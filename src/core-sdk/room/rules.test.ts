@@ -3,6 +3,7 @@ import {describe,it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {validRuleRequest,validRuleView,validSequence,newRuleStep,ruleActions,ruleGestures,ruleEvents,ruleConditions,rulePolicies,ruleMounts} from './rules';
 import nativeView from '../../../test-fixtures/browser/ruleBookState.json';
+import unavailableView from '../../../test-fixtures/browser/unavailableProgramState.json';
 import {parseRoomCommands} from './roomAgent';
 import {sequenceProgram,simpleProgramSteps} from './programs';
 const id='a'.repeat(32),step='b'.repeat(32);
@@ -40,4 +41,27 @@ describe('shared behaviour contract',()=>{
 
 it('rejects inherited property names as behaviour edit kinds without throwing',()=>{
  for(const kind of ['__proto__','constructor','toString'])expect(validRuleRequest({action:'edit',revision:1,edits:[{kind,target:id}]})).toBe(false);
+});
+
+it('accepts preserved unavailable observations only with native diagnostics and keeps writes strict',()=>{
+ const original=sequence(),bad={...original,program:'  {unreadable source '},error='Unsupported saved program';
+ const view={...nativeView,selected:bad,selectedError:error,sequences:[{id:bad.id,name:bad.name,steps:0,repeat:false,program:true,error}]};
+ expect(validRuleView(view)).toBe(true);
+ expect(validSequence(bad)).toBe(false);
+ expect(validRuleRequest({action:'edit',revision:1,edits:[{kind:'save',sequence:bad}]})).toBe(false);
+ expect(validRuleView({...view,selectedError:undefined})).toBe(false);
+ expect(validRuleView({...view,selectedError:'Not the summary diagnostic'})).toBe(false);
+ expect(validRuleView({...view,selected:{...bad,program:'x'.repeat(24001)}})).toBe(false);
+ expect(validRuleView({...view,selected:{...bad,id:'bad'}})).toBe(false);
+ expect(validRuleView({...view,selected:{...bad,extra:'script'}})).toBe(false);
+ expect(validRuleView({...view,selectedError:'x'.repeat(2049)})).toBe(false);
+ // A valid program may also be unavailable due to a collection event conflict.
+ expect(validRuleView({...view,selected:original})).toBe(true);
+});
+
+it('reads the real native mixed-compatibility observation including empty valid diagnostics',()=>{
+ expect(validRuleView(unavailableView.rules)).toBe(true);
+ expect(unavailableView.rules.sequences.some(s=>s.error==='')).toBe(true);
+ expect(unavailableView.rules.selectedError).toBe(unavailableView.rules.sequences[0].error);
+ expect(validSequence(unavailableView.rules.selected)).toBe(false);
 });

@@ -176,3 +176,22 @@ it('authors scoped object edits with scalar controls and preserves their exact t
   await act(async()=>{client.receive({...initial,revision:revision++,ack:revision-2,rules:{...rules(),revision:revision+3,selected:updated}});});
  }
 });
+
+it('lets the user inspect and repair an unavailable source without dispatching invalid edits',async()=>{
+ const good=rules().selected!,source=' { preserve invalid source ',error='Unsupported saved program';
+ const unavailable=state({rules:{...rules(),selected:{...good,program:source},selectedError:error,sequences:[{id,name:good.name,steps:0,repeat:false,program:true,error}]}});
+ const client=new RoomAgentClient();expect(client.receive(unavailable)).toBe(true);
+ const screen=render(<RuleWorkspace client={client}/>);
+ expect((screen.getByRole('button',{name:'Try behaviour'}) as HTMLButtonElement).disabled).toBe(true);
+ expect((screen.getByRole('button',{name:'+ Behaviour'}) as HTMLButtonElement).disabled).toBe(false);
+ fireEvent.click(screen.getByRole('button',{name:'Repair source'}));
+ expect((screen.getByLabelText('Program JSON') as HTMLTextAreaElement).value).toBe(source);
+ fireEvent.change(screen.getByLabelText('Program JSON'),{target:{value:'invalid edit'}});
+ fireEvent.click(screen.getByRole('button',{name:'Update draft'}));expect(client.snapshot().request).toBeNull();
+ expect((screen.getByRole('button',{name:'Apply changes'}) as HTMLButtonElement).disabled).toBe(true);
+ fireEvent.change(screen.getByLabelText('Program JSON'),{target:{value:good.program}});
+ fireEvent.click(screen.getByRole('button',{name:'Update draft'}));fireEvent.click(screen.getByRole('button',{name:'Apply changes'}));
+ expect(client.snapshot().request!.commands[0].rule!.edits![0]).toEqual({kind:'save',sequence:good});
+ await act(async()=>{client.receive(state({ack:1,revision:2,rules:{...rules(),revision:5}}));});
+ expect((screen.getByRole('button',{name:'Try behaviour'}) as HTMLButtonElement).disabled).toBe(false);
+});

@@ -55,6 +55,43 @@ namespace Maestro.Quest.Tests
         }
 
 
+        [UnityTest] public IEnumerator UnavailableSavedProgramRemainsRepairableWithoutBlockingPhysicalButtonsOrOtherPrograms()
+        {
+            var original=workshop.Snapshot();var good=original.sequences.Single();
+            var bad=good.Copy();bad.id=Guid.NewGuid().ToString("N");bad.name="Needs repair";
+            var unsupported=JObject.Parse(bad.program);unsupported["functions"][0]["body"][0]["capability"]="future.animation.play";bad.program=unsupported.ToString();
+            string preserved=bad.program;
+            UnityEngine.Object.Destroy(runtime);UnityEngine.Object.Destroy(workshop);yield return null;
+            var document=new RuleDocument {sequences=new[]{bad,good},bindings=new[]{bad,good}.Select(x=>new RuleBinding {id=Guid.NewGuid().ToString("N"),sequenceId=x.id,trigger=RuleEventKind.Speaking}).ToArray(),
+                buttons=new[]{new RuleButtonData {id=Guid.NewGuid().ToString("N"),sequenceId=bad.id,mount=ButtonMount.LeftController,position=new Vector3(-.12f,.06f,.05f)}}};
+            Directory.CreateDirectory(directory);File.WriteAllText(Path.Combine(directory,"behaviours.v2.json"),JsonUtility.ToJson(document));
+            workshop=root.AddComponent<RuleWorkshop>();workshop.Initialize(editor,directory);
+            runtime=root.AddComponent<RoomRules>();runtime.Initialize(workshop,editor,animations,null,root.GetComponent<RoomInteraction>(),null,index=>index==0?leftAnchor.transform:rightAnchor.transform);
+            var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);
+            var state=observer.Observe();state.visible=true;state.workspaceView="rules";state.rules=workshop.Observe(true);
+            Assert.That(state.rules.readOnly,Is.False);Assert.That(state.rules.selected.program,Is.EqualTo(preserved));Assert.That(state.rules.selectedError,Is.Not.Empty);
+            Assert.That(state.rules.sequences.Single(x=>x.id==good.id).error,Is.Null);
+            string output=Environment.GetEnvironmentVariable("MAESTRO_PROGRAM_EVIDENCE");
+            if(!string.IsNullOrEmpty(output)){Directory.CreateDirectory(output);File.WriteAllText(Path.Combine(output,"program-unavailable.json"),RoomAgentWire.Serialize(state));}
+            runtime.ObserveSnapshot(new BookSnapshot {activity="idle"});runtime.ObserveSnapshot(new BookSnapshot {activity="speaking"});
+            Assert.That(runtime.Scheduler.ObserveRuns().Single().sequenceId,Is.EqualTo(good.id));
+            var button=root.GetComponentInChildren<RuleButton>();var router=root.AddComponent<BookPointerRouter>();router.Editor=editor;
+            yield return null;Physics.SyncTransforms();
+            var ray=new Ray(button.transform.position-Vector3.forward*.3f,Vector3.forward);
+            Assert.That(router.Begin(1,ray),Is.True);router.End(1,ray);
+            Assert.That(runtime.Scheduler.ObserveRuns().Single().sequenceId,Is.EqualTo(good.id));Assert.That(runtime.Scheduler.LastError,Is.Not.Empty);
+            good.name="Edited working behaviour";
+            Assert.That(workshop.Execute(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="save",sequence=good}}},out var error,out _),Is.True,error);
+            Assert.That(workshop.Snapshot().sequences.First().program,Is.EqualTo(preserved));
+            bad.program=good.program;
+            Assert.That(workshop.Execute(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="save",sequence=bad}}},out error,out _),Is.True,error);
+            Assert.That(workshop.Observe().selectedError,Is.Null);Assert.That(runtime.Trigger(bad.id),Is.True);
+            workshop.Undo();Assert.That(workshop.Snapshot().sequences.First().program,Is.EqualTo(preserved));Assert.That(runtime.Trigger(bad.id),Is.False);
+            workshop.Redo();Assert.That(runtime.Trigger(bad.id),Is.True);
+            Assert.That(workshop.Execute(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="delete",target=bad.id}}},out error,out _),Is.True,error);
+            Assert.That(workshop.Snapshot().sequences.Single().id,Is.EqualTo(good.id));
+        }
+
         [UnityTest] public IEnumerator FailedCreationSaveCannotApplyAnObjectOrReturnAnInventedResult()
         {
             int count=editor.Snapshot().objects.Length;

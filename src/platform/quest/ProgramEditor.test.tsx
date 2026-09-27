@@ -105,3 +105,18 @@ it('rejects a recursive function call created by visual controls without destroy
  const h=harness(initial),before=h.source();fireEvent.click(h.screen.getByLabelText('+ Call function in main'));
  expect(h.screen.getByRole('alert').textContent).toContain('Recursive');expect(h.source()).toBe(before);
 });
+
+it('preserves unavailable source until a complete valid repair is accepted',()=>{
+ const source=' { preserved incomplete source ',onChange=vi.fn(),editing=vi.fn();
+ const screen=render(<ProgramEditor source={source} targets={[]} onEditingChange={editing} onChange={onChange}/>);
+ fireEvent.click(screen.getByRole('button',{name:'Repair source'}));
+ expect((screen.getByLabelText('Program JSON') as HTMLTextAreaElement).value).toBe(source);
+ fireEvent.change(screen.getByLabelText('Program JSON'),{target:{value:'still invalid'}});
+ fireEvent.click(screen.getByRole('button',{name:'Update draft'}));expect(onChange).not.toHaveBeenCalled();
+ fireEvent.click(screen.getByRole('button',{name:'Discard editor draft'}));
+ fireEvent.click(screen.getByRole('button',{name:'Repair source'}));
+ expect((screen.getByLabelText('Program JSON') as HTMLTextAreaElement).value).toBe(source);
+ fireEvent.change(screen.getByLabelText('Program JSON'),{target:{value:JSON.stringify(empty)}});
+ fireEvent.click(screen.getByRole('button',{name:'Update draft'}));
+ expect(onChange).toHaveBeenCalledWith(JSON.stringify(empty));expect(editing).toHaveBeenLastCalledWith(false);
+});

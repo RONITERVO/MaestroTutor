@@ -21,7 +21,7 @@ namespace Maestro.Quest.Rules
         public int revision,page;
         public RuleEdit[] edits;
     }
-    [Serializable] public sealed class RuleSummary { public string id,name; public int steps; public bool repeat,program; }
+    [Serializable] public sealed class RuleSummary { public string id,name,error; public int steps; public bool repeat,program; }
     [Serializable] public sealed class RuleRunView { public string id,sequenceId; public bool preparing,waiting;public string waitEvent;public float waitSeconds;public ProgramVariableView[] state=Array.Empty<ProgramVariableView>(); public string nodeId,functionName,status; public ProgramVariableView[] locals=Array.Empty<ProgramVariableView>(); }
     [Serializable] public sealed class RuleOutcome {public string id,sequenceId,phase,nodeId,status;}
     [Serializable] public sealed class ProgramVariableView {public string name,type,value;}
@@ -29,7 +29,7 @@ namespace Maestro.Quest.Rules
     {
         public int revision,bindingPage,bindingCount,queued,eventQueue,eventsDropped;
         public bool canUndo,canRedo,readOnly;
-        public string status;
+        public string status,selectedError;
         public RuleSummary[] sequences;
         public RuleSequence selected;
         public RuleBinding[] bindings;
@@ -47,8 +47,8 @@ namespace Maestro.Quest.Rules
             int page=Mathf.Clamp(viewPage,0,Mathf.Max(0,(bindings.Length-1)/8));
             return new RuleView {
                 revision=Revision,canUndo=CanUndo,canRedo=CanRedo,readOnly=ReadOnly,status=Status,
-                sequences=document.sequences.Select(x=>new RuleSummary {id=x.id,name=x.name,steps=x.Compile(out _).NodeCount,repeat=x.repeat,program=true}).ToArray(),
-                selected=selected,bindings=bindings.Skip(page*8).Take(8).Select(x=>x.Copy()).ToArray(),bindingPage=page,bindingCount=bindings.Length,
+                sequences=document.sequences.Select(x=>new RuleSummary {id=x.id,name=x.name,steps=x.Compile(out _)?.NodeCount??0,repeat=x.repeat,program=true,error=document.ProgramError(x)}).ToArray(),
+                selected=selected,selectedError=selected==null?null:document.ProgramError(selected),bindings=bindings.Skip(page*8).Take(8).Select(x=>x.Copy()).ToArray(),bindingPage=page,bindingCount=bindings.Length,
                 buttons=selected==null ? Array.Empty<RuleButtonData>() : document.buttons.Where(x=>x.sequenceId==selected.id).Select(x=>x.Copy()).ToArray(),
                 running=Runtime?.Scheduler?.ObserveRuns() ?? Array.Empty<RuleRunView>(),outcomes=Runtime?.Scheduler?.Outcomes??Array.Empty<RuleOutcome>(),queued=Runtime?.Scheduler?.QueuedCount ?? 0,eventQueue=Runtime?.Scheduler?.EventQueueCount??0,eventsDropped=Runtime?.Scheduler?.EventsDropped??0
             };
@@ -124,7 +124,7 @@ namespace Maestro.Quest.Rules
                 else if(change.kind=="unbutton") {if(!candidate.buttons.Any(x=>x.id==change.target))return false;candidate.buttons=candidate.buttons.Where(x=>x.id!=change.target).ToArray();}
                 else return false;
             }
-            if(!candidate.Validate(out error))return false;
+            if(!candidate.ValidateEdit(document,out error))return false;
             if(!Edit(value=>{value.sequences=candidate.sequences;value.bindings=candidate.bindings;value.buttons=candidate.buttons;},"Behaviour edit applied. Undo restores this batch.")) {error=Status;return false;}
             sequenceIndex=Array.FindIndex(document.sequences,x=>x.id==selectedId);if(sequenceIndex<0&&document.sequences.Length>0)sequenceIndex=0;
             stepIndex=0;viewPage=0;created=added.Where(id=>document.sequences.Any(x=>x.id==id)).ToArray();error=Status;Changed?.Invoke();return true;

@@ -47,9 +47,10 @@ installation shows a reset message. Room creations, downloaded models/motions,
 source collections and the original web chat/backup formats are unaffected.
 
 Atomic pending writes, last-good backup recovery, Undo and motion-reference
-protection remain. A newer outer document, embedded program/capability or collection filename
-(including recovery copies) makes the collection read-only instead of rolling back
-to an older backup. Current save files and incoming native save commands reject
+protection remain. A newer outer document or collection filename (including
+recovery copies) makes the collection read-only instead of rolling back to an
+older backup. An incompatible embedded program/capability instead disables only
+that program while preserving its source, as described in the compatibility section below. Current save files and incoming native save commands reject
 legacy/mixed sequence fields before deserialization can silently discard them.
 New opcodes still require a program-version change.
 
@@ -386,3 +387,38 @@ signatures, custom declaration names/types and advanced resource-list management
 still use source editing. Moving existing blocks across containers, interactive
 debug stepping and headset editing/keyboard acceptance remain release work.
 No second interpreter, provider session or storage format was introduced.
+
+
+## Per-program compatibility isolation (2026-09-27)
+
+Within a structurally valid behaviours.v2 collection, unsupported program
+versions, unknown capability IDs/versions, invalid program source and incompatible
+custom-event declarations disable the affected programs. The rest of the
+collection remains editable and executable. No fallback silently replaces a
+program with a backup or a different action.
+
+Native observations advertise unavailablePrograms.v1. Each summary includes an
+error; inspection includes selectedError and the unchanged source. Empty/null
+errors mean available. The book marks unavailable behaviours, blocks Try and
+offers source repair or deletion. The agent receives the same diagnostic/source
+through existing rules.inspect/edit operations. Direct, event and physical-button
+starts are rejected before resource arbitration, so they cannot interrupt another
+run. Conflicting custom-event declarations disable each affected program.
+
+New or changed definitions must validate completely. Unchanged unavailable
+entries survive edits to other behaviours, triggers and buttons; Undo may restore
+an original preserved entry after a repair/deletion. A successful repair only
+saves the definition; it does not start it. Unknown references in unreadable
+programs, histories and retained backups conservatively protect motion downloads.
+
+This is a per-program boundary, not permission to overwrite unknown collection
+formats. Collection versions, IDs, limits, wire fields, triggers and button data
+still validate; existing structural-corruption backup recovery and unknown
+whole-file protection remain. No prototype data or imported assets were erased.
+
+Regression coverage exercises mixed collections, strict new edits, repair,
+undo/redo, custom-event conflicts, motion retention, and real native physical
+pointer and state-trigger paths. The exported native observation is consumed by
+web validation and a Chrome repair probe. Browser acknowledgements are simulated;
+the native tests separately exercise actual Unity execution. Headset acceptance
+of the repair UI remains pending.

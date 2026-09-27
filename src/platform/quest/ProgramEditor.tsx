@@ -23,9 +23,10 @@ export function ProgramEditor({source,onChange,run,onEditingChange,targets,event
  const write=(value:BehaviourProgram)=>{const json=JSON.stringify(value),result=parseProgram(json);if(!result.program){setError(result.error!);return false;}onChange(json);setError('');return true;};
  const update=(fn:(value:BehaviourProgram)=>void)=>{if(!program)return;const next=copy(program);fn(next);write(next);};
  const saveEditor=()=>{
-  if(!editing||!program)return;
+  if(!editing)return;
   try {
    if(editing.kind==='source'){const result=parseProgram(editing.buffer);if(!result.program)throw new Error(result.error!);if(write(result.program))setEditing(null);return;}
+   if(!program)return;
    const value:unknown=JSON.parse(editing.buffer),next=copy(program);
    if(editing.kind==='node'||editing.kind==='visual'){const found=findBlock(next,editing.id);if(!found)throw new Error('Block changed. Discard this editor draft.');if(!value||typeof value!=='object'||(value as {id:unknown}).id!==editing.id)throw new Error('Keep this block’s stable id.');found.body[found.at]=value as ProgramNode;
     if(editing.kind==='visual'){
@@ -77,7 +78,7 @@ export function ProgramEditor({source,onChange,run,onEditingChange,targets,event
  return <section className="program-editor" aria-label="Program editor">
   <p className="room-workspace-intro">Build with the same blocks as the agent. Add actions inside branches, edit values, then apply the draft. Source editing is optional; applying a draft does not start it.</p>
   {error&&<p role="alert" className="room-message room-message-warning">{error}</p>}
-  {!program?<p role="alert">{parsed.error}</p>:<>
+  {!program?<><p role="alert">{parsed.error}</p><p>The saved source is preserved. Repair it here, or delete this behaviour. Other behaviours remain usable.</p><fieldset disabled={disabled}>{editing?<><label>Program JSON<textarea aria-label="Program JSON" spellCheck={false} rows={18} maxLength={24000} value={editing.buffer} onChange={e=>setEditing({...editing,buffer:e.target.value})}/></label><div className="room-workspace-actions"><button onClick={saveEditor}>Update draft</button><button onClick={()=>{setEditing(null);setError('');}}>Discard editor draft</button></div></>:<button onClick={()=>setEditing({kind:'source',id:'',buffer:source})}>Repair source</button>}</fieldset></>:<>
    {run&&<div className="program-watch" aria-label="Live program values"><strong>{run.functionName} · {run.status}</strong>{[...(run.state??[]).map(v=>({...v,name:'state.'+v.name})),...(run.locals??[])].map(v=><p key={v.name}><code>{v.name}</code> = {v.value} <small>({v.type})</small></p>)}</div>}
    {editing?<fieldset disabled={disabled}><legend>{editing.kind==='source'?'Full program source':editing.kind==='visual'?'Edit values':editing.kind==='node'?'Edit block '+editing.id:'Edit function '+editing.id}</legend>{editing.kind==='visual'?<ProgramBlockEditor node={JSON.parse(editing.buffer) as ProgramNode} program={program} fn={program.functions.find(fn=>findBlock({...program,functions:[fn]},editing.id))!} objects={targets} onChange={node=>setEditing({...editing,buffer:JSON.stringify(node)})}/>:<label>Program JSON<textarea aria-label="Program JSON" spellCheck={false} rows={18} maxLength={24000} value={editing.buffer} onChange={e=>setEditing({...editing,buffer:e.target.value})}/></label>}<p className="room-workspace-intro">Update draft validates the complete program. Your changes do not run until applied and triggered.</p><div className="room-workspace-actions"><button onClick={saveEditor}>Update draft</button><button onClick={()=>{setEditing(null);setError('');}}>Discard editor draft</button></div></fieldset>:<fieldset disabled={disabled} className="room-edit-body">
     <div className="room-workspace-actions"><button onClick={()=>setEditing({kind:'source',id:'',buffer:JSON.stringify(program,null,2)})}>Edit full source</button><button disabled={program.functions.length>=16} onClick={()=>update(value=>{let i=1;while(value.functions.some(f=>f.name==='function_'+i))i++;value.functions.push({name:'function_'+i,returns:'void',parameters:[],locals:[],body:[]});})}>+ Function</button></div>

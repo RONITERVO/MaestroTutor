@@ -54,6 +54,7 @@ namespace Maestro.Quest.Rules
             {
                 var sequence = Selected;
                 if (sequence == null) return "No action sequence selected";
+                var issue=document.ProgramError(sequence);if(issue!=null)return sequence.name+" — Unavailable: "+issue+" · Repair or delete it in the book";
                 var steps=sequence.SimpleSteps();
                 if(steps==null || steps.Length==0)return sequence.name+" · Program · Edit its functions in the book";
                 var step = steps[Mathf.Clamp(stepIndex,0,steps.Length-1)];
@@ -114,7 +115,7 @@ namespace Maestro.Quest.Rules
             if (ReadOnly) { Say("Saved rules are unavailable for editing; original files are preserved"); return false; }
             if (!placement && Runtime && Runtime.AnyButtonHeld) { Say("Release your action buttons before editing rules"); return false; }
             var candidate = document.Copy(); action(candidate);
-            if (!candidate.Validate(out var error)) { Say(error); return false; }
+            if (!candidate.ValidateEdit(document,out var error)) { Say(error); return false; }
             if (JsonUtility.ToJson(candidate) == JsonUtility.ToJson(document)) return true;
             undo.Add(document); if (undo.Count > 32) undo.RemoveAt(0); redo.Clear(); document = candidate;
             Updated(); Say(message); return true;

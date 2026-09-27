@@ -494,3 +494,16 @@ Painting preserves physical motion; explicit placement/resizing resets velocity.
 Unrelated runs continue, and completed deletion replay cannot delete an Undo
 restoration. See [object-edit semantics and evidence](QUEST_OBJECT_EDIT_ACTIONS.md).
 Quest acceptance, broader operation coverage and store release remain open.
+
+
+PC compatibility checkpoint (2026-09-27): a confirmed PR review finding is fixed
+across saved-program storage, the native scheduler, physical buttons, observations
+and the book/agent editor. One unavailable program preserves its source and
+diagnostic without locking unrelated behaviours. New edits remain strict;
+Undo and unknown motion references stay protected. See
+[compatibility semantics](QUEST_BEHAVIOUR_PROGRAMS.md#per-program-compatibility-isolation-2026-09-27).
+PC verification covers 1,296 app tests, 133 EditMode and 95 PlayMode tests, with
+three optional private-model skips. Chrome repairs a real native observation.
+The latest build remains uninstalled. In-app damaged-receipt recovery, modular
+native capability dispatch, broader action coverage and all remaining v1
+hardware/provider/store acceptance gates remain open.

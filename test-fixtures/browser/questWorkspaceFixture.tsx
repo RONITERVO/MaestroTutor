@@ -7,6 +7,7 @@ import {simpleProgramSteps} from '../../src/core-sdk/room/programs';
 import {copyRecipe,parseRecipe} from '../../src/core-sdk/room/recipe';
 import robot from './recipeRobot.json';
 import nativeProgram from './programBookState.json';
+import unavailableProgram from './unavailableProgramState.json';
 import nativeExecutions from './executionStates.json';
 import nativeEvents from './eventProgramStates.json';
 import creationProgram from '../../unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-create.json';
@@ -45,6 +46,7 @@ if(new URLSearchParams(location.search).has('creation')||recipeCreation||objectE
  state.rules!.running=[];state.rules!.outcomes=[];state.rules!.bindings=[];state.rules!.bindingCount=0;state.rules!.buttons=[];
  state.execution=JSON.parse(JSON.stringify(objectEdits?objectEditResults.painted:recipeCreation?recipeCreationResult:creationResult));state.capabilities=[...state.capabilities??[],'eventPrograms.v1','actionResults.v1','recipeCreation.v1','objectEdits.v1','execution.v1','executionReceipts.v1'];
 }
+if(new URLSearchParams(location.search).has('unavailablePrograms'))state=JSON.parse(JSON.stringify(unavailableProgram));
 state.capabilities=[...new Set([...state.capabilities??[],'catalog.v1'])];
 const prop=simpleProgramSteps(nativeRules.selected.program)?.[0]?.propId;
 if(prop)state.objects.push({id:prop,objectRevision:4,name:'Practice ball',kind:'Ball',position:{x:.3,y:.8,z:.8},scale:1,color:white,animated:false});
@@ -103,7 +105,7 @@ setInterval(()=>{
     if(rule.action==='edit'){
      ruleUndo.push(copy(view));ruleRedo.length=0;view=copy(view);
      for(const edit of rule.edits??[]) {
-      if(edit.kind==='save'&&edit.sequence){const sequence=copy(edit.sequence);sequence.id ||= uuid();view.selected=sequence;view.sequences=view.sequences.filter(x=>x.id!==sequence.id);view.sequences.push({id:sequence.id,name:sequence.name,steps:JSON.parse(sequence.program).functions.reduce((n:number,f:{body:unknown[]})=>n+f.body.length,0),program:Boolean(sequence.program),repeat:sequence.repeat});}
+      if(edit.kind==='save'&&edit.sequence){const sequence=copy(edit.sequence);sequence.id ||= uuid();view.selected=sequence;view.selectedError=null;view.sequences=view.sequences.filter(x=>x.id!==sequence.id);view.sequences.push({id:sequence.id,name:sequence.name,steps:JSON.parse(sequence.program).functions.reduce((n:number,f:{body:unknown[]})=>n+f.body.length,0),program:Boolean(sequence.program),repeat:sequence.repeat});}
       else if(edit.kind==='bind'&&edit.binding){const binding=copy(edit.binding);binding.id ||= uuid();view.bindings=view.bindings.filter(x=>x.id!==binding.id);view.bindings.push(binding);view.bindingCount=view.bindings.length;}
       else if(edit.kind==='unbind') {view.bindings=view.bindings.filter(x=>x.id!==edit.target);view.bindingCount=view.bindings.length;}
       else if(edit.kind==='button')view.buttons.push({id:uuid(),sequenceId:edit.target!,mount:edit.mount!,position:{x:0,y:0,z:0},rotation:{x:0,y:0,z:0,w:1}});

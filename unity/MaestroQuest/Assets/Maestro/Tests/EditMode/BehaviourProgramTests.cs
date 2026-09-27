@@ -271,7 +271,7 @@ namespace Maestro.Quest.Tests
             Assert.That(Wire(),Is.True);value["steps"]=new JArray();Assert.That(Wire(),Is.False);value.Remove("steps");
             value.Remove("program");Assert.That(Wire(),Is.False);value["program"]=12;Assert.That(Wire(),Is.False);
         }
-        [Test] public void NewerProgramVersionIsPreservedReadOnlyWithoutRollingBackToItsBackup()
+        [Test] public void NewerProgramVersionIsPreservedIndividuallyWithoutRollingBackToItsBackup()
         {
             string directory=Path.Combine(Path.GetTempPath(),"MaestroFutureProgram-"+Guid.NewGuid().ToString("N"));
             try {
@@ -279,8 +279,10 @@ namespace Maestro.Quest.Tests
                 var storage=new RuleStorage(directory);Assert.That(storage.Save(document,out _),Is.True);Assert.That(storage.Save(document,out _),Is.True);
                 var program=JObject.Parse(document.sequences[0].program);program["version"]=4;document.sequences[0].program=program.ToString();
                 string path=Path.Combine(directory,"behaviours.v2.json"),future=JsonUtility.ToJson(document);File.WriteAllText(path,future);
-                storage=new RuleStorage(directory);storage.Load(out var message);Assert.That(storage.ReadOnly,Is.True,message);Assert.That(message,Does.Contain("different app version"));
-                Assert.That(storage.Save(new RuleDocument(),out _),Is.False);Assert.That(File.ReadAllText(path),Is.EqualTo(future));
+                storage=new RuleStorage(directory);var loaded=storage.Load(out var message);Assert.That(storage.ReadOnly,Is.False,message);Assert.That(message,Does.Contain("unavailable"));
+                Assert.That(loaded.sequences.Single().program,Is.EqualTo(document.sequences[0].program));
+                Assert.That(loaded.ProgramError(loaded.sequences[0]),Is.Not.Empty);Assert.That(File.ReadAllText(path),Is.EqualTo(future));
+                Assert.That(storage.Save(loaded,out var error),Is.True,error);
             }finally {if(Directory.Exists(directory))Directory.Delete(directory,true);}
         }
         [TestCase("avatar.gesture.play",2)] [TestCase("future.capability",1)]
@@ -293,9 +295,71 @@ namespace Maestro.Quest.Tests
                 var program=JObject.Parse(document.sequences[0].program);var node=program["functions"][0]["body"][1]["then"][0];
                 node["capability"]=capability;node["version"]=version;document.sequences[0].program=program.ToString();
                 string path=Path.Combine(directory,"behaviours.v2.json"),original=JsonUtility.ToJson(document);File.WriteAllText(path,original);
-                storage=new RuleStorage(directory);Assert.That(storage.Load(out _).sequences,Is.Empty);Assert.That(storage.ReadOnly,Is.True);
-                Assert.That(storage.Save(new RuleDocument(),out _),Is.False);Assert.That(File.ReadAllText(path),Is.EqualTo(original));
+                storage=new RuleStorage(directory);var loaded=storage.Load(out _);Assert.That(storage.ReadOnly,Is.False);
+                Assert.That(loaded.sequences.Single().program,Is.EqualTo(document.sequences[0].program));
+                Assert.That(loaded.ProgramError(loaded.sequences[0]),Is.Not.Empty);Assert.That(File.ReadAllText(path),Is.EqualTo(original));
+                Assert.That(storage.Save(loaded,out var error),Is.True,error);
             }finally {if(Directory.Exists(directory))Directory.Delete(directory,true);}
+        }
+        static RuleSequence Available(string name="Usable")=>new() {id=Guid.NewGuid().ToString("N"),name=name,program=BehaviourProgram.FromSteps(new RuleStep {action=RuleActionKind.Gesture,seconds=1})};
+        [TestCase("unknownCapability")] [TestCase("unknownVersion")] [TestCase("malformed")]
+        public void UnavailableProgramDoesNotBlockOtherEditsTriggersOrUndo(string kind)
+        {
+            string directory=Path.Combine(Path.GetTempPath(),"MaestroIsolated-"+Guid.NewGuid().ToString("N"));
+            try {
+                var good=Available();var bad=Available("Needs repair");var source=JObject.Parse(bad.program);
+                if(kind=="unknownCapability")source["functions"][0]["body"][0]["capability"]="future.capability";
+                if(kind=="unknownVersion")source["version"]=99;
+                bad.program=kind=="malformed"?" { preserve incomplete source ":source.ToString();string original=bad.program;
+                var document=new RuleDocument {sequences=new[]{good,bad},bindings=new[]{good,bad}.Select(x=>new RuleBinding {id=Guid.NewGuid().ToString("N"),sequenceId=x.id,trigger=RuleEventKind.Speaking}).ToArray()};
+                Directory.CreateDirectory(directory);string path=Path.Combine(directory,"behaviours.v2.json");File.WriteAllText(path,JsonUtility.ToJson(document));
+                var storage=new RuleStorage(directory);var loaded=storage.Load(out _);
+                Assert.That(storage.ReadOnly,Is.False);Assert.That(loaded.Validate(out _,true),Is.True);Assert.That(loaded.Validate(out _),Is.False);
+                var actions=new Actions();var scheduler=new RuleScheduler(actions);scheduler.Configure(loaded);
+                scheduler.SetActivity("idle",0);scheduler.SetActivity("speaking",1);
+                Assert.That(actions.Starts,Is.EqualTo(1));Assert.That(scheduler.LastError,Is.Null);
+                Assert.That(scheduler.Trigger(bad.id,2),Is.False);Assert.That(scheduler.RunningCount,Is.EqualTo(1),"Failed starts cannot interrupt a usable run");
+                Assert.That(actions.Stops,Is.Zero);
+                loaded.sequences[0].name="Edited valid";
+                Assert.That(storage.Save(loaded,out var error),Is.True,error);
+                Assert.That(new RuleStorage(directory).Load(out _).sequences[1].program,Is.EqualTo(original));
+                var rejected=loaded.Copy();rejected.sequences[1].name="Changed invalid";Assert.That(storage.Save(rejected,out _),Is.False);
+                rejected=loaded.Copy();rejected.sequences=rejected.sequences.Append(new RuleSequence {id=Guid.NewGuid().ToString("N"),name="New invalid",program=original}).ToArray();
+                Assert.That(storage.Save(rejected,out _),Is.False);
+                var repaired=loaded.Copy();repaired.sequences[1].program=good.program;
+                Assert.That(repaired.sequences[1].Compile(out _),Is.Not.Null,"Repair must invalidate a cached failure");
+                Assert.That(storage.Save(repaired,out error),Is.True,error);
+                Assert.That(storage.Save(loaded,out error),Is.True,error,"Undo may restore a preserved original");
+                storage.RetainsMotion(Guid.NewGuid().ToString("N"),out bool uncertain,true);Assert.That(uncertain,Is.True);
+                Assert.That(bad.UsesMotion(Guid.NewGuid().ToString("N")),Is.True);
+                Assert.That(storage.Save(new RuleDocument(),out error),Is.True,error,"Unavailable programs remain deletable");
+                storage.RetainsMotion(Guid.NewGuid().ToString("N"),out uncertain,true);Assert.That(uncertain,Is.True,"Recovery backups still protect unknown references");
+            }finally {if(Directory.Exists(directory))Directory.Delete(directory,true);}
+        }
+        [Test] public void EventTypeConflictsDisableOnlyAffectedProgramsAndCannotBeIntroducedByEdits()
+        {
+            var first=Available("Number event");var second=Available("Text event");var good=Available();
+            var source=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-events.json")));
+            first.program=source.ToString();source["events"][0]["type"]="text";second.program=source.ToString();
+            var previous=new RuleDocument {sequences=new[]{first,good}};
+            var conflict=new RuleDocument {sequences=new[]{first,second,good}};
+            Assert.That(conflict.ValidateEdit(previous,out _),Is.False);
+            Assert.That(conflict.ProgramError(first),Does.Contain("different payload"));Assert.That(conflict.ProgramError(second),Is.Not.Null);
+            Assert.That(conflict.ProgramError(good),Is.Null);
+            var actions=new Actions();var scheduler=new RuleScheduler(actions);scheduler.Configure(conflict);
+            Assert.That(scheduler.Trigger(first.id,0),Is.False);Assert.That(scheduler.Trigger(second.id,0),Is.False);Assert.That(scheduler.Trigger(good.id,0),Is.True);
+            Assert.That(actions.Starts,Is.EqualTo(1));
+            var repaired=conflict.Copy();repaired.sequences[1].program=first.program;Assert.That(repaired.ValidateEdit(conflict,out var error),Is.True,error);
+        }
+        [Test] public void CompatibilityIsolationDoesNotRelaxCollectionStructureOrLimits()
+        {
+            var good=Available();var document=new RuleDocument {sequences=new[]{good}};
+            good.program="bad";Assert.That(document.Validate(out _,true),Is.True);
+            good.program=new string('x',24001);Assert.That(document.Validate(out _,true),Is.False);
+            good.program="bad";good.id="not-an-id";Assert.That(document.Validate(out _,true),Is.False);
+            good.id=Guid.NewGuid().ToString("N");document.sequences=new[]{good,good.Copy()};Assert.That(document.Validate(out _,true),Is.False);
+            document.sequences=new[]{good};document.buttons=new[]{new RuleButtonData {id=Guid.NewGuid().ToString("N"),sequenceId=Guid.NewGuid().ToString("N")}};
+            Assert.That(document.Validate(out _,true),Is.False);
         }
         [TestCase("greeting",true)] [TestCase("unknown",false)]
         public void ComputedNamedGesturesAreValidatedBeforeTheyReachTheHandler(string gesture,bool valid)

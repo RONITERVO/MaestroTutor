@@ -55,12 +55,12 @@ namespace Maestro.Quest.Rules
         public bool repeat;
         public string program;
         BehaviourProgram compiled;
-        string compiledSource;
+        string compiledSource,compiledError;
+        bool compilationAttempted;
         public BehaviourProgram Compile(out string error) {
-            error=null;
-            if(compiledSource==program&&compiled!=null)return compiled;
-            if(!BehaviourProgram.TryParse(program,out var value,out error))return null;
-            compiledSource=program;compiled=value;return compiled;
+            if(compilationAttempted&&compiledSource==program){error=compiledError;return compiled;}
+            compilationAttempted=true;compiledSource=program;
+            BehaviourProgram.TryParse(program,out compiled,out compiledError);error=compiledError;return compiled;
         }
         public static bool ValidWire(Newtonsoft.Json.Linq.JToken token)
         {
@@ -72,12 +72,13 @@ namespace Maestro.Quest.Rules
                 value["program"].Type==Newtonsoft.Json.Linq.JTokenType.String;
         }
         public IEnumerable<string> Targets()=>Compile(out _)?.Resources??Array.Empty<string>();
-        public bool UsesMotion(string id)=>Compile(out _)?.ReferencesMotion(id)==true;
+        // An unreadable program may still reference any saved motion.
+        public bool UsesMotion(string id)=>Compile(out _) is not BehaviourProgram value||value.ReferencesMotion(id);
         public IEnumerable<string> MotionIds()=>Compile(out _)?.ReferencedIds??Array.Empty<string>();
         // A detached view for simple controls, never a second serialized representation.
         public RuleStep[] SimpleSteps()=>Compile(out _)?.SimpleSteps();
         public void SetSimpleSteps(RuleStep[] values) => program=Compile(out _)?.WithSimpleSteps(values) ?? throw new ArgumentException("Invalid program");
-        public RuleSequence Copy() => new() { id=id,name=name,interruption=interruption,repeat=repeat,program=program,compiled=compiled,compiledSource=compiledSource };
+        public RuleSequence Copy() => new() { id=id,name=name,interruption=interruption,repeat=repeat,program=program,compiled=compiled,compiledSource=compiledSource,compiledError=compiledError,compilationAttempted=compilationAttempted };
     }
     [Serializable] public sealed class RuleBinding
     {
@@ -146,7 +147,35 @@ namespace Maestro.Quest.Rules
             error=null;return true;
         }
 
-        public bool Validate(out string error)
+        public string ProgramError(RuleSequence sequence)
+        {
+            var compiled=sequence.Compile(out var error);
+            if(compiled==null)return string.IsNullOrEmpty(error)?"This program is unavailable":error.Length>2048?error.Substring(0,2048):error;
+            if(sequence.repeat&&compiled.Version==3)return "Use a Forever block for a version-3 program";
+            foreach(var other in sequences) {
+                if(other.id==sequence.id)continue;
+                var peer=other.Compile(out _);if(peer==null||other.repeat&&peer.Version==3)continue;
+                foreach(var declaration in compiled.CustomEvents)
+                    if(peer.CustomEvents.TryGetValue(declaration.Key,out var type)&&type!=declaration.Value)
+                        return "Custom event "+declaration.Key+" has a different payload type in another program";
+            }
+            return null;
+        }
+        // Existing unavailable definitions may be carried unchanged, never introduced
+        // through normal editing. Undo may restore a known preserved definition.
+        public bool ValidateEdit(RuleDocument previous,out string error,Func<RuleSequence,bool> preserved=null)
+        {
+            if(!Validate(out error,true))return false;
+            foreach(var sequence in sequences){
+                string issue=ProgramError(sequence);if(issue==null)continue;
+                var before=previous?.sequences.FirstOrDefault(x=>x.id==sequence.id);
+                if(before!=null&&JsonUtility.ToJson(before)==JsonUtility.ToJson(sequence)||preserved?.Invoke(sequence)==true)continue;
+                error=sequence.name+": "+issue;return false;
+            }
+            return true;
+        }
+
+        public bool Validate(out string error,bool allowUnavailable=false)
         {
             error = "This rule file has an unsupported version or invalid data.";
             if (version != 2 || sequences == null || bindings == null || buttons == null || sequences.Length > 32 || bindings.Length > 128 || buttons.Length > 16) return false;
@@ -155,10 +184,15 @@ namespace Maestro.Quest.Rules
             var sequenceIds = new HashSet<string>(); var bindingIds = new HashSet<string>(); var buttonIds = new HashSet<string>();
             foreach (var sequence in sequences)
             {
-                if (sequence == null || !IsId(sequence.id) || !sequenceIds.Add(sequence.id) || string.IsNullOrWhiteSpace(sequence.name) || sequence.name.Length > 32 || sequence.name.Any(char.IsControl) || !Enum.IsDefined(typeof(RuleInterruption),sequence.interruption) || sequence.Compile(out _)==null||sequence.repeat&&sequence.Compile(out _).Version==3) return false;
-                foreach(var declaration in sequence.Compile(out _).CustomEvents) {
-                    if(eventTypes.TryGetValue(declaration.Key,out var previous)&&previous!=declaration.Value) {error="Custom event payload types must agree across programs";return false;}
-                    eventTypes[declaration.Key]=declaration.Value;
+                if (sequence == null || !IsId(sequence.id) || !sequenceIds.Add(sequence.id) || string.IsNullOrWhiteSpace(sequence.name) || sequence.name.Length > 32 || sequence.name.Any(char.IsControl) || !Enum.IsDefined(typeof(RuleInterruption),sequence.interruption) || sequence.program==null || sequence.program.Length>24000) return false;
+                if(!allowUnavailable){
+                    var compiled=sequence.Compile(out error);
+                    if(compiled==null)return false;
+                    if(sequence.repeat&&compiled.Version==3){error="Use a Forever block for a version-3 program";return false;}
+                    foreach(var declaration in compiled.CustomEvents) {
+                        if(eventTypes.TryGetValue(declaration.Key,out var previous)&&previous!=declaration.Value) {error="Custom event payload types must agree across programs";return false;}
+                        eventTypes[declaration.Key]=declaration.Value;
+                    }
                 }
             }
             foreach (var binding in bindings)

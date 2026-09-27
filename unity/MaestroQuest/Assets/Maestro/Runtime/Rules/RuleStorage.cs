@@ -8,34 +8,29 @@ namespace Maestro.Quest.Rules
     {
         readonly VersionedRoomFile<RuleDocument> file;
         readonly string directory;
+        RuleDocument accepted=new();
+        readonly System.Collections.Generic.HashSet<string> preservedUnavailable=new();
         public bool ReadOnly => file.ReadOnly;
-        public RuleStorage(string directory) { this.directory=System.IO.Path.GetFullPath(directory);file = new VersionedRoomFile<RuleDocument>(directory,"behaviours",512*1024,x => x.Validate(out _),x => x.Copy(),null,_=>{},2,HasNewerProgram,json=>json["sequences"] is Newtonsoft.Json.Linq.JArray sequences && sequences.All(RuleSequence.ValidWire),minimumVersion:2); }
-        static bool HasNewerProgram(RuleDocument document)
-        {
-            foreach(var sequence in document.sequences??System.Array.Empty<RuleSequence>()) {
-                if(string.IsNullOrEmpty(sequence?.program))continue;
-                try {
-                    using var reader=new Newtonsoft.Json.JsonTextReader(new System.IO.StringReader(sequence.program)) {MaxDepth=48,DateParseHandling=Newtonsoft.Json.DateParseHandling.None};
-                    var root=Newtonsoft.Json.Linq.JObject.Load(reader);var value=root["version"];
-                    if((value?.Type==Newtonsoft.Json.Linq.JTokenType.Integer || value?.Type==Newtonsoft.Json.Linq.JTokenType.Float)&&(double)value!=2&&(double)value!=3)return true;
-                    foreach(var node in root.Descendants().OfType<Newtonsoft.Json.Linq.JObject>()) {
-                        if(node["op"]?.Type!=Newtonsoft.Json.Linq.JTokenType.String || (string)node["op"]!="invoke" || node["capability"]?.Type!=Newtonsoft.Json.Linq.JTokenType.String ||
-                            (node["version"]?.Type!=Newtonsoft.Json.Linq.JTokenType.Integer && node["version"]?.Type!=Newtonsoft.Json.Linq.JTokenType.Float))continue;
-                        var definition=Maestro.Quest.Programs.BehaviourCatalog.Action((string)node["capability"]);
-                        if(definition==null || (double)node["version"]!=definition.Version)return true;
-                    }
-                }catch(Newtonsoft.Json.JsonException) { /* Corrupt data follows the ordinary recovery path. */ }
-            }
-            return false;
-        }
-        public bool RetainsMotion(string id,out bool uncertain,bool force=false) => file.Retains(x => x.sequences.SelectMany(sequence => sequence.MotionIds()),id,out uncertain,force);
+        public RuleStorage(string directory) { this.directory=System.IO.Path.GetFullPath(directory);file = new VersionedRoomFile<RuleDocument>(directory,"behaviours",512*1024,x => x.Validate(out _,true),x => x.Copy(),null,_=>{},2,null,json=>json["sequences"] is Newtonsoft.Json.Linq.JArray sequences && sequences.All(RuleSequence.ValidWire),minimumVersion:2); }
+        public bool RetainsMotion(string id,out bool uncertain,bool force=false) => file.Retains(x => x.sequences.SelectMany(sequence => sequence.MotionIds()),id,out uncertain,force,x=>x.sequences.Any(sequence=>sequence.Compile(out _)==null));
         public RuleDocument Load(out string message)
         {
             var value=file.Load(out message);
             if(value==null && !ReadOnly && (System.IO.File.Exists(System.IO.Path.Combine(directory,"behaviours.v1.json")) || Enumerable.Range(1,5).Any(version=>System.IO.File.Exists(System.IO.Path.Combine(directory,"rules.v"+version+".json")))))
                 message="Development behaviours were reset for the new program format. Create a behaviour in the book.";
-            return value??new RuleDocument();
+            accepted=(value??new RuleDocument()).Copy();preservedUnavailable.Clear();
+            foreach(var sequence in accepted.sequences)
+                if(accepted.ProgramError(sequence)!=null)preservedUnavailable.Add(UnityEngine.JsonUtility.ToJson(sequence));
+            if(value!=null&&preservedUnavailable.Count>0)
+                message=(string.IsNullOrEmpty(message)?"":message+" ")+preservedUnavailable.Count+" behaviour(s) are unavailable. Their sources are preserved; inspect them in the book. Other behaviours remain usable.";
+            return accepted.Copy();
         }
-        public bool Save(RuleDocument document,out string error) => file.Save(document,out error);
+        public bool Save(RuleDocument document,out string error)
+        {
+            error="Invalid behaviour data";
+            if(document==null||!document.ValidateEdit(accepted,out error,sequence=>preservedUnavailable.Contains(UnityEngine.JsonUtility.ToJson(sequence))))return false;
+            if(!file.Save(document,out error))return false;
+            accepted=document.Copy();return true;
+        }
     }
 }

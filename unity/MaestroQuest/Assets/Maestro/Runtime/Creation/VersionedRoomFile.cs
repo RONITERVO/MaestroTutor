@@ -102,7 +102,7 @@ namespace Maestro.Quest.Creation
             }
             catch (Exception e) when (e is IOException || e is UnauthorizedAccessException || e is ArgumentException || e is JsonException || e is OverflowException) { return false; }
         }
-        public bool Retains(Func<T,IEnumerable<string>> identities,string id,out bool uncertain,bool force=false)
+        public bool Retains(Func<T,IEnumerable<string>> identities,string id,out bool uncertain,bool force=false,Func<T,bool> unknownReferences=null)
         {
             lock (retainedGate)
             {
@@ -118,7 +118,7 @@ namespace Maestro.Quest.Creation
                             if (force || !retained.TryGetValue(path,out var cached) || cached.Length != info.Length || cached.Stamp != info.LastWriteTimeUtc.Ticks)
                             {
                                 cached=new Retained { Length=info.Length,Stamp=info.LastWriteTimeUtc.Ticks };
-                                if (Read(path,v,out var document,out _)) cached.Ids=identities(document).Where(x => x != null).ToHashSet(); else cached.Uncertain=true;
+                                if (Read(path,v,out var document,out _)) {cached.Ids=identities(document).Where(x => x != null).ToHashSet();cached.Uncertain=unknownReferences?.Invoke(document)==true;} else cached.Uncertain=true;
                                 retained[path]=cached;
                             }
                             uncertain |= cached.Uncertain; found |= cached.Ids?.Contains(id) == true;

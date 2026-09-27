@@ -29,7 +29,8 @@ namespace Maestro.Quest.Book
             if (editor.UsesMotion(id)) uses.Add("Maestro walking");
             foreach (var sequence in rules.Snapshot().sequences)
             {
-                if(sequence.UsesMotion(id))uses.Add("Program: "+sequence.name);
+                if(sequence.Compile(out _)==null)uses.Add("Unavailable program: "+sequence.name+" (references unknown)");
+                else if(sequence.UsesMotion(id))uses.Add("Program: "+sequence.name);
             }
             foreach (var profile in editor.ActivityProfiles.Snapshot().avatars)
                 foreach (var role in profile.roles)

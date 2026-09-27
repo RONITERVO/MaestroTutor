@@ -37,7 +37,7 @@ namespace Maestro.Quest.Rules
         {
             status="Choose a declared custom event and matching payload";
             if(!ValidValue(value))return false;
-            var declarations=document.sequences.Select(x=>x.Compile(out _)).Where(x=>name!=null&&x.CustomEvents.ContainsKey(name)).ToArray();
+            var declarations=document.sequences.Where(x=>!unavailable.ContainsKey(x.id)).Select(x=>x.Compile(out _)).Where(x=>name!=null&&x.CustomEvents.ContainsKey(name)).ToArray();
             if(declarations.Length==0||declarations.Any(x=>x.CustomEvents[name]!=value.Type))return false;
             return EnqueueEvent(name,"",value,now,0,out status);
         }

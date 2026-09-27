@@ -69,6 +69,8 @@ namespace Maestro.Quest.Rules
         public void TrySelected()
         {
             if (workshop.Selected == null) return;
+            var issue=workshop.Snapshot().ProgramError(workshop.Selected);
+            if(issue!=null){workshop.Say(issue);return;}
             animations.Stop(); Trigger(workshop.Selected.id);
         }
         public bool CanRun(RuleStep step,out string error)

@@ -47,6 +47,7 @@ namespace Maestro.Quest.Rules
         public const int MaximumConcurrent=8,MaximumOutcomes=16;
         public bool HasCapacity=>running.Count<MaximumConcurrent;
         RuleDocument document = new();
+        readonly Dictionary<string,string> unavailable=new();
         string activity;
         bool suspended;
         public int RunningCount => running.Count;
@@ -69,8 +70,9 @@ namespace Maestro.Quest.Rules
         }
         public void Configure(RuleDocument value)
         {
-            if (!value.Validate(out var error)) throw new ArgumentException(error);
-            StopAll(); document = value.Copy(); firedAt.Clear();
+            if (!value.Validate(out var error,true)) throw new ArgumentException(error);
+            StopAll(); document = value.Copy(); firedAt.Clear();unavailable.Clear();
+            foreach(var sequence in document.sequences){var issue=document.ProgramError(sequence);if(issue!=null)unavailable.Add(sequence.id,issue);}
         }
         public void Suspend(bool value) { suspended = value; if (value) { StopAll(); activity = null; } }
         public void ForgetActivity()
@@ -97,7 +99,7 @@ namespace Maestro.Quest.Rules
             var definition=BehaviourCatalog.Event(kind);if(definition!=null)EnqueueEvent(definition.Id,sourceId??"",new ProgramValue(definition.ObjectEvent?sourceId:definition.Activity),now,0,out _);
             foreach (var binding in document.bindings)
             {
-                if (!binding.enabled || binding.trigger != kind || (RuleDocument.IsObjectEvent(kind) && binding.sourceId != sourceId) || !RuleDocument.ConditionMatches(binding.condition,activity)) continue;
+                if (unavailable.ContainsKey(binding.sequenceId) || !binding.enabled || binding.trigger != kind || (RuleDocument.IsObjectEvent(kind) && binding.sourceId != sourceId) || !RuleDocument.ConditionMatches(binding.condition,activity)) continue;
                 if (firedAt.TryGetValue(binding.id,out float last) && now-last < binding.cooldown) continue;
                 if (Trigger(binding.sequenceId,now,binding)) firedAt[binding.id] = now;
             }
@@ -108,6 +110,7 @@ namespace Maestro.Quest.Rules
             if (suspended || !float.IsFinite(now)) { LastError = "Rules are paused"; return false; }
             var sequence = document.sequences.FirstOrDefault(x => x.id == sequenceId);
             if (sequence == null) { LastError = "That action sequence no longer exists"; return false; }
+            if (unavailable.TryGetValue(sequenceId,out var issue)){LastError=issue;return false;}
             if (!BindingStillValid(binding)) return false;
             var targets = (sequence.Compile(out _).Version==3?Array.Empty<string>():sequence.Targets()).ToHashSet();
             var conflicts = running.Where(x => x.Sequence.id == sequenceId || Conflicts(x,Whole(targets))).ToArray();
