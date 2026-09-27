@@ -107,6 +107,16 @@ it('offers the agent schema only with a host-captured request and passes that re
   const args = vi.mocked(generateGeminiResponse).mock.calls[0];
   expect(args[1]).toContain(JSON.stringify({ originalUserRequest: original }));
   expect((args[3].configOverrides.responseJsonSchema.properties.toolRequest.anyOf as any[]).some(item => item.properties?.tool?.enum?.includes('agent'))).toBe(true);
+  const config = args[3].configOverrides;
+  expect(config.responseMimeType).toBe('application/json');
+  const schema = config.responseJsonSchema;
+  expect(schema.required).toEqual(REPLY_SUGGESTIONS_RESPONSE_SCHEMA.required);
+  expect(schema.additionalProperties).toBe(false);
+  for (const [name, value] of Object.entries(REPLY_SUGGESTIONS_RESPONSE_SCHEMA.properties)) {
+    if (name !== 'toolRequest') expect(schema.properties[name]).toEqual(value);
+  }
+  for (const choice of REPLY_SUGGESTIONS_RESPONSE_SCHEMA.properties.toolRequest.anyOf)
+    expect(schema.properties.toolRequest.anyOf).toContainEqual(choice);
   expect(JSON.stringify(REPLY_SUGGESTIONS_RESPONSE_SCHEMA)).not.toContain('agent');
 });
 
