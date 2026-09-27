@@ -35,6 +35,11 @@ namespace Maestro.Quest.Programs
         public static JObject Schema(RuleActionKind kind)
         {
             var p=new JObject();
+            if(kind==RuleActionKind.CreatePrimitive)return Object(new JObject {
+                ["shape"]=Choice("ball","block","cylinder"),["name"]=Text("^.{0,80}$",80),
+                ["x"]=Number(-25,25),["y"]=Number(-25,25),["z"]=Number(-25,25),["scale"]=Number(.1,4),
+                ["red"]=Number(0,1),["green"]=Number(0,1),["blue"]=Number(0,1)
+            });
             if(RuleDocument.IsInstant(kind)) {
                 p["target"]=Resource(Text("^[a-fA-F0-9]{32}$",32));
                 if(kind==RuleActionKind.PhysicsImpulse) {p["x"]=Number(-20,20);p["y"]=Number(-20,20);p["z"]=Number(-20,20);}
@@ -52,6 +57,16 @@ namespace Maestro.Quest.Programs
             if(p["target"] is JObject target)Resource(target);
             if(p["prop"] is JObject prop)prop["x-requires"]=new JObject {["target"]="maestro"};
             return Object(p,"prop");
+        }
+        public static JObject OutputSchema(RuleActionKind kind)=>Object(kind==RuleActionKind.CreatePrimitive
+            ?new JObject {["objectId"]=Resource(Text("^[a-f0-9]{32}$",32))}:new JObject());
+        // A bound resource placeholder is not an authorization. Computed IDs are
+        // checked against declarations or native-created results at execution time.
+        public static string[] LiteralResources(JObject arguments,JObject schema,JObject bindings,int version) {
+            var literal=(JObject)arguments.DeepClone();
+            if(version==3)foreach(var field in bindings.Properties())
+                if((string)schema["properties"]?[field.Name]?["x-resource"]=="object")literal.Remove(field.Name);
+            return Resources(literal,schema);
         }
         public static bool Validate(JToken value,JObject schema,out string error,string path="arguments")
         {
@@ -100,6 +115,10 @@ namespace Maestro.Quest.Programs
         public static JObject FromStep(RuleStep step)
         {
             var result=new JObject();var fields=(JObject)Schema(step.action)["properties"];
+            if(step.action==RuleActionKind.CreatePrimitive) {
+                result["shape"]=step.shape;result["name"]=step.objectName;result["x"]=step.creationPosition.x;result["y"]=step.creationPosition.y;result["z"]=step.creationPosition.z;
+                result["scale"]=step.creationScale;result["red"]=step.creationColor.r;result["green"]=step.creationColor.g;result["blue"]=step.creationColor.b;
+            }
             if(fields.ContainsKey("target"))result["target"]=step.targetId;
             if(fields.ContainsKey("seconds"))result["seconds"]=step.seconds;
             if(step.action==RuleActionKind.PhysicsImpulse) {result["x"]=step.impulse.x;result["y"]=step.impulse.y;result["z"]=step.impulse.z;}
@@ -119,6 +138,10 @@ namespace Maestro.Quest.Programs
             step=null;error=null;if(!BehaviourCatalog.HasAction(kind) || !Validate(arguments,Schema(kind),out error)) {error??="Unknown capability";return false;}
             var result=new RuleStep {action=kind,targetId=(string)arguments["target"]??"maestro",seconds=(float?)arguments["seconds"]??0,
                 loop=(bool?)arguments["loop"]??false,clipModelHash=(string)arguments["modelHash"],clipIndex=(int?)arguments["clipIndex"]??0,motionId=(string)arguments["motionId"]};
+            if(kind==RuleActionKind.CreatePrimitive) {
+                result.shape=(string)arguments["shape"];result.objectName=(string)arguments["name"];result.creationPosition=new Vector3((float)arguments["x"],(float)arguments["y"],(float)arguments["z"]);
+                result.creationScale=(float)arguments["scale"];result.creationColor=new Color((float)arguments["red"],(float)arguments["green"],(float)arguments["blue"],1);
+            }
             if(kind==RuleActionKind.PhysicsImpulse)result.impulse=new Vector3((float)arguments["x"],(float)arguments["y"],(float)arguments["z"]);
             if(arguments["gesture"]!=null)result.gesture=Enum.Parse<RuleGesture>((string)arguments["gesture"],true);
             if(arguments["prop"] is JObject prop) {

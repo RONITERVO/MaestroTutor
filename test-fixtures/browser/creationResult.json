@@ -1,0 +1,44 @@
+{
+  "selected": {
+    "id": "cd9b136c09824889a25347a520c9e00a",
+    "capability": "object.create.primitive",
+    "version": 1,
+    "resources": [],
+    "phase": "completed",
+    "status": "Action completed",
+    "output": {
+      "objectId": "543a0adad68548e9abd6e96120ba9ad3"
+    },
+    "call": {
+      "id": "object.create.primitive",
+      "version": 1,
+      "arguments": {
+        "shape": "ball",
+        "name": "Program ball",
+        "x": 0.3,
+        "y": 1.3,
+        "z": 0.65,
+        "scale": 1,
+        "red": 0.2,
+        "green": 0.6,
+        "blue": 0.9
+      }
+    }
+  },
+  "running": [],
+  "outcomes": [
+    {
+      "id": "cd9b136c09824889a25347a520c9e00a",
+      "capability": "object.create.primitive",
+      "version": 1,
+      "resources": [],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "objectId": "543a0adad68548e9abd6e96120ba9ad3"
+      }
+    }
+  ],
+  "nextRunId": "76ea4a1da11b44c58cfcb4711e7e6b8b",
+  "storageError": null
+}

@@ -9,6 +9,8 @@ import robot from './recipeRobot.json';
 import nativeProgram from './programBookState.json';
 import nativeExecutions from './executionStates.json';
 import nativeEvents from './eventProgramStates.json';
+import creationProgram from '../../unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-create.json';
+import creationResult from './creationResult.json';
 import {capabilityDefinition,validateCapabilityArguments,capabilityResources} from '../../shared/capabilities';
 import {behaviourCatalog} from '../../shared/behaviourCatalog';
 import nativeRules from './ruleBookState.json';
@@ -26,6 +28,13 @@ const eventPrograms=new URLSearchParams(location.search).has('events');let signa
 if(eventPrograms)state=JSON.parse(JSON.stringify(nativeEvents.waiting));
 const programs=new URLSearchParams(location.search).has('program');if(programs)state=JSON.parse(JSON.stringify(nativeProgram));
 if(new URLSearchParams(location.search).has('execution')){state=JSON.parse(JSON.stringify(nativeExecutions.running));state.visible=true;state.execution={selected:null,running:[],outcomes:[]};}
+if(new URLSearchParams(location.search).has('creation')){
+ state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';
+ state.rules!.selected!.program=JSON.stringify(creationProgram);state.rules!.selected!.name='Create and push';
+ state.rules!.sequences=state.rules!.sequences.map(x=>x.id===state.rules!.selected!.id?{...x,name:'Create and push',steps:2,program:true}:x);
+ state.rules!.running=[];state.rules!.outcomes=[];state.rules!.bindings=[];state.rules!.bindingCount=0;state.rules!.buttons=[];
+ state.execution=JSON.parse(JSON.stringify(creationResult));state.capabilities=[...state.capabilities??[],'eventPrograms.v1','actionResults.v1','execution.v1','executionReceipts.v1'];
+}
 state.capabilities=[...new Set([...state.capabilities??[],'catalog.v1'])];
 const prop=simpleProgramSteps(nativeRules.selected.program)?.[0]?.propId;
 if(prop)state.objects.push({id:prop,objectRevision:4,name:'Practice ball',kind:'Ball',position:{x:.3,y:.8,z:.8},scale:1,color:white,animated:false});

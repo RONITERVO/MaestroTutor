@@ -78,3 +78,15 @@ it('validates actual native event runs and their retained state through the room
  expect(states.second.rules.running[0].state[0].value).toBe('2');
  expect(states.stopped.rules.running).toEqual([]);expect(states.paused.rules.running).toEqual([]);
 });
+
+it('shares native creation-result programs and gates result authoring on runtime support',()=>{
+ const program=JSON.parse(readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-create.json','utf8')) as BehaviourProgram;
+ const source=JSON.stringify(program);expect(parseProgram(source).error).toBeNull();expect(simpleProgramSteps(source)).toBeNull();
+ const commands=parseRoomCommands({commands:[{action:'rules',rule:{action:'edit',revision:1,edits:[{kind:'save',reference:'create',sequence:{id:'',name:'Create and push',interruption:0,repeat:false,program:source}}]}}]});
+ expect(()=>requireRoomCapabilities(commands,{capabilities:['behaviourPrograms.v3','eventPrograms.v1']})).toThrow('action results');
+ expect(()=>requireRoomCapabilities(commands,{capabilities:['behaviourPrograms.v3','eventPrograms.v1','actionResults.v1']})).not.toThrow();
+ const create=program.functions[0].body[0];if(create.op!=='invoke')throw new Error('Expected create');
+ create.results={unknown:'ball'};expect(parseProgram(JSON.stringify(program)).program).toBeNull();
+ create.results={objectId:'ball'};program.functions[0].locals[0].initial=0;expect(parseProgram(JSON.stringify(program)).program).toBeNull();
+ program.functions[0].locals[0].initial='';program.version=2;delete program.state;delete program.events;expect(parseProgram(JSON.stringify(program)).program).toBeNull();
+});

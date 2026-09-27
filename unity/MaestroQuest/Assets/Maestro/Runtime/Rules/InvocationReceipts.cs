@@ -49,7 +49,9 @@ namespace Maestro.Quest.Rules
         static bool StorageFailure(Exception ex)=>ex is InvalidDataException||ex is IOException||ex is UnauthorizedAccessException||ex is JsonException||ex is ArgumentException||ex is InvalidCastException||ex is OverflowException||ex is System.Security.SecurityException;
         static bool Id(JToken value)=>value?.Type==JTokenType.String&&System.Text.RegularExpressions.Regex.IsMatch((string)value,"^[a-f0-9]{32}$");
         static bool Active(JObject item)=>(string)item["phase"] is "preparing" or "running";
-        static bool Valid(JObject item)=>item.Count==7&&Id(item["id"])&&RoomCapabilityCatalog.ValidCall(item["call"] as JObject)
+        static bool Valid(JObject item)=>(item.Count==7||item.Count==8&&item.ContainsKey("output"))&&
+            (!item.ContainsKey("output")||(string)item["phase"]=="completed"&&Maestro.Quest.Programs.BehaviourCatalog.Action((string)item["capability"]) is var definition&&definition!=null&&
+                (int?)item["version"]==definition.Version&&Maestro.Quest.Programs.CapabilityArguments.Validate(item["output"],definition.OutputSchema,out _))&&Id(item["id"])&&RoomCapabilityCatalog.ValidCall(item["call"] as JObject)
             &&JToken.DeepEquals(item["capability"],item["call"]["id"])&&JToken.DeepEquals(item["version"],item["call"]["version"])
             &&item["resources"] is JArray resources&&resources.Count<=16
             &&JToken.DeepEquals(new JArray(RoomExecutions.Resources(new JObject {["operation"]="start",["call"]=item["call"].DeepClone()}).OrderBy(x=>x)),new JArray(resources.Values<string>().OrderBy(x=>x)))

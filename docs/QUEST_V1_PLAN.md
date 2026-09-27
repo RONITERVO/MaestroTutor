@@ -473,3 +473,10 @@ capabilities share native rigid-body execution with one-off calls, saved program
 event triggers and buttons. Instant effects report actual completion and do not
 renew work/causal budgets. See [semantics and boundaries](QUEST_PROGRAM_PHYSICS.md).
 The full v1 goal and device/store acceptance remain open.
+
+
+PC creation-result checkpoint (2026-09-27): primitive creation now returns a typed
+object ID to one-off receipts and version-3 program locals. Human blocks and the
+agent use the same result binding, with native authority checks, room Undo and
+no duplicate creation on receipt replay. See [contract and boundaries](QUEST_CREATION_RESULTS.md).
+This does not complete all creation/import capabilities or Quest/store acceptance.

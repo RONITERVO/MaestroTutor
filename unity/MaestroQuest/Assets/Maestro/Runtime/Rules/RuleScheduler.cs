@@ -13,6 +13,7 @@ namespace Maestro.Quest.Rules
         bool Start(string runId, RuleStep step, out float seconds, out string error);
         void Stop(string runId, bool preservePlacement);
     }
+    public interface IRuleResults { Newtonsoft.Json.Linq.JObject TakeResult(string runId); }
     public interface IRuleCompletion { bool Complete(string runId,out string error); }
     public enum RuleActionState { Preparing, Ready, Failed }
     public interface IRuleReadiness { RuleActionState State(string runId,out string error); }
@@ -33,14 +34,14 @@ namespace Maestro.Quest.Rules
             public bool Reactive=>Sequence.Compile(out _).Version==3;
             public ProgramMachine Machine;
             public RuleStep Active;
-            public Newtonsoft.Json.Linq.JObject Invocation;
+            public Newtonsoft.Json.Linq.JObject Invocation,Output;
         }
         sealed class Pending { public string SequenceId; public RuleBinding Binding; }
         readonly IRuleActions actions;
         readonly List<Run> running = new();
         readonly List<Pending> queued = new();
         readonly Dictionary<string,float> firedAt = new();
-        sealed class FinishedRun {public RuleOutcome Outcome;public Newtonsoft.Json.Linq.JObject Invocation;public string[] Resources;}
+        sealed class FinishedRun {public RuleOutcome Outcome;public Newtonsoft.Json.Linq.JObject Invocation,Output;public string[] Resources;}
         readonly Queue<FinishedRun> outcomes=new();
         public RuleOutcome[] Outcomes=>outcomes.Where(x=>x.Invocation==null).Select(x=>x.Outcome).ToArray();
         public const int MaximumConcurrent=8,MaximumOutcomes=16;
@@ -162,6 +163,7 @@ namespace Maestro.Quest.Rules
                 if(actions is IRuleCompletion completion) {
                     if(!completion.Complete(run.Id,out error)) {LastError=error??"This action could not finish";Stop(run,false,"failed",LastError);return false;}
                 } else actions.Stop(run.Id,false);
+                if(!CompleteResult(run,out error)) {LastError=error;Stop(run,false,"failed",error);return false;}
                 run.Active=null;
                 if(run.Reactive) {run.Targets.Clear();run.Claims=Array.Empty<BehaviourCatalog.Claim>();}
                 // An instant effect is already done. Don't reset activation work or
@@ -174,6 +176,12 @@ namespace Maestro.Quest.Rules
             }
             run.Preparing = state == RuleActionState.Preparing;
             run.Ends = now + seconds; return true;
+        }
+        bool CompleteResult(Run run,out string error) {
+            var result=actions is IRuleResults source?source.TakeResult(run.Id):new Newtonsoft.Json.Linq.JObject();
+            if(!run.Machine.CompleteAction(result,out error))return false;
+            if(result.Count>0)run.Output=(Newtonsoft.Json.Linq.JObject)result.DeepClone();
+            return true;
         }
         public void Tick(float now)
         {
@@ -201,6 +209,7 @@ namespace Maestro.Quest.Rules
                 if (actions is IRuleCompletion completion)
                 { if (!completion.Complete(run.Id,out var completionError)) { LastError=completionError ?? "This action could not finish"; Stop(run,false,"failed",LastError); continue; } }
                 else actions.Stop(run.Id,false);
+                if(!CompleteResult(run,out var resultError)) {LastError=resultError;Stop(run,false,"failed",resultError);continue;}
                 bool timed=run.Active!=null&&!RuleDocument.IsInstant(run.Active.action);
                 run.Active=null;if(run.Reactive) {run.Targets.Clear();run.Claims=Array.Empty<BehaviourCatalog.Claim>();if(timed) {run.Machine.BeginActivation();run.EventDepth=0;}}
                 // At most one step per run per tick, even after a long frame.
@@ -231,7 +240,7 @@ namespace Maestro.Quest.Rules
         }
         void Finish(Run run,string phase,string status) {
             if(run.Invocation!=null) {if(phase=="completed")status="Action completed";else if(phase=="cancelled"&&status=="Behaviour stopped")status="Action cancelled";}
-            Unsubscribe(run);running.Remove(run);outcomes.Enqueue(new FinishedRun {Outcome=new RuleOutcome {id=run.Id,sequenceId=run.Sequence.id,phase=phase,nodeId=run.Machine?.NodeId,status=status??phase},Invocation=run.Invocation,Resources=run.Targets.ToArray()});
+            Unsubscribe(run);running.Remove(run);outcomes.Enqueue(new FinishedRun {Outcome=new RuleOutcome {id=run.Id,sequenceId=run.Sequence.id,phase=phase,nodeId=run.Machine?.NodeId,status=status??phase},Invocation=run.Invocation,Output=run.Output,Resources=run.Targets.ToArray()});
             while(outcomes.Count>MaximumOutcomes)outcomes.Dequeue();
             if(run.Invocation!=null)Receipts?.Update(LiveInvocation(run.Id));
         }

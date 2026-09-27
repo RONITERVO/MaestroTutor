@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace Maestro.Quest.Rules
 {
-    public enum RuleActionKind { RecordedAnimation, Gesture, Wait, ThrowRecording, LookAtUser, FollowUser, ImportedClip, LibraryMotion, RecipeAnimation, UpperBodyGesture, PhysicsImpulse, PhysicsStop }
+    public enum RuleActionKind { RecordedAnimation, Gesture, Wait, ThrowRecording, LookAtUser, FollowUser, ImportedClip, LibraryMotion, RecipeAnimation, UpperBodyGesture, PhysicsImpulse, PhysicsStop, CreatePrimitive }
     public enum PropHand { Left, Right }
     public enum PropRelease { Return, Drop, Throw }
     public enum RuleGesture { Greeting, Pointing, Listening, Speaking, Idle, Walk }
@@ -29,6 +29,10 @@ namespace Maestro.Quest.Rules
         public float seconds;
         public bool loop;
         public Vector3 impulse;
+        public string shape="ball", objectName="";
+        public Vector3 creationPosition=new(.3f,1.3f,.65f);
+        public Color creationColor=Color.white;
+        public float creationScale=1;
         public string clipModelHash;
         public int clipIndex;
         public string motionId;
@@ -102,10 +106,10 @@ namespace Maestro.Quest.Rules
         public static bool CanCarry(RuleStep step) => step.targetId == "maestro" && (step.action == RuleActionKind.RecordedAnimation || step.action == RuleActionKind.Gesture || step.action == RuleActionKind.ImportedClip || step.action == RuleActionKind.LibraryMotion);
         public static IEnumerable<string> Targets(RuleStep step)
         {
-            if (step.action != RuleActionKind.Wait) yield return step.targetId;
+            if (step.action != RuleActionKind.Wait && step.action != RuleActionKind.CreatePrimitive) yield return step.targetId;
             if (!string.IsNullOrEmpty(step.propId)) yield return step.propId;
         }
-        public static bool IsInstant(RuleActionKind kind) => kind == RuleActionKind.PhysicsImpulse || kind == RuleActionKind.PhysicsStop;
+        public static bool IsInstant(RuleActionKind kind) => kind == RuleActionKind.PhysicsImpulse || kind == RuleActionKind.PhysicsStop || kind == RuleActionKind.CreatePrimitive;
         public static bool IsSpatial(RuleActionKind kind) => kind == RuleActionKind.LookAtUser || kind == RuleActionKind.FollowUser;
         public static string Activity(RuleEventKind kind) => BehaviourCatalog.Event(kind)?.Activity;
         public static bool ConditionMatches(RuleCondition condition, string activity) => condition == RuleCondition.Any || condition.ToString().ToLowerInvariant() == activity;
@@ -119,7 +123,8 @@ namespace Maestro.Quest.Rules
                 !float.IsFinite(step.propOffset.sqrMagnitude) || step.propOffset.sqrMagnitude > 1 || !MotionFrame.ValidRotation(step.propRotation) ||
                 !string.IsNullOrEmpty(step.propAvatarHash) && !ModelLibrary.ValidHash(step.propAvatarHash))) return false;
             if (step.action != RuleActionKind.RecordedAnimation && step.action != RuleActionKind.ThrowRecording && step.action != RuleActionKind.ImportedClip && step.action != RuleActionKind.LibraryMotion && step.action != RuleActionKind.RecipeAnimation && !IsInstant(step.action) && step.seconds < .1f) return false;
-            if (IsInstant(step.action) && (step.seconds != 0 || step.loop || !IsId(step.targetId))) return false;
+            if (IsInstant(step.action) && (step.seconds != 0 || step.loop || step.action != RuleActionKind.CreatePrimitive && !IsId(step.targetId))) return false;
+            if (step.action == RuleActionKind.CreatePrimitive && (!new[]{"block","ball","cylinder"}.Contains(step.shape) || step.objectName==null || step.objectName.Length>80 || step.objectName.Any(char.IsControl) || !RoomRecipe.Finite(step.creationPosition) || step.creationPosition.sqrMagnitude>625 || !float.IsFinite(step.creationScale) || step.creationScale<.1f || step.creationScale>4 || !RoomRecipe.ValidColor(step.creationColor))) return false;
             if (step.action == RuleActionKind.PhysicsImpulse && (!float.IsFinite(step.impulse.sqrMagnitude) || Mathf.Abs(step.impulse.x)>20 || Mathf.Abs(step.impulse.y)>20 || Mathf.Abs(step.impulse.z)>20)) return false;
             if (step.action == RuleActionKind.UpperBodyGesture && step.gesture == RuleGesture.Walk) return false;
             if (!string.IsNullOrEmpty(step.motionId) && !IsId(step.motionId)) return false;

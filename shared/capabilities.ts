@@ -8,7 +8,7 @@ export interface CapabilitySchema {
  minimum?:number;maximum?:number;maxLength?:number;pattern?:string;enum?:string[];
 }
 export interface CapabilityDefinition {
- id:string;version:number;label:string;description?:string;input:CapabilitySchema;
+ id:string;version:number;label:string;description?:string;input:CapabilitySchema;output?:CapabilitySchema;
  duration:string;ownership:string;channels:string[];requirements:string[];
 }
 export interface CapabilityInvocation {id:string;version:number;arguments:Record<string,unknown>}
@@ -50,6 +50,21 @@ export function validateCapabilityArguments(id:string,version:number,args:unknow
 export function validCapabilityInvocation(value:unknown):value is CapabilityInvocation {
  return record(value)&&Object.keys(value).length===3&&['id','version','arguments'].every(key=>own(value,key))&&typeof value.id==='string'&&
  typeof value.version==='number'&&validateCapabilityArguments(value.id,value.version,value.arguments)===null;
+}
+export function validateCapabilityOutput(id:string,version:number,output:unknown):string|null {
+ const definition=definitions.get(id);
+ if(!definition||definition.version!==version||!definition.output)return 'Unknown action output contract';
+ return validate(output,definition.output,'result');
+}
+export function capabilityOutputType(id:string,key:string):BehaviourValueType|null {
+ const schema=definitions.get(id)?.output?.properties;
+ if(!schema||!own(schema,key))return null;
+ const type=schema[key].type;return type==='string'?'text':type==='integer'?'number':type==='number'||type==='boolean'?type:null;
+}
+export function literalCapabilityResources(id:string,args:Record<string,unknown>,bindings:Record<string,unknown>,version:number):string[] {
+ const literal={...args},schema=definitions.get(id)?.input.properties;
+ if(version===3)for(const key of Object.keys(bindings))if(schema?.[key]?.['x-resource']==='object')delete literal[key];
+ return capabilityResources(id,literal);
 }
 export function capabilityParameterType(id:string,parameter:string):BehaviourValueType|null {
  const schema=definitions.get(id)?.input.properties;

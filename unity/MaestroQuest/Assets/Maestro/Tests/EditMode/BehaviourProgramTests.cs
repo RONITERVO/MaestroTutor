@@ -12,6 +12,39 @@ namespace Maestro.Quest.Tests
 {
     public sealed class BehaviourProgramTests
     {
+
+        static JObject CreationProgram()=>JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-create.json")));
+        [Test] public void TypedNativeResultsAuthorizeOnlyCreatedObjectsAndNeverFlattenToSimpleSteps()
+        {
+            var json=CreationProgram();Assert.That(BehaviourProgram.TryParse(json.ToString(),out var program,out var error),Is.True,error);
+            Assert.That(program.SimpleSteps(),Is.Null);
+            var machine=new ProgramMachine(program,null);
+            Assert.That(machine.Advance(out var create),Is.EqualTo(ProgramYield.Action));Assert.That(create.action,Is.EqualTo(RuleActionKind.CreatePrimitive));
+            Assert.That(machine.CompleteAction(new JObject {["objectId"]="maestro"},out error),Is.False,"A builtin cannot be invented by a creation result");
+            string id=Guid.NewGuid().ToString("N");Assert.That(machine.CompleteAction(new JObject {["objectId"]=id},out error),Is.True,error);
+            Assert.That(machine.Locals["ball"].Text,Is.EqualTo(id));
+            Assert.That(machine.Advance(out var push),Is.EqualTo(ProgramYield.Action));Assert.That(push.targetId,Is.EqualTo(id));
+            Assert.That(machine.Advance(out _),Is.EqualTo(ProgramYield.Completed));
+            json=CreationProgram();json["functions"][0]["body"][1]["bindings"]["target"]=new JObject {["value"]=Guid.NewGuid().ToString("N")};
+            machine=new ProgramMachine(Compile(json.ToString()),null);machine.Advance(out _);Assert.That(machine.CompleteAction(new JObject {["objectId"]=id},out error),Is.True,error);
+            Assert.That(machine.Advance(out _),Is.EqualTo(ProgramYield.Failed));Assert.That(machine.Error,Does.Contain("declared or created"));
+            json=CreationProgram();json["functions"][0]["locals"][0]["initial"]=0;Assert.That(BehaviourProgram.TryParse(json.ToString(),out _,out _),Is.False);
+            json=CreationProgram();json["functions"][0]["body"][0]["results"]["unknown"]="ball";Assert.That(BehaviourProgram.TryParse(json.ToString(),out _,out _),Is.False);
+            json=CreationProgram();json["version"]=2;((JObject)json).Remove("state");((JObject)json).Remove("events");Assert.That(BehaviourProgram.TryParse(json.ToString(),out _,out _),Is.False);
+        }
+        [Test] public void CreationLimitStopsBeforeASeventeenthEffectAndDoesNotRenewInstructionBudget()
+        {
+            var json=CreationProgram();var create=json["functions"][0]["body"][0].DeepClone();
+            json["functions"][0]["body"]=new JArray(new JObject {["id"]="loop",["op"]="forever",["body"]=new JArray(create)});
+            var machine=new ProgramMachine(Compile(json.ToString()),null);int previous=0;
+            for(int i=0;i<16;i++) {
+                Assert.That(machine.Advance(out var action),Is.EqualTo(ProgramYield.Action));Assert.That(action.action,Is.EqualTo(RuleActionKind.CreatePrimitive));
+                Assert.That(machine.Instructions,Is.GreaterThan(previous));previous=machine.Instructions;
+                Assert.That(machine.CompleteAction(new JObject {["objectId"]=Guid.NewGuid().ToString("N")},out var error),Is.True,error);
+            }
+            Assert.That(machine.Advance(out _),Is.EqualTo(ProgramYield.Failed));Assert.That(machine.Error,Does.Contain("16 created"));
+        }
+
         [Test] public void SchemaResourcesAndDomainConstraintsMatchNativeHandlers()
         {
             foreach(RuleActionKind kind in Enum.GetValues(typeof(RuleActionKind))) {

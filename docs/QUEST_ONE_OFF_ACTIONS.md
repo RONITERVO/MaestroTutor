@@ -47,8 +47,9 @@ Cancelling an already retained terminal run returns that outcome unchanged.
 ## Ownership and lifecycle
 
 - One-off calls reject occupied resources and full capacity. They do not queue,
-  replace another action, change object selection, edit saved definitions or enter
-  Undo history. A saved program's explicit restart policy can still preempt them.
+  replace another action, change object selection or edit saved behaviour definitions.
+  Runtime motion does not enter Undo history; creation adds one room-object Undo
+  edit. A saved program's explicit restart policy can still preempt running motion.
 - One-off calls compile to a temporary single-invocation program and use the same
   ProgramMachine, scheduler, native handlers, async preparation and terminal path.
   There is no independent playback implementation or saved temporary behaviour.
@@ -87,3 +88,7 @@ The catalog now includes ten invocation capabilities, including an explicit
 provide session state and timers. [One-off receipt recovery](QUEST_ACTION_RECOVERY.md)
 is implemented. Full room-command catalog coverage, durable program state and receipts for other commands, broader clip layering, actual provider planning quality, headset performance and store release
 acceptance remain. No headset install or service deployment is included.
+
+Creation actions now return typed outputs to the retained receipt. See
+[creation results and their persistence boundaries](QUEST_CREATION_RESULTS.md).
+A historical completion does not assert that its object still exists after Undo.

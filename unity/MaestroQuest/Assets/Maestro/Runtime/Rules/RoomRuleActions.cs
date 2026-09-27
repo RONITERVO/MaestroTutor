@@ -13,7 +13,7 @@ using Maestro.Quest.Programs;
 
 namespace Maestro.Quest.Rules
 {
-    public sealed class RoomRuleActions : IRuleActions, IRuleCompletion, IRuleReadiness, IProgramFacts
+    public sealed class RoomRuleActions : IRuleActions, IRuleCompletion, IRuleReadiness, IProgramFacts, IRuleResults
     {
         sealed class Effect
         {
@@ -37,6 +37,8 @@ namespace Maestro.Quest.Rules
         readonly RoomEditor editor;
         readonly AnimationWorkshop workshop;
         readonly Dictionary<string,Effect> effects = new();
+        readonly Dictionary<string,Newtonsoft.Json.Linq.JObject> results=new();
+        public Newtonsoft.Json.Linq.JObject TakeResult(string runId) {if(!results.Remove(runId,out var result))return new();return result;}
         public static ImportedModel ClipModel(RoomItem item) => !item ? null : item.GetComponent<MaestroAvatar>()?.CustomModel ?? item.GetComponent<CreatedRoomObject>()?.Model;
         public RoomRuleActions(RoomEditor editor, AnimationWorkshop workshop) { this.editor = editor; this.workshop = workshop; }
         public bool TryRead(string name,out ProgramValue value) {
@@ -47,6 +49,7 @@ namespace Maestro.Quest.Rules
         public bool CanRun(RuleStep step, out string error)
         {
             error = null;
+            if (step.action == RuleActionKind.CreatePrimitive) return editor.CanCreatePrimitive(out error);
             if (step.action == RuleActionKind.Wait) return true;
             if (!AvatarHeldProp.CanAttach(editor,step,out error)) return false;
             if (!string.IsNullOrEmpty(step.propId) && workshop && workshop.ControlsTarget(step.propId)) { error="Stop authoring the prop before running this action"; return false; }
@@ -103,6 +106,10 @@ namespace Maestro.Quest.Rules
         {
             seconds = step.seconds;
             if (!CanRun(step,out error)) return false;
+            if(step.action==RuleActionKind.CreatePrimitive) {
+                if(!editor.CreatePrimitive(Enum.Parse<RoomObjectKind>(step.shape,true),step.objectName,step.creationPosition,step.creationScale,step.creationColor,out var id,out error))return false;
+                results[runId]=new Newtonsoft.Json.Linq.JObject {["objectId"]=id};return true;
+            }
             if (step.action == RuleActionKind.Wait) return true;
             if(RuleDocument.IsInstant(step.action)) {
                 var item=editor.Find(step.targetId);var rigid=item.GetComponent<RigidRoomItem>();
@@ -239,6 +246,7 @@ namespace Maestro.Quest.Rules
         }
         public void Stop(string runId, bool preservePlacement)
         {
+            results.Remove(runId);
             if (!effects.Remove(runId,out var effect)) return;
             if (effect.PropReservation) effect.PropReservation.SetAnimationOwner(effect,false);
             if (effect.Prop) effect.Prop.End(preservePlacement);

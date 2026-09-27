@@ -23,7 +23,10 @@ export function validRoomControl(c:Record<string,unknown>):boolean {
   }
 }
 export function requireRoomCapabilities(commands:{action:string;rule?:unknown}[],scene:{capabilities?:string[]}) {
+  const hasResults=(value:unknown):boolean=>Array.isArray(value)?value.some(hasResults):record(value)?value.op==='invoke'&&(value.results!==undefined||value.capability==='object.create.primitive')||Object.values(value).some(hasResults):false;
   for(const command of commands) {
+    if(command.action==='rules'&&record(command.rule)&&Array.isArray(command.rule.edits)&&command.rule.edits.some(e=>record(e)&&record(e.sequence)&&typeof e.sequence.program==='string'&&hasResults(JSON.parse(e.sequence.program)))&&!scene.capabilities?.includes('actionResults.v1'))
+      throw new Error('Update the native app to use action results and creation programs.');
     if((Object.prototype.hasOwnProperty.call(roomControlFields,command.action)||command.action==='catalog'||command.action==='execution'||command.action==='motions'||command.action==='avatarActivities')&&!scene.capabilities?.includes(command.action+'.v1'))
       throw new Error('This room does not support '+command.action+'. Update or connect a compatible native app.');
     if(command.action==='rules'&&record(command.rule)&&(command.rule.action==='signal'||command.rule.action==='stop'&&typeof command.rule.target==='string'||Array.isArray(command.rule.edits)&&command.rule.edits.some(e=>record(e)&&record(e.sequence)&&typeof e.sequence.program==='string'&&JSON.parse(e.sequence.program).version===3))&&!scene.capabilities?.includes('eventPrograms.v1'))

@@ -53,6 +53,69 @@ namespace Maestro.Quest.Tests
             workshop.UseTarget(); sequenceId = workshop.Selected.id;
             yield return null;
         }
+
+
+        [UnityTest] public IEnumerator FailedCreationSaveCannotApplyAnObjectOrReturnAnInventedResult()
+        {
+            int count=editor.Snapshot().objects.Length;
+            Directory.CreateDirectory(directory);
+            string future=Path.Combine(directory,"room.v999.json");File.WriteAllText(future,"preserve this newer room");
+            var executor=new RoomAgentExecutor(editor);var request=new RoomAgentRequest {version=2,conditions=Array.Empty<RoomObjectCondition>(),
+                commands=new[]{new RoomAgentCommand {action="execution",execution=new JObject {["operation"]="start",["runId"]=runtime.Scheduler.Receipts.NextId,["call"]=CreationCall()}}}};
+            Assert.That(executor.Execute(request,out var error,out _),Is.False);
+            Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count));
+            var selected=executor.Executions.Observe()["selected"];Assert.That((string)selected["phase"],Is.EqualTo("failed"));Assert.That(selected["output"],Is.Null);
+            Assert.That(File.ReadAllText(future),Is.EqualTo("preserve this newer room"));
+            yield return null;
+        }
+
+        JObject CreationCall() {
+            var program=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-create.json")));
+            return new JObject {["id"]="object.create.primitive",["version"]=1,["arguments"]=program["functions"][0]["body"][0]["arguments"].DeepClone()};
+        }
+        [UnityTest] public IEnumerator CreationResultChainsIntoRealPhysicsWithoutInterruptingAnotherObject()
+        {
+            string source=File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-create.json"));
+            var create=new RuleSequence {id="",name="Create then push",program=source};
+            Assert.That(workshop.Execute(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="save",reference="create",sequence=create}}},out var error,out var ids),Is.True,error);
+            physics.SetSurfaces(true,"Ready");physics.StartPhysics();yield return new WaitForFixedUpdate();
+            var executor=new RoomAgentExecutor(editor);
+            var recording=new JObject {["id"]="animation.recording.play",["version"]=1,["arguments"]=new JObject {["target"]=editor.Identity(block),["seconds"]=2,["loop"]=false}};
+            Assert.That(runtime.Scheduler.Invoke(recording,Time.unscaledTime,out var recordingId,out error),Is.True,error);
+            var before=block.transform.localPosition;int count=editor.Snapshot().objects.Length;
+            Assert.That(runtime.Trigger(ids.Single()),Is.True,runtime.Scheduler.LastError);
+            var run=runtime.Scheduler.ObserveRuns().Single();string created=run.locals.Single(x=>x.name=="ball").value;
+            Assert.That(Guid.TryParseExact(created,"N",out _),Is.True);Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count+1));
+            Assert.That((string)runtime.Scheduler.Invocation(recordingId)["phase"],Is.EqualTo("running"),"Creation cannot cancel an unrelated animation");
+            var body=editor.Find(created).GetComponent<Rigidbody>();Assert.That(body.mass,Is.EqualTo(.5f));
+            runtime.Scheduler.Tick(Time.unscaledTime);
+            Assert.That(body.linearVelocity.x,Is.EqualTo(1).Within(.001f));Assert.That(body.linearVelocity.y,Is.EqualTo(2).Within(.001f));
+            var persisted=new RoomStorage(directory).Load(out error);Assert.That(persisted.objects.Any(x=>x.id==created),Is.True,error);
+            yield return new WaitForSeconds(.15f);Assert.That(block.transform.localPosition.x,Is.GreaterThan(before.x));
+            Assert.That(editor.Find(created).transform.localPosition.x,Is.GreaterThan(.35f));
+            Assert.That(runtime.Scheduler.Outcomes.Last().phase,Is.EqualTo("completed"));
+            editor.Undo();Assert.That(editor.Find(created),Is.Null);Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count));
+            editor.Redo();Assert.That(editor.Find(created),Is.Not.Null);Assert.That(editor.Read(created).name,Is.EqualTo("Program ball"));
+        }
+        [UnityTest] public IEnumerator CreationReceiptRetainsExactResultAcrossDuplicateRequestAndRestart()
+        {
+            var executor=new RoomAgentExecutor(editor);int count=editor.Snapshot().objects.Length;
+            string runId=runtime.Scheduler.Receipts.NextId;
+            var request=new RoomAgentRequest {version=2,conditions=Array.Empty<RoomObjectCondition>(),commands=new[]{new RoomAgentCommand {action="execution",execution=new JObject {["operation"]="start",["runId"]=runId,["call"]=CreationCall()}}}};
+            Assert.That(executor.Execute(request,out var error,out _),Is.True,error);
+            var selected=(JObject)executor.Executions.Observe()["selected"];Assert.That((string)selected["phase"],Is.EqualTo("completed"));
+            string id=(string)selected["output"]["objectId"];Assert.That(editor.Find(id),Is.Not.Null);
+            var reopened=new RoomAgentExecutor(editor);Assert.That(reopened.Execute(request,out error,out _),Is.True,error);
+            Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count+1));Assert.That((string)reopened.Executions.Observe()["selected"]["output"]["objectId"],Is.EqualTo(id));
+            var receipts=new InvocationReceipts(directory);Assert.That(receipts.Error,Is.Null);Assert.That((string)receipts.Find(runId)["output"]["objectId"],Is.EqualTo(id));
+            Assert.That(new RoomStorage(directory).Load(out error).objects.Any(x=>x.id==id),Is.True,error);
+            string evidence=Environment.GetEnvironmentVariable("MAESTRO_CREATION_EVIDENCE");
+            if(!string.IsNullOrEmpty(evidence)) {Directory.CreateDirectory(evidence);File.WriteAllText(Path.Combine(evidence,"created.json"),reopened.Executions.Observe().ToString());}
+            editor.Undo();Assert.That(editor.Find(id),Is.Null);
+            Assert.That(reopened.Execute(request,out error,out _),Is.True,error);Assert.That(editor.Find(id),Is.Null,"A historical successful receipt cannot recreate an undone object");
+            yield return null;
+        }
+
         XRRayInteractor Hand(int index, Vector3 position)
         {
             var hand = new GameObject("Rule test hand"); hand.SetActive(false); hand.transform.SetParent(root.transform,false); hand.transform.position = position;

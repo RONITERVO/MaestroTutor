@@ -66,7 +66,7 @@ namespace Maestro.Quest.Programs
         {
             var f=functions[Entry];
             if(Version!=2 || functions.Count!=1 || f.Returns!=ProgramType.Void || f.Parameters.Length!=0 || f.Initial.Count!=0 ||
-                f.Body.Any(n=>(string)n["op"]!="invoke" || ((JObject)n["bindings"]).Count!=0))return null;
+                f.Body.Any(n=>(string)n["op"]!="invoke" || ((JObject)n["bindings"]).Count!=0 || n["results"]!=null))return null;
             return f.Body.Select(n=> {var step=Action((string)n["id"]);step.id=(string)n["id"];return step;}).ToArray();
         }
         public string WithSimpleSteps(RuleStep[] steps)
@@ -210,10 +210,21 @@ namespace Maestro.Quest.Programs
                     case "return":
                         Keys(node,function.Returns==ProgramType.Void?"id op":"id op value");if(function.Returns!=ProgramType.Void)Expr("value",function.Returns);break;
                     case "invoke":
-                        Keys(node,"id op capability version arguments bindings");
+                        Keys(node,"id op capability version arguments bindings","results");
                         string capability=Text(node["capability"]);Need((node["version"]?.Type==JTokenType.Integer||node["version"]?.Type==JTokenType.Float)&&(double)node["version"]==Math.Truncate((double)node["version"]),"Capability version must be an integer");
                         Need(BehaviourCatalog.TryInvocation(capability,(int)node["version"],Object(node["arguments"]),out var step,out var invocationError),invocationError??"Invalid capability arguments");
-                        Need(RuleDocument.Targets(step).All(resources.Contains),"Declare every action resource");step.id=id;actions.Add(id,step);
+                        var contract=BehaviourCatalog.Action(capability);
+                        Need(CapabilityArguments.LiteralResources(Object(node["arguments"]),contract.InputSchema,Object(node["bindings"]),Version).All(resources.Contains),"Declare every action resource");step.id=id;actions.Add(id,step);
+                        if(node.ContainsKey("results")) {
+                            Need(Version==3,"Action results need program version 3");
+                            var outputs=(JObject)contract.OutputSchema["properties"];var assigned=new HashSet<string>();
+                            foreach(var output in Object(node["results"]).Properties()) {
+                                Need(outputs[output.Name] is JObject,"Unknown action result");
+                                string destination=Text(output.Value);
+                                var outputType=(string)outputs[output.Name]["type"] switch {"string"=>ProgramType.Text,"number" or "integer"=>ProgramType.Number,"boolean"=>ProgramType.Boolean,_=>ProgramType.Void};
+                                Need(outputType!=ProgramType.Void&&function.Types.TryGetValue(destination,out var localType)&&localType==outputType&&assigned.Add(destination),"Invalid or duplicate action result destination");
+                            }
+                        }
                         foreach(var binding in Object(node["bindings"]).Properties()) {
                             var expected=BindingType(capability,binding.Name);Need(Expression(binding.Value,function)==expected,"Native argument type differs");
                         }break;

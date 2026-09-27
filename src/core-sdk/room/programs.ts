@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import {type RuleStep} from './ruleSteps';
 import {behaviourFactTypes,behaviourCatalog} from '../../../shared/behaviourCatalog';
-import {validateCapabilityArguments,capabilityParameterType,capabilityResources} from '../../../shared/capabilities';
+import {validateCapabilityArguments,capabilityParameterType,capabilityOutputType,literalCapabilityResources} from '../../../shared/capabilities';
 import {stepInvocation,invocationStep} from './capabilitySteps';
 export type Value=number|boolean|string;
 export type ValueType='number'|'boolean'|'text';
@@ -11,7 +11,7 @@ export type ProgramNode={id:string}&(
  {op:'set'|'setState';variable:string;value:Expression}|{op:'forever';body:ProgramNode[]}|{op:'sleep';seconds:Expression}|{op:'awaitEvent';event:string;source:string;timeout:Expression;received:string;value:string}|{op:'emitEvent';event:string;value:Expression}|{op:'if';test:Expression;then:ProgramNode[];else:ProgramNode[]}|
  {op:'repeat';count:Expression;body:ProgramNode[]}|{op:'switch';value:Expression;cases:{value:Value;body:ProgramNode[]}[];default:ProgramNode[]}|
  {op:'call';function:string;args:Expression[];result?:string}|{op:'return';value?:Expression}|
- {op:'invoke';capability:string;version:number;arguments:Record<string,unknown>;bindings:Record<string,Expression>});
+ {op:'invoke';capability:string;version:number;arguments:Record<string,unknown>;bindings:Record<string,Expression>;results?:Record<string,string>});
 export interface ProgramFunction {name:string;returns:ValueType|'void';parameters:{name:string;type:ValueType}[];locals:{name:string;initial:Value}[];body:ProgramNode[]}
 export interface BehaviourProgram {version:2|3;entry:string;resources:string[];functions:ProgramFunction[];state?:{name:string;initial:Value}[];events?:{name:string;type:ValueType}[]}
 export const programFacts=behaviourFactTypes;
@@ -89,10 +89,14 @@ export function parseProgram(source:unknown):{program:BehaviourProgram|null;erro
      case 'call': {keys(n,'id op function args','result');const callee=functions.get(text(n.function));need(callee,'Unknown function');calls.get(f.source.name as string)!.add(n.function as string);const args=array(n.args,8),params=array(callee.source.parameters,8);need(args.length===params.length,'Wrong function argument count');args.forEach((a,i)=>need(expr(a,f.types)===obj(params[i]).type,'Function argument type differs'));if(Object.prototype.hasOwnProperty.call(n,'result')){const t=f.types.get(text(n.result));need(t&&t===callee.source.returns,'Invalid return destination');}break;}
      case 'return':keys(n,f.source.returns==='void'?'id op':'id op value');if(f.source.returns!=='void')expect('value',f.source.returns as ValueType);break;
      case 'invoke': {
-      keys(n,'id op capability version arguments bindings');const capability=text(n.capability),args=obj(n.arguments);
+      keys(n,'id op capability version arguments bindings','results');const capability=text(n.capability),args=obj(n.arguments);
       need(typeof n.version==='number','Capability version must be numeric');
       const error=validateCapabilityArguments(capability,n.version,args);need(!error,error??'Invalid capability arguments');
-      need(capabilityResources(capability,args).every(id=>resources.has(id)),'Declare every action resource');
+      need(literalCapabilityResources(capability,args,obj(n.bindings),root.version as number).every(id=>resources.has(id)),'Declare every action resource');
+      if(n.results!==undefined) {
+       need(root.version===3,'Action results need program version 3');const assigned=new Set<string>();
+       for(const [key,destination] of Object.entries(obj(n.results))){const t=capabilityOutputType(capability,key);need(t&&typeof destination==='string'&&f.types.get(destination)===t&&!assigned.has(destination),'Invalid or duplicate action result destination');assigned.add(destination as string);}
+      }
       for(const [key,value] of Object.entries(obj(n.bindings))){const t=capabilityParameterType(capability,key);need(t,'Unsupported capability argument binding');need(expr(value,f.types)===t,'Capability argument type differs');}break;
      }
      default:throw new Error('Unknown program block');
@@ -108,7 +112,7 @@ export function parseProgram(source:unknown):{program:BehaviourProgram|null;erro
 }
 export function sequenceProgram(steps:RuleStep[]):BehaviourProgram {
  const resources=new Set<string>();const body:ProgramNode[]=steps.map((step,i)=>{
-  const call=stepInvocation(step);if(step.action!==2)resources.add(step.targetId);if(step.propId)resources.add(step.propId);
+  const call=stepInvocation(step);if(step.action!==2&&step.action!==12)resources.add(step.targetId);if(step.propId)resources.add(step.propId);
   return {id:step.id||'action_'+(i+1),op:'invoke',capability:call.id,version:call.version,arguments:call.arguments,bindings:{}};
  });
  return {version:2,entry:'main',resources:[...resources],functions:[{name:'main',returns:'void',parameters:[],locals:[],body}]};
@@ -120,7 +124,7 @@ export function simpleProgramSteps(source:string):RuleStep[]|null {
  try {
   const p=JSON.parse(source) as BehaviourProgram;
   if(p.version!==2||p.functions.length!==1)return null;const f=p.functions[0];
-  if(f.name!==p.entry||f.returns!=='void'||f.parameters.length||f.locals.length||f.body.some(n=>n.op!=='invoke'||Object.keys(n.bindings).length))return null;
+  if(f.name!==p.entry||f.returns!=='void'||f.parameters.length||f.locals.length||f.body.some(n=>n.op!=='invoke'||Object.keys(n.bindings).length||n.results!==undefined))return null;
   return f.body.map(n=>{if(n.op!=='invoke')throw new Error('Expected action');return invocationStep({id:n.capability,version:n.version,arguments:n.arguments},n.id);});
  }catch{return null;}
 }

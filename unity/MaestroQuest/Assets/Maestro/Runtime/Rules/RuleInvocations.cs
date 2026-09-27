@@ -32,7 +32,10 @@ namespace Maestro.Quest.Rules
             ["id"]=id,["capability"]=call["id"].DeepClone(),["version"]=call["version"].DeepClone(),["resources"]=new JArray(resources),["phase"]=phase,["status"]=status==null?"":status.Length<=2048?status:status.Substring(0,2048)
         };
         JObject Summary(Run run)=>Summary(run.Id,run.Invocation,run.Targets.ToArray(),run.Preparing?"preparing":"running",run.Preparing?"Loading action animation":"Action running");
-        static JObject Summary(FinishedRun run)=>Summary(run.Outcome.id,run.Invocation,run.Resources,run.Outcome.phase,run.Outcome.status);
+        static JObject Summary(FinishedRun run) {
+            var summary=Summary(run.Outcome.id,run.Invocation,run.Resources,run.Outcome.phase,run.Outcome.status);
+            if(run.Output!=null)summary["output"]=run.Output.DeepClone();return summary;
+        }
         public JObject Invocation(string runId)
         {
             if(Receipts==null)return LiveInvocation(runId);

@@ -31,7 +31,7 @@ export function CapabilityBrowser({client,onClose,onInsert}:{client:RoomAgentCli
  };
  const search=async(offset=0)=>{const result=await send({operation:'search',query:offset?page?.query??query:query,offset});if(result?.operation==='search')setPage(result);};
  const inspect=async(id:string,version:number)=>{const result=await send({operation:'inspect',capability:id,version});if(result?.operation==='inspect'){
-  setDefinition(result.definition);setChecked('');if(result.definition)setArgs(JSON.stringify(initial(result.definition.input,state?.objects??[]),null,2));else setError(result.status);
+  setDefinition(result.definition);setChecked('');if(result.definition)setArgs(JSON.stringify(result.definition.id==='object.create.primitive'?{shape:'ball',name:'Ball',x:.3,y:1.3,z:.65,scale:1,red:.2,green:.6,blue:.9}:initial(result.definition.input,state?.objects??[]),null,2));else setError(result.status);
  }};
  let call:CapabilityInvocation|null=null,invalid='';
  if(definition)try {const argumentsValue:unknown=JSON.parse(args);invalid=validateCapabilityArguments(definition.id,definition.version,argumentsValue)??'';
@@ -65,7 +65,7 @@ export function CapabilityBrowser({client,onClose,onInsert}:{client:RoomAgentCli
     <h2>One-off actions</h2><p className="room-workspace-intro">These runs do not change saved behaviours.</p>
     {state.execution.running.map(run=><div key={run.id} className="room-message"><strong>{capabilityDefinition(run.capability)?.label??run.capability}</strong><p>{run.status}</p><div className="room-workspace-actions"><button disabled={pending} onClick={()=>void execute({operation:'inspect',runId:run.id})}>Inspect action {run.id.slice(0,6)}</button><button disabled={pending} onClick={()=>void execute({operation:'cancel',runId:run.id})}>Stop action {run.id.slice(0,6)}</button></div></div>)}
     {!state.execution.running.length&&<p>No one-off action is running.</p>}
-    {state.execution.selected&&<div aria-label="Selected action" className="room-message"><strong>{state.execution.selected.phase}</strong><p>{state.execution.selected.status}</p><details><summary>Exact action</summary><pre>{JSON.stringify(state.execution.selected.call,null,2)}</pre></details></div>}
+    {state.execution.selected&&<div aria-label="Selected action" className="room-message"><strong>{state.execution.selected.phase}</strong><p>{state.execution.selected.status}</p>{state.execution.selected.output&&<><h3>Action result</h3><pre aria-label="Action result">{JSON.stringify(state.execution.selected.output,null,2)}</pre></>}<details><summary>Exact action</summary><pre>{JSON.stringify(state.execution.selected.call,null,2)}</pre></details></div>}
     {state.execution.outcomes.length>0&&<details><summary>Recent action results</summary><div className="room-object-list">{[...state.execution.outcomes].reverse().map(run=><button key={run.id} disabled={pending} onClick={()=>void execute({operation:'inspect',runId:run.id})}><span>{capabilityDefinition(run.capability)?.label??run.capability} · {run.phase}</span><small>{run.id.slice(0,6)} · {run.status}</small></button>)}</div></details>}
    </section>}
   </section>

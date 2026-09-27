@@ -20,7 +20,7 @@ const guid=(v:unknown)=>typeof v==='string'&&/^[a-f0-9]{32}$/.test(v);
 const ref=(v:unknown)=>typeof v==='string'&&/^[a-zA-Z0-9_]{1,32}$/.test(v);
 const target=(v:unknown)=>v==='maestro'||v==='book'||guid(v);
 const title=(v:unknown)=>typeof v==='string'&&v.trim().length>0&&v.length<=32&&!/[\u0000-\u001f]/.test(v);
-export const newRuleStep=(action=2):RuleStep=>({id:crypto.randomUUID().replace(/-/g,''),action,targetId:'maestro',gesture:0,seconds:[10,11].includes(action)?0:action===2?1:2.5,loop:false,...(action===10?{impulse:{x:0,y:.6,z:0}}:{})});
+export const newRuleStep=(action=2):RuleStep=>({id:crypto.randomUUID().replace(/-/g,''),action,targetId:'maestro',gesture:0,seconds:[10,11,12].includes(action)?0:action===2?1:2.5,loop:false,...(action===12?{creation:{shape:'ball',name:'Ball',x:.3,y:1.3,z:.65,scale:1,red:.2,green:.6,blue:.9}}:{}),...(action===10?{impulse:{x:0,y:.6,z:0}}:{})});
 export const copySequence=(value:RuleSequence):RuleSequence=>JSON.parse(JSON.stringify(value));
 export function validSequence(v:unknown,draft=false):v is RuleSequence {
  return record(v)&&(guid(v.id)||draft&&v.id==='')&&title(v.name)&&int(v.interruption,0,2)&&typeof v.repeat==='boolean'&&

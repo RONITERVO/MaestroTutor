@@ -5,6 +5,7 @@ import {validExecutionRequest,validExecutionView,type ExecutionView} from '../..
 import {parseRoomCommands,isRoomQuery,type RoomAgentState} from './roomAgent';
 import {RoomAgentClient} from '../../platform/quest/roomAgentBridge';
 import {requireRoomCapabilities} from '../../../shared/roomControls';
+import nativeCreation from '../../../test-fixtures/browser/creationResult.json';
 import nativeProgram from '../../../test-fixtures/browser/programBookState.json';
 const id='a'.repeat(32),prop='b'.repeat(32);
 const call={id:'animation.recording.play',version:1,arguments:{target:'maestro',seconds:1,loop:false,prop:{
@@ -98,4 +99,23 @@ it('accepts actual native disk recovery and unsaved-completion observations with
  expect(nativeRecovery['unsaved-completion'].selected.phase).toBe('completed');
  expect(nativeRecovery['unsaved-completion'].nextRunId).toBeNull();
  expect(nativeRecovery['unsaved-completion'].storageError).toContain('storage failed');client.cancel();
+});
+
+it('validates exact typed creation results without treating a receipt as current object existence',()=>{
+ const call={id:'object.create.primitive',version:1,arguments:{shape:'ball',name:'Ball',x:.3,y:1.3,z:.65,scale:1,red:.2,green:.6,blue:.9}};
+ const done={id,capability:call.id,version:1,resources:[],phase:'completed' as const,status:'Action completed',output:{objectId:prop}};
+ const view={selected:{...done,call},running:[],outcomes:[done]};
+ expect(validExecutionView(view)).toBe(true);
+ expect(validExecutionView({...view,selected:{...view.selected,output:{objectId:'c'.repeat(32)}}})).toBe(false);
+ for(const output of [{objectId:'maestro'},{objectId:'invalid'},{objectId:prop,extra:1}]){
+  expect(validExecutionView({...view,selected:{...view.selected,output},outcomes:[{...done,output}]})).toBe(false);
+ }
+ expect(validExecutionView({...view,selected:{...view.selected,phase:'failed'},outcomes:[{...done,phase:'failed'}]})).toBe(false);
+});
+
+it('accepts the real persisted native creation result through the existing room observation adapter',()=>{
+ expect(validExecutionView(nativeCreation)).toBe(true);
+ const state=JSON.parse(JSON.stringify(nativeProgram)) as RoomAgentState;
+ state.execution=nativeCreation as ExecutionView;
+ expect(new RoomAgentClient().receive(state)).toBe(true);
 });

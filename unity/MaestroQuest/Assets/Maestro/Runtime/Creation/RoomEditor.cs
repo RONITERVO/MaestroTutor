@@ -102,8 +102,31 @@ namespace Maestro.Quest.Creation
         public void Create(RoomObjectKind kind)
         {
             if (kind != RoomObjectKind.Block && kind != RoomObjectKind.Ball && kind != RoomObjectKind.Cylinder) return;
-            var item = new RoomObjectData { id = Guid.NewGuid().ToString("N"), kind = kind, color = Paint, position = SpawnPosition(), physics = kind == RoomObjectKind.Ball ? ItemPhysics.Bouncy : ItemPhysics.Solid };
-            if (Commit(new[] { item }, Array.Empty<string>(), kind + " added", true)) { selected = item.id; UpdateSelection(); }
+            if (CreatePrimitive(kind,"",SpawnPosition(),1,Paint,out var id,out var error)) { selected=id;UpdateSelection(); }
+            else SetStatus(error);
+        }
+
+        public bool CanCreatePrimitive(out string error) {
+            error=null;
+            if(journal==null) {error="Room editor is not ready";return false;}
+            if(storage.ReadOnly) {error="This room was saved by a newer app and is read-only";return false;}
+            if(journal.Snapshot().objects.Length>=RoomDocument.MaximumObjects+2) {error="This room has reached its creation limit";return false;}
+            return true;
+        }
+        public bool CreatePrimitive(RoomObjectKind kind,string name,Vector3 position,float scale,Color color,out string id,out string error) {
+            id=null;
+            if(!CanCreatePrimitive(out error))return false;
+            if(kind!=RoomObjectKind.Block&&kind!=RoomObjectKind.Ball&&kind!=RoomObjectKind.Cylinder) {error="Choose a ball, block or cylinder";return false;}
+            var item=new RoomObjectData {id=Guid.NewGuid().ToString("N"),name=name,kind=kind,position=position,scale=scale,color=color,
+                physics=kind==RoomObjectKind.Ball?ItemPhysics.Bouncy:ItemPhysics.Solid};
+            var candidate=journal.Snapshot();candidate.objects=candidate.objects.Append(item).ToArray();
+            if(!candidate.Validate(out error))return false;
+            // Serialize with the existing background writer. Save the validated candidate
+            // before applying it; an interrupted write cannot cause a second creation on retry.
+            saveTask?.GetAwaiter().GetResult();saveTask=null;
+            if(!storage.Save(candidate,out error))return false;
+            if(!Commit(new[]{item},Array.Empty<string>(),kind+" added",true)) {error=Status;return false;}
+            dirty=false;id=item.id;return true;
         }
 
         Vector3 SpawnPosition()
@@ -266,11 +289,13 @@ namespace Maestro.Quest.Creation
                     created = true;
                 }
                 if (!item.Grab.isSelected && (created || changed == null || (applyChangedPose && changed.Contains(data.id)))) ApplyPose(item,data);
+                if(created || changed==null || changed.Contains(data.id)) {
                 item.GetComponent<CreatedRoomObject>()?.ApplyRecipe(data.recipe);
                 item.GetComponent<CreatedRoomObject>()?.SetCollisionShape(data.collisionShape);
                 item.GetComponent<RigidRoomItem>()?.Configure(PhysicsWorld,data.physics,data.mass);
                 item.GetComponent<MaestroAvatar>()?.SetSavedPose(data.joints);
                 var avatar = item.GetComponent<MaestroAvatar>(); if (avatar) { avatar.ConfigureActivityProfiles(ActivityProfiles,Motions); avatar.SetWalkReference(data.walkClip-1,data.walkMotionId,Motions); _ = avatar.SetModel(data.modelHash,Models); }
+                }
                 if (!data.IsBuiltIn)
                 {
                     item.SetHome(new Vector3(-.63f + (slot % 8) * .18f,.7f + ((slot / 8) % 4) * .18f,1.15f + (slot / 32) * .25f),Quaternion.identity,Vector3.one);

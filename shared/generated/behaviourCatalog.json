@@ -383,6 +383,99 @@
       "requirements": []
     },
     {
+      "id": "object.create.primitive",
+      "version": 1,
+      "label": "Create shape",
+      "input": {
+        "type": "object",
+        "properties": {
+          "shape": {
+            "type": "string",
+            "enum": [
+              "ball",
+              "block",
+              "cylinder"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "pattern": "^.{0,80}$",
+            "maxLength": 80
+          },
+          "x": {
+            "type": "number",
+            "minimum": -25.0,
+            "maximum": 25.0
+          },
+          "y": {
+            "type": "number",
+            "minimum": -25.0,
+            "maximum": 25.0
+          },
+          "z": {
+            "type": "number",
+            "minimum": -25.0,
+            "maximum": 25.0
+          },
+          "scale": {
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 4.0
+          },
+          "red": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          },
+          "green": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          },
+          "blue": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          }
+        },
+        "required": [
+          "shape",
+          "name",
+          "x",
+          "y",
+          "z",
+          "scale",
+          "red",
+          "green",
+          "blue"
+        ],
+        "additionalProperties": false
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [
+        "room.capacity",
+        "storage.writable"
+      ],
+      "description": "Create a ball, block or cylinder at x/y/z in room metres (within 25 m of the origin). Scale is a multiplier (1 is the usual tray shape); RGB is 0–1. Returns objectId after saving. The ball is bouncy; other shapes are solid, mass 0.5 kg. Each creation is one Undo edit. Stop leaves created objects in the room.",
+      "output": {
+        "type": "object",
+        "properties": {
+          "objectId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "objectId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "object.physics.impulse",
       "version": 1,
       "label": "Push object",
@@ -1018,7 +1111,8 @@
         "animation.recipe.play",
         "avatar.gesture.upperBody",
         "object.physics.impulse",
-        "object.physics.stop"
+        "object.physics.stop",
+        "object.create.primitive"
       ],
       "eventIds": [
         "maestro.speaking.enter",
@@ -1034,19 +1128,19 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "ebc52831039840ae5e75b7040c83ecfb669b39a6625505b90a5779e3af61a83c"
+      "sha256": "35cc2a8299431b58b44e31e9631cd5027f218a00c5b49502b3a6dc9999fbd3a5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "291d19e030670eabe72f50d247b1ab8c6a9d3b55065de3a3e31b2731a1b7ba33"
+      "sha256": "40cc85afac5e537c9a91fe49512c3cdf91a45b3f1b7dc420b9a66d9444f41c0e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
-      "sha256": "948f84222138ea66bc52c55abb2f956a11eb75fa76eebdae72d4062624a00ec6"
+      "sha256": "933d996c4a738e3aab62bf3e0ac96bef8877c5418e7bd03f275450bad218627e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleDocument.cs",
-      "sha256": "b57489e49501482ea0798886c4819c76998607362c05659ab7254a98cf72be08"
+      "sha256": "2f510995d74d73ed7ca65fd5db71160405fd8944587bc86ced0619496e7d206b"
     }
   ]
 }

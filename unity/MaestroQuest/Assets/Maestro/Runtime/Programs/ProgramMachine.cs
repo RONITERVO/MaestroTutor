@@ -25,6 +25,9 @@ namespace Maestro.Quest.Programs
         bool terminal;
         readonly Dictionary<string,ProgramValue> state;
         Scope waitingScope;string receivedVariable,valueVariable;
+        Scope resultScope;JObject resultBindings;BehaviourCatalog.ActionDefinition resultContract;
+        readonly HashSet<string> createdResources=new();
+        public JObject LastOutput {get;private set;}
         public ProgramWait Wait {get;private set;}
         public ProgramSignal Signal {get;private set;}
         public IReadOnlyDictionary<string,ProgramValue> State=>new Dictionary<string,ProgramValue>(state);
@@ -56,7 +59,7 @@ namespace Maestro.Quest.Programs
         }
         public ProgramYield Advance(out RuleStep action,int budget=32)
         {
-            action=null;Signal=null;if(Wait!=null)return ProgramYield.Waiting;if(terminal)return Error==null?ProgramYield.Completed:ProgramYield.Failed;
+            action=null;Signal=null;if(resultContract!=null)throw new InvalidOperationException("Complete the pending action result before advancing");if(Wait!=null)return ProgramYield.Waiting;if(terminal)return Error==null?ProgramYield.Completed:ProgramYield.Failed;
             if(budget<1||budget>256)throw new ArgumentOutOfRangeException(nameof(budget));
             try {
                 int began=Instructions;
@@ -95,11 +98,25 @@ namespace Maestro.Quest.Programs
                             var arguments=(JObject)node["arguments"].DeepClone();
                             foreach(var binding in ((JObject)node["bindings"]).Properties())arguments[binding.Name]=JToken.FromObject(Evaluate(binding.Value,frame.Scope).Value);
                             if(!BehaviourCatalog.TryInvocation((string)node["capability"],(int)node["version"],arguments,out action,out var error))throw new ProgramFault(error??"Invalid computed capability arguments");
-                            if(!RuleDocument.Targets(action).All(program.Allows))throw new ProgramFault("Computed target is not a declared resource");
+                            if(!RuleDocument.Targets(action).All(id=>program.Allows(id)||createdResources.Contains(id)))throw new ProgramFault("Computed target is not a declared or created resource");
+                            var contract=BehaviourCatalog.Action((string)node["capability"]);
+                            if(((JObject)contract.OutputSchema["properties"]).Count>0) {
+                                if(createdResources.Count>=16)throw new ProgramFault("This run has reached its limit of 16 created objects");
+                                resultScope=frame.Scope;resultBindings=node["results"] as JObject;resultContract=contract;
+                            }
                             action.id=NodeId;return ProgramYield.Action;
                     }
                 }return ProgramYield.Yield;
             } catch(ProgramFault error) {Error=error.Message;frames.Clear();terminal=true;action=null;return ProgramYield.Failed;}
+        }
+        public bool CompleteAction(JObject output,out string error) {
+            error=null;output??=new JObject();
+            if(resultContract==null) {if(output.Count!=0) {error="Unexpected native action result";return false;}return true;}
+            if(!CapabilityArguments.Validate(output,resultContract.OutputSchema,out error,"result"))return false;
+            // Only validated results from the native handler authorize newly created IDs.
+            foreach(var id in CapabilityArguments.Resources(output,resultContract.OutputSchema))createdResources.Add(id);
+            if(resultBindings!=null)foreach(var binding in resultBindings.Properties())resultScope.Values[(string)binding.Value]=ProgramValue.Literal(output[binding.Name]);
+            LastOutput=(JObject)output.DeepClone();resultContract=null;resultScope=null;resultBindings=null;return true;
         }
         public void Resume(bool received,ProgramValue value=default)
         {
