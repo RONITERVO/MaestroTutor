@@ -239,8 +239,8 @@ namespace Maestro.Quest.Tests
             animations.SendMessage("OnApplicationPause",true); Assert.That(avatar.IsImportedClipPlaying,Is.False);
             animations.SendMessage("OnApplicationPause",false);
             rules.NewSequence();
-            for (int i=0;i<7 && rules.Selected.steps[0].action != RuleActionKind.ImportedClip;i++) rules.CycleAction();
-            var step = rules.Selected.steps[0]; Assert.That(step.action,Is.EqualTo(RuleActionKind.ImportedClip));
+            for (int i=0;i<7 && rules.Selected.SimpleSteps()[0].action != RuleActionKind.ImportedClip;i++) rules.CycleAction();
+            var step = rules.Selected.SimpleSteps()[0]; Assert.That(step.action,Is.EqualTo(RuleActionKind.ImportedClip));
             Assert.That(step.clipModelHash,Is.EqualTo(avatar.ModelHash)); Assert.That(step.seconds,Is.Zero);
             Assert.That(runtime.Trigger(rules.Selected.id),Is.True,runtime.Scheduler.LastError);
             before = head.rotation; yield return new WaitForSeconds(.35f);
@@ -250,7 +250,7 @@ namespace Maestro.Quest.Tests
             Assert.That(runtime.Scheduler.RunningCount,Is.Zero); Assert.That(avatar.IsImportedClipPlaying,Is.False);
             editor.SaveNow(); rules.SendMessage("OnApplicationPause",true); rules.SendMessage("OnApplicationPause",false); yield return new WaitForSeconds(.2f);
             Assert.That(new RoomStorage(directory).Load(out _).objects.Single(x => x.id == "maestro").walkClip,Is.EqualTo(1));
-            Assert.That(new RuleStorage(directory).Load(out _).sequences.Single().steps[0].clipModelHash,Is.EqualTo(step.clipModelHash));
+            Assert.That(new RuleStorage(directory).Load(out _).sequences.Single().SimpleSteps()[0].clipModelHash,Is.EqualTo(step.clipModelHash));
             imports.DefaultMaestro(); Assert.That(editor.Read("maestro").walkClip,Is.Zero);
             Assert.That(runtime.Trigger(rules.Selected.id),Is.False,"A clip must not silently resolve against another avatar");
             editor.Undo(); yield return new WaitUntil(() => !avatar.ModelBusy);
@@ -259,9 +259,9 @@ namespace Maestro.Quest.Tests
             var saveReplacement = editor.Models.SaveAsync(replacement); yield return new WaitUntil(() => saveReplacement.IsCompleted);
             Assert.That(saveReplacement.Exception,Is.Null);
             Assert.That(editor.SetMaestroModel(replacement.Hash),Is.True); Assert.That(avatar.ModelBusy,Is.True);
-            rules.CycleGesture(); Assert.That(rules.Selected.steps[0].clipModelHash,Is.Null,"Loading must not bind the previous rig's clip index to the next model");
+            rules.CycleGesture(); Assert.That(rules.Selected.SimpleSteps()[0].clipModelHash,Is.Null.Or.Empty,"Loading must not bind the previous rig's clip index to the next model");
             yield return new WaitUntil(() => !avatar.ModelBusy);
-            rules.CycleGesture(); Assert.That(rules.Selected.steps[0].clipModelHash,Is.EqualTo(replacement.Hash));
+            rules.CycleGesture(); Assert.That(rules.Selected.SimpleSteps()[0].clipModelHash,Is.EqualTo(replacement.Hash));
         }
 
         [UnityTest] public IEnumerator LibraryControlsSaveAndPreviewWithoutAnotherModelOrAutoplay()

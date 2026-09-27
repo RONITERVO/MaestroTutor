@@ -100,6 +100,23 @@ export function sequenceProgram(steps:RuleStep[]):BehaviourProgram {
  const resources=new Set<string>();const body:ProgramNode[]=steps.map((step,i)=>{const {id,...value}=step;if(step.action!==2)resources.add(step.targetId);if(step.propId)resources.add(step.propId);return {id:id||'action_'+(i+1),op:'action',step:value,bindings:{}};});
  return {version:1,entry:'main',resources:[...resources],functions:[{name:'main',returns:'void',parameters:[],locals:[],body}]};
 }
+/** A detached action-only view for the simple editor, not another saved format.
+ * Draft numeric values may be temporarily invalid; validSequence guards Apply.
+ */
+export function simpleProgramSteps(source:string):RuleStep[]|null {
+ try {
+  const p=JSON.parse(source) as BehaviourProgram;
+  if(p.functions.length!==1)return null;const f=p.functions[0];
+  if(f.name!==p.entry||f.returns!=='void'||f.parameters.length||f.locals.length||f.body.some(n=>n.op!=='action'||Object.keys(n.bindings).length))return null;
+  return f.body.map(n=>{if(n.op!=='action')throw new Error('Expected action');return {...n.step,id:n.id};});
+ }catch{return null;}
+}
+export function withSimpleProgramSteps(source:string,steps:RuleStep[]):string {
+ const previous=simpleProgramSteps(source);if(previous===null)throw new Error('Edit this program in the function editor');
+ const p=JSON.parse(source) as BehaviourProgram,next=sequenceProgram(steps),oldResources=new Set(sequenceProgram(previous).resources);
+ p.resources=[...new Set([...p.resources.filter(id=>!oldResources.has(id)),...next.resources])];
+ p.functions[0].body=next.functions[0].body;return JSON.stringify(p);
+}
 export function expressionLabel(e:Expression):string {
  if('value' in e)return JSON.stringify(e.value);if('var' in e)return e.var;if('fact' in e)return e.fact;
  const symbols:Record<string,string>={add:'+',sub:'−',mul:'×',div:'÷',mod:'mod',lt:'<',le:'≤',gt:'>',ge:'≥',eq:'=',ne:'≠',and:'and',or:'or'};

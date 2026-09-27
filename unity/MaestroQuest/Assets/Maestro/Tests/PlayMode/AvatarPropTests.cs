@@ -57,10 +57,10 @@ namespace Maestro.Quest.Tests
             ball.GetComponent<RigidRoomItem>().Teleported(); editor.RememberPlacement(editor.Identity(ball));
             var pose=avatar.PoseRig.Capture();
             editor.SaveAnimation("maestro",new RoomMotion { frames=new[] { new MotionFrame { position=avatar.transform.localPosition,joints=pose },new MotionFrame { time=1,position=avatar.transform.localPosition+Vector3.right,joints=pose } } },null,false);
-            rules.NewSequence(); for (int i=0;i<8 && rules.Selected.steps[0].action != RuleActionKind.RecordedAnimation;i++) rules.CycleAction();
+            rules.NewSequence(); for (int i=0;i<8 && rules.Selected.SimpleSteps()[0].action != RuleActionKind.RecordedAnimation;i++) rules.CycleAction();
             editor.Select(ball); rules.UseProp(); rules.FitProp();
-            while (rules.Selected.steps[0].propRelease != release) rules.CyclePropRelease();
-            for (int i=0;i<20 && Mathf.Abs(rules.Selected.steps[0].propReleaseAt-at)>.001f;i++) rules.CyclePropTime();
+            while (rules.Selected.SimpleSteps()[0].propRelease != release) rules.CyclePropRelease();
+            for (int i=0;i<20 && Mathf.Abs(rules.Selected.SimpleSteps()[0].propReleaseAt-at)>.001f;i++) rules.CyclePropTime();
             world.SetSurfaces(true,"Synthetic room aligned"); world.StartPhysics();
         }
         static IEnumerator Until(Func<bool> value)
@@ -73,7 +73,7 @@ namespace Maestro.Quest.Tests
             Configure(PropRelease.Throw); Assert.That(runtime.Trigger(rules.Selected.id),Is.True,rules.Status);
             yield return new WaitForSeconds(.2f);
             var hold=ball.GetComponent<AvatarHeldProp>(); Assert.That(hold && hold.Holding,Is.True); Assert.That(ball.GetComponent<Rigidbody>().isKinematic,Is.True);
-            var hand=avatar.PoseRig.Bone(PoseJoint.RightHand); var step=rules.Selected.steps[0];
+            var hand=avatar.PoseRig.Bone(PoseJoint.RightHand); var step=rules.Selected.SimpleSteps()[0];
             Assert.That(Vector3.Distance(ball.transform.position,hand.position+hand.rotation*step.propOffset),Is.LessThan(.02f));
             yield return Until(() => hold && hold.Released || runtime.Scheduler.RunningCount == 0);
             Assert.That(hold && hold.Released,Is.True,runtime.Scheduler.LastError);
@@ -97,9 +97,9 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator UserGripTakesPropWithoutSnappingAndAssignmentsUndoAndPersist()
         {
-            Configure(PropRelease.Return); string id=rules.Selected.steps[0].propId;
-            rules.ClearProp(); rules.Undo(); Assert.That(rules.Selected.steps[0].propId,Is.EqualTo(id));
-            rules.SendMessage("OnApplicationPause",true); Assert.That(new RuleStorage(directory).Load(out _).sequences[0].steps[0].propId,Is.EqualTo(id));
+            Configure(PropRelease.Return); string id=rules.Selected.SimpleSteps()[0].propId;
+            rules.ClearProp(); rules.Undo(); Assert.That(rules.Selected.SimpleSteps()[0].propId,Is.EqualTo(id));
+            rules.SendMessage("OnApplicationPause",true); Assert.That(new RuleStorage(directory).Load(out _).sequences[0].SimpleSteps()[0].propId,Is.EqualTo(id));
             rules.SendMessage("OnApplicationPause",false); world.StartPhysics();
             Assert.That(runtime.Trigger(rules.Selected.id),Is.True,rules.Status); yield return new WaitForSeconds(.2f); var before=ball.transform.position;
             var hand=new GameObject("User prop grip"); hand.SetActive(false); hand.transform.SetParent(root.transform,false); hand.transform.position=before;
@@ -118,7 +118,7 @@ namespace Maestro.Quest.Tests
             Configure(PropRelease.Return); rules.AssignLibraryMotion(import.Result.Single().id); var home=ball.transform.position;
             Assert.That(runtime.Trigger(rules.Selected.id),Is.True,rules.Status); yield return Until(() => avatar.LibraryMotionId != null || runtime.Scheduler.RunningCount == 0);
             Assert.That(avatar.LibraryMotionId,Is.Not.Null,runtime.Scheduler.LastError);
-            yield return new WaitForSeconds(.3f); var step=rules.Selected.steps[0]; var hand=avatar.PoseRig.Bone(PoseJoint.RightHand);
+            yield return new WaitForSeconds(.3f); var step=rules.Selected.SimpleSteps()[0]; var hand=avatar.PoseRig.Bone(PoseJoint.RightHand);
             Assert.That(Vector3.Distance(ball.transform.position,hand.position+hand.rotation*step.propOffset),Is.LessThan(.02f),runtime.Scheduler.LastError);
             runtime.SendMessage("OnApplicationPause",true); Assert.That(Vector3.Distance(ball.transform.position,home),Is.LessThan(.001f));
             runtime.SendMessage("OnApplicationPause",false); yield return null; Assert.That(runtime.Scheduler.RunningCount,Is.Zero);
@@ -137,8 +137,8 @@ namespace Maestro.Quest.Tests
             }
             Click("Show prop controls"); Assert.That(tools.PropsVisible,Is.True);
             Assert.That(board.GetComponentsInChildren<RuleToolAction>().Any(x => x.AccessibleName == "Step type"),Is.False);
-            Click("Clear prop"); Assert.That(rules.Selected.steps[0].propId,Is.Null);
-            Click("Undo rules"); Assert.That(rules.Selected.steps[0].propId,Is.EqualTo(editor.Identity(ball)));
+            Click("Clear prop"); Assert.That(rules.Selected.SimpleSteps()[0].propId,Is.Null.Or.Empty);
+            Click("Undo rules"); Assert.That(rules.Selected.SimpleSteps()[0].propId,Is.EqualTo(editor.Identity(ball)));
             Assert.That(runtime.Scheduler.RunningCount,Is.Zero,"Opening or editing props never starts their motion");
             yield return new WaitForSecondsRealtime(.3f); Click("Show action controls"); Assert.That(tools.PropsVisible,Is.False);
         }

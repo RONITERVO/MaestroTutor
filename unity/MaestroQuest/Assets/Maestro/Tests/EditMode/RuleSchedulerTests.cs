@@ -47,7 +47,7 @@ namespace Maestro.Quest.Tests
             actions.Phase = RuleActionState.Preparing; scheduler.Trigger(sequence.id,45); scheduler.Suspend(true); scheduler.Suspend(false); actions.Phase = RuleActionState.Ready; scheduler.Tick(46); Assert.That(scheduler.RunningCount,Is.Zero);
             actions.Phase = RuleActionState.Failed; Assert.That(scheduler.Trigger(sequence.id,50),Is.False); Assert.That(scheduler.LastError,Does.Contain("Missing"));
         }
-        static RuleSequence Sequence(string target = "maestro") => new() { id = Guid.NewGuid().ToString("N"), name = "Test action", steps = new[] { new RuleStep { action = RuleActionKind.RecordedAnimation, targetId = target, seconds = 2 } } };
+        static RuleSequence Sequence(string target = "maestro") => new() { id = Guid.NewGuid().ToString("N"), name = "Test action", program=Maestro.Quest.Programs.BehaviourProgram.FromSteps(new RuleStep { action = RuleActionKind.RecordedAnimation, targetId = target, seconds = 2 }) };
         static RuleBinding Binding(RuleSequence sequence,RuleEventKind kind) => new() { id = Guid.NewGuid().ToString("N"), sequenceId = sequence.id, trigger = kind, sourceId = "book" };
         [Test] public void SharedSequenceRespondsToManualStateAndObjectTriggersWithoutRepeatedSnapshotFiring()
         {
@@ -92,14 +92,14 @@ namespace Maestro.Quest.Tests
         }
         [Test] public void SequentialActionsAdvanceOncePerTickAndEditingCanStopAnEntireSequence()
         {
-            var sequence = Sequence(); sequence.repeat = true; sequence.steps = new[] { new RuleStep { action = RuleActionKind.RecordedAnimation,targetId = "book",seconds = 1 },new RuleStep { action = RuleActionKind.RecordedAnimation,targetId = "maestro",seconds = 1 } };
+            var sequence = Sequence(); sequence.repeat = true; sequence.SetSimpleSteps(new[] { new RuleStep { action = RuleActionKind.RecordedAnimation,targetId = "book",seconds = 1 },new RuleStep { action = RuleActionKind.RecordedAnimation,targetId = "maestro",seconds = 1 } });
             var fake = new Actions(); var scheduler = new RuleScheduler(fake); scheduler.Configure(new RuleDocument { sequences = new[] { sequence } });
             scheduler.Trigger(sequence.id,0); scheduler.Tick(1000); Assert.That(fake.Started.Count,Is.EqualTo(2),"No catch-up loop after a stalled frame");
             Assert.That(fake.Started[1],Is.EqualTo("maestro")); scheduler.StopTarget("book",true); Assert.That(fake.Active,Is.Empty);
         }
         [Test] public void PropReferencesReserveBothTargetsAndActiveFailuresCancelTheRun()
         {
-            var carry=Sequence(); string prop=Guid.NewGuid().ToString("N"); carry.steps[0].propId=prop;
+            var carry=Sequence(); string prop=Guid.NewGuid().ToString("N"); var carrying=carry.SimpleSteps();carrying[0].propId=prop;carry.SetSimpleSteps(carrying);
             var other=Sequence(prop); other.interruption=RuleInterruption.Ignore;
             var actions=new PreparingActions { Phase=RuleActionState.Ready }; var scheduler=new RuleScheduler(actions);
             scheduler.Configure(new RuleDocument { sequences=new[] { carry,other } });
@@ -114,14 +114,14 @@ namespace Maestro.Quest.Tests
             try
             {
                 var sequence = Sequence(); var document = new RuleDocument { sequences = new[] { sequence },bindings = new[] { Binding(sequence,RuleEventKind.Speaking) },buttons = new[] { new RuleButtonData { id = Guid.NewGuid().ToString("N"),sequenceId = sequence.id,mount = ButtonMount.LeftController,position = new Vector3(-.12f,.08f,.06f) } } };
-                Assert.That(document.Validate(out _),Is.True); var copy = document.Copy(); copy.sequences[0].steps[0].seconds = 9; Assert.That(document.sequences[0].steps[0].seconds,Is.EqualTo(2));
+                Assert.That(document.Validate(out _),Is.True); var copy = document.Copy(); var edited=copy.sequences[0].SimpleSteps();edited[0].seconds=9;copy.sequences[0].SetSimpleSteps(edited); Assert.That(document.sequences[0].SimpleSteps()[0].seconds,Is.EqualTo(2));
                 var storage = new RuleStorage(directory); Assert.That(storage.Save(document,out _),Is.True); Assert.That(storage.Save(copy,out _),Is.True);
-                File.WriteAllText(Path.Combine(directory,"rules.v5.json"),"broken");
+                File.WriteAllText(Path.Combine(directory,"behaviours.v1.json"),"broken");
                 var recovered = storage.Load(out var message); StringAssert.Contains("backup",message); Assert.That(recovered.buttons[0].position,Is.EqualTo(document.buttons[0].position));
-                Assert.That(recovered.sequences[0].steps[0].seconds,Is.EqualTo(2));
+                Assert.That(recovered.sequences[0].SimpleSteps()[0].seconds,Is.EqualTo(2));
                 copy.buttons[0].position = Vector3.one; Assert.That(copy.Validate(out _),Is.False);
                 copy = document.Copy(); copy.bindings[0].sequenceId = Guid.NewGuid().ToString("N"); Assert.That(copy.Validate(out _),Is.False);
-                copy = document.Copy(); copy.sequences[0].steps[0].seconds = float.NaN; Assert.That(copy.Validate(out _),Is.False);
+                copy = document.Copy(); edited=copy.sequences[0].SimpleSteps();edited[0].seconds=-1;copy.sequences[0].SetSimpleSteps(edited); Assert.That(copy.Validate(out _),Is.False);
                 copy = document.Copy(); copy.bindings[0].trigger = (RuleEventKind)500; Assert.That(copy.Validate(out _),Is.False);
             }
             finally { if (Directory.Exists(directory)) Directory.Delete(directory,true); }

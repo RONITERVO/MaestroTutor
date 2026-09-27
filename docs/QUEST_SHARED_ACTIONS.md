@@ -214,7 +214,10 @@ one revision-checked rule command from chat-agent authoring and the optional boo
 editor. The book displays nested editable blocks/JSON, the native current node,
 locals and recent completion/cancellation/failure outcomes. State/object events,
 run-now and physical buttons share that execution path. Programs are capability
-gated; v5 rule storage preserves older linear rules and future-version files.
+gated. The current v2 capability stores every behaviour as one program in
+`behaviours.v1.json`; retired development rule collections are left untouched and
+start empty. Simple controls edit a derived view of program blocks. Future-version
+protection and last-good recovery remain. See QUEST_BEHAVIOUR_PROGRAMS.md.
 
 See [the program contract and remaining roadmap](QUEST_BEHAVIOUR_PROGRAMS.md).
 This milestone does not provide timers, arbitrary JavaScript/C#, Blockly round-trip

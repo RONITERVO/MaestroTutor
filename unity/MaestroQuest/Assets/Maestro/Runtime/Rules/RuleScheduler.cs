@@ -26,7 +26,6 @@ namespace Maestro.Quest.Rules
             public RuleSequence Sequence;
             public RuleBinding Binding;
             public HashSet<string> Targets;
-            public int Step;
             public float Ends, Duration, PrepareDeadline;
             public bool Preparing,Computing;
             public ProgramMachine Machine;
@@ -46,7 +45,7 @@ namespace Maestro.Quest.Rules
         public int PreparingCount => running.Count(x => x.Preparing);
         public int QueuedCount => queued.Count;
         public string LastError { get; private set; }
-        public RuleRunView[] ObserveRuns() => running.Select(x=>new RuleRunView {id=x.Id,sequenceId=x.Sequence.id,stepId=x.Active?.id ?? "00000000000000000000000000000000",preparing=x.Preparing,nodeId=x.Machine?.NodeId,functionName=x.Machine?.Function,status=x.Computing?"Evaluating":x.Preparing?"Loading":"Running",
+        public RuleRunView[] ObserveRuns() => running.Select(x=>new RuleRunView {id=x.Id,sequenceId=x.Sequence.id,preparing=x.Preparing,nodeId=x.Machine?.NodeId,functionName=x.Machine?.Function,status=x.Computing?"Evaluating":x.Preparing?"Loading":"Running",
             locals=x.Machine?.Locals.Select(v=>new ProgramVariableView {name=v.Key,type=v.Value.Type.ToString().ToLowerInvariant(),value=Convert.ToString(v.Value.Value,System.Globalization.CultureInfo.InvariantCulture)}).ToArray()??Array.Empty<ProgramVariableView>()}).ToArray();
         public RuleScheduler(IRuleActions actions) { this.actions = actions; }
         public bool TryRead(string name,out ProgramValue value) {
@@ -94,7 +93,6 @@ namespace Maestro.Quest.Rules
             var sequence = document.sequences.FirstOrDefault(x => x.id == sequenceId);
             if (sequence == null) { LastError = "That action sequence no longer exists"; return false; }
             if (!BindingStillValid(binding)) return false;
-            foreach (var step in sequence.steps) if (!actions.CanRun(step,out var error)) { LastError = error; return false; }
             var targets = sequence.Targets().ToHashSet();
             var conflicts = running.Where(x => x.Sequence.id == sequenceId || x.Targets.Overlaps(targets)).ToArray();
             if (conflicts.Length > 0 || running.Count >= 8)
@@ -109,13 +107,13 @@ namespace Maestro.Quest.Rules
                 foreach (var run in conflicts) Stop(run,false);
             }
             var next = new Run { Id = Guid.NewGuid().ToString("N"), Sequence = sequence.Copy(), Binding = binding?.Copy(), Targets = targets };
-            if(sequence.UsesProgram)next.Machine=new ProgramMachine(sequence.Compile(out _),this);
+            next.Machine=new ProgramMachine(sequence.Compile(out _),this);
             running.Add(next); return StartStep(next,now);
         }
         bool StartStep(Run run, float now)
         {
             run.Computing=false;
-            if(run.Machine!=null) {
+            {
                 var yielded=run.Machine.Advance(out run.Active);
                 if(yielded==ProgramYield.Yield) {run.Computing=true;return true;}
                 if(yielded==ProgramYield.Failed) {LastError=run.Machine.Error;Stop(run,false,"failed",LastError);return false;}
@@ -124,7 +122,8 @@ namespace Maestro.Quest.Rules
                     else Finish(run,"completed","Program completed");
                     return true;
                 }
-            }else run.Active=run.Sequence.steps[run.Step];
+            }
+            if(!actions.CanRun(run.Active,out var unavailable)) {LastError=unavailable;Stop(run,false,"failed",LastError);return false;}
             if (!actions.Start(run.Id,run.Active,out float seconds,out var error) || !float.IsFinite(seconds) || seconds < .01f || seconds > 30)
             { LastError = error ?? "This action has an invalid duration"; Stop(run,false,"failed",LastError); return false; }
             run.Duration = seconds; run.PrepareDeadline = now+30;
@@ -155,13 +154,6 @@ namespace Maestro.Quest.Rules
                 { if (!completion.Complete(run.Id,out var completionError)) { LastError=completionError ?? "This action could not finish"; Stop(run,false,"failed",LastError); continue; } }
                 else actions.Stop(run.Id,false);
                 run.Active=null;
-                if(run.Machine!=null) {StartStep(run,now);continue;}
-                run.Step++;
-                if (run.Step >= run.Sequence.steps.Length)
-                {
-                    if (!run.Sequence.repeat) { Finish(run,"completed","Behaviour completed"); continue; }
-                    run.Step = 0;
-                }
                 // At most one step per run per tick, even after a long frame.
                 StartStep(run,now);
             }

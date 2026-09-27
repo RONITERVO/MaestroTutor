@@ -45,20 +45,30 @@ namespace Maestro.Quest.Rules
         public RuleInterruption interruption;
         public bool repeat;
         public string program;
-        public bool UsesProgram=>!string.IsNullOrEmpty(program);
         BehaviourProgram compiled;
         string compiledSource;
         public BehaviourProgram Compile(out string error) {
-            error=null;if(!UsesProgram)return null;
+            error=null;
             if(compiledSource==program&&compiled!=null)return compiled;
             if(!BehaviourProgram.TryParse(program,out var value,out error))return null;
             compiledSource=program;compiled=value;return compiled;
         }
-        public IEnumerable<string> Targets()=>UsesProgram?Compile(out _)?.Resources??Array.Empty<string>():steps.SelectMany(RuleDocument.Targets);
-        public bool UsesMotion(string id)=>steps.Any(x=>x.motionId==id)||(UsesProgram&&Compile(out _)?.ReferencesMotion(id)==true);
-        public IEnumerable<string> MotionIds()=>steps.Select(x=>x.motionId).Concat(UsesProgram?Compile(out _)?.ReferencedIds??Array.Empty<string>():Array.Empty<string>());
-        public RuleStep[] steps = Array.Empty<RuleStep>();
-        public RuleSequence Copy() => new() { id = id, name = name, interruption = interruption, repeat = repeat, program=program,compiled=compiled,compiledSource=compiledSource, steps = steps.Select(x => x.Copy()).ToArray() };
+        public static bool ValidWire(Newtonsoft.Json.Linq.JToken token)
+        {
+            if(token is not Newtonsoft.Json.Linq.JObject value)return false;
+            var keys=new[] {"id","name","interruption","repeat","program"};
+            return value.Count==keys.Length && keys.All(value.ContainsKey) &&
+                value["id"].Type==Newtonsoft.Json.Linq.JTokenType.String && value["name"].Type==Newtonsoft.Json.Linq.JTokenType.String &&
+                value["interruption"].Type==Newtonsoft.Json.Linq.JTokenType.Integer && value["repeat"].Type==Newtonsoft.Json.Linq.JTokenType.Boolean &&
+                value["program"].Type==Newtonsoft.Json.Linq.JTokenType.String;
+        }
+        public IEnumerable<string> Targets()=>Compile(out _)?.Resources??Array.Empty<string>();
+        public bool UsesMotion(string id)=>Compile(out _)?.ReferencesMotion(id)==true;
+        public IEnumerable<string> MotionIds()=>Compile(out _)?.ReferencedIds??Array.Empty<string>();
+        // A detached view for simple controls, never a second serialized representation.
+        public RuleStep[] SimpleSteps()=>Compile(out _)?.SimpleSteps();
+        public void SetSimpleSteps(RuleStep[] values) => program=Compile(out _)?.WithSimpleSteps(values) ?? throw new ArgumentException("Invalid program");
+        public RuleSequence Copy() => new() { id=id,name=name,interruption=interruption,repeat=repeat,program=program,compiled=compiled,compiledSource=compiledSource };
     }
     [Serializable] public sealed class RuleBinding
     {
@@ -80,7 +90,7 @@ namespace Maestro.Quest.Rules
     }
     [Serializable] public sealed class RuleDocument
     {
-        public int version = 5;
+        public int version = 1;
         public RuleSequence[] sequences = Array.Empty<RuleSequence>();
         public RuleBinding[] bindings = Array.Empty<RuleBinding>();
         public RuleButtonData[] buttons = Array.Empty<RuleButtonData>();
@@ -98,29 +108,33 @@ namespace Maestro.Quest.Rules
         public static string Activity(RuleEventKind kind) => BehaviourCatalog.Event(kind)?.Activity;
         public static bool ConditionMatches(RuleCondition condition, string activity) => condition == RuleCondition.Any || condition.ToString().ToLowerInvariant() == activity;
 
+        public static bool ValidStep(RuleStep step,out string error)
+        {
+            error="Invalid native action";
+            if (step == null || !BehaviourCatalog.HasAction(step.action) || !Enum.IsDefined(typeof(RuleGesture),step.gesture) || !float.IsFinite(step.seconds) || step.seconds < 0 || step.seconds > 30) return false;
+            if (!string.IsNullOrEmpty(step.propId) && (!IsId(step.propId) || !CanCarry(step) || !Enum.IsDefined(typeof(PropHand),step.propHand) ||
+                !Enum.IsDefined(typeof(PropRelease),step.propRelease) || !float.IsFinite(step.propReleaseAt) || step.propReleaseAt < .05f || step.propReleaseAt > 1 ||
+                !float.IsFinite(step.propOffset.sqrMagnitude) || step.propOffset.sqrMagnitude > 1 || !MotionFrame.ValidRotation(step.propRotation) ||
+                !string.IsNullOrEmpty(step.propAvatarHash) && !ModelLibrary.ValidHash(step.propAvatarHash))) return false;
+            if (step.action != RuleActionKind.RecordedAnimation && step.action != RuleActionKind.ThrowRecording && step.action != RuleActionKind.ImportedClip && step.action != RuleActionKind.LibraryMotion && step.action != RuleActionKind.RecipeAnimation && step.seconds < .1f) return false;
+            if (!string.IsNullOrEmpty(step.motionId) && !IsId(step.motionId)) return false;
+            if (step.clipIndex < 0 || step.clipIndex >= 32 || !string.IsNullOrEmpty(step.clipModelHash) && !ModelLibrary.ValidHash(step.clipModelHash)) return false;
+            if (step.action == RuleActionKind.ThrowRecording && (step.loop || step.seconds != 0)) return false;
+            if (step.action != RuleActionKind.Wait && !IsTarget(step.targetId)) return false;
+            if ((step.action == RuleActionKind.Gesture || IsSpatial(step.action)) && step.targetId != "maestro") return false;
+            error=null;return true;
+        }
+
         public bool Validate(out string error)
         {
             error = "This rule file has an unsupported version or invalid data.";
-            if (version != 1 && version != 2 && version != 3 && version != 4 && version != 5 || sequences == null || bindings == null || buttons == null || sequences.Length > 32 || bindings.Length > 128 || buttons.Length > 16) return false;
+            if (version != 1 || sequences == null || bindings == null || buttons == null || sequences.Length > 32 || bindings.Length > 128 || buttons.Length > 16) return false;
             if(sequences.Where(x=>x!=null).Sum(x=>x.program?.Length??0)>128000)return false;
-            var stepIds = new HashSet<string>(); var sequenceIds = new HashSet<string>(); var bindingIds = new HashSet<string>(); var buttonIds = new HashSet<string>();
+            var sequenceIds = new HashSet<string>(); var bindingIds = new HashSet<string>(); var buttonIds = new HashSet<string>();
             foreach (var sequence in sequences)
             {
-                if (sequence == null || !IsId(sequence.id) || !sequenceIds.Add(sequence.id) || string.IsNullOrWhiteSpace(sequence.name) || sequence.name.Length > 32 || sequence.name.Any(char.IsControl) || !Enum.IsDefined(typeof(RuleInterruption),sequence.interruption) || sequence.steps == null || (sequence.UsesProgram ? version<5 || sequence.steps.Length!=0 || sequence.Compile(out _)==null : sequence.steps.Length<1 || sequence.steps.Length>16)) return false;
-                foreach (var step in sequence.steps)
-                {
-                    if (step == null || version >= 4 && (!IsId(step.id) || !stepIds.Add(step.id)) || version < 4 && step.action == RuleActionKind.RecipeAnimation || !BehaviourCatalog.HasAction(step.action) || !Enum.IsDefined(typeof(RuleGesture),step.gesture) || !float.IsFinite(step.seconds) || step.seconds < 0 || step.seconds > 30) return false;
-                    if (!string.IsNullOrEmpty(step.propId) && (version < 3 || !IsId(step.propId) || !CanCarry(step) || !Enum.IsDefined(typeof(PropHand),step.propHand) ||
-                        !Enum.IsDefined(typeof(PropRelease),step.propRelease) || !float.IsFinite(step.propReleaseAt) || step.propReleaseAt < .05f || step.propReleaseAt > 1 ||
-                        !float.IsFinite(step.propOffset.sqrMagnitude) || step.propOffset.sqrMagnitude > 1 || !MotionFrame.ValidRotation(step.propRotation) ||
-                        !string.IsNullOrEmpty(step.propAvatarHash) && !ModelLibrary.ValidHash(step.propAvatarHash))) return false;
-                    if (step.action != RuleActionKind.RecordedAnimation && step.action != RuleActionKind.ThrowRecording && step.action != RuleActionKind.ImportedClip && step.action != RuleActionKind.LibraryMotion && step.action != RuleActionKind.RecipeAnimation && step.seconds < .1f) return false;
-                    if (!string.IsNullOrEmpty(step.motionId) && !IsId(step.motionId) || version == 1 && (step.action == RuleActionKind.LibraryMotion || !string.IsNullOrEmpty(step.motionId))) return false;
-                    if (step.clipIndex < 0 || step.clipIndex >= 32 || !string.IsNullOrEmpty(step.clipModelHash) && !ModelLibrary.ValidHash(step.clipModelHash)) return false;
-                    if (step.action == RuleActionKind.ThrowRecording && (step.loop || step.seconds != 0)) return false;
-                    if (step.action != RuleActionKind.Wait && !IsTarget(step.targetId)) return false;
-                    if ((step.action == RuleActionKind.Gesture || IsSpatial(step.action)) && step.targetId != "maestro") return false;
-                }
+                if (sequence == null || !IsId(sequence.id) || !sequenceIds.Add(sequence.id) || string.IsNullOrWhiteSpace(sequence.name) || sequence.name.Length > 32 || sequence.name.Any(char.IsControl) || !Enum.IsDefined(typeof(RuleInterruption),sequence.interruption) || sequence.Compile(out _)==null) return false;
+
             }
             foreach (var binding in bindings)
             {

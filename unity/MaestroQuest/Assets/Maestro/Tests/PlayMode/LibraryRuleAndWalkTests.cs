@@ -152,7 +152,7 @@ namespace Maestro.Quest.Tests
                 Directory.CreateDirectory(output);var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);var observation=observer.Observe();observation.motions=page;
                 File.WriteAllText(Path.Combine(output,"motion-search-state.json"),RoomAgentWire.Serialize(observation));
             }
-            var sequence=rules.Selected;sequence.steps[0].motionId=page.entries.Single().id;
+            var sequence=rules.Selected;var selectedSteps=sequence.SimpleSteps();selectedSteps[0].motionId=page.entries.Single().id;sequence.SetSimpleSteps(selectedSteps);
             Assert.That(executor.Execute(new RoomAgentRequest {version=2,commands=new[] {new RoomAgentCommand {action="rules",rule=new RuleRequest {action="edit",revision=rules.Revision,edits=new[] {new RuleEdit {kind="save",sequence=sequence}}}}}},out error,out _),Is.True,error);
             Assert.That(runtime.Trigger(sequence.id),Is.True);yield return Until(()=>avatar.LibraryMotionId==gait.id);runtime.StopAll();
             var update=editor.Motions.UpdateAsync(gait.id,"Everyday walk",new[] {"calm"},true);yield return Until(()=>update.IsCompleted);Assert.That(update.Exception,Is.Null);
@@ -172,10 +172,10 @@ namespace Maestro.Quest.Tests
             var work=book.HandleAsync(Request("select")); yield return Until(() => work.IsCompleted);
             Assert.That(book.State.canAssign,Is.True);
             var staleAssignment=Request("rule");
-            var program=rules.Selected; program.name="Programmed walk"; program.steps=Array.Empty<RuleStep>();
+            var program=rules.Selected; program.name="Programmed walk";
             program.program=Newtonsoft.Json.JsonConvert.SerializeObject(new {
                 version=1,entry="main",resources=new[] {"maestro"},functions=new[] {new {
-                    name="main",returns="void",parameters=Array.Empty<object>(),locals=Array.Empty<object>(),
+                    name="main",returns="void",parameters=Array.Empty<object>(),locals=new[] {new {name="reserved",initial=false}},
                     body=new[] {new {id="walk",op="action",step=new {action=7,targetId="maestro",gesture=0,motionId=gait.id,seconds=.5f,loop=true},bindings=new {}}}
                 }}
             });
@@ -198,7 +198,7 @@ namespace Maestro.Quest.Tests
             work=book.HandleAsync(Request("archive")); yield return Until(() => work.IsCompleted);
             work=book.HandleAsync(Request("removeDownload")); yield return Until(() => work.IsCompleted);
             Assert.That(editor.Motions.Downloaded(gait.id),Is.True);
-            rules.Undo(); Assert.That(rules.Selected.UsesProgram,Is.False); Assert.That(book.State.canAssign,Is.True);
+            rules.Undo(); Assert.That(rules.Selected.SimpleSteps(),Is.Not.Null); Assert.That(book.State.canAssign,Is.True);
             work=book.HandleAsync(Request("rule")); yield return Until(() => work.IsCompleted);
             Assert.That(rules.SelectedStep.motionId,Is.EqualTo(gait.id),book.State.status);
             book.SetVisible(false); rules.Undo(); rules.Redo();
@@ -219,7 +219,7 @@ namespace Maestro.Quest.Tests
             Assert.That(editor.Motions.Downloaded(greeting.id),Is.True); Assert.That(book.State.canRemoveDownload,Is.False);
             runtime.StopAll(); rules.AssignLibraryMotion(gait.id); book.Refresh();
             Assert.That(book.State.usage.total,Is.Zero); Assert.That(book.State.usage.history,Is.True); Assert.That(book.State.canRemoveDownload,Is.False);
-            rules.Undo(); Assert.That(rules.Selected.steps[0].motionId,Is.EqualTo(greeting.id));
+            rules.Undo(); Assert.That(rules.Selected.SimpleSteps()[0].motionId,Is.EqualTo(greeting.id));
             rules.SendMessage("OnApplicationPause",true); rules.SendMessage("OnApplicationPause",false);
             yield return Until(() => book.State.usage.saved);
             string evidence=Environment.GetEnvironmentVariable("MAESTRO_IMPORT_EVIDENCE");
@@ -345,9 +345,9 @@ namespace Maestro.Quest.Tests
             var walk = Request("walk"); walk.motionId = gait.id; work = book.HandleAsync(walk); yield return Until(() => work.IsCompleted);
             Assert.That(editor.Read("maestro").walkMotionId,Is.EqualTo(gait.id)); Assert.That(avatar.IsImportedClipPlaying,Is.False);
             var assign = Request("rule"); assign.motionId = gait.id; assign.ruleId = rules.Selected.id; assign.stepIndex = rules.SelectedStepIndex;
-            work = book.HandleAsync(assign); yield return Until(() => work.IsCompleted); Assert.That(rules.Selected.steps[0].motionId,Is.EqualTo(gait.id));
+            work = book.HandleAsync(assign); yield return Until(() => work.IsCompleted); Assert.That(rules.Selected.SimpleSteps()[0].motionId,Is.EqualTo(gait.id));
             rules.NewSequence(); assign.sequence = ++sequence; work = book.HandleAsync(assign); yield return Until(() => work.IsCompleted);
-            Assert.That(book.State.status,Does.Contain("changed")); Assert.That(rules.Selected.steps[0].action,Is.EqualTo(RuleActionKind.Gesture));
+            Assert.That(book.State.status,Does.Contain("changed")); Assert.That(rules.Selected.SimpleSteps()[0].action,Is.EqualTo(RuleActionKind.Gesture));
             query = Request("query"); query.query = ""; work = book.HandleAsync(query); yield return Until(() => work.IsCompleted);
             string evidence = Environment.GetEnvironmentVariable("MAESTRO_IMPORT_EVIDENCE");
             if (!string.IsNullOrEmpty(evidence)) { Directory.CreateDirectory(evidence); File.WriteAllText(Path.Combine(evidence,"library-book-state.json"),Newtonsoft.Json.JsonConvert.SerializeObject(book.State)); }
@@ -384,10 +384,10 @@ namespace Maestro.Quest.Tests
             Assert.That(router.Begin(0,ray),Is.False); Assert.That(router.Begin(1,ray),Is.True); router.End(1,ray);
             yield return Until(() => avatar.LibraryMotionId == greeting.id); runtime.StopAll(); Assert.That(avatar.IsImportedClipPlaying,Is.False);
             var rename = editor.Motions.UpdateAsync(greeting.id,"My greeting",new[] { "greeting" },true); yield return Until(() => rename.IsCompleted); Assert.That(rename.Exception,Is.Null);
-            Assert.That(rules.Selected.steps[0].motionId,Is.EqualTo(greeting.id)); Assert.That(rules.Summary,Does.Contain("My greeting"));
-            rules.AssignLibraryMotion(gait.id); rules.Undo(); Assert.That(rules.Selected.steps[0].motionId,Is.EqualTo(greeting.id));
+            Assert.That(rules.Selected.SimpleSteps()[0].motionId,Is.EqualTo(greeting.id)); Assert.That(rules.Summary,Does.Contain("My greeting"));
+            rules.AssignLibraryMotion(gait.id); rules.Undo(); Assert.That(rules.Selected.SimpleSteps()[0].motionId,Is.EqualTo(greeting.id));
             rules.SendMessage("OnApplicationPause",true); var restored = new RuleStorage(directory).Load(out var error); Assert.That(error,Is.Null);
-            Assert.That(restored.sequences.Single().steps.Single().motionId,Is.EqualTo(greeting.id)); Assert.That(restored.buttons.Single().mount,Is.EqualTo(ButtonMount.LeftController));
+            Assert.That(restored.sequences.Single().SimpleSteps().Single().motionId,Is.EqualTo(greeting.id)); Assert.That(restored.buttons.Single().mount,Is.EqualTo(ButtonMount.LeftController));
         }
         [UnityTest] public IEnumerator SavedObjectMotionRunsAndStopsWithoutMovingItsRoomPlacement()
         {

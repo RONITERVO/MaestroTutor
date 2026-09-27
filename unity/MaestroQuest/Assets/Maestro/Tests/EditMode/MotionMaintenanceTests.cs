@@ -65,12 +65,12 @@ namespace Maestro.Quest.Tests
         [Test] public void RetainedSaveAndRecoveryCopiesProtectReferencesEvenAfterCurrentAssignmentsChange()
         {
             string id=Guid.NewGuid().ToString("N"); var storage=new RuleStorage(directory);
-            var document=new RuleDocument { sequences=new[] { new RuleSequence { id=Guid.NewGuid().ToString("N"),name="Saved action",steps=new[] { new RuleStep { action=RuleActionKind.LibraryMotion,motionId=id,seconds=0 } } } } };
+            var document=new RuleDocument { sequences=new[] { new RuleSequence { id=Guid.NewGuid().ToString("N"),name="Saved action",program=Maestro.Quest.Programs.BehaviourProgram.FromSteps(new RuleStep { action=RuleActionKind.LibraryMotion,motionId=id,seconds=0 }) } } };
             Assert.That(storage.Save(document,out var error),Is.True,error);
             Assert.That(storage.RetainsMotion(id,out bool uncertain),Is.True); Assert.That(uncertain,Is.False);
             Assert.That(storage.Save(new RuleDocument(),out error),Is.True,error);
             Assert.That(storage.RetainsMotion(id,out uncertain),Is.True,"Recovery backup keeps the earlier reference"); Assert.That(uncertain,Is.False);
-            File.WriteAllText(Path.Combine(directory,"rules.v3.json.unreadable"),"damaged retained save");
+            File.WriteAllText(Path.Combine(directory,"behaviours.v1.json.unreadable"),"damaged retained save");
             storage.RetainsMotion(Guid.NewGuid().ToString("N"),out uncertain); Assert.That(uncertain,Is.True,"Unknown retained contents must not permit deleting a possible dependency");
         }
     }

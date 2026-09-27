@@ -46,8 +46,8 @@ namespace Maestro.Quest.Tests
             rightAnchor = new GameObject("Right controller pose"); rightAnchor.transform.SetParent(root.transform,false); rightAnchor.transform.position = new Vector3(3,1,1);
             runtime = root.AddComponent<RoomRules>(); runtime.Initialize(workshop,editor,animations,null,room,null,index => { var anchor = index == 0 ? leftAnchor : rightAnchor; return anchor && anchor.activeSelf ? anchor.transform : null; });
             workshop.NewSequence();
-            for (int i = 0; i < System.Enum.GetValues(typeof(RuleActionKind)).Length && workshop.Selected.steps[0].action != RuleActionKind.RecordedAnimation; i++) workshop.CycleAction();
-            Assert.That(workshop.Selected.steps[0].action,Is.EqualTo(RuleActionKind.RecordedAnimation));
+            for (int i = 0; i < System.Enum.GetValues(typeof(RuleActionKind)).Length && workshop.Selected.SimpleSteps()[0].action != RuleActionKind.RecordedAnimation; i++) workshop.CycleAction();
+            Assert.That(workshop.Selected.SimpleSteps()[0].action,Is.EqualTo(RuleActionKind.RecordedAnimation));
             workshop.UseTarget(); sequenceId = workshop.Selected.id;
             yield return null;
         }
@@ -118,21 +118,21 @@ namespace Maestro.Quest.Tests
 
         [UnityTest] public IEnumerator SharedRuleEditsPreserveStepIdentityRejectStaleAndUndoWholeBatch()
         {
-            int revision=workshop.Revision;var sequence=workshop.Selected;string originalStep=sequence.steps[0].id;
-            sequence.steps=sequence.steps.Append(new RuleStep {id="",action=RuleActionKind.Wait,seconds=1}).ToArray();
+            int revision=workshop.Revision;var sequence=workshop.Selected;string originalStep=sequence.SimpleSteps()[0].id;
+            sequence.SetSimpleSteps(sequence.SimpleSteps().Append(new RuleStep {action=RuleActionKind.Wait,seconds=1}).ToArray());
             var edit=new RuleRequest {action="edit",revision=revision,edits=new[]{new RuleEdit {kind="save",sequence=sequence},new RuleEdit {kind="button",target=sequence.id,mount=ButtonMount.LeftController}}};
             Assert.That(workshop.Execute(edit,out var error,out _),Is.True,error);Assert.That(workshop.Revision,Is.EqualTo(revision+1));
-            var saved=workshop.Selected;Assert.That(saved.steps[0].id,Is.EqualTo(originalStep));Assert.That(RuleDocument.IsId(saved.steps[1].id),Is.True);
+            var saved=workshop.Selected;Assert.That(saved.SimpleSteps()[0].id,Is.EqualTo(originalStep));Assert.That(RuleDocument.IsId(saved.SimpleSteps()[1].id),Is.True);
             Assert.That(workshop.Execute(edit,out _,out _),Is.False,"An old draft cannot replace a newer edit");
-            string before=JsonUtility.ToJson(workshop.Snapshot());saved.steps[0].seconds=-1;
+            string before=JsonUtility.ToJson(workshop.Snapshot());var invalid=saved.SimpleSteps();invalid[0].seconds=-1;saved.SetSimpleSteps(invalid);
             edit.revision=workshop.Revision;edit.edits[0].sequence=saved;Assert.That(workshop.Execute(edit,out _,out _),Is.False);Assert.That(JsonUtility.ToJson(workshop.Snapshot()),Is.EqualTo(before));
             Assert.That(workshop.Execute(new RuleRequest {action="undo",revision=workshop.Revision},out _,out _),Is.True);
-            Assert.That(workshop.Selected.steps.Length,Is.EqualTo(1));Assert.That(workshop.Snapshot().buttons.Length,Is.Zero);
+            Assert.That(workshop.Selected.SimpleSteps().Length,Is.EqualTo(1));Assert.That(workshop.Snapshot().buttons.Length,Is.Zero);
             Assert.That(workshop.Execute(new RuleRequest {action="redo",revision=workshop.Revision},out _,out _),Is.True);
-            var restored=workshop.Selected;string added=restored.steps[1].id;restored.steps=restored.steps.Reverse().ToArray();
+            var restored=workshop.Selected;string added=restored.SimpleSteps()[1].id;restored.SetSimpleSteps(restored.SimpleSteps().Reverse().ToArray());
             Assert.That(workshop.Execute(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="save",sequence=restored}}},out _,out _),Is.True);
-            Assert.That(workshop.Selected.steps[0].id,Is.EqualTo(added));workshop.AddStep();Assert.That(workshop.Observe().revision,Is.GreaterThan(revision));
-            workshop.SendMessage("OnApplicationPause",true);var loaded=new RuleStorage(directory).Load(out _);Assert.That(loaded.sequences.First(x=>x.id==sequence.id).steps[0].id,Is.EqualTo(added));
+            Assert.That(workshop.Selected.SimpleSteps()[0].id,Is.EqualTo(added));workshop.AddStep();Assert.That(workshop.Observe().revision,Is.GreaterThan(revision));
+            workshop.SendMessage("OnApplicationPause",true);var loaded=new RuleStorage(directory).Load(out _);Assert.That(loaded.sequences.First(x=>x.id==sequence.id).SimpleSteps()[0].id,Is.EqualTo(added));
             yield return null;
         }
         [UnityTest] public IEnumerator AgentRuleRecipePlaybackSharesTutorEventsAndActualButtonInput()
@@ -140,14 +140,14 @@ namespace Maestro.Quest.Tests
             var agent=new RoomAgentExecutor(editor);var recipe=RecipeTemplates.BoxRobot(true);recipe.playing=false;
             Assert.That(agent.Execute(new RoomAgentRequest {version=1,sceneRevision=editor.Revision,commands=new[]{new RoomAgentCommand {action="create",kind="recipe",reference="robot",name="Robot",recipe=recipe}}},out var error,out var created),Is.True,error);
             string target=created.Single();var geometry=editor.Find(target).GetComponent<RecipeObject>();Assert.That(geometry.IsPlaying,Is.False);
-            var sequence=new RuleSequence {id="",name="Wave with speech",steps=new[]{new RuleStep {id="",action=RuleActionKind.RecipeAnimation,targetId=target,seconds=.3f,loop=true}}};
+            var sequence=new RuleSequence {id="",name="Wave with speech",program=Maestro.Quest.Programs.BehaviourProgram.FromSteps(new RuleStep {action=RuleActionKind.RecipeAnimation,targetId=target,seconds=.3f,loop=true})};
             var request=new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{
                 new RuleEdit {kind="save",reference="wave",sequence=sequence},
                 new RuleEdit {kind="bind",binding=new RuleBinding {sequenceId="wave",trigger=RuleEventKind.Speaking,stopOnExit=true}},
                 new RuleEdit {kind="button",target="wave",mount=ButtonMount.Room}}};
             Assert.That(agent.Execute(new RoomAgentRequest {version=2,commands=new[]{new RoomAgentCommand {action="rules",rule=request}}},out error,out created),Is.True,error);
             string id=created.Single();yield return null;runtime.ObserveSnapshot(new BookSnapshot {activity="idle"});runtime.ObserveSnapshot(new BookSnapshot {activity="speaking"});
-            Assert.That(geometry.IsPlaying,Is.True,runtime.Scheduler.LastError);Assert.That(workshop.Observe().running.Single().stepId,Is.EqualTo(workshop.Selected.steps[0].id));
+            Assert.That(geometry.IsPlaying,Is.True,runtime.Scheduler.LastError);Assert.That(workshop.Observe().running.Single().nodeId,Is.EqualTo(workshop.Selected.SimpleSteps()[0].id));
             var arm=geometry.Part("RightUpperArm");var rotation=arm.localRotation;yield return new WaitForSeconds(.12f);Assert.That(Quaternion.Angle(rotation,arm.localRotation),Is.GreaterThan(.1f));
             runtime.ObserveSnapshot(new BookSnapshot {activity="idle"});Assert.That(geometry.IsPlaying,Is.False);
             var button=root.GetComponentInChildren<RuleButton>();var router=root.AddComponent<BookPointerRouter>();router.Editor=editor;Physics.SyncTransforms();
@@ -165,7 +165,7 @@ namespace Maestro.Quest.Tests
             foreach(var token in new[] {json["functions"][0]["body"][1]["then"][0],json["functions"][0]["body"][1]["else"][0]}) {
                 token["step"]["action"]=8;token["step"]["targetId"]=target;token["step"]["seconds"]=.8f;token["step"]["loop"]=true;
             }
-            var sequence=new RuleSequence {id="",name="Programmed wave",program=json.ToString(Newtonsoft.Json.Formatting.None),steps=Array.Empty<RuleStep>()};
+            var sequence=new RuleSequence {id="",name="Programmed wave",program=json.ToString(Newtonsoft.Json.Formatting.None)};
             var request=new RuleRequest {action="edit",revision=workshop.Revision,edits=new[] {
                 new RuleEdit {kind="save",reference="wave",sequence=sequence},
                 new RuleEdit {kind="bind",binding=new RuleBinding {sequenceId="wave",trigger=RuleEventKind.Speaking,stopOnExit=true}},

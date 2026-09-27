@@ -58,6 +58,30 @@ namespace Maestro.Quest.Programs
         }
         public int NodeCount=>ids.Count;
         public RuleStep[] NativeActions=>actions.Values.Select(x=>x.Copy()).ToArray();
+        public RuleStep[] SimpleSteps()
+        {
+            var f=functions[Entry];
+            if(functions.Count!=1 || f.Returns!=ProgramType.Void || f.Parameters.Length!=0 || f.Initial.Count!=0 ||
+                f.Body.Any(n=>(string)n["op"]!="action" || ((JObject)n["bindings"]).Count!=0))return null;
+            return f.Body.Select(n=> {var step=Action((string)n["id"]);step.id=(string)n["id"];return step;}).ToArray();
+        }
+        public string WithSimpleSteps(RuleStep[] steps)
+        {
+            if(SimpleSteps()==null)throw new ArgumentException("Edit this program's functions in the book");
+            var root=JObject.Parse(Source);
+            root["functions"][0]["body"]=ActionNodes(steps);
+            // Preserve extra declarations; replace resources used by the edited actions.
+            root["resources"]=new JArray(Resources.Except(SimpleSteps().SelectMany(RuleDocument.Targets)).Concat(steps.SelectMany(RuleDocument.Targets)).Distinct());
+            return root.ToString(Formatting.None);
+        }
+        static JArray ActionNodes(RuleStep[] steps) => new(steps.Select(step=> {
+            var value=JObject.Parse(JsonUtility.ToJson(step));value.Remove("id");
+            return new JObject { ["id"]=step.id,["op"]="action",["step"]=value,["bindings"]=new JObject() };
+        }));
+        public static string FromSteps(params RuleStep[] steps) => new JObject {
+            ["version"]=1,["entry"]="main",["resources"]=new JArray(steps.SelectMany(RuleDocument.Targets).Distinct()),
+            ["functions"]=new JArray(new JObject { ["name"]="main",["returns"]="void",["parameters"]=new JArray(),["locals"]=new JArray(),["body"]=ActionNodes(steps) })
+        }.ToString(Formatting.None);
         public bool ReferencesMotion(string id)=>Source.Contains("\""+id+"\"");
         internal ProgramFunction Function(string name)=>functions[name];
         internal RuleStep Action(string id)=>actions[id].Copy();
@@ -174,7 +198,7 @@ namespace Maestro.Quest.Programs
         }
         internal static ProgramType BindingType(string name)=>BehaviourCatalog.Bindings.TryGetValue(name,out var type)
             ? type : throw new ProgramFault("Unsupported native argument binding");
-        internal static bool ValidStep(RuleStep step,out string error)=>new RuleDocument {sequences=new[] {new RuleSequence {id="11111111111111111111111111111111",name="Program action",steps=new[] {step}}}}.Validate(out error);
+        internal static bool ValidStep(RuleStep step,out string error)=>RuleDocument.ValidStep(step,out error);
         static RuleStep ReadStep(JObject value)
         {
             Keys(value,"action targetId gesture seconds loop","clipModelHash clipIndex motionId propId propAvatarHash propHand propRelease propOffset propRotation propReleaseAt");

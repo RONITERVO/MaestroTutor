@@ -89,7 +89,7 @@ eliminate UI, provider evaluation or headset testing.
 
 ## Implementation stages and acceptance
 
-1. **Vocabulary foundation (this checkpoint):** native registrations for the nine
+1. **Vocabulary foundation (complete):** native registrations for the nine
    existing program actions, seven events and three facts; duration, current whole-target
    ownership and prerequisite metadata; typed scalar bindings;
    generated web labels/fact types/prompt fact guide; native export equality and
@@ -97,10 +97,14 @@ eliminate UI, provider evaluation or headset testing.
    registrations. Old numeric positions and RuleStep binding names are isolated under
    adapters.ruleStep, separate from the string capability identities. This is not
    the finished catalog of all room commands or generated argument validation.
-2. Replace the development dual sequence/program representation with a canonical
-   program format. Reset development documents if needed; document the reset and
-   preserve source models/downloads and recoverable last-good writes. Remove old
-   migrations only after their consumers and tests have moved.
+2. **Canonical program storage (complete):** every behaviour stores one program;
+   simple controls derive and edit literal blocks, with one interpreter for all runs.
+   `behaviours.v1.json` starts a fresh development behaviour collection, preserving
+   old `rules.v1`–`rules.v5` files without migration. Their triggers/buttons reset too.
+   Models, motion downloads, room creations and released web saves are unchanged.
+   Atomic writes, last-good recovery, newer-version protection, stable node IDs,
+   Undo and motion-library assignment remain. New saves require the native
+   `behaviourPrograms.v2` capability. No headset installation/reset has occurred yet.
 3. Add typed capability invocation, availability and paged search, with one
    vertical path exercised by book, agent and native program. Preserve domain
    validators; generate structural schemas rather than duplicating business rules.

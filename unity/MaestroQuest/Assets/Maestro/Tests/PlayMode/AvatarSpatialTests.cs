@@ -176,7 +176,7 @@ namespace Maestro.Quest.Tests
             Tutor(); var actions = new RoomRuleActions(editor,authoring);
             var step = new RuleStep { action=RuleActionKind.LookAtUser,targetId="maestro",seconds=.5f };
             var scheduler = new RuleScheduler(actions);
-            var sequence = new RuleSequence { id=Guid.NewGuid().ToString("N"),name="Look",steps=new[] { step } };
+            var sequence = new RuleSequence { id=Guid.NewGuid().ToString("N"),name="Look",program=Maestro.Quest.Programs.BehaviourProgram.FromSteps(step) };
             scheduler.Configure(new RuleDocument { sequences=new[] { sequence } });
             Assert.That(scheduler.Trigger(sequence.id,0),Is.True,scheduler.LastError);
             Assert.That(motion.Active,Is.True); yield return new WaitForSeconds(.2f);

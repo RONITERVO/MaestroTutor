@@ -418,3 +418,20 @@ The first native vocabulary registry now generates web action/event labels, fact
 types, scalar binding types and the prompt fact guide, with drift checks. Typed
 capability invocation, full room-command coverage, timers/state machines and
 per-channel ownership remain follow-up work. No development data was reset here.
+
+
+## Canonical behaviour programs (2026-09-27)
+
+The dual saved step-list/program representation and separate linear scheduling
+path have been removed. Physical controls, motion-library assignment and simple
+book editing derive action blocks from the same program used by the agent and
+function editor. Stable node identities, props, exact motion IDs, revision checks,
+Undo, triggers, buttons, Stop and last-good recovery are retained. Complex programs
+stay in the function editor and cannot be flattened by a simple assignment.
+
+The new `behaviours.v1.json` format starts an empty development behaviour collection,
+including its triggers/buttons; retired rule files are preserved without migration.
+This applies when the new build is installed. No headset installation or reset was
+performed during this PC checkpoint. Room creations, models/motions, source
+collections and released web chat/backup formats remain intact. See
+[the program contract](QUEST_BEHAVIOUR_PROGRAMS.md) for boundaries and verification.

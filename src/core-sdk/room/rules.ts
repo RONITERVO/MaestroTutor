@@ -2,16 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0
 import {validVector,validRotation,type Vec3,type Rotation} from './recipe';
 export {ruleActions,ruleGestures,ruleEvents,ruleConditions,rulePolicies,ruleMounts} from '../../../shared/prompts';
-import {validRuleStep,type RuleStep} from "./ruleSteps";
+import type {RuleStep} from "./ruleSteps";
 export type {RuleStep} from "./ruleSteps";
 import {parseProgram} from "./programs";
-export interface RuleSequence {id:string;name:string;interruption:number;repeat:boolean;program?:string|null;steps:RuleStep[]}
+export interface RuleSequence {id:string;name:string;interruption:number;repeat:boolean;program:string}
 export interface RuleBinding {id:string;sequenceId:string;sourceId:string|null;trigger:number;condition:number;cooldown:number;enabled:boolean;stopOnExit:boolean}
 export interface RuleButton {id:string;sequenceId:string;mount:number;position:Vec3;rotation:Rotation}
 export interface RuleEdit {kind:'save'|'delete'|'bind'|'unbind'|'button'|'unbutton';reference?:string;target?:string;sequence?:RuleSequence;binding?:RuleBinding;mount?:number}
 export interface RuleRequest {action:'inspect'|'edit'|'play'|'stop'|'undo'|'redo';revision?:number;target?:string;page?:number;edits?:RuleEdit[]}
 export interface RuleView {revision:number;canUndo:boolean;canRedo:boolean;readOnly:boolean;status:string;sequences:{id:string;name:string;steps:number;repeat:boolean;program?:boolean}[];selected:RuleSequence|null;bindings:RuleBinding[];buttons:RuleButton[];bindingPage:number;bindingCount:number;running:RuleRun[];outcomes?:RuleOutcome[];queued:number}
-export interface RuleRun {id:string;sequenceId:string;stepId:string;preparing:boolean;nodeId?:string|null;functionName?:string|null;status?:string;locals?:{name:string;type:string;value:string}[]}
+export interface RuleRun {id:string;sequenceId:string;preparing:boolean;nodeId?:string|null;functionName?:string|null;status?:string;locals?:{name:string;type:string;value:string}[]}
 export interface RuleOutcome {id:string;sequenceId:string;phase:'completed'|'cancelled'|'failed';nodeId?:string|null;status:string}
 const record=(v:unknown):v is Record<string,unknown>=>v!==null&&typeof v==='object'&&!Array.isArray(v);
 const int=(v:unknown,min:number,max:number):v is number=>typeof v==='number'&&Number.isInteger(v)&&v>=min&&v<=max;
@@ -20,16 +20,11 @@ const guid=(v:unknown)=>typeof v==='string'&&/^[a-f0-9]{32}$/.test(v);
 const ref=(v:unknown)=>typeof v==='string'&&/^[a-zA-Z0-9_]{1,32}$/.test(v);
 const target=(v:unknown)=>v==='maestro'||v==='book'||guid(v);
 const title=(v:unknown)=>typeof v==='string'&&v.trim().length>0&&v.length<=32&&!/[\u0000-\u001f]/.test(v);
-export const newRuleStep=(action=2):RuleStep=>({id:'',action,targetId:'maestro',gesture:0,seconds:action===2?1:2.5,loop:false});
+export const newRuleStep=(action=2):RuleStep=>({id:crypto.randomUUID().replace(/-/g,''),action,targetId:'maestro',gesture:0,seconds:action===2?1:2.5,loop:false});
 export const copySequence=(value:RuleSequence):RuleSequence=>JSON.parse(JSON.stringify(value));
 export function validSequence(v:unknown,draft=false):v is RuleSequence {
- if(!record(v)||!(guid(v.id)||draft&&v.id==='')||!title(v.name)||!int(v.interruption,0,2)||typeof v.repeat!=='boolean'||!Array.isArray(v.steps))return false;
- if(v.program!=null&&typeof v.program!=='string')return false;
- if(v.program)return v.steps.length===0&&parseProgram(v.program).program!==null;
- if(v.steps.length<1||v.steps.length>16)return false;
- const ids=new Set<string>();
- for(const s of v.steps) {if(!validRuleStep(s,draft)||s.id!==''&&ids.has(s.id))return false;if(s.id!=='')ids.add(s.id);}
- return true;
+ return record(v)&&(guid(v.id)||draft&&v.id==='')&&title(v.name)&&int(v.interruption,0,2)&&typeof v.repeat==='boolean'&&
+ Object.keys(v).every(k=>['id','name','interruption','repeat','program'].includes(k))&&parseProgram(v.program).program!==null;
 }
 const validBinding=(v:unknown,draft=false):v is RuleBinding=>record(v)&&(guid(v.id)||draft&&v.id==='')&&(draft?ref(v.sequenceId):guid(v.sequenceId))&&int(v.trigger,0,6)&&int(v.condition,0,4)&&num(v.cooldown,.25,30)&&typeof v.enabled==='boolean'&&typeof v.stopOnExit==='boolean'&&(v.trigger<4||target(v.sourceId));
 export function validRuleRequest(v:unknown):v is RuleRequest {
@@ -55,5 +50,5 @@ export function validRuleView(v:unknown):v is RuleView {
  const text=(x:unknown,max=2048)=>typeof x==='string'&&x.length<=max;
  const name=(x:unknown)=>x==null||x===''||ref(x);
  if(v.outcomes!==undefined&&(!Array.isArray(v.outcomes)||v.outcomes.length>16||!v.outcomes.every(o=>record(o)&&guid(o.id)&&guid(o.sequenceId)&&['completed','cancelled','failed'].includes(o.phase as string)&&name(o.nodeId)&&text(o.status))))return false;
- return Array.isArray(v.running)&&v.running.length<=8&&v.running.every(r=>record(r)&&guid(r.id)&&guid(r.sequenceId)&&guid(r.stepId)&&typeof r.preparing==='boolean'&&name(r.nodeId)&&name(r.functionName)&&(r.status===undefined||text(r.status))&&(r.locals===undefined||Array.isArray(r.locals)&&r.locals.length<=24&&r.locals.every(l=>record(l)&&ref(l.name)&&['number','boolean','text'].includes(l.type as string)&&text(l.value,128))));
+ return Array.isArray(v.running)&&v.running.length<=8&&v.running.every(r=>record(r)&&guid(r.id)&&guid(r.sequenceId)&&typeof r.preparing==='boolean'&&name(r.nodeId)&&name(r.functionName)&&(r.status===undefined||text(r.status))&&(r.locals===undefined||Array.isArray(r.locals)&&r.locals.length<=24&&r.locals.every(l=>record(l)&&ref(l.name)&&['number','boolean','text'].includes(l.type as string)&&text(l.value,128))));
 }

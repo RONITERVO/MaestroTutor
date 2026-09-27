@@ -1,7 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {ProgramEditor} from './ProgramEditor';
-import {sequenceProgram} from '../../core-sdk/room/programs';
+import {sequenceProgram,simpleProgramSteps,withSimpleProgramSteps} from '../../core-sdk/room/programs';
 import {useCallback,useEffect,useState,useSyncExternalStore} from 'react';
 import type {RoomAgentState} from '../../core-sdk/room/roomAgent';
 import {copySequence,newRuleStep,validSequence,ruleActions,ruleGestures,ruleEvents,ruleConditions,rulePolicies,ruleMounts,type RuleSequence,type RuleEdit,type RuleRequest,type RuleStep} from '../../core-sdk/room/rules';
@@ -12,25 +12,28 @@ const draftOf=(state:RoomAgentState):Draft|null=>state.rules?.selected?{sequence
 export function RuleWorkspace({client}:{client:RoomAgentClient}) {
  const {state,pending}=useSyncExternalStore(client.subscribe,client.getSnapshot);
  const [draft,setDraft]=useState<Draft|null>(null),[dirty,setDirty]=useState(false),[error,setError]=useState('');
+ const [advanced,setAdvanced]=useState(false);
  const [programEditing,setProgramEditing]=useState(false),[editorReset,setEditorReset]=useState(0);
  const editProgram=useCallback((value:boolean)=>{setProgramEditing(value);if(value)setDirty(true);},[]);
  const [trigger,setTrigger]=useState(0),[condition,setCondition]=useState(0),[source,setSource]=useState('maestro'),[whileState,setWhileState]=useState(false);
  useEffect(()=>{if(!dirty&&state)setDraft(draftOf(state));},[state?.rules?.revision,state?.rules?.selected?.id,dirty]);
  if(!state?.visible||!state.rules)return null;
- const rules=state.rules,sequence=draft?.sequence;
- const stale=Boolean(draft&&(draft.source.session!==state.session||draft.revision!==rules.revision)),blocked=pending||rules.readOnly||stale;
+ const rules=state.rules,sequence=draft?.sequence,steps=sequence?simpleProgramSteps(sequence.program):null;
+ const supported=state.capabilities?.includes('behaviourPrograms.v2')===true;
+ const stale=Boolean(draft&&(draft.source.session!==state.session||draft.revision!==rules.revision)),blocked=pending||rules.readOnly||stale||!supported;
  const send=async(rule:RuleRequest,expected?:RoomAgentState)=>{setError('');try {const result=await client.request([{action:'rules',rule}],expected);if(!result.ok)setError(result.status);return result;}catch(e){setError(e instanceof Error?e.message:'This action could not be completed.');return null;}};
  const edit=async(edits:RuleEdit[],expected=state)=>send({action:'edit',revision:expected.rules!.revision,edits},expected);
  const change=(fn:(value:RuleSequence)=>void)=>{if(!draft)return;const value=copySequence(draft.sequence);fn(value);setDraft({...draft,sequence:value});setDirty(true);};
  const save=async()=>{if(!draft||!validSequence(draft.sequence,true)){setError('Check the name, targets and durations before applying.');return;}const result=await edit([{kind:'save',sequence:draft.sequence}],draft.source);if(result?.ok){setDirty(false);setDraft(draftOf(result));}};
- const updateStep=(index:number,fn:(step:RuleStep)=>void)=>change(value=>fn(value.steps[index]));
- const create=async(program=false)=>{const target=state.objects.find(o=>o.kind==='Assembly');const step=newRuleStep(target?8:1);step.targetId=target?.id??'maestro';await edit([{kind:'save',reference:'newBehaviour',sequence:{id:'',name:'New behaviour',interruption:0,repeat:false,steps:program?[]:[step],...(program?{program:JSON.stringify(sequenceProgram([step]))}:{})}}]);};
+ const changeSteps=(fn:(steps:RuleStep[])=>void)=>change(value=>{const steps=simpleProgramSteps(value.program);if(steps===null)return;fn(steps);value.program=withSimpleProgramSteps(value.program,steps);});
+ const updateStep=(index:number,fn:(step:RuleStep)=>void)=>changeSteps(steps=>fn(steps[index]));
+ const create=async()=>{const target=state.objects.find(o=>o.kind==='Assembly');const step=newRuleStep(target?8:1);step.targetId=target?.id??'maestro';await edit([{kind:'save',reference:'newBehaviour',sequence:{id:'',name:'New behaviour',interruption:0,repeat:false,program:JSON.stringify(sequenceProgram([step]))}}]);};
  const exit=async(objects:boolean)=>{try {const result=await client.request(objects?[{action:'inspect',target:state.selectedId??state.objects[0]?.id??'maestro'}]:[{action:'workspace',visible:false}]);if(!result.ok)setError(result.status);else setDirty(false);}catch(e){setError(e instanceof Error?e.message:'The book is unavailable.');}};
  return <div className="room-workspace rule-workspace" aria-label="Behaviour workspace">
   <section className="room-workspace-page room-hierarchy" aria-label="Behaviours and triggers">
    <div className="room-workspace-heading"><div><span className="room-eyebrow">WHEN THIS HAPPENS</span><h1>Behaviours</h1></div><button disabled={pending} onClick={()=>void exit(false)}>{dirty?'Discard & return':'Back to chat'}</button></div>
    <p className="room-workspace-intro">Build actions together. The agent, these blocks and your physical buttons use the same behaviours.</p>
-   <div className="room-workspace-actions"><button disabled={pending||dirty||programEditing} onClick={()=>void exit(true)}>Objects</button><button disabled={pending||dirty||rules.readOnly} onClick={()=>void create()}>+ Behaviour</button>{state.capabilities?.includes('behaviourPrograms.v1')&&<button disabled={pending||dirty||rules.readOnly||programEditing} onClick={()=>void create(true)}>+ Program</button>}<button disabled={pending||dirty||!rules.canUndo} onClick={()=>void send({action:'undo',revision:rules.revision})}>Undo</button><button disabled={pending||dirty||!rules.canRedo} onClick={()=>void send({action:'redo',revision:rules.revision})}>Redo</button></div>
+   <div className="room-workspace-actions"><button disabled={pending||dirty||programEditing} onClick={()=>void exit(true)}>Objects</button><button disabled={pending||dirty||rules.readOnly||programEditing||!supported} onClick={()=>void create()}>+ Behaviour</button><button disabled={pending||dirty||!rules.canUndo} onClick={()=>void send({action:'undo',revision:rules.revision})}>Undo</button><button disabled={pending||dirty||!rules.canRedo} onClick={()=>void send({action:'redo',revision:rules.revision})}>Redo</button></div>
    <div className="room-object-list" aria-label="Behaviours">{rules.sequences.map(value=><button key={value.id} disabled={pending||dirty||programEditing} aria-pressed={sequence?.id===value.id} onClick={()=>void send({action:'inspect',target:value.id})}><span>{value.name}</span><small>{value.steps} {value.program?'blocks':'steps'}{value.repeat?' · Repeats':''}{rules.running.some(run=>run.sequenceId===value.id)?' · Running':''}</small></button>)}</div>
    {sequence&&<>
     <h2 className="rule-section-title">Triggers</h2>
@@ -44,14 +47,15 @@ export function RuleWorkspace({client}:{client:RoomAgentClient}) {
   </section>
   <section className="room-workspace-page room-inspector" aria-label="Behaviour blocks">
    <div className="room-workspace-heading"><div><span className="room-eyebrow">DO THESE ACTIONS</span><h2>{sequence?.name??'Choose a behaviour'}</h2></div><button disabled={pending} onClick={()=>void send({action:'stop'})}>Stop all</button></div>
-   <div role="status" className={error||stale?'room-message room-message-warning':'room-message'}>{error||(stale?'Behaviours changed. Your draft is retained; reload before applying.':rules.status)}</div>
+   <div role="status" className={error||stale?'room-message room-message-warning':'room-message'}>{error||(!supported?'Update the native app to edit behaviours.':stale?'Behaviours changed. Your draft is retained; reload before applying.':rules.status)}</div>
    {rules.outcomes?.filter(outcome=>outcome.sequenceId===sequence?.id).slice(-1).map(outcome=><p className="room-message" key={outcome.id}>Last run: {outcome.phase} · {outcome.status}</p>)}
    {rules.queued>0&&<p>{rules.queued} queued actions</p>}
    {sequence&&<>
     <div className="room-workspace-actions"><button disabled={blocked||!dirty||programEditing} onClick={()=>void save()}>Apply changes</button><button disabled={pending||!dirty&&!stale} onClick={()=>{setDraft(draftOf(state));setDirty(false);setError('');setEditorReset(value=>value+1);}}>{stale?'Reload latest':'Discard draft'}</button><button disabled={blocked||dirty||programEditing} onClick={()=>void send({action:'play',target:sequence.id,revision:rules.revision})}>Try behaviour</button></div>
     <fieldset disabled={blocked} className="room-edit-body"><label>Name<input maxLength={32} value={sequence.name} onChange={e=>change(value=>{value.name=e.target.value;})}/></label>
     <div className="rule-start-block"><label className="rule-checkbox"><input type="checkbox" checked={sequence.repeat} onChange={e=>change(value=>{value.repeat=e.target.checked;})}/>Repeat until stopped</label><label>If triggered again<select value={sequence.interruption} onChange={e=>change(value=>{value.interruption=Number(e.target.value);})}>{rulePolicies.map((name,index)=><option key={name} value={index}>{name}</option>)}</select></label></div>
-    {sequence.program?<ProgramEditor key={sequence.id+':'+draft!.revision+':'+editorReset} source={sequence.program} targets={state.objects} onChange={source=>change(value=>{value.program=source;})} run={rules.running.find(run=>run.sequenceId===sequence.id)} onEditingChange={editProgram} disabled={blocked}/>:<><ol className="rule-block-list">{sequence.steps.map((step,index)=>{const active=rules.running.find(run=>run.sequenceId===sequence.id&&run.stepId===step.id);return <li key={step.id||`draft-${index}`} className={`rule-action-block${active?' rule-action-active':''}`}>
+    {steps!==null&&<button disabled={programEditing} onClick={()=>setAdvanced(value=>!value)}>{advanced?'Simple action editor':'Functions & code'}</button>}
+    {steps===null||advanced?<ProgramEditor key={sequence.id+':'+draft!.revision+':'+editorReset} source={sequence.program} targets={state.objects} onChange={source=>change(value=>{value.program=source;})} run={rules.running.find(run=>run.sequenceId===sequence.id)} onEditingChange={editProgram} disabled={blocked}/>:<><ol className="rule-block-list">{steps.map((step,index)=>{const active=rules.running.find(run=>run.sequenceId===sequence.id&&run.nodeId===step.id);return <li key={step.id||`draft-${index}`} className={`rule-action-block${active?' rule-action-active':''}`}>
      <div className="rule-step-heading"><strong>{index+1}. {ruleActions[step.action]}</strong>{active&&<span>{active.preparing?'Loading':'Running'}</span>}</div>
      <label>Action<select aria-label={`Step ${index+1} action`} value={step.action} onChange={e=>updateStep(index,value=>{value.action=Number(e.target.value);value.seconds=[0,3,6,7,8].includes(value.action)?0:2.5;if([1,4,5].includes(value.action))value.targetId='maestro';if(value.action===3)value.loop=false;if(![0,1,6,7].includes(value.action))value.propId=null;})}>{ruleActions.map((name,action)=><option key={name} value={action} disabled={(action===6||action===7)&&step.action!==action}>{name}</option>)}</select></label>
      {step.action!==2&&<label>Target<select aria-label={`Step ${index+1} target`} value={step.targetId} onChange={e=>updateStep(index,value=>{value.targetId=e.target.value;if(value.targetId!=='maestro')value.propId=null;})}>{state.objects.filter(o=>![1,4,5].includes(step.action)||o.id==='maestro').map(o=><option key={o.id} value={o.id}>{o.name}</option>)}</select></label>}
@@ -60,8 +64,8 @@ export function RuleWorkspace({client}:{client:RoomAgentClient}) {
      {[0,6,7,8].includes(step.action)&&<><small>0 uses the full animation duration.</small><label className="rule-checkbox"><input type="checkbox" checked={step.loop} onChange={e=>updateStep(index,value=>{value.loop=e.target.checked;})}/>Loop during this step</label></>}
      {(step.action===6||step.action===7)&&<p className="room-workspace-intro">The saved imported motion is retained. New motion assignments use the existing motion tools.</p>}
      {step.propId&&<p>Carrying {state.objects.find(o=>o.id===step.propId)?.name??'a missing prop'}; saved hand and release settings are retained.</p>}
-     <div className="room-workspace-actions"><button aria-label={`Move step ${index+1} up`} disabled={index===0} onClick={()=>change(value=>{[value.steps[index-1],value.steps[index]]=[value.steps[index],value.steps[index-1]];})}>↑</button><button aria-label={`Move step ${index+1} down`} disabled={index===sequence.steps.length-1} onClick={()=>change(value=>{[value.steps[index+1],value.steps[index]]=[value.steps[index],value.steps[index+1]];})}>↓</button><button aria-label={`Remove step ${index+1}`} disabled={sequence.steps.length<=1} onClick={()=>change(value=>{value.steps.splice(index,1);})}>Remove</button></div>
-    </li>;})}</ol><button disabled={sequence.steps.length>=16} onClick={()=>change(value=>{value.steps.push(newRuleStep());})}>+ Wait / action block</button>{state.capabilities?.includes('behaviourPrograms.v1')&&<button onClick={()=>change(value=>{value.program=JSON.stringify(sequenceProgram(value.steps));value.steps=[];})}>Convert to program</button>}</>}</fieldset>
+     <div className="room-workspace-actions"><button aria-label={`Move step ${index+1} up`} disabled={index===0} onClick={()=>changeSteps(steps=>{[steps[index-1],steps[index]]=[steps[index],steps[index-1]];})}>↑</button><button aria-label={`Move step ${index+1} down`} disabled={index===steps.length-1} onClick={()=>changeSteps(steps=>{[steps[index+1],steps[index]]=[steps[index],steps[index+1]];})}>↓</button><button aria-label={`Remove step ${index+1}`} disabled={steps.length<=1} onClick={()=>changeSteps(steps=>{steps.splice(index,1);})}>Remove</button></div>
+    </li>;})}</ol><button disabled={steps.length>=16} onClick={()=>changeSteps(steps=>{steps.push(newRuleStep());})}>+ Wait / action block</button></>}</fieldset>
     <div className="room-workspace-actions"><button disabled={blocked||dirty||programEditing} onClick={()=>void edit([{kind:'delete',target:sequence.id}])}>Delete behaviour · Undo available</button></div>
    </>}
   </section>

@@ -21,7 +21,7 @@ namespace Maestro.Quest.Rules
         public RuleEdit[] edits;
     }
     [Serializable] public sealed class RuleSummary { public string id,name; public int steps; public bool repeat,program; }
-    [Serializable] public sealed class RuleRunView { public string id,sequenceId,stepId; public bool preparing; public string nodeId,functionName,status; public ProgramVariableView[] locals=Array.Empty<ProgramVariableView>(); }
+    [Serializable] public sealed class RuleRunView { public string id,sequenceId; public bool preparing; public string nodeId,functionName,status; public ProgramVariableView[] locals=Array.Empty<ProgramVariableView>(); }
     [Serializable] public sealed class RuleOutcome {public string id,sequenceId,phase,nodeId,status;}
     [Serializable] public sealed class ProgramVariableView {public string name,type,value;}
     [Serializable] public sealed class RuleView
@@ -46,7 +46,7 @@ namespace Maestro.Quest.Rules
             int page=Mathf.Clamp(viewPage,0,Mathf.Max(0,(bindings.Length-1)/8));
             return new RuleView {
                 revision=Revision,canUndo=CanUndo,canRedo=CanRedo,readOnly=ReadOnly,status=Status,
-                sequences=document.sequences.Select(x=>new RuleSummary {id=x.id,name=x.name,steps=x.UsesProgram?x.Compile(out _).NodeCount:x.steps.Length,repeat=x.repeat,program=x.UsesProgram}).ToArray(),
+                sequences=document.sequences.Select(x=>new RuleSummary {id=x.id,name=x.name,steps=x.Compile(out _).NodeCount,repeat=x.repeat,program=true}).ToArray(),
                 selected=selected,bindings=bindings.Skip(page*8).Take(8).Select(x=>x.Copy()).ToArray(),bindingPage=page,bindingCount=bindings.Length,
                 buttons=selected==null ? Array.Empty<RuleButtonData>() : document.buttons.Where(x=>x.sequenceId==selected.id).Select(x=>x.Copy()).ToArray(),
                 running=Runtime?.Scheduler?.ObserveRuns() ?? Array.Empty<RuleRunView>(),outcomes=Runtime?.Scheduler?.Outcomes??Array.Empty<RuleOutcome>(),queued=Runtime?.Scheduler?.QueuedCount ?? 0
@@ -86,17 +86,13 @@ namespace Maestro.Quest.Rules
                 if(change.kind=="save")
                 {
                     var input=change.sequence;
-                    if(input==null || input.steps==null || input.steps.Any(x=>x==null))return false;
+                    if(input==null || input.Compile(out error)==null)return false;
                     var value=input.Copy();bool isNew=string.IsNullOrEmpty(value.id);
                     var previous=candidate.sequences.FirstOrDefault(x=>x.id==value.id);
                     if(!isNew && previous==null) {error="That behaviour no longer exists";return false;}
                     if(isNew) {
                         if(!Creation.RoomRecipe.ValidId(change.reference) || aliases.ContainsKey(change.reference))return false;
                         value.id=Guid.NewGuid().ToString("N");aliases.Add(change.reference,value.id);added.Add(value.id);
-                    }
-                    foreach(var step in value.steps) {
-                        if(isNew || string.IsNullOrEmpty(step.id))step.id=Guid.NewGuid().ToString("N");
-                        else if(!previous.steps.Any(x=>x.id==step.id)) {error="An unknown step identity cannot replace an existing step";return false;}
                     }
                     candidate.sequences=isNew ? candidate.sequences.Append(value).ToArray() : candidate.sequences.Select(x=>x.id==value.id ? value : x).ToArray();
                     selectedId=value.id;

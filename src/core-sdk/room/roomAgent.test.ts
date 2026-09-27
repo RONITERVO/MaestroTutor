@@ -1,3 +1,4 @@
+import {sequenceProgram} from './programs';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {describe,expect,it,vi} from 'vitest';
@@ -93,10 +94,10 @@ it('does not persist an action intent or dispatch a new capability to an older n
 });
 
 it('discovers native motion identities before saving an animation through the existing agent task',async()=>{
- let current:RoomAgentState={...scene,capabilities:['motions.v1']};
+ let current:RoomAgentState={...scene,capabilities:['motions.v1','behaviourPrograms.v2']};
  const motionId='b'.repeat(32),query={query:'wave',offset:0,includeShort:false,favouritesOnly:false,archivedOnly:false};
  const search={action:'motions',target:'maestro',motionQuery:query};
- const save={action:'rules',rule:{action:'edit',revision:1,edits:[{kind:'save',reference:'wave',sequence:{id:'',name:'Wave',interruption:0,repeat:false,steps:[{id:'',action:7,targetId:'maestro',gesture:0,seconds:0,loop:false,motionId}]}}]}};
+ const save={action:'rules',rule:{action:'edit',revision:1,edits:[{kind:'save',reference:'wave',sequence:{id:'',name:'Wave',interruption:0,repeat:false,program:JSON.stringify(sequenceProgram([{id:'wave_motion',action:7,targetId:'maestro',gesture:0,seconds:0,loop:false,motionId}]))}}]}};
  const ai=client([JSON.stringify({commands:[search]}),JSON.stringify({commands:[save]}),'{"commands":[]}']);
  const execute=vi.fn(async(commands:any[])=>{
   if(commands[0].action==='motions')current={...current,ack:1,status:'Found compatible wave',motions:{targetId:'maestro',modelHash:'c'.repeat(64),ready:true,status:'Found',query,offset:0,total:1,pageSize:12,entries:[{id:motionId,name:'Friendly wave',tags:['greeting'],duration:2,shortClip:false,favourite:false,archived:false,downloaded:true}]}};

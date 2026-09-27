@@ -44,7 +44,7 @@
     "avatarWalk.v1",
     "motions.v1",
     "avatarActivities.v1",
-    "behaviourPrograms.v1"
+    "behaviourPrograms.v2"
   ],
   "physics": null,
   "avatar": null,

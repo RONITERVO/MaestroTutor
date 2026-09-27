@@ -35,7 +35,7 @@ namespace Maestro.Quest.Tests
         }
         [Test] public void ProgramUsesExistingTriggerOwnershipStopAndCompletionInsteadOfAnotherRuntime()
         {
-            string id=Guid.NewGuid().ToString("N");var sequence=new RuleSequence {id=id,name="Prime check",program=Example(),steps=Array.Empty<RuleStep>()};
+            string id=Guid.NewGuid().ToString("N");var sequence=new RuleSequence {id=id,name="Prime check",program=Example()};
             var document=new RuleDocument {sequences=new[] {sequence},bindings=new[] {new RuleBinding {id=Guid.NewGuid().ToString("N"),sequenceId=id,trigger=RuleEventKind.Speaking}}};
             Assert.That(document.Validate(out var error),Is.True,error);var actions=new Actions();var scheduler=new RuleScheduler(actions);scheduler.Configure(document);
             scheduler.SetActivity("idle",0);scheduler.SetActivity("speaking",1);for(int i=0;i<20&&actions.Starts==0;i++)scheduler.Tick(1+i*.01f);
@@ -49,12 +49,12 @@ namespace Maestro.Quest.Tests
         {
             string directory=Path.Combine(Path.GetTempPath(),"MaestroProgram-"+Guid.NewGuid().ToString("N"));
             try {
-                var document=new RuleDocument {sequences=new[] {new RuleSequence {id=Guid.NewGuid().ToString("N"),name="Prime",program=Example(),steps=Array.Empty<RuleStep>()}}};
+                var document=new RuleDocument {sequences=new[] {new RuleSequence {id=Guid.NewGuid().ToString("N"),name="Prime",program=Example()}}};
                 var storage=new RuleStorage(directory);Assert.That(storage.Save(document,out var error),Is.True,error);
-                var loaded=new RuleStorage(directory).Load(out error);Assert.That(loaded.version,Is.EqualTo(5));Assert.That(loaded.sequences[0].program,Is.EqualTo(Example()));
-                loaded.sequences[0].name="Renamed";Assert.That(storage.Save(loaded,out error),Is.True,error);File.WriteAllText(Path.Combine(directory,"rules.v5.json"),"broken");
+                var loaded=new RuleStorage(directory).Load(out error);Assert.That(loaded.version,Is.EqualTo(1));Assert.That(loaded.sequences[0].program,Is.EqualTo(Example()));
+                loaded.sequences[0].name="Renamed";Assert.That(storage.Save(loaded,out error),Is.True,error);File.WriteAllText(Path.Combine(directory,"behaviours.v1.json"),"broken");
                 loaded=new RuleStorage(directory).Load(out error);Assert.That(error,Does.Contain("backup"));Assert.That(loaded.sequences[0].program,Is.EqualTo(Example()));
-                File.WriteAllText(Path.Combine(directory,"rules.v5.json"),"{\"version\":6}");storage=new RuleStorage(directory);storage.Load(out _);Assert.That(storage.ReadOnly,Is.True);
+                File.WriteAllText(Path.Combine(directory,"behaviours.v1.json"),"{\"version\":6}");storage=new RuleStorage(directory);storage.Load(out _);Assert.That(storage.ReadOnly,Is.True);
             }finally {if(Directory.Exists(directory))Directory.Delete(directory,true);}
         }
         [Test] public void SharedWebAndNativeProgramFixturesAgree()
@@ -62,15 +62,38 @@ namespace Maestro.Quest.Tests
             var fixtures=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-contract.json")));
             foreach(var item in fixtures["cases"])Assert.That(BehaviourProgram.TryParse((string)item["source"],out _,out var error),Is.EqualTo((bool)item["valid"]),(string)item["name"]+": "+error);
         }
-        [Test] public void VersionFourMigrationKeepsStableStepIdsAndOriginalFile()
+        [Test] public void SimpleControlsEditOnlyTheCanonicalProgramAndPreserveBlockIdentities()
         {
-            string directory=Path.Combine(Path.GetTempPath(),"MaestroV4-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(directory);
-            try {
-                var document=new RuleDocument {version=4,sequences=new[] {new RuleSequence {id=Guid.NewGuid().ToString("N"),name="Wait",steps=new[] {new RuleStep {action=RuleActionKind.Wait,seconds=1}}}}};
-                string original=JsonUtility.ToJson(document),path=Path.Combine(directory,"rules.v4.json");File.WriteAllText(path,original);
-                var storage=new RuleStorage(directory);var loaded=storage.Load(out var error);Assert.That(loaded.version,Is.EqualTo(5),error);Assert.That(loaded.sequences[0].steps[0].id,Is.EqualTo(document.sequences[0].steps[0].id));
-                Assert.That(storage.Save(loaded,out error),Is.True,error);Assert.That(File.ReadAllText(path),Is.EqualTo(original));
-            }finally {Directory.Delete(directory,true);}
+            var step=new RuleStep {id="wave",action=RuleActionKind.Gesture,seconds=1};
+            var sequence=new RuleSequence {id=Guid.NewGuid().ToString("N"),name="Wave",program=BehaviourProgram.FromSteps(step)};
+            var original=sequence.program;var view=sequence.SimpleSteps();view[0].seconds=2;
+            Assert.That(sequence.program,Is.EqualTo(original),"The editable view must be detached");
+            var copy=sequence.Copy();copy.SetSimpleSteps(view);
+            Assert.That(copy.SimpleSteps()[0].id,Is.EqualTo("wave"));Assert.That(copy.SimpleSteps()[0].seconds,Is.EqualTo(2));
+            Assert.That(sequence.SimpleSteps()[0].seconds,Is.EqualTo(1));
+            Assert.That(JObject.Parse(JsonUtility.ToJson(copy)).ContainsKey("steps"),Is.False);
+            var machine=new ProgramMachine(copy.Compile(out _),null);Assert.That(machine.Advance(out var action),Is.EqualTo(ProgramYield.Action));
+            Assert.That(action.seconds,Is.EqualTo(2));Assert.That(machine.NodeId,Is.EqualTo("wave"));
+            Assert.That(Compile(Example()).SimpleSteps(),Is.Null);Assert.Throws<ArgumentException>(()=>Compile(Example()).WithSimpleSteps(view));
+        }
+        [Test] public void SimpleEditsUpdateResourceOwnershipWithoutFlatteningComplexPrograms()
+        {
+            var step=new RuleStep {action=RuleActionKind.RecordedAnimation,targetId="book",seconds=1};
+            var root=JObject.Parse(BehaviourProgram.FromSteps(step));((JArray)root["resources"]).Add("maestro");
+            root["entry"]="start";root["functions"][0]["name"]="start";
+            var program=Compile(root.ToString());var view=program.SimpleSteps();view[0].targetId=Guid.NewGuid().ToString("N");
+            var edited=Compile(program.WithSimpleSteps(view));Assert.That(edited.Entry,Is.EqualTo("start"));
+            Assert.That(edited.Resources,Is.EquivalentTo(new[] {"maestro",view[0].targetId}));Assert.That(edited.SimpleSteps()[0].id,Is.EqualTo(step.id));
+            root=JObject.Parse(BehaviourProgram.FromSteps(step));root["functions"][0]["body"][0]["bindings"]["seconds"]=JObject.Parse("{\"value\":2}");
+            program=Compile(root.ToString());Assert.That(program.SimpleSteps(),Is.Null,"An expression must not be overwritten by the literal-only editor");
+        }
+        [Test] public void NativeWireRejectsLegacyMixedAndMistypedSavedPrograms()
+        {
+            var sequence=new RuleSequence {id="",name="Wait",program=BehaviourProgram.FromSteps(new RuleStep {action=RuleActionKind.Wait,seconds=1})};
+            var value=JObject.Parse(JsonUtility.ToJson(sequence));
+            bool Wire()=>Maestro.Quest.Creation.RoomControls.ValidWire(new JObject {["commands"]=new JArray(new JObject {["action"]="rules",["rule"]=new JObject {["action"]="edit",["revision"]=1,["edits"]=new JArray(new JObject {["kind"]="save",["reference"]="wait",["sequence"]=value})}})}.ToString());
+            Assert.That(Wire(),Is.True);value["steps"]=new JArray();Assert.That(Wire(),Is.False);value.Remove("steps");
+            value.Remove("program");Assert.That(Wire(),Is.False);value["program"]=12;Assert.That(Wire(),Is.False);
         }
         [Test] public void NewerProgramVersionIsPreservedReadOnlyWithoutRollingBackToItsBackup()
         {
@@ -79,7 +102,7 @@ namespace Maestro.Quest.Tests
                 var document=new RuleDocument {sequences=new[] {new RuleSequence {id=Guid.NewGuid().ToString("N"),name="Future",program=Example()}}};
                 var storage=new RuleStorage(directory);Assert.That(storage.Save(document,out _),Is.True);Assert.That(storage.Save(document,out _),Is.True);
                 var program=JObject.Parse(document.sequences[0].program);program["version"]=2;document.sequences[0].program=program.ToString();
-                string path=Path.Combine(directory,"rules.v5.json"),future=JsonUtility.ToJson(document);File.WriteAllText(path,future);
+                string path=Path.Combine(directory,"behaviours.v1.json"),future=JsonUtility.ToJson(document);File.WriteAllText(path,future);
                 storage=new RuleStorage(directory);storage.Load(out var message);Assert.That(storage.ReadOnly,Is.True,message);Assert.That(message,Does.Contain("different app version"));
                 Assert.That(storage.Save(new RuleDocument(),out _),Is.False);Assert.That(File.ReadAllText(path),Is.EqualTo(future));
             }finally {if(Directory.Exists(directory))Directory.Delete(directory,true);}
@@ -90,11 +113,11 @@ namespace Maestro.Quest.Tests
             try {
                 var document=new RuleDocument {sequences=new[] {new RuleSequence {id=Guid.NewGuid().ToString("N"),name="Current",program=Example()}}};
                 var storage=new RuleStorage(directory);Assert.That(storage.Save(document,out var error),Is.True,error);
-                string current=Path.Combine(directory,"rules.v5.json"),original=File.ReadAllText(current);
-                File.WriteAllText(Path.Combine(directory,"rules.v6.json.notes"),"unrelated notes");
+                string current=Path.Combine(directory,"behaviours.v1.json"),original=File.ReadAllText(current);
+                File.WriteAllText(Path.Combine(directory,"behaviours.v2.json.notes"),"unrelated notes");
                 File.WriteAllText(Path.Combine(directory,"room.v999.json"),"another collection");
                 storage=new RuleStorage(directory);Assert.That(storage.Load(out _).sequences.Length,Is.EqualTo(1));Assert.That(storage.ReadOnly,Is.False);
-                foreach(string name in new[] {"rules.v6.json","rules.v6.json.backup","rules.v6.json.pending","rules.v6.json.unreadable","rules.v999999999999.json"}) {
+                foreach(string name in new[] {"behaviours.v2.json","behaviours.v2.json.backup","behaviours.v2.json.pending","behaviours.v2.json.unreadable","behaviours.v999999999999.json"}) {
                     // The newer writer may appear after this process has loaded.
                     var running=new RuleStorage(directory);running.Load(out _);
                     string path=Path.Combine(directory,name),future="Unknown newer format, preserve every byte";File.WriteAllText(path,future);

@@ -19,16 +19,17 @@ namespace Maestro.Quest.Creation
         readonly int version;
         readonly int maximum;
         readonly Func<T,bool> validate,newerDocument;
+        readonly Func<JObject,bool> validWire;
         readonly Func<T,T> copy;
         readonly Action<T> normalize,upgrade;
         sealed class Retained { public long Length,Stamp; public bool Uncertain; public HashSet<string> Ids; }
         readonly object retainedGate=new();
         readonly Dictionary<string,Retained> retained=new();
         public bool ReadOnly { get; private set; }
-        public VersionedRoomFile(string directory,string stem,int maximum,Func<T,bool> validate,Func<T,T> copy,Action<T> normalize,Action<T> upgrade,int version = 2,Func<T,bool> newerDocument = null)
+        public VersionedRoomFile(string directory,string stem,int maximum,Func<T,bool> validate,Func<T,T> copy,Action<T> normalize,Action<T> upgrade,int version = 2,Func<T,bool> newerDocument = null,Func<JObject,bool> validWire = null)
         {
             this.directory = Path.GetFullPath(directory); this.stem=stem; this.version=version; primary = Path.Combine(this.directory,stem+".v"+version+".json");
-            this.newerDocument=newerDocument;
+            this.newerDocument=newerDocument;this.validWire=validWire;
             label = stem; this.maximum = maximum; this.validate = validate; this.copy = copy; this.normalize = normalize; this.upgrade = upgrade;
         }
         // A newer app writes a different filename. Do not load an older save
@@ -94,6 +95,7 @@ namespace Maestro.Quest.Creation
                 if (json["version"].ToString() != expected.ToString()) { newer = true; return false; }
                 var candidate = JsonUtility.FromJson<T>(text); if (candidate == null) return false;
                 if(newerDocument?.Invoke(candidate)==true) {newer=true;return false;}
+                if(validWire!=null && !validWire(json))return false;
                 normalize?.Invoke(candidate); if (!validate(candidate)) return false;
                 value = candidate; return true;
             }

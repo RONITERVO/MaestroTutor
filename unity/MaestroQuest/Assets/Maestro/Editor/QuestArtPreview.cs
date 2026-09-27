@@ -89,7 +89,7 @@ namespace Maestro.Quest.Editor
                 var editor = root.AddComponent<RoomEditor>(); editor.Initialize(room,book,maestro,directory);
                 foreach (var item in root.GetComponentsInChildren<RoomItem>()) item.gameObject.SetActive(false);
                 var sampleProp=editor.Snapshot().objects.First(x => x.kind == RoomObjectKind.Ball);
-                var example=new RuleDocument { sequences=new[] { new RuleSequence { id=Guid.NewGuid().ToString("N"),name="Ball gesture",steps=new[] { new RuleStep { action=RuleActionKind.Gesture,seconds=2.5f,propId=sampleProp.id,propHand=PropHand.Right,propRelease=PropRelease.Throw,propReleaseAt=.6f } } } } };
+                var example=new RuleDocument { sequences=new[] { new RuleSequence { id=Guid.NewGuid().ToString("N"),name="Ball gesture",program=Maestro.Quest.Programs.BehaviourProgram.FromSteps(new RuleStep { action=RuleActionKind.Gesture,seconds=2.5f,propId=sampleProp.id,propHand=PropHand.Right,propRelease=PropRelease.Throw,propReleaseAt=.6f }) } } };
                 if (!new RuleStorage(directory).Save(example,out var saveError)) throw new InvalidOperationException(saveError);
                 var workshop = root.AddComponent<RuleWorkshop>(); workshop.Initialize(editor,directory); workshop.AddBinding(); workshop.AddButton(ButtonMount.LeftController);
                 File.WriteAllText(Path.Combine(output,"rule-book-state.json"),JsonUtility.ToJson(workshop.Observe(),true));

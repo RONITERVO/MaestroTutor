@@ -9,51 +9,24 @@
     "status": "Behaviour edit applied. Undo restores this batch.",
     "sequences": [
         {
-            "id": "101915e45582430c8dc126fbac4a3f04",
+            "id": "fa1bb97f3ec9411da3ecb9c37bd5bcb5",
             "name": "Ball gesture",
             "steps": 1,
-            "repeat": false
+            "repeat": false,
+            "program": true
         }
     ],
     "selected": {
-        "id": "101915e45582430c8dc126fbac4a3f04",
+        "id": "fa1bb97f3ec9411da3ecb9c37bd5bcb5",
         "name": "Ball gesture",
         "interruption": 0,
         "repeat": false,
-        "steps": [
-            {
-                "id": "33a7cc1c403243e895bc031a205e82f5",
-                "action": 1,
-                "targetId": "maestro",
-                "gesture": 0,
-                "seconds": 2.5,
-                "loop": false,
-                "clipModelHash": "",
-                "clipIndex": 0,
-                "motionId": "",
-                "propId": "5f3dd72aff924a05a44dfd9299dabbad",
-                "propAvatarHash": "",
-                "propHand": 1,
-                "propRelease": 2,
-                "propOffset": {
-                    "x": 0.0,
-                    "y": 0.0,
-                    "z": 0.0
-                },
-                "propRotation": {
-                    "x": 0.0,
-                    "y": 0.0,
-                    "z": 0.0,
-                    "w": 1.0
-                },
-                "propReleaseAt": 0.6000000238418579
-            }
-        ]
+        "program": "{\"version\":1,\"entry\":\"main\",\"resources\":[\"maestro\",\"0e674d1f3d1947bcb80141a4b8709b9c\"],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[],\"body\":[{\"id\":\"0becaf826b9e479d83df8b617f7670a6\",\"op\":\"action\",\"step\":{\"action\":1,\"targetId\":\"maestro\",\"gesture\":0,\"seconds\":2.5,\"loop\":false,\"clipModelHash\":\"\",\"clipIndex\":0,\"motionId\":\"\",\"propId\":\"0e674d1f3d1947bcb80141a4b8709b9c\",\"propAvatarHash\":\"\",\"propHand\":1,\"propRelease\":2,\"propOffset\":{\"x\":0.0,\"y\":0.0,\"z\":0.0},\"propRotation\":{\"x\":0.0,\"y\":0.0,\"z\":0.0,\"w\":1.0},\"propReleaseAt\":0.60000002384185791},\"bindings\":{}}]}]}"
     },
     "bindings": [
         {
-            "id": "0d33629d30184f4284004d15572454f2",
-            "sequenceId": "101915e45582430c8dc126fbac4a3f04",
+            "id": "1e28d4640bd14507af80744f89783c0b",
+            "sequenceId": "fa1bb97f3ec9411da3ecb9c37bd5bcb5",
             "sourceId": "maestro",
             "trigger": 0,
             "condition": 0,
@@ -64,8 +37,8 @@
     ],
     "buttons": [
         {
-            "id": "df46ba643da146779f353d4b76de27e0",
-            "sequenceId": "101915e45582430c8dc126fbac4a3f04",
+            "id": "a8499283a0b7459886f913b8666ccfaa",
+            "sequenceId": "fa1bb97f3ec9411da3ecb9c37bd5bcb5",
             "mount": 1,
             "position": {
                 "x": -0.11999999731779099,
@@ -80,5 +53,6 @@
             }
         }
     ],
-    "running": []
+    "running": [],
+    "outcomes": []
 }

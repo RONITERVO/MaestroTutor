@@ -1,7 +1,6 @@
 # Programmable behaviours: foundation and roadmap
 
-Updated 2026-09-27. The first executable program subset is implemented alongside
-existing linear rules. This is a development milestone, not Quest release approval.
+Updated 2026-09-27. Every behaviour now uses one canonical program representation. This is a development milestone, not Quest release approval.
 
 ## Implemented foundation
 
@@ -12,8 +11,8 @@ repeat, call and return. Expressions support arithmetic, comparisons, short-circ
 logic and three explicit facts: Maestro state, physics readiness and physics running.
 No provider call occurs while a saved program runs.
 
-The existing revision-checked `rules` command saves either linear `steps` or one
-`program` string with empty steps. The same native scheduler handles ownership,
+The revision-checked `rules` command requires one `program` string. There is no
+separate saved `steps` array or linear scheduler path. The same native scheduler handles ownership,
 loading, completion, state/object triggers, physical buttons, Stop, grabbing,
 app pause and interruption policy. Run-now uses `rules.play`; saving does not run
 a program and a physical button is optional. Programs reserve their declared
@@ -24,33 +23,40 @@ Functions currently live within one program; cross-program libraries are future 
 The optional book workspace renders nested blocks and functions, highlights the
 current native node, and shows native locals and recent outcomes. Users can add,
 reorder and remove blocks/functions, edit a block/function's JSON, edit full source,
-and convert a linear sequence without losing step IDs or prop/motion fields.
+or switch between simple action controls and the function/source editor without
+converting data. Simple controls derive literal action blocks from a single-function
+program and write back to that same tree, preserving node IDs, prop/motion fields,
+function names and extra resource declarations. Expressions, branches, locals and
+multiple functions require the function editor; simple controls cannot flatten them.
 Complete-program validation runs before accepting an editor draft and again before
 native execution. Unfinished edits are retained when a physical edit makes their
 revision stale. JSON is the current advanced text representation; this is not a
 JavaScript/C# editor, Blockly integration or a finished drag-and-drop editor.
 
 The planner uses the same save/play/inspect/bind/button contract, gated by native
-`behaviourPrograms.v1`. Original Maestro still owns Gemini, subscriptions/BYOK,
+`behaviourPrograms.v2`. Original Maestro still owns Gemini, subscriptions/BYOK,
 conversation and handoff verification. The chat stays the default book interface.
 Program authoring is an optional workspace, and no new floating flat controls are
 introduced outside the pages.
 
-Rules storage is now v5. Loading v1–v4 preserves the old files and stable IDs;
-existing rules remain linear until explicitly converted. Backups and Undo retain
-program source and referenced library motions. A newer outer document version or
-embedded program version makes the collection read-only, preserving the original
-instead of falling back to an older backup. A newer collection filename (including
-its backup, pending or unreadable recovery copy) also blocks loading/saving older
-collections and protects unknown motion references from download removal. This
-check runs on load, save and retained-reference inspection, including when a newer
-file appears after loading. New opcodes must bump program version.
+Behaviour storage now uses `behaviours.v1.json`. This deliberately resets the
+owner's pre-release behaviour collection instead of migrating `rules.v1`–`rules.v5`.
+Old files remain untouched but are no longer loaded; saved triggers and mounted
+buttons belonging to them are reset with the behaviours. Loading an old development
+installation shows a reset message. Room creations, downloaded models/motions,
+source collections and the original web chat/backup formats are unaffected.
 
-The motion-library book view tolerates a selected program without indexing legacy
-steps. Its old step-assignment button is unavailable for programs, and a queued
-assignment receives an explanation instead of changing the program. Program blocks
-remain editable in their own book workspace. Library usage lists include program
-references, using the same conservative reference analysis as storage and Undo.
+Atomic pending writes, last-good backup recovery, Undo and motion-reference
+protection remain. A newer outer document, embedded program or collection filename
+(including recovery copies) makes the collection read-only instead of rolling back
+to an older backup. Current save files and incoming native save commands reject
+legacy/mixed sequence fields before deserialization can silently discard them.
+New opcodes still require a program-version change.
+
+Motion-library assignment and physical action/prop controls remain available for
+literal action-only programs. Complex programs keep their source and receive an
+explanation when a simple assignment is attempted. Library usage includes program
+references with the same conservative reference analysis as storage and Undo.
 
 Limits are 16 functions, 8 parameters/16 locals per function, 128 statement nodes,
 512 expression nodes, nesting/call depth 8, 16 reserved targets, 24,000 source
@@ -60,7 +66,8 @@ recurse. Repeat counts are 0–10,000. The interpreter yields between statements
 around a 32-instruction tick budget, charging expression evaluation too; an atomic
 expression may finish past that boundary. A run fails after 65,536 instructions.
 Eight disjoint runs and eight queued requests are the existing scheduler maximum.
-Explicit whole-sequence repeat resets the per-run budget each cycle until stopped.
+Explicit whole-program repeat resets the per-run budget and local variables each
+cycle until stopped; persistent event-driven state is the next runtime stage.
 
 Native actions yield while loading/playing. Computed native arguments and resource
 ownership are revalidated before dispatch. Errors stop the run and release its
@@ -82,33 +89,30 @@ controller, cancellation, completion, pause, Undo and reload. Browser tests repl
 actual Unity observations; browser edit acknowledgements are explicitly simulated.
 Hardware frame timing and this editor's Quest readability remain unverified.
 
-## Verified development checkpoint (2026-09-27)
+## Verified canonical-storage checkpoint (2026-09-27)
 
-APK SHA256: `3EC364252AD3075A00A6250388E44519F946DFD6F4FA9716748C7FBEBDBA8184`.
-This is development signing, built by `Build-QuestDevelopment.ps1`, and has not
-been installed or tested on the headset. The packaged web bundle was compared
-byte-for-byte with the successful production web build.
+Development APK SHA256: `F9F5222307E7CAD36A3724604DDB8EF32FAB2C56A8FBA1F3213878A4BCBAA18C`.
+It has not been installed on Quest. Its v2 signature verifies, the bundled web
+asset matches the production build byte-for-byte, and all 90 runtime source files
+match the Unity build mirror.
 
-- Full app suite: 1,118 passing tests; full app lint and TypeScript pass.
-- Unity: 80 EditMode and 73 PlayMode passing tests; three explicitly optional
-  private-model/collection tests skipped because no external files were supplied.
-- Native Android browser: 25 passing tests, release AAR build and lint pass.
-- Functions: 25 passing unit tests/build. Live gateway: 31 passing tests/build.
-- Shared prompt ownership, core boundaries and release-config checks pass.
-- Browser replay: actual native current-node/locals displayed; a block edit
-  validates and preserves other functions before one simulated save receipt.
+- App: 1,204 passing tests, full app/shared lint, TypeScript and production build.
+- Unity: 87 EditMode and 76 PlayMode passing tests; three optional private-file
+  tests skipped because no external files were supplied.
+- Android browser: 25 tests, release AAR and lint passed.
+- Functions: 25 tests/build; Live gateway: 31 tests/build passed.
+- Catalog drift, prompt ownership, core boundaries and release configuration passed.
+- Chrome replays actual native observations and round-trips simple editing to
+  source while preserving block IDs and prop settings. A complex edit preserves
+  the other function. Browser acknowledgements are simulated; actual native
+  execution, buttons and library assignment are checked in Unity PlayMode.
+- Native regressions cover detached simple views, resource replacement, complex
+  program protection, canonical wire validation, development reset, prop and block
+  persistence, backup recovery and newer-version preservation.
 
-The integration check also saves a library-motion program through the shared agent
-executor while the library is open, plays it on the imported rig, rejects a stale
-step assignment, protects its referenced download and restores linear assignment
-with Undo. Save tests cover newer collection filenames appearing before and after
-load, recovery copies, reference protection and unchanged original bytes.
-
-Local program/browser evidence is under ignored `.quest-evidence/programs/`; the
-updated native test reports, APK/source hashes and build logs are under
-`.quest-evidence/program-library/`. The initial PR's GitHub release gate passed at
-`1e14f53`, including the billing emulator suite. Real-provider, headset and Meta
-Store release checks remain separate; this checkpoint does not establish those.
+Ignored local evidence is in `.quest-evidence/program-storage/`. The first packaging
+attempt stalled during Unity shutdown and was rejected; the complete retry exited
+successfully. Headset, real-provider and store release acceptance remain separate.
 
 ## Still to implement
 
