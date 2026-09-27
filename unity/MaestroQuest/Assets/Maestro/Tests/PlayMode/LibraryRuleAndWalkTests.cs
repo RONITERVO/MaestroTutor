@@ -64,6 +64,40 @@ namespace Maestro.Quest.Tests
             UnityEngine.Object.Destroy(root); Time.captureDeltaTime = captureDelta; yield return null; yield return null;
             if (Directory.Exists(directory)) Directory.Delete(directory,true);
         }
+        [UnityTest] public IEnumerator AgentActivityAssignmentsShareBookRevisionAtomicityUndoAndRealPlayback()
+        {
+            var imports=root.AddComponent<ImportWorkshop>();imports.Initialize(editor,authoring);
+            var book=root.AddComponent<LibraryBookController>();book.Initialize(editor,imports,rules);book.SetVisible(true);
+            var executor=new RoomAgentExecutor(editor);var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);
+            var profiles=editor.ActivityProfiles;int sceneRevision=editor.Revision,ruleRevision=rules.Revision;
+            AvatarActivityEdit Assign(int role,string id) => new() {operation="assign",role=role,choice=new TutorMotionChoice {motionId=id,loop=true,weight=2}};
+            RoomAgentRequest Request(string operation,params AvatarActivityEdit[] edits) => new() {version=2,commands=new[] {new RoomAgentCommand {action="avatarActivities",activities=new AvatarActivityRequest {operation=operation,modelHash=avatar.ModelHash,revision=profiles.Revision,edits=operation=="edit" ? edits : null}}}};
+            Assert.That(executor.Execute(Request("edit",Assign(3,greeting.id),Assign(1,gait.id)),out var error,out _),Is.True,error);
+            Assert.That(profiles.Revision,Is.EqualTo(2));Assert.That(editor.Revision,Is.EqualTo(sceneRevision));Assert.That(rules.Revision,Is.EqualTo(ruleRevision));
+            var view=observer.Observe().activityProfile;
+            Assert.That(JsonUtility.ToJson(view.roles[3]),Is.EqualTo(JsonUtility.ToJson(book.State.activityProfile.roles[3])));
+            Assert.That(view.roles[1].choices.Single().motionId,Is.EqualTo(gait.id));Assert.That(avatar.ActivityMotionId,Is.Null,"Saving with the library open must not start automatic playback");
+            string output=Environment.GetEnvironmentVariable("MAESTRO_ACTIVITY_EVIDENCE");
+            if(!string.IsNullOrEmpty(output)) {Directory.CreateDirectory(output);File.WriteAllText(Path.Combine(output,"activity-state.json"),RoomAgentWire.Serialize(observer.Observe()));}
+            var staleAgent=Request("edit",new AvatarActivityEdit {operation="clear",role=3});
+            var staleBook=new LibraryBookRequest {version=1,session=book.State.session,sequence=2,action="roleClear",modelHash=avatar.ModelHash,profileRevision=profiles.Revision,role=3};
+            var work=book.HandleAsync(new LibraryBookRequest {version=1,session=book.State.session,sequence=1,action="roleAssign",modelHash=avatar.ModelHash,profileRevision=profiles.Revision,role=3,motionId=greeting.id,speed=.75f,weight=4,loop=true});yield return Until(()=>work.IsCompleted);
+            Assert.That(profiles.Revision,Is.EqualTo(3));Assert.That(observer.Observe().activityProfile.roles[3].choices.Single().weight,Is.EqualTo(4));
+            Assert.That(executor.Execute(staleAgent,out error,out _),Is.False);Assert.That(error,Does.Contain("changed"));
+            work=book.HandleAsync(staleBook);yield return Until(()=>work.IsCompleted);Assert.That(book.State.status,Does.Contain("changed"));Assert.That(profiles.Revision,Is.EqualTo(3));
+            Assert.That(executor.Execute(Request("edit",Assign(0,gait.id),Assign(2,new string('a',32))),out error,out _),Is.False);Assert.That(profiles.Find(avatar.ModelHash).roles.Any(r=>r.role==TutorMotionRole.Idle),Is.False);Assert.That(profiles.Revision,Is.EqualTo(3));
+            Assert.That(executor.Execute(Request("undo"),out error,out _),Is.True,error);Assert.That(book.State.activityProfile.roles[3].choices.Single().weight,Is.EqualTo(2));
+            Assert.That(executor.Execute(Request("undo"),out error,out _),Is.True,error);Assert.That(profiles.Find(avatar.ModelHash),Is.Null,"One Undo removes both roles in the original batch");
+            Assert.That(executor.Execute(Request("redo"),out error,out _),Is.True,error);Assert.That(editor.Revision,Is.EqualTo(sceneRevision));
+            book.SetVisible(false);avatar.ObserveTutorState(new BookSnapshot {version=1,activity="speaking"});yield return Until(()=>avatar.ActivityMotionId==greeting.id);
+            var head=avatar.PoseRig.CanonicalBone(PoseJoint.Head);var rotation=head.localRotation;yield return new WaitForSeconds(.3f);Assert.That(Quaternion.Angle(rotation,head.localRotation),Is.GreaterThan(1));
+            avatar.ObserveTutorState(new BookSnapshot {version=1,activity="listening"});yield return Until(()=>avatar.ActivityMotionId==gait.id);
+            avatar.SetEditing(true);yield return null;Assert.That(avatar.ActivityMotionId,Is.Null);
+            Assert.That(executor.Execute(Request("edit",Assign(2,greeting.id)),out error,out _),Is.True,error);yield return null;Assert.That(avatar.ActivityMotionId,Is.Null,"Saving does not steal manual authoring ownership");avatar.SetEditing(false);
+            File.Delete(Path.Combine(directory,"motions",greeting.hash+".motion.glb"));
+            Assert.That(executor.Execute(Request("edit",Assign(0,greeting.id)),out error,out _),Is.False);Assert.That(error,Does.Contain("download"));
+            view=observer.Observe().activityProfile;Assert.That(view.roles[3].choices.Single().available,Is.False);Assert.That(view.roles[3].choices.Single().motionId,Is.EqualTo(greeting.id));
+        }
         [UnityTest] public IEnumerator AgentAndManualWalkSelectionShareValidationPlaybackUndoAndAvailability()
         {
             var executor=new RoomAgentExecutor(editor);var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);
@@ -271,7 +305,7 @@ namespace Maestro.Quest.Tests
             var imports=root.AddComponent<ImportWorkshop>(); imports.Initialize(editor,authoring);
             var book=root.AddComponent<LibraryBookController>(); book.Initialize(editor,imports,rules); book.SetVisible(true);
             int sequence=0;
-            LibraryBookRequest Request(string action,string model=null) => new() { version=1,session=book.State.session,sequence=++sequence,action=action,modelHash=model ?? avatar.ModelHash,role=3,motionId=greeting.id,weight=2,speed=1,cooldown=2 };
+            LibraryBookRequest Request(string action,string model=null) => new() { version=1,session=book.State.session,sequence=++sequence,action=action,profileRevision=editor.ActivityProfiles.Revision,modelHash=model ?? avatar.ModelHash,role=3,motionId=greeting.id,weight=2,speed=1,cooldown=2 };
             avatar.ObserveTutorState(new BookSnapshot { version=1,activity="speaking" });
             var work=book.HandleAsync(Request("roleAssign")); yield return Until(() => work.IsCompleted); yield return null;
             Assert.That(book.State.activityProfile.roles[3].choices.Single().motionId,Is.EqualTo(greeting.id)); Assert.That(avatar.ActivityMotionId,Is.Null,"Library browsing suppresses automatic state playback");

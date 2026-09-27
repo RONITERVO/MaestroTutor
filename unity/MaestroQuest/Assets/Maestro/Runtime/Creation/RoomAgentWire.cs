@@ -19,6 +19,7 @@ namespace Maestro.Quest.Creation
             if(state.rules==null)json["rules"]=JValue.CreateNull();
             else if(state.rules.selected==null)json["rules"]["selected"]=JValue.CreateNull();
             if(state.physics==null)json["physics"]=JValue.CreateNull();
+            if(state.activityProfile==null)json["activityProfile"]=JValue.CreateNull();
             if(state.walk==null)json["walk"]=JValue.CreateNull();
             if(state.avatar==null)json["avatar"]=JValue.CreateNull();
             else Movement(json["avatar"],state.avatar.distance,state.avatar.speed);

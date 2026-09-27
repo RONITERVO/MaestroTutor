@@ -13,7 +13,7 @@ namespace Maestro.Quest.Book
 {
     [Serializable] public sealed class LibraryBookRequest
     {
-        public int version, sequence, offset, stepIndex, sourceIndex, termsPage, role, weight, usagePage;
+        public int version, sequence, offset, stepIndex, sourceIndex, termsPage, role, weight, usagePage, profileRevision;
         public float speed,cooldown;
         public string session, action, query, motionId, name, ruleId, modelHash;
         public bool compatibleOnly, favouritesOnly, includeShort, favourite, loop, archivedOnly;
@@ -25,6 +25,7 @@ namespace Maestro.Quest.Book
                 sourceIndex < 0 || sourceIndex >= 1024 || termsPage < 0 || termsPage > 64 || stepIndex < 0 || stepIndex >= 16 || usagePage < 0 || usagePage > 512) return false;
             if (action == "query") return Text(query,80);
             if (action == "stop" || action == "close") return true;
+            if (action != null && action.StartsWith("role",StringComparison.Ordinal) && profileRevision < 1) return false;
             if (action == "roleUndo" || action == "roleRedo") return ModelLibrary.ValidHash(modelHash);
             if (action == "roleAssign" || action == "roleRemove" || action == "roleClear")
                 return ModelLibrary.ValidHash(modelHash) && role >= 0 && role < 4 && (action == "roleClear" || Guid.TryParseExact(motionId,"N",out _)) &&
@@ -42,24 +43,6 @@ namespace Maestro.Quest.Book
         public float duration;
         public bool favourite,compatible,shortClip,archived,removed,downloaded;
         public int bytes;
-    }
-    [Serializable] public sealed class ActivityChoiceView
-    {
-        public string motionId,name;
-        public int weight;
-        public float speed,cooldown;
-        public bool loop,available;
-    }
-    [Serializable] public sealed class ActivityRoleView
-    {
-        public int role;
-        public ActivityChoiceView[] choices=Array.Empty<ActivityChoiceView>();
-    }
-    [Serializable] public sealed class ActivityProfileView
-    {
-        public string modelHash,status;
-        public bool canAssign,readOnly,canUndo,canRedo;
-        public ActivityRoleView[] roles=Array.Empty<ActivityRoleView>();
     }
     [Serializable] public sealed class LibraryBookState
     {
@@ -135,14 +118,10 @@ namespace Maestro.Quest.Book
                 }
                 else if (request.action.StartsWith("role",StringComparison.Ordinal))
                 {
-                    if (!avatar || avatar.ModelBusy || !avatar.CustomModel || avatar.ModelHash != request.modelHash) throw new ModelImportException("Maestro changed. Review its state assignments and try again.");
-                    string error; bool accepted;
-                    var role=(TutorMotionRole)request.role;
-                    if (request.action == "roleUndo") accepted=editor.ActivityProfiles.Undo(request.modelHash,out error);
-                    else if (request.action == "roleRedo") accepted=editor.ActivityProfiles.Redo(request.modelHash,out error);
-                    else if (request.action == "roleClear" || request.action == "roleRemove") accepted=editor.ActivityProfiles.Remove(avatar.ModelHash,role,request.action == "roleClear" ? null : request.motionId,out error);
-                    else accepted=editor.ActivityProfiles.Assign(avatar.ModelHash,avatar.CustomModel.MotionRigHash,role,new TutorMotionChoice { motionId=request.motionId,loop=request.loop,speed=request.speed,weight=request.weight,cooldown=request.cooldown },editor.Motions,out error);
-                    if (!accepted) throw new ModelImportException(error);
+                    var action=request.action == "roleUndo" ? "undo" : request.action == "roleRedo" ? "redo" : "edit";
+                    var edit=new AvatarActivityEdit { operation=request.action == "roleClear" ? "clear" : request.action == "roleRemove" ? "remove" : "assign",role=request.role,motionId=request.motionId,
+                        choice=new TutorMotionChoice { motionId=request.motionId,loop=request.loop,speed=request.speed,weight=request.weight,cooldown=request.cooldown } };
+                    if (!AvatarActivityActions.Execute(editor,new AvatarActivityRequest { operation=action,modelHash=request.modelHash,revision=request.profileRevision,edits=action == "edit" ? new[] { edit } : null },out var error)) throw new ModelImportException(error);
                     message="Tutor-state assignments saved. Automatic motions resume with the conversation.";
                 }
                 else
@@ -238,13 +217,7 @@ namespace Maestro.Quest.Book
                 canPreview = compatible,canWalk = compatible && !selected.Short,canAssign = selected != null && editor.Motions.Downloaded(selected.id) && model && model.Ready && (!targetAvatar || !targetAvatar.ModelBusy) && model.MotionRigHash == selected.rigHash,
                 ruleId = sequence?.id,ruleName = sequence?.name,stepIndex = step,sourceIndex = sourceIndex,sourceCount = sources.Length,sourceName = source?.name,
                 attribution = terms.Substring(termsPage*TermsSize,Math.Min(TermsSize,terms.Length-termsPage*TermsSize)),termsPage = termsPage,termsPages = pages,
-                activityProfile = new ActivityProfileView {
-                    modelHash=avatar && !avatar.ModelBusy ? avatar.ModelHash : "",readOnly=editor.ActivityProfiles.ReadOnly,
-                    canAssign=compatible && !selected.Short && !editor.ActivityProfiles.ReadOnly,canUndo=editor.ActivityProfiles.CanUndo(avatar ? avatar.ModelHash : ""),canRedo=editor.ActivityProfiles.CanRedo(avatar ? avatar.ModelHash : ""),
-                    status=editor.ActivityProfiles.Notice ?? avatar?.ActivityMotionStatus ?? "Uses included animations where no state motion is assigned",
-                    roles=Enumerable.Range(0,4).Select(role => new ActivityRoleView { role=role,choices=(editor.ActivityProfiles.Find(avatar ? avatar.ModelHash : "")?.roles.FirstOrDefault(x => (int)x.role == role)?.choices ?? Array.Empty<TutorMotionChoice>())
-                        .Select(choice => { var entry=editor.Motions.Find(choice.motionId); return new ActivityChoiceView { motionId=choice.motionId,name=entry?.name ?? "Missing saved motion",loop=choice.loop,speed=choice.speed,weight=choice.weight,cooldown=choice.cooldown,available=entry != null && editor.Motions.Downloaded(entry.id) && !entry.Short && entry.rigHash == rig }; }).ToArray() }).ToArray()
-                },
+                activityProfile = AvatarActivityActions.Observe(editor,selected?.id ?? ""),
                 status = editor.Motions.Notice ?? message
             };
         }

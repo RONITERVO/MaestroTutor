@@ -113,3 +113,14 @@ it('accepts the actual native walk observation and protects the selected avatar 
  expect(client.receive({...native,revision:native.revision+1,ack:1,walk:cleared})).toBe(true);expect((await pending).walk?.source).toBe('included');
  expect(client.receive({...native,revision:native.revision+2,ack:1,walk:{...native.walk,clipIndex:0}})).toBe(false);
 });
+
+it('accepts Unity activity observations and carries their independent revision without guessing one',async()=>{
+ const native=JSON.parse(readFileSync('test-fixtures/browser/avatarActivityState.json','utf8'));
+ const client=new RoomAgentClient();expect(client.receive(native)).toBe(true);
+ expect(client.getSnapshot().state?.activityProfile?.roles[3].choices[0]).toMatchObject({name:'Greeting',available:true,weight:2});
+ const command={action:'avatarActivities' as const,activities:{modelHash:native.activityProfile.modelHash,revision:native.activityProfile.revision,operation:'undo' as const}};
+ const pending=client.request([command]);expect(client.snapshot().request?.commands).toEqual([command]);expect(client.snapshot().request?.conditions).toEqual([]);
+ expect(client.receive({...native,revision:native.revision+1,ack:1,ok:false,status:'Tutor-state assignments changed',activityProfile:{...native.activityProfile,revision:3}})).toBe(true);
+ expect((await pending).ok).toBe(false);expect(client.snapshot().request).toBeNull();
+ for(const change of [{revision:undefined},{revision:0},{roles:[]},{roles:native.activityProfile.roles.map((r:any)=>({...r,choices:r.choices.map((c:any)=>({...c,weight:1.5}))}))}])expect(client.receive({...native,revision:native.revision+2,activityProfile:{...native.activityProfile,...change}})).toBe(false);
+});

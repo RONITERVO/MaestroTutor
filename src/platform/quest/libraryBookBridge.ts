@@ -1,16 +1,11 @@
+import {validActivityProfile,type ActivityProfile} from '../../../shared/avatarActivities';
+export type {ActivityProfile} from '../../../shared/avatarActivities';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 export interface LibraryEntry {
   id: string; name: string; tags: string[]; duration: number;
   favourite: boolean; compatible: boolean; shortClip: boolean;
   archived?: boolean; removed?: boolean; downloaded?: boolean; bytes?: number;
-}
-export interface ActivityChoice {
-  motionId: string; name: string; weight: number; speed: number; cooldown: number; loop: boolean; available: boolean;
-}
-export interface ActivityProfile {
-  modelHash: string; status: string; canAssign: boolean; readOnly: boolean; canUndo: boolean; canRedo: boolean;
-  roles: { role: number; choices: ActivityChoice[] }[];
 }
 export interface MotionUsage {
   total: number; page: number; pages: number; uses: string[];
@@ -34,7 +29,7 @@ export interface LibraryRequest {
   archivedOnly?: boolean; usagePage?: number;
   query?: string; offset?: number; compatibleOnly?: boolean; favouritesOnly?: boolean; includeShort?: boolean;
   motionId?: string; name?: string; tags?: string[]; favourite?: boolean; loop?: boolean;
-  modelHash?: string; role?: number; weight?: number; speed?: number; cooldown?: number;
+  profileRevision?: number; modelHash?: string; role?: number; weight?: number; speed?: number; cooldown?: number;
   ruleId?: string; stepIndex?: number; sourceIndex?: number; termsPage?: number;
 }
 const id = (value: unknown): value is string => typeof value === 'string' && /^[a-f0-9]{32}$/.test(value);
@@ -47,14 +42,6 @@ function entry(value: unknown): value is LibraryEntry {
     ['favourite', 'compatible', 'shortClip'].every(key => typeof value[key] === 'boolean') &&
     ['archived', 'removed', 'downloaded'].every(key => value[key] === undefined || typeof value[key] === 'boolean') &&
     (value.bytes === undefined || integer(value.bytes, 28, 8 * 1024 * 1024));
-}
-function activityProfile(value: unknown): boolean {
-  const bounded = (number: unknown, min: number, max: number) => typeof number === 'number' && Number.isFinite(number) && number >= min && number <= max;
-  return record(value) && (value.modelHash === '' || typeof value.modelHash === 'string' && /^[a-f0-9]{64}$/.test(value.modelHash)) && text(value.status, 2048) &&
-    ['canAssign', 'readOnly', 'canUndo', 'canRedo'].every(key => typeof value[key] === 'boolean') && Array.isArray(value.roles) && value.roles.length === 4 &&
-    value.roles.every((group, index) => record(group) && group.role === index && Array.isArray(group.choices) && group.choices.length <= 4 &&
-      group.choices.every(choice => record(choice) && id(choice.motionId) && text(choice.name, 100) && integer(choice.weight, 1, 10) && bounded(choice.speed, .25, 2) && bounded(choice.cooldown, 0, 60) && typeof choice.loop === 'boolean' && typeof choice.available === 'boolean') &&
-      new Set(group.choices.map(choice => choice.motionId)).size === group.choices.length);
 }
 function usage(value: unknown): boolean {
   return record(value) && integer(value.total, 0, 2048) && integer(value.page, 0, 512) && integer(value.pages, 1, 513) &&
@@ -72,7 +59,7 @@ export function parseLibraryState(value: unknown): LibraryState | null {
       !text(value.attribution, 1500) || !integer(value.termsPage, 0, 64) || !integer(value.termsPages, 1, 65)) return null;
   if (value.usage !== undefined && value.usage !== null && !usage(value.usage) ||
       value.archivedOnly !== undefined && typeof value.archivedOnly !== 'boolean' || value.canRemoveDownload !== undefined && typeof value.canRemoveDownload !== 'boolean' || value.canForgetMotion !== undefined && typeof value.canForgetMotion !== 'boolean') return null;
-  if (value.activityProfile !== undefined && value.activityProfile !== null && !activityProfile(value.activityProfile)) return null;
+  if (value.activityProfile !== undefined && value.activityProfile !== null && !validActivityProfile(value.activityProfile)) return null;
   return value as unknown as LibraryState;
 }
 /** Requests are acknowledged by native sequence, never retried as new actions.

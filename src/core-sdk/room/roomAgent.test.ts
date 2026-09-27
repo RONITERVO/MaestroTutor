@@ -117,3 +117,15 @@ it('assigns a discovered walking motion without starting follow and reports nati
  expect(execute.mock.calls).toHaveLength(1);expect(execute).toHaveBeenCalledWith([command],4,scene.objects);expect(result.scene.walk?.available).toBe(false);
  const next:any=(ai.models.generateContentStream.mock.calls as any)[1][0];expect(JSON.parse(next.contents[0].parts[0].text).scene.walk.status).toBe('Download no longer available');
 });
+
+it('uses the shared activity revision and returns rejection evidence without replaying a profile edit',async()=>{
+ const profile={modelHash:'f'.repeat(64),revision:2,status:'Ready',canAssign:true,readOnly:false,canUndo:true,canRedo:false,roles:[0,1,2,3].map(role=>({role,choices:[]}))};
+ let current:RoomAgentState={...scene,capabilities:['avatarActivities.v1'],activityProfile:profile};
+ const command={action:'avatarActivities',activities:{modelHash:profile.modelHash,revision:profile.revision,operation:'edit',edits:[{operation:'assign',role:3,choice:{motionId:'b'.repeat(32),weight:1,speed:1,cooldown:0,loop:true}}]}};
+ const ai=client([JSON.stringify({commands:[command]}),'{"commands":[]}']);
+ const execute=vi.fn(async()=>current={...current,ack:1,ok:false,status:'Tutor-state assignments changed',activityProfile:{...profile,revision:3}});
+ const result=await runRoomActionTask({...input,prompt:'Use that saved animation while speaking'},{aiClient:ai},{state:()=>current,valid:()=>true,execute},()=>{});
+ expect(execute).toHaveBeenCalledOnce();expect(execute).toHaveBeenCalledWith([command],4,scene.objects);expect(result.receipts[0].ok).toBe(false);
+ const next:any=(ai.models.generateContentStream.mock.calls as any)[1][0];const data=JSON.parse(next.contents[0].parts[0].text);
+ expect(data.scene.activityProfile.revision).toBe(3);expect(data.receipts[0].status).toContain('changed');
+});

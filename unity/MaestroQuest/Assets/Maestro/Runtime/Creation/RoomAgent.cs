@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Maestro.Quest.Book;
+using Maestro.Quest.Avatar;
 using Maestro.Quest.Rules;
 using UnityEngine;
 
@@ -19,6 +20,7 @@ namespace Maestro.Quest.Creation
         public RoomRecipe recipe;
         public RuleRequest rule;
         public RoomMotionQuery motionQuery;
+        public AvatarActivityRequest activities;
         public string operation,motionId;
         public ObjectPhysicsSettings physics;
         public AvatarMovementSettings movement;
@@ -57,6 +59,7 @@ namespace Maestro.Quest.Creation
         public RoomPhysicsObservation physics;
         public AvatarMovementObservation avatar;
         public AvatarWalkObservation walk;
+        public ActivityProfileView activityProfile;
         public RoomAgentObject[] objects;
         public string[] created=Array.Empty<string>();
     }
@@ -95,6 +98,10 @@ namespace Maestro.Quest.Creation
             if(commands.Any(command=>command?.action=="motions")) {
                 if(commands.Length!=1) {status="Motion searches must be sent on their own";return false;}
                 return Motions.Execute(commands[0],out status);
+            }
+            if(commands.Any(command=>command?.action=="avatarActivities")) {
+                if(commands.Length!=1) {status="Tutor-state assignments must be sent on their own";return false;}
+                return AvatarActivityActions.Execute(editor,commands[0].activities,out status);
             }
             if(commands.Any(command => command==null || RoomControls.IsControl(command.action) && !RoomControls.ValidCommand(command))) return false;
             if(commands.Any(command => RoomControls.Runtime(command.action)) && commands.Length!=1) {status="Runtime controls must be sent on their own";return false;}
@@ -245,7 +252,7 @@ namespace Maestro.Quest.Creation
             else if(executor.InspectionId!=null) lastInspected=executor.InspectionId;
             var inspected=editor.Read(lastInspected);
             return new RoomAgentState { session=inbox.Session,revision=++revision,sceneRevision=editor.Revision,ack=inbox.Ack,ok=ok,status=status,created=created,
-                motions=executor.Motions.Observe(),capabilities=RoomControls.Capabilities(editor),physics=RoomControls.ObservePhysics(editor),avatar=RoomControls.ObserveAvatar(editor),walk=AvatarWalkSelection.Observe(editor),
+                motions=executor.Motions.Observe(),capabilities=RoomControls.Capabilities(editor),physics=RoomControls.ObservePhysics(editor),avatar=RoomControls.ObserveAvatar(editor),walk=AvatarWalkSelection.Observe(editor),activityProfile=AvatarActivityActions.Observe(editor),
                 visible=executor.WorkspaceVisible,workspaceView=executor.RulesFocused ? "rules" : "objects",rules=editor.GetComponent<RuleWorkshop>()?.Observe(executor.RulesFocused),inspection=inspected==null || executor.RulesFocused ? null : new RoomInspection {id=inspected.id,partId=executor.InspectionId==inspected.id ? executor.InspectedPart : null,objectRevision=editor.ObjectRevision(inspected.id),recipe=inspected.recipe},
                 selectedId=editor.SelectedId,canUndo=editor.CanUndo,canRedo=editor.CanRedo,physicsRunning=editor.PhysicsWorld && editor.PhysicsWorld.Running,
                 objects=editor.Snapshot().objects.Select(x=>new RoomAgentObject {id=x.id,objectRevision=editor.ObjectRevision(x.id),name=x.name??x.kind.ToString(),kind=x.kind.ToString(),position=editor.Find(x.id) ? editor.Find(x.id).transform.localPosition : x.position,scale=x.scale,color=x.color,physics=RoomControls.Physics(x),

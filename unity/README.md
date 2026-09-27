@@ -212,3 +212,8 @@ sharing validation and room Undo with the manual walk chooser. Native observatio
 include assignment availability and loading/fallback messages. See
 [QUEST_AVATAR_MOVEMENT.md](../docs/QUEST_AVATAR_MOVEMENT.md). Set
 `MAESTRO_WALK_EVIDENCE` during verification to capture its actual native observation.
+
+`avatarActivities.v1` shares automatic idle/listening/thinking/speaking preferences
+between chat and the book, with per-avatar history, atomic edits and stale-profile
+protection. See [tutor-state motions](../docs/QUEST_AVATAR_ACTIVITIES.md). Saving a
+preference preserves playback priorities and is distinct from starting a motion.

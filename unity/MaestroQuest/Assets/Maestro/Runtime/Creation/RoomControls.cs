@@ -53,6 +53,7 @@ namespace Maestro.Quest.Creation
                     if (token is not JObject value || value["action"]?.Type != JTokenType.String) return false;
                     string action = (string)value["action"];
                     if(action=="motions") {if(commands.Count!=1 || !RoomMotionSearch.ValidWire(value))return false;continue;}
+                    if(action=="avatarActivities") {if(commands.Count!=1 || !AvatarActivityActions.ValidWire(value))return false;continue;}
                     if (!IsControl(action)) continue;
                     string[] keys = action switch {
                         "physicsSettings" => new[] { "action","target","physics" },
@@ -103,7 +104,7 @@ namespace Maestro.Quest.Creation
         }
         public static string[] Capabilities(RoomEditor editor) => Actions.Where(action =>
             action != "physicsRun" || editor.PhysicsWorld).Where(action =>
-            action != "avatarMotion" || editor.Find("maestro")?.GetComponent<AvatarSpatialMotion>()).Where(action => action != "avatarWalk" || editor.Find("maestro")?.GetComponent<MaestroAvatar>()).Select(action => action+".v1").Concat(new[] {"motions.v1"}).Concat(editor.GetComponent<RuleWorkshop>() ? new[] {"behaviourPrograms.v1"} : Array.Empty<string>()).ToArray();
+            action != "avatarMotion" || editor.Find("maestro")?.GetComponent<AvatarSpatialMotion>()).Where(action => action != "avatarWalk" || editor.Find("maestro")?.GetComponent<MaestroAvatar>()).Select(action => action+".v1").Concat(new[] {"motions.v1","avatarActivities.v1"}).Concat(editor.GetComponent<RuleWorkshop>() ? new[] {"behaviourPrograms.v1"} : Array.Empty<string>()).ToArray();
         public static RoomPhysicsObservation ObservePhysics(RoomEditor editor) => !editor.PhysicsWorld ? null : new() {
             ready=editor.PhysicsWorld.SurfacesReady,running=editor.PhysicsWorld.Running,status=editor.PhysicsWorld.Status
         };

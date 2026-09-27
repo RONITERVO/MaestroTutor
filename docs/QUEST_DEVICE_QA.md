@@ -2,7 +2,36 @@
 
 This is development evidence, not a release acceptance report.
 
-## Latest: shared walking preference — not installed
+## Latest: shared automatic-animation preferences — not installed
+
+APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-avatar-activities-9210BA28.apk`.
+SHA256: `9210BA286C643711BC0132EA46948B025F194812779F8E76CF2B2F07230BED1B`.
+Development v2 signature verifies; libraries are ARM64 only. All 89 runtime sources
+match the tested mirror. Embedded `main-BVgyQ49l.js` matches the built web bundle
+(SHA256 `c6e21b2bbfa3d2a169d13f1c18bbfa77c5d91b9c03631912d522c17131fe75de`).
+81 EditMode, 76 required PlayMode, 25 Android and 1,174 app tests pass. Three optional
+private-file tests were deliberately skipped. TypeScript, full/shared lint,
+prompt/core guards and release-config checks pass. Functions (25) and Live gateway
+(31) tests/builds pass. Evidence: `.quest-evidence/avatar-activities/`.
+
+`avatarActivities.v1` adds atomic per-avatar idle/listening/thinking/speaking
+assignments through the original app-owned agent. The book uses the same validator,
+projection, save and independent Undo history. Profile revisions reject stale
+agent/book requests. A dirty book draft survives an intervening agent edit.
+The native integration test observes real head rotation and state transitions,
+checks multi-role atomicity, manual authoring priority, failed writes, Undo/Redo
+and missing-download availability. Web tests parse the actual Unity observation
+and verify conflict UX. A headless Chrome check also preserves a dirty draft,
+reloads the new settings and submits the observed revision. That presentation
+check uses a real Unity profile in a synthetic book envelope; conflict updates
+are simulated. Provider orchestration tests use a mock, not Gemini.
+
+No device access occurred. Acceptance must include real-provider chat assignment,
+co-editing, automatic playback during Live, pause/resume and model changes, plus
+all earlier hardware checks. The reported default-avatar stationary feet issue
+remains unresolved. This is a development checkpoint, not Store readiness.
+
+## Earlier: shared walking preference — not installed
 
 APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-avatar-walk-CF9E1370.apk`.
 SHA256: `CF9E1370A329212E2895DC6E15B6FE6F87B8E11CAE67CC56BD5A8FBF1A1646AF`.

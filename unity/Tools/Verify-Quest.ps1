@@ -97,7 +97,7 @@ if (!$MotionAuditDirectory) { $expectedSkipped += 'SelectedCollectionMotionsMatc
 $unexpectedCases = @($playReport.SelectNodes('//test-case[@result!="Passed"]') | Where-Object {
     $_.result -ne 'Skipped' -or $_.label -ne 'Ignored' -or $expectedSkipped -notcontains $_.name
 })
-if ($playReport.'test-run'.result -notin @('Passed','Skipped:Ignored') -or [int]$playReport.'test-run'.passed -lt 75 -or $unexpectedCases.Count -gt 0) { throw 'Unity interaction tests did not pass.' }
+if ($playReport.'test-run'.result -notin @('Passed','Skipped:Ignored') -or [int]$playReport.'test-run'.passed -lt 76 -or $unexpectedCases.Count -gt 0) { throw 'Unity interaction tests did not pass.' }
 if ($MotionAuditDirectory) {
     $env:MAESTRO_MOTION_AUDIT = Join-Path $repoRoot '.quest-evidence/motion-library'
     Invoke-QuestEditor @('-quit','-executeMethod','Maestro.Quest.Editor.QuestMotionAudit.Inspect') 'motion-audit.log'

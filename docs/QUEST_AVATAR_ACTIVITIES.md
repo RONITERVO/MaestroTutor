@@ -1,6 +1,6 @@
 # Per-avatar tutor-state motions
 
-Development implementation, 2026-09-26. This is presentation driven by the
+Development implementation, updated 2026-09-27. This is presentation driven by the
 existing web tutor state. It never starts another conversation, microphone,
 voice or paid session. Quest acceptance remains required; the headset is on
 charging hold and no installation is implied by desktop verification.
@@ -33,6 +33,41 @@ character continues using its built-in animations. Walking has its separate
 saved gait assignment; visual-rule sequences retain their existing triggers.
 Rules can also use recorded poses/movement through the authoring system. This
 editor currently assigns reusable imported library motions only.
+
+## Use through Maestro chat
+
+An explicit request such as “use Friendly wave while you are speaking” can now
+be delegated through the original app-owned room agent. It searches the shared
+motion library and submits `avatarActivities.v1`; Unity does not own a second
+Gemini client. The agent can assign/update one choice, remove it, restore a role's
+included animation, or undo/redo assignment changes. It cannot import new files
+through this operation or assign motions from an incompatible avatar rig.
+
+The standalone command is `{action:"avatarActivities",activities:{modelHash,
+revision,operation:"edit",edits:[{operation:"assign",role:3,choice:{motionId,
+weight:1,speed:1,cooldown:0,loop:false}}]}}`. All identifiers and `revision` come
+from the native observation/library. Roles are 0 Idle, 1 Listening, 2 Thinking,
+3 Speaking. `remove` uses role and motionId; `clear` uses role only. `undo`/`redo`
+use modelHash and revision without edits. Up to 16 edits form one atomic profile
+save and one assignment Undo. Unmentioned choices/roles remain unchanged.
+
+`scene.activityProfile` and the book share one native projection. Each reports
+the current model, revision, four role lists, availability, status and history.
+The book additionally gates assignment on its selected motion. A missing payload
+cannot be newly assigned; an existing unavailable choice retains its identity.
+The shared validator enforces bounds and rejects unknown/mistyped wire fields.
+
+The profile document has an in-memory revision separate from room/rule revisions.
+Successful changes and history moves advance it; no-ops and rejected edits do not.
+It is fenced by the current native session and model identity. Both book and agent
+must submit the revision they observed. A conflicting edit is rejected, never
+silently retried. The book preserves a dirty settings draft and offers an explicit
+reload when its profile changes. Old book states can still be displayed, but
+assignment controls need the new revision field. Old requests without a revision
+fail safely on the new runtime. Embedded web and native code ship together.
+
+Saving an assignment does not start a preview or prove immediate playback. The
+existing activity runtime retains its priorities and runs choices when appropriate.
 
 ## Runtime ownership and transitions
 
@@ -69,12 +104,13 @@ The separate 256 KiB file uses the existing atomic/backup persistence path and
 strict validation. Unknown versions or invalid data are preserved read-only.
 Undo/Redo retains up to 32 in-memory changes per history list, with operations
 selected for the current avatar. It does not survive app restart. Current and
-history motion references are exposed for a future safe deletion workflow;
-there is no new library deletion UI in this checkpoint.
+history motion references protect downloads in the existing library maintenance
+workflow; see QUEST_MOTION_MAINTENANCE.md.
 
 The bounded library bridge adds assignment/remove/clear/Undo/Redo commands and
 an optional profile view. Native validates bounds, role, rig and current avatar
-hash. Stale avatar/session requests cannot redirect an assignment. Book pages
+hash and shared profile revision. Stale avatar/session/profile requests cannot
+redirect or overwrite an assignment. Book pages
 remain the only flat editing surface; no persistent toolbar is overlaid on the
 conversation.
 
@@ -103,3 +139,11 @@ not establish headset performance, complete provider parity or Store readiness.
 Development checkpoint **906ED6F1** passed the complete build and 131 automated
 checks and remains uninstalled. Exact artifact hashes and verification scope are
 in QUEST_DEVICE_QA.md.
+
+Shared agent checkpoint adds native/web wire conformance fixtures, an actual
+Unity-emitted `avatarActivityState.json`, atomic two-role edits, stale agent/book
+conflicts, manual-to-agent read-back, independent Undo/Redo, real head rotation,
+state transitions, authoring priority and missing-download rejection. App-owned
+provider journeys use a mock provider; they establish orchestration and rejection
+reporting, not real-provider acceptance. Latest artifact details are in
+QUEST_DEVICE_QA.md.

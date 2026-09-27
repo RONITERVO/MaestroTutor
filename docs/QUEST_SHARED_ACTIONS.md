@@ -228,7 +228,8 @@ performance testing are still required for release.
 book and agent use `MotionLibrary.Search`; downloaded results provide stable IDs
 for the existing behavior executor. Native observations invalidate compatibility
 when the target model changes. See QUEST_MOTION_DISCOVERY.md. This closes discovery
-for saved motions; profile assignment, import and full action-catalogue parity remain unfinished.
+for saved motions; the following increment adds activity-profile assignment.
+Import and full action-catalogue parity remain unfinished.
 
 ## Shared walking preference (2026-09-27)
 
@@ -237,3 +238,14 @@ validation as manual selection. It joins the existing atomic room-edit journal a
 per-object revision checks. The `walk` observation adds assignment and availability
 read-back, plus native loading/fallback status. See QUEST_AVATAR_MOVEMENT.md; this
 is a preference edit, not a movement-start command or headset gait acceptance.
+
+## Shared automatic animation preferences (2026-09-27)
+
+`avatarActivities.v1` connects chat to the same per-avatar profile domain used by
+the book. Assign/remove/clear and Undo/Redo share validation, atomic persistence,
+reference retention and a profile revision. Multi-role edits produce one history
+entry. Book drafts survive conflicting agent edits; stale writes fail with fresh
+read-back. The agent and book observe one projection, and existing playback
+ownership stays authoritative. See QUEST_AVATAR_ACTIVITIES.md for the wire contract
+and acceptance boundaries. General import, model replacement, controller bindings,
+scan workflows and durable native execution receipts remain outside this increment.

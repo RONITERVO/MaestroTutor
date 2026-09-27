@@ -28,3 +28,8 @@ it('validates saved walk observations without claiming an assignment starts play
  expect(()=>requireRoomCapabilities([{action:'avatarWalk'}],{})).toThrow('does not support');
  expect(()=>requireRoomCapabilities([{action:'avatarWalk'}],{capabilities:['avatarWalk.v1']})).not.toThrow();
 });
+
+it('gates shared activity edits on the advertised native capability',()=>{
+ expect(()=>requireRoomCapabilities([{action:'avatarActivities'}],{})).toThrow('does not support');
+ expect(()=>requireRoomCapabilities([{action:'avatarActivities'}],{capabilities:['avatarActivities.v1']})).not.toThrow();
+});

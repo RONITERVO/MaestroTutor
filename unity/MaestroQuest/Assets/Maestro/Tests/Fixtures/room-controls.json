@@ -204,6 +204,111 @@
       "name": "walk assignment with unknown operation",
       "valid": false,
       "json": "{\"commands\":[{\"action\":\"avatarWalk\",\"target\":\"maestro\",\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"operation\":\"follow\"}]}"
+    },
+    {
+      "name": "assign activity profile",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":2,\"operation\":\"edit\",\"edits\":[{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}}]}}]}"
+    },
+    {
+      "name": "activity undo",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":2,\"operation\":\"undo\"}}]}"
+    },
+    {
+      "name": "activity redo",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":2,\"operation\":\"redo\"}}]}"
+    },
+    {
+      "name": "activity clear",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":2,\"operation\":\"edit\",\"edits\":[{\"operation\":\"clear\",\"role\":0}]}}]}"
+    },
+    {
+      "name": "activity remove",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":2,\"operation\":\"edit\",\"edits\":[{\"operation\":\"remove\",\"role\":0,\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}]}}]}"
+    },
+    {
+      "name": "reject activity missing revision",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"operation\":\"edit\",\"edits\":[{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}}]}}]}"
+    },
+    {
+      "name": "reject activity zero revision",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":0,\"operation\":\"edit\",\"edits\":[{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}}]}}]}"
+    },
+    {
+      "name": "reject activity wrong model",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bad\",\"revision\":2,\"operation\":\"edit\",\"edits\":[{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}}]}}]}"
+    },
+    {
+      "name": "reject activity unknown operation",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":2,\"operation\":\"eval\",\"edits\":[{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}}]}}]}"
+    },
+    {
+      "name": "reject activity empty edits",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":2,\"operation\":\"edit\",\"edits\":[]}}]}"
+    },
+    {
+      "name": "reject activity excess edits",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":2,\"operation\":\"edit\",\"edits\":[{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}},{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}},{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}},{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}},{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}},{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}},{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}},{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}},{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}},{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}},{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}},{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}},{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}},{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}},{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}},{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}},{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}}]}}]}"
+    },
+    {
+      "name": "reject activity fractional role",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":2,\"operation\":\"edit\",\"edits\":[{\"operation\":\"assign\",\"role\":0.5,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}}]}}]}"
+    },
+    {
+      "name": "reject activity extra role",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":2,\"operation\":\"edit\",\"edits\":[{\"operation\":\"assign\",\"role\":4,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}}]}}]}"
+    },
+    {
+      "name": "reject activity missing speed",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":2,\"operation\":\"edit\",\"edits\":[{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"cooldown\":10,\"loop\":true}}]}}]}"
+    },
+    {
+      "name": "reject activity fractional weight",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":2,\"operation\":\"edit\",\"edits\":[{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":1.5,\"speed\":0.75,\"cooldown\":10,\"loop\":true}}]}}]}"
+    },
+    {
+      "name": "reject activity text loop",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":2,\"operation\":\"edit\",\"edits\":[{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":\"true\"}}]}}]}"
+    },
+    {
+      "name": "reject activity upper id",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":2,\"operation\":\"edit\",\"edits\":[{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}}]}}]}"
+    },
+    {
+      "name": "reject activity unknown choice field",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":2,\"operation\":\"edit\",\"edits\":[{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true,\"code\":\"x\"}}]}}]}"
+    },
+    {
+      "name": "reject activity unknown field",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":2,\"operation\":\"edit\",\"edits\":[{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}}]},\"target\":\"maestro\"}]}"
+    },
+    {
+      "name": "reject activity undo with edits",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":2,\"operation\":\"undo\",\"edits\":[{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}}]}}]}"
+    },
+    {
+      "name": "reject mixed activity batch",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":2,\"operation\":\"edit\",\"edits\":[{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}}]}},{\"action\":\"undo\"}]}"
     }
   ]
 }

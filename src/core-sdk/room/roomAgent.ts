@@ -1,6 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import { roomControlFields, validRoomControl, requireRoomCapabilities, type ObjectPhysicsSettings, type AvatarMovementSettings, type PhysicsObservation, type AvatarMovementObservation, type AvatarWalkObservation } from '../../../shared/roomControls';
+import {validAvatarActivityRequest,type AvatarActivityRequest,type ActivityProfile} from '../../../shared/avatarActivities';
 import {validMotionQuery,type MotionQuery,type MotionSearchView} from '../../../shared/roomMotions';
 import type { RelatedRoomTask } from './taskSteering';
 import {validRuleRequest,type RuleRequest,type RuleView} from './rules';
@@ -11,8 +12,8 @@ import { runTutorTextTurn, type TutorTextTurnInput, type TutorTextTurnOptions } 
 import { buildRoomAgentPrompt, buildRoomResultInstruction, ROOM_AGENT_INSTRUCTION, ROOM_AGENT_SCHEMA } from '../../../shared/prompts';
 
 export interface RoomCommand {
-  action: 'create' | 'move' | 'resize' | 'paint' | 'recipe' | 'delete' | 'undo' | 'redo' | 'inspect' | 'workspace' | 'play' | 'stop' | 'rules' | 'motions' | keyof typeof roomControlFields;
-  rule?:RuleRequest; motionId?:string; motionQuery?:MotionQuery;
+  action: 'create' | 'move' | 'resize' | 'paint' | 'recipe' | 'delete' | 'undo' | 'redo' | 'inspect' | 'workspace' | 'play' | 'stop' | 'rules' | 'motions' | 'avatarActivities' | keyof typeof roomControlFields;
+  activities?:AvatarActivityRequest; rule?:RuleRequest; motionId?:string; motionQuery?:MotionQuery;
   operation?:'start'|'pause'|'look'|'follow'|'stop'; physics?:ObjectPhysicsSettings; movement?:AvatarMovementSettings;
   target?: string; partId?:string; reference?: string; name?: string;
   kind?: 'block' | 'ball' | 'cylinder' | 'recipe' | 'boxRobot';
@@ -23,7 +24,7 @@ export interface RoomAgentState {
   version: 1; session: string; revision: number; sceneRevision: number; ack: number;
   ok: boolean; status: string; created: string[]; canUndo: boolean; canRedo: boolean; physicsRunning: boolean;
   capabilities?:string[]; physics?:PhysicsObservation|null; avatar?:AvatarMovementObservation|null; walk?:AvatarWalkObservation|null;
-  workspaceView?:'objects'|'rules'; rules?:RuleView|null; motions?:MotionSearchView|null;
+  activityProfile?:ActivityProfile|null; workspaceView?:'objects'|'rules'; rules?:RuleView|null; motions?:MotionSearchView|null;
   visible?: boolean; inspection?: {id:string;partId?:string|null;objectRevision:number;recipe:RoomRecipe|null}|null;
   selectedId?: string | null;
   objects: { physics?:ObjectPhysicsSettings; movement?:AvatarMovementSettings|null; held?:boolean; simulating?:boolean; objectRevision?:number; id: string; name: string; kind: string; position: {x:number;y:number;z:number}; scale:number; color: {r:number;g:number;b:number;a:number}; animated:boolean }[];
@@ -37,7 +38,7 @@ const record = (v: unknown): v is Record<string, unknown> => v !== null && typeo
 const validColor = (v: unknown) => record(v) && ['r','g','b'].every(k => typeof v[k] === 'number' && Number.isFinite(v[k]) && Number(v[k]) >= 0 && Number(v[k]) <= 1) && v.a === 1;
 const vector = (v: unknown) => record(v) && ['x','y','z'].every(k => typeof v[k] === 'number' && Number.isFinite(v[k]) && Math.abs(v[k] as number) <= 25);
 const fields: Record<RoomCommand['action'], readonly string[]> = {
-  ...roomControlFields, motions:['target','motionQuery'],
+  ...roomControlFields, avatarActivities:['activities'], motions:['target','motionQuery'],
   create:['reference','name','kind','atPosition','position','scale','color','recipe'], move:['target','position'], resize:['target','scale'],
   paint:['target','color'], recipe:['target','recipe'], delete:['target'], undo:[], redo:[], inspect:['target','partId'], workspace:['visible'], play:['target'], stop:['target'], rules:['rule'],
 };
@@ -52,6 +53,7 @@ export function parseRoomCommands(input: unknown): RoomCommand[] {
     if ((action === 'move' || c.atPosition === true || c.position !== undefined) && !vector(c.position)) throw new Error('Invalid position.');
     if (c.partId !== undefined && (typeof c.partId !== 'string' || !/^[a-zA-Z0-9_]{1,32}$/.test(c.partId))) throw new Error('Invalid recipe part.');
     if (Object.prototype.hasOwnProperty.call(roomControlFields,action) && !validRoomControl(c)) throw new Error('Invalid room control.');
+    if (action === 'avatarActivities' && !validAvatarActivityRequest(c.activities)) throw new Error('Invalid tutor-state assignment.');
     if (action === 'motions' && !validMotionQuery(c.motionQuery)) throw new Error('Invalid motion search.');
     if (action === 'rules' && !validRuleRequest(c.rule)) throw new Error('Invalid behaviour request.');
     if (action === 'workspace' && typeof c.visible !== 'boolean') throw new Error('Invalid workspace state.');
@@ -60,7 +62,7 @@ export function parseRoomCommands(input: unknown): RoomCommand[] {
     if ((action === 'paint' || c.color !== undefined) && !validColor(c.color)) throw new Error('Invalid colour.');
     if ((action === 'recipe' || c.kind === 'recipe') && !parseRecipe(c.recipe)) throw new Error('Missing recipe.');
   }
-  if (input.commands.some(c => ['undo','redo','inspect','workspace','play','stop','rules','motions','physicsRun','avatarMotion'].includes(c.action)) && input.commands.length !== 1) throw new Error('This action must be submitted on its own.');
+  if (input.commands.some(c => ['undo','redo','inspect','workspace','play','stop','rules','motions','avatarActivities','physicsRun','avatarMotion'].includes(c.action)) && input.commands.length !== 1) throw new Error('This action must be submitted on its own.');
   return input.commands as unknown as RoomCommand[];
 }
 

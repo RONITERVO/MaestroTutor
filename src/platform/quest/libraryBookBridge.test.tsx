@@ -66,7 +66,7 @@ describe('book library transport and UI', () => {
   });
   it('validates bounded per-avatar profiles and sends explicit assignment settings without preview', () => {
     const modelHash = 'f'.repeat(64);
-    const initial = { ...state(), selected: state().entries[0], activityProfile: { modelHash, status: 'Ready', canAssign: true, readOnly: false, canUndo: false, canRedo: false, roles: [0, 1, 2, 3].map(role => ({ role, choices: [] })) } };
+    const initial = { ...state(), selected: state().entries[0], activityProfile: { modelHash, revision: 1, status: 'Ready', canAssign: true, readOnly: false, canUndo: false, canRedo: false, roles: [0, 1, 2, 3].map(role => ({ role, choices: [] })) } };
     expect(parseLibraryState(initial)).not.toBeNull();
     expect(parseLibraryState({ ...initial, activityProfile: { ...initial.activityProfile, roles: [] } })).toBeNull();
     const client = new LibraryBookClient(); client.receive(initial); const ui = render(<LibraryBookView client={client} />);
@@ -75,7 +75,7 @@ describe('book library transport and UI', () => {
     fireEvent.change(ui.getByLabelText('Selection weight'), { target: { value: '5' } });
     fireEvent.change(ui.getByLabelText('Seconds before reusing'), { target: { value: '10' } });
     fireEvent.click(ui.getByText('Assign to tutor state'));
-    expect(client.snapshot().libraryRequest).toMatchObject({ action: 'roleAssign', modelHash, role: 3, motionId, speed: 1, weight: 5, cooldown: 10, loop: false });
+    expect(client.snapshot().libraryRequest).toMatchObject({ action: 'roleAssign', modelHash, profileRevision: 1, role: 3, motionId, speed: 1, weight: 5, cooldown: 10, loop: false });
     const profile = { ...initial.activityProfile, canUndo: true, roles: initial.activityProfile.roles.map(group => ({ ...group, choices: group.role === 3 ? [{ motionId, name: 'Stage walk', weight: 5, speed: 1, cooldown: 10, loop: false, available: true }] : [] })) };
     act(() => { client.receive({ ...initial, revision: 2, ack: 1, activityProfile: profile }); });
     fireEvent.click(ui.getByLabelText('Remove Stage walk from Speaking'));
@@ -127,4 +127,20 @@ describe('book library transport and UI', () => {
     expect(client.snapshot().libraryRequest).toMatchObject({ action: 'forgetMotion', motionId });
   });
 
+});
+
+it('keeps a dirty assignment draft when an agent changes the shared profile and requires reload', () => {
+ const client=new LibraryBookClient();
+ const profile={modelHash:'f'.repeat(64),revision:1,status:'Ready',canAssign:true,readOnly:false,canUndo:true,canRedo:false,roles:[0,1,2,3].map(role=>({role,choices:[]}))};
+ const initial={...state(),selected:state().entries[0],activityProfile:profile};client.receive(initial);
+ const ui=render(<LibraryBookView client={client}/>);fireEvent.click(ui.getByText('Tutor-state motions'));
+ fireEvent.change(ui.getByLabelText('Selection weight'),{target:{value:'5'}});
+ act(()=>{client.receive({...initial,revision:2,activityProfile:{...profile,revision:2,roles:profile.roles.map(r=>({...r,choices:r.role===0?[{motionId,name:'Stage walk',weight:2,speed:.5,cooldown:10,loop:true,available:true}]:[]}))}});});
+ expect((ui.getByLabelText('Selection weight') as HTMLSelectElement).value).toBe('5');
+ expect((ui.getByLabelText('Selection weight') as HTMLSelectElement).closest('fieldset')?.disabled).toBe(true);
+ expect(client.snapshot().libraryRequest).toBeNull();
+ fireEvent.click(ui.getByText('Reload current assignments'));
+ expect((ui.getByLabelText('Selection weight') as HTMLSelectElement).value).toBe('2');
+ fireEvent.change(ui.getByLabelText('Playback speed'),{target:{value:'1.5'}});fireEvent.click(ui.getByText('Update state motion'));
+ expect(client.snapshot().libraryRequest).toMatchObject({action:'roleAssign',profileRevision:2,weight:2,speed:1.5,cooldown:10,loop:true});
 });

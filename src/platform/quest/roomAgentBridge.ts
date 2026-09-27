@@ -1,4 +1,5 @@
 import { requireRoomCapabilities, validObjectPhysics, validAvatarMovement, validPhysicsObservation, validAvatarObservation, validAvatarWalkObservation } from '../../../shared/roomControls';
+import {validActivityProfile} from '../../../shared/avatarActivities';
 import {validMotionSearchView} from '../../../shared/roomMotions';
 import {validRuleView} from '../../core-sdk/room/rules';
 // Copyright 2026 Roni Tervo
@@ -29,6 +30,7 @@ export class RoomAgentClient {
     if(input.objects.some(o=>!record(o) || typeof o.id!=='string' || !/^(book|maestro|[a-f0-9]{32})$/.test(o.id) || typeof o.name!=='string' || o.name.length>80 || typeof o.kind!=='string' || !vector(o.position) || typeof o.scale!=='number' || !Number.isFinite(o.scale) || !validPigment(o.color) || typeof o.animated!=='boolean' || o.objectRevision!==undefined&&!integer(o.objectRevision,1))) return false;
     if(input.capabilities!==undefined&&(!Array.isArray(input.capabilities)||input.capabilities.length>64||!input.capabilities.every(c=>typeof c==='string'&&/^[a-zA-Z][a-zA-Z0-9.]{0,63}$/.test(c))||new Set(input.capabilities).size!==input.capabilities.length))return false;
     if(input.physics!==undefined&&input.physics!==null&&(!validPhysicsObservation(input.physics)||input.physics.running!==input.physicsRunning))return false;
+    if(input.activityProfile!==undefined&&input.activityProfile!==null&&!validActivityProfile(input.activityProfile,true))return false;
     if(input.walk!==undefined&&input.walk!==null&&!validAvatarWalkObservation(input.walk))return false;
     if(input.avatar!==undefined&&input.avatar!==null&&!validAvatarObservation(input.avatar))return false;
     if(input.objects.some(o=>o.physics!==undefined&&!validObjectPhysics(o.physics)||o.movement!==undefined&&o.movement!==null&&!validAvatarMovement(o.movement)||['held','simulating'].some(key=>o[key]!==undefined&&typeof o[key]!=='boolean')))return false;

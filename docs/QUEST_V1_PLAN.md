@@ -32,6 +32,13 @@ Undo, stale-edit rejection, included-walk restoration and availability read-back
 Native tests observe actual leg motion after an agent assignment. This does not
 resolve the reported on-headset default gait issue. See QUEST_AVATAR_MOVEMENT.md.
 
+PC-only activity-profile update (2026-09-27): `avatarActivities.v1` adds shared
+chat/book assignment of idle, listening, thinking and speaking motions. Multi-role
+changes save atomically with a separate assignment Undo; both entry points check
+the observed profile revision. A conflicting agent edit preserves the book draft.
+Native tests cover actual rig motion and priority after assignment. See
+QUEST_AVATAR_ACTIVITIES.md. This remains uninstalled and needs provider/device QA.
+
 Earlier implementation update (2026-09-26): validated Mixamo/Unity-named GLB
 humanoids can replace Maestro, including the user's actual Meshy export.
 Gaze and following use the shared pose rig and scanned-room navigation, with
