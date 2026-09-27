@@ -212,6 +212,27 @@ namespace Maestro.Quest.Tests
                 File.WriteAllText(Path.Combine(directory,"behaviours.v2.json"),"{\"version\":6}");storage=new RuleStorage(directory);storage.Load(out _);Assert.That(storage.ReadOnly,Is.True);
             }finally {if(Directory.Exists(directory))Directory.Delete(directory,true);}
         }
+        sealed class VisualFacts:IProgramFacts {
+            readonly string activity;public VisualFacts(string activity){this.activity=activity;}
+            public bool TryRead(string name,out ProgramValue value){value=new ProgramValue(activity);return name=="maestro.state";}
+        }
+        [TestCase("speaking",2)] [TestCase("idle",1)]
+        public void VisuallyAuthoredBranchFixtureExecutesTheExactNestedActions(string activity,int expected)
+        {
+            string source=File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-visual.json"));
+            var machine=new ProgramMachine(Compile(source),new VisualFacts(activity));int actions=0,ticks=0;ProgramYield result;
+            do {
+                result=machine.Advance(out var action,4);Assert.That(++ticks,Is.LessThan(50),machine.Error);
+                if(result==ProgramYield.Action){
+                    actions++;Assert.That(action.id,Is.EqualTo(activity=="speaking"?"block_3":"block_4"));
+                    Assert.That(action.action,Is.EqualTo(activity=="speaking"?RuleActionKind.Gesture:RuleActionKind.Wait));
+                    if(activity=="speaking"){Assert.That(action.gesture,Is.EqualTo(RuleGesture.Greeting));Assert.That(action.seconds,Is.EqualTo(.2f));}
+                    else Assert.That(action.seconds,Is.EqualTo(1));
+                }
+            }while(result==ProgramYield.Action||result==ProgramYield.Yield);
+            Assert.That(result,Is.EqualTo(ProgramYield.Completed),machine.Error);Assert.That(actions,Is.EqualTo(expected));
+            Assert.That(machine.Advance(out _),Is.EqualTo(ProgramYield.Completed));
+        }
         [Test] public void SharedWebAndNativeProgramFixturesAgree()
         {
             var fixtures=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-contract.json")));

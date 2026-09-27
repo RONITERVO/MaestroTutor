@@ -11,6 +11,7 @@ import nativeExecutions from './executionStates.json';
 import nativeEvents from './eventProgramStates.json';
 import creationProgram from '../../unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-create.json';
 import creationResult from './creationResult.json';
+import visualProgram from '../../unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-visual.json';
 import objectEditProgram from './objectEditProgram.json';
 import objectEditResults from './objectEditResults.json';
 import recipeCreationProgram from './recipeCreationProgram.json';
@@ -32,12 +33,13 @@ const eventPrograms=new URLSearchParams(location.search).has('events');let signa
 if(eventPrograms)state=JSON.parse(JSON.stringify(nativeEvents.waiting));
 const programs=new URLSearchParams(location.search).has('program');if(programs)state=JSON.parse(JSON.stringify(nativeProgram));
 if(new URLSearchParams(location.search).has('execution')){state=JSON.parse(JSON.stringify(nativeExecutions.running));state.visible=true;state.execution={selected:null,running:[],outcomes:[]};}
+const visualBlocks=new URLSearchParams(location.search).has('visualBlocks');
 const objectEdits=new URLSearchParams(location.search).has('objectEdits');
 const recipeCreation=new URLSearchParams(location.search).has('recipeCreation');
-if(new URLSearchParams(location.search).has('creation')||recipeCreation||objectEdits){
+if(new URLSearchParams(location.search).has('creation')||recipeCreation||objectEdits||visualBlocks){
  state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';
- const program=objectEdits?objectEditProgram:recipeCreation?recipeCreationProgram:creationProgram;
- const name=objectEdits?'Make a red ball':recipeCreation?'Create waving robot':'Create and push';
+ const program=visualBlocks?{...visualProgram,resources:[],functions:[{...visualProgram.functions[0],body:[]}]}:objectEdits?objectEditProgram:recipeCreation?recipeCreationProgram:creationProgram;
+ const name=visualBlocks?'Speaking greeting':objectEdits?'Make a red ball':recipeCreation?'Create waving robot':'Create and push';
  state.rules!.selected!.program=JSON.stringify(program);state.rules!.selected!.name=name;
  state.rules!.sequences=state.rules!.sequences.map(x=>x.id===state.rules!.selected!.id?{...x,name,steps:program.functions[0].body.length,program:true}:x);
  state.rules!.running=[];state.rules!.outcomes=[];state.rules!.bindings=[];state.rules!.bindingCount=0;state.rules!.buttons=[];

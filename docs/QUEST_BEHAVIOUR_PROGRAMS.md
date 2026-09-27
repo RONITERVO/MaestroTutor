@@ -342,3 +342,47 @@ See [the current contract and boundaries](QUEST_EVENT_PROGRAMS.md). Earlier note
 marking all event waits/timers pending describe prior checkpoints. Durable state,
 wall-clock scheduling, parallel branches, channel blending and full release
 acceptance remain open; no headset install or backend deployment is included.
+
+## Visual nested authoring (2026-09-27)
+
+The optional book workspace now inserts blocks directly into Then/Otherwise,
+repeat/Forever bodies, individual cases and default branches. Edit values opens
+typed controls; Source retains the exact canonical node. IDs and untouched
+branches, functions, recipes and result bindings survive edits. Applying a draft
+still does not start it.
+
+Action choices and recursive input controls come from the committed native
+catalog. These include object selectors, numbers, booleans, enums, optional
+arguments, object fields, arrays and nullable values. Definitions are detached
+copies. Native examples seed recipe actions; there is no second hand-written
+action schema or execution path. Changing the action explicitly replaces its
+inputs/results; changing an input preserves other data.
+
+Typed expression controls combine constants, compatible function variables,
+session state, room facts, arithmetic and comparisons. Conditions, loop counts,
+timers, event sources/timeouts, assignments, case values and function arguments
+share those expressions. Function calls and event payloads retain type checks.
+New local variables can be added from the function block. Existing result-variable
+controls remain available.
+
+Every completed edit passes the full shared program validator, including
+recursion, size, nesting, target and result checks. Invalid input remains inside
+the editor draft; the last valid program is preserved and Apply is disabled
+until the editor is resolved. Stale native observations retain the existing
+conflict behavior. Newly selected literal object references are added to the
+program's declared resources; existing declarations are preserved. A resource
+bound to a creation result has no authority merely from its required placeholder:
+the native version-3 runtime still checks declared or actually created IDs.
+
+Verification includes a program built without JSON in real Chrome: if Maestro
+is speaking, repeat a greeting twice; otherwise wait. Its exact JSON equals
+program-visual.json, which Unity executes for both branches. Browser
+acknowledgements are simulated; the browser probe starts no native action.
+Additional tests cover invalid-edit retention, recipe/result preservation,
+typed event calculations, nested cases and recursive-call rejection.
+
+This is not a complete drag-and-drop programming environment. Function
+signatures, custom declaration names/types and advanced resource-list management
+still use source editing. Moving existing blocks across containers, interactive
+debug stepping and headset editing/keyboard acceptance remain release work.
+No second interpreter, provider session or storage format was introduced.

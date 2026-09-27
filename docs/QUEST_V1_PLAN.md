@@ -2,28 +2,29 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
-Latest PC increment (2026-09-27): one-off action receipts survive Unity restart.
-The app journals a native-issued ID before dispatch; duplicate/expired IDs cannot
-start another effect, and unfinished recovery is explicitly uncertain. Corrupt or
-failed receipt storage disables new one-off starts. See QUEST_ACTION_RECOVERY.md.
-This does not resume saved programs or cover all room-command receipts.
+Latest PC increment (2026-09-27): the optional book editor supports direct
+insertion into nested branches and typed value/expression controls. The same
+human-authored program is verified in Chrome and executed by Unity for both
+branches; source editing remains available. See QUEST_BEHAVIOUR_PROGRAMS.md.
 
-Current PC checkpoint (2026-09-27): the development client includes typed behavior
-programs with functions, variables, branches, loops, shared native actions and an
-optional book editor showing blocks, JSON and live execution state. Existing
-state/object triggers and controller buttons run those programs through the same
-scheduler. Rules v5 preserves legacy sequences and future-version files. See
-QUEST_BEHAVIOUR_PROGRAMS.md for the implemented subset and remaining editor,
-timer/event, library and durable-receipt work. The first draft PR is a review
-checkpoint for the accumulated Quest companion and app-owned agent work; it does
-not mark the v1 release complete. Device access remains on hold.
+Current architecture: the original app owns chat/Live handoff, Gemini access
+and durable task journals. Canonical behaviour programs, the shared native
+catalog (18 actions, seven events and three facts), one scheduler and native
+receipts serve human controls and agent calls. Version-3 programs retain typed
+session state across event/timer waits. Creation results compose with animation,
+physics and durable object edits; per-channel ownership permits supported
+avatar movement/gesture/gaze composition.
 
-PR [#248](https://github.com/RONITERVO/MaestroTutor/pull/248) is open as a draft.
-Its initial GitHub release gate passed at commit `1e14f53`, including app, Functions,
-billing-emulator and Live gateway checks. A follow-up hardens the native program /
-motion-library integration and protects newer collection filenames on downgrade;
-its validation checkpoint is recorded in QUEST_BEHAVIOUR_PROGRAMS.md.
+Prototype behaviour migration was retired with the owner's approval:
+behaviours.v2.json starts a fresh development collection when installed, while
+older files, room creations and existing app chat/backups remain preserved.
+Earlier delivery entries describe their historical checkpoints and may refer
+to retired formats. No reset or installation occurred in this increment.
 
+PR [#248](https://github.com/RONITERVO/MaestroTutor/pull/248) remains a draft.
+Its description records the exact latest pushed head, verification and APK.
+PC verification does not establish real-provider or headset acceptance.
+Device work remains on hold; the full v1 and Store release are incomplete.
 
 PC-only motion discovery update (2026-09-27): the original Maestro agent can now
 search the native saved animation library by name/tag with compatible-rig filtering,
