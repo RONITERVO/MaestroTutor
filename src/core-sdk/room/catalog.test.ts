@@ -31,8 +31,8 @@ it('verifies returned definitions semantically and rejects altered contracts or 
 });
 it('finds resources through schema annotations, including nested props',()=>{
  expect(capabilityResources('time.wait',{seconds:1})).toEqual([]);
- expect(capabilityResources('animation.recording.play',{target:'maestro',prop:{objectId:'a'.repeat(32)}})).toEqual(['maestro','a'.repeat(32)]);
- expect(capabilityResources('animation.recording.play',{target:'maestro',unregistered:{objectId:'book'}})).toEqual(['maestro']);
+ expect(capabilityResources('animation.play',{source:{kind:'recording'},channel:'wholeTarget',target:'maestro',prop:{objectId:'a'.repeat(32)}})).toEqual(['maestro','a'.repeat(32)]);
+ expect(capabilityResources('animation.play',{source:{kind:'recording'},channel:'wholeTarget',target:'maestro',unregistered:{objectId:'book'}})).toEqual(['maestro']);
 });
 
 import native from '../../../test-fixtures/browser/catalogStates.json';

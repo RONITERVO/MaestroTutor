@@ -1,8 +1,9 @@
 # Native capability modules
 
-Development checkpoint, 2026-09-28. All nineteen catalog actions now use native
-modules, including animation and movement. This completes the existing action
-handler split, not the broader v1 architecture or release acceptance.
+Development checkpoint, 2026-09-28. All public catalog actions use native
+modules, including animation and movement. The current catalog has fourteen
+actions after [typed animation consolidation](QUEST_ANIMATION_VOCABULARY.md).
+The handler split does not complete the broader v1 architecture or release acceptance.
 
 ## Shared execution path
 
@@ -21,12 +22,12 @@ operation once. Input JSON is copied before dispatch so a caller cannot change
 an already validated target or effect. New modules are trusted native C# bundled
 with the app, never downloaded code or agent-written executable C#.
 
-All nineteen actions use independent registrations. The ten wait/object/physics
-modules are joined by recording, recorded throw, full-body gesture, upper-body
-gesture, look, follow, embedded clip, library motion and recipe animation modules.
-There is no shared animation dispatcher or RuleStep conversion on the execution
-path. Related operations share target/prop ownership or spatial lifetime helpers;
-those helpers do not select handlers by action kind.
+The ten wait/object/physics modules are joined by animation.play, recorded throw,
+look and follow. The animation module selects a typed source implementation;
+recording, gesture, embedded, library and recipe operations retain independent
+lifetimes. There is no numeric kind dispatcher or RuleStep conversion on the
+execution path. Related operations share target/prop ownership or spatial
+lifetime helpers.
 
 Each animation module owns its schema, readiness and operation. Recordings own
 their PlayableGraph; throwing samples the precise final frame before handing the
@@ -38,9 +39,11 @@ and spatial operations release only their own channel, preserving another
 owner's gait, arm layer and room placement. Full-body cleanup is idempotent so
 completion followed by host cleanup cannot undo a throw.
 
-This extraction preserves all nineteen action contracts, versions, channel
-claims and prerequisites, as well as events, facts and legacy editor mappings.
-It does not silently rename saved motion choices or change saved-edit semantics.
+The original extraction preserved nineteen public contracts. The subsequent
+pre-release consolidation replaces six of those names with typed animation.play
+variants while retaining source semantics and exact motion choices. Events, facts
+and saved-edit semantics remain unchanged; prototype compatibility is documented
+in the animation contract above.
 
 The main physical tray now edits named invocation fields from each module's
 schema, including actions without a numeric adapter. Specialized prop fitting,
@@ -89,7 +92,7 @@ acknowledgements are simulated; actual object motion is verified in Unity.
 
 ## Remaining release work
 
-Specialized physical-editor adapters, vocabulary review,
+Specialized physical-editor adapters, remaining vocabulary consolidation,
 generic capability/version negotiation, runtime effects versus explicit grouped
 saved edits, priority arbitration, richer world subscriptions, collection types
 and shared program libraries remain. Existing saved-edit actions were not silently
@@ -97,10 +100,11 @@ changed to transient effects. Quest frame/save timing, hardware interaction,
 real-provider journeys and store acceptance remain separate gates. No headset
 installation, user-data reset or service deployment is included here.
 
-PC verification: 1,303 app tests across 155 files, 151 EditMode and 104 PlayMode
+Prior dispatch/quick-edit checkpoint verification: 1,303 app tests across 155 files,
+151 EditMode and 104 PlayMode
 tests, with three optional private-model checks skipped. TypeScript, lint, shared
 code/prompt guards, catalog provenance, 25 Android bridge tests and the ARM64
-IL2CPP development build pass. The APK's v2 signature was verified; all 112 native
+IL2CPP development build pass. The APK's v2 signature was verified; all 113 native
 runtime sources match the tested mirror and all 112 packaged web files match the
 production build. All nineteen action contracts and events/facts/adapters compare
 unchanged against the prior manifest, apart from source provenance.

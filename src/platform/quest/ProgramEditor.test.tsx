@@ -47,8 +47,8 @@ it('builds the shared native branch/loop/action fixture entirely with visual con
  h.change('Condition left source','fact:maestro.state');h.change('Condition right value','speaking');h.click('Update draft');
  fireEvent.click(h.screen.getByLabelText('+ Repeat in block_1 Then'));
  fireEvent.click(h.screen.getByLabelText('+ Action in block_2 Repeat these'));
- h.click('Edit values block_3');h.change('Block action','avatar.gesture.play');
- h.change('gesture','greeting');h.change('seconds','0.2');h.click('Update draft');
+ h.click('Edit values block_3');h.change('Block action','animation.play');
+ h.change('source.gesture','greeting');h.change('seconds','0.2');h.click('Update draft');
  fireEvent.click(h.screen.getByLabelText('+ Action in block_1 Otherwise'));
  expect(h.screen.queryByLabelText('Program JSON')).toBeNull();
  const fixture=JSON.parse(readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-visual.json','utf8'));
@@ -131,4 +131,23 @@ it('authors a named-only rotation module with schema controls and preserves it o
  expect(h.screen.queryByLabelText('Program JSON')).toBeNull();h.click('Edit values block_1');
  h.change('yaw','181');h.click('Update draft');expect(h.screen.getByRole('alert').textContent).toContain('contract');
  expect(JSON.parse(h.source()).functions[0].body[0]).toEqual(expected);
+});
+
+it('changes the typed animation channel with one shared form and keeps nested expressions explicit',()=>{
+ const initial=JSON.parse(readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-visual.json','utf8')) as BehaviourProgram;
+ const h=harness(initial);h.click('Edit values block_3');
+ h.change('Animation source and channel','1');h.change('source.gesture','pointing');h.click('Update draft');
+ const program=JSON.parse(h.source());const node=program.functions[0].body[0].then[0].body[0];
+ expect(node.id).toBe('block_3');expect(node.capability).toBe('animation.play');expect(node.arguments.channel).toBe('upperBody');expect(node.arguments.seconds).toBe(.2);
+ h.click('Edit values block_3');h.change('source.gesture input mode','expression');h.change('source.gesture value','speaking');h.click('Update draft');
+ const changed=JSON.parse(h.source()).functions[0].body[0].then[0].body[0];expect(changed.bindings).toEqual({'source.gesture':{value:'speaking'}});
+ expect(changed.arguments.source.gesture).toBe('pointing');expect(parseProgram(h.source()).error).toBeNull();
+});
+it('keeps an exact library motion ID when editing duration and removes incompatible fields only on an explicit source change',()=>{
+ const initial=structuredClone(empty),motion='b'.repeat(32);initial.resources=['maestro'];
+ initial.functions[0].body=[{id:'play',op:'invoke',capability:'animation.play',version:1,arguments:{target:'maestro',source:{kind:'library',motionId:motion},channel:'wholeTarget',seconds:1,loop:true},bindings:{}}];
+ const h=harness(initial);h.click('Edit values play');h.change('seconds','2');h.click('Update draft');
+ expect(JSON.parse(h.source()).functions[0].body[0].arguments.source).toEqual({kind:'library',motionId:motion});
+ h.click('Edit values play');h.change('Animation source and channel','0');h.click('Update draft');
+ const changed=JSON.parse(h.source()).functions[0].body[0];expect(changed.arguments.source).toEqual({kind:'gesture',gesture:'greeting'});expect(changed.arguments.loop).toBeUndefined();expect(changed.arguments.seconds).toBe(2);
 });

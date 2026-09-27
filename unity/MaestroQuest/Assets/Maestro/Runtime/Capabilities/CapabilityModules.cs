@@ -14,9 +14,7 @@ namespace Maestro.Quest.Programs
     internal static class CapabilityModules
     {
         public static readonly IReadOnlyList<CapabilityModule> All=Array.AsReadOnly(new CapabilityModule[] {
-            new RecordedAnimationCapability(),
-            new GestureCapability(),
-            new UpperBodyGestureCapability(),
+            new AnimationPlayCapability(),
             new WaitCapability(),
             new CreatePrimitiveCapability(),
             new CreateRecipeCapability(),
@@ -30,9 +28,6 @@ namespace Maestro.Quest.Programs
             new ThrowRecordingCapability(),
             new LookAtUserCapability(),
             new FollowUserCapability(),
-            new EmbeddedAnimationCapability(),
-            new LibraryAnimationCapability(),
-            new RecipeAnimationCapability(),
         });
     }
 }

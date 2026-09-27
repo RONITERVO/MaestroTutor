@@ -43,10 +43,10 @@ namespace Maestro.Quest.Tests
         }
         [Test] public void ReactiveLayersAcquireAtInvocationReleaseDuringWaitAndCannotStealAChannel()
         {
-            var source=Source();Loop(source)[1]["then"][1]["capability"]="avatar.gesture.upperBody";
+            var source=Source();Loop(source)[1]["then"][1]["arguments"]["channel"]="upperBody";
             var sequence=Sequence(source);var a=new Actions();var scheduler=Scheduler(a,sequence);
             var follow=JObject.Parse(@"{'id':'avatar.follow.user','version':1,'arguments':{'target':'maestro','seconds':10}}");
-            var wave=JObject.Parse(@"{'id':'avatar.gesture.upperBody','version':1,'arguments':{'target':'maestro','gesture':'greeting','seconds':10}}");
+            var wave=JObject.Parse(@"{'id':'animation.play','version':1,'arguments':{'target':'maestro','source':{'kind':'gesture','gesture':'greeting'},'channel':'upperBody','seconds':10}}");
             Assert.That(scheduler.Invoke(follow,0,out var walking,out _),Is.True);
             Assert.That(scheduler.Trigger(sequence.id,0),Is.True);
             scheduler.Emit(RuleEventKind.ItemTapped,"book",.1f);scheduler.Tick(.1f);
@@ -109,7 +109,7 @@ namespace Maestro.Quest.Tests
         [Test] public void WaitingProgramsDoNotPreemptOwnersAndLoadingCancellationStaysTerminal()
         {
             var a=new Actions();var sequence=Sequence();var s=Scheduler(a,sequence);s.Trigger(sequence.id,0);
-            var call=JObject.Parse(@"{'id':'avatar.gesture.play','version':1,'arguments':{'target':'maestro','gesture':'greeting','seconds':1}}");
+            var call=JObject.Parse(@"{'id':'animation.play','version':1,'arguments':{'target':'maestro','source':{'kind':'gesture','gesture':'greeting'},'channel':'wholeTarget','seconds':1}}");
             Assert.That(s.Invoke(call,0,out var owner,out _),Is.True);
             s.Emit(RuleEventKind.ItemTapped,"book",.1f);s.Tick(.1f);
             Assert.That(s.Outcomes.Single().phase,Is.EqualTo("failed"));Assert.That((string)s.Invocation(owner)["phase"],Is.EqualTo("running"));

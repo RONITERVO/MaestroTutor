@@ -16,7 +16,7 @@ namespace Maestro.Quest.Rules
     {
         sealed class Field {
             public string Path,Root,Key;public JObject Schema,Parent;public JArray Array;public int Index;
-            public bool Optional,Container;
+            public bool Optional,Container,Variant;
             public JToken Value=>Array!=null?Array[Index]:Parent[Key];
             public void Set(JToken value) {if(Array!=null)Array[Index]=value;else Parent[Key]=value;}
         }
@@ -43,7 +43,7 @@ namespace Maestro.Quest.Rules
         JObject Node=>nodeIndex>=0&&nodeIndex<nodes.Count?nodes[nodeIndex]:null;
         Field Current=>fieldIndex>=0&&fieldIndex<fields.Count?fields[fieldIndex]:null;
         BehaviourCatalog.ActionDefinition Definition=>BehaviourCatalog.Action(CapabilityId);
-        bool Bound(Field field)=>field!=null&&(Node["bindings"] as JObject)?.ContainsKey(field.Root)==true;
+        bool Bound(Field field)=>field!=null&&((JObject)Node["bindings"]).Properties().Any(x=>x.Name==field.Path||field.Container&&x.Name.StartsWith(field.Root+".",StringComparison.Ordinal));
         public CapabilityQuickEdit(RuleWorkshop workshop,RoomEditor editor) {this.workshop=workshop;this.editor=editor;Reload();}
         static string Short(string value,int limit)=>value?.Length>limit?value.Substring(0,limit-3)+"...":value;
         public string Summary {
@@ -51,7 +51,7 @@ namespace Maestro.Quest.Rules
                 if(sequence==null)return "Create or select a behaviour";
                 if(Node==null)return sequence.name+"\nEdit this program in the book";
                 var field=Current;string value=field==null?"No editable fields":Bound(field)?"From expression · edit in book":
-                    field.Value==null?"Not included":field.Container?"Included · Set field removes it":field.Value.ToString(Formatting.None);
+                    field.Variant?(string)CapabilitySchema.Resolve(field.Schema,field.Value)?["title"]??"Unsupported source":field.Value==null?"Not included":field.Container?"Included · Set field removes it":field.Value.ToString(Formatting.None);
                 if(field!=null&&!Bound(field)&&(string)field.Schema["x-resource"]=="object"&&field.Value?.Type==JTokenType.String) {
                     string id=(string)field.Value;var item=editor.Read(id);
                     value=item==null?"Missing object":(string.IsNullOrEmpty(item.name)?item.kind.ToString():item.name)+(item.IsBuiltIn?"":" · "+id.Substring(0,4));
@@ -82,23 +82,27 @@ namespace Maestro.Quest.Rules
             string selected=Current?.Path;fields=new List<Field>();if(Node==null||Definition==null)return;
             void Walk(JObject schema,JToken value,string path,string root,JObject parent,string key,JArray array,int index,bool optional,int depth) {
                 if(depth>12)return;
+                if(schema["oneOf"] is JArray) {
+                    fields.Add(new Field {Path="Source and channel",Root=root,Schema=schema,Parent=parent,Key=key,Variant=true});
+                    schema=CapabilitySchema.Resolve(schema,value);if(schema==null)return;
+                }
                 string type=(string)schema["type"];
                 if(optional)fields.Add(new Field {Path=path+" (include)",Root=root,Schema=schema,Parent=parent,Key=key,Array=array,Index=index,Optional=true,Container=true});
                 if(value==null)return;
                 if(type=="object"&&value is JObject obj) {
                     var required=(JArray)schema["required"];
                     foreach(var child in ((JObject)schema["properties"]).Properties())
-                        Walk((JObject)child.Value,obj[child.Name],path+"."+child.Name,root,obj,child.Name,null,0,!required.Any(x=>(string)x==child.Name),depth+1);
+                        Walk((JObject)child.Value,obj[child.Name],path.Length==0?child.Name:path+"."+child.Name,root.Length==0?child.Name:root,obj,child.Name,null,0,!required.Any(x=>(string)x==child.Name),depth+1);
                 } else if(type=="array"&&value is JArray entries) {
                     for(int i=0;i<entries.Count;i++)Walk((JObject)schema["items"],entries[i],path+"["+i+"]",root,null,null,entries,i,false,depth+1);
                 } else fields.Add(new Field {Path=path,Root=root,Schema=schema,Parent=parent,Key=key,Array=array,Index=index});
             }
             var args=(JObject)Node["arguments"];var shape=Definition.InputSchema;
-            foreach(var child in ((JObject)shape["properties"]).Properties())
-                Walk((JObject)child.Value,args[child.Name],child.Name,child.Name,args,child.Name,null,0,!((JArray)shape["required"]).Any(x=>(string)x==child.Name),0);
+            Walk(shape,args,"","",Node,"arguments",null,0,false,0);
             int found=fields.FindIndex(x=>x.Path==selected);fieldIndex=found>=0?found:Mathf.Clamp(fieldIndex,0,Math.Max(0,fields.Count-1));
         }
         JToken Initial(JObject schema) {
+            if(schema["oneOf"] is JArray variants)return Initial((JObject)variants[0]);
             if(schema["enum"] is JArray choices)return choices[0].DeepClone();
             switch((string)schema["type"]) {
                 case "object":
@@ -125,6 +129,8 @@ namespace Maestro.Quest.Rules
         }
         public void Adjust(int direction) {
             var field=Current;if(field==null)return;if(Bound(field)) {Status="This field comes from an expression; edit it in the book";return;}
+            if(field.Variant) {ChangeVariant(field,direction);return;}
+            if((bool?)field.Schema["x-static"]==true) {Status="Use Source and channel to change this choice";return;}
             if(field.Container) {ToggleOptional(field);return;}
             var schema=field.Schema;
             if((string)schema["x-resource"]=="object") {
@@ -142,6 +148,15 @@ namespace Maestro.Quest.Rules
             }
             Status="Edit text, motion selections and detailed values in the book";
         }
+        void ChangeVariant(Field field,int direction) {
+            if(((JObject)Node["bindings"]).Count>0) {Status="Change wired sources in the book; expressions are preserved";return;}
+            var variants=(JArray)field.Schema["oneOf"];int index=variants.IndexOf(CapabilitySchema.Resolve(field.Schema,field.Value));
+            var selected=(JObject)variants[(index+direction+variants.Count)%variants.Count];var next=(JObject)Initial(selected);
+            var previous=(JObject)field.Value;
+            foreach(var property in ((JObject)selected["properties"]).Properties())
+                if((bool?)property.Value["x-static"]!=true&&previous[property.Name]!=null&&CapabilityArguments.Validate(previous[property.Name],(JObject)property.Value,out _))next[property.Name]=previous[property.Name].DeepClone();
+            field.Set(next);Changed("Source changed in draft; compatible values retained");
+        }
         void Cycle(Field field,string[] options,int direction) {
             if(options.Length==0) {Status="No compatible object is available";return;}
             int index=Array.IndexOf(options,(string)field.Value);field.Set(new JValue(options[(index+direction+options.Length)%options.Length]));Changed("Choice changed in draft");
@@ -151,7 +166,8 @@ namespace Maestro.Quest.Rules
             if(field.Value!=null)field.Parent.Remove(field.Key);else field.Set(Initial(field.Schema));Changed("Optional field changed in draft");
         }
         public void SetField() {
-            var field=Current;if(field==null)return;if(Bound(field)) {Status="This field comes from an expression; edit it in the book";return;}
+            var field=Current;if(field==null)return;
+            if(field.Variant||(bool?)field.Schema["x-static"]==true) {Adjust(1);return;}if(Bound(field)) {Status="This field comes from an expression; edit it in the book";return;}
             if(field.Container) {ToggleOptional(field);return;}
             if((string)field.Schema["x-resource"]=="object") {
                 if(editor.SelectedId==null||!CapabilityArguments.Validate(new JValue(editor.SelectedId),field.Schema,out _)) {Status="Select an object allowed by this field";return;}

@@ -59,7 +59,7 @@ namespace Maestro.Quest.Tests
         {
             var executor=new RoomAgentExecutor(editor);var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);
             string target=editor.Identity(block);
-            var call=new JObject {["id"]="animation.recording.play",["version"]=1,["arguments"]=new JObject {["target"]=target,["seconds"]=2,["loop"]=false}};
+            var call=new JObject {["id"]="animation.play",["version"]=1,["arguments"]=new JObject {["target"]=target,["seconds"]=2,["loop"]=false,["source"]=new JObject {["kind"]="recording"},["channel"]="wholeTarget"}};
             var receipts=runtime.Scheduler.Receipts;
             Assert.That(runtime.Scheduler.Invoke(call,Time.unscaledTime,out var oldId,out _,receipts.NextId),Is.True);
             Vector3 before=block.transform.position;yield return new WaitForSeconds(.12f);Assert.That(Vector3.Distance(before,block.transform.position),Is.GreaterThan(.005f));
@@ -145,8 +145,8 @@ namespace Maestro.Quest.Tests
             var definition=Maestro.Quest.Programs.BehaviourCatalog.Action("object.create.recipe");
             source["functions"][0]["locals"][0]["name"]="robot";
             var create=source["functions"][0]["body"][0];create["capability"]=definition.Id;create["arguments"]=definition.Example;create["results"]["objectId"]="robot";
-            var play=source["functions"][0]["body"][1];play["id"]="animate";play["capability"]="animation.recipe.play";play["bindings"]["target"]["var"]="robot";
-            play["arguments"]=new JObject {["target"]=new string('0',32),["seconds"]=.6,["loop"]=true};
+            var play=source["functions"][0]["body"][1];play["id"]="animate";play["capability"]="animation.play";play["bindings"]["target"]["var"]="robot";
+            play["arguments"]=new JObject {["target"]=new string('0',32),["seconds"]=.6,["loop"]=true,["source"]=new JObject {["kind"]="recipe"},["channel"]="wholeTarget"};
             var sequence=new RuleSequence {id="",name="Create waving robot",program=source.ToString(Newtonsoft.Json.Formatting.None)};
             Assert.That(workshop.Execute(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="save",reference="robot",sequence=sequence}}},out var error,out var ids),Is.True,error);
             int count=editor.Snapshot().objects.Length;
@@ -204,6 +204,7 @@ namespace Maestro.Quest.Tests
 
         JObject ObjectEditCall(string capability,string target,params (string key,JToken value)[] values) {
             var args=new JObject {["target"]=target};foreach(var value in values)args[value.key]=value.value;
+            if(capability=="animation.play") {args["source"]=new JObject {["kind"]="recording"};args["channel"]="wholeTarget";}
             return new JObject {["id"]=capability,["version"]=1,["arguments"]=args};
         }
         RoomAgentRequest ObjectEditRequest(JObject call) {
@@ -230,7 +231,7 @@ namespace Maestro.Quest.Tests
             Add("move","object.position.set",new JObject {["x"]=.2,["y"]=1.7,["z"]=1});
             var sequence=new RuleSequence {id="",name="Make a red ball",program=source.ToString(Newtonsoft.Json.Formatting.None)};
             Assert.That(workshop.Execute(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="save",reference="ball",sequence=sequence}}},out var error,out var ids),Is.True,error);
-            Assert.That(runtime.Scheduler.Invoke(ObjectEditCall("animation.recording.play",editor.Identity(block),("seconds",2),("loop",false)),Time.unscaledTime,out var recording,out error),Is.True,error);
+            Assert.That(runtime.Scheduler.Invoke(ObjectEditCall("animation.play",editor.Identity(block),("seconds",2),("loop",false)),Time.unscaledTime,out var recording,out error),Is.True,error);
             Assert.That(runtime.Trigger(ids.Single()),Is.True,runtime.Scheduler.LastError);
             string created=runtime.Scheduler.ObserveRuns().Single().locals.Single(x=>x.name=="ball").value;
             for(int i=0;i<5;i++)runtime.Scheduler.Tick(Time.unscaledTime);
@@ -263,7 +264,7 @@ namespace Maestro.Quest.Tests
             // Undo restores the preceding journal pose, not an unsaved physics frame.
             var position=item.transform.localPosition;var scale=item.transform.localScale;var original=editor.Read(id).rotation;
             var executor=new RoomAgentExecutor(editor);var call=ObjectEditCall("object.rotation.set",id,("pitch",20),("yaw",90),("roll",-10));
-            Assert.That(runtime.Scheduler.Invoke(ObjectEditCall("animation.recording.play",editor.Identity(block),("seconds",2),("loop",false)),Time.unscaledTime,out var recording,out error),Is.True,error);
+            Assert.That(runtime.Scheduler.Invoke(ObjectEditCall("animation.play",editor.Identity(block),("seconds",2),("loop",false)),Time.unscaledTime,out var recording,out error),Is.True,error);
             var request=ObjectEditRequest(call);
             Assert.That(executor.Execute(request,out error,out _),Is.True,error);var expected=Quaternion.Euler(20,90,-10);
             Assert.That(Quaternion.Angle(item.transform.localRotation,expected),Is.LessThan(.01));
@@ -355,7 +356,7 @@ namespace Maestro.Quest.Tests
             Assert.That(workshop.Execute(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="save",reference="create",sequence=create}}},out var error,out var ids),Is.True,error);
             physics.SetSurfaces(true,"Ready");physics.StartPhysics();yield return new WaitForFixedUpdate();
             var executor=new RoomAgentExecutor(editor);
-            var recording=new JObject {["id"]="animation.recording.play",["version"]=1,["arguments"]=new JObject {["target"]=editor.Identity(block),["seconds"]=2,["loop"]=false}};
+            var recording=new JObject {["id"]="animation.play",["version"]=1,["arguments"]=new JObject {["target"]=editor.Identity(block),["seconds"]=2,["loop"]=false,["source"]=new JObject {["kind"]="recording"},["channel"]="wholeTarget"}};
             Assert.That(runtime.Scheduler.Invoke(recording,Time.unscaledTime,out var recordingId,out error),Is.True,error);
             var before=block.transform.localPosition;int count=editor.Snapshot().objects.Length;
             Assert.That(runtime.Trigger(ids.Single()),Is.True,runtime.Scheduler.LastError);
@@ -406,7 +407,7 @@ namespace Maestro.Quest.Tests
             program["resources"]=new JArray(target);
             var loop=(JArray)program["functions"][0]["body"][0]["body"];loop[0]["event"]="user.wave";loop[0]["source"]="";
             program["functions"][0]["locals"][1]["initial"]=0;
-            loop[1]["then"][1]=new JObject {["id"]="wave",["op"]="invoke",["capability"]="animation.recording.play",["version"]=1,["arguments"]=new JObject {["target"]=target,["seconds"]=.5,["loop"]=false},["bindings"]=new JObject()};
+            loop[1]["then"][1]=new JObject {["id"]="wave",["op"]="invoke",["capability"]="animation.play",["version"]=1,["arguments"]=new JObject {["target"]=target,["seconds"]=.5,["loop"]=false,["source"]=new JObject {["kind"]="recording"},["channel"]="wholeTarget"},["bindings"]=new JObject()};
             var sequence=workshop.Selected;sequence.program=program.ToString(Newtonsoft.Json.Formatting.None);sequence.repeat=false;
             var executor=new RoomAgentExecutor(editor);var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);
             bool Execute(RuleRequest rule,out string error)=>executor.Execute(new RoomAgentRequest {version=2,commands=new[]{new RoomAgentCommand {action="rules",rule=rule}}},out error,out _);
@@ -477,7 +478,7 @@ namespace Maestro.Quest.Tests
         {
             var executor=new RoomAgentExecutor(editor);string target=editor.SelectedId;
             string id=runtime.Scheduler.Receipts.NextId;
-            var call=new JObject {["id"]="animation.recording.play",["version"]=1,["arguments"]=new JObject {["target"]=target,["seconds"]=1,["loop"]=false}};
+            var call=new JObject {["id"]="animation.play",["version"]=1,["arguments"]=new JObject {["target"]=target,["seconds"]=1,["loop"]=false,["source"]=new JObject {["kind"]="recording"},["channel"]="wholeTarget"}};
             var request=new RoomAgentRequest {version=2,conditions=new[]{new RoomObjectCondition {id=target,revision=editor.ObjectRevision(target)}},
                 commands=new[]{new RoomAgentCommand {action="execution",execution=new JObject {["operation"]="start",["runId"]=id,["call"]=call}}}};
             Assert.That(executor.Execute(request,out var error,out _),Is.True,error);
@@ -504,7 +505,7 @@ namespace Maestro.Quest.Tests
             var inbox=new RoomAgentInbox();string client=Guid.NewGuid().ToString("N");
             inbox.TryAccept(new RoomAgentSnapshot {clientId=client},out _);
             int revision=editor.Revision,ruleRevision=workshop.Revision;string selected=editor.SelectedId,document=JsonUtility.ToJson(editor.Snapshot()),rules=JsonUtility.ToJson(workshop.Snapshot());
-            var call=new JObject {["id"]="animation.recording.play",["version"]=1,["arguments"]=new JObject {["target"]=selected,["seconds"]=1,["loop"]=false}};
+            var call=new JObject {["id"]="animation.play",["version"]=1,["arguments"]=new JObject {["target"]=selected,["seconds"]=1,["loop"]=false,["source"]=new JObject {["kind"]="recording"},["channel"]="wholeTarget"}};
             var raw=new JObject {["version"]=2,["sequence"]=1,["session"]=inbox.Session,["conditions"]=new JArray(new JObject {["id"]=selected,["revision"]=editor.ObjectRevision(selected)}),
                 ["commands"]=new JArray(new JObject {["action"]="execution",["execution"]=new JObject {["operation"]="start",["call"]=call}})};
             Assert.That(RoomControls.ValidWire(raw.ToString()),Is.True);
@@ -543,13 +544,13 @@ namespace Maestro.Quest.Tests
         [UnityTest] public IEnumerator OneOffRechecksTargetAndPropRevisionsAndRefusesBusyOrPausedRuntime()
         {
             var executor=new RoomAgentExecutor(editor);string target=editor.SelectedId;int revision=editor.Revision;
-            var request=new RoomAgentRequest {version=2,conditions=new[] {new RoomObjectCondition {id=target,revision=editor.ObjectRevision(target)-1}},commands=new[] {new RoomAgentCommand {action="execution",execution=new JObject {["operation"]="start",["call"]=new JObject {["id"]="animation.recording.play",["version"]=1,["arguments"]=new JObject {["target"]=target,["seconds"]=1,["loop"]=false}}}}}};
+            var request=new RoomAgentRequest {version=2,conditions=new[] {new RoomObjectCondition {id=target,revision=editor.ObjectRevision(target)-1}},commands=new[] {new RoomAgentCommand {action="execution",execution=new JObject {["operation"]="start",["call"]=new JObject {["id"]="animation.play",["version"]=1,["arguments"]=new JObject {["target"]=target,["seconds"]=1,["loop"]=false,["source"]=new JObject {["kind"]="recording"},["channel"]="wholeTarget"}}}}}};
             Assert.That(executor.Execute(request,out var error,out _),Is.False);Assert.That(error,Does.Contain("target changed"));Assert.That(runtime.Scheduler.RunningCount,Is.Zero);
             request.conditions[0].revision=editor.ObjectRevision(target);Assert.That(runtime.Trigger(sequenceId),Is.True);
             Assert.That(executor.Execute(request,out error,out _),Is.False);Assert.That(error,Does.Contain("owns"));Assert.That(runtime.Scheduler.RunningCount,Is.EqualTo(1));
             runtime.StopAll();runtime.enabled=false;Assert.That(executor.Execute(request,out error,out _),Is.False);Assert.That(error,Does.Contain("paused"));runtime.enabled=true;
             var args=(JObject)request.commands[0].execution["call"]["arguments"];args["target"]="maestro";args["prop"]=new JObject {["objectId"]=target,["avatarHash"]="",["hand"]="right",["release"]="return",["offset"]=new JObject {["x"]=0,["y"]=0,["z"]=0},["rotation"]=new JObject {["x"]=0,["y"]=0,["z"]=0,["w"]=1},["releaseAt"]=1};
-            Assert.That(Maestro.Quest.Programs.BehaviourCatalog.TryInvocation("animation.recording.play",1,args,out _,out _),Is.True);
+            Assert.That(Maestro.Quest.Programs.BehaviourCatalog.TryInvocation("animation.play",1,args,out _,out _),Is.True);
             request.conditions=new[] {new RoomObjectCondition {id="maestro",revision=editor.ObjectRevision("maestro")},new RoomObjectCondition {id=target,revision=editor.ObjectRevision(target)-1}};
             Assert.That(executor.Execute(request,out error,out _),Is.False);Assert.That(error,Does.Contain("target changed"),"A stale prop is rejected before handler/authoring side effects");
             Assert.That(editor.Revision,Is.EqualTo(revision));Assert.That(runtime.Scheduler.RunningCount,Is.Zero);
@@ -572,9 +573,9 @@ namespace Maestro.Quest.Tests
             var second=Query(new JObject {["operation"]="search",["query"]="",["offset"]=6},"search-next");
             Assert.That(first["entries"].Count(),Is.EqualTo(6));Assert.That((int)first["total"],Is.EqualTo(Maestro.Quest.Programs.BehaviourCatalog.Actions.Count));
             Assert.That(first["entries"].Select(x=>(string)x["id"]).Intersect(second["entries"].Select(x=>(string)x["id"])),Is.Empty);
-            var inspected=Query(new JObject {["operation"]="inspect",["capability"]="animation.recording.play",["version"]=1},"inspect");
-            Assert.That(JToken.DeepEquals(inspected["definition"],Maestro.Quest.Programs.BehaviourCatalog.Action("animation.recording.play").ToJson()),Is.True);
-            var check=new JObject {["operation"]="check",["call"]=new JObject {["id"]="animation.recording.play",["version"]=1,["arguments"]=new JObject {["target"]=selected,["seconds"]=1,["loop"]=false}}};
+            var inspected=Query(new JObject {["operation"]="inspect",["capability"]="animation.play",["version"]=1},"inspect");
+            Assert.That(JToken.DeepEquals(inspected["definition"],Maestro.Quest.Programs.BehaviourCatalog.Action("animation.play").ToJson()),Is.True);
+            var check=new JObject {["operation"]="check",["call"]=new JObject {["id"]="animation.play",["version"]=1,["arguments"]=new JObject {["target"]=selected,["seconds"]=1,["loop"]=false,["source"]=new JObject {["kind"]="recording"},["channel"]="wholeTarget"}}};
             var ready=Query(check,"ready");Assert.That((bool)ready["valid"],Is.True);Assert.That((bool)ready["available"],Is.True);
             Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(document));Assert.That(runtime.Scheduler.RunningCount,Is.Zero);
             Assert.That(runtime.Trigger(sequenceId),Is.True);yield return null;
@@ -692,7 +693,7 @@ namespace Maestro.Quest.Tests
             var json=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-prime.json")));
             json["resources"]=new JArray(target);
             foreach(var token in new[] {json["functions"][0]["body"][1]["then"][0],json["functions"][0]["body"][1]["else"][0]}) {
-                token["capability"]="animation.recipe.play";token["arguments"]=new JObject {["target"]=target,["seconds"]=.8f,["loop"]=true};
+                token["capability"]="animation.play";token["arguments"]=new JObject {["target"]=target,["seconds"]=.8f,["loop"]=true,["source"]=new JObject {["kind"]="recipe"},["channel"]="wholeTarget"};
             }
             var sequence=new RuleSequence {id="",name="Programmed wave",program=json.ToString(Newtonsoft.Json.Formatting.None)};
             var request=new RuleRequest {action="edit",revision=workshop.Revision,edits=new[] {
@@ -774,15 +775,36 @@ namespace Maestro.Quest.Tests
             try {camera.targetTexture=render;camera.Render();RenderTexture.active=render;pixels.ReadPixels(new Rect(0,0,1200,1100),0,0);pixels.Apply();File.WriteAllBytes(path,pixels.EncodeToPNG());}
             finally {RenderTexture.active=previous;camera.targetTexture=null;render.Release();UnityEngine.Object.Destroy(render);UnityEngine.Object.Destroy(pixels);UnityEngine.Object.Destroy(cameraRoot);}
         }
+        [UnityTest] public IEnumerator NativeAnimationSourceChoiceSharesBookProgramAndUndoWithoutPlayback()
+        {
+            var saved=workshop.Selected;saved.program=Maestro.Quest.Programs.BehaviourProgram.FromSteps(new RuleStep {id="wave",action=RuleActionKind.Gesture,targetId="maestro",seconds=2,gesture=RuleGesture.Pointing,propId=editor.Identity(block)});
+            Assert.That(workshop.Execute(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="save",sequence=saved}}},out var error,out _),Is.True,error);
+            string output=Environment.GetEnvironmentVariable("MAESTRO_QUICK_EDIT_EVIDENCE");
+            if(!string.IsNullOrEmpty(output)) {Directory.CreateDirectory(output);File.WriteAllText(Path.Combine(output,"rule-with-prop.json"),JsonUtility.ToJson(workshop.Observe(true)));}
+            var board=new GameObject("Animation source controls");board.transform.SetParent(root.transform,false);
+            var tools=board.AddComponent<RuleTools>();tools.Build(workshop,root.GetComponent<RoomInteraction>());
+            Assert.That(tools.Draft.FieldPath,Is.EqualTo("Source and channel"));
+            var button=board.GetComponentsInChildren<RuleToolAction>().Single(x=>x.AccessibleName=="Value +");
+            var router=root.AddComponent<BookPointerRouter>();router.Editor=editor;Physics.SyncTransforms();
+            var ray=new Ray(button.transform.position-Vector3.forward*.25f,Vector3.forward);Assert.That(router.Begin(1,ray),Is.True);router.End(1,ray);
+            Assert.That(tools.Draft.Dirty,Is.True);Assert.That(workshop.Selected.program,Is.EqualTo(saved.program));
+            var changed=JObject.Parse(tools.Draft.ProgramSource);var args=changed["functions"][0]["body"][0]["arguments"];
+            Assert.That((string)args["channel"],Is.EqualTo("upperBody"));Assert.That((string)args["source"]["gesture"],Is.EqualTo("pointing"));Assert.That((int)args["seconds"],Is.EqualTo(2));Assert.That(args["prop"],Is.Null);
+            if(!string.IsNullOrEmpty(output))CaptureQuickEdit(board,Path.Combine(output,"animation-source-draft.png"));
+            Assert.That(tools.Draft.Apply(),Is.True,tools.Draft.Status);Assert.That(runtime.Scheduler.RunningCount,Is.Zero);
+            var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);Assert.That(observer.OpenRules(saved.id,out error),Is.True,error);
+            if(!string.IsNullOrEmpty(output))File.WriteAllText(Path.Combine(output,"animation-book.json"),RoomAgentWire.Serialize(observer.Observe()));
+            workshop.Undo();Assert.That(workshop.Selected.program,Is.EqualTo(saved.program));yield return null;
+        }
         [UnityTest] public IEnumerator NativeQuickEditsPreserveBranchesAndRefuseStaleExternalChanges()
         {
             var saved=workshop.Selected;saved.program=File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-prime.json"));
             Assert.That(workshop.Execute(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[] {new RuleEdit {kind="save",sequence=saved}}},out var error,out _),Is.True,error);
-            var draft=new CapabilityQuickEdit(workshop,editor);Assert.That(draft.NodeId,Is.EqualTo("prime_wave"));draft.FieldStep(1);draft.Adjust(1);
+            var draft=new CapabilityQuickEdit(workshop,editor);Assert.That(draft.NodeId,Is.EqualTo("prime_wave"));for(int i=0;i<draft.FieldCount&&draft.FieldPath!="seconds";i++)draft.FieldStep(1);draft.Adjust(1);
             var expected=JObject.Parse(saved.program);expected["functions"][0]["body"][1]["then"][0]["arguments"]["seconds"]=1.1;
             Assert.That(draft.Apply(),Is.True,draft.Status);Assert.That(JToken.DeepEquals(JObject.Parse(workshop.Selected.program),expected),Is.True);
             Assert.That(runtime.Scheduler.RunningCount,Is.Zero);workshop.Undo();draft.Refresh();Assert.That(workshop.Selected.program,Is.EqualTo(saved.program));
-            draft.FieldStep(1);draft.Adjust(1);string pending=draft.ProgramSource;
+            for(int i=0;i<draft.FieldCount&&draft.FieldPath!="seconds";i++)draft.FieldStep(1);draft.Adjust(1);string pending=draft.ProgramSource;
             var external=workshop.Selected;external.name="Changed in book";
             Assert.That(workshop.Execute(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[] {new RuleEdit {kind="save",sequence=external}}},out error,out _),Is.True,error);
             draft.Refresh();Assert.That(draft.Stale,Is.True);Assert.That(draft.Apply(),Is.False);Assert.That(draft.ProgramSource,Is.EqualTo(pending));Assert.That(draft.Dirty,Is.True);

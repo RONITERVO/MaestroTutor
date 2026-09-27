@@ -8,7 +8,7 @@ import {requireRoomCapabilities} from '../../../shared/roomControls';
 import nativeCreation from '../../../test-fixtures/browser/creationResult.json';
 import nativeProgram from '../../../test-fixtures/browser/programBookState.json';
 const id='a'.repeat(32),prop='b'.repeat(32);
-const call={id:'animation.recording.play',version:1,arguments:{target:'maestro',seconds:1,loop:false,prop:{
+const call={id:'animation.play',version:1,arguments:{source:{kind:'recording'},channel:'wholeTarget',target:'maestro',seconds:1,loop:false,prop:{
  objectId:prop,avatarHash:'',hand:'right',release:'return',offset:{x:0,y:0,z:0},rotation:{x:0,y:0,z:0,w:1},releaseAt:1}}};
 const start={operation:'start' as const,call};
 it('validates exact one-off commands and distinguishes inspection from starts or cancellation',()=>{

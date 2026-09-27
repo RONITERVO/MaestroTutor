@@ -4,9 +4,9 @@
     "revision": 3,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "a15215d958bb4c2cbe13ed8827606db1",
+    "session": "d0659ac8ed6e4bd9b56c2f9e317d1b78",
     "status": "Room actions ready",
-    "selectedId": "fe69f2d1b5b5457e801123533e93f044",
+    "selectedId": "9256c9298e9145f0a42e5974ce52ed0c",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -15,18 +15,22 @@
     "inspection": null,
     "workspaceView": "objects",
     "rules": {
-      "revision": 11,
+      "revision": 19,
       "bindingPage": 0,
       "bindingCount": 0,
       "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
       "canUndo": true,
       "canRedo": false,
       "readOnly": false,
-      "status": "Target assigned from your room selection",
+      "status": "Action type changed",
+      "selectedError": "",
       "sequences": [
         {
-          "id": "7ab72078996941cb880e90a338254fcf",
+          "id": "20003fe6ebb942d287f9323ffc9baaa1",
           "name": "Action 1",
+          "error": "",
           "steps": 1,
           "repeat": false,
           "program": true
@@ -42,12 +46,25 @@
     "capabilities": [
       "physicsSettings.v1",
       "avatarSettings.v1",
+      "physicsRun.v1",
       "motions.v1",
       "avatarActivities.v1",
       "catalog.v1",
-      "behaviourPrograms.v3"
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "objectEdits.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1"
     ],
-    "physics": null,
+    "physics": {
+      "ready": false,
+      "running": false,
+      "status": "Load or scan your room to use gravity"
+    },
     "avatar": null,
     "walk": null,
     "activityProfile": {
@@ -79,7 +96,7 @@
     },
     "objects": [
       {
-        "id": "0b940270211f4fa29a063e32b1c2db00",
+        "id": "4b24417129bb498d83ec8dc4bbb2d98d",
         "name": "Cylinder",
         "kind": "Cylinder",
         "objectRevision": 5,
@@ -106,7 +123,7 @@
         "movement": null
       },
       {
-        "id": "2ce4ff4eacdb4232bded351f89d88eb7",
+        "id": "694136ca62d64f97ab9602b540c3cb11",
         "name": "Ball",
         "kind": "Ball",
         "objectRevision": 4,
@@ -120,6 +137,33 @@
           "r": 0.7647058963775635,
           "g": 0.6000000238418579,
           "b": 0.3137255012989044,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "9256c9298e9145f0a42e5974ce52ed0c",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 6,
+        "position": {
+          "x": 0.5199999809265137,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
           "a": 1.0
         },
         "animated": false,
@@ -147,33 +191,6 @@
           "r": 1.0,
           "g": 1.0,
           "b": 1.0,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "fe69f2d1b5b5457e801123533e93f044",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 6,
-        "position": {
-          "x": 0.5199999809265137,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
           "a": 1.0
         },
         "animated": false,
@@ -220,159 +237,887 @@
     "created": [],
     "catalog": {
       "operation": "inspect",
-      "capability": "animation.recording.play",
+      "capability": "animation.play",
       "version": 1,
       "definition": {
-        "id": "animation.recording.play",
+        "id": "animation.play",
         "version": 1,
-        "label": "Recorded animation",
+        "label": "Play animation",
         "input": {
           "type": "object",
-          "properties": {
-            "target": {
-              "type": "string",
-              "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
-              "maxLength": 32,
-              "x-resource": "object"
-            },
-            "seconds": {
-              "type": "number",
-              "minimum": 0.0,
-              "maximum": 30.0
-            },
-            "loop": {
-              "type": "boolean"
-            },
-            "prop": {
+          "oneOf": [
+            {
               "type": "object",
               "properties": {
-                "objectId": {
+                "target": {
                   "type": "string",
-                  "pattern": "^[a-fA-F0-9]{32}$",
-                  "maxLength": 32,
+                  "enum": [
+                    "maestro"
+                  ],
                   "x-resource": "object"
                 },
-                "avatarHash": {
-                  "type": "string",
-                  "pattern": "^(|[a-f0-9]{64})$",
-                  "maxLength": 64
-                },
-                "hand": {
-                  "type": "string",
-                  "enum": [
-                    "left",
-                    "right"
-                  ]
-                },
-                "release": {
-                  "type": "string",
-                  "enum": [
-                    "return",
-                    "drop",
-                    "throw"
-                  ]
-                },
-                "offset": {
-                  "type": "object",
-                  "properties": {
-                    "x": {
-                      "type": "number",
-                      "minimum": -1.0,
-                      "maximum": 1.0
-                    },
-                    "y": {
-                      "type": "number",
-                      "minimum": -1.0,
-                      "maximum": 1.0
-                    },
-                    "z": {
-                      "type": "number",
-                      "minimum": -1.0,
-                      "maximum": 1.0
-                    }
-                  },
-                  "required": [
-                    "x",
-                    "y",
-                    "z"
-                  ],
-                  "additionalProperties": false,
-                  "format": "boundedOffset"
-                },
-                "rotation": {
-                  "type": "object",
-                  "properties": {
-                    "x": {
-                      "type": "number",
-                      "minimum": -1.0,
-                      "maximum": 1.0
-                    },
-                    "y": {
-                      "type": "number",
-                      "minimum": -1.0,
-                      "maximum": 1.0
-                    },
-                    "z": {
-                      "type": "number",
-                      "minimum": -1.0,
-                      "maximum": 1.0
-                    },
-                    "w": {
-                      "type": "number",
-                      "minimum": -1.0,
-                      "maximum": 1.0
-                    }
-                  },
-                  "required": [
-                    "x",
-                    "y",
-                    "z",
-                    "w"
-                  ],
-                  "additionalProperties": false,
-                  "format": "unitQuaternion"
-                },
-                "releaseAt": {
+                "seconds": {
                   "type": "number",
-                  "minimum": 0.05,
-                  "maximum": 1.0
+                  "minimum": 0.1,
+                  "maximum": 30.0
+                },
+                "prop": {
+                  "type": "object",
+                  "properties": {
+                    "objectId": {
+                      "type": "string",
+                      "pattern": "^[a-fA-F0-9]{32}$",
+                      "maxLength": 32,
+                      "x-resource": "object"
+                    },
+                    "avatarHash": {
+                      "type": "string",
+                      "pattern": "^(|[a-f0-9]{64})$",
+                      "maxLength": 64
+                    },
+                    "hand": {
+                      "type": "string",
+                      "enum": [
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "release": {
+                      "type": "string",
+                      "enum": [
+                        "return",
+                        "drop",
+                        "throw"
+                      ]
+                    },
+                    "offset": {
+                      "type": "object",
+                      "properties": {
+                        "x": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "y": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "z": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        }
+                      },
+                      "required": [
+                        "x",
+                        "y",
+                        "z"
+                      ],
+                      "additionalProperties": false,
+                      "format": "boundedOffset"
+                    },
+                    "rotation": {
+                      "type": "object",
+                      "properties": {
+                        "x": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "y": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "z": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "w": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        }
+                      },
+                      "required": [
+                        "x",
+                        "y",
+                        "z",
+                        "w"
+                      ],
+                      "additionalProperties": false,
+                      "format": "unitQuaternion"
+                    },
+                    "releaseAt": {
+                      "type": "number",
+                      "minimum": 0.05,
+                      "maximum": 1.0
+                    }
+                  },
+                  "required": [
+                    "objectId",
+                    "avatarHash",
+                    "hand",
+                    "release",
+                    "offset",
+                    "rotation",
+                    "releaseAt"
+                  ],
+                  "additionalProperties": false,
+                  "x-requires": {
+                    "target": "maestro"
+                  }
+                },
+                "source": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "gesture"
+                      ],
+                      "x-static": true
+                    },
+                    "gesture": {
+                      "type": "string",
+                      "enum": [
+                        "greeting",
+                        "pointing",
+                        "listening",
+                        "speaking",
+                        "idle",
+                        "walk"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "gesture"
+                  ],
+                  "additionalProperties": false
+                },
+                "channel": {
+                  "type": "string",
+                  "enum": [
+                    "wholeTarget"
+                  ],
+                  "x-static": true
                 }
               },
               "required": [
-                "objectId",
-                "avatarHash",
-                "hand",
-                "release",
-                "offset",
-                "rotation",
-                "releaseAt"
+                "target",
+                "seconds",
+                "source",
+                "channel"
               ],
               "additionalProperties": false,
-              "x-requires": {
-                "target": "maestro"
-              }
+              "title": "Gesture",
+              "x-channels": [
+                "wholeTarget"
+              ],
+              "x-requirements": [
+                "target.exists",
+                "target.unheld",
+                "authoring.inactive",
+                "avatar.available"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "target": {
+                  "type": "string",
+                  "enum": [
+                    "maestro"
+                  ],
+                  "x-resource": "object"
+                },
+                "seconds": {
+                  "type": "number",
+                  "minimum": 0.1,
+                  "maximum": 30.0
+                },
+                "source": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "gesture"
+                      ],
+                      "x-static": true
+                    },
+                    "gesture": {
+                      "type": "string",
+                      "enum": [
+                        "greeting",
+                        "pointing",
+                        "listening",
+                        "speaking",
+                        "idle"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "gesture"
+                  ],
+                  "additionalProperties": false
+                },
+                "channel": {
+                  "type": "string",
+                  "enum": [
+                    "upperBody"
+                  ],
+                  "x-static": true
+                }
+              },
+              "required": [
+                "target",
+                "seconds",
+                "source",
+                "channel"
+              ],
+              "additionalProperties": false,
+              "title": "Upper-body gesture",
+              "x-channels": [
+                "upperBody"
+              ],
+              "x-requirements": [
+                "target.exists",
+                "target.unheld",
+                "authoring.inactive",
+                "avatar.available"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "target": {
+                  "type": "string",
+                  "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+                  "maxLength": 32,
+                  "x-resource": "object"
+                },
+                "seconds": {
+                  "type": "number",
+                  "minimum": 0.0,
+                  "maximum": 30.0
+                },
+                "loop": {
+                  "type": "boolean"
+                },
+                "prop": {
+                  "type": "object",
+                  "properties": {
+                    "objectId": {
+                      "type": "string",
+                      "pattern": "^[a-fA-F0-9]{32}$",
+                      "maxLength": 32,
+                      "x-resource": "object"
+                    },
+                    "avatarHash": {
+                      "type": "string",
+                      "pattern": "^(|[a-f0-9]{64})$",
+                      "maxLength": 64
+                    },
+                    "hand": {
+                      "type": "string",
+                      "enum": [
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "release": {
+                      "type": "string",
+                      "enum": [
+                        "return",
+                        "drop",
+                        "throw"
+                      ]
+                    },
+                    "offset": {
+                      "type": "object",
+                      "properties": {
+                        "x": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "y": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "z": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        }
+                      },
+                      "required": [
+                        "x",
+                        "y",
+                        "z"
+                      ],
+                      "additionalProperties": false,
+                      "format": "boundedOffset"
+                    },
+                    "rotation": {
+                      "type": "object",
+                      "properties": {
+                        "x": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "y": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "z": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "w": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        }
+                      },
+                      "required": [
+                        "x",
+                        "y",
+                        "z",
+                        "w"
+                      ],
+                      "additionalProperties": false,
+                      "format": "unitQuaternion"
+                    },
+                    "releaseAt": {
+                      "type": "number",
+                      "minimum": 0.05,
+                      "maximum": 1.0
+                    }
+                  },
+                  "required": [
+                    "objectId",
+                    "avatarHash",
+                    "hand",
+                    "release",
+                    "offset",
+                    "rotation",
+                    "releaseAt"
+                  ],
+                  "additionalProperties": false,
+                  "x-requires": {
+                    "target": "maestro"
+                  }
+                },
+                "source": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "recording"
+                      ],
+                      "x-static": true
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ],
+                  "additionalProperties": false
+                },
+                "channel": {
+                  "type": "string",
+                  "enum": [
+                    "wholeTarget"
+                  ],
+                  "x-static": true
+                }
+              },
+              "required": [
+                "target",
+                "seconds",
+                "loop",
+                "source",
+                "channel"
+              ],
+              "additionalProperties": false,
+              "title": "Recorded animation",
+              "x-channels": [
+                "wholeTarget"
+              ],
+              "x-requirements": [
+                "target.exists",
+                "target.unheld",
+                "authoring.inactive",
+                "recording.available"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "target": {
+                  "type": "string",
+                  "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+                  "maxLength": 32,
+                  "x-resource": "object"
+                },
+                "seconds": {
+                  "type": "number",
+                  "minimum": 0.0,
+                  "maximum": 30.0
+                },
+                "loop": {
+                  "type": "boolean"
+                },
+                "prop": {
+                  "type": "object",
+                  "properties": {
+                    "objectId": {
+                      "type": "string",
+                      "pattern": "^[a-fA-F0-9]{32}$",
+                      "maxLength": 32,
+                      "x-resource": "object"
+                    },
+                    "avatarHash": {
+                      "type": "string",
+                      "pattern": "^(|[a-f0-9]{64})$",
+                      "maxLength": 64
+                    },
+                    "hand": {
+                      "type": "string",
+                      "enum": [
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "release": {
+                      "type": "string",
+                      "enum": [
+                        "return",
+                        "drop",
+                        "throw"
+                      ]
+                    },
+                    "offset": {
+                      "type": "object",
+                      "properties": {
+                        "x": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "y": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "z": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        }
+                      },
+                      "required": [
+                        "x",
+                        "y",
+                        "z"
+                      ],
+                      "additionalProperties": false,
+                      "format": "boundedOffset"
+                    },
+                    "rotation": {
+                      "type": "object",
+                      "properties": {
+                        "x": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "y": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "z": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "w": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        }
+                      },
+                      "required": [
+                        "x",
+                        "y",
+                        "z",
+                        "w"
+                      ],
+                      "additionalProperties": false,
+                      "format": "unitQuaternion"
+                    },
+                    "releaseAt": {
+                      "type": "number",
+                      "minimum": 0.05,
+                      "maximum": 1.0
+                    }
+                  },
+                  "required": [
+                    "objectId",
+                    "avatarHash",
+                    "hand",
+                    "release",
+                    "offset",
+                    "rotation",
+                    "releaseAt"
+                  ],
+                  "additionalProperties": false,
+                  "x-requires": {
+                    "target": "maestro"
+                  }
+                },
+                "source": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "embedded"
+                      ],
+                      "x-static": true
+                    },
+                    "modelHash": {
+                      "type": "string",
+                      "pattern": "^(|[a-f0-9]{64})$",
+                      "maxLength": 64
+                    },
+                    "clipIndex": {
+                      "type": "integer",
+                      "minimum": 0.0,
+                      "maximum": 31.0
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "modelHash",
+                    "clipIndex"
+                  ],
+                  "additionalProperties": false
+                },
+                "channel": {
+                  "type": "string",
+                  "enum": [
+                    "wholeTarget"
+                  ],
+                  "x-static": true
+                }
+              },
+              "required": [
+                "target",
+                "seconds",
+                "loop",
+                "source",
+                "channel"
+              ],
+              "additionalProperties": false,
+              "title": "Imported clip",
+              "x-channels": [
+                "wholeTarget"
+              ],
+              "x-requirements": [
+                "target.exists",
+                "target.unheld",
+                "authoring.inactive",
+                "model.loaded",
+                "embeddedClip.available"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "target": {
+                  "type": "string",
+                  "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+                  "maxLength": 32,
+                  "x-resource": "object"
+                },
+                "seconds": {
+                  "type": "number",
+                  "minimum": 0.0,
+                  "maximum": 30.0
+                },
+                "loop": {
+                  "type": "boolean"
+                },
+                "prop": {
+                  "type": "object",
+                  "properties": {
+                    "objectId": {
+                      "type": "string",
+                      "pattern": "^[a-fA-F0-9]{32}$",
+                      "maxLength": 32,
+                      "x-resource": "object"
+                    },
+                    "avatarHash": {
+                      "type": "string",
+                      "pattern": "^(|[a-f0-9]{64})$",
+                      "maxLength": 64
+                    },
+                    "hand": {
+                      "type": "string",
+                      "enum": [
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "release": {
+                      "type": "string",
+                      "enum": [
+                        "return",
+                        "drop",
+                        "throw"
+                      ]
+                    },
+                    "offset": {
+                      "type": "object",
+                      "properties": {
+                        "x": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "y": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "z": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        }
+                      },
+                      "required": [
+                        "x",
+                        "y",
+                        "z"
+                      ],
+                      "additionalProperties": false,
+                      "format": "boundedOffset"
+                    },
+                    "rotation": {
+                      "type": "object",
+                      "properties": {
+                        "x": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "y": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "z": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "w": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        }
+                      },
+                      "required": [
+                        "x",
+                        "y",
+                        "z",
+                        "w"
+                      ],
+                      "additionalProperties": false,
+                      "format": "unitQuaternion"
+                    },
+                    "releaseAt": {
+                      "type": "number",
+                      "minimum": 0.05,
+                      "maximum": 1.0
+                    }
+                  },
+                  "required": [
+                    "objectId",
+                    "avatarHash",
+                    "hand",
+                    "release",
+                    "offset",
+                    "rotation",
+                    "releaseAt"
+                  ],
+                  "additionalProperties": false,
+                  "x-requires": {
+                    "target": "maestro"
+                  }
+                },
+                "source": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "library"
+                      ],
+                      "x-static": true
+                    },
+                    "motionId": {
+                      "type": "string",
+                      "pattern": "^(|[a-fA-F0-9]{32})$",
+                      "maxLength": 32
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "motionId"
+                  ],
+                  "additionalProperties": false
+                },
+                "channel": {
+                  "type": "string",
+                  "enum": [
+                    "wholeTarget"
+                  ],
+                  "x-static": true
+                }
+              },
+              "required": [
+                "target",
+                "seconds",
+                "loop",
+                "source",
+                "channel"
+              ],
+              "additionalProperties": false,
+              "title": "Library motion",
+              "x-channels": [
+                "wholeTarget"
+              ],
+              "x-requirements": [
+                "target.exists",
+                "target.unheld",
+                "authoring.inactive",
+                "model.loaded",
+                "motion.available",
+                "rig.compatible"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "target": {
+                  "type": "string",
+                  "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+                  "maxLength": 32,
+                  "x-resource": "object"
+                },
+                "seconds": {
+                  "type": "number",
+                  "minimum": 0.0,
+                  "maximum": 30.0
+                },
+                "loop": {
+                  "type": "boolean"
+                },
+                "source": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "recipe"
+                      ],
+                      "x-static": true
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ],
+                  "additionalProperties": false
+                },
+                "channel": {
+                  "type": "string",
+                  "enum": [
+                    "wholeTarget"
+                  ],
+                  "x-static": true
+                }
+              },
+              "required": [
+                "target",
+                "seconds",
+                "loop",
+                "source",
+                "channel"
+              ],
+              "additionalProperties": false,
+              "title": "Recipe animation",
+              "x-channels": [
+                "wholeTarget"
+              ],
+              "x-requirements": [
+                "target.exists",
+                "target.unheld",
+                "authoring.inactive",
+                "recipe.tracksAvailable"
+              ]
             }
-          },
-          "required": [
-            "target",
-            "seconds",
-            "loop"
           ],
-          "additionalProperties": false
+          "x-discriminators": [
+            "source.kind",
+            "channel"
+          ]
         },
         "duration": "timed",
-        "ownership": "exclusiveTargetAndProp",
+        "ownership": "sourceChannels",
         "channels": [
-          "wholeTarget"
+          "wholeTarget",
+          "upperBody"
         ],
         "requirements": [
           "target.exists",
           "target.unheld",
           "authoring.inactive",
-          "recording.available"
-        ]
+          "source.ready"
+        ],
+        "description": "Choose a typed source and channel. Library and embedded sources keep exact motion/model identities. Only built-in gestures currently support upperBody; wholeTarget owns the complete object. Inspect the selected variant's prerequisites; no automatic source substitution.",
+        "example": {
+          "target": "maestro",
+          "seconds": 2,
+          "source": {
+            "kind": "gesture",
+            "gesture": "greeting"
+          },
+          "channel": "wholeTarget"
+        }
       },
       "status": "Action definition. Check concrete arguments before running it."
+    },
+    "execution": {
+      "selected": null,
+      "running": [],
+      "outcomes": [],
+      "nextRunId": "93089ae8af4f43c580196c3791ccac1e",
+      "storageError": null,
+      "recovery": null
     }
   },
   "invalid": {
@@ -380,9 +1125,9 @@
     "revision": 7,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "a15215d958bb4c2cbe13ed8827606db1",
+    "session": "d0659ac8ed6e4bd9b56c2f9e317d1b78",
     "status": "Room actions ready",
-    "selectedId": "fe69f2d1b5b5457e801123533e93f044",
+    "selectedId": "9256c9298e9145f0a42e5974ce52ed0c",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -391,18 +1136,22 @@
     "inspection": null,
     "workspaceView": "objects",
     "rules": {
-      "revision": 11,
+      "revision": 19,
       "bindingPage": 0,
       "bindingCount": 0,
       "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
       "canUndo": true,
       "canRedo": false,
       "readOnly": false,
       "status": "Action triggered",
+      "selectedError": "",
       "sequences": [
         {
-          "id": "7ab72078996941cb880e90a338254fcf",
+          "id": "20003fe6ebb942d287f9323ffc9baaa1",
           "name": "Action 1",
+          "error": "",
           "steps": 1,
           "repeat": false,
           "program": true
@@ -414,10 +1163,10 @@
       "running": [],
       "outcomes": [
         {
-          "id": "5341a5633aab4bd8a7c801ebe055e00f",
-          "sequenceId": "7ab72078996941cb880e90a338254fcf",
+          "id": "7f9c3f20e94842adb2d8758587ca086b",
+          "sequenceId": "20003fe6ebb942d287f9323ffc9baaa1",
           "phase": "cancelled",
-          "nodeId": "579a273880cd4bb28cac692d690ba8be",
+          "nodeId": "69eab6ae67264afbadc45e981a6dbc82",
           "status": "Behaviour stopped"
         }
       ]
@@ -426,12 +1175,25 @@
     "capabilities": [
       "physicsSettings.v1",
       "avatarSettings.v1",
+      "physicsRun.v1",
       "motions.v1",
       "avatarActivities.v1",
       "catalog.v1",
-      "behaviourPrograms.v3"
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "objectEdits.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1"
     ],
-    "physics": null,
+    "physics": {
+      "ready": false,
+      "running": false,
+      "status": "Load or scan your room to use gravity"
+    },
     "avatar": null,
     "walk": null,
     "activityProfile": {
@@ -463,7 +1225,7 @@
     },
     "objects": [
       {
-        "id": "0b940270211f4fa29a063e32b1c2db00",
+        "id": "4b24417129bb498d83ec8dc4bbb2d98d",
         "name": "Cylinder",
         "kind": "Cylinder",
         "objectRevision": 5,
@@ -490,7 +1252,7 @@
         "movement": null
       },
       {
-        "id": "2ce4ff4eacdb4232bded351f89d88eb7",
+        "id": "694136ca62d64f97ab9602b540c3cb11",
         "name": "Ball",
         "kind": "Ball",
         "objectRevision": 4,
@@ -504,6 +1266,33 @@
           "r": 0.7647058963775635,
           "g": 0.6000000238418579,
           "b": 0.3137255012989044,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "9256c9298e9145f0a42e5974ce52ed0c",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 6,
+        "position": {
+          "x": 0.5199999809265137,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
           "a": 1.0
         },
         "animated": false,
@@ -531,33 +1320,6 @@
           "r": 1.0,
           "g": 1.0,
           "b": 1.0,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "fe69f2d1b5b5457e801123533e93f044",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 6,
-        "position": {
-          "x": 0.5199999809265137,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
           "a": 1.0
         },
         "animated": false,
@@ -605,12 +1367,16 @@
     "catalog": {
       "operation": "check",
       "call": {
-        "id": "animation.recording.play",
+        "id": "animation.play",
         "version": 1,
         "arguments": {
-          "target": "68312f6b98f24910bc8de6bd0d112e07",
+          "target": "2dea2819959f4cb88bd7016c3638f1a6",
           "seconds": 100,
-          "loop": false
+          "loop": false,
+          "source": {
+            "kind": "recording"
+          },
+          "channel": "wholeTarget"
         }
       },
       "valid": false,
@@ -618,6 +1384,14 @@
       "occupied": false,
       "resources": [],
       "status": "arguments.seconds does not match the capability contract"
+    },
+    "execution": {
+      "selected": null,
+      "running": [],
+      "outcomes": [],
+      "nextRunId": "93089ae8af4f43c580196c3791ccac1e",
+      "storageError": null,
+      "recovery": null
     }
   },
   "missing": {
@@ -625,9 +1399,9 @@
     "revision": 6,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "a15215d958bb4c2cbe13ed8827606db1",
+    "session": "d0659ac8ed6e4bd9b56c2f9e317d1b78",
     "status": "Room actions ready",
-    "selectedId": "fe69f2d1b5b5457e801123533e93f044",
+    "selectedId": "9256c9298e9145f0a42e5974ce52ed0c",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -636,18 +1410,22 @@
     "inspection": null,
     "workspaceView": "objects",
     "rules": {
-      "revision": 11,
+      "revision": 19,
       "bindingPage": 0,
       "bindingCount": 0,
       "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
       "canUndo": true,
       "canRedo": false,
       "readOnly": false,
       "status": "Action triggered",
+      "selectedError": "",
       "sequences": [
         {
-          "id": "7ab72078996941cb880e90a338254fcf",
+          "id": "20003fe6ebb942d287f9323ffc9baaa1",
           "name": "Action 1",
+          "error": "",
           "steps": 1,
           "repeat": false,
           "program": true
@@ -659,10 +1437,10 @@
       "running": [],
       "outcomes": [
         {
-          "id": "5341a5633aab4bd8a7c801ebe055e00f",
-          "sequenceId": "7ab72078996941cb880e90a338254fcf",
+          "id": "7f9c3f20e94842adb2d8758587ca086b",
+          "sequenceId": "20003fe6ebb942d287f9323ffc9baaa1",
           "phase": "cancelled",
-          "nodeId": "579a273880cd4bb28cac692d690ba8be",
+          "nodeId": "69eab6ae67264afbadc45e981a6dbc82",
           "status": "Behaviour stopped"
         }
       ]
@@ -671,12 +1449,25 @@
     "capabilities": [
       "physicsSettings.v1",
       "avatarSettings.v1",
+      "physicsRun.v1",
       "motions.v1",
       "avatarActivities.v1",
       "catalog.v1",
-      "behaviourPrograms.v3"
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "objectEdits.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1"
     ],
-    "physics": null,
+    "physics": {
+      "ready": false,
+      "running": false,
+      "status": "Load or scan your room to use gravity"
+    },
     "avatar": null,
     "walk": null,
     "activityProfile": {
@@ -708,7 +1499,7 @@
     },
     "objects": [
       {
-        "id": "0b940270211f4fa29a063e32b1c2db00",
+        "id": "4b24417129bb498d83ec8dc4bbb2d98d",
         "name": "Cylinder",
         "kind": "Cylinder",
         "objectRevision": 5,
@@ -735,7 +1526,7 @@
         "movement": null
       },
       {
-        "id": "2ce4ff4eacdb4232bded351f89d88eb7",
+        "id": "694136ca62d64f97ab9602b540c3cb11",
         "name": "Ball",
         "kind": "Ball",
         "objectRevision": 4,
@@ -749,6 +1540,33 @@
           "r": 0.7647058963775635,
           "g": 0.6000000238418579,
           "b": 0.3137255012989044,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "9256c9298e9145f0a42e5974ce52ed0c",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 6,
+        "position": {
+          "x": 0.5199999809265137,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
           "a": 1.0
         },
         "animated": false,
@@ -776,33 +1594,6 @@
           "r": 1.0,
           "g": 1.0,
           "b": 1.0,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "fe69f2d1b5b5457e801123533e93f044",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 6,
-        "position": {
-          "x": 0.5199999809265137,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
           "a": 1.0
         },
         "animated": false,
@@ -850,21 +1641,33 @@
     "catalog": {
       "operation": "check",
       "call": {
-        "id": "animation.recording.play",
+        "id": "animation.play",
         "version": 1,
         "arguments": {
-          "target": "68312f6b98f24910bc8de6bd0d112e07",
+          "target": "2dea2819959f4cb88bd7016c3638f1a6",
           "seconds": 1,
-          "loop": false
+          "loop": false,
+          "source": {
+            "kind": "recording"
+          },
+          "channel": "wholeTarget"
         }
       },
       "valid": true,
       "available": false,
       "occupied": false,
       "resources": [
-        "68312f6b98f24910bc8de6bd0d112e07"
+        "2dea2819959f4cb88bd7016c3638f1a6"
       ],
       "status": "An action target was removed; choose another target"
+    },
+    "execution": {
+      "selected": null,
+      "running": [],
+      "outcomes": [],
+      "nextRunId": "93089ae8af4f43c580196c3791ccac1e",
+      "storageError": null,
+      "recovery": null
     }
   },
   "occupied": {
@@ -872,9 +1675,9 @@
     "revision": 5,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "a15215d958bb4c2cbe13ed8827606db1",
+    "session": "d0659ac8ed6e4bd9b56c2f9e317d1b78",
     "status": "Room actions ready",
-    "selectedId": "fe69f2d1b5b5457e801123533e93f044",
+    "selectedId": "9256c9298e9145f0a42e5974ce52ed0c",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -883,18 +1686,22 @@
     "inspection": null,
     "workspaceView": "objects",
     "rules": {
-      "revision": 11,
+      "revision": 19,
       "bindingPage": 0,
       "bindingCount": 0,
       "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
       "canUndo": true,
       "canRedo": false,
       "readOnly": false,
       "status": "Action triggered",
+      "selectedError": "",
       "sequences": [
         {
-          "id": "7ab72078996941cb880e90a338254fcf",
+          "id": "20003fe6ebb942d287f9323ffc9baaa1",
           "name": "Action 1",
+          "error": "",
           "steps": 1,
           "repeat": false,
           "program": true
@@ -905,10 +1712,14 @@
       "buttons": [],
       "running": [
         {
-          "id": "5341a5633aab4bd8a7c801ebe055e00f",
-          "sequenceId": "7ab72078996941cb880e90a338254fcf",
+          "id": "7f9c3f20e94842adb2d8758587ca086b",
+          "sequenceId": "20003fe6ebb942d287f9323ffc9baaa1",
           "preparing": false,
-          "nodeId": "579a273880cd4bb28cac692d690ba8be",
+          "waiting": false,
+          "waitEvent": "",
+          "waitSeconds": 0.0,
+          "state": [],
+          "nodeId": "69eab6ae67264afbadc45e981a6dbc82",
           "functionName": "main",
           "status": "Running",
           "locals": []
@@ -920,12 +1731,25 @@
     "capabilities": [
       "physicsSettings.v1",
       "avatarSettings.v1",
+      "physicsRun.v1",
       "motions.v1",
       "avatarActivities.v1",
       "catalog.v1",
-      "behaviourPrograms.v3"
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "objectEdits.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1"
     ],
-    "physics": null,
+    "physics": {
+      "ready": false,
+      "running": false,
+      "status": "Load or scan your room to use gravity"
+    },
     "avatar": null,
     "walk": null,
     "activityProfile": {
@@ -957,7 +1781,7 @@
     },
     "objects": [
       {
-        "id": "0b940270211f4fa29a063e32b1c2db00",
+        "id": "4b24417129bb498d83ec8dc4bbb2d98d",
         "name": "Cylinder",
         "kind": "Cylinder",
         "objectRevision": 5,
@@ -984,7 +1808,7 @@
         "movement": null
       },
       {
-        "id": "2ce4ff4eacdb4232bded351f89d88eb7",
+        "id": "694136ca62d64f97ab9602b540c3cb11",
         "name": "Ball",
         "kind": "Ball",
         "objectRevision": 4,
@@ -998,6 +1822,33 @@
           "r": 0.7647058963775635,
           "g": 0.6000000238418579,
           "b": 0.3137255012989044,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "9256c9298e9145f0a42e5974ce52ed0c",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 6,
+        "position": {
+          "x": 0.522519588470459,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
           "a": 1.0
         },
         "animated": false,
@@ -1025,33 +1876,6 @@
           "r": 1.0,
           "g": 1.0,
           "b": 1.0,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "fe69f2d1b5b5457e801123533e93f044",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 6,
-        "position": {
-          "x": 0.5219637751579285,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
           "a": 1.0
         },
         "animated": false,
@@ -1099,21 +1923,33 @@
     "catalog": {
       "operation": "check",
       "call": {
-        "id": "animation.recording.play",
+        "id": "animation.play",
         "version": 1,
         "arguments": {
-          "target": "fe69f2d1b5b5457e801123533e93f044",
+          "target": "9256c9298e9145f0a42e5974ce52ed0c",
           "seconds": 1,
-          "loop": false
+          "loop": false,
+          "source": {
+            "kind": "recording"
+          },
+          "channel": "wholeTarget"
         }
       },
       "valid": true,
       "available": false,
       "occupied": true,
       "resources": [
-        "fe69f2d1b5b5457e801123533e93f044"
+        "9256c9298e9145f0a42e5974ce52ed0c"
       ],
-      "status": "A running behaviour currently owns one of these objects"
+      "status": "A running action owns a required animation channel or object"
+    },
+    "execution": {
+      "selected": null,
+      "running": [],
+      "outcomes": [],
+      "nextRunId": "93089ae8af4f43c580196c3791ccac1e",
+      "storageError": null,
+      "recovery": null
     }
   },
   "ready": {
@@ -1121,9 +1957,9 @@
     "revision": 4,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "a15215d958bb4c2cbe13ed8827606db1",
+    "session": "d0659ac8ed6e4bd9b56c2f9e317d1b78",
     "status": "Room actions ready",
-    "selectedId": "fe69f2d1b5b5457e801123533e93f044",
+    "selectedId": "9256c9298e9145f0a42e5974ce52ed0c",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -1132,18 +1968,22 @@
     "inspection": null,
     "workspaceView": "objects",
     "rules": {
-      "revision": 11,
+      "revision": 19,
       "bindingPage": 0,
       "bindingCount": 0,
       "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
       "canUndo": true,
       "canRedo": false,
       "readOnly": false,
-      "status": "Target assigned from your room selection",
+      "status": "Action type changed",
+      "selectedError": "",
       "sequences": [
         {
-          "id": "7ab72078996941cb880e90a338254fcf",
+          "id": "20003fe6ebb942d287f9323ffc9baaa1",
           "name": "Action 1",
+          "error": "",
           "steps": 1,
           "repeat": false,
           "program": true
@@ -1159,12 +1999,25 @@
     "capabilities": [
       "physicsSettings.v1",
       "avatarSettings.v1",
+      "physicsRun.v1",
       "motions.v1",
       "avatarActivities.v1",
       "catalog.v1",
-      "behaviourPrograms.v3"
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "objectEdits.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1"
     ],
-    "physics": null,
+    "physics": {
+      "ready": false,
+      "running": false,
+      "status": "Load or scan your room to use gravity"
+    },
     "avatar": null,
     "walk": null,
     "activityProfile": {
@@ -1196,7 +2049,7 @@
     },
     "objects": [
       {
-        "id": "0b940270211f4fa29a063e32b1c2db00",
+        "id": "4b24417129bb498d83ec8dc4bbb2d98d",
         "name": "Cylinder",
         "kind": "Cylinder",
         "objectRevision": 5,
@@ -1223,7 +2076,7 @@
         "movement": null
       },
       {
-        "id": "2ce4ff4eacdb4232bded351f89d88eb7",
+        "id": "694136ca62d64f97ab9602b540c3cb11",
         "name": "Ball",
         "kind": "Ball",
         "objectRevision": 4,
@@ -1237,6 +2090,33 @@
           "r": 0.7647058963775635,
           "g": 0.6000000238418579,
           "b": 0.3137255012989044,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "9256c9298e9145f0a42e5974ce52ed0c",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 6,
+        "position": {
+          "x": 0.5199999809265137,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
           "a": 1.0
         },
         "animated": false,
@@ -1264,33 +2144,6 @@
           "r": 1.0,
           "g": 1.0,
           "b": 1.0,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "fe69f2d1b5b5457e801123533e93f044",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 6,
-        "position": {
-          "x": 0.5199999809265137,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
           "a": 1.0
         },
         "animated": false,
@@ -1338,21 +2191,33 @@
     "catalog": {
       "operation": "check",
       "call": {
-        "id": "animation.recording.play",
+        "id": "animation.play",
         "version": 1,
         "arguments": {
-          "target": "fe69f2d1b5b5457e801123533e93f044",
+          "target": "9256c9298e9145f0a42e5974ce52ed0c",
           "seconds": 1,
-          "loop": false
+          "loop": false,
+          "source": {
+            "kind": "recording"
+          },
+          "channel": "wholeTarget"
         }
       },
       "valid": true,
       "available": true,
       "occupied": false,
       "resources": [
-        "fe69f2d1b5b5457e801123533e93f044"
+        "9256c9298e9145f0a42e5974ce52ed0c"
       ],
       "status": "Ready now. This check does not reserve or start the action."
+    },
+    "execution": {
+      "selected": null,
+      "running": [],
+      "outcomes": [],
+      "nextRunId": "93089ae8af4f43c580196c3791ccac1e",
+      "storageError": null,
+      "recovery": null
     }
   },
   "search-next": {
@@ -1360,9 +2225,9 @@
     "revision": 2,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "a15215d958bb4c2cbe13ed8827606db1",
+    "session": "d0659ac8ed6e4bd9b56c2f9e317d1b78",
     "status": "Room actions ready",
-    "selectedId": "fe69f2d1b5b5457e801123533e93f044",
+    "selectedId": "9256c9298e9145f0a42e5974ce52ed0c",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -1371,18 +2236,22 @@
     "inspection": null,
     "workspaceView": "objects",
     "rules": {
-      "revision": 11,
+      "revision": 19,
       "bindingPage": 0,
       "bindingCount": 0,
       "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
       "canUndo": true,
       "canRedo": false,
       "readOnly": false,
-      "status": "Target assigned from your room selection",
+      "status": "Action type changed",
+      "selectedError": "",
       "sequences": [
         {
-          "id": "7ab72078996941cb880e90a338254fcf",
+          "id": "20003fe6ebb942d287f9323ffc9baaa1",
           "name": "Action 1",
+          "error": "",
           "steps": 1,
           "repeat": false,
           "program": true
@@ -1398,12 +2267,25 @@
     "capabilities": [
       "physicsSettings.v1",
       "avatarSettings.v1",
+      "physicsRun.v1",
       "motions.v1",
       "avatarActivities.v1",
       "catalog.v1",
-      "behaviourPrograms.v3"
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "objectEdits.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1"
     ],
-    "physics": null,
+    "physics": {
+      "ready": false,
+      "running": false,
+      "status": "Load or scan your room to use gravity"
+    },
     "avatar": null,
     "walk": null,
     "activityProfile": {
@@ -1435,7 +2317,7 @@
     },
     "objects": [
       {
-        "id": "0b940270211f4fa29a063e32b1c2db00",
+        "id": "4b24417129bb498d83ec8dc4bbb2d98d",
         "name": "Cylinder",
         "kind": "Cylinder",
         "objectRevision": 5,
@@ -1462,7 +2344,7 @@
         "movement": null
       },
       {
-        "id": "2ce4ff4eacdb4232bded351f89d88eb7",
+        "id": "694136ca62d64f97ab9602b540c3cb11",
         "name": "Ball",
         "kind": "Ball",
         "objectRevision": 4,
@@ -1476,6 +2358,33 @@
           "r": 0.7647058963775635,
           "g": 0.6000000238418579,
           "b": 0.3137255012989044,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "9256c9298e9145f0a42e5974ce52ed0c",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 6,
+        "position": {
+          "x": 0.5199999809265137,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
           "a": 1.0
         },
         "animated": false,
@@ -1503,33 +2412,6 @@
           "r": 1.0,
           "g": 1.0,
           "b": 1.0,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "fe69f2d1b5b5457e801123533e93f044",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 6,
-        "position": {
-          "x": 0.5199999809265137,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
           "a": 1.0
         },
         "animated": false,
@@ -1579,12 +2461,27 @@
       "query": "",
       "offset": 6,
       "pageSize": 6,
-      "total": 9,
+      "total": 14,
       "entries": [
         {
-          "id": "avatar.look.user",
+          "id": "object.delete",
           "version": 1,
-          "label": "Look at user"
+          "label": "Delete object"
+        },
+        {
+          "id": "object.physics.impulse",
+          "version": 1,
+          "label": "Push object"
+        },
+        {
+          "id": "object.physics.stop",
+          "version": 1,
+          "label": "Stop object motion"
+        },
+        {
+          "id": "object.position.set",
+          "version": 1,
+          "label": "Move object"
         },
         {
           "id": "object.recording.throw",
@@ -1592,12 +2489,20 @@
           "label": "Throw recording"
         },
         {
-          "id": "time.wait",
+          "id": "object.rotation.set",
           "version": 1,
-          "label": "Wait"
+          "label": "Rotate object"
         }
       ],
-      "status": "Found 9 actions. Search does not run them."
+      "status": "Found 14 actions. Search does not run them."
+    },
+    "execution": {
+      "selected": null,
+      "running": [],
+      "outcomes": [],
+      "nextRunId": "93089ae8af4f43c580196c3791ccac1e",
+      "storageError": null,
+      "recovery": null
     }
   },
   "search": {
@@ -1605,9 +2510,9 @@
     "revision": 1,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "a15215d958bb4c2cbe13ed8827606db1",
+    "session": "d0659ac8ed6e4bd9b56c2f9e317d1b78",
     "status": "Room actions ready",
-    "selectedId": "fe69f2d1b5b5457e801123533e93f044",
+    "selectedId": "9256c9298e9145f0a42e5974ce52ed0c",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -1616,18 +2521,22 @@
     "inspection": null,
     "workspaceView": "objects",
     "rules": {
-      "revision": 11,
+      "revision": 19,
       "bindingPage": 0,
       "bindingCount": 0,
       "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
       "canUndo": true,
       "canRedo": false,
       "readOnly": false,
-      "status": "Target assigned from your room selection",
+      "status": "Action type changed",
+      "selectedError": "",
       "sequences": [
         {
-          "id": "7ab72078996941cb880e90a338254fcf",
+          "id": "20003fe6ebb942d287f9323ffc9baaa1",
           "name": "Action 1",
+          "error": "",
           "steps": 1,
           "repeat": false,
           "program": true
@@ -1643,12 +2552,25 @@
     "capabilities": [
       "physicsSettings.v1",
       "avatarSettings.v1",
+      "physicsRun.v1",
       "motions.v1",
       "avatarActivities.v1",
       "catalog.v1",
-      "behaviourPrograms.v3"
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "objectEdits.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1"
     ],
-    "physics": null,
+    "physics": {
+      "ready": false,
+      "running": false,
+      "status": "Load or scan your room to use gravity"
+    },
     "avatar": null,
     "walk": null,
     "activityProfile": {
@@ -1680,7 +2602,7 @@
     },
     "objects": [
       {
-        "id": "0b940270211f4fa29a063e32b1c2db00",
+        "id": "4b24417129bb498d83ec8dc4bbb2d98d",
         "name": "Cylinder",
         "kind": "Cylinder",
         "objectRevision": 5,
@@ -1707,7 +2629,7 @@
         "movement": null
       },
       {
-        "id": "2ce4ff4eacdb4232bded351f89d88eb7",
+        "id": "694136ca62d64f97ab9602b540c3cb11",
         "name": "Ball",
         "kind": "Ball",
         "objectRevision": 4,
@@ -1721,6 +2643,33 @@
           "r": 0.7647058963775635,
           "g": 0.6000000238418579,
           "b": 0.3137255012989044,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "9256c9298e9145f0a42e5974ce52ed0c",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 6,
+        "position": {
+          "x": 0.5199999809265137,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
           "a": 1.0
         },
         "animated": false,
@@ -1748,33 +2697,6 @@
           "r": 1.0,
           "g": 1.0,
           "b": 1.0,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "fe69f2d1b5b5457e801123533e93f044",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 6,
-        "position": {
-          "x": 0.5199999809265137,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
           "a": 1.0
         },
         "animated": false,
@@ -1824,27 +2746,12 @@
       "query": "",
       "offset": 0,
       "pageSize": 6,
-      "total": 9,
+      "total": 14,
       "entries": [
         {
-          "id": "animation.embedded.play",
+          "id": "animation.play",
           "version": 1,
-          "label": "Imported clip"
-        },
-        {
-          "id": "animation.library.play",
-          "version": 1,
-          "label": "Library motion"
-        },
-        {
-          "id": "animation.recipe.play",
-          "version": 1,
-          "label": "Recipe animation"
-        },
-        {
-          "id": "animation.recording.play",
-          "version": 1,
-          "label": "Recorded animation"
+          "label": "Play animation"
         },
         {
           "id": "avatar.follow.user",
@@ -1852,12 +2759,35 @@
           "label": "Follow user"
         },
         {
-          "id": "avatar.gesture.play",
+          "id": "avatar.look.user",
           "version": 1,
-          "label": "Gesture"
+          "label": "Look at user"
+        },
+        {
+          "id": "object.color.set",
+          "version": 1,
+          "label": "Paint object"
+        },
+        {
+          "id": "object.create.primitive",
+          "version": 1,
+          "label": "Create shape"
+        },
+        {
+          "id": "object.create.recipe",
+          "version": 1,
+          "label": "Create recipe object"
         }
       ],
-      "status": "Found 9 actions. Search does not run them."
+      "status": "Found 14 actions. Search does not run them."
+    },
+    "execution": {
+      "selected": null,
+      "running": [],
+      "outcomes": [],
+      "nextRunId": "93089ae8af4f43c580196c3791ccac1e",
+      "storageError": null,
+      "recovery": null
     }
   },
   "unknown": {
@@ -1865,9 +2795,9 @@
     "revision": 8,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "a15215d958bb4c2cbe13ed8827606db1",
+    "session": "d0659ac8ed6e4bd9b56c2f9e317d1b78",
     "status": "Room actions ready",
-    "selectedId": "fe69f2d1b5b5457e801123533e93f044",
+    "selectedId": "9256c9298e9145f0a42e5974ce52ed0c",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -1876,18 +2806,22 @@
     "inspection": null,
     "workspaceView": "objects",
     "rules": {
-      "revision": 11,
+      "revision": 19,
       "bindingPage": 0,
       "bindingCount": 0,
       "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
       "canUndo": true,
       "canRedo": false,
       "readOnly": false,
       "status": "Action triggered",
+      "selectedError": "",
       "sequences": [
         {
-          "id": "7ab72078996941cb880e90a338254fcf",
+          "id": "20003fe6ebb942d287f9323ffc9baaa1",
           "name": "Action 1",
+          "error": "",
           "steps": 1,
           "repeat": false,
           "program": true
@@ -1899,10 +2833,10 @@
       "running": [],
       "outcomes": [
         {
-          "id": "5341a5633aab4bd8a7c801ebe055e00f",
-          "sequenceId": "7ab72078996941cb880e90a338254fcf",
+          "id": "7f9c3f20e94842adb2d8758587ca086b",
+          "sequenceId": "20003fe6ebb942d287f9323ffc9baaa1",
           "phase": "cancelled",
-          "nodeId": "579a273880cd4bb28cac692d690ba8be",
+          "nodeId": "69eab6ae67264afbadc45e981a6dbc82",
           "status": "Behaviour stopped"
         }
       ]
@@ -1911,12 +2845,25 @@
     "capabilities": [
       "physicsSettings.v1",
       "avatarSettings.v1",
+      "physicsRun.v1",
       "motions.v1",
       "avatarActivities.v1",
       "catalog.v1",
-      "behaviourPrograms.v3"
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "objectEdits.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1"
     ],
-    "physics": null,
+    "physics": {
+      "ready": false,
+      "running": false,
+      "status": "Load or scan your room to use gravity"
+    },
     "avatar": null,
     "walk": null,
     "activityProfile": {
@@ -1948,7 +2895,7 @@
     },
     "objects": [
       {
-        "id": "0b940270211f4fa29a063e32b1c2db00",
+        "id": "4b24417129bb498d83ec8dc4bbb2d98d",
         "name": "Cylinder",
         "kind": "Cylinder",
         "objectRevision": 5,
@@ -1975,7 +2922,7 @@
         "movement": null
       },
       {
-        "id": "2ce4ff4eacdb4232bded351f89d88eb7",
+        "id": "694136ca62d64f97ab9602b540c3cb11",
         "name": "Ball",
         "kind": "Ball",
         "objectRevision": 4,
@@ -1989,6 +2936,33 @@
           "r": 0.7647058963775635,
           "g": 0.6000000238418579,
           "b": 0.3137255012989044,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "9256c9298e9145f0a42e5974ce52ed0c",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 6,
+        "position": {
+          "x": 0.5199999809265137,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
           "a": 1.0
         },
         "animated": false,
@@ -2016,33 +2990,6 @@
           "r": 1.0,
           "g": 1.0,
           "b": 1.0,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "fe69f2d1b5b5457e801123533e93f044",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 6,
-        "position": {
-          "x": 0.5199999809265137,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
           "a": 1.0
         },
         "animated": false,
@@ -2093,6 +3040,14 @@
       "version": 1,
       "definition": null,
       "status": "Unknown capability or unsupported version"
+    },
+    "execution": {
+      "selected": null,
+      "running": [],
+      "outcomes": [],
+      "nextRunId": "93089ae8af4f43c580196c3791ccac1e",
+      "storageError": null,
+      "recovery": null
     }
   }
 }

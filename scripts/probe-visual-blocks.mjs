@@ -27,8 +27,8 @@ try {
  await page.getByLabel('Condition left source',{exact:true}).selectOption('fact:maestro.state');
  await page.getByLabel('Condition right value',{exact:true}).fill('speaking');await save();
  await add('block_1 Then','Repeat');await add('block_2 Repeat these','Action');
- await edit('block_3');await page.getByLabel('Block action',{exact:true}).selectOption('avatar.gesture.play');
- await page.getByLabel('gesture',{exact:true}).selectOption('greeting');
+ await edit('block_3');await page.getByLabel('Block action',{exact:true}).selectOption('animation.play');
+ await page.getByLabel('source.gesture',{exact:true}).selectOption('greeting');
  await page.getByLabel('seconds',{exact:true}).fill('0.2');
  await page.screenshot({path:resolve(out,'action-values.png')});await save();
  await add('block_1 Otherwise','Action');

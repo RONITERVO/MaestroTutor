@@ -36,12 +36,16 @@
                 {
                   "id": "block_3",
                   "op": "invoke",
-                  "capability": "avatar.gesture.play",
+                  "capability": "animation.play",
                   "version": 1,
                   "arguments": {
                     "target": "maestro",
                     "seconds": 0.2,
-                    "gesture": "greeting"
+                    "source": {
+                      "kind": "gesture",
+                      "gesture": "greeting"
+                    },
+                    "channel": "wholeTarget"
                   },
                   "bindings": {}
                 }

@@ -4,6 +4,7 @@ import {parseRecipe} from './roomRecipe';
 import {behaviourCatalog,type BehaviourValueType} from './behaviourCatalog';
 export interface CapabilitySchema {
  type:'object'|'array'|'string'|'number'|'integer'|'boolean';
+ oneOf?:CapabilitySchema[];'x-discriminators'?:string[];title?:string;'x-static'?:boolean;'x-channels'?:string[];'x-requirements'?:string[];
  items?:CapabilitySchema;minItems?:number;maxItems?:number;nullable?:boolean;
  properties?:Record<string,CapabilitySchema>;required?:string[];additionalProperties?:false;
  format?:'unitQuaternion'|'boundedOffset'|'roomRecipe';'x-resource'?:'object';'x-requires'?:Record<string,string>;
@@ -20,8 +21,28 @@ const definitions=new Map((clone(behaviourCatalog.actions) as unknown as Capabil
 const record=(value:unknown):value is Record<string,unknown>=>value!==null&&typeof value==='object'&&!Array.isArray(value);
 const own=(value:object,key:string)=>Object.prototype.hasOwnProperty.call(value,key);
 export function capabilityDefinition(id:string):CapabilityDefinition|null {const value=definitions.get(id);return value?clone(value):null;}
+/** Resolve literal variant selectors without treating readiness as validation. */
+export function schemaField(schema:CapabilitySchema|undefined,path:string):CapabilitySchema|undefined {
+ for(const key of path.split('.'))schema=schema?.properties&&own(schema.properties,key)?schema.properties[key]:undefined;return schema;
+}
+export function argumentValue(value:unknown,path:string):unknown {for(const key of path.split('.'))value=record(value)?value[key]:undefined;return value;}
+export function resolveCapabilitySchema(schema:CapabilitySchema|undefined,value:unknown):CapabilitySchema|undefined {
+ if(!schema?.oneOf)return schema;
+ const matches=schema.oneOf.filter(branch=>(schema['x-discriminators']??[]).every(path=>schemaField(branch,path)?.enum?.includes(argumentValue(value,path) as string)));
+ return matches.length===1?matches[0]:undefined;
+}
+export function capabilityInput(id:string,args:Record<string,unknown>):CapabilitySchema|undefined {return resolveCapabilitySchema(definitions.get(id)?.input,args);}
+export function capabilityBindingFields(id:string,args:Record<string,unknown>):Record<string,CapabilitySchema> {
+ const result:Record<string,CapabilitySchema>={};
+ const visit=(schema:CapabilitySchema|undefined,path:string)=>{if(!schema||schema['x-static'])return;
+  if(schema.type==='object')for(const [key,field] of Object.entries(schema.properties??{}))visit(field,path?path+'.'+key:key);
+  else if(schema.type!=='array')result[path]=schema;
+ };visit(capabilityInput(id,args),'');return result;
+}
+export function validateCapabilityValue(value:unknown,schema:CapabilitySchema):string|null {return validate(value,schema,'value');}
 function validate(value:unknown,schema:CapabilitySchema,path:string):string|null {
  const error=path+' does not match the capability contract';
+ if(schema.oneOf){const selected=resolveCapabilitySchema(schema,value);return selected?validate(value,selected,path):path+' has an unsupported source or channel';}
  if(value===null&&schema.nullable)return null;
  switch(schema.type) {
   case 'object': {
@@ -70,21 +91,24 @@ export function capabilityOutputType(id:string,key:string):BehaviourValueType|nu
  const type=schema[key].type;return type==='string'?'text':type==='integer'?'number':type==='number'||type==='boolean'?type:null;
 }
 export function literalCapabilityResources(id:string,args:Record<string,unknown>,bindings:Record<string,unknown>,version:number):string[] {
- const literal={...args},schema=definitions.get(id)?.input.properties;
- if(version===3)for(const key of Object.keys(bindings))if(schema?.[key]?.['x-resource']==='object')delete literal[key];
+ const literal=clone(args),schema=capabilityInput(id,args);
+ if(version===3)for(const key of Object.keys(bindings))if(schemaField(schema,key)?.['x-resource']==='object'){
+  const parts=key.split('.'),parent=parts.length===1?literal:argumentValue(literal,parts.slice(0,-1).join('.'));
+  if(record(parent))delete parent[parts[parts.length-1]];
+ }
  return capabilityResources(id,literal);
 }
-export function capabilityParameterType(id:string,parameter:string):BehaviourValueType|null {
- const schema=definitions.get(id)?.input.properties;
- if(!schema||!own(schema,parameter))return null;
- const type=schema[parameter].type;return type==='string'?'text':type==='integer'?'number':type==='number'||type==='boolean'?type:null;
+export function capabilityParameterType(id:string,parameter:string,args:Record<string,unknown>={}):BehaviourValueType|null {
+ const schema=schemaField(capabilityInput(id,args),parameter);
+ if(!schema||schema['x-static'])return null;
+ const type=schema.type;return type==='string'?'text':type==='integer'?'number':type==='number'||type==='boolean'?type:null;
 }
 
 /** Schema-declared object references used for ownership and optimistic revisions. */
 export function capabilityResources(id:string,args:Record<string,unknown>):string[] {
  const result=new Set<string>();
  const visit=(value:unknown,schema:CapabilitySchema|undefined)=>{
-  if(!schema)return;if(schema['x-resource']==='object'&&typeof value==='string')result.add(value);
+  schema=resolveCapabilitySchema(schema,value);if(!schema)return;if(schema['x-resource']==='object'&&typeof value==='string')result.add(value);
   if(Array.isArray(value))for(const entry of value)visit(entry,schema.items);
   if(record(value))for(const [key,entry] of Object.entries(value))visit(entry,schema.properties?.[key]);
  };visit(args,definitions.get(id)?.input);return [...result];

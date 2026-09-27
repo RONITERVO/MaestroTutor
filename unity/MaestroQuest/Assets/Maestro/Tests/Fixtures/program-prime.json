@@ -38,12 +38,16 @@
               "id": "prime_wave",
               "op": "invoke",
               "bindings": {},
-              "capability": "avatar.gesture.play",
+              "capability": "animation.play",
               "version": 1,
               "arguments": {
                 "target": "maestro",
                 "seconds": 0.1,
-                "gesture": "greeting"
+                "source": {
+                  "kind": "gesture",
+                  "gesture": "greeting"
+                },
+                "channel": "wholeTarget"
               }
             }
           ],
@@ -52,12 +56,16 @@
               "id": "composite_idle",
               "op": "invoke",
               "bindings": {},
-              "capability": "avatar.gesture.play",
+              "capability": "animation.play",
               "version": 1,
               "arguments": {
                 "target": "maestro",
                 "seconds": 0.1,
-                "gesture": "idle"
+                "source": {
+                  "kind": "gesture",
+                  "gesture": "idle"
+                },
+                "channel": "wholeTarget"
               }
             }
           ]

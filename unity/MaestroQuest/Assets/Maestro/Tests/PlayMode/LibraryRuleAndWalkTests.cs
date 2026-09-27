@@ -73,7 +73,7 @@ namespace Maestro.Quest.Tests
             Assert.That(avatar.LibraryMotionId,Is.EqualTo(gait.id));
             var hand=avatar.PoseRig.Bone(PoseJoint.RightUpperArm);var before=hand.rotation;
             var clipTime=avatar.PoseRig.Bone(PoseJoint.LeftUpperLeg).rotation;
-            var call=Newtonsoft.Json.Linq.JObject.Parse(@"{'id':'avatar.gesture.upperBody','version':1,'arguments':{'target':'maestro','seconds':10,'gesture':'greeting'}}");
+            var call=Newtonsoft.Json.Linq.JObject.Parse(@"{'id':'animation.play','version':1,'arguments':{'target':'maestro','source':{'kind':'gesture','gesture':'greeting'},'channel':'upperBody','seconds':10}}");
             Assert.That(runtime.Scheduler.Invoke(call,Time.unscaledTime,out var run,out var error),Is.True,error);
             for(int i=0;i<30;i++) {avatar.SpatialWalk(.65f);yield return null;}
             Assert.That(avatar.LibraryMotionId,Is.EqualTo(gait.id),"Upper-body sampling must not stop or replace the imported gait");
@@ -198,7 +198,7 @@ namespace Maestro.Quest.Tests
             program.program=Newtonsoft.Json.JsonConvert.SerializeObject(new {
                 version=2,entry="main",resources=new[] {"maestro"},functions=new[] {new {
                     name="main",returns="void",parameters=Array.Empty<object>(),locals=new[] {new {name="reserved",initial=false}},
-                    body=new[] {new {id="walk",op="invoke",capability="animation.library.play",version=1,arguments=new {target="maestro",motionId=gait.id,seconds=.5f,loop=true},bindings=new {}}}
+                    body=new[] {new {id="walk",op="invoke",capability="animation.play",version=1,arguments=new {target="maestro",source=new {kind="library",motionId=gait.id},channel="wholeTarget",seconds=.5f,loop=true},bindings=new {}}}
                 }}
             });
             Assert.That(program.Compile(out var programError),Is.Not.Null,programError);
@@ -439,15 +439,15 @@ namespace Maestro.Quest.Tests
             Assert.That(rules.Selected.SimpleSteps()[0].motionId,Is.EqualTo(gait.id));Assert.That(rules.Selected.SimpleSteps()[1].action,Is.EqualTo(RuleActionKind.Wait));
             tools.Draft.Step(1);Assert.That(rules.SelectedStep.id,Is.EqualTo(second));rules.AssignLibraryMotion(greeting.id);
             Assert.That(rules.Selected.SimpleSteps()[0].motionId,Is.EqualTo(gait.id));Assert.That(rules.Selected.SimpleSteps()[1].motionId,Is.EqualTo(greeting.id));
-            Assert.That(tools.Draft.NodeId,Is.EqualTo(second));Assert.That(tools.Draft.CapabilityId,Is.EqualTo("animation.library.play"));
+            Assert.That(tools.Draft.NodeId,Is.EqualTo(second));Assert.That(tools.Draft.CapabilityId,Is.EqualTo("animation.play"));
             Assert.That(avatar.LibraryMotionId,Is.Null);Assert.That(runtime.Scheduler.RunningCount,Is.Zero);
             yield return null;
         }
         [UnityTest] public IEnumerator NamedLibraryOperationReleasesLateLoadsAndTransferredLeasesExactlyOnce()
         {
             var host=new RoomRuleActions(editor,authoring);
-            var arguments=new JObject {["target"]="maestro",["seconds"]=1,["loop"]=true,["motionId"]=greeting.id};
-            Assert.That(BehaviourCatalog.TryCall("animation.library.play",1,arguments,out var call,out var error),Is.True,error);
+            var arguments=new JObject {["target"]="maestro",["seconds"]=1,["loop"]=true,["source"]=new JObject {["kind"]="library",["motionId"]=greeting.id},["channel"]="wholeTarget"};
+            Assert.That(BehaviourCatalog.TryCall("animation.play",1,arguments,out var call,out var error),Is.True,error);
             try {
                 Assert.That(editor.Motions.Pinned(greeting.id),Is.False);
                 Assert.That(host.Start("cancel-load",call,out _,out error),Is.True,error);
@@ -476,8 +476,8 @@ namespace Maestro.Quest.Tests
             var replacement=ModelLibrary.Inspect("replacement.glb",Clip(8,"Replacement"));
             var save=editor.Models.SaveAsync(replacement);yield return Until(()=>save.IsCompleted);Assert.That(save.Exception,Is.Null);
             var host=new RoomRuleActions(editor,authoring);
-            Assert.That(BehaviourCatalog.TryCall("animation.library.play",1,new JObject {
-                ["target"]="maestro",["seconds"]=1,["loop"]=true,["motionId"]=gait.id
+            Assert.That(BehaviourCatalog.TryCall("animation.play",1,new JObject {
+                ["target"]="maestro",["seconds"]=1,["loop"]=true,["source"]=new JObject {["kind"]="library",["motionId"]=gait.id},["channel"]="wholeTarget"
             },out var call,out var error),Is.True,error);
             try {
                 Assert.That(host.Start("replacement",call,out _,out error),Is.True,error);

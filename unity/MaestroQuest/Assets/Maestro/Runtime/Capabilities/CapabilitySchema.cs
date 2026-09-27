@@ -7,6 +7,26 @@ namespace Maestro.Quest.Programs
     /// <summary>Schema building blocks; capability modules own their contracts.</summary>
     public static class CapabilitySchema
     {
+        // oneOf is evaluated strictly; discriminators only choose an editor view.
+        public static JObject Resolve(JObject schema,JToken value) {
+            if(schema?["oneOf"] is not JArray variants)return schema;
+            var keys=((JArray)schema["x-discriminators"]).Values<string>().ToArray();
+            var matches=variants.OfType<JObject>().Where(branch=>keys.All(path=> {
+                var field=Field(branch,path);var actual=Value(value,path);
+                return actual?.Type==JTokenType.String&&field?["enum"] is JArray choices&&choices.Any(x=>JToken.DeepEquals(x,actual));
+            })).Take(2).ToArray();return matches.Length==1?matches[0]:null;
+        }
+        public static JToken Value(JToken value,string path) {foreach(var key in path.Split('.'))value=(value as JObject)?[key];return value;}
+        public static JObject Field(JObject schema,string path) {
+            foreach(var key in path.Split('.'))schema=schema?["properties"]?[key] as JObject;return schema;
+        }
+        public static void Set(JObject value,string path,JToken next) {
+            var keys=path.Split('.');for(int i=0;i<keys.Length-1;i++)value=value[keys[i]] as JObject??throw new ProgramFault("Unknown argument path");
+            if(!value.ContainsKey(keys[^1]))throw new ProgramFault("Unknown argument path");value[keys[^1]]=next;
+        }
+        public static void Remove(JObject value,string path) {
+            var keys=path.Split('.');for(int i=0;i<keys.Length-1;i++) {value=value[keys[i]] as JObject;if(value==null)return;}value.Remove(keys[^1]);
+        }
         public static JObject Number(double min,double max,bool integer=false)=>new() {["type"]=integer?"integer":"number",["minimum"]=min,["maximum"]=max};
         public static JObject Text(string pattern,int max=128)=>new() {["type"]="string",["pattern"]=pattern,["maxLength"]=max};
         public static JObject Choice(params string[] values)=>new() {["type"]="string",["enum"]=new JArray(values)};

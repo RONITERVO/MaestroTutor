@@ -110,7 +110,7 @@ it('authors the upper-body capability through the same simple editor and preserv
  expect((screen.getByRole('option',{name:'Walk'}) as HTMLOptionElement).disabled).toBe(true);
  fireEvent.click(screen.getByRole('button',{name:'Apply changes'}));
  const updated=client.snapshot().request!.commands[0].rule!.edits![0].sequence!;
- expect(JSON.parse(updated.program).functions[0].body[0]).toMatchObject({id:step,capability:'avatar.gesture.upperBody',version:1,arguments:{target:'maestro',gesture:'pointing',seconds:2.5}});
+ expect(JSON.parse(updated.program).functions[0].body[0]).toMatchObject({id:step,capability:'animation.play',version:1,arguments:{target:'maestro',source:{kind:'gesture',gesture:'pointing'},channel:'upperBody',seconds:2.5}});
  await act(async()=>{client.receive(state({revision:2,ack:1,rules:{...rules(),revision:5,selected:updated}}));});
  expect((screen.getByLabelText('Step 1 action') as HTMLSelectElement).value).toBe('9');
 });

@@ -5,6 +5,7 @@ import {type CapabilityInvocation} from '../../../shared/capabilities';
 import {type RuleStep} from './ruleSteps';
 import {type Vec3,type Rotation} from './recipe';
 const ids:readonly string[]=behaviourCatalog.adapters.ruleStep.actionIds;
+const animationSources=behaviourCatalog.adapters.ruleStep.animationSources;
 const gestures=['greeting','pointing','listening','speaking','idle','walk'];
 /** Private adapter for existing physical/simple controls. Saved programs use named calls. */
 export function stepInvocation(step:RuleStep):CapabilityInvocation {
@@ -25,14 +26,19 @@ export function stepInvocation(step:RuleStep):CapabilityInvocation {
  if(step.propId)args.prop={objectId:step.propId,avatarHash:step.propAvatarHash??'',hand:['left','right'][step.propHand??1],
   release:['return','drop','throw'][step.propRelease??0],releaseAt:step.propReleaseAt??1,
   offset:step.propOffset??{x:0,y:0,z:0},rotation:step.propRotation??{x:0,y:0,z:0,w:1}};
- return {id,version:1,arguments:args};
+ const variant=animationSources.find(source=>source.id===id);
+ if(variant){const source:Record<string,unknown>={kind:variant.kind};for(const field of variant.fields){source[field]=args[field];delete args[field];}args.source=source;args.channel=variant.channel;}
+ return {id:variant?'animation.play':id,version:1,arguments:args};
 }
 /** Decode a detached editor view. Callers validate the public schema and domain before applying.
  * Draft numeric values remain editable even when outside their permitted bounds.
  */
 export function invocationStep(call:CapabilityInvocation,id:string):RuleStep {
- const action=ids.indexOf(call.id);if(action<0||action>17||call.version!==1)throw new Error('Unknown capability or unsupported capability version');
- const a=call.arguments,p=a.prop as Record<string,unknown>|undefined;
+ const selected=call.arguments.source as Record<string,unknown>|undefined;
+ const variant=call.id==='animation.play'?animationSources.find(source=>source.kind===selected?.kind&&source.channel===call.arguments.channel):undefined;
+ const action=ids.indexOf(variant?.id??call.id);if(action<0||action>17||call.version!==1)throw new Error('Unknown capability or unsupported capability version');
+ const a={...call.arguments};if(variant){for(const field of variant.fields)a[field]=selected?.[field];delete a.source;delete a.channel;}
+ const p=a.prop as Record<string,unknown>|undefined;
  return {id,action,targetId:(a.target??'maestro') as string,seconds:(a.seconds??0) as number,
   gesture:a.gesture===undefined?0:gestures.indexOf(a.gesture as string),loop:(a.loop??false) as boolean,
   clipModelHash:(a.modelHash??'') as string,clipIndex:(a.clipIndex??0) as number,motionId:(a.motionId??'') as string,

@@ -53,7 +53,7 @@ namespace Maestro.Quest.Creation
             if(operation=="search") {
                 string query=((string)request["query"]).Trim();
                 var terms=query.Split(' ',StringSplitOptions.RemoveEmptyEntries);
-                var matches=BehaviourCatalog.Actions.Where(x=>terms.All(term=>(x.Id+" "+x.Label+" "+string.Join(" ",x.Requirements)).IndexOf(term,StringComparison.OrdinalIgnoreCase)>=0)).OrderBy(x=>x.Id,StringComparer.Ordinal).ToArray();
+                var matches=BehaviourCatalog.Actions.Where(x=>terms.All(term=>x.SearchText.IndexOf(term,StringComparison.OrdinalIgnoreCase)>=0)).OrderBy(x=>x.Id,StringComparer.Ordinal).ToArray();
                 int offset=Math.Min((int)request["offset"],Math.Max(0,(matches.Length-1)/PageSize*PageSize));
                 return new JObject {["operation"]=operation,["query"]=query,["offset"]=offset,["pageSize"]=PageSize,["total"]=matches.Length,
                     ["entries"]=new JArray(matches.Skip(offset).Take(PageSize).Select(x=>new JObject {["id"]=x.Id,["version"]=x.Version,["label"]=x.Label})),

@@ -1,11 +1,12 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
-import type {CapabilitySchema} from '../../../shared/capabilities';
+import {resolveCapabilitySchema,validateCapabilityValue,type CapabilitySchema} from '../../../shared/capabilities';
 
 export type EditorObject = {id:string; name?:string};
 
 /** A draft value only. The shared validator and native handler decide validity. */
 export function initialCapabilityValue(schema:CapabilitySchema, objects:readonly EditorObject[]):unknown {
+  if (schema.oneOf) return initialCapabilityValue(schema.oneOf[0],objects);
   if (schema.enum) return schema.enum[0];
   if (schema.type==='object') {
     const value=Object.fromEntries((schema.required??[]).map(key=>[key,initialCapabilityValue(schema.properties![key],objects)]));
@@ -19,10 +20,25 @@ export function initialCapabilityValue(schema:CapabilitySchema, objects:readonly
   return '';
 }
 
+export function changeCapabilityVariant(schema:CapabilitySchema,index:number,value:unknown,objects:readonly EditorObject[]):Record<string,unknown> {
+ const selected=schema.oneOf![index],next=initialCapabilityValue(selected,objects) as Record<string,unknown>;
+ const old=value&&typeof value==='object'?value as Record<string,unknown>:{};
+ for(const [key,field] of Object.entries(selected.properties??{}))if(!field['x-static']&&Object.prototype.hasOwnProperty.call(old,key)&&validateCapabilityValue(old[key],field)===null)next[key]=old[key];
+ return next;
+}
+export function CapabilityVariant({schema,value,onChange,objects,label='Animation source and channel'}:{schema:CapabilitySchema;value:unknown;onChange:(value:Record<string,unknown>)=>void;objects:readonly EditorObject[];label?:string}) {
+ const selected=resolveCapabilitySchema(schema,value),index=schema.oneOf!.indexOf(selected!);
+ return <label>{label}<select aria-label={label} value={index} onChange={e=>onChange(changeCapabilityVariant(schema,Number(e.target.value),value,objects))}>
+  {index<0&&<option value={-1}>Unsupported selection</option>}
+  {schema.oneOf!.map((branch,i)=><option key={i} value={i}>{branch.title??'Variant '+(i+1)}</option>)}
+ </select></label>;
+}
+
 export function CapabilityFields({schema,value,onChange,label,objects,depth=0}:{
   schema:CapabilitySchema; value:unknown; onChange:(value:unknown)=>void;
   label:string; objects:readonly EditorObject[]; depth?:number;
 }) {
+  if(schema.oneOf){const selected=resolveCapabilitySchema(schema,value);return <><CapabilityVariant schema={schema} value={value} onChange={onChange} objects={objects} label={label+' variant'}/>{selected&&<CapabilityFields schema={selected} value={value} onChange={onChange} objects={objects} label={label} depth={depth}/>}</>;}
   if(depth>12) return <p>Use the source editor for this deeply nested value.</p>;
   if(schema.nullable && value===null) return <div><span>{label}: none</span><button onClick={()=>onChange(initialCapabilityValue(schema,objects))}>Set {label}</button></div>;
   const optionalNull=schema.nullable&&<button onClick={()=>onChange(null)}>Clear {label}</button>;

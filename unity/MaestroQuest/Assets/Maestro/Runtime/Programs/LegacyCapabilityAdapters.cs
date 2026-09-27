@@ -4,6 +4,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using Maestro.Quest.Rules;
+using Newtonsoft.Json.Linq;
 namespace Maestro.Quest.Programs
 {
     /// <summary>Detached views used by the existing tray controls. New modules need no numeric identity.</summary>
@@ -34,13 +35,15 @@ namespace Maestro.Quest.Programs
         public static string[] ActionIds=>ids.OrderBy(x=>(int)x.Key).Select(x=>x.Value).ToArray();
         public static bool TryStep(this CapabilityCall call,out RuleStep step,out string error) {
             step=null;error="Use the book's capability blocks for this action";
-            var kind=LegacyCapabilityAdapters.Kind(call.Definition.Id);
-            if(!kind.HasValue||!CapabilityArguments.TryStep(kind.Value,call.Arguments,out step,out error))return false;
+            var source=call.Definition.Id=="animation.play"?AnimationPlayCapability.Find(call.Arguments):null;
+            var kind=LegacyCapabilityAdapters.Kind(source?.Provider.Id??call.Definition.Id);
+            if(!kind.HasValue||!CapabilityArguments.TryStep(kind.Value,source==null?call.Arguments:source.Native(call.Arguments),out step,out error))return false;
             step.id=call.NodeId;return true;
         }
         public static bool TryCall(RuleStep step,out CapabilityCall call,out string error) {
             call=null;if(!RuleDocument.ValidStep(step,out error))return false;
-            if(!BehaviourCatalog.TryCall(Id(step.action),1,CapabilityArguments.FromStep(step),out call,out error))return false;
+            var source=AnimationPlayCapability.Legacy(Id(step.action));var args=CapabilityArguments.FromStep(step);
+            if(!BehaviourCatalog.TryCall(source==null?Id(step.action):"animation.play",1,source==null?args:source.Public(args),out call,out error))return false;
             call.NodeId=step.id;return true;
         }
     }

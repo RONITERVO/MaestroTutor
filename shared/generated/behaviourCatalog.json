@@ -2,362 +2,874 @@
   "version": 1,
   "actions": [
     {
-      "id": "animation.recording.play",
+      "id": "animation.play",
       "version": 1,
-      "label": "Recorded animation",
+      "label": "Play animation",
       "input": {
         "type": "object",
-        "properties": {
-          "target": {
-            "type": "string",
-            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
-            "maxLength": 32,
-            "x-resource": "object"
-          },
-          "seconds": {
-            "type": "number",
-            "minimum": 0.0,
-            "maximum": 30.0
-          },
-          "loop": {
-            "type": "boolean"
-          },
-          "prop": {
+        "oneOf": [
+          {
             "type": "object",
             "properties": {
-              "objectId": {
+              "target": {
                 "type": "string",
-                "pattern": "^[a-fA-F0-9]{32}$",
-                "maxLength": 32,
+                "enum": [
+                  "maestro"
+                ],
                 "x-resource": "object"
               },
-              "avatarHash": {
-                "type": "string",
-                "pattern": "^(|[a-f0-9]{64})$",
-                "maxLength": 64
-              },
-              "hand": {
-                "type": "string",
-                "enum": [
-                  "left",
-                  "right"
-                ]
-              },
-              "release": {
-                "type": "string",
-                "enum": [
-                  "return",
-                  "drop",
-                  "throw"
-                ]
-              },
-              "offset": {
-                "type": "object",
-                "properties": {
-                  "x": {
-                    "type": "number",
-                    "minimum": -1.0,
-                    "maximum": 1.0
-                  },
-                  "y": {
-                    "type": "number",
-                    "minimum": -1.0,
-                    "maximum": 1.0
-                  },
-                  "z": {
-                    "type": "number",
-                    "minimum": -1.0,
-                    "maximum": 1.0
-                  }
-                },
-                "required": [
-                  "x",
-                  "y",
-                  "z"
-                ],
-                "additionalProperties": false,
-                "format": "boundedOffset"
-              },
-              "rotation": {
-                "type": "object",
-                "properties": {
-                  "x": {
-                    "type": "number",
-                    "minimum": -1.0,
-                    "maximum": 1.0
-                  },
-                  "y": {
-                    "type": "number",
-                    "minimum": -1.0,
-                    "maximum": 1.0
-                  },
-                  "z": {
-                    "type": "number",
-                    "minimum": -1.0,
-                    "maximum": 1.0
-                  },
-                  "w": {
-                    "type": "number",
-                    "minimum": -1.0,
-                    "maximum": 1.0
-                  }
-                },
-                "required": [
-                  "x",
-                  "y",
-                  "z",
-                  "w"
-                ],
-                "additionalProperties": false,
-                "format": "unitQuaternion"
-              },
-              "releaseAt": {
+              "seconds": {
                 "type": "number",
-                "minimum": 0.05,
-                "maximum": 1.0
+                "minimum": 0.1,
+                "maximum": 30.0
+              },
+              "prop": {
+                "type": "object",
+                "properties": {
+                  "objectId": {
+                    "type": "string",
+                    "pattern": "^[a-fA-F0-9]{32}$",
+                    "maxLength": 32,
+                    "x-resource": "object"
+                  },
+                  "avatarHash": {
+                    "type": "string",
+                    "pattern": "^(|[a-f0-9]{64})$",
+                    "maxLength": 64
+                  },
+                  "hand": {
+                    "type": "string",
+                    "enum": [
+                      "left",
+                      "right"
+                    ]
+                  },
+                  "release": {
+                    "type": "string",
+                    "enum": [
+                      "return",
+                      "drop",
+                      "throw"
+                    ]
+                  },
+                  "offset": {
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      },
+                      "y": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      },
+                      "z": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      }
+                    },
+                    "required": [
+                      "x",
+                      "y",
+                      "z"
+                    ],
+                    "additionalProperties": false,
+                    "format": "boundedOffset"
+                  },
+                  "rotation": {
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      },
+                      "y": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      },
+                      "z": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      },
+                      "w": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      }
+                    },
+                    "required": [
+                      "x",
+                      "y",
+                      "z",
+                      "w"
+                    ],
+                    "additionalProperties": false,
+                    "format": "unitQuaternion"
+                  },
+                  "releaseAt": {
+                    "type": "number",
+                    "minimum": 0.05,
+                    "maximum": 1.0
+                  }
+                },
+                "required": [
+                  "objectId",
+                  "avatarHash",
+                  "hand",
+                  "release",
+                  "offset",
+                  "rotation",
+                  "releaseAt"
+                ],
+                "additionalProperties": false,
+                "x-requires": {
+                  "target": "maestro"
+                }
+              },
+              "source": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "gesture"
+                    ],
+                    "x-static": true
+                  },
+                  "gesture": {
+                    "type": "string",
+                    "enum": [
+                      "greeting",
+                      "pointing",
+                      "listening",
+                      "speaking",
+                      "idle",
+                      "walk"
+                    ]
+                  }
+                },
+                "required": [
+                  "kind",
+                  "gesture"
+                ],
+                "additionalProperties": false
+              },
+              "channel": {
+                "type": "string",
+                "enum": [
+                  "wholeTarget"
+                ],
+                "x-static": true
               }
             },
             "required": [
-              "objectId",
-              "avatarHash",
-              "hand",
-              "release",
-              "offset",
-              "rotation",
-              "releaseAt"
+              "target",
+              "seconds",
+              "source",
+              "channel"
             ],
             "additionalProperties": false,
-            "x-requires": {
-              "target": "maestro"
-            }
-          }
-        },
-        "required": [
-          "target",
-          "seconds",
-          "loop"
-        ],
-        "additionalProperties": false
-      },
-      "duration": "timed",
-      "ownership": "exclusiveTargetAndProp",
-      "channels": [
-        "wholeTarget"
-      ],
-      "requirements": [
-        "target.exists",
-        "target.unheld",
-        "authoring.inactive",
-        "recording.available"
-      ]
-    },
-    {
-      "id": "avatar.gesture.play",
-      "version": 1,
-      "label": "Gesture",
-      "input": {
-        "type": "object",
-        "properties": {
-          "target": {
-            "type": "string",
-            "enum": [
-              "maestro"
+            "title": "Gesture",
+            "x-channels": [
+              "wholeTarget"
             ],
-            "x-resource": "object"
-          },
-          "seconds": {
-            "type": "number",
-            "minimum": 0.1,
-            "maximum": 30.0
-          },
-          "gesture": {
-            "type": "string",
-            "enum": [
-              "greeting",
-              "pointing",
-              "listening",
-              "speaking",
-              "idle",
-              "walk"
+            "x-requirements": [
+              "target.exists",
+              "target.unheld",
+              "authoring.inactive",
+              "avatar.available"
             ]
           },
-          "prop": {
+          {
             "type": "object",
             "properties": {
-              "objectId": {
+              "target": {
                 "type": "string",
-                "pattern": "^[a-fA-F0-9]{32}$",
-                "maxLength": 32,
+                "enum": [
+                  "maestro"
+                ],
                 "x-resource": "object"
               },
-              "avatarHash": {
-                "type": "string",
-                "pattern": "^(|[a-f0-9]{64})$",
-                "maxLength": 64
-              },
-              "hand": {
-                "type": "string",
-                "enum": [
-                  "left",
-                  "right"
-                ]
-              },
-              "release": {
-                "type": "string",
-                "enum": [
-                  "return",
-                  "drop",
-                  "throw"
-                ]
-              },
-              "offset": {
-                "type": "object",
-                "properties": {
-                  "x": {
-                    "type": "number",
-                    "minimum": -1.0,
-                    "maximum": 1.0
-                  },
-                  "y": {
-                    "type": "number",
-                    "minimum": -1.0,
-                    "maximum": 1.0
-                  },
-                  "z": {
-                    "type": "number",
-                    "minimum": -1.0,
-                    "maximum": 1.0
-                  }
-                },
-                "required": [
-                  "x",
-                  "y",
-                  "z"
-                ],
-                "additionalProperties": false,
-                "format": "boundedOffset"
-              },
-              "rotation": {
-                "type": "object",
-                "properties": {
-                  "x": {
-                    "type": "number",
-                    "minimum": -1.0,
-                    "maximum": 1.0
-                  },
-                  "y": {
-                    "type": "number",
-                    "minimum": -1.0,
-                    "maximum": 1.0
-                  },
-                  "z": {
-                    "type": "number",
-                    "minimum": -1.0,
-                    "maximum": 1.0
-                  },
-                  "w": {
-                    "type": "number",
-                    "minimum": -1.0,
-                    "maximum": 1.0
-                  }
-                },
-                "required": [
-                  "x",
-                  "y",
-                  "z",
-                  "w"
-                ],
-                "additionalProperties": false,
-                "format": "unitQuaternion"
-              },
-              "releaseAt": {
+              "seconds": {
                 "type": "number",
-                "minimum": 0.05,
-                "maximum": 1.0
+                "minimum": 0.1,
+                "maximum": 30.0
+              },
+              "source": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "gesture"
+                    ],
+                    "x-static": true
+                  },
+                  "gesture": {
+                    "type": "string",
+                    "enum": [
+                      "greeting",
+                      "pointing",
+                      "listening",
+                      "speaking",
+                      "idle"
+                    ]
+                  }
+                },
+                "required": [
+                  "kind",
+                  "gesture"
+                ],
+                "additionalProperties": false
+              },
+              "channel": {
+                "type": "string",
+                "enum": [
+                  "upperBody"
+                ],
+                "x-static": true
               }
             },
             "required": [
-              "objectId",
-              "avatarHash",
-              "hand",
-              "release",
-              "offset",
-              "rotation",
-              "releaseAt"
+              "target",
+              "seconds",
+              "source",
+              "channel"
             ],
             "additionalProperties": false,
-            "x-requires": {
-              "target": "maestro"
-            }
-          }
-        },
-        "required": [
-          "target",
-          "seconds",
-          "gesture"
-        ],
-        "additionalProperties": false
-      },
-      "duration": "timed",
-      "ownership": "exclusiveTargetAndProp",
-      "channels": [
-        "wholeTarget"
-      ],
-      "requirements": [
-        "target.exists",
-        "target.unheld",
-        "authoring.inactive",
-        "avatar.available"
-      ]
-    },
-    {
-      "id": "avatar.gesture.upperBody",
-      "version": 1,
-      "label": "Upper-body gesture",
-      "input": {
-        "type": "object",
-        "properties": {
-          "target": {
-            "type": "string",
-            "enum": [
-              "maestro"
+            "title": "Upper-body gesture",
+            "x-channels": [
+              "upperBody"
             ],
-            "x-resource": "object"
+            "x-requirements": [
+              "target.exists",
+              "target.unheld",
+              "authoring.inactive",
+              "avatar.available"
+            ]
           },
-          "seconds": {
-            "type": "number",
-            "minimum": 0.1,
-            "maximum": 30.0
+          {
+            "type": "object",
+            "properties": {
+              "target": {
+                "type": "string",
+                "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "seconds": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 30.0
+              },
+              "loop": {
+                "type": "boolean"
+              },
+              "prop": {
+                "type": "object",
+                "properties": {
+                  "objectId": {
+                    "type": "string",
+                    "pattern": "^[a-fA-F0-9]{32}$",
+                    "maxLength": 32,
+                    "x-resource": "object"
+                  },
+                  "avatarHash": {
+                    "type": "string",
+                    "pattern": "^(|[a-f0-9]{64})$",
+                    "maxLength": 64
+                  },
+                  "hand": {
+                    "type": "string",
+                    "enum": [
+                      "left",
+                      "right"
+                    ]
+                  },
+                  "release": {
+                    "type": "string",
+                    "enum": [
+                      "return",
+                      "drop",
+                      "throw"
+                    ]
+                  },
+                  "offset": {
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      },
+                      "y": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      },
+                      "z": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      }
+                    },
+                    "required": [
+                      "x",
+                      "y",
+                      "z"
+                    ],
+                    "additionalProperties": false,
+                    "format": "boundedOffset"
+                  },
+                  "rotation": {
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      },
+                      "y": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      },
+                      "z": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      },
+                      "w": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      }
+                    },
+                    "required": [
+                      "x",
+                      "y",
+                      "z",
+                      "w"
+                    ],
+                    "additionalProperties": false,
+                    "format": "unitQuaternion"
+                  },
+                  "releaseAt": {
+                    "type": "number",
+                    "minimum": 0.05,
+                    "maximum": 1.0
+                  }
+                },
+                "required": [
+                  "objectId",
+                  "avatarHash",
+                  "hand",
+                  "release",
+                  "offset",
+                  "rotation",
+                  "releaseAt"
+                ],
+                "additionalProperties": false,
+                "x-requires": {
+                  "target": "maestro"
+                }
+              },
+              "source": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "recording"
+                    ],
+                    "x-static": true
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "additionalProperties": false
+              },
+              "channel": {
+                "type": "string",
+                "enum": [
+                  "wholeTarget"
+                ],
+                "x-static": true
+              }
+            },
+            "required": [
+              "target",
+              "seconds",
+              "loop",
+              "source",
+              "channel"
+            ],
+            "additionalProperties": false,
+            "title": "Recorded animation",
+            "x-channels": [
+              "wholeTarget"
+            ],
+            "x-requirements": [
+              "target.exists",
+              "target.unheld",
+              "authoring.inactive",
+              "recording.available"
+            ]
           },
-          "gesture": {
-            "type": "string",
-            "enum": [
-              "greeting",
-              "pointing",
-              "listening",
-              "speaking",
-              "idle"
+          {
+            "type": "object",
+            "properties": {
+              "target": {
+                "type": "string",
+                "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "seconds": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 30.0
+              },
+              "loop": {
+                "type": "boolean"
+              },
+              "prop": {
+                "type": "object",
+                "properties": {
+                  "objectId": {
+                    "type": "string",
+                    "pattern": "^[a-fA-F0-9]{32}$",
+                    "maxLength": 32,
+                    "x-resource": "object"
+                  },
+                  "avatarHash": {
+                    "type": "string",
+                    "pattern": "^(|[a-f0-9]{64})$",
+                    "maxLength": 64
+                  },
+                  "hand": {
+                    "type": "string",
+                    "enum": [
+                      "left",
+                      "right"
+                    ]
+                  },
+                  "release": {
+                    "type": "string",
+                    "enum": [
+                      "return",
+                      "drop",
+                      "throw"
+                    ]
+                  },
+                  "offset": {
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      },
+                      "y": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      },
+                      "z": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      }
+                    },
+                    "required": [
+                      "x",
+                      "y",
+                      "z"
+                    ],
+                    "additionalProperties": false,
+                    "format": "boundedOffset"
+                  },
+                  "rotation": {
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      },
+                      "y": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      },
+                      "z": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      },
+                      "w": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      }
+                    },
+                    "required": [
+                      "x",
+                      "y",
+                      "z",
+                      "w"
+                    ],
+                    "additionalProperties": false,
+                    "format": "unitQuaternion"
+                  },
+                  "releaseAt": {
+                    "type": "number",
+                    "minimum": 0.05,
+                    "maximum": 1.0
+                  }
+                },
+                "required": [
+                  "objectId",
+                  "avatarHash",
+                  "hand",
+                  "release",
+                  "offset",
+                  "rotation",
+                  "releaseAt"
+                ],
+                "additionalProperties": false,
+                "x-requires": {
+                  "target": "maestro"
+                }
+              },
+              "source": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "embedded"
+                    ],
+                    "x-static": true
+                  },
+                  "modelHash": {
+                    "type": "string",
+                    "pattern": "^(|[a-f0-9]{64})$",
+                    "maxLength": 64
+                  },
+                  "clipIndex": {
+                    "type": "integer",
+                    "minimum": 0.0,
+                    "maximum": 31.0
+                  }
+                },
+                "required": [
+                  "kind",
+                  "modelHash",
+                  "clipIndex"
+                ],
+                "additionalProperties": false
+              },
+              "channel": {
+                "type": "string",
+                "enum": [
+                  "wholeTarget"
+                ],
+                "x-static": true
+              }
+            },
+            "required": [
+              "target",
+              "seconds",
+              "loop",
+              "source",
+              "channel"
+            ],
+            "additionalProperties": false,
+            "title": "Imported clip",
+            "x-channels": [
+              "wholeTarget"
+            ],
+            "x-requirements": [
+              "target.exists",
+              "target.unheld",
+              "authoring.inactive",
+              "model.loaded",
+              "embeddedClip.available"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "target": {
+                "type": "string",
+                "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "seconds": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 30.0
+              },
+              "loop": {
+                "type": "boolean"
+              },
+              "prop": {
+                "type": "object",
+                "properties": {
+                  "objectId": {
+                    "type": "string",
+                    "pattern": "^[a-fA-F0-9]{32}$",
+                    "maxLength": 32,
+                    "x-resource": "object"
+                  },
+                  "avatarHash": {
+                    "type": "string",
+                    "pattern": "^(|[a-f0-9]{64})$",
+                    "maxLength": 64
+                  },
+                  "hand": {
+                    "type": "string",
+                    "enum": [
+                      "left",
+                      "right"
+                    ]
+                  },
+                  "release": {
+                    "type": "string",
+                    "enum": [
+                      "return",
+                      "drop",
+                      "throw"
+                    ]
+                  },
+                  "offset": {
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      },
+                      "y": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      },
+                      "z": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      }
+                    },
+                    "required": [
+                      "x",
+                      "y",
+                      "z"
+                    ],
+                    "additionalProperties": false,
+                    "format": "boundedOffset"
+                  },
+                  "rotation": {
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      },
+                      "y": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      },
+                      "z": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      },
+                      "w": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      }
+                    },
+                    "required": [
+                      "x",
+                      "y",
+                      "z",
+                      "w"
+                    ],
+                    "additionalProperties": false,
+                    "format": "unitQuaternion"
+                  },
+                  "releaseAt": {
+                    "type": "number",
+                    "minimum": 0.05,
+                    "maximum": 1.0
+                  }
+                },
+                "required": [
+                  "objectId",
+                  "avatarHash",
+                  "hand",
+                  "release",
+                  "offset",
+                  "rotation",
+                  "releaseAt"
+                ],
+                "additionalProperties": false,
+                "x-requires": {
+                  "target": "maestro"
+                }
+              },
+              "source": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "library"
+                    ],
+                    "x-static": true
+                  },
+                  "motionId": {
+                    "type": "string",
+                    "pattern": "^(|[a-fA-F0-9]{32})$",
+                    "maxLength": 32
+                  }
+                },
+                "required": [
+                  "kind",
+                  "motionId"
+                ],
+                "additionalProperties": false
+              },
+              "channel": {
+                "type": "string",
+                "enum": [
+                  "wholeTarget"
+                ],
+                "x-static": true
+              }
+            },
+            "required": [
+              "target",
+              "seconds",
+              "loop",
+              "source",
+              "channel"
+            ],
+            "additionalProperties": false,
+            "title": "Library motion",
+            "x-channels": [
+              "wholeTarget"
+            ],
+            "x-requirements": [
+              "target.exists",
+              "target.unheld",
+              "authoring.inactive",
+              "model.loaded",
+              "motion.available",
+              "rig.compatible"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "target": {
+                "type": "string",
+                "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "seconds": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 30.0
+              },
+              "loop": {
+                "type": "boolean"
+              },
+              "source": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "recipe"
+                    ],
+                    "x-static": true
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "additionalProperties": false
+              },
+              "channel": {
+                "type": "string",
+                "enum": [
+                  "wholeTarget"
+                ],
+                "x-static": true
+              }
+            },
+            "required": [
+              "target",
+              "seconds",
+              "loop",
+              "source",
+              "channel"
+            ],
+            "additionalProperties": false,
+            "title": "Recipe animation",
+            "x-channels": [
+              "wholeTarget"
+            ],
+            "x-requirements": [
+              "target.exists",
+              "target.unheld",
+              "authoring.inactive",
+              "recipe.tracksAvailable"
             ]
           }
-        },
-        "required": [
-          "target",
-          "seconds",
-          "gesture"
         ],
-        "additionalProperties": false
+        "x-discriminators": [
+          "source.kind",
+          "channel"
+        ]
       },
       "duration": "timed",
-      "ownership": "exclusiveChannels",
+      "ownership": "sourceChannels",
       "channels": [
+        "wholeTarget",
         "upperBody"
       ],
       "requirements": [
         "target.exists",
         "target.unheld",
         "authoring.inactive",
-        "avatar.available"
-      ]
+        "source.ready"
+      ],
+      "description": "Choose a typed source and channel. Library and embedded sources keep exact motion/model identities. Only built-in gestures currently support upperBody; wholeTarget owns the complete object. Inspect the selected variant's prerequisites; no automatic source substitution.",
+      "example": {
+        "target": "maestro",
+        "seconds": 2,
+        "source": {
+          "kind": "gesture",
+          "gesture": "greeting"
+        },
+        "channel": "wholeTarget"
+      }
     },
     {
       "id": "time.wait",
@@ -797,7 +1309,7 @@
         "storage.writable",
         "recipe.valid"
       ],
-      "description": "Create editable geometry and optional animation tracks from a bounded recipe. Returns objectId after saving; one room Undo edit. Set recipe.playing=false to create it idle and use animation.recipe.play on the returned ID for program-controlled playback. Setting playing=true explicitly starts the saved recipe animation. Geometry uses metres in room axes; scale is 0.1–4. The new assembly uses fixed physics.",
+      "description": "Create editable geometry and optional animation tracks from a bounded recipe. Returns objectId after saving; one room Undo edit. Set recipe.playing=false to create it idle and use animation.play with source.kind recipe on the returned ID for program-controlled playback. Setting playing=true explicitly starts the saved recipe animation. Geometry uses metres in room axes; scale is 0.1–4. The new assembly uses fixed physics.",
       "example": {
         "name": "Box robot",
         "x": 0.3,
@@ -1870,368 +2382,6 @@
         "physics.running",
         "navigation.floorReady"
       ]
-    },
-    {
-      "id": "animation.embedded.play",
-      "version": 1,
-      "label": "Imported clip",
-      "input": {
-        "type": "object",
-        "properties": {
-          "target": {
-            "type": "string",
-            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
-            "maxLength": 32,
-            "x-resource": "object"
-          },
-          "seconds": {
-            "type": "number",
-            "minimum": 0.0,
-            "maximum": 30.0
-          },
-          "loop": {
-            "type": "boolean"
-          },
-          "modelHash": {
-            "type": "string",
-            "pattern": "^(|[a-f0-9]{64})$",
-            "maxLength": 64
-          },
-          "clipIndex": {
-            "type": "integer",
-            "minimum": 0.0,
-            "maximum": 31.0
-          },
-          "prop": {
-            "type": "object",
-            "properties": {
-              "objectId": {
-                "type": "string",
-                "pattern": "^[a-fA-F0-9]{32}$",
-                "maxLength": 32,
-                "x-resource": "object"
-              },
-              "avatarHash": {
-                "type": "string",
-                "pattern": "^(|[a-f0-9]{64})$",
-                "maxLength": 64
-              },
-              "hand": {
-                "type": "string",
-                "enum": [
-                  "left",
-                  "right"
-                ]
-              },
-              "release": {
-                "type": "string",
-                "enum": [
-                  "return",
-                  "drop",
-                  "throw"
-                ]
-              },
-              "offset": {
-                "type": "object",
-                "properties": {
-                  "x": {
-                    "type": "number",
-                    "minimum": -1.0,
-                    "maximum": 1.0
-                  },
-                  "y": {
-                    "type": "number",
-                    "minimum": -1.0,
-                    "maximum": 1.0
-                  },
-                  "z": {
-                    "type": "number",
-                    "minimum": -1.0,
-                    "maximum": 1.0
-                  }
-                },
-                "required": [
-                  "x",
-                  "y",
-                  "z"
-                ],
-                "additionalProperties": false,
-                "format": "boundedOffset"
-              },
-              "rotation": {
-                "type": "object",
-                "properties": {
-                  "x": {
-                    "type": "number",
-                    "minimum": -1.0,
-                    "maximum": 1.0
-                  },
-                  "y": {
-                    "type": "number",
-                    "minimum": -1.0,
-                    "maximum": 1.0
-                  },
-                  "z": {
-                    "type": "number",
-                    "minimum": -1.0,
-                    "maximum": 1.0
-                  },
-                  "w": {
-                    "type": "number",
-                    "minimum": -1.0,
-                    "maximum": 1.0
-                  }
-                },
-                "required": [
-                  "x",
-                  "y",
-                  "z",
-                  "w"
-                ],
-                "additionalProperties": false,
-                "format": "unitQuaternion"
-              },
-              "releaseAt": {
-                "type": "number",
-                "minimum": 0.05,
-                "maximum": 1.0
-              }
-            },
-            "required": [
-              "objectId",
-              "avatarHash",
-              "hand",
-              "release",
-              "offset",
-              "rotation",
-              "releaseAt"
-            ],
-            "additionalProperties": false,
-            "x-requires": {
-              "target": "maestro"
-            }
-          }
-        },
-        "required": [
-          "target",
-          "seconds",
-          "loop",
-          "modelHash",
-          "clipIndex"
-        ],
-        "additionalProperties": false
-      },
-      "duration": "timed",
-      "ownership": "exclusiveTargetAndProp",
-      "channels": [
-        "wholeTarget"
-      ],
-      "requirements": [
-        "target.exists",
-        "target.unheld",
-        "authoring.inactive",
-        "model.loaded",
-        "embeddedClip.available"
-      ]
-    },
-    {
-      "id": "animation.library.play",
-      "version": 1,
-      "label": "Library motion",
-      "input": {
-        "type": "object",
-        "properties": {
-          "target": {
-            "type": "string",
-            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
-            "maxLength": 32,
-            "x-resource": "object"
-          },
-          "seconds": {
-            "type": "number",
-            "minimum": 0.0,
-            "maximum": 30.0
-          },
-          "loop": {
-            "type": "boolean"
-          },
-          "motionId": {
-            "type": "string",
-            "pattern": "^(|[a-fA-F0-9]{32})$",
-            "maxLength": 32
-          },
-          "prop": {
-            "type": "object",
-            "properties": {
-              "objectId": {
-                "type": "string",
-                "pattern": "^[a-fA-F0-9]{32}$",
-                "maxLength": 32,
-                "x-resource": "object"
-              },
-              "avatarHash": {
-                "type": "string",
-                "pattern": "^(|[a-f0-9]{64})$",
-                "maxLength": 64
-              },
-              "hand": {
-                "type": "string",
-                "enum": [
-                  "left",
-                  "right"
-                ]
-              },
-              "release": {
-                "type": "string",
-                "enum": [
-                  "return",
-                  "drop",
-                  "throw"
-                ]
-              },
-              "offset": {
-                "type": "object",
-                "properties": {
-                  "x": {
-                    "type": "number",
-                    "minimum": -1.0,
-                    "maximum": 1.0
-                  },
-                  "y": {
-                    "type": "number",
-                    "minimum": -1.0,
-                    "maximum": 1.0
-                  },
-                  "z": {
-                    "type": "number",
-                    "minimum": -1.0,
-                    "maximum": 1.0
-                  }
-                },
-                "required": [
-                  "x",
-                  "y",
-                  "z"
-                ],
-                "additionalProperties": false,
-                "format": "boundedOffset"
-              },
-              "rotation": {
-                "type": "object",
-                "properties": {
-                  "x": {
-                    "type": "number",
-                    "minimum": -1.0,
-                    "maximum": 1.0
-                  },
-                  "y": {
-                    "type": "number",
-                    "minimum": -1.0,
-                    "maximum": 1.0
-                  },
-                  "z": {
-                    "type": "number",
-                    "minimum": -1.0,
-                    "maximum": 1.0
-                  },
-                  "w": {
-                    "type": "number",
-                    "minimum": -1.0,
-                    "maximum": 1.0
-                  }
-                },
-                "required": [
-                  "x",
-                  "y",
-                  "z",
-                  "w"
-                ],
-                "additionalProperties": false,
-                "format": "unitQuaternion"
-              },
-              "releaseAt": {
-                "type": "number",
-                "minimum": 0.05,
-                "maximum": 1.0
-              }
-            },
-            "required": [
-              "objectId",
-              "avatarHash",
-              "hand",
-              "release",
-              "offset",
-              "rotation",
-              "releaseAt"
-            ],
-            "additionalProperties": false,
-            "x-requires": {
-              "target": "maestro"
-            }
-          }
-        },
-        "required": [
-          "target",
-          "seconds",
-          "loop",
-          "motionId"
-        ],
-        "additionalProperties": false
-      },
-      "duration": "timed",
-      "ownership": "exclusiveTargetAndProp",
-      "channels": [
-        "wholeTarget"
-      ],
-      "requirements": [
-        "target.exists",
-        "target.unheld",
-        "authoring.inactive",
-        "model.loaded",
-        "motion.available",
-        "rig.compatible"
-      ]
-    },
-    {
-      "id": "animation.recipe.play",
-      "version": 1,
-      "label": "Recipe animation",
-      "input": {
-        "type": "object",
-        "properties": {
-          "target": {
-            "type": "string",
-            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
-            "maxLength": 32,
-            "x-resource": "object"
-          },
-          "seconds": {
-            "type": "number",
-            "minimum": 0.0,
-            "maximum": 30.0
-          },
-          "loop": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "target",
-          "seconds",
-          "loop"
-        ],
-        "additionalProperties": false
-      },
-      "duration": "timed",
-      "ownership": "exclusiveTargetAndProp",
-      "channels": [
-        "wholeTarget"
-      ],
-      "requirements": [
-        "target.exists",
-        "target.unheld",
-        "authoring.inactive",
-        "recipe.tracksAvailable"
-      ]
     }
   ],
   "events": [
@@ -2317,6 +2467,79 @@
         "object.color.set",
         "object.delete"
       ],
+      "animationSources": [
+        {
+          "id": "avatar.gesture.play",
+          "kind": "gesture",
+          "channel": "wholeTarget",
+          "fields": [
+            "gesture"
+          ],
+          "label": "Gesture"
+        },
+        {
+          "id": "avatar.gesture.upperBody",
+          "kind": "gesture",
+          "channel": "upperBody",
+          "fields": [
+            "gesture"
+          ],
+          "label": "Upper-body gesture"
+        },
+        {
+          "id": "animation.recording.play",
+          "kind": "recording",
+          "channel": "wholeTarget",
+          "fields": [],
+          "label": "Recorded animation"
+        },
+        {
+          "id": "animation.embedded.play",
+          "kind": "embedded",
+          "channel": "wholeTarget",
+          "fields": [
+            "modelHash",
+            "clipIndex"
+          ],
+          "label": "Imported clip"
+        },
+        {
+          "id": "animation.library.play",
+          "kind": "library",
+          "channel": "wholeTarget",
+          "fields": [
+            "motionId"
+          ],
+          "label": "Library motion"
+        },
+        {
+          "id": "animation.recipe.play",
+          "kind": "recipe",
+          "channel": "wholeTarget",
+          "fields": [],
+          "label": "Recipe animation"
+        }
+      ],
+      "actionLabels": [
+        "Recorded animation",
+        "Gesture",
+        "Wait",
+        "Throw recording",
+        "Look at user",
+        "Follow user",
+        "Imported clip",
+        "Library motion",
+        "Recipe animation",
+        "Upper-body gesture",
+        "Push object",
+        "Stop object motion",
+        "Create shape",
+        "Create recipe object",
+        "Move object",
+        "Resize object",
+        "Paint object",
+        "Delete object"
+      ],
       "eventIds": [
         "maestro.speaking.enter",
         "maestro.listening.enter",
@@ -2331,15 +2554,15 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "54b3fd7d97c98514e011d59a167b2260bacc9be5fa3160fdea444c6d166d092f"
+      "sha256": "b836324318eb5b16e4bf056f887973c2d77690586c659afd9dd56ea1d4137f57"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "901d1cba6642507411dd43a8fcfcbba0dc515990c0817307d5185d43b05f1955"
+      "sha256": "9ad93900486ec5bb120bc53ce8a1a97d79a6189dadb3625dbae78f04f1ebf1af"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
-      "sha256": "d4065eed79d88cd012a4a11154e65a32e72447a0068659ace3da6fa78cf50f2e"
+      "sha256": "e764f1b1d8d33b24abb95ea73ce8d38a64831625b955843215684e2008d566cd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleDocument.cs",
@@ -2355,11 +2578,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/LegacyCapabilityAdapters.cs",
-      "sha256": "84b82e55839d87ba102200ce5cb94bdd931de0317466b15b120552f2751e7949"
+      "sha256": "f40fdaa628ea813380da2b16b2c8a41b3fd823a45f50ec15a03bd4dc15411c04"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationCapabilitySupport.cs",
       "sha256": "94db1978b31a711c5f13d242ca9a91863121d079710123982b0b401d4386ee49"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationPlayCapability.cs",
+      "sha256": "49fc030ff2f3fb6e5304265c1541e84b58f5debc5eae28c7744f5710da44ce89"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModule.cs",
@@ -2367,11 +2594,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "98aa5b4335e83c903fd73d386471b25b5a166ebf6758447d9421b0b399687d05"
+      "sha256": "889c369f49f6a47fc148ecf38d60fe95548a8e9785665f35bcbe01293e48c7df"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
-      "sha256": "1162eef52b8c0c1fbd5a5df8c6a44177dd1cf8c7bf33b220669387610477e38f"
+      "sha256": "040653d4fb7523254f2409fefbed333d95b5168560048ac4de354d18dbd6ff6d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/EmbeddedAnimationCapability.cs",
@@ -2387,7 +2614,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectCapabilities.cs",
-      "sha256": "2a3c8f60c641d0d4be1425ddab1f5b560e9a70a7867e1028eea16a08d29f0baf"
+      "sha256": "b799cda29b567b47230fcb7a340281b9f27def17bc8c9e457c6b32ca9db821fe"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RecipeAnimationCapability.cs",

@@ -76,8 +76,8 @@ it('retains recipe arrays in result-driven programs and requires recipe-capable 
  const program=JSON.parse(readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-create.json','utf8')) as BehaviourProgram;
  const create=program.functions[0].body[0],animate=program.functions[0].body[1];
  if(create.op!=='invoke'||animate.op!=='invoke')throw new Error('Expected invocations');
- create.capability=capability;create.arguments=args();animate.capability='animation.recipe.play';
- animate.arguments={target:'0'.repeat(32),seconds:.6,loop:true};
+ create.capability=capability;create.arguments=args();animate.capability='animation.play';
+ animate.arguments={target:'0'.repeat(32),seconds:.6,loop:true,source:{kind:'recipe'},channel:'wholeTarget'};
  const source=JSON.stringify(program);expect(parseProgram(source).error).toBeNull();
  expect(simpleProgramSteps(source)).toBeNull();
  const commands=parseRoomCommands({commands:[{action:'rules',rule:{action:'edit',revision:1,edits:[{kind:'save',reference:'robot',sequence:{id:'',name:'Create robot',interruption:0,repeat:false,program:source}}]}}]});

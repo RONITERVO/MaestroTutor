@@ -23,13 +23,13 @@ namespace Maestro.Quest.Tests
             var actual=JObject.Parse(BehaviourCatalog.Manifest().ToString());
             Assert.That(JToken.DeepEquals(actual,expected),Is.True,"Regenerate the reviewed manifest from native registrations.");
             Assert.That(BehaviourCatalog.Actions.Where(x=>LegacyCapabilityAdapters.Kind(x.Id).HasValue).All(x=>x.Duration==(RuleDocument.IsInstant(LegacyCapabilityAdapters.Kind(x.Id).Value)?"instant":"timed")),Is.True);
-            Assert.That(BehaviourCatalog.Action("avatar.gesture.upperBody").Channels,Is.EqualTo(new[] {"upperBody"}));
+            Assert.That(BehaviourCatalog.Action(RuleActionKind.UpperBodyGesture).Channels,Is.EqualTo(new[] {"upperBody"}));
             Assert.That(BehaviourCatalog.Action("avatar.follow.user").Channels,Is.EqualTo(new[] {"locomotion","gaze"}));
-            Assert.That(BehaviourCatalog.Action("animation.library.play").Channels,Is.EqualTo(new[] {"wholeTarget"}));
+            Assert.That(BehaviourCatalog.Action(RuleActionKind.LibraryMotion).Channels,Is.EqualTo(new[] {"wholeTarget"}));
         }
         [Test] public void EveryExistingAdapterHasExactlyOneStableRegistration()
         {
-            Assert.That(BehaviourCatalog.Actions.Where(x=>LegacyCapabilityAdapters.Kind(x.Id).HasValue).Select(x=>LegacyCapabilityAdapters.Kind(x.Id).Value),Is.EquivalentTo(Enum.GetValues(typeof(RuleActionKind))));
+            Assert.That(LegacyCapabilityAdapters.ActionIds.Select(id=>LegacyCapabilityAdapters.Kind(id).Value),Is.EquivalentTo(Enum.GetValues(typeof(RuleActionKind))));
             Assert.That(BehaviourCatalog.Events.Select(x=>x.Kind),Is.EquivalentTo(Enum.GetValues(typeof(RuleEventKind))));
             var ids=BehaviourCatalog.Actions.Select(x=>x.Id).Concat(BehaviourCatalog.Events.Select(x=>x.Id)).Concat(BehaviourCatalog.Facts.Select(x=>x.Id)).ToArray();
             Assert.That(ids.Distinct().Count(),Is.EqualTo(ids.Length));
@@ -81,16 +81,18 @@ namespace Maestro.Quest.Tests
         }
         [Test] public void NamedArgumentsRoundTripThroughEveryExistingNativeHandlerAdapter()
         {
-            foreach(var capability in BehaviourCatalog.Actions.Where(x=>LegacyCapabilityAdapters.Kind(x.Id).HasValue)) {
+            foreach(RuleActionKind kind in Enum.GetValues(typeof(RuleActionKind))) {
+                var capability=BehaviourCatalog.Action(kind);
                 var original=new RuleStep {action=LegacyCapabilityAdapters.Kind(capability.Id).Value,targetId=RuleDocument.IsInstant(LegacyCapabilityAdapters.Kind(capability.Id).Value)?Guid.NewGuid().ToString("N"):"maestro",seconds=LegacyCapabilityAdapters.Kind(capability.Id).Value==RuleActionKind.ThrowRecording||RuleDocument.IsInstant(LegacyCapabilityAdapters.Kind(capability.Id).Value)?0:1,
                     gesture=RuleGesture.Greeting,clipModelHash=new string('a',64),clipIndex=2,motionId=Guid.NewGuid().ToString("N")};
                 if(LegacyCapabilityAdapters.Kind(capability.Id).Value==RuleActionKind.CreateRecipe) original.creationRecipe=RecipeTemplates.BoxRobot(true);
-                var args=CapabilityArguments.FromStep(original);
-                Assert.That(BehaviourCatalog.TryInvocation(capability.Id,1,args,out var step,out var error),Is.True,capability.Id+": "+error);
+                Assert.That(LegacyCapabilityAdapters.TryCall(original,out var call,out var error),Is.True,error);
+                var args=call.Arguments;
+                Assert.That(BehaviourCatalog.TryInvocation(call.Definition.Id,1,args,out var step,out error),Is.True,call.Definition.Id+": "+error);
                 Assert.That(step.action,Is.EqualTo(LegacyCapabilityAdapters.Kind(capability.Id).Value));Assert.That(step.seconds,Is.EqualTo(original.seconds));
-                Assert.That(JToken.DeepEquals(CapabilityArguments.FromStep(step),args),Is.True,capability.Id);
-                Assert.That(BehaviourCatalog.TryInvocation(capability.Id,2,args,out _,out _),Is.False);
-                args["engineCode"]="anything";Assert.That(BehaviourCatalog.TryInvocation(capability.Id,1,args,out _,out _),Is.False);
+                Assert.That(JToken.DeepEquals(CapabilityArguments.FromStep(step),CapabilityArguments.FromStep(original)),Is.True,capability.Id);
+                Assert.That(BehaviourCatalog.TryInvocation(call.Definition.Id,2,args,out _,out _),Is.False);
+                args["engineCode"]="anything";Assert.That(BehaviourCatalog.TryInvocation(call.Definition.Id,1,args,out _,out _),Is.False);
             }
             Assert.That(BehaviourCatalog.TryInvocation("unknown.action",1,new JObject(),out _,out _),Is.False);
         }
@@ -98,14 +100,14 @@ namespace Maestro.Quest.Tests
         {
             var step=new RuleStep {action=RuleActionKind.Gesture,seconds=2,gesture=RuleGesture.Pointing,propId=Guid.NewGuid().ToString("N"),propHand=PropHand.Left,
                 propRelease=PropRelease.Throw,propReleaseAt=.5f,propOffset=new Vector3(.1f,.2f,0),propRotation=Quaternion.identity};
-            var args=CapabilityArguments.FromStep(step);Assert.That((string)args["gesture"],Is.EqualTo("pointing"));
-            Assert.That(BehaviourCatalog.TryInvocation("avatar.gesture.play",1,args,out var restored,out var error),Is.True,error);
+            Assert.That(LegacyCapabilityAdapters.TryCall(step,out var call,out _),Is.True);var args=call.Arguments;Assert.That((string)args["source"]["gesture"],Is.EqualTo("pointing"));
+            Assert.That(BehaviourCatalog.TryInvocation("animation.play",1,args,out var restored,out var error),Is.True,error);
             Assert.That(restored.propId,Is.EqualTo(step.propId));Assert.That(restored.propHand,Is.EqualTo(PropHand.Left));Assert.That(restored.propRelease,Is.EqualTo(PropRelease.Throw));Assert.That(restored.propOffset,Is.EqualTo(step.propOffset));
-            args["gesture"]=1;Assert.That(BehaviourCatalog.TryInvocation("avatar.gesture.play",1,args,out _,out _),Is.False);args["gesture"]="greeting";
+            args["source"]["gesture"]=1;Assert.That(BehaviourCatalog.TryInvocation("animation.play",1,args,out _,out _),Is.False);args["source"]["gesture"]="greeting";
             args["prop"]["offset"]=JObject.Parse("{\"x\":1,\"y\":1,\"z\":1}");
-            Assert.That(BehaviourCatalog.TryInvocation("avatar.gesture.play",1,args,out _,out _),Is.False,"Component bounds do not replace the native distance constraint");
-            args.Remove("prop");args["seconds"]="2";Assert.That(BehaviourCatalog.TryInvocation("avatar.gesture.play",1,args,out _,out _),Is.False);
-            args["seconds"]=2;args["target"]="book";Assert.That(BehaviourCatalog.TryInvocation("avatar.gesture.play",1,args,out _,out _),Is.False);
+            Assert.That(BehaviourCatalog.TryInvocation("animation.play",1,args,out _,out _),Is.False,"Component bounds do not replace the native distance constraint");
+            args.Remove("prop");args["seconds"]="2";Assert.That(BehaviourCatalog.TryInvocation("animation.play",1,args,out _,out _),Is.False);
+            args["seconds"]=2;args["target"]="book";Assert.That(BehaviourCatalog.TryInvocation("animation.play",1,args,out _,out _),Is.False);
         }
         [Test] public void AReturnedSchemaCannotWeakenTheRegisteredArgumentContract()
         {

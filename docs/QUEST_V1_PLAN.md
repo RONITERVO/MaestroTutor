@@ -538,3 +538,15 @@ stale-draft protection and direct opening of the same program in the book.
 Text, expressions and detailed structure stay in the existing full book editor.
 See [native quick edits](QUEST_NATIVE_QUICK_EDITS.md). Updated layout acceptance
 on Quest is pending while device work remains on hold.
+
+
+Typed animation checkpoint (2026-09-28): one animation.play action exposes
+recording, built-in gesture, embedded clip, exact library motion and recipe
+sources through a shared discriminated schema. The six supported source/channel
+combinations retain their native lifetimes and selected-channel claims. Book and
+physical controls use the same typed choices; nested scalar expressions retain
+resource authority and exact source identity. Existing prototype IDs become
+unavailable preserved source rather than being silently reinterpreted.
+See [animation vocabulary](QUEST_ANIMATION_VOCABULARY.md). Remaining vocabulary,
+runtime/grouped commits, arbitration, world subscriptions/libraries and all
+hardware/provider/store acceptance gates remain open. Device work is on hold.

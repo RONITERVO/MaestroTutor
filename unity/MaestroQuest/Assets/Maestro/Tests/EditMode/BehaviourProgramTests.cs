@@ -46,8 +46,8 @@ namespace Maestro.Quest.Tests
             var source=CreationProgram();source["functions"][0]["body"][0]["capability"]=definition.Id;
             source["functions"][0]["body"][0]["arguments"]=definition.Example;
             source["functions"][0]["locals"][0]["name"]="robot";source["functions"][0]["body"][0]["results"]["objectId"]="robot";
-            var play=source["functions"][0]["body"][1];play["id"]="animate";play["capability"]="animation.recipe.play";play["bindings"]["target"]["var"]="robot";
-            play["arguments"]=new JObject {["target"]=new string('0',32),["seconds"]=.6,["loop"]=true};
+            var play=source["functions"][0]["body"][1];play["id"]="animate";play["capability"]="animation.play";play["bindings"]["target"]["var"]="robot";
+            play["arguments"]=new JObject {["target"]=new string('0',32),["seconds"]=.6,["loop"]=true,["source"]=new JObject {["kind"]="recipe"},["channel"]="wholeTarget"};
             Assert.That(BehaviourProgram.TryParse(source.ToString(),out var program,out var error),Is.True,error);
             var machine=new ProgramMachine(program,null);
             Assert.That(machine.Advance(out var create),Is.EqualTo(ProgramYield.Action));Assert.That(EditorStep(create).creationRecipe.tracks.Length,Is.EqualTo(2));
@@ -366,7 +366,7 @@ namespace Maestro.Quest.Tests
         public void ComputedNamedGesturesAreValidatedBeforeTheyReachTheHandler(string gesture,bool valid)
         {
             var program=JObject.Parse(BehaviourProgram.FromSteps(new RuleStep {action=RuleActionKind.Gesture,seconds=1}));
-            program["functions"][0]["body"][0]["bindings"]["gesture"]=new JObject {["value"]=gesture};
+            program["functions"][0]["body"][0]["bindings"]["source.gesture"]=new JObject {["value"]=gesture};
             var machine=new ProgramMachine(Compile(program.ToString()),null);
             Assert.That(machine.Advance(out var step),Is.EqualTo(valid?ProgramYield.Action:ProgramYield.Failed));
             if(valid)Assert.That(EditorStep(step).gesture,Is.EqualTo(RuleGesture.Greeting));else Assert.That(step,Is.Null);
@@ -380,7 +380,7 @@ namespace Maestro.Quest.Tests
             Assert.That(machine.Advance(out var step),Is.EqualTo(ProgramYield.Failed));Assert.That(step,Is.Null);
             ((JArray)program["resources"]).Add("book");
             machine=new ProgramMachine(Compile(program.ToString()),null);Assert.That(machine.Advance(out step),Is.EqualTo(ProgramYield.Action));Assert.That(EditorStep(step).targetId,Is.EqualTo("book"));
-            bindings["clipIndex"]=new JObject {["value"]=.5};
+            bindings["source.clipIndex"]=new JObject {["value"]=.5};
             machine=new ProgramMachine(Compile(program.ToString()),null);Assert.That(machine.Advance(out step),Is.EqualTo(ProgramYield.Failed));Assert.That(step,Is.Null);
         }
         [Test] public void NewerCollectionFilenamesPreventRollbackSavingAndMotionRemoval()

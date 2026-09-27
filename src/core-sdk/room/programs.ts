@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import {type RuleStep} from './ruleSteps';
 import {behaviourFactTypes,behaviourCatalog} from '../../../shared/behaviourCatalog';
-import {validateCapabilityArguments,capabilityParameterType,capabilityOutputType,literalCapabilityResources} from '../../../shared/capabilities';
+import {validateCapabilityArguments,capabilityParameterType,argumentValue,capabilityOutputType,literalCapabilityResources} from '../../../shared/capabilities';
 import {stepInvocation,invocationStep} from './capabilitySteps';
 export type Value=number|boolean|string;
 export type ValueType='number'|'boolean'|'text';
@@ -97,7 +97,7 @@ export function parseProgram(source:unknown):{program:BehaviourProgram|null;erro
        need(root.version===3,'Action results need program version 3');const assigned=new Set<string>();
        for(const [key,destination] of Object.entries(obj(n.results))){const t=capabilityOutputType(capability,key);need(t&&typeof destination==='string'&&f.types.get(destination)===t&&!assigned.has(destination),'Invalid or duplicate action result destination');assigned.add(destination as string);}
       }
-      for(const [key,value] of Object.entries(obj(n.bindings))){const t=capabilityParameterType(capability,key);need(t,'Unsupported capability argument binding');need(expr(value,f.types)===t,'Capability argument type differs');}break;
+      for(const [key,value] of Object.entries(obj(n.bindings))){const t=capabilityParameterType(capability,key,obj(n.arguments));need(t,'Unsupported capability argument binding');need(argumentValue(n.arguments,key)!==undefined,'A bound argument needs a literal placeholder');need(expr(value,f.types)===t,'Capability argument type differs');}break;
      }
      default:throw new Error('Unknown program block');
     }

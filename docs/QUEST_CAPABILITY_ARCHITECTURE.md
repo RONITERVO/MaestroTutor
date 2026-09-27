@@ -174,3 +174,14 @@ specialized prop/motion controls retain explicit adapters. A real rotation capab
 addition without extending the enum, step fields, scheduler, web validator or
 book form. Manifest provenance automatically covers the module directory.
 See [module boundaries, verification and remaining work](QUEST_CAPABILITY_MODULES.md).
+
+
+## Typed animation vocabulary (2026-09-28)
+
+Six prototype play/gesture IDs are consolidated into animation.play with typed
+source/channel variants. Native and web share variant validation, generated
+forms, nested scalar binding paths and selected-channel ownership. Exact motion
+IDs and independent operation cleanup remain. The catalog now has fourteen
+public actions; old numeric controls are isolated adapters. See
+[the contract, compatibility and evidence](QUEST_ANIMATION_VOCABULARY.md).
+Creation/spatial consolidation and the remaining runtime/release work are open.

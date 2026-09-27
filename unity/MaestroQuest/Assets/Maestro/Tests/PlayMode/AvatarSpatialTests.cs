@@ -81,7 +81,7 @@ namespace Maestro.Quest.Tests
             Newtonsoft.Json.Linq.JObject Call(string id)=>new() {["id"]=id,["version"]=1,
                 ["arguments"]=new Newtonsoft.Json.Linq.JObject {["target"]="maestro",["seconds"]=10}};
             var follow=Call("avatar.follow.user");
-            var wave=Call("avatar.gesture.upperBody");wave["arguments"]["gesture"]="greeting";
+            var wave=Call("animation.play");wave["arguments"]["source"]=Newtonsoft.Json.Linq.JObject.Parse("{\"kind\":\"gesture\",\"gesture\":\"greeting\"}");wave["arguments"]["channel"]="upperBody";
             Assert.That(scheduler.Invoke(follow,0,out var walking,out var error),Is.True,error);
             var hand=avatar.PoseRig.CanonicalBone(PoseJoint.RightUpperArm);
             var foot=avatar.PoseRig.CanonicalBone(PoseJoint.LeftUpperLeg);
@@ -133,7 +133,7 @@ namespace Maestro.Quest.Tests
             Assert.That(scheduler.RunningCount,Is.Zero);
             Assert.That(motion.Begin("direct",AvatarSpatialMode.Follow,out error),Is.True,error);
             Assert.That(scheduler.Invoke(wave,3,out waving,out error),Is.True,error);
-            var fullBody=Call("avatar.gesture.play");fullBody["arguments"]["gesture"]="greeting";
+            var fullBody=Call("animation.play");fullBody["arguments"]["source"]=Newtonsoft.Json.Linq.JObject.Parse("{\"kind\":\"gesture\",\"gesture\":\"greeting\"}");fullBody["arguments"]["channel"]="wholeTarget";
             Assert.That(scheduler.Invoke(fullBody,3,out _,out error),Is.False,"Programs cannot steal direct controller/tool movement");
             Assert.That(motion.OwnedBy("direct"),Is.True);
             Assert.That(scheduler.Invoke(look,3,out _,out error),Is.False);Assert.That(motion.OwnedBy("direct"),Is.True);

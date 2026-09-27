@@ -56,7 +56,7 @@ namespace Maestro.Quest.Programs
     {
         public override string Id=>"object.create.recipe";
         public override string Label=>"Create recipe object";
-        public override string Description=>"Create editable geometry and optional animation tracks from a bounded recipe. Returns objectId after saving; one room Undo edit. Set recipe.playing=false to create it idle and use animation.recipe.play on the returned ID for program-controlled playback. Setting playing=true explicitly starts the saved recipe animation. Geometry uses metres in room axes; scale is 0.1–4. The new assembly uses fixed physics.";
+        public override string Description=>"Create editable geometry and optional animation tracks from a bounded recipe. Returns objectId after saving; one room Undo edit. Set recipe.playing=false to create it idle and use animation.play with source.kind recipe on the returned ID for program-controlled playback. Setting playing=true explicitly starts the saved recipe animation. Geometry uses metres in room axes; scale is 0.1–4. The new assembly uses fixed physics.";
         public override string Duration=>"instant";
         public override IReadOnlyList<string> Requirements=>new[] {"room.capacity","storage.writable","recipe.valid"};
         public override JObject InputSchema=>Object(new JObject {["name"]=Text("^.{0,80}$",80),["x"]=Number(-25,25),["y"]=Number(-25,25),["z"]=Number(-25,25),["scale"]=Number(.1,4),["recipe"]=RecipeSchema()});

@@ -11,7 +11,7 @@ it('keeps existing book wire positions stable while adding named identities', ()
   expect(ruleActions[2]).toBe('Wait'); expect(ruleEvents[4]).toBe('Item tapped');
   expect(behaviourCatalog.adapters.ruleStep.actionIds.indexOf('animation.library.play')).toBe(7);
   expect(behaviourCatalog.actions.every(action=>!('wireValue' in action))).toBe(true);
-  expect(behaviourCatalog.actions.find(action=>action.id==='avatar.gesture.play')).toMatchObject({duration:'timed',channels:['wholeTarget']});
+  expect(behaviourCatalog.actions.find(action=>action.id==='animation.play')).toMatchObject({duration:'timed',channels:['wholeTarget','upperBody']});
   const ids=[...behaviourCatalog.actions,...behaviourCatalog.events,...behaviourCatalog.facts].map(entry=>entry.id);
   expect(new Set(ids).size).toBe(ids.length);
 });

@@ -80,8 +80,9 @@ namespace Maestro.Quest.Programs
             return root.ToString(Formatting.None);
         }
         static JArray ActionNodes(RuleStep[] steps) => new(steps.Select(step=> {
-            var capability=BehaviourCatalog.Action(step.action)??throw new ArgumentException("Unknown native capability");
-            return new JObject { ["id"]=step.id,["op"]="invoke",["capability"]=capability.Id,["version"]=capability.Version,["arguments"]=CapabilityArguments.FromStep(step),["bindings"]=new JObject() };
+            string id=LegacyCapabilityAdapters.Id(step.action)??throw new ArgumentException("Unknown native capability");
+            var source=AnimationPlayCapability.Legacy(id);var arguments=CapabilityArguments.FromStep(step);
+            return new JObject { ["id"]=step.id,["op"]="invoke",["capability"]=source==null?id:"animation.play",["version"]=1,["arguments"]=source==null?arguments:source.Public(arguments),["bindings"]=new JObject() };
         }));
         public static string FromSteps(params RuleStep[] steps) => new JObject {
             ["version"]=2,["entry"]="main",["resources"]=new JArray(steps.SelectMany(RuleDocument.Targets).Distinct()),
@@ -227,7 +228,8 @@ namespace Maestro.Quest.Programs
                             }
                         }
                         foreach(var binding in Object(node["bindings"]).Properties()) {
-                            var expected=BindingType(capability,binding.Name);Need(Expression(binding.Value,function)==expected,"Native argument type differs");
+                            Need(CapabilitySchema.Value(node["arguments"],binding.Name)!=null,"A bound argument needs a literal placeholder");
+                            var expected=BindingType(capability,binding.Name,Object(node["arguments"]));Need(Expression(binding.Value,function)==expected,"Native argument type differs");
                         }break;
                     default:throw new ProgramFault("Unknown program block");
                 }
@@ -241,9 +243,10 @@ namespace Maestro.Quest.Programs
                 if(op=="switch"&&Returns((JArray)item["default"])&&((JArray)item["cases"]).All(x=>Returns((JArray)x["body"])))return true;
             }return false;
         }
-        internal static ProgramType BindingType(string capability,string name)
+        internal static ProgramType BindingType(string capability,string name,JObject arguments)
         {
-            var schema=BehaviourCatalog.Action(capability)?.InputSchema["properties"]?[name];
+            var schema=CapabilitySchema.Field(CapabilitySchema.Resolve(BehaviourCatalog.Action(capability)?.InputSchema,arguments),name);
+            Need((bool?)schema?["x-static"]!=true,"Source and channel selectors must stay literal");
             return (string)(schema?["type"]) switch {"string"=>ProgramType.Text,"number" or "integer"=>ProgramType.Number,"boolean"=>ProgramType.Boolean,_=>throw new ProgramFault("Unsupported capability argument binding")};
         }
     }

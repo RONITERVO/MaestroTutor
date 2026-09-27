@@ -20,15 +20,20 @@ namespace Maestro.Quest.Programs
         // A bound resource placeholder is not an authorization. Computed IDs are
         // checked against declarations or native-created results at execution time.
         public static string[] LiteralResources(JObject arguments,JObject schema,JObject bindings,int version) {
-            var literal=(JObject)arguments.DeepClone();
+            var literal=(JObject)arguments.DeepClone();schema=CapabilitySchema.Resolve(schema,arguments);
             if(version==3)foreach(var field in bindings.Properties())
-                if((string)schema["properties"]?[field.Name]?["x-resource"]=="object")literal.Remove(field.Name);
+                if((string)CapabilitySchema.Field(schema,field.Name)?["x-resource"]=="object")CapabilitySchema.Remove(literal,field.Name);
             return Resources(literal,schema);
         }
         public static bool Validate(JToken value,JObject schema,out string error,string path="arguments")
         {
             error=path+" does not match the capability contract";
-            if(value==null)return false;
+            if(value==null||schema==null)return false;
+            if(schema["oneOf"] is JArray variants) {
+                var selected=CapabilitySchema.Resolve(schema,value);
+                if(selected==null) {error=path+" has an unsupported source or channel";return false;}
+                return Validate(value,selected,out error,path);
+            }
             if(value.Type==JTokenType.Null)return (bool?)schema["nullable"]==true;
             switch((string)schema["type"]) {
                 case "object":
@@ -71,6 +76,7 @@ namespace Maestro.Quest.Programs
             var values=new HashSet<string>();
             void Walk(JToken value,JToken shape) {
                 if(value==null||shape==null)return;
+                shape=CapabilitySchema.Resolve((JObject)shape,value);if(shape==null)return;
                 if((string)shape["x-resource"]=="object" && value.Type==JTokenType.String)values.Add((string)value);
                 if(value is JArray array && shape["items"] is JObject itemSchema)foreach(var item in array)Walk(item,itemSchema);
                 if(value is JObject obj && shape["properties"] is JObject fields)

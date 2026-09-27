@@ -70,3 +70,9 @@ Quest readability, comfort and end-to-end headset interaction remain unverified
 for this updated layout. No device installation or user-data reset is included.
 Vocabulary consolidation, grouped runtime commits, arbitration and richer
 program/world types remain separate before-release work.
+
+
+Animation blocks now expose a Source and channel field from the same typed
+variant schema as the book. Changing that choice retains compatible literal
+values; expressions use the full book editor. Nested scalar binding paths are
+read-only on the physical tray. See [typed animation sources](QUEST_ANIMATION_VOCABULARY.md).

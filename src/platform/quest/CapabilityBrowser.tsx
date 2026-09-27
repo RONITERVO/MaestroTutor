@@ -1,13 +1,14 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {useState,useSyncExternalStore} from 'react';
-import {capabilityDefinition,validateCapabilityArguments,type CapabilityDefinition,type CapabilityInvocation,type CapabilitySchema} from '../../../shared/capabilities';
+import {capabilityDefinition,validateCapabilityArguments,resolveCapabilitySchema,type CapabilityDefinition,type CapabilityInvocation,type CapabilitySchema} from '../../../shared/capabilities';
 import type {ExecutionRequest} from '../../../shared/roomExecutions';
 import type {CatalogRequest,CatalogView} from '../../../shared/roomCatalog';
 import type {RoomAgentClient} from './roomAgentBridge';
 export type CatalogInsert=(call:CapabilityInvocation)=>string|null;
 export type OpenCatalog=(insert?:CatalogInsert)=>void;
 function initial(schema:CapabilitySchema,objects:{id:string}[]):unknown {
+ if(schema.oneOf)return initial(schema.oneOf[0],objects);
  if(schema.enum)return schema.enum[0];
  if(schema.type==='object')return Object.fromEntries((schema.required??[]).map(key=>[key,initial(schema.properties![key],objects)]));
  if(schema.type==='array')return Array.from({length:schema.minItems??0},()=>initial(schema.items!,objects));
@@ -61,7 +62,7 @@ export function CapabilityBrowser({client,onClose,onInsert}:{client:RoomAgentCli
      {state?.capabilities?.includes('execution.v1')&&<button disabled={pending||!call||Boolean(state?.execution?.storageError)} onClick={()=>{if(call)void execute({operation:'start',call});}}>Run action now</button>}
      {onInsert&&<button disabled={pending||!call} onClick={()=>{if(call){const error=onInsert(call);if(error)setError(error);else onClose();}}}>Add first block to draft</button>}</div>
     <p className="room-workspace-intro">{onInsert?'Adding a block changes your draft. Apply it in the workshop when ready.':'Choose a behaviour in the workshop to add an action block.'} Availability can change before a behaviour runs.</p>
-    <details><summary>Argument reference</summary><p>Duration: {definition.duration}. Uses: {definition.channels.join(', ')||'no animation channel'}.</p><p>Needs: {definition.requirements.join(', ')||'no additional requirements'}.</p><pre>{JSON.stringify(definition.input,null,2)}</pre></details>
+    <details><summary>Argument reference</summary><p>Duration: {definition.duration}. Uses: {(resolveCapabilitySchema(definition.input,call?.arguments)?.['x-channels']??definition.channels).join(', ')||'no animation channel'}.</p><p>Needs: {(resolveCapabilitySchema(definition.input,call?.arguments)?.['x-requirements']??definition.requirements).join(', ')||'no additional requirements'}.</p><pre>{JSON.stringify(definition.input,null,2)}</pre></details>
    </>}
    {state?.execution&&<section aria-label="One-off actions" className="execution-view">
     <h2>One-off actions</h2><p className="room-workspace-intro">These runs do not change saved behaviours.</p>

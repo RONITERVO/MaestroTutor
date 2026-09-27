@@ -18,6 +18,7 @@ namespace Maestro.Quest.Programs
         public sealed class ActionDefinition
         {
             public readonly CapabilityModule Module;
+            public readonly string SearchText;
             public string Id=>Module.Id;
             public string Label=>Module.Label;
             public string Description=>Module.Description;
@@ -40,7 +41,10 @@ namespace Maestro.Quest.Programs
                 if(Example!=null)value["example"]=Example;
                 if(((JObject)OutputSchema["properties"]).Count>0)value["output"]=OutputSchema;return value;
             }
-            public ActionDefinition(CapabilityModule module) {Module=module??throw new ArgumentNullException(nameof(module));}
+            public ActionDefinition(CapabilityModule module) {
+                Module=module??throw new ArgumentNullException(nameof(module));
+                SearchText=Id+" "+Label+" "+Description+" "+string.Join(" ",Requirements)+" "+string.Join(" ",InputSchema.Descendants().OfType<JProperty>().Where(p=>p.Name=="title"||p.Name=="x-requirements"||p.Name=="x-channels").Select(p=>p.Value.ToString()));
+            }
         }
         public sealed class EventDefinition
         {
@@ -90,7 +94,10 @@ namespace Maestro.Quest.Programs
         static readonly Dictionary<string,FactDefinition> facts=Facts.ToDictionary(x=>x.Id,StringComparer.Ordinal);
         static readonly Dictionary<string,ActionDefinition> actionIds=Actions.ToDictionary(x=>x.Id,StringComparer.Ordinal);
         public static ActionDefinition Action(string id)=>id!=null&&actionIds.TryGetValue(id,out var value)?value:null;
-        public static ActionDefinition Action(RuleActionKind kind)=>Action(LegacyCapabilityAdapters.Id(kind));
+        public static ActionDefinition Action(RuleActionKind kind) {
+            string id=LegacyCapabilityAdapters.Id(kind);var source=AnimationPlayCapability.Legacy(id);
+            return source==null?Action(id):new ActionDefinition(source.Provider);
+        }
         public static bool TryCall(string id,int version,JObject arguments,out CapabilityCall call,out string error)
         {
             call=null;var action=Action(id);error="Unknown capability or unsupported capability version";
@@ -125,6 +132,8 @@ namespace Maestro.Quest.Programs
             ["facts"]=new JArray(Facts.Select(x=>new JObject { ["id"]=x.Id,["type"]=x.Type.ToString().ToLowerInvariant(),["label"]=x.Label })),
             ["adapters"]=new JObject { ["ruleStep"]=new JObject {
                 ["actionIds"]=new JArray(LegacyCapabilityAdapters.ActionIds),
+                ["animationSources"]=AnimationPlayCapability.Adapters(),
+                ["actionLabels"]=new JArray(LegacyCapabilityAdapters.ActionIds.Select(id=>AnimationPlayCapability.Legacy(id)?.Provider.Label??Action(id).Label)),
                 ["eventIds"]=new JArray(Events.OrderBy(x=>(int)x.Kind).Select(x=>x.Id)),
             } },
         };

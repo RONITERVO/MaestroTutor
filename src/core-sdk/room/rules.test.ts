@@ -32,7 +32,7 @@ describe('shared behaviour contract',()=>{
     const catalog=readFileSync('unity/MaestroQuest/Assets/Maestro/Runtime/Programs/LegacyCapabilityAdapters.cs','utf8');
     const registered=new Map([...catalog.matchAll(/\[RuleActionKind\.(\w+)\]="([^"]+)"/g)].map(m=>[m[1],m[2]]));
     expect(names.map(name=>registered.get(name))).toEqual(behaviourCatalog.adapters.ruleStep.actionIds);
-    expect(values).toEqual(behaviourCatalog.adapters.ruleStep.actionIds.map(id=>behaviourCatalog.actions.find(action=>action.id===id)!.label));
+    expect(values).toEqual(behaviourCatalog.adapters.ruleStep.actionLabels);
    }else expect(names.map(s=>s.toLowerCase())).toEqual(values.map(s=>s.replace(/[ -]/g,'').toLowerCase()));
   }
  });

@@ -73,12 +73,16 @@
                 {
                   "id": "wave",
                   "op": "invoke",
-                  "capability": "avatar.gesture.play",
+                  "capability": "animation.play",
                   "version": 1,
                   "arguments": {
                     "target": "maestro",
-                    "gesture": "greeting",
-                    "seconds": 1
+                    "seconds": 1,
+                    "source": {
+                      "kind": "gesture",
+                      "gesture": "greeting"
+                    },
+                    "channel": "wholeTarget"
                   },
                   "bindings": {}
                 },

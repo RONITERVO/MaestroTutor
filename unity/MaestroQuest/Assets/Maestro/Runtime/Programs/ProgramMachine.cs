@@ -96,7 +96,7 @@ namespace Maestro.Quest.Programs
                         case "return":Return(node.ContainsKey("value")?Eval("value"):default);break;
                         case "invoke":
                             var arguments=(JObject)node["arguments"].DeepClone();
-                            foreach(var binding in ((JObject)node["bindings"]).Properties())arguments[binding.Name]=JToken.FromObject(Evaluate(binding.Value,frame.Scope).Value);
+                            foreach(var binding in ((JObject)node["bindings"]).Properties())CapabilitySchema.Set(arguments,binding.Name,JToken.FromObject(Evaluate(binding.Value,frame.Scope).Value));
                             if(!BehaviourCatalog.TryCall((string)node["capability"],(int)node["version"],arguments,out action,out var error))throw new ProgramFault(error??"Invalid computed capability arguments");
                             if(!action.Resources.All(id=>program.Allows(id)||createdResources.Contains(id)))throw new ProgramFault("Computed target is not a declared or created resource");
                             var contract=BehaviourCatalog.Action((string)node["capability"]);

@@ -4,9 +4,9 @@
     "revision": 2,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "87a4b2c61b9245d891cd9f43a40d2cc5",
+    "session": "d433f0250a7347e1a6beead29d23bb5b",
     "status": "Room actions ready",
-    "selectedId": "569f1c2da2564193a5aea4a0bd51088f",
+    "selectedId": "592cf01b43ec46fdb917de797909f87a",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -15,18 +15,22 @@
     "inspection": null,
     "workspaceView": "objects",
     "rules": {
-      "revision": 11,
+      "revision": 19,
       "bindingPage": 0,
       "bindingCount": 0,
       "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
       "canUndo": true,
       "canRedo": false,
       "readOnly": false,
-      "status": "Target assigned from your room selection",
+      "status": "Action type changed",
+      "selectedError": "",
       "sequences": [
         {
-          "id": "c1dbcefb296a4cd8896e16fd0ccf7e45",
+          "id": "71509de93ef1490891565f8f3f70b1b6",
           "name": "Action 1",
+          "error": "",
           "steps": 1,
           "repeat": false,
           "program": true
@@ -42,13 +46,25 @@
     "capabilities": [
       "physicsSettings.v1",
       "avatarSettings.v1",
+      "physicsRun.v1",
       "motions.v1",
       "avatarActivities.v1",
       "catalog.v1",
       "behaviourPrograms.v3",
-      "execution.v1"
+      "eventPrograms.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "objectEdits.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1"
     ],
-    "physics": null,
+    "physics": {
+      "ready": false,
+      "running": false,
+      "status": "Load or scan your room to use gravity"
+    },
     "avatar": null,
     "walk": null,
     "activityProfile": {
@@ -80,7 +96,7 @@
     },
     "objects": [
       {
-        "id": "2f055c85eee049a2b763fe82a8ef64f9",
+        "id": "01d7e39aec7c4d8cab6f08d3df401a85",
         "name": "Ball",
         "kind": "Ball",
         "objectRevision": 4,
@@ -107,7 +123,34 @@
         "movement": null
       },
       {
-        "id": "569f1c2da2564193a5aea4a0bd51088f",
+        "id": "59204f766bd741938291135d769995cf",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "592cf01b43ec46fdb917de797909f87a",
         "name": "Block",
         "kind": "Block",
         "objectRevision": 6,
@@ -161,33 +204,6 @@
         "movement": null
       },
       {
-        "id": "d36c12601e6f4dd0aae4ad28fe13c631",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
         "id": "maestro",
         "name": "Maestro",
         "kind": "Maestro",
@@ -222,37 +238,44 @@
     "catalog": null,
     "execution": {
       "selected": {
-        "id": "6588e941668f49b591b8cf1da38748f7",
-        "capability": "animation.recording.play",
+        "id": "ae42f91d050e4ea28980ceab1c7beede",
+        "capability": "animation.play",
         "version": 1,
         "resources": [
-          "569f1c2da2564193a5aea4a0bd51088f"
+          "592cf01b43ec46fdb917de797909f87a"
         ],
         "phase": "cancelled",
         "status": "Action cancelled",
         "call": {
-          "id": "animation.recording.play",
+          "id": "animation.play",
           "version": 1,
           "arguments": {
-            "target": "569f1c2da2564193a5aea4a0bd51088f",
+            "target": "592cf01b43ec46fdb917de797909f87a",
             "seconds": 1,
-            "loop": false
+            "loop": false,
+            "source": {
+              "kind": "recording"
+            },
+            "channel": "wholeTarget"
           }
         }
       },
       "running": [],
       "outcomes": [
         {
-          "id": "6588e941668f49b591b8cf1da38748f7",
-          "capability": "animation.recording.play",
+          "id": "ae42f91d050e4ea28980ceab1c7beede",
+          "capability": "animation.play",
           "version": 1,
           "resources": [
-            "569f1c2da2564193a5aea4a0bd51088f"
+            "592cf01b43ec46fdb917de797909f87a"
           ],
           "phase": "cancelled",
           "status": "Action cancelled"
         }
-      ]
+      ],
+      "nextRunId": "6d68850d2dee426bb559539ee9da22c2",
+      "storageError": null,
+      "recovery": null
     }
   },
   "completed": {
@@ -260,9 +283,9 @@
     "revision": 3,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "87a4b2c61b9245d891cd9f43a40d2cc5",
+    "session": "d433f0250a7347e1a6beead29d23bb5b",
     "status": "Room actions ready",
-    "selectedId": "569f1c2da2564193a5aea4a0bd51088f",
+    "selectedId": "592cf01b43ec46fdb917de797909f87a",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -271,18 +294,22 @@
     "inspection": null,
     "workspaceView": "objects",
     "rules": {
-      "revision": 11,
+      "revision": 19,
       "bindingPage": 0,
       "bindingCount": 0,
       "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
       "canUndo": true,
       "canRedo": false,
       "readOnly": false,
-      "status": "Target assigned from your room selection",
+      "status": "Action type changed",
+      "selectedError": "",
       "sequences": [
         {
-          "id": "c1dbcefb296a4cd8896e16fd0ccf7e45",
+          "id": "71509de93ef1490891565f8f3f70b1b6",
           "name": "Action 1",
+          "error": "",
           "steps": 1,
           "repeat": false,
           "program": true
@@ -298,13 +325,25 @@
     "capabilities": [
       "physicsSettings.v1",
       "avatarSettings.v1",
+      "physicsRun.v1",
       "motions.v1",
       "avatarActivities.v1",
       "catalog.v1",
       "behaviourPrograms.v3",
-      "execution.v1"
+      "eventPrograms.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "objectEdits.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1"
     ],
-    "physics": null,
+    "physics": {
+      "ready": false,
+      "running": false,
+      "status": "Load or scan your room to use gravity"
+    },
     "avatar": null,
     "walk": null,
     "activityProfile": {
@@ -336,7 +375,7 @@
     },
     "objects": [
       {
-        "id": "2f055c85eee049a2b763fe82a8ef64f9",
+        "id": "01d7e39aec7c4d8cab6f08d3df401a85",
         "name": "Ball",
         "kind": "Ball",
         "objectRevision": 4,
@@ -363,7 +402,34 @@
         "movement": null
       },
       {
-        "id": "569f1c2da2564193a5aea4a0bd51088f",
+        "id": "59204f766bd741938291135d769995cf",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "592cf01b43ec46fdb917de797909f87a",
         "name": "Block",
         "kind": "Block",
         "objectRevision": 6,
@@ -417,33 +483,6 @@
         "movement": null
       },
       {
-        "id": "d36c12601e6f4dd0aae4ad28fe13c631",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
         "id": "maestro",
         "name": "Maestro",
         "kind": "Maestro",
@@ -478,47 +517,54 @@
     "catalog": null,
     "execution": {
       "selected": {
-        "id": "49b084c56c8b4a6f8b124b3b0ab4e0c8",
-        "capability": "animation.recording.play",
+        "id": "6d68850d2dee426bb559539ee9da22c2",
+        "capability": "animation.play",
         "version": 1,
         "resources": [
-          "569f1c2da2564193a5aea4a0bd51088f"
+          "592cf01b43ec46fdb917de797909f87a"
         ],
         "phase": "completed",
         "status": "Action completed",
         "call": {
-          "id": "animation.recording.play",
+          "id": "animation.play",
           "version": 1,
           "arguments": {
-            "target": "569f1c2da2564193a5aea4a0bd51088f",
+            "target": "592cf01b43ec46fdb917de797909f87a",
             "seconds": 1,
-            "loop": false
+            "loop": false,
+            "source": {
+              "kind": "recording"
+            },
+            "channel": "wholeTarget"
           }
         }
       },
       "running": [],
       "outcomes": [
         {
-          "id": "6588e941668f49b591b8cf1da38748f7",
-          "capability": "animation.recording.play",
+          "id": "ae42f91d050e4ea28980ceab1c7beede",
+          "capability": "animation.play",
           "version": 1,
           "resources": [
-            "569f1c2da2564193a5aea4a0bd51088f"
+            "592cf01b43ec46fdb917de797909f87a"
           ],
           "phase": "cancelled",
           "status": "Action cancelled"
         },
         {
-          "id": "49b084c56c8b4a6f8b124b3b0ab4e0c8",
-          "capability": "animation.recording.play",
+          "id": "6d68850d2dee426bb559539ee9da22c2",
+          "capability": "animation.play",
           "version": 1,
           "resources": [
-            "569f1c2da2564193a5aea4a0bd51088f"
+            "592cf01b43ec46fdb917de797909f87a"
           ],
           "phase": "completed",
           "status": "Action completed"
         }
-      ]
+      ],
+      "nextRunId": "56f195a8b5a64bb98f8cacef4555bc9c",
+      "storageError": null,
+      "recovery": null
     }
   },
   "grabbed": {
@@ -526,9 +572,9 @@
     "revision": 4,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "87a4b2c61b9245d891cd9f43a40d2cc5",
+    "session": "d433f0250a7347e1a6beead29d23bb5b",
     "status": "Room actions ready",
-    "selectedId": "569f1c2da2564193a5aea4a0bd51088f",
+    "selectedId": "592cf01b43ec46fdb917de797909f87a",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -537,18 +583,22 @@
     "inspection": null,
     "workspaceView": "objects",
     "rules": {
-      "revision": 11,
+      "revision": 19,
       "bindingPage": 0,
       "bindingCount": 0,
       "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
       "canUndo": true,
       "canRedo": false,
       "readOnly": false,
-      "status": "Target assigned from your room selection",
+      "status": "Action type changed",
+      "selectedError": "",
       "sequences": [
         {
-          "id": "c1dbcefb296a4cd8896e16fd0ccf7e45",
+          "id": "71509de93ef1490891565f8f3f70b1b6",
           "name": "Action 1",
+          "error": "",
           "steps": 1,
           "repeat": false,
           "program": true
@@ -564,13 +614,25 @@
     "capabilities": [
       "physicsSettings.v1",
       "avatarSettings.v1",
+      "physicsRun.v1",
       "motions.v1",
       "avatarActivities.v1",
       "catalog.v1",
       "behaviourPrograms.v3",
-      "execution.v1"
+      "eventPrograms.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "objectEdits.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1"
     ],
-    "physics": null,
+    "physics": {
+      "ready": false,
+      "running": false,
+      "status": "Load or scan your room to use gravity"
+    },
     "avatar": null,
     "walk": null,
     "activityProfile": {
@@ -602,7 +664,7 @@
     },
     "objects": [
       {
-        "id": "2f055c85eee049a2b763fe82a8ef64f9",
+        "id": "01d7e39aec7c4d8cab6f08d3df401a85",
         "name": "Ball",
         "kind": "Ball",
         "objectRevision": 4,
@@ -629,12 +691,39 @@
         "movement": null
       },
       {
-        "id": "569f1c2da2564193a5aea4a0bd51088f",
+        "id": "59204f766bd741938291135d769995cf",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "592cf01b43ec46fdb917de797909f87a",
         "name": "Block",
         "kind": "Block",
         "objectRevision": 6,
         "position": {
-          "x": 0.5600207448005676,
+          "x": 0.5600012540817261,
           "y": 1.4500000476837158,
           "z": 0.800000011920929
         },
@@ -683,33 +772,6 @@
         "movement": null
       },
       {
-        "id": "d36c12601e6f4dd0aae4ad28fe13c631",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
         "id": "maestro",
         "name": "Maestro",
         "kind": "Maestro",
@@ -744,57 +806,64 @@
     "catalog": null,
     "execution": {
       "selected": {
-        "id": "ee7f0236888a44098972726a68de1516",
-        "capability": "animation.recording.play",
+        "id": "56f195a8b5a64bb98f8cacef4555bc9c",
+        "capability": "animation.play",
         "version": 1,
         "resources": [
-          "569f1c2da2564193a5aea4a0bd51088f"
+          "592cf01b43ec46fdb917de797909f87a"
         ],
         "phase": "cancelled",
         "status": "Action cancelled",
         "call": {
-          "id": "animation.recording.play",
+          "id": "animation.play",
           "version": 1,
           "arguments": {
-            "target": "569f1c2da2564193a5aea4a0bd51088f",
+            "target": "592cf01b43ec46fdb917de797909f87a",
             "seconds": 1,
-            "loop": false
+            "loop": false,
+            "source": {
+              "kind": "recording"
+            },
+            "channel": "wholeTarget"
           }
         }
       },
       "running": [],
       "outcomes": [
         {
-          "id": "6588e941668f49b591b8cf1da38748f7",
-          "capability": "animation.recording.play",
+          "id": "ae42f91d050e4ea28980ceab1c7beede",
+          "capability": "animation.play",
           "version": 1,
           "resources": [
-            "569f1c2da2564193a5aea4a0bd51088f"
+            "592cf01b43ec46fdb917de797909f87a"
           ],
           "phase": "cancelled",
           "status": "Action cancelled"
         },
         {
-          "id": "49b084c56c8b4a6f8b124b3b0ab4e0c8",
-          "capability": "animation.recording.play",
+          "id": "6d68850d2dee426bb559539ee9da22c2",
+          "capability": "animation.play",
           "version": 1,
           "resources": [
-            "569f1c2da2564193a5aea4a0bd51088f"
+            "592cf01b43ec46fdb917de797909f87a"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "ee7f0236888a44098972726a68de1516",
-          "capability": "animation.recording.play",
+          "id": "56f195a8b5a64bb98f8cacef4555bc9c",
+          "capability": "animation.play",
           "version": 1,
           "resources": [
-            "569f1c2da2564193a5aea4a0bd51088f"
+            "592cf01b43ec46fdb917de797909f87a"
           ],
           "phase": "cancelled",
           "status": "Action cancelled"
         }
-      ]
+      ],
+      "nextRunId": "9311e976eb6a414081c7d0832360ca7b",
+      "storageError": null,
+      "recovery": null
     }
   },
   "running": {
@@ -802,9 +871,9 @@
     "revision": 1,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "87a4b2c61b9245d891cd9f43a40d2cc5",
+    "session": "d433f0250a7347e1a6beead29d23bb5b",
     "status": "Room actions ready",
-    "selectedId": "569f1c2da2564193a5aea4a0bd51088f",
+    "selectedId": "592cf01b43ec46fdb917de797909f87a",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -813,18 +882,22 @@
     "inspection": null,
     "workspaceView": "objects",
     "rules": {
-      "revision": 11,
+      "revision": 19,
       "bindingPage": 0,
       "bindingCount": 0,
       "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
       "canUndo": true,
       "canRedo": false,
       "readOnly": false,
-      "status": "Target assigned from your room selection",
+      "status": "Action type changed",
+      "selectedError": "",
       "sequences": [
         {
-          "id": "c1dbcefb296a4cd8896e16fd0ccf7e45",
+          "id": "71509de93ef1490891565f8f3f70b1b6",
           "name": "Action 1",
+          "error": "",
           "steps": 1,
           "repeat": false,
           "program": true
@@ -840,13 +913,25 @@
     "capabilities": [
       "physicsSettings.v1",
       "avatarSettings.v1",
+      "physicsRun.v1",
       "motions.v1",
       "avatarActivities.v1",
       "catalog.v1",
       "behaviourPrograms.v3",
-      "execution.v1"
+      "eventPrograms.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "objectEdits.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1"
     ],
-    "physics": null,
+    "physics": {
+      "ready": false,
+      "running": false,
+      "status": "Load or scan your room to use gravity"
+    },
     "avatar": null,
     "walk": null,
     "activityProfile": {
@@ -878,7 +963,7 @@
     },
     "objects": [
       {
-        "id": "2f055c85eee049a2b763fe82a8ef64f9",
+        "id": "01d7e39aec7c4d8cab6f08d3df401a85",
         "name": "Ball",
         "kind": "Ball",
         "objectRevision": 4,
@@ -905,7 +990,34 @@
         "movement": null
       },
       {
-        "id": "569f1c2da2564193a5aea4a0bd51088f",
+        "id": "59204f766bd741938291135d769995cf",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "592cf01b43ec46fdb917de797909f87a",
         "name": "Block",
         "kind": "Block",
         "objectRevision": 6,
@@ -959,33 +1071,6 @@
         "movement": null
       },
       {
-        "id": "d36c12601e6f4dd0aae4ad28fe13c631",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
         "id": "maestro",
         "name": "Maestro",
         "kind": "Maestro",
@@ -1020,37 +1105,44 @@
     "catalog": null,
     "execution": {
       "selected": {
-        "id": "6588e941668f49b591b8cf1da38748f7",
-        "capability": "animation.recording.play",
+        "id": "ae42f91d050e4ea28980ceab1c7beede",
+        "capability": "animation.play",
         "version": 1,
         "resources": [
-          "569f1c2da2564193a5aea4a0bd51088f"
+          "592cf01b43ec46fdb917de797909f87a"
         ],
         "phase": "running",
         "status": "Action running",
         "call": {
-          "id": "animation.recording.play",
+          "id": "animation.play",
           "version": 1,
           "arguments": {
-            "target": "569f1c2da2564193a5aea4a0bd51088f",
+            "target": "592cf01b43ec46fdb917de797909f87a",
             "seconds": 1,
-            "loop": false
+            "loop": false,
+            "source": {
+              "kind": "recording"
+            },
+            "channel": "wholeTarget"
           }
         }
       },
       "running": [
         {
-          "id": "6588e941668f49b591b8cf1da38748f7",
-          "capability": "animation.recording.play",
+          "id": "ae42f91d050e4ea28980ceab1c7beede",
+          "capability": "animation.play",
           "version": 1,
           "resources": [
-            "569f1c2da2564193a5aea4a0bd51088f"
+            "592cf01b43ec46fdb917de797909f87a"
           ],
           "phase": "running",
           "status": "Action running"
         }
       ],
-      "outcomes": []
+      "outcomes": [],
+      "nextRunId": "6d68850d2dee426bb559539ee9da22c2",
+      "storageError": null,
+      "recovery": null
     }
   }
 }

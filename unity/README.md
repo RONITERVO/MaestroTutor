@@ -230,3 +230,11 @@ include assignment availability and loading/fallback messages. See
 between chat and the book, with per-avatar history, atomic edits and stale-profile
 protection. See [tutor-state motions](../docs/QUEST_AVATAR_ACTIVITIES.md). Saving a
 preference preserves playback priorities and is distinct from starting a motion.
+
+
+Animation authoring uses one animation.play capability with typed source/channel
+choices. Use the tray's Source and channel field or the book's generated form.
+Library choices keep exact downloaded motion IDs; arbitrary clip layering remains
+unsupported. The old prototype play IDs are no longer public capabilities; old
+programs remain visible as unavailable source for repair. See
+[typed animation contract](../docs/QUEST_ANIMATION_VOCABULARY.md).

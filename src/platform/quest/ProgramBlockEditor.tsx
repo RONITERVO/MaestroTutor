@@ -1,9 +1,10 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import type {ReactNode} from 'react';
 import {behaviourCatalog} from '../../../shared/behaviourCatalog';
-import {capabilityDefinition,capabilityParameterType} from '../../../shared/capabilities';
+import {capabilityDefinition,capabilityParameterType,capabilityInput,type CapabilitySchema} from '../../../shared/capabilities';
 import type {BehaviourProgram,Expression,ProgramFunction,ProgramNode,ValueType} from '../../core-sdk/room/programs';
-import {CapabilityFields,initialCapabilityValue,type EditorObject} from './CapabilityFields';
+import {CapabilityFields,CapabilityVariant,initialCapabilityValue,type EditorObject} from './CapabilityFields';
 import {ProgramValueEditor,defaultValue,expressionType,roomValueSources,valueType,type ValueSource} from './ProgramValueEditor';
 
 export function ProgramBlockEditor({node,program,fn,objects,onChange}:{
@@ -20,6 +21,23 @@ export function ProgramBlockEditor({node,program,fn,objects,onChange}:{
   switch(node.op) {
     case 'invoke': {
       const definition=capabilityDefinition(node.capability)!;
+      const input=capabilityInput(node.capability,node.arguments);
+      const field=(path:string,schema:CapabilitySchema,value:unknown,present:boolean,required:boolean,change:(value:unknown,remove?:boolean)=>void):ReactNode=>{
+        const type=capabilityParameterType(node.capability,path,node.arguments),bound=node.bindings[path];
+        return <div key={path}>
+          {!required&&<label className="rule-checkbox"><input type="checkbox" aria-label={'Include '+path} checked={present} onChange={e=>change(e.target.checked?initialCapabilityValue(schema,objects):undefined,!e.target.checked)}/>Include {path}</label>}
+          {(required||present)&&<>
+            {type&&<label>{path} input<select aria-label={path+' input mode'} value={bound?'expression':'literal'} onChange={e=>{
+              const bindings={...node.bindings},args=JSON.parse(JSON.stringify(node.arguments)) as Record<string,unknown>;if(e.target.value==='expression'){bindings[path]={value:defaultValue(type)};if(schema['x-resource']==='object'&&!value){const parts=path.split('.');let parent=args;for(const key of parts.slice(0,-1))parent=parent[key] as Record<string,unknown>;parent[parts[parts.length-1]]='0'.repeat(32);}}else delete bindings[path];onChange({...node,arguments:args,bindings});
+            }}><option value="literal">Value</option><option value="expression">Variable or calculation</option></select></label>}
+            {bound&&type?expr(path,bound,type,value=>onChange({...node,bindings:{...node.bindings,[path]:value}})):
+              schema.type==='object'?<fieldset><legend>{path}</legend>{Object.entries(schema.properties??{}).map(([key,child])=>{
+                const obj=(value??{}) as Record<string,unknown>;
+                return field(path+'.'+key,child,obj[key],Object.prototype.hasOwnProperty.call(obj,key),schema.required?.includes(key)??false,(next,remove)=>{const copy={...obj};if(remove)delete copy[key];else copy[key]=next;change(copy);});
+              })}</fieldset>:<CapabilityFields label={path} schema={schema} value={value} objects={objects} onChange={value=>change(value)}/>}
+          </>}
+        </div>;
+      };
       return <div>
         <label>Action<select aria-label="Block action" value={node.capability} onChange={e=>{
           const next=capabilityDefinition(e.target.value)!;
@@ -27,31 +45,15 @@ export function ProgramBlockEditor({node,program,fn,objects,onChange}:{
         }}>{behaviourCatalog.actions.map(action=><option key={action.id} value={action.id}>{action.label}</option>)}</select></label>
         <p className="room-workspace-intro">Changing the action replaces its inputs and result assignments. Editing a value keeps all other fields.</p>
         {definition.description&&<p>{definition.description}</p>}
-        {Object.entries(definition.input.properties??{}).map(([key,schema])=>{
-          const type=capabilityParameterType(node.capability,key),bound=node.bindings[key];
-          const required=definition.input.required?.includes(key),present=Object.prototype.hasOwnProperty.call(node.arguments,key);
-          return <div key={key}>
-            {!required&&<label className="rule-checkbox"><input type="checkbox" aria-label={'Include '+key} checked={present} onChange={e=>{
-              const args={...node.arguments},bindings={...node.bindings};
-              if(e.target.checked)args[key]=initialCapabilityValue(schema,objects);else {delete args[key];delete bindings[key];}
-              onChange({...node,arguments:args,bindings});
-            }}/>Include {key}</label>}
-            {(required||present)&&<>
-              {type&&<label>{key} input<select aria-label={key+' input mode'} value={bound?'expression':'literal'} onChange={e=>{
-                const bindings={...node.bindings},args={...node.arguments};
-                if(e.target.value==='expression') {
-                  bindings[key]={value:defaultValue(type)};
-                  // A bound resource still needs a structurally valid literal. This
-                  // placeholder grants no authority; native resolves the binding.
-                  if(schema['x-resource']==='object'&&!args[key])args[key]='0'.repeat(32);
-                }else delete bindings[key];
-                onChange({...node,arguments:args,bindings});
-              }}><option value="literal">Value</option><option value="expression">Variable or calculation</option></select></label>}
-              {bound&&type?expr(key,bound,type,value=>onChange({...node,bindings:{...node.bindings,[key]:value}})):
-                <CapabilityFields label={key} schema={schema} value={node.arguments[key]} objects={objects} onChange={value=>onChange({...node,arguments:{...node.arguments,[key]:value}})}/>}
-            </>}
-          </div>;
-        })}
+        {definition.input.oneOf&&<CapabilityVariant schema={definition.input} value={node.arguments} objects={objects} onChange={args=>{
+          const bindings=Object.fromEntries(Object.entries(node.bindings).filter(([key])=>capabilityParameterType(node.capability,key,args)===capabilityParameterType(node.capability,key,node.arguments)&&capabilityParameterType(node.capability,key,args)!==null));
+          onChange({...node,arguments:args,bindings});
+        }}/>}
+        {Object.entries(input?.properties??{}).map(([key,schema])=>field(key,schema,node.arguments[key],Object.prototype.hasOwnProperty.call(node.arguments,key),input?.required?.includes(key)??false,(value,remove)=>{
+          const args={...node.arguments},bindings={...node.bindings};
+          if(remove){delete args[key];for(const path of Object.keys(bindings))if(path===key||path.startsWith(key+'.'))delete bindings[path];}else args[key]=value;
+          onChange({...node,arguments:args,bindings});
+        }))}
       </div>;
     }
     case 'if': return expr('Condition',node.test,'boolean',test=>onChange({...node,test}));

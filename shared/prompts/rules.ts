@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import {behaviourCatalog} from '../behaviourCatalog';
 /** Generated labels retain the current native wire identities. */
-export const ruleActions=behaviourCatalog.adapters.ruleStep.actionIds.map(id=>behaviourCatalog.actions.find(action=>action.id===id)!.label);
+export const ruleActions=behaviourCatalog.adapters.ruleStep.actionLabels;
 export const ruleGestures=['Greeting','Pointing','Listening','Speaking','Idle','Walk'] as const;
 export const ruleEvents=behaviourCatalog.adapters.ruleStep.eventIds.map(id=>behaviourCatalog.events.find(event=>event.id===id)!.label);
 export const ruleConditions=['Any','Speaking','Listening','Thinking','Idle'] as const;

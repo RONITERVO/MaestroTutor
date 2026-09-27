@@ -26,7 +26,7 @@
             "x": 0.3,
             "y": 1.3,
             "z": 0.65,
-            "scale": 1.0,
+            "scale": 1,
             "recipe": {
               "version": 1,
               "parts": [
@@ -668,12 +668,16 @@
         {
           "id": "animate",
           "op": "invoke",
-          "capability": "animation.recipe.play",
+          "capability": "animation.play",
           "version": 1,
           "arguments": {
             "target": "00000000000000000000000000000000",
             "seconds": 0.6,
-            "loop": true
+            "loop": true,
+            "source": {
+              "kind": "recipe"
+            },
+            "channel": "wholeTarget"
           },
           "bindings": {
             "target": {

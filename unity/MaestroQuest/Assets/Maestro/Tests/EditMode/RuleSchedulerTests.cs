@@ -14,9 +14,9 @@ namespace Maestro.Quest.Tests
 {
     public sealed class RuleSchedulerTests
     {
-        static JObject InvocationCall(string capability="animation.recording.play",string target="maestro")=>capability=="time.wait"
+        static JObject InvocationCall(string capability="animation.play",string target="maestro")=>capability=="time.wait"
             ? new JObject {["id"]=capability,["version"]=1,["arguments"]=new JObject {["seconds"]=1}}
-            : new JObject {["id"]=capability,["version"]=1,["arguments"]=new JObject {["target"]=target,["seconds"]=1,["loop"]=false}};
+            : new JObject {["id"]=capability,["version"]=1,["arguments"]=new JObject {["target"]=target,["seconds"]=1,["loop"]=false,["source"]=new JObject {["kind"]="recording"},["channel"]="wholeTarget"}};
         [Test] public void InstantEffectsCompleteOnceWithoutAdvancingTheClockAndStayCompletedOnCancel()
         {
             var actions=new Actions();var scheduler=new RuleScheduler(actions);
@@ -100,8 +100,8 @@ namespace Maestro.Quest.Tests
             var scheduler=new RuleScheduler(new Actions());
             JObject Call(string id)=>new JObject {["id"]=id,["version"]=1,["arguments"]=new JObject {["target"]="maestro",["seconds"]=10}};
             var follow=Call("avatar.follow.user");var look=Call("avatar.look.user");
-            var arms=Call("avatar.gesture.upperBody");arms["arguments"]["gesture"]="greeting";
-            var body=Call("avatar.gesture.play");body["arguments"]["gesture"]="greeting";
+            var arms=Call("animation.play");arms["arguments"]["source"]=Newtonsoft.Json.Linq.JObject.Parse("{\"kind\":\"gesture\",\"gesture\":\"greeting\"}");arms["arguments"]["channel"]="upperBody";
+            var body=Call("animation.play");body["arguments"]["source"]=Newtonsoft.Json.Linq.JObject.Parse("{\"kind\":\"gesture\",\"gesture\":\"greeting\"}");body["arguments"]["channel"]="wholeTarget";
             Assert.That(scheduler.Invoke(follow,0,out var walking,out var error),Is.True,error);
             Assert.That(scheduler.Invoke(arms,0,out var waving,out error),Is.True,error);
             Assert.That(scheduler.Invoke(look,0,out _,out _),Is.False,"Follow already owns gaze");
@@ -119,7 +119,8 @@ namespace Maestro.Quest.Tests
             scheduler.StopAll();
             var prop=Guid.NewGuid().ToString("N");
             var carrying=new RuleStep {action=RuleActionKind.Gesture,seconds=5,propId=prop};
-            var call=new JObject {["id"]="avatar.gesture.play",["version"]=1,["arguments"]=Maestro.Quest.Programs.CapabilityArguments.FromStep(carrying)};
+            Assert.That(LegacyCapabilityAdapters.TryCall(carrying,out var named,out _),Is.True);
+            var call=new JObject {["id"]="animation.play",["version"]=1,["arguments"]=named.Arguments};
             Assert.That(scheduler.Invoke(call,3,out _,out error),Is.True,error);
             Assert.That(scheduler.Invoke(InvocationCall(target:prop),3,out _,out _),Is.False,"Props remain exclusive whole objects");
             Assert.That(scheduler.Invoke(arms,3,out _,out _),Is.False);
