@@ -105,13 +105,16 @@ eliminate UI, provider evaluation or headset testing.
    Atomic writes, last-good recovery, newer-version protection, stable node IDs,
    Undo and motion-library assignment remain. New saves require the native
    `behaviourPrograms.v3` capability. No headset installation/reset has occurred yet.
-3. **Typed invocation implemented; discovery pending:** version-2 programs call
+3. **Typed invocation and discovery implemented:** version-2 programs call
    stable action IDs plus capability version and named arguments. Native definitions
    generate structural schemas used by web validation, editor labels and agent
    signatures. Runtime computed arguments go through that same schema and existing
    domain validators before the existing scheduler/handler. Book/agent/native paths
-   exercise these calls. Per-capability availability queries, paged search and direct
-   transient invocation are still to implement; current run-now requires a saved program.
+   exercise these calls. Paged search, exact-definition inspection and live availability
+   checks now share the same read-only native path for agent and book. Schema resource
+   annotations remove the generic web validator's dependency on the simple-action enum.
+   Direct transient invocation remains pending; current run-now requires a saved program.
+   See [the discovery contract](QUEST_CAPABILITY_DISCOVERY.md).
 4. Implement native event subscriptions, monotonic timers, named events and state
    machines with explicit lifecycle policy. Test storms, recursion, pause, reload,
    deleted targets, lost tracking and Stop before claiming continuous behaviours.

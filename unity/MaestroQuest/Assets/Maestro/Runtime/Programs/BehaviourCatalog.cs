@@ -22,6 +22,8 @@ namespace Maestro.Quest.Programs
             public readonly RuleActionKind Kind;
             public readonly string Duration, Ownership;
             public readonly IReadOnlyList<string> Channels, Requirements;
+            public JObject ToJson()=>new JObject {["id"]=Id,["version"]=Version,["label"]=Label,["input"]=InputSchema,
+                ["duration"]=Duration,["ownership"]=Ownership,["channels"]=new JArray(Channels),["requirements"]=new JArray(Requirements)};
             public ActionDefinition(string id, RuleActionKind kind, string label, string requirements="")
             {
                 Id=id;Kind=kind;Label=label;Duration="timed";
@@ -105,8 +107,7 @@ namespace Maestro.Quest.Programs
         }
         public static JObject Manifest()=>new JObject {
             ["version"]=1,
-            ["actions"]=new JArray(Actions.Select(x=>new JObject { ["id"]=x.Id,["version"]=x.Version,["label"]=x.Label,["input"]=x.InputSchema,
-                ["duration"]=x.Duration,["ownership"]=x.Ownership,["channels"]=new JArray(x.Channels),["requirements"]=new JArray(x.Requirements) })),
+            ["actions"]=new JArray(Actions.Select(x=>x.ToJson())),
             ["events"]=new JArray(Events.Select(x=>new JObject { ["id"]=x.Id,["label"]=x.Label,["activity"]=x.Activity,["objectEvent"]=x.ObjectEvent })),
             ["facts"]=new JArray(Facts.Select(x=>new JObject { ["id"]=x.Id,["type"]=x.Type.ToString().ToLowerInvariant(),["label"]=x.Label })),
             ["adapters"]=new JObject { ["ruleStep"]=new JObject {

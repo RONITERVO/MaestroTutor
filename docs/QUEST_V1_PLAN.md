@@ -416,8 +416,9 @@ prototype saves if needed. The accepted design, review qualifications, tradeoffs
 and staged acceptance are in [QUEST_CAPABILITY_ARCHITECTURE.md](QUEST_CAPABILITY_ARCHITECTURE.md).
 The first native vocabulary registry now generates web action/event labels, fact
 types, typed argument schemas and prompt signatures, with drift checks. Saved
-programs now invoke named, versioned capabilities. Paged discovery, live availability,
-full room-command coverage, timers/state machines and
+programs now invoke named, versioned capabilities. Paged discovery and live availability
+share native queries with the book and agent; see [the contract](QUEST_CAPABILITY_DISCOVERY.md).
+Full room-command coverage, timers/state machines and
 per-channel ownership remain follow-up work. No development data was reset here.
 
 

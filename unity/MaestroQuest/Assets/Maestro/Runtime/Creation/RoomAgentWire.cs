@@ -15,6 +15,7 @@ namespace Maestro.Quest.Creation
             var json=JObject.Parse(JsonUtility.ToJson(state));
             if(state.inspection==null)json["inspection"]=JValue.CreateNull();
             else if(state.inspection.recipe==null)json["inspection"]["recipe"]=JValue.CreateNull();
+            json["catalog"]=state.catalog?.DeepClone()??JValue.CreateNull();
             if(state.motions==null)json["motions"]=JValue.CreateNull();
             if(state.rules==null)json["rules"]=JValue.CreateNull();
             else if(state.rules.selected==null)json["rules"]["selected"]=JValue.CreateNull();
@@ -29,6 +30,18 @@ namespace Maestro.Quest.Creation
                 else Movement(wire["movement"],item.movement.distance,item.movement.speed);
             }
             return json.ToString(Formatting.None);
+        }
+        // JsonUtility cannot hydrate arbitrary typed JSON arguments. Only the validated
+        // structured catalog payload is copied from the original raw request.
+        public static bool PopulateStructured(RoomAgentRequest request,JObject raw)
+        {
+            if(raw?["commands"] is not JArray commands || request?.commands==null || commands.Count!=request.commands.Length)return false;
+            for(int i=0;i<commands.Count;i++) {
+                if(request.commands[i]?.action!="catalog")continue;
+                if(commands[i] is not JObject command || !RoomCapabilityCatalog.ValidWire(command))return false;
+                request.commands[i].catalog=(JObject)command["catalog"].DeepClone();
+            }
+            return true;
         }
         static void Movement(JToken value,float distance,float speed)
         {

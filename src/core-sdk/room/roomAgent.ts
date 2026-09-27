@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {validCatalogRequest,type CatalogRequest,type CatalogView} from '../../../shared/roomCatalog';
 import { roomControlFields, validRoomControl, requireRoomCapabilities, type ObjectPhysicsSettings, type AvatarMovementSettings, type PhysicsObservation, type AvatarMovementObservation, type AvatarWalkObservation } from '../../../shared/roomControls';
 import {validAvatarActivityRequest,type AvatarActivityRequest,type ActivityProfile} from '../../../shared/avatarActivities';
 import {validMotionQuery,type MotionQuery,type MotionSearchView} from '../../../shared/roomMotions';
@@ -12,8 +13,8 @@ import { runTutorTextTurn, type TutorTextTurnInput, type TutorTextTurnOptions } 
 import { buildRoomAgentPrompt, buildRoomResultInstruction, ROOM_AGENT_INSTRUCTION, ROOM_AGENT_SCHEMA } from '../../../shared/prompts';
 
 export interface RoomCommand {
-  action: 'create' | 'move' | 'resize' | 'paint' | 'recipe' | 'delete' | 'undo' | 'redo' | 'inspect' | 'workspace' | 'play' | 'stop' | 'rules' | 'motions' | 'avatarActivities' | keyof typeof roomControlFields;
-  activities?:AvatarActivityRequest; rule?:RuleRequest; motionId?:string; motionQuery?:MotionQuery;
+  action: 'create' | 'move' | 'resize' | 'paint' | 'recipe' | 'delete' | 'undo' | 'redo' | 'inspect' | 'workspace' | 'play' | 'stop' | 'rules' | 'motions' | 'catalog' | 'avatarActivities' | keyof typeof roomControlFields;
+  catalog?:CatalogRequest; activities?:AvatarActivityRequest; rule?:RuleRequest; motionId?:string; motionQuery?:MotionQuery;
   operation?:'start'|'pause'|'look'|'follow'|'stop'; physics?:ObjectPhysicsSettings; movement?:AvatarMovementSettings;
   target?: string; partId?:string; reference?: string; name?: string;
   kind?: 'block' | 'ball' | 'cylinder' | 'recipe' | 'boxRobot';
@@ -24,7 +25,7 @@ export interface RoomAgentState {
   version: 1; session: string; revision: number; sceneRevision: number; ack: number;
   ok: boolean; status: string; created: string[]; canUndo: boolean; canRedo: boolean; physicsRunning: boolean;
   capabilities?:string[]; physics?:PhysicsObservation|null; avatar?:AvatarMovementObservation|null; walk?:AvatarWalkObservation|null;
-  activityProfile?:ActivityProfile|null; workspaceView?:'objects'|'rules'; rules?:RuleView|null; motions?:MotionSearchView|null;
+  catalog?:CatalogView|null; activityProfile?:ActivityProfile|null; workspaceView?:'objects'|'rules'; rules?:RuleView|null; motions?:MotionSearchView|null;
   visible?: boolean; inspection?: {id:string;partId?:string|null;objectRevision:number;recipe:RoomRecipe|null}|null;
   selectedId?: string | null;
   objects: { physics?:ObjectPhysicsSettings; movement?:AvatarMovementSettings|null; held?:boolean; simulating?:boolean; objectRevision?:number; id: string; name: string; kind: string; position: {x:number;y:number;z:number}; scale:number; color: {r:number;g:number;b:number;a:number}; animated:boolean }[];
@@ -38,7 +39,7 @@ const record = (v: unknown): v is Record<string, unknown> => v !== null && typeo
 const validColor = (v: unknown) => record(v) && ['r','g','b'].every(k => typeof v[k] === 'number' && Number.isFinite(v[k]) && Number(v[k]) >= 0 && Number(v[k]) <= 1) && v.a === 1;
 const vector = (v: unknown) => record(v) && ['x','y','z'].every(k => typeof v[k] === 'number' && Number.isFinite(v[k]) && Math.abs(v[k] as number) <= 25);
 const fields: Record<RoomCommand['action'], readonly string[]> = {
-  ...roomControlFields, avatarActivities:['activities'], motions:['target','motionQuery'],
+  ...roomControlFields, catalog:['catalog'], avatarActivities:['activities'], motions:['target','motionQuery'],
   create:['reference','name','kind','atPosition','position','scale','color','recipe'], move:['target','position'], resize:['target','scale'],
   paint:['target','color'], recipe:['target','recipe'], delete:['target'], undo:[], redo:[], inspect:['target','partId'], workspace:['visible'], play:['target'], stop:['target'], rules:['rule'],
 };
@@ -54,6 +55,7 @@ export function parseRoomCommands(input: unknown): RoomCommand[] {
     if (c.partId !== undefined && (typeof c.partId !== 'string' || !/^[a-zA-Z0-9_]{1,32}$/.test(c.partId))) throw new Error('Invalid recipe part.');
     if (Object.prototype.hasOwnProperty.call(roomControlFields,action) && !validRoomControl(c)) throw new Error('Invalid room control.');
     if (action === 'avatarActivities' && !validAvatarActivityRequest(c.activities)) throw new Error('Invalid tutor-state assignment.');
+    if (action === 'catalog' && !validCatalogRequest(c.catalog)) throw new Error('Invalid capability query.');
     if (action === 'motions' && !validMotionQuery(c.motionQuery)) throw new Error('Invalid motion search.');
     if (action === 'rules' && !validRuleRequest(c.rule)) throw new Error('Invalid behaviour request.');
     if (action === 'workspace' && typeof c.visible !== 'boolean') throw new Error('Invalid workspace state.');
@@ -62,7 +64,7 @@ export function parseRoomCommands(input: unknown): RoomCommand[] {
     if ((action === 'paint' || c.color !== undefined) && !validColor(c.color)) throw new Error('Invalid colour.');
     if ((action === 'recipe' || c.kind === 'recipe') && !parseRecipe(c.recipe)) throw new Error('Missing recipe.');
   }
-  if (input.commands.some(c => ['undo','redo','inspect','workspace','play','stop','rules','motions','avatarActivities','physicsRun','avatarMotion'].includes(c.action)) && input.commands.length !== 1) throw new Error('This action must be submitted on its own.');
+  if (input.commands.some(c => ['undo','redo','inspect','workspace','play','stop','rules','motions','catalog','avatarActivities','physicsRun','avatarMotion'].includes(c.action)) && input.commands.length !== 1) throw new Error('This action must be submitted on its own.');
   return input.commands as unknown as RoomCommand[];
 }
 
@@ -87,7 +89,8 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
 ):Promise<RoomTaskResult> {
   const receipts:RoomAgentState[]=[];
   const active=()=>{if(control.signal?.aborted||control.isCurrent?.()===false||!lease.valid())throw new DOMException('The room request was interrupted. No further actions will run.','AbortError');};
-  for(let step=0;step<3;step++) {
+  let queries=0,actions=0;
+  for(let step=0;step<9;step++) {
     active();await control.beforePlan?.();active();
     const scene=copy(lease.state());
     const response=await generateGeminiResponse(input.model,buildRoomAgentPrompt(input.prompt,scene,receipts,{systemInstruction:input.systemInstruction,nativeLanguageCode:input.nativeLanguageCode,relatedTask:control.relatedTask}),input.history,{
@@ -100,7 +103,7 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
     const commands=parseRoomCommands(JSON.parse(response.text||'{}'));
     if(!commands.length)return {receipts,scene:copy(lease.state()),budgetExhausted:false,relatedTask:control.relatedTask,needsReview:!!control.relatedTask?.unconfirmed};
     // An unconfirmed earlier action is evidence of uncertainty, never permission to retry it.
-    if (control.relatedTask?.unconfirmed && commands.some(command => command.action !== 'inspect' && command.action !== 'motions'))
+    if (control.relatedTask?.unconfirmed && commands.some(command => command.action !== 'inspect' && command.action !== 'motions' && command.action !== 'catalog'))
       return { receipts, scene: copy(lease.state()), budgetExhausted: false, relatedTask: control.relatedTask, needsReview: true };
     requireRoomCapabilities(commands,scene);
     await control.beforeDispatch?.(commands,scene);active();
@@ -108,10 +111,12 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
       ? lease.execute(commands,scene.sceneRevision,scene.objects,control.signal)
       : lease.execute(commands,scene.sceneRevision,scene.objects));
     receipts.push(copy(receipt));
+    if(commands.every(command=>['catalog','motions','inspect'].includes(command.action)))queries++;else actions++;
     // Cancellation may race an acknowledgement. Preserve that evidence before
     // checking the turn fence; never relabel a completed edit as rolled back.
     await control.onReceipt?.(copy(receipt));
     active();
+    if(queries>=6||actions>=3)break;
   }
   active();return {receipts,scene:copy(lease.state()),budgetExhausted:true,relatedTask:control.relatedTask};
 }

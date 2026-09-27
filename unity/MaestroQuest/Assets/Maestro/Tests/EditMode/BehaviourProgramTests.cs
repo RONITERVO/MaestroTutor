@@ -12,6 +12,44 @@ namespace Maestro.Quest.Tests
 {
     public sealed class BehaviourProgramTests
     {
+        [Test] public void SchemaResourcesAndDomainConstraintsMatchNativeHandlers()
+        {
+            foreach(RuleActionKind kind in Enum.GetValues(typeof(RuleActionKind))) {
+                var step=new RuleStep {action=kind,seconds=kind==RuleActionKind.ThrowRecording?0:1};
+                void Check() {
+                    var schema=CapabilityArguments.Schema(kind);var args=CapabilityArguments.FromStep(step);
+                    Assert.That(CapabilityArguments.Validate(args,schema,out var error),Is.True,error);
+                    Assert.That(CapabilityArguments.Resources(args,schema),Is.EquivalentTo(RuleDocument.Targets(step)));
+                }
+                Check();
+                if(kind==RuleActionKind.RecordedAnimation||kind==RuleActionKind.Gesture||kind==RuleActionKind.ImportedClip||kind==RuleActionKind.LibraryMotion) {
+                    step.propId=Guid.NewGuid().ToString("N");Check();
+                    var args=CapabilityArguments.FromStep(step);var schema=CapabilityArguments.Schema(kind);
+                    args["prop"]["rotation"]["w"]=0;Assert.That(CapabilityArguments.Validate(args,schema,out _),Is.False);
+                    args=CapabilityArguments.FromStep(step);args["prop"]["offset"]=new JObject {["x"]=1,["y"]=1,["z"]=1};
+                    Assert.That(CapabilityArguments.Validate(args,schema,out _),Is.False);
+                    args=CapabilityArguments.FromStep(step);args["target"]="book";Assert.That(CapabilityArguments.Validate(args,schema,out _),Is.False);
+                }
+            }
+        }
+        [Test] public void CatalogRequestsPreserveStructuredArgumentsAndRejectAmbiguousFields()
+        {
+            var query=new JObject {["operation"]="check",["call"]=new JObject {["id"]="time.wait",["version"]=1,["arguments"]=new JObject {["seconds"]=1}}};
+            var command=new JObject {["action"]="catalog",["catalog"]=query};
+            var wire=new JObject {["version"]=2,["commands"]=new JArray(command)};
+            Assert.That(Maestro.Quest.Creation.RoomControls.ValidWire(wire.ToString()),Is.True);
+            var request=JsonUtility.FromJson<Maestro.Quest.Creation.RoomAgentRequest>(wire.ToString());
+            Assert.That(request.commands[0].catalog,Is.Null);
+            Assert.That(Maestro.Quest.Creation.RoomAgentWire.PopulateStructured(request,wire),Is.True);
+            Assert.That(JToken.DeepEquals(request.commands[0].catalog,query),Is.True);
+            request.commands[0].catalog["call"]["arguments"]["seconds"]=2;
+            Assert.That((int)query["call"]["arguments"]["seconds"],Is.EqualTo(1),"Hydration must be detached");
+            command["action"]="play";Assert.That(Maestro.Quest.Creation.RoomCapabilityCatalog.ValidWire(command),Is.False);command["action"]="catalog";
+            command["catalog"]["extra"]=true;Assert.That(Maestro.Quest.Creation.RoomControls.ValidWire(wire.ToString()),Is.False);((JObject)command["catalog"]).Remove("extra");
+            ((JArray)wire["commands"]).Add(new JObject {["action"]="stop",["target"]="maestro"});Assert.That(Maestro.Quest.Creation.RoomControls.ValidWire(wire.ToString()),Is.False);
+            var tooDeep=new JObject();var cursor=tooDeep;for(int i=0;i<10;i++){var next=new JObject();cursor["nested"]=next;cursor=next;}
+            query["call"]["arguments"]=tooDeep;Assert.That(Maestro.Quest.Creation.RoomCapabilityCatalog.ValidRequest(query),Is.False);
+        }
         static string Example()=>File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-prime.json"));
         static BehaviourProgram Compile(string source) {Assert.That(BehaviourProgram.TryParse(source,out var program,out var error),Is.True,error);return program;}
         sealed class Facts:IProgramFacts {public bool TryRead(string name,out ProgramValue value) {value=new ProgramValue("speaking");return name=="maestro.state";}}

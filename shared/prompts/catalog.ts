@@ -1,0 +1,11 @@
+// Copyright 2026 Roni Tervo
+// SPDX-License-Identifier: Apache-2.0
+export const catalogRequestSchema={type:'object',properties:{
+ operation:{type:'string',enum:['search','inspect','check']},query:{type:'string',maxLength:80},offset:{type:'integer',minimum:0,maximum:1000000},
+ capability:{type:'string'},version:{type:'integer',minimum:1,maximum:1000000},
+ call:{type:'object',properties:{id:{type:'string'},version:{type:'integer',minimum:1,maximum:1000000},arguments:{type:'object',additionalProperties:true}},required:['id','version','arguments'],additionalProperties:false}
+},required:['operation'],additionalProperties:false};
+export const CATALOG_GUIDE=`When catalog.v1 is advertised, send a standalone {action:"catalog",catalog:{operation:"search",query:"avatar",offset:0}} to discover action IDs and versions, then {operation:"inspect",capability:exact ID,version:returned version} to retrieve its typed definition. Pages contain up to six entries; search by ID, label or prerequisite text, then offset+6 for more. Only inspect relevant entries rather than expanding every definition into context.
+To check concrete arguments use {operation:"check",call:{id,version,arguments:{...}}}. scene.catalog returns valid, available, occupied, resources and status, refreshed against current native state. All three catalog operations are read-only: they never select, save, reserve, interrupt or start anything. Unknown definitions and invalid/unavailable calls have explicit status. A successful query receipt proves only the query, not availability or action completion; inspect those fields.
+Definitions use JSON Schema object/string/number/integer/boolean fields. Required fields are explicit; extra fields are forbidden. x-resource:"object" marks object references that programs must reserve; x-requires constrains sibling arguments; format boundedOffset requires squared length <=1 and unitQuaternion requires squared length within .01 of 1. Nested optional prop fields remain literal.
+Use the returned stable ID/version and named arguments in a program invoke block. Current execution still requires saving/playing a behaviour; there is no direct transient catalog run operation yet. A check is only a snapshot and will be revalidated during execution. Search/inspect/check may be used to clarify an unconfirmed earlier action without replaying it. `;

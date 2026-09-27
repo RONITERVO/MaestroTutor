@@ -2,7 +2,7 @@ import {sequenceProgram} from './programs';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {describe,expect,it,vi} from 'vitest';
-import {parseRoomCommands,runRoomActionTask,runRoomTutorTurn,type RoomAgentState} from './roomAgent';
+import {parseRoomCommands,runRoomActionTask,runRoomTutorTurn,type RoomAgentState,type RoomCommand} from './roomAgent';
 import {ROOM_AGENT_SCHEMA} from '../../../shared/prompts';
 const scene:RoomAgentState={version:1,session:'a'.repeat(32),revision:1,sceneRevision:4,ack:0,ok:true,status:'Ready',objects:[],created:[],canUndo:false,canRedo:false,physicsRunning:false};
 const input={model:'gemini-3.8-flash',prompt:'Make a robot and have it wave.',history:[],nativeLanguageCode:'en',systemInstruction:'Tutor fixture'};
@@ -129,4 +129,27 @@ it('uses the shared activity revision and returns rejection evidence without rep
  expect(execute).toHaveBeenCalledOnce();expect(execute).toHaveBeenCalledWith([command],4,scene.objects);expect(result.receipts[0].ok).toBe(false);
  const next:any=(ai.models.generateContentStream.mock.calls as any)[1][0];const data=JSON.parse(next.contents[0].parts[0].text);
  expect(data.scene.activityProfile.revision).toBe(3);expect(data.receipts[0].status).toContain('changed');
+});
+
+it('discovers and checks a capability before saving while keeping a separate bounded query allowance',async()=>{
+ const catalogCommands=[
+  {action:'catalog',catalog:{operation:'search',query:'wait',offset:0}},
+  {action:'catalog',catalog:{operation:'inspect',capability:'time.wait',version:1}},
+  {action:'catalog',catalog:{operation:'check',call:{id:'time.wait',version:1,arguments:{seconds:1}}}},
+ ];
+ const save={action:'rules',rule:{action:'edit',revision:1,edits:[{kind:'save',reference:'wait',sequence:{id:'',name:'Wait',interruption:0,repeat:false,program:JSON.stringify(sequenceProgram([{id:'pause',action:2,targetId:'maestro',seconds:1,gesture:0,loop:false}]))}}]}};
+ const plans=[...catalogCommands,save].map(command=>JSON.stringify({commands:[command]}));plans.push('{"commands":[]}');
+ const ai=client(plans),current={...scene,capabilities:['catalog.v1','behaviourPrograms.v3']};
+ const execute=vi.fn(async(_commands:RoomCommand[])=>({...current,ack:1}));
+ const result=await runRoomActionTask(input,{aiClient:ai},{state:()=>current,valid:()=>true,execute},()=>{});
+ expect(execute).toHaveBeenCalledTimes(4);expect(result.budgetExhausted).toBe(false);
+ expect(execute.mock.calls[3][0]).toEqual([save]);
+});
+it('stops repetitive discovery at six acknowledged queries and saved actions at three',async()=>{
+ for(const action of [{action:'catalog',catalog:{operation:'search',query:'',offset:0}},{action:'workspace',visible:true}]){
+  const ai=client(Array.from({length:10},()=>JSON.stringify({commands:[action]}))),current={...scene,capabilities:['catalog.v1']};
+  const execute=vi.fn(async(_commands:RoomCommand[])=>({...current,ack:1}));
+  const result=await runRoomActionTask(input,{aiClient:ai},{state:()=>current,valid:()=>true,execute},()=>{});
+  expect(result.budgetExhausted).toBe(true);expect(execute).toHaveBeenCalledTimes(action.action==='catalog'?6:3);
+ }
 });

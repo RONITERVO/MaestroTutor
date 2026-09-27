@@ -263,3 +263,12 @@ The first native vocabulary registry now generates web action/event labels, fact
 types, scalar binding types and the prompt fact guide, with drift checks. Typed
 capability invocation, full room-command coverage, timers/state machines and
 per-channel ownership remain follow-up work. No development data was reset here.
+
+## Capability discovery and readiness (2026-09-27)
+
+The book and agent now share paged action search, registered schema inspection and
+live availability checks. These queries preserve edits, selection and playback.
+Schema annotations allow the generic program editor/validator to consume a new
+registered native action without extending the legacy simple-action adapter.
+See [contract and evidence](QUEST_CAPABILITY_DISCOVERY.md). This covers the current
+nine invocation capabilities, not all room tools or future event/channel semantics.

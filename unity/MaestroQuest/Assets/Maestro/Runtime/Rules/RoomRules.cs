@@ -71,6 +71,12 @@ namespace Maestro.Quest.Rules
             if (workshop.Selected == null) return;
             animations.Stop(); Trigger(workshop.Selected.id);
         }
+        public bool CanRun(RuleStep step,out string error)
+        {
+            error="Action runtime is not ready";if(actions==null||Scheduler==null)return false;
+            if(paused||!focused||!isActiveAndEnabled) {error="Actions are paused";return false;}
+            return actions.CanRun(step,out error);
+        }
         public void StopAll() => Scheduler?.StopAll();
         public void ObserveSnapshot(BookSnapshot snapshot)
         {

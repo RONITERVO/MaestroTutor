@@ -44,6 +44,7 @@ namespace Maestro.Quest.Rules
         public int RunningCount => running.Count;
         public int PreparingCount => running.Count(x => x.Preparing);
         public int QueuedCount => queued.Count;
+        public bool TargetsBusy(IEnumerable<string> targets) {var ids=targets.ToHashSet();return running.Any(x=>x.Targets.Overlaps(ids));}
         public string LastError { get; private set; }
         public RuleRunView[] ObserveRuns() => running.Select(x=>new RuleRunView {id=x.Id,sequenceId=x.Sequence.id,preparing=x.Preparing,nodeId=x.Machine?.NodeId,functionName=x.Machine?.Function,status=x.Computing?"Evaluating":x.Preparing?"Loading":"Running",
             locals=x.Machine?.Locals.Select(v=>new ProgramVariableView {name=v.Key,type=v.Value.Type.ToString().ToLowerInvariant(),value=Convert.ToString(v.Value.Value,System.Globalization.CultureInfo.InvariantCulture)}).ToArray()??Array.Empty<ProgramVariableView>()}).ToArray();

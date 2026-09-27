@@ -4,6 +4,7 @@ import {behaviourCatalog,type BehaviourValueType} from './behaviourCatalog';
 export interface CapabilitySchema {
  type:'object'|'string'|'number'|'integer'|'boolean';
  properties?:Record<string,CapabilitySchema>;required?:string[];additionalProperties?:false;
+ format?:'unitQuaternion'|'boundedOffset';'x-resource'?:'object';'x-requires'?:Record<string,string>;
  minimum?:number;maximum?:number;maxLength?:number;pattern?:string;enum?:string[];
 }
 export interface CapabilityDefinition {
@@ -23,7 +24,13 @@ function validate(value:unknown,schema:CapabilitySchema,path:string):string|null
   case 'object': {
    if(!record(value))return error;const properties=schema.properties??{};
    if((schema.required??[]).some(key=>!own(value,key))||Object.keys(value).some(key=>!own(properties,key)))return error;
-   for(const [key,entry] of Object.entries(value)){const error=validate(entry,properties[key],path+'.'+key);if(error)return error;}return null;
+   for(const [key,entry] of Object.entries(value)){
+    const error=validate(entry,properties[key],path+'.'+key);if(error)return error;
+    if(Object.entries(properties[key]['x-requires']??{}).some(([field,expected])=>value[field]!==expected))return path+'.'+key+' has incompatible arguments';
+   }
+   if(schema.format){const norm=Object.values(value).reduce<number>((sum,x)=>sum+Number(x)**2,0);
+    if(schema.format==='boundedOffset'&&norm>1||schema.format==='unitQuaternion'&&Math.abs(norm-1)>=.01)return path+' has an invalid length';}
+   return null;
   }
   case 'string':return typeof value==='string'&&!/[\u0000-\u001f\u007f-\u009f]/.test(value)&&
    (schema.maxLength===undefined||value.length<=schema.maxLength)&&(!schema.pattern||new RegExp(schema.pattern).test(value))&&(!schema.enum||schema.enum.includes(value))?null:error;
@@ -48,4 +55,13 @@ export function capabilityParameterType(id:string,parameter:string):BehaviourVal
  const schema=definitions.get(id)?.input.properties;
  if(!schema||!own(schema,parameter))return null;
  const type=schema[parameter].type;return type==='string'?'text':type==='integer'?'number':type==='number'||type==='boolean'?type:null;
+}
+
+/** Schema-declared object references used for ownership and optimistic revisions. */
+export function capabilityResources(id:string,args:Record<string,unknown>):string[] {
+ const result=new Set<string>();
+ const visit=(value:unknown,schema:CapabilitySchema|undefined)=>{
+  if(!schema)return;if(schema['x-resource']==='object'&&typeof value==='string')result.add(value);
+  if(record(value))for(const [key,entry] of Object.entries(value))visit(entry,schema.properties?.[key]);
+ };visit(args,definitions.get(id)?.input);return [...result];
 }

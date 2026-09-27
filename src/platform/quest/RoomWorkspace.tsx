@@ -6,6 +6,7 @@ import {copyRecipe,parseRecipe,rotateBy,type RoomRecipe,type Rotation} from '../
 import type {RoomAgentClient} from './roomAgentBridge';
 import './roomWorkspace.css';
 import {RuleWorkspace} from './RuleWorkspace';
+import {CapabilityBrowser,type CatalogInsert,type OpenCatalog} from './CapabilityBrowser';
 type Draft={id:string;revision:number;recipe:RoomRecipe|null;source:RoomAgentState};
 const identity={x:0,y:0,z:0,w:1};
 const axes=['x','y','z'] as const;
@@ -17,9 +18,12 @@ function TurnControls({label,rotation,onChange}:{label:string;rotation:Rotation;
 /** An optional projection of the native document, never an independent scene copy. */
 export function RoomWorkspace({client}:{client:RoomAgentClient}) {
  const {state}=useSyncExternalStore(client.subscribe,client.getSnapshot);
- return <><div hidden={state?.workspaceView==='rules'}><ObjectsWorkspace client={client}/></div><div hidden={state?.workspaceView!=='rules'}><RuleWorkspace client={client}/></div></>;
+ const [catalog,setCatalog]=useState<{insert?:CatalogInsert}|null>(null);
+ useEffect(()=>{setCatalog(null);},[state?.session,state?.visible]);
+ const openCatalog:OpenCatalog=insert=>setCatalog({insert});
+ return <><div hidden={Boolean(catalog)||state?.workspaceView==='rules'}><ObjectsWorkspace client={client} onCatalog={openCatalog}/></div><div hidden={Boolean(catalog)||state?.workspaceView!=='rules'}><RuleWorkspace client={client} onCatalog={openCatalog}/></div>{catalog&&state?.visible&&<CapabilityBrowser key={state.session} client={client} onClose={()=>setCatalog(null)} onInsert={catalog.insert}/>}</>;
 }
-function ObjectsWorkspace({client}:{client:RoomAgentClient}) {
+function ObjectsWorkspace({client,onCatalog}:{client:RoomAgentClient;onCatalog:OpenCatalog}) {
  const {state,pending}=useSyncExternalStore(client.subscribe,client.getSnapshot);
  const [draft,setDraft]=useState<Draft|null>(null),[dirty,setDirty]=useState(false),[error,setError]=useState('');
  const [partId,setPartId]=useState(''),[tab,setTab]=useState<'parts'|'animation'>('parts'),[keyIndex,setKeyIndex]=useState(0);
@@ -47,7 +51,7 @@ function ObjectsWorkspace({client}:{client:RoomAgentClient}) {
   <section className="room-workspace-page room-hierarchy" aria-label="Room objects and parts">
    <div className="room-workspace-heading"><div><span className="room-eyebrow">YOUR ROOM</span><h1>Workshop</h1></div><button disabled={pending} onClick={()=>{setDirty(false);void send([{action:'workspace',visible:false}]);}}>{dirty?'Discard & return':'Back to chat'}</button></div>
    <p className="room-workspace-intro">Explore what Maestro made. Your changes and conversation edit the same objects.</p>
-   <div className="room-workspace-actions">{state.rules&&<button disabled={pending||dirty} onClick={()=>void send([{action:'rules',rule:{action:'inspect'}}])}>Behaviours</button>}<button disabled={pending||dirty} onClick={()=>void create()}>+ Box robot</button><button disabled={pending||dirty||!state.canUndo} onClick={()=>void send([{action:'undo'}])}>Undo</button><button disabled={pending||dirty||!state.canRedo} onClick={()=>void send([{action:'redo'}])}>Redo</button></div>
+   <div className="room-workspace-actions"><button disabled={pending||!state.capabilities?.includes('catalog.v1')} onClick={()=>onCatalog()}>Action catalog</button>{state.rules&&<button disabled={pending||dirty} onClick={()=>void send([{action:'rules',rule:{action:'inspect'}}])}>Behaviours</button>}<button disabled={pending||dirty} onClick={()=>void create()}>+ Box robot</button><button disabled={pending||dirty||!state.canUndo} onClick={()=>void send([{action:'undo'}])}>Undo</button><button disabled={pending||dirty||!state.canRedo} onClick={()=>void send([{action:'redo'}])}>Redo</button></div>
    <div className="room-object-list" aria-label="Objects">{state.objects.map(object=><button key={object.id} disabled={pending} aria-pressed={draft?.id===object.id} onClick={()=>void select(object.id)}><span>{object.kind==='Assembly'?'◇':object.kind==='Maestro'?'♙':object.kind==='Book'?'▤':'○'} {object.name}</span><small>{object.kind}{object.animated?' · Playing':''}</small></button>)}</div>
    {recipe&&<div className="room-parts-list" aria-label="Parts"><h2>Parts & joints <small>{recipe.parts.length}</small></h2>{recipe.parts.map(node=><button key={node.id} disabled={pending} aria-pressed={part?.id===node.id} onClick={()=>{setPartId(node.id);setKeyIndex(0);void send([{action:'inspect',target:draft!.id,partId:node.id}]);}}><span>{node.id}</span><small>{node.parent?`↳ ${node.parent}`:'Root part'} · {node.shape}</small></button>)}</div>}
   </section>

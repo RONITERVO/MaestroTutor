@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 using System;
 using System.Linq;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Maestro.Quest.Rules;
 using Newtonsoft.Json.Linq;
@@ -23,10 +24,11 @@ namespace Maestro.Quest.Programs
         static JObject Vector(bool rotation=false)
         {
             var fields=new JObject {["x"]=Number(-1,1),["y"]=Number(-1,1),["z"]=Number(-1,1)};
-            if(rotation)fields["w"]=Number(-1,1);return Object(fields);
+            if(rotation)fields["w"]=Number(-1,1);var schema=Object(fields);schema["format"]=rotation?"unitQuaternion":"boundedOffset";return schema;
         }
+        static JObject Resource(JObject schema) {schema["x-resource"]="object";return schema;}
         static JObject Prop()=>Object(new JObject {
-            ["objectId"]=Text("^[a-fA-F0-9]{32}$",32),["avatarHash"]=Text("^(|[a-f0-9]{64})$",64),
+            ["objectId"]=Resource(Text("^[a-fA-F0-9]{32}$",32)),["avatarHash"]=Text("^(|[a-f0-9]{64})$",64),
             ["hand"]=Choice("left","right"),["release"]=Choice("return","drop","throw"),
             ["offset"]=Vector(),["rotation"]=Vector(true),["releaseAt"]=Number(.05,1)
         });
@@ -42,6 +44,8 @@ namespace Maestro.Quest.Programs
             if(kind==RuleActionKind.ImportedClip) {p["modelHash"]=Text("^(|[a-f0-9]{64})$",64);p["clipIndex"]=Number(0,31,true);}
             if(kind==RuleActionKind.LibraryMotion)p["motionId"]=Text("^(|[a-fA-F0-9]{32})$",32);
             if(kind==RuleActionKind.RecordedAnimation||kind==RuleActionKind.Gesture||kind==RuleActionKind.ImportedClip||kind==RuleActionKind.LibraryMotion)p["prop"]=Prop();
+            if(p["target"] is JObject target)Resource(target);
+            if(p["prop"] is JObject prop)prop["x-requires"]=new JObject {["target"]="maestro"};
             return Object(p,"prop");
         }
         public static bool Validate(JToken value,JObject schema,out string error,string path="arguments")
@@ -52,7 +56,15 @@ namespace Maestro.Quest.Programs
                 case "object":
                     if(value is not JObject obj)return false;var properties=(JObject)schema["properties"];
                     if(((JArray)schema["required"]).Any(key=>!obj.ContainsKey((string)key)) || obj.Properties().Any(p=>!properties.ContainsKey(p.Name)))return false;
-                    foreach(var field in obj.Properties())if(!Validate(field.Value,(JObject)properties[field.Name],out error,path+"."+field.Name))return false;
+                    foreach(var field in obj.Properties()) {
+                        var fieldSchema=(JObject)properties[field.Name];
+                        if(!Validate(field.Value,fieldSchema,out error,path+"."+field.Name))return false;
+                        if(fieldSchema["x-requires"] is JObject requirements && requirements.Properties().Any(p=>!JToken.DeepEquals(obj[p.Name],p.Value))) {error=path+"."+field.Name+" has incompatible arguments";return false;}
+                    }
+                    if(schema["format"]!=null) {
+                        double norm=obj.Properties().Sum(p=>(double)p.Value*(double)p.Value);
+                        if((string)schema["format"]=="boundedOffset" && norm>1 || (string)schema["format"]=="unitQuaternion" && Math.Abs(norm-1)>=.01) {error=path+" has an invalid length";return false;}
+                    }
                     break;
                 case "string":
                     if(value.Type!=JTokenType.String)return false;string text=(string)value;
@@ -68,6 +80,17 @@ namespace Maestro.Quest.Programs
                 default:return false;
             }
             error=null;return true;
+        }
+        public static string[] Resources(JObject arguments,JObject schema)
+        {
+            var values=new HashSet<string>();
+            void Walk(JToken value,JToken shape) {
+                if(value==null||shape==null)return;
+                if((string)shape["x-resource"]=="object" && value.Type==JTokenType.String)values.Add((string)value);
+                if(value is JObject obj && shape["properties"] is JObject fields)
+                    foreach(var field in obj.Properties())Walk(field.Value,fields[field.Name]);
+            }
+            Walk(arguments,schema);return values.ToArray();
         }
         public static JObject FromStep(RuleStep step)
         {

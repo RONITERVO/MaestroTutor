@@ -1,7 +1,9 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {ProgramEditor} from './ProgramEditor';
-import {sequenceProgram,simpleProgramSteps,withSimpleProgramSteps} from '../../core-sdk/room/programs';
+import {capabilityResources} from '../../../shared/capabilities';
+import type {OpenCatalog} from './CapabilityBrowser';
+import {parseProgram,sequenceProgram,simpleProgramSteps,withSimpleProgramSteps} from '../../core-sdk/room/programs';
 import {useCallback,useEffect,useState,useSyncExternalStore} from 'react';
 import type {RoomAgentState} from '../../core-sdk/room/roomAgent';
 import {copySequence,newRuleStep,validSequence,ruleActions,ruleGestures,ruleEvents,ruleConditions,rulePolicies,ruleMounts,type RuleSequence,type RuleEdit,type RuleRequest,type RuleStep} from '../../core-sdk/room/rules';
@@ -9,7 +11,7 @@ import type {RoomAgentClient} from './roomAgentBridge';
 
 type Draft={sequence:RuleSequence;source:RoomAgentState;revision:number};
 const draftOf=(state:RoomAgentState):Draft|null=>state.rules?.selected?{sequence:copySequence(state.rules.selected),source:state,revision:state.rules.revision}:null;
-export function RuleWorkspace({client}:{client:RoomAgentClient}) {
+export function RuleWorkspace({client,onCatalog}:{client:RoomAgentClient;onCatalog?:OpenCatalog}) {
  const {state,pending}=useSyncExternalStore(client.subscribe,client.getSnapshot);
  const [draft,setDraft]=useState<Draft|null>(null),[dirty,setDirty]=useState(false),[error,setError]=useState('');
  const [advanced,setAdvanced]=useState(false);
@@ -28,12 +30,20 @@ export function RuleWorkspace({client}:{client:RoomAgentClient}) {
  const changeSteps=(fn:(steps:RuleStep[])=>void)=>change(value=>{const steps=simpleProgramSteps(value.program);if(steps===null)return;fn(steps);value.program=withSimpleProgramSteps(value.program,steps);});
  const updateStep=(index:number,fn:(step:RuleStep)=>void)=>changeSteps(steps=>fn(steps[index]));
  const create=async()=>{const target=state.objects.find(o=>o.kind==='Assembly');const step=newRuleStep(target?8:1);step.targetId=target?.id??'maestro';await edit([{kind:'save',reference:'newBehaviour',sequence:{id:'',name:'New behaviour',interruption:0,repeat:false,program:JSON.stringify(sequenceProgram([step]))}}]);};
+ const browse=()=>onCatalog?.(draft&&!blocked?call=>{
+  const parsed=parseProgram(draft.sequence.program);if(!parsed.program)return parsed.error??'Invalid draft.';
+  const program=parsed.program,entry=program.functions.find(f=>f.name===program.entry)!;
+  entry.body.unshift({id:crypto.randomUUID().replace(/-/g,''),op:'invoke',capability:call.id,version:call.version,arguments:call.arguments,bindings:{}});
+  program.resources=[...new Set([...program.resources,...capabilityResources(call.id,call.arguments)])];
+  const source=JSON.stringify(program),validated=parseProgram(source);if(validated.error)return validated.error;
+  setDraft({...draft,sequence:{...draft.sequence,program:source}});setDirty(true);setEditorReset(value=>value+1);return null;
+ }:undefined);
  const exit=async(objects:boolean)=>{try {const result=await client.request(objects?[{action:'inspect',target:state.selectedId??state.objects[0]?.id??'maestro'}]:[{action:'workspace',visible:false}]);if(!result.ok)setError(result.status);else setDirty(false);}catch(e){setError(e instanceof Error?e.message:'The book is unavailable.');}};
  return <div className="room-workspace rule-workspace" aria-label="Behaviour workspace">
   <section className="room-workspace-page room-hierarchy" aria-label="Behaviours and triggers">
    <div className="room-workspace-heading"><div><span className="room-eyebrow">WHEN THIS HAPPENS</span><h1>Behaviours</h1></div><button disabled={pending} onClick={()=>void exit(false)}>{dirty?'Discard & return':'Back to chat'}</button></div>
    <p className="room-workspace-intro">Build actions together. The agent, these blocks and your physical buttons use the same behaviours.</p>
-   <div className="room-workspace-actions"><button disabled={pending||dirty||programEditing} onClick={()=>void exit(true)}>Objects</button><button disabled={pending||dirty||rules.readOnly||programEditing||!supported} onClick={()=>void create()}>+ Behaviour</button><button disabled={pending||dirty||!rules.canUndo} onClick={()=>void send({action:'undo',revision:rules.revision})}>Undo</button><button disabled={pending||dirty||!rules.canRedo} onClick={()=>void send({action:'redo',revision:rules.revision})}>Redo</button></div>
+   <div className="room-workspace-actions">{onCatalog&&<button disabled={pending||programEditing||!state.capabilities?.includes('catalog.v1')} onClick={browse}>Action catalog</button>}<button disabled={pending||dirty||programEditing} onClick={()=>void exit(true)}>Objects</button><button disabled={pending||dirty||rules.readOnly||programEditing||!supported} onClick={()=>void create()}>+ Behaviour</button><button disabled={pending||dirty||!rules.canUndo} onClick={()=>void send({action:'undo',revision:rules.revision})}>Undo</button><button disabled={pending||dirty||!rules.canRedo} onClick={()=>void send({action:'redo',revision:rules.revision})}>Redo</button></div>
    <div className="room-object-list" aria-label="Behaviours">{rules.sequences.map(value=><button key={value.id} disabled={pending||dirty||programEditing} aria-pressed={sequence?.id===value.id} onClick={()=>void send({action:'inspect',target:value.id})}><span>{value.name}</span><small>{value.steps} {value.program?'blocks':'steps'}{value.repeat?' · Repeats':''}{rules.running.some(run=>run.sequenceId===value.id)?' · Running':''}</small></button>)}</div>
    {sequence&&<>
     <h2 className="rule-section-title">Triggers</h2>
@@ -57,7 +67,7 @@ export function RuleWorkspace({client}:{client:RoomAgentClient}) {
     {steps!==null&&<button disabled={programEditing} onClick={()=>setAdvanced(value=>!value)}>{advanced?'Simple action editor':'Functions & code'}</button>}
     {steps===null||advanced?<ProgramEditor key={sequence.id+':'+draft!.revision+':'+editorReset} source={sequence.program} targets={state.objects} onChange={source=>change(value=>{value.program=source;})} run={rules.running.find(run=>run.sequenceId===sequence.id)} onEditingChange={editProgram} disabled={blocked}/>:<><ol className="rule-block-list">{steps.map((step,index)=>{const active=rules.running.find(run=>run.sequenceId===sequence.id&&run.nodeId===step.id);return <li key={step.id||`draft-${index}`} className={`rule-action-block${active?' rule-action-active':''}`}>
      <div className="rule-step-heading"><strong>{index+1}. {ruleActions[step.action]}</strong>{active&&<span>{active.preparing?'Loading':'Running'}</span>}</div>
-     <label>Action<select aria-label={`Step ${index+1} action`} value={step.action} onChange={e=>updateStep(index,value=>{value.action=Number(e.target.value);value.seconds=[0,3,6,7,8].includes(value.action)?0:2.5;if([1,4,5].includes(value.action))value.targetId='maestro';if(value.action===3)value.loop=false;if(![0,1,6,7].includes(value.action))value.propId=null;})}>{ruleActions.map((name,action)=><option key={name} value={action} disabled={(action===6||action===7)&&step.action!==action}>{name}</option>)}</select></label>
+     <label>Action<select aria-label={`Step ${index+1} action`} value={step.action} onChange={e=>updateStep(index,value=>{value.action=Number(e.target.value);value.seconds=[0,3,6,7,8].includes(value.action)?0:2.5;if([1,4,5].includes(value.action))value.targetId='maestro';if(value.action===3)value.loop=false;if(![0,1,6,7].includes(value.action))value.propId=null;})}>{ruleActions.map((name,action)=><option key={name} value={action} disabled={action>8||(action===6||action===7)&&step.action!==action}>{name}</option>)}</select></label>
      {step.action!==2&&<label>Target<select aria-label={`Step ${index+1} target`} value={step.targetId} onChange={e=>updateStep(index,value=>{value.targetId=e.target.value;if(value.targetId!=='maestro')value.propId=null;})}>{state.objects.filter(o=>![1,4,5].includes(step.action)||o.id==='maestro').map(o=><option key={o.id} value={o.id}>{o.name}</option>)}</select></label>}
      {step.action===1&&<label>Gesture<select aria-label={`Step ${index+1} gesture`} value={step.gesture} onChange={e=>updateStep(index,value=>{value.gesture=Number(e.target.value);})}>{ruleGestures.map((name,gesture)=><option key={name} value={gesture}>{name}</option>)}</select></label>}
      <label>Seconds<input aria-label={`Step ${index+1} seconds`} type="number" min={[0,3,6,7,8].includes(step.action)?0:.1} max={30} step={.1} disabled={step.action===3} value={step.seconds} onChange={e=>updateStep(index,value=>{value.seconds=Number(e.target.value);})}/></label>

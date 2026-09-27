@@ -274,7 +274,8 @@ limited tutor-state conditions, physical buttons, recorded/imported/library and
 recipe animation, spatial actions and interruption handling. Those legacy sequences do not have
 general branching, variables or user functions; the v5 program alternative adds
 them. Readable text syntax and timer bindings remain unimplemented.
-The room planner's three batches/eight commands limit bounds model-driven edits;
+The room planner's three action batches/eight commands limit bounds model-driven edits;
+read-only discovery and inspection have a separate six-batch allowance;
 it is not a suitable language limit for future saved programs.
 
 The owner approved resetting prototype behaviour saves instead of maintaining
@@ -309,3 +310,12 @@ types, per-capability argument schemas and prompt signatures, with drift checks.
 Typed invocation now serves every saved program. Paged capability discovery,
 live availability queries, full room-command coverage, timers/state machines and
 per-channel ownership remain follow-up work. No development data was reset here.
+
+## Shared capability discovery (2026-09-27)
+
+Paged search, definition inspection and current availability checks now use a
+read-only native catalog from both the book and agent. Program validation follows
+schema-declared resources and constraints rather than the private nine-action
+simple-editor mapping. See [the discovery contract](QUEST_CAPABILITY_DISCOVERY.md).
+Earlier pending-discovery notes describe prior checkpoints. Direct transient calls,
+persistent event state/timers, channel blending and release acceptance remain.

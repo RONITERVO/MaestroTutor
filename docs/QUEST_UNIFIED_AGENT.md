@@ -96,7 +96,7 @@ SDK, provider key, subscription ledger or prompt fork is required.
   restart should show an interrupted/uncertain task and require deliberate recovery,
   not restart mutation automatically. Keep results tied to the original conversation.
 - Use scoped observations and capability groups to control cost. The initial runner
-  permits three batches; longer tasks need explicit task budgets, checkpoints and
+  permits three action batches plus six discovery/inspection batches; longer tasks need explicit task budgets, checkpoints and
   resumable progress, not an unlimited loop or increasingly huge system prompts.
 - Native continuous physics, walking and hand/head tracking stay in Unity. Agents
   set intent, rules and targets; they do not stream per-frame transform commands.
@@ -116,8 +116,8 @@ rewritten prompt. `assistantTools` starts the task using the original source ID,
 including when the tutor also produced an artifact.
 
 `src/api/gemini/journeys.ts` no longer runs the legacy room planner before every
-Quest reply. The app-owned task independently observes/plans/executes (three
-batches maximum) and prepares its own normal-format reply. It uses the same
+Quest reply. The app-owned task independently observes/plans/executes (three action
+batches plus six discovery/inspection batches maximum) and prepares its own normal-format reply. It uses the same
 browser client resolver for BYOK or managed access, retains original attachments,
 history and tutor context, and publishes its result in the original conversation.
 The original tutor context is task data; it cannot override the native command
@@ -377,7 +377,7 @@ The normal tutor context and scene help interpret a clarification answer. The fo
 request lineage is bounded to 64,000 characters; exceeding that limit asks for a
 self-contained request without silently dropping constraints. Stop does not need
 to forward that lineage and is not blocked by its size. Native action
-limits remain three batches of up to eight commands per new user request.
+limits are three action batches of up to eight commands plus six standalone read-only discovery/inspection batches per new user request; reaching either limit stops planning.
 
 Earlier unconfirmed actions propagate uncertainty. Follow-ups may inspect, but
 further mutations are refused until the user reviews the room and makes a fresh

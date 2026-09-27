@@ -20,6 +20,7 @@ namespace Maestro.Quest.Creation
         public RoomRecipe recipe;
         public RuleRequest rule;
         public RoomMotionQuery motionQuery;
+        [NonSerialized] public Newtonsoft.Json.Linq.JObject catalog;
         public AvatarActivityRequest activities;
         public string operation,motionId;
         public ObjectPhysicsSettings physics;
@@ -55,6 +56,7 @@ namespace Maestro.Quest.Creation
         public string workspaceView;
         public RuleView rules;
         public RoomMotionView motions;
+        [NonSerialized] public Newtonsoft.Json.Linq.JObject catalog;
         public string[] capabilities;
         public RoomPhysicsObservation physics;
         public AvatarMovementObservation avatar;
@@ -72,7 +74,8 @@ namespace Maestro.Quest.Creation
         public string InspectionId { get; private set; }
         public string InspectedPart { get; private set; }
         public RoomMotionSearch Motions { get; }
-        public RoomAgentExecutor(RoomEditor source) { editor=source;Motions=new RoomMotionSearch(source); }
+        public RoomCapabilityCatalog Catalog { get; }
+        public RoomAgentExecutor(RoomEditor source) { editor=source;Motions=new RoomMotionSearch(source);Catalog=new RoomCapabilityCatalog(source); }
         bool Preconditions(RoomAgentRequest request,out string error)
         {
             error="The target changed; inspect its latest state before retrying.";
@@ -95,6 +98,10 @@ namespace Maestro.Quest.Creation
             created=Array.Empty<string>(); status="Invalid room request";
             if(request == null || (request.version != 1 && request.version != 2) || request.commands == null || request.commands.Length<1 || request.commands.Length>8) return false;
             var commands=request.commands;
+            if(commands.Any(command=>command?.action=="catalog")) {
+                if(commands.Length!=1) {status="Capability queries must be sent on their own";return false;}
+                return Catalog.Execute(commands[0].catalog,out status);
+            }
             if(commands.Any(command=>command?.action=="motions")) {
                 if(commands.Length!=1) {status="Motion searches must be sent on their own";return false;}
                 return Motions.Execute(commands[0],out status);
@@ -236,10 +243,13 @@ namespace Maestro.Quest.Creation
             if(!string.IsNullOrEmpty(json) && json.Length<=32768)
             {
                 try {
-                    var requestJson=Newtonsoft.Json.Linq.JObject.Parse(json)["request"];
+                    using var reader=new Newtonsoft.Json.JsonTextReader(new System.IO.StringReader(json)) {MaxDepth=48,DateParseHandling=Newtonsoft.Json.DateParseHandling.None};
+                    var raw=Newtonsoft.Json.Linq.JObject.Load(reader,new Newtonsoft.Json.Linq.JsonLoadSettings {DuplicatePropertyNameHandling=Newtonsoft.Json.Linq.DuplicatePropertyNameHandling.Error});
+                    if(reader.Read())throw new ArgumentException("Extra room data");
+                    var requestJson=raw["request"];
                     var snapshot=JsonUtility.FromJson<RoomAgentSnapshot>(json);
                     if(inbox.TryAccept(snapshot,out var request)) {
-                        if(RoomControls.ValidWire(requestJson?.ToString() ?? "")) ok=executor.Execute(request,out status,out created);
+                        if(RoomControls.ValidWire(requestJson?.ToString() ?? "") && RoomAgentWire.PopulateStructured(request,requestJson as Newtonsoft.Json.Linq.JObject)) ok=executor.Execute(request,out status,out created);
                         else {ok=false;status="Invalid room control arguments";created=Array.Empty<string>();}
                     }
                 } catch(Exception ex) when(ex is ArgumentException || ex is Newtonsoft.Json.JsonException) { /* Invalid or partial messages never execute. */ }
@@ -252,7 +262,7 @@ namespace Maestro.Quest.Creation
             else if(executor.InspectionId!=null) lastInspected=executor.InspectionId;
             var inspected=editor.Read(lastInspected);
             return new RoomAgentState { session=inbox.Session,revision=++revision,sceneRevision=editor.Revision,ack=inbox.Ack,ok=ok,status=status,created=created,
-                motions=executor.Motions.Observe(),capabilities=RoomControls.Capabilities(editor),physics=RoomControls.ObservePhysics(editor),avatar=RoomControls.ObserveAvatar(editor),walk=AvatarWalkSelection.Observe(editor),activityProfile=AvatarActivityActions.Observe(editor),
+                motions=executor.Motions.Observe(),catalog=executor.Catalog.Observe(),capabilities=RoomControls.Capabilities(editor),physics=RoomControls.ObservePhysics(editor),avatar=RoomControls.ObserveAvatar(editor),walk=AvatarWalkSelection.Observe(editor),activityProfile=AvatarActivityActions.Observe(editor),
                 visible=executor.WorkspaceVisible,workspaceView=executor.RulesFocused ? "rules" : "objects",rules=editor.GetComponent<RuleWorkshop>()?.Observe(executor.RulesFocused),inspection=inspected==null || executor.RulesFocused ? null : new RoomInspection {id=inspected.id,partId=executor.InspectionId==inspected.id ? executor.InspectedPart : null,objectRevision=editor.ObjectRevision(inspected.id),recipe=inspected.recipe},
                 selectedId=editor.SelectedId,canUndo=editor.CanUndo,canRedo=editor.CanRedo,physicsRunning=editor.PhysicsWorld && editor.PhysicsWorld.Running,
                 objects=editor.Snapshot().objects.Select(x=>new RoomAgentObject {id=x.id,objectRevision=editor.ObjectRevision(x.id),name=x.name??x.kind.ToString(),kind=x.kind.ToString(),position=editor.Find(x.id) ? editor.Find(x.id).transform.localPosition : x.position,scale=x.scale,color=x.color,physics=RoomControls.Physics(x),

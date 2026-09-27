@@ -1,8 +1,8 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
-import {validRuleStep,type RuleStep} from './ruleSteps';
+import {type RuleStep} from './ruleSteps';
 import {behaviourFactTypes} from '../../../shared/behaviourCatalog';
-import {validateCapabilityArguments,capabilityParameterType} from '../../../shared/capabilities';
+import {validateCapabilityArguments,capabilityParameterType,capabilityResources} from '../../../shared/capabilities';
 import {stepInvocation,invocationStep} from './capabilitySteps';
 export type Value=number|boolean|string;
 export type ValueType='number'|'boolean'|'text';
@@ -77,9 +77,7 @@ export function parseProgram(source:unknown):{program:BehaviourProgram|null;erro
       keys(n,'id op capability version arguments bindings');const capability=text(n.capability),args=obj(n.arguments);
       need(typeof n.version==='number','Capability version must be numeric');
       const error=validateCapabilityArguments(capability,n.version,args);need(!error,error??'Invalid capability arguments');
-      const step=invocationStep({id:capability,version:n.version,arguments:args},'22222222222222222222222222222222');
-      need(validRuleStep(step),'Invalid native action');
-      need((step.action===2||resources.has(step.targetId))&&(!step.propId||resources.has(step.propId)),'Declare every action resource');
+      need(capabilityResources(capability,args).every(id=>resources.has(id)),'Declare every action resource');
       for(const [key,value] of Object.entries(obj(n.bindings))){const t=capabilityParameterType(capability,key);need(t,'Unsupported capability argument binding');need(expr(value,f.types)===t,'Capability argument type differs');}break;
      }
      default:throw new Error('Unknown program block');

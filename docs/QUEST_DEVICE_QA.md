@@ -1110,3 +1110,15 @@ No hardware query, APK installation or provider usage is included.
    and receipts must remain readable with no automatic resumption or speech.
    Confirm managed/BYOK usage and the existing server settlement behavior; client
    cancellation does not prove zero provider cost or remote cancellation.
+
+## Action catalog acceptance pending
+
+Once device work resumes, open the book's Workshop and Action catalog. Search,
+page, inspect a definition and check concrete arguments. Verify that an occupied
+check does not interrupt playback, readiness updates after Stop, and editing the
+arguments clears the old readiness. Add a block to a behaviour draft and Apply;
+then trigger it normally. Verify a simultaneous physical edit retains the draft
+and requires Reload. Test readable input and hand/controller interaction on the
+actual two-page surface. Ask the original chat agent for the equivalent behaviour,
+including an unavailable action, and verify the native receipt matches its reply.
+No headset query or installation was performed for this PC checkpoint.

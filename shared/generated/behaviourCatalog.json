@@ -11,7 +11,8 @@
           "target": {
             "type": "string",
             "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
-            "maxLength": 32
+            "maxLength": 32,
+            "x-resource": "object"
           },
           "seconds": {
             "type": "number",
@@ -27,7 +28,8 @@
               "objectId": {
                 "type": "string",
                 "pattern": "^[a-fA-F0-9]{32}$",
-                "maxLength": 32
+                "maxLength": 32,
+                "x-resource": "object"
               },
               "avatarHash": {
                 "type": "string",
@@ -73,7 +75,8 @@
                   "y",
                   "z"
                 ],
-                "additionalProperties": false
+                "additionalProperties": false,
+                "format": "boundedOffset"
               },
               "rotation": {
                 "type": "object",
@@ -105,7 +108,8 @@
                   "z",
                   "w"
                 ],
-                "additionalProperties": false
+                "additionalProperties": false,
+                "format": "unitQuaternion"
               },
               "releaseAt": {
                 "type": "number",
@@ -122,7 +126,10 @@
               "rotation",
               "releaseAt"
             ],
-            "additionalProperties": false
+            "additionalProperties": false,
+            "x-requires": {
+              "target": "maestro"
+            }
           }
         },
         "required": [
@@ -155,7 +162,8 @@
             "type": "string",
             "enum": [
               "maestro"
-            ]
+            ],
+            "x-resource": "object"
           },
           "seconds": {
             "type": "number",
@@ -179,7 +187,8 @@
               "objectId": {
                 "type": "string",
                 "pattern": "^[a-fA-F0-9]{32}$",
-                "maxLength": 32
+                "maxLength": 32,
+                "x-resource": "object"
               },
               "avatarHash": {
                 "type": "string",
@@ -225,7 +234,8 @@
                   "y",
                   "z"
                 ],
-                "additionalProperties": false
+                "additionalProperties": false,
+                "format": "boundedOffset"
               },
               "rotation": {
                 "type": "object",
@@ -257,7 +267,8 @@
                   "z",
                   "w"
                 ],
-                "additionalProperties": false
+                "additionalProperties": false,
+                "format": "unitQuaternion"
               },
               "releaseAt": {
                 "type": "number",
@@ -274,7 +285,10 @@
               "rotation",
               "releaseAt"
             ],
-            "additionalProperties": false
+            "additionalProperties": false,
+            "x-requires": {
+              "target": "maestro"
+            }
           }
         },
         "required": [
@@ -329,7 +343,8 @@
           "target": {
             "type": "string",
             "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
-            "maxLength": 32
+            "maxLength": 32,
+            "x-resource": "object"
           }
         },
         "required": [
@@ -362,7 +377,8 @@
             "type": "string",
             "enum": [
               "maestro"
-            ]
+            ],
+            "x-resource": "object"
           },
           "seconds": {
             "type": "number",
@@ -399,7 +415,8 @@
             "type": "string",
             "enum": [
               "maestro"
-            ]
+            ],
+            "x-resource": "object"
           },
           "seconds": {
             "type": "number",
@@ -437,7 +454,8 @@
           "target": {
             "type": "string",
             "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
-            "maxLength": 32
+            "maxLength": 32,
+            "x-resource": "object"
           },
           "seconds": {
             "type": "number",
@@ -463,7 +481,8 @@
               "objectId": {
                 "type": "string",
                 "pattern": "^[a-fA-F0-9]{32}$",
-                "maxLength": 32
+                "maxLength": 32,
+                "x-resource": "object"
               },
               "avatarHash": {
                 "type": "string",
@@ -509,7 +528,8 @@
                   "y",
                   "z"
                 ],
-                "additionalProperties": false
+                "additionalProperties": false,
+                "format": "boundedOffset"
               },
               "rotation": {
                 "type": "object",
@@ -541,7 +561,8 @@
                   "z",
                   "w"
                 ],
-                "additionalProperties": false
+                "additionalProperties": false,
+                "format": "unitQuaternion"
               },
               "releaseAt": {
                 "type": "number",
@@ -558,7 +579,10 @@
               "rotation",
               "releaseAt"
             ],
-            "additionalProperties": false
+            "additionalProperties": false,
+            "x-requires": {
+              "target": "maestro"
+            }
           }
         },
         "required": [
@@ -593,7 +617,8 @@
           "target": {
             "type": "string",
             "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
-            "maxLength": 32
+            "maxLength": 32,
+            "x-resource": "object"
           },
           "seconds": {
             "type": "number",
@@ -614,7 +639,8 @@
               "objectId": {
                 "type": "string",
                 "pattern": "^[a-fA-F0-9]{32}$",
-                "maxLength": 32
+                "maxLength": 32,
+                "x-resource": "object"
               },
               "avatarHash": {
                 "type": "string",
@@ -660,7 +686,8 @@
                   "y",
                   "z"
                 ],
-                "additionalProperties": false
+                "additionalProperties": false,
+                "format": "boundedOffset"
               },
               "rotation": {
                 "type": "object",
@@ -692,7 +719,8 @@
                   "z",
                   "w"
                 ],
-                "additionalProperties": false
+                "additionalProperties": false,
+                "format": "unitQuaternion"
               },
               "releaseAt": {
                 "type": "number",
@@ -709,7 +737,10 @@
               "rotation",
               "releaseAt"
             ],
-            "additionalProperties": false
+            "additionalProperties": false,
+            "x-requires": {
+              "target": "maestro"
+            }
           }
         },
         "required": [
@@ -744,7 +775,8 @@
           "target": {
             "type": "string",
             "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
-            "maxLength": 32
+            "maxLength": 32,
+            "x-resource": "object"
           },
           "seconds": {
             "type": "number",
@@ -863,11 +895,11 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "21e8c74602a06c52ee62302033ad341f802894694e000daf409b09e2b4a3ea99"
+      "sha256": "68180a40ab4159210240cfcf94d98347de1f500004e2c7cf5574cc24e513bd30"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "2a2d5e7b2e03f85e4bfcad3c4bcbdabf23369156296f154d65a447c9483ccef5"
+      "sha256": "4e7682b8d078f35bf25906d6c23c0a31edf061e31071bdbb38306f93e7ef6c3a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

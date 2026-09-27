@@ -7,6 +7,8 @@ import {simpleProgramSteps} from '../../src/core-sdk/room/programs';
 import {copyRecipe,parseRecipe} from '../../src/core-sdk/room/recipe';
 import robot from './recipeRobot.json';
 import nativeProgram from './programBookState.json';
+import {capabilityDefinition,validateCapabilityArguments,capabilityResources} from '../../shared/capabilities';
+import {behaviourCatalog} from '../../shared/behaviourCatalog';
 import nativeRules from './ruleBookState.json';
 import {validRuleView,type RuleView} from '../../src/core-sdk/room/rules';
 import '../../src/app/index.css';
@@ -19,6 +21,7 @@ let state:RoomAgentState={version:1,session:'a'.repeat(32),revision:1,sceneRevis
 if(!validRuleView(nativeRules))throw new Error('Native rule observation fixture is invalid');
 state.capabilities=['behaviourPrograms.v3'];state.rules=JSON.parse(JSON.stringify(nativeRules));state.workspaceView='objects';
 const programs=new URLSearchParams(location.search).has('program');if(programs)state=JSON.parse(JSON.stringify(nativeProgram));
+state.capabilities=[...state.capabilities??[],'catalog.v1'];
 const prop=simpleProgramSteps(nativeRules.selected.program)?.[0]?.propId;
 if(prop)state.objects.push({id:prop,objectRevision:4,name:'Practice ball',kind:'Ball',position:{x:.3,y:.8,z:.8},scale:1,color:white,animated:false});
 const undo:typeof recipe[]=[],redo:typeof recipe[]=[];
@@ -32,7 +35,21 @@ setInterval(()=>{
  if(request&&request.session===state.session&&request.sequence===state.ack+1){
   state={...state,ack:request.sequence,ok:true,status:'Fixture action completed'};
   for(const command of request.commands){
-   if(command.action==='workspace')state.visible=command.visible;
+   if(command.action==='catalog'&&command.catalog){
+    const query=command.catalog;
+    if(query.operation==='search'){
+     const terms=query.query.toLowerCase().trim().split(/ +/).filter(Boolean);
+     const matches=behaviourCatalog.actions.filter(x=>terms.every(term=>(x.id+' '+x.label+' '+x.requirements.join(' ')).toLowerCase().includes(term))).sort((a,b)=>a.id.localeCompare(b.id));
+     const offset=Math.min(query.offset,Math.max(0,Math.floor((matches.length-1)/6)*6));
+     state.catalog={operation:'search',query:query.query,offset,pageSize:6,total:matches.length,entries:matches.slice(offset,offset+6).map(({id,version,label})=>({id,version,label})),status:'Fixture catalog search'};
+    }else if(query.operation==='inspect'){
+     const definition=capabilityDefinition(query.capability);
+     state.catalog={...query,definition:definition?.version===query.version?definition:null,status:'Fixture definition'};
+    }else{
+     const call=query.call,valid=validateCapabilityArguments(call.id,call.version,call.arguments)===null;
+     state.catalog={operation:'check',call,valid,available:false,occupied:false,resources:valid?capabilityResources(call.id,call.arguments):[],status:'Browser preview cannot verify live action availability. Check in Unity.'};
+    }
+   }else if(command.action==='workspace')state.visible=command.visible;
    else if(command.action==='inspect'){state.workspaceView='objects';state.inspection={id:command.target!,objectRevision:state.objects.find(x=>x.id===command.target)!.objectRevision!,recipe:command.target===id?recipe:null};}
    else if(command.action==='recipe'&&command.target===id&&parseRecipe(command.recipe)){
     undo.push(copyRecipe(recipe));redo.length=0;Object.assign(recipe,copyRecipe(command.recipe as typeof recipe));state.sceneRevision++;

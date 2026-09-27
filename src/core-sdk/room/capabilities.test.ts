@@ -32,7 +32,7 @@ it('rejects malformed public calls and keeps returned schemas detached',()=>{
  expect(capabilityParameterType('time.wait','target')).toBeNull();
  expect(capabilityParameterType('avatar.gesture.play','prop')).toBeNull();
 });
-it('retains prop arguments and rejects domain-invalid offsets after structural validation',()=>{
+it('retains prop arguments and validates declared vector constraints without using the simple editor adapter',()=>{
  const step={...newRuleStep(1),propId:'a'.repeat(32),propAvatarHash:'b'.repeat(64),propHand:0,propRelease:2,
   propOffset:{x:.1,y:.2,z:0},propRotation:{x:0,y:0,z:0,w:1},propReleaseAt:.5};
  const program=sequenceProgram([step]),node=program.functions[0].body[0];
@@ -40,6 +40,6 @@ it('retains prop arguments and rejects domain-invalid offsets after structural v
  const call=stepInvocation(step);expect(invocationStep(call,step.id)).toMatchObject(step);
  if(node.op!=='invoke')throw new Error('Expected invocation');
  (node.arguments.prop as {offset:unknown}).offset={x:1,y:1,z:1};
- expect(validateCapabilityArguments(node.capability,node.version,node.arguments)).toBeNull();
+ expect(validateCapabilityArguments(node.capability,node.version,node.arguments)).not.toBeNull();
  expect(parseProgram(JSON.stringify(program)).program).toBeNull();
 });

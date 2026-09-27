@@ -1,9 +1,10 @@
+// Copyright 2026 Roni Tervo
+// SPDX-License-Identifier: Apache-2.0
+import {validCatalogView} from '../../../shared/roomCatalog';
 import { requireRoomCapabilities, validObjectPhysics, validAvatarMovement, validPhysicsObservation, validAvatarObservation, validAvatarWalkObservation } from '../../../shared/roomControls';
 import {validActivityProfile} from '../../../shared/avatarActivities';
 import {validMotionSearchView} from '../../../shared/roomMotions';
 import {validRuleView} from '../../core-sdk/room/rules';
-// Copyright 2026 Roni Tervo
-// SPDX-License-Identifier: Apache-2.0
 import {parseRecipe,validPigment} from '../../core-sdk/room/recipe';
 import { parseRoomCommands, type RoomAgentLease, type RoomAgentState, type RoomCommand } from '../../core-sdk/room/roomAgent';
 const record=(v:unknown):v is Record<string,unknown> => v!==null && typeof v==='object' && !Array.isArray(v);
@@ -35,6 +36,7 @@ export class RoomAgentClient {
     if(input.avatar!==undefined&&input.avatar!==null&&!validAvatarObservation(input.avatar))return false;
     if(input.objects.some(o=>o.physics!==undefined&&!validObjectPhysics(o.physics)||o.movement!==undefined&&o.movement!==null&&!validAvatarMovement(o.movement)||['held','simulating'].some(key=>o[key]!==undefined&&typeof o[key]!=='boolean')))return false;
     if(input.visible!==undefined && typeof input.visible!=='boolean')return false;
+    if(input.catalog!==undefined&&input.catalog!==null&&!validCatalogView(input.catalog))return false;
     if(input.motions!==undefined&&input.motions!==null&&!validMotionSearchView(input.motions))return false;
     if(input.rules!==undefined&&input.rules!==null&&!validRuleView(input.rules))return false;
     if(input.workspaceView!==undefined&&!['objects','rules'].includes(input.workspaceView as string))return false;

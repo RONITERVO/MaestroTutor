@@ -60,6 +60,40 @@ namespace Maestro.Quest.Tests
             ray.selectInput = new XRInputButtonReader { inputSourceMode = XRInputButtonReader.InputSourceMode.ManualValue,manualPerformed = true,manualValue = 1 };
             hand.SetActive(true); return ray;
         }
+        [UnityTest] public IEnumerator CatalogDiscoveryAndLiveChecksDoNotEditOrInterruptTheRoom()
+        {
+            var executor=new RoomAgentExecutor(editor);int roomRevision=editor.Revision,ruleRevision=workshop.Revision;
+            string selected=editor.SelectedId,document=JsonUtility.ToJson(editor.Snapshot());
+            var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);
+            JObject Query(JObject query,string phase) {
+                Assert.That(executor.Execute(new RoomAgentRequest {version=2,commands=new[] {new RoomAgentCommand {action="catalog",catalog=query}}},out var error,out var created),Is.True,error);
+                Assert.That(created,Is.Empty);var result=executor.Catalog.Observe();
+                string output=Environment.GetEnvironmentVariable("MAESTRO_CATALOG_EVIDENCE");
+                if(!string.IsNullOrEmpty(output)) {Directory.CreateDirectory(output);var state=observer.Observe();state.catalog=result;File.WriteAllText(Path.Combine(output,phase+".json"),RoomAgentWire.Serialize(state));}
+                Assert.That(editor.Revision,Is.EqualTo(roomRevision));Assert.That(workshop.Revision,Is.EqualTo(ruleRevision));Assert.That(editor.SelectedId,Is.EqualTo(selected));
+                return result;
+            }
+            var first=Query(new JObject {["operation"]="search",["query"]="",["offset"]=0},"search");
+            var second=Query(new JObject {["operation"]="search",["query"]="",["offset"]=6},"search-next");
+            Assert.That(first["entries"].Count(),Is.EqualTo(6));Assert.That((int)first["total"],Is.EqualTo(Maestro.Quest.Programs.BehaviourCatalog.Actions.Count));
+            Assert.That(first["entries"].Select(x=>(string)x["id"]).Intersect(second["entries"].Select(x=>(string)x["id"])),Is.Empty);
+            var inspected=Query(new JObject {["operation"]="inspect",["capability"]="animation.recording.play",["version"]=1},"inspect");
+            Assert.That(JToken.DeepEquals(inspected["definition"],Maestro.Quest.Programs.BehaviourCatalog.Action("animation.recording.play").ToJson()),Is.True);
+            var check=new JObject {["operation"]="check",["call"]=new JObject {["id"]="animation.recording.play",["version"]=1,["arguments"]=new JObject {["target"]=selected,["seconds"]=1,["loop"]=false}}};
+            var ready=Query(check,"ready");Assert.That((bool)ready["valid"],Is.True);Assert.That((bool)ready["available"],Is.True);
+            Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(document));Assert.That(runtime.Scheduler.RunningCount,Is.Zero);
+            Assert.That(runtime.Trigger(sequenceId),Is.True);yield return null;
+            var occupied=Query(check,"occupied");Assert.That((bool)occupied["occupied"],Is.True);Assert.That((bool)occupied["available"],Is.False);
+            Assert.That(runtime.Scheduler.RunningCount,Is.EqualTo(1),"Checking cannot stop another action");
+            runtime.StopAll();Assert.That((bool)executor.Catalog.Observe()["available"],Is.True,"Checks refresh without another command");
+            runtime.enabled=false;Assert.That((bool)executor.Catalog.Observe()["available"],Is.False);runtime.enabled=true;
+            check["call"]["arguments"]["target"]=Guid.NewGuid().ToString("N");var missing=Query(check,"missing");
+            Assert.That((bool)missing["valid"],Is.True);Assert.That((bool)missing["available"],Is.False);
+            check["call"]["arguments"]["seconds"]=100;var invalid=Query(check,"invalid");
+            Assert.That((bool)invalid["valid"],Is.False);Assert.That((bool)invalid["available"],Is.False);
+            var unknown=Query(new JObject {["operation"]="inspect",["capability"]="future.unknown",["version"]=1},"unknown");
+            Assert.That(unknown["definition"].Type,Is.EqualTo(JTokenType.Null));
+        }
         [UnityTest] public IEnumerator RealButtonAndWebActivityTriggerTheSameRecordedActionAndPauseStopsIt()
         {
             workshop.AddBinding(); workshop.AddButton(ButtonMount.Room);
