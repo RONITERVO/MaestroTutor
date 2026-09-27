@@ -211,8 +211,8 @@ export function createLiveProviderCallbacks(state: Pick<LiveSessionData,
             modelText,
             finalUserAudio,
             modelAudioLines,
-            ...(session.turnContext?.handoffId ? [{ ...session.turnContext,
-              liveInputMedia: liveInputContextRef.current?.finish() ?? missingLiveInput(),
+            ...(session.turnContext ? [{ ...session.turnContext,
+              ...(session.turnContext.handoffId ? { liveInputMedia: liveInputContextRef.current?.finish() ?? missingLiveInput() } : {}),
             }] : [])
           );
           if (callbackResult instanceof Promise) {

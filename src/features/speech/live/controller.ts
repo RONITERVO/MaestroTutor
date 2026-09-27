@@ -92,7 +92,7 @@ export function createLiveConversationController(ports: LiveRuntimePorts, callba
   const start = async (opts: StartLiveConversationOptions) => {
     const request = ++startRequest;
     const {
-      liveOpenTrigger, stream, videoElement,
+      liveOpenTrigger, stream, videoElement, conversationId,
       systemInstruction, voiceName, responseModalities = [Modality.AUDIO],
       playModelAudio = true, emitTurns = true, allowModelInterruptions = false,
       costFeature = 'liveConversation', gateInputOnSpeech = false, gateAudioAfterConnect = gateInputOnSpeech,
@@ -314,7 +314,12 @@ export function createLiveConversationController(ports: LiveRuntimePorts, callba
         ? await opts.buildSystemInstruction()
         : systemInstruction;
       if (abortIfInvalidated()) return;
-      const turnContext = opts.prepareTurnContext ? structuredClone(await opts.prepareTurnContext(freshSystemInstruction)) : undefined;
+      const preparedContext = opts.prepareTurnContext ? structuredClone(await opts.prepareTurnContext(freshSystemInstruction)) : undefined;
+      const turnContext = preparedContext || conversationId ? {
+        ...preparedContext,
+        systemInstruction: preparedContext?.systemInstruction ?? freshSystemInstruction,
+        ...(conversationId ? { conversationId } : {}),
+      } : undefined;
       if (abortIfInvalidated()) return;
       turnTimingRef.current?.mark('context.ready', { instructionCharacters: freshSystemInstruction?.length ?? 0 });
       const providerCallbacks = createLiveProviderCallbacks(state, {

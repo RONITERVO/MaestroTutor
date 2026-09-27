@@ -148,7 +148,16 @@ export class BackupDecoder {
       this.unique('profile', 'singleton'); if (row.text !== null) text(row.text);
       emitted.push({ kind: 'profile', id: 'singleton', value: row.text });
     } else if (row.type === 'assets') {
-      this.unique('asset', 'maestroProfileImage'); if (row.maestroProfile !== null) object(row.maestroProfile);
+      this.unique('asset', 'maestroProfileImage');
+      if (row.maestroProfile !== null) {
+        const asset = object(row.maestroProfile);
+        // Validate every field consumed by avatar hydration before the archive
+        // can replace live data. Keep optional legacy fields and unknown metadata.
+        for (const key of ['dataUrl', 'mimeType', 'uri', 'accessScope']) {
+          if (key in asset) text(asset[key]);
+        }
+        if ('updatedAt' in asset) integer(asset.updatedAt);
+      }
       emitted.push({ kind: 'asset', id: 'maestroProfileImage', value: row.maestroProfile });
     } else if (row.type === 'end') {
       if (!this.enhanced || row.chats !== this.chats || row.tasks !== this.tasks) invalid(); this.ended = true;

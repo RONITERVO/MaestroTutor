@@ -28,7 +28,7 @@ it.each(['', 'A transcribed answer'])('retains the model audio after completion 
   const config = createConfig();
   const h = renderHook(() => useLiveSessionController(config));
   const audio = new Int16Array([100, 200, 300]);
-  await act(async () => { await h.result.current.handleLiveTurnComplete('', modelText, undefined, [audio]); });
+  await act(async () => { await h.result.current.handleLiveTurnComplete('', modelText, undefined, [audio], { conversationId: allGeneratedLanguagePairs[0].id }); });
   const messages = useMaestroStore.getState().messages;
   expect(messages).toHaveLength(1);
   expect(messages[0].role).toBe('assistant');
@@ -77,7 +77,7 @@ it('captures the completed spoken source messages before starting shared suggest
     return true;
   });
   await act(async () => { await h.result.current.handleLiveTurnComplete('Make a blue robot.', 'I will ask the agent.', undefined, undefined,
-    { systemInstruction: 'Original captured context', handoffId: 'owned-live-context', liveInputMedia: { version: 1, complete: false, issue: 'limit', frames: [], packets: [] } }); });
+    { conversationId: allGeneratedLanguagePairs[0].id, systemInstruction: 'Original captured context', handoffId: 'owned-live-context', liveInputMedia: { version: 1, complete: false, issue: 'limit', frames: [], packets: [] } }); });
   expect(ports.capture).toHaveBeenCalledOnce(); expect(ports.suggestions).toHaveBeenCalledOnce();
   expect(ports.capture.mock.calls[0][4]).toEqual({ version: 1, complete: false, issue: 'limit', frames: [], packets: [] });
   expect(ports.suggestions.mock.calls[0][3]).toEqual({ responseSource: 'live' });
@@ -88,11 +88,12 @@ it('does not persist a spoken turn into another conversation after a slow snapsh
   config.captureSnapshot = vi.fn(() => new Promise<null>(done => { resolve = done; }));
   const h = renderHook(() => useLiveSessionController(config)); let completing!: Promise<void>;
   act(() => { completing = h.result.current.handleLiveTurnComplete('Make a robot.', 'I will ask the agent.', undefined, undefined,
-    { handoffId: 'owned-live-context' }); });
+    { conversationId: allGeneratedLanguagePairs[0].id, handoffId: 'owned-live-context' }); });
   useMaestroStore.setState({ settings: { ...useMaestroStore.getState().settings, selectedLanguagePairId: 'different-conversation' } });
   await act(async () => { resolve(null); await completing; });
   expect(useMaestroStore.getState().messages).toHaveLength(0);
   expect(ports.capture).not.toHaveBeenCalled(); expect(ports.suggestions).not.toHaveBeenCalled();
+  expect(ports.clearDrafts).not.toHaveBeenCalled();
 });
 
 it.each(['finish', 'stop', 'conversation'])('yields idle user-owned Live without losing its choice; %s', async outcome => {
@@ -102,6 +103,7 @@ it.each(['finish', 'stop', 'conversation'])('yields idle user-owned Live without
   const config = { ...createConfig(), liveVideoStream: { active: true } as MediaStream };
   const h = renderHook(() => useLiveSessionController(config));
   await act(async () => { await h.result.current.handleStartLiveSession(); });
+  expect(ports.start.mock.calls[0][0].conversationId).toBe(allGeneratedLanguagePairs[0].id);
   expect(await h.result.current.pauseLiveForSpeech()).toBeNull(); // Active speech cannot be displaced.
   await act(async () => { callbacks().onStateChange('idle'); });
   expect(useMaestroStore.getState().liveSessionState).toBe('armed'); expect(ports.start).toHaveBeenCalledTimes(2);
@@ -114,4 +116,33 @@ it.each(['finish', 'stop', 'conversation'])('yields idle user-owned Live without
   await act(async () => { resume!(); resume!(); });
   expect(ports.start).toHaveBeenCalledTimes(outcome === 'finish' ? 3 : 2);
   if (outcome === 'finish') expect(ports.start.mock.calls[2][0]).toMatchObject({ gateInputOnSpeech: true });
+});
+
+
+it.each(['text', 'audio'])('rejects a delayed %s completion from a previously selected conversation', async kind => {
+  const config = createConfig(), origin = useMaestroStore.getState().settings.selectedLanguagePairId!;
+  const h = renderHook(() => useLiveSessionController(config));
+  act(() => useMaestroStore.setState({ messages: [{ id: 'new-draft', role: 'assistant', text: 'Current draft', timestamp: 1 }],
+    settings: { ...initialSettings, selectedLanguagePairId: allGeneratedLanguagePairs[1].id } }));
+  const before = useMaestroStore.getState().messages;
+  await act(async () => { await h.result.current.handleLiveTurnComplete(kind === 'text' ? 'Old question' : '',
+    kind === 'text' ? 'Old answer' : '', undefined, kind === 'audio' ? [new Int16Array([100])] : undefined,
+    { conversationId: origin }); });
+  expect(useMaestroStore.getState().messages).toEqual(before);
+  expect(config.captureSnapshot).not.toHaveBeenCalled();
+  expect(ports.suggestions).not.toHaveBeenCalled(); expect(ports.capture).not.toHaveBeenCalled();
+  expect(ports.clearDrafts).not.toHaveBeenCalled(); expect(ports.cache).not.toHaveBeenCalled();
+});
+
+it('does not fetch suggestions or clear the new draft when the conversation changes during handoff persistence', async () => {
+  const config = createConfig(); let resolve!: () => void;
+  ports.capture.mockImplementation(() => new Promise<void>(done => { resolve = done; }));
+  const h = renderHook(() => useLiveSessionController(config)); let completing!: Promise<void>;
+  await act(async () => { completing = h.result.current.handleLiveTurnComplete('Request', 'Reply', undefined, undefined,
+    { conversationId: useMaestroStore.getState().settings.selectedLanguagePairId!, handoffId: 'owned-context' }); });
+  act(() => useMaestroStore.setState({ messages: [{ id: 'new-draft', role: 'assistant', text: 'Current draft', timestamp: 1 }],
+    settings: { ...initialSettings, selectedLanguagePairId: allGeneratedLanguagePairs[1].id } }));
+  await act(async () => { resolve(); await completing; });
+  expect(ports.suggestions).not.toHaveBeenCalled(); expect(ports.clearDrafts).not.toHaveBeenCalled();
+  expect(useMaestroStore.getState().messages.map(message => message.id)).toEqual(['new-draft']);
 });

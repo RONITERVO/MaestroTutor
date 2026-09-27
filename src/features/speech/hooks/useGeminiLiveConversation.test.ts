@@ -383,3 +383,19 @@ it.each([false, true])('preserves actual sent audio through completion; interrup
   }
   expect(capture.port.onmessage).toBeNull();
 });
+
+
+it('keeps the conversation captured before async connection even without a room handoff', async () => {
+  const h = harness(), pending = deferred<string>();
+  const options = { liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_CAMERA_LIVE, conversationId: 'original-pair',
+    buildSystemInstruction: () => pending.promise, playModelAudio: false };
+  let starting!: Promise<void>;
+  act(() => { starting = h.result.current.start(options); }); await flush();
+  options.conversationId = 'new-pair';
+  await act(async () => { pending.resolve('Original instruction'); await starting; });
+  expect(connections[0].config).not.toHaveProperty('conversationId');
+  expect(connections[0].config.systemInstruction).toBe('Original instruction');
+  connections[0].callbacks.onmessage({ serverContent: { outputTranscription: { text: 'Old answer' }, turnComplete: true } });
+  await flush(); await advance(1500);
+  expect(h.callbacks.onTurnComplete.mock.calls[0][4]).toEqual({ conversationId: 'original-pair', systemInstruction: 'Original instruction' });
+});

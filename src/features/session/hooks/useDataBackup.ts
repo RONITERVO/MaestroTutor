@@ -231,7 +231,7 @@ export const useDataBackup = ({ t }: UseDataBackupConfig): UseDataBackupReturn =
 
           let chats = 0, tasks = 0;
           await iterateChatHistoriesDB(async (pairId, messages) => {
-            if (!pairId || !messages?.length) return;
+            if (!pairId || !Array.isArray(messages)) return;
             chats++;
             if (Array.isArray(messages) && messages.length > 0) {
               let chunkIndex = 0;
@@ -257,6 +257,10 @@ export const useDataBackup = ({ t }: UseDataBackupConfig): UseDataBackupReturn =
                   await flush(true);
                 }
               }
+            } else {
+              // An empty selected conversation still carries profile and avatar
+              // data; encode it explicitly so the saved archive is restorable.
+              await writer.write(buildChatChunkLine(pairId, 0, true, []));
             }
 
             const meta = (allMetas && (allMetas as any)[pairId]) || null;

@@ -36,6 +36,8 @@ export interface LiveTurnTranscriptUpdate {
 import type { LiveInputMedia } from '../../../core-sdk/media/liveInputContext';
 
 export interface LiveTurnContext {
+  /** Original local conversation, captured when Live is started/armed. */
+  conversationId?: string;
   liveInputMedia?: LiveInputMedia;
   systemInstruction?: string;
   /** Opaque app-issued provenance, never model-authored data. */
@@ -69,6 +71,8 @@ export interface UseGeminiLiveConversationCallbacks {
 }
 
 export interface StartLiveConversationOptions {
+  /** Local completion provenance; never sent to the provider. */
+  conversationId?: string;
   /** The audited product event that authorizes this paid Live transport. */
   liveOpenTrigger: ConversationLiveOpenTrigger;
   /**

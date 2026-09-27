@@ -67,3 +67,16 @@ it('retains follow-up provenance and cancellation evidence as passive backup his
   expect(entries.find(entry => entry.kind === 'task')?.value).toEqual(value);
   (value.record.relatedTask.requests as any) = [{}]; expect(() => validateArchivedRoomTask(value)).toThrow();
 });
+
+
+it.each([1, [], { dataUrl: 1 }, { mimeType: {} }, { uri: false }, { accessScope: [] }, { updatedAt: -1 }])(
+  'rejects malformed avatar assets before they can be staged: %j', async maestroProfile => {
+    await expect(decode([header, chat, { type: 'assets', maestroProfile }, { ...end, tasks: 0 }]))
+      .rejects.toThrow('INVALID_BACKUP_FORMAT');
+  });
+
+it.each([null, {}, { dataUrl: 'data:image/png;base64,AQID', mimeType: 'image/png', updatedAt: 1 }, { uri: 'file:///legacy.png', accessScope: 'byok' }])(
+  'retains supported legacy avatar asset fields: %j', async maestroProfile => {
+    expect(await decode([header, chat, { type: 'assets', maestroProfile }, { ...end, tasks: 0 }]))
+      .toContainEqual({ kind: 'asset', id: 'maestroProfileImage', value: maestroProfile });
+  });

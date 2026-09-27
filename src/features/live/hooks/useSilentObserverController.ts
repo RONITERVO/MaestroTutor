@@ -160,18 +160,21 @@ export const useSilentObserverController = ({
     if (startInFlightRef.current) return;
     startInFlightRef.current = true;
     clearRetryTimer();
+    const conversationId = useMaestroStore.getState().settings.selectedLanguagePairId;
     const startAttempt = Date.now();
     lastStartAttemptRef.current = startAttempt;
 
     try {
       const liveSystemInstruction = await buildObserverInstruction();
-      if (!shouldRunRef.current || lastStartAttemptRef.current !== startAttempt) return;
+      if (!shouldRunRef.current || lastStartAttemptRef.current !== startAttempt || !conversationId
+        || useMaestroStore.getState().settings.selectedLanguagePairId !== conversationId) return;
 
       const voiceName = settingsRef.current.tts.voiceName || 'Kore';
       const activeStream = liveVideoStream && liveVideoStream.active ? liveVideoStream : null;
 
       await startObserverConversation({
         liveOpenTrigger: LIVE_OPEN_TRIGGER.WHISPER_OBSERVER,
+        conversationId,
         stream: activeStream,
         videoElement: visualContextVideoRef.current,
         systemInstruction: liveSystemInstruction,

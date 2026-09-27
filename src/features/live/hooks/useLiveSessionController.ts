@@ -188,7 +188,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
   const liveSessionShouldRestoreSttRef = useRef(false);
   const liveSessionCaptureRef = useRef<{ stream: MediaStream; created: boolean } | null>(null);
   const liveUiTokenRef = useRef<string | null>(null);
-  const isFinalizingLiveTurnRef = useRef(false);
+  const isFinalizingLiveTurnRef = useRef<symbol | null>(null);
   const continueLiveRef = useRef(false);
   const speechPauseRef = useRef<symbol | null>(null);
   const restartLiveRef = useRef<(() => Promise<void>) | null>(null);
@@ -332,8 +332,15 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
     modelAudioLines?: Int16Array[],
     context?: LiveTurnContext
   ) => {
-    const turnPairId = useMaestroStore.getState().settings.selectedLanguagePairId;
-    isFinalizingLiveTurnRef.current = true;
+    const turnPairId = context?.conversationId;
+    const isCurrentTurn = () => Boolean(turnPairId)
+      && useMaestroStore.getState().settings.selectedLanguagePairId === turnPairId
+      && !useMaestroStore.getState().isLoadingHistory;
+    // A completion may have been queued before a language/conversation change.
+    // Never infer its origin from the currently selected conversation.
+    if (!turnPairId || !isCurrentTurn()) return;
+    const finalization = Symbol('live-turn');
+    isFinalizingLiveTurnRef.current = finalization;
     const hasModelAudio = Boolean(modelAudioLines?.some(segment => segment.length > 0));
     try {
       const userDraftMeta = liveDraftMessageMetaRef.current.user;
@@ -351,7 +358,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
           snapshotData = await captureSnapshot(false);
         } catch { /* ignore */ }
 
-        if (useMaestroStore.getState().settings.selectedLanguagePairId !== turnPairId || useMaestroStore.getState().isLoadingHistory) return;
+        if (!isCurrentTurn()) return;
 
         // Save User Audio if available
         let recordedUtterance: RecordedUtterance | undefined = undefined;
@@ -405,6 +412,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
               console.warn('Optimization failed, using original for persistence', e);
             }
 
+            if (!isCurrentTurn() || !findExistingMessageId(userMessageId)) return;
             try {
               // 2. Upload FULL resolution to Files API for model context
               const up = await uploadMediaToFiles(snapshotData.base64, snapshotData.mimeType, 'live-user-snapshot');
@@ -420,6 +428,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
               ]);
               
               // 3. Update message with both low-res (local) and URI (remote)
+              if (!isCurrentTurn() || !findExistingMessageId(userMessageId)) return;
               updateMessage(userMessageId, {
                 storageOptimizedImageUrl: optimizedDataUrl,
                 storageOptimizedImageMimeType: optimizedMime,
@@ -428,6 +437,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
             } catch (e) {
               console.warn('Upload failed', e);
               // Still update persistence image
+              if (!isCurrentTurn() || !findExistingMessageId(userMessageId)) return;
               updateMessage(userMessageId, {
                 storageOptimizedImageUrl: optimizedDataUrl,
                 storageOptimizedImageMimeType: optimizedMime
@@ -564,6 +574,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
             }, userText, structuredText, context.liveInputMedia);
           }
 
+          if (!isCurrentTurn()) return;
           // 4. Generate Suggestions Immediately. Live turns rely on this shared
           // path to decide whether to attach an artifact or run a tool request.
           void fetchAndSetReplySuggestions(assistantId, structuredText, getHistoryRespectingBookmark(completeHistory), {
@@ -586,9 +597,9 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
     } catch (error) {
       console.error('Failed to process live turn completion:', error);
     } finally {
-      isFinalizingLiveTurnRef.current = false;
-      if (modelText.trim() || hasModelAudio) {
-        clearAllLiveDraftMessages();
+      if (isFinalizingLiveTurnRef.current === finalization) {
+        isFinalizingLiveTurnRef.current = null;
+        if (isCurrentTurn() && (modelText.trim() || hasModelAudio)) clearAllLiveDraftMessages();
       }
     }
   }, [
@@ -735,6 +746,8 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
     if (!sessionActivity.isActive()) return;
     if (liveSessionState === 'connecting' || liveSessionState === 'active' || liveSessionState === 'armed') return;
 
+    const conversationId = useMaestroStore.getState().settings.selectedLanguagePairId;
+    if (!conversationId) return;
     setLiveSessionError(null);
 
     let stream: MediaStream | null = liveVideoStream && liveVideoStream.active ? liveVideoStream : null;
@@ -792,13 +805,16 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
       cancelReengagement();
 
       const liveSystemInstruction = await generateLiveSystemInstruction();
-      if (!sessionActivity.isActive() || !continueLiveRef.current) { releaseLiveSessionCapture(); return; }
+      if (!sessionActivity.isActive() || !continueLiveRef.current
+        || useMaestroStore.getState().settings.selectedLanguagePairId !== conversationId) { releaseLiveSessionCapture(); return; }
       const voiceName = settingsRef.current.tts.voiceName || 'Kore';
 
       restartLiveRef.current = async () => {
-        if (!continueLiveRef.current || speechPauseRef.current || !sessionActivity.isActive()) return;
+        if (!continueLiveRef.current || speechPauseRef.current || !sessionActivity.isActive()
+          || useMaestroStore.getState().settings.selectedLanguagePairId !== conversationId) return;
         await startLiveConversation({
           liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_CAMERA_LIVE,
+          conversationId,
           stream: liveSessionCaptureRef.current?.stream,
           videoElement: visualContextVideoRef.current,
           buildSystemInstruction: () => liveInstructionBuilderRef.current(),
@@ -810,6 +826,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
 
       await startLiveConversation({
         liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_CAMERA_LIVE,
+        conversationId,
         stream,
         videoElement: visualContextVideoRef.current,
         systemInstruction: liveSystemInstruction,
