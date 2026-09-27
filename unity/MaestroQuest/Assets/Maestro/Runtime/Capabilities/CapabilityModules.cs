@@ -14,9 +14,9 @@ namespace Maestro.Quest.Programs
     internal static class CapabilityModules
     {
         public static readonly IReadOnlyList<CapabilityModule> All=Array.AsReadOnly(new CapabilityModule[] {
-            new AnimationCapability("animation.recording.play",RuleActionKind.RecordedAnimation,"Recorded animation","target.exists target.unheld authoring.inactive recording.available"),
-            new AnimationCapability("avatar.gesture.play",RuleActionKind.Gesture,"Gesture","target.exists target.unheld authoring.inactive avatar.available"),
-            new AnimationCapability("avatar.gesture.upperBody",RuleActionKind.UpperBodyGesture,"Upper-body gesture","target.exists target.unheld authoring.inactive avatar.available"),
+            new RecordedAnimationCapability(),
+            new GestureCapability(),
+            new UpperBodyGestureCapability(),
             new WaitCapability(),
             new CreatePrimitiveCapability(),
             new CreateRecipeCapability(),
@@ -27,12 +27,12 @@ namespace Maestro.Quest.Programs
             new DeleteObjectCapability(),
             new PhysicsImpulseCapability(),
             new PhysicsStopCapability(),
-            new AnimationCapability("object.recording.throw",RuleActionKind.ThrowRecording,"Throw recording","target.exists target.unheld authoring.inactive recording.twoFrames rigidBody.dynamic physics.running"),
-            new AnimationCapability("avatar.look.user",RuleActionKind.LookAtUser,"Look at user","target.exists target.unheld authoring.inactive avatar.spatialReady"),
-            new AnimationCapability("avatar.follow.user",RuleActionKind.FollowUser,"Follow user","target.exists target.unheld authoring.inactive avatar.spatialReady physics.running navigation.floorReady"),
-            new AnimationCapability("animation.embedded.play",RuleActionKind.ImportedClip,"Imported clip","target.exists target.unheld authoring.inactive model.loaded embeddedClip.available"),
-            new AnimationCapability("animation.library.play",RuleActionKind.LibraryMotion,"Library motion","target.exists target.unheld authoring.inactive model.loaded motion.available rig.compatible"),
-            new AnimationCapability("animation.recipe.play",RuleActionKind.RecipeAnimation,"Recipe animation","target.exists target.unheld authoring.inactive recipe.tracksAvailable"),
+            new ThrowRecordingCapability(),
+            new LookAtUserCapability(),
+            new FollowUserCapability(),
+            new EmbeddedAnimationCapability(),
+            new LibraryAnimationCapability(),
+            new RecipeAnimationCapability(),
         });
     }
 }

@@ -22,7 +22,7 @@ namespace Maestro.Quest.Avatar
         RigidRoomItem rigid;
         Rigidbody body;
         Transform hand;
-        RuleStep step;
+        PropAttachment attachment;
         Vector3 homePosition,centre;
         Quaternion homeRotation;
         float radius,began,duration,lastPoseAt;
@@ -30,30 +30,30 @@ namespace Maestro.Quest.Avatar
         public string Error { get; private set; }
         public bool Released => released;
         public bool Holding => holding;
-        public static bool CanAttach(RoomEditor editor,RuleStep step,out string error)
+        public static bool CanAttach(RoomEditor editor,PropAttachment attachment,out string error)
         {
             error=null;
-            if (string.IsNullOrEmpty(step.propId)) return true;
-            var avatar=editor.Find("maestro")?.GetComponent<MaestroAvatar>(); var item=editor.Find(step.propId);
-            if (!RuleDocument.CanCarry(step) || !avatar || avatar.ModelBusy || !avatar.PoseRig || (avatar.ModelHash ?? "") != (step.propAvatarHash ?? ""))
+            if (attachment == null) return true;
+            var avatar=editor.Find("maestro")?.GetComponent<MaestroAvatar>(); var item=editor.Find(attachment.ObjectId);
+            if (!avatar || avatar.ModelBusy || !avatar.PoseRig || (avatar.ModelHash ?? "") != (attachment.AvatarHash ?? ""))
             { error="Choose Maestro's current avatar and fit the prop again"; return false; }
-            var hand=avatar.PoseRig.Bone(step.propHand == PropHand.Left ? PoseJoint.LeftHand : PoseJoint.RightHand);
+            var hand=avatar.PoseRig.Bone(attachment.Hand == PropHand.Left ? PoseJoint.LeftHand : PoseJoint.RightHand);
             if (!hand) { error="This avatar has no mapped hand for the prop"; return false; }
             var rigid=item ? item.GetComponent<RigidRoomItem>() : null;
-            if (!item || editor.Read(step.propId)?.IsBuiltIn != false || !rigid || !rigid.GeometryReady || item.Grab.isSelected)
+            if (!item || editor.Read(attachment.ObjectId)?.IsBuiltIn != false || !rigid || !rigid.GeometryReady || item.Grab.isSelected)
             { error="Select a loaded creation and release it before using it as a prop"; return false; }
-            if (step.propRelease != PropRelease.Return && (!rigid.Dynamic || !editor.PhysicsWorld || !editor.PhysicsWorld.CanSimulate(item.transform.position)))
+            if (attachment.Release != PropRelease.Return && (!rigid.Dynamic || !editor.PhysicsWorld || !editor.PhysicsWorld.CanSimulate(item.transform.position)))
             { error="Drop or throw needs a Solid/Bouncy prop and running aligned room physics"; return false; }
             return true;
         }
-        public static AvatarHeldProp Begin(RoomEditor editor,RuleStep step,float duration,out string error)
+        public static AvatarHeldProp Begin(RoomEditor editor,PropAttachment attachment,float duration,out string error)
         {
-            if (!CanAttach(editor,step,out error)) return null;
-            var item=editor.Find(step.propId); var rigid=item.GetComponent<RigidRoomItem>();
+            if (!CanAttach(editor,attachment,out error) || attachment == null) return null;
+            var item=editor.Find(attachment.ObjectId); var rigid=item.GetComponent<RigidRoomItem>();
             if (rigid.AnimationOwned) { error="Another animation owns this prop"; return null; }
             var value=item.gameObject.AddComponent<AvatarHeldProp>(); value.editor=editor; value.item=item; value.rigid=rigid; value.body=item.GetComponent<Rigidbody>();
-            value.avatar=editor.Find("maestro").GetComponent<MaestroAvatar>(); value.step=step.Copy();
-            value.hand=value.avatar.PoseRig.Bone(step.propHand == PropHand.Left ? PoseJoint.LeftHand : PoseJoint.RightHand);
+            value.avatar=editor.Find("maestro").GetComponent<MaestroAvatar>(); value.attachment=attachment;
+            value.hand=value.avatar.PoseRig.Bone(attachment.Hand == PropHand.Left ? PoseJoint.LeftHand : PoseJoint.RightHand);
             value.homePosition=item.transform.localPosition; value.homeRotation=item.transform.localRotation;
             value.duration=duration; value.began=Time.unscaledTime; value.requiresRoom=editor.PhysicsWorld && editor.PhysicsWorld.Running;
             Physics.SyncTransforms(); var bounds=item.Grab.colliders[0].bounds;
@@ -93,7 +93,7 @@ namespace Maestro.Quest.Avatar
         {
             error=Error; if (error != null) return false;
             if (!holding) return true;
-            if (!item || !avatar || !hand || avatar.ModelBusy || (avatar.ModelHash ?? "") != (step.propAvatarHash ?? "") || item.Grab.isSelected)
+            if (!item || !avatar || !hand || avatar.ModelBusy || (avatar.ModelHash ?? "") != (attachment.AvatarHash ?? "") || item.Grab.isSelected)
                 error="Prop action stopped — its avatar or item changed";
             else if (requiresRoom && (!editor.PhysicsWorld || !editor.PhysicsWorld.CanSimulate(item.transform.position)))
                 error="Prop action stopped — check room alignment and restart physics";
@@ -106,7 +106,7 @@ namespace Maestro.Quest.Avatar
             float now=Time.unscaledTime;
             if (samples.Count > 0 && now-lastPoseAt > .25f) { Error="Motion was interrupted; try the prop action again"; return false; }
             float scale=avatar.transform.lossyScale.y;
-            var position=hand.position+hand.rotation*(step.propOffset*scale); var rotation=hand.rotation*step.propRotation;
+            var position=hand.position+hand.rotation*(attachment.Offset*scale); var rotation=hand.rotation*attachment.Rotation;
             if (!float.IsFinite(position.sqrMagnitude) || !MotionFrame.ValidRotation(rotation) ||
                 requiresRoom && !editor.PhysicsWorld.CanSimulate(position) || !Clear(position,rotation,false,true))
             { Error="Prop path is blocked — adjust its fit, motion or Maestro's placement"; return false; }
@@ -121,11 +121,11 @@ namespace Maestro.Quest.Avatar
         {
             if (!holding || Error != null) return;
             if (!Follow()) return;
-            if (step.propRelease != PropRelease.Return && Time.unscaledTime-began >= duration*step.propReleaseAt) Release();
+            if (attachment.Release != PropRelease.Return && Time.unscaledTime-began >= duration*attachment.ReleaseAt) Release();
         }
         public void Finish()
         {
-            if (holding && Error == null && step.propRelease != PropRelease.Return) Release();
+            if (holding && Error == null && attachment.Release != PropRelease.Return) Release();
         }
         bool Release()
         {
@@ -135,7 +135,7 @@ namespace Maestro.Quest.Avatar
             var first=samples[0]; var last=new Sample { Time=Time.unscaledTime,Position=item.transform.position,Rotation=item.transform.rotation }; float dt=last.Time-first.Time;
             if (Time.unscaledTime-lastPoseAt > .25f) { Error="Motion was interrupted; try the prop action again"; return false; }
             Vector3 velocity=Vector3.zero,spin=Vector3.zero;
-            if (step.propRelease == PropRelease.Throw)
+            if (attachment.Release == PropRelease.Throw)
             {
                 if (dt < .02f) { Error="Throw needs more motion before release — choose a later release time"; return false; }
                 velocity=(last.Position-first.Position)/dt;
@@ -145,7 +145,7 @@ namespace Maestro.Quest.Avatar
             }
             holding=false; rigid.SetAnimationOwner(this,false);
             if (!rigid.Launch(velocity,spin)) { holding=true; rigid.SetAnimationOwner(this,true); Error="Room physics could not take ownership of the prop"; return false; }
-            released=true; editor.RememberPlacement(step.propId); return true;
+            released=true; editor.RememberPlacement(attachment.ObjectId); return true;
         }
         public void End(bool preservePlacement)
         {

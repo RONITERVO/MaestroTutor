@@ -10,6 +10,8 @@ using Maestro.Quest.Creation;
 using Maestro.Quest.Imports;
 using Maestro.Quest.Interaction;
 using Maestro.Quest.Rules;
+using Maestro.Quest.Programs;
+using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -425,6 +427,55 @@ namespace Maestro.Quest.Tests
             Assert.That(Quaternion.Angle(rotation,node.localRotation),Is.GreaterThan(10));
             Assert.That(Vector3.Distance(position,item.transform.position),Is.LessThan(.0001f));
             runtime.StopAll(); Assert.That(Quaternion.Angle(rotation,node.localRotation),Is.LessThan(.01f));
+        }
+        [UnityTest] public IEnumerator NamedLibraryOperationReleasesLateLoadsAndTransferredLeasesExactlyOnce()
+        {
+            var host=new RoomRuleActions(editor,authoring);
+            var arguments=new JObject {["target"]="maestro",["seconds"]=1,["loop"]=true,["motionId"]=greeting.id};
+            Assert.That(BehaviourCatalog.TryCall("animation.library.play",1,arguments,out var call,out var error),Is.True,error);
+            try {
+                Assert.That(editor.Motions.Pinned(greeting.id),Is.False);
+                Assert.That(host.Start("cancel-load",call,out _,out error),Is.True,error);
+                Assert.That(host.State("cancel-load",out _),Is.EqualTo(RuleActionState.Preparing));
+                host.Stop("cancel-load",false);host.Stop("cancel-load",true);
+                // Await the same real load; cancelling its operation must dispose the late lease.
+                var probe=editor.Motions.AcquireAsync(greeting.id,greeting.rigHash);
+                yield return Until(()=>probe.IsCompleted);Assert.That(probe.Exception,Is.Null);probe.Result.Dispose();
+                yield return Until(()=>!editor.Motions.Pinned(greeting.id));
+                Assert.That(avatar.IsImportedClipPlaying,Is.False);
+
+                Assert.That(host.Start("complete",call,out var seconds,out error),Is.True,error);Assert.That(seconds,Is.EqualTo(1));
+                yield return Until(()=>host.State("complete",out _)!=RuleActionState.Preparing);
+                Assert.That(host.State("complete",out error),Is.EqualTo(RuleActionState.Ready),error);
+                Assert.That(avatar.LibraryMotionId,Is.EqualTo(greeting.id));Assert.That(editor.Motions.Pinned(greeting.id),Is.True);
+                var head=avatar.PoseRig.Bone(PoseJoint.Head);var before=head.rotation;
+                yield return new WaitForSeconds(.2f);Assert.That(Quaternion.Angle(before,head.rotation),Is.GreaterThan(1));
+                Assert.That(host.Complete("complete",out error),Is.True,error);
+                Assert.That(avatar.LibraryMotionId,Is.Null);Assert.That(editor.Motions.Pinned(greeting.id),Is.False);
+                Assert.That(host.Complete("complete",out _),Is.True);host.Stop("complete",false);
+                Assert.That(editor.Motions.Pinned(greeting.id),Is.False);
+            } finally {host.Stop("cancel-load",false);host.Stop("complete",false);}
+        }
+        [UnityTest] public IEnumerator NamedLibraryOperationRejectsACompatibleReplacementWhilePreparing()
+        {
+            var replacement=ModelLibrary.Inspect("replacement.glb",Clip(8,"Replacement"));
+            var save=editor.Models.SaveAsync(replacement);yield return Until(()=>save.IsCompleted);Assert.That(save.Exception,Is.Null);
+            var host=new RoomRuleActions(editor,authoring);
+            Assert.That(BehaviourCatalog.TryCall("animation.library.play",1,new JObject {
+                ["target"]="maestro",["seconds"]=1,["loop"]=true,["motionId"]=gait.id
+            },out var call,out var error),Is.True,error);
+            try {
+                Assert.That(host.Start("replacement",call,out _,out error),Is.True,error);
+                Assert.That(host.State("replacement",out _),Is.EqualTo(RuleActionState.Preparing));
+                Assert.That(editor.SetMaestroModel(replacement.Hash),Is.True);yield return Until(()=>!avatar.ModelBusy);
+                var probe=editor.Motions.AcquireAsync(gait.id,gait.rigHash);
+                yield return Until(()=>probe.IsCompleted);Assert.That(probe.Exception,Is.Null);probe.Result.Dispose();
+                yield return Until(()=>host.State("replacement",out _)!=RuleActionState.Preparing);
+                Assert.That(host.State("replacement",out error),Is.EqualTo(RuleActionState.Failed));Assert.That(error,Does.Contain("changed while loading"));
+                Assert.That(avatar.LibraryMotionId,Is.Null,"A compatible replacement must not inherit a pending request for the previous model");
+            } finally {host.Stop("replacement",false);}
+            Assert.That(editor.Motions.Pinned(gait.id),Is.False);
+            Assert.That(avatar.ModelHash,Is.EqualTo(replacement.Hash));
         }
         [UnityTest] public IEnumerator LoadingRuleCancelsOnFocusLossAndMissingOrIncompatibleMotionsCannotRun()
         {

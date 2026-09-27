@@ -16,24 +16,7 @@ namespace Maestro.Quest.Programs
     /// This contract is independent of RuleStep serialization and numeric enum positions.</summary>
     public static class CapabilityArguments
     {
-        static readonly string[] Gestures={"greeting","pointing","listening","speaking","idle","walk"};
         public static JObject Schema(RuleActionKind kind)=>BehaviourCatalog.Action(kind)?.InputSchema;
-        internal static JObject AnimationSchema(RuleActionKind kind)
-        {
-            var p=new JObject();
-            if(kind!=RuleActionKind.Wait)p["target"]=kind==RuleActionKind.Gesture||kind==RuleActionKind.UpperBodyGesture||RuleDocument.IsSpatial(kind)
-                ? Choice("maestro") : Text("^(maestro|book|[a-fA-F0-9]{32})$",32);
-            if(kind!=RuleActionKind.ThrowRecording)p["seconds"]=Number(kind==RuleActionKind.Wait||kind==RuleActionKind.Gesture||kind==RuleActionKind.UpperBodyGesture||RuleDocument.IsSpatial(kind) ? .1 : 0,30);
-            if(kind==RuleActionKind.Gesture||kind==RuleActionKind.UpperBodyGesture)p["gesture"]=Choice(kind==RuleActionKind.UpperBodyGesture?Gestures.Where(x=>x!="walk").ToArray():Gestures);
-            if(kind==RuleActionKind.RecordedAnimation||kind==RuleActionKind.ImportedClip||kind==RuleActionKind.LibraryMotion||kind==RuleActionKind.RecipeAnimation)
-                p["loop"]=new JObject {["type"]="boolean"};
-            if(kind==RuleActionKind.ImportedClip) {p["modelHash"]=Text("^(|[a-f0-9]{64})$",64);p["clipIndex"]=Number(0,31,true);}
-            if(kind==RuleActionKind.LibraryMotion)p["motionId"]=Text("^(|[a-fA-F0-9]{32})$",32);
-            if(kind==RuleActionKind.RecordedAnimation||kind==RuleActionKind.Gesture||kind==RuleActionKind.ImportedClip||kind==RuleActionKind.LibraryMotion)p["prop"]=Prop();
-            if(p["target"] is JObject target)Resource(target);
-            if(p["prop"] is JObject prop)prop["x-requires"]=new JObject {["target"]="maestro"};
-            return Object(p,"prop");
-        }
         // A bound resource placeholder is not an authorization. Computed IDs are
         // checked against declarations or native-created results at execution time.
         public static string[] LiteralResources(JObject arguments,JObject schema,JObject bindings,int version) {

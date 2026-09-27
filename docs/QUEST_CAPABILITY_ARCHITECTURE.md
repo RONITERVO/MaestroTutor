@@ -166,9 +166,10 @@ other room commands and durable saved-program state remain future work.
 
 ## Named native modules (2026-09-28)
 
-The scheduler and interpreter now carry named calls directly. Ten independent
-modules own their contracts and execution, with a temporary adapter for the nine
-existing animation/spatial capabilities. A real rotation capability demonstrates
+The scheduler and interpreter now carry named calls directly. All nineteen
+modules own their contracts and execution. The nine animation/spatial handlers
+no longer convert calls to RuleStep or enter a shared kind-based dispatcher.
+Physical tray compatibility remains an explicit adapter. A real rotation capability demonstrates
 addition without extending the enum, step fields, scheduler, web validator or
 book form. Manifest provenance automatically covers the module directory.
 See [module boundaries, verification and remaining work](QUEST_CAPABILITY_MODULES.md).

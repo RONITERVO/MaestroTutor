@@ -523,10 +523,11 @@ open. This checkpoint is not installed on the headset.
 
 
 PC native-module checkpoint (2026-09-28): named calls now flow directly through
-the interpreter, scheduler and shared runtime. Ten modules own validation,
+the interpreter, scheduler and shared runtime. All nineteen modules own validation,
 readiness, claims and operation lifetimes. Object rotation proves a new capability
 can use the existing editor, receipts and generated book fields without enum or
-scheduler changes. Existing animation paths pass through a temporary adapter;
-full animation/tray consolidation and the other release gates remain open.
+scheduler changes. Animation modules now own graph, clip, asynchronous lease,
+prop and channel cleanup directly. Physical tray consolidation, vocabulary review
+and the other release gates remain open.
 See [module contract and evidence](QUEST_CAPABILITY_MODULES.md). This development
 checkpoint does not install an APK or reset user data.

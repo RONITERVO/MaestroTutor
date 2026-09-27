@@ -1,7 +1,8 @@
 # Native capability modules
 
-Development checkpoint, 2026-09-28. This changes native dispatch and adds a real
-named-only rotation capability; it is not completion of all v1 architecture work.
+Development checkpoint, 2026-09-28. All nineteen catalog actions now use native
+modules, including animation and movement. This completes the existing action
+handler split, not the broader v1 architecture or release acceptance.
 
 ## Shared execution path
 
@@ -20,11 +21,26 @@ operation once. Input JSON is copied before dispatch so a caller cannot change
 an already validated target or effect. New modules are trusted native C# bundled
 with the app, never downloaded code or agent-written executable C#.
 
-Ten actions use independent modules: wait, primitive/recipe creation, position,
-rotation, size, tint, deletion, physics impulse and physics stop. The nine existing
-animation/spatial actions use an explicit adapter around the tested animation
-lifecycle. That adapter still contains kind-based branches and is remaining
-consolidation work; moving it does not by itself make animation internals modular.
+All nineteen actions use independent registrations. The ten wait/object/physics
+modules are joined by recording, recorded throw, full-body gesture, upper-body
+gesture, look, follow, embedded clip, library motion and recipe animation modules.
+There is no shared animation dispatcher or RuleStep conversion on the execution
+path. Related operations share target/prop ownership or spatial lifetime helpers;
+those helpers do not select handlers by action kind.
+
+Each animation module owns its schema, readiness and operation. Recordings own
+their PlayableGraph; throwing samples the precise final frame before handing the
+item back to physics. Embedded playback owns its selected model. Library playback
+owns an asynchronous lease until successful transfer to the avatar, checks the
+exact model and rig again after preparation, and disposes late arrivals after
+Stop. Prop attachment uses immutable domain data instead of RuleStep. Upper-body
+and spatial operations release only their own channel, preserving another
+owner's gait, arm layer and room placement. Full-body cleanup is idempotent so
+completion followed by host cleanup cannot undo a throw.
+
+This extraction preserves all nineteen action contracts, versions, channel
+claims and prerequisites, as well as events, facts and legacy editor mappings.
+It does not silently rename saved motion choices or change saved-edit semantics.
 
 The existing tray's numeric controls are isolated in LegacyCapabilityAdapters.
 They derive temporary RuleStep views from canonical saved programs. Modules do
@@ -72,7 +88,7 @@ acknowledgements are simulated; actual object motion is verified in Unity.
 
 ## Remaining release work
 
-Animation modules, schema-generated physical tray controls, vocabulary review,
+Schema-generated physical tray controls, vocabulary review,
 generic capability/version negotiation, runtime effects versus explicit grouped
 saved edits, priority arbitration, richer world subscriptions, collection types
 and shared program libraries remain. Existing saved-edit actions were not silently
@@ -80,8 +96,17 @@ changed to transient effects. Quest frame/save timing, hardware interaction,
 real-provider journeys and store acceptance remain separate gates. No headset
 installation, user-data reset or service deployment is included here.
 
-PC verification: 1,303 app tests across 155 files, 151 EditMode and 98 PlayMode
+PC verification: 1,303 app tests across 155 files, 151 EditMode and 100 PlayMode
 tests, with three optional private-model checks skipped. TypeScript, lint, shared
-code/prompt guards, 25 Android bridge tests and the ARM64 IL2CPP development build
-pass. Chrome screenshots and exact-save evidence were checked. Headset and
-real-provider acceptance remain unverified.
+code/prompt guards, catalog provenance, 25 Android bridge tests and the ARM64
+IL2CPP development build pass. The APK's v2 signature was verified; all 112 native
+runtime sources match the tested mirror and all 112 packaged web files match the
+production build. All nineteen action contracts and events/facts/adapters compare
+unchanged against the prior manifest, apart from source provenance.
+
+The expanded regressions exercise late-load cancellation, successful avatar lease
+transfer and completion, exact-model replacement during preparation, and repeated
+cleanup after physical release. Existing walking/upper-body, recording/prop,
+recipe and real-input tests also pass. Prior Chrome screenshots and exact-save
+evidence cover the unchanged book UI; this extraction changes native execution.
+Headset and real-provider acceptance remain unverified.

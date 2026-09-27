@@ -228,6 +228,10 @@ namespace Maestro.Quest.Tests
             Assert.That(actions.Complete("throw",out var completionError),Is.True,completionError);
             Assert.That(item.transform.localPosition.x,Is.EqualTo(.5f).Within(.001f));
             Assert.That(item.GetComponent<Rigidbody>().linearVelocity.x,Is.EqualTo(1).Within(.01f));
+            Assert.That(actions.Complete("throw",out _),Is.True);actions.Stop("throw",false);
+            Assert.That(item.GetComponent<RigidRoomItem>().AnimationOwned,Is.False);
+            Assert.That(item.transform.localPosition.x,Is.EqualTo(.5f).Within(.001f),"Repeated cleanup cannot restore the pre-throw pose");
+            Assert.That(item.GetComponent<Rigidbody>().linearVelocity.x,Is.EqualTo(1).Within(.01f));
             yield return new WaitForFixedUpdate();
             var beforeEdit = item.transform.position;
             editor.Create(RoomObjectKind.Block);

@@ -15,7 +15,7 @@ namespace Maestro.Quest.Rules
         readonly Dictionary<string,CapabilityOperation> operations=new();
         readonly Dictionary<string,JObject> results=new();
         public RoomRuleActions(RoomEditor editor,AnimationWorkshop workshop) {context=new CapabilityContext(editor,workshop);}
-        public static ImportedModel ClipModel(RoomItem item)=>AnimationActionRuntime.ClipModel(item);
+        public static ImportedModel ClipModel(RoomItem item)=>AnimationTargets.ClipModel(item);
         public bool TryRead(string name,out ProgramValue value) {
             value=default;if(!context.Editor.PhysicsWorld)return false;
             return BehaviourCatalog.TryRead(name,new BehaviourCatalog.FactContext(physicsReady:context.Editor.PhysicsWorld.SurfacesReady,

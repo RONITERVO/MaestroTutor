@@ -47,16 +47,15 @@ namespace Maestro.Quest.Programs
     {
         public readonly RoomEditor Editor;
         public readonly AnimationWorkshop Workshop;
-        internal readonly AnimationActionRuntime Animations;
-        public CapabilityContext(RoomEditor editor,AnimationWorkshop workshop) {Editor=editor;Workshop=workshop;Animations=new AnimationActionRuntime(editor,workshop);}
-        public bool Target(JObject arguments,out RoomItem item,out string error) {
+        public CapabilityContext(RoomEditor editor,AnimationWorkshop workshop) {Editor=editor;Workshop=workshop;}
+        public bool Target(JObject arguments,out RoomItem item,out string error,bool allowSpatial=false,bool allowUpperBody=false) {
             item=Editor?Editor.Find((string)arguments["target"]):null;error=null;
             if(!item) {error="An action target was removed; choose another target";return false;}
             if(item.Grab.isSelected||Workshop&&Workshop.ControlsTarget((string)arguments["target"])) {error="Release the target and stop authoring before running its rule";return false;}
             var tutor=item.GetComponent<MaestroAvatar>();
             if(tutor&&tutor.ModelBusy) {error="Wait for Maestro to finish loading";return false;}
-            if(tutor&&tutor.GetComponent<AvatarSpatialMotion>()?.Active==true) {error="Stop Maestro's current movement before starting a conflicting action";return false;}
-            if(tutor&&tutor.UpperBodyActive) {error="An upper-body gesture is already running";return false;}
+            if(!allowSpatial&&tutor&&tutor.GetComponent<AvatarSpatialMotion>()?.Active==true) {error="Stop Maestro's current movement before starting a conflicting action";return false;}
+            if(!allowUpperBody&&tutor&&tutor.UpperBodyActive) {error="An upper-body gesture is already running";return false;}
             return true;
         }
     }
