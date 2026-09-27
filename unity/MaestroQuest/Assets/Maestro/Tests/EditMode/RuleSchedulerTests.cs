@@ -16,6 +16,33 @@ namespace Maestro.Quest.Tests
         static JObject InvocationCall(string capability="animation.recording.play",string target="maestro")=>capability=="time.wait"
             ? new JObject {["id"]=capability,["version"]=1,["arguments"]=new JObject {["seconds"]=1}}
             : new JObject {["id"]=capability,["version"]=1,["arguments"]=new JObject {["target"]=target,["seconds"]=1,["loop"]=false}};
+        [Test] public void InstantEffectsCompleteOnceWithoutAdvancingTheClockAndStayCompletedOnCancel()
+        {
+            var actions=new Actions();var scheduler=new RuleScheduler(actions);
+            var call=new JObject {["id"]="object.physics.impulse",["version"]=1,["arguments"]=new JObject {["target"]=Guid.NewGuid().ToString("N"),["x"]=0,["y"]=1,["z"]=0}};
+            Assert.That(scheduler.Invoke(call,7,out var id,out var error),Is.True,error);
+            Assert.That(actions.Started.Count,Is.EqualTo(1));Assert.That((string)scheduler.Invocation(id)["phase"],Is.EqualTo("completed"),"A completed physical effect cannot be cancelled as if still pending");scheduler.Tick(7);
+            Assert.That((string)scheduler.Invocation(id)["phase"],Is.EqualTo("completed"));
+            Assert.That(scheduler.CancelInvocation(id,out _),Is.True);scheduler.Tick(999);
+            Assert.That(actions.Started.Count,Is.EqualTo(1));Assert.That(scheduler.RunningCount,Is.Zero);
+        }
+        [Test] public void InstantOnlyForeverCannotRenewItsInstructionBudgetOrCatchUpInOneFrame()
+        {
+            var step=new RuleStep {action=RuleActionKind.PhysicsStop,targetId=Guid.NewGuid().ToString("N")};
+            var json=JObject.Parse(Maestro.Quest.Programs.BehaviourProgram.FromSteps(step));
+            json["version"]=3;json["state"]=new JArray();json["events"]=new JArray();
+            var body=json["functions"][0]["body"].DeepClone();
+            json["functions"][0]["body"]=new JArray(new JObject {["id"]="continuous",["op"]="forever",["body"]=body});
+            var sequence=new RuleSequence {id=Guid.NewGuid().ToString("N"),name="No timer",program=json.ToString()};
+            var actions=new Actions();var scheduler=new RuleScheduler(actions);scheduler.Configure(new RuleDocument {sequences=new[]{sequence}});
+            Assert.That(scheduler.Trigger(sequence.id,0),Is.True);
+            for(int i=0;i<66000&&scheduler.RunningCount>0;i++) {
+                int before=actions.Started.Count;scheduler.Tick(1000+i);
+                Assert.That(actions.Started.Count-before,Is.LessThanOrEqualTo(1),"No recursive instant-action catch-up");
+            }
+            Assert.That(scheduler.RunningCount,Is.Zero);Assert.That(scheduler.LastError,Does.Contain("instruction budget"));
+            Assert.That(actions.Started.Count,Is.GreaterThan(1));
+        }
         [Test] public void OneOffCallsShareOwnershipAndCompletionWithoutSavedSequences()
         {
             var actions=new Actions();var scheduler=new RuleScheduler(actions);var saved=Sequence();saved.interruption=RuleInterruption.Ignore;
@@ -103,7 +130,7 @@ namespace Maestro.Quest.Tests
             public readonly HashSet<string> Active = new();
             public int Stopped;
             public bool CanRun(RuleStep step,out string error) { error = null; return true; }
-            public bool Start(string id,RuleStep step,out float seconds,out string error) { Active.Add(id); Started.Add(step.targetId); seconds = step.seconds == 0 ? 2 : step.seconds; error = null; return true; }
+            public bool Start(string id,RuleStep step,out float seconds,out string error) { Active.Add(id); Started.Add(step.targetId); seconds = RuleDocument.IsInstant(step.action)?0:step.seconds == 0 ? 2 : step.seconds; error = null; return true; }
             public void Stop(string id,bool preserve) { if (Active.Remove(id)) Stopped++; }
         }
         sealed class PreparingActions : IRuleActions,IRuleReadiness

@@ -53,6 +53,11 @@ namespace Maestro.Quest.Rules
             var item = editor.Find(step.targetId);
             if (!item) { error = "An action target was removed; choose another target"; return false; }
             if (item.Grab.isSelected || (workshop && workshop.ControlsTarget(step.targetId))) { error = "Release the target and stop authoring before running its rule"; return false; }
+            if(RuleDocument.IsInstant(step.action)) {
+                var rigid=item.GetComponent<RigidRoomItem>();
+                if(!rigid) {error="This object has no rigid-body physics";return false;}
+                return rigid.CanReceivePhysicsAction(out error);
+            }
             if ((step.action == RuleActionKind.RecordedAnimation || step.action == RuleActionKind.ThrowRecording) && editor.Read(step.targetId).motion == null) { error = "Record an animation on the target first"; return false; }
             if (step.action == RuleActionKind.ThrowRecording && (!item.GetComponent<RigidRoomItem>() || !item.GetComponent<RigidRoomItem>().Dynamic || editor.Read(step.targetId).motion.frames.Length < 2 || !editor.PhysicsWorld || !editor.PhysicsWorld.Running))
             { error = "Throw recording needs a physical creation, two motion frames and running room physics"; return false; }
@@ -99,6 +104,12 @@ namespace Maestro.Quest.Rules
             seconds = step.seconds;
             if (!CanRun(step,out error)) return false;
             if (step.action == RuleActionKind.Wait) return true;
+            if(RuleDocument.IsInstant(step.action)) {
+                var item=editor.Find(step.targetId);var rigid=item.GetComponent<RigidRoomItem>();
+                if(step.action==RuleActionKind.PhysicsStop)return rigid.ClearMotion(out error);
+                var impulse=item.transform.parent?item.transform.parent.TransformDirection(step.impulse):step.impulse;
+                return rigid.ApplyImpulse(impulse,out error);
+            }
             var target = editor.Find(step.targetId); var avatar = target.GetComponent<MaestroAvatar>();
             if (avatar && step.action != RuleActionKind.UpperBodyGesture && !RuleDocument.IsSpatial(step.action)) { avatar.GetComponent<AvatarSpatialMotion>()?.Stop(); avatar.SetEditing(true); }
             var effect = new Effect { TargetId = step.targetId, Began = Time.unscaledTime,Step=step.Copy(),Duration=seconds }; effects.Add(runId,effect);

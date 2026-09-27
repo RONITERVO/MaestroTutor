@@ -466,3 +466,10 @@ See [the current contract and boundaries](QUEST_EVENT_PROGRAMS.md). Earlier note
 marking all event waits/timers pending describe prior checkpoints. Durable state,
 wall-clock scheduling, parallel branches, channel blending and full release
 acceptance remain open; no headset install or backend deployment is included.
+
+
+PC programmable-physics checkpoint (2026-09-27): named push and stop-motion
+capabilities share native rigid-body execution with one-off calls, saved programs,
+event triggers and buttons. Instant effects report actual completion and do not
+renew work/causal budgets. See [semantics and boundaries](QUEST_PROGRAM_PHYSICS.md).
+The full v1 goal and device/store acceptance remain open.

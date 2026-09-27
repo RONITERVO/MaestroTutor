@@ -151,11 +151,27 @@ namespace Maestro.Quest.Rules
                 run.Targets=targets;run.Claims=claims;
             }
             if(!actions.CanRun(run.Active,out var unavailable)) {LastError=unavailable;Stop(run,false,"failed",LastError);return false;}
-            if (!actions.Start(run.Id,run.Active,out float seconds,out var error) || !float.IsFinite(seconds) || seconds < .01f || seconds > 30)
+            bool instant=RuleDocument.IsInstant(run.Active.action);
+            if (!actions.Start(run.Id,run.Active,out float seconds,out var error) || !float.IsFinite(seconds) || (instant?seconds!=0:seconds<.01f) || seconds > 30)
             { LastError = error ?? "This action has an invalid duration"; Stop(run,false,"failed",LastError); return false; }
             run.Duration = seconds; run.PrepareDeadline = now+30;
             var state = actions is IRuleReadiness readiness ? readiness.State(run.Id,out error) : RuleActionState.Ready;
             if (state == RuleActionState.Failed) { LastError = error ?? "This action could not load"; Stop(run,false,"failed",LastError); return false; }
+            if(instant) {
+                if(state!=RuleActionState.Ready) {LastError="An instant action cannot defer its effect";Stop(run,false,"failed",LastError);return false;}
+                if(actions is IRuleCompletion completion) {
+                    if(!completion.Complete(run.Id,out error)) {LastError=error??"This action could not finish";Stop(run,false,"failed",LastError);return false;}
+                } else actions.Stop(run.Id,false);
+                run.Active=null;
+                if(run.Reactive) {run.Targets.Clear();run.Claims=Array.Empty<BehaviourCatalog.Claim>();}
+                // An instant effect is already done. Don't reset activation work or
+                // causal depth, and don't execute a second effect in this frame.
+                if(run.Invocation!=null) {
+                    if(run.Machine.Advance(out _)!=ProgramYield.Completed) {LastError="Invalid one-off completion";Stop(run,false,"failed",LastError);return false;}
+                    Finish(run,"completed","Action completed");
+                } else run.Computing=true;
+                return true;
+            }
             run.Preparing = state == RuleActionState.Preparing;
             run.Ends = now + seconds; return true;
         }
@@ -185,7 +201,8 @@ namespace Maestro.Quest.Rules
                 if (actions is IRuleCompletion completion)
                 { if (!completion.Complete(run.Id,out var completionError)) { LastError=completionError ?? "This action could not finish"; Stop(run,false,"failed",LastError); continue; } }
                 else actions.Stop(run.Id,false);
-                run.Active=null;if(run.Reactive) {run.Targets.Clear();run.Claims=Array.Empty<BehaviourCatalog.Claim>();run.Machine.BeginActivation();run.EventDepth=0;}
+                bool timed=run.Active!=null&&!RuleDocument.IsInstant(run.Active.action);
+                run.Active=null;if(run.Reactive) {run.Targets.Clear();run.Claims=Array.Empty<BehaviourCatalog.Claim>();if(timed) {run.Machine.BeginActivation();run.EventDepth=0;}}
                 // At most one step per run per tick, even after a long frame.
                 StartStep(run,now);
             }

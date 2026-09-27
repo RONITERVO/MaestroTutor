@@ -59,6 +59,7 @@ namespace Maestro.Quest.Tests
             editor.SaveAnimation("maestro",new RoomMotion { frames=new[] { new MotionFrame { position=avatar.transform.localPosition,joints=pose },new MotionFrame { time=1,position=avatar.transform.localPosition+Vector3.right,joints=pose } } },null,false);
             rules.NewSequence(); for (int i=0;i<Enum.GetValues(typeof(RuleActionKind)).Length && rules.Selected.SimpleSteps()[0].action != RuleActionKind.RecordedAnimation;i++) rules.CycleAction();
             Assert.That(rules.Selected.SimpleSteps()[0].action,Is.EqualTo(RuleActionKind.RecordedAnimation));
+            editor.Select(editor.Find("maestro"));rules.UseTarget();Assert.That(rules.Selected.SimpleSteps()[0].targetId,Is.EqualTo("maestro"));
             editor.Select(ball); rules.UseProp(); rules.FitProp();
             for(int i=0;i<Enum.GetValues(typeof(PropRelease)).Length && rules.Selected.SimpleSteps()[0].propRelease != release;i++) rules.CyclePropRelease();
             Assert.That(rules.Selected.SimpleSteps()[0].propId,Is.EqualTo(editor.Identity(ball)));

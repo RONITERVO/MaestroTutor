@@ -21,7 +21,7 @@ namespace Maestro.Quest.Tests
             // Compare the serialized contract: a nullable C# string becomes JSON null.
             var actual=JObject.Parse(BehaviourCatalog.Manifest().ToString());
             Assert.That(JToken.DeepEquals(actual,expected),Is.True,"Regenerate the reviewed manifest from native registrations.");
-            Assert.That(BehaviourCatalog.Actions.All(x=>x.Duration=="timed"),Is.True);
+            Assert.That(BehaviourCatalog.Actions.All(x=>x.Duration==(RuleDocument.IsInstant(x.Kind)?"instant":"timed")),Is.True);
             Assert.That(BehaviourCatalog.Action("avatar.gesture.upperBody").Channels,Is.EqualTo(new[] {"upperBody"}));
             Assert.That(BehaviourCatalog.Action("avatar.follow.user").Channels,Is.EqualTo(new[] {"locomotion","gaze"}));
             Assert.That(BehaviourCatalog.Action("animation.library.play").Channels,Is.EqualTo(new[] {"wholeTarget"}));
@@ -63,7 +63,7 @@ namespace Maestro.Quest.Tests
         [Test] public void NamedArgumentsRoundTripThroughEveryExistingNativeHandlerAdapter()
         {
             foreach(var capability in BehaviourCatalog.Actions) {
-                var original=new RuleStep {action=capability.Kind,targetId="maestro",seconds=capability.Kind==RuleActionKind.ThrowRecording?0:1,
+                var original=new RuleStep {action=capability.Kind,targetId=RuleDocument.IsInstant(capability.Kind)?Guid.NewGuid().ToString("N"):"maestro",seconds=capability.Kind==RuleActionKind.ThrowRecording||RuleDocument.IsInstant(capability.Kind)?0:1,
                     gesture=RuleGesture.Greeting,clipModelHash=new string('a',64),clipIndex=2,motionId=Guid.NewGuid().ToString("N")};
                 var args=CapabilityArguments.FromStep(original);
                 Assert.That(BehaviourCatalog.TryInvocation(capability.Id,1,args,out var step,out var error),Is.True,capability.Id+": "+error);

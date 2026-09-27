@@ -8,7 +8,7 @@ export interface CapabilitySchema {
  minimum?:number;maximum?:number;maxLength?:number;pattern?:string;enum?:string[];
 }
 export interface CapabilityDefinition {
- id:string;version:number;label:string;input:CapabilitySchema;
+ id:string;version:number;label:string;description?:string;input:CapabilitySchema;
  duration:string;ownership:string;channels:string[];requirements:string[];
 }
 export interface CapabilityInvocation {id:string;version:number;arguments:Record<string,unknown>}

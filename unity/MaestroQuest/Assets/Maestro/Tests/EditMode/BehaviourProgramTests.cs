@@ -15,7 +15,7 @@ namespace Maestro.Quest.Tests
         [Test] public void SchemaResourcesAndDomainConstraintsMatchNativeHandlers()
         {
             foreach(RuleActionKind kind in Enum.GetValues(typeof(RuleActionKind))) {
-                var step=new RuleStep {action=kind,seconds=kind==RuleActionKind.ThrowRecording?0:1};
+                var step=new RuleStep {action=kind,targetId=RuleDocument.IsInstant(kind)?Guid.NewGuid().ToString("N"):"maestro",seconds=kind==RuleActionKind.ThrowRecording||RuleDocument.IsInstant(kind)?0:1};
                 void Check() {
                     var schema=CapabilityArguments.Schema(kind);var args=CapabilityArguments.FromStep(step);
                     Assert.That(CapabilityArguments.Validate(args,schema,out var error),Is.True,error);

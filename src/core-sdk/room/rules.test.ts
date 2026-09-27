@@ -1,3 +1,4 @@
+import {behaviourCatalog} from '../../../shared/behaviourCatalog';
 import {describe,it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {validRuleRequest,validRuleView,validSequence,newRuleStep,ruleActions,ruleGestures,ruleEvents,ruleConditions,rulePolicies,ruleMounts} from './rules';
@@ -25,7 +26,13 @@ describe('shared behaviour contract',()=>{
  it('keeps native and web action/event enum identities aligned',()=>{
   const source=readFileSync('unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleDocument.cs','utf8');
   for(const [name,values] of Object.entries({RuleActionKind:ruleActions,RuleGesture:ruleGestures,RuleEventKind:ruleEvents,RuleCondition:ruleConditions,RuleInterruption:rulePolicies,ButtonMount:ruleMounts})) {
-   const match=source.match(new RegExp(`enum ${name} \{([^}]+)\}`));expect(match).not.toBeNull();expect(match![1].split(',').map(s=>s.trim().toLowerCase())).toEqual(values.map(s=>s.replace(/[ -]/g,'').toLowerCase()));
+   const match=source.match(new RegExp(`enum ${name} \{([^}]+)\}`));expect(match).not.toBeNull();const names=match![1].split(',').map(s=>s.trim());
+   if(name==='RuleActionKind'){
+    const catalog=readFileSync('unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs','utf8');
+    const registered=new Map([...catalog.matchAll(/new ActionDefinition\("([^"]+)",RuleActionKind\.(\w+),/g)].map(m=>[m[2],m[1]]));
+    expect(names.map(name=>registered.get(name))).toEqual(behaviourCatalog.adapters.ruleStep.actionIds);
+    expect(values).toEqual(behaviourCatalog.adapters.ruleStep.actionIds.map(id=>behaviourCatalog.actions.find(action=>action.id===id)!.label));
+   }else expect(names.map(s=>s.toLowerCase())).toEqual(values.map(s=>s.replace(/[ -]/g,'').toLowerCase()));
   }
  });
 });

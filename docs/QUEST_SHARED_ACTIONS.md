@@ -305,3 +305,10 @@ result without repeating its action; restart reports unfinished effects as
 uncertain and does not resume them. Storage failures block new one-off effects.
 See [recovery contract and boundaries](QUEST_ACTION_RECOVERY.md). Receipts for
 other room commands and durable saved-program state remain future work.
+
+
+PC programmable-physics checkpoint (2026-09-27): named push and stop-motion
+capabilities share native rigid-body execution with one-off calls, saved programs,
+event triggers and buttons. Instant effects report actual completion and do not
+renew work/causal budgets. See [semantics and boundaries](QUEST_PROGRAM_PHYSICS.md).
+The full v1 goal and device/store acceptance remain open.

@@ -9,7 +9,7 @@ import {parseProgram,sequenceProgram} from './programs';
 
 it.each(behaviourCatalog.actions)('uses the same named $id contract for simple authoring and saved execution',definition=>{
  const kind=behaviourCatalog.adapters.ruleStep.actionIds.indexOf(definition.id);
- const step={...newRuleStep(kind),seconds:kind===3?0:1},call=stepInvocation(step);
+ const step={...newRuleStep(kind),targetId:definition.duration==='instant'?'f'.repeat(32):'maestro',seconds:kind===3||definition.duration==='instant'?0:1},call=stepInvocation(step);
  expect(validCapabilityInvocation(call)).toBe(true);
  expect(validateCapabilityArguments(call.id,call.version,call.arguments)).toBeNull();
  expect(stepInvocation(invocationStep(call,step.id))).toEqual(call);
@@ -50,4 +50,21 @@ it('retains prop arguments and validates declared vector constraints without usi
  (node.arguments.prop as {offset:unknown}).offset={x:1,y:1,z:1};
  expect(validateCapabilityArguments(node.capability,node.version,node.arguments)).not.toBeNull();
  expect(parseProgram(JSON.stringify(program)).program).toBeNull();
+});
+
+it('declares instant physical effects with bounded scalar arguments that can be computed by programs',()=>{
+ const target='e'.repeat(32),definition=capabilityDefinition('object.physics.impulse')!;
+ expect(definition.duration).toBe('instant');expect(definition.description).toContain('Newton-seconds');
+ expect(definition.channels).toEqual(['wholeTarget']);
+ expect(capabilityParameterType(definition.id,'y')).toBe('number');
+ const args={target,x:0,y:1.2,z:0};expect(validateCapabilityArguments(definition.id,1,args)).toBeNull();
+ for(const bad of [{...args,target:'maestro'},{...args,target:'book'},{...args,y:21},{...args,y:Infinity},{...args,seconds:1}])
+  expect(validateCapabilityArguments(definition.id,1,bad)).not.toBeNull();
+ const program=sequenceProgram([{...newRuleStep(10),targetId:target,impulse:{x:0,y:1.2,z:0}}]);
+ expect(parseProgram(JSON.stringify(program)).error).toBeNull();
+ const node=program.functions[0].body[0];if(node.op!=='invoke')throw new Error('Expected invocation');
+ program.functions[0].locals.push({name:'force',initial:1.2});node.bindings.y={var:'force'};
+ expect(parseProgram(JSON.stringify(program)).error).toBeNull();
+ program.functions[0].locals[0].initial='bad';expect(parseProgram(JSON.stringify(program)).program).toBeNull();
+ expect(validateCapabilityArguments('object.physics.stop',1,{target})).toBeNull();
 });

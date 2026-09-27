@@ -114,3 +114,24 @@ it('authors the upper-body capability through the same simple editor and preserv
  await act(async()=>{client.receive(state({revision:2,ack:1,rules:{...rules(),revision:5,selected:updated}}));});
  expect((screen.getByLabelText('Step 1 action') as HTMLSelectElement).value).toBe('9');
 });
+
+it('authors physical impulse blocks through the same named contract without fake durations',async()=>{
+ const client=new RoomAgentClient(),ballId='e'.repeat(32),initial=state();
+ initial.objects.push({...initial.objects[0],id:ballId,name:'Ball',kind:'Ball'});
+ expect(client.receive(initial)).toBe(true);const screen=render(<RuleWorkspace client={client}/>);
+ fireEvent.change(screen.getByLabelText('Step 1 action'),{target:{value:'10'}});
+ expect(screen.queryByLabelText('Step 1 seconds')).toBeNull();
+ expect((screen.getByLabelText('Step 1 target') as HTMLSelectElement).value).toBe(ballId);
+ fireEvent.change(screen.getByLabelText('Step 1 impulse y'),{target:{value:'1.2'}});
+ fireEvent.click(screen.getByRole('button',{name:'Apply changes'}));
+ const updated=client.snapshot().request!.commands[0].rule!.edits![0].sequence!;
+ const program=parseProgram(updated.program).program!;
+ expect(program.functions[0].body[0]).toMatchObject({op:'invoke',capability:'object.physics.impulse',arguments:{target:ballId,x:0,y:1.2,z:0}});
+ expect((program.functions[0].body[0] as any).arguments).not.toHaveProperty('seconds');
+ await act(async()=>{client.receive({...initial,revision:2,ack:1,rules:{...initial.rules!,revision:5,selected:updated}});});
+ fireEvent.change(screen.getByLabelText('Step 1 action'),{target:{value:'11'}});
+ expect(screen.queryByLabelText('Step 1 impulse y')).toBeNull();expect(screen.queryByLabelText('Step 1 seconds')).toBeNull();
+ fireEvent.click(screen.getByRole('button',{name:'Apply changes'}));
+ expect(JSON.parse(client.snapshot().request!.commands[0].rule!.edits![0].sequence!.program).functions[0].body[0].arguments).toEqual({target:ballId});
+ act(()=>client.cancel());
+});

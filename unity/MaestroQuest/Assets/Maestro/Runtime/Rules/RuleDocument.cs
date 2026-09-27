@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace Maestro.Quest.Rules
 {
-    public enum RuleActionKind { RecordedAnimation, Gesture, Wait, ThrowRecording, LookAtUser, FollowUser, ImportedClip, LibraryMotion, RecipeAnimation, UpperBodyGesture }
+    public enum RuleActionKind { RecordedAnimation, Gesture, Wait, ThrowRecording, LookAtUser, FollowUser, ImportedClip, LibraryMotion, RecipeAnimation, UpperBodyGesture, PhysicsImpulse, PhysicsStop }
     public enum PropHand { Left, Right }
     public enum PropRelease { Return, Drop, Throw }
     public enum RuleGesture { Greeting, Pointing, Listening, Speaking, Idle, Walk }
@@ -28,6 +28,7 @@ namespace Maestro.Quest.Rules
         // Zero uses a recording/imported clip duration; other actions use an explicit duration.
         public float seconds;
         public bool loop;
+        public Vector3 impulse;
         public string clipModelHash;
         public int clipIndex;
         public string motionId;
@@ -104,6 +105,7 @@ namespace Maestro.Quest.Rules
             if (step.action != RuleActionKind.Wait) yield return step.targetId;
             if (!string.IsNullOrEmpty(step.propId)) yield return step.propId;
         }
+        public static bool IsInstant(RuleActionKind kind) => kind == RuleActionKind.PhysicsImpulse || kind == RuleActionKind.PhysicsStop;
         public static bool IsSpatial(RuleActionKind kind) => kind == RuleActionKind.LookAtUser || kind == RuleActionKind.FollowUser;
         public static string Activity(RuleEventKind kind) => BehaviourCatalog.Event(kind)?.Activity;
         public static bool ConditionMatches(RuleCondition condition, string activity) => condition == RuleCondition.Any || condition.ToString().ToLowerInvariant() == activity;
@@ -116,7 +118,9 @@ namespace Maestro.Quest.Rules
                 !Enum.IsDefined(typeof(PropRelease),step.propRelease) || !float.IsFinite(step.propReleaseAt) || step.propReleaseAt < .05f || step.propReleaseAt > 1 ||
                 !float.IsFinite(step.propOffset.sqrMagnitude) || step.propOffset.sqrMagnitude > 1 || !MotionFrame.ValidRotation(step.propRotation) ||
                 !string.IsNullOrEmpty(step.propAvatarHash) && !ModelLibrary.ValidHash(step.propAvatarHash))) return false;
-            if (step.action != RuleActionKind.RecordedAnimation && step.action != RuleActionKind.ThrowRecording && step.action != RuleActionKind.ImportedClip && step.action != RuleActionKind.LibraryMotion && step.action != RuleActionKind.RecipeAnimation && step.seconds < .1f) return false;
+            if (step.action != RuleActionKind.RecordedAnimation && step.action != RuleActionKind.ThrowRecording && step.action != RuleActionKind.ImportedClip && step.action != RuleActionKind.LibraryMotion && step.action != RuleActionKind.RecipeAnimation && !IsInstant(step.action) && step.seconds < .1f) return false;
+            if (IsInstant(step.action) && (step.seconds != 0 || step.loop || !IsId(step.targetId))) return false;
+            if (step.action == RuleActionKind.PhysicsImpulse && (!float.IsFinite(step.impulse.sqrMagnitude) || Mathf.Abs(step.impulse.x)>20 || Mathf.Abs(step.impulse.y)>20 || Mathf.Abs(step.impulse.z)>20)) return false;
             if (step.action == RuleActionKind.UpperBodyGesture && step.gesture == RuleGesture.Walk) return false;
             if (!string.IsNullOrEmpty(step.motionId) && !IsId(step.motionId)) return false;
             if (step.clipIndex < 0 || step.clipIndex >= 32 || !string.IsNullOrEmpty(step.clipModelHash) && !ModelLibrary.ValidHash(step.clipModelHash)) return false;

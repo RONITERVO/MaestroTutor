@@ -97,6 +97,31 @@ namespace Maestro.Quest.Interaction
             if (body) { body.position = transform.position; body.rotation = transform.rotation; }
             Refresh();
         }
+        public bool CanReceivePhysicsAction(out string error)
+        {
+            error=null;
+            if(!body||!item||!item.Grab) {error="Object physics is unavailable";return false;}
+            if(!Dynamic) {error="Choose solid or bouncy physics for this object first";return false;}
+            if(!geometryReady) {error="Object collision geometry is still loading";return false;}
+            if(item.Grab.isSelected) {error="Release the object before changing its motion";return false;}
+            if(AnimationOwned) {error="An animation or carried prop owns this object";return false;}
+            if(!world||!world.CanSimulate(transform.position)) {error="Start room physics with valid scanned surfaces first";return false;}
+            return true;
+        }
+        // Impulse is in Newton-seconds, in world axes. Reuse the same launch
+        // limits and ownership checks as a controller/recorded throw.
+        public bool ApplyImpulse(Vector3 impulse,out string error)
+        {
+            if(!CanReceivePhysicsAction(out error))return false;
+            if(!float.IsFinite(impulse.sqrMagnitude)) {error="Invalid impulse";return false;}
+            if(Launch(body.linearVelocity+impulse/body.mass,body.angularVelocity))return true;
+            error="Object physics changed before the push";return false;
+        }
+        public bool ClearMotion(out string error)
+        {
+            if(!CanReceivePhysicsAction(out error))return false;
+            StopVelocity();return true; // Gravity/collisions continue; this is not a freeze.
+        }
         public bool Launch(Vector3 velocity, Vector3 angularVelocity)
         {
             if (!Allowed || item.Grab.isSelected || !float.IsFinite(velocity.sqrMagnitude) || !float.IsFinite(angularVelocity.sqrMagnitude)) return false;

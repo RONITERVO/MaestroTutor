@@ -35,6 +35,11 @@ namespace Maestro.Quest.Programs
         public static JObject Schema(RuleActionKind kind)
         {
             var p=new JObject();
+            if(RuleDocument.IsInstant(kind)) {
+                p["target"]=Resource(Text("^[a-fA-F0-9]{32}$",32));
+                if(kind==RuleActionKind.PhysicsImpulse) {p["x"]=Number(-20,20);p["y"]=Number(-20,20);p["z"]=Number(-20,20);}
+                return Object(p);
+            }
             if(kind!=RuleActionKind.Wait)p["target"]=kind==RuleActionKind.Gesture||kind==RuleActionKind.UpperBodyGesture||RuleDocument.IsSpatial(kind)
                 ? Choice("maestro") : Text("^(maestro|book|[a-fA-F0-9]{32})$",32);
             if(kind!=RuleActionKind.ThrowRecording)p["seconds"]=Number(kind==RuleActionKind.Wait||kind==RuleActionKind.Gesture||kind==RuleActionKind.UpperBodyGesture||RuleDocument.IsSpatial(kind) ? .1 : 0,30);
@@ -97,6 +102,7 @@ namespace Maestro.Quest.Programs
             var result=new JObject();var fields=(JObject)Schema(step.action)["properties"];
             if(fields.ContainsKey("target"))result["target"]=step.targetId;
             if(fields.ContainsKey("seconds"))result["seconds"]=step.seconds;
+            if(step.action==RuleActionKind.PhysicsImpulse) {result["x"]=step.impulse.x;result["y"]=step.impulse.y;result["z"]=step.impulse.z;}
             if(fields.ContainsKey("gesture"))result["gesture"]=Enum.IsDefined(typeof(RuleGesture),step.gesture)?step.gesture.ToString().ToLowerInvariant():"invalid";
             if(fields.ContainsKey("loop"))result["loop"]=step.loop;
             if(fields.ContainsKey("modelHash")) {result["modelHash"]=step.clipModelHash??"";result["clipIndex"]=step.clipIndex;}
@@ -113,6 +119,7 @@ namespace Maestro.Quest.Programs
             step=null;error=null;if(!BehaviourCatalog.HasAction(kind) || !Validate(arguments,Schema(kind),out error)) {error??="Unknown capability";return false;}
             var result=new RuleStep {action=kind,targetId=(string)arguments["target"]??"maestro",seconds=(float?)arguments["seconds"]??0,
                 loop=(bool?)arguments["loop"]??false,clipModelHash=(string)arguments["modelHash"],clipIndex=(int?)arguments["clipIndex"]??0,motionId=(string)arguments["motionId"]};
+            if(kind==RuleActionKind.PhysicsImpulse)result.impulse=new Vector3((float)arguments["x"],(float)arguments["y"],(float)arguments["z"]);
             if(arguments["gesture"]!=null)result.gesture=Enum.Parse<RuleGesture>((string)arguments["gesture"],true);
             if(arguments["prop"] is JObject prop) {
                 result.propId=(string)prop["objectId"];result.propAvatarHash=(string)prop["avatarHash"];

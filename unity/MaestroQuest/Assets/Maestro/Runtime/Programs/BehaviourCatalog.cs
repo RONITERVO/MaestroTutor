@@ -15,18 +15,21 @@ namespace Maestro.Quest.Programs
     {
         public sealed class ActionDefinition
         {
-            public readonly string Id, Label;
+            public readonly string Id, Label, Description;
             public int Version=>1;
             public JObject InputSchema=>CapabilityArguments.Schema(Kind);
             public bool TryArguments(JObject arguments,out RuleStep step,out string error)=>CapabilityArguments.TryStep(Kind,arguments,out step,out error);
             public readonly RuleActionKind Kind;
             public readonly string Duration, Ownership;
             public readonly IReadOnlyList<string> Channels, Requirements;
-            public JObject ToJson()=>new JObject {["id"]=Id,["version"]=Version,["label"]=Label,["input"]=InputSchema,
-                ["duration"]=Duration,["ownership"]=Ownership,["channels"]=new JArray(Channels),["requirements"]=new JArray(Requirements)};
-            public ActionDefinition(string id, RuleActionKind kind, string label, string requirements="")
+            public JObject ToJson() {
+                var value=new JObject {["id"]=Id,["version"]=Version,["label"]=Label,["input"]=InputSchema,
+                    ["duration"]=Duration,["ownership"]=Ownership,["channels"]=new JArray(Channels),["requirements"]=new JArray(Requirements)};
+                if(Description!=null)value["description"]=Description;return value;
+            }
+            public ActionDefinition(string id, RuleActionKind kind, string label, string requirements="",string description=null)
             {
-                Id=id;Kind=kind;Label=label;Duration="timed";
+                Id=id;Kind=kind;Label=label;Description=description;Duration=RuleDocument.IsInstant(kind)?"instant":"timed";
                 Ownership=kind==RuleActionKind.Wait?"none":kind==RuleActionKind.UpperBodyGesture||RuleDocument.IsSpatial(kind)?"exclusiveChannels":"exclusiveTargetAndProp";
                 Channels=Array.AsReadOnly(ActionChannels(kind));
                 Requirements=Array.AsReadOnly(requirements.Split(' ',StringSplitOptions.RemoveEmptyEntries));
@@ -65,6 +68,8 @@ namespace Maestro.Quest.Programs
             new ActionDefinition("avatar.gesture.play",RuleActionKind.Gesture,"Gesture","target.exists target.unheld authoring.inactive avatar.available"),
             new ActionDefinition("avatar.gesture.upperBody",RuleActionKind.UpperBodyGesture,"Upper-body gesture","target.exists target.unheld authoring.inactive avatar.available"),
             new ActionDefinition("time.wait",RuleActionKind.Wait,"Wait"),
+            new ActionDefinition("object.physics.impulse",RuleActionKind.PhysicsImpulse,"Push object","target.exists target.unheld authoring.inactive rigidBody.dynamic physics.running geometry.ready","Apply x/y/z impulse in Newton-seconds along room axes (right/up/forward). Mass affects the velocity change; existing speed limits apply. Completion means the push was applied; gravity and collisions keep moving the object."),
+            new ActionDefinition("object.physics.stop",RuleActionKind.PhysicsStop,"Stop object motion","target.exists target.unheld authoring.inactive rigidBody.dynamic physics.running geometry.ready","Clear linear and angular velocity once. This does not freeze or pin the object; gravity and collisions continue afterward."),
             new ActionDefinition("object.recording.throw",RuleActionKind.ThrowRecording,"Throw recording","target.exists target.unheld authoring.inactive recording.twoFrames rigidBody.dynamic physics.running"),
             new ActionDefinition("avatar.look.user",RuleActionKind.LookAtUser,"Look at user","target.exists target.unheld authoring.inactive avatar.spatialReady"),
             new ActionDefinition("avatar.follow.user",RuleActionKind.FollowUser,"Follow user","target.exists target.unheld authoring.inactive avatar.spatialReady physics.running navigation.floorReady"),

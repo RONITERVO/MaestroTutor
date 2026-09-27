@@ -26,6 +26,7 @@ namespace Maestro.Quest.Tests
         AnimationWorkshop animations;
         RuleWorkshop workshop;
         RoomRules runtime;
+        RoomPhysicsWorld physics;
         RoomItem block;
         string directory, sequenceId;
         [UnitySetUp] public IEnumerator SetUp()
@@ -37,7 +38,8 @@ namespace Maestro.Quest.Tests
                 var value = new GameObject(name); value.transform.SetParent(root.transform,false); var collider = value.AddComponent<BoxCollider>(); collider.size = Vector3.one*.1f;
                 var item = value.AddComponent<RoomItem>(); item.Configure(new Collider[] { collider }); room.Register(item); return item;
             }
-            var book = Included("book"); var avatar = Included("maestro"); editor = root.AddComponent<RoomEditor>(); editor.Initialize(room,book,avatar,directory);
+            physics=root.AddComponent<RoomPhysicsWorld>();
+            var book = Included("book"); var avatar = Included("maestro"); editor = root.AddComponent<RoomEditor>(); editor.Initialize(room,book,avatar,directory,physics);
             var blockData = editor.Snapshot().objects.First(x => x.kind == RoomObjectKind.Block); block = editor.Find(blockData.id); editor.Select(block);
             editor.SaveAnimation(blockData.id,new RoomMotion { frames = new[] { new MotionFrame { position = blockData.position },new MotionFrame { time = 2,position = blockData.position + Vector3.right*.4f } } },null,false);
             animations = root.AddComponent<AnimationWorkshop>(); animations.Initialize(editor);
@@ -95,6 +97,43 @@ namespace Maestro.Quest.Tests
             Assert.That(Execute(new RuleRequest {action="play",revision=revision,target=sequence.id},out error),Is.True,error);
             runtime.SendMessage("OnApplicationPause",true);runtime.SendMessage("OnApplicationPause",false);yield return null;
             Assert.That(runtime.Scheduler.RunningCount,Is.Zero);Evidence("paused");
+        }
+        [UnityTest] public IEnumerator SharedPhysicsCallsPushAndStopTheRealBallWithoutPlaybackOrReplay()
+        {
+            var executor=new RoomAgentExecutor(editor);var data=editor.Snapshot().objects.First(x=>x.kind==RoomObjectKind.Ball);
+            var item=editor.Find(data.id);var body=item.GetComponent<Rigidbody>();var rigid=item.GetComponent<RigidRoomItem>();
+            bool Execute(RoomAgentCommand command,out string error)=>executor.Execute(new RoomAgentRequest {version=2,conditions=new[]{new RoomObjectCondition {id=data.id,revision=editor.ObjectRevision(data.id)}},commands=new[]{command}},out error,out _);
+            Assert.That(Execute(new RoomAgentCommand {action="physicsSettings",target=data.id,physics=new ObjectPhysicsSettings {mode="bouncy",mass=.6f,shape="sphere"}},out var error),Is.True,error);
+            physics.SetSurfaces(true,"Ready");physics.StartPhysics();yield return new WaitForFixedUpdate();rigid.StopVelocity();
+            var call=new JObject {["id"]="object.physics.impulse",["version"]=1,["arguments"]=new JObject {["target"]=data.id,["x"]=.6,["y"]=1.2,["z"]=0}};
+            string id=runtime.Scheduler.Receipts.NextId;
+            var command=new RoomAgentCommand {action="execution",execution=new JObject {["operation"]="start",["runId"]=id,["call"]=call}};
+            Assert.That(Execute(command,out error),Is.True,error);Assert.That(body.linearVelocity.x,Is.EqualTo(1).Within(.001f));Assert.That(body.linearVelocity.y,Is.EqualTo(2).Within(.001f));
+            Assert.That(rigid.AnimationOwned,Is.False,"An instant push must leave ownership with physics");
+            void Evidence(string phase) {
+                string output=Environment.GetEnvironmentVariable("MAESTRO_PHYSICS_ACTION_EVIDENCE");if(string.IsNullOrEmpty(output))return;
+                Directory.CreateDirectory(output);File.WriteAllText(Path.Combine(output,phase+".json"),new JObject {
+                    ["execution"]=executor.Executions.Observe(),["position"]=JObject.Parse(JsonUtility.ToJson(item.transform.position)),
+                    ["velocity"]=JObject.Parse(JsonUtility.ToJson(body.linearVelocity)),["mass"]=body.mass,["gravity"]=body.useGravity,["simulating"]=rigid.Simulating
+                }.ToString());
+            }
+            Evidence("pushed");
+            runtime.Scheduler.Tick(Time.unscaledTime);
+            Assert.That((string)executor.Executions.Observe()["selected"]["phase"],Is.EqualTo("completed"));
+            var velocity=body.linearVelocity;Assert.That(Execute(command,out error),Is.True,error);Assert.That(body.linearVelocity,Is.EqualTo(velocity),"A duplicate cannot apply a second impulse");
+            var before=item.transform.position;yield return new WaitForSeconds(.15f);
+            Assert.That(item.transform.position.x,Is.GreaterThan(before.x+.05f));
+            call=new JObject {["id"]="object.physics.stop",["version"]=1,["arguments"]=new JObject {["target"]=data.id}};
+            command.execution=new JObject {["operation"]="start",["runId"]=runtime.Scheduler.Receipts.NextId,["call"]=call};
+            before=item.transform.position;Assert.That(Execute(command,out error),Is.True,error);
+            Assert.That(body.linearVelocity,Is.EqualTo(Vector3.zero));Assert.That(item.transform.position,Is.EqualTo(before),"Stop motion cannot restore a saved pose");Evidence("stopped");
+            yield return new WaitForFixedUpdate();yield return new WaitForFixedUpdate();
+            Assert.That(body.linearVelocity.y,Is.LessThan(0));Assert.That(body.useGravity,Is.True);Evidence("gravity");
+            root.transform.rotation=Quaternion.Euler(0,90,0);Physics.SyncTransforms();rigid.StopVelocity();
+            call=new JObject {["id"]="object.physics.impulse",["version"]=1,["arguments"]=new JObject {["target"]=data.id,["x"]=.6,["y"]=0,["z"]=0}};
+            command.execution=new JObject {["operation"]="start",["runId"]=runtime.Scheduler.Receipts.NextId,["call"]=call};
+            Assert.That(Execute(command,out error),Is.True,error);
+            Assert.That(Vector3.Distance(body.linearVelocity,root.transform.TransformDirection(Vector3.right)),Is.LessThan(.001f),"Impulse axes follow the room without scaling physical units");Evidence("rotated-room");
         }
         [UnityTest] public IEnumerator LostReceiptAcrossBrowserReconnectReturnsTheOriginalActionBeforeStaleTargetChecks()
         {

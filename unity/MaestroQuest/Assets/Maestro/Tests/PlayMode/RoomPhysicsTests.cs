@@ -35,6 +35,24 @@ namespace Maestro.Quest.Tests
             rigid = sphere.AddComponent<RigidRoomItem>(); rigid.Initialize(ball); rigid.Configure(world,ItemPhysics.Bouncy,.6f); body = sphere.GetComponent<Rigidbody>();
             yield return null;
         }
+        [UnityTest] public IEnumerator ProgramImpulseUsesMassAndExistingLimitsWhileClearMotionKeepsGravity()
+        {
+            Assert.That(rigid.ApplyImpulse(Vector3.right,out _),Is.False);
+            world.SetSurfaces(true,"Ready");world.StartPhysics();yield return new WaitForFixedUpdate();
+            rigid.StopVelocity();Assert.That(rigid.ApplyImpulse(Vector3.right*1.2f,out var error),Is.True,error);
+            Assert.That(body.linearVelocity.x,Is.EqualTo(2).Within(.001f),"Impulse must use body mass");
+            Assert.That(rigid.ApplyImpulse(Vector3.right*.6f,out error),Is.True,error);
+            Assert.That(body.linearVelocity.x,Is.EqualTo(3).Within(.001f),"Impulse adds to existing motion");
+            Assert.That(rigid.ApplyImpulse(Vector3.right*20,out error),Is.True,error);
+            Assert.That(body.linearVelocity.magnitude,Is.LessThanOrEqualTo(15.001f));
+            Assert.That(rigid.ClearMotion(out error),Is.True,error);Assert.That(body.linearVelocity,Is.EqualTo(Vector3.zero));
+            yield return new WaitForFixedUpdate();yield return new WaitForFixedUpdate();
+            Assert.That(body.linearVelocity.y,Is.LessThan(0));Assert.That(body.useGravity,Is.True);
+            var owner=new object();rigid.SetAnimationOwner(owner,true);
+            Assert.That(rigid.ApplyImpulse(Vector3.up,out _),Is.False,"An impulse cannot take a carried/animated object");
+            Assert.That(rigid.ClearMotion(out _),Is.False);rigid.SetAnimationOwner(owner,false);
+            world.PausePhysics();Assert.That(rigid.ApplyImpulse(Vector3.up,out _),Is.False);
+        }
         [UnityTest] public IEnumerator ScanGateGravityFloorBounceAndPauseUseActualPhysics()
         {
             world.StartPhysics(); yield return new WaitForSeconds(.15f);

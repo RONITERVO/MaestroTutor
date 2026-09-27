@@ -11,7 +11,8 @@ export function stepInvocation(step:RuleStep):CapabilityInvocation {
  const id=ids[step.action];if(!id)throw new Error('Unknown capability');
  const args:Record<string,unknown>={};
  if(step.action!==2)args.target=step.targetId;
- if(step.action!==3)args.seconds=step.seconds;
+ if(![3,10,11].includes(step.action))args.seconds=step.seconds;
+ if(step.action===10){args.x=step.impulse?.x??0;args.y=step.impulse?.y??0;args.z=step.impulse?.z??0;}
  if(step.action===1||step.action===9)args.gesture=gestures[step.gesture]??'invalid';
  if([0,6,7,8].includes(step.action))args.loop=step.loop;
  if(step.action===6){args.modelHash=step.clipModelHash??'';args.clipIndex=step.clipIndex??0;}
@@ -25,11 +26,12 @@ export function stepInvocation(step:RuleStep):CapabilityInvocation {
  * Draft numeric values remain editable even when outside their permitted bounds.
  */
 export function invocationStep(call:CapabilityInvocation,id:string):RuleStep {
- const action=ids.indexOf(call.id);if(action<0||action>9||call.version!==1)throw new Error('Unknown capability or unsupported capability version');
+ const action=ids.indexOf(call.id);if(action<0||action>11||call.version!==1)throw new Error('Unknown capability or unsupported capability version');
  const a=call.arguments,p=a.prop as Record<string,unknown>|undefined;
  return {id,action,targetId:(a.target??'maestro') as string,seconds:(a.seconds??0) as number,
   gesture:a.gesture===undefined?0:gestures.indexOf(a.gesture as string),loop:(a.loop??false) as boolean,
   clipModelHash:(a.modelHash??'') as string,clipIndex:(a.clipIndex??0) as number,motionId:(a.motionId??'') as string,
+  ...(action===10?{impulse:{x:a.x as number,y:a.y as number,z:a.z as number}}:{}),
   ...(p?{propId:p.objectId as string,propAvatarHash:p.avatarHash as string,propHand:['left','right'].indexOf(p.hand as string),
    propRelease:['return','drop','throw'].indexOf(p.release as string),propReleaseAt:p.releaseAt as number,
    propOffset:p.offset as Vec3,propRotation:p.rotation as Rotation}:{})};

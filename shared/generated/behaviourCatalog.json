@@ -383,6 +383,92 @@
       "requirements": []
     },
     {
+      "id": "object.physics.impulse",
+      "version": 1,
+      "label": "Push object",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "x": {
+            "type": "number",
+            "minimum": -20.0,
+            "maximum": 20.0
+          },
+          "y": {
+            "type": "number",
+            "minimum": -20.0,
+            "maximum": 20.0
+          },
+          "z": {
+            "type": "number",
+            "minimum": -20.0,
+            "maximum": 20.0
+          }
+        },
+        "required": [
+          "target",
+          "x",
+          "y",
+          "z"
+        ],
+        "additionalProperties": false
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "rigidBody.dynamic",
+        "physics.running",
+        "geometry.ready"
+      ],
+      "description": "Apply x/y/z impulse in Newton-seconds along room axes (right/up/forward). Mass affects the velocity change; existing speed limits apply. Completion means the push was applied; gravity and collisions keep moving the object."
+    },
+    {
+      "id": "object.physics.stop",
+      "version": 1,
+      "label": "Stop object motion",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "rigidBody.dynamic",
+        "physics.running",
+        "geometry.ready"
+      ],
+      "description": "Clear linear and angular velocity once. This does not freeze or pin the object; gravity and collisions continue afterward."
+    },
+    {
       "id": "object.recording.throw",
       "version": 1,
       "label": "Throw recording",
@@ -930,7 +1016,9 @@
         "animation.embedded.play",
         "animation.library.play",
         "animation.recipe.play",
-        "avatar.gesture.upperBody"
+        "avatar.gesture.upperBody",
+        "object.physics.impulse",
+        "object.physics.stop"
       ],
       "eventIds": [
         "maestro.speaking.enter",
@@ -946,11 +1034,11 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "0472d9c2920eb395fd9047ee612ee68feb37e0da35e2cd0e8d3ef2582a9df9a0"
+      "sha256": "ebc52831039840ae5e75b7040c83ecfb669b39a6625505b90a5779e3af61a83c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "527897c307640376c3b42ce64617cff41ad13c4074dd9ad596812fab0b0d621d"
+      "sha256": "291d19e030670eabe72f50d247b1ab8c6a9d3b55065de3a3e31b2731a1b7ba33"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -958,7 +1046,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleDocument.cs",
-      "sha256": "704f902d9ba67456fece35f763b6c9a4652c43460b0458e5edcfd52640bf4510"
+      "sha256": "b57489e49501482ea0798886c4819c76998607362c05659ab7254a98cf72be08"
     }
   ]
 }

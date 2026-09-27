@@ -52,7 +52,7 @@ export function CapabilityBrowser({client,onClose,onInsert}:{client:RoomAgentCli
   <section className="room-workspace-page room-inspector" aria-label="Action details">
    <h2>{definition?.label??'Choose an action'}</h2>
    <div role="status" className={error||state?.execution?.storageError?'room-message room-message-warning':'room-message'}>{error||state?.execution?.storageError||(!supported?'Update the native app to browse actions.':pending?'Waiting for the room…':check?.status??state?.execution?.selected?.status??'Select an action or check its availability.')}</div>
-   {definition&&<><p>{definition.id} · version {definition.version}</p>
+   {definition&&<><p>{definition.id} · version {definition.version}</p>{definition.description&&<p>{definition.description}</p>}
     <label>Action arguments<textarea aria-label="Action arguments" rows={12} spellCheck={false} value={args} disabled={pending} onChange={e=>{setArgs(e.target.value);setChecked('');}}/></label>
     {invalid&&<p className="room-message room-message-warning">{invalid}</p>}
     <div className="room-workspace-actions"><button disabled={pending||!call} onClick={async()=>{if(call){const result=await send({operation:'check',call});if(result?.operation==='check')setChecked(key);}}}>Check availability</button>
