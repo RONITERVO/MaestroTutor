@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {validTemporaryRoom} from '../../../shared/roomSession';
 import {capabilityResources} from '../../../shared/capabilities';
 import {validExecutionView,identifyExecution} from '../../../shared/roomExecutions';
 import {validCatalogView} from '../../../shared/roomCatalog';
@@ -32,6 +33,7 @@ export class RoomAgentClient {
       !Array.isArray(input.created) || input.created.length>16 || !input.created.every(id) || !Array.isArray(input.objects) || input.objects.length>66 || JSON.stringify(input).length>327680) return false;
     if(input.objects.some(o=>!record(o) || typeof o.id!=='string' || !/^(book|maestro|[a-f0-9]{32})$/.test(o.id) || typeof o.name!=='string' || o.name.length>80 || typeof o.kind!=='string' || !vector(o.position) || typeof o.scale!=='number' || !Number.isFinite(o.scale) || !validPigment(o.color) || typeof o.animated!=='boolean' || o.objectRevision!==undefined&&!integer(o.objectRevision,1))) return false;
     if(input.capabilities!==undefined&&(!Array.isArray(input.capabilities)||input.capabilities.length>64||!input.capabilities.every(c=>typeof c==='string'&&/^[a-zA-Z][a-zA-Z0-9.]{0,63}$/.test(c))||new Set(input.capabilities).size!==input.capabilities.length))return false;
+    if(input.temporaryRoom!==undefined&&!validTemporaryRoom(input.temporaryRoom)||Array.isArray(input.capabilities)&&input.capabilities.includes('temporaryRoom.v1')&&!validTemporaryRoom(input.temporaryRoom))return false;
     if(input.physics!==undefined&&input.physics!==null&&(!validPhysicsObservation(input.physics)||input.physics.running!==input.physicsRunning))return false;
     if(input.activityProfile!==undefined&&input.activityProfile!==null&&!validActivityProfile(input.activityProfile,true))return false;
     if(input.walk!==undefined&&input.walk!==null&&!validAvatarWalkObservation(input.walk))return false;

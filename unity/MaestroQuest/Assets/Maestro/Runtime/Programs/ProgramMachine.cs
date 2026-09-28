@@ -101,7 +101,7 @@ namespace Maestro.Quest.Programs
                             if(!action.Resources.All(id=>program.Allows(id)||createdResources.Contains(id)))throw new ProgramFault("Computed target is not a declared or created resource");
                             var contract=BehaviourCatalog.Action((string)node["capability"]);
                             if(((JObject)contract.OutputSchema["properties"]).Count>0) {
-                                if(createdResources.Count>=16)throw new ProgramFault("This run has reached its limit of 16 created objects");
+                                if(createdResources.Count+((JObject)contract.OutputSchema["properties"]).Properties().Count(p=>(string)p.Value["x-resource"]=="object")>16)throw new ProgramFault("This run has reached its limit of 16 created objects");
                                 resultScope=frame.Scope;resultBindings=node["results"] as JObject;resultContract=contract;
                             }
                             action.NodeId=NodeId;return ProgramYield.Action;

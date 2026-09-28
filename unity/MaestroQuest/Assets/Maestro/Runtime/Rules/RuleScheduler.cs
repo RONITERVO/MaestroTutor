@@ -13,6 +13,7 @@ namespace Maestro.Quest.Rules
         bool Start(string runId, CapabilityCall step, out float seconds, out string error);
         void Stop(string runId, bool preservePlacement);
     }
+    public interface IRuleInterruptionInfo { string InterruptionStatus(string runId); }
     public interface IRuleResults { Newtonsoft.Json.Linq.JObject TakeResult(string runId); }
     public interface IRuleCompletion { bool Complete(string runId,out string error); }
     public enum RuleActionState { Preparing, Ready, Failed }
@@ -51,14 +52,15 @@ namespace Maestro.Quest.Rules
         string activity;
         bool suspended;
         public int RunningCount => running.Count;
+        public bool HasOtherWork(string runId)=>queued.Count>0||running.Any(run=>run.Id!=runId);
         public int PreparingCount => running.Count(x => x.Preparing);
         public int QueuedCount => queued.Count;
         public bool TargetsBusy(IEnumerable<string> targets) {var ids=targets.ToHashSet();return running.Any(x=>x.Targets.Overlaps(ids));}
         static BehaviourCatalog.Claim[] Whole(IEnumerable<string> targets)=>targets.Select(id=>new BehaviourCatalog.Claim(id,"wholeTarget")).ToArray();
         static bool Conflicts(Run run,IEnumerable<BehaviourCatalog.Claim> claims)=>claims.Any(claim=>run.Claims.Any(claim.Conflicts));
-        public bool ActionBusy(CapabilityCall call)=>running.Any(run=>Conflicts(run,call.Claims));
+        public bool ActionBusy(CapabilityCall call)=>call.RequiresQuietRoom?(running.Count>0||queued.Count>0):running.Any(run=>run.Active?.RequiresQuietRoom==true||Conflicts(run,call.Claims));
         public string LastError { get; private set; }
-        public RuleRunView[] ObserveRuns() => running.Where(x=>x.Invocation==null).Select(x=>new RuleRunView {id=x.Id,sequenceId=x.Sequence.id,preparing=x.Preparing,nodeId=x.Machine?.NodeId,functionName=x.Machine?.Function,status=x.Machine?.Wait!=null?x.Machine.Wait.Event==null?"Waiting for timer":"Waiting for "+x.Machine.Wait.Event:x.Computing?"Evaluating":x.Preparing?"Loading":"Running",
+        public RuleRunView[] ObserveRuns() => running.Where(x=>x.Invocation==null).Select(x=>new RuleRunView {id=x.Id,sequenceId=x.Sequence.id,preparing=x.Preparing,nodeId=x.Machine?.NodeId,functionName=x.Machine?.Function,status=x.Machine?.Wait!=null?x.Machine.Wait.Event==null?"Waiting for timer":"Waiting for "+x.Machine.Wait.Event:x.Computing?"Evaluating":x.Preparing?x.Active?.AwaitCompletion==true?"Waiting for action completion":"Loading":"Running",
             waiting=x.Machine?.Wait!=null,waitEvent=x.Machine?.Wait?.Event,waitSeconds=x.Machine?.Wait!=null&&x.Machine.Wait.Seconds>0?Math.Max(0,x.Ends-lastNow):0,
             state=x.Machine?.State.Select(v=>new ProgramVariableView {name=v.Key,type=v.Value.Type.ToString().ToLowerInvariant(),value=Convert.ToString(v.Value.Value,System.Globalization.CultureInfo.InvariantCulture)}).ToArray()??Array.Empty<ProgramVariableView>(),
             locals=x.Machine?.Locals.Select(v=>new ProgramVariableView {name=v.Key,type=v.Value.Type.ToString().ToLowerInvariant(),value=Convert.ToString(v.Value.Value,System.Globalization.CultureInfo.InvariantCulture)}).ToArray()??Array.Empty<ProgramVariableView>()}).ToArray();
@@ -148,6 +150,9 @@ namespace Maestro.Quest.Rules
                     return true;
                 }
             }
+            if(run.Active.RequiresQuietRoom&&HasOtherWork(run.Id)||running.Any(x=>x!=run&&x.Active?.RequiresQuietRoom==true)) {
+                LastError="Stop other room actions before this room-wide action";Stop(run,false,"failed",LastError);return false;
+            }
             if(run.Reactive) {
                 var targets=run.Active.Resources.ToHashSet();
                 var claims=run.Active.Claims;
@@ -155,13 +160,13 @@ namespace Maestro.Quest.Rules
                 run.Targets=targets;run.Claims=claims;
             }
             if(!actions.CanRun(run.Active,out var unavailable)) {LastError=unavailable;Stop(run,false,"failed",LastError);return false;}
-            bool instant=run.Active.Instant;
-            if (!actions.Start(run.Id,run.Active,out float seconds,out var error) || !float.IsFinite(seconds) || (instant?seconds!=0:seconds<.01f) || seconds > 30)
+            bool instant=run.Active.Instant,awaited=run.Active.AwaitCompletion;
+            if (!actions.Start(run.Id,run.Active,out float seconds,out var error) || !float.IsFinite(seconds) || (instant||awaited?seconds!=0:seconds<.01f) || seconds > 30)
             { LastError = error ?? "This action has an invalid duration"; Stop(run,false,"failed",LastError); return false; }
             run.Duration = seconds; run.PrepareDeadline = now+30;
             var state = actions is IRuleReadiness readiness ? readiness.State(run.Id,out error) : RuleActionState.Ready;
             if (state == RuleActionState.Failed) { LastError = error ?? "This action could not load"; Stop(run,false,"failed",LastError); return false; }
-            if(instant) {
+            if(instant||awaited&&state==RuleActionState.Ready) {
                 if(state!=RuleActionState.Ready) {LastError="An instant action cannot defer its effect";Stop(run,false,"failed",LastError);return false;}
                 if(actions is IRuleCompletion completion) {
                     if(!completion.Complete(run.Id,out error)) {LastError=error??"This action could not finish";Stop(run,false,"failed",LastError);return false;}
@@ -197,6 +202,15 @@ namespace Maestro.Quest.Rules
                     Unsubscribe(run);run.Machine.Resume(false);run.EventDepth=0;StartStep(run,now);continue;
                 }
                 if(run.Computing) {StartStep(run,now);continue;}
+                if(run.Active?.AwaitCompletion==true) {
+                    string issue=null;var state=actions is IRuleReadiness awaited?awaited.State(run.Id,out issue):RuleActionState.Ready;
+                    if(state==RuleActionState.Preparing && now<run.PrepareDeadline)continue;
+                    if(state!=RuleActionState.Ready) {
+                        LastError=state==RuleActionState.Preparing?"The action did not complete in time; inspect its outcome before retrying":issue??"The action failed";
+                        Stop(run,false,"failed",LastError);continue;
+                    }
+                    run.Preparing=false;run.Ends=now;
+                }
                 if (run.Preparing)
                 {
                     if (now >= run.PrepareDeadline) { LastError = "The action took too long to load; try again"; Stop(run,false,"failed",LastError); continue; }
@@ -213,7 +227,7 @@ namespace Maestro.Quest.Rules
                 { if (!completion.Complete(run.Id,out var completionError)) { LastError=completionError ?? "This action could not finish"; Stop(run,false,"failed",LastError); continue; } }
                 else actions.Stop(run.Id,false);
                 if(!CompleteResult(run,out var resultError)) {LastError=resultError;Stop(run,false,"failed",resultError);continue;}
-                bool timed=run.Active!=null&&!run.Active.Instant;
+                bool timed=run.Active!=null&&!run.Active.Instant&&!run.Active.AwaitCompletion;
                 run.Active=null;if(run.Reactive) {run.Targets.Clear();run.Claims=Array.Empty<BehaviourCatalog.Claim>();if(timed) {run.Machine.BeginActivation();run.EventDepth=0;}}
                 // At most one step per run per tick, even after a long frame.
                 StartStep(run,now);
@@ -247,7 +261,11 @@ namespace Maestro.Quest.Rules
             while(outcomes.Count>MaximumOutcomes)outcomes.Dequeue();
             if(run.Invocation!=null)Receipts?.Update(LiveInvocation(run.Id));
         }
-        void Stop(Run run,bool preservePlacement,string phase="cancelled",string status="Behaviour stopped") {actions.Stop(run.Id,preservePlacement);Finish(run,phase,status);}
+        void Stop(Run run,bool preservePlacement,string phase="cancelled",string status="Behaviour stopped") {
+            var notice=(actions as IRuleInterruptionInfo)?.InterruptionStatus(run.Id);
+            if(!string.IsNullOrEmpty(notice))status=phase=="cancelled"?notice:status+". "+notice;
+            actions.Stop(run.Id,preservePlacement);Finish(run,phase,status);
+        }
         public bool StopSequence(string id)
         {
             if(!document.sequences.Any(x=>x.id==id))return false;

@@ -75,7 +75,7 @@ namespace Maestro.Quest.Creation
                 else {
                     occupied=runtime.Scheduler?.ActionBusy(step)==true;
                     available=runtime.CanRun(step,out error);
-                    if(available&&occupied) {available=false;error="A running action owns a required animation channel or object";}
+                    if(available&&occupied) {available=false;error=step.RequiresQuietRoom?"Stop other room actions before this room-wide action":"A running action owns a required animation channel or object";}
                     if(available&&!runtime.Scheduler.HasCapacity) {available=false;error="All action slots are currently in use";}
                 }
             }

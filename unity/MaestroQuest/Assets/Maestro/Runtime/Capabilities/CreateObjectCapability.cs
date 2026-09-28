@@ -28,7 +28,7 @@ namespace Maestro.Quest.Programs
         Kind Selected(JObject args)=>Kinds.Single(k=>k.Adapter.Matches(args));
         public override string Id=>"object.create";
         public override string Label=>"Create object";
-        public override string Description=>"Choose a creation kind: a physical shape or an editable recipe with optional animation tracks. Inspect the selected kind's example, fields and requirements. Both return the exact objectId after saving and add one Undo edit. Stop leaves created objects in the room. Imported models still use the existing asset import workflow.";
+        public override string Description=>"Choose a creation kind: a physical shape or an editable recipe with optional animation tracks. Inspect the selected kind's example, fields and requirements. Both return the exact live objectId. Outside temporary play it is saved with one Undo; inside temporary play it stays unsaved until room.session keep completes. Stop leaves created objects in the room. Imported models still use the existing asset import workflow.";
         public override string Duration=>"instant";
         public override IReadOnlyList<string> Requirements=>new[] {"room.capacity","storage.writable","kind.valid"};
         public override JObject InputSchema=>new() {["type"]="object",["title"]="Creation kind",["oneOf"]=new JArray(Kinds.Select(k=>k.Schema)),["x-discriminators"]=new JArray("kind")};

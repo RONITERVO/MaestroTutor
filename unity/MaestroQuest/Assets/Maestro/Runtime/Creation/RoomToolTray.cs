@@ -20,8 +20,8 @@ namespace Maestro.Quest.Creation
             this.editor = editor; this.room = room;
             var wood = Material(IllustratedMaterials.Hex("C89D65")); var paper = Material(IllustratedMaterials.Paper);
             var teal = Material(IllustratedMaterials.Hex("2B8D88")); var ink = Material(IllustratedMaterials.Ink);
-            Part(transform,PrimitiveType.Cube,Vector3.zero,new Vector3(.62f,.42f,.025f),wood);
-            var handle = gameObject.AddComponent<BoxCollider>(); handle.center = new Vector3(0,0,.007f); handle.size = new Vector3(.62f,.42f,.025f);
+            Part(transform,PrimitiveType.Cube,new Vector3(0,-.06f,0),new Vector3(.62f,.56f,.025f),wood);
+            var handle = gameObject.AddComponent<BoxCollider>(); handle.center = new Vector3(0,-.06f,.007f); handle.size = new Vector3(.62f,.56f,.025f);
             var movable = gameObject.AddComponent<RoomItem>(); movable.Configure(new Collider[] { handle },1,1); room.Register(movable);
             var kinds = new[] { RoomTool.Block, RoomTool.Ball, RoomTool.Cylinder };
             var primitives = new[] { PrimitiveType.Cube, PrimitiveType.Sphere, PrimitiveType.Cylinder };
@@ -55,7 +55,13 @@ namespace Maestro.Quest.Creation
                     if (bottom[i] == RoomTool.Save || bottom[i] == RoomTool.Recall) Part(tool,PrimitiveType.Cube,new Vector3(0,0,-.016f),new Vector3(.027f,.024f,.006f),paper);
                 }
             }
-            status = Label(transform,new Vector3(0,-.192f,-.020f),"",.0048f);
+            var sessionTools=new[]{RoomTool.BeginTemporary,RoomTool.KeepTemporary,RoomTool.DiscardTemporary};
+            var sessionLabels=new[]{"Try room","Keep snapshot","End / discard"};
+            for(int i=0;i<sessionTools.Length;i++) {
+                var tool=Tool(sessionTools[i],new Vector3(-.2f+i*.2f,-.235f,-.035f),sessionLabels[i]);
+                Part(tool,PrimitiveType.Cube,Vector3.zero,new Vector3(.055f,.033f,.028f),teal);
+            }
+            status = Label(transform,new Vector3(0,-.32f,-.020f),"",.0048f);
             editor.Changed += Refresh; Refresh();
         }
 
@@ -70,7 +76,7 @@ namespace Maestro.Quest.Creation
 
         void Refresh()
         {
-            status.text = editor.Status;
+            status.text = (editor.TemporaryRoom?"TEMPORARY | ":"SAVED ROOM | ")+editor.Status;
             if (status.text.Length > 70) status.text = status.text.Substring(0,70) + "…";
             pencilPaint.color = editor.DrawingMode ? IllustratedMaterials.Hex("2B8D88") : IllustratedMaterials.Ribbon;
         }

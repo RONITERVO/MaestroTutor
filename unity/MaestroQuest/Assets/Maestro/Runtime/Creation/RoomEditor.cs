@@ -454,6 +454,7 @@ namespace Maestro.Quest.Creation
             if (!dirty) return;
             dirty = false; if (!storage.Save(journal.Snapshot(),out var error)) SetStatus(error);
         }
+        public void ReportStatus(string value)=>SetStatus(value);
         void SetStatus(string value) { Status = value; Changed?.Invoke(); }
         void OnApplicationPause(bool paused) { if (paused) Flush(); }
         void OnApplicationFocus(bool focused) { if (!focused) Flush(); }

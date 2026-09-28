@@ -896,6 +896,76 @@
       "requirements": []
     },
     {
+      "id": "room.session",
+      "version": 1,
+      "label": "Temporary room",
+      "input": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "enum": [
+              "begin",
+              "keep",
+              "discard"
+            ]
+          },
+          "sessionId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "operation",
+          "sessionId"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "temporaryRoom.v1"
+        ]
+      },
+      "duration": "completion",
+      "ownership": "roomSession",
+      "channels": [],
+      "requirements": [
+        "room.session.current",
+        "manual.released",
+        "storage.writable"
+      ],
+      "description": "Explicit room-wide temporary play. Begin keeps the current base and makes later object edits temporary. Keep saves one captured snapshot as one saved Undo and continues temporary play; later edits remain temporary. Discard returns to the latest kept base and pauses physics. Programs, imported files and chat are separate. Pass the exact observed room sessionId (or bind room.sessionId); Begin/Discard return the new identity. Begin/Discard require other runs and authoring to finish. A dispatched Keep can finish after Stop; inspect save status instead of replaying it. Ordinary creations remain saved outside this mode.",
+      "example": {
+        "operation": "begin",
+        "sessionId": "00000000000000000000000000000000"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "saveId": {
+            "type": "string",
+            "pattern": "^([a-f0-9]{32})?$",
+            "maxLength": 32
+          },
+          "savedRevision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 1000000.0
+          }
+        },
+        "required": [
+          "sessionId",
+          "saveId",
+          "savedRevision"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "object.create",
       "version": 1,
       "label": "Create object",
@@ -1974,7 +2044,7 @@
         "storage.writable",
         "kind.valid"
       ],
-      "description": "Choose a creation kind: a physical shape or an editable recipe with optional animation tracks. Inspect the selected kind's example, fields and requirements. Both return the exact objectId after saving and add one Undo edit. Stop leaves created objects in the room. Imported models still use the existing asset import workflow.",
+      "description": "Choose a creation kind: a physical shape or an editable recipe with optional animation tracks. Inspect the selected kind's example, fields and requirements. Both return the exact live objectId. Outside temporary play it is saved with one Undo; inside temporary play it stays unsaved until room.session keep completes. Stop leaves created objects in the room. Imported models still use the existing asset import workflow.",
       "example": {
         "shape": "ball",
         "name": "Ball",
@@ -2101,7 +2171,7 @@
         "authoring.inactive",
         "storage.writable"
       ],
-      "description": "Set orientation in room axes using pitch, yaw and roll in degrees, each -180 to 180 (Unity Euler rotation). Keeps current position and scale. Saves before completion and adds one Undo edit. Rotation resets velocity, then normal gravity resumes. Other objects keep running."
+      "description": "Set orientation in room axes using pitch, yaw and roll in degrees, each -180 to 180 (Unity Euler rotation). Keeps current position and scale. Outside temporary play, saves before completion with one Undo edit. In a temporary room, changes live placement and local Undo; a kept snapshot makes it durable. Rotation resets velocity, then normal gravity resumes. Other objects keep running."
     },
     {
       "id": "object.scale.set",
@@ -2468,6 +2538,11 @@
   ],
   "facts": [
     {
+      "id": "room.sessionId",
+      "type": "text",
+      "label": "Current room session"
+    },
+    {
       "id": "maestro.state",
       "type": "text",
       "label": "Maestro state"
@@ -2659,7 +2734,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "a7889e98fdce22a3b838ce3fb734f4cf12e7c37ce92578d8cce24f2e02d7691d"
+      "sha256": "09c73e11167a2695e76a2d44f2bea891dd01416d930acd947e5c126344918143"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -2695,11 +2770,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModule.cs",
-      "sha256": "2b9e0f9381cac993314935107230b16e40306f460510f021891d0edf3e77be8b"
+      "sha256": "6b229f022b580bb9e89c6c1cb589f0948049b4bae7b96148b6bab99615493dbb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "42a6354a705580a5aeae56b83ace498feb6165fc685c6219965ed01d271b5f0f"
+      "sha256": "dfa32f44918d68b65e5f0af0b3a8fa305f7ac2b897b6c1f4e60b72666695545e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -2711,7 +2786,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreateObjectCapability.cs",
-      "sha256": "598949d955f0d950c04f81250825c088570f04afefc622271be4d76e3b83736f"
+      "sha256": "ead4616185c6e82ef165a12401de65d1f5ec7cbc3f29475af749d8f8a3da85f8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/EmbeddedAnimationCapability.cs",
@@ -2738,8 +2813,12 @@
       "sha256": "97e3f51b525991801f3162069ec66234f061dfe8b7348856ad4fc611b5e4e5b6"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RoomSessionCapability.cs",
+      "sha256": "f42c87ae7a7612a0bfecc89eb274c872fd22fc99023798d546125109d5052619"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RotateObjectCapability.cs",
-      "sha256": "7c45f9c5fdd1817bfcab0ead75700e37df2f0ce4f06eb0d9b02133251ed929b5"
+      "sha256": "e6bd4cc16afb0bdd1b8188e8a2baec2bd154880ac9c4f956b75c77fd201ae433"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SpatialCapabilities.cs",

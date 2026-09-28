@@ -27,6 +27,13 @@ export function requireRoomCapabilities(commands:{action:string;rule?:unknown;ex
   const hasResults=(value:unknown):boolean=>Array.isArray(value)?value.some(hasResults):record(value)?value.op==='invoke'&&(value.results!==undefined||Object.keys(capabilityDefinition(String(value.capability))?.output?.properties??{}).length>0)||Object.values(value).some(hasResults):false;
   const hasRecipe=(value:unknown):boolean=>Array.isArray(value)?value.some(hasRecipe):record(value)?value.op==='invoke'&&record(value.arguments)&&capabilityInput(String(value.capability),value.arguments)?.['x-features']?.includes('recipeCreation.v1')===true||Object.values(value).some(hasRecipe):false;
   const hasEdit=(value:unknown):boolean=>Array.isArray(value)?value.some(hasEdit):record(value)?value.op==='invoke'&&['object.position.set','object.scale.set','object.color.set','object.delete'].includes(String(value.capability))||Object.values(value).some(hasEdit):false;
+  const needs=(value:unknown,features:Set<string>)=>{
+    if(Array.isArray(value)){value.forEach(x=>needs(x,features));return;}
+    if(!record(value))return;
+    const capability=value.op==='invoke'?value.capability:value.id;
+    if(typeof capability==='string'&&record(value.arguments))for(const feature of capabilityInput(capability,value.arguments)?.['x-features']??[])features.add(feature);
+    Object.values(value).forEach(x=>needs(x,features));
+  };
   for(const command of commands) {
     if(command.action==='execution'&&record(command.execution)&&command.execution.operation==='recover'&&!scene.capabilities?.includes('actionRecovery.v1'))throw new Error('Update the native app to recover action history.');
     if(command.action==='rules'&&record(command.rule)&&Array.isArray(command.rule.edits)&&command.rule.edits.some(e=>record(e)&&record(e.sequence)&&typeof e.sequence.program==='string'&&hasEdit(JSON.parse(e.sequence.program)))&&!scene.capabilities?.includes('objectEdits.v1'))
@@ -41,6 +48,9 @@ export function requireRoomCapabilities(commands:{action:string;rule?:unknown;ex
       throw new Error('Update the native app to use event programs.');
     if(command.action==='rules'&&record(command.rule)&&Array.isArray(command.rule.edits)&&command.rule.edits.some(e=>record(e)&&record(e.sequence)&&e.sequence.program)&&!scene.capabilities?.includes('behaviourPrograms.v3'))
       throw new Error('This room does not support behaviour programs. Update or connect a compatible native app.');
+    const features=new Set<string>();needs(command.execution,features);
+    if(command.action==='rules'&&record(command.rule)&&Array.isArray(command.rule.edits))for(const edit of command.rule.edits)if(record(edit)&&record(edit.sequence)&&typeof edit.sequence.program==='string')needs(JSON.parse(edit.sequence.program),features);
+    for(const feature of features)if(!scene.capabilities?.includes(feature))throw new Error('This action requires '+feature+'. Update or connect a compatible native app.');
   }
 }
 const text=(v:unknown)=>typeof v==='string'&&v.length<=2048;

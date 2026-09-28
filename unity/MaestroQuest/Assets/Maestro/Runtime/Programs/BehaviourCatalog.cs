@@ -56,10 +56,10 @@ namespace Maestro.Quest.Programs
         }
         public readonly struct FactContext
         {
-            public readonly string Activity;
+            public readonly string Activity,RoomSessionId;
             public readonly bool? PhysicsReady, PhysicsRunning;
-            public FactContext(string activity=null, bool? physicsReady=null, bool? physicsRunning=null)
-            { Activity=activity;PhysicsReady=physicsReady;PhysicsRunning=physicsRunning; }
+            public FactContext(string activity=null, bool? physicsReady=null, bool? physicsRunning=null,string roomSessionId=null)
+            { Activity=activity;PhysicsReady=physicsReady;PhysicsRunning=physicsRunning;RoomSessionId=roomSessionId; }
         }
         public sealed class FactDefinition
         {
@@ -85,6 +85,7 @@ namespace Maestro.Quest.Programs
             new EventDefinition("object.released",RuleEventKind.ItemReleased,"Item released",objectEvent:true),
         });
         public static readonly IReadOnlyList<FactDefinition> Facts=Array.AsReadOnly(new[] {
+            new FactDefinition("room.sessionId",ProgramType.Text,"Current room session",context=>context.RoomSessionId==null?null:new ProgramValue(context.RoomSessionId)),
             new FactDefinition("maestro.state",ProgramType.Text,"Maestro state",context=>context.Activity==null?null:new ProgramValue(context.Activity)),
             new FactDefinition("physics.running",ProgramType.Boolean,"Physics running",context=>context.PhysicsRunning.HasValue?new ProgramValue(context.PhysicsRunning.Value):null),
             new FactDefinition("physics.ready",ProgramType.Boolean,"Room surfaces ready",context=>context.PhysicsReady.HasValue?new ProgramValue(context.PhysicsReady.Value):null),

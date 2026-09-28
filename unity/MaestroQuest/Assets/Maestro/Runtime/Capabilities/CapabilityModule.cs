@@ -26,6 +26,7 @@ namespace Maestro.Quest.Programs
         public virtual IReadOnlyList<string> Channels=>Array.Empty<string>();
         public virtual IReadOnlyList<string> Requirements=>Array.Empty<string>();
         public virtual bool Validate(JObject arguments,out string error) {error=null;return true;}
+        public virtual bool RequiresQuietRoom(JObject arguments)=>false;
         public virtual BehaviourCatalog.Claim[] Claims(JObject arguments)=>Channels.Select(c=>new BehaviourCatalog.Claim((string)arguments["target"],c)).ToArray();
         public abstract bool CanRun(CapabilityContext context,JObject arguments,out string error);
         public abstract bool Start(CapabilityContext context,string runId,JObject arguments,out CapabilityOperation operation,out string error);
@@ -40,6 +41,8 @@ namespace Maestro.Quest.Programs
         public string[] Resources=>CapabilityArguments.Resources(arguments,Definition.InputSchema);
         public BehaviourCatalog.Claim[] Claims=>Definition.Module.Claims(Arguments);
         public bool Instant=>Definition.Duration=="instant";
+        public bool RequiresQuietRoom=>Definition.Module.RequiresQuietRoom(Arguments);
+        public bool AwaitCompletion=>Definition.Duration=="completion";
         internal CapabilityCall(BehaviourCatalog.ActionDefinition definition,JObject arguments) {Definition=definition;this.arguments=(JObject)arguments.DeepClone();}
         public CapabilityCall Copy()=>new(Definition,arguments) {NodeId=NodeId};
 
@@ -68,6 +71,8 @@ namespace Maestro.Quest.Programs
         public virtual void Tick() {}
         public virtual bool Complete(out string error) {error=null;return true;}
         public virtual void Stop(bool preservePlacement) {}
+        // Describes effects that Stop cannot retract (for example a dispatched write).
+        public virtual string InterruptionStatus=>null;
         public virtual JObject Result=>new JObject();
     }
     internal sealed class CompletedCapability : CapabilityOperation

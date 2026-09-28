@@ -19,7 +19,7 @@ namespace Maestro.Quest.Rules
             if(suspended||!float.IsFinite(now)) {error="Actions are paused";return false;}
             string source=BehaviourProgram.FromInvocation(call);
             if(!BehaviourProgram.TryParse(source,out var program,out error))return false;
-            if(ActionBusy(step)) {error="A running action owns a required animation channel or object";return false;}
+            if(ActionBusy(step)) {error=step.RequiresQuietRoom?"Stop other room actions before this room-wide action":"A running action owns a required animation channel or object";return false;}
             if(!HasCapacity) {error="All action slots are currently in use";return false;}
             var sequence=new RuleSequence {id=Guid.NewGuid().ToString("N"),name="One-off action",interruption=RuleInterruption.Ignore,program=source};
             var identity=issuedId??Receipts?.NextId??Guid.NewGuid().ToString("N");
@@ -31,7 +31,7 @@ namespace Maestro.Quest.Rules
         static JObject Summary(string id,JObject call,string[] resources,string phase,string status)=>new() {
             ["id"]=id,["capability"]=call["id"].DeepClone(),["version"]=call["version"].DeepClone(),["resources"]=new JArray(resources),["phase"]=phase,["status"]=status==null?"":status.Length<=2048?status:status.Substring(0,2048)
         };
-        JObject Summary(Run run)=>Summary(run.Id,run.Invocation,run.Targets.ToArray(),run.Preparing?"preparing":"running",run.Preparing?"Loading action animation":"Action running");
+        JObject Summary(Run run)=>Summary(run.Id,run.Invocation,run.Targets.ToArray(),run.Preparing?"preparing":"running",run.Preparing?run.Active?.AwaitCompletion==true?"Waiting for action completion":"Loading action animation":"Action running");
         static JObject Summary(FinishedRun run) {
             var summary=Summary(run.Outcome.id,run.Invocation,run.Resources,run.Outcome.phase,run.Outcome.status);
             if(run.Output!=null)summary["output"]=run.Output.DeepClone();return summary;

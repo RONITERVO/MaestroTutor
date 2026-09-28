@@ -91,3 +91,9 @@ native runtime sources match the tested mirror and all 112 packaged web files
 match a final production rebuild byte-for-byte. APK SHA256:
 C4F00E349CBA84C854D98323E442455446E237504D6DB08CC1E9E5109BAADB68.
 The APK has not been installed or accepted on Quest.
+
+
+Later checkpoint: explicit shared temporary rooms and grouped snapshot commits
+are now integrated in the catalog, book, native tray and receipt path. See
+[temporary-room semantics](QUEST_TEMPORARY_ROOM.md). The earlier verification
+counts and remaining-work list above describe the typed-creation checkpoint.

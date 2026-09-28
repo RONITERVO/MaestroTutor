@@ -12,7 +12,7 @@ namespace Maestro.Quest.Programs
     {
         public override string Id=>"object.rotation.set";
         public override string Label=>"Rotate object";
-        public override string Description=>"Set orientation in room axes using pitch, yaw and roll in degrees, each -180 to 180 (Unity Euler rotation). Keeps current position and scale. Saves before completion and adds one Undo edit. Rotation resets velocity, then normal gravity resumes. Other objects keep running.";
+        public override string Description=>"Set orientation in room axes using pitch, yaw and roll in degrees, each -180 to 180 (Unity Euler rotation). Keeps current position and scale. Outside temporary play, saves before completion with one Undo edit. In a temporary room, changes live placement and local Undo; a kept snapshot makes it durable. Rotation resets velocity, then normal gravity resumes. Other objects keep running.";
         public override string Duration=>"instant";
         public override IReadOnlyList<string> Channels=>new[] {"wholeTarget"};
         public override IReadOnlyList<string> Requirements=>new[] {"target.exists","target.unheld","authoring.inactive","storage.writable"};

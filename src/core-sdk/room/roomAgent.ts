@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import type {TemporaryRoomView} from '../../../shared/roomSession';
 import {identifyExecution,validExecutionRequest,type ExecutionRequest,type ExecutionView} from '../../../shared/roomExecutions';
 import {validCatalogRequest,type CatalogRequest,type CatalogView} from '../../../shared/roomCatalog';
 import { roomControlFields, validRoomControl, requireRoomCapabilities, type ObjectPhysicsSettings, type AvatarMovementSettings, type PhysicsObservation, type AvatarMovementObservation, type AvatarWalkObservation } from '../../../shared/roomControls';
@@ -25,7 +26,7 @@ export interface RoomCommand {
 export interface RoomAgentState {
   version: 1; session: string; revision: number; sceneRevision: number; ack: number;
   ok: boolean; status: string; created: string[]; canUndo: boolean; canRedo: boolean; physicsRunning: boolean;
-  capabilities?:string[]; physics?:PhysicsObservation|null; avatar?:AvatarMovementObservation|null; walk?:AvatarWalkObservation|null;
+  temporaryRoom?:TemporaryRoomView; capabilities?:string[]; physics?:PhysicsObservation|null; avatar?:AvatarMovementObservation|null; walk?:AvatarWalkObservation|null;
   execution?:ExecutionView|null; catalog?:CatalogView|null; activityProfile?:ActivityProfile|null; workspaceView?:'objects'|'rules'; rules?:RuleView|null; motions?:MotionSearchView|null;
   visible?: boolean; inspection?: {id:string;partId?:string|null;objectRevision:number;recipe:RoomRecipe|null}|null;
   selectedId?: string | null;

@@ -64,6 +64,13 @@ Select a creation by tapping it or picking it up; release before paint/erase/und
 Included book and Maestro cannot be erased or duplicated. New tools stay outside
 the book pages, and each tool is a solid 3D object with a text marking.
 
+Try room, Keep snapshot and End / discard share the book Workshop's explicit
+room-wide temporary mode. The status identifies the current mode. Keep saves one
+captured snapshot as one saved Undo and continues temporary play; later edits
+remain temporary. Begin/Discard require other room actions to finish. Stop cannot
+withdraw an already-dispatched save. Outside this mode, normal creation stays
+saved. See [temporary-room scope and release gates](../docs/QUEST_TEMPORARY_ROOM.md).
+
 The second wooden box contains animation tools. Select an object, then tap Record,
 move it and tap Record again to save a take (up to 30 seconds, sampled at 10 Hz).
 Alternatively use Save frame at successive placements. Earlier/Later selects a

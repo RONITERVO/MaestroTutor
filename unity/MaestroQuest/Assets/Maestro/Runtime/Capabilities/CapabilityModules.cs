@@ -16,6 +16,7 @@ namespace Maestro.Quest.Programs
         public static readonly IReadOnlyList<CapabilityModule> All=Array.AsReadOnly(new CapabilityModule[] {
             new AnimationPlayCapability(),
             new WaitCapability(),
+            new RoomSessionCapability(),
             new CreateObjectCapability(),
             new MoveObjectCapability(),
             new RotateObjectCapability(),

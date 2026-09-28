@@ -569,3 +569,17 @@ completion/receipts, visible session scope and controls are the next integration
 step. Ordinary creation defaults remain saved. See
 [semantics and integration gates](QUEST_TEMPORARY_ROOM.md). No device operation,
 installed data reset or service/store deployment is part of this checkpoint.
+
+
+Temporary-room public integration (2026-09-28): `room.session` now exposes explicit
+Begin/Keep/Discard through the same catalog, scheduler and durable execution
+receipts used by the original-app agent, canonical programs, book and solid 3D
+tray. Real asynchronous completion, exact scope/save identities, quiet-room
+boundaries and honest Stop outcomes protect grouped snapshots. Ordinary creation
+remains saved. The catalog now has fourteen actions, seven events and four facts.
+PC checks pass: 1,345 app, 166 EditMode, 120 PlayMode and 25 Android tests; three
+optional native tests remain skipped. The new development APK is built but not
+installed. Chrome replays actual native observations; its acknowledgements alone
+are simulated. See [public semantics and remaining gates](QUEST_TEMPORARY_ROOM.md).
+Begin baseline I/O remains synchronous; headset performance/durability acceptance,
+real-provider journeys and the broader v1/store gates remain open.
