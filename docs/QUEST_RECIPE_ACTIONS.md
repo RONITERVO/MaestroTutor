@@ -1,5 +1,10 @@
 # Editable recipes as shared actions
 
+Historical development checkpoint. The retired creation IDs and test counts below
+describe that checkpoint, not the current public contract. See
+[Typed object creation](QUEST_CREATION_VOCABULARY.md) for the current
+`object.create` primitive/recipe vocabulary and verification.
+
 `object.create.recipe` version 1 creates native geometry and optional animation
 tracks using the same room editor, recipe player, scheduler and durable one-off
 receipts as existing actions. The book action catalog, simple controls, function

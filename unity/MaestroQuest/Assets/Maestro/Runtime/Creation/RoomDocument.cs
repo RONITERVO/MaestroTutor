@@ -133,7 +133,10 @@ namespace Maestro.Quest.Creation
         readonly List<Change> undo = new(), redo = new();
         readonly Dictionary<string, RoomObjectData> items = new();
         readonly Dictionary<string,int> revisions = new();
-        int nextRevision = 1;
+        // Forks share one monotonic clock: an Undo, discard or recreated object
+        // must never make a stale observation current again.
+        sealed class RevisionClock { public int Next = 1; }
+        readonly RevisionClock clock = new();
         public int ObjectRevision(string id) => id != null && revisions.TryGetValue(id,out var value) ? value : 0;
         public bool CanUndo => undo.Count > 0;
         public bool CanRedo => redo.Count > 0;
@@ -142,7 +145,29 @@ namespace Maestro.Quest.Creation
         public RoomJournal(RoomDocument document)
         {
             if (!document.Validate(out var error)) throw new ArgumentException(error, nameof(document));
-            foreach (var item in document.objects) { items.Add(item.id, item.Copy()); revisions[item.id]=nextRevision++; }
+            foreach (var item in document.objects) { items.Add(item.id, item.Copy()); revisions[item.id]=clock.Next++; }
+        }
+        RoomJournal(RoomJournal source)
+        {
+            clock=source.clock;
+            foreach(var pair in source.items) items.Add(pair.Key,pair.Value.Copy());
+            foreach(var pair in source.revisions) revisions.Add(pair.Key,pair.Value);
+        }
+        // A temporary room has its own local Undo history; the saved history
+        // remains untouched until a successfully written snapshot is accepted.
+        public RoomJournal Fork() => new(this);
+        public bool ApplySnapshot(RoomDocument document,out string error)
+        {
+            if(document==null) {error="Room snapshot is missing";return false;}
+            if(!document.Validate(out error))return false;
+            var ids=document.objects.Select(x=>x.id).ToHashSet();
+            var replacements=document.objects.Where(x=>!items.TryGetValue(x.id,out var before)||!Equivalent(new[]{before},new[]{x})).ToArray();
+            return Apply(replacements,items.Keys.Where(id=>!ids.Contains(id)).ToArray(),out error);
+        }
+        public void InvalidateChangedObservations(RoomJournal other)
+        {
+            foreach(var id in items.Keys)
+                if(ObjectRevision(id)!=other.ObjectRevision(id))revisions[id]=clock.Next++;
         }
         public RoomObjectData Read(string id) => id != null && items.TryGetValue(id, out var value) ? value.Copy() : null;
         // Physics updates persisted placement without filling Undo with every simulation step.
@@ -150,7 +175,7 @@ namespace Maestro.Quest.Creation
         {
             if (!items.TryGetValue(id,out var data) || !float.IsFinite(position.sqrMagnitude) || position.sqrMagnitude > 625 || !MotionFrame.ValidRotation(rotation)) return false;
             if ((data.position-position).sqrMagnitude < .000001f && Quaternion.Angle(data.rotation,rotation) < .1f) return false;
-            data.position = position; data.rotation = rotation; revisions[id]=nextRevision++; return true;
+            data.position = position; data.rotation = rotation; revisions[id]=clock.Next++; return true;
         }
         public RoomDocument Snapshot() => new() { version = 2, objects = items.Values.Select(item => item.Copy()).OrderBy(item => item.id, StringComparer.Ordinal).ToArray() };
 
@@ -185,7 +210,7 @@ namespace Maestro.Quest.Creation
         void Set(RoomObjectData[] before, RoomObjectData[] after)
         {
             foreach (var item in before) { items.Remove(item.id); revisions.Remove(item.id); }
-            foreach (var item in after) { items[item.id] = item.Copy(); revisions[item.id]=nextRevision++; }
+            foreach (var item in after) { items[item.id] = item.Copy(); revisions[item.id]=clock.Next++; }
         }
         static bool Equivalent(RoomObjectData[] a, RoomObjectData[] b) => JsonUtility.ToJson(new RoomDocument { objects = a.OrderBy(x => x.id).ToArray() }) == JsonUtility.ToJson(new RoomDocument { objects = b.OrderBy(x => x.id).ToArray() });
     }

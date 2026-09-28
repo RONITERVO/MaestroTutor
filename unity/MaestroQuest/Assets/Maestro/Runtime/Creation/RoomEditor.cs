@@ -13,7 +13,7 @@ using UnityEngine;
 
 namespace Maestro.Quest.Creation
 {
-    public sealed class RoomEditor : MonoBehaviour
+    public sealed partial class RoomEditor : MonoBehaviour
     {
         readonly Dictionary<string, RoomItem> objects = new();
         readonly Dictionary<RoomItem, string> identities = new();
@@ -44,8 +44,8 @@ namespace Maestro.Quest.Creation
         public RoomDocument Snapshot() => journal.Snapshot();
         public int ObjectRevision(string id) => journal.ObjectRevision(id);
         public void PrepareAgentEdit() => Editing?.Invoke();
-        public bool UsesMotion(string id) => journal.UsesMotion(id);
-        public bool HistoricalMotion(string id) => journal.HistoricalMotionIds.Contains(id);
+        public bool UsesMotion(string id) => journal.UsesMotion(id) || savedJournal?.UsesMotion(id)==true || savingSnapshot?.objects.Any(x=>x.walkMotionId==id)==true;
+        public bool HistoricalMotion(string id) => journal.HistoricalMotionIds.Contains(id) || savedJournal?.HistoricalMotionIds.Contains(id)==true;
         public bool SavedMotion(string id,out bool uncertain,bool force=false) => storage.RetainsMotion(id,out uncertain,force);
         public ModelLibrary Models { get; private set; }
         public MotionLibrary Motions { get; private set; }
@@ -169,6 +169,10 @@ namespace Maestro.Quest.Creation
             var changed=replacements.Select(x=>x.id).Concat(removals).ToHashSet();
             candidate.objects=candidate.objects.Where(x=>!changed.Contains(x.id)).Concat(replacements).ToArray();
             if(!candidate.Validate(out error))return false;
+            if(TemporaryRoom) {
+                if(!Commit(replacements,removals,message,true,applyPose)){error=Status;return false;}
+                return true;
+            }
             // Same serialized writer and journal as manual edits; no global Editing
             // signal here because the caller already owns only the affected targets.
             saveTask?.GetAwaiter().GetResult();saveTask=null;
@@ -373,7 +377,7 @@ namespace Maestro.Quest.Creation
             Commit(placements,Array.Empty<string>(),"Room brought back within reach");
         }
 
-        void MarkDirty() { Revision++; dirty = true; saveAt = Time.unscaledTime + .5f; }
+        void MarkDirty() { Revision++; dirty = !TemporaryRoom; saveAt = Time.unscaledTime + .5f; }
         public void RememberPlacement(string id)
         {
             var item = Find(id);
@@ -408,7 +412,10 @@ namespace Maestro.Quest.Creation
             Editing?.Invoke(); if (Busy()) return false;
             if(ResizeObject("maestro",scale,out var error))return true;SetStatus(error);return false;
         }
-        public void SaveNow() { CapturePhysicsPlacements(); MarkDirty(); saveAt = 0; SetStatus("Saving room"); }
+        public void SaveNow() {
+            if(TemporaryRoom) {if(!KeepTemporaryRoom(out var error))SetStatus(error);return;}
+            CapturePhysicsPlacements(); MarkDirty(); saveAt = 0; SetStatus("Saving room");
+        }
         void CapturePhysicsPlacements()
         {
             if (journal == null) return;
@@ -423,6 +430,7 @@ namespace Maestro.Quest.Creation
         float captureAt;
         void Update()
         {
+            CompleteTemporarySave();
             if (Time.unscaledTime >= captureAt) { captureAt = Time.unscaledTime + 1; CapturePhysicsPlacements(); }
             if (saveTask != null && saveTask.IsCompleted)
             {
@@ -430,13 +438,16 @@ namespace Maestro.Quest.Creation
                 if (error != null) SetStatus(error);
                 else if (!dirty) SetStatus("Room saved");
             }
-            if (journal == null || !dirty || saveTask != null || Time.unscaledTime < saveAt) return;
+            if (journal == null || TemporaryRoom || !dirty || saveTask != null || Time.unscaledTime < saveAt) return;
             var snapshot = journal.Snapshot(); dirty = false;
             saveTask = Task.Run(() => { storage.Save(snapshot,out var error); return error; });
         }
         void Flush()
         {
             if (journal == null) return;
+            // A dispatched Keep is allowed to finish on pause/quit, but neither
+            // these callbacks nor autosave can persist the later live fork.
+            if(TemporaryRoom) {CompleteTemporarySave(wait:true);return;}
             CapturePhysicsPlacements();
             var pendingError = saveTask?.GetAwaiter().GetResult(); saveTask = null;
             if (pendingError != null) SetStatus(pendingError);

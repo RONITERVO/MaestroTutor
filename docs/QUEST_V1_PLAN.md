@@ -558,3 +558,14 @@ preservation and unchanged exact output/save/Undo behavior. Private editor
 projections are now generated descriptors. The catalog has thirteen public
 actions. See [contract, compatibility and evidence](QUEST_CREATION_VOCABULARY.md).
 Spatial consolidation and remaining runtime/release work are still open.
+
+
+Temporary-room storage foundation (2026-09-28): an explicit native editor fork
+isolates live changes from saved state, including physics/autosave/lifecycle
+paths. A worker saves a captured snapshot; its delta becomes one saved Undo and
+later edits remain temporary. Discard restores the last saved base without
+replaying motion. This is not yet exposed in the book or catalog: shared async
+completion/receipts, visible session scope and controls are the next integration
+step. Ordinary creation defaults remain saved. See
+[semantics and integration gates](QUEST_TEMPORARY_ROOM.md). No device operation,
+installed data reset or service/store deployment is part of this checkpoint.

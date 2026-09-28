@@ -1,5 +1,10 @@
 # Creation results shared by chat, programs and book controls
 
+Historical development checkpoint. The retired creation IDs and test counts below
+describe that checkpoint, not the current public contract. See
+[Typed object creation](QUEST_CREATION_VOCABULARY.md) for the current
+`object.create` primitive/recipe vocabulary and verification.
+
 The native catalog now includes `object.create.primitive` version 1. It creates a
 ball, block or cylinder through the same `RoomEditor.CreatePrimitive` path as the
 physical creation tray. The scheduler, typed input validation, native-issued start
