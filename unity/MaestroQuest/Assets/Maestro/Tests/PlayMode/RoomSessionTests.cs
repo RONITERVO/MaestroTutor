@@ -4,6 +4,8 @@ using System;
 using System.Collections;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
 using Maestro.Quest.Book;
 using Maestro.Quest.Creation;
 using Maestro.Quest.Interaction;
@@ -35,8 +37,74 @@ namespace Maestro.Quest.Tests
   IEnumerator Finish(){float end=Time.realtimeSinceStartup+5;while((editor.TemporarySavePending||runtime.Scheduler.RunningCount>0)&&Time.realtimeSinceStartup<end)yield return null;Assert.That(runtime.Scheduler.RunningCount,Is.Zero);Assert.That(editor.TemporarySavePending,Is.False);}
   RoomDocument Saved()=>new RoomStorage(directory).Load(out _);
   void Evidence(string name){var path=Environment.GetEnvironmentVariable("MAESTRO_SESSION_EVIDENCE");if(string.IsNullOrEmpty(path))return;Directory.CreateDirectory(path);var state=observer.Observe();state.execution=executions.Observe();state.visible=true;File.WriteAllText(Path.Combine(path,name+".json"),RoomAgentWire.Serialize(state));}
+  TaskCompletionSource<string> EarlierSaveGate() {
+   var gate=new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+   typeof(RoomEditor).GetField("saveTask",BindingFlags.Instance|BindingFlags.NonPublic).SetValue(editor,gate.Task);
+   // Prevent a future synchronous-wait regression from hanging the entire test runner.
+   _=Task.Delay(5000).ContinueWith(_=>gate.TrySetResult("Test writer watchdog elapsed"));return gate;
+  }
+  [UnityTest] public IEnumerator BeginningDoesNotBlockFramesOrPersistLaterManualEditsAfterCancel() {
+   var gate=EarlierSaveGate();string run=null,id=null;
+   try {
+    run=Start("begin");Assert.That(gate.Task.IsCompleted,Is.False,"Begin must not wait on Unity's thread");
+    Assert.That((string)runtime.Scheduler.Invocation(run)["phase"],Is.EqualTo("preparing"));
+    Assert.That(editor.ObserveTemporaryRoom().phase,Is.EqualTo("starting"));
+    Assert.That(editor.CreatePrimitive(RoomObjectKind.Block,"While starting",Vector3.up,1,Color.white,out id,out var error),Is.True,error);
+    int frame=Time.frameCount;yield return null;yield return null;Assert.That(Time.frameCount,Is.GreaterThan(frame));
+    Assert.That(editor.TemporarySavePending,Is.True);Assert.That(File.Exists(Path.Combine(directory,"room.v2.json")),Is.False);
+    Assert.That(runtime.Scheduler.CancelInvocation(run,out error),Is.True,error);
+    Assert.That((string)runtime.Scheduler.Invocation(run)["status"],Does.Contain("temporary mode"));
+    Assert.That(editor.DiscardTemporaryRoom(out _),Is.False,"Cannot retract a dispatched baseline write");
+   } finally {gate.TrySetResult(null);}
+   yield return Finish();Assert.That(editor.TemporaryRoom,Is.True);Assert.That(editor.Find(id),Is.Not.Null);
+   Assert.That(Saved().objects.Any(x=>x.id==id),Is.False);Assert.That(editor.ObserveTemporaryRoom().phase,Is.EqualTo("ready"));
+   Assert.That((string)runtime.Scheduler.Invocation(run)["phase"],Is.EqualTo("cancelled"));
+   var kept=Start("keep");yield return Finish();Assert.That(Saved().objects.Any(x=>x.id==id),Is.True);
+   Assert.That((string)runtime.Scheduler.Invocation(kept)["phase"],Is.EqualTo("completed"));
+  }
+  [UnityTest] public IEnumerator BaselineWritesAfterTheEarlierAutosaveAndCapturesOnlyItsStartingState() {
+   Assert.That(editor.CreatePrimitive(RoomObjectKind.Block,"Older",Vector3.up,1,Color.white,out var id,out _),Is.True);
+   var older=editor.Snapshot();editor.Find(id).transform.localPosition=Vector3.up*2;editor.RememberPlacement(id);
+   var gate=new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+   var store=new RoomStorage(directory);var previous=Task.Run(async()=>{await gate.Task;store.Save(older,out var issue);return issue;});
+   typeof(RoomEditor).GetField("saveTask",BindingFlags.Instance|BindingFlags.NonPublic).SetValue(editor,previous);
+   _=Task.Delay(5000).ContinueWith(_=>gate.TrySetResult("Test writer watchdog elapsed"));
+   try {
+    var run=Start("begin");Assert.That(gate.Task.IsCompleted,Is.False);
+    Assert.That(editor.MoveObject(id,Vector3.up*3,out var error),Is.True,error);
+    Assert.That((string)runtime.Scheduler.Invocation(run)["phase"],Is.EqualTo("preparing"));
+   } finally {gate.TrySetResult(null);}
+   yield return Finish();Assert.That(Saved().objects.Single(x=>x.id==id).position,Is.EqualTo(Vector3.up*2));
+   Assert.That(editor.Read(id).position,Is.EqualTo(Vector3.up*3));
+  }
+  [UnityTest] public IEnumerator FailedBaselineHasFailedReceiptAndCanBeKeptWithoutRecreatingItsEdits() {
+   var blocked=Path.Combine(directory,"room.v2.json.pending");Directory.CreateDirectory(blocked);
+   var request=Request(Call("begin"));executions.Execute(request,out _);yield return Finish();
+   Assert.That((string)runtime.Scheduler.Invocation((string)request["runId"])["phase"],Is.EqualTo("failed"));
+   Assert.That(editor.TemporaryRoom,Is.True);var id=Create("Preserve after failure");Evidence("failed-start");
+   Directory.Delete(blocked);Start("keep");yield return Finish();Assert.That(Saved().objects.Count(x=>x.id==id),Is.EqualTo(1));
+   Start("discard");editor.Undo();Assert.That(editor.Find(id),Is.Null);
+  }
+  [UnityTest] public IEnumerator FaultedEarlierWriterDoesNotEscapeTheCompletionContract() {
+   var gate=EarlierSaveGate();gate.SetException(new IOException("Injected earlier save failure"));
+   var request=Request(Call("begin"));executions.Execute(request,out _);yield return Finish();
+   Assert.That((string)runtime.Scheduler.Invocation((string)request["runId"])["phase"],Is.EqualTo("failed"));
+   Assert.That(editor.TemporaryRoom,Is.True);Assert.That(editor.TemporarySaveError,Is.Not.Null);
+   Start("keep");yield return Finish();Assert.That(editor.TemporarySaveError,Is.Null);
+  }
+  [UnityTest] public IEnumerator PauseFinishesOnlyTheStartingSnapshotNotEditsMadeWhileItWasSaving() {
+   var gate=EarlierSaveGate();string id;
+   try {
+    Start("begin");Assert.That(editor.CreatePrimitive(RoomObjectKind.Block,"Later",Vector3.up,1,Color.white,out id,out _),Is.True);
+   } finally {gate.TrySetResult(null);}
+   editor.SendMessage("OnApplicationPause",true);Assert.That(editor.TemporarySavePending,Is.False);
+   Assert.That(Saved().objects.Any(x=>x.id==id),Is.False);Assert.That(editor.Find(id),Is.Not.Null);yield return Finish();
+  }
   [UnityTest] public IEnumerator NativeCatalogCycleHasDurableReceiptsFreshScopesAndOneGroupedUndo(){
-   Evidence("initial");string inactive=editor.TemporarySessionId;var begin=Request(Call("begin"));Assert.That(executions.Execute(begin,out var error),Is.True,error);
+   Evidence("initial");string inactive=editor.TemporarySessionId;var gate=EarlierSaveGate();var begin=Request(Call("begin"));
+   try {Assert.That(executions.Execute(begin,out var accepted),Is.True,accepted);Assert.That(gate.Task.IsCompleted,Is.False);Evidence("starting");}
+   finally {gate.TrySetResult(null);}
+   yield return Finish();string error;
    Assert.That(editor.TemporarySessionId,Is.Not.EqualTo(inactive));var scope=editor.TemporarySessionId;Evidence("begun");
    Assert.That(executions.Execute(begin,out error),Is.True,error);Assert.That(editor.TemporarySessionId,Is.EqualTo(scope),"Duplicate Begin never opens another session");
    var created=Create("Temporary shared creation");Assert.That(Saved().objects.Any(x=>x.id==created),Is.False);Evidence("created");
@@ -49,7 +117,7 @@ namespace Maestro.Quest.Tests
    editor.Undo();Assert.That(editor.Find(created),Is.Null);editor.Redo();Assert.That(editor.Find(created),Is.Not.Null);
   }
   [UnityTest] public IEnumerator CancellingKeepDoesNotRetractItsWriteOrPersistLaterEdits(){
-   Start("begin");string kept=Create("Kept");string run=Start("keep");
+   Start("begin");yield return Finish();string kept=Create("Kept");string run=Start("keep");
    string before=(string)runtime.Scheduler.Invocation(run)["phase"];Assert.That(runtime.Scheduler.CancelInvocation(run,out _),Is.True);
    if(before!="completed")Assert.That((string)runtime.Scheduler.Invocation(run)["status"],Does.Contain("snapshot"));
    string late=Create("Later");yield return Finish();
@@ -62,12 +130,12 @@ namespace Maestro.Quest.Tests
    var catalog=new RoomCapabilityCatalog(editor);Assert.That(catalog.Execute(new JObject {["operation"]="check",["call"]=Call("begin")},out _),Is.True);
    Assert.That((bool)catalog.Observe()["occupied"],Is.True);Assert.That((bool)catalog.Observe()["available"],Is.False);
    Assert.That(executions.Execute(Request(Call("begin")),out error),Is.False);Assert.That(error,Does.Contain("other room actions"));Assert.That(runtime.Scheduler.RunningCount,Is.EqualTo(1));
-   runtime.Scheduler.CancelInvocation(other,out _);Start("begin");runtime.Scheduler.Invoke(wait,Time.unscaledTime,out other,out _);
+   runtime.Scheduler.CancelInvocation(other,out _);Start("begin");yield return Finish();runtime.Scheduler.Invoke(wait,Time.unscaledTime,out other,out _);
    Assert.That(executions.Execute(Request(Call("discard")),out error),Is.False);Assert.That(editor.TemporaryRoom,Is.True);Assert.That(runtime.Scheduler.RunningCount,Is.EqualTo(1));
    runtime.Scheduler.CancelInvocation(other,out _);Start("discard");yield return null;
   }
   [UnityTest] public IEnumerator ActualWriterFailureHasFailedReceiptAndKeepsTemporaryEditsForAnExplicitRetry(){
-   Start("begin");var id=Create("Retry once");var blocked=Path.Combine(directory,"room.v2.json.pending");Directory.CreateDirectory(blocked);
+   Start("begin");yield return Finish();var id=Create("Retry once");var blocked=Path.Combine(directory,"room.v2.json.pending");Directory.CreateDirectory(blocked);
    var request=Request(Call("keep"));executions.Execute(request,out _);yield return Finish();
    Assert.That((string)runtime.Scheduler.Invocation((string)request["runId"])["phase"],Is.EqualTo("failed"));Assert.That(editor.Find(id),Is.Not.Null);Evidence("failed-save");
    Directory.Delete(blocked);Start("keep");yield return Finish();Assert.That(Saved().objects.Count(x=>x.id==id),Is.EqualTo(1));
@@ -87,7 +155,7 @@ namespace Maestro.Quest.Tests
    var tray=new GameObject("Creation tools");tray.transform.SetParent(root.transform,false);tray.transform.localPosition=new Vector3(2,0,1);tray.AddComponent<RoomToolTray>().Build(editor,room);
    var router=root.AddComponent<BookPointerRouter>();router.Editor=editor;yield return null;Physics.SyncTransforms();
    void Click(float x){var ray=new Ray(new Vector3(x,-.235f,0),Vector3.forward);Assert.That(router.Begin(0,ray),Is.True);router.End(0,ray);}
-   Click(1.8f);Assert.That(editor.TemporaryRoom,Is.True);
+   Click(1.8f);Assert.That(editor.TemporaryRoom,Is.True);yield return Finish();
    var evidence=Environment.GetEnvironmentVariable("MAESTRO_SESSION_EVIDENCE");
    if(!string.IsNullOrEmpty(evidence)) {
     Directory.CreateDirectory(evidence);var cameraRoot=new GameObject("Session controls camera");cameraRoot.transform.SetParent(root.transform,false);

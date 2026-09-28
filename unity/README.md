@@ -68,8 +68,10 @@ Try room, Keep snapshot and End / discard share the book Workshop's explicit
 room-wide temporary mode. The status identifies the current mode. Keep saves one
 captured snapshot as one saved Undo and continues temporary play; later edits
 remain temporary. Begin/Discard require other room actions to finish. Stop cannot
-withdraw an already-dispatched save. Outside this mode, normal creation stays
-saved. See [temporary-room scope and release gates](../docs/QUEST_TEMPORARY_ROOM.md).
+withdraw an already-dispatched save. Begin writes its baseline off-thread; edits
+made while it starts are already temporary. Failed baseline saves retain that
+fork for explicit Save snapshot or Discard, with recovery status in the book.
+Outside this mode, normal creation stays saved. See [temporary-room scope and release gates](../docs/QUEST_TEMPORARY_ROOM.md).
 
 The second wooden box contains animation tools. Select an object, then tap Record,
 move it and tap Record again to save a take (up to 30 seconds, sampled at 10 Hz).

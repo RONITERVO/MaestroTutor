@@ -22,6 +22,10 @@ it('rejects inconsistent temporary-room observations before publishing them',()=
  const pending={...view(),active:true,pending:true,phase:'pending' as const,saveId:'c'.repeat(32)};expect(validTemporaryRoom(pending)).toBe(true);
  expect(validTemporaryRoom({...pending,pending:false,phase:'failed',error:'Storage is full'})).toBe(true);
  expect(validTemporaryRoom({...pending,pending:false,phase:'saved',savedRevision:1})).toBe(true);
+ expect(validTemporaryRoom({...pending,phase:'starting'})).toBe(true);
+ expect(validTemporaryRoom({...pending,pending:false,phase:'ready'})).toBe(true);
+ for(const phase of ['starting','ready'])expect(validTemporaryRoom({...pending,phase,savedRevision:1})).toBe(false);
+ expect(validTemporaryRoom({...pending,pending:false,phase:'starting'})).toBe(false);
 });
 it('enforces module-declared native features for one-off calls and program source',()=>{
  const call=roomSessionCall('begin',view());

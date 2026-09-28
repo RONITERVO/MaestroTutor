@@ -583,3 +583,14 @@ installed. Chrome replays actual native observations; its acknowledgements alone
 are simulated. See [public semantics and remaining gates](QUEST_TEMPORARY_ROOM.md).
 Begin baseline I/O remains synchronous; headset performance/durability acceptance,
 real-provider journeys and the broader v1/store gates remain open.
+
+
+Asynchronous room-start checkpoint (2026-09-28): Begin now captures a detached
+baseline and immediately isolates later edits while its worker waits for any
+older autosave and writes the base. The native result stays preparing until real
+completion. Failure/cancellation retains the temporary fork for explicit Keep or
+Discard; Discard preserves pre-existing unsaved state and original Undo. The book
+shows starting/ready and baseline-failure recovery. Native checks pass 166 EditMode
+and 125 PlayMode tests (three optional skips). Normal baseline writes no longer
+wait on Unity's main thread; snapshot capture, receipt/ordinary-save I/O and
+pause/quit waits still need device profiling/acceptance. Full v1 remains open.

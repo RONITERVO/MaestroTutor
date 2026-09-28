@@ -933,7 +933,7 @@
         "manual.released",
         "storage.writable"
       ],
-      "description": "Explicit room-wide temporary play. Begin keeps the current base and makes later object edits temporary. Keep saves one captured snapshot as one saved Undo and continues temporary play; later edits remain temporary. Discard returns to the latest kept base and pauses physics. Programs, imported files and chat are separate. Pass the exact observed room sessionId (or bind room.sessionId); Begin/Discard return the new identity. Begin/Discard require other runs and authoring to finish. A dispatched Keep can finish after Stop; inspect save status instead of replaying it. Ordinary creations remain saved outside this mode.",
+      "description": "Explicit room-wide temporary play. Begin captures the current base and makes later object edits temporary immediately; completion waits for its baseline write. Failed baseline saves keep the fork available for Keep or Discard. Keep saves one captured snapshot as one saved Undo and continues temporary play; later edits remain temporary. Discard returns to the latest kept base and pauses physics. Programs, imported files and chat are separate. Pass the exact observed room sessionId (or bind room.sessionId); Begin/Discard return the new identity. Begin/Discard require other runs and authoring to finish. A dispatched Keep can finish after Stop; inspect save status instead of replaying it. Ordinary creations remain saved outside this mode.",
       "example": {
         "operation": "begin",
         "sessionId": "00000000000000000000000000000000"
@@ -2814,7 +2814,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RoomSessionCapability.cs",
-      "sha256": "f42c87ae7a7612a0bfecc89eb274c872fd22fc99023798d546125109d5052619"
+      "sha256": "df429cf24f05441efb09ffdecd85d0fde27f59bddf4ae73e126cea2a4dc60379"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RotateObjectCapability.cs",

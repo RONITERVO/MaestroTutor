@@ -56,7 +56,7 @@ namespace Maestro.Quest.Tests
         [UnityTest] public IEnumerator EditsPhysicsAutosavePauseAndDestroyCannotLeakTemporaryData()
         {
             var original=Create("Kept block");
-            Assert.That(editor.BeginTemporaryRoom(out var error),Is.True,error);
+            Assert.That(editor.BeginTemporaryRoom(out var error),Is.True,error);yield return FinishSave();
             var bytes=File.ReadAllBytes(Primary);var saved=Saved();
             Assert.That(editor.BeginTemporaryRoom(out _),Is.False);
             // If a per-action save or lifecycle flush leaks through, this path
@@ -83,7 +83,7 @@ namespace Maestro.Quest.Tests
         [UnityTest] public IEnumerator KeepCapturesOneSnapshotWithoutReplayingLaterEditsAndHasOneSavedUndo()
         {
             var existing=Create("Existing");
-            Assert.That(editor.BeginTemporaryRoom(out var error),Is.True,error);
+            Assert.That(editor.BeginTemporaryRoom(out var error),Is.True,error);yield return FinishSave();
             var first=Create("First");var second=Create("Second");
             Assert.That(editor.PaintObject(existing,Color.blue,out error),Is.True,error);
             Assert.That(editor.DeleteObject(first,out error),Is.True,error);
@@ -108,7 +108,7 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator SaveFailureKeepsTheLiveForkAndCanBeRetriedWithoutNewObjects()
         {
-            Create("Base");Assert.That(editor.BeginTemporaryRoom(out var error),Is.True,error);
+            Create("Base");Assert.That(editor.BeginTemporaryRoom(out var error),Is.True,error);yield return FinishSave();
             var bytes=File.ReadAllBytes(Primary);var id=Create("Keep me");
             Directory.CreateDirectory(Primary+".pending");
             Assert.That(editor.KeepTemporaryRoom(out error),Is.True,error);yield return FinishSave();
@@ -124,7 +124,7 @@ namespace Maestro.Quest.Tests
         [UnityTest] public IEnumerator DiscardStopsPhysicsRestoresPlacementsAndInvalidatesOldObservations()
         {
             var id=Create("Base");var before=editor.Read(id);int initial=editor.ObjectRevision(id);
-            Assert.That(editor.BeginTemporaryRoom(out var error),Is.True,error);
+            Assert.That(editor.BeginTemporaryRoom(out var error),Is.True,error);yield return FinishSave();
             Assert.That(editor.MoveObject(id,new Vector3(.5f,1.5f,.8f),out error),Is.True,error);
             int temporary=editor.ObjectRevision(id);Assert.That(temporary,Is.GreaterThan(initial));
             var removed=Create("Remove me");editor.Select(editor.Find(removed));
@@ -143,21 +143,28 @@ namespace Maestro.Quest.Tests
             yield return null;
             var manager=root.GetComponent<XRInteractionManager>();manager.SelectEnter((IXRSelectInteractor)ray,item.Grab);
             Assert.That(editor.BeginTemporaryRoom(out _),Is.False);manager.SelectExit((IXRSelectInteractor)ray,item.Grab);
-            Assert.That(editor.BeginTemporaryRoom(out var error),Is.True,error);
+            Assert.That(editor.BeginTemporaryRoom(out var error),Is.True,error);yield return FinishSave();
             manager.SelectEnter((IXRSelectInteractor)ray,item.Grab);
             Assert.That(editor.KeepTemporaryRoom(out _),Is.False);Assert.That(editor.DiscardTemporaryRoom(out _),Is.False);
             manager.SelectExit((IXRSelectInteractor)ray,item.Grab);
             Assert.That(editor.DiscardTemporaryRoom(out error),Is.True,error);yield return null;
         }
-        [UnityTest] public IEnumerator BeginFailureCannotHideTheSavedRoomAndItsUndoHistory()
+        [UnityTest] public IEnumerator FailedBaselineKeepsTheForkUntilExplicitDiscardAndRestoresPriorUndo()
         {
             var id=Create("Persisted first");var bytes=File.ReadAllBytes(Primary);
+            // A dirty placement must survive failure/discard, not revert to the older disk file.
+            editor.Find(id).transform.localPosition=Vector3.up*2;editor.RememberPlacement(id);
             Directory.CreateDirectory(Primary+".pending");
-            Assert.That(editor.BeginTemporaryRoom(out var error),Is.False);Assert.That(error,Is.Not.Null);
-            Assert.That(editor.TemporaryRoom,Is.False);Assert.That(editor.Find(id),Is.Not.Null);
-            Assert.That(editor.CanUndo,Is.True);Assert.That(File.ReadAllBytes(Primary),Is.EqualTo(bytes));
+            Assert.That(editor.BeginTemporaryRoom(out var error),Is.True,error);var temp=Create("Trial during baseline");
+            yield return FinishSave();Assert.That(editor.TemporarySaveError,Does.Contain("Starting room was not saved"));
+            Assert.That(editor.TemporaryRoom,Is.True);Assert.That(editor.Find(id),Is.Not.Null);Assert.That(editor.Find(temp),Is.Not.Null);
+            Assert.That(File.ReadAllBytes(Primary),Is.EqualTo(bytes));
             Directory.Delete(Primary+".pending");
-            Assert.That(editor.BeginTemporaryRoom(out error),Is.True,error);yield return null;
+            Assert.That(editor.DiscardTemporaryRoom(out error),Is.True,error);
+            Assert.That(editor.Find(temp),Is.Null);Assert.That(editor.Read(id).position,Is.EqualTo(Vector3.up*2));
+            editor.SendMessage("OnApplicationPause",true);
+            Assert.That(Saved().objects.Single(x=>x.id==id).position,Is.EqualTo(Vector3.up*2));
+            editor.Undo();Assert.That(editor.Find(id),Is.Null,"Previous saved Undo remains available");
         }
         [UnityTest] public IEnumerator SavedAndHistoricalMotionReferencesRemainProtectedAcrossTheFork()
         {
@@ -167,7 +174,7 @@ namespace Maestro.Quest.Tests
                 Assert.That(editor.ApplyAgentEdit(editor.Revision,new[]{data},Array.Empty<string>(),out var issue),Is.True,issue);
             }
             Assign(previous);Assign(saved);
-            Assert.That(editor.BeginTemporaryRoom(out var error),Is.True,error);Assign(live);
+            Assert.That(editor.BeginTemporaryRoom(out var error),Is.True,error);yield return FinishSave();Assign(live);
             Assert.That(editor.Read("maestro").walkMotionId,Is.EqualTo(live));
             Assert.That(editor.UsesMotion(saved),Is.True,"Discard still needs the base's motion");
             Assert.That(editor.UsesMotion(live),Is.True);
@@ -185,7 +192,7 @@ namespace Maestro.Quest.Tests
         [UnityTest] public IEnumerator PauseFinishesOnlyTheDispatchedSnapshotAndOrdinaryCreationStillSaves()
         {
             var baseId=Create("Ordinary");Assert.That(Saved().objects.Any(x=>x.id==baseId),Is.True);
-            Assert.That(editor.BeginTemporaryRoom(out var error),Is.True,error);var kept=Create("Keep on pause");
+            Assert.That(editor.BeginTemporaryRoom(out var error),Is.True,error);yield return FinishSave();var kept=Create("Keep on pause");
             Assert.That(editor.KeepTemporaryRoom(out error),Is.True,error);var late=Create("Do not keep on pause");
             editor.SendMessage("OnApplicationPause",true);
             Assert.That(editor.TemporarySavePending,Is.False);Assert.That(editor.TemporarySaveError,Is.Null);

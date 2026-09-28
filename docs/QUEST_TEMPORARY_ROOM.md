@@ -7,18 +7,20 @@ saved normally. Temporary play requires an explicit room-wide request.
 
 ## User workflow
 
-- **Begin temporary room** keeps the current base and opens one shared live fork.
-  The native tray labels this **Try room**. Other room actions and held items must
-  finish first; the operation rejects a busy room rather than interrupting it.
+- **Begin temporary room** captures the current base and immediately opens one
+  shared live fork. The native tray labels this **Try room**. Its baseline write
+  runs off-thread, after any earlier autosave; Begin reports completion only after
+  that write succeeds. New edits already stay temporary while it is starting.
+  Other room actions and held items must finish first; a busy room is rejected.
 - **Save snapshot** captures the current fork and saves that exact snapshot on a
   worker. The tray labels this **Keep snapshot**; its existing Save tool also uses
   this path inside temporary mode. Temporary play continues after saving.
-- **Discard unsaved & end** returns to the latest successful snapshot and ends the
-  mode. The tray labels this **End / discard**. Physics pauses; document placement
+- **Discard unsaved & end** returns to the latest kept snapshot, or the captured
+  starting state if nothing was kept, and ends the mode. The tray labels this **End / discard**. Physics pauses; document placement
   is restored without replaying velocity, animation or program progress.
 
-The book's Workshop displays the current mode, pending write, saved snapshot
-number and any failure. The tray status always identifies temporary or saved
+The book's Workshop displays the current mode, the starting-baseline write and
+its readiness separately from subsequent snapshots, plus any failure. The tray status always identifies temporary or saved
 mode. Returning to chat does not end temporary mode. Behaviour definitions,
 imported files, activity profiles, controller preferences, room scans and chat
 retain their separate stores. This operation does not undo speech, API use,
@@ -38,8 +40,18 @@ previously kept state; doing so is another temporary edit until explicitly kept.
 Discard restores the saved journal and its Undo history. Motion references in
 the base, base Undo and in-flight snapshot remain retained.
 
-One writer runs at a time. A failed Keep preserves the previous save and Undo;
-the live fork remains editable and can be retried or discarded. Discard refuses
+One writer runs at a time. Begin transfers an earlier autosave task to its worker
+chain, so an older write cannot overwrite its baseline and Unity never waits for
+that task during dispatch. The baseline is detached before the fork is edited;
+completion does not incorporate later changes or reset the scene. The prior
+journal keeps the original Undo history and asset references.
+
+A failed baseline leaves the live fork temporary and editable, with a failed
+Begin receipt. Save snapshot explicitly retries by saving the current fork;
+Discard restores the captured starting state and its Undo, then resumes normal
+saving for any pre-existing unsaved changes. It does not silently make trial edits
+permanent or lose those pre-existing changes. A failed Keep likewise preserves
+the previous save and Undo; the fork can be retried or discarded. Discard refuses
 while a dispatched write is pending. Pause/quit finishes only that dispatched
 snapshot, never later fork edits. Monotonic object revisions make changed or
 removed/recreated objects stale after Undo/Discard; unchanged objects keep their
@@ -49,24 +61,31 @@ revisions.
 
 `room.session@1` accepts `{operation: "begin" | "keep" | "discard", sessionId}`.
 The caller must supply the exact currently observed 32-hex scope ID, including
-before Begin. Programs can bind the `room.sessionId` fact. Successful Begin and
-Discard rotate that ID; stale calls cannot affect a different session. The
+before Begin. Programs can bind the `room.sessionId` fact. Accepted Begin and
+successful Discard rotate that ID; stale calls cannot affect a different session.
+The new scope is visible while Begin is pending, but dependent program steps wait
+for its real result. The
 catalog's zero-filled example is a placeholder, not an executable scope token.
 
 Results contain `sessionId`, `saveId` and `savedRevision`. Observation exposes
 `temporaryRoom` with `active`, `pending`, `id`, `saveId`, `phase`, `error` and
-`savedRevision`. Each save retains its own completion handle: a later write
+`savedRevision`. `starting` means the baseline is pending; `ready` means it saved
+successfully with zero kept revisions. Later Keeps use `pending`/`saved`; failures
+use `failed` with a diagnostic. Even a baseline has an exact `saveId`. Each write
+retains its own completion handle: a later write
 cannot replace the identity/result awaited by an earlier call. Book and agent
 requests use native-issued execution IDs; duplicate receipts do not repeat the
 effect. Creation results inside temporary mode identify live unsaved objects,
 not a promise that those objects survive closing the app.
 
-The generic scheduler supports a `completion` duration. A Keep remains preparing
-until its real write completes; it is not treated as a short animation. Waiting
+The generic scheduler supports a `completion` duration. Both Begin and Keep
+remain preparing until their real writes complete; neither uses a fake animation
+duration. Waiting
 for I/O does not renew instruction or causal budgets. Failure or the 30-second
 completion deadline stops dependent steps. Stop cancels waiting/continuations,
 but cannot retract a dispatched write: its receipt reports that the snapshot may
-still save, has failed, or was already saved. Inspect the save status before any
+still save, has failed, or was already saved. Cancelling Begin leaves temporary
+mode active; it never silently discards edits made while the baseline was saving. Inspect the save status before any
 explicit retry. Restart never automatically replays uncertain effects.
 
 Begin/Discard require the other scheduler runs and queue to be empty. Native
@@ -79,7 +98,7 @@ physics after capture remains temporary.
 
 ## Verification and remaining release work
 
-PC checks pass: **1,345 app tests, 166 EditMode tests and 120 PlayMode tests**,
+PC checks pass: **1,345 app tests, 166 EditMode tests and 125 PlayMode tests**,
 with three optional private-model/collection skips. TypeScript, lint, prompt and
 core boundaries, catalog export/source checks, production build and 25 Android
 bridge tests pass. The ARM64 IL2CPP development APK is built and not installed.
@@ -89,13 +108,20 @@ lifecycle isolation, exact session scopes, duplicate starts, saved/local Undo,
 cancellation after dispatch, a create-16/keep/discard program and physical pointer
 activation of all three new tools. Deferred-operation tests prove completion,
 failure, timeout, cancellation and finite work despite repeated I/O completion.
+New integrations delay an earlier writer while Unity frames and manual edits
+continue, verify two real writes finish in order, exercise baseline failure and
+explicit Keep/Discard recovery, retain prior Undo/dirty placements, and confirm
+pause completes only the starting snapshot. A faulted earlier task becomes a
+failed receipt instead of escaping the completion contract.
 Chrome consumes those actual native observations and verifies the book's exact
 requests and statuses. Its transport acknowledgements are simulated; the browser
 probe does not execute Unity. Native and browser screenshots were inspected.
 
-Beginning a session still writes its initial baseline synchronously. Moving that
-lifecycle off the main thread and measuring save/serialization latency on Quest
-remain release work. The room retains its bounded geometry/object/animation
+Baseline and Keep file writes run off-thread during normal use. Main-thread
+snapshot capture/copy and grouped Undo reconciliation still need Quest profiling.
+Pause/quit intentionally wait for an already-dispatched snapshot; ordinary saved
+edits and durable receipt I/O retain their existing write paths. Device latency
+and durability acceptance remain release work. The room retains its bounded geometry/object/animation
 budgets. This is a document snapshot mechanism, not a transaction over arbitrary
 physical effects. Headset layout, comfort, lifecycle/durability acceptance and a
 real-provider voice-to-session journey remain unverified. No installed data reset,

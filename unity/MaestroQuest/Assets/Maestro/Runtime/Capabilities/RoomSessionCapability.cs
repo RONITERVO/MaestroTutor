@@ -15,7 +15,7 @@ namespace Maestro.Quest.Programs
     {
         public override string Id=>"room.session";
         public override string Label=>"Temporary room";
-        public override string Description=>"Explicit room-wide temporary play. Begin keeps the current base and makes later object edits temporary. Keep saves one captured snapshot as one saved Undo and continues temporary play; later edits remain temporary. Discard returns to the latest kept base and pauses physics. Programs, imported files and chat are separate. Pass the exact observed room sessionId (or bind room.sessionId); Begin/Discard return the new identity. Begin/Discard require other runs and authoring to finish. A dispatched Keep can finish after Stop; inspect save status instead of replaying it. Ordinary creations remain saved outside this mode.";
+        public override string Description=>"Explicit room-wide temporary play. Begin captures the current base and makes later object edits temporary immediately; completion waits for its baseline write. Failed baseline saves keep the fork available for Keep or Discard. Keep saves one captured snapshot as one saved Undo and continues temporary play; later edits remain temporary. Discard returns to the latest kept base and pauses physics. Programs, imported files and chat are separate. Pass the exact observed room sessionId (or bind room.sessionId); Begin/Discard return the new identity. Begin/Discard require other runs and authoring to finish. A dispatched Keep can finish after Stop; inspect save status instead of replaying it. Ordinary creations remain saved outside this mode.";
         public override string Duration=>"completion";
         public override string Ownership=>"roomSession";
         public override bool RequiresQuietRoom(JObject args)=>(string)args["operation"]!="keep";
@@ -54,7 +54,7 @@ namespace Maestro.Quest.Programs
                 _=>editor.DiscardTemporaryRoom(out error,stopAuthoring:false)
             };
             if(!accepted)return false;
-            operation=kind=="keep"?new Saving(editor,editor.LastTemporarySave):new CompletedCapability(Result(editor.TemporarySessionId,editor.TemporarySaveId,editor.TemporarySaveRevision));return true;
+            operation=kind!="discard"?new Saving(editor,editor.LastTemporarySave):new CompletedCapability(Result(editor.TemporarySessionId,editor.TemporarySaveId,editor.TemporarySaveRevision));return true;
         }
         static JObject Result(string sessionId,string saveId,int revision)=>new() {["sessionId"]=sessionId,["saveId"]=saveId,["savedRevision"]=revision};
         sealed class Saving : CapabilityOperation {
@@ -65,7 +65,7 @@ namespace Maestro.Quest.Programs
                 if(editor)editor.PollTemporarySave();error=receipt.Error;
                 return receipt.Pending?RuleActionState.Preparing:error!=null?RuleActionState.Failed:RuleActionState.Ready;
             }
-            public override string InterruptionStatus=>receipt.Pending?"Stopped waiting. The dispatched snapshot may still be saved; inspect room save "+receipt.Id+" before retrying.":receipt.Error!=null?"Stopped; the snapshot write failed. Temporary edits remain in the room.":"Stopped further actions; the captured room snapshot was already saved.";
+            public override string InterruptionStatus=>receipt.IsBaseline?(receipt.Pending?"Stopped waiting. The starting room snapshot may still save; temporary mode and later edits remain active. Inspect room save "+receipt.Id+" before continuing.":receipt.Error!=null?"Stopped; the starting room snapshot failed. Edits remain temporary; Save snapshot retries or Discard returns to the starting room.":"Stopped further actions; the starting room snapshot was saved and temporary mode remains active."):receipt.Pending?"Stopped waiting. The dispatched snapshot may still be saved; inspect room save "+receipt.Id+" before retrying.":receipt.Error!=null?"Stopped; the snapshot write failed. Temporary edits remain in the room.":"Stopped further actions; the captured room snapshot was already saved.";
             public override JObject Result=>RoomSessionCapability.Result(receipt.SessionId,receipt.Id,receipt.SavedRevision);
         }
         public static bool RunManual(RoomEditor editor,string kind,out string status) {

@@ -445,7 +445,7 @@ namespace Maestro.Quest.Creation
         void Flush()
         {
             if (journal == null) return;
-            // A dispatched Keep is allowed to finish on pause/quit, but neither
+            // A dispatched baseline or Keep may finish on pause/quit, but neither
             // these callbacks nor autosave can persist the later live fork.
             if(TemporaryRoom) {CompleteTemporarySave(wait:true);return;}
             CapturePhysicsPlacements();

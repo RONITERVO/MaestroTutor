@@ -15,15 +15,17 @@ namespace Maestro.Quest.Creation
     }
     public sealed class TemporarySaveReceipt {
         public readonly string Id,SessionId;
+        public readonly bool IsBaseline;
         public bool Pending {get;internal set;}=true;
         public string Error {get;internal set;}
         public int SavedRevision {get;internal set;}
-        internal TemporarySaveReceipt(string id,string sessionId) {Id=id;SessionId=sessionId;}
+        internal TemporarySaveReceipt(string id,string sessionId,bool baseline) {Id=id;SessionId=sessionId;IsBaseline=baseline;}
     }
     // One shared live fork; catalog actions own public execution and receipts.
     public sealed partial class RoomEditor
     {
         RoomJournal savedJournal;
+        bool savedBaseDurable;
         Task<string> temporarySave;
         RoomDocument savingSnapshot;
         public bool TemporaryRoom => savedJournal!=null;
@@ -32,7 +34,7 @@ namespace Maestro.Quest.Creation
         public TemporarySaveReceipt LastTemporarySave {get;private set;}
         public string TemporarySaveId {get;private set;}="";
         public TemporaryRoomView ObserveTemporaryRoom()=>new() {active=TemporaryRoom,pending=TemporarySavePending,id=TemporarySessionId,saveId=TemporarySaveId,savedRevision=TemporarySaveRevision,
-            phase=TemporarySavePending?"pending":TemporarySaveError!=null?"failed":TemporarySaveRevision>0?"saved":"idle",error=TemporarySaveError??""};
+            phase=TemporarySavePending?(LastTemporarySave.IsBaseline?"starting":"pending"):TemporarySaveError!=null?"failed":TemporarySaveRevision>0?"saved":TemporaryRoom?"ready":"idle",error=TemporarySaveError??""};
         internal void PollTemporarySave()=>CompleteTemporarySave();
         public bool TemporarySavePending => temporarySave!=null;
         public string TemporarySaveError {get;private set;}
@@ -58,19 +60,35 @@ namespace Maestro.Quest.Creation
             if(TemporaryRoom) {error="A temporary room is already active";return false;}
             if(!CanChangeTemporaryBoundary(out error))return false;
             if(storage.ReadOnly) {error="This room is unavailable for saving";return false;}
-            // This is an explicit manual boundary, not a scheduler action. Stop
-            // current authoring first so its final frame belongs to the base.
+            // Direct manual callers finish authoring first. Catalog calls already
+            // coordinate ownership and must not cancel their own scheduler run.
             if(stopAuthoring)Editing?.Invoke();
             if(!CanChangeTemporaryBoundary(out error))return false;
             CapturePhysicsPlacements();
-            // Establish the durable base once, with the same serialized writer
-            // as existing edits. Per-action writes are bypassed in the fork.
-            saveTask?.GetAwaiter().GetResult();saveTask=null;
-            if(!storage.Save(journal.Snapshot(),out error)) {SetStatus(error);return false;}
-            dirty=false;savedJournal=journal;journal=journal.Fork();
-            TemporarySaveError=null;TemporarySaveRevision=0;TemporarySaveId="";TemporarySessionId=Guid.NewGuid().ToString("N");Revision++;
-            SetStatus("Temporary room started: changes stay here until you save a snapshot");return true;
+            var baseline=journal.Snapshot();if(!baseline.Validate(out error))return false;
+            // Capture on Unity's thread. Later edits go only to a separate live
+            // fork, even while the baseline waits for an earlier autosave.
+            savedJournal=journal;journal=journal.Fork();savedBaseDurable=false;dirty=false;
+            TemporarySaveRevision=0;TemporarySessionId=Guid.NewGuid().ToString("N");Revision++;
+            var previous=saveTask;saveTask=null;
+            DispatchTemporarySave(baseline,baseline:true,previous);
+            SetStatus("Starting temporary room: saving its base; new edits stay temporary");return true;
         }
+        void DispatchTemporarySave(RoomDocument snapshot,bool baseline,Task<string> previous=null)
+        {
+            savingSnapshot=snapshot;TemporarySaveError=null;TemporarySaveId=Guid.NewGuid().ToString("N");
+            LastTemporarySave=new TemporarySaveReceipt(TemporarySaveId,TemporarySessionId,baseline);
+            var target=storage; // The worker owns detached data, never scene/journal objects.
+            temporarySave=Task.Run(async()=>{
+                try {
+                    if(previous!=null)await previous.ConfigureAwait(false);
+                    target.Save(snapshot,out var issue);return issue;
+                } catch(Exception) {
+                    return "The room snapshot could not be saved. Temporary edits remain available; inspect storage before retrying.";
+                }
+            });
+        }
+
         public bool KeepTemporaryRoom(out string error)
         {
             error=null;CompleteTemporarySave();
@@ -86,9 +104,7 @@ namespace Maestro.Quest.Creation
             }
             CapturePhysicsPlacements();
             var snapshot=journal.Snapshot();if(!snapshot.Validate(out error))return false;
-            savingSnapshot=snapshot;TemporarySaveError=null;TemporarySaveId=Guid.NewGuid().ToString("N");
-            LastTemporarySave=new TemporarySaveReceipt(TemporarySaveId,TemporarySessionId);
-            temporarySave=Task.Run(()=>{storage.Save(snapshot,out var issue);return issue;});
+            DispatchTemporarySave(snapshot,baseline:false);
             SetStatus("Saving temporary room snapshot: later changes remain temporary");return true;
         }
         void CompleteTemporarySave(bool wait=false)
@@ -97,10 +113,14 @@ namespace Maestro.Quest.Creation
             var error=temporarySave.GetAwaiter().GetResult();temporarySave=null;
             var snapshot=savingSnapshot;savingSnapshot=null;LastTemporarySave.Pending=false;LastTemporarySave.Error=error;
             if(error!=null) {
-                TemporarySaveError=error;SetStatus(error);return;
+                TemporarySaveError=LastTemporarySave.IsBaseline?"Starting room was not saved. Edits remain temporary; Save snapshot retries, or Discard returns to the starting room. "+error:error;SetStatus(TemporarySaveError);return;
             }
             // Only the exact successfully written snapshot enters saved Undo.
             // No scene reconciliation or action replay occurs at completion.
+            savedBaseDurable=true;
+            if(LastTemporarySave.IsBaseline) {
+                Revision++;SetStatus("Temporary room ready: its starting state is saved; later changes stay temporary");return;
+            }
             if(!savedJournal.ApplySnapshot(snapshot,out error))throw new InvalidOperationException(error);
             TemporarySaveRevision++;LastTemporarySave.SavedRevision=TemporarySaveRevision;Revision++;
             SetStatus("Temporary room snapshot saved: later changes are still temporary");
@@ -117,10 +137,10 @@ namespace Maestro.Quest.Creation
             // running action. Leave physics paused after replacing colliders.
             PhysicsWorld?.PausePhysics();
             savedJournal.InvalidateChangedObservations(journal);
-            journal=savedJournal;savedJournal=null;TemporarySessionId=Guid.NewGuid().ToString("N");TemporarySaveId="";TemporarySaveRevision=0;dirty=false;Revision++;
+            journal=savedJournal;savedJournal=null;TemporarySessionId=Guid.NewGuid().ToString("N");TemporarySaveId="";TemporarySaveRevision=0;dirty=!savedBaseDurable;saveAt=UnityEngine.Time.unscaledTime+.5f;Revision++;
             if(journal.Read(selected)==null)selected=null;
             Reconcile();TemporarySaveError=null;
-            SetStatus("Temporary changes discarded: returned to the last saved room");return true;
+            SetStatus(savedBaseDurable?"Temporary changes discarded: returned to the last saved room":"Temporary changes discarded: returned to the starting room; saving its pending edits");return true;
         }
     }
 }
