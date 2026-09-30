@@ -93,11 +93,17 @@ acknowledgements are simulated; actual object motion is verified in Unity.
 
 ## Remaining release work
 
+Subsequent increments added explicit grouped temporary-room edits
+([temporary rooms](QUEST_TEMPORARY_ROOM.md)), shared native priority arbitration
+([ownership](QUEST_ROOM_OWNERSHIP.md)), contact/proximity/motion subscriptions
+([event programs](QUEST_EVENT_PROGRAMS.md)), structured collections
+([program data](QUEST_PROGRAM_DATA.md)) and pinned local module libraries
+([program modules](QUEST_PROGRAM_MODULES.md)). Existing saved-edit actions were
+not silently changed to transient effects.
+
 Specialized physical-editor adapters, remaining vocabulary consolidation,
-generic capability/version negotiation, runtime effects versus explicit grouped
-saved edits, priority arbitration, richer world subscriptions, collection types
-and shared program libraries remain. Existing saved-edit actions were not silently
-changed to transient effects. Quest frame/save timing, hardware interaction,
+generic capability/version negotiation, broader world/actor coverage and
+declarative resume policies remain. Quest frame/save timing, hardware interaction,
 real-provider journeys and store acceptance remain separate gates. No headset
 installation, user-data reset or service deployment is included here.
 
