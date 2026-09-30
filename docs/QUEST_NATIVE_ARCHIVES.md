@@ -172,6 +172,19 @@ its latest autosaves succeeded; a failed retention step must keep the old owners
 and their accepted in-memory state alive. These native APIs must stay behind the
 shared reviewed operation; an agent cannot supply a filesystem path.
 
+Ordinary room and behaviour autosaves retain their unsaved state after a failed
+write. They retry the latest accepted document after a bounded delay; a successful
+older snapshot cannot clear later edits. Pause/focus/quit flushes keep failed edits
+pending, and their checked flush path reports failure instead of relying on a
+status label. Successful retries clear stale save errors without replacing a newer
+user-facing status. Faulted workers follow the same failure path. A rejected immediate
+object edit cannot forget an earlier failed autosave. Temporary-room lifecycle
+callbacks still finish only dispatched baseline/Keep snapshots; retrying ordinary
+saves cannot keep the later temporary fork. These fixes preserve in-memory edits
+while the process lives, but do not guarantee recovery after termination during an
+unresolved storage failure. They also do not yet constitute the coordinated
+all-store retention required before switching workspaces.
+
 The Android picker needs a separately tracked request: `RoomRules` intentionally
 stops active actions when the app loses focus, and opening system file selection
 can cause that pause. Do not put the entire picker interaction inside an awaited

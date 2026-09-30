@@ -27,6 +27,8 @@ namespace Maestro.Quest.Creation
         bool applying, dirty;
         float saveAt;
         Task<string> saveTask;
+        string lastSaveError;
+        internal bool HasUnsavedChanges => dirty || saveTask != null;
         public string Status { get; private set; } = "Choose a shape or pick up an object";
         public bool DrawingMode { get; private set; }
         public Color Paint { get; private set; } = IllustratedMaterials.Hex("2B8D88");
@@ -196,10 +198,10 @@ namespace Maestro.Quest.Creation
             }
             // Same serialized writer and journal as manual edits; no global Editing
             // signal here because the caller already owns only the affected targets.
-            saveTask?.GetAwaiter().GetResult();saveTask=null;
+            CompleteSave(wait:true);
             if(!storage.Save(candidate,out error))return false;
             if(!Commit(replacements,removals,message,true,applyPose)){error=Status;return false;}
-            dirty=false;return true;
+            dirty=false;lastSaveError=null;return true;
         }
 
         Vector3 SpawnPosition()
@@ -453,27 +455,58 @@ namespace Maestro.Quest.Creation
         {
             CompleteTemporarySave();
             if (Time.unscaledTime >= captureAt) { captureAt = Time.unscaledTime + 1; CapturePhysicsPlacements(); }
-            if (saveTask != null && saveTask.IsCompleted)
-            {
-                var error = saveTask.GetAwaiter().GetResult(); saveTask = null;
-                if (error != null) SetStatus(error);
-                else if (!dirty) SetStatus("Room saved");
-            }
+            CompleteSave();
             if (journal == null || TemporaryRoom || !dirty || saveTask != null || Time.unscaledTime < saveAt) return;
             var snapshot = journal.Snapshot(); dirty = false;
-            saveTask = Task.Run(() => { storage.Save(snapshot,out var error); return error; });
+            saveTask = Task.Run(() => SaveSnapshot(snapshot));
+        }
+        string SaveSnapshot(RoomDocument snapshot)
+        {
+            try { return storage.Save(snapshot,out var error) ? null : error ?? "Room save was not confirmed; your edits remain unsaved."; }
+            catch (Exception) { return "Room save was not confirmed; your edits remain unsaved. Check storage and try again."; }
+        }
+        void CompleteSave(bool wait=false)
+        {
+            if (saveTask == null || !wait && !saveTask.IsCompleted) return;
+            string error;
+            try { error=saveTask.GetAwaiter().GetResult(); }
+            catch(Exception) { error="Room save was not confirmed; your edits remain unsaved."; }
+            saveTask=null;
+            // A failed older snapshot cannot mark the current journal as saved.
+            // Retry the latest accepted state, with a delay to avoid hammering storage.
+            if (error != null) SaveFailed(error);
+            else if (!dirty) { if(lastSaveError!=null)ClearSaveError();else SetStatus("Room saved"); }
+        }
+        void SaveFailed(string error)
+        {
+            dirty=true;saveAt=Time.unscaledTime+5;lastSaveError=error;SetStatus(error);
+        }
+        void ClearSaveError()
+        {
+            string previous=lastSaveError;lastSaveError=null;
+            if(previous!=null && Status==previous)SetStatus("Room saved");
+        }
+        internal bool TryFlush(out string error)
+        {
+            error=null;
+            if (journal == null || storage == null) { error="Room storage is not ready."; return false; }
+            if (TemporaryRoom) { error="Keep or discard the temporary room before saving the ordinary workspace."; return false; }
+            CapturePhysicsPlacements(); CompleteSave(wait:true);
+            if(storage.ReadOnly){error="Room storage is unavailable; original files are preserved.";return false;}
+            if (!dirty) return true;
+            int revision=Revision;
+            error=SaveSnapshot(journal.Snapshot());
+            dirty=error!=null || Revision!=revision;
+            if (error != null) SaveFailed(error);
+            else if(!dirty)ClearSaveError();
+            return error==null;
         }
         void Flush()
         {
-            if (journal == null) return;
-            // A dispatched baseline or Keep may finish on pause/quit, but neither
-            // these callbacks nor autosave can persist the later live fork.
+            // Lifecycle callbacks can finish a dispatched baseline/Keep but must
+            // never persist the later live fork, even when its baseline failed.
             if(TemporaryRoom) {CompleteTemporarySave(wait:true);return;}
-            CapturePhysicsPlacements();
-            var pendingError = saveTask?.GetAwaiter().GetResult(); saveTask = null;
-            if (pendingError != null) SetStatus(pendingError);
-            if (!dirty) return;
-            dirty = false; if (!storage.Save(journal.Snapshot(),out var error)) SetStatus(error);
+            if(journal!=null)TryFlush(out _);
         }
         public void ReportStatus(string value)=>SetStatus(value);
         void SetStatus(string value) { Status = value; Changed?.Invoke(); }

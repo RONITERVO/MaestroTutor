@@ -838,3 +838,14 @@ unconnected. They must be integrated together; a persisted flag is not enough to
 prevent imported triggers. Android file selection also needs its own tracked
 request because the system picker pauses the app and stops ordinary running
 actions. See [generation contract and integration requirements](QUEST_NATIVE_ARCHIVES.md#recoverable-workspace-generation-store-native-foundation).
+
+### 2026-10-01: retain accepted edits after save failures
+
+Ordinary room and behaviour saves now preserve the pending state after background,
+lifecycle or faulted-worker failures. A delayed retry writes the latest accepted
+snapshot; completing an older save does not erase newer edits. The lifecycle path
+has a checked result, and a rejected immediate edit keeps earlier unsaved changes.
+Temporary-room pause/quit still cannot save unkept changes. Integration tests cover
+real blocked storage and recovery, changes during a write and faulted workers.
+This is a prerequisite for restore retention, not coordinated activation or a
+promise to survive process loss while storage remains unavailable.

@@ -24,6 +24,8 @@ namespace Maestro.Quest.Rules
         bool dirty;
         float saveAt;
         Task<string> saveTask;
+        string lastSaveError;
+        internal bool HasUnsavedChanges => dirty || saveTask != null;
         string sourceId = "maestro";
         RuleEventKind trigger;
         RuleCondition condition;
@@ -255,16 +257,49 @@ namespace Maestro.Quest.Rules
         void Update()
         {
             Modules?.Poll();
-            if (saveTask != null && saveTask.IsCompleted) { var error = saveTask.GetAwaiter().GetResult(); saveTask = null; if (error != null) Say(error); }
+            CompleteSave();
             if (!dirty || storage == null || saveTask != null || Time.unscaledTime < saveAt) return;
             var snapshot = document.Copy(); dirty = false;
-            saveTask = Task.Run(() => { storage.Save(snapshot,out var error); return error; });
+            saveTask = Task.Run(() => SaveSnapshot(snapshot));
         }
-        void Flush()
+        string SaveSnapshot(RuleDocument snapshot)
         {
-            var pending = saveTask?.GetAwaiter().GetResult(); saveTask = null; if (pending != null) Say(pending);
-            if (!dirty || storage == null) return; dirty = false; if (!storage.Save(document,out var error)) Say(error);
+            try { return storage.Save(snapshot,out var error) ? null : error ?? "Behaviour save was not confirmed; your edits remain unsaved."; }
+            catch (Exception) { return "Behaviour save was not confirmed; your edits remain unsaved. Check storage and try again."; }
         }
+        void CompleteSave(bool wait=false)
+        {
+            if (saveTask == null || !wait && !saveTask.IsCompleted) return;
+            string error;
+            try { error=saveTask.GetAwaiter().GetResult(); }
+            catch(Exception) { error="Behaviour save was not confirmed; your edits remain unsaved."; }
+            saveTask=null;
+            if (error != null)SaveFailed(error);
+            else if(!dirty)ClearSaveError();
+        }
+        void SaveFailed(string error)
+        {
+            dirty=true;saveAt=Time.unscaledTime+5;lastSaveError=error;Say(error);
+        }
+        void ClearSaveError()
+        {
+            string previous=lastSaveError;lastSaveError=null;
+            if(previous!=null && Status==previous)Say("Behaviours saved");
+        }
+        internal bool TryFlush(out string error)
+        {
+            error=null;
+            if(storage==null){error="Behaviour storage is not ready.";return false;}
+            CompleteSave(wait:true);
+            if(storage.ReadOnly){error="Behaviour storage is unavailable; original files are preserved.";return false;}
+            if(!dirty)return true;
+            int revision=Revision;
+            error=SaveSnapshot(document.Copy());dirty=error!=null || Revision!=revision;
+            if(error!=null)SaveFailed(error);
+            else if(!dirty)ClearSaveError();
+            return error==null;
+        }
+        void Flush()=>TryFlush(out _);
         void OnApplicationPause(bool paused) { if (paused) {Flush();Modules?.Flush();} }
         void OnApplicationFocus(bool focused) { if (!focused) Flush(); }
         void OnApplicationQuit() {Flush();Modules?.Flush();}
