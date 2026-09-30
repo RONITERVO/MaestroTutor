@@ -49,6 +49,8 @@ jobs:
         run: npm audit --omit=dev --audit-level=critical
       - name: Audit shipped Functions dependencies
         run: npm --prefix functions audit --omit=dev --audit-level=high
+      - name: Audit shipped Live gateway dependencies
+        run: npm --prefix live-gateway audit --omit=dev --audit-level=high
 
       - name: Verify generated behaviour catalog sources
         run: npm run verify:behaviour-catalog
