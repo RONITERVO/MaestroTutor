@@ -15,6 +15,7 @@ namespace Maestro.Quest.Creation
         readonly RoomEditor editor;
         JObject request,cached;
         Entry inspected;
+        int moduleRevision;bool moduleReady,modulePending;string moduleNotice;
         public RoomCapabilityCatalog(RoomEditor editor) {this.editor=editor;}
         static bool Exact(JObject value,params string[] keys)=>value!=null&&value.Count==keys.Length&&keys.All(value.ContainsKey);
         static bool Text(JToken value,int max)=>value?.Type==JTokenType.String&&((string)value).Length<=max&&!((string)value).Any(char.IsControl);
@@ -22,14 +23,14 @@ namespace Maestro.Quest.Creation
         static bool Id(JToken value)=>Text(value,96)&&Regex.IsMatch((string)value,@"^[a-z][a-zA-Z0-9]*(\.[a-z][a-zA-Z0-9]*)+$");
         static bool QueryKeys(JObject value,params string[] keys) {
             if(!value.ContainsKey("category"))return Exact(value,keys);
-            return value["category"]?.Type==JTokenType.String&&new[]{"actions","events","facts"}.Contains((string)value["category"])&&Exact(value,keys.Concat(new[]{"category"}).ToArray());
+            return value["category"]?.Type==JTokenType.String&&new[]{"actions","events","facts","modules"}.Contains((string)value["category"])&&Exact(value,keys.Concat(new[]{"category"}).ToArray());
         }
         public static bool ValidRequest(JObject value)
         {
             if(value==null||value["operation"]?.Type!=JTokenType.String)return false;
             switch((string)value["operation"]) {
                 case "search":return QueryKeys(value,"operation","query","offset")&&Text(value["query"],80)&&value["offset"]?.Type==JTokenType.Integer&&(double)value["offset"]>=0&&(double)value["offset"]<=1000000;
-                case "inspect":return QueryKeys(value,"operation","capability","version")&&Id(value["capability"])&&Version(value["version"]);
+                case "inspect":return QueryKeys(value,"operation","capability","version")&&((string)value["category"]=="modules"?value["capability"]?.Type==JTokenType.String&&ProgramModuleLibrary.ValidHash((string)value["capability"]):Id(value["capability"]))&&Version(value["version"]);
                 case "check":return Exact(value,"operation","call")&&ValidCall(value["call"] as JObject);
                 default:return false;
             }
@@ -76,9 +77,28 @@ namespace Maestro.Quest.Creation
             if(entry!=null)result["status"]=available?"Current fact value. Reading does not change the room.":"Fact value is currently unavailable; do not treat it as false or zero.";
             return result;
         }
+        JObject ObserveModules(string operation) {
+            var library=editor?editor.GetComponent<RuleWorkshop>()?.Modules:null;library?.Poll();
+            bool ready=library?.Ready==true,pending=library?.Pending==true;int revision=library?.Revision??1;
+            string notice=library==null?"Module library is unavailable":!ready?"Module library is loading":library.Error;
+            if(cached!=null&&moduleRevision==revision&&moduleReady==ready&&modulePending==pending&&moduleNotice==notice)return (JObject)cached.DeepClone();
+            moduleRevision=revision;moduleReady=ready;modulePending=pending;moduleNotice=notice;
+            var common=new JObject {["operation"]=operation,["category"]="modules",["revision"]=revision,["ready"]=ready,["pending"]=pending};
+            if(operation=="search") {
+                string query=((string)request["query"]).Trim();var entries=library?.Search(query)??Array.Empty<ProgramModuleLibrary.Entry>();int offset=Math.Min((int)request["offset"],Math.Max(0,(entries.Length-1)/PageSize*PageSize));
+                common["query"]=query;common["offset"]=offset;common["pageSize"]=PageSize;common["total"]=entries.Length;
+                common["entries"]=new JArray(entries.Skip(offset).Take(PageSize).Select(e=>new JObject {["id"]=e.Hash,["version"]=1,["label"]=e.Name}));common["status"]=notice??"Found "+entries.Length+" reusable modules. Search does not publish, import or run anything.";
+            }else {
+                string hash=(string)request["capability"];var entry=(int)request["version"]==1?library?.Inspect(hash):null;
+                common["capability"]=hash;common["version"]=request["version"].DeepClone();common["definition"]=entry?.ReadDefinition()??(JToken)JValue.CreateNull();
+                common["status"]=notice??entry?.Error??(entry==null?"Unknown module content ID or unsupported version":"Pinned module definition. Importing changes a draft; applying never starts it.");
+            }
+            return Cache(common);
+        }
         public JObject Observe()
         {
             if(request==null)return null;string operation=(string)request["operation"],category=(string)request["category"]??"actions";
+            if(category=="modules")return ObserveModules(operation);
             // Search/definition expansion happens once per query. Only fact values
             // and action readiness are live, through their existing native readers.
             if(cached!=null) {var copy=(JObject)cached.DeepClone();return category=="facts"&&operation=="inspect"?ReadFact(copy,inspected):copy;}

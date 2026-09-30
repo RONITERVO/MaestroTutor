@@ -966,6 +966,149 @@
       }
     },
     {
+      "id": "program.module.publish",
+      "version": 1,
+      "label": "Save reusable module",
+      "input": {
+        "type": "object",
+        "properties": {
+          "sequenceId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "rulesRevision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 1000000.0
+          },
+          "name": {
+            "type": "string",
+            "pattern": "^.{1,64}$",
+            "maxLength": 64
+          },
+          "exports": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9_]{1,32}$",
+              "maxLength": 32
+            },
+            "minItems": 1,
+            "maxItems": 16
+          }
+        },
+        "required": [
+          "sequenceId",
+          "rulesRevision",
+          "name",
+          "exports"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "moduleLibrary.v1"
+        ]
+      },
+      "duration": "completion",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [
+        "behaviour.current",
+        "moduleLibrary.ready",
+        "storage.writable"
+      ],
+      "description": "Publish a snapshot of an existing saved behaviour as an immutable reusable module. Pass the exact rules revision and sequence ID, a name, and its exported local function names. Unity validates importability and returns the real SHA256 content ID. Version-2 source is normalized to version 3 without editing its behaviour. Identical content is deduplicated. Nothing starts, and existing imports keep their pins. Completion waits for the file write; Stop cannot undo an already dispatched write. Inspect library/receipt instead of retrying an uncertain result.",
+      "example": {
+        "sequenceId": "00000000000000000000000000000000",
+        "rulesRevision": 1,
+        "name": "My module",
+        "exports": [
+          "main"
+        ]
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 1000000.0
+          },
+          "changed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "hash",
+          "revision",
+          "changed"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "program.module.remove",
+      "version": 1,
+      "label": "Remove library module",
+      "input": {
+        "type": "object",
+        "properties": {
+          "hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "hash"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "moduleLibrary.v1"
+        ]
+      },
+      "duration": "completion",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [
+        "moduleLibrary.ready",
+        "storage.writable"
+      ],
+      "description": "Remove the exact content ID from the reusable module library. Saved behaviours keep their embedded copies and continue unchanged. This deletes the library copy, including a damaged entry. There is no library Undo. Completion waits for the write; Stop cannot retract a dispatched removal. Inspect the exact ID/receipt after uncertainty; do not replay.",
+      "example": {
+        "hash": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 1000000.0
+          },
+          "changed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "hash",
+          "revision",
+          "changed"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "object.create",
       "version": 1,
       "label": "Create object",
@@ -2956,6 +3099,10 @@
       "sha256": "cb1e12257cda89889ab8e30e2c4985cebfd0742426ce6f98cf09a560a0b62fa4"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramModuleLibrary.cs",
+      "sha256": "b05f909e7ab5f6550bed074b92e38d486c3bbc5e1927ee803f7191d27436af18"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleDocument.cs",
       "sha256": "1474f2a638a00d2e8174c7a0def2cd6a39d48a36e9fb40647035dd5a0d56f47e"
     },
@@ -2985,7 +3132,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "dfa32f44918d68b65e5f0af0b3a8fa305f7ac2b897b6c1f4e60b72666695545e"
+      "sha256": "4e9a128db6c1558405a04d98dde95458696339bc446fa271f2abe7cdb4cc3a86"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -3014,6 +3161,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectCapabilities.cs",
       "sha256": "b799cda29b567b47230fcb7a340281b9f27def17bc8c9e457c6b32ca9db821fe"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ProgramModuleCapabilities.cs",
+      "sha256": "6f568a689821f33b652414d19012ac0e7f6bbb9f346b28d60f4cc1182e8a8b72"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RecipeAnimationCapability.cs",

@@ -21,7 +21,8 @@ namespace Maestro.Quest.Book
         public static MotionRetention ReadSaved(RoomEditor editor,RuleWorkshop rules,string id,bool force=false)
         {
             bool saved=editor.SavedMotion(id,out bool a,force); saved |= rules.SavedMotion(id,out bool b,force); saved |= editor.ActivityProfiles.SavedMotion(id,out bool c,force);
-            return new MotionRetention { Saved=saved,Uncertain=a || b || c };
+            bool modules=false,unknownModules=true;if(rules.Modules!=null)modules=rules.Modules.Retains(id,out unknownModules);
+            return new MotionRetention { Saved=saved||modules,Uncertain=a || b || c || unknownModules };
         }
         public static MotionUsageView Read(RoomEditor editor,RuleWorkshop rules,string id,int page=0,MotionRetention retained=null)
         {
@@ -32,6 +33,7 @@ namespace Maestro.Quest.Book
                 if(sequence.Compile(out _)==null)uses.Add("Unavailable program: "+sequence.name+" (references unknown)");
                 else if(sequence.UsesMotion(id))uses.Add("Program: "+sequence.name);
             }
+            if(rules.Modules!=null)foreach(var module in rules.Modules.Search(""))if(module.References.Contains(id))uses.Add("Reusable module: "+module.Name);
             foreach (var profile in editor.ActivityProfiles.Snapshot().avatars)
                 foreach (var role in profile.roles)
                     if (role.choices.Any(x => x.motionId == id)) uses.Add("Avatar "+profile.modelHash.Substring(0,8)+": "+role.role);

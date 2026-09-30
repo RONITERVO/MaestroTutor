@@ -1,8 +1,8 @@
 # Pinned program modules
 
-Implemented composition foundation, 2026-09-30. Managed library storage, publication,
-paged discovery, a visual import/upgrade workflow and device acceptance remain open.
-This is not a complete shared-library product or a release approval.
+Implemented composition and managed library, 2026-09-30. Native publication, bounded
+paged discovery and explicit book import/replacement share the agent action/query
+contracts. Device acceptance and release gates remain open.
 
 A saved version-3 program can opt into `moduleVersion:1` and `imports:[]` when native
 `programModules.v1` is advertised. An import has exactly `alias`, `hash`, `module`
@@ -16,7 +16,7 @@ an external definition cannot alter a saved behaviour. Replacing a snapshot and
 its pin is an explicit program edit, validated atomically under the existing rules
 revision and cancellation policy. A hash identifies content; it is not a signature,
 permission grant or proof of trust. Agents must preserve inspected pins and cannot
-invent them; native library creation/discovery is a later capability.
+invent them; native publication returns the actual hash.
 
 ## Composition and ownership
 
@@ -71,8 +71,52 @@ no linking or hashing occurs on every interpreter tick.
 The book lists pins, exports, required objects, signal connections and imported
 function blocks. Imported blocks are read-only and can highlight the native running
 node. Exported calls use the same visual argument/result editor as local functions.
-Human and agent see the same source, trace and state. The library picker and explicit
-visual version-upgrade workflow still need implementation.
+Human and agent see the same source, trace and state. The library picker edits this
+same source; it cannot silently substitute a newer definition.
+
+## Managed native library
+
+`moduleLibrary.v1` adds `program.module.publish` and `program.module.remove` to the
+existing capability registry, schemas, preflight, one-off action receipts and native
+scheduler. Publish accepts a saved sequence ID, exact rules revision, name and local
+export names. It validates the saved definition's importability and copies it without
+editing or starting the original. Version-2 source is normalized to version 3 in the
+copy. The completed output returns `hash`, library `revision` and `changed`; identical
+content deduplicates. There is no separate model/provider API or second executor.
+
+Catalog search/inspect with `category:"modules"` discovers these definitions six at a
+time. Search matches name, export names and exact hash. Inspection uses the returned
+hash as `capability`, `version:1`, and includes the full definition or an explicit
+unavailable diagnostic. `ready`, `pending` and `revision` describe library state;
+querying never publishes, imports or starts anything. Cached catalog pages refresh
+when loading or writes change these values. Agents inspect only relevant entries.
+
+In the book's Reusable modules panel, publish a saved behaviour with chosen exports,
+search and inspect a version, then choose a new import or explicitly replace an
+existing alias. Each signal is wired to a displayed caller name with its exact type.
+New signal names are scoped from behaviour/alias by default; choosing an existing
+name deliberately connects that room-wide signal. Additional object declarations
+require the displayed grant. The combined program is revalidated before changing the
+draft; incompatible upgrades, changed pins and stale drafts leave it intact. Apply
+uses the existing revision check and cancellation policy; Start remains separate.
+Imported blocks remain read-only, while exported calls use the normal block editor.
+
+Storage contains at most 256 immutable `program-modules.v1/<hash>.json` files. Each
+module remains within 24,000 JSON characters and 96,000 UTF-8 bytes, and must fit the
+combined program limits when imported. Loading/file validation and write/flush/rename
+run on a worker. Owner-thread polling commits observations. Unknown or damaged files
+are preserved and isolated instead of disabling other definitions. The existing
+saved-motion audit protects references in valid modules and conservatively keeps
+assets when library references are uncertain or a write is pending.
+
+Publication writes and flushes a unique temporary file before renaming it to its exact
+content ID. It never overwrites an existing damaged copy. Removal is an explicit
+permanent deletion of the chosen library copy, with no library Undo. Embedded copies
+in saved behaviours remain usable offline and unchanged. A dispatched write may
+finish after Stop: the operation reports this and the agent inspects library/receipts
+instead of replaying uncertain actions. App pause/quit flush pending work. Library
+backup/export and sharing between installations remain future work; the library is
+currently local to this Quest installation. Content hashes do not authenticate authors.
 
 ## Canonical pin encoding
 
@@ -100,3 +144,12 @@ through the room executor, rejects a tampered edit without interrupting it, stop
 reloads unchanged snapshots and verifies pause cancellation. The browser replay shows
 those actual native observations and changes an exported call while preserving all
 pins. Browser acknowledgements are simulated; it does not execute Unity or test Quest.
+
+Managed-library EditMode tests cover deduplication, exact reload (including ISO date
+strings), detached reads, isolated corruption, storage failure, safe IDs and asset
+retention during removal. The PlayMode integration publishes through the shared
+executor and durable receipt, queries the actual catalog, rejects a stale revision,
+publishes changed content, then proves that deletion does not affect the running or
+reloaded embedded copy. Book tests reject incompatible upgrades/tampering/missing
+object grants and use the same catalog/action contracts. Browser replay uses these
+native observations with explicitly simulated acknowledgements.

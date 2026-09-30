@@ -17,6 +17,7 @@ namespace Maestro.Quest.Rules
     {
         RoomEditor editor;
         RuleStorage storage;
+        public ProgramModuleLibrary Modules {get;private set;}
         RuleDocument document = new();
         readonly List<RuleDocument> undo = new(), redo = new();
         int sequenceIndex = -1, stepIndex, bindingIndex = -1;
@@ -112,7 +113,7 @@ namespace Maestro.Quest.Rules
         }
         public void Initialize(RoomEditor source, string saveDirectory = null)
         {
-            editor = source; storage = new RuleStorage(saveDirectory ?? Path.Combine(Application.persistentDataPath,"room"));
+            editor = source; string directory=saveDirectory ?? Path.Combine(Application.persistentDataPath,"room");storage = new RuleStorage(directory);Modules=new ProgramModuleLibrary(directory);
             document = storage.Load(out var message); sequenceIndex = document.sequences.Length > 0 ? 0 : -1;
             if (message != null) Status = message;
         }
@@ -253,6 +254,7 @@ namespace Maestro.Quest.Rules
         public void Redo() { if (ReadOnly || redo.Count == 0 || (Runtime && Runtime.AnyButtonHeld)) return; undo.Add(document); document = redo[^1]; redo.RemoveAt(redo.Count-1); Updated(); Say("Rule edit redone"); }
         void Update()
         {
+            Modules?.Poll();
             if (saveTask != null && saveTask.IsCompleted) { var error = saveTask.GetAwaiter().GetResult(); saveTask = null; if (error != null) Say(error); }
             if (!dirty || storage == null || saveTask != null || Time.unscaledTime < saveAt) return;
             var snapshot = document.Copy(); dirty = false;
@@ -263,9 +265,9 @@ namespace Maestro.Quest.Rules
             var pending = saveTask?.GetAwaiter().GetResult(); saveTask = null; if (pending != null) Say(pending);
             if (!dirty || storage == null) return; dirty = false; if (!storage.Save(document,out var error)) Say(error);
         }
-        void OnApplicationPause(bool paused) { if (paused) Flush(); }
+        void OnApplicationPause(bool paused) { if (paused) {Flush();Modules?.Flush();} }
         void OnApplicationFocus(bool focused) { if (!focused) Flush(); }
-        void OnApplicationQuit() => Flush();
-        void OnDestroy() => Flush();
+        void OnApplicationQuit() {Flush();Modules?.Flush();}
+        void OnDestroy() {Flush();Modules?.Flush();}
     }
 }

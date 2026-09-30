@@ -2,13 +2,14 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
-Latest PC increment (2026-09-30): pinned embedded program modules compose through
-the same native interpreter, with private per-instance state, explicit signal wires
-and caller-declared resource authority. The book inspects pinned internals and edits
-exported calls. Managed library authoring/discovery/upgrades remain open. See
-QUEST_PROGRAM_MODULES.md. PC checks pass 1,441 app tests, 202 EditMode, 134 PlayMode
-and 25 Android tests (three optional native skips), plus browser replay. The verified
-ARM64 development APK remains uninstalled; device/provider/store gates remain open.
+Latest PC increment (2026-09-30): native reusable-module publication and removal
+share the capability/receipt system; catalog search inspects immutable exact versions.
+The book publishes exports, wires signals and explicitly imports or replaces a pin
+in a draft. Saved and running copies survive later publication or library deletion.
+See QUEST_PROGRAM_MODULES.md. PC checks pass 1,449 app tests, 207 EditMode and 135
+PlayMode tests (three optional native skips), plus 25 Android tests. The ARM64
+development APK is built, signature-verified and uninstalled; real-provider/device/
+store acceptance remains open.
 
 Previous PC increment (2026-09-30): the optional book now edits typed program state
 and named signal declarations without JSON. Atomic scoped renames preserve references;
@@ -67,7 +68,7 @@ branches; source editing remains available. See QUEST_BEHAVIOUR_PROGRAMS.md.
 
 Current architecture: the original app owns chat/Live handoff, Gemini access
 and durable task journals. Canonical behaviour programs, the shared native
-catalog (14 actions, nine events and four facts), one scheduler and native
+catalog (16 actions, nine events and four facts), one scheduler and native
 receipts serve human controls and agent calls. Version-3 programs retain typed
 session state across event/timer waits. Creation results compose with animation,
 physics and durable object edits; per-channel ownership permits supported
@@ -676,3 +677,14 @@ Actual native creation/paint results are replayed in the book. See
 195 EditMode, 132 PlayMode and 25 Android tests (three optional native skips).
 Shared libraries, state/event declaration controls and the other v1 gates remain
 open. The new development APK is built but not installed; device work stays on hold.
+
+
+PC managed-module library checkpoint (2026-09-30): native immutable publication and
+removal now use the shared capability/receipt system; bounded module discovery uses
+the existing catalog. The book publishes chosen exports, inspects exact versions,
+wires signals and explicitly imports/replaces a pin in the caller draft. Saved copies
+continue after source publication or library deletion. Storage/validation runs off
+thread, isolated damaged entries remain preserved, and motion retention includes
+saved modules. See [module library contract](QUEST_PROGRAM_MODULES.md). Installation,
+real-provider/device acceptance, library backup/export and the wider v1 release gates
+remain open; this checkpoint does not establish Quest Store readiness.

@@ -85,3 +85,18 @@ it('checks exact event and fact definitions and distinguishes false, unavailable
  expect(validCatalogView({...text,value:'x'.repeat(129)})).toBe(false);
  fact.definition!.description='Changed';expect(behaviourFact('physics.ready')!.description).not.toBe('Changed');expect(validCatalogView(fact)).toBe(false);
 });
+
+import nativeModules from '../../../test-fixtures/browser/moduleLibraryCatalog.json';
+it('accepts native module pins and requires library support for human and agent requests',()=>{
+ for(const view of Object.values(nativeModules))expect(validCatalogView(view)).toBe(true);
+ const queries=[{operation:'search',category:'modules',query:'remember',offset:0},{operation:'inspect',category:'modules',capability:nativeModules.inspected.capability,version:1}];
+ for(const query of queries){const commands=parseRoomCommands({commands:[{action:'catalog',catalog:query}]});
+  expect(()=>requireRoomCapabilities(commands,{capabilities:['catalog.v1']})).toThrow('moduleLibrary.v1');
+  expect(()=>requireRoomCapabilities(commands,{capabilities:['catalog.v1','moduleLibrary.v1']})).not.toThrow();
+ }
+ const call={id:'program.module.publish',version:1,arguments:{sequenceId:'b'.repeat(32),rulesRevision:1,name:'Remember amounts',exports:['remember']}};
+ const commands=parseRoomCommands({commands:[{action:'execution',execution:{operation:'start',call}}]});
+ expect(()=>requireRoomCapabilities(commands,{capabilities:['execution.v1']})).toThrow('moduleLibrary.v1');
+ expect(()=>requireRoomCapabilities(commands,{capabilities:['execution.v1','moduleLibrary.v1']})).not.toThrow();
+ expect(nativeModules.removed.definition).toBeNull();
+});

@@ -1,6 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
-import {sha256} from '@noble/hashes/sha2.js';
+import {moduleHash} from '../../../shared/programModuleIdentity';
+export {moduleHash} from '../../../shared/programModuleIdentity';
 import type {BehaviourProgram,ProgramFunction} from './programs';
 import {visitProgramNodes,visitNodeExpressions} from './programTraversal';
 export interface ProgramModule {version:1;name:string;exports:string[];program:BehaviourProgram}
@@ -12,19 +13,6 @@ export const compiledProgramName=(s:unknown)=>typeof s==='string'&&/^[a-zA-Z0-9_
 const object=(v:unknown):Record<string,unknown>=>{need(v!==null&&typeof v==='object'&&!Array.isArray(v),'Expected a module object');return v as Record<string,unknown>;};
 const list=(v:unknown,max:number):unknown[]=>{need(Array.isArray(v)&&v.length<=max,'Missing or oversized module list');return v as unknown[];};
 function fields(value:Record<string,unknown>,keys:string[]){need(Object.keys(value).length===keys.length&&keys.every(k=>own(value,k)),'Missing or unknown module field');}
-/** Versioned canonical encoding: UTF-16 strings, ordinal keys, IEEE-754 numbers. Not authentication. */
-export function moduleHash(module:unknown):string {
- let nodes=0;
- const encode=(v:unknown,depth=0):string=>{
-  need(depth<=48&&++nodes<=32768,'Module hash input limit exceeded');
-  if(v===null)return 'N';if(typeof v==='boolean')return v?'T':'F';
-  if(typeof v==='number'){need(Number.isFinite(v),'Module numbers must be finite');const b=new DataView(new ArrayBuffer(8));b.setFloat64(0,v===0?0:v);return 'D'+Array.from(new Uint8Array(b.buffer),x=>x.toString(16).padStart(2,'0')).join('');}
-  if(typeof v==='string'){let result='S'+v.length+':';for(let i=0;i<v.length;i++)result+=v.charCodeAt(i).toString(16).padStart(4,'0');return result;}
-  if(Array.isArray(v))return 'A'+v.length+'['+v.map(x=>encode(x,depth+1)).join('')+']';
-  const o=object(v),keys=Object.keys(o).sort();return 'O'+keys.length+'{'+keys.map(k=>encode(k,depth+1)+encode(o[k],depth+1)).join('')+'}';
- };
- return Array.from(sha256(new TextEncoder().encode('Maestro.Module.v1\n'+encode(module))),b=>b.toString(16).padStart(2,'0')).join('');
-}
 /** Each scope is validated before inclusion; final validation enforces combined limits. Source is never mutated. */
 export function linkProgram(source:Record<string,unknown>,validate:(value:Record<string,unknown>)=>void):BehaviourProgram {
  let instances=0;

@@ -1285,3 +1285,16 @@ No headset query or installation was performed for this checkpoint.
 - Measure compilation/inspection of a near-limit four-instance program alongside MR
   and browser interaction. No device timing or real-provider acceptance is claimed
   by the PC tests or the browser replay, and this checkpoint performs no installation.
+
+### Reusable program library (pending headset acceptance)
+
+Publish a saved behaviour with a chosen exported function from Reusable modules.
+Confirm the completed receipt, search by its name, inspect its exact content ID and
+import it into a second behaviour with explicit signal wires and object access.
+Apply must not start it. Run the caller, publish a changed source as a second version,
+and confirm the caller keeps its original values. Explicitly replace its pin; an
+incompatible export/signature must leave the draft intact. Remove a library copy,
+restart the app, and verify saved callers still run their embedded definitions.
+Confirm damaged entries show an individual diagnostic and other entries remain usable.
+Check readable labels, comfortable scrolling, controller/hand input and operation
+status on device. PC replay and native tests do not replace this acceptance.

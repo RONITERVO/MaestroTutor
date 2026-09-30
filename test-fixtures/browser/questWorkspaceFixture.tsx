@@ -20,6 +20,7 @@ import recipeCreationProgram from './recipeCreationProgram.json';
 import recipeCreationResult from './recipeCreationResult.json';
 import {capabilityDefinition,validateCapabilityArguments,capabilityResources} from '../../shared/capabilities';
 import {behaviourCatalog} from '../../shared/behaviourCatalog';
+import {validCatalogView} from '../../shared/roomCatalog';
 import nativeRules from './ruleBookState.json';
 import {validRuleView,type RuleView} from '../../src/core-sdk/room/rules';
 import '../../src/app/index.css';
@@ -56,6 +57,13 @@ if(new URLSearchParams(location.search).has('structured')){
  Object.assign(window,{maestroWorkspaceRulesEvidence:(rules:unknown)=>{if(!validRuleView(rules))throw new Error('Invalid native program observation');state={...state,rules:JSON.parse(JSON.stringify(rules)),visible:true,workspaceView:'rules'};}});
 }
 
+let moduleEvidence:Record<string,RoomAgentState>|null=null;
+if(new URLSearchParams(location.search).has('moduleLibrary'))Object.assign(window,{maestroModuleLibraryEvidence:(evidence:Record<string,RoomAgentState>)=>{
+ for(const key of ['published','search','inspected','running','removed'])if(!evidence[key]||!validRuleView(evidence[key].rules))throw new Error('Native module evidence is missing');
+ if(!validCatalogView(evidence.search.catalog)||!validCatalogView(evidence.inspected.catalog))throw new Error('Invalid module catalog evidence');
+ moduleEvidence=JSON.parse(JSON.stringify(evidence));state={...JSON.parse(JSON.stringify(evidence.published)),revision:state.revision+1,ack:0,visible:true,workspaceView:'rules'};
+}});
+
 const prop=simpleProgramSteps(nativeRules.selected.program)?.[0]?.propId;
 if(prop)state.objects.push({id:prop,objectRevision:4,name:'Practice ball',kind:'Ball',position:{x:.3,y:.8,z:.8},scale:1,color:white,animated:false});
 const undo:typeof recipe[]=[],redo:typeof recipe[]=[];
@@ -74,7 +82,9 @@ setInterval(()=>{
   for(const command of request.commands){
    if(command.action==='execution'&&command.execution){
     const input=command.execution;
-    if(input.operation==='recover'&&recovering&&input.recoveryId===historyRecovery.error.execution.recovery.id){state.execution=copy(historyRecovery.success.execution);state.status=historyRecovery.success.status;}
+    if(moduleEvidence&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(moduleEvidence.published.execution?.selected?.call)){
+     state.execution=copy(moduleEvidence.published.execution);state.status='Recorded native publication; browser acknowledgement is simulated';
+    }else if(input.operation==='recover'&&recovering&&input.recoveryId===historyRecovery.error.execution.recovery.id){state.execution=copy(historyRecovery.success.execution);state.status=historyRecovery.success.status;}
     else if(input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeExecutions.running.execution.selected.call)){
      state.execution=copy(nativeExecutions.running.execution) as RoomAgentState['execution'];state.status='Replayed native running observation';
     }else if(input.operation==='cancel'&&input.runId===nativeExecutions.running.execution.selected.id){
@@ -82,6 +92,11 @@ setInterval(()=>{
     }else {state.ok=false;state.status='This browser fixture only replays the recorded native call. It does not execute actions.';}
    }else if(command.action==='catalog'&&command.catalog){
     const query=command.catalog;
+    if(moduleEvidence&&query.operation!=='check'&&query.category==='modules'){
+     if(query.operation==='search')state.catalog=copy(moduleEvidence.search.catalog);
+     else {const view=moduleEvidence.inspected.catalog;state.catalog=view?.operation==='inspect'&&query.capability===view.capability?copy(view):{operation:'inspect',category:'modules',capability:query.capability,version:query.version,definition:null,revision:1,ready:true,pending:false,status:'Not present in recorded evidence'};}
+     continue;
+    }
     if(query.operation!=='check'&&query.category&&query.category!=='actions'){state.ok=false;state.status='This older browser fixture supports action discovery only.';continue;}
     if(query.operation==='search'){
      const terms=query.query.toLowerCase().trim().split(/ +/).filter(Boolean);

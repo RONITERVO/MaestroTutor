@@ -40,7 +40,8 @@ export function requireRoomCapabilities(commands:{action:string;rule?:unknown;ex
     Object.values(value).forEach(x=>needs(x,features));
   };
   for(const command of commands) {
-    if(command.action==='catalog'&&record(command.catalog)&&command.catalog.category!==undefined&&!scene.capabilities?.includes('catalogVocabulary.v1'))throw new Error('Update the native app to discover events and facts (catalogVocabulary.v1).');
+    if(command.action==='catalog'&&record(command.catalog)&&command.catalog.category==='modules'&&!scene.capabilities?.includes('moduleLibrary.v1'))throw new Error('Update the native app to browse reusable modules (moduleLibrary.v1).');
+    if(command.action==='catalog'&&record(command.catalog)&&command.catalog.category!==undefined&&command.catalog.category!=='modules'&&!scene.capabilities?.includes('catalogVocabulary.v1'))throw new Error('Update the native app to discover events and facts (catalogVocabulary.v1).');
     if(command.action==='execution'&&record(command.execution)&&command.execution.operation==='recover'&&!scene.capabilities?.includes('actionRecovery.v1'))throw new Error('Update the native app to recover action history.');
     if(command.action==='rules'&&record(command.rule)&&Array.isArray(command.rule.edits)&&command.rule.edits.some(e=>record(e)&&record(e.sequence)&&typeof e.sequence.program==='string'&&hasEdit(JSON.parse(e.sequence.program)))&&!scene.capabilities?.includes('objectEdits.v1'))
       throw new Error('Update the native app to edit objects in programs.');

@@ -509,6 +509,49 @@ namespace Maestro.Quest.Tests
             ray.selectInput = new XRInputButtonReader { inputSourceMode = XRInputButtonReader.InputSourceMode.ManualValue,manualPerformed = true,manualValue = 1 };
             hand.SetActive(true); return ray;
         }
+        [UnityTest] public IEnumerator ModuleLibraryPublishesInspectsAndRemovesWithoutChangingPinnedRuns()
+        {
+            for(int i=0;i<120&&!workshop.Modules.Ready;i++)yield return null;
+            Assert.That(workshop.Modules.Ready,Is.True);
+            var executor=new RoomAgentExecutor(editor);var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);
+            bool Rule(RuleRequest rule,out string error)=>executor.Execute(new RoomAgentRequest {version=2,commands=new[]{new RoomAgentCommand {action="rules",rule=rule}}},out error,out _);
+            bool Call(string id,JObject args,out string error)=>executor.Execute(new RoomAgentRequest {version=2,conditions=Array.Empty<RoomObjectCondition>(),commands=new[]{new RoomAgentCommand {action="execution",execution=new JObject {["operation"]="start",["runId"]=runtime.Scheduler.Receipts.NextId,["call"]=new JObject {["id"]=id,["version"]=1,["arguments"]=args}}}}},out error,out _);
+            bool Query(JObject query,out string error)=>executor.Execute(new RoomAgentRequest {version=2,commands=new[]{new RoomAgentCommand {action="catalog",catalog=query}}},out error,out _);
+            void Evidence(string phase){string output=Environment.GetEnvironmentVariable("MAESTRO_LIBRARY_EVIDENCE");if(string.IsNullOrEmpty(output))return;Directory.CreateDirectory(output);var state=observer.Observe();state.rules=workshop.Observe(true);state.catalog=executor.Catalog.Observe();state.execution=executor.Executions.Observe();state.visible=true;state.workspaceView="rules";File.WriteAllText(Path.Combine(output,phase+".json"),RoomAgentWire.Serialize(state));}
+            var source=workshop.Selected;source.name="Remember amounts";source.repeat=false;source.program=File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-declarations.json"));
+            Assert.That(Rule(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="save",sequence=source}}},out var error),Is.True,error);
+            var args=new JObject {["sequenceId"]=source.id,["rulesRevision"]=workshop.Revision,["name"]="Remember amounts",["exports"]=new JArray("remember")};
+            Assert.That(Call("program.module.publish",args,out error),Is.True,error);
+            for(int i=0;i<120&&(string)executor.Executions.Observe()["selected"]?["phase"]!="completed";i++)yield return null;
+            var receipt=executor.Executions.Observe()["selected"];Assert.That((string)receipt["phase"],Is.EqualTo("completed"),receipt.ToString());string hash=(string)receipt["output"]["hash"];
+            Assert.That(runtime.Scheduler.RunningCount,Is.Zero);Evidence("published");
+            Assert.That(Query(JObject.Parse(@"{'operation':'search','category':'modules','query':'remember','offset':0}"),out error),Is.True,error);
+            Assert.That((int)executor.Catalog.Observe()["total"],Is.EqualTo(1));Evidence("search");
+            var inspect=new JObject {["operation"]="inspect",["category"]="modules",["capability"]=hash,["version"]=1};
+            Assert.That(Query(inspect,out error),Is.True,error);var module=(JObject)executor.Catalog.Observe()["definition"];Evidence("inspected");
+            var changed=JObject.Parse(source.program);changed["state"][0]["initial"]=10;source.program=changed.ToString();
+            Assert.That(Rule(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="save",sequence=source}}},out error),Is.True,error);
+            Assert.That(Call("program.module.publish",args,out error),Is.False,"Stale saved revision cannot publish a different source");
+            args["rulesRevision"]=workshop.Revision;Assert.That(Call("program.module.publish",args,out error),Is.True,error);
+            for(int i=0;i<120&&(string)executor.Executions.Observe()["selected"]?["phase"]!="completed";i++)yield return null;
+            receipt=executor.Executions.Observe()["selected"];Assert.That((string)receipt["phase"],Is.EqualTo("completed"));string second=(string)receipt["output"]["hash"];Assert.That(second,Is.Not.EqualTo(hash));Assert.That(workshop.Modules.Count,Is.EqualTo(2));
+            var caller=JObject.Parse(@"{'version':3,'moduleVersion':1,'dataVersion':1,'entry':'main','resources':[],'state':[],'events':[{'name':'user.request','type':'number'},{'name':'user.total','type':'number'}],'functions':[{'name':'main','returns':'void','parameters':[],'locals':[],'body':[{'id':'first','op':'call','module':'counter','function':'remember','args':[{'value':2}]},{'id':'second','op':'call','module':'counter','function':'remember','args':[{'value':4}]},{'id':'wait','op':'sleep','seconds':{'value':30}}]}]}");
+            caller["imports"]=new JArray(new JObject {["alias"]="counter",["hash"]=hash,["module"]=module.DeepClone(),["signals"]=new JObject {["user.add"]="user.request",["user.stored"]="user.total"}});
+            Assert.That(Rule(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="save",reference="caller",sequence=new RuleSequence {id="",name="Use pinned counter",program=caller.ToString()}}}},out error),Is.True,error);
+            string callerId=workshop.Selected.id;Assert.That(Rule(new RuleRequest {action="play",revision=workshop.Revision,target=callerId},out error),Is.True,error);
+            for(int i=0;i<60&&!runtime.Scheduler.ObserveRuns().Any(r=>r.nodeId=="wait");i++)yield return null;
+            var run=runtime.Scheduler.ObserveRuns().Single();Assert.That(run.state.Single(x=>x.name=="counter.total").value,Is.EqualTo("6"),"New publication must not replace the pinned initial state");Evidence("running");
+            string saved=workshop.Selected.program;Assert.That(Call("program.module.remove",new JObject {["hash"]=hash},out error),Is.True,error);
+            for(int i=0;i<120&&(string)executor.Executions.Observe()["selected"]?["phase"]!="completed";i++)yield return null;
+            Assert.That((string)executor.Executions.Observe()["selected"]["phase"],Is.EqualTo("completed"));Assert.That(workshop.Modules.Inspect(hash),Is.Null);
+            Assert.That(runtime.Scheduler.ObserveRuns().Single().id,Is.EqualTo(run.id));Assert.That(workshop.Selected.program,Is.EqualTo(saved));Assert.That(executor.Catalog.Observe()["definition"].Type,Is.EqualTo(JTokenType.Null),"Cached inspection must refresh after deletion");Evidence("removed");
+            workshop.SendMessage("OnApplicationPause",true);var restored=new RuleStorage(directory).Load(out error);Assert.That(restored.sequences.Single(x=>x.id==callerId).program,Is.EqualTo(saved));
+            var library=new Maestro.Quest.Programs.ProgramModuleLibrary(directory);library.Flush();Assert.That(library.Count,Is.EqualTo(1));Assert.That(library.Inspect(second),Is.Not.Null);Assert.That(library.Inspect(hash),Is.Null);
+            workshop.SendMessage("OnApplicationPause",false);Assert.That(Rule(new RuleRequest {action="play",revision=workshop.Revision,target=callerId},out error),Is.True,error);
+            for(int i=0;i<60&&!runtime.Scheduler.ObserveRuns().Any(r=>r.nodeId=="wait");i++)yield return null;
+            Assert.That(runtime.Scheduler.ObserveRuns().Single().state.Single(x=>x.name=="counter.total").value,Is.EqualTo("6"));
+        }
+
         [UnityTest] public IEnumerator PinnedModulesRunSaveRejectTamperingAndReloadThroughTheSharedExecutor()
         {
             string source=File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-modules-nested.json"));
