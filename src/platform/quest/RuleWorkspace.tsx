@@ -5,6 +5,7 @@ import {capabilityResources} from '../../../shared/capabilities';
 import type {OpenCatalog} from './CapabilityBrowser';
 import {parseProgram,sequenceProgram,simpleProgramSteps,withSimpleProgramSteps} from '../../core-sdk/room/programs';
 import {useCallback,useEffect,useState,useSyncExternalStore} from 'react';
+import {RoomOwnershipDetails} from './RoomOwnershipDetails';
 import type {RoomAgentState} from '../../core-sdk/room/roomAgent';
 import {copySequence,newRuleStep,validSequence,ruleActions,ruleGestures,ruleEvents,ruleConditions,rulePolicies,ruleMounts,type RuleSequence,type RuleEdit,type RuleRequest,type RuleStep} from '../../core-sdk/room/rules';
 import type {RoomAgentClient} from './roomAgentBridge';
@@ -44,6 +45,7 @@ export function RuleWorkspace({client,onCatalog}:{client:RoomAgentClient;onCatal
    <div className="room-workspace-heading"><div><span className="room-eyebrow">WHEN THIS HAPPENS</span><h1>Behaviours</h1></div><button disabled={pending} onClick={()=>void exit(false)}>{dirty?'Discard & return':'Back to chat'}</button></div>
    <p className="room-workspace-intro">Build actions together. The agent, these blocks and your physical buttons use the same behaviours.</p>
    <div className="room-workspace-actions">{onCatalog&&<button disabled={pending||programEditing||!state.capabilities?.includes('catalog.v1')} onClick={browse}>Action catalog</button>}<button disabled={pending||dirty||programEditing} onClick={()=>void exit(true)}>Objects</button><button disabled={pending||dirty||rules.readOnly||programEditing||!supported} onClick={()=>void create()}>+ Behaviour</button><button disabled={pending||dirty||!rules.canUndo} onClick={()=>void send({action:'undo',revision:rules.revision})}>Undo</button><button disabled={pending||dirty||!rules.canRedo} onClick={()=>void send({action:'redo',revision:rules.revision})}>Redo</button></div>
+   <RoomOwnershipDetails state={state}/>
    <div className="room-object-list" aria-label="Behaviours">{rules.sequences.map(value=><button key={value.id} disabled={pending||dirty||programEditing} aria-pressed={sequence?.id===value.id} onClick={()=>void send({action:'inspect',target:value.id})}><span>{value.name}</span><small>{value.steps} {value.program?'blocks':'steps'}{value.repeat?' · Repeats':''}{value.error?' · Unavailable':''}{rules.running.some(run=>run.sequenceId===value.id)?' · Running':''}</small></button>)}</div>
    {sequence&&<>
     <h2 className="rule-section-title">Triggers</h2>

@@ -1,8 +1,38 @@
-# Quest 3 development verification — 2026-09-27
+# Quest 3 development verification — 2026-09-30
 
 This is development evidence, not a release acceptance report.
 
-## Latest: shared automatic-animation preferences — not installed
+## Shared ownership: headset acceptance pending
+
+The latest PC package and exact verification are recorded in draft PR #248 and
+`.quest-evidence/room-ownership/verification.json`. It is not installed. Earlier
+APK entries below describe their historical checkpoints, not the latest build.
+See [the ownership policy](QUEST_ROOM_OWNERSHIP.md).
+
+When device work resumes, check these on Quest 3 with the same room and assets:
+
+1. Play a behaviour, then grip its target. The animated item should stay at the
+   grasped position. Hold it with two hands, release one, then the other; it must
+   remain claimed until the last release and must not restart afterwards.
+2. Record movement while gripping and moving an item. Both controller and hand
+   interaction should continue the take. Save and replay the actual movement.
+3. Run walking and an upper-body gesture together. Direct Look/Follow or the
+   assigned avatar stick should take over movement while the arms continue.
+   Invalid tracking or unavailable navigation must not stop valid current work.
+4. Pose/preview Maestro, then use an explicit movement control. Verify deliberate
+   takeover; a program command must not override authoring or a held joint.
+5. Lose focus or open system UI. Previews/programs stop, props use the established
+   Stop/return behavior, and focus return alone does not replay them. Tutor-state
+   animation needs its normal current-state eligibility.
+6. Open the optional Workshop/Behaviours view and **In control now**. Names and
+   target/channel descriptions must match physical ownership, update on release,
+   remain readable and support hand/controller tapping. Ask the original chat
+   agent about a blocked action and check its answer against that same evidence.
+
+These checks remain unverified on hardware. No device access or data reset was
+performed while the device hold is active.
+
+## Earlier: shared automatic-animation preferences — not installed
 
 APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-avatar-activities-9210BA28.apk`.
 SHA256: `9210BA286C643711BC0132EA46948B025F194812779F8E76CF2B2F07230BED1B`.

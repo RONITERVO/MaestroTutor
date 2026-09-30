@@ -3,6 +3,7 @@
 using System.Collections.Generic;
 using Maestro.Quest.Avatar;
 using Maestro.Quest.Rules;
+using Maestro.Quest.Interaction;
 using Newtonsoft.Json.Linq;
 using static Maestro.Quest.Programs.CapabilitySchema;
 namespace Maestro.Quest.Programs
@@ -27,7 +28,7 @@ namespace Maestro.Quest.Programs
             readonly AvatarSpatialMotion spatial;readonly string runId;readonly float seconds;bool stopped;
             public SpatialOperation(AvatarSpatialMotion spatial,string runId,float seconds) {this.spatial=spatial;this.runId=runId;this.seconds=seconds;}
             public override float Seconds=>seconds;
-            public bool Begin(AvatarSpatialMode mode,out string error)=>spatial.Begin(runId,mode,out error);
+            public bool Begin(AvatarSpatialMode mode,out string error)=>spatial.Begin(runId,mode,out error,RoomActorRole.Program);
             public override RuleActionState State(out string error) {
                 error=null;if(spatial&&spatial.OwnedBy(runId))return RuleActionState.Ready;
                 error=spatial?spatial.Status:"Maestro movement was removed";return RuleActionState.Failed;

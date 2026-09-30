@@ -123,7 +123,6 @@ namespace Maestro.Quest.Interaction
             {
                 if (!driving)
                 {
-                    rules?.Scheduler.StopConflicting(new RuleStep {action=RuleActionKind.FollowUser,targetId="maestro"},true);
                     driving=avatar.Begin(Owner,AvatarSpatialMode.Manual,out var error);
                     if (!driving) { avatarGate.Reset(); Say(error); }
                 }

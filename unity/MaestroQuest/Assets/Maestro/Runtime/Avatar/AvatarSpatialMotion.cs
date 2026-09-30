@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 using System;
 using Maestro.Quest.Creation;
+using Maestro.Quest.Programs;
 using Maestro.Quest.Interaction;
 using UnityEngine;
 using UnityEngine.AI;
@@ -22,6 +23,7 @@ namespace Maestro.Quest.Avatar
         RoomNavigation navigation;
         Func<bool> tracked;
         string owner;
+        RoomOwnership.Lease ownershipLease;
         Vector3 manualDirection;
         float manualAt;
         public bool OwnedBy(string identity) => owner == identity;
@@ -49,26 +51,42 @@ namespace Maestro.Quest.Avatar
             room.Restoring += Stop; avatar.ModelChanged += ModelChanged;
             editor.Changed += ReadPreferences; ReadPreferences();
         }
-        public bool CanBegin(AvatarSpatialMode value, out string error)
+        public bool CanBegin(AvatarSpatialMode value, out string error,bool allowAuthoringTakeover=false)
         {
             error = null;
             if (paused || !focused || !room || !room.Viewer || !tracked()) error = "Head tracking is unavailable; try again when tracking returns";
             else if (!avatar || !avatar.PoseRig || avatar.ModelBusy) error = "Wait for Maestro to finish loading";
-            else if (item.Grab.isSelected || avatar.PoseRig.IsHolding || animations.ControlsTarget("maestro")) error = "Release Maestro and stop posing or recording first";
+            else if (item.Grab.isSelected || avatar.PoseRig.IsHolding || !allowAuthoringTakeover&&animations.ControlsTarget("maestro")) error = "Release Maestro and stop posing or recording first";
             else if (value != AvatarSpatialMode.Look && (!editor.PhysicsWorld || !editor.PhysicsWorld.Running)) error = "Load the room, check its alignment, then Start physics before walking";
             return error == null;
         }
-        public bool Begin(string identity, AvatarSpatialMode value, out string error)
+        public bool Begin(string identity, AvatarSpatialMode value, out string error,RoomActorRole role=RoomActorRole.Control)
         {
             if (string.IsNullOrEmpty(identity)) { error = "Movement needs an action owner"; return false; }
-            if (!CanBegin(value,out error)) { Say(error); return false; }
+            if (!CanBegin(value,out error,allowAuthoringTakeover:role==RoomActorRole.Control)) { Say(error); return false; }
             if (value != AvatarSpatialMode.Look)
             {
                 float scale = transform.lossyScale.y;
                 if (!navigation || !navigation.Prepare(.25f*scale,1.7f*scale,out error)) { Say(error ?? "Room navigation is unavailable"); return false; }
                 if (!navigation.Sample(transform.position,.25f,out _)) { error = "Place Maestro's feet near the scanned floor, then try walking"; Say(error); return false; }
             }
-            Stop(); manualDirection=Vector3.zero; manualAt=Time.unscaledTime; owner = identity; mode = value; yaw = pitch = 0; corners = Array.Empty<Vector3>(); corner = 0; nextPath = 0;
+            var claims=value==AvatarSpatialMode.Look?new[]{new BehaviourCatalog.Claim("maestro","gaze")}:
+                new[]{new BehaviourCatalog.Claim("maestro","locomotion"),new BehaviourCatalog.Claim("maestro","gaze")};
+            // Restarting our own direct command is not a borrowed scheduler lease.
+            bool ownRestart=ownershipLease?.Held==true&&ownershipLease.Id==identity;
+            if(ownRestart&&!editor.Ownership.CanAcquire(identity,role,claims,out error,replaceControl:role==RoomActorRole.Control)){Say(error);return false;}
+            if(ownRestart)Stop();
+            bool borrowed=editor.Ownership.Covers(identity,claims);
+            RoomOwnership.Lease acquired=null;
+            if(!borrowed&&!editor.Ownership.TryAcquire(identity,"Maestro "+value.ToString().ToLowerInvariant(),role,claims,
+                _=>Stop(),out acquired,out error,preservePlacement:true,replaceControl:role==RoomActorRole.Control)) {Say(error);return false;}
+            // A successful manual takeover also retires older queued target work.
+            // Do this only after readiness and acquisition so a refused input is inert.
+            if(role==RoomActorRole.Control)editor.GetComponent<Maestro.Quest.Rules.RoomRules>()?.Scheduler.CancelQueuedConflicting(claims);
+            // An acquired takeover already stopped an older actor via the arbiter.
+            // A delegated module borrows its scheduler's reservation.
+            Stop();ownershipLease=acquired;
+            manualDirection=Vector3.zero; manualAt=Time.unscaledTime; owner = identity; mode = value; yaw = pitch = 0; corners = Array.Empty<Vector3>(); corner = 0; nextPath = 0;
             avatar.SetEditing(true,preserveUpperBody:true); avatar.SpatialWalk(0);
             Say(value == AvatarSpatialMode.Manual ? "Maestro stick active — center it to stop" : value == AvatarSpatialMode.Follow ? "Following you — Stop or grip Maestro to end" : "Looking at you — Stop or pose Maestro to end"); return true;
         }
@@ -76,7 +94,7 @@ namespace Maestro.Quest.Avatar
         public void Stop()
         {
             if (!Active) return;
-            owner = null; corners = Array.Empty<Vector3>();
+            owner = null; corners = Array.Empty<Vector3>();ownershipLease?.Dispose();ownershipLease=null;
             if (avatar) { avatar.SpatialWalk(0); avatar.SetEditing(false,preserveUpperBody:true); }
             if (editor) editor.RememberPlacement("maestro");
             Say("Maestro stopped — placement saved");

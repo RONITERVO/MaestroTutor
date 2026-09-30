@@ -106,23 +106,25 @@ namespace Maestro.Quest.Creation
             var motion=editor.Find("maestro")?.GetComponent<AvatarSpatialMotion>();
             status="Maestro movement is unavailable";if (!motion || !new[] { "look","follow","stop" }.Contains(operation)) return false;
             var authoring=editor.GetComponent<AnimationWorkshop>();
-            if(authoring && authoring.ControlsTarget("maestro"))authoring.Stop();
-            editor.GetComponent<RoomRules>()?.Scheduler.StopConflicting(new RuleStep {action=RuleActionKind.FollowUser,targetId="maestro"},true);
-            if (operation == "stop") { motion.Stop();status="Maestro movement and preview stopped";return true; }
+            if (operation == "stop") {
+                if(authoring && authoring.ControlsTarget("maestro"))authoring.Stop();
+                editor.GetComponent<RoomRules>()?.Scheduler.StopConflicting(new RuleStep {action=RuleActionKind.FollowUser,targetId="maestro"},true);
+                motion.Stop();status="Maestro movement and preview stopped";return true;
+            }
             bool started=motion.Begin("direct",operation == "look" ? AvatarSpatialMode.Look : AvatarSpatialMode.Follow,out status);
             if (started) status="Maestro " + operation + " started; observe live movement status";
             return started;
         }
         public static string[] Capabilities(RoomEditor editor) => Actions.Where(action =>
             action != "physicsRun" || editor.PhysicsWorld).Where(action =>
-            action != "avatarMotion" || editor.Find("maestro")?.GetComponent<AvatarSpatialMotion>()).Where(action => action != "avatarWalk" || editor.Find("maestro")?.GetComponent<MaestroAvatar>()).Select(action => action+".v1").Concat(new[] {"motions.v1","avatarActivities.v1","catalog.v1"}).Concat(editor.GetComponent<RuleWorkshop>() ? new[] {"behaviourPrograms.v3","eventPrograms.v1","execution.v1","executionReceipts.v1","actionResults.v1","recipeCreation.v1", "objectEdits.v1","unavailablePrograms.v1","actionRecovery.v1","temporaryRoom.v1"} : Array.Empty<string>()).ToArray();
+            action != "avatarMotion" || editor.Find("maestro")?.GetComponent<AvatarSpatialMotion>()).Where(action => action != "avatarWalk" || editor.Find("maestro")?.GetComponent<MaestroAvatar>()).Select(action => action+".v1").Concat(new[] {"motions.v1","avatarActivities.v1","catalog.v1","roomOwnership.v1"}).Concat(editor.GetComponent<RuleWorkshop>() ? new[] {"behaviourPrograms.v3","eventPrograms.v1","execution.v1","executionReceipts.v1","actionResults.v1","recipeCreation.v1", "objectEdits.v1","unavailablePrograms.v1","actionRecovery.v1","temporaryRoom.v1"} : Array.Empty<string>()).ToArray();
         public static RoomPhysicsObservation ObservePhysics(RoomEditor editor) => !editor.PhysicsWorld ? null : new() {
             ready=editor.PhysicsWorld.SurfacesReady,running=editor.PhysicsWorld.Running,status=editor.PhysicsWorld.Status
         };
         public static AvatarMovementObservation ObserveAvatar(RoomEditor editor)
         {
             var motion=editor.Find("maestro")?.GetComponent<AvatarSpatialMotion>();if (!motion) return null;
-            bool look=motion.CanBegin(AvatarSpatialMode.Look,out var lookReason),follow=motion.CanBegin(AvatarSpatialMode.Follow,out var followReason);
+            bool look=motion.CanBegin(AvatarSpatialMode.Look,out var lookReason,allowAuthoringTakeover:true),follow=motion.CanBegin(AvatarSpatialMode.Follow,out var followReason,allowAuthoringTakeover:true);
             return new() { active=motion.Active,mode=motion.Active ? motion.Mode.ToString().ToLowerInvariant() : "stopped",status=motion.Status,
                 canLook=look,canFollow=follow,lookReason=lookReason ?? "",followReason=followReason ?? "",distance=motion.Distance,speed=motion.Speed };
         }

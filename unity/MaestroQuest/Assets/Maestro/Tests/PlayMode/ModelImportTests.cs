@@ -304,6 +304,8 @@ namespace Maestro.Quest.Tests
             play = imports.PlayLibraryAsync(); wasPending = !play.IsCompleted; imports.SendMessage("OnApplicationFocus",false);
             yield return new WaitUntil(() => play.IsCompleted); if (wasPending) Assert.That(play.Result,Is.False,"Focus loss during loading must cancel playback");
             Assert.That(avatar.IsImportedClipPlaying,Is.False);
+            play = imports.PlayLibraryAsync(); yield return new WaitUntil(() => play.IsCompleted); Assert.That(play.Result,Is.False,"Lost focus cannot start a preview");
+            imports.SendMessage("OnApplicationFocus",true);
             play = imports.PlayLibraryAsync(); yield return new WaitUntil(() => play.IsCompleted); Assert.That(play.Result,Is.True,imports.Status);
             Assert.That(avatar.IsImportedClipPlaying,Is.True); Assert.That(animations.IsImportedPreview,Is.True);
             var head = avatar.PoseRig.Bone(PoseJoint.Head); var hand = avatar.PoseRig.Bone(PoseJoint.LeftHand);

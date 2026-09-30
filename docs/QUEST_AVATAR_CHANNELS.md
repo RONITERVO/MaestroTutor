@@ -9,15 +9,15 @@ foot planting, and Quest performance/comfort acceptance remain future work.
 
 | Capability | Target ownership |
 | --- | --- |
-| avatar.gesture.upperBody | upperBody: spine, chest and both arms/hands |
+| animation.play with channel upperBody and gesture source | upperBody: spine, chest and both arms/hands |
 | avatar.look.user | gaze |
 | avatar.follow.user | locomotion and gaze |
 | time.wait | none |
 | Other animation/gesture actions | wholeTarget |
 
-The new upper-body action takes target `maestro`, seconds 0.1–30 and gesture
+The consolidated animation.play upper-body option takes target `maestro`, seconds 0.1–30 and gesture
 `greeting`, `pointing`, `listening`, `speaking` or `idle`. Walk and props are
-deliberately absent from its schema. The existing avatar.gesture.play contract
+deliberately absent from its schema. The animation.play wholeTarget option
 keeps its full-body behavior, including Walk and prop handling.
 
 One-off calls and each active version-3 invocation acquire catalog channel claims.
@@ -26,7 +26,7 @@ is wholeTarget. Prop claims always cover the entire prop. Waiting event programs
 own nothing. Version-2 saved programs retain whole-object reservations across the
 entire program; use event programs for concurrent persistent behaviors.
 
-Catalog preflight and actual Start use the same scheduler conflict check and native readiness handlers. Direct tool/controller movement is also protected from conflicting program starts. A busy one-off or
+Catalog preflight and actual Start use the common RoomOwnership service and native readiness handlers. See QUEST_ROOM_OWNERSHIP.md for native role priorities, cooperative recording/grips and cancellation policy. Direct tool/controller movement is also protected from conflicting program starts. A busy one-off or
 v3 invocation fails without preemption or hidden queuing. The original app owns
 the provider; agent, optional book controls and native handlers share these calls.
 No new provider client or per-combination agent tool is introduced.

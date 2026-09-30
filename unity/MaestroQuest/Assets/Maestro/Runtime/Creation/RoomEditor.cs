@@ -20,6 +20,9 @@ namespace Maestro.Quest.Creation
         RoomInteraction room;
         RoomJournal journal;
         RoomStorage storage;
+        public RoomOwnership Ownership {get;}=new();
+        readonly Dictionary<string,RoomOwnership.Lease> handOwners=new();
+        bool ownershipPaused,ownershipFocused=true;
         string selected;
         bool applying, dirty;
         float saveAt;
@@ -62,6 +65,7 @@ namespace Maestro.Quest.Creation
             ActivityProfiles=new AvatarActivityProfiles(directory);
             var loaded = storage.Load(out var message);
             journal = new RoomJournal(loaded ?? StarterDocument(book, maestro));
+            maestro.GetComponent<MaestroAvatar>()?.ConfigureOwnership(Ownership,"maestro");
             Reconcile();
             room.Restoring += BeforeRestore; room.Restored += AfterRestore;
             if (message != null) SetStatus(message);
@@ -81,10 +85,18 @@ namespace Maestro.Quest.Creation
             objects.Add(id,item); identities.Add(item,id);
             item.GrabStarted += GrabStarted; item.GrabFinished += GrabFinished;
         }
-        void GrabStarted(RoomItem item) { if (!applying) { ItemGrabbed?.Invoke(item); Select(item); } }
+        void OwnHeld(RoomItem item) {
+            var id=Identity(item);if(id==null||Ownership.Suspended)return;
+            if(handOwners.TryGetValue(id,out var held)&&held.Held)return;
+            if(Ownership.TryAcquire("hand:"+id,"Your grip",RoomActorRole.Grab,new[]{new Maestro.Quest.Programs.BehaviourCatalog.Claim(id,"wholeTarget")},
+                null,out var lease,out var error,preservePlacement:true))handOwners[id]=lease;else SetStatus(error);
+        }
+        void GrabStarted(RoomItem item) { if (!applying) { OwnHeld(item);ItemGrabbed?.Invoke(item); Select(item); } }
         void GrabFinished(RoomItem item)
         {
-            if (applying || !identities.TryGetValue(item,out var id)) return;
+            if (!identities.TryGetValue(item,out var id)) return;
+            if(handOwners.Remove(id,out var lease))lease.Dispose();
+            if(applying)return;
             var before = journal.Read(id); if (before == null) return;
             var after = Pose(before, item.transform);
             if (!Commit(new[] { after }, Array.Empty<string>(), "Placed — saving", true)) ApplyPose(item, journal.Read(id));
@@ -456,12 +468,16 @@ namespace Maestro.Quest.Creation
         }
         public void ReportStatus(string value)=>SetStatus(value);
         void SetStatus(string value) { Status = value; Changed?.Invoke(); }
-        void OnApplicationPause(bool paused) { if (paused) Flush(); }
-        void OnApplicationFocus(bool focused) { if (!focused) Flush(); }
+        void RefreshOwnership() {
+            Ownership.Suspend(ownershipPaused||!ownershipFocused);
+            if(!Ownership.Suspended)foreach(var item in objects.Values)if(item&&item.Grab.isSelected)OwnHeld(item);
+        }
+        void OnApplicationPause(bool paused) { ownershipPaused=paused;RefreshOwnership();if (paused) Flush(); }
+        void OnApplicationFocus(bool focused) { ownershipFocused=focused;RefreshOwnership();if (!focused) Flush(); }
         void OnApplicationQuit() => Flush();
         void OnDestroy()
         {
-            Flush(); Motions?.Dispose();
+            Ownership.Suspend(true);Flush(); Motions?.Dispose();
             if (room) { room.Restoring -= BeforeRestore; room.Restored -= AfterRestore; }
             foreach (var item in objects.Values) if (item) { item.GrabStarted -= GrabStarted; item.GrabFinished -= GrabFinished; }
         }

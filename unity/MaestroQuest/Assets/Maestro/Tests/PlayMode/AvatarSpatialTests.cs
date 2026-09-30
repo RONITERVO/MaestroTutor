@@ -140,6 +140,45 @@ namespace Maestro.Quest.Tests
             Assert.That(RoomControls.AvatarMotion(editor,"stop",out _),Is.True);Assert.That(avatar.UpperBodyOwnedBy(waving),Is.True);
             scheduler.StopAll();
         }
+        [UnityTest] public IEnumerator DirectTakeoverPreservesArmsAndInvalidOrRepeatedCommandsDoNotLeakOwnership()
+        {
+            Surface(new Vector3(0,-.1f,0),new Vector3(12,.2f,12));Tutor();Ready();yield return null;
+            Assert.That(System.Linq.Enumerable.Any(editor.Ownership.Observe().owners,x=>x.role=="ambient"),Is.True);
+            var actions=new RoomRuleActions(editor,authoring);var scheduler=new RuleScheduler(actions);
+            Newtonsoft.Json.Linq.JObject Call(string id)=>new(){["id"]=id,["version"]=1,["arguments"]=new Newtonsoft.Json.Linq.JObject{["target"]="maestro",["seconds"]=10}};
+            var wave=Call("animation.play");wave["arguments"]["source"]=Newtonsoft.Json.Linq.JObject.Parse("{\"kind\":\"gesture\",\"gesture\":\"greeting\"}");wave["arguments"]["channel"]="upperBody";
+            Assert.That(scheduler.Invoke(Call("avatar.follow.user"),0,out var walking,out var error),Is.True,error);
+            Assert.That(scheduler.Invoke(wave,0,out var waving,out error),Is.True,error);
+            tracked=false;Assert.That(motion.Begin("direct",AvatarSpatialMode.Look,out _),Is.False);Assert.That(motion.OwnedBy(walking),Is.True);
+            tracked=true;Assert.That(motion.Begin("direct",AvatarSpatialMode.Look,out error),Is.True,error);
+            Assert.That(avatar.UpperBodyOwnedBy(waving),Is.True);Assert.That(scheduler.RunningCount,Is.EqualTo(1));
+            Assert.That(motion.Begin("direct",AvatarSpatialMode.Follow,out error),Is.True,error);
+            Assert.That(editor.Ownership.Covers("direct",new[]{new Maestro.Quest.Programs.BehaviourCatalog.Claim("maestro","locomotion")}),Is.True);
+            Assert.That(scheduler.Invoke(Call("avatar.look.user"),0,out _,out _),Is.False);
+            editor.SendMessage("OnApplicationFocus",false);Assert.That(motion.Active,Is.False);Assert.That(scheduler.RunningCount,Is.Zero);
+            Assert.That(editor.Ownership.Observe().owners,Is.Empty);
+            editor.SendMessage("OnApplicationFocus",true);yield return null;Assert.That(motion.Active,Is.False);Assert.That(avatar.UpperBodyActive,Is.False);
+            authoring.TogglePose();Assert.That(authoring.IsPosing,Is.True);tracked=false;
+            Assert.That(RoomControls.AvatarMotion(editor,"look",out _),Is.False);Assert.That(authoring.IsPosing,Is.True,"An unavailable control must not cancel authoring");
+            tracked=true;Assert.That(RoomControls.AvatarMotion(editor,"look",out error),Is.True,error);Assert.That(authoring.IsPosing,Is.False);motion.Stop();
+            var evidence=Environment.GetEnvironmentVariable("MAESTRO_OWNERSHIP_EVIDENCE");
+            if(!string.IsNullOrEmpty(evidence)){Directory.CreateDirectory(evidence);File.WriteAllText(Path.Combine(evidence,"native-ownership.json"),JsonUtility.ToJson(editor.Ownership.Observe()));}
+        }
+        [UnityTest] public IEnumerator SuccessfulDirectTakeoverRetiresQueuedMovementButRefusedInputLeavesItIntact()
+        {
+            Surface(new Vector3(0,-.1f,0),new Vector3(12,.2f,12));Tutor();Ready();
+            var workshop=root.AddComponent<RuleWorkshop>();workshop.Initialize(editor,directory);
+            var runtime=root.AddComponent<RoomRules>();runtime.Initialize(workshop,editor,authoring,null,room,null);
+            var program=Maestro.Quest.Programs.BehaviourProgram.FromSteps(new RuleStep{action=RuleActionKind.FollowUser,targetId="maestro",seconds=10});
+            var first=new RuleSequence{id=Guid.NewGuid().ToString("N"),name="Following",program=program};
+            var queued=new RuleSequence{id=Guid.NewGuid().ToString("N"),name="Queued movement",program=program,interruption=RuleInterruption.QueueLatest};
+            runtime.Scheduler.Configure(new RuleDocument{sequences=new[]{first,queued}});
+            Assert.That(runtime.Scheduler.Trigger(first.id,Time.unscaledTime),Is.True,runtime.Scheduler.LastError);
+            Assert.That(runtime.Scheduler.Trigger(queued.id,Time.unscaledTime),Is.True);Assert.That(runtime.Scheduler.QueuedCount,Is.EqualTo(1));
+            tracked=false;Assert.That(RoomControls.AvatarMotion(editor,"look",out _),Is.False);Assert.That(runtime.Scheduler.QueuedCount,Is.EqualTo(1));
+            tracked=true;Assert.That(RoomControls.AvatarMotion(editor,"look",out var error),Is.True,error);Assert.That(runtime.Scheduler.QueuedCount,Is.Zero);
+            motion.Stop();yield return null;Assert.That(runtime.Scheduler.RunningCount,Is.Zero);Assert.That(motion.Active,Is.False,"Old queued movement cannot resume after direct controls end");
+        }
         void CaptureLayer(string path)
         {
             var cameraRoot=new GameObject("Layer verification camera");cameraRoot.transform.SetParent(root.transform,false);
@@ -248,7 +287,7 @@ namespace Maestro.Quest.Tests
             tracked = false; yield return null; Assert.That(motion.Active,Is.False); Assert.That(motion.Begin("lost",AvatarSpatialMode.Look,out _),Is.False);
             tracked = true; Assert.That(motion.Begin("recording",AvatarSpatialMode.Look,out _),Is.True);
             editor.Select(editor.Find("maestro")); authoring.ToggleRecord(); Assert.That(motion.Active,Is.False);
-            Assert.That(motion.Begin("blocked",AvatarSpatialMode.Look,out _),Is.False); authoring.Stop();
+            Assert.That(motion.Begin("blocked",AvatarSpatialMode.Look,out _,RoomActorRole.Program),Is.False,"Program movement cannot override recording"); Assert.That(authoring.IsRecording,Is.True); authoring.Stop();
             Assert.That(motion.Begin("recovery",AvatarSpatialMode.Look,out _),Is.True); room.RestoreInFrontOfViewer(); Assert.That(motion.Active,Is.False);
             Assert.That(motion.Begin("pause",AvatarSpatialMode.Look,out _),Is.True); motion.SendMessage("OnApplicationPause",true); Assert.That(motion.Active,Is.False);
             motion.SendMessage("OnApplicationPause",false); yield return null; Assert.That(motion.Active,Is.False,"Resume never starts movement automatically");

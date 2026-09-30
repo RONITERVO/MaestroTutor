@@ -1,6 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {useEffect,useState,useSyncExternalStore} from 'react';
+import {RoomOwnershipDetails} from './RoomOwnershipDetails';
 import type {RoomAgentState,RoomCommand} from '../../core-sdk/room/roomAgent';
 import {copyRecipe,parseRecipe,rotateBy,type RoomRecipe,type Rotation} from '../../core-sdk/room/recipe';
 import type {RoomAgentClient} from './roomAgentBridge';
@@ -54,6 +55,7 @@ function ObjectsWorkspace({client,onCatalog}:{client:RoomAgentClient;onCatalog:O
    <p className="room-workspace-intro">Explore what Maestro made. Your changes and conversation edit the same objects.</p>
    <div className="room-workspace-actions"><button disabled={pending||!state.capabilities?.includes('catalog.v1')} onClick={()=>onCatalog()}>Action catalog</button>{state.rules&&<button disabled={pending||dirty} onClick={()=>void send([{action:'rules',rule:{action:'inspect'}}])}>Behaviours</button>}<button disabled={pending||dirty} onClick={()=>void create()}>+ Box robot</button><button disabled={pending||dirty||!state.canUndo} onClick={()=>void send([{action:'undo'}])}>Undo</button><button disabled={pending||dirty||!state.canRedo} onClick={()=>void send([{action:'redo'}])}>Redo</button></div>
    <TemporaryRoomControls client={client} disabled={dirty}/>
+   <RoomOwnershipDetails state={state}/>
    <div className="room-object-list" aria-label="Objects">{state.objects.map(object=><button key={object.id} disabled={pending} aria-pressed={draft?.id===object.id} onClick={()=>void select(object.id)}><span>{object.kind==='Assembly'?'◇':object.kind==='Maestro'?'♙':object.kind==='Book'?'▤':'○'} {object.name}</span><small>{object.kind}{object.animated?' · Playing':''}</small></button>)}</div>
    {recipe&&<div className="room-parts-list" aria-label="Parts"><h2>Parts & joints <small>{recipe.parts.length}</small></h2>{recipe.parts.map(node=><button key={node.id} disabled={pending} aria-pressed={part?.id===node.id} onClick={()=>{setPartId(node.id);setKeyIndex(0);void send([{action:'inspect',target:draft!.id,partId:node.id}]);}}><span>{node.id}</span><small>{node.parent?`↳ ${node.parent}`:'Root part'} · {node.shape}</small></button>)}</div>}
   </section>

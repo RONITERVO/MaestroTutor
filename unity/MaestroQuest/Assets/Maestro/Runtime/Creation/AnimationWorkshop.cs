@@ -31,7 +31,14 @@ namespace Maestro.Quest.Creation
         bool importedPreview, walkPreview;
         public event Action<string> Starting;
         public bool ControlsTarget(string id) => controlling && targetId == id;
-        void TakeControl() { Starting?.Invoke(targetId); controlling = true; target?.GetComponent<RigidRoomItem>()?.SetAnimationOwner(this,true); }
+        readonly string ownershipId="authoring:"+Guid.NewGuid().ToString("N");
+        RoomOwnership.Lease ownershipLease;
+        bool TakeControl(bool allowsGrab=false) {
+            if(ownershipLease?.Held!=true&&!editor.Ownership.TryAcquire(ownershipId,"Animation authoring",RoomActorRole.Control,
+                new[]{new Maestro.Quest.Programs.BehaviourCatalog.Claim(targetId,"wholeTarget")},_=>Stop(),out ownershipLease,out var error,replaceControl:true,allowsGrab:allowsGrab)) {Say(error);return false;}
+            if(!ownershipLease.SetAllowsGrab(allowsGrab)){Say("Release the object before changing animation controls");return false;}
+            controlling=true;Starting?.Invoke(targetId);target?.GetComponent<RigidRoomItem>()?.SetAnimationOwner(this,true);return true;
+        }
         public bool IsRecording => recording != null;
         public bool IsPlaying => graph.IsValid();
         public bool IsPosing => posing;
@@ -81,7 +88,7 @@ namespace Maestro.Quest.Creation
             if (avatar && avatar.ModelBusy) { Say("Wait for Maestro to finish changing avatars"); return; }
             if (editor.DrawingMode) editor.ToggleDrawing();
             if (!avatar || !avatar.PoseRig) { Say("Maestro is still loading"); return; }
-            TakeControl();
+            if(!TakeControl())return;
             avatar.SetEditing(true); avatar.PoseRig.SetManual(true); avatar.PoseRig.SetPosing(true);
             avatar.PoseRig.Apply(currentPose);
             avatar.PoseRig.PoseChanged += SavePose;
@@ -98,7 +105,7 @@ namespace Maestro.Quest.Creation
         public void AddFrame()
         {
             if (!Ready() || IsRecording) return;
-            TakeControl();
+            if(!TakeControl(allowsGrab:true))return;
             StopPlayback();
             var motion = editor.Read(targetId).motion ?? new RoomMotion();
             if (motion.frames.Length >= RoomMotion.MaximumFrames || motion.Duration >= RoomMotion.MaximumSeconds) { Say("This animation is full"); return; }
@@ -112,7 +119,7 @@ namespace Maestro.Quest.Creation
             StopPlayback(); var motion = editor.Read(targetId).motion;
             if (motion == null) { Say("Save a frame first"); return; }
             selectedFrame = Mathf.Clamp(selectedFrame + direction,0,motion.frames.Length - 1);
-            TakeControl();
+            if(!TakeControl(allowsGrab:true))return;
             if (avatar) avatar.SetEditing(true);
             Apply(motion.frames[selectedFrame]); Say("Frame " + (selectedFrame+1) + " of " + motion.frames.Length);
         }
@@ -137,7 +144,7 @@ namespace Maestro.Quest.Creation
         {
             if (IsRecording) { FinishRecording(); return; }
             if (!Ready()) return;
-            StopPlayback(); TakeControl(); recording = new List<MotionFrame> { Capture(0) }; began = Time.unscaledTime; nextSample = .1f;
+            StopPlayback(); if(!TakeControl(allowsGrab:true))return; recording = new List<MotionFrame> { Capture(0) }; began = Time.unscaledTime; nextSample = .1f;
             Say("Recording a new take — move or pose; tap Record again to save");
         }
         void FinishRecording()
@@ -153,7 +160,7 @@ namespace Maestro.Quest.Creation
             if (!Ready() || IsRecording) return;
             Stop(); preview = editor.Read(targetId).motion;
             if (preview == null || preview.frames.Length < 2) { Say("Save at least two frames to play"); return; }
-            TakeControl();
+            if(!TakeControl())return;
             if (avatar) avatar.SetEditing(true);
             target.Grab.enabled = false;
             graph = PlayableGraph.Create("User animation preview"); graph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
@@ -186,19 +193,19 @@ namespace Maestro.Quest.Creation
             Stop(); if (!avatar) { Say("Choose Maestro for gestures"); return; }
             var names = new[] { "Greeting","Pointing","Listening","Speaking","Idle","Walk" };
             string name = names[gestureIndex++ % names.Length];
-            TakeControl(); avatar.SetEditing(true); avatar.Gesture(name); Say(name + " preview — tap Gesture to choose another");
+            if(!TakeControl())return; avatar.SetEditing(true); avatar.Gesture(name); Say(name + " preview — tap Gesture to choose another");
         }
         public bool PreviewImportedClip(int index, bool loop)
         {
             if (!Ready() || IsRecording || !avatar) return false;
-            Stop(); TakeControl(); avatar.SetEditing(true);
+            Stop(); if(!TakeControl())return false; avatar.SetEditing(true);
             if (!avatar.PlayImportedClip(index,loop)) { Stop(); Say("This Maestro has no playable clip at that index"); return false; }
             importedPreview = true; Say("Playing " + avatar.CustomModel.ClipName(index) + " — Stop ends preview"); return true;
         }
         public bool PreviewLibraryMotion(MotionLibrary.Lease motion,bool loop)
         {
             if (!Ready() || IsRecording || !avatar) return false;
-            Stop(); TakeControl(); avatar.SetEditing(true);
+            Stop(); if(!TakeControl())return false; avatar.SetEditing(true);
             if (!avatar.PlayLibraryMotion(motion,loop)) { Stop(); Say("This motion is incompatible with the loaded Maestro"); return false; }
             importedPreview = true; Say("Playing library motion — Stop ends preview"); return true;
         }
@@ -207,11 +214,11 @@ namespace Maestro.Quest.Creation
             Stop(); editor.Select(editor.Find("maestro")); SelectionChanged(); if (!Ready() || !avatar) return;
             if (!string.IsNullOrEmpty(avatar.WalkMotionId))
             {
-                TakeControl(); avatar.SetEditing(true); walkPreview = true; avatar.SpatialWalk(.65f*avatar.transform.lossyScale.y);
+                if(!TakeControl())return; avatar.SetEditing(true); walkPreview = true; avatar.SpatialWalk(.65f*avatar.transform.lossyScale.y);
                 Say("Saved walk preview — Stop ends preview"); return;
             }
             if (avatar.CustomModel && avatar.WalkClip >= 0) { PreviewImportedClip(avatar.WalkClip,true); return; }
-            TakeControl(); avatar.SetEditing(true); avatar.Gesture("Walk"); Say("Included walk preview — Stop ends preview");
+            if(!TakeControl())return; avatar.SetEditing(true); avatar.Gesture("Walk"); Say("Included walk preview — Stop ends preview");
         }
         public void ChangeSpeed(float factor)
         {
@@ -250,7 +257,7 @@ namespace Maestro.Quest.Creation
                 controlling = false;
                 target?.GetComponent<RigidRoomItem>()?.SetAnimationOwner(this,false);
             }
-            finally { stopping = false; }
+            finally { ownershipLease?.Dispose();ownershipLease=null;stopping = false; }
             Say(saveError ?? "Stopped — saved animation is ready");
         }
         void Update()

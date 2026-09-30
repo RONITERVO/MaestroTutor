@@ -4,6 +4,8 @@ using Maestro.Quest.Art;
 using Maestro.Quest.Book;
 using Maestro.Quest.Creation;
 using Maestro.Quest.Imports;
+using Maestro.Quest.Interaction;
+using Maestro.Quest.Programs;
 using System;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -36,6 +38,25 @@ namespace Maestro.Quest.Avatar
             activityMotion?.Cancel(); greetingUntil=0; return true;
         }
         public void EndUpperBody(string owner) => gestureLayer?.End(owner);
+        RoomOwnership ownership;
+        RoomOwnership.Lease ambientLease;
+        string ambientOwner;
+        BehaviourCatalog.Claim[] ambientClaims;
+        public void ConfigureOwnership(RoomOwnership service,string target) {
+            if(ownership!=null)EndAmbient();ownership=service;ambientOwner="ambient:"+target;
+            ambientClaims=new[]{new BehaviourCatalog.Claim(target,"wholeTarget")};
+        }
+        void EndAmbient() {
+            ambientLease?.Dispose();ambientLease=null;activityMotion?.Cancel();
+            greetingUntil=0;activity=null;if(animator)animator.speed=0;
+        }
+        bool AmbientAllowed(bool eligible) {
+            if(!eligible){if(ambientLease!=null)EndAmbient();return false;}
+            if(ownership==null)return true; // Standalone preview prefabs have no room arbiter.
+            if(ambientLease?.Held!=true&&!ownership.TryAcquire(ambientOwner,"Maestro tutor activity",RoomActorRole.Ambient,ambientClaims,
+                _=>EndAmbient(),out ambientLease,out _))return false;
+            return true;
+        }
         AvatarActivityMotion activityMotion;
         bool activityPlayback,libraryOpen,paused,focused=true;
         BookSnapshot observedSnapshot,blockedSnapshot;
@@ -101,7 +122,7 @@ namespace Maestro.Quest.Avatar
         {
             hash ??= "";
             if (requestedModel == hash && (!retry || ModelBusy)) return ModelLoad;
-            walkMotion?.Stop(); StopImportedClip();
+            EndAmbient();walkMotion?.Stop(); StopImportedClip();
             gestureLayer?.Stop(); requestedModel = hash; int generation = ++modelGeneration;
             if (hash.Length == 0)
             {
@@ -158,8 +179,9 @@ namespace Maestro.Quest.Avatar
         {
             gestureLayer?.RestoreBase();
             if (Browser) ObserveTutorState(Browser.Snapshot);
-            bool ambient=!UpperBodyActive && !paused && focused && !ReducedMotion && !editing && !spatialWalking && savedPose == null && !libraryOpen && !ModelBusy && custom && (!IsImportedClipPlaying || activityPlayback);
-            if (activityMotion.Apply(observedActivity,ambient && (observedActivity != "idle" || Time.unscaledTime >= greetingUntil),Time.unscaledTime)) return;
+            bool ambient=AmbientAllowed(!UpperBodyActive&&!paused&&focused&&!ReducedMotion&&!editing&&!spatialWalking&&savedPose==null&&!libraryOpen&&!ModelBusy&&(!IsImportedClipPlaying||activityPlayback));
+            if (activityMotion.Apply(observedActivity,ambient && custom && (observedActivity != "idle" || Time.unscaledTime >= greetingUntil),Time.unscaledTime)) return;
+            if(ownership!=null&&!ambient){if(!editing&&animator)animator.speed=0;return;}
             if (paused || !focused || editing || savedPose != null || IsImportedClipPlaying) return;
             if (!animator || !animator.runtimeAnimatorController || Time.unscaledTime < greetingUntil) return;
             string state = ReducedMotion ? "Idle" : observedActivity switch
@@ -183,6 +205,7 @@ namespace Maestro.Quest.Avatar
         }
         public void SetEditing(bool value,bool preserveUpperBody=false)
         {
+            if(value)EndAmbient();
             if(!preserveUpperBody)gestureLayer?.Stop();
             walkMotion?.Stop(); StopImportedClip();
             editing = value;
@@ -278,13 +301,13 @@ namespace Maestro.Quest.Avatar
         {
             if (!animator || !animator.runtimeAnimatorController || (name != "Greeting" && name != "Pointing" && name != "Listening" && name != "Speaking" && name != "Idle" && name != "Walk")) return;
             StopImportedClip();
-            PoseRig.SetManual(false); animator.Play(name,0,0); animator.Update(0);
+            PoseRig.SetManual(false); animator.speed=1; animator.Play(name,0,0); animator.Update(0);
             // A gesture can be sampled into a pose while authoring; live tutor activity
             // resumes when authoring ends and no saved static pose is active.
         }
-        void OnApplicationPause(bool value) { paused=value; if (value) { blockedSnapshot=observedSnapshot; observedActivity=null; } if (value) { gestureLayer?.Stop(); walkMotion?.Stop(); StopImportedClip(); } }
-        void OnApplicationFocus(bool value) { focused=value; if (!value) { blockedSnapshot=observedSnapshot; observedActivity=null; } if (!value) { gestureLayer?.Stop(); walkMotion?.Stop(); StopImportedClip(); } }
-        void OnDisable() { gestureLayer?.Stop(); walkMotion?.Stop(); StopImportedClip(); }
-        void OnDestroy() { gestureLayer?.Dispose(); walkMotion?.Stop(); StopImportedClip(); activityMotion?.Dispose(); disposed = true; modelGeneration++; }
+        void OnApplicationPause(bool value) { paused=value; if (value) { blockedSnapshot=observedSnapshot; observedActivity=null; } if (value) { EndAmbient();gestureLayer?.Stop(); walkMotion?.Stop(); StopImportedClip(); } }
+        void OnApplicationFocus(bool value) { focused=value; if (!value) { blockedSnapshot=observedSnapshot; observedActivity=null; } if (!value) { EndAmbient();gestureLayer?.Stop(); walkMotion?.Stop(); StopImportedClip(); } }
+        void OnDisable() { EndAmbient();gestureLayer?.Stop(); walkMotion?.Stop(); StopImportedClip(); }
+        void OnDestroy() { EndAmbient();gestureLayer?.Dispose(); walkMotion?.Stop(); StopImportedClip(); activityMotion?.Dispose(); disposed = true; modelGeneration++; }
     }
 }

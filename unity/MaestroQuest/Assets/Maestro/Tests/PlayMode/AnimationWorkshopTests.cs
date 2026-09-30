@@ -77,6 +77,8 @@ namespace Maestro.Quest.Tests
             workshop.SendMessage("OnApplicationPause",true); Assert.That(workshop.IsRecording,Is.False);
             var motion = editor.Read(block.id).motion; Assert.That(motion.frames.Length,Is.GreaterThanOrEqualTo(3));
             Assert.That(motion.frames[^1].position.x - motion.frames[0].position.x,Is.EqualTo(.4f).Within(.001f));
+            workshop.Play();Assert.That(workshop.IsPlaying,Is.False,"Paused ownership prevents new previews");
+            workshop.SendMessage("OnApplicationPause",false);
             workshop.Play(); yield return new WaitForSeconds(.14f); Assert.That(workshop.IsPlaying,Is.True);
             workshop.SendMessage("OnApplicationFocus",false); Assert.That(workshop.IsPlaying,Is.False);
             Assert.That(item.transform.localPosition,Is.EqualTo(editor.Read(block.id).position));
@@ -85,6 +87,27 @@ namespace Maestro.Quest.Tests
             UnityEngine.Object.Destroy(editor); yield return null;
             var restored = new RoomStorage(directory).Load(out var error); Assert.That(restored,Is.Not.Null,error);
             Assert.That(restored.objects.Single(x => x.id == block.id).motion.frames.Length,Is.EqualTo(motion.frames.Length));
+        }
+        [UnityTest] public IEnumerator PhysicalGripCanMoveTheRecordedObjectWithoutInterruptingItsTake()
+        {
+            var block=editor.Snapshot().objects.First(x=>x.kind==RoomObjectKind.Block);var item=editor.Find(block.id);editor.Select(item);
+            workshop.ToggleRecord();yield return new WaitForSeconds(.12f);
+            var handRoot=new GameObject("Recording hand");handRoot.SetActive(false);handRoot.transform.SetParent(root.transform,false);
+            handRoot.transform.position=item.transform.position-Vector3.forward*.25f;
+            var hand=handRoot.AddComponent<XRRayInteractor>();hand.enableUIInteraction=false;hand.interactionManager=manager;
+            hand.keepSelectedTargetValid=true;hand.manipulateAttachTransform=false;hand.selectActionTrigger=XRBaseInputInteractor.InputTriggerType.State;
+            hand.selectInput=new XRInputButtonReader {inputSourceMode=XRInputButtonReader.InputSourceMode.ManualValue,manualPerformed=true,manualValue=1};
+            handRoot.SetActive(true);manager.SelectEnter((IXRSelectInteractor)hand,item.Grab);yield return new WaitForSeconds(.12f);
+            Assert.That(workshop.IsRecording,Is.True,"Gripping is the source of recorded movement, not a cancellation");
+            var view=editor.Ownership.Observe();Assert.That(view.owners.Any(x=>x.role=="grab"&&x.claims.Any(c=>c.target==block.id)),Is.True);
+            Assert.That(view.owners.Any(x=>x.role=="control"&&x.allowsGrab),Is.True);
+            var start=item.transform.localPosition;handRoot.transform.position+=Vector3.right*.35f;yield return new WaitForSeconds(.16f);
+            Assert.That(item.transform.localPosition.x-start.x,Is.GreaterThan(.2f),"XRI actually moved the recorded object");
+            handRoot.SetActive(false);yield return null;
+            Assert.That(workshop.IsRecording,Is.True);Assert.That(editor.Ownership.Observe().owners.Any(x=>x.role=="grab"),Is.False);
+            workshop.ToggleRecord();var take=editor.Read(block.id).motion;
+            Assert.That(take.frames.Length,Is.GreaterThanOrEqualTo(3));Assert.That(take.frames.Max(x=>x.position.x)-take.frames.Min(x=>x.position.x),Is.GreaterThan(.2f));
+            workshop.Stop();Assert.That(editor.Ownership.Observe().owners.Any(x=>x.role=="control"),Is.False);
         }
         [UnityTest] public IEnumerator ChangingAvatarFinishesAndRetainsTheCurrentTake()
         {

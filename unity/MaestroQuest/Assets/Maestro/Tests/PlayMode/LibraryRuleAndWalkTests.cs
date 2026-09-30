@@ -519,6 +519,7 @@ namespace Maestro.Quest.Tests
             editor.Undo(); Assert.That(editor.Read("maestro").walkMotionId,Is.Null.Or.Empty); editor.Redo();
             editor.SaveNow(); editor.SendMessage("OnApplicationPause",true);
             var saved = new RoomStorage(directory).Load(out var error); Assert.That(error,Is.Null); Assert.That(saved.version,Is.EqualTo(2)); Assert.That(saved.objects.Single(x => x.id == "maestro").walkMotionId,Is.EqualTo(gait.id));
+            editor.SendMessage("OnApplicationPause",false);
             var add = editor.Motions.ImportAsync("unavailable.glb",Clip(13,"Lower leg")); yield return Until(() => add.IsCompleted); Assert.That(add.Exception,Is.Null); var missing = add.Result.Single();
             Assert.That(editor.SetAvatarWalkMotion(missing.id),Is.True); File.Delete(Path.Combine(directory,"motions",missing.hash+".motion.glb"));
             authoring.PreviewWalk(); yield return Until(() => avatar.WalkMotionStatus?.Contains("missing") == true);

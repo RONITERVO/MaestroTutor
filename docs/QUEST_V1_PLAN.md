@@ -2,14 +2,20 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
-Latest PC increment (2026-09-27): the optional book editor supports direct
+Latest PC increment (2026-09-30): shared native ownership integrates programs,
+direct avatar controls, animation authoring, grips and ambient tutor activity.
+Recordings cooperate with physical grabs; interrupted programs stay cancelled.
+The optional book workspace and agent see the same owner/claim evidence. See
+QUEST_ROOM_OWNERSHIP.md for scope, policy, verification and remaining actor work.
+
+Prior PC increment (2026-09-27): the optional book editor supports direct
 insertion into nested branches and typed value/expression controls. The same
 human-authored program is verified in Chrome and executed by Unity for both
 branches; source editing remains available. See QUEST_BEHAVIOUR_PROGRAMS.md.
 
 Current architecture: the original app owns chat/Live handoff, Gemini access
 and durable task journals. Canonical behaviour programs, the shared native
-catalog (18 actions, seven events and three facts), one scheduler and native
+catalog (14 actions, seven events and four facts), one scheduler and native
 receipts serve human controls and agent calls. Version-3 programs retain typed
 session state across event/timer waits. Creation results compose with animation,
 physics and durable object edits; per-channel ownership permits supported

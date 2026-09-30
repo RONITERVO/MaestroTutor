@@ -640,7 +640,15 @@ namespace Maestro.Quest.Tests
             var current = block.transform.position; var hand = Hand(1,current-Vector3.forward*.2f);
             manager.SelectEnter((IXRSelectInteractor)hand,block.Grab);
             Assert.That(runtime.Scheduler.RunningCount,Is.Zero); Assert.That(Vector3.Distance(current,block.transform.position),Is.LessThan(.01f),"Grabbing does not snap an animated object back");
-            hand.gameObject.SetActive(false); yield return null;
+            var claim=editor.Ownership.Observe().owners.Single(x=>x.role=="grab");Assert.That(claim.claims.Single().target,Is.EqualTo(editor.Identity(block)));
+            var otherHand=Hand(2,current+Vector3.right*.1f-Vector3.forward*.2f);manager.SelectEnter((IXRSelectInteractor)otherHand,block.Grab);
+            hand.gameObject.SetActive(false);yield return null;Assert.That(block.Grab.isSelected,Is.True);
+            Assert.That(editor.Ownership.Observe().owners.Any(x=>x.id==claim.id),Is.True,"The second hand still owns the object");
+            var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);
+            void Evidence(string phase){var folder=Environment.GetEnvironmentVariable("MAESTRO_OWNERSHIP_EVIDENCE");if(string.IsNullOrEmpty(folder))return;Directory.CreateDirectory(folder);var state=observer.Observe();state.visible=true;state.workspaceView="rules";File.WriteAllText(Path.Combine(folder,phase+".json"),RoomAgentWire.Serialize(state));}
+            Evidence("held");otherHand.gameObject.SetActive(false);yield return null;Evidence("released");
+            Assert.That(editor.Ownership.Observe().owners.Any(x=>x.id==claim.id),Is.False);
+            Assert.That(runtime.Scheduler.RunningCount,Is.Zero,"Releasing hands cannot restart the cancelled animation");
             workshop.AddBinding(); workshop.AddButton(ButtonMount.Room); int count = workshop.Snapshot().buttons.Length;
             workshop.DeleteSequence(); Assert.That(workshop.Snapshot().sequences,Is.Empty); workshop.Undo();
             Assert.That(workshop.Snapshot().buttons.Length,Is.EqualTo(count)); Assert.That(workshop.Snapshot().bindings.Length,Is.EqualTo(1));

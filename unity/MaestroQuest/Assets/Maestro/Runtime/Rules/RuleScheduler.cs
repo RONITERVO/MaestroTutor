@@ -1,6 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 using System;
+using Maestro.Quest.Interaction;
 using System.Collections.Generic;
 using System.Linq;
 using Maestro.Quest.Programs;
@@ -13,6 +14,7 @@ namespace Maestro.Quest.Rules
         bool Start(string runId, CapabilityCall step, out float seconds, out string error);
         void Stop(string runId, bool preservePlacement);
     }
+    public interface IRuleOwnershipSource { RoomOwnership Ownership {get;} }
     public interface IRuleInterruptionInfo { string InterruptionStatus(string runId); }
     public interface IRuleResults { Newtonsoft.Json.Linq.JObject TakeResult(string runId); }
     public interface IRuleCompletion { bool Complete(string runId,out string error); }
@@ -35,6 +37,7 @@ namespace Maestro.Quest.Rules
             public bool Reactive=>Sequence.Compile(out _).Version==3;
             public ProgramMachine Machine;
             public CapabilityCall Active;
+            public RoomOwnership.Lease OwnershipLease;
             public Newtonsoft.Json.Linq.JObject Invocation,Output;
         }
         sealed class Pending { public string SequenceId; public RuleBinding Binding; }
@@ -58,14 +61,15 @@ namespace Maestro.Quest.Rules
         public bool TargetsBusy(IEnumerable<string> targets) {var ids=targets.ToHashSet();return running.Any(x=>x.Targets.Overlaps(ids));}
         static BehaviourCatalog.Claim[] Whole(IEnumerable<string> targets)=>targets.Select(id=>new BehaviourCatalog.Claim(id,"wholeTarget")).ToArray();
         static bool Conflicts(Run run,IEnumerable<BehaviourCatalog.Claim> claims)=>claims.Any(claim=>run.Claims.Any(claim.Conflicts));
-        public bool ActionBusy(CapabilityCall call)=>call.RequiresQuietRoom?(running.Count>0||queued.Count>0):running.Any(run=>run.Active?.RequiresQuietRoom==true||Conflicts(run,call.Claims));
+        public bool ActionBusy(CapabilityCall call)=>call.RequiresQuietRoom?(running.Count>0||queued.Count>0):running.Any(run=>run.Active?.RequiresQuietRoom==true)||!Ownership.CanAcquire("catalog-check",RoomActorRole.Program,call.Claims,out _);
+        public RoomOwnership Ownership {get;}
         public string LastError { get; private set; }
         public RuleRunView[] ObserveRuns() => running.Where(x=>x.Invocation==null).Select(x=>new RuleRunView {id=x.Id,sequenceId=x.Sequence.id,preparing=x.Preparing,nodeId=x.Machine?.NodeId,functionName=x.Machine?.Function,status=x.Machine?.Wait!=null?x.Machine.Wait.Event==null?"Waiting for timer":"Waiting for "+x.Machine.Wait.Event:x.Computing?"Evaluating":x.Preparing?x.Active?.AwaitCompletion==true?"Waiting for action completion":"Loading":"Running",
             waiting=x.Machine?.Wait!=null,waitEvent=x.Machine?.Wait?.Event,waitSeconds=x.Machine?.Wait!=null&&x.Machine.Wait.Seconds>0?Math.Max(0,x.Ends-lastNow):0,
             state=x.Machine?.State.Select(v=>new ProgramVariableView {name=v.Key,type=v.Value.Type.ToString().ToLowerInvariant(),value=Convert.ToString(v.Value.Value,System.Globalization.CultureInfo.InvariantCulture)}).ToArray()??Array.Empty<ProgramVariableView>(),
             locals=x.Machine?.Locals.Select(v=>new ProgramVariableView {name=v.Key,type=v.Value.Type.ToString().ToLowerInvariant(),value=Convert.ToString(v.Value.Value,System.Globalization.CultureInfo.InvariantCulture)}).ToArray()??Array.Empty<ProgramVariableView>()}).ToArray();
         public InvocationReceipts Receipts { get; }
-        public RuleScheduler(IRuleActions actions,InvocationReceipts receipts=null) { this.actions = actions; Receipts=receipts; }
+        public RuleScheduler(IRuleActions actions,InvocationReceipts receipts=null) { this.actions = actions; Receipts=receipts;Ownership=(actions as IRuleOwnershipSource)?.Ownership??new RoomOwnership(); }
         public bool TryRead(string name,out ProgramValue value) {
             if(BehaviourCatalog.TryRead(name,new BehaviourCatalog.FactContext(activity),out value))return true;
             if(actions is IProgramFacts source)return source.TryRead(name,out value);value=default;return false;
@@ -129,8 +133,15 @@ namespace Maestro.Quest.Rules
             }
             var next = new Run { Id = Guid.NewGuid().ToString("N"), Sequence = sequence.Copy(), Binding = binding?.Copy(), Targets = targets, Claims=Whole(targets) };
             next.Machine=new ProgramMachine(sequence.Compile(out _),this);
-            running.Add(next); return StartStep(next,now);
+            running.Add(next);if(!next.Reactive&&!Reserve(next,next.Claims))return false;return StartStep(next,now);
         }
+        bool Reserve(Run run,BehaviourCatalog.Claim[] claims) {
+            if(run.OwnershipLease?.Held==true)return true;
+            if(Ownership.TryAcquire(run.Id,run.Sequence.name,RoomActorRole.Program,claims,
+                notice=>{if(running.Contains(run))Stop(run,notice.PreservePlacement,"cancelled",notice.Message);},out run.OwnershipLease,out var error))return true;
+            LastError=error;Stop(run,false,"failed",error);return false;
+        }
+        void ReleaseClaims(Run run) {run.OwnershipLease?.Dispose();run.OwnershipLease=null;}
         bool StartStep(Run run, float now)
         {
             run.Computing=false;
@@ -160,6 +171,7 @@ namespace Maestro.Quest.Rules
                 run.Targets=targets;run.Claims=claims;
             }
             if(!actions.CanRun(run.Active,out var unavailable)) {LastError=unavailable;Stop(run,false,"failed",LastError);return false;}
+            if(!Reserve(run,run.Claims))return false;
             bool instant=run.Active.Instant,awaited=run.Active.AwaitCompletion;
             if (!actions.Start(run.Id,run.Active,out float seconds,out var error) || !float.IsFinite(seconds) || (instant||awaited?seconds!=0:seconds<.01f) || seconds > 30)
             { LastError = error ?? "This action has an invalid duration"; Stop(run,false,"failed",LastError); return false; }
@@ -173,7 +185,7 @@ namespace Maestro.Quest.Rules
                 } else actions.Stop(run.Id,false);
                 if(!CompleteResult(run,out error)) {LastError=error;Stop(run,false,"failed",error);return false;}
                 run.Active=null;
-                if(run.Reactive) {run.Targets.Clear();run.Claims=Array.Empty<BehaviourCatalog.Claim>();}
+                if(run.Reactive) {ReleaseClaims(run);run.Targets.Clear();run.Claims=Array.Empty<BehaviourCatalog.Claim>();}
                 // An instant effect is already done. Don't reset activation work or
                 // causal depth, and don't execute a second effect in this frame.
                 if(run.Invocation!=null) {
@@ -228,7 +240,7 @@ namespace Maestro.Quest.Rules
                 else actions.Stop(run.Id,false);
                 if(!CompleteResult(run,out var resultError)) {LastError=resultError;Stop(run,false,"failed",resultError);continue;}
                 bool timed=run.Active!=null&&!run.Active.Instant&&!run.Active.AwaitCompletion;
-                run.Active=null;if(run.Reactive) {run.Targets.Clear();run.Claims=Array.Empty<BehaviourCatalog.Claim>();if(timed) {run.Machine.BeginActivation();run.EventDepth=0;}}
+                run.Active=null;if(run.Reactive) {ReleaseClaims(run);run.Targets.Clear();run.Claims=Array.Empty<BehaviourCatalog.Claim>();if(timed) {run.Machine.BeginActivation();run.EventDepth=0;}}
                 // At most one step per run per tick, even after a long frame.
                 StartStep(run,now);
             }
@@ -245,6 +257,9 @@ namespace Maestro.Quest.Rules
         {
             var claims=BehaviourCatalog.Claims(step);
             foreach(var run in running.Where(x=>Conflicts(x,claims)).ToArray())Stop(run,preservePlacement);
+            CancelQueuedConflicting(claims);
+        }
+        public void CancelQueuedConflicting(BehaviourCatalog.Claim[] claims) {
             // Pending v2 sequences reserve whole objects. Pending v3 programs
             // own nothing until their next invocation and are rechecked then.
             queued.RemoveAll(x=>document.sequences.FirstOrDefault(y=>y.id==x.SequenceId) is RuleSequence sequence &&
@@ -257,14 +272,14 @@ namespace Maestro.Quest.Rules
         }
         void Finish(Run run,string phase,string status) {
             if(run.Invocation!=null) {if(phase=="completed")status="Action completed";else if(phase=="cancelled"&&status=="Behaviour stopped")status="Action cancelled";}
-            Unsubscribe(run);running.Remove(run);outcomes.Enqueue(new FinishedRun {Outcome=new RuleOutcome {id=run.Id,sequenceId=run.Sequence.id,phase=phase,nodeId=run.Machine?.NodeId,status=status??phase},Invocation=run.Invocation,Output=run.Output,Resources=run.Targets.ToArray()});
+            ReleaseClaims(run);Unsubscribe(run);running.Remove(run);outcomes.Enqueue(new FinishedRun {Outcome=new RuleOutcome {id=run.Id,sequenceId=run.Sequence.id,phase=phase,nodeId=run.Machine?.NodeId,status=status??phase},Invocation=run.Invocation,Output=run.Output,Resources=run.Targets.ToArray()});
             while(outcomes.Count>MaximumOutcomes)outcomes.Dequeue();
             if(run.Invocation!=null)Receipts?.Update(LiveInvocation(run.Id));
         }
         void Stop(Run run,bool preservePlacement,string phase="cancelled",string status="Behaviour stopped") {
             var notice=(actions as IRuleInterruptionInfo)?.InterruptionStatus(run.Id);
             if(!string.IsNullOrEmpty(notice))status=phase=="cancelled"?notice:status+". "+notice;
-            actions.Stop(run.Id,preservePlacement);Finish(run,phase,status);
+            try {actions.Stop(run.Id,preservePlacement);} finally {Finish(run,phase,status);}
         }
         public bool StopSequence(string id)
         {
