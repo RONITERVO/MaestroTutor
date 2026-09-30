@@ -6,7 +6,7 @@ Latest PC increment (2026-09-30): the book and agent share typed lists/records,
 function signatures and local declarations in the same native program. Immutable
 values, structural typing, data operations, bounded execution and exact object
 authority support collecting creation results and passing them between functions.
-PC verification passes 1,391 app tests, 195 EditMode, 132 PlayMode and 25 Android
+PC verification passes 1,392 app tests, 195 EditMode, 132 PlayMode and 25 Android
 tests, with three optional private-asset skips. The development APK is built and
 uninstalled. See QUEST_PROGRAM_DATA.md; shared libraries, remaining declaration
 controls and real-provider/headset/store acceptance remain open.
@@ -655,7 +655,7 @@ session state, functions and native observations. The book exposes type/literal/
 expression controls; the agent uses the same format and limits. Immutable copies,
 scalar projections into native actions and unchanged object authority are tested.
 Actual native creation/paint results are replayed in the book. See
-[the structured-value contract](QUEST_PROGRAM_DATA.md). PC checks pass 1,391 app,
+[the structured-value contract](QUEST_PROGRAM_DATA.md). PC checks pass 1,392 app,
 195 EditMode, 132 PlayMode and 25 Android tests (three optional native skips).
 Shared libraries, state/event declaration controls and the other v1 gates remain
 open. The new development APK is built but not installed; device work stays on hold.

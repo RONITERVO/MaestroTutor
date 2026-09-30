@@ -81,7 +81,9 @@ or replay a program's state.
 Function parameters, returns and locals have recursive type/value controls. Users can
 add/remove fields and list items and compose data operations without JSON. Changing
 a declaration's type resets its initial literal; existing body calculations must
-still validate. Invalid drafts retain the previous valid program. Source and agent
+still validate. Editing an inferred list preserves its type when its last item is
+removed, including lists inside records. Invalid drafts retain the previous valid
+program. Source and agent
 editing use the same validator and canonical definition.
 
 State/event declaration editing, coordinated record-field renames, shared versioned
@@ -102,7 +104,7 @@ pause flush; Stop leaves completed creations intact.
 A Chrome walkthrough authors a list of records and an append expression without JSON.
 It then displays actual native collection observations and the field binding controls.
 Its command acknowledgements and surrounding room are synthetic; Chrome executes no
-Unity effects. Screenshots were inspected. PC results are 1,391 app tests, 195 Unity
+Unity effects. Screenshots were inspected. PC results are 1,392 app tests, 195 Unity
 EditMode and 132 PlayMode tests, with three optional private-asset skips, plus 25
 Android bridge tests and successful development ARM64 packaging.
 

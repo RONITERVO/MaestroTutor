@@ -24,7 +24,7 @@ export function ProgramFunctionEditor({value,onChange,entry,structured=false}:{v
    {value.locals.map((v,i)=>{const type=v.type??inferDataType(v.initial);return <div key={i}>
     <label>Variable {i+1} name<input aria-label={'Variable '+(i+1)+' name'} maxLength={32} value={v.name} onChange={e=>onChange({...value,locals:value.locals.map((p,j)=>i===j?{...p,name:e.target.value}:p)})}/></label>
     <ProgramDataTypeEditor label={'Variable '+(i+1)+' type'} value={type} structured={structured} onChange={next=>onChange({...value,locals:value.locals.map((p,j)=>i===j?{name:p.name,origin:p.origin,...(typeof next==='object'?{type:next}:{}),initial:initialValue(next as ValueType)}:p)})}/>
-    <ProgramDataValueEditor label={'Initial value '+(i+1)} value={v.initial} type={type} onChange={initial=>onChange({...value,locals:value.locals.map((p,j)=>i===j?{...p,initial}:p)})}/>
+    <ProgramDataValueEditor label={'Initial value '+(i+1)} value={v.initial} type={type} onChange={initial=>onChange({...value,locals:value.locals.map((p,j)=>i===j?{...p,initial,...(typeof type==='object'?{type}:{})}:p)})}/>
     <button onClick={()=>onChange({...value,locals:value.locals.filter((_,j)=>j!==i)})}>Remove variable {i+1}</button>
    </div>;})}
    <button disabled={value.locals.length>=16} onClick={()=>onChange({...value,locals:[...value.locals,{origin:null,name:freshName('value_'),initial:0}]})}>Add local variable</button>

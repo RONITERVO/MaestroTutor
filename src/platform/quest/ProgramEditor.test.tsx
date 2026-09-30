@@ -253,3 +253,13 @@ it('creates a list of typed records and edits its data without source',()=>{
  expect(JSON.parse(h.source()).functions[0].body[0]).toMatchObject({op:'set',value:{op:'append',args:[{var:'items'},{value:{red:.7,id:'maestro'}}]}});
  expect(h.screen.queryByLabelText('Program JSON')).toBeNull();expect(parseProgram(h.source()).error).toBeNull();
 });
+
+it('keeps an inferred nested list type when a human removes its last initial item',()=>{
+ const initial=structuredClone(empty);initial.version=3;initial.dataVersion=1;initial.state=[];initial.events=[];
+ initial.functions[0].locals=[{name:'group',initial:{ids:['book']}}];
+ const h=harness(initial);h.click('Edit function main');h.click('Remove Initial value 1 ids item 1');
+ h.click('Update draft');expect(parseProgram(h.source()).error).toBeNull();
+ expect(JSON.parse(h.source()).functions[0].locals[0]).toEqual({name:'group',initial:{ids:[]},type:{record:{ids:{list:'text'}}}});
+ h.click('Edit function main');h.click('Add Initial value 1 ids item');h.change('Initial value 1 ids item 1','maestro');h.click('Update draft');
+ expect(JSON.parse(h.source()).functions[0].locals[0].initial).toEqual({ids:['maestro']});
+});
