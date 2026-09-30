@@ -20,7 +20,7 @@ function variables(body:ProgramNode[],map:(name:string)=>string) {
   if(n.op==='set')n.variable=map(n.variable);
   if(n.op==='call'&&n.result)n.result=map(n.result);
   if(n.op==='invoke'&&n.results)for(const key of Object.keys(n.results))n.results[key]=map(n.results[key]);
-  if(n.op==='awaitEvent'){n.received=map(n.received);n.value=map(n.value);if(n.fields)for(const key of Object.keys(n.fields))n.fields[key]=map(n.fields[key]);}
+  if(n.op==='awaitEvent'||n.op==='awaitCondition'){n.received=map(n.received);n.value=map(n.value);if(n.op==='awaitEvent'&&n.fields)for(const key of Object.keys(n.fields))n.fields[key]=map(n.fields[key]);}
  });
 }
 function origins(items:{origin:number|null}[],length:number){

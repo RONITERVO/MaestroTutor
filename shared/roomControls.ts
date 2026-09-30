@@ -32,6 +32,7 @@ export function requireRoomCapabilities(commands:{action:string;rule?:unknown;ex
   const needs=(value:unknown,features:Set<string>)=>{
     if(Array.isArray(value)){value.forEach(x=>needs(x,features));return;}
     if(!record(value))return;
+    if(value.op==='awaitCondition')features.add('conditionWaits.v1');
     if(value.op==='awaitEvent'){
       if(value.fields!==undefined)features.add('eventFields.v1');
       for(const feature of behaviourEvent(String(value.event))?.features??[])features.add(feature);

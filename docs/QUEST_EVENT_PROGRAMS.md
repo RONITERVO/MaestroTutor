@@ -436,3 +436,71 @@ browser edits that source and replays actual native position/pause/failure
 observations; catalog acknowledgements and its search page are simulated.
 Screenshots were inspected. Final packaging and hardware acceptance are recorded
 separately; a browser does not execute Unity.
+
+
+## Calculated condition waits (2026-09-30)
+
+`conditionWaits.v1` adds `awaitCondition` to the existing version-3 interpreter.
+A user or agent can combine current catalog facts with the existing comparisons,
+logic and record fields. This supplies a reusable sampled predicate rather than
+adding a new native event/tool for each threshold or combination. The shared
+`program-conditions.json` fixture watches an object's world X coordinate against
+a state value, then stores whether the wait matched. Its resources remain empty:
+observing an object neither controls it nor authorizes later edits.
+
+| Required field | Meaning |
+| --- | --- |
+| `test` | Boolean expression, reevaluated on each sample with fresh fact reads |
+| `transition` | `true`, `false` or `either`: which qualified change can wake the program |
+| `initial` | `baseline` suppresses the initial state; `report` can report a matching initial state |
+| `stableSeconds` | Number expression, 0–10 seconds of the same sampled truth value |
+| `timeout` | Number expression, 0 for no deadline or 0.1–3600 seconds |
+| `received` / `value` | Distinct boolean locals for match receipt and the matched truth value |
+
+Timing expressions evaluate once when the block is reached. The predicate uses
+retained locals/state and fresh facts; that program executes no other statements
+while waiting. The initial read establishes a baseline/candidate, with subsequent
+reads at most 10 times per second and no catch-up. Every candidate, including an
+initial report, must satisfy the stable period. A change that returns to the last
+confirmed value before qualifying does not emit. Stability filters sampled jitter;
+it is not spatial hysteresis or proof that the condition held between samples.
+Existing native proximity/motion subscriptions retain their own hysteresis.
+
+A gap over 0.3 seconds discards earlier stable time and reapplies the initial
+policy. There is no replay of missed changes. A match at the deadline wins;
+a later sample loses to timeout. Matching sets `received=true` and `value` to the
+qualified boolean. Entry resets `received=false`; timeout leaves `value` unchanged.
+Missing/unavailable facts, invalid computed fact inputs and expression errors fail
+the run explicitly. They never become a fabricated false value.
+
+At most eight total runs/watchers are active. Each new wait takes one baseline
+reading in addition to its subsequent samples. Repeated immediate-report waits
+can therefore make up to two reads per 0.1-second cycle per run. Each read has a separate
+512-instruction expression/value budget; false samples neither consume nor reset
+the statement activation budget. Oversized samples fail visibly. Even a constant
+true report waits for the first 0.1-second sample, preventing a tight wake loop.
+Private condition wakes do not consume the broadcast queue. All watches sample
+before resumed program statements execute, and each run retains the existing
+per-tick statement budget. Waits acquire no channels. Stop, definition edits,
+pause/focus loss and reload dispose them; focus return never restarts a run.
+
+The book has a Condition wait block with typed predicate, transition, initial,
+timing and destination controls. Variable/state renames and pinned module linking
+traverse these expressions and destinations. The original-app agent receives the
+same feature/grammar and submits the same program via the existing save/start
+commands. No new provider route or per-scenario tool is introduced.
+
+PC checks cover debounce, initial policy, bounded work, stale sampling, timeouts,
+missing targets, module scoping and visual editing. PlayMode saves the shared
+fixture through the native executor, waits for actual recorded animation to cross
+the threshold without taking its ownership or changing saved room data, then checks
+pause and target loss. The browser probe replays those native observations and
+edits the canonical source; it neither executes Unity nor simulates acknowledgements.
+The provider test simulates planning through the existing query/save path; actual
+provider/headset performance and usability acceptance remain pending.
+
+This is an in-program wait, not a persistent start binding or concurrent monitor
+while another block plays. Explicit starts/bindings and loops compose continuing
+behaviour. Contact detection, spatial identity/anchors, reflex arbitration,
+background schedules and durable/resumable programs retain their separate release
+gates. Ordinary Stop and cancellation behavior is unchanged.

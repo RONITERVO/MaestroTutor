@@ -49,6 +49,7 @@ namespace Maestro.Quest.Programs
     case "return":if(n.ContainsKey("value"))Expression(n["value"],visit);break;
     case "call":foreach(var arg in List(n["args"],8))Expression(arg,visit);break;
     case "invoke":foreach(var p in Obj(n["bindings"]).Properties())Expression(p.Value,visit);break;
+    case "awaitCondition":Expression(n["test"],visit);Expression(n["stableSeconds"],visit);Expression(n["timeout"],visit);break;
     case "awaitEvent":Expression(n["timeout"],visit);if(n.ContainsKey("bindings"))foreach(var p in Obj(n["bindings"]).Properties())Expression(p.Value,visit);break;
    }
   }

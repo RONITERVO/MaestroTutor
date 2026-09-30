@@ -13,6 +13,7 @@ export type ValueType=DataType;
 export type {ScalarType};
 export type Expression={value:Value;type?:ValueType}|{var:string}|{state:string}|{fact:string;version?:number;arguments?:Record<string,unknown>;bindings?:Record<string,Expression>}|{op:string;args:Expression[]};
 export type ProgramNode={id:string}&(
+ {op:'awaitCondition';test:Expression;transition:'true'|'false'|'either';initial:'baseline'|'report';stableSeconds:Expression;timeout:Expression;received:string;value:string}|
  {op:'set'|'setState';variable:string;value:Expression}|{op:'forever';body:ProgramNode[]}|{op:'sleep';seconds:Expression}|{op:'awaitEvent';event:string;source:string;timeout:Expression;received:string;value:string;fields?:Record<string,string>;version?:number;arguments?:Record<string,unknown>;bindings?:Record<string,Expression>}|{op:'emitEvent';event:string;value:Expression}|{op:'if';test:Expression;then:ProgramNode[];else:ProgramNode[]}|
  {op:'repeat';count:Expression;body:ProgramNode[]}|{op:'switch';value:Expression;cases:{value:Value;body:ProgramNode[]}[];default:ProgramNode[]}|
  {op:'call';module?:string;function:string;args:Expression[];result?:string}|{op:'return';value?:Expression}|
@@ -88,6 +89,12 @@ function validateProgram(root:Record<string,unknown>):void {
      case 'setState': {need(root.version===3,'State needs program version 3');keys(n,'id op variable value');const t=state.get(text(n.variable));need(t,'Unknown program state');expect('value',t);break;}
      case 'forever':need(root.version===3,'Events need program version 3');keys(n,'id op body');child('body');break;
      case 'sleep':need(root.version===3,'Timers need program version 3');keys(n,'id op seconds');expect('seconds','number');break;
+     case 'awaitCondition': {
+      need(root.version===3,'Conditions need program version 3');keys(n,'id op test transition initial stableSeconds timeout received value');
+      need(['true','false','either'].includes(text(n.transition))&&['baseline','report'].includes(text(n.initial)),'Invalid condition transition or initial policy');
+      need(f.types.get(text(n.received))==='boolean'&&f.types.get(text(n.value))==='boolean'&&n.received!==n.value,'Condition destinations need distinct boolean locals');
+      expect('test','boolean');expect('stableSeconds','number');expect('timeout','number');break;
+     }
      case 'awaitEvent': {
       need(root.version===3,'Events need program version 3');keys(n,'id op event source timeout received value','fields version arguments bindings');const eventName=text(n.event),definition=behaviourEvent(eventName),t=events.get(eventName)??(definition?'text':null);need(t,'Unknown event');
       const source=text(n.source);need(source===''||definition?.objectEvent&&target(source),'Only object events accept a source');

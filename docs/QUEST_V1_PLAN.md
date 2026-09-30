@@ -2,7 +2,17 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
-Latest PC increment (2026-09-30): parameterized fact reads share native schemas,
+Latest PC increment (2026-09-30): calculated condition waits compose inspected facts
+with existing typed expressions, debounce and explicit initial-state policies.
+Programs, agent instructions and book controls use the same source; module linking
+and declaration renames include condition inputs. Native tests observe actual
+animation crossing a threshold without taking ownership or saving runtime changes.
+PC checks pass 1,465 app tests, 231 EditMode and 138 PlayMode checks (three optional
+native skips), plus 25 Android tests. The ARM64 APK is built, signature-verified
+and uninstalled. See QUEST_EVENT_PROGRAMS.md for the bounded sampling and lifecycle
+contract. Device/provider/store acceptance remains open.
+
+Previous PC increment (2026-09-30): parameterized fact reads share native schemas,
 typed program expressions, catalog inspection and visual input editing. Programs
 and the agent can read current object positions without owning or editing them.
 Stored records stay detached; missing targets remain unavailable. See

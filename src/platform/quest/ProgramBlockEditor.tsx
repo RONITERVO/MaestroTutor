@@ -62,6 +62,16 @@ export function ProgramBlockEditor({node,program,fn,objects,onChange,eventFields
     case 'if': return expr('Condition',node.test,'boolean',test=>onChange({...node,test}));
     case 'repeat': return expr('Repetitions',node.count,'number',count=>onChange({...node,count}));
     case 'sleep': return expr('Seconds',node.seconds,'number',seconds=>onChange({...node,seconds}));
+    case 'awaitCondition': return <>
+      {expr('Watched condition',node.test,'boolean',test=>onChange({...node,test}))}
+      <label>Detect condition<select aria-label="Detect condition" value={node.transition} onChange={e=>onChange({...node,transition:e.target.value as typeof node.transition})}><option value="true">Becomes true</option><option value="false">Becomes false</option><option value="either">Either change</option></select></label>
+      <label>When watching starts<select aria-label="Initial condition" value={node.initial} onChange={e=>onChange({...node,initial:e.target.value as typeof node.initial})}><option value="report">Also report current match</option><option value="baseline">Wait for a later change</option></select></label>
+      {expr('Stable seconds',node.stableSeconds,'number',stableSeconds=>onChange({...node,stableSeconds}))}
+      {expr('Timeout seconds',node.timeout,'number',timeout=>onChange({...node,timeout}))}
+      {variable('Condition received',node.received,'boolean',received=>onChange({...node,received}),locals.filter(v=>v.name!==node.value))}
+      {variable('Condition value',node.value,'boolean',value=>onChange({...node,value}),locals.filter(v=>v.name!==node.received))}
+      <p>Reads once when the wait starts, then at most 10 times per second without controlling objects. Stable seconds is 0–10; zero timeout waits until stopped. Facts refresh each sample; local values stay fixed while waiting. Missing facts fail the run. An observation gap over 0.3 seconds restarts the stable period and initial policy. Stop or app pause cancels without resuming.</p>
+    </>;
     case 'forever': return <p>Repeats these blocks until stopped. Add a timer or event wait to yield between iterations.</p>;
     case 'set': case 'setState': {
       const choices=node.op==='setState'?states:locals,type=choices.find(v=>v.name===node.variable)?.type??expressionType(node.value,sources);

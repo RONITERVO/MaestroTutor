@@ -14,7 +14,7 @@ it('lets a human wire a native creation result into the next action without writ
  if(first.op!=='invoke'||second.op!=='invoke')throw new Error('Expected calls');
  delete first.results;second.bindings={};initial.resources=[String(second.arguments.target)];
  initial.functions[0].locals=[];let source=JSON.stringify(initial);
- function Harness(){const [value,setValue]=useState(source);return <ProgramEditor source={value} targets={[]} eventsSupported eventFieldsSupported eventSubscriptionsSupported factQueriesSupported resultsSupported structuredSupported onEditingChange={()=>{}} onChange={next=>{source=next;setValue(next);}}/>;}
+ function Harness(){const [value,setValue]=useState(source);return <ProgramEditor source={value} targets={[]} eventsSupported eventFieldsSupported eventSubscriptionsSupported factQueriesSupported conditionWaitsSupported resultsSupported structuredSupported onEditingChange={()=>{}} onChange={next=>{source=next;setValue(next);}}/>;}
  const screen=render(<Harness/>);
  fireEvent.click(screen.getByLabelText('create new variable for objectId'));
  fireEvent.change(screen.getByLabelText('push argument target variable'),{target:{value:'objectId'}});
@@ -32,7 +32,7 @@ const empty:BehaviourProgram={version:2,entry:'main',resources:[],functions:[{na
 function harness(initial=empty,objects=[{id:'maestro',name:'Maestro'},{id:'book',name:'Book'}]) {
  let source=JSON.stringify(initial);
  const onChange=vi.fn();
- function Harness(){const [value,setValue]=useState(source);return <ProgramEditor source={value} targets={objects} eventsSupported eventFieldsSupported eventSubscriptionsSupported factQueriesSupported resultsSupported structuredSupported onEditingChange={()=>{}} onChange={next=>{source=next;setValue(next);onChange(next);}}/>;}
+ function Harness(){const [value,setValue]=useState(source);return <ProgramEditor source={value} targets={objects} eventsSupported eventFieldsSupported eventSubscriptionsSupported factQueriesSupported conditionWaitsSupported resultsSupported structuredSupported onEditingChange={()=>{}} onChange={next=>{source=next;setValue(next);onChange(next);}}/>;}
  const screen=render(<Harness/>);
  const change=(label:string,value:string)=>fireEvent.change(screen.getByLabelText(label),{target:{value}});
  const click=(name:string)=>fireEvent.click(screen.getByRole('button',{name}));
@@ -324,4 +324,13 @@ it('edits a structured fact target and state binding through the same canonical 
  expect(parseProgram(h.source()).program?.functions[0].body[0]).toMatchObject({value:{fact:'object.position',arguments:{target:'maestro'},bindings:{}}});
  h.click('Edit values read_before');h.change('Assigned value fact target mode','expression');h.change('Assigned value fact target expression source','state:target');h.click('Update draft');
  expect(parseProgram(h.source()).program?.functions[0].body[0]).toMatchObject({value:{bindings:{target:{state:'target'}}}});expect(parseProgram(h.source()).program?.resources).toEqual([]);
+});
+
+it('authors condition watches visually with explicit initial, stable and result controls',()=>{
+ const h=harness();fireEvent.click(h.screen.getByLabelText('+ Condition wait in main'));h.click('Edit values block_1');
+ h.change('Watched condition source','op:eq');h.change('Watched condition compared type','text');h.change('Watched condition left source','fact:maestro.state');h.change('Watched condition right value','speaking');h.change('Detect condition','either');h.change('Initial condition','baseline');h.change('Stable seconds value','0.3');h.change('Timeout seconds value','5');h.click('Update draft');
+ const p=parseProgram(h.source());expect(p.error).toBeNull();expect(p.program?.version).toBe(3);expect(p.program?.functions[0].body[0]).toMatchObject({op:'awaitCondition',transition:'either',initial:'baseline',stableSeconds:{value:.3},timeout:{value:5},test:{op:'eq',args:[{fact:'maestro.state'},{value:'speaking'}]}});expect(h.screen.queryByLabelText('Program JSON')).toBeNull();
+});
+it('does not offer new condition waits when the native feature is unavailable',()=>{
+ const screen=render(<ProgramEditor source={JSON.stringify(empty)} targets={[]} eventsSupported onEditingChange={()=>{}} onChange={()=>{}}/>);expect(screen.queryByLabelText('+ Condition wait in main')).toBeNull();
 });

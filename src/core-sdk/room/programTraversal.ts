@@ -11,6 +11,7 @@ export function visitNodeExpressions(n:ProgramNode,action:(expression:Expression
   case 'if':visit(n.test);break;case 'repeat':visit(n.count);break;case 'sleep':visit(n.seconds);break;
   case 'return':if(n.value)visit(n.value);break;case 'call':n.args.forEach(visit);break;
   case 'invoke':Object.values(n.bindings).forEach(visit);break;
+  case 'awaitCondition':visit(n.test);visit(n.stableSeconds);visit(n.timeout);break;
   case 'awaitEvent':visit(n.timeout);Object.values(n.bindings??{}).forEach(visit);break;
  }
 }

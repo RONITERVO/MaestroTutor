@@ -820,6 +820,23 @@ namespace Maestro.Quest.Tests
             var unknown=Query(new JObject {["operation"]="inspect",["capability"]="future.unknown",["version"]=1},"unknown");
             Assert.That(unknown["definition"].Type,Is.EqualTo(JTokenType.Null));
         }
+        [UnityTest] public IEnumerator SharedConditionWaitObservesRealAnimationAndCancelsOnPauseOrMissingTarget()
+        {
+            string target=editor.Identity(block);var program=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-conditions.json")));
+            program["state"][0]["initial"]=target;program["state"][1]["initial"]=block.transform.position.x+.04f;string source=program.ToString();
+            var executor=new RoomAgentExecutor(editor);var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);
+            Assert.That(executor.Execute(new RoomAgentRequest {version=2,commands=new[]{new RoomAgentCommand {action="rules",rule=new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="save",reference="watch",sequence=new RuleSequence {id="",name="Wait for object position",program=source}}}}}}},out var error,out var created),Is.True,error);
+            string id=created.Single();int revision=editor.Revision,rulesRevision=workshop.Revision;string document=JsonUtility.ToJson(editor.Snapshot());
+            void Evidence(string phase){string output=Environment.GetEnvironmentVariable("MAESTRO_CONDITION_EVIDENCE");if(string.IsNullOrEmpty(output))return;Directory.CreateDirectory(output);var state=observer.Observe();state.visible=true;state.workspaceView="rules";state.rules=workshop.Observe(true);File.WriteAllText(Path.Combine(output,phase+".json"),RoomAgentWire.Serialize(state));}
+            Evidence("saved");Assert.That(runtime.Scheduler.RunningCount,Is.Zero,"Saving must not start the watcher");
+            Assert.That(runtime.Trigger(id),Is.True);Evidence("waiting");Assert.That(runtime.Scheduler.ObserveRuns().Single().status,Is.EqualTo("Waiting for condition"));
+            Assert.That(runtime.Trigger(sequenceId),Is.True,"A read-only condition must not own the animation target");yield return new WaitForSeconds(.85f);
+            var run=runtime.Scheduler.ObserveRuns().Single(x=>x.sequenceId==id);Assert.That(run.nodeId,Is.EqualTo("finish"),runtime.Scheduler.LastError);Assert.That(run.state.Single(x=>x.name=="matched").value,Is.EqualTo("True"));Evidence("matched");
+            Assert.That(runtime.Scheduler.RunningCount,Is.EqualTo(2));Assert.That(editor.Revision,Is.EqualTo(revision));Assert.That(workshop.Revision,Is.EqualTo(rulesRevision));Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(document));Assert.That(workshop.Selected.program,Is.EqualTo(source));
+            runtime.StopAll();Assert.That(runtime.Trigger(id),Is.True);root.SendMessage("OnApplicationPause",true,SendMessageOptions.DontRequireReceiver);Evidence("paused");root.SendMessage("OnApplicationPause",false,SendMessageOptions.DontRequireReceiver);yield return null;Assert.That(runtime.Scheduler.RunningCount,Is.Zero);Evidence("resumed");
+            Assert.That(runtime.Trigger(id),Is.True);block.gameObject.SetActive(false);yield return new WaitForSeconds(.2f);Assert.That(runtime.Scheduler.RunningCount,Is.Zero);Assert.That(runtime.Scheduler.LastError,Does.Contain("unavailable"));Evidence("missing");
+            block.gameObject.SetActive(true);
+        }
         [UnityTest] public IEnumerator ParameterizedFactsObserveAnimationWithoutOwningEditingOrFabricatingTargets()
         {
             string target=editor.Identity(block),source=File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-object-facts.json")).Replace("\"book\"","\""+target+"\"");

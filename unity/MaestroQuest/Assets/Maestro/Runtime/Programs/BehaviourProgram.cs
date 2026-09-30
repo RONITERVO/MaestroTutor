@@ -196,6 +196,11 @@ namespace Maestro.Quest.Programs
                         Need(Version==3,"State needs program version 3");Keys(node,"id op variable value");Need(InitialState.TryGetValue(Text(node["variable"]),out var state),"Unknown program state");Expr("value",state.Type);break;
                     case "forever":Need(Version==3,"Events need program version 3");Keys(node,"id op body");Child("body");break;
                     case "sleep":Need(Version==3,"Timers need program version 3");Keys(node,"id op seconds");Expr("seconds",ProgramType.Number);break;
+                    case "awaitCondition":
+                        Need(Version==3,"Conditions need program version 3");Keys(node,"id op test transition initial stableSeconds timeout received value");
+                        Need(new[]{"true","false","either"}.Contains(Text(node["transition"]))&&new[]{"baseline","report"}.Contains(Text(node["initial"])),"Invalid condition transition or initial policy");
+                        Need(function.Types.TryGetValue(Text(node["received"]),out var conditionReceived)&&conditionReceived==ProgramType.Boolean&&function.Types.TryGetValue(Text(node["value"]),out var conditionValue)&&conditionValue==ProgramType.Boolean&&Text(node["received"])!=Text(node["value"]),"Condition destinations need distinct boolean locals");
+                        Expr("test",ProgramType.Boolean);Expr("stableSeconds",ProgramType.Number);Expr("timeout",ProgramType.Number);break;
                     case "awaitEvent":
                         Need(Version==3,"Events need program version 3");Keys(node,"id op event source timeout received value","fields version arguments bindings");
                         string eventName=Text(node["event"]);var eventType=EventType(eventName);string sourceId=Text(node["source"]);

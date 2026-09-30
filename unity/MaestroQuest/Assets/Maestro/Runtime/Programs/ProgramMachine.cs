@@ -9,7 +9,7 @@ using Newtonsoft.Json.Linq;
 namespace Maestro.Quest.Programs
 {
     public enum ProgramYield { Action, Yield, Waiting, Signal, Completed, Failed }
-    public sealed class ProgramWait {public string Event,Source;public float Seconds;public JObject Arguments;}
+    public sealed class ProgramWait {public string Event,Source;public float Seconds;public JObject Arguments;public Func<float,IProgramEventWatch> Condition;}
     public sealed class ProgramSignal {public string Event;public ProgramValue Value;}
     public interface IProgramFacts {bool TryRead(string name,out ProgramValue value);}
     public interface IProgramFactQueries {bool TryRead(string name,int version,JObject arguments,out ProgramValue value);}
@@ -25,6 +25,8 @@ namespace Maestro.Quest.Programs
         readonly HashSet<Scope> memoryScopes=new();
         Scope observed;
         bool terminal;
+        int sampleBudget=-1;
+        public const int MaximumConditionInstructions=512;
         readonly Dictionary<string,ProgramValue> state;
         Scope waitingScope;string receivedVariable,valueVariable;JObject eventBindings;
         Scope resultScope;JObject resultBindings;BehaviourCatalog.ActionDefinition resultContract;
@@ -82,6 +84,12 @@ namespace Maestro.Quest.Programs
                         case "sleep":
                             double seconds=Eval("seconds").Number;if(!double.IsFinite(seconds)||seconds<.1||seconds>3600)throw new ProgramFault("Delay must be 0.1 to 3600 seconds");
                             Wait=new ProgramWait {Seconds=(float)seconds};return ProgramYield.Waiting;
+                        case "awaitCondition":
+                            double conditionTimeout=Eval("timeout").Number,stable=Eval("stableSeconds").Number;
+                            if(!double.IsFinite(conditionTimeout)||conditionTimeout!=0&&(conditionTimeout<.1||conditionTimeout>3600)||!double.IsFinite(stable)||stable<0||stable>10)throw new ProgramFault("Condition timeout must be zero or 0.1 to 3600 seconds; stable period must be 0 to 10 seconds");
+                            waitingScope=frame.Scope;receivedVariable=(string)node["received"];valueVariable=(string)node["value"];waitingScope.Values[receivedVariable]=new ProgramValue(false);
+                            var conditionScope=frame.Scope;
+                            Wait=new ProgramWait {Seconds=(float)conditionTimeout,Condition=now=>new ConditionSubscription(()=>EvaluateCondition(node["test"],conditionScope),(string)node["transition"],(string)node["initial"],(float)stable,now)};return ProgramYield.Waiting;
                         case "awaitEvent":
                             double timeout=Eval("timeout").Number;if(!double.IsFinite(timeout)||timeout!=0&&(timeout<.1||timeout>3600))throw new ProgramFault("Event timeout must be zero or 0.1 to 3600 seconds");
                             waitingScope=frame.Scope;receivedVariable=(string)node["received"];valueVariable=(string)node["value"];eventBindings=node["fields"] as JObject;
@@ -130,6 +138,10 @@ namespace Maestro.Quest.Programs
         public void Resume(bool received,ProgramValue value=default,JObject fields=null)
         {
             if(Wait==null)throw new InvalidOperationException("This program is not waiting");
+            if(received&&Wait.Condition!=null) {
+                if(value.Type!=ProgramType.Boolean||fields!=null)throw new ArgumentException("Invalid condition result");
+                waitingScope.Values[receivedVariable]=new ProgramValue(true);waitingScope.Values[valueVariable]=value;
+            }
             if(received&&Wait.Event!=null) {
                 if(value.Type!=program.EventType(Wait.Event))throw new ArgumentException("Event payload type differs");
                 var definition=BehaviourCatalog.Event(Wait.Event);
@@ -150,7 +162,16 @@ namespace Maestro.Quest.Programs
             Add(Result);if(nodes>1024||characters>8192)throw new ProgramFault("Program retained-value budget exceeded");
         }
         void Charge(int count){for(int i=0;i<count;i++)Charge();}
-        void Charge() {if(++Instructions>MaximumInstructions)throw new ProgramFault("Program instruction budget exhausted");}
+        void Charge() {
+            if(sampleBudget>=0){if(sampleBudget==0)throw new ProgramFault("Condition sample instruction budget exhausted");sampleBudget--;return;}
+            if(++Instructions>MaximumInstructions)throw new ProgramFault("Program instruction budget exhausted");
+        }
+        bool EvaluateCondition(JToken test,Scope scope) {
+            // A bounded sample is independent of accumulated statement work. False
+            // observations do not consume or renew the running activation budget.
+            sampleBudget=MaximumConditionInstructions;
+            try{return Evaluate(test,scope).Boolean;}finally{sampleBudget=-1;}
+        }
         ProgramValue Evaluate(JToken token,Scope scope)
         {
             Charge();

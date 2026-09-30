@@ -66,16 +66,23 @@ namespace Maestro.Quest.Rules
         bool WaitForEvent(Run run,float now)
         {
             lastNow=now;run.Targets.Clear();run.Claims=Array.Empty<BehaviourCatalog.Claim>();run.Active=null;run.WaitSerial++;run.Ends=now+run.Machine.Wait.Seconds;
+            if(run.Machine.Wait.Condition!=null) {
+                try {run.Watch=run.Machine.Wait.Condition(now);}catch(ProgramFault error){LastError=error.Message;Stop(run,false,"failed",LastError);return false;}
+                return RegisterWatch(run);
+            }
             string name=run.Machine.Wait.Event;if(name==null)return true;
             if(run.Machine.Wait.Arguments!=null) {
                 if(!BehaviourCatalog.Event(name).TryWatch(actions as IProgramEventWorld,run.Machine.Wait.Arguments,now,out run.Watch,out var error)) {
                     LastError=error;Stop(run,false,"failed",error);return false;
                 }
-                for(int i=0;i<watched.Length;i++)if(watched[i]==null) {watched[i]=run;run.WatchSlot=i;run.WatchPending=false;return true;}
-                LastError="Native event subscription limit reached";Stop(run,false,"failed",LastError);return false;
+                return RegisterWatch(run);
             }
             if(!subscriptions.TryGetValue(name,out var listeners))subscriptions[name]=listeners=new();
             listeners.Add(run);return true;
+        }
+        bool RegisterWatch(Run run) {
+            for(int i=0;i<watched.Length;i++)if(watched[i]==null){watched[i]=run;run.WatchSlot=i;run.WatchPending=false;return true;}
+            LastError="Native subscription limit reached";Stop(run,false,"failed",LastError);return false;
         }
         void PollWatches(float now) {
             // At most eight read-only watchers, no per-frame array/schema expansion.
@@ -84,6 +91,12 @@ namespace Maestro.Quest.Rules
                 bool emitted=run.Watch.Poll(now,out var value,out var fields,out var error);
                 if(error!=null) {LastError=error;Stop(run,false,"failed",error);continue;}
                 if(!emitted)continue;
+                if(run.Machine.Wait.Condition!=null) {
+                    if(value.Type!=ProgramType.Boolean||fields!=null){LastError="Condition produced an invalid result";Stop(run,false,"failed",LastError);continue;}
+                    // Private bounded wake, independent of the broadcast event queue.
+                    // All watches sample before any resumed statement executes.
+                    Unsubscribe(run);run.Machine.Resume(true,value);run.EventDepth=0;run.Computing=true;continue;
+                }
                 if(value.Type!=ProgramType.Text||!ValidValue(value)||!BehaviourCatalog.Event(run.Machine.Wait.Event).ValidFields(fields)) {LastError="Native subscription produced invalid fields";Stop(run,false,"failed",LastError);continue;}
                 if(eventQueue.Count>=MaximumEvents) {if(EventsDropped<int.MaxValue)EventsDropped++;LastError="Event queue is full; the event was not delivered";continue;}
                 eventQueue.Enqueue(new EventMessage {Receivers=new[] {new Delivery {Run=run,Serial=run.WaitSerial}},Value=value,Fields=(JObject)fields.DeepClone(),At=now,Depth=0});run.WatchPending=true;

@@ -1322,3 +1322,16 @@ readability of units/help and behaviour under real headset frame timing.
   cancelled/failed runs rather than false origins or automatic replay.
 - Check labels, record-field editing, controller/hand selection, rendering cost
   and the equivalent real-provider agent journey on Quest.
+
+
+### Calculated condition waits — pending device acceptance
+
+With the book's Condition wait editor, watch an object's position against a visible
+threshold, then move it across with grip and recorded animation. Check baseline vs
+current-match reporting, stable period and timeout. Verify the program does not
+interrupt the movement, repeated crossings behave as configured, and state/trace
+show the same result as the agent's inspection. Stop, app pause and object removal
+must cancel/fail visibly without resuming on focus return. Confirm labels are
+readable and hand/controller editing remains practical. Profile eight active
+condition watchers with representative record/fact expressions alongside MR,
+physics and book rendering; PC sampling limits alone do not establish Quest timing.

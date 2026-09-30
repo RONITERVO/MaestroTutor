@@ -3232,7 +3232,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
-      "sha256": "5d40e95bd4c1fd5c580bad2feeae8fc01dc7f25a3ec3574b3bfbbabd08c63a36"
+      "sha256": "719be37aacc9700a0c3207ada3f9eedfb3bda2d147f7018f634ab176ead5cc6d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramSubscriptions.cs",
@@ -3252,7 +3252,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramModules.cs",
-      "sha256": "af9ae2c46d94dadd9956fa501a2f136ffb620e52639086ab8a4b88b26cd47981"
+      "sha256": "f63b25c608d7d89ce404fe0a6079a65b0300c91ed6ab31db5c3cc0d41f468875"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramModuleLibrary.cs",
