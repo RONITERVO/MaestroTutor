@@ -8,10 +8,8 @@
  * coordinating between multiple services (chats, metas, global profile, assets).
  */
 import { useCallback, useState } from 'react';
-import { nativeFileWriter } from '../../../platform/browser/fileWriter';
-import { Capacitor } from '@capacitor/core';
-import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
-import { Share } from '@capacitor/share';
+import type { AppFileWriter } from '../../../platform/browser/fileWriter';
+import {saveBackupFile,isBackupCancellation,type BackupSaveResult} from '../services/backupFile';
 
 // --- Types ---
 import type { TranslationFunction } from '../../../app/hooks/useTranslations';
@@ -23,7 +21,6 @@ import {
   getChatMetaDB,
   getChatHistoryDB,
   iterateChatHistoriesDB,
-  hasAnyChatHistoriesDB,
   resetRoomAgentTasks,
 } from '../../chat';
 import { getGlobalProfileDB } from '..';
@@ -45,8 +42,8 @@ export interface UseDataBackupConfig {
 
 export interface UseDataBackupReturn {
   exportStatus: string;
-  handleSaveAllChats: (options?: { filename?: string; auto?: boolean }) => Promise<void>;
-  handleLoadAllChats: (file: File) => Promise<void>;
+  handleSaveAllChats: (options?: { filename?: string; auto?: boolean }) => Promise<BackupSaveResult>;
+  handleLoadAllChats: (file: File) => Promise<boolean>;
   handleSaveCurrentChat: () => Promise<void>;
   handleAppendToCurrentChat: (file: File) => Promise<void>;
   handleTrimBeforeBookmark: () => Promise<boolean>;
@@ -54,16 +51,10 @@ export interface UseDataBackupReturn {
 
 const BACKUP_FORMAT = 'ndjson-v1';
 const BACKUP_EXT = 'ndjson';
-const BACKUP_MIME = 'application/x-ndjson';
 const MAX_CHUNK_CHARS = 1_000_000; // ~1MB per NDJSON line
 const MAX_CHUNK_MESSAGES = 200;
 
-type BackupLineWriter = {
-  location?: () => string | undefined;
-  write: (line: string) => Promise<void>;
-  close: () => Promise<void>;
-  abort?: () => Promise<void>;
-};
+type BackupLineWriter = Pick<AppFileWriter,'write'>;
 
 const normalizeBackupFilename = (rawFilename: string, fallbackBase: string): string => {
   const cleaned = rawFilename.replace(/[\\/:*?"<>|]/g, '-').trim();
@@ -91,63 +82,7 @@ const buildChatChunkLine = (pairId: string, chunkIndex: number, isLast: boolean,
   return `{"type":"chatChunk","pairId":${pid},"chunkIndex":${chunkIndex}${lastField},"messages":[${messageJsonParts.join(',')}]}\n`;
 };
 
-const isCancelError = (err: unknown) => {
-  const msg = (err instanceof Error ? err.message : String(err)).toLowerCase();
-  return msg.includes('canceled') || msg.includes('cancelled') || msg.includes('abort');
-};
-
-const createNativeLineWriter = (path: string, directory: Directory) => {
-  let hasWritten = false;
-  let uri: string | undefined;
-  const writer: BackupLineWriter & { getUri: () => string | undefined } = {
-    write: async (line: string) => {
-      if (!hasWritten) {
-        const result = await Filesystem.writeFile({
-          path,
-          data: line,
-          directory,
-          encoding: Encoding.UTF8,
-        });
-        uri = result?.uri;
-        hasWritten = true;
-        return;
-      }
-      await Filesystem.appendFile({
-        path,
-        data: line,
-        directory,
-        encoding: Encoding.UTF8,
-      });
-    },
-    close: async () => {},
-    getUri: () => uri,
-  };
-  return writer;
-};
-
-const createWebLineWriter = async (filename: string): Promise<BackupLineWriter> => {
-  const native = nativeFileWriter(filename, BACKUP_MIME);
-  if (native) return native;
-  const picker = (typeof window !== 'undefined' ? (window as any).showSaveFilePicker : undefined) as undefined | ((options?: any) => Promise<any>);
-  if (typeof picker !== 'function') {
-    throw new Error('BROWSER_NOT_SUPPORTED');
-  }
-  const handle = await picker({
-    suggestedName: filename,
-    types: [{ description: 'Maestro Backup', accept: { [BACKUP_MIME]: ['.ndjson', '.jsonl'] } }],
-    excludeAcceptAllOption: false,
-  });
-  const writable = await handle.createWritable();
-  return {
-    write: async (line: string) => {
-      await writable.write(line);
-    },
-    close: async () => {
-      await writable.close();
-    },
-    abort: async () => { await writable.abort(); },
-  };
-};
+const isCancelError = isBackupCancellation;
 
 const readFileAsText = (file: Blob): Promise<string> =>
   new Promise((resolve, reject) => {
@@ -200,28 +135,15 @@ export const useDataBackup = ({ t }: UseDataBackupConfig): UseDataBackupReturn =
   const setTempTargetLangCode = useMaestroStore(state => state.setTempTargetLangCode);
   const setIsLanguageSelectionOpen = useMaestroStore(state => state.setIsLanguageSelectionOpen);
 
-  const handleSaveAllChats = useCallback(async (options?: { filename?: string; auto?: boolean }) => {
+  const handleSaveAllChats = useCallback(async (options?: { filename?: string; auto?: boolean }):Promise<BackupSaveResult> => {
     setExportStatus('');
     const isAuto = options?.auto === true;
     try {
       const selectedPairId = useMaestroStore.getState().settings.selectedLanguagePairId;
-      if (selectedPairId) {
-        try {
-          await safeSaveChatHistoryDB(selectedPairId, useMaestroStore.getState().messages);
-        } catch { /* ignore */ }
-      }
-      const hasAnyChats = await hasAnyChatHistoriesDB();
-      if (!hasAnyChats) {
-        if (!isAuto) {
-          alert(t('startPage.noChatsToSave'));
-        }
-        return;
-      }
-
+      if (selectedPairId && !await safeSaveChatHistoryDB(selectedPairId, useMaestroStore.getState().messages)) throw new Error('Could not save the current conversation before exporting.');
       const allMetas = await getAllChatMetasDB();
       const gp = await getGlobalProfileDB();
-      let maestroProfile: any = null;
-      try { maestroProfile = await getMaestroProfileImageDB(); } catch {}
+      const maestroProfile = await getMaestroProfileImageDB();
 
       const timestamp = new Date().toISOString().slice(0, 19).replace('T', '_').replace(/:/g, '-');
       const prefix = isAuto ? 'maestro-backup-' : 'maestro-all-chats-';
@@ -231,7 +153,6 @@ export const useDataBackup = ({ t }: UseDataBackupConfig): UseDataBackupReturn =
       const safeFilename = normalizeBackupFilename(rawFilename, `${prefix}${timestamp}`);
 
       const writeBackupLines = async (writer: BackupLineWriter) => {
-        try {
           await writer.write(buildHeaderLine());
           await writer.write(buildJsonLine({ type: 'globalProfile', text: gp?.text || null }));
           await writer.write(buildJsonLine({ type: 'assets', maestroProfile }));
@@ -278,77 +199,16 @@ export const useDataBackup = ({ t }: UseDataBackupConfig): UseDataBackupReturn =
           });
           await writer.write(buildJsonLine({ type: 'end', chats, tasks }));
 
-          await writer.close();
-        } catch (error) { await writer.abort?.().catch(() => {}); throw error; }
       };
 
-      if (Capacitor.isNativePlatform()) {
-        const attemptWrite = async (directory: Directory) => {
-          const writer = createNativeLineWriter(safeFilename, directory);
-          await writeBackupLines(writer);
-          const uri = writer.getUri();
-          if (!uri) throw new Error('Missing file URI for backup');
-          return uri;
-        };
-
-        try {
-          let uri: string | undefined;
-          try {
-            uri = await attemptWrite(Directory.Documents);
-          } catch {
-            uri = await attemptWrite(Directory.Cache);
-          }
-
-          await Share.share({
-            title: t('startPage.saveChats'),
-            url: uri,
-            dialogTitle: t('startPage.saveChats'),
-          });
-        } catch (err) {
-          if (isCancelError(err)) {
-            return;
-          }
-          const errorMsg = err instanceof Error ? err.message : String(err);
-          console.error('Failed to save/share backup:', err);
-          if (!isAuto) {
-            alert(`${t('startPage.saveError')}\n${errorMsg}`);
-          }
-        }
-        return;
-      }
-
-      try {
-        const writer = await createWebLineWriter(safeFilename);
-        await writeBackupLines(writer);
-        setExportStatus(writer.location?.() ? `Saved: ${writer.location()}` : '');
-      } catch (err) {
-        if (isCancelError(err)) {
-          return;
-        }
-        const errMsg = err instanceof Error ? err.message : String(err);
-        if (errMsg === 'BROWSER_NOT_SUPPORTED') {
-          if (!isAuto) {
-            alert(t('startPage.browserNotSupported') || 'Your browser does not support file saving. Please use Chrome or Edge.');
-          }
-          return;
-        }
-        throw err;
-      }
+      const result=await saveBackupFile(safeFilename,t('startPage.saveChats'),writeBackupLines,isAuto);
+      if(result.status==='saved'&&result.location)setExportStatus(t(result.sharingFailed?'sessionControls.backupSavedShareFailed':'sessionControls.backupSaved',{location:result.location}));
+      return result;
     } catch (error) {
-      if (isCancelError(error)) {
-        return;
-      }
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      if (errorMsg === 'BROWSER_NOT_SUPPORTED') {
-        if (!isAuto) {
-          alert(t('startPage.browserNotSupported') || 'Your browser does not support file saving. Please use Chrome or Edge.');
-        }
-        return;
-      }
-      console.error("Failed to save all chats:", error);
-      if (!isAuto) {
-        alert(`${t('startPage.saveError')}\n${errorMsg}`);
-      }
+      if(isCancelError(error))return {status:'cancelled'};
+      const message=error instanceof Error?error.message:String(error);
+      if(!isAuto)alert(message==='BROWSER_NOT_SUPPORTED'?t('startPage.browserNotSupported'):`${t('startPage.saveError')}\n${message}`);
+      return {status:'failed',message};
     }
   }, [t]);
 
@@ -378,13 +238,18 @@ export const useDataBackup = ({ t }: UseDataBackupConfig): UseDataBackupReturn =
   }, [t, setTempNativeLangCode, setTempTargetLangCode, setIsLanguageSelectionOpen]);
 
   const handleLoadAllChats = useCallback(async (file: File) => {
-    await handleSaveAllChats({ auto: true });
+    const backup=await handleSaveAllChats({auto:true});
+    if(backup.status!=='saved'){
+      setExportStatus(t('sessionControls.backupRequired'));
+      return false;
+    }
     try {
       const name = (file.name || '').toLowerCase();
       if (!name.endsWith('.ndjson') && !name.endsWith('.jsonl')) {
         throw new Error('UNSUPPORTED_FORMAT');
       }
       await loadNdjsonBackup(file);
+      return true;
     } catch (e) {
       const errMsg = e instanceof Error ? e.message : String(e);
       console.error("Failed to load chats:", e);
@@ -393,6 +258,7 @@ export const useDataBackup = ({ t }: UseDataBackupConfig): UseDataBackupReturn =
       } else {
         alert(t('startPage.loadError'));
       }
+      return false;
     }
   }, [handleSaveAllChats, t, loadNdjsonBackup]);
 
@@ -406,9 +272,7 @@ export const useDataBackup = ({ t }: UseDataBackupConfig): UseDataBackupReturn =
         return;
       }
       // Save in-memory messages to DB first
-      try {
-        await safeSaveChatHistoryDB(selectedPairId, useMaestroStore.getState().messages);
-      } catch { /* ignore */ }
+      if(!await safeSaveChatHistoryDB(selectedPairId,useMaestroStore.getState().messages))throw new Error('Could not save the current conversation before exporting.');
 
       const messages = await getChatHistoryDB(selectedPairId);
       if (!messages || messages.length === 0) {
@@ -421,7 +285,6 @@ export const useDataBackup = ({ t }: UseDataBackupConfig): UseDataBackupReturn =
       const safeFilename = normalizeBackupFilename(`maestro-${selectedPairId}-${timestamp}`, `maestro-chat-${timestamp}`);
 
       const writeBackupLines = async (writer: BackupLineWriter) => {
-        try {
           await writer.write(buildHeaderLine());
           await writer.write(buildJsonLine({ type: 'globalProfile', text: null }));
           await writer.write(buildJsonLine({ type: 'assets', maestroProfile: null }));
@@ -455,53 +318,10 @@ export const useDataBackup = ({ t }: UseDataBackupConfig): UseDataBackupReturn =
           }
           const tasks = await writeTaskBackup(selectedPairId, messages, writer.write);
           await writer.write(buildJsonLine({ type: 'end', chats: 1, tasks }));
-          await writer.close();
-        } catch (error) { await writer.abort?.().catch(() => {}); throw error; }
       };
 
-      if (Capacitor.isNativePlatform()) {
-        const attemptWrite = async (directory: Directory) => {
-          const writer = createNativeLineWriter(safeFilename, directory);
-          await writeBackupLines(writer);
-          const uri = writer.getUri();
-          if (!uri) throw new Error('Missing file URI for backup');
-          return uri;
-        };
-
-        try {
-          let uri: string | undefined;
-          try {
-            uri = await attemptWrite(Directory.Documents);
-          } catch {
-            uri = await attemptWrite(Directory.Cache);
-          }
-          await Share.share({
-            title: t('startPage.saveThisChat') || 'Save This Chat',
-            url: uri,
-            dialogTitle: t('startPage.saveThisChat') || 'Save This Chat',
-          });
-        } catch (err) {
-          if (isCancelError(err)) return;
-          const errorMsg = err instanceof Error ? err.message : String(err);
-          console.error('Failed to save/share single chat:', err);
-          alert(`${t('startPage.saveError')}\n${errorMsg}`);
-        }
-        return;
-      }
-
-      try {
-        const writer = await createWebLineWriter(safeFilename);
-        await writeBackupLines(writer);
-        setExportStatus(writer.location?.() ? `Saved: ${writer.location()}` : '');
-      } catch (err) {
-        if (isCancelError(err)) return;
-        const errMsg = err instanceof Error ? err.message : String(err);
-        if (errMsg === 'BROWSER_NOT_SUPPORTED') {
-          alert(t('startPage.browserNotSupported') || 'Your browser does not support file saving. Please use Chrome or Edge.');
-          return;
-        }
-        throw err;
-      }
+      const result=await saveBackupFile(safeFilename,t('startPage.saveThisChat'),writeBackupLines);
+      if(result.status==='saved'&&result.location)setExportStatus(t(result.sharingFailed?'sessionControls.backupSavedShareFailed':'sessionControls.backupSaved',{location:result.location}));
     } catch (error) {
       if (isCancelError(error)) return;
       const errorMsg = error instanceof Error ? error.message : String(error);

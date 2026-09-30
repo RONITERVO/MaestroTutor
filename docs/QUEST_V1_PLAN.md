@@ -748,3 +748,37 @@ and [pending expiry contract](https://developer.android.com/reference/android/pr
 Hardware filesystem behavior and power-loss durability remain acceptance gates.
 The browser fixture uses simulated native acknowledgements and real original
 Save/Load controls/IndexedDB; Android tests use an isolated fake MediaStore provider.
+
+
+### 2026-09-30: confirmed backups before replacement/reset
+
+Save All now returns a distinct saved/shared/cancelled/failed outcome. Load All and
+Backup & Reset require a completed file before changing existing data. Failures
+persisting the selected conversation, reading its avatar, writing or closing the
+file all stop the destructive path. Modern complete archives may contain zero
+conversations, so a profile created before the first lesson is still restorable;
+legacy empty files and truncated/mismatched modern archives remain invalid.
+
+Desktop and Quest share one writer adapter. On Capacitor, required recovery copies
+are written to a unique Documents filename through a pending file and rename;
+a cache file or share-sheet acknowledgement cannot authorize replacement/reset.
+Manual sharing can still use cache when Documents is unavailable. A completed
+Documents file remains saved if its subsequent share dialog is cancelled.
+
+Reset clears all original-app IndexedDB stores in one transaction and reloads only
+on its completion. It never queues an uncancellable deleteDatabase request. Double
+confirmation and cancellation while an action is already running are disabled.
+Changes to this tab's conversation/settings abort an outstanding reset; both
+asynchronous aborts and synchronous clear/setup failures roll back queued clears.
+A guard that arrives after commit is reported honestly as a completed reset.
+This is not global writer quiescence: concurrent tabs, provider completions and
+other independent writes still require coordinated snapshot/maintenance acceptance
+before release. Chat backups do not restore every preference, credential, cache,
+or native Unity room/model/motion/module file. Native content portability remains
+next work, separate from this original-app backup path.
+
+PC browser evidence uses the actual Save/Load/Reset controls and real IndexedDB,
+with simulated native export acknowledgements. It covers failed mandatory saves,
+atomic rollback, a conversation change during clear, successful clear/reload and
+zero-chat profile restoration. No headset installation or storage acceptance is
+implied by those checks.

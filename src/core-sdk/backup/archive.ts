@@ -166,6 +166,6 @@ export class BackupDecoder {
   }
   finish(): BackupEntry[] {
     if (!this.header || this.task || (this.enhanced && !this.ended)) return invalid();
-    const result = this.flushChat(); if (!this.chats) invalid(); return result;
+    const result = this.flushChat(); if (!this.enhanced && !this.chats) invalid(); return result;
   }
 }

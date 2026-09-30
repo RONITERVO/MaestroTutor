@@ -78,7 +78,7 @@ export async function commitBackupStage(staged: StagedBackup, appendPair?: strin
       request.onsuccess = () => {
         const cursor = request.result;
         if (!cursor) {
-          if (visitedChats !== staged.chats || visitedTasks !== staged.tasks || !copiedChats) { tx.abort(); return; }
+          if (visitedChats !== staged.chats || visitedTasks !== staged.tasks || (appendPair && !copiedChats)) { tx.abort(); return; }
           if (appendPair) {
             readRoomTaskSummaries(tx, appendPair, summaries => {
               const chats = tx.objectStore(STORE_NAME), history = chats.get(appendPair);

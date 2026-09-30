@@ -26,6 +26,14 @@ When device work resumes:
    failure must not claim success or overwrite another export. Save smaller
    conversations separately when the archive exceeds the limit.
 
+6. Cancel or fail the mandatory save before Load All and Backup & Reset. Neither
+   may replace/delete data. Retry with a completed save, then restore its contents.
+   Check a profile-only installation with no conversations. On phone builds,
+   required backups must exist under Documents, not just a dismissed share sheet.
+   Use an isolated test profile for reset; chat backup does not restore every
+   preference or native room asset. Other tabs/provider activity must be included
+   in the remaining coordinated-maintenance acceptance tests.
+
 Android MediaStore provider tests cover pending publication and deletion; Chrome
 uses a simulated transport to exercise the actual Save/Load controls and IndexedDB.
 Neither establishes headset acceptance, process-crash cleanup timing or flash

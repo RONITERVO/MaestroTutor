@@ -80,3 +80,13 @@ it.each([null, {}, { dataUrl: 'data:image/png;base64,AQID', mimeType: 'image/png
     expect(await decode([header, chat, { type: 'assets', maestroProfile }, { ...end, tasks: 0 }]))
       .toContainEqual({ kind: 'asset', id: 'maestroProfileImage', value: maestroProfile });
   });
+
+
+it('accepts a complete modern zero-chat archive but rejects a truncated or legacy empty one',async()=>{
+ const profile={type:'globalProfile',text:'Before my first lesson'},emptyEnd={type:'end',chats:0,tasks:0};
+ expect(await decode([header,profile,emptyEnd])).toEqual([{kind:'profile',id:'singleton',value:profile.text}]);
+ expect(await decode([header,emptyEnd])).toEqual([]);
+ await expect(decode([header,profile])).rejects.toThrow('INVALID_BACKUP_FORMAT');
+ await expect(decode([{type:'header',format:'ndjson-v1'},profile])).rejects.toThrow('INVALID_BACKUP_FORMAT');
+ await expect(decode([header,{...emptyEnd,chats:1}])).rejects.toThrow('INVALID_BACKUP_FORMAT');
+});

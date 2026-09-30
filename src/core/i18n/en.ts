@@ -49,6 +49,13 @@ export const enTranslations: Record<string, string> = {
   "startPage.browserNotSupported": "Your browser does not support file saving. Please use Chrome or Edge.",
   
   // Session Controls - Action labels and descriptions
+  "sessionControls.backupSaved": "Saved: {location}",
+  "sessionControls.backupSavedShareFailed": "Saved: {location}. Sharing did not finish; your local backup is available.",
+  "sessionControls.backupRequired": "A backup was not completed. Your existing data has not been replaced or reset. Try saving again.",
+  "sessionControls.backupChanged": "Your conversation or settings changed during backup. Nothing was reset. Try again when ready.",
+  "sessionControls.confirmAction": "Confirm action",
+  "sessionControls.cancelAction": "Cancel action",
+  "sessionControls.actionWorking": "Finishing this action…",
   "sessionControls.taskBackupDetails": "Backups include agent task records and any speech or camera frames saved with them. Imported tasks are history only; their actions will not run again.",
   "sessionControls.saveAll.label": "Save All",
   "sessionControls.saveAll.description": "Export all chats to backup file",
