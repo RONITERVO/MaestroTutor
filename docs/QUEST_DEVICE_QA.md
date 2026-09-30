@@ -41,6 +41,21 @@ power-loss durability. Native creations, motion assets and module-library entrie
 are not included by this chat backup path; their portability remains separate work.
 
 
+## Module files: headset acceptance pending
+
+1. In the book's reusable module library, inspect and export a module. Confirm
+   its Downloads receipt, including the resolved name after repeated exports.
+2. Choose that JSON file. Check its name, exact content ID, exports and referenced
+   objects before pressing Import file to library. Selection must not start work.
+3. Confirm the native action receipt and inspect the resulting definition. Import
+   twice and verify one identical entry. No program, button or animation may start.
+4. Reject an altered hash, truncated/invalid file, unsupported version and an invalid
+   program without replacing library entries. Interrupt export/import and inspect
+   file/library/receipt before retrying; Stop cannot retract dispatched storage.
+5. Reuse the entry in a caller only after deliberate resource/signal wiring. Missing
+   room objects or motion/model assets must remain missing, with no silent remap.
+   A module file alone does not transfer an entire native workspace.
+
 ## Shared ownership: headset acceptance pending
 
 The latest PC package and exact verification are recorded in draft PR #248 and

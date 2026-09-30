@@ -31,6 +31,27 @@ namespace Maestro.Quest.Programs
    try{operation=new ModuleWrite(library,library.Publish(module));return true;}catch(Exception ex){error=ex.Message;return false;}
   }
  }
+ internal sealed class ImportProgramModuleCapability:CapabilityModule
+ {
+  public override string Id=>"program.module.import";
+  public override string Label=>"Import reusable module";
+  public override string Description=>"Save an exact portable module definition to the local library. Pass its complete definition object and SHA256 hash from an inspected module or Maestro module file. The hash is an identity, not proof of trust. Unity validates the entire program and pin before writing. Nothing starts, no object access is granted, and saved/running imports remain unchanged. Exact object/motion/model references are retained; missing dependencies are not supplied or remapped. A dispatched write can finish after Stop; inspect the library/receipt after uncertainty.";
+  public override string Duration=>"completion";
+  public override IReadOnlyList<string> Requirements=>new[]{"moduleLibrary.ready","storage.writable"};
+  public override JObject InputSchema {get {var schema=Object(new JObject {["hash"]=Text("^[a-f0-9]{64}$",64),["definition"]=new JObject {["type"]="object",["format"]="programModule",["x-static"]=true}});schema["x-features"]=new JArray("moduleLibraryFiles.v1");return schema;}}
+  public override JObject OutputSchema=>ModuleWrite.ResultSchema;
+  public override JObject Example {get {var module=JObject.Parse("{\"version\":1,\"name\":\"Empty reusable program\",\"exports\":[\"main\"],\"program\":{\"version\":3,\"entry\":\"main\",\"resources\":[],\"state\":[],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[],\"body\":[]}]}}");return new JObject {["hash"]=ProgramModules.Hash(module),["definition"]=module};}}
+  static bool Prepare(CapabilityContext context,JObject args,out ProgramModuleLibrary library,out JObject module,out string error){
+   library=context.Editor?context.Editor.GetComponent<RuleWorkshop>()?.Modules:null;module=null;error="Behaviour library is not ready";
+   if(library==null||!library.CanWrite(out error))return false;
+   try{module=ProgramModuleLibrary.ImportDefinition((string)args["hash"],args["definition"] as JObject);return library.CanPublish(module,out error);}catch(Exception ex){error=ex.Message;return false;}
+  }
+  public override bool CanRun(CapabilityContext context,JObject args,out string error)=>Prepare(context,args,out _,out _,out error);
+  public override bool Start(CapabilityContext context,string runId,JObject args,out CapabilityOperation operation,out string error){
+   operation=null;if(!Prepare(context,args,out var library,out var module,out error))return false;
+   try{operation=new ModuleWrite(library,library.Publish(module));return true;}catch(Exception ex){error=ex.Message;return false;}
+  }
+ }
  internal sealed class RemoveProgramModuleCapability:CapabilityModule
  {
   public override string Id=>"program.module.remove";

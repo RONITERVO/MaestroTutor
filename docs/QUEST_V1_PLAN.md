@@ -782,3 +782,15 @@ with simulated native export acknowledgements. It covers failed mandatory saves,
 atomic rollback, a conversation change during clear, successful clear/reload and
 zero-chat profile restoration. No headset installation or storage acceptance is
 implied by those checks.
+
+
+### 2026-09-30: reusable module file portability
+
+The library exports exact inspected definitions and previews/imports validated
+Maestro module files using the shared `program.module.import` capability. Human
+and agent imports receive native-issued action receipts and immutable content
+identities. Importing does not execute a program, grant resources, replace pins,
+or transfer room/model/motion assets. The bounded format includes embedded modules;
+asset transfer and deliberate dependency rebinding remain open. Native quick edits
+keep module documents opaque and visit only actual local invocation blocks. See
+[portable module contract](QUEST_PROGRAM_MODULES.md#portable-module-files).

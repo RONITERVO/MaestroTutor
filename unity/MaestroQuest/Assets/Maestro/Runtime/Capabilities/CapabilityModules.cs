@@ -18,6 +18,7 @@ namespace Maestro.Quest.Programs
             new WaitCapability(),
             new RoomSessionCapability(),
             new PublishProgramModuleCapability(),
+            new ImportProgramModuleCapability(),
             new RemoveProgramModuleCapability(),
             new CreateObjectCapability(),
             new MoveObjectCapability(),

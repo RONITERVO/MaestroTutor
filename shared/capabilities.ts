@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {moduleHash,validModuleRecord} from './programModuleIdentity';
 import {parseRecipe} from './roomRecipe';
 import {behaviourCatalog,type BehaviourValueType} from './behaviourCatalog';
 export interface CapabilitySchema {
@@ -7,7 +8,7 @@ export interface CapabilitySchema {
  oneOf?:CapabilitySchema[];'x-discriminators'?:string[];title?:string;description?:string;examples?:unknown[];'x-static'?:boolean;'x-channels'?:string[];'x-requirements'?:string[];'x-features'?:string[];
  items?:CapabilitySchema;minItems?:number;maxItems?:number;nullable?:boolean;
  properties?:Record<string,CapabilitySchema>;required?:string[];additionalProperties?:false;
- format?:'unitQuaternion'|'boundedOffset'|'roomRecipe';'x-resource'?:'object';'x-requires'?:Record<string,string>;
+ format?:'unitQuaternion'|'boundedOffset'|'roomRecipe'|'programModule';'x-resource'?:'object';'x-requires'?:Record<string,string>;
  minimum?:number;maximum?:number;maxLength?:number;pattern?:string;enum?:string[];
 }
 export interface CapabilityDefinition {
@@ -46,7 +47,9 @@ function validate(value:unknown,schema:CapabilitySchema,path:string):string|null
  if(value===null&&schema.nullable)return null;
  switch(schema.type) {
   case 'object': {
-   if(!record(value))return error;const properties=schema.properties??{};
+   if(!record(value))return error;
+   if(schema.format==='programModule'){try{return validModuleRecord(value,moduleHash(value))?null:error;}catch{return error;}}
+   const properties=schema.properties??{};
    if((schema.required??[]).some(key=>!own(value,key))||Object.keys(value).some(key=>!own(properties,key)))return error;
    for(const [key,entry] of Object.entries(value)){
     const error=validate(entry,properties[key],path+'.'+key);if(error)return error;

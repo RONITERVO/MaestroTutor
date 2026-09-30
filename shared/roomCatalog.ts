@@ -1,7 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
-import {validModuleRecord,type ModuleRecord} from './programModuleIdentity';
-import {capabilityDefinition,type CapabilityDefinition,type CapabilityInvocation} from './capabilities';
+import {moduleHash,validModuleRecord,type ModuleRecord} from './programModuleIdentity';
+import {capabilityDefinition,resolveCapabilitySchema,type CapabilitySchema,type CapabilityDefinition,type CapabilityInvocation} from './capabilities';
 import {behaviourEvent,type BehaviourEventDefinition} from './behaviourEvents';
 import {behaviourFact,type BehaviourFactDefinition} from './behaviourCatalog';
 import {validFactValue,validateFactArguments} from './behaviourFacts';
@@ -24,12 +24,14 @@ const id=(v:unknown)=>text(v,96)&&/^[a-z][a-zA-Z0-9]*(\.[a-z][a-zA-Z0-9]*)+$/.te
 export const boundedCapabilityCall=(v:unknown):v is CapabilityInvocation=>{
  if(!record(v)||!exact(v,['id','version','arguments'])||!id(v.id)||!integer(v.version,1)||!record(v.arguments)||JSON.stringify(v.arguments).length>24000)return false;
  let count=0;
- const bounded=(v:unknown,depth:number):boolean=>{
+ const bounded=(v:unknown,depth:number,schema?:CapabilitySchema):boolean=>{
+  schema=resolveCapabilitySchema(schema,v);
+  if(schema?.format==='programModule'){try{return validModuleRecord(v,moduleHash(v));}catch{return false;}}
   if(++count>4096||depth>12)return false;
-  if(record(v))return Object.entries(v).every(([key,x])=>text(key,80)&&bounded(x,depth+1));
-  if(Array.isArray(v))return v.length<=64&&v.every(x=>bounded(x,depth+1));
+  if(record(v))return Object.entries(v).every(([key,x])=>text(key,80)&&bounded(x,depth+1,schema?.properties?.[key]));
+  if(Array.isArray(v))return v.length<=64&&v.every(x=>bounded(x,depth+1,schema?.items));
   return v===null||typeof v==='boolean'||typeof v==='number'&&Number.isFinite(v)&&Math.abs(v)<=1000000||text(v,128);
- };return bounded(v.arguments,0);
+ };return bounded(v.arguments,0,capabilityDefinition(v.id as string)?.input);
 };
 const queryKeys=(v:Record<string,unknown>,keys:string[])=>Object.prototype.hasOwnProperty.call(v,'category')?
  typeof v.category==='string'&&['actions','events','facts','modules'].includes(v.category)&&exact(v,[...keys,'category']):exact(v,keys);

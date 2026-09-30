@@ -46,7 +46,9 @@ namespace Maestro.Quest.Creation
         public static bool ValidWire(string json)
         {
             try {
-                var root = JObject.Parse(json);
+                using var reader=new Newtonsoft.Json.JsonTextReader(new System.IO.StringReader(json)) {MaxDepth=64,DateParseHandling=Newtonsoft.Json.DateParseHandling.None};
+                var root=JObject.Load(reader,new Newtonsoft.Json.Linq.JsonLoadSettings {DuplicatePropertyNameHandling=Newtonsoft.Json.Linq.DuplicatePropertyNameHandling.Error});
+                if(reader.Read())return false;
                 if (root["commands"] is not JArray commands || commands.Count < 1 || commands.Count > 8) return false;
                 foreach (var token in commands)
                 {
@@ -117,7 +119,7 @@ namespace Maestro.Quest.Creation
         }
         public static string[] Capabilities(RoomEditor editor) => Actions.Where(action =>
             action != "physicsRun" || editor.PhysicsWorld).Where(action =>
-            action != "avatarMotion" || editor.Find("maestro")?.GetComponent<AvatarSpatialMotion>()).Where(action => action != "avatarWalk" || editor.Find("maestro")?.GetComponent<MaestroAvatar>()).Select(action => action+".v1").Concat(new[] {"motions.v1","avatarActivities.v1","catalog.v1","catalogVocabulary.v1","roomOwnership.v1"}).Concat(editor.GetComponent<RuleWorkshop>() ? new[] {"behaviourPrograms.v3","eventPrograms.v1","eventFields.v1","eventSubscriptions.v1","factQueries.v1","conditionWaits.v1","structuredValues.v1","programModules.v1","moduleLibrary.v1","execution.v1","executionReceipts.v1","actionResults.v1","recipeCreation.v1", "objectEdits.v1","unavailablePrograms.v1","actionRecovery.v1","temporaryRoom.v1"} : Array.Empty<string>()).ToArray();
+            action != "avatarMotion" || editor.Find("maestro")?.GetComponent<AvatarSpatialMotion>()).Where(action => action != "avatarWalk" || editor.Find("maestro")?.GetComponent<MaestroAvatar>()).Select(action => action+".v1").Concat(new[] {"motions.v1","avatarActivities.v1","catalog.v1","catalogVocabulary.v1","roomOwnership.v1"}).Concat(editor.GetComponent<RuleWorkshop>() ? new[] {"behaviourPrograms.v3","eventPrograms.v1","eventFields.v1","eventSubscriptions.v1","factQueries.v1","conditionWaits.v1","structuredValues.v1","programModules.v1","moduleLibrary.v1","moduleLibraryFiles.v1","execution.v1","executionReceipts.v1","actionResults.v1","recipeCreation.v1", "objectEdits.v1","unavailablePrograms.v1","actionRecovery.v1","temporaryRoom.v1"} : Array.Empty<string>()).ToArray();
         public static RoomPhysicsObservation ObservePhysics(RoomEditor editor) => !editor.PhysicsWorld ? null : new() {
             ready=editor.PhysicsWorld.SurfacesReady,running=editor.PhysicsWorld.Running,status=editor.PhysicsWorld.Status
         };

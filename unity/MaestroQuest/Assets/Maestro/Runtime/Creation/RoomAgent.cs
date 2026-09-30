@@ -264,7 +264,7 @@ namespace Maestro.Quest.Creation
             if(!string.IsNullOrEmpty(json) && json.Length<=32768)
             {
                 try {
-                    using var reader=new Newtonsoft.Json.JsonTextReader(new System.IO.StringReader(json)) {MaxDepth=48,DateParseHandling=Newtonsoft.Json.DateParseHandling.None};
+                    using var reader=new Newtonsoft.Json.JsonTextReader(new System.IO.StringReader(json)) {MaxDepth=64,DateParseHandling=Newtonsoft.Json.DateParseHandling.None};
                     var raw=Newtonsoft.Json.Linq.JObject.Load(reader,new Newtonsoft.Json.Linq.JsonLoadSettings {DuplicatePropertyNameHandling=Newtonsoft.Json.Linq.DuplicatePropertyNameHandling.Error});
                     if(reader.Read())throw new ArgumentException("Extra room data");
                     var requestJson=raw["request"];

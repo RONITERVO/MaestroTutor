@@ -53,7 +53,7 @@ namespace Maestro.Quest.Programs
     case "awaitEvent":Expression(n["timeout"],visit);if(n.ContainsKey("bindings"))foreach(var p in Obj(n["bindings"]).Properties())Expression(p.Value,visit);break;
    }
   }
-  static void Nodes(JArray body,Action<JObject> visit){foreach(var token in body){var n=Obj(token);visit(n);switch((string)n["op"]){
+  internal static void Nodes(JArray body,Action<JObject> visit){foreach(var token in body){var n=Obj(token);visit(n);switch((string)n["op"]){
    case "if":Nodes(List(n["then"],128),visit);Nodes(List(n["else"],128),visit);break;
    case "repeat":case "forever":Nodes(List(n["body"],128),visit);break;
    case "switch":foreach(var arm in List(n["cases"],16))Nodes(List(Obj(arm)["body"],128),visit);Nodes(List(n["default"],128),visit);break;

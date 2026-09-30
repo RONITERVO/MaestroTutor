@@ -1,5 +1,9 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {useEffect,useRef,useState} from 'react';
+import {moduleHash} from '../../../shared/programModuleIdentity';
+import {checkedModuleFile} from '../../core-sdk/room/programModuleFile';
+import {strictProgramJson} from '../../core-sdk/room/programs';
 import {resolveCapabilitySchema,validateCapabilityValue,type CapabilitySchema} from '../../../shared/capabilities';
 
 export type EditorObject = {id:string; name?:string};
@@ -35,10 +39,20 @@ export function CapabilityVariant({schema,value,onChange,objects,label=schema.ti
  </select></label>;
 }
 
+function ModuleDefinitionField({value,onChange,label}:{value:unknown;onChange:(value:unknown)=>void;label:string}) {
+ const [draft,setDraft]=useState(()=>JSON.stringify(value,null,2)),[error,setError]=useState('');const sent=useRef(JSON.stringify(value));
+ useEffect(()=>{const next=JSON.stringify(value);if(next!==sent.current){sent.current=next;setDraft(JSON.stringify(value,null,2));setError('');}},[value]);
+ return <label>{label}<textarea aria-label={label} rows={8} maxLength={96000} value={draft} aria-invalid={Boolean(error)} onChange={event=>{
+  const text=event.target.value;setDraft(text);try{const definition=strictProgramJson(text),file=checkedModuleFile({format:'maestro-program-module',version:1,hash:moduleHash(definition),definition});sent.current=JSON.stringify(file.definition);onChange(file.definition);setError('');}
+  catch(e){sent.current='null';onChange(null);setError(e instanceof Error?e.message:'Invalid module definition.');}
+ }}/>{error&&<span role="alert">{error}</span>}<small>Paste the complete module definition. Its content must match the separately supplied hash; changing a definition creates a different identity.</small></label>;
+}
+
 export function CapabilityFields({schema,value,onChange,label,objects,depth=0}:{
   schema:CapabilitySchema; value:unknown; onChange:(value:unknown)=>void;
   label:string; objects:readonly EditorObject[]; depth?:number;
 }) {
+  if(schema.format==='programModule')return <ModuleDefinitionField value={value} onChange={onChange} label={label}/>;
   if(schema.oneOf){const selected=resolveCapabilitySchema(schema,value);return <><CapabilityVariant schema={schema} value={value} onChange={onChange} objects={objects} label={schema.title??label+' variant'}/>{selected&&<CapabilityFields schema={selected} value={value} onChange={onChange} objects={objects} label={label} depth={depth}/>}</>;}
   if(depth>12) return <p>Use the source editor for this deeply nested value.</p>;
   if(schema.nullable && value===null) return <div><span>{label}: none</span><button onClick={()=>onChange(initialCapabilityValue(schema,objects))}>Set {label}</button></div>;

@@ -53,6 +53,24 @@ namespace Maestro.Quest.Programs
    if(module==null||Compact(module).Length>BehaviourProgram.MaximumCharacters||module["program"] is not JObject p||p["events"] is not JArray)throw new ProgramFault("Invalid or oversized module definition");
    if(!BehaviourProgram.TryParse(Compact(Wrapper(module)),out _,out var error))throw new ProgramFault("Module cannot be imported: "+error);
   }
+  // Bounded wire shape only, matching shared/programModuleIdentity.ts. The
+  // import capability additionally compiles the complete definition before IO.
+  public static bool ValidRecord(JObject m){
+   try {
+    bool Version(JToken value,int version)=>(value?.Type==JTokenType.Integer||value?.Type==JTokenType.Float)&&(double)value==version;
+    if(m==null||m.Count!=4||!new[]{"version","name","exports","program"}.All(m.ContainsKey)||!Version(m["version"],1)||m["name"]?.Type!=JTokenType.String)return false;
+    string name=(string)m["name"];if(string.IsNullOrWhiteSpace(name.Replace("\uFEFF",""))||name.Length>64||name.Any(char.IsControl)||m["exports"] is not JArray exports||exports.Count<1||exports.Count>16)return false;
+    bool Plain(JToken t)=>t?.Type==JTokenType.String&&System.Text.RegularExpressions.Regex.IsMatch((string)t,"^[a-zA-Z0-9_]{1,32}$");
+    if(!exports.All(Plain)||exports.Values<string>().Distinct().Count()!=exports.Count||m["program"] is not JObject p||!Version(p["version"],3))return false;
+    if(p["resources"] is not JArray resources||resources.Count>16||resources.Any(r=>r.Type!=JTokenType.String||!System.Text.RegularExpressions.Regex.IsMatch((string)r,"^(maestro|book|[a-fA-F0-9]{32})$")))return false;
+    if(p["events"] is not JArray events||events.Count>16||events.Any(e=>e is not JObject o||o.Count!=2||o["name"]?.Type!=JTokenType.String||!System.Text.RegularExpressions.Regex.IsMatch((string)o["name"],"^user\\.[a-zA-Z0-9_]{1,32}$")||o["type"]?.Type!=JTokenType.String||!new[]{"number","text","boolean"}.Contains((string)o["type"])))return false;
+    if(Compact(m).Length>BehaviourProgram.MaximumCharacters)return false;_=ProgramModules.Hash(m);return true;
+   }catch{return false;}
+  }
+  public static JObject ImportDefinition(string hash,JObject definition){
+   if(!ValidHash(hash)||!ValidRecord(definition)||ProgramModules.Hash(definition)!=hash)throw new ProgramFault("Module content does not match its file identity");
+   Validate(definition);return (JObject)definition.DeepClone();
+  }
   static JObject ReadObject(string source){
    using var reader=new JsonTextReader(new StringReader(source)) {MaxDepth=48,DateParseHandling=DateParseHandling.None};
    var module=JObject.Load(reader,new JsonLoadSettings {DuplicatePropertyNameHandling=DuplicatePropertyNameHandling.Error});if(reader.Read())throw new ProgramFault("Extra module data");return module;

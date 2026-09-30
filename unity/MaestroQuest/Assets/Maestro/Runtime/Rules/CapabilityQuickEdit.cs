@@ -51,7 +51,7 @@ namespace Maestro.Quest.Rules
                 if(sequence==null)return "Create or select a behaviour";
                 if(Node==null)return sequence.name+"\nEdit this program in the book";
                 var field=Current;string value=field==null?"No editable fields":Bound(field)?"From expression · edit in book":
-                    field.Variant?(string)CapabilitySchema.Resolve(field.Schema,field.Value)?["title"]??"Unsupported source":field.Value==null?"Not included":field.Container?"Included · Set field removes it":field.Value.ToString(Formatting.None);
+                    (string)field.Schema["format"]=="programModule"?"Module document · edit in book":field.Variant?(string)CapabilitySchema.Resolve(field.Schema,field.Value)?["title"]??"Unsupported source":field.Value==null?"Not included":field.Container?"Included · Set field removes it":field.Value.ToString(Formatting.None);
                 if(field!=null&&!Bound(field)&&(string)field.Schema["x-resource"]=="object"&&field.Value?.Type==JTokenType.String) {
                     string id=(string)field.Value;var item=editor.Read(id);
                     value=item==null?"Missing object":(string.IsNullOrEmpty(item.name)?item.kind.ToString():item.name)+(item.IsBuiltIn?"":" · "+id.Substring(0,4));
@@ -69,7 +69,7 @@ namespace Maestro.Quest.Rules
             if(sequence==null) {Status="Create or select a behaviour";return;}
             if(sequence.Compile(out var error)==null) {Status=error+" · Repair in the book";return;}
             program=JObject.Parse(sequence.program);
-            nodes=program.Descendants().OfType<JObject>().Where(x=>(string)x["op"]=="invoke").ToList();
+            nodes=ActionNodes(program);
             nodeIndex=Math.Max(0,nodes.FindIndex(x=>(string)x["id"]==selected));fieldIndex=0;Fields();workshop.SelectLiteralNode(NodeId);Status="Choose a block, then a field";
         }
         public bool Clean() {if(!Dirty)return true;Status="Apply or discard the quick-edit draft first";return false;}
@@ -78,10 +78,16 @@ namespace Maestro.Quest.Rules
         }
         public void FieldStep(int direction) {if(fields.Count>0)fieldIndex=(fieldIndex+direction+fields.Count)%fields.Count;}
         void Changed(string status) {Dirty=true;Status=status;Fields();}
+        static List<JObject> ActionNodes(JObject source) {
+            var result=new List<JObject>();
+            foreach(var function in ((JArray)source["functions"]).OfType<JObject>())ProgramModules.Nodes((JArray)function["body"],node=>{if((string)node["op"]=="invoke")result.Add(node);});
+            return result;
+        }
         void Fields() {
             string selected=Current?.Path;fields=new List<Field>();if(Node==null||Definition==null)return;
             void Walk(JObject schema,JToken value,string path,string root,JObject parent,string key,JArray array,int index,bool optional,int depth) {
                 if(depth>12)return;
+                if((string)schema["format"]=="programModule") {fields.Add(new Field {Path=path,Root=root,Schema=schema,Parent=parent,Key=key});return;}
                 if(schema["oneOf"] is JArray) {
                     fields.Add(new Field {Path=(string)schema["title"]??"Variant",Root=root,Schema=schema,Parent=parent,Key=key,Variant=true});
                     schema=CapabilitySchema.Resolve(schema,value);if(schema==null)return;
@@ -131,7 +137,7 @@ namespace Maestro.Quest.Rules
         public void Adjust(int direction) {
             var field=Current;if(field==null)return;if(Bound(field)) {Status="This field comes from an expression; edit it in the book";return;}
             if(field.Variant) {ChangeVariant(field,direction);return;}
-            if((bool?)field.Schema["x-static"]==true) {Status="Use the variant field to change this choice";return;}
+            if((bool?)field.Schema["x-static"]==true) {Status=(string)field.Schema["format"]=="programModule"?"Edit the module document in the book":"Use the variant field to change this choice";return;}
             if(field.Container) {ToggleOptional(field);return;}
             var schema=field.Schema;
             if((string)schema["x-resource"]=="object") {
@@ -182,21 +188,21 @@ namespace Maestro.Quest.Rules
             var wait=BehaviourCatalog.Action("time.wait");
             var added=new JObject {["id"]="quick_"+Guid.NewGuid().ToString("N").Substring(0,24),["op"]="invoke",["capability"]=wait.Id,["version"]=wait.Version,
                 ["arguments"]=new JObject {["seconds"]=1},["bindings"]=new JObject()};
-            body.Insert(body.IndexOf(Node)+1,added);nodes=program.Descendants().OfType<JObject>().Where(x=>(string)x["op"]=="invoke").ToList();
+            body.Insert(body.IndexOf(Node)+1,added);nodes=ActionNodes(program);
             nodeIndex=nodes.IndexOf(added);fieldIndex=0;fields.Clear();Changed("Wait block added in draft");
         }
         public void DeleteBlock() {
             if(Node==null)return;
             if(Node["results"]!=null) {Status="Delete result-producing blocks in the book so their users remain visible";return;}
             if(nodes.Count<=1) {Status="Keep one action block, or edit the structure in the book";return;}
-            Node.Remove();nodes=program.Descendants().OfType<JObject>().Where(x=>(string)x["op"]=="invoke").ToList();
+            Node.Remove();nodes=ActionNodes(program);
             nodeIndex=Mathf.Clamp(nodeIndex,0,nodes.Count-1);fieldIndex=0;fields.Clear();Changed("Block removed in draft");
         }
         public bool Apply() {
             if(!Dirty) {Status="There are no draft changes";return false;}
             if(Stale) {Status="Behaviours changed. Draft retained; discard to load the latest version";return false;}
             var candidate=(JObject)program.DeepClone();var resources=((JArray)candidate["resources"]).Values<string>().ToList();
-            foreach(var node in candidate.Descendants().OfType<JObject>().Where(x=>(string)x["op"]=="invoke")) {
+            foreach(var node in ActionNodes(candidate)) {
                 var definition=BehaviourCatalog.Action((string)node["capability"]);
                 foreach(var id in CapabilityArguments.LiteralResources((JObject)node["arguments"],definition.InputSchema,(JObject)node["bindings"],(int)candidate["version"]))
                     if(!resources.Contains(id))resources.Add(id);

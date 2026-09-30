@@ -577,6 +577,36 @@ namespace Maestro.Quest.Tests
             Assert.That(runtime.Scheduler.ObserveRuns().Single().state.Single(x=>x.name=="counter.total").value,Is.EqualTo("6"));
         }
 
+        [UnityTest] public IEnumerator PortableModuleImportUsesReceiptsWithoutStartingTheImportedProgram()
+        {
+            for(int i=0;i<120&&!workshop.Modules.Ready;i++)yield return null;
+            Assert.That(workshop.Modules.Ready,Is.True);
+            var executor=new RoomAgentExecutor(editor);
+            var module=Maestro.Quest.Programs.ProgramModuleLibrary.Definition("{\"version\":3,\"entry\":\"main\",\"resources\":[],\"state\":[],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[],\"body\":[{\"id\":\"sleep\",\"op\":\"sleep\",\"seconds\":{\"value\":10}}]}]}","Portable counter",new[]{"main"});
+            module["program"]["state"]=new JArray(new JObject {["name"]="words",["initial"]=new string('ä',126)},new JObject {["name"]="savedAt",["initial"]="2026-09-30T12:34:56Z"});
+            module["program"]["functions"][0]["body"]=new JArray(new JObject {["id"]="inside_module",["op"]="invoke",["capability"]="time.wait",["version"]=1,["arguments"]=new JObject {["seconds"]=10},["bindings"]=new JObject()});
+            for(int depth=0;depth<7;depth++)module["program"]["functions"][0]["body"]=new JArray(new JObject {["id"]="if_"+depth,["op"]="if",["test"]=new JObject {["value"]=true},["then"]=module["program"]["functions"][0]["body"].DeepClone(),["else"]=new JArray()});
+            string hash=Maestro.Quest.Programs.ProgramModules.Hash(module),id=runtime.Scheduler.Receipts.NextId;
+            var request=new RoomAgentRequest {version=2,conditions=Array.Empty<RoomObjectCondition>(),commands=new[]{new RoomAgentCommand {action="execution",execution=new JObject {["operation"]="start",["runId"]=id,["call"]=new JObject {["id"]="program.module.import",["version"]=1,["arguments"]=new JObject {["hash"]=hash,["definition"]=module}}}}}};
+            Assert.That(RoomControls.ValidWire(new JObject {["commands"]=new JArray(new JObject {["action"]="execution",["execution"]=request.commands[0].execution.DeepClone()})}.ToString()),Is.True,"Wire validation must preserve date-looking text and deep module documents");
+            Assert.That(executor.Execute(request,out var error,out _),Is.True,error);
+            for(int i=0;i<180&&(string)runtime.Scheduler.Invocation(id)["phase"]!="completed";i++)yield return null;
+            Assert.That((string)runtime.Scheduler.Invocation(id)["phase"],Is.EqualTo("completed"));Assert.That((string)runtime.Scheduler.Invocation(id)["output"]["hash"],Is.EqualTo(hash));
+            Assert.That(workshop.Modules.Count,Is.EqualTo(1));Assert.That(runtime.Scheduler.ObserveRuns(),Is.Empty,"Import is storage, not execution of its entry function");
+            string evidence=Environment.GetEnvironmentVariable("MAESTRO_MODULE_FILE_EVIDENCE");
+            if(!string.IsNullOrEmpty(evidence)){Directory.CreateDirectory(evidence);File.WriteAllText(Path.Combine(evidence,"module-file.json"),new JObject {["format"]="maestro-program-module",["version"]=1,["hash"]=hash,["definition"]=workshop.Modules.Inspect(hash).ReadDefinition()}.ToString());File.WriteAllText(Path.Combine(evidence,"receipt.json"),runtime.Scheduler.Invocation(id).ToString());}
+            int revision=workshop.Modules.Revision;Assert.That(executor.Execute(request,out error,out _),Is.True,error);Assert.That(workshop.Modules.Revision,Is.EqualTo(revision),"Same receipt does not replay the import");
+            request.commands[0].execution["runId"]=runtime.Scheduler.Receipts.NextId;request.commands[0].execution["call"]["arguments"]["hash"]=new string('0',64);
+            Assert.That(executor.Execute(request,out error,out _),Is.False);StringAssert.Contains("identity",error);Assert.That(workshop.Modules.Count,Is.EqualTo(1));
+            var reloaded=new Maestro.Quest.Programs.ProgramModuleLibrary(directory);reloaded.Flush();Assert.That(JToken.DeepEquals(reloaded.Inspect(hash).ReadDefinition(),module),Is.True);
+            var author=(JObject)module["program"].DeepClone();author["functions"][0]["body"]=new JArray(new JObject {["id"]="import_file",["op"]="invoke",["capability"]="program.module.import",["version"]=1,["arguments"]=new JObject {["hash"]=hash,["definition"]=module.DeepClone()},["bindings"]=new JObject()});
+            var sequence=workshop.Selected;sequence.program=author.ToString();
+            Assert.That(executor.Execute(new RoomAgentRequest {version=2,commands=new[]{new RoomAgentCommand {action="rules",rule=new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="save",sequence=sequence}}}}}},out error,out _),Is.True,error);
+            var quick=new CapabilityQuickEdit(workshop,editor);quick.Step(1);Assert.That(quick.NodeId,Is.EqualTo("import_file"),"Embedded module actions are data, not quick-edit blocks");
+            quick.FieldStep(1);Assert.That(quick.FieldPath,Is.EqualTo("definition"));quick.Adjust(1);Assert.That(quick.Dirty,Is.False);StringAssert.Contains("book",quick.Status);
+
+        }
+
         [UnityTest] public IEnumerator PinnedModulesRunSaveRejectTamperingAndReloadThroughTheSharedExecutor()
         {
             string source=File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-modules-nested.json"));

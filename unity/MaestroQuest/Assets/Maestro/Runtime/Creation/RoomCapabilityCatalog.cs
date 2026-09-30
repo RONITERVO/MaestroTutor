@@ -39,13 +39,15 @@ namespace Maestro.Quest.Creation
         {
             if(!Exact(call,"id","version","arguments")||!Id(call["id"])||!Version(call["version"])||call["arguments"] is not JObject arguments||arguments.ToString(Newtonsoft.Json.Formatting.None).Length>24000)return false;
             int count=0;
-            bool Bounded(JToken token,int depth) {
+            bool Bounded(JToken token,int depth,JObject schema=null) {
+                schema=schema==null?null:CapabilitySchema.Resolve(schema,token);
+                if((string)schema?["format"]=="programModule")return token is JObject module&&ProgramModuleLibrary.ValidRecord(module);
                 if(++count>4096||depth>12)return false;
-                if(token is JObject obj)return obj.Properties().All(p=>p.Name.Length<=80&&!p.Name.Any(char.IsControl)&&Bounded(p.Value,depth+1));
-                if(token is JArray array)return array.Count<=64&&array.All(x=>Bounded(x,depth+1));
+                if(token is JObject obj)return obj.Properties().All(p=>p.Name.Length<=80&&!p.Name.Any(char.IsControl)&&Bounded(p.Value,depth+1,schema?["properties"]?[p.Name] as JObject));
+                if(token is JArray array)return array.Count<=64&&array.All(x=>Bounded(x,depth+1,schema?["items"] as JObject));
                 return token.Type switch {JTokenType.String=>Text(token,128),JTokenType.Integer or JTokenType.Float=>double.IsFinite((double)token)&&Math.Abs((double)token)<=1000000,JTokenType.Boolean or JTokenType.Null=>true,_=>false};
             }
-            return Bounded(arguments,0);
+            return Bounded(arguments,0,BehaviourCatalog.Action((string)call["id"])?.InputSchema);
         }
         public static bool ValidWire(JObject command)=>Exact(command,"action","catalog")&&(string)command["action"]=="catalog"&&command["catalog"] is JObject query&&ValidRequest(query);
         public bool Execute(JObject value,out string status)

@@ -153,3 +153,42 @@ publishes changed content, then proves that deletion does not affect the running
 reloaded embedded copy. Book tests reject incompatible upgrades/tampering/missing
 object grants and use the same catalog/action contracts. Browser replay uses these
 native observations with explicitly simulated acknowledgements.
+
+
+## Portable module files
+
+With `moduleLibraryFiles.v1`, the book library exports its exact inspected definition
+as a UTF-8 `.json` envelope: `{format:"maestro-program-module",version:1,hash,definition}`.
+The original platform writer is used; a completed-file receipt appears only after
+close/publication. The import picker bounds files to 96,000 bytes, rejects invalid
+UTF-8, duplicate keys, unknown envelope versions/fields, hash mismatches and programs
+that cannot be imported. Selection only previews the file. **Import file to library**
+starts the catalog action `program.module.import` with the same exact hash and
+structured definition that an agent supplies. Native code recompiles the definition,
+checks the pin, and uses the existing immutable library write/receipt path. A hash is
+content identity, not trust or a signature. Dispatched writes may finish after Stop.
+
+Import creates no binding, button, running behaviour or object permission. Existing
+library content is deduplicated; damaged copies still require explicit removal.
+Saved/running caller imports remain embedded exact copies. Reusing the new entry
+in a behaviour remains a separate draft edit with explicit resource grants and
+signal connections. Files contain the program and its embedded module definitions;
+room objects, avatars, model assets and motion files are not bundled. Resource IDs
+are shown as known names or unavailable IDs in the preview; exact motion/model
+references remain visible in the complete definition. Computed dependencies cannot
+be resolved statically. Nothing is silently substituted. Transferring those assets
+and explicit rebinding/variant authoring remain separate portability work.
+
+The catalog's static `programModule` field carries a structured document without
+double-escaping its JSON. Ordinary arguments keep their depth/node/scalar bounds;
+this field uses the module's shape, canonical identity and source-size bounds, then
+full compilation before native IO. Commands stay within 32,768 characters and
+arguments within 24,000. Transport/receipt JSON allows depth 64 so it can contain
+the separately bounded module document. The generic book action editor supports
+editing/pasting that document. Physical quick edits show it as a document to edit
+in the book, and visit only actual local program blocks, never embedded module data.
+
+PC tests cover file validation/round-trip, native receipt replay, storage/reload,
+no automatic execution, file-close acknowledgement and explicit UI dispatch.
+Browser native responses/export acknowledgements are simulated; headset picker,
+Downloads and flash durability still require device acceptance.

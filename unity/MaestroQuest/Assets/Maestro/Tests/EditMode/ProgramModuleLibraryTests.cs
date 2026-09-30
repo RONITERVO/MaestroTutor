@@ -39,6 +39,16 @@ namespace Maestro.Quest.Tests
    var result=await Task.Run(()=>{bool retained=library.Retains(id,out bool uncertain);return (retained,uncertain);});Assert.That(result.retained,Is.True);Assert.That(result.uncertain,Is.False);
    var removed=library.Remove(write.Hash);Assert.That(library.Retains(id,out bool pending),Is.True);Assert.That(pending,Is.True);library.Flush();Assert.That(removed.Error,Is.Null);Assert.That(library.Retains(id,out pending),Is.False);Assert.That(pending,Is.False);
   }
+  [Test] public void PortableImportsValidateExactIdentityAndCompileBeforeStorage(){
+   var module=Definition();string hash=ProgramModules.Hash(module);
+   var imported=ProgramModuleLibrary.ImportDefinition(hash,module);Assert.That(JToken.DeepEquals(module,imported),Is.True);
+   imported["name"]="Edited after validation";Assert.That((string)module["name"],Is.EqualTo("Counter"));
+   Assert.Throws<ProgramFault>(()=>ProgramModuleLibrary.ImportDefinition(new string('0',64),module));
+   var invalid=(JObject)module.DeepClone();invalid["exports"]=new JArray("missing");Assert.That(ProgramModuleLibrary.ValidRecord(invalid),Is.True,"Wire shape is separate from compilation");
+   Assert.Throws<ProgramFault>(()=>ProgramModuleLibrary.ImportDefinition(ProgramModules.Hash(invalid),invalid));
+   foreach(var version in new JToken[]{new JValue(1.5),new JValue("1"),new JValue(2)}){invalid=(JObject)module.DeepClone();invalid["version"]=version;Assert.That(ProgramModuleLibrary.ValidRecord(invalid),Is.False);}
+   Assert.That(Directory.GetFiles(directory,"*",SearchOption.AllDirectories),Is.Empty);
+  }
   [Test] public void InvalidExportsAndTraversalIdsNeverTouchStorage(){
    Assert.Throws<ProgramFault>(()=>ProgramModuleLibrary.Definition(Source,"Counter",new[]{"missing"}));Assert.Throws<ProgramFault>(()=>ProgramModuleLibrary.Definition(Source,"Counter",Array.Empty<string>()));
    Assert.Throws<ProgramFault>(()=>library.Remove("../outside"));Assert.That(Directory.GetFiles(directory,"*",SearchOption.AllDirectories),Is.Empty);

@@ -37,7 +37,9 @@ namespace Maestro.Quest.Programs
             if(value.Type==JTokenType.Null)return (bool?)schema["nullable"]==true;
             switch((string)schema["type"]) {
                 case "object":
-                    if(value is not JObject obj)return false;var properties=(JObject)schema["properties"];
+                    if(value is not JObject obj)return false;
+                    if((string)schema["format"]=="programModule") {if(!ProgramModuleLibrary.ValidRecord(obj))return false;break;}
+                    var properties=(JObject)schema["properties"];
                     if(((JArray)schema["required"]).Any(key=>!obj.ContainsKey((string)key)) || obj.Properties().Any(p=>!properties.ContainsKey(p.Name)))return false;
                     foreach(var field in obj.Properties()) {
                         var fieldSchema=(JObject)properties[field.Name];

@@ -29,7 +29,7 @@ namespace Maestro.Quest.Rules
                     throw new InvalidDataException("Newer action receipt format");
                 if(!File.Exists(path))return;
                 if(new FileInfo(path).Length>1024*1024)throw new InvalidDataException("Receipt limit");
-                using var reader=new JsonTextReader(new StringReader(File.ReadAllText(path,Encoding.UTF8))) {MaxDepth=48,DateParseHandling=DateParseHandling.None};
+                using var reader=new JsonTextReader(new StringReader(File.ReadAllText(path,Encoding.UTF8))) {MaxDepth=64,DateParseHandling=DateParseHandling.None};
                 var root=JObject.Load(reader,new JsonLoadSettings {DuplicatePropertyNameHandling=DuplicatePropertyNameHandling.Error});
                 if(reader.Read()||root.Count!=2||(int?)root["version"]!=1||root["entries"] is not JArray data||data.Count>24)
                     throw new InvalidDataException("Receipt format");

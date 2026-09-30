@@ -1052,6 +1052,92 @@
       }
     },
     {
+      "id": "program.module.import",
+      "version": 1,
+      "label": "Import reusable module",
+      "input": {
+        "type": "object",
+        "properties": {
+          "hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "definition": {
+            "type": "object",
+            "format": "programModule",
+            "x-static": true
+          }
+        },
+        "required": [
+          "hash",
+          "definition"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "moduleLibraryFiles.v1"
+        ]
+      },
+      "duration": "completion",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [
+        "moduleLibrary.ready",
+        "storage.writable"
+      ],
+      "description": "Save an exact portable module definition to the local library. Pass its complete definition object and SHA256 hash from an inspected module or Maestro module file. The hash is an identity, not proof of trust. Unity validates the entire program and pin before writing. Nothing starts, no object access is granted, and saved/running imports remain unchanged. Exact object/motion/model references are retained; missing dependencies are not supplied or remapped. A dispatched write can finish after Stop; inspect the library/receipt after uncertainty.",
+      "example": {
+        "hash": "f01657516a2f607e2aede67ea7f66b08770c7c123fc264cf3132893bb42cb902",
+        "definition": {
+          "version": 1,
+          "name": "Empty reusable program",
+          "exports": [
+            "main"
+          ],
+          "program": {
+            "version": 3,
+            "entry": "main",
+            "resources": [],
+            "state": [],
+            "events": [],
+            "functions": [
+              {
+                "name": "main",
+                "returns": "void",
+                "parameters": [],
+                "locals": [],
+                "body": []
+              }
+            ]
+          }
+        }
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 1000000.0
+          },
+          "changed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "hash",
+          "revision",
+          "changed"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "program.module.remove",
       "version": 1,
       "label": "Remove library module",
@@ -3228,7 +3314,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "9bb9c726ea92183cc2ac6457862e10607072b17f94e7e4828c66a9339206a9eb"
+      "sha256": "bbfdf86a7b8eb4ca3d188b3c71877a4ed14199b00a8761349a1dffd8dd8bab03"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -3252,11 +3338,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramModules.cs",
-      "sha256": "f63b25c608d7d89ce404fe0a6079a65b0300c91ed6ab31db5c3cc0d41f468875"
+      "sha256": "e7124a26f7cec091eb760449a685ff42453718b9bafd34147ad9ae9557875f48"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramModuleLibrary.cs",
-      "sha256": "b05f909e7ab5f6550bed074b92e38d486c3bbc5e1927ee803f7191d27436af18"
+      "sha256": "f577f18830b468853ff355f72a622f55179f071bfa65faeda22d72d6f9fef317"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleDocument.cs",
@@ -3288,7 +3374,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "4e9a128db6c1558405a04d98dde95458696339bc446fa271f2abe7cdb4cc3a86"
+      "sha256": "5b2b287b3900f5f7fd29c635e5d6a3cd159efb18531837c2c2c5c33069bfe947"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -3320,7 +3406,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ProgramModuleCapabilities.cs",
-      "sha256": "6f568a689821f33b652414d19012ac0e7f6bbb9f346b28d60f4cc1182e8a8b72"
+      "sha256": "a064d8f69eaa59d263a6619fd9b7b9089e992a615e4005b166d023556be5e3d3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RecipeAnimationCapability.cs",
