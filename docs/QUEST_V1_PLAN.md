@@ -2,7 +2,16 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
-Latest PC increment (2026-09-30): shared native ownership integrates programs,
+Latest PC increment (2026-09-30): typed native event fields let the book and agent
+compose collision reactions through the same canonical programs. Actual PhysX
+contact entry carries counterpart, speed and world position; source filters,
+bounded dispatch and resource authority remain enforced. See
+QUEST_EVENT_PROGRAMS.md. PC verification passes 1,351 app tests, 180 Unity
+EditMode and 129 PlayMode tests, plus 25 Android bridge tests. The verified
+development APK is built but uninstalled. Device and real-provider acceptance
+remain pending.
+
+Latest verified ownership increment (2026-09-30): shared native ownership integrates programs,
 direct avatar controls, animation authoring, grips and ambient tutor activity.
 Recordings cooperate with physical grabs; interrupted programs stay cancelled.
 The optional book workspace and agent see the same owner/claim evidence. See
@@ -15,7 +24,7 @@ branches; source editing remains available. See QUEST_BEHAVIOUR_PROGRAMS.md.
 
 Current architecture: the original app owns chat/Live handoff, Gemini access
 and durable task journals. Canonical behaviour programs, the shared native
-catalog (14 actions, seven events and four facts), one scheduler and native
+catalog (14 actions, eight events and four facts), one scheduler and native
 receipts serve human controls and agent calls. Version-3 programs retain typed
 session state across event/timer waits. Creation results compose with animation,
 physics and durable object edits; per-channel ownership permits supported

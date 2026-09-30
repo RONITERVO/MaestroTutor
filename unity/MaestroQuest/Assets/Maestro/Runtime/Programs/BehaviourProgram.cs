@@ -42,7 +42,7 @@ namespace Maestro.Quest.Programs
         public int Version {get;private set;}
         internal readonly Dictionary<string,ProgramValue> InitialState=new();
         internal readonly Dictionary<string,ProgramType> CustomEvents=new();
-        internal ProgramType EventType(string name) => CustomEvents.TryGetValue(name,out var type)?type:BehaviourCatalog.Events.Any(x=>x.Id==name)?ProgramType.Text:throw new ProgramFault("Unknown event");
+        internal ProgramType EventType(string name) => CustomEvents.TryGetValue(name,out var type)?type:BehaviourCatalog.Event(name)!=null?ProgramType.Text:throw new ProgramFault("Unknown event");
         public string Entry {get;private set;}
         public string[] Resources => resources.ToArray();
         string[] referencedIds=System.Array.Empty<string>();
@@ -187,13 +187,20 @@ namespace Maestro.Quest.Programs
                     case "forever":Need(Version==3,"Events need program version 3");Keys(node,"id op body");Child("body");break;
                     case "sleep":Need(Version==3,"Timers need program version 3");Keys(node,"id op seconds");Expr("seconds",ProgramType.Number);break;
                     case "awaitEvent":
-                        Need(Version==3,"Events need program version 3");Keys(node,"id op event source timeout received value");
+                        Need(Version==3,"Events need program version 3");Keys(node,"id op event source timeout received value","fields");
                         string eventName=Text(node["event"]);var eventType=EventType(eventName);string sourceId=Text(node["source"]);
-                        var definition=BehaviourCatalog.Events.FirstOrDefault(x=>x.Id==eventName);
+                        var definition=BehaviourCatalog.Event(eventName);
                         Need(sourceId==""||definition?.ObjectEvent==true&&RuleDocument.IsTarget(sourceId),"Only object events accept a source");
                         Need(function.Types.TryGetValue(Text(node["received"]),out var received)&&received==ProgramType.Boolean,"Event received needs a boolean local");
                         Need(function.Types.TryGetValue(Text(node["value"]),out var payload)&&payload==eventType,"Event value needs a matching local");
                         Need(Text(node["received"])!=Text(node["value"]),"Event destinations must differ");
+                        if(node.ContainsKey("fields")) {
+                            var assigned=new HashSet<string> {Text(node["received"]),Text(node["value"])};
+                            foreach(var field in Object(node["fields"]).Properties()) {
+                                var fieldType=definition?.FieldType(field.Name)??ProgramType.Void;
+                                Need(fieldType!=ProgramType.Void&&function.Types.TryGetValue(Text(field.Value),out var localType)&&localType==fieldType&&assigned.Add(Text(field.Value)),"Invalid or duplicate event field destination");
+                            }
+                        }
                         Expr("timeout",ProgramType.Number);break;
                     case "emitEvent":
                         Need(Version==3,"Events need program version 3");Keys(node,"id op event value");Need(CustomEvents.TryGetValue(Text(node["event"]),out var customType),"Only declared custom events may be emitted");Expr("value",customType);break;

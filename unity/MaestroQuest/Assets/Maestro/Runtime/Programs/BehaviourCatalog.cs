@@ -49,10 +49,24 @@ namespace Maestro.Quest.Programs
         public sealed class EventDefinition
         {
             public readonly string Id, Label, Activity;
-            public readonly RuleEventKind Kind;
+            public readonly RuleEventKind? Kind;
             public readonly bool ObjectEvent;
+            public readonly string Description;
+            readonly JObject fields;
+            public JObject Fields=>fields==null?null:(JObject)fields.DeepClone();
             public EventDefinition(string id, RuleEventKind kind, string label, string activity=null, bool objectEvent=false)
             { Id=id;Kind=kind;Label=label;Activity=activity;ObjectEvent=objectEvent; }
+            // New native events do not require a legacy tray enum or a signal route.
+            public EventDefinition(string id,string label,string description,JObject fields,bool objectEvent=false)
+            { Id=id;Label=label;Description=description;ObjectEvent=objectEvent;this.fields=(JObject)fields.DeepClone(); }
+            public ProgramType FieldType(string name)=>((string)fields?["properties"]?[name]?["type"]) switch {
+                "string"=>ProgramType.Text,"number" or "integer"=>ProgramType.Number,"boolean"=>ProgramType.Boolean,_=>ProgramType.Void
+            };
+            public bool ValidFields(JObject value)=>fields==null?value==null||value.Count==0:CapabilityArguments.Validate(value,fields,out _,"event fields");
+            public JObject ToJson() {
+                var result=new JObject {["id"]=Id,["label"]=Label,["activity"]=Activity,["objectEvent"]=ObjectEvent};
+                if(fields!=null) {result["fields"]=Fields;result["description"]=Description;result["features"]=new JArray("eventFields.v1");}return result;
+            }
         }
         public readonly struct FactContext
         {
@@ -83,6 +97,14 @@ namespace Maestro.Quest.Programs
             new EventDefinition("object.tapped",RuleEventKind.ItemTapped,"Item tapped",objectEvent:true),
             new EventDefinition("object.grabbed",RuleEventKind.ItemGrabbed,"Item grabbed",objectEvent:true),
             new EventDefinition("object.released",RuleEventKind.ItemReleased,"Item released",objectEvent:true),
+            new EventDefinition("object.collided","Object contact began",
+                "A physics contact began while room physics was running. Value is the source object ID. otherId is a registered room object ID or empty; otherKind distinguishes object, scannedRoom, controller and environment. speed is relative speed in metres/second; x/y/z are one contact point in world metres. Compound colliders can produce separate contacts. This is not a continuous contact or precise impact-energy measurement. Fields do not authorize editing new objects.",
+                CapabilitySchema.Object(new JObject {
+                    ["otherId"]=CapabilitySchema.Text("^[a-zA-Z0-9_]{0,32}$",32),
+                    ["otherKind"]=CapabilitySchema.Choice("object","scannedRoom","controller","environment"),
+                    ["speed"]=CapabilitySchema.Number(0,1000000),
+                    ["x"]=CapabilitySchema.Number(-1000000,1000000),["y"]=CapabilitySchema.Number(-1000000,1000000),["z"]=CapabilitySchema.Number(-1000000,1000000)
+                }),objectEvent:true),
         });
         public static readonly IReadOnlyList<FactDefinition> Facts=Array.AsReadOnly(new[] {
             new FactDefinition("room.sessionId",ProgramType.Text,"Current room session",context=>context.RoomSessionId==null?null:new ProgramValue(context.RoomSessionId)),
@@ -91,7 +113,8 @@ namespace Maestro.Quest.Programs
             new FactDefinition("physics.ready",ProgramType.Boolean,"Room surfaces ready",context=>context.PhysicsReady.HasValue?new ProgramValue(context.PhysicsReady.Value):null),
         });
         public static readonly IReadOnlyDictionary<string,ProgramType> FactTypes=new ReadOnlyDictionary<string,ProgramType>(Facts.ToDictionary(x=>x.Id,x=>x.Type));
-        static readonly Dictionary<RuleEventKind,EventDefinition> events=Events.ToDictionary(x=>x.Kind);
+        static readonly Dictionary<RuleEventKind,EventDefinition> events=Events.Where(x=>x.Kind.HasValue).ToDictionary(x=>x.Kind.Value);
+        static readonly Dictionary<string,EventDefinition> eventIds=Events.ToDictionary(x=>x.Id,StringComparer.Ordinal);
         static readonly Dictionary<string,FactDefinition> facts=Facts.ToDictionary(x=>x.Id,StringComparer.Ordinal);
         static readonly Dictionary<string,ActionDefinition> actionIds=Actions.ToDictionary(x=>x.Id,StringComparer.Ordinal);
         public static ActionDefinition Action(string id)=>id!=null&&actionIds.TryGetValue(id,out var value)?value:null;
@@ -121,6 +144,7 @@ namespace Maestro.Quest.Programs
             return claims.ToArray();
         }
         public static bool HasAction(RuleActionKind kind)=>Action(kind)!=null;
+        public static EventDefinition Event(string id)=>id!=null&&eventIds.TryGetValue(id,out var value)?value:null;
         public static EventDefinition Event(RuleEventKind kind)=>events.TryGetValue(kind,out var value)?value:null;
         public static bool TryRead(string id, FactContext context, out ProgramValue value)
         {
@@ -129,13 +153,13 @@ namespace Maestro.Quest.Programs
         public static JObject Manifest()=>new JObject {
             ["version"]=1,
             ["actions"]=new JArray(Actions.Select(x=>x.ToJson())),
-            ["events"]=new JArray(Events.Select(x=>new JObject { ["id"]=x.Id,["label"]=x.Label,["activity"]=x.Activity,["objectEvent"]=x.ObjectEvent })),
+            ["events"]=new JArray(Events.Select(x=>x.ToJson())),
             ["facts"]=new JArray(Facts.Select(x=>new JObject { ["id"]=x.Id,["type"]=x.Type.ToString().ToLowerInvariant(),["label"]=x.Label })),
             ["adapters"]=new JObject { ["ruleStep"]=new JObject {
                 ["actionIds"]=new JArray(LegacyCapabilityAdapters.ActionIds),
                 ["invocations"]=LegacyCapabilityAdapters.Invocations(),
                 ["actionLabels"]=new JArray(LegacyCapabilityAdapters.ActionIds.Select(id=>LegacyCapabilityAdapters.Provider(id)?.Label??Action(id).Label)),
-                ["eventIds"]=new JArray(Events.OrderBy(x=>(int)x.Kind).Select(x=>x.Id)),
+                ["eventIds"]=new JArray(Events.Where(x=>x.Kind.HasValue).OrderBy(x=>(int)x.Kind.Value).Select(x=>x.Id)),
             } },
         };
     }

@@ -55,6 +55,65 @@ namespace Maestro.Quest.Tests
         }
 
 
+        [UnityTest] public IEnumerator ActualContactsWakeTypedProgramsAndDriveRecordedMotionThroughSharedNativeExecution()
+        {
+            RoomPhysicsLayers.Configure();
+            var floor=GameObject.CreatePrimitive(PrimitiveType.Cube);floor.transform.SetParent(root.transform,false);
+            floor.transform.position=new Vector3(0,-.1f,0);floor.transform.localScale=new Vector3(12,.2f,12);floor.layer=RoomPhysicsLayers.Scanned;
+            string target=editor.Identity(block);var ballData=editor.Snapshot().objects.Single(x=>x.kind==RoomObjectKind.Ball);var ball=editor.Find(ballData.id);
+            Assert.That(editor.MoveObject(target,new Vector3(3,.2f,3),out var error),Is.True,error);
+            Assert.That(editor.ResizeObject(target,3,out error),Is.True,error);
+            Assert.That(editor.MoveObject(ballData.id,new Vector3(3,1.2f,3),out error),Is.True,error);
+            var rigid=ball.GetComponent<RigidRoomItem>();rigid.Configure(physics,ItemPhysics.Solid,.6f);
+            var position=block.transform.localPosition;
+            Assert.That(editor.SaveAnimation(target,new RoomMotion {frames=new[] {new MotionFrame {position=position},new MotionFrame {time=.4f,position=position+Vector3.right*.4f}}},null,false),Is.True);
+            // SaveAnimation reconciles all entries. Apply the physics profile last.
+            rigid.Configure(physics,ItemPhysics.Solid,.6f);
+            var program=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-contact.json")));
+            program["resources"]=new JArray(target);program["functions"][0]["body"][0]["body"][0]["source"]=ballData.id;
+            ((JArray)program["functions"][0]["body"][0]["body"][1]["then"]).Add(new JObject {
+                ["id"]="react",["op"]="invoke",["capability"]="animation.play",["version"]=1,
+                ["arguments"]=new JObject {["target"]=target,["source"]=new JObject {["kind"]="recording"},["channel"]="wholeTarget",["seconds"]=.4f,["loop"]=false},["bindings"]=new JObject()});
+            var sequence=new RuleSequence {id="",name="React to contacts",program=program.ToString(Newtonsoft.Json.Formatting.None)};
+            var executor=new RoomAgentExecutor(editor);
+            Assert.That(executor.Execute(new RoomAgentRequest {version=2,commands=new[] {new RoomAgentCommand {action="rules",rule=new RuleRequest {action="edit",revision=workshop.Revision,edits=new[] {new RuleEdit {kind="save",reference="watch",sequence=sequence}}}}}},out error,out var created),Is.True,error);
+            string id=created.Single();string saved=workshop.Selected.program;
+            var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);
+            void Evidence(string phase) {
+                string output=Environment.GetEnvironmentVariable("MAESTRO_EVENT_EVIDENCE");if(string.IsNullOrEmpty(output))return;Directory.CreateDirectory(output);
+                var state=observer.Observe();state.visible=true;state.workspaceView="rules";state.rules=workshop.Observe(true);
+                File.WriteAllText(Path.Combine(output,"contact-"+phase+".json"),RoomAgentWire.Serialize(state));
+            }
+            Assert.That(runtime.Trigger(id),Is.True);Evidence("waiting");
+            Physics.SyncTransforms();physics.SetSurfaces(true,"Synthetic floor ready");physics.StartPhysics();
+            for(int i=0;i<180&&block.transform.position.x<3.04f;i++)yield return new WaitForFixedUpdate();
+            Assert.That(block.transform.position.x,Is.GreaterThan(3.04f),runtime.Scheduler.LastError??"A real collision should start the recorded movement");
+            var run=runtime.Scheduler.ObserveRuns().Single();
+            Assert.That(run.state.Single(x=>x.name=="lastKind").value,Is.EqualTo("object"));
+            Assert.That(run.state.Single(x=>x.name=="lastOther").value,Is.EqualTo(target));
+            Assert.That(double.Parse(run.state.Single(x=>x.name=="lastSpeed").value,System.Globalization.CultureInfo.InvariantCulture),Is.GreaterThan(1));
+            Assert.That(run.locals.Single(x=>x.name=="source").value,Is.EqualTo(ballData.id));Evidence("reaction");
+            Assert.That(workshop.Selected.program,Is.EqualTo(saved),"Observations and playback do not rewrite the program");
+            runtime.StopAll();physics.PausePhysics();
+            Assert.That(editor.MoveObject(target,new Vector3(5,.2f,3),out error),Is.True,error);
+            Assert.That(editor.MoveObject(ballData.id,new Vector3(3,1.2f,3),out error),Is.True,error);
+            rigid.Configure(physics,ItemPhysics.Solid,.6f);Physics.SyncTransforms();
+            // Watch without invoking the recording this time; floor identity is
+            // deliberately only scannedRoom, not an invented semantic wall/floor label.
+            ((JArray)program["functions"][0]["body"][0]["body"][1]["then"]).Last.Remove();
+            sequence=workshop.Selected;sequence.program=program.ToString(Newtonsoft.Json.Formatting.None);
+            Assert.That(workshop.Execute(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="save",sequence=sequence}}},out error,out _),Is.True,error);
+            Assert.That(runtime.Trigger(id),Is.True);physics.StartPhysics();
+            for(int i=0;i<180&&runtime.Scheduler.ObserveRuns().Single().state.Single(x=>x.name=="contacts").value=="0";i++)yield return new WaitForFixedUpdate();
+            run=runtime.Scheduler.ObserveRuns().Single();Assert.That(run.state.Single(x=>x.name=="lastKind").value,Is.EqualTo("scannedRoom"));
+            Assert.That(run.state.Single(x=>x.name=="lastOther").value,Is.EqualTo(""));Evidence("floor");
+            physics.PausePhysics();var count=run.state.Single(x=>x.name=="contacts").value;yield return new WaitForSeconds(.1f);
+            Assert.That(runtime.Scheduler.ObserveRuns().Single().state.Single(x=>x.name=="contacts").value,Is.EqualTo(count));
+            root.SendMessage("OnApplicationPause",true,SendMessageOptions.DontRequireReceiver);Evidence("paused");
+            root.SendMessage("OnApplicationPause",false,SendMessageOptions.DontRequireReceiver);yield return null;
+            Assert.That(runtime.Scheduler.RunningCount,Is.Zero);Assert.That(physics.Running,Is.False);
+        }
+
         [UnityTest] public IEnumerator BookRecoveryStopsActualOneOffMotionAndPreservesObjectsAndSavedBehaviours()
         {
             var executor=new RoomAgentExecutor(editor);var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);

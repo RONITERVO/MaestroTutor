@@ -2534,6 +2534,64 @@
       "label": "Item released",
       "activity": null,
       "objectEvent": true
+    },
+    {
+      "id": "object.collided",
+      "label": "Object contact began",
+      "activity": null,
+      "objectEvent": true,
+      "fields": {
+        "type": "object",
+        "properties": {
+          "otherId": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_]{0,32}$",
+            "maxLength": 32
+          },
+          "otherKind": {
+            "type": "string",
+            "enum": [
+              "object",
+              "scannedRoom",
+              "controller",
+              "environment"
+            ]
+          },
+          "speed": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1000000.0
+          },
+          "x": {
+            "type": "number",
+            "minimum": -1000000.0,
+            "maximum": 1000000.0
+          },
+          "y": {
+            "type": "number",
+            "minimum": -1000000.0,
+            "maximum": 1000000.0
+          },
+          "z": {
+            "type": "number",
+            "minimum": -1000000.0,
+            "maximum": 1000000.0
+          }
+        },
+        "required": [
+          "otherId",
+          "otherKind",
+          "speed",
+          "x",
+          "y",
+          "z"
+        ],
+        "additionalProperties": false
+      },
+      "description": "A physics contact began while room physics was running. Value is the source object ID. otherId is a registered room object ID or empty; otherKind distinguishes object, scannedRoom, controller and environment. speed is relative speed in metres/second; x/y/z are one contact point in world metres. Compound colliders can produce separate contacts. This is not a continuous contact or precise impact-energy measurement. Fields do not authorize editing new objects.",
+      "features": [
+        "eventFields.v1"
+      ]
     }
   ],
   "facts": [
@@ -2734,7 +2792,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "09c73e11167a2695e76a2d44f2bea891dd01416d930acd947e5c126344918143"
+      "sha256": "c5cf71274ec2066008bb4c80b9c505f50357aaed7d303dbe6f8b89067160f6eb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -2742,7 +2800,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
-      "sha256": "993ab665b3dfb790d2a54fd41747cdcbcc26b2d1e006acf9aa8ee7941ec63d15"
+      "sha256": "e730f9f2bff8fda6c38630c48f219c24571e2d56e7cc5917fe88509104ce54c9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleDocument.cs",

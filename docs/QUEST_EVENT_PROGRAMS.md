@@ -49,7 +49,8 @@ representation. No additional save reset is needed.
 - emitEvent: declared custom event ID and matching scalar value expression.
   Programs cannot forge built-in engine events.
 
-Built-in catalog events carry text: Maestro's activity or the source object ID.
+Built-in catalog events retain a primary text value: Maestro's activity or the source object ID.
+Some events also define typed fields, described below.
 Object events allow an exact source ID or empty string for any; all other events
 require an empty source. Initial activity is a baseline, not an entered-state event.
 No per-frame model call is needed.
@@ -119,3 +120,63 @@ This is not a completed Quest release. Hardware timing/readability and real-prov
 planning remain unverified. Wall-clock/background scheduling, durable/resumable state,
 parallel branches, broader animation layering, richer state-machine authoring, full capability
 coverage and durable receipts remain open.
+
+
+## Typed native contact events (2026-09-30)
+
+`eventFields.v1` extends an awaitEvent node with optional
+`fields: {fieldName: localVariableName}`. Native event registrations own the field
+schema, description and required feature; the committed catalog supplies the web
+validator, book controls and agent guide. The destinations must be existing scalar
+locals with matching types, distinct from each other and from received/value.
+Programs may bind any subset. Runtime validates the entire native payload before
+changing destinations. A timeout changes received to false and retains all earlier
+payload values. Event IDs and bindings preserve the existing version-3 format;
+older runtimes are rejected by the shared feature check. No save migration/reset.
+
+The first producer is `object.collided`, emitted on actual PhysX contact entry
+for registered rigid room items while room physics is ready and running. The
+primary value is the source object ID and the existing exact-source/any-source
+filter applies. Fields:
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| otherId | text | Other registered room object ID, or empty for environment/controller geometry |
+| otherKind | text | object, scannedRoom, controller or environment |
+| speed | number | Relative linear speed in metres per second, not force/energy |
+| x, y, z | number | One contact point in world-space metres |
+
+The source can be a fixed or dynamic item; actual PhysX collision requirements
+still apply. Grabbed items can generate contacts when physical interaction is
+active. Animated/carried source items, disabled items and paused/unready worlds
+do not produce these events. The collision object is never retained: native code
+copies the values at emission and the scheduler detaches them before queueing.
+Payload construction is skipped when no matching program is waiting.
+
+This is contact entry, not every physics frame or a contact-exit event. Compound
+colliders may produce more than one entry. Scanned geometry is reported as
+scannedRoom; floor/wall semantics are not guessed from a normal. Contact points
+have the accuracy of the configured collision geometry and speculative CCD, not
+visual mesh or live camera reconstruction. World coordinates are not automatically
+converted to a room-local action's coordinates.
+
+These observations do not acquire ownership, write saves or grant access to new
+object IDs. Actions using a field ID still require a declared or native-created
+resource and the usual readiness/ownership checks. Only native producers can emit
+catalog events; the app/agent signal route remains restricted to declared user.*
+scalar events. Event-time receivers, wait generations, deadlines, queue64,
+dispatch16, causal budgets and no-replay lifecycle rules remain in force.
+
+The optional book editor lets users select typed destination variables for these
+fields. The normal chat remains the default authoring interface. Existing scalar
+custom events remain supported; typed custom records, proximity/condition-edge
+subscriptions, vector/list values, collision exit/continuous contacts and semantic
+room-surface identities remain future work.
+
+PC verification covers strict field/schema validation, detached observations,
+source filters, overflow/generation/deadline handling, feature gating, human
+visual editing and denied undeclared-object edits. A PlayMode scenario saves via
+the actual room executor, drops a rigid ball onto a registered object and observes
+the collision wake a program that drives recorded motion. It then checks scanned
+floor contacts, pause and no automatic restart. Quest timing/performance and
+real-provider conversational acceptance are still pending.

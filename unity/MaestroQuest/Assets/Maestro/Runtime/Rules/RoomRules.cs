@@ -32,7 +32,7 @@ namespace Maestro.Quest.Rules
             anchors = controllerAnchors ?? (index => input ? input.ControllerAnchor(index) : null);
             actions = new RoomRuleActions(editor,animations); Scheduler = new RuleScheduler(actions,new InvocationReceipts(editor.SaveDirectory)); workshop.Runtime = this;
             workshop.DocumentChanged += Reload;
-            editor.Editing += StopAll; editor.ItemGrabbed += Grabbed; editor.ItemReleased += Released; editor.ItemTapped += Tapped;
+            editor.Editing += StopAll; editor.ItemGrabbed += Grabbed; editor.ItemReleased += Released; editor.ItemTapped += Tapped; editor.ItemCollided += Collided;
             animations.Starting += Authoring; room.Restoring += StopAll; room.Restored += RecoverButtons;
             Reload();
         }
@@ -58,6 +58,11 @@ namespace Maestro.Quest.Rules
         }
         void Released(string id) { Scheduler.Emit(RuleEventKind.ItemReleased,id,Time.unscaledTime); ShowError(); }
         void Tapped(string id) { Scheduler.Emit(RuleEventKind.ItemTapped,id,Time.unscaledTime); ShowError(); }
+        void Collided(string id,string otherId,string kind,Vector3 point,float speed) {
+            if(paused||!focused||!isActiveAndEnabled||Scheduler==null||!Scheduler.IsListening("object.collided",id))return;
+            var fields=new Newtonsoft.Json.Linq.JObject {["otherId"]=otherId,["otherKind"]=kind,["speed"]=speed,["x"]=point.x,["y"]=point.y,["z"]=point.z};
+            Scheduler.EmitNative("object.collided",id,new Programs.ProgramValue(id),fields,Time.unscaledTime,out _);
+        }
         void Authoring(string id) => Scheduler.StopTarget(id,false);
         void RecoverButtons() => workshop.RecoverButtons();
         void ShowError() { if (Scheduler.LastError != null) workshop.Say(Scheduler.LastError); }
@@ -102,7 +107,7 @@ namespace Maestro.Quest.Rules
         {
             StopAll();
             if (workshop) workshop.DocumentChanged -= Reload;
-            if (editor) { editor.Editing -= StopAll; editor.ItemGrabbed -= Grabbed; editor.ItemReleased -= Released; editor.ItemTapped -= Tapped; }
+            if (editor) { editor.Editing -= StopAll; editor.ItemGrabbed -= Grabbed; editor.ItemReleased -= Released; editor.ItemTapped -= Tapped; editor.ItemCollided -= Collided; }
             if (animations) animations.Starting -= Authoring;
             if (room) { room.Restoring -= StopAll; room.Restored -= RecoverButtons; }
         }

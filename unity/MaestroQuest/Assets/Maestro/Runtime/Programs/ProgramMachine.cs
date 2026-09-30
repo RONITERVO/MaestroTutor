@@ -24,7 +24,7 @@ namespace Maestro.Quest.Programs
         Scope observed;
         bool terminal;
         readonly Dictionary<string,ProgramValue> state;
-        Scope waitingScope;string receivedVariable,valueVariable;
+        Scope waitingScope;string receivedVariable,valueVariable;JObject eventBindings;
         Scope resultScope;JObject resultBindings;BehaviourCatalog.ActionDefinition resultContract;
         readonly HashSet<string> createdResources=new();
         public JObject LastOutput {get;private set;}
@@ -82,7 +82,7 @@ namespace Maestro.Quest.Programs
                             Wait=new ProgramWait {Seconds=(float)seconds};return ProgramYield.Waiting;
                         case "awaitEvent":
                             double timeout=Eval("timeout").Number;if(!double.IsFinite(timeout)||timeout!=0&&(timeout<.1||timeout>3600))throw new ProgramFault("Event timeout must be zero or 0.1 to 3600 seconds");
-                            waitingScope=frame.Scope;receivedVariable=(string)node["received"];valueVariable=(string)node["value"];
+                            waitingScope=frame.Scope;receivedVariable=(string)node["received"];valueVariable=(string)node["value"];eventBindings=node["fields"] as JObject;
                             waitingScope.Values[receivedVariable]=new ProgramValue(false);
                             Wait=new ProgramWait {Event=(string)node["event"],Source=(string)node["source"],Seconds=(float)timeout};return ProgramYield.Waiting;
                         case "emitEvent":Signal=new ProgramSignal {Event=(string)node["event"],Value=Eval("value")};return ProgramYield.Signal;
@@ -118,14 +118,18 @@ namespace Maestro.Quest.Programs
             if(resultBindings!=null)foreach(var binding in resultBindings.Properties())resultScope.Values[(string)binding.Value]=ProgramValue.Literal(output[binding.Name]);
             LastOutput=(JObject)output.DeepClone();resultContract=null;resultScope=null;resultBindings=null;return true;
         }
-        public void Resume(bool received,ProgramValue value=default)
+        public void Resume(bool received,ProgramValue value=default,JObject fields=null)
         {
             if(Wait==null)throw new InvalidOperationException("This program is not waiting");
             if(received&&Wait.Event!=null) {
                 if(value.Type!=program.EventType(Wait.Event))throw new ArgumentException("Event payload type differs");
+                var definition=BehaviourCatalog.Event(Wait.Event);
+                if(definition!=null?!definition.ValidFields(fields):fields!=null&&fields.Count!=0)throw new ArgumentException("Event fields differ from the catalog");
+                // Validate the complete observation before changing any destination.
+                if(eventBindings!=null)foreach(var binding in eventBindings.Properties())waitingScope.Values[(string)binding.Value]=ProgramValue.Literal(fields[binding.Name]);
                 waitingScope.Values[receivedVariable]=new ProgramValue(true);waitingScope.Values[valueVariable]=value;
             }
-            Wait=null;waitingScope=null;receivedVariable=valueVariable=null;
+            Wait=null;waitingScope=null;receivedVariable=valueVariable=null;eventBindings=null;
             BeginActivation(); // Scope/state/stack remain intact.
         }
         internal void BeginActivation()=>Instructions=0;

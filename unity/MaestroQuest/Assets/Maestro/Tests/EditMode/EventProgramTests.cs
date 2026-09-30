@@ -26,6 +26,68 @@ namespace Maestro.Quest.Tests
         static RuleSequence Sequence(JObject source=null)=>new() {id=Guid.NewGuid().ToString("N"),name="Reactive wave",program=(source??Source()).ToString(Newtonsoft.Json.Formatting.None)};
         static RuleScheduler Scheduler(Actions actions,params RuleSequence[] sequences){var result=new RuleScheduler(actions);result.Configure(new RuleDocument {sequences=sequences});return result;}
         static string State(RuleScheduler s,string name)=>s.ObserveRuns().Single().state.Single(x=>x.name==name).value;
+        static JObject ContactSource()=>JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-contact.json")));
+        static JObject ContactFields()=>new() {["otherId"]="book",["otherKind"]="object",["speed"]=4d,["x"]=1d,["y"]=2d,["z"]=3d};
+        [Test] public void ContactFieldsAreTypedDetachedAndCannotBeForgedAsCustomSignals()
+        {
+            var sequence=Sequence(ContactSource());var s=Scheduler(new Actions(),sequence);
+            Assert.That(s.IsListening("object.collided","book"),Is.False);
+            Assert.That(s.Trigger(sequence.id,0),Is.True);Assert.That(s.IsListening("object.collided","book"),Is.True);
+            var fields=ContactFields();
+            Assert.That(s.EmitNative("object.collided","maestro",new ProgramValue("maestro"),fields,.1f,out var error),Is.True,error);
+            fields["speed"]=99;fields["otherId"]="maestro";s.Tick(.1f);
+            Assert.That(State(s,"contacts"),Is.EqualTo("1"));Assert.That(State(s,"lastSpeed"),Is.EqualTo("4"));Assert.That(State(s,"lastOther"),Is.EqualTo("book"));
+            var observation=s.ObserveRuns().Single();Assert.That(observation.locals.Single(x=>x.name=="height").value,Is.EqualTo("2"));
+            Assert.That(s.Signal("object.collided",new ProgramValue("book"),1,out _),Is.False);
+            Assert.That(s.EmitNative("user.wave","",new ProgramValue("book"),fields,1,out _),Is.False);
+            Assert.That(s.EmitNative("object.collided","book",new ProgramValue("maestro"),fields,1,out _),Is.False);
+            var schema=BehaviourCatalog.Event("object.collided").Fields;schema["properties"]["speed"]["type"]="string";
+            Assert.That(s.EmitNative("object.collided","book",new ProgramValue("book"),ContactFields(),1,out _),Is.True,"Schema callers cannot mutate native validation");
+        }
+        [Test] public void ContactFieldsRejectMissingExtraNonfiniteAndWrongTypedValuesWithoutPartialWake()
+        {
+            var source=ContactSource();Assert.That(BehaviourProgram.TryParse(source.ToString(),out var program,out var error),Is.True,error);
+            var machine=new ProgramMachine(program,null);Assert.That(machine.Advance(out _),Is.EqualTo(ProgramYield.Waiting));
+            var invalid=new[] {ContactFields(),ContactFields(),ContactFields(),ContactFields(),ContactFields()};
+            invalid[0].Remove("speed");invalid[1]["extra"]=1;invalid[2]["speed"]=double.NaN;invalid[3]["otherKind"]="floor";invalid[4]["speed"]="fast";
+            var sequence=Sequence(source);var scheduler=Scheduler(new Actions(),sequence);scheduler.Trigger(sequence.id,0);
+            foreach(var fields in invalid) {
+                Assert.That(scheduler.EmitNative("object.collided","book",new ProgramValue("book"),fields,.1f,out _),Is.False);
+                Assert.Throws<ArgumentException>(()=>machine.Resume(true,new ProgramValue("book"),fields));
+                Assert.That(machine.Wait,Is.Not.Null);Assert.That(machine.Locals["received"].Boolean,Is.False);Assert.That(machine.Locals["speed"].Number,Is.Zero);
+            }
+            Assert.That(scheduler.EventQueueCount,Is.Zero);machine.Resume(true,new ProgramValue("book"),ContactFields());
+            Assert.That(machine.Advance(out _),Is.EqualTo(ProgramYield.Waiting));Assert.That(machine.State["lastSpeed"].Number,Is.EqualTo(4));
+        }
+        [Test] public void ContactWaitsKeepFiltersDeadlinesGenerationsAndQueueLimits()
+        {
+            var source=ContactSource();Loop(source)[0]["source"]="book";Loop(source)[0]["timeout"]["value"]=.5;
+            var sequence=Sequence(source);var scheduler=Scheduler(new Actions(),sequence);
+            scheduler.EmitNative("object.collided","book",new ProgramValue("book"),ContactFields(),0,out _);
+            scheduler.Trigger(sequence.id,0);scheduler.Tick(.1f);Assert.That(State(scheduler,"contacts"),Is.EqualTo("0"));
+            scheduler.EmitNative("object.collided","maestro",new ProgramValue("maestro"),ContactFields(),.1f,out _);scheduler.Tick(.1f);
+            Assert.That(State(scheduler,"contacts"),Is.EqualTo("0"));
+            for(int i=0;i<65;i++)scheduler.EmitNative("object.collided","book",new ProgramValue("book"),ContactFields(),.2f,out _);
+            Assert.That(scheduler.EventsDropped,Is.EqualTo(1));Assert.That(scheduler.EventQueueCount,Is.EqualTo(64));
+            for(int i=0;i<4;i++)scheduler.Tick(.3f);
+            Assert.That(State(scheduler,"contacts"),Is.EqualTo("1"));Assert.That(scheduler.EventQueueCount,Is.Zero);
+            scheduler.EmitNative("object.collided","book",new ProgramValue("book"),ContactFields(),1,out _);scheduler.Tick(1);
+            Assert.That(State(scheduler,"contacts"),Is.EqualTo("1"));Assert.That(State(scheduler,"lastSpeed"),Is.EqualTo("4"),"Timeout preserves event values");
+            scheduler.Suspend(true);Assert.That(scheduler.EmitNative("object.collided","book",new ProgramValue("book"),ContactFields(),2,out _),Is.False);
+            scheduler.Suspend(false);scheduler.Tick(3);Assert.That(scheduler.RunningCount,Is.Zero,"No automatic restart");
+        }
+        [Test] public void EventFieldBindingsRejectUnknownTypesAliasesAndUnauthorizedDynamicTargets()
+        {
+            foreach(var bindings in new[] {new JObject {["speed"]="kind"},new JObject {["otherId"]="source"},new JObject {["x"]="speed",["speed"]="speed"},new JObject {["future"]="speed"},new JObject {["speed"]="missing"}}) {
+                var source=ContactSource();Loop(source)[0]["fields"]=bindings;
+                Assert.That(BehaviourProgram.TryParse(source.ToString(),out _,out _),Is.False,bindings.ToString());
+            }
+            var unauthorized=ContactSource();var action=JObject.Parse(@"{'id':'edit','op':'invoke','capability':'object.rotation.set','version':1,'arguments':{'target':'book','pitch':0,'yaw':90,'roll':0},'bindings':{'target':{'var':'other'}}}");
+            Loop(unauthorized).Insert(1,action);
+            Assert.That(BehaviourProgram.TryParse(unauthorized.ToString(),out var program,out var error),Is.True,error);
+            var machine=new ProgramMachine(program,null);machine.Advance(out _);machine.Resume(true,new ProgramValue("maestro"),ContactFields());
+            Assert.That(machine.Advance(out _),Is.EqualTo(ProgramYield.Failed));StringAssert.Contains("declared or created",machine.Error);
+        }
         [Test] public void EventsPreserveStateReleaseIdleResourcesAndNeverReplay()
         {
             var actions=new Actions();var sequence=Sequence();var s=Scheduler(actions,sequence);

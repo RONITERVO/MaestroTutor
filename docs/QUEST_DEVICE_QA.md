@@ -1176,3 +1176,17 @@ See [the current contract and boundaries](QUEST_EVENT_PROGRAMS.md). Earlier note
 marking all event waits/timers pending describe prior checkpoints. Durable state,
 wall-clock scheduling, parallel branches, channel blending and full release
 acceptance remain open; no headset install or backend deployment is included.
+
+
+### Pending: typed contact reactions
+
+After device work resumes, use a program waiting for object.collided with source
+set to a created ball. Bind speed and otherKind in the optional book editor, and
+use the received branch to play a short gesture/recording on a different declared
+object. Load/check the room and start physics; drop and throw the ball onto an
+object and scanned floor/wall. Verify the trace identifies the counterpart and
+that motion reacts only to actual new contacts. Stop and pause must prevent later
+reactions; returning focus must not restart the program. Check readability of
+field controls, repeated/compound contacts, event overflow and sustained Quest
+frame timing. scannedRoom intentionally does not claim floor/wall labels.
+No headset installation or acceptance is recorded for this increment.

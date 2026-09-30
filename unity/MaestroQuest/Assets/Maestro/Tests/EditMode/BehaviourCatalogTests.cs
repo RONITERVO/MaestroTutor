@@ -30,7 +30,7 @@ namespace Maestro.Quest.Tests
         [Test] public void EveryExistingAdapterHasExactlyOneStableRegistration()
         {
             Assert.That(LegacyCapabilityAdapters.ActionIds.Select(id=>LegacyCapabilityAdapters.Kind(id).Value),Is.EquivalentTo(Enum.GetValues(typeof(RuleActionKind))));
-            Assert.That(BehaviourCatalog.Events.Select(x=>x.Kind),Is.EquivalentTo(Enum.GetValues(typeof(RuleEventKind))));
+            Assert.That(BehaviourCatalog.Events.Where(x=>x.Kind.HasValue).Select(x=>x.Kind.Value),Is.EquivalentTo(Enum.GetValues(typeof(RuleEventKind))));
             var ids=BehaviourCatalog.Actions.Select(x=>x.Id).Concat(BehaviourCatalog.Events.Select(x=>x.Id)).Concat(BehaviourCatalog.Facts.Select(x=>x.Id)).ToArray();
             Assert.That(ids.Distinct().Count(),Is.EqualTo(ids.Length));
             Assert.That(ids.All(id=>System.Text.RegularExpressions.Regex.IsMatch(id,@"^[a-z][a-zA-Z0-9]*(\.[a-z][a-zA-Z0-9]*)+$")),Is.True);
@@ -73,8 +73,9 @@ namespace Maestro.Quest.Tests
             foreach(var entry in manifest["events"])
             {
                 var kind=BehaviourCatalog.Events.Single(x=>x.Id==(string)entry["id"]).Kind;
-                Assert.That(RuleDocument.Activity(kind),Is.EqualTo((string)entry["activity"]));
-                Assert.That(RuleDocument.IsObjectEvent(kind),Is.EqualTo((bool)entry["objectEvent"]));
+                if(!kind.HasValue)continue;
+                Assert.That(RuleDocument.Activity(kind.Value),Is.EqualTo((string)entry["activity"]));
+                Assert.That(RuleDocument.IsObjectEvent(kind.Value),Is.EqualTo((bool)entry["objectEvent"]));
             }
             Assert.That((string)BehaviourCatalog.Action("time.wait").InputSchema["properties"]["seconds"]["type"],Is.EqualTo("number"));
             Assert.That(BehaviourCatalog.Action("time.wait").InputSchema["properties"]["engineCode"],Is.Null);

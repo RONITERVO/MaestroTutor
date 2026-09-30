@@ -5,6 +5,7 @@ export interface AvatarMovementSettings { distance:number; speed:number }
 export interface AvatarWalkObservation {source:'included'|'embedded'|'library';motionId:string;modelHash:string;clipIndex:number;name:string;available:boolean;status:string;playbackStatus:string}
 export interface PhysicsObservation { ready:boolean; running:boolean; status:string }
 export interface AvatarMovementObservation { active:boolean; mode:'look'|'follow'|'manual'|'stopped'; status:string; canLook:boolean; canFollow:boolean; lookReason:string; followReason:string; distance:number; speed:number }
+import {behaviourEvent} from './behaviourEvents';
 import {capabilityDefinition,capabilityInput} from './capabilities';
 import {roomControlFields} from './prompts/roomcontrols';
 export {roomControlFields} from './prompts/roomcontrols';
@@ -30,6 +31,10 @@ export function requireRoomCapabilities(commands:{action:string;rule?:unknown;ex
   const needs=(value:unknown,features:Set<string>)=>{
     if(Array.isArray(value)){value.forEach(x=>needs(x,features));return;}
     if(!record(value))return;
+    if(value.op==='awaitEvent'){
+      if(value.fields!==undefined)features.add('eventFields.v1');
+      for(const feature of behaviourEvent(String(value.event))?.features??[])features.add(feature);
+    }
     const capability=value.op==='invoke'?value.capability:value.id;
     if(typeof capability==='string'&&record(value.arguments))for(const feature of capabilityInput(capability,value.arguments)?.['x-features']??[])features.add(feature);
     Object.values(value).forEach(x=>needs(x,features));

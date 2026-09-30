@@ -90,3 +90,18 @@ it('shares native creation-result programs and gates result authoring on runtime
  create.results={objectId:'ball'};program.functions[0].locals[0].initial=0;expect(parseProgram(JSON.stringify(program)).program).toBeNull();
  program.functions[0].locals[0].initial='';program.version=2;delete program.state;delete program.events;expect(parseProgram(JSON.stringify(program)).program).toBeNull();
 });
+
+it('shares typed contact fields and rejects ambiguous bindings without granting object authority',()=>{
+ const program=JSON.parse(readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-contact.json','utf8'));
+ expect(parseProgram(JSON.stringify(program)).error).toBeNull();
+ const commands=()=>parseRoomCommands({commands:[{action:'rules',rule:{action:'edit',revision:1,edits:[{kind:'save',reference:'watch',sequence:{id:'',name:'Contact watcher',repeat:false,interruption:0,program:JSON.stringify(program)}}]}}]});
+ const capabilities=['behaviourPrograms.v3','eventPrograms.v1'];
+ expect(()=>requireRoomCapabilities(commands(),{capabilities})).toThrow('eventFields.v1');
+ expect(()=>requireRoomCapabilities(commands(),{capabilities:[...capabilities,'eventFields.v1']})).not.toThrow();
+ const wait=program.functions[0].body[0].body[0];delete wait.fields;
+ expect(()=>requireRoomCapabilities(commands(),{capabilities})).toThrow('eventFields.v1');
+ for(const fields of [{speed:'kind'},{otherId:'source'},{speed:'speed',x:'speed'},{future:'speed'},{speed:'missing'},null,[]]){
+  wait.fields=fields;expect(parseProgram(JSON.stringify(program)).program).toBeNull();
+ }
+ wait.fields={speed:'speed'};wait.event='user.example';program.events=[{name:'user.example',type:'text'}];expect(parseProgram(JSON.stringify(program)).program).toBeNull();
+});

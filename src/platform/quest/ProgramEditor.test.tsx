@@ -14,7 +14,7 @@ it('lets a human wire a native creation result into the next action without writ
  if(first.op!=='invoke'||second.op!=='invoke')throw new Error('Expected calls');
  delete first.results;second.bindings={};initial.resources=[String(second.arguments.target)];
  initial.functions[0].locals=[];let source=JSON.stringify(initial);
- function Harness(){const [value,setValue]=useState(source);return <ProgramEditor source={value} targets={[]} eventsSupported resultsSupported onEditingChange={()=>{}} onChange={next=>{source=next;setValue(next);}}/>;}
+ function Harness(){const [value,setValue]=useState(source);return <ProgramEditor source={value} targets={[]} eventsSupported eventFieldsSupported resultsSupported onEditingChange={()=>{}} onChange={next=>{source=next;setValue(next);}}/>;}
  const screen=render(<Harness/>);
  fireEvent.click(screen.getByLabelText('create new variable for objectId'));
  fireEvent.change(screen.getByLabelText('push argument target variable'),{target:{value:'objectId'}});
@@ -32,7 +32,7 @@ const empty:BehaviourProgram={version:2,entry:'main',resources:[],functions:[{na
 function harness(initial=empty,objects=[{id:'maestro',name:'Maestro'},{id:'book',name:'Book'}]) {
  let source=JSON.stringify(initial);
  const onChange=vi.fn();
- function Harness(){const [value,setValue]=useState(source);return <ProgramEditor source={value} targets={objects} eventsSupported resultsSupported onEditingChange={()=>{}} onChange={next=>{source=next;setValue(next);onChange(next);}}/>;}
+ function Harness(){const [value,setValue]=useState(source);return <ProgramEditor source={value} targets={objects} eventsSupported eventFieldsSupported resultsSupported onEditingChange={()=>{}} onChange={next=>{source=next;setValue(next);onChange(next);}}/>;}
  const screen=render(<Harness/>);
  const change=(label:string,value:string)=>fireEvent.change(screen.getByLabelText(label),{target:{value}});
  const click=(name:string)=>fireEvent.click(screen.getByRole('button',{name}));
@@ -162,4 +162,22 @@ it('switches creation kinds with native examples and preserves result destinatio
  expect(result.functions[0].body[1]).toEqual(initial.functions[0].body[1]);expect(parseProgram(h.source()).error).toBeNull();
  h.click('Edit values create');h.change('name','My teaching robot');h.click('Update draft');
  expect(JSON.parse(h.source()).functions[0].body[0].arguments.recipe).toEqual(changed.arguments.recipe);
+});
+
+it('lets users select typed collision fields through the same canonical blocks and preserves them in source',()=>{
+ const initial=JSON.parse(readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-contact.json','utf8'));
+ delete initial.functions[0].body[0].body[0].fields;
+ const h=harness(initial);h.click('Edit values contact');
+ h.change('Event field speed','speed');h.change('Event field otherKind','kind');h.change('Event field otherId','other');h.change('Event field y','height');h.click('Update draft');
+ const expected=JSON.parse(readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-contact.json','utf8'));
+ expect(JSON.parse(h.source())).toEqual(expected);expect(parseProgram(h.source()).error).toBeNull();
+ h.click('Edit values contact');h.change('Await event','object.tapped');h.click('Update draft');
+ expect(JSON.parse(h.source()).functions[0].body[0].body[0].fields).toBeUndefined();
+});
+it('keeps new physical events unavailable in editors connected to an older runtime',()=>{
+ const source=readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-contact.json','utf8');
+ const screen=render(<ProgramEditor source={source} targets={[]} eventsSupported onChange={()=>{}} onEditingChange={()=>{}}/>);
+ fireEvent.click(screen.getByRole('button',{name:'Edit values contact'}));
+ expect((screen.getByRole('option',{name:'object.collided'}) as HTMLOptionElement).disabled).toBe(true);
+ expect(screen.getByRole('group',{name:'Store event details'}).hasAttribute('disabled')).toBe(true);
 });

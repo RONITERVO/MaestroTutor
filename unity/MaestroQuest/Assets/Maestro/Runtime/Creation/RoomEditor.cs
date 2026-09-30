@@ -36,6 +36,7 @@ namespace Maestro.Quest.Creation
         public event Action Editing;
         public event Action<RoomItem> ItemGrabbed;
         public event Action<string> ItemReleased, ItemTapped;
+        public event Action<string,string,string,Vector3,float> ItemCollided;
         public string Identity(RoomItem item) => item && identities.TryGetValue(item,out var id) ? id : null;
         public void Tapped(RoomItem item) { var id = Identity(item); if (id != null) ItemTapped?.Invoke(id); }
         public int Revision { get; private set; } = 1;
@@ -84,6 +85,14 @@ namespace Maestro.Quest.Creation
         {
             objects.Add(id,item); identities.Add(item,id);
             item.GrabStarted += GrabStarted; item.GrabFinished += GrabFinished;
+            var rigid=item.GetComponent<RigidRoomItem>();if(rigid)rigid.ContactStarted+=ContactStarted;
+        }
+        void ContactStarted(RoomItem item,Collider other,Vector3 point,float speed) {
+            string id=Identity(item);if(applying||Ownership.Suspended||id==null||!other)return;
+            var otherItem=other.attachedRigidbody?other.attachedRigidbody.GetComponent<RoomItem>():other.GetComponentInParent<RoomItem>();
+            string otherId=Identity(otherItem)??"";
+            string kind=otherId!=""?"object":other.gameObject.layer==RoomPhysicsLayers.Scanned?"scannedRoom":other.gameObject.layer==RoomPhysicsLayers.Controller?"controller":"environment";
+            ItemCollided?.Invoke(id,otherId,kind,point,speed);
         }
         void OwnHeld(RoomItem item) {
             var id=Identity(item);if(id==null||Ownership.Suspended)return;
@@ -479,7 +488,7 @@ namespace Maestro.Quest.Creation
         {
             Ownership.Suspend(true);Flush(); Motions?.Dispose();
             if (room) { room.Restoring -= BeforeRestore; room.Restored -= AfterRestore; }
-            foreach (var item in objects.Values) if (item) { item.GrabStarted -= GrabStarted; item.GrabFinished -= GrabFinished; }
+            foreach (var item in objects.Values) if (item) { item.GrabStarted -= GrabStarted; item.GrabFinished -= GrabFinished;var rigid=item.GetComponent<RigidRoomItem>();if(rigid)rigid.ContactStarted-=ContactStarted; }
         }
     }
 }

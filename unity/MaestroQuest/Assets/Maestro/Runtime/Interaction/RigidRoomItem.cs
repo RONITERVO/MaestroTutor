@@ -27,6 +27,15 @@ namespace Maestro.Quest.Interaction
         Vector3 lastGoodPosition;
         Quaternion lastGoodRotation;
         public event Action<RoomItem> Settled;
+        public event Action<RoomItem,Collider,Vector3,float> ContactStarted;
+        void OnCollisionEnter(Collision collision) {
+            if(ContactStarted==null||!isActiveAndEnabled||!geometryReady||AnimationOwned||!world||!world.CanSimulate(transform.position)||collision.contactCount==0)return;
+            // Unity may reuse Collision objects. Copy the observation immediately;
+            // no callback object or mutable body state enters the program queue.
+            var point=collision.GetContact(0).point;float speed=collision.relativeVelocity.magnitude;
+            if(!float.IsFinite(point.sqrMagnitude)||!float.IsFinite(speed))return;
+            ContactStarted.Invoke(item,collision.collider,point,speed);
+        }
         public bool GeometryReady => geometryReady;
         public bool Dynamic => profile != ItemPhysics.Fixed;
         public bool Simulating => body && !body.isKinematic;

@@ -1,14 +1,15 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import type {ReactNode} from 'react';
+import {behaviourEvent,eventFieldType} from '../../../shared/behaviourEvents';
 import {behaviourCatalog} from '../../../shared/behaviourCatalog';
 import {capabilityDefinition,capabilityParameterType,capabilityInput,type CapabilitySchema} from '../../../shared/capabilities';
 import type {BehaviourProgram,Expression,ProgramFunction,ProgramNode,ValueType} from '../../core-sdk/room/programs';
 import {CapabilityFields,CapabilityVariant,initialCapabilityValue,type EditorObject} from './CapabilityFields';
 import {ProgramValueEditor,defaultValue,expressionType,roomValueSources,valueType,type ValueSource} from './ProgramValueEditor';
 
-export function ProgramBlockEditor({node,program,fn,objects,onChange}:{
-  node:ProgramNode;program:BehaviourProgram;fn:ProgramFunction;objects:readonly EditorObject[];onChange:(node:ProgramNode)=>void;
+export function ProgramBlockEditor({node,program,fn,objects,onChange,eventFieldsSupported=false}:{
+  eventFieldsSupported?:boolean;node:ProgramNode;program:BehaviourProgram;fn:ProgramFunction;objects:readonly EditorObject[];onChange:(node:ProgramNode)=>void;
 }) {
   const locals=[...fn.parameters,...fn.locals.map(v=>({name:v.name,type:valueType(v.initial)}))];
   const states=(program.state??[]).map(v=>({name:v.name,type:valueType(v.initial)}));
@@ -88,17 +89,23 @@ export function ProgramBlockEditor({node,program,fn,objects,onChange}:{
     }
     case 'awaitEvent': {
       const events=[...behaviourCatalog.events.map(e=>({name:e.id,type:'text' as ValueType,objectEvent:e.objectEvent})),...(program.events??[]).map(e=>({...e,objectEvent:false}))];
-      const selected=events.find(e=>e.name===node.event),type=selected?.type??'text';
+      const selected=events.find(e=>e.name===node.event),type=selected?.type??'text',definition=behaviourEvent(node.event);
       return <>
         <label>Event<select aria-label="Await event" value={node.event} onChange={e=>{
           const event=events.find(v=>v.name===e.target.value)!;
-          onChange({...node,event:event.name,source:event.objectEvent?node.source:'',value:locals.find(v=>v.type===event.type&&v.name!==node.received)?.name??''});
-        }}>{events.map(e=><option key={e.name} value={e.name}>{e.name}</option>)}</select></label>
+          const next={...node,event:event.name,source:event.objectEvent?node.source:'',value:locals.find(v=>v.type===event.type&&v.name!==node.received)?.name??''};delete next.fields;onChange(next);
+        }}>{events.map(e=><option key={e.name} value={e.name} disabled={!eventFieldsSupported&&Boolean(behaviourEvent(e.name)?.features?.length)}>{e.name}</option>)}</select></label>
         {selected?.objectEvent&&<label>Event object<select aria-label="Event object" value={node.source} onChange={e=>onChange({...node,source:e.target.value})}><option value="">Any object</option>{objects.map(o=><option key={o.id} value={o.id}>{o.name??o.id}</option>)}</select></label>}
         {expr('Timeout seconds',node.timeout,'number',timeout=>onChange({...node,timeout}))}
         <p className="room-workspace-intro">Zero waits until the event arrives or the run is stopped.</p>
         {variable('Event received',node.received,'boolean',received=>onChange({...node,received}))}
         {variable('Event value',node.value,type,value=>onChange({...node,value}))}
+        {definition?.description&&<p className="room-workspace-intro">{definition.description}</p>}
+        {definition?.fields&&<fieldset disabled={!eventFieldsSupported}><legend>Store event details</legend><p>Choose existing variables below. Add variables to the function first if needed.</p>
+          {Object.keys(definition.fields.properties??{}).map(key=><label key={key}>{key} ({eventFieldType(node.event,key)})<select aria-label={'Event field '+key} value={node.fields?.[key]??''} onChange={e=>{
+            const fields={...node.fields};if(e.target.value)fields[key]=e.target.value;else delete fields[key];const next={...node};if(Object.keys(fields).length)next.fields=fields;else delete next.fields;onChange(next);
+          }}><option value="">Do not store</option>{locals.filter(v=>v.type===eventFieldType(node.event,key)&&v.name!==node.received&&v.name!==node.value&&!Object.entries(node.fields??{}).some(([k,d])=>k!==key&&d===v.name)).map(v=><option key={v.name} value={v.name}>{v.name}</option>)}</select></label>)}
+        </fieldset>}
       </>;
     }
     case 'emitEvent': {
@@ -107,7 +114,7 @@ export function ProgramBlockEditor({node,program,fn,objects,onChange}:{
         <label>Named event<select aria-label="Send named event" value={node.event} onChange={e=>{
           const next=program.events!.find(v=>v.name===e.target.value)!;
           onChange({...node,event:next.name,value:next.type===type?node.value:{value:defaultValue(next.type)}});
-        }}>{program.events?.map(e=><option key={e.name} value={e.name}>{e.name}</option>)}</select></label>
+        }}>{program.events?.map(e=><option key={e.name} value={e.name} disabled={!eventFieldsSupported&&Boolean(behaviourEvent(e.name)?.features?.length)}>{e.name}</option>)}</select></label>
         {expr('Event payload',node.value,type,value=>onChange({...node,value}))}
       </>;
     }
