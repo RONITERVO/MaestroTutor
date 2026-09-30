@@ -261,3 +261,31 @@ establish actual headset Downloads/picker behaviour,
 restore activation/restart, interrupted power-loss durability, large-library memory
 or headset performance. Native portable backup/restore and the wider v1 release
 remain incomplete until that integration and acceptance work passes.
+
+## Runtime activity holds
+
+Native workspace owners now share a `RoomRuntimeGate`. A restore host can acquire
+its hold before `RoomEditor.Initialize`, then pass the selected data directory and
+an independent receipt directory. Rules and controller preferences inherit that
+same data directory; action receipts use the supplied history epoch.
+
+A hold prevents rule/event starts, one-off effects, recipe autoplay and explicit
+recipe playback, avatar activity/gestures, animation authoring, controller bindings
+and both movement modes, and physics startup. Entering a hold interrupts current
+owners and stops simulation. App focus/pause changes cannot release another native
+owner's hold. Nested holders must release their own leases; a cleanup failure keeps
+activity held. Read-only inspection stays available while the app is focused.
+
+Releasing a hold does not replay stopped actions, resume physics or recipes, or
+accept a controller button that remained pressed. A fresh input is required, and
+the first tutor-state reading establishes the rule baseline. New recipe objects
+inherit the hold before evaluating saved animation. Imported model loaders already
+disable file autoplay independently of this gate.
+
+This is an enforced activity boundary, not complete restore activation. Document
+editing and manual object placement are still available; coordinated retention must
+also freeze accepted edits and pending imports before switching roots. The startup
+host still needs to resolve the generation selection, acquire this hold before
+loading owners, handle corrupt selections explicitly, and bind review completion to
+the inspected documents. No restore command or automatic selection has been enabled
+by adding this boundary.

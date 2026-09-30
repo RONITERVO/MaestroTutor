@@ -16,6 +16,7 @@ namespace Maestro.Quest.Interaction
         const string Owner="controller movement";
         RoomInteraction room;
         RoomEditor editor;
+        RoomRuntimeGate runtimeGate;
         AnimationWorkshop animations;
         AvatarSpatialMotion avatar;
         RoomRules rules;
@@ -41,7 +42,8 @@ namespace Maestro.Quest.Interaction
         {
             room=interaction; editor=source; animations=authoring; avatar=motion; rules=behaviours; workshop=ruleEditor; input=controller; view=presentation; headTracked=tracked;
             sample=frames ?? (() => input ? input.ReadMovement() : default);
-            storage=new ControllerPreferenceStorage(directory ?? Path.Combine(Application.persistentDataPath,"room")); preferences=storage.Load(out var message);
+            storage=new ControllerPreferenceStorage(directory ?? source.SaveDirectory); preferences=storage.Load(out var message);
+            runtimeGate=editor.RuntimeGate;runtimeGate.Changed+=RuntimeChanged;RuntimeChanged();
             room.Restoring+=Recover; editor.Editing+=Interrupt; animations.Starting+=Authoring; if (workshop) workshop.Changed+=RulesChanged;
             if (message != null) Say(message);
         }
@@ -61,6 +63,7 @@ namespace Maestro.Quest.Interaction
         public void SwapSticks() { var next=Preferences; (next.userStick,next.avatarStick)=(next.avatarStick,next.userStick); Apply(next); }
         public void ToggleAvatar()
         {
+            if(!RuntimeReady())return;
             if (!AvatarEnabled && preferences.avatarStick == MovementStick.None) { Say("Choose a Maestro binding first"); return; }
             Interrupt(); AvatarEnabled=!AvatarEnabled;
             if (AvatarEnabled) { animations.Stop(); rules?.Scheduler.StopConflicting(new RuleStep {action=RuleActionKind.FollowUser,targetId="maestro"},true); avatar.Stop(); }
@@ -68,12 +71,14 @@ namespace Maestro.Quest.Interaction
         }
         public void ToggleUser()
         {
+            if(!RuntimeReady())return;
             if (!Virtual) { Say("Choose Virtual view before enabling your own movement"); return; }
             if (!UserEnabled && preferences.userStick == MovementStick.None) { Say("Choose your movement binding first"); return; }
             Interrupt(); UserEnabled=!UserEnabled; Say(UserEnabled ? "Your movement on — center the stick, then move" : "Your movement off");
         }
         public void ToggleView()
         {
+            if(!RuntimeReady())return;
             if (Virtual) { Recover(); Say("Mixed reality restored — check scan alignment before Start physics"); return; }
             // Physical actions run on release, before BookControllerInput clears PageHeld.
             // That finishing click is allowed; a held grab or drawing is not.
@@ -100,6 +105,8 @@ namespace Maestro.Quest.Interaction
             var action=workshop?.Snapshot().sequences; var found=action == null ? null : Array.Find(action,x => x.id == binding.sequenceId);
             return found == null ? "Missing action" : found.name;
         }
+        bool RuntimeReady(){if(!editor.RuntimeGate.Held)return true;Recover();Say(editor.RuntimeGate.Reason);return false;}
+        void RuntimeChanged(){if(editor.RuntimeGate.Held){Recover();Say(editor.RuntimeGate.Reason);}}
         void RulesChanged() => Changed?.Invoke();
         void Authoring(string _) => Interrupt();
         public void Interrupt()
@@ -116,7 +123,7 @@ namespace Maestro.Quest.Interaction
         public void Tick(float deltaTime)
         {
             if (preferences == null) return;
-            if (paused || !focused || !headTracked()) { Recover(); return; }
+            if (!RuntimeReady()||paused || !focused || !headTracked()) { Recover(); return; }
             var frame=sample();
             if (frame.busy || editor.AnyHeld || rules && rules.AnyButtonHeld) { Interrupt(); return; }
             if (driving && !avatar.OwnedBy(Owner)) { driving=false; avatarGate.Reset(); }
@@ -164,7 +171,7 @@ namespace Maestro.Quest.Interaction
         void OnDisable() => Recover();
         void OnDestroy()
         {
-            Recover(); if (room) room.Restoring-=Recover; if (editor) editor.Editing-=Interrupt; if (animations) animations.Starting-=Authoring; if (workshop) workshop.Changed-=RulesChanged;
+            Recover(); if (room) room.Restoring-=Recover; if(runtimeGate!=null)runtimeGate.Changed-=RuntimeChanged; if (editor) editor.Editing-=Interrupt; if (animations) animations.Starting-=Authoring; if (workshop) workshop.Changed-=RulesChanged;
         }
     }
 }

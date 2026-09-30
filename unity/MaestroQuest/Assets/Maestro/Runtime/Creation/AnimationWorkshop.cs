@@ -34,6 +34,7 @@ namespace Maestro.Quest.Creation
         readonly string ownershipId="authoring:"+Guid.NewGuid().ToString("N");
         RoomOwnership.Lease ownershipLease;
         bool TakeControl(bool allowsGrab=false) {
+            if(editor.RuntimeGate.Held){Say(editor.RuntimeGate.Reason);return false;}
             if(ownershipLease?.Held!=true&&!editor.Ownership.TryAcquire(ownershipId,"Animation authoring",RoomActorRole.Control,
                 new[]{new Maestro.Quest.Programs.BehaviourCatalog.Claim(targetId,"wholeTarget")},_=>Stop(),out ownershipLease,out var error,replaceControl:true,allowsGrab:allowsGrab)) {Say(error);return false;}
             if(!ownershipLease.SetAllowsGrab(allowsGrab)){Say("Release the object before changing animation controls");return false;}
@@ -61,6 +62,7 @@ namespace Maestro.Quest.Creation
         void Say(string value) { Status = value; Changed?.Invoke(); }
         bool Ready()
         {
+            if(editor.RuntimeGate.Held){Say(editor.RuntimeGate.Reason);return false;}
             if (!target) { Say("Select an object first"); return false; }
             if (avatar && avatar.ModelBusy) { Say("Wait for Maestro to finish changing avatars"); return false; }
             if (editor.AnyHeld || (avatar && avatar.PoseRig && avatar.PoseRig.IsHolding)) { Say("Release the object or joint first"); return false; }
@@ -262,6 +264,7 @@ namespace Maestro.Quest.Creation
         }
         void Update()
         {
+            if(editor&&editor.RuntimeGate.Held){if(controlling||IsRecording||IsPlaying||IsPosing||IsImportedPreview)Stop();return;}
             if (walkPreview) { if (!avatar) { Stop(); return; } avatar.SpatialWalk(.65f*avatar.transform.lossyScale.y); }
             if (importedPreview && (!avatar || !avatar.IsImportedClipPlaying)) { Stop(); return; }
             if (IsRecording)

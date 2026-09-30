@@ -15,6 +15,7 @@ namespace Maestro.Quest.Rules
     {
         RuleWorkshop workshop;
         RoomEditor editor;
+        RoomRuntimeGate runtimeGate;
         AnimationWorkshop animations;
         NativeBookBrowser browser;
         RoomInteraction room;
@@ -30,7 +31,8 @@ namespace Maestro.Quest.Rules
         {
             workshop = source; editor = roomEditor; animations = animationWorkshop; browser = book; room = interaction; input = controllerInput;
             anchors = controllerAnchors ?? (index => input ? input.ControllerAnchor(index) : null);
-            actions = new RoomRuleActions(editor,animations); Scheduler = new RuleScheduler(actions,new InvocationReceipts(editor.SaveDirectory)); workshop.Runtime = this;
+            actions = new RoomRuleActions(editor,animations); Scheduler = new RuleScheduler(actions,new InvocationReceipts(editor.ReceiptDirectory)); workshop.Runtime = this;
+            runtimeGate=editor.RuntimeGate;runtimeGate.Changed+=RefreshSuspension;RefreshSuspension();
             workshop.DocumentChanged += Reload;
             editor.Editing += StopAll; editor.ItemGrabbed += Grabbed; editor.ItemReleased += Released; editor.ItemTapped += Tapped; editor.ItemCollided += Collided;
             animations.Starting += Authoring; room.Restoring += StopAll; room.Restored += RecoverButtons;
@@ -59,7 +61,7 @@ namespace Maestro.Quest.Rules
         void Released(string id) { Scheduler.Emit(RuleEventKind.ItemReleased,id,Time.unscaledTime); ShowError(); }
         void Tapped(string id) { Scheduler.Emit(RuleEventKind.ItemTapped,id,Time.unscaledTime); ShowError(); }
         void Collided(string id,string otherId,string kind,Vector3 point,float speed) {
-            if(paused||!focused||!isActiveAndEnabled||Scheduler==null||!Scheduler.IsListening("object.collided",id))return;
+            if(editor.RuntimeGate.Held||paused||!focused||!isActiveAndEnabled||Scheduler==null||!Scheduler.IsListening("object.collided",id))return;
             var fields=new Newtonsoft.Json.Linq.JObject {["otherId"]=otherId,["otherKind"]=kind,["speed"]=speed,["x"]=point.x,["y"]=point.y,["z"]=point.z};
             Scheduler.EmitNative("object.collided",id,new Programs.ProgramValue(id),fields,Time.unscaledTime,out _);
         }
@@ -87,13 +89,14 @@ namespace Maestro.Quest.Rules
         public bool CanRun(Maestro.Quest.Programs.CapabilityCall step,out string error)
         {
             error="Action runtime is not ready";if(actions==null||Scheduler==null)return false;
+            if(editor.RuntimeGate.Held){error=editor.RuntimeGate.Reason;return false;}
             if(paused||!focused||!isActiveAndEnabled) {error="Actions are paused";return false;}
             return actions.CanRun(step,out error);
         }
         public void StopAll() => Scheduler?.StopAll();
         public void ObserveSnapshot(BookSnapshot snapshot)
         {
-            if (Scheduler == null || paused || !focused) return;
+            if (Scheduler == null || paused || !focused || editor.RuntimeGate.Held) return;
             // A paused/recreated browser has no reliable activity. Clear its baseline
             // without manufacturing an Idle event or stopping manual room actions.
             if (snapshot == null || snapshot.audioPaused) Scheduler.ForgetActivity();
@@ -101,18 +104,20 @@ namespace Maestro.Quest.Rules
         }
         void Update()
         {
-            if (Scheduler == null || paused || !focused) return;
+            if (Scheduler == null || paused || !focused || editor.RuntimeGate.Held) return;
             if (browser) ObserveSnapshot(browser.Snapshot);
             Scheduler.Tick(Time.unscaledTime); actions.Tick();
             if (Scheduler.LastError != shownError) { shownError = Scheduler.LastError; if (shownError != null) workshop.Say(shownError); }
         }
-        void OnApplicationPause(bool value) { paused = value; Scheduler?.Suspend(paused || !focused); }
-        void OnApplicationFocus(bool value) { focused = value; Scheduler?.Suspend(paused || !focused); }
+        void RefreshSuspension()=>Scheduler?.Suspend(paused||!focused||editor.RuntimeGate.Held);
+        void OnApplicationPause(bool value) { paused = value; RefreshSuspension(); }
+        void OnApplicationFocus(bool value) { focused = value; RefreshSuspension(); }
         void OnDisable() => StopAll();
         void OnDestroy()
         {
             StopAll();
             if (workshop) workshop.DocumentChanged -= Reload;
+            if(runtimeGate!=null)runtimeGate.Changed-=RefreshSuspension;
             if (editor) { editor.Editing -= StopAll; editor.ItemGrabbed -= Grabbed; editor.ItemReleased -= Released; editor.ItemTapped -= Tapped; editor.ItemCollided -= Collided; }
             if (animations) animations.Starting -= Authoring;
             if (room) { room.Restoring -= StopAll; room.Restored -= RecoverButtons; }

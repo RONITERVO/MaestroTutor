@@ -14,6 +14,9 @@ namespace Maestro.Quest.Interaction
         public event Action Changed;
         public Func<Vector3, bool> Contains;
         bool paused,focused=true;
+        RoomRuntimeGate runtimeGate;
+        internal void ConfigureRuntime(RoomRuntimeGate gate){if(runtimeGate==gate)return;if(runtimeGate!=null)runtimeGate.Changed-=RuntimeChanged;runtimeGate=gate;if(gate!=null)gate.Changed+=RuntimeChanged;RuntimeChanged();}
+        void RuntimeChanged(){if(runtimeGate?.Held==true){Running=false;Status=runtimeGate.Reason;Changed?.Invoke();}}
         public void SetSurfaces(bool ready, string message)
         {
             SurfacesReady = ready;
@@ -24,15 +27,17 @@ namespace Maestro.Quest.Interaction
         public void PausePhysics() => SetRunning(false,out _);
         public bool SetRunning(bool running,out string status)
         {
+            if(running&&runtimeGate?.Held==true){Status=runtimeGate.Reason;status=Status;Changed?.Invoke();return false;}
             if (running && (paused || !focused || !isActiveAndEnabled)) {Status="Return to the active room before starting physics";status=Status;Changed?.Invoke();return false;}
             if (running && !SurfacesReady) { Status="Load the room scan and check its alignment first";status=Status;Changed?.Invoke();return false; }
             Running=running;
             Status=running ? "Physics on — grip to pick up, release to throw" : SurfacesReady ? "Physics paused — Start resumes without old throw speeds" : "Load or scan your room to use gravity";
             status=Status;Changed?.Invoke();return true;
         }
-        public bool CanSimulate(Vector3 position) => Running && SurfacesReady && (Contains == null || Contains(position));
+        public bool CanSimulate(Vector3 position) => runtimeGate?.Held!=true && Running && SurfacesReady && (Contains == null || Contains(position));
         void OnApplicationPause(bool value) { paused=value;if (paused) PausePhysics(); }
         void OnApplicationFocus(bool value) { focused=value;if (!focused) PausePhysics(); }
         void OnDisable() => PausePhysics();
+        void OnDestroy(){if(runtimeGate!=null)runtimeGate.Changed-=RuntimeChanged;}
     }
 }

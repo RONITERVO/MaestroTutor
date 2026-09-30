@@ -21,6 +21,7 @@ namespace Maestro.Quest.Creation
         RoomJournal journal;
         RoomStorage storage;
         public RoomOwnership Ownership {get;}=new();
+        public RoomRuntimeGate RuntimeGate {get;private set;}=new();
         readonly Dictionary<string,RoomOwnership.Lease> handOwners=new();
         bool ownershipPaused,ownershipFocused=true;
         string selected;
@@ -58,16 +59,19 @@ namespace Maestro.Quest.Creation
         public AvatarActivityProfiles ActivityProfiles { get; private set; }
         public RoomPhysicsWorld PhysicsWorld { get; private set; }
         public string SaveDirectory { get; private set; }
+        public string ReceiptDirectory {get;private set;}
 
-        public void Initialize(RoomInteraction interaction, RoomItem book, RoomItem maestro, string saveDirectory = null, RoomPhysicsWorld physics = null)
+        public void Initialize(RoomInteraction interaction, RoomItem book, RoomItem maestro, string saveDirectory = null, RoomPhysicsWorld physics = null, RoomRuntimeGate runtimeGate = null, string receiptDirectory = null)
         {
-            room = interaction; PhysicsWorld = physics;
+            room = interaction; RuntimeGate=runtimeGate??RuntimeGate;RuntimeGate.Changed+=RefreshOwnership;RefreshOwnership();
+            PhysicsWorld = physics;PhysicsWorld?.ConfigureRuntime(RuntimeGate);
             AddIdentity("book", book); AddIdentity("maestro", maestro);
-            var directory = saveDirectory ?? Path.Combine(Application.persistentDataPath, "room"); SaveDirectory=directory;
+            var directory = saveDirectory ?? Path.Combine(Application.persistentDataPath, "room"); SaveDirectory=directory;ReceiptDirectory=receiptDirectory??directory;
             storage = new RoomStorage(directory); Models = new ModelLibrary(Path.Combine(directory, "models")); Motions = new MotionLibrary(Path.Combine(directory,"motions"));
             ActivityProfiles=new AvatarActivityProfiles(directory);
             var loaded = storage.Load(out var message);
             journal = new RoomJournal(loaded ?? StarterDocument(book, maestro));
+            maestro.GetComponent<MaestroAvatar>()?.ConfigureRuntime(RuntimeGate);
             maestro.GetComponent<MaestroAvatar>()?.ConfigureOwnership(Ownership,"maestro");
             Reconcile();
             room.Restoring += BeforeRestore; room.Restored += AfterRestore;
@@ -358,7 +362,7 @@ namespace Maestro.Quest.Creation
                 {
                     var root = new GameObject(data.kind.ToString()); root.transform.SetParent(transform,false);
                     // Canonical scale is linked to XRI before restoring saved pose/scale.
-                    item = root.AddComponent<CreatedRoomObject>().Build(data, Models);
+                    item = root.AddComponent<CreatedRoomObject>().Build(data, Models,RuntimeGate);
                     AddIdentity(data.id,item); room.Register(item);
                     created = true;
                 }
@@ -511,7 +515,7 @@ namespace Maestro.Quest.Creation
         public void ReportStatus(string value)=>SetStatus(value);
         void SetStatus(string value) { Status = value; Changed?.Invoke(); }
         void RefreshOwnership() {
-            Ownership.Suspend(ownershipPaused||!ownershipFocused);
+            Ownership.Suspend(ownershipPaused||!ownershipFocused||RuntimeGate.Held);
             if(!Ownership.Suspended)foreach(var item in objects.Values)if(item&&item.Grab.isSelected)OwnHeld(item);
         }
         void OnApplicationPause(bool paused) { ownershipPaused=paused;RefreshOwnership();if (paused) Flush(); }
@@ -519,7 +523,7 @@ namespace Maestro.Quest.Creation
         void OnApplicationQuit() => Flush();
         void OnDestroy()
         {
-            Ownership.Suspend(true);Flush(); Motions?.Dispose();
+            RuntimeGate.Changed-=RefreshOwnership;Ownership.Suspend(true);Flush(); Motions?.Dispose();
             if (room) { room.Restoring -= BeforeRestore; room.Restored -= AfterRestore; }
             foreach (var item in objects.Values) if (item) { item.GrabStarted -= GrabStarted; item.GrabFinished -= GrabFinished;var rigid=item.GetComponent<RigidRoomItem>();if(rigid)rigid.ContactStarted-=ContactStarted; }
         }

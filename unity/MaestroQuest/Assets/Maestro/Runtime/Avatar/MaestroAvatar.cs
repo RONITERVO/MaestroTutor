@@ -18,6 +18,14 @@ namespace Maestro.Quest.Avatar
     {
         public NativeBookBrowser Browser;
         public bool ReducedMotion;
+        RoomRuntimeGate runtimeGate;
+        internal void ConfigureRuntime(RoomRuntimeGate gate){if(runtimeGate==gate)return;if(runtimeGate!=null)runtimeGate.Changed-=RuntimeChanged;runtimeGate=gate;if(gate!=null)gate.Changed+=RuntimeChanged;RuntimeChanged();}
+        void RuntimeChanged(){
+            blockedSnapshot=Browser?Browser.Snapshot:observedSnapshot;observedActivity=null;
+            if(runtimeGate?.Held!=true)return;
+            EndAmbient();gestureLayer?.Stop();walkMotion?.Stop();StopImportedClip();spatialWalking=false;
+            if(animator)animator.speed=0;
+        }
         Animator animator;
         string activity;
         float greetingUntil;
@@ -34,7 +42,7 @@ namespace Maestro.Quest.Avatar
         public bool UpperBodyActive => gestureLayer?.Active == true;
         public bool BeginUpperBody(string owner,string gesture)
         {
-            if(ModelBusy || !PoseRig || gestureLayer == null || !gestureLayer.Begin(owner,gesture))return false;
+            if(runtimeGate?.Held==true||ModelBusy || !PoseRig || gestureLayer == null || !gestureLayer.Begin(owner,gesture))return false;
             activityMotion?.Cancel(); greetingUntil=0; return true;
         }
         public void EndUpperBody(string owner) => gestureLayer?.End(owner);
@@ -72,7 +80,7 @@ namespace Maestro.Quest.Avatar
         public void ObserveTutorState(BookSnapshot snapshot)
         {
             observedSnapshot=snapshot;
-            observedActivity=!paused && focused && snapshot != null && !ReferenceEquals(snapshot,blockedSnapshot) && snapshot.version == 1 && !snapshot.audioPaused &&
+            observedActivity=runtimeGate?.Held!=true&&!paused && focused && snapshot != null && !ReferenceEquals(snapshot,blockedSnapshot) && snapshot.version == 1 && !snapshot.audioPaused &&
                 (snapshot.activity == "idle" || snapshot.activity == "listening" || snapshot.activity == "thinking" || snapshot.activity == "speaking") ? snapshot.activity : null;
         }
         GameObject included;
@@ -177,6 +185,7 @@ namespace Maestro.Quest.Avatar
 
         void Update()
         {
+            if(runtimeGate?.Held==true){if(animator)animator.speed=0;return;}
             gestureLayer?.RestoreBase();
             if (Browser) ObserveTutorState(Browser.Snapshot);
             bool ambient=AmbientAllowed(!UpperBodyActive&&!paused&&focused&&!ReducedMotion&&!editing&&!spatialWalking&&savedPose==null&&!libraryOpen&&!ModelBusy&&(!IsImportedClipPlaying||activityPlayback));
@@ -211,10 +220,11 @@ namespace Maestro.Quest.Avatar
             editing = value;
             if (!PoseRig) return;
             PoseRig.SetManual(value || savedPose != null);
-            if (!value) { PoseRig.SetPosing(false); PoseRig.Apply(savedPose); activity = null; spatialWalking = false; animator.speed = 1; }
+            if (!value) { PoseRig.SetPosing(false); PoseRig.Apply(savedPose); activity = null; spatialWalking = false; animator.speed = runtimeGate?.Held==true?0:1; }
         }
         public void SpatialWalk(float metresPerSecond)
         {
+            if(runtimeGate?.Held==true)return;
             bool walking = metresPerSecond > .025f && !ReducedMotion;
             float rate = walking ? Mathf.Clamp(metresPerSecond/(.65f*transform.lossyScale.y),.25f,2) : 1;
             if (!walking) walkMotion?.Stop();
@@ -235,7 +245,7 @@ namespace Maestro.Quest.Avatar
         public void SetImportedPlaybackRate(float rate) { if (float.IsFinite(rate)) importedSpeed = Mathf.Clamp(rate,.25f,2); }
         public bool PlayImportedClip(int index, bool loop)
         {
-            if (ModelBusy || !custom || index < 0 || index >= custom.ClipCount || custom.ClipDuration(index) <= 0) return false;
+            if (runtimeGate?.Held==true||ModelBusy || !custom || index < 0 || index >= custom.ClipCount || custom.ClipDuration(index) <= 0) return false;
             StopImportedClip(); custom.Stop();
             importedClip = index; importedLoop = loop; importedTime = 0; importedSpeed = 1;
             PoseRig.SetManual(true); activity = "imported";
@@ -248,11 +258,11 @@ namespace Maestro.Quest.Avatar
         }
         internal bool PlayActivityMotion(MotionLibrary.Lease motion,bool loop)
         {
-            BeginActivityBlend(); return StartLibraryMotion(motion,loop,true);
+            if(runtimeGate?.Held==true)return false;BeginActivityBlend(); return StartLibraryMotion(motion,loop,true);
         }
         bool StartLibraryMotion(MotionLibrary.Lease motion,bool loop,bool ambient)
         {
-            if (ModelBusy || !custom || motion == null || !motion.Clip || motion.RigHash != custom.MotionRigHash) return false;
+            if (runtimeGate?.Held==true||ModelBusy || !custom || motion == null || !motion.Clip || motion.RigHash != custom.MotionRigHash) return false;
             StopClip(); custom.Stop(); libraryMotion = motion; activityPlayback=ambient; importedLoop = loop; importedTime = 0; importedSpeed = 1;
             PoseRig.SetManual(true); activity = "imported";
             custom.SampleMotion(motion,0,loop); PoseRig.CaptureImportedPose(); return true;
@@ -288,6 +298,7 @@ namespace Maestro.Quest.Avatar
         }
         void LateUpdate()
         {
+            if(runtimeGate?.Held==true)return;
             if (!IsImportedClipPlaying || !custom) BlendActivity();
             else {
                 importedTime += Mathf.Min(Time.deltaTime,.05f)*importedSpeed;
@@ -299,7 +310,7 @@ namespace Maestro.Quest.Avatar
         }
         public void Gesture(string name)
         {
-            if (!animator || !animator.runtimeAnimatorController || (name != "Greeting" && name != "Pointing" && name != "Listening" && name != "Speaking" && name != "Idle" && name != "Walk")) return;
+            if (runtimeGate?.Held==true||!animator || !animator.runtimeAnimatorController || (name != "Greeting" && name != "Pointing" && name != "Listening" && name != "Speaking" && name != "Idle" && name != "Walk")) return;
             StopImportedClip();
             PoseRig.SetManual(false); animator.speed=1; animator.Play(name,0,0); animator.Update(0);
             // A gesture can be sampled into a pose while authoring; live tutor activity
@@ -308,6 +319,6 @@ namespace Maestro.Quest.Avatar
         void OnApplicationPause(bool value) { paused=value; if (value) { blockedSnapshot=observedSnapshot; observedActivity=null; } if (value) { EndAmbient();gestureLayer?.Stop(); walkMotion?.Stop(); StopImportedClip(); } }
         void OnApplicationFocus(bool value) { focused=value; if (!value) { blockedSnapshot=observedSnapshot; observedActivity=null; } if (!value) { EndAmbient();gestureLayer?.Stop(); walkMotion?.Stop(); StopImportedClip(); } }
         void OnDisable() { EndAmbient();gestureLayer?.Stop(); walkMotion?.Stop(); StopImportedClip(); }
-        void OnDestroy() { EndAmbient();gestureLayer?.Dispose(); walkMotion?.Stop(); StopImportedClip(); activityMotion?.Dispose(); disposed = true; modelGeneration++; }
+        void OnDestroy() {if(runtimeGate!=null)runtimeGate.Changed-=RuntimeChanged; EndAmbient();gestureLayer?.Dispose(); walkMotion?.Stop(); StopImportedClip(); activityMotion?.Dispose(); disposed = true; modelGeneration++; }
     }
 }

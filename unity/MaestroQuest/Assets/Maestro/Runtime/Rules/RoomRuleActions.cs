@@ -35,7 +35,7 @@ namespace Maestro.Quest.Rules
             return BehaviourCatalog.TryRead(name,version,arguments,new BehaviourCatalog.FactContext(physicsReady:context.Editor.PhysicsWorld?context.Editor.PhysicsWorld.SurfacesReady:null,
                 physicsRunning:context.Editor.PhysicsWorld?context.Editor.PhysicsWorld.Running:null,roomSessionId:context.Editor.TemporarySessionId,world:this,editor:context.Editor),out value);
         }
-        public bool CanRun(CapabilityCall call,out string error)=>call.Definition.Module.CanRun(context,call.Arguments,out error);
+        public bool CanRun(CapabilityCall call,out string error){if(context.Editor&&context.Editor.RuntimeGate.Held){error=context.Editor.RuntimeGate.Reason;return false;}return call.Definition.Module.CanRun(context,call.Arguments,out error);}
         public bool Start(string runId,CapabilityCall call,out float seconds,out string error) {
             seconds=0;error="This action is already running";if(operations.ContainsKey(runId))return false;
             if(!CanRun(call,out error))return false;results.Remove(runId);interrupted.Remove(runId);

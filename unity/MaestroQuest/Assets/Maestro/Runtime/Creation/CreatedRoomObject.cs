@@ -22,13 +22,13 @@ namespace Maestro.Quest.Creation
         bool pendingCollider;
         public ImportedModel Model { get; private set; }
         public string ModelStatus { get; private set; }
-        public RoomItem Build(RoomObjectData data, ModelLibrary library = null)
+        public RoomItem Build(RoomObjectData data, ModelLibrary library = null, RoomRuntimeGate runtimeGate = null)
         {
             Bounds bounds;
             Collider collider;
             if (data.kind == RoomObjectKind.Assembly)
             {
-                recipe=gameObject.AddComponent<RecipeObject>(); recipe.Apply(data.recipe); bounds=recipe.LocalBounds;
+                recipe=gameObject.AddComponent<RecipeObject>(); recipe.ConfigureRuntime(runtimeGate);recipe.Apply(data.recipe); bounds=recipe.LocalBounds;
                 var box=gameObject.AddComponent<BoxCollider>(); box.center=bounds.center; box.size=bounds.size; collider=box;
             }
             else if (data.kind == RoomObjectKind.Drawing)

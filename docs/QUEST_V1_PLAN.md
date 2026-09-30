@@ -863,3 +863,13 @@ provider prevents another worker. Native tests capture a real workspace, verify 
 preview and its identical catalog fact, and prove active content remains unchanged.
 The book test consumes the real native receipt/preview. This does not yet implement
 reviewed activation, coordinated current-state retention or startup recovery.
+
+### 2026-10-01: shared workspace activity hold
+
+Native rules, avatar playback, recipes, authoring, movement bindings and physics now
+accept one composable runtime hold. It can be acquired before loading owners;
+lifecycle focus cannot clear it, and releasing it does not replay stopped actions.
+Rules and controls inherit the editor's selected data directory, while receipt
+history can use a fresh epoch. This is the enforcement prerequisite for reviewed
+restoration. Production generation selection, coherent accepted-edit retention,
+review completion and startup recovery are still being integrated.

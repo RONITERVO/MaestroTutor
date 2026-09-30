@@ -115,7 +115,7 @@ namespace Maestro.Quest.Rules
         }
         public void Initialize(RoomEditor source, string saveDirectory = null)
         {
-            editor = source; string directory=saveDirectory ?? Path.Combine(Application.persistentDataPath,"room");storage = new RuleStorage(directory);Modules=new ProgramModuleLibrary(directory);
+            editor = source; string directory=saveDirectory ?? source.SaveDirectory;storage = new RuleStorage(directory);Modules=new ProgramModuleLibrary(directory);
             document = storage.Load(out var message); sequenceIndex = document.sequences.Length > 0 ? 0 : -1;
             if (message != null) Status = message;
         }

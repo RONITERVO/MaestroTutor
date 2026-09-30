@@ -54,7 +54,8 @@ namespace Maestro.Quest.Avatar
         public bool CanBegin(AvatarSpatialMode value, out string error,bool allowAuthoringTakeover=false)
         {
             error = null;
-            if (paused || !focused || !room || !room.Viewer || !tracked()) error = "Head tracking is unavailable; try again when tracking returns";
+            if(editor.RuntimeGate.Held)error=editor.RuntimeGate.Reason;
+            else if (paused || !focused || !room || !room.Viewer || !tracked()) error = "Head tracking is unavailable; try again when tracking returns";
             else if (!avatar || !avatar.PoseRig || avatar.ModelBusy) error = "Wait for Maestro to finish loading";
             else if (item.Grab.isSelected || avatar.PoseRig.IsHolding || !allowAuthoringTakeover&&animations.ControlsTarget("maestro")) error = "Release Maestro and stop posing or recording first";
             else if (value != AvatarSpatialMode.Look && (!editor.PhysicsWorld || !editor.PhysicsWorld.Running)) error = "Load the room, check its alignment, then Start physics before walking";
@@ -116,7 +117,7 @@ namespace Maestro.Quest.Avatar
         void Update()
         {
             if (!Active) return;
-            if (paused || !focused || !tracked() || !avatar || avatar.ModelBusy || item.Grab.isSelected) { Stop(); return; }
+            if (editor.RuntimeGate.Held||paused || !focused || !tracked() || !avatar || avatar.ModelBusy || item.Grab.isSelected) { Stop(); return; }
             if (mode == AvatarSpatialMode.Look) return;
             if (!navigation || !navigation.Ready) { Stop(); Say("Walking stopped — check room alignment and Start physics again"); return; }
             float dt = Mathf.Min(Time.deltaTime,.05f);
@@ -194,6 +195,7 @@ namespace Maestro.Quest.Avatar
         }
         void LateUpdate()
         {
+            if(editor&&editor.RuntimeGate.Held)return;
             if (!Active || mode == AvatarSpatialMode.Manual || !avatar || !room.Viewer) return;
             var head = avatar.PoseRig.CanonicalBone(PoseJoint.Head);
             var target = transform.InverseTransformDirection(room.Viewer.position-head.position);
