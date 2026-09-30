@@ -1,0 +1,63 @@
+// Copyright 2026 Roni Tervo
+// SPDX-License-Identifier: Apache-2.0
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using Maestro.Quest.Creation;
+using Maestro.Quest.Interaction;
+using Maestro.Quest.Programs;
+using Maestro.Quest.Rules;
+using Newtonsoft.Json;
+using UnityEngine;
+
+namespace Maestro.Quest.Persistence
+{
+    public sealed class CapturedWorkspaceArchive
+    {
+        // Private completed snapshot, not proof that a user-visible download was published.
+        public string Path {get;internal set;}
+        public WorkspaceArchiveReceipt Receipt {get;internal set;}
+    }
+    public static class WorkspaceArchiveCapture
+    {
+        /// <summary>Call on the Unity owner thread. One non-yielding copy captures the accepted documents;
+        /// scoped library gates keep referenced bytes stable until the worker closes the archive.
+        /// In-progress takes, transient physics/animation state, Undo, scans, chat and receipts are excluded.</summary>
+        public static Task<CapturedWorkspaceArchive> Start(RoomEditor editor,RuleWorkshop rules,MovementControls controls,string outputDirectory,CancellationToken cancellation=default)
+        {
+            cancellation.ThrowIfCancellationRequested();
+            if(!editor||!rules||!controls||rules.Editor!=editor||controls.ArchiveEditor!=editor)throw new InvalidOperationException("Workspace controls are not ready.");
+            if(editor.TemporaryRoom||editor.TemporarySavePending)throw new InvalidOperationException("Keep or discard the temporary room before exporting the saved workspace.");
+            if(!editor.CanSaveRoom||rules.ReadOnly||editor.ActivityProfiles.ReadOnly||!controls.ArchiveReady)throw new InvalidOperationException("Resolve unavailable native storage before exporting a portable workspace.");
+            rules.Modules.Poll();if(!rules.Modules.Ready||rules.Modules.Pending||rules.Modules.Error!=null)throw new InvalidOperationException("Wait for the reusable library to finish loading or writing.");
+            var modules=rules.Modules.Search("");if(modules.Any(x=>x.Error!=null))throw new InvalidOperationException("A reusable module is damaged; its original remains available for recovery.");
+            if(!editor.Models.TryCaptureArchive(out var models))throw new InvalidOperationException("Wait for the model import to finish before exporting.");
+            WorkspaceLibraryCapture motions=null;
+            try{
+                if(!editor.Motions.TryCaptureArchive(out motions))throw new InvalidOperationException("Wait for motion import or maintenance before exporting.");
+                // No await between these copies. Library workers cannot commit/remove payloads while gated.
+                var room=editor.Snapshot();room.version=2;var behaviours=rules.Snapshot();var preferences=controls.Preferences;var activities=editor.ActivityProfiles.Snapshot();
+                var definitions=modules.ToDictionary(x=>"program-modules.v1/"+x.Hash+".json",x=>x.ReadDefinition(),StringComparer.Ordinal);
+                string output=System.IO.Path.GetFullPath(outputDirectory);var heldMotions=motions;
+                return Task.Run(()=>{
+                    string path=null;bool created=false;
+                    try{
+                        cancellation.ThrowIfCancellationRequested();var documents=new Dictionary<string,byte[]>(StringComparer.Ordinal);var assets=new Dictionary<string,Func<Stream>>(StringComparer.Ordinal);
+                        var utf8=new UTF8Encoding(false,true);byte[] Json(object value)=>utf8.GetBytes(JsonUtility.ToJson(value));
+                        documents.Add("room.v2.json",Json(room));documents.Add("behaviours.v2.json",Json(behaviours));documents.Add("controls.v2.json",Json(preferences));documents.Add("avatar-activities.v2.json",Json(activities));
+                        foreach(var pair in definitions)documents.Add(pair.Key,utf8.GetBytes(pair.Value.ToString(Formatting.None)));
+                        models.Collect(documents,assets);heldMotions.Collect(documents,assets);var snapshot=new WorkspaceArchiveSnapshot(documents,assets);
+                        Directory.CreateDirectory(output);WorkspaceArchive.NoLink(output);path=System.IO.Path.Combine(output,"maestro-workspace-"+Guid.NewGuid().ToString("N")+".zip");
+                        WorkspaceArchiveReceipt receipt;using(var file=new FileStream(path,FileMode.CreateNew,FileAccess.Write,FileShare.None)){created=true;receipt=WorkspaceArchive.Write(file,snapshot,cancellation);file.Flush(true);}
+                        cancellation.ThrowIfCancellationRequested();return new CapturedWorkspaceArchive {Path=path,Receipt=receipt};
+                    }catch{if(created&&path!=null&&File.Exists(path))File.Delete(path);throw;}
+                    finally{heldMotions.Dispose();models.Dispose();}
+                });
+            }catch{motions?.Dispose();models.Dispose();throw;}
+        }
+    }
+}

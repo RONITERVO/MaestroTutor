@@ -794,3 +794,16 @@ or transfer room/model/motion assets. The bounded format includes embedded modul
 asset transfer and deliberate dependency rebinding remain open. Native quick edits
 keep module documents opaque and visit only actual local invocation blocks. See
 [portable module contract](QUEST_PROGRAM_MODULES.md#portable-module-files).
+
+
+### 2026-09-30: native workspace archive foundation
+
+Native capture now takes a detached accepted-document snapshot while scoped library
+gates keep model/motion bytes stable. A bounded archive contains room, behaviour,
+controller, avatar activity, model, motion and reusable module content with exact
+IDs. Import verifies all entries in an owned staging directory without touching live
+stores or running behaviours. Missing references remain explicit; invalid programs
+remain individually unavailable. See [archive contract and evidence](QUEST_NATIVE_ARCHIVES.md).
+User-facing book/agent actions, Android publication/picking, atomic activation and
+recovery controls are still open. This foundation does not yet provide users a
+complete native backup/restore workflow. Device work remains on hold.

@@ -11,7 +11,7 @@ namespace Maestro.Quest.Creation
         public RoomDocument Load(out string message) => file.Load(out message);
         public bool Save(RoomDocument room,out string error) => file.Save(room,out error);
         public bool RetainsMotion(string id,out bool uncertain,bool force=false) => file.Retains(x => x.objects.Select(item => item.walkMotionId),id,out uncertain,force);
-        static void Normalize(RoomDocument room)
+        internal static void Normalize(RoomDocument room)
         {
             if (room.objects == null) return;
             foreach (var item in room.objects)

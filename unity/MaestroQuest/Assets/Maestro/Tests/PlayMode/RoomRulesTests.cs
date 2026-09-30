@@ -55,6 +55,27 @@ namespace Maestro.Quest.Tests
         }
 
 
+        [UnityTest] public IEnumerator NativeArchiveCapturesOneAcceptedWorkspaceAndFailureReleasesLibraryWriters()
+        {
+            var controls=root.AddComponent<MovementControls>();controls.Initialize(root.GetComponent<RoomInteraction>(),editor,animations,null,runtime,workshop,null,null,()=>true,directory:directory);
+            workshop.Modules.Flush();var before=editor.Snapshot();var behaviourSource=workshop.Selected.program;var output=Path.Combine(directory,"exports");
+            var capture=Maestro.Quest.Persistence.WorkspaceArchiveCapture.Start(editor,workshop,controls,output);
+            string target=editor.Identity(block);Assert.That(editor.MoveObject(target,new Vector3(2,1,2),out var error),Is.True,error);workshop.NewSequence();
+            while(!capture.IsCompleted)yield return null;
+            Assert.That(capture.IsFaulted,Is.False,capture.Exception?.ToString());var result=capture.GetAwaiter().GetResult();Assert.That(File.Exists(result.Path),Is.True);
+            using(var input=File.OpenRead(result.Path))using(var staged=Maestro.Quest.Persistence.WorkspaceArchive.Stage(input,directory)){
+                var archivedRoom=new RoomStorage(staged.DirectoryPath).Load(out error);Assert.That(error,Is.Null);Assert.That(archivedRoom.objects.Single(x=>x.id==target).position,Is.EqualTo(before.objects.Single(x=>x.id==target).position));Assert.That(editor.Read(target).position,Is.EqualTo(new Vector3(2,1,2)));
+                var archivedRules=new RuleStorage(staged.DirectoryPath).Load(out error);Assert.That(archivedRules.sequences.Single(x=>x.id==sequenceId).program,Is.EqualTo(behaviourSource));Assert.That(archivedRules.sequences.Length,Is.EqualTo(workshop.Snapshot().sequences.Length-1));
+                Assert.That(runtime.Scheduler.ObserveRuns(),Is.Empty);
+            }
+            string blocked=Path.Combine(directory,"not-a-directory");File.WriteAllText(blocked,"leave this alone");var failed=Maestro.Quest.Persistence.WorkspaceArchiveCapture.Start(editor,workshop,controls,blocked);
+            while(!failed.IsCompleted)yield return null;Assert.That(failed.IsFaulted,Is.True);Assert.That(File.ReadAllText(blocked),Is.EqualTo("leave this alone"));
+            Assert.That(editor.Models.TryCaptureArchive(out var models),Is.True);models.Dispose();Assert.That(editor.Motions.TryCaptureArchive(out var motions),Is.True);motions.Dispose();
+            string unavailable=Path.Combine(directory,"unavailable-controls");Directory.CreateDirectory(unavailable);File.WriteAllText(Path.Combine(unavailable,"controls.v2.json"),"{\"version\":99}");
+            var separate=new GameObject("Unavailable controls");separate.transform.SetParent(root.transform,false);var badControls=separate.AddComponent<MovementControls>();badControls.Initialize(root.GetComponent<RoomInteraction>(),editor,animations,null,runtime,workshop,null,null,()=>true,directory:unavailable);
+            Assert.Throws<InvalidOperationException>(()=>Maestro.Quest.Persistence.WorkspaceArchiveCapture.Start(editor,workshop,badControls,output),"Never archive default preferences substituted for unreadable storage");
+        }
+
         [UnityTest] public IEnumerator ActualContactsWakeTypedProgramsAndDriveRecordedMotionThroughSharedNativeExecution()
         {
             RoomPhysicsLayers.Configure();

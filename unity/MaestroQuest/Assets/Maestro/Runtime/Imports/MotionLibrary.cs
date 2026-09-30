@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Maestro.Quest.Art;
+using Maestro.Quest.Persistence;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
@@ -88,6 +89,19 @@ namespace Maestro.Quest.Imports
             if (TryRead(source+".backup",out catalogue,out _,expected)) { catalogue.version=2; Notice = "Recovered the motion library from its backup"; return; }
             if (File.Exists(source) || File.Exists(source+".backup")) { readOnly = true; Notice = "The motion catalogue is unreadable. Its files are retained for recovery; imports are paused."; }
             catalogue = new MotionCatalogue();
+        }
+        internal bool TryCaptureArchive(out WorkspaceLibraryCapture capture)
+        {
+            capture=null;if(!writes.Wait(0))return false;
+            try {
+                if(disposed||readOnly)throw new ModelImportException(Notice??"Motion library is unavailable.");
+                MotionCatalogue copy;lock(gate)copy=catalogue.Copy();
+                capture=new WorkspaceLibraryCapture(()=>writes.Release(),(documents,assets)=>{
+                    if(Directory.Exists(directory))WorkspaceArchive.NoLink(directory);
+                    documents.Add("motions/motions.v2.json",new UTF8Encoding(false,true).GetBytes(JsonConvert.SerializeObject(copy,Formatting.None)));
+                    foreach(var entry in copy.entries.Where(x=>!x.removed)){string path=PayloadPath(entry.hash);assets.Add("motions/"+entry.hash+".motion.glb",()=>WorkspaceLibraryCapture.Open(path));}
+                });return true;
+            }catch{writes.Release();throw;}
         }
         public MotionEntry Inspect(string id)
         {
@@ -292,6 +306,15 @@ namespace Maestro.Quest.Imports
                 origins += entry.origins.Length; Check(origins <= 32768);
             }
             Check(value.entries.Where(x => !x.removed).Sum(x => (long)x.bytes) <= MaximumDiskBytes);
+        }
+        // Archive snapshots use the same catalogue validation without opening a live library.
+        internal static MotionCatalogue DecodeSnapshot(byte[] bytes)
+        {
+            if(bytes==null||bytes.Length<1||bytes.Length>MaximumCatalogueBytes)throw new ModelImportException("Invalid motion snapshot size.");
+            using var reader=new JsonTextReader(new StringReader(new UTF8Encoding(false,true).GetString(bytes))) {MaxDepth=16,DateParseHandling=DateParseHandling.None};
+            var json=JObject.Load(reader,new JsonLoadSettings {DuplicatePropertyNameHandling=DuplicatePropertyNameHandling.Error});
+            if(reader.Read()||json.Count!=3||json["version"]?.Type!=JTokenType.Integer||(int)json["version"]!=2||json["entries"] is not JArray||json["sources"] is not JArray)throw new ModelImportException("Unsupported motion snapshot.");
+            var value=json.ToObject<MotionCatalogue>();Validate(value);return value;
         }
         static bool TryRead(string path,out MotionCatalogue value) => TryRead(path,out value,out _);
         static bool TryRead(string path,out MotionCatalogue value,out bool unsupported,int expected = 2)

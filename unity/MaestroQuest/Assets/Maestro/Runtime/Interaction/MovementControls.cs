@@ -35,6 +35,8 @@ namespace Maestro.Quest.Interaction
         public string Status { get; private set; }="Movement off — choose controls, then enable";
         public event Action Changed;
         public ControllerPreferences Preferences => preferences.Copy();
+        internal RoomEditor ArchiveEditor => editor;
+        internal bool ArchiveReady => storage!=null&&!storage.ReadOnly&&preferences!=null;
         public void Initialize(RoomInteraction interaction,RoomEditor source,AnimationWorkshop authoring,AvatarSpatialMotion motion,RoomRules behaviours,RuleWorkshop ruleEditor,BookControllerInput controller,VirtualRoomView presentation,Func<bool> tracked,Func<ControllerFrame> frames=null,string directory=null)
         {
             room=interaction; editor=source; animations=authoring; avatar=motion; rules=behaviours; workshop=ruleEditor; input=controller; view=presentation; headTracked=tracked;
