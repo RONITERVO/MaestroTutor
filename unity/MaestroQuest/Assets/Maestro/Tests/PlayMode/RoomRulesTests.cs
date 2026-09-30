@@ -509,6 +509,27 @@ namespace Maestro.Quest.Tests
             ray.selectInput = new XRInputButtonReader { inputSourceMode = XRInputButtonReader.InputSourceMode.ManualValue,manualPerformed = true,manualValue = 1 };
             hand.SetActive(true); return ray;
         }
+        [UnityTest] public IEnumerator PinnedModulesRunSaveRejectTamperingAndReloadThroughTheSharedExecutor()
+        {
+            string source=File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-modules-nested.json"));
+            var sequence=workshop.Selected;sequence.program=source;sequence.repeat=false;sequence.name="Pinned counters";
+            var executor=new RoomAgentExecutor(editor);var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);
+            bool Execute(RuleRequest rule,out string error)=>executor.Execute(new RoomAgentRequest {version=2,commands=new[]{new RoomAgentCommand {action="rules",rule=rule}}},out error,out _);
+            Assert.That(Execute(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="save",sequence=sequence}}},out var error),Is.True,error);
+            Assert.That(runtime.Scheduler.RunningCount,Is.Zero);int revision=workshop.Revision;string saved=JsonUtility.ToJson(workshop.Snapshot());
+            Assert.That(Execute(new RuleRequest {action="play",revision=revision,target=sequence.id},out error),Is.True,error);
+            for(int i=0;i<60&&!runtime.Scheduler.ObserveRuns().Any(r=>r.nodeId=="wait");i++)yield return null;
+            var run=runtime.Scheduler.ObserveRuns().Single();Assert.That(run.nodeId,Is.EqualTo("wait"));Assert.That(run.state.Single(v=>v.name=="first.inner.count").value,Is.EqualTo("3"));Assert.That(run.state.Single(v=>v.name=="second.count").value,Is.EqualTo("5"));
+            Assert.That(JsonUtility.ToJson(workshop.Snapshot()),Is.EqualTo(saved));
+            string output=Environment.GetEnvironmentVariable("MAESTRO_MODULE_EVIDENCE");if(!string.IsNullOrEmpty(output)){Directory.CreateDirectory(output);var state=observer.Observe();state.rules=workshop.Observe(true);state.visible=true;state.workspaceView="rules";File.WriteAllText(Path.Combine(output,"running.json"),RoomAgentWire.Serialize(state));}
+            var corrupted=workshop.Selected;var changed=JObject.Parse(source);changed["imports"][0]["module"]["name"]="Unexpected replacement";corrupted.program=changed.ToString();
+            Assert.That(Execute(new RuleRequest {action="edit",revision=revision,edits=new[]{new RuleEdit {kind="save",sequence=corrupted}}},out error),Is.False);Assert.That(error,Does.Contain("pinned hash"));Assert.That(runtime.Scheduler.RunningCount,Is.EqualTo(1));Assert.That(workshop.Revision,Is.EqualTo(revision));
+            Assert.That(Execute(new RuleRequest {action="stop"},out error),Is.True,error);Assert.That(runtime.Scheduler.RunningCount,Is.Zero);
+            workshop.SendMessage("OnApplicationPause",true);var restored=new RuleStorage(directory).Load(out error);Assert.That(restored.sequences.Single(x=>x.id==sequence.id).program,Is.EqualTo(source));
+            workshop.SendMessage("OnApplicationPause",false);
+            Assert.That(Execute(new RuleRequest {action="play",revision=revision,target=sequence.id},out error),Is.True,error);runtime.SendMessage("OnApplicationPause",true);runtime.SendMessage("OnApplicationPause",false);yield return null;Assert.That(runtime.Scheduler.RunningCount,Is.Zero);
+        }
+
         [UnityTest] public IEnumerator VisuallyAuthoredDeclarationsShareSignalsAndTypedStateWithoutSavingRuntimeValues()
         {
             string source=File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-declarations.json"));

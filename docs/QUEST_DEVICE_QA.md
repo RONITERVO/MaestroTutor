@@ -1269,3 +1269,19 @@ See [the exact limits and evidence](QUEST_PROGRAM_DATA.md). No install is includ
 - Confirm stale edits after an incoming change require reopening the declarations.
 PC native execution and browser replay do not establish these device/provider checks.
 No headset query or installation was performed for this checkpoint.
+
+### Pending: pinned program modules (2026-09-30)
+
+- Inspect the nested counter example on the real book. Open a pinned module and read
+  its exports, object requirements, signal connections and imported blocks. Confirm
+  qualified state names and the running-node highlight are legible with hands/controllers.
+- Edit an exported call's arguments/result visually. Apply saves and cancels an old
+  run without auto-starting; an explicit Start uses the pinned version and fresh state.
+- Run two instances and verify independent state. Stop, focus loss and app pause cancel
+  both through the same program; reload preserves definitions without restarting them.
+- Compare an original-chat request to reuse an inspected import with a manual edit.
+  Neither should alter a pin or guess a library/hash. Library publication, discovery
+  and a dedicated import/upgrade UI remain separate unfinished work.
+- Measure compilation/inspection of a near-limit four-instance program alongside MR
+  and browser interaction. No device timing or real-provider acceptance is claimed
+  by the PC tests or the browser replay, and this checkpoint performs no installation.

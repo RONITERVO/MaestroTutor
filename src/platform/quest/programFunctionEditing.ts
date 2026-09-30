@@ -44,7 +44,7 @@ export function editProgramFunction(program:BehaviourProgram,originalName:string
  if(index<0)next.functions.push(fn);else next.functions[index]=fn;
  if(previous){
   if(next.entry===originalName)next.entry=fn.name;
-  for(const f of next.functions)visit(f.body,n=>{if(n.op==='call'&&n.function===originalName){
+  for(const f of next.functions)visit(f.body,n=>{if(n.op==='call'&&!n.module&&n.function===originalName){
    n.function=fn.name;n.args=draft.parameters.map(p=>p.origin===null?initialExpression(p.type):n.args[p.origin]);
   }});
  }

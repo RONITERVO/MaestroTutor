@@ -26,6 +26,7 @@ export function editProgramDeclarations(program:BehaviourProgram,draft:Declarati
   if(n.op==='setState')n.variable=stateName(n.variable);
   if((n.op==='awaitEvent'||n.op==='emitEvent')&&n.event.startsWith('user.'))n.event=eventName(n.event);
  });
+ for(const imported of next.imports??[])for(const key of Object.keys(imported.signals))imported.signals[key]=eventName(imported.signals[key]);
  next.version=3;next.state=draft.state.map(({name,type,initial})=>({name,initial,...(typeof type==='object'?{type}:{})}));next.events=draft.events.map(({name,type})=>({name,type}));
  if(draft.state.some(s=>typeof s.type==='object'))next.dataVersion=1;
  const result=parseProgram(JSON.stringify(next));if(!result.program)throw new Error(result.error??'Invalid declarations');return result.program;

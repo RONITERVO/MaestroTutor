@@ -18,7 +18,8 @@ app pause and interruption policy. Run-now uses `rules.play`; saving does not ru
 a program and a physical button is optional. Programs reserve their declared
 resources conservatively across branches. Edits and Undo cancel active old runs.
 Native actions cover the existing nine rule kinds, not every room-agent control.
-Functions currently live within one program; cross-program libraries are future work.
+Functions can now compose content-pinned embedded modules through the same interpreter;
+see QUEST_PROGRAM_MODULES.md. Managed library storage/discovery remains future work.
 
 The optional book workspace renders nested blocks and functions, highlights the
 current native node, and shows native locals and recent outcomes. Users can add,

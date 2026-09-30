@@ -55,7 +55,7 @@ export function requireRoomCapabilities(commands:{action:string;rule?:unknown;ex
     if(command.action==='rules'&&record(command.rule)&&Array.isArray(command.rule.edits)&&command.rule.edits.some(e=>record(e)&&record(e.sequence)&&e.sequence.program)&&!scene.capabilities?.includes('behaviourPrograms.v3'))
       throw new Error('This room does not support behaviour programs. Update or connect a compatible native app.');
     const features=new Set<string>();needs(command.execution,features);
-    if(command.action==='rules'&&record(command.rule)&&Array.isArray(command.rule.edits))for(const edit of command.rule.edits)if(record(edit)&&record(edit.sequence)&&typeof edit.sequence.program==='string'){const program=JSON.parse(edit.sequence.program);if(program.dataVersion!==undefined)features.add('structuredValues.v1');needs(program,features);}
+    if(command.action==='rules'&&record(command.rule)&&Array.isArray(command.rule.edits))for(const edit of command.rule.edits)if(record(edit)&&record(edit.sequence)&&typeof edit.sequence.program==='string'){const program=JSON.parse(edit.sequence.program);if(program.dataVersion!==undefined)features.add('structuredValues.v1');if(program.moduleVersion!==undefined)features.add('programModules.v1');needs(program,features);}
     for(const feature of features)if(!scene.capabilities?.includes(feature))throw new Error('This action requires '+feature+'. Update or connect a compatible native app.');
   }
 }

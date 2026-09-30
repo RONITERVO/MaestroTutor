@@ -293,3 +293,17 @@ it('refuses stale declaration edits after an incoming program change',()=>{
  screen.rerender(<ProgramEditor source={JSON.stringify(initial)} targets={[]} eventsSupported structuredSupported onChange={onChange} onEditingChange={()=>{}}/>);fireEvent.click(screen.getByRole('button',{name:'Update draft'}));
  expect(screen.getByRole('alert').textContent).toContain('Program changed');expect(onChange).not.toHaveBeenCalled();
 });
+
+it('edits exported calls visually and inspects pinned module internals without changing them',()=>{
+ const initial=JSON.parse(readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-modules.json','utf8')) as BehaviourProgram,h=harness(initial);
+ expect(h.screen.getByLabelText('Pinned module first')).toBeTruthy();expect(h.screen.getByLabelText('Imported function first.privateAdd')).toBeTruthy();
+ expect(h.screen.queryByLabelText('Edit values first.change')).toBeNull();expect(h.screen.queryByLabelText('Edit block first.change')).toBeNull();
+ h.click('Edit values first');expect((h.screen.getByLabelText('Called function') as HTMLSelectElement).value).toBe('first.add');
+ expect(h.screen.queryByRole('option',{name:'first.privateAdd'})).toBeNull();h.change('Called function','second.add');h.change('Argument amount value','7');h.click('Update draft');
+ const edited=JSON.parse(h.source()) as BehaviourProgram;expect(edited.functions[0].body[0]).toMatchObject({module:'second',function:'add',args:[{value:7}]});expect(edited.imports).toEqual(initial.imports);
+});
+it('shows a native qualified module block as running without exposing an edit button',()=>{
+ const source=readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-modules-nested.json','utf8');
+ const screen=render(<ProgramEditor source={source} targets={[]} onChange={()=>{}} onEditingChange={()=>{}} run={{id:'a'.repeat(32),sequenceId:'b'.repeat(32),preparing:false,nodeId:'first.inner.change',functionName:'first.inner.privateAdd',status:'Running',state:[{name:'first.inner.count',type:'number',value:'3'}]}}/>);
+ expect(screen.container.querySelector('[data-node-id="first.inner.change"]')?.className).toContain('rule-action-active');expect(screen.getByLabelText('Live program values').textContent).toContain('state.first.inner.count');expect(screen.queryByLabelText('Edit values first.inner.change')).toBeNull();
+});

@@ -2,7 +2,15 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
-Latest PC increment (2026-09-30): the optional book now edits typed program state
+Latest PC increment (2026-09-30): pinned embedded program modules compose through
+the same native interpreter, with private per-instance state, explicit signal wires
+and caller-declared resource authority. The book inspects pinned internals and edits
+exported calls. Managed library authoring/discovery/upgrades remain open. See
+QUEST_PROGRAM_MODULES.md. PC checks pass 1,441 app tests, 202 EditMode, 134 PlayMode
+and 25 Android tests (three optional native skips), plus browser replay. The verified
+ARM64 development APK remains uninstalled; device/provider/store gates remain open.
+
+Previous PC increment (2026-09-30): the optional book now edits typed program state
 and named signal declarations without JSON. Atomic scoped renames preserve references;
 invalid/removal/type conflicts and stale drafts preserve valid source. The same human-
 authored source runs in Unity, where two behaviours exchange signals and retain typed

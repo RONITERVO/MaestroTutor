@@ -1,3 +1,4 @@
+import {programCallables} from '../../core-sdk/room/programModules';
 import {sameDataType} from '../../../shared/programValues';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
@@ -131,12 +132,12 @@ export function ProgramBlockEditor({node,program,fn,objects,onChange,eventFields
       </>;
     }
     case 'call': {
-      const callee=program.functions.find(f=>f.name===node.function)!;
+      const choices=programCallables(program),key=(node.module?node.module+'.':'')+node.function,callee=choices.find(c=>c.key===key)!.fn;
       return <>
-        <label>Function<select aria-label="Called function" value={node.function} onChange={e=>{
-          const next=program.functions.find(f=>f.name===e.target.value)!;
-          onChange({id:node.id,op:'call',function:next.name,args:next.parameters.map(p=>valueExpression(p.type))});
-        }}>{program.functions.filter(f=>f.name!==fn.name).map(f=><option key={f.name} value={f.name}>{f.name}</option>)}</select></label>
+        <label>Function<select aria-label="Called function" value={key} onChange={e=>{
+          const next=choices.find(c=>c.key===e.target.value)!;
+          onChange({id:node.id,op:'call',function:next.fn.name,...(next.module?{module:next.module}:{}),args:next.fn.parameters.map(p=>valueExpression(p.type))});
+        }}>{choices.filter(c=>c.module||c.fn.name!==fn.name).map(c=><option key={c.key} value={c.key}>{c.key}</option>)}</select></label>
         {callee.parameters.map((p,i)=><div key={p.name}>{expr('Argument '+p.name,node.args[i],p.type,next=>onChange({...node,args:node.args.map((v,j)=>j===i?next:v)}))}</div>)}
         {callee.returns!=='void'&&<label>Store return value<select aria-label="Function result" value={node.result??''} onChange={e=>{
           const next={...node};if(e.target.value)next.result=e.target.value;else delete next.result;onChange(next);

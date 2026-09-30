@@ -1,3 +1,4 @@
+import {compiledProgramName} from './programModules';
 import {validDataObservation} from '../../../shared/programValues';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
@@ -64,8 +65,8 @@ export function validRuleView(v:unknown):v is RuleView {
  if(!Array.isArray(v.bindings)||v.bindings.length>8||v.bindings.some(b=>!validBinding(b))||!Array.isArray(v.buttons)||v.buttons.length>16||v.buttons.some(b=>!record(b)||!guid(b.id)||!guid(b.sequenceId)||!int(b.mount,0,2)||!validVector(b.position)||!validRotation(b.rotation)))return false;
  if(v.eventQueue!==undefined&&!int(v.eventQueue,0,64)||v.eventsDropped!==undefined&&!int(v.eventsDropped,0,2147483647))return false;
  const text=(x:unknown,max=2048)=>typeof x==='string'&&x.length<=max;
- const name=(x:unknown)=>x==null||x===''||ref(x);
+ const name=(x:unknown)=>x==null||x===''||compiledProgramName(x);
  if(v.outcomes!==undefined&&(!Array.isArray(v.outcomes)||v.outcomes.length>16||!v.outcomes.every(o=>record(o)&&guid(o.id)&&guid(o.sequenceId)&&['completed','cancelled','failed'].includes(o.phase as string)&&name(o.nodeId)&&text(o.status))))return false;
- const values=(x:unknown,max:number)=>Array.isArray(x)&&x.length<=max&&x.every(l=>record(l)&&ref(l.name)&&['number','boolean','text','list','record'].includes(l.type as string)&&text(l.value,l.type==='list'||l.type==='record'?1024:128)&&(!(l.type==='list'||l.type==='record')||validDataObservation(l.value as string,l.type)));
+ const values=(x:unknown,max:number)=>Array.isArray(x)&&x.length<=max&&x.every(l=>record(l)&&compiledProgramName(l.name)&&['number','boolean','text','list','record'].includes(l.type as string)&&text(l.value,l.type==='list'||l.type==='record'?1024:128)&&(!(l.type==='list'||l.type==='record')||validDataObservation(l.value as string,l.type)));
  return Array.isArray(v.running)&&v.running.length<=8&&v.running.every(r=>record(r)&&guid(r.id)&&guid(r.sequenceId)&&typeof r.preparing==='boolean'&&(r.waiting===undefined||typeof r.waiting==='boolean')&&(r.waitEvent==null||text(r.waitEvent,96))&&(r.waitSeconds===undefined||num(r.waitSeconds,0,3601))&&(r.state===undefined||values(r.state,16))&&name(r.nodeId)&&name(r.functionName)&&(r.status===undefined||text(r.status))&&(r.locals===undefined||Array.isArray(r.locals)&&r.locals.length<=24&&r.locals.every(l=>record(l)&&ref(l.name)&&['number','boolean','text','list','record'].includes(l.type as string)&&text(l.value,l.type==='list'||l.type==='record'?1024:128)&&(!(l.type==='list'||l.type==='record')||validDataObservation(l.value as string,l.type)))));
 }

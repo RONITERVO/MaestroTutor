@@ -50,6 +50,7 @@ if(new URLSearchParams(location.search).has('creation')||recipeCreation||objectE
 if(new URLSearchParams(location.search).has('unavailablePrograms'))state=JSON.parse(JSON.stringify(unavailableProgram));
 const recovering=new URLSearchParams(location.search).has('recovery');if(recovering)state=JSON.parse(JSON.stringify(historyRecovery.error));
 state.capabilities=[...new Set([...state.capabilities??[],'catalog.v1'])];
+if(new URLSearchParams(location.search).has('modules'))state.capabilities.push('programModules.v1');
 if(new URLSearchParams(location.search).has('structured')){
  state.capabilities=[...state.capabilities,'structuredValues.v1'];
  Object.assign(window,{maestroWorkspaceRulesEvidence:(rules:unknown)=>{if(!validRuleView(rules))throw new Error('Invalid native program observation');state={...state,rules:JSON.parse(JSON.stringify(rules)),visible:true,workspaceView:'rules'};}});

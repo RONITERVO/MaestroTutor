@@ -103,11 +103,19 @@ namespace Maestro.Quest.Programs
             using var reader=new JsonTextReader(new System.IO.StringReader(source)) {MaxDepth=48,DateParseHandling=DateParseHandling.None};
             var root=JObject.Load(reader,new JsonLoadSettings {DuplicatePropertyNameHandling=DuplicatePropertyNameHandling.Error});
             Need(!reader.Read(),"Extra data follows the program");
+            var raw=root;
+            root=ProgramModules.Link(raw,value=>new BehaviourProgram().ReadRoot(value));
+            ReadRoot(root);
+            referencedIds=raw.Descendants().OfType<JValue>().Where(x=>x.Type==JTokenType.String&&Guid.TryParseExact((string)x,"N",out _)).Select(x=>(string)x).Distinct().ToArray();
+            Source=raw.ToString(Formatting.None);
+        }
+        void ReadRoot(JObject root)
+        {
             Need((root["version"]?.Type==JTokenType.Integer||root["version"]?.Type==JTokenType.Float)&&((double)root["version"]==2||(double)root["version"]==3),"Unsupported program version");
             Version=(int)root["version"];Keys(root,Version==3?"version entry resources functions state events":"version entry resources functions","dataVersion");
             Need(!root.ContainsKey("dataVersion")||Version==3&&(root["dataVersion"]?.Type==JTokenType.Integer||root["dataVersion"]?.Type==JTokenType.Float)&&(double)root["dataVersion"]==1,"Unsupported structured-value version");structured=root.ContainsKey("dataVersion");
             if(Version==3) {
-                foreach(var token in Array(root["state"],16)) {var item=Object(token);Keys(item,"name initial","type");string name=Text(item["name"]);Need(Name(name)&&InitialState.TryAdd(name,Literal(item["initial"],item["type"])),"Invalid or duplicate state name");}
+                foreach(var token in Array(root["state"],16)) {var item=Object(token);Keys(item,"name initial","type");string name=Text(item["name"]);Need(ProgramModules.CompiledName(name)&&InitialState.TryAdd(name,Literal(item["initial"],item["type"])),"Invalid or duplicate state name");}
                 foreach(var token in Array(root["events"],16)) {var item=Object(token);Keys(item,"name type");string name=Text(item["name"]);var type=Type(Text(item["type"]));
                     Need(System.Text.RegularExpressions.Regex.IsMatch(name,@"^user\.[a-zA-Z0-9_]{1,32}$")&&type!=ProgramType.Void&&CustomEvents.TryAdd(name,type),"Invalid or duplicate custom event");}
             }
@@ -117,7 +125,7 @@ namespace Maestro.Quest.Programs
             foreach(var token in definitions)
             {
                 var f=Object(token);Keys(f,"name returns parameters locals body");var function=new ProgramFunction {Name=Text(f["name"]),Returns=DataType(f["returns"],true),Body=Array(f["body"],MaximumNodes)};
-                Need(Name(function.Name)&&!functions.ContainsKey(function.Name),"Invalid or duplicate function name");
+                Need(ProgramModules.CompiledName(function.Name)&&!functions.ContainsKey(function.Name),"Invalid or duplicate function name");
                 var parameters=new List<string>();
                 foreach(var parameter in Array(f["parameters"],8)) {
                     var p=Object(parameter);Keys(p,"name type");string name=Text(p["name"]);var type=DataType(p["type"]);
@@ -141,8 +149,6 @@ namespace Maestro.Quest.Programs
                 Need(depth<=8,"Function call depth exceeds its limit");depths.Add(name,depth);return depth;
             }
             foreach(string name in functions.Keys)Depth(name);
-            referencedIds=root.Descendants().OfType<JValue>().Where(x=>x.Type==JTokenType.String&&Guid.TryParseExact((string)x,"N",out _)).Select(x=>(string)x).Distinct().ToArray();
-            Source=root.ToString(Formatting.None);
         }
         ProgramDataType DataType(JToken token,bool allowVoid=false) {
             var type=ProgramDataType.Read(token);Need(allowVoid||type!=ProgramType.Void,"A value cannot be void");
@@ -174,7 +180,7 @@ namespace Maestro.Quest.Programs
             Need(depth<=8,"Block nesting limit exceeded");
             foreach(var token in body)
             {
-                var node=Object(token);string id=Text(node["id"]),op=Text(node["op"]);Need(Name(id)&&ids.Add(id)&&ids.Count<=MaximumNodes,"Invalid, duplicate or excessive block identities");
+                var node=Object(token);string id=Text(node["id"]),op=Text(node["op"]);Need(ProgramModules.CompiledName(id)&&ids.Add(id)&&ids.Count<=MaximumNodes,"Invalid, duplicate or excessive block identities");
                 void Child(string key)=>Body(Array(node[key],MaximumNodes),function,depth+1);
                 void Expr(string key,ProgramDataType type)=>Need(Expression(node[key],function)==type,"Expression type differs from its use");
                 switch(op) {
