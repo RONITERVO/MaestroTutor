@@ -19,7 +19,7 @@ namespace Maestro.Quest.Programs
    public JObject ReadDefinition()=>Definition==null?null:(JObject)Definition.DeepClone();
   }
   public sealed class Write {
-   internal Task<Result> Task;public string Hash,Error;public bool Pending=true,Changed;public int Revision;
+   internal Task<Result> Task;internal IDisposable Lease;public string Hash,Error;public bool Pending=true,Changed;public int Revision;
   }
   internal sealed class Result {public Entry Entry;public bool Removed,Changed;public string Error;}
   sealed class Loaded {public Dictionary<string,Entry> Entries=new();public string Error;public bool Overflow;}
@@ -32,7 +32,9 @@ namespace Maestro.Quest.Programs
   public bool Pending=>write?.Pending==true;
   public int Count=>entries.Count;
   public static bool ValidHash(string value)=>value!=null&&value.Length==64&&value.All(c=>c>='a'&&c<='f'||c>='0'&&c<='9');
-  public ProgramModuleLibrary(string parent){
+  readonly Maestro.Quest.Persistence.WorkspaceWriteGate workspaceWrites;
+  public ProgramModuleLibrary(string parent,Maestro.Quest.Persistence.WorkspaceWriteGate writeGate=null){
+   workspaceWrites=writeGate??new();
    directory=Path.Combine(Path.GetFullPath(parent),"program-modules.v1");
    // Build the static vocabulary on the Unity owner thread before pure validation on the worker.
    _=BehaviourCatalog.Actions.Count;loading=Task.Run(Load);
@@ -98,14 +100,14 @@ namespace Maestro.Quest.Programs
    if(write?.Pending!=true||!write.Task.IsCompleted)return;
    var result=write.Task.GetAwaiter().GetResult();write.Error=result.Error;write.Changed=result.Changed;
    if(result.Error==null){if(result.Removed)entries.Remove(write.Hash);else entries[write.Hash]=result.Entry;if(result.Changed)Revision++;}
-   write.Revision=Revision;write.Pending=false;
+   write.Revision=Revision;write.Pending=false;write.Lease?.Dispose();write.Lease=null;
   }}
   public void Flush(){loading.GetAwaiter().GetResult();if(write?.Pending==true)write.Task.GetAwaiter().GetResult();Poll();}
   public Entry[] Search(string query){Poll();lock(gate){var terms=query.Trim().Split(' ',StringSplitOptions.RemoveEmptyEntries);return entries.Values.Where(e=>terms.All(t=>(e.Name+" "+e.Hash+" "+string.Join(" ",e.Definition?["exports"]?.Values<string>()??Array.Empty<string>())).IndexOf(t,StringComparison.OrdinalIgnoreCase)>=0)).OrderBy(e=>e.Name,StringComparer.Ordinal).ThenBy(e=>e.Hash,StringComparer.Ordinal).ToArray();}}
   public Entry Inspect(string hash){Poll();lock(gate)return entries.TryGetValue(hash,out var entry)?entry:null;}
   // Called by the existing off-thread retained-save audit. It never commits owner-thread state.
   public bool Retains(string id,out bool uncertain){var loaded=loading.GetAwaiter().GetResult();lock(gate){var current=Ready?entries:loaded.Entries;uncertain=Pending||(Ready?Error:loaded.Error)!=null||current.Values.Any(e=>e.Error!=null);return current.Values.Any(e=>e.References.Contains(id));}}
-  public bool CanWrite(out string error){Poll();error=!Ready?"Module library is loading":Pending?"Wait for the dispatched library write":Revision>=1000000?"Reopen the room before changing the library":null;return error==null;}
+  public bool CanWrite(out string error){Poll();error=workspaceWrites.Frozen?Maestro.Quest.Persistence.WorkspaceWriteGate.FrozenReason:!Ready?"Module library is loading":Pending?"Wait for the dispatched library write":Revision>=1000000?"Reopen the room before changing the library":null;return error==null;}
   public bool CanPublish(JObject module,out string error){lock(gate){
    if(!CanWrite(out error))return false;string hash=ProgramModules.Hash(module);
    if(entries.TryGetValue(hash,out var entry)&&entry.Error!=null){error="The existing library copy is damaged; remove it explicitly before publishing again";return false;}
@@ -114,7 +116,7 @@ namespace Maestro.Quest.Programs
   }}
   public Write Publish(JObject module){lock(gate){
    Validate(module);if(!CanPublish(module,out var error))throw new ProgramFault(error);string hash=ProgramModules.Hash(module),source=Compact(module);
-   write=new Write {Hash=hash};write.Task=Task.Run(()=>{
+   write=new Write {Hash=hash,Lease=workspaceWrites.Write()};write.Task=Task.Run(()=>{
     string temporary=null;try {
      Directory.CreateDirectory(directory);string path=Path.Combine(directory,hash+".json");
      if(File.Exists(path))return new Result {Entry=Decode(hash,Read(path)),Changed=false};
@@ -126,7 +128,7 @@ namespace Maestro.Quest.Programs
   }}
   public Write Remove(string hash){lock(gate){
    if(!ValidHash(hash))throw new ProgramFault("Invalid module identity");if(!CanWrite(out var error))throw new ProgramFault(error);
-   write=new Write {Hash=hash};write.Task=Task.Run(()=>{try{string path=Path.Combine(directory,hash+".json");bool present=File.Exists(path);File.Delete(path);return new Result {Removed=true,Changed=present};}catch(Exception ex){return new Result {Error=ex.Message};}});return write;
+   write=new Write {Hash=hash,Lease=workspaceWrites.Write()};write.Task=Task.Run(()=>{try{string path=Path.Combine(directory,hash+".json");bool present=File.Exists(path);File.Delete(path);return new Result {Removed=true,Changed=present};}catch(Exception ex){return new Result {Error=ex.Message};}});return write;
   }}
  }
 }

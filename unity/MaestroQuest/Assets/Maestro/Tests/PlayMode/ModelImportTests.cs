@@ -354,6 +354,9 @@ namespace Maestro.Quest.Tests
             var workshop = root.AddComponent<ImportWorkshop>(); workshop.Initialize(editor);
             var prepare = workshop.PrepareAsync("triangle.glb", ModelFixture.Create()); yield return new WaitUntil(() => prepare.IsCompleted);
             Assert.That(workshop.HasPreview, Is.True, workshop.Status); Assert.That(editor.Snapshot().objects.Any(x => x.kind == RoomObjectKind.ImportedModel), Is.False);
+            var preview=workshop.GetComponentsInChildren<ImportedModel>().Single();workshop.Play();Assert.That(preview.IsPlaying,Is.True);
+            using(editor.RuntimeGate.Hold("Preserving workspace")) {Assert.That(preview.IsPlaying,Is.False);workshop.Play();yield return null;Assert.That(preview.IsPlaying,Is.False);StringAssert.Contains("Preserving",workshop.Status);}
+            Assert.That(preview.IsPlaying,Is.False,"Releasing a hold must not resume preview clips");
             var board = new GameObject("Solid import tools"); board.transform.SetParent(root.transform, false); board.transform.localPosition = new Vector3(4,0,0); board.AddComponent<ImportTools>().Build(workshop, room);
             yield return Capture("import-tools-unity.png", board.transform.position, .53f);
             var accept = workshop.AcceptAsync(); yield return new WaitUntil(() => accept.IsCompleted); Assert.That(accept.Result, Is.True, workshop.Status);
@@ -361,6 +364,9 @@ namespace Maestro.Quest.Tests
             var created = editor.Find(data.id).GetComponent<CreatedRoomObject>();
             yield return new WaitUntil(() => created.Model && created.Model.Ready || created.ModelStatus != "Loading local model…");
             Assert.That(created.Model.Ready, Is.True, created.ModelStatus);
+            workshop.Play();Assert.That(created.Model.IsPlaying,Is.True);
+            using(editor.RuntimeGate.Hold("Preserving workspace")) {Assert.That(created.Model.IsPlaying,Is.False);workshop.Play();yield return null;Assert.That(created.Model.IsPlaying,Is.False);}
+            Assert.That(created.Model.IsPlaying,Is.False);workshop.Play();Assert.That(created.Model.IsPlaying,Is.True);workshop.Stop();
             editor.Erase(); yield return null; Assert.That(editor.Read(data.id), Is.Null);
             editor.Undo(); yield return null;
             created = editor.Find(data.id).GetComponent<CreatedRoomObject>(); yield return new WaitUntil(() => created.Model && created.Model.Ready || created.ModelStatus != "Loading local model…");

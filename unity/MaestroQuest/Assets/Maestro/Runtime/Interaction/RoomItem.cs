@@ -5,13 +5,20 @@ using System;
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using UnityEngine.XR.Interaction.Toolkit.Transformers;
+using UnityEngine.XR.Interaction.Toolkit.Filtering;
+using UnityEngine.XR.Interaction.Toolkit.Interactors;
+using Maestro.Quest.Persistence;
 
 namespace Maestro.Quest.Interaction
 {
     /// <summary>Movable room content; loose creations can opt into RigidRoomItem physics.</summary>
-    public sealed class RoomItem : MonoBehaviour
+    public sealed class RoomItem : MonoBehaviour, IXRSelectFilter
     {
         public XRGrabInteractable Grab { get; private set; }
+        WorkspaceWriteGate writes;
+        public bool canProcess=>isActiveAndEnabled;
+        public bool Process(IXRSelectInteractor interactor,IXRSelectInteractable interactable)=>writes?.Frozen!=true;
+        internal void ConfigureWrites(WorkspaceWriteGate gate){writes=gate;}
         public event Action<RoomItem> GrabStarted, GrabFinished;
         Vector3 homePosition, homeScale;
         Quaternion homeRotation;
@@ -41,6 +48,7 @@ namespace Maestro.Quest.Interaction
             Grab.AddMultipleGrabTransformer(transformer);
             Grab.firstSelectEntered.AddListener(OnGrabStarted);
             Grab.lastSelectExited.AddListener(OnGrabFinished);
+            Grab.selectFilters.Add(this);
             Grab.enabled = true;
         }
 

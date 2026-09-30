@@ -22,6 +22,7 @@ namespace Maestro.Quest.Creation
         RoomStorage storage;
         public RoomOwnership Ownership {get;}=new();
         public RoomRuntimeGate RuntimeGate {get;private set;}=new();
+        public Maestro.Quest.Persistence.WorkspaceWriteGate WriteGate {get;}=new();
         readonly Dictionary<string,RoomOwnership.Lease> handOwners=new();
         bool ownershipPaused,ownershipFocused=true;
         string selected;
@@ -33,8 +34,8 @@ namespace Maestro.Quest.Creation
         public string Status { get; private set; } = "Choose a shape or pick up an object";
         public bool DrawingMode { get; private set; }
         public Color Paint { get; private set; } = IllustratedMaterials.Hex("2B8D88");
-        public bool CanUndo => journal != null && journal.CanUndo;
-        public bool CanRedo => journal != null && journal.CanRedo;
+        public bool CanUndo => !WriteGate.Frozen && journal != null && journal.CanUndo;
+        public bool CanRedo => !WriteGate.Frozen && journal != null && journal.CanRedo;
         public event Action Changed;
         public event Action Editing;
         public event Action<RoomItem> ItemGrabbed;
@@ -63,12 +64,12 @@ namespace Maestro.Quest.Creation
 
         public void Initialize(RoomInteraction interaction, RoomItem book, RoomItem maestro, string saveDirectory = null, RoomPhysicsWorld physics = null, RoomRuntimeGate runtimeGate = null, string receiptDirectory = null)
         {
-            room = interaction; RuntimeGate=runtimeGate??RuntimeGate;RuntimeGate.Changed+=RefreshOwnership;RefreshOwnership();
+            room = interaction; room.ConfigureWrites(WriteGate); RuntimeGate=runtimeGate??RuntimeGate;RuntimeGate.Changed+=RefreshOwnership;RefreshOwnership();
             PhysicsWorld = physics;PhysicsWorld?.ConfigureRuntime(RuntimeGate);
             AddIdentity("book", book); AddIdentity("maestro", maestro);
             var directory = saveDirectory ?? Path.Combine(Application.persistentDataPath, "room"); SaveDirectory=directory;ReceiptDirectory=receiptDirectory??directory;
-            storage = new RoomStorage(directory); Models = new ModelLibrary(Path.Combine(directory, "models")); Motions = new MotionLibrary(Path.Combine(directory,"motions"));
-            ActivityProfiles=new AvatarActivityProfiles(directory);
+            storage = new RoomStorage(directory); Models = new ModelLibrary(Path.Combine(directory, "models"),WriteGate); Motions = new MotionLibrary(Path.Combine(directory,"motions"),WriteGate);
+            ActivityProfiles=new AvatarActivityProfiles(directory,WriteGate);
             var loaded = storage.Load(out var message);
             journal = new RoomJournal(loaded ?? StarterDocument(book, maestro));
             maestro.GetComponent<MaestroAvatar>()?.ConfigureRuntime(RuntimeGate);
@@ -89,7 +90,7 @@ namespace Maestro.Quest.Creation
 
         void AddIdentity(string id, RoomItem item)
         {
-            objects.Add(id,item); identities.Add(item,id);
+            objects.Add(id,item); identities.Add(item,id);item.ConfigureWrites(WriteGate);
             item.GrabStarted += GrabStarted; item.GrabFinished += GrabFinished;
             var rigid=item.GetComponent<RigidRoomItem>();if(rigid)rigid.ContactStarted+=ContactStarted;
         }
@@ -135,6 +136,7 @@ namespace Maestro.Quest.Creation
 
         public bool CanCreatePrimitive(out string error) {
             error=null;
+            if(WriteGate.Frozen){error=Maestro.Quest.Persistence.WorkspaceWriteGate.FrozenReason;return false;}
             if(journal==null) {error="Room editor is not ready";return false;}
             if(storage.ReadOnly) {error="This room was saved by a newer app and is read-only";return false;}
             if(journal.Snapshot().objects.Length>=RoomDocument.MaximumObjects+2) {error="This room has reached its creation limit";return false;}
@@ -168,6 +170,7 @@ namespace Maestro.Quest.Creation
         }
         public bool CanEditObject(string id,bool creationOnly,out string error) {
             error=null;
+            if(WriteGate.Frozen){error=Maestro.Quest.Persistence.WorkspaceWriteGate.FrozenReason;return false;}
             if(journal==null){error="Room editor is not ready";return false;}
             if(storage.ReadOnly){error="This room was saved by a newer app and is read-only";return false;}
             var data=Read(id);var item=Find(id);
@@ -192,6 +195,7 @@ namespace Maestro.Quest.Creation
             return CommitPersisted(new[]{data},Array.Empty<string>(),message,applyPose,out error);
         }
         bool CommitPersisted(RoomObjectData[] replacements,string[] removals,string message,bool applyPose,out string error) {
+            using var write=WriteGate.TryWrite(out error);if(write==null)return false;
             var candidate=journal.Snapshot();
             var changed=replacements.Select(x=>x.id).Concat(removals).ToHashSet();
             candidate.objects=candidate.objects.Where(x=>!changed.Contains(x.id)).Concat(replacements).ToArray();
@@ -261,8 +265,8 @@ namespace Maestro.Quest.Creation
             Editing?.Invoke(); if(DeleteObject(selected,out var error)) { selected = null; UpdateSelection(); } else SetStatus(error);
         }
 
-        public void Undo() { Editing?.Invoke(); if (Busy()) return; if (journal.Undo()) { Reconcile(); MarkDirty(); SetStatus("Undone"); } else SetStatus("Nothing to undo"); }
-        public void Redo() { Editing?.Invoke(); if (Busy()) return; if (journal.Redo()) { Reconcile(); MarkDirty(); SetStatus("Redone"); } else SetStatus("Nothing to redo"); }
+        public void Undo() { using var write=WriteGate.TryWrite(out var blocked);if(write==null){SetStatus(blocked);return;} Editing?.Invoke(); if (Busy()) return; if (journal.Undo()) { Reconcile(); MarkDirty(); SetStatus("Undone"); } else SetStatus("Nothing to undo"); }
+        public void Redo() { using var write=WriteGate.TryWrite(out var blocked);if(write==null){SetStatus(blocked);return;} Editing?.Invoke(); if (Busy()) return; if (journal.Redo()) { Reconcile(); MarkDirty(); SetStatus("Redone"); } else SetStatus("Nothing to redo"); }
         public void ToggleDrawing() { Editing?.Invoke(); DrawingMode = !DrawingMode; SetStatus(DrawingMode ? "Pencil: hold trigger or pinch to draw" : "Pencil put away"); }
 
         public bool AddDrawing(IReadOnlyList<Vector3> worldPoints, Color color)
@@ -293,6 +297,7 @@ namespace Maestro.Quest.Creation
 
         bool Commit(RoomObjectData[] replacements, string[] removals, string success, bool placement = false, bool? applyPose = null)
         {
+            using var write=WriteGate.TryWrite(out var blocked);if(write==null){SetStatus(blocked);return false;}
             if (!placement) Editing?.Invoke();
             if (journal == null || (!placement && Busy())) return false;
             if (!journal.Apply(replacements,removals,out var error)) { SetStatus(error); return false; }
@@ -407,6 +412,7 @@ namespace Maestro.Quest.Creation
         void MarkDirty() { Revision++; dirty = !TemporaryRoom; saveAt = Time.unscaledTime + .5f; }
         public void RememberPlacement(string id)
         {
+            using var write=WriteGate.TryWrite(out _);if(write==null)return;
             var item = Find(id);
             if (item && journal.UpdatePlacement(id,item.transform.localPosition,item.transform.localRotation.normalized)) MarkDirty();
         }
@@ -440,11 +446,13 @@ namespace Maestro.Quest.Creation
             if(ResizeObject("maestro",scale,out var error))return true;SetStatus(error);return false;
         }
         public void SaveNow() {
+            using var write=WriteGate.TryWrite(out var blocked);if(write==null){SetStatus(blocked);return;}
             if(TemporaryRoom) {if(!KeepTemporaryRoom(out var error))SetStatus(error);return;}
             CapturePhysicsPlacements(); MarkDirty(); saveAt = 0; SetStatus("Saving room");
         }
         void CapturePhysicsPlacements()
         {
+            using var write=WriteGate.TryWrite(out _);if(write==null)return;
             if (journal == null) return;
             foreach (var pair in objects)
             {

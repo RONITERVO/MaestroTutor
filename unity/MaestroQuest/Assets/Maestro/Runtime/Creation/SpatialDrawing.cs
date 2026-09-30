@@ -12,6 +12,7 @@ namespace Maestro.Quest.Creation
         public RoomEditor Editor;
         readonly List<Vector3> points = new();
         int owner = -1;
+        System.IDisposable write;
         PencilMarks preview;
         Color color;
         float nextPreview;
@@ -20,6 +21,7 @@ namespace Maestro.Quest.Creation
         public void Begin(int id, Ray ray)
         {
             if (!Editor || !Editor.DrawingMode || owner != -1) return;
+            write=Editor.WriteGate.TryWrite(out var blocked);if(write==null){Editor.ReportStatus(blocked);return;}
             owner = id; color = Editor.Paint; points.Clear(); nextPreview = 0;
             var root = new GameObject("Pencil stroke in progress"); root.transform.SetParent(transform, false);
             preview = root.AddComponent<PencilMarks>();
@@ -44,8 +46,8 @@ namespace Maestro.Quest.Creation
         {
             if (owner != id) return;
             owner = -1;
-            if (Editor && points.Count >= 2) Editor.AddDrawing(points,color);
-            points.Clear(); if (preview) Destroy(preview.gameObject); preview = null;
+            try {if (Editor && points.Count >= 2) Editor.AddDrawing(points,color);}
+            finally {points.Clear(); if (preview) Destroy(preview.gameObject); preview = null;write?.Dispose();write=null;}
         }
         public void Cancel(int id) => End(id);
         void OnDisable() { if (owner != -1) End(owner); }

@@ -48,12 +48,14 @@ namespace Maestro.Quest.Avatar
         AvatarActivityDocument document;
         public int Revision { get; private set; }=1;
         public bool ReadOnly => file.ReadOnly;
-        public bool CanUndo(string model) => !ReadOnly && undo.Any(x => x.Model == model);
-        public bool CanRedo(string model) => !ReadOnly && redo.Any(x => x.Model == model);
+        public bool CanUndo(string model) => !writes.Frozen && !ReadOnly && undo.Any(x => x.Model == model);
+        public bool CanRedo(string model) => !writes.Frozen && !ReadOnly && redo.Any(x => x.Model == model);
         public string Notice { get; private set; }
         public event Action Changed;
-        public AvatarActivityProfiles(string directory)
+        readonly Maestro.Quest.Persistence.WorkspaceWriteGate writes;
+        public AvatarActivityProfiles(string directory,Maestro.Quest.Persistence.WorkspaceWriteGate writeGate=null)
         {
+            writes=writeGate??new();
             file=new(directory,"avatar-activities",256*1024,x => x.Valid(),x => x.Copy(),null,x => x.version=2);
             document=file.Load(out var message) ?? new AvatarActivityDocument(); Notice=message;
         }
@@ -105,6 +107,7 @@ namespace Maestro.Quest.Avatar
         }
         bool Commit(AvatarActivityDocument next,string model,out string error)
         {
+            using var write=writes.TryWrite(out error);if(write==null)return false;
             error=Notice; if (ReadOnly || Revision == int.MaxValue) return false;
             error=null; var before=document.avatars.FirstOrDefault(x => x.modelHash == model); var after=next.avatars.FirstOrDefault(x => x.modelHash == model);
             if (UnityEngine.JsonUtility.ToJson(before) == UnityEngine.JsonUtility.ToJson(after)) return true;
@@ -116,6 +119,7 @@ namespace Maestro.Quest.Avatar
         public bool Redo(string model,out string error) => Move(model,redo,undo,true,out error);
         bool Move(string model,List<Change> from,List<Change> to,bool forward,out string error)
         {
+            using var write=writes.TryWrite(out error);if(write==null)return false;
             error=Notice; if (ReadOnly || Revision == int.MaxValue) return false;
             error="No assignment change to undo or redo for this avatar"; int index=from.FindLastIndex(x => x.Model == model); if (index < 0) return false;
             var change=from[index]; var replacement=forward ? change.After : change.Before; var next=document.Copy();

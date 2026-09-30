@@ -16,6 +16,7 @@ namespace Maestro.Quest.Imports
     {
         [Serializable] sealed class Selection { public string path, name, error; }
         RoomEditor editor;
+        RoomRuntimeGate runtimeGate;
         ModelAsset pending;
         ImportedModel preview;
         bool busy, picking, disposed, loop;
@@ -38,6 +39,7 @@ namespace Maestro.Quest.Imports
         {
             Batches=gameObject.AddComponent<ImportBatchWorkshop>(); Batches.Initialize(source,this);
             editor = source; editor.Changed += SelectionChanged; editor.Editing += Stop;
+            runtimeGate=editor.RuntimeGate;runtimeGate.Changed+=RuntimeChanged;RuntimeChanged();
             editor.ItemGrabbed += Grabbed; if (animations) animations.Starting += StopTarget;
             animationWorkshop = animations;
             maestro = editor.Find("maestro")?.GetComponent<MaestroAvatar>();
@@ -105,6 +107,7 @@ namespace Maestro.Quest.Imports
         public async void Accept() => await AcceptAsync();
         public async Task<bool> AcceptAsync()
         {
+            using var write=editor.WriteGate.TryWrite(out var blocked);if(write==null){Say(blocked);return false;}
             if (Busy || !HasPreview) return false;
             if (editor.AnyHeld) { Say("Release the object before adding the model"); return false; }
             busy = true;
@@ -122,6 +125,7 @@ namespace Maestro.Quest.Imports
         public async void UseMaestro() => await UseMaestroAsync();
         public async Task<bool> UseMaestroAsync()
         {
+            using var write=editor.WriteGate.TryWrite(out var blocked);if(write==null){Say(blocked);return false;}
             if (Busy || !maestro || maestro.ModelBusy) return false;
             if (editor.AnyHeld) { Say("Release the object before changing Maestro"); return false; }
             var target = Target;
@@ -144,8 +148,10 @@ namespace Maestro.Quest.Imports
         void MaestroChanged() { motionRequest++; if (libraryMode) ShowLibraryDetails(); if (maestro) Say(maestro.ModelStatus); }
         ImportedModel Target => HasPreview ? preview : editor.SelectedId == "maestro" ? maestro?.CustomModel : editor.Find(editor.SelectedId)?.GetComponent<CreatedRoomObject>()?.Model;
         public void NextClip() { if (libraryMode) { NextLibraryMotion(); return; } var target = Target; if (!target || target.ClipCount == 0) { Say("This model has no embedded animation clips"); return; } Stop(); clip = (clip + 1) % target.ClipCount; Say("Clip " + (clip + 1) + ": " + target.ClipName(clip)); }
+        void RuntimeChanged(){if(runtimeGate.Held)Stop();}
         public void Play()
         {
+            if(runtimeGate?.Held==true){Say(runtimeGate.Reason);return;}
             if (libraryMode) { _ = PlayLibraryAsync(); return; }
             var target = Target; if (!target || !target.Ready || target.ClipCount == 0) { Say("Choose an imported model or Maestro with animation clips"); return; }
             if (editor.AnyHeld) { Say("Release the object before previewing its clip"); return; }
@@ -221,6 +227,7 @@ namespace Maestro.Quest.Imports
         public async void SaveMotions() => await SaveMotionsAsync();
         public async Task<bool> SaveMotionsAsync()
         {
+            using var write=editor.WriteGate.TryWrite(out var blocked);if(write==null){Say(blocked);return false;}
             if (Busy) return false; busy = true; Stop(); Say("Extracting motions without saving another model…");
             try
             {
@@ -242,6 +249,7 @@ namespace Maestro.Quest.Imports
         }
         public async Task<bool> PlayLibraryAsync(string motionId = null,bool? repeat = null)
         {
+            if(runtimeGate?.Held==true){Say(runtimeGate.Reason);return false;}
             if (Busy || !isActiveAndEnabled) return false;
             var entry = motionId == null ? CurrentMotion() : editor.Motions.Find(motionId);
             if (entry == null || !maestro || maestro.ModelBusy || !maestro.CustomModel || !animationWorkshop || entry.rigHash != maestro.CustomModel.MotionRigHash) { Say("Choose a saved motion compatible with the loaded Maestro"); return false; }
@@ -272,6 +280,7 @@ namespace Maestro.Quest.Imports
         void OnDisable() { if (editor) Stop(); }
         void OnDestroy()
         {
+            if(runtimeGate!=null)runtimeGate.Changed-=RuntimeChanged;
             Stop(); disposed = true; ClearPreview(); if (picking) ReleasePicker();
             if (Batches) Destroy(Batches);
             if (editor) { editor.Changed -= SelectionChanged; editor.Editing -= Stop; editor.ItemGrabbed -= Grabbed; }

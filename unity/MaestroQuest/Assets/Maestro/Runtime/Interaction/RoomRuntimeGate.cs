@@ -18,6 +18,7 @@ namespace Maestro.Quest.Interaction
         }
         readonly List<Lease> holds=new();
         string failure;
+        internal string Failure=>failure;
         public bool Held=>failure!=null||holds.Count>0;
         public string Reason=>failure??(holds.Count>0?holds[0].Reason:null);
         public event Action Changed;

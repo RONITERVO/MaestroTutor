@@ -23,7 +23,8 @@ namespace Maestro.Quest.Imports
     {
         readonly string directory;
         readonly SemaphoreSlim writes=new(1,1);
-        public ModelLibrary(string directory) { this.directory = Path.GetFullPath(directory); }
+        readonly WorkspaceWriteGate workspaceWrites;
+        public ModelLibrary(string directory,WorkspaceWriteGate writeGate=null) { this.directory = Path.GetFullPath(directory);workspaceWrites=writeGate??new(); }
         public static bool ValidHash(string hash) => hash != null && hash.Length == 64 && hash.All(c => c >= '0' && c <= '9' || c >= 'a' && c <= 'f');
         public static string Hash(byte[] bytes) { using var sha = SHA256.Create(); return BitConverter.ToString(sha.ComputeHash(bytes)).Replace("-", "").ToLowerInvariant(); }
         public static ModelAsset Inspect(string name, byte[] bytes) => new() { Hash = Hash(bytes), Name = SafeName(name), Bytes = bytes, Inspection = ModelInspection.Inspect(bytes) };
@@ -38,6 +39,7 @@ namespace Maestro.Quest.Imports
         });
         public async Task SaveAsync(ModelAsset asset)
         {
+            using var write=workspaceWrites.Write();
             await writes.WaitAsync().ConfigureAwait(false);
             try { await Task.Run(() => {
                 // Revalidate at the persistence boundary; the caller cannot substitute a hash/path.

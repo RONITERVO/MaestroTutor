@@ -74,6 +74,7 @@ namespace Maestro.Quest.Imports
         public async void Retry() => await SaveAsync(true);
         public async Task SaveAsync(bool retryFailed=false)
         {
+            using var write=editor.WriteGate.TryWrite(out var blocked);if(write==null){Say(blocked);return;}
             if (imports.Busy || disposed) return;
             if (batch == null) { Say("Choose files first. Save batch confirms you may use these assets."); return; }
             imports.Stop(); page=0;

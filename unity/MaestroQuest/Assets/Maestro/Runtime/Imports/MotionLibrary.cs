@@ -79,8 +79,10 @@ namespace Maestro.Quest.Imports
             internal Lease(MotionLibrary owner,Cached value) { this.owner = owner; this.value = value; }
             public void Dispose() { if (value == null) return; value.Users = Math.Max(0,value.Users-1); value.Used = ++owner.clock; value = null; owner = null; }
         }
-        public MotionLibrary(string directory)
+        readonly WorkspaceWriteGate workspaceWrites;
+        public MotionLibrary(string directory,WorkspaceWriteGate writeGate=null)
         {
+            workspaceWrites=writeGate??new();
             this.directory = Path.GetFullPath(directory); primary = Path.Combine(this.directory,"motions.v2.json"); backup = primary+".backup";
             string source=File.Exists(primary) || File.Exists(backup) ? primary : Path.Combine(this.directory,"motions.v1.json");
             int expected=source == primary ? 2 : 1;
@@ -128,6 +130,7 @@ namespace Maestro.Quest.Imports
         }
         public async Task ArchiveAsync(string id,bool archived)
         {
+            using var write=workspaceWrites.Write();
             await writes.WaitAsync().ConfigureAwait(false);
             try { await Task.Run(() => {
                 if (disposed) throw new ObjectDisposedException(nameof(MotionLibrary));
@@ -145,6 +148,7 @@ namespace Maestro.Quest.Imports
         async Task MaintainAsync(string id,Func<Task<string>> protection,bool forget)
         {
             if (protection == null) throw new ArgumentNullException(nameof(protection));
+            using var write=workspaceWrites.Write();
             await writes.WaitAsync();
             try
             {
@@ -179,6 +183,7 @@ namespace Maestro.Quest.Imports
         public async Task<MotionEntry[]> ImportAsync(string fileName,byte[] bytes,string category = null)
         {
             if (disposed) throw new ObjectDisposedException(nameof(MotionLibrary));
+            using var write=workspaceWrites.Write();
             await writes.WaitAsync().ConfigureAwait(false);
             try
             {
@@ -230,6 +235,7 @@ namespace Maestro.Quest.Imports
         }
         public async Task UpdateAsync(string id,string name,string[] tags,bool favourite)
         {
+            using var write=workspaceWrites.Write();
             await writes.WaitAsync().ConfigureAwait(false);
             try { await Task.Run(() => {
                 if (disposed) throw new ObjectDisposedException(nameof(MotionLibrary));

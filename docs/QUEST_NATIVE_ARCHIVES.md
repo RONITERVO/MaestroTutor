@@ -280,12 +280,67 @@ Releasing a hold does not replay stopped actions, resume physics or recipes, or
 accept a controller button that remained pressed. A fresh input is required, and
 the first tutor-state reading establishes the rule baseline. New recipe objects
 inherit the hold before evaluating saved animation. Imported model loaders already
-disable file autoplay independently of this gate.
+disable file autoplay independently of this gate. Direct import previews and room
+object clip controls also stop on the hold and require a new Play after release.
 
-This is an enforced activity boundary, not complete restore activation. Document
-editing and manual object placement are still available; coordinated retention must
-also freeze accepted edits and pending imports before switching roots. The startup
-host still needs to resolve the generation selection, acquire this hold before
-loading owners, handle corrupt selections explicitly, and bind review completion to
-the inspected documents. No restore command or automatic selection has been enabled
-by adding this boundary.
+An activity hold alone permits document editing and manual object placement. The
+separate accepted-edit boundary below closes those paths during retention. The
+startup host still needs to resolve the generation selection, acquire the activity
+hold before loading owners, handle corrupt selections explicitly, and bind review
+completion to the inspected documents. No restore command or automatic selection
+has been enabled by these boundaries.
+
+
+## Preserving accepted edits before activation
+
+`WorkspaceEditHold` coordinates the activity hold with `WorkspaceWriteGate` on the
+Unity owner thread. It refuses to start during an accepted write, an unfinished
+stroke, held object/joint/button, a temporary room, unavailable archive storage or
+an unfinished module update. It stops effects and finishes authoring before freezing
+edits, so the final accepted pose/take can be included. Failed acquisition releases
+only its own leases. A runtime cleanup failure keeps activity stopped.
+
+The same write gate covers the actual mutation paths: room/rule edits and their
+Undo/Redo, temporary-room boundaries, physical selection and Recall, controller
+preferences, avatar assignments, and model/motion/module library changes. Model
+acceptance and batch imports hold leases across awaits through their final accepted
+updates. Queued library writes count before they acquire their file semaphore;
+module publication remains in flight until the owner observes its result. Ordinary
+autosaves can finish because they only persist previously accepted documents.
+
+Keep the edit hold through archive capture, preparation and activation. Existing
+`WorkspaceArchiveCapture` copies the accepted documents, including unsaved edits,
+and keeps model/motion bytes stable through archive close. The retained archive is
+prepared as its own verified generation. The native store now requires that exact
+retained generation and manifest hash when activating the imported generation.
+One pointer commit selects the import as Active and the retained snapshot as
+Previous, each with a fresh receipt epoch and review requirement. Original roots
+and receipt files stay in place. This costs an additional bounded snapshot and copy;
+storage failures must leave the live owners and accepted in-memory state intact.
+
+An activation record binds the complete origin selection and both manifest
+identities. Interrupted retries must use that exact pair. A reserved retained
+snapshot cannot be discarded as an unused preview or reused for another activation,
+even if the pointer commit has not happened yet. Both snapshots are reverified before
+an uncommitted retry; an already committed retry reconciles its saved outcome without
+rewriting authored content or switching twice. The record format is unreleased; old
+incompatible development activation records fail closed without migration.
+
+Native integration tests preserve unsaved room/rule edits and actual preferences and
+modules, reject writes through the shared manual/agent paths while held, and reopen
+the retained generation using ordinary stores. Failure tests keep the same live
+owners, accepted data and Undo; queued-worker and module-observation tests cover the
+async gaps. Filesystem tests cover changed retained content, substitution on retry,
+reservation protection and interruptions around the pointer commit.
+
+These services are not yet the production restore workflow. The host still needs
+persistent shell/content separation, coordinated private archive cleanup, selection
+on startup, owner/session replacement, content-bound review and shared maintenance
+commands that work while content actions are held. Preserve the lease until all
+retention/activation workers have settled; native owners must not be destroyed on a
+failed retention. Previous-workspace recovery still needs an exact operation identity
+before exposure. An activation retry after releasing the edit hold or restarting
+must first verify that the retained snapshot still represents the accepted current
+state; otherwise the host needs a new import/retention pair. Selection revision
+alone does not track edits within a room. Headset power-loss and storage/performance
+acceptance remain open.

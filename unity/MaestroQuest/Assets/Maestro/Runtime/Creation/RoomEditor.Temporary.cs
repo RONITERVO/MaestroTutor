@@ -56,6 +56,7 @@ namespace Maestro.Quest.Creation
         }
         public bool BeginTemporaryRoom(out string error,bool stopAuthoring=true)
         {
+            using var write=WriteGate.TryWrite(out error);if(write==null)return false;
             error=null;
             if(TemporaryRoom) {error="A temporary room is already active";return false;}
             if(!CanChangeTemporaryBoundary(out error))return false;
@@ -91,6 +92,7 @@ namespace Maestro.Quest.Creation
 
         public bool KeepTemporaryRoom(out string error)
         {
+            using var write=WriteGate.TryWrite(out error);if(write==null)return false;
             error=null;CompleteTemporarySave();
             if(!TemporaryRoom) {error="Start a temporary room first";return false;}
             if(TemporarySavePending) {error="A temporary room snapshot is already saving";return false;}
@@ -127,6 +129,7 @@ namespace Maestro.Quest.Creation
         }
         public bool DiscardTemporaryRoom(out string error,bool stopAuthoring=true)
         {
+            using var write=WriteGate.TryWrite(out error);if(write==null)return false;
             error=null;CompleteTemporarySave();
             if(!TemporaryRoom) {error="No temporary room is active";return false;}
             if(TemporarySavePending) {error="Wait for the dispatched snapshot save before discarding";return false;}

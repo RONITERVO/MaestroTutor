@@ -102,7 +102,7 @@ namespace Maestro.Quest.Persistence
         string GenerationPath(string id){if(!Id(id))throw Invalid("Invalid prepared workspace identity.");return Path.Combine(generations,id);}
         JObject Metadata(string id)
         {
-            string path=GenerationPath(id);WorkspaceArchive.NoLink(path);var metadata=Read(Path.Combine(path,"generation.v1.json"));
+            string path=GenerationPath(id);if(!Directory.Exists(path))throw Invalid("The selected workspace directory is missing.");WorkspaceArchive.NoLink(path);var metadata=Read(Path.Combine(path,"generation.v1.json"));
             if(!Exact(metadata,"version","id","manifestHash")||metadata["version"]?.Type!=JTokenType.Integer||(int)metadata["version"]!=1||metadata["id"]?.Type!=JTokenType.String||(string)metadata["id"]!=id||metadata["manifestHash"]?.Type!=JTokenType.String||!ModelLibrary.ValidHash((string)metadata["manifestHash"]))throw Invalid("Invalid prepared workspace metadata.");
             string data=Path.Combine(path,"data");if(!Directory.Exists(data))throw Invalid("The selected workspace directory is missing.");WorkspaceArchive.NoLink(data);return metadata;
         }
@@ -159,7 +159,7 @@ namespace Maestro.Quest.Persistence
         }
         public PreparedWorkspaceGeneration InspectPrepared(string id,string hash,CancellationToken cancellation=default)
         {
-            using var lease=Lease();if(File.Exists(Path.Combine(GenerationPath(id),"activation.v1.json")))throw Invalid("This workspace was already reserved for activation. Inspect the current selection.");
+            using var lease=Lease();if(Reserved(id))throw Invalid("This workspace was already reserved for activation. Inspect the current selection.");
             return new PreparedWorkspaceGeneration(id,Verify(id,hash,cancellation));
         }
         void Expected(WorkspaceSelection value,string revision)
@@ -174,21 +174,51 @@ namespace Maestro.Quest.Persistence
                 fault?.Invoke("pointer.afterCommit");
             }finally{if(File.Exists(pending))File.Delete(pending);}
         }
-        public WorkspaceSelection Activate(string id,string hash,string expectedRevision,CancellationToken cancellation=default)
+        // Both generations are verified before one pointer commit. The retained generation must
+        // be captured from accepted live owners under WorkspaceEditHold, not copied from autosaves.
+        // Its exact identity and the origin selection remain bound to this activation on retry.
+        public WorkspaceSelection Activate(string id,string hash,string expectedRevision,string retainedId,string retainedHash,CancellationToken cancellation=default)
         {
-            using var lease=Lease();cancellation.ThrowIfCancellationRequested();var current=Load();if(!ModelLibrary.ValidHash(hash)||(string)Metadata(id)["manifestHash"]!=hash)throw Invalid("The selected workspace does not match its preview.");string path=GenerationPath(id),attempt=Path.Combine(path,"activation.v1.json");WorkspaceSelection next;
+            using var lease=Lease();cancellation.ThrowIfCancellationRequested();var current=Load();
+            if(id==retainedId||!Id(retainedId)||!ModelLibrary.ValidHash(retainedHash))throw Invalid("Choose a separate retained workspace snapshot.");
+            if(!ModelLibrary.ValidHash(hash)||(string)Metadata(id)["manifestHash"]!=hash)throw Invalid("The selected workspace does not match its preview.");
+            string attempt=Path.Combine(GenerationPath(id),"activation.v1.json");WorkspaceSelection next;
             if(File.Exists(attempt)) {
-                var record=Read(attempt);if(!Exact(record,"version","from","manifestHash","next")||record["version"]?.Type!=JTokenType.Integer||(int)record["version"]!=1||record["from"]?.Type!=JTokenType.String||(string)record["from"]!=expectedRevision||(string)record["manifestHash"]!=hash)throw Invalid("The activation identity belongs to a different request.");
-                next=Selection(record["next"] as JObject);if(next.Active.Generation!=id||!next.Active.ReviewRequired)throw Invalid("Invalid saved activation attempt.");
+                var record=ActivationRecord(attempt);var origin=Selection(record["origin"] as JObject);
+                if((string)record["from"]!=expectedRevision||(string)record["manifestHash"]!=hash||(string)record["retained"]["generation"]!=retainedId||(string)record["retained"]["manifestHash"]!=retainedHash)throw Invalid("The activation identity belongs to a different request.");
+                next=Selection(record["next"] as JObject);
+                if(next.Active.Generation!=id)throw Invalid("Invalid saved activation attempt.");
                 if(current.Revision==next.Revision){if(!JToken.DeepEquals(current.Json(),next.Json()))throw Invalid("The activation outcome does not match its saved identity.");return current;}
-                Expected(current,expectedRevision);if(next.Previous==null||!JToken.DeepEquals(next.Previous.Json(),current.Active.Json()))throw Invalid("Saved activation predecessor does not match.");Verify(id,hash,cancellation);
+                Expected(current,expectedRevision);if(!JToken.DeepEquals(origin.Json(),current.Json()))throw Invalid("Saved activation origin does not match.");
+                Verify(id,hash,cancellation);Verify(retainedId,retainedHash,cancellation);
             }else {
-                Expected(current,expectedRevision);Verify(id,hash,cancellation);if(current.Active.Generation==id)throw Invalid("That workspace is already active.");
-                if(current.Revision==Initial)Directory.CreateDirectory(Path.Combine(appRoot,"room"));
-                next=new WorkspaceSelection(Guid.NewGuid().ToString("N"),new WorkspaceLocation(id,Guid.NewGuid().ToString("N"),true),current.Active);
-                WriteNew(attempt,Json(new JObject {["version"]=1,["from"]=expectedRevision,["manifestHash"]=hash,["next"]=next.Json()}));fault?.Invoke("activation.reserved");
+                Expected(current,expectedRevision);
+                if(current.Active.Generation==id||current.Previous?.Generation==id||current.Active.Generation==retainedId||current.Previous?.Generation==retainedId||Reserved(id)||Reserved(retainedId))throw Invalid("Activation requires two unused, verified workspace generations.");
+                Verify(id,hash,cancellation);Verify(retainedId,retainedHash,cancellation);
+                next=new WorkspaceSelection(Guid.NewGuid().ToString("N"),new WorkspaceLocation(id,Guid.NewGuid().ToString("N"),true),new WorkspaceLocation(retainedId,Guid.NewGuid().ToString("N"),true));
+                WriteNew(attempt,Json(new JObject {["version"]=1,["from"]=expectedRevision,["origin"]=current.Json(),["manifestHash"]=hash,
+                    ["retained"]=new JObject {["generation"]=retainedId,["manifestHash"]=retainedHash},["next"]=next.Json()}));fault?.Invoke("activation.reserved");
             }
             cancellation.ThrowIfCancellationRequested();Commit(next);return next;
+        }
+        static JObject ActivationRecord(string path)
+        {
+            var record=Read(path);
+            if(!Exact(record,"version","from","origin","manifestHash","retained","next")||record["version"]?.Type!=JTokenType.Integer||(int)record["version"]!=1||record["from"]?.Type!=JTokenType.String||record["manifestHash"]?.Type!=JTokenType.String||!ModelLibrary.ValidHash((string)record["manifestHash"])||record["retained"] is not JObject retained||!Exact(retained,"generation","manifestHash")||!TextId(retained["generation"])||retained["manifestHash"]?.Type!=JTokenType.String||!ModelLibrary.ValidHash((string)retained["manifestHash"]))throw Invalid("Invalid workspace activation identity.");
+            var origin=Selection(record["origin"] as JObject);var next=Selection(record["next"] as JObject);
+            if(origin.Revision!=(string)record["from"]||next.Revision==origin.Revision||next.Previous?.Generation!=(string)retained["generation"]||!next.Active.ReviewRequired||!next.Previous.ReviewRequired||next.Active.Generation==Original||next.Active.ReceiptEpoch==next.Previous.ReceiptEpoch||next.Active.Generation==origin.Active.Generation||next.Previous.Generation==origin.Active.Generation)throw Invalid("Invalid saved workspace activation boundary.");
+            return record;
+        }
+        bool Reserved(string id)
+        {
+            int count=0;
+            foreach(string folder in Directory.EnumerateDirectories(generations)) {
+                if(++count>MaximumGenerations)throw Invalid("Unexpected workspace retention count.");WorkspaceArchive.NoLink(folder);
+                string path=Path.Combine(folder,"activation.v1.json");if(!File.Exists(path))continue;
+                var record=ActivationRecord(path);if((string)record["next"]["active"]["generation"]!=Path.GetFileName(folder))throw Invalid("Invalid activation reservation location.");
+                if(Path.GetFileName(folder)==id||(string)record["retained"]["generation"]==id)return true;
+            }
+            return false;
         }
         public WorkspaceSelection RestorePrevious(string expectedRevision)
         {
@@ -203,7 +233,7 @@ namespace Maestro.Quest.Persistence
         public void DiscardPrepared(string id,string hash)
         {
             using var lease=Lease();var current=Load();string path=GenerationPath(id);
-            if(current.Active.Generation==id||current.Previous?.Generation==id||File.Exists(Path.Combine(path,"activation.v1.json")))throw Invalid("An activated or reserved workspace cannot be discarded as a preview.");
+            if(current.Active.Generation==id||current.Previous?.Generation==id||Reserved(id))throw Invalid("An activated or reserved workspace cannot be discarded as a preview.");
             if((string)Metadata(id)["manifestHash"]!=hash)throw Invalid("The prepared identity does not match.");DeleteOwned(path);
         }
         void DeleteOwned(string path)

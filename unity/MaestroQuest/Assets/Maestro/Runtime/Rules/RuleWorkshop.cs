@@ -33,8 +33,8 @@ namespace Maestro.Quest.Rules
         public RoomRules Runtime;
         public int Revision { get; private set; }=1;
         public bool ReadOnly => storage?.ReadOnly ?? false;
-        public bool CanUndo => !ReadOnly && undo.Count>0;
-        public bool CanRedo => !ReadOnly && redo.Count>0;
+        public bool CanUndo => editor && !editor.WriteGate.Frozen && !ReadOnly && undo.Count>0;
+        public bool CanRedo => editor && !editor.WriteGate.Frozen && !ReadOnly && redo.Count>0;
         public string Status { get; private set; } = "Create an action sequence, then add triggers or buttons";
         public event Action Changed, DocumentChanged;
         public bool HistoricalMotion(string id) => undo.Concat(redo).Any(x => x.sequences.Any(sequence => sequence.UsesMotion(id)));
@@ -115,13 +115,14 @@ namespace Maestro.Quest.Rules
         }
         public void Initialize(RoomEditor source, string saveDirectory = null)
         {
-            editor = source; string directory=saveDirectory ?? source.SaveDirectory;storage = new RuleStorage(directory);Modules=new ProgramModuleLibrary(directory);
+            editor = source; string directory=saveDirectory ?? source.SaveDirectory;storage = new RuleStorage(directory);Modules=new ProgramModuleLibrary(directory,source.WriteGate);
             document = storage.Load(out var message); sequenceIndex = document.sequences.Length > 0 ? 0 : -1;
             if (message != null) Status = message;
         }
         public void Say(string value) { Status = value; Changed?.Invoke(); }
         bool Edit(Action<RuleDocument> action, string message, bool placement = false)
         {
+            using var write=editor.WriteGate.TryWrite(out var blocked);if(write==null){Say(blocked);return false;}
             if (ReadOnly) { Say("Saved rules are unavailable for editing; original files are preserved"); return false; }
             if (!placement && Runtime && Runtime.AnyButtonHeld) { Say("Release your action buttons before editing rules"); return false; }
             var candidate = document.Copy(); action(candidate);
@@ -252,8 +253,8 @@ namespace Maestro.Quest.Rules
         {
             Edit(value => { int i = 0; foreach (var button in value.buttons) if (button.mount == ButtonMount.Room) { button.position = new Vector3(.28f+(i%6)*.09f,1.2f-(i/6)*.09f,.68f); button.rotation = Quaternion.identity; i++; } },"Room buttons brought back within reach");
         }
-        public void Undo() { if (ReadOnly || undo.Count == 0 || (Runtime && Runtime.AnyButtonHeld)) return; redo.Add(document); document = undo[^1]; undo.RemoveAt(undo.Count-1); Updated(); Say("Rule edit undone"); }
-        public void Redo() { if (ReadOnly || redo.Count == 0 || (Runtime && Runtime.AnyButtonHeld)) return; undo.Add(document); document = redo[^1]; redo.RemoveAt(redo.Count-1); Updated(); Say("Rule edit redone"); }
+        public void Undo() { using var write=editor.WriteGate.TryWrite(out var blocked);if(write==null){Say(blocked);return;} if (ReadOnly || undo.Count == 0 || (Runtime && Runtime.AnyButtonHeld)) return; redo.Add(document); document = undo[^1]; undo.RemoveAt(undo.Count-1); Updated(); Say("Rule edit undone"); }
+        public void Redo() { using var write=editor.WriteGate.TryWrite(out var blocked);if(write==null){Say(blocked);return;} if (ReadOnly || redo.Count == 0 || (Runtime && Runtime.AnyButtonHeld)) return; undo.Add(document); document = redo[^1]; redo.RemoveAt(redo.Count-1); Updated(); Say("Rule edit redone"); }
         void Update()
         {
             Modules?.Poll();

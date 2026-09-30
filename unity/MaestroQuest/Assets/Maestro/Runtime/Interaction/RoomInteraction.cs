@@ -9,6 +9,8 @@ namespace Maestro.Quest.Interaction
     public sealed class RoomInteraction : MonoBehaviour
     {
         public Transform Viewer;
+        Maestro.Quest.Persistence.WorkspaceWriteGate writes;
+        internal void ConfigureWrites(Maestro.Quest.Persistence.WorkspaceWriteGate gate){writes=gate;}
         readonly List<RoomItem> items = new();
         public event Action Restoring, Restored;
 
@@ -17,6 +19,7 @@ namespace Maestro.Quest.Interaction
 
         public void RestoreInFrontOfViewer()
         {
+            using var write=writes?.TryWrite(out _);if(writes!=null&&write==null)return;
             if (!Viewer) return;
             Restoring?.Invoke();
             var forward = Vector3.ProjectOnPlane(Viewer.forward, Vector3.up);

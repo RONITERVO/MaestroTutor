@@ -873,3 +873,17 @@ Rules and controls inherit the editor's selected data directory, while receipt
 history can use a fresh epoch. This is the enforcement prerequisite for reviewed
 restoration. Production generation selection, coherent accepted-edit retention,
 review completion and startup recovery are still being integrated.
+
+
+### 2026-10-01: accepted-edit retention boundary
+
+Native editors, library writes, import completion, physical selection and Recall now
+share an edit gate separate from the activity hold. Retention waits for complete
+accepted operations, finishes authoring, then captures current in-memory documents.
+Activation requires a separately verified retained snapshot and binds it with the
+import and origin selection in one recorded operation. A retry cannot substitute its
+previous workspace; reserved retention cannot be deleted as an unused preview.
+Native tests exercise accepted unsaved edits, async writer gaps, failure without
+owner destruction, and both sides of the pointer commit. These are reusable native
+services; production startup/switching, maintenance parity and content-bound review
+remain unfinished, and no device installation is included.

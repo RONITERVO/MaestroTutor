@@ -39,7 +39,7 @@ namespace Maestro.Quest.Rules
             var shape = GameObject.CreatePrimitive(PrimitiveType.Cube); shape.transform.SetParent(transform,false); shape.transform.localScale = new Vector3(.065f,.055f,.025f);
             shape.GetComponent<Collider>().enabled = false; ArtResources.Release(shape.GetComponent<Collider>()); shape.GetComponent<Renderer>().sharedMaterial = material; visual = shape.transform;
             var collider = gameObject.AddComponent<BoxCollider>(); collider.size = new Vector3(.075f,.065f,.035f); hit = collider;
-            item = gameObject.AddComponent<RoomItem>(); item.Configure(new Collider[] { collider },1,1); item.Grab.selectFilters.Add(this); item.GrabFinished += Placed;
+            item = gameObject.AddComponent<RoomItem>(); item.Configure(new Collider[] { collider },1,1); item.ConfigureWrites(source.Editor.WriteGate); item.Grab.selectFilters.Add(this); item.GrabFinished += Placed;
             var marking = new GameObject("Action name",typeof(TextMesh)); marking.transform.SetParent(shape.transform,false); marking.transform.localPosition = new Vector3(0,0,-.55f);
             // Compensate for the geometry's scale so the marking uses physical meters.
             marking.transform.localScale = new Vector3(1/.065f,1/.055f,1/.025f);

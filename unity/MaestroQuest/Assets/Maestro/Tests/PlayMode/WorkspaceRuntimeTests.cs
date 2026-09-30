@@ -9,6 +9,9 @@ using Maestro.Quest.Book;
 using Maestro.Quest.Creation;
 using Maestro.Quest.Interaction;
 using Maestro.Quest.Programs;
+using Maestro.Quest.Persistence;
+using Maestro.Quest.Imports;
+using System.Threading.Tasks;
 using Maestro.Quest.Rules;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
@@ -24,7 +27,7 @@ namespace Maestro.Quest.Tests
         RoomRuntimeGate gate;IDisposable review;ControllerFrame frame;
         [SetUp] public void Setup()
         {
-            directory=Path.Combine(Path.GetTempPath(),"MaestroRuntimeHold-"+Guid.NewGuid().ToString("N"));epoch=Path.Combine(directory,"action-epochs",Guid.NewGuid().ToString("N"));
+            directory=Path.Combine(Path.GetTempPath(),"MqHold-"+Guid.NewGuid().ToString("N"));epoch=Path.Combine(directory,"action-epochs",Guid.NewGuid().ToString("N"));
             objectId=Guid.NewGuid().ToString("N");sequenceId=Guid.NewGuid().ToString("N");
             var document=new RoomDocument {version=2,objects=new[]{new RoomObjectData {id="book",kind=RoomObjectKind.Book,position=new Vector3(0,1,1)},new RoomObjectData {id="maestro",kind=RoomObjectKind.Maestro,position=new Vector3(1,0,1)},new RoomObjectData {id=objectId,kind=RoomObjectKind.Assembly,position=new Vector3(2,1,1),recipe=RecipeTemplates.BoxRobot(true)}}};
             document.objects[2].recipe.playing=true;Assert.That(new RoomStorage(directory).Save(document,out var error),Is.True,error);
@@ -83,6 +86,71 @@ namespace Maestro.Quest.Tests
             var value=fresh.GetComponent<RecipeObject>();Assert.That(value.IsPlaying,Is.False);value.StartRule(true);yield return null;Assert.That(value.IsPlaying,Is.False);
             editor.Select(editor.Find(objectId));animations.Play();yield return null;Assert.That(animations.IsPlaying,Is.False);StringAssert.Contains("Review",animations.Status);
             review.Dispose();review=null;yield return null;Assert.That(value.IsPlaying,Is.False);value.Restart();Assert.That(value.IsPlaying,Is.True);
+        }
+        [UnityTest] public IEnumerator PreservationCapturesAcceptedEditsAndExcludesEveryNativeEditorUntilReleased()
+        {
+            workshop.Modules.Flush();while(avatar.ModelBusy)yield return null;
+            workshop.AddButton(ButtonMount.Room);workshop.ToggleRepeat();
+            var module=ProgramModuleLibrary.Definition(BehaviourProgram.FromSteps(new RuleStep {action=RuleActionKind.Wait,seconds=1}),"One pause",new[]{"main"});
+            var published=workshop.Modules.Publish(module);workshop.Modules.Flush();Assert.That(published.Error,Is.Null);
+            var objectData=editor.Read(objectId);objectData.name="Accepted before autosave";
+            Assert.That(editor.ApplyAgentEdit(editor.Revision,new[]{objectData},Array.Empty<string>(),out var error),Is.True,error);
+            Assert.That(editor.HasUnsavedChanges,Is.True);Assert.That(workshop.HasUnsavedChanges,Is.True);
+            var preferences=controls.Preferences;preferences.deadZone=.3f;Assert.That(controls.Apply(preferences),Is.True);
+            var before=JsonUtility.ToJson(editor.Snapshot());var behaviourBefore=JsonUtility.ToJson(workshop.Snapshot());var revision=editor.Revision;var ruleRevision=workshop.Revision;
+            Assert.That(WorkspaceEditHold.TryAcquire(editor,workshop,controls,out var hold,out error),Is.True,error);
+            using(hold) {
+                Assert.That(editor.WriteGate.Frozen,Is.True);Assert.That(gate.Held,Is.True);
+                Assert.That(editor.MoveObject(objectId,Vector3.one,out error),Is.False);StringAssert.Contains("preserved",error);
+                Assert.That(editor.ApplyAgentEdit(editor.Revision,new[]{objectData},Array.Empty<string>(),out error),Is.False);
+                editor.Undo();editor.Redo();editor.SaveNow();editor.RememberPlacement(objectId);
+                Assert.That(editor.BeginTemporaryRoom(out error),Is.False);Assert.That(controls.Apply(new ControllerPreferences()),Is.False);
+                Assert.That(editor.ActivityProfiles.Undo(new string('a',64),out error),Is.False);StringAssert.Contains("preserved",error);
+                workshop.NewSequence();workshop.ToggleRepeat();workshop.Undo();workshop.Redo();
+                Assert.That(workshop.Execute(new RuleRequest {action="undo",revision=workshop.Revision},out error,out _),Is.False);StringAssert.Contains("preserved",error);
+                Assert.Throws<ProgramFault>(()=>workshop.Modules.Publish(module));Assert.Throws<ProgramFault>(()=>workshop.Modules.Remove(published.Hash));
+                var asset=ModelLibrary.Inspect("Example.glb",ModelFixture.Mixamo());var modelWrite=editor.Models.SaveAsync(asset);var motionWrite=editor.Motions.ImportAsync("Example.glb",asset.Bytes);
+                while(!modelWrite.IsCompleted||!motionWrite.IsCompleted)yield return null;
+                Assert.That(modelWrite.Exception?.GetBaseException(),Is.TypeOf<InvalidOperationException>());Assert.That(motionWrite.Exception?.GetBaseException(),Is.TypeOf<InvalidOperationException>());
+                Assert.That(editor.Find(objectId).Process(null,null),Is.False);Assert.That(root.GetComponentInChildren<RuleButton>().GetComponent<RoomItem>().Process(null,null),Is.False);
+                var room=root.GetComponent<RoomInteraction>();var position=room.transform.position;room.RestoreInFrontOfViewer();Assert.That(room.transform.position,Is.EqualTo(position));
+                FocusRoundTrip();Assert.That(editor.WriteGate.Frozen,Is.True);Assert.That(editor.Revision,Is.EqualTo(revision));Assert.That(workshop.Revision,Is.EqualTo(ruleRevision));
+                var capture=WorkspaceArchiveCapture.Start(editor,workshop,controls,Path.Combine(directory,"private-retention"));while(!capture.IsCompleted)yield return null;
+                Assert.That(capture.IsFaulted,Is.False,capture.Exception?.ToString());var captured=capture.GetAwaiter().GetResult();
+                try {
+                    var store=new WorkspaceGenerationStore(Path.Combine(directory,"g"));
+                    var preparation=Task.Run(()=>{using var archive=File.OpenRead(captured.Path);return store.Prepare(archive);});while(!preparation.IsCompleted)yield return null;
+                    var retained=preparation.GetAwaiter().GetResult();var imported=Task.Run(()=>{using var archive=File.OpenRead(captured.Path);return store.Prepare(archive);});while(!imported.IsCompleted)yield return null;
+                    var destination=imported.GetAwaiter().GetResult();var activation=Task.Run(()=>store.Activate(destination.Id,destination.Receipt.ManifestHash,"initial",retained.Id,retained.Receipt.ManifestHash));while(!activation.IsCompleted)yield return null;
+                    var selected=activation.GetAwaiter().GetResult();string previous=store.DataDirectory(selected.Previous);
+                    Assert.That(JsonUtility.ToJson(new RoomStorage(previous).Load(out error)),Is.EqualTo(before));Assert.That(error,Is.Null);
+                    Assert.That(JsonUtility.ToJson(new RuleStorage(previous).Load(out error)),Is.EqualTo(behaviourBefore));Assert.That(error,Is.Null);
+                    Assert.That(new ControllerPreferenceStorage(previous).Load(out error).deadZone,Is.EqualTo(.3f));Assert.That(error,Is.Null);
+                    Assert.That(File.Exists(Path.Combine(previous,"program-modules.v1",published.Hash+".json")),Is.True);Assert.That(selected.Previous.ReviewRequired,Is.True);
+                }finally{File.Delete(captured.Path);}
+                Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(before));Assert.That(JsonUtility.ToJson(workshop.Snapshot()),Is.EqualTo(behaviourBefore));
+            }
+            Assert.That(editor.WriteGate.Frozen,Is.False);Assert.That(gate.Held,Is.True,"The independent review lease still owns its activity hold");
+            Assert.That(editor.Find(objectId).Process(null,null),Is.True);Assert.That(editor.MoveObject(objectId,new Vector3(3,1,1),out var editError),Is.True,editError);
+        }
+        [UnityTest] public IEnumerator InProgressStrokeBlocksPreservationAndFailedCaptureKeepsLiveOwnersAndEdits()
+        {
+            workshop.Modules.Flush();while(avatar.ModelBusy)yield return null;
+            review.Dispose();review=null;
+            var drawing=root.AddComponent<SpatialDrawing>();drawing.Editor=editor;editor.ToggleDrawing();drawing.Begin(0,new Ray(Vector3.zero,Vector3.forward));drawing.Move(0,new Ray(Vector3.right*.02f,Vector3.forward));
+            Assert.That(drawing.IsDrawing,Is.True);Assert.That(WorkspaceEditHold.TryAcquire(editor,workshop,controls,out _,out var error),Is.False);Assert.That(gate.Held,Is.False);
+            drawing.End(0);Assert.That(editor.Snapshot().objects.Any(x=>x.kind==RoomObjectKind.Drawing),Is.True);
+            var accepted=JsonUtility.ToJson(editor.Snapshot());var originalOwner=editor;
+            Assert.That(WorkspaceEditHold.TryAcquire(editor,workshop,controls,out var hold,out error),Is.True,error);
+            using(hold) {
+                var blocked=Path.Combine(directory,"blocked-output");File.WriteAllText(blocked,"Keep this file");
+                var capture=WorkspaceArchiveCapture.Start(editor,workshop,controls,blocked);while(!capture.IsCompleted)yield return null;
+                Assert.That(capture.IsFaulted,Is.True);_=capture.Exception;
+                Assert.That(editor,Is.SameAs(originalOwner));Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(accepted));Assert.That(File.ReadAllText(blocked),Is.EqualTo("Keep this file"));
+                Assert.That(editor.WriteGate.Frozen,Is.True);Assert.That(editor.Models.TryCaptureArchive(out var models),Is.True);models.Dispose();
+            }
+            Assert.That(editor.WriteGate.Frozen,Is.False);Assert.That(gate.Held,Is.False);Assert.That(recipe.IsPlaying,Is.False);Assert.That(physics.Running,Is.False);
+            editor.Undo();Assert.That(editor.Snapshot().objects.Any(x=>x.kind==RoomObjectKind.Drawing),Is.False,"Failed preservation leaves ordinary Undo usable");
         }
         [UnityTearDown] public IEnumerator Cleanup()
         {

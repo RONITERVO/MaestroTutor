@@ -81,6 +81,7 @@ namespace Maestro.Quest.Rules
                 bool started=Runtime.Trigger(request.target);error=Status;return started;
             }
             if(request.action=="undo" || request.action=="redo") {
+                using var write=editor.WriteGate.TryWrite(out error);if(write==null)return false;
                 if(ReadOnly || Runtime && Runtime.AnyButtonHeld) {error="Release buttons and open editable rules before changing history";return false;}
                 bool undoing=request.action=="undo";
                 if(undoing ? !CanUndo : !CanRedo) {error="There is no behaviour edit to "+request.action;return false;}
