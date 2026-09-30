@@ -1298,3 +1298,14 @@ restart the app, and verify saved callers still run their embedded definitions.
 Confirm damaged entries show an individual diagnostic and other entries remain usable.
 Check readable labels, comfortable scrolling, controller/hand input and operation
 status on device. PC replay and native tests do not replace this acceptance.
+
+### Physical motion events (pending headset acceptance)
+
+With a scanned floor, use the shared event block to wait for a solid/bouncy ball to
+settle, then change its colour. Check that both rolling and spinning postpone the
+reaction until the quiet period. Test report versus baseline initial policy. Hold
+the ball, pause physics, and interrupt with an animation: none may report false rest.
+Release/resume and check fresh qualification, then throw again and detect moving.
+Change a threshold in the book and through the agent; inspect the same saved source
+and measured fields. Stop and app pause must cancel without automatic replay. Check
+readability of units/help and behaviour under real headset frame timing.

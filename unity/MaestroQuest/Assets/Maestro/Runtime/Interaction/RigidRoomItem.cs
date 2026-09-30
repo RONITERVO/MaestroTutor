@@ -36,6 +36,14 @@ namespace Maestro.Quest.Interaction
             if(!float.IsFinite(point.sqrMagnitude)||!float.IsFinite(speed))return;
             ContactStarted.Invoke(item,collision.collider,point,speed);
         }
+        public uint MotionRevision {get;private set;}
+        public bool TryReadMotion(out bool available,out float speed,out float angularSpeed) {
+            available=false;speed=angularSpeed=0;
+            if(!isActiveAndEnabled||!body||!item||!item.isActiveAndEnabled||!item.Grab||!Dynamic)return false;
+            available=Allowed&&!item.Grab.isSelected&&!body.isKinematic;
+            if(available){speed=body.linearVelocity.magnitude;angularSpeed=body.angularVelocity.magnitude;}
+            return float.IsFinite(speed)&&float.IsFinite(angularSpeed);
+        }
         public bool GeometryReady => geometryReady;
         public bool Dynamic => profile != ItemPhysics.Fixed;
         public bool Simulating => body && !body.isKinematic;
@@ -53,7 +61,8 @@ namespace Maestro.Quest.Interaction
         }
         public void Configure(RoomPhysicsWorld source, ItemPhysics value, float mass)
         {
-            if (world != source) { if (world) world.Changed -= Refresh; world = source; if (world) world.Changed += Refresh; }
+            if(world!=source||profile!=value||body.mass!=Mathf.Clamp(mass,.05f,20))MotionRevision++;
+            if (world != source) { if (world) world.Changed -= PhysicsChanged; world = source; if (world) world.Changed += PhysicsChanged; }
             profile = value; body.mass = Mathf.Clamp(mass, .05f, 20);
             material.bounciness = value == ItemPhysics.Bouncy ? .72f : .1f;
             material.dynamicFriction = value == ItemPhysics.Bouncy ? .45f : .6f;
@@ -63,17 +72,18 @@ namespace Maestro.Quest.Interaction
             foreach (var collider in item.Grab.colliders) if (collider) collider.sharedMaterial = material;
             Refresh();
         }
-        public void SetGeometryReady(bool ready) { geometryReady = ready; Refresh(); }
+        public void SetGeometryReady(bool ready) { if(geometryReady!=ready)MotionRevision++;geometryReady = ready; Refresh(); }
         public void SetAnimationOwner(object owner, bool owns)
         {
-            if (owns) owners.Add(owner); else owners.Remove(owner);
+            bool changed=owns?owners.Add(owner):owners.Remove(owner);if(changed)MotionRevision++;
             Refresh();
         }
+        void PhysicsChanged(){MotionRevision++;Refresh();}
         bool Allowed => Dynamic && geometryReady && owners.Count == 0 && world && world.CanSimulate(transform.position);
-        void Grabbed(SelectEnterEventArgs _) { canceled = false; wasMoving = true; }
+        void Grabbed(SelectEnterEventArgs _) { MotionRevision++;canceled = false; wasMoving = true; }
         void Released(SelectExitEventArgs args)
         {
-            canceled = args.isCanceled;
+            MotionRevision++;canceled = args.isCanceled;
             if (canceled) { StopVelocity(); item.Grab.throwOnDetach = false; }
             Refresh();
         }
@@ -101,7 +111,7 @@ namespace Maestro.Quest.Interaction
         }
         public void Teleported()
         {
-            StopVelocity(); canceled = true;
+            MotionRevision++;StopVelocity(); canceled = true;
             lastGoodPosition = transform.position; lastGoodRotation = transform.rotation;
             if (body) { body.position = transform.position; body.rotation = transform.rotation; }
             Refresh();
@@ -154,10 +164,10 @@ namespace Maestro.Quest.Interaction
             if (moving) { quietSince = Time.unscaledTime; wasMoving = true; }
             else if (wasMoving && Time.unscaledTime - quietSince > .6f) { wasMoving = false; Settled?.Invoke(item); }
         }
-        void OnDisable() { StopVelocity(); if (body) { body.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative; body.isKinematic = true; body.useGravity = false; } }
+        void OnDisable() { MotionRevision++;StopVelocity(); if (body) { body.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative; body.isKinematic = true; body.useGravity = false; } }
         void OnDestroy()
         {
-            if (world) world.Changed -= Refresh;
+            if (world) world.Changed -= PhysicsChanged;
             if (item && item.Grab) { item.Grab.firstSelectEntered.RemoveListener(Grabbed); item.Grab.lastSelectExited.RemoveListener(Released); }
             ArtResources.Release(material);
         }

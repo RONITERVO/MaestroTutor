@@ -307,3 +307,13 @@ it('shows a native qualified module block as running without exposing an edit bu
  const screen=render(<ProgramEditor source={source} targets={[]} onChange={()=>{}} onEditingChange={()=>{}} run={{id:'a'.repeat(32),sequenceId:'b'.repeat(32),preparing:false,nodeId:'first.inner.change',functionName:'first.inner.privateAdd',status:'Running',state:[{name:'first.inner.count',type:'number',value:'3'}]}}/>);
  expect(screen.container.querySelector('[data-node-id="first.inner.change"]')?.className).toContain('rule-action-active');expect(screen.getByLabelText('Live program values').textContent).toContain('state.first.inner.count');expect(screen.queryByLabelText('Edit values first.inner.change')).toBeNull();
 });
+
+it('edits physics motion observations using native-generated fields and preserves the reaction',()=>{
+ const initial=JSON.parse(readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-physics-motion.json','utf8'));
+ const h=harness(initial,[{id:'b'.repeat(32),name:'Ball'},{id:'book',name:'Book'}]);h.click('Edit values settling');
+ expect(h.screen.getByRole('group',{name:'Event subscription'})).toBeTruthy();expect([...h.screen.getByLabelText('Object').querySelectorAll('option')].some(x=>x.value==='book')).toBe(false);
+ h.change('Speed threshold (m/s)','.03');h.change('Spin threshold (rad/s)','.2');h.change('Quiet period (seconds)','.8');h.change('Detect','either');h.change('When watching starts','baseline');
+ h.change('Speed threshold (m/s) input mode','expression');h.change('Speed threshold (m/s) source','var:speed');h.change('Event field angularSpeed','');h.click('Update draft');
+ const result=JSON.parse(h.source());expect(result.functions[0].body[0]).toMatchObject({arguments:{speedThreshold:.03,angularThreshold:.2,quietSeconds:.8,transition:'either',initial:'baseline'},bindings:{speedThreshold:{var:'speed'}},fields:{settled:'settled',speed:'speed',quietSeconds:'quiet'}});
+ expect(result.functions[0].body.slice(1)).toEqual(initial.functions[0].body.slice(1));expect(parseProgram(h.source()).error).toBeNull();
+});

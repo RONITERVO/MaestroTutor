@@ -122,3 +122,11 @@ it('shares strict versioned subscription inputs and gates the native producer',(
  expect(parseProgram(JSON.stringify(p)).error).toBeNull(); // Native revalidates computed values when the wait starts.
  p.functions[0].body[0].body[0].event='object.collided';expect(parseProgram(JSON.stringify(p)).program).toBeNull();
 });
+
+it('uses catalog validation for motion thresholds, initial-state policy and measured fields',()=>{
+ const source=readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-physics-motion.json','utf8');expect(parseProgram(source).error).toBeNull();
+ for(const edit of [(w:any)=>{w.arguments.speedThreshold=0;},(w:any)=>{w.arguments.angularThreshold=6;},(w:any)=>{w.arguments.quietSeconds=11;},(w:any)=>{w.arguments.initial='automatic';},(w:any)=>{w.arguments.transition='idle';},(w:any)=>{w.source='book';},(w:any)=>{w.fields.speed='settled';},(w:any)=>{w.fields.madeUp='quiet';}]){
+  const p=JSON.parse(source);edit(p.functions[0].body[0]);expect(parseProgram(JSON.stringify(p)).program).toBeNull();
+ }
+ const p=JSON.parse(source);p.functions[0].body[0].bindings={speedThreshold:{var:'speed'}};expect(parseProgram(JSON.stringify(p)).error).toBeNull();
+});

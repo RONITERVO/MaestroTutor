@@ -114,6 +114,31 @@ namespace Maestro.Quest.Tests
             Assert.That(runtime.Scheduler.RunningCount,Is.Zero);Assert.That(physics.Running,Is.False);
         }
 
+        [UnityTest] public IEnumerator PhysicalSettlingPaintsTheBallAndANewThrowWakesTheSameCanonicalProgram()
+        {
+            RoomPhysicsLayers.Configure();var floor=GameObject.CreatePrimitive(PrimitiveType.Cube);floor.transform.SetParent(root.transform,false);floor.transform.position=new Vector3(3,-.1f,3);floor.transform.localScale=new Vector3(6,.2f,6);floor.layer=RoomPhysicsLayers.Scanned;
+            var data=editor.Snapshot().objects.Single(x=>x.kind==RoomObjectKind.Ball);var ball=editor.Find(data.id);var rigid=ball.GetComponent<RigidRoomItem>();
+            Assert.That(editor.MoveObject(data.id,new Vector3(3,1.2f,3),out var error),Is.True,error);
+            Assert.That(editor.SetItemPhysics(data.id,new ObjectPhysicsSettings {mode="solid",shape="sphere",mass=.6f}),Is.True,editor.Status);
+            string source=File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-physics-motion.json")).Replace(new string('b',32),data.id);
+            var executor=new RoomAgentExecutor(editor);var sequence=new RuleSequence {id="",name="React to settling",program=source};
+            Assert.That(executor.Execute(new RoomAgentRequest {version=2,commands=new[]{new RoomAgentCommand {action="rules",rule=new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="save",reference="motion",sequence=sequence}}}}}},out error,out var created),Is.True,error);
+            string id=created.Single();int revision=workshop.Revision;var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);
+            void Evidence(string phase){string output=Environment.GetEnvironmentVariable("MAESTRO_MOTION_EVENT_EVIDENCE");if(string.IsNullOrEmpty(output))return;Directory.CreateDirectory(output);var state=observer.Observe();state.visible=true;state.workspaceView="rules";state.rules=workshop.Observe(true);File.WriteAllText(Path.Combine(output,phase+".json"),RoomAgentWire.Serialize(state));}
+            Assert.That(runtime.Trigger(id),Is.True);yield return new WaitForSeconds(.4f);
+            Assert.That(runtime.Scheduler.ObserveRuns().Single().nodeId,Is.EqualTo("settling"),"Paused velocity zero must not be reported as landed");Evidence("paused-physics");
+            Physics.SyncTransforms();physics.SetSurfaces(true,"Synthetic floor ready");physics.StartPhysics();Evidence("falling");
+            for(int i=0;i<400&&!runtime.Scheduler.ObserveRuns().Any(r=>r.nodeId=="moving");i++)yield return new WaitForFixedUpdate();
+            var run=runtime.Scheduler.ObserveRuns().Single();Assert.That(run.nodeId,Is.EqualTo("moving"),runtime.Scheduler.LastError);Assert.That(run.state.Single(x=>x.name=="landed").value,Is.EqualTo("True"));
+            Assert.That(float.Parse(run.state.Single(x=>x.name=="quiet").value,System.Globalization.CultureInfo.InvariantCulture),Is.GreaterThanOrEqualTo(.3f));Assert.That(editor.Read(data.id).color.g,Is.EqualTo(.8f).Within(.001f));Assert.That(ball.transform.position.y,Is.LessThan(.15f));Evidence("settled");
+            uint epoch=rigid.MotionRevision;Assert.That(rigid.Launch(new Vector3(0,2,0),Vector3.up),Is.True);Assert.That(rigid.MotionRevision,Is.EqualTo(epoch),"A physical impulse must not hide a motion transition by resetting the baseline");
+            for(int i=0;i<80&&!runtime.Scheduler.ObserveRuns().Any(r=>r.nodeId=="finish");i++)yield return new WaitForFixedUpdate();
+            run=runtime.Scheduler.ObserveRuns().Single();Assert.That(run.state.Single(x=>x.name=="movingAgain").value,Is.EqualTo("True"));Evidence("moving");Assert.That(workshop.Revision,Is.EqualTo(revision));Assert.That(workshop.Selected.program,Is.EqualTo(source));
+            runtime.StopAll();physics.PausePhysics();Assert.That(runtime.Trigger(id),Is.True);yield return new WaitForSeconds(.4f);Assert.That(runtime.Scheduler.ObserveRuns().Single().nodeId,Is.EqualTo("settling"));
+            root.SendMessage("OnApplicationPause",true,SendMessageOptions.DontRequireReceiver);Evidence("paused-app");root.SendMessage("OnApplicationPause",false,SendMessageOptions.DontRequireReceiver);yield return null;Assert.That(runtime.Scheduler.RunningCount,Is.Zero);
+            Assert.That(runtime.Trigger(id),Is.True);ball.gameObject.SetActive(false);yield return new WaitForSeconds(.15f);Assert.That(runtime.Scheduler.RunningCount,Is.Zero);Assert.That(runtime.Scheduler.LastError,Does.Contain("disabled"));Evidence("missing");
+        }
+
         [UnityTest] public IEnumerator ProximityCrossingsDriveRecordedMotionAndRetainTheSharedProgram()
         {
             var a=editor.Find("maestro");var b=editor.Find("book");a.transform.position=new Vector3(4,1,4);b.transform.position=a.transform.position+Vector3.right;

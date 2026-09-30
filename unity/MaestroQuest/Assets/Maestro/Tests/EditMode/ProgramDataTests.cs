@@ -11,6 +11,13 @@ namespace Maestro.Quest.Tests
 {
  public sealed class ProgramDataTests
  {
+  [Test] public void ScalarReadbackKeepsClrTypesAndStructuredValuesStayDetached(){
+   Assert.That(new ProgramValue("ball").Value,Is.TypeOf<string>().And.EqualTo("ball"));
+   Assert.That(new ProgramValue(false).Value,Is.TypeOf<bool>().And.EqualTo(false));
+   Assert.That(new ProgramValue(2d).Value,Is.TypeOf<double>().And.EqualTo(2d));
+   Assert.That(default(ProgramValue).Value,Is.Null);
+   var record=ProgramValue.Literal(new JObject {["name"]="ball"});var copy=(JObject)record.Value;copy["name"]="changed";Assert.That((string)((JObject)record.Value)["name"],Is.EqualTo("ball"));
+  }
   static string Fixture(string name)=>File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/"+name+".json"));
   static ProgramMachine Machine(JObject source){Assert.That(BehaviourProgram.TryParse(source.ToString(),out var program,out var error),Is.True,error);return new ProgramMachine(program,null);}
   [Test] public void SharedStructuredContractsAgree(){foreach(var item in JObject.Parse(Fixture("program-data-contract"))["cases"])Assert.That(BehaviourProgram.TryParse((string)item["source"],out _,out var error),Is.EqualTo((bool)item["valid"]),(string)item["name"]+": "+error);}

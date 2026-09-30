@@ -312,5 +312,73 @@ The browser displays the actual native values and pause result; its surrounding 
 and command acknowledgements are synthetic. Screenshots were inspected. Headset and
 real-provider acceptance remain open; no APK installation is included.
 
-Shared versioned function libraries, coordinated record-field renames, cross-container
-block movement, richer subscriptions and the broader v1 release gates remain unfinished.
+Managed pinned function libraries are now implemented; see QUEST_PROGRAM_MODULES.md.
+Coordinated record-field renames, cross-container block movement, richer subscriptions
+and the broader v1 release gates remain unfinished.
+
+## Physical motion observations (2026-09-30)
+
+The registered `object.motion.changed` event uses the same private subscription,
+versioned schema, computed scalar inputs, typed fields, queue, timeouts and native
+program machine as proximity. It adds no agent tool or separate interpreter. Book
+controls derive from its native schema, including readable labels, units and help.
+Search/inspect describes the identical contract to the agent. Saving never watches
+or starts a reaction.
+
+Arguments name one created room `target`, `speedThreshold` (0.005–1 m/s),
+`angularThreshold` (0.01–5 rad/s), `quietSeconds` (0.1–10), `transition`
+(`settled`, `moving`, `either`) and `initial` (`baseline`, `report`). The ordinary
+source filter must be empty. The target needs solid/bouncy physics; missing,
+disabled, fixed or invalid targets fail explicitly. Observing its ID gives no
+permission to edit it.
+
+Settling requires both speeds at or below their thresholds for the whole observed
+quiet period. Once settled, either speed at or above twice its threshold changes
+the state to moving; this band prevents jitter. `baseline` uses the first eligible
+measurement as a quiet/moving baseline without sending an event. `report` can emit
+the current qualifying state, but a quiet measurement still needs the full quiet
+period before a settled report. Filtering one transition still updates internal
+state, so a later qualifying transition is not lost.
+
+Held objects, carried props, animation ownership, loading collision geometry and
+paused/unready physics are temporarily ineligible. They produce no event and do
+not accumulate quiet time. Native eligibility/placement revisions capture brief
+ownership, teleport or physics discontinuities even between samples. A replacement
+object instance also resets the observation. Normal launches and changes of velocity
+do not reset the baseline: a throw must remain observable as new motion. An
+unrelated colour edit does not change the motion revision.
+
+Each new eligible observation window applies the chosen initial policy again.
+Thus report can qualify a fresh current rest after physics resumes, using a new
+quiet period; baseline waits for a subsequent transition. This is not replay of
+previous motion. App pause still cancels the whole program through the existing
+runtime policy, with no automatic restart.
+
+Each watch samples at most ten times per second. A gap over 0.3 seconds resets its
+baseline and quiet period rather than claiming uninterrupted observation. There is
+no catch-up. Motion between samples may be missed. The event means measured speed
+was low; it does not prove floor support, a particular contact, reachable placement
+or permanent rest. Physical velocities come from the actual native Rigidbody,
+including spin, rather than transform guesses or an LLM. The existing eight-watch
+limit applies; polling allocates fields only on a qualifying event.
+
+The primary value is the target ID. Fields are `settled` (boolean), `speed`
+(m/s), `angularSpeed` (rad/s) and `quietSeconds` (observed quiet duration; zero for
+moving). They are copied into chosen compatible locals. Timeout retains previous
+payload values with received=false. Stop/disposal prevents further sampling;
+queue overflow drops the transition without replay.
+
+`program-physics-motion.json` demonstrates waiting for rest, painting the same
+explicitly declared ball, then waiting for it to move again. A PlayMode integration
+runs that exact program with real gravity and a synthetic floor, verifies no false
+rest while physics is paused, observes the colour change after landing, launches a
+new throw and observes the next wait, then checks app pause and disabled targets.
+EditMode checks cover spin, thresholds, hysteresis, both initial policies,
+unavailability, revision/replacement/gap resets, sampling bounds and invalid values.
+A shared-value regression also verifies native scalar readback remains CLR
+string/number/boolean, with structured values detached; implicit JSON conversions
+previously boxed scalar readback as JValue.
+
+The browser probe edits thresholds with their units and displays actual native rest,
+new-throw, pause and failure observations. It performs no Unity execution or command
+acknowledgement. Quest timing/comfort and real-provider acceptance remain pending.

@@ -68,7 +68,8 @@ namespace Maestro.Quest.Programs
         public ProgramValue(bool value){shape=ProgramType.Boolean;Boolean=value;Number=0;Text=null;data=null;Nodes=1;Characters=5;}
         public ProgramValue(string value){shape=ProgramType.Text;Text=value;Number=0;Boolean=false;data=null;Nodes=1;Characters=JsonConvert.ToString(value).Length;}
         ProgramValue(JToken value,ProgramDataType type,int nodes,int characters){shape=type;data=value.DeepClone();Number=0;Boolean=false;Text=null;Nodes=nodes;Characters=characters;}
-        public object Value=>Type.Kind switch {ProgramType.Number=>Number,ProgramType.Boolean=>Boolean,ProgramType.Text=>Text,ProgramType.List or ProgramType.Record=>data.DeepClone(),_=>null};
+        // Box scalar arms explicitly: JToken implicit conversions otherwise make the whole switch return JSON wrappers.
+        public object Value=>Type.Kind switch {ProgramType.Number=>(object)Number,ProgramType.Boolean=>(object)Boolean,ProgramType.Text=>(object)Text,ProgramType.List or ProgramType.Record=>data.DeepClone(),_=>null};
         public string Display=>data!=null?data.ToString(Formatting.None):Convert.ToString(Value,System.Globalization.CultureInfo.InvariantCulture);
         public static ProgramValue Literal(JToken value,ProgramDataType declared=null) {
             var type=declared??ProgramDataType.Infer(value);int nodes=0;

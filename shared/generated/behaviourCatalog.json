@@ -2637,6 +2637,120 @@
   ],
   "events": [
     {
+      "id": "object.motion.changed",
+      "version": 1,
+      "label": "Object physics motion changed",
+      "activity": null,
+      "objectEvent": false,
+      "valueType": "text",
+      "description": "Observes an explicit solid/bouncy room object's physical velocity, at most 10 samples/second. Source filter must be empty. Settled requires both speed <= speedThreshold (metres/second) and angular speed <= angularThreshold (radians/second) for quietSeconds. After settling, moving starts at twice either threshold; this hysteresis suppresses jitter. Transition selects settled, moving or either. Initial baseline suppresses the current state; report emits the first qualifying state (settled still requires the quiet period). Missing/disabled/non-dynamic objects or invalid readings fail. Held, carried, animation-owned, unready or paused physics emits nothing. Each new eligible window after ownership/physics/placement changes, replacement or a sample gap over 0.3 seconds resets the baseline and quiet period, applying the initial policy again. No catch-up or old quiet time is replayed. Value is the object ID; fields are settled, speed, angularSpeed and quietSeconds measured at delivery. Sampling can miss motion between samples; settled is a threshold observation, not proof of support/contact or a permanent rest. It grants no edit authority.",
+      "features": [
+        "eventPrograms.v1",
+        "eventFields.v1",
+        "eventSubscriptions.v1"
+      ],
+      "fields": {
+        "type": "object",
+        "properties": {
+          "settled": {
+            "type": "boolean"
+          },
+          "speed": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1000000.0
+          },
+          "angularSpeed": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1000000.0
+          },
+          "quietSeconds": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 3600.0
+          }
+        },
+        "required": [
+          "settled",
+          "speed",
+          "angularSpeed",
+          "quietSeconds"
+        ],
+        "additionalProperties": false
+      },
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object",
+            "title": "Object",
+            "description": "Choose a creation with solid or bouncy physics."
+          },
+          "speedThreshold": {
+            "type": "number",
+            "minimum": 0.005,
+            "maximum": 1.0,
+            "title": "Speed threshold (m/s)",
+            "description": "Motion below this speed can qualify as settled. Moving again uses twice this threshold."
+          },
+          "angularThreshold": {
+            "type": "number",
+            "minimum": 0.01,
+            "maximum": 5.0,
+            "title": "Spin threshold (rad/s)",
+            "description": "Rotation must also stay below this limit. Moving again uses twice this threshold."
+          },
+          "quietSeconds": {
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 10.0,
+            "title": "Quiet period (seconds)",
+            "description": "Both speeds must remain low for this long. Held, paused or interrupted time does not count."
+          },
+          "transition": {
+            "type": "string",
+            "enum": [
+              "settled",
+              "moving",
+              "either"
+            ],
+            "title": "Detect",
+            "description": "Choose which qualifying motion state should wake the program."
+          },
+          "initial": {
+            "type": "string",
+            "enum": [
+              "baseline",
+              "report"
+            ],
+            "title": "When watching starts",
+            "description": "Baseline waits for a later change. Report also reports the current state; settling still needs the full quiet period. This choice applies again after interrupted observation."
+          }
+        },
+        "required": [
+          "target",
+          "speedThreshold",
+          "angularThreshold",
+          "quietSeconds",
+          "transition",
+          "initial"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000",
+        "speedThreshold": 0.05,
+        "angularThreshold": 0.1,
+        "quietSeconds": 0.6,
+        "transition": "settled",
+        "initial": "report"
+      }
+    },
+    {
       "id": "maestro.speaking.enter",
       "version": 1,
       "label": "Speaking",
@@ -3076,7 +3190,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "2c6e95addc0d06719eb7ef3c9085bfe58853a95f5d3b45e04dd7aa1643542d27"
+      "sha256": "8f3720c5ea840f51ebe6d332bd75f1924f19bd8dcb749ae919fa1eaac3dfac42"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -3091,8 +3205,12 @@
       "sha256": "6c38762b122ec0b22b9b29c73bbde4e5ee3eeee5ba4318a602e102075521b6b6"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/PhysicsMotionSubscription.cs",
+      "sha256": "1958c8cbc6fcd40bbdde8bb69cd618a3c0bf405a203065cc2084b7bb7111c1a0"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramData.cs",
-      "sha256": "a0d3d0925072f3e7cedea6c5805d8dff02402f545b19060b34526809d45d57c1"
+      "sha256": "63f6e6c6e6268dd1ebd9bd552aa333b1f05a094ecf53352fb9a42c8248e3e11d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramModules.cs",

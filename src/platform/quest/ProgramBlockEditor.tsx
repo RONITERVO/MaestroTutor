@@ -102,10 +102,11 @@ export function ProgramBlockEditor({node,program,fn,objects,onChange,eventFields
         {selected?.objectEvent&&<label>Event object<select aria-label="Event object" value={node.source} onChange={e=>onChange({...node,source:e.target.value})}><option value="">Any object</option>{objects.map(o=><option key={o.id} value={o.id}>{o.name??o.id}</option>)}</select></label>}
         {definition?.input&&<fieldset disabled={!eventSubscriptionsSupported}><legend>Event subscription</legend><p>Inputs are evaluated when the wait starts and stay fixed until it ends.</p>
           {Object.entries(definition.input.properties??{}).map(([key,schema])=>{
-            const type=eventArgumentType(node.event,key),bound=node.bindings?.[key];
+            const type=eventArgumentType(node.event,key),bound=node.bindings?.[key],label=schema.title??'Event '+key;
             return <div key={key}>
-              {type&&<label>{key} input<select aria-label={'Event '+key+' input mode'} value={bound?'expression':'literal'} onChange={e=>{const bindings={...node.bindings};if(e.target.value==='expression')bindings[key]={value:defaultValue(type)};else delete bindings[key];onChange({...node,bindings});}}><option value="literal">Value</option><option value="expression">Variable or calculation</option></select></label>}
-              {bound&&type?expr('Event '+key,bound,type,value=>onChange({...node,bindings:{...node.bindings,[key]:value}})):<CapabilityFields label={'Event '+key} schema={schema} value={node.arguments?.[key]} objects={objects} onChange={value=>onChange({...node,arguments:{...node.arguments,[key]:value}})}/>}
+              {type&&<label>{schema.title??key} input<select aria-label={label+' input mode'} value={bound?'expression':'literal'} onChange={e=>{const bindings={...node.bindings};if(e.target.value==='expression')bindings[key]={value:defaultValue(type)};else delete bindings[key];onChange({...node,bindings});}}><option value="literal">Value</option><option value="expression">Variable or calculation</option></select></label>}
+              {bound&&type?expr(label,bound,type,value=>onChange({...node,bindings:{...node.bindings,[key]:value}})):<CapabilityFields label={label} schema={schema} value={node.arguments?.[key]} objects={objects} onChange={value=>onChange({...node,arguments:{...node.arguments,[key]:value}})}/>}
+              {schema.description&&<small>{schema.description}</small>}
             </div>;
           })}
         </fieldset>}
