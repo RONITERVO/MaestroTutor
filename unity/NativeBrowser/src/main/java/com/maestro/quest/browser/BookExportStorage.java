@@ -15,6 +15,9 @@ import java.io.OutputStream;
 final class BookExportStorage implements BookExportSession.Storage {
     private final ContentResolver resolver;
     BookExportStorage(ContentResolver resolver) { this.resolver = resolver; }
+    static boolean validArchiveName(String name) {
+        return name != null && name.length() <= 110 && name.matches("maestro-workspace-[a-f0-9]{32}( \\([0-9]+\\))?\\.zip");
+    }
     public BookExportSession.Sink open(String name, String mime) throws IOException {
         ContentValues values = new ContentValues();
         values.put(MediaStore.MediaColumns.DISPLAY_NAME,name);
@@ -39,7 +42,7 @@ final class BookExportStorage implements BookExportSession.Storage {
                         if (cursor == null || !cursor.moveToFirst()) throw new IOException("Downloads did not return the saved filename.");
                         actualName = cursor.getString(0);
                     }
-                    if (!BookExportSession.validName(actualName)) throw new IOException("Unexpected export name");
+                    if (!("application/zip".equals(mime) ? validArchiveName(actualName) : BookExportSession.validName(actualName))) throw new IOException("Unexpected export name");
                     ContentValues done = new ContentValues(); done.put(MediaStore.MediaColumns.IS_PENDING,0);
                     if (resolver.update(uri,done,null,null) != 1) throw new IOException("Downloads did not confirm the file.");
                     published = true;

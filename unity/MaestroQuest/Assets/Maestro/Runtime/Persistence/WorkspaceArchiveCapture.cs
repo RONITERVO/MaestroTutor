@@ -27,14 +27,24 @@ namespace Maestro.Quest.Persistence
         /// <summary>Call on the Unity owner thread. One non-yielding copy captures the accepted documents;
         /// scoped library gates keep referenced bytes stable until the worker closes the archive.
         /// In-progress takes, transient physics/animation state, Undo, scans, chat and receipts are excluded.</summary>
+        public static bool CanStart(RoomEditor editor,RuleWorkshop rules,MovementControls controls,out string error)
+        {
+            error=null;
+            if(!editor||!rules||!controls||rules.Editor!=editor||controls.ArchiveEditor!=editor)error="Workspace controls are not ready.";
+            else if(editor.TemporaryRoom||editor.TemporarySavePending)error="Keep or discard the temporary room before exporting the saved workspace.";
+            else if(!editor.CanSaveRoom||rules.ReadOnly||editor.ActivityProfiles.ReadOnly||!controls.ArchiveReady)error="Resolve unavailable native storage before exporting a portable workspace.";
+            else {
+                rules.Modules.Poll();
+                if(!rules.Modules.Ready||rules.Modules.Pending||rules.Modules.Error!=null)error="Wait for the reusable library to finish loading or writing.";
+                else if(rules.Modules.Search("").Any(x=>x.Error!=null))error="A reusable module is damaged; its original remains available for recovery.";
+            }
+            return error==null;
+        }
         public static Task<CapturedWorkspaceArchive> Start(RoomEditor editor,RuleWorkshop rules,MovementControls controls,string outputDirectory,CancellationToken cancellation=default)
         {
             cancellation.ThrowIfCancellationRequested();
-            if(!editor||!rules||!controls||rules.Editor!=editor||controls.ArchiveEditor!=editor)throw new InvalidOperationException("Workspace controls are not ready.");
-            if(editor.TemporaryRoom||editor.TemporarySavePending)throw new InvalidOperationException("Keep or discard the temporary room before exporting the saved workspace.");
-            if(!editor.CanSaveRoom||rules.ReadOnly||editor.ActivityProfiles.ReadOnly||!controls.ArchiveReady)throw new InvalidOperationException("Resolve unavailable native storage before exporting a portable workspace.");
-            rules.Modules.Poll();if(!rules.Modules.Ready||rules.Modules.Pending||rules.Modules.Error!=null)throw new InvalidOperationException("Wait for the reusable library to finish loading or writing.");
-            var modules=rules.Modules.Search("");if(modules.Any(x=>x.Error!=null))throw new InvalidOperationException("A reusable module is damaged; its original remains available for recovery.");
+            if(!CanStart(editor,rules,controls,out var error))throw new InvalidOperationException(error);
+            var modules=rules.Modules.Search("");
             if(!editor.Models.TryCaptureArchive(out var models))throw new InvalidOperationException("Wait for the model import to finish before exporting.");
             WorkspaceLibraryCapture motions=null;
             try{

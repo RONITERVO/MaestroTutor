@@ -807,3 +807,19 @@ remain individually unavailable. See [archive contract and evidence](QUEST_NATIV
 User-facing book/agent actions, Android publication/picking, atomic activation and
 recovery controls are still open. This foundation does not yet provide users a
 complete native backup/restore workflow. Device work remains on hold.
+
+### 2026-09-30: native workspace export through shared actions
+
+`workspace.archive.export` is discoverable and runnable through the existing book
+catalog, agent and program interpreter. A completed receipt means a closed binary
+ZIP was published in Quest Downloads/Maestro. Native capture and Android streaming
+stay outside the browser; arbitrary paths and files cannot be supplied. Duplicate
+execution IDs replay their result, pending exports remain pending until publication,
+and failure/Stop preserve honest outcome uncertainty. Output sizes fit program
+value bounds even for the largest permitted archive; export has a bounded native
+I/O allowance without extending ordinary action/loading deadlines.
+
+PC native and Android provider tests cover publication, replay, failure and Stop.
+Archive picking, reviewed generation activation/recovery and actual headset
+Downloads/performance acceptance remain open. See [native archive workflow](QUEST_NATIVE_ARCHIVES.md).
+Device work remains on hold; no build was installed.

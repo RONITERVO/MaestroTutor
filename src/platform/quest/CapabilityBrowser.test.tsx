@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import {act,cleanup,fireEvent,render} from '@testing-library/react';
 import {afterEach,expect,it} from 'vitest';
+import exportReceipt from '../../../test-fixtures/browser/workspaceExportReceipt.json';
 import native from '../../../test-fixtures/browser/catalogStates.json';
 import nativeProgram from '../../../test-fixtures/browser/programBookState.json';
 import {RoomWorkspace} from './RoomWorkspace';
@@ -11,9 +12,9 @@ import type {RoomAgentState} from '../../core-sdk/room/roomAgent';
 import {validCatalogView,type CatalogView} from '../../../shared/roomCatalog';
 function catalogFixture(value:unknown):CatalogView {if(!validCatalogView(value))throw new Error('Invalid native catalog fixture');return value;}
 afterEach(cleanup);
-function setup(vocabulary=false){
+function setup(vocabulary=false,extraFeatures:string[]=[]){
  const client=new RoomAgentClient();let state=JSON.parse(JSON.stringify(nativeProgram)) as RoomAgentState;
- state={...state,capabilities:[...new Set([...state.capabilities!,'catalog.v1',...(vocabulary?['catalogVocabulary.v1','factQueries.v1']:[])])],catalog:null,visible:true,workspaceView:'rules',ack:0,revision:1};
+ state={...state,capabilities:[...new Set([...state.capabilities!,...extraFeatures,'catalog.v1',...(vocabulary?['catalogVocabulary.v1','factQueries.v1']:[])])],catalog:null,visible:true,workspaceView:'rules',ack:0,revision:1};
  client.receive(state);const screen=render(<RoomWorkspace client={client}/>);
  const receive=async(catalog?:CatalogView,changed=false)=>{
   state={...state,ack:client.snapshot().request?.sequence??state.ack,revision:state.revision+1,catalog:catalog??state.catalog,
@@ -170,4 +171,17 @@ it('reads selected object arguments without showing a previous target as the new
  const book:CatalogView={...inspection,arguments:{target:'book'},available:true,value:{x:1,y:2,z:3}};await receive(book);expect(screen.getByLabelText('Current fact value').textContent).toContain('"x":1');
  fireEvent.change(screen.getByLabelText('Fact inputs target'),{target:{value:'maestro'}});expect(screen.getByLabelText('Current fact value').textContent).not.toContain('"x":1');await receive({...book,value:{x:4,y:2,z:3}});expect(screen.getByLabelText('Current fact value').textContent).toContain('Not read yet');
  fireEvent.click(screen.getByRole('button',{name:'Read fact'}));expect(client.snapshot().request?.commands[0]).toMatchObject({catalog:{arguments:{target:'maestro'}}});await receive({...book,arguments:{target:'maestro'},value:{x:5,y:2,z:3}});expect(screen.getByLabelText('Current fact value').textContent).toContain('"x":5');expect(screen.queryByRole('button',{name:'Run action now'})).toBeNull();act(()=>client.cancel());
+});
+
+it('runs workspace export from the shared catalog and displays the native publication receipt',async()=>{
+ const {client,screen,receive}=setup(false,['workspaceArchiveExport.v1','execution.v1','actionResults.v1']);
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.change(screen.getByLabelText('Search actions'),{target:{value:'export native workspace'}});fireEvent.click(screen.getByRole('button',{name:/^Search$/}));
+ const definition=capabilityDefinition('workspace.archive.export')!;
+ await receive({operation:'search',query:'export native workspace',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Found export'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Action definition'});
+ expect(screen.getByLabelText('Action arguments').textContent).toBe('{}');fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
+ expect(client.snapshot().request?.commands[0]).toMatchObject({action:'execution',execution:{operation:'start',call:{id:definition.id,version:1,arguments:{}}}});
+ const current=client.getSnapshot().state!;const next={...current,ack:client.snapshot().request!.sequence,revision:current.revision+1,execution:{selected:exportReceipt,running:[],outcomes:[Object.fromEntries(Object.entries(exportReceipt).filter(([key])=>key!=='call'))]}};
+ await act(async()=>{expect(client.receive(next)).toBe(true);});
+ expect(screen.getByLabelText('Action result').textContent).toContain(exportReceipt.output.location);expect(screen.getByLabelText('Action result').textContent).toContain(exportReceipt.output.manifestHash);
 });

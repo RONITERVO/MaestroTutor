@@ -181,7 +181,7 @@ namespace Maestro.Quest.Rules
             bool instant=run.Active.Instant,awaited=run.Active.AwaitCompletion;
             if (!actions.Start(run.Id,run.Active,out float seconds,out var error) || !float.IsFinite(seconds) || (instant||awaited?seconds!=0:seconds<.01f) || seconds > 30)
             { LastError = error ?? "This action has an invalid duration"; Stop(run,false,"failed",LastError); return false; }
-            run.Duration = seconds; run.PrepareDeadline = now+30;
+            run.Duration = seconds; run.PrepareDeadline = now+(awaited?Math.Clamp(run.Active.Definition.Module.CompletionTimeoutSeconds,1,600):30);
             var state = actions is IRuleReadiness readiness ? readiness.State(run.Id,out error) : RuleActionState.Ready;
             if (state == RuleActionState.Failed) { LastError = error ?? "This action could not load"; Stop(run,false,"failed",LastError); return false; }
             if(instant||awaited&&state==RuleActionState.Ready) {

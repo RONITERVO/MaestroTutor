@@ -966,6 +966,104 @@
       }
     },
     {
+      "id": "workspace.archive.export",
+      "version": 1,
+      "label": "Export native workspace",
+      "input": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false,
+        "x-features": [
+          "workspaceArchiveExport.v1"
+        ]
+      },
+      "duration": "completion",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [
+        "workspace.ready",
+        "libraries.idle",
+        "downloads.available"
+      ],
+      "description": "Save a portable ZIP in Quest Downloads/Maestro containing accepted room objects and recipes, recorded animations, saved behaviours, controller settings, avatar activities, models, motion files and reusable modules. It captures one snapshot; later edits stay in the workspace. Keep or discard temporary play first. Chat, credentials, room scans, active takes, running programs, Undo and execution receipts are excluded. Missing references remain unchanged and are counted in the result. Export does not change the workspace. Completion means Android closed and published the file; waiting is bounded to ten minutes. Stop cannot retract publication; after interruption check Downloads/Maestro before retrying. Restore is not available yet.",
+      "example": {},
+      "output": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "type": "string",
+            "pattern": "^Downloads/Maestro/.+\\.zip$",
+            "maxLength": 128
+          },
+          "sizeKiB": {
+            "type": "number",
+            "minimum": 0.0009765625,
+            "maximum": 524288.0
+          },
+          "manifestHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "files": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 1400.0
+          },
+          "models": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 32.0
+          },
+          "motions": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 1024.0
+          },
+          "modules": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 256.0
+          },
+          "unavailablePrograms": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 1000000.0
+          },
+          "missingModels": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 1000000.0
+          },
+          "missingMotions": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 1000000.0
+          },
+          "missingControllerPrograms": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 1000000.0
+          }
+        },
+        "required": [
+          "location",
+          "sizeKiB",
+          "manifestHash",
+          "files",
+          "models",
+          "motions",
+          "modules",
+          "unavailablePrograms",
+          "missingModels",
+          "missingMotions",
+          "missingControllerPrograms"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "program.module.publish",
       "version": 1,
       "label": "Save reusable module",
@@ -3370,11 +3468,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModule.cs",
-      "sha256": "6b229f022b580bb9e89c6c1cb589f0948049b4bae7b96148b6bab99615493dbb"
+      "sha256": "91dc56c02b804ab3c4a7040190ffc50edd4e63410d213e0c57406920d94f42f9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "5b2b287b3900f5f7fd29c635e5d6a3cd159efb18531837c2c2c5c33069bfe947"
+      "sha256": "f699c2d5e1895ac39adfd343ce70a30b55307fd4300c94b4f1dff1f917478393"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -3427,6 +3525,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SpatialCapabilities.cs",
       "sha256": "a0c4af9d75687aacf1179d4abb3fa8aa20b6767430e8e79a4c08af293da3d428"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceExportCapability.cs",
+      "sha256": "a9baed5c3c95ba9ae532d2df578596601b0aaee2d0778a08adb4aed762841129"
     }
   ]
 }

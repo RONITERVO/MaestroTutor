@@ -22,6 +22,8 @@ namespace Maestro.Quest.Programs
         public virtual JObject OutputSchema=>CapabilitySchema.Object(new JObject());
         public virtual JObject Example=>null;
         public abstract string Duration {get;}
+        // Trusted native I/O deadline, never a user-program argument. Animation loading stays at 30s.
+        internal virtual float CompletionTimeoutSeconds=>30;
         public virtual string Ownership=>Channels.Count==0?"none":"exclusiveTargetAndProp";
         public virtual IReadOnlyList<string> Channels=>Array.Empty<string>();
         public virtual IReadOnlyList<string> Requirements=>Array.Empty<string>();

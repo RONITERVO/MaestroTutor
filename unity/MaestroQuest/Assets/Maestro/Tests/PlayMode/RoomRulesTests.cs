@@ -55,6 +55,56 @@ namespace Maestro.Quest.Tests
         }
 
 
+        [UnityTest] public IEnumerator WorkspaceExportReceiptsWaitForPublicationAndReplayDoesNotExportTwice()
+        {
+            var controls=root.AddComponent<MovementControls>();controls.Initialize(root.GetComponent<RoomInteraction>(),editor,animations,null,runtime,workshop,null,null,()=>true,directory:directory);
+            workshop.Modules.Flush();var export=root.AddComponent<Maestro.Quest.Persistence.WorkspaceExport>();
+            var output=Path.Combine(directory,"exports");int publishes=0;string privatePath=null;
+            using var release=new System.Threading.ManualResetEventSlim(false);
+            using var entered=new System.Threading.ManualResetEventSlim(false);
+            export.InitializeForTests(editor,workshop,controls,output,path=>{privatePath=path;System.Threading.Interlocked.Increment(ref publishes);entered.Set();if(!release.Wait(TimeSpan.FromSeconds(15)))throw new IOException("Test publisher timed out");return "Downloads/Maestro/"+Path.GetFileName(path);});
+            var executor=new RoomAgentExecutor(editor);string id=runtime.Scheduler.Receipts.NextId;
+            var request=new RoomAgentRequest {version=2,conditions=Array.Empty<RoomObjectCondition>(),commands=new[]{new RoomAgentCommand {action="execution",execution=new JObject {["operation"]="start",["runId"]=id,["call"]=new JObject {["id"]="workspace.archive.export",["version"]=1,["arguments"]=new JObject()}}}}};
+            try {
+                Assert.That(RoomControls.Capabilities(editor),Does.Contain("workspaceArchiveExport.v1"));Assert.That(executor.Execute(request,out var error,out _),Is.True,error);
+                for(int i=0;i<300&&!entered.IsSet;i++)yield return null;Assert.That(entered.IsSet,Is.True);
+                Assert.That((string)runtime.Scheduler.Invocation(id)["phase"],Is.EqualTo("preparing"));Assert.That(runtime.Scheduler.Invocation(id)["output"],Is.Null,"A closed private ZIP is not a publication receipt");
+                Assert.That(export.CanStart(out error),Is.False);StringAssert.Contains("current workspace export",error);
+                Assert.That(executor.Execute(request,out error,out _),Is.True,error);Assert.That(publishes,Is.EqualTo(1));
+                using(var input=File.OpenRead(privatePath))using(var staged=Maestro.Quest.Persistence.WorkspaceArchive.Stage(input,directory))Assert.That(staged.Receipt.Summary.Files,Is.GreaterThanOrEqualTo(5));
+                release.Set();for(int i=0;i<300&&(string)runtime.Scheduler.Invocation(id)["phase"]=="preparing";i++)yield return null;
+                var receipt=runtime.Scheduler.Invocation(id);Assert.That((string)receipt["phase"],Is.EqualTo("completed"),receipt.ToString());StringAssert.StartsWith("Downloads/Maestro/",(string)receipt["output"]["location"]);Assert.That((double)receipt["output"]["sizeKiB"],Is.GreaterThan(0));Assert.That(File.Exists(privatePath),Is.False);
+                Assert.That(executor.Execute(request,out error,out _),Is.True,error);Assert.That(publishes,Is.EqualTo(1));Assert.That(export.CanStart(out error),Is.True,error);
+                string evidence=Environment.GetEnvironmentVariable("MAESTRO_WORKSPACE_EXPORT_EVIDENCE");if(!string.IsNullOrEmpty(evidence)){Directory.CreateDirectory(evidence);File.WriteAllText(Path.Combine(evidence,"published-receipt.json"),receipt.ToString());}
+            }finally{release.Set();}
+        }
+        [UnityTest] public IEnumerator FailedWorkspacePublicationKeepsLiveContentAndDoesNotClaimSaved()
+        {
+            var controls=root.AddComponent<MovementControls>();controls.Initialize(root.GetComponent<RoomInteraction>(),editor,animations,null,runtime,workshop,null,null,()=>true,directory:directory);
+            workshop.Modules.Flush();var export=root.AddComponent<Maestro.Quest.Persistence.WorkspaceExport>();string privatePath=null;int attempts=0;var before=JsonUtility.ToJson(editor.Snapshot());
+            export.InitializeForTests(editor,workshop,controls,Path.Combine(directory,"exports"),path=>{privatePath=path;attempts++;throw new IOException("Downloads did not confirm the file.");});
+            var executor=new RoomAgentExecutor(editor);string id=runtime.Scheduler.Receipts.NextId;
+            var request=new RoomAgentRequest {version=2,conditions=Array.Empty<RoomObjectCondition>(),commands=new[]{new RoomAgentCommand {action="execution",execution=new JObject {["operation"]="start",["runId"]=id,["call"]=new JObject {["id"]="workspace.archive.export",["version"]=1,["arguments"]=new JObject()}}}}};
+            Assert.That(executor.Execute(request,out var error,out _),Is.True,error);for(int i=0;i<300&&(string)runtime.Scheduler.Invocation(id)["phase"]=="preparing";i++)yield return null;
+            var receipt=runtime.Scheduler.Invocation(id);Assert.That((string)receipt["phase"],Is.EqualTo("failed"));Assert.That(receipt["output"],Is.Null);StringAssert.Contains("Downloads did not confirm",(string)receipt["status"]);Assert.That(File.Exists(privatePath),Is.False);Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(before));
+            Assert.That(executor.Execute(request,out error,out _),Is.False);Assert.That(attempts,Is.EqualTo(1));Assert.That(export.CanStart(out error),Is.True,error);
+        }
+        [UnityTest] public IEnumerator StoppingWorkspaceExportCannotRetractDispatchedPublication()
+        {
+            var controls=root.AddComponent<MovementControls>();controls.Initialize(root.GetComponent<RoomInteraction>(),editor,animations,null,runtime,workshop,null,null,()=>true,directory:directory);
+            workshop.Modules.Flush();var export=root.AddComponent<Maestro.Quest.Persistence.WorkspaceExport>();bool published=false;string privatePath=null;
+            using var release=new System.Threading.ManualResetEventSlim(false);using var entered=new System.Threading.ManualResetEventSlim(false);
+            export.InitializeForTests(editor,workshop,controls,Path.Combine(directory,"exports"),path=>{privatePath=path;entered.Set();if(!release.Wait(TimeSpan.FromSeconds(15)))throw new IOException("Test publisher timed out");published=true;return "Downloads/Maestro/"+Path.GetFileName(path);});
+            var executor=new RoomAgentExecutor(editor);string id=runtime.Scheduler.Receipts.NextId;
+            var request=new RoomAgentRequest {version=2,conditions=Array.Empty<RoomObjectCondition>(),commands=new[]{new RoomAgentCommand {action="execution",execution=new JObject {["operation"]="start",["runId"]=id,["call"]=new JObject {["id"]="workspace.archive.export",["version"]=1,["arguments"]=new JObject()}}}}};
+            try {
+                Assert.That(executor.Execute(request,out var error,out _),Is.True,error);for(int i=0;i<300&&!entered.IsSet;i++)yield return null;Assert.That(entered.IsSet,Is.True);
+                Assert.That(runtime.Scheduler.CancelInvocation(id,out error),Is.True,error);var receipt=runtime.Scheduler.Invocation(id);Assert.That((string)receipt["phase"],Is.EqualTo("cancelled"));StringAssert.Contains("may still appear",(string)receipt["status"]);Assert.That(receipt["output"],Is.Null);Assert.That(export.Busy,Is.True);
+                release.Set();for(int i=0;i<300&&export.Busy;i++)yield return null;Assert.That(export.Busy,Is.False);Assert.That(published,Is.True);Assert.That(File.Exists(privatePath),Is.False);
+                Assert.That((string)runtime.Scheduler.Invocation(id)["phase"],Is.EqualTo("cancelled"));Assert.That(runtime.Scheduler.Invocation(id)["output"],Is.Null);
+            }finally{release.Set();}
+        }
+
         [UnityTest] public IEnumerator NativeArchiveCapturesOneAcceptedWorkspaceAndFailureReleasesLibraryWriters()
         {
             var controls=root.AddComponent<MovementControls>();controls.Initialize(root.GetComponent<RoomInteraction>(),editor,animations,null,runtime,workshop,null,null,()=>true,directory:directory);

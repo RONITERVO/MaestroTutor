@@ -39,6 +39,15 @@ namespace Maestro.Quest.Tests
    Assert.That((string)scheduler.Invocation(id)["phase"],Is.EqualTo("failed"));Assert.That((string)scheduler.Invocation(id)["status"],Does.Contain("may still finish"));
    Assert.That(actions.Completions,Is.Zero);Assert.That(actions.Stops,Is.EqualTo(1));
   }
+  [Test] public void WorkspacePublicationHasABoundedNativeDeadlineWithoutChangingOtherActions()
+  {
+   var actions=new Actions {Hold=true};var scheduler=new RuleScheduler(actions);
+   var call=new JObject {["id"]="workspace.archive.export",["version"]=1,["arguments"]=new JObject()};
+   Assert.That(scheduler.Invoke(call,0,out var id,out var error),Is.True,error);
+   scheduler.Tick(31);Assert.That((string)scheduler.Invocation(id)["phase"],Is.EqualTo("preparing"));
+   scheduler.Tick(599);Assert.That((string)scheduler.Invocation(id)["phase"],Is.EqualTo("preparing"));
+   scheduler.Tick(600);Assert.That((string)scheduler.Invocation(id)["phase"],Is.EqualTo("failed"));Assert.That(actions.Completions,Is.Zero);Assert.That(actions.Stops,Is.EqualTo(1));
+  }
   [Test] public void IoCompletionNeverRenewsAnInstantForeverProgramsInstructionBudget()
   {
    var source=JObject.Parse(BehaviourProgram.FromInvocation(Call()));source["version"]=3;source["state"]=new JArray();source["events"]=new JArray();

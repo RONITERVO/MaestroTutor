@@ -128,6 +128,7 @@ namespace Maestro.Quest
             var virtualView=gameObject.AddComponent<VirtualRoomView>(); virtualView.Initialize(originObject.transform,camera,scan,physics);
             var movementControls=gameObject.AddComponent<MovementControls>();
             movementControls.Initialize(room,editor,workshop,movement,content.GetComponent<RoomRules>(),rules,input,virtualView,() => headTracking == null || (headTracking.ReadValue<int>() & 3) == 3);
+            content.AddComponent<Maestro.Quest.Persistence.WorkspaceExport>().Initialize(editor,rules,movementControls);
             var controlTools=new GameObject("Movement and controller bindings"); controlTools.transform.SetParent(content.transform,false);
             controlTools.transform.localPosition=new Vector3(-1.15f,.4f,1.25f); controlTools.transform.localRotation=Quaternion.Euler(40,-30,0);
             controlTools.AddComponent<MovementTools>().Build(movementControls,room);

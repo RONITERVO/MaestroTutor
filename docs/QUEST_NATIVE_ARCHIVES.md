@@ -1,9 +1,10 @@
 # Native workspace archives
 
-This checkpoint provides native snapshot capture, a portable archive codec and
-verified restore staging. **Book/agent commands, Android file publication/picking,
-restore activation and recovery UI are not connected yet.** It does not make native
-backup/restore a finished user feature. Original chat backup remains separate.
+Native snapshot capture and Android Downloads publication are available through
+`workspace.archive.export` in the shared action catalog. The book, agent and saved
+programs use the same operation and execution receipts. **Archive selection,
+restore activation and recovery UI are not connected yet.** Original chat backup
+remains separate, and portable backup/restore is not a finished release feature.
 
 ## Snapshot boundary
 
@@ -29,6 +30,37 @@ The result is a flushed/closed **private snapshot file**, not a user-visible sav
 file receipt. The publication adapter must confirm its own flush/close/publication
 before telling a user their export is saved. Failed capture removes its own partial
 file. A completed snapshot is independent of later room or library edits.
+
+## Publication
+
+On Quest, open the workshop's Action catalog, search for “Export native workspace”,
+inspect it and run with empty inputs. An agent discovers and invokes the same
+capability; no extra agent-specific file tool is required. An older or non-Quest
+runtime without `workspaceArchiveExport.v1` cannot run it. No caller can supply a
+private source path, destination path, filename or arbitrary files to include.
+
+A single `WorkspaceExport` owner captures to an app-private cache directory and
+streams the closed ZIP through a native worker into a pending Downloads/Maestro
+MediaStore row. The Java boundary accepts only that directory and generated
+archive filenames, rejects links/noncanonical paths and enforces the 512 MiB bound
+while streaming. It never sends binary bytes through the browser or a chat tool.
+Text backup export keeps its existing text-only validation. The sink closes the
+provider stream, reads the provider's resolved filename and publishes the row
+before returning success. Copy, close or publication failure aborts its pending row.
+The owned private ZIP is cleaned up after either publication or failure.
+
+The completion receipt contains the published location, archive size in KiB,
+manifest hash and inventory/missing-reference counts. KiB preserves exact byte
+precision while keeping the largest value within the program numeric bounds. A private ZIP is not a saved
+receipt. The existing one-off execution ID prevents duplicate delivery from
+publishing twice; a new explicit invocation creates a new snapshot. Only one export
+can be pending per workspace. Export has a bounded ten-minute native wait; other
+action/loading deadlines remain unchanged. Stop ends waiting and program
+continuation but cannot retract an already dispatched publication. After Stop,
+timeout, receipt-write failure or process loss, inspect Downloads/Maestro before
+requesting another export. A cancelled receipt is not later rewritten as success.
+App-private cache/pending provider entries left by process loss are not evidence
+of a completed export; crash cleanup and power-loss acceptance remain work.
 
 ## Version 1 format
 
@@ -83,9 +115,9 @@ counts unavailable programs. This is not exhaustive static dependency analysis:
 programs can calculate IDs, and explicit dependency inspection/rebinding remains
 unfinished. Restoring a reference never means silently choosing a different asset.
 
-Next integration must publish/pick archives through the native file boundary,
-provide the same discoverable operation and completion evidence to the book and
-agent, and switch to a verified generation only through an explicit restore action.
+Next integration must pick archives through the native file boundary, provide a
+shared inspection/review flow, and switch to a verified generation only through an
+explicit restore action.
 Keep the prior workspace recoverable, invalidate stale requests, and leave imported
 behaviour triggers/movement/physics paused until reviewed. Copying staged files over
 live stores one by one would not meet the restore contract. Activation must not
@@ -102,7 +134,11 @@ cancellation and output failure. A PlayMode test captures the actual room/rule/
 controller owners, edits after capture and proves the snapshot retained the earlier
 definitions; a failed output releases both library gates.
 
-These are PC checks. They do not establish Android Downloads/picker behaviour,
+Native PlayMode checks verify pending/published/failed/cancelled receipts and
+duplicate delivery through the actual shared executor. Android JVM tests verify
+binary streaming, private-path and size bounds, failures and pending MediaStore
+publication with the provider-resolved name. These are PC checks. They do not
+establish actual headset Downloads/picker behaviour,
 restore activation/restart, interrupted power-loss durability, large-library memory
 or headset performance. Native portable backup/restore and the wider v1 release
 remain incomplete until that integration and acceptance work passes.
