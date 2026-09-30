@@ -6,6 +6,7 @@ import { sessionActivity } from '../browser/sessionActivity';
 import type { LibraryBookClient, LibraryRequest } from './libraryBookBridge';
 import { RoomAgentClient, registerRoomAgent } from './roomAgentBridge';
 import { createFileSelectionGate } from './fileSelectionGate';
+import { createBookFileExport } from './bookFileExport';
 
 export interface BookSnapshot {
   version: 1;
@@ -24,21 +25,24 @@ export interface BookSnapshot {
 
 declare global {
   interface Window {
-    maestroBook?: Readonly<{ snapshot: () => BookSnapshot; roomSnapshot: () => ReturnType<RoomAgentClient['snapshot']>; roomState: (input: unknown) => boolean; command: (input: unknown) => boolean; lifecycle: (suspended: boolean) => void; lifecycleState: () => ReturnType<typeof sessionActivity.status>; takeFileSelection: () => boolean; libraryState: (input: unknown) => boolean }>;
+    maestroBook?: Readonly<{ snapshot: () => BookSnapshot; roomSnapshot: () => ReturnType<RoomAgentClient['snapshot']>; roomState: (input: unknown) => boolean; command: (input: unknown) => boolean; lifecycle: (suspended: boolean) => void; lifecycleState: () => ReturnType<typeof sessionActivity.status>; takeFileSelection: () => boolean; fileExportPoll: () => unknown; fileExportResult: (value:unknown) => boolean; libraryState: (input: unknown) => boolean }>;
   }
 }
 
 /** Native polls this top-level document; no JS-to-native object is exposed to iframes. */
 export function installBookBridge(target: Window, readSnapshot: () => BookSnapshot, command: (value: BookCommand) => void, library?: LibraryBookClient, room = new RoomAgentClient()) {
   const fileSelection = createFileSelectionGate(target);
+  const fileExport = createBookFileExport(target);
   const unregisterRoom = registerRoomAgent(room);
   const bridge = Object.freeze({
     roomSnapshot: room.snapshot, roomState: room.receive,
     snapshot: () => ({ ...readSnapshot(), ...library?.snapshot() }),
     libraryState: (input: unknown) => library?.receive(input) ?? false,
     takeFileSelection: () => fileSelection.take(),
+    fileExportPoll:fileExport.poll,fileExportResult:fileExport.receive,
     lifecycle(suspended: boolean) {
       if (typeof suspended !== 'boolean') return;
+      fileExport.lifecycle(suspended);
       if (suspended) { fileSelection.clear(); library?.suspend(); room.cancel(); }
       // Commit iframe removal before native pauses JavaScript timers.
       flushSync(() => sessionActivity.setSuspended(suspended));
@@ -52,5 +56,5 @@ export function installBookBridge(target: Window, readSnapshot: () => BookSnapsh
     },
   });
   target.maestroBook = bridge;
-  return () => { unregisterRoom(); fileSelection.dispose(); if (target.maestroBook === bridge) delete target.maestroBook; };
+  return () => { unregisterRoom(); fileExport.dispose(); fileSelection.dispose(); if (target.maestroBook === bridge) delete target.maestroBook; };
 }

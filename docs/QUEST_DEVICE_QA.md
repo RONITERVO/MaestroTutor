@@ -2,6 +2,37 @@
 
 This is development evidence, not a release acceptance report.
 
+## Book backup export: headset acceptance pending
+
+The original **Save All / Save Chat** controls now use a document-owned Android
+writer on Quest, with a receipt inside the original page after the file closes.
+The PC checkpoint is recorded in `.quest-evidence/book-export/verification.json`.
+The APK remains uninstalled while device work is on hold.
+
+When device work resumes:
+
+1. Save a conversation containing multilingual text and artifacts. Confirm that
+   the page reports `Downloads/Maestro/<filename>` only after the operation ends.
+2. Use the original Load All file picker to select that file from Downloads.
+   Verify messages, bookmarks, profile/avatar and archived agent-task records;
+   imported task history must not execute old actions.
+3. Save twice with the same filename. Both files must remain available, and the
+   receipt must use Android's resolved filename rather than hiding a collision.
+4. Interrupt a large export with system UI, book/browser replacement or a focus
+   loss. Expect an interruption/uncertain-result message, no completed partial
+   file, and a successful fresh export after resume. A finish already dispatched
+   may have completed: inspect Downloads before retrying.
+5. Check low-storage failure and a large archive. The limit is 256 MiB per file;
+   failure must not claim success or overwrite another export. Save smaller
+   conversations separately when the archive exceeds the limit.
+
+Android MediaStore provider tests cover pending publication and deletion; Chrome
+uses a simulated transport to exercise the actual Save/Load controls and IndexedDB.
+Neither establishes headset acceptance, process-crash cleanup timing or flash
+power-loss durability. Native creations, motion assets and module-library entries
+are not included by this chat backup path; their portability remains separate work.
+
+
 ## Shared ownership: headset acceptance pending
 
 The latest PC package and exact verification are recorded in draft PR #248 and

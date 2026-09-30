@@ -40,7 +40,7 @@ import { ThemeCustomizerPanel } from '../../theme';
 
 const SessionControls: React.FC = () => {
   const { t } = useAppTranslations();
-  const { handleSaveAllChats, handleLoadAllChats, handleSaveCurrentChat, handleAppendToCurrentChat, handleTrimBeforeBookmark } = useDataBackup({ t });
+  const { exportStatus, handleSaveAllChats, handleLoadAllChats, handleSaveCurrentChat, handleAppendToCurrentChat, handleTrimBeforeBookmark } = useDataBackup({ t });
 
   const settings = useMaestroStore(selectSettings);
   const updateSetting = useMaestroStore(state => state.updateSetting);
@@ -811,6 +811,7 @@ const SessionControls: React.FC = () => {
         </>
       )}
     </div>
+    {exportStatus && <p role="status" className="px-3 py-1 text-sm text-mode-toggle-text" style={{overflowWrap:'anywhere'}}>{exportStatus}</p>}
     {isThemeCustomizerOpen && (
       <ThemeCustomizerPanel onClose={() => setIsThemeCustomizerOpen(false)} />
     )}

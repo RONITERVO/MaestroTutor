@@ -46,6 +46,7 @@ public final class BookWebView extends OffscreenBrowser {
     private boolean suspended;
     private int lifecycleEpoch;
     private BookRequests requests, permissionOwner, pickerOwner;
+    private BookExports exports;
     private static final int MICROPHONE_REQUEST = 4701, FILE_REQUEST = 4702;
     private final Handler lifecycleHandler = new Handler(Looper.getMainLooper());
 
@@ -56,6 +57,7 @@ public final class BookWebView extends OffscreenBrowser {
     private void resetRequests() {
         if (requests != null) requests.close();
         final WebView owner = web;
+        resetExports();
         requests = new BookRequests(new BookRequests.Host() {
             public Activity activity() { return UnityPlayer.currentActivity; }
             public boolean active() { return !disposed && !suspended && web == owner && web != null && isAppOrigin(Uri.parse(web.getUrl() == null ? "" : web.getUrl())); }
@@ -78,6 +80,15 @@ public final class BookWebView extends OffscreenBrowser {
             }
             public void report(String message) { error = message; }
         });
+    }
+
+    private void resetExports() {
+        if (exports != null) exports.close();
+        final WebView owner = web;
+        exports = new BookExports(new BookExports.Host() {
+            public boolean active() { return !disposed && !suspended && web == owner && web != null && isAppOrigin(Uri.parse(web.getUrl() == null ? "" : web.getUrl())); }
+            public void evaluate(String script, ValueCallback<String> result) { if (active()) owner.evaluateJavascript(script,result); }
+        }, new BookExportStorage(UnityPlayer.currentActivity.getContentResolver()));
     }
 
     @Override public void onRequestPermissionsResult(int code,String[] permissions,int[] results) {
@@ -159,6 +170,7 @@ public final class BookWebView extends OffscreenBrowser {
                     error = "The book browser stopped. Reopen the book to recover your saved conversation.";
                     mInitialized = false;
                     if (requests != null) { requests.close(); requests = null; }
+                    if (exports != null) { exports.close(); exports = null; }
                     if (view.getParent() instanceof ViewGroup) ((ViewGroup)view.getParent()).removeView(view);
                     view.destroy(); web = null; mView = null;
                     snapshots.invalidate(); roomSnapshots.invalidate();
@@ -182,6 +194,7 @@ public final class BookWebView extends OffscreenBrowser {
     }
 
     private void destroyWebView() {
+        if (exports != null) { exports.close(); exports = null; }
         if (requests != null) { requests.close(); requests = null; }
         if (web == null) return;
         web.stopLoading();
@@ -211,6 +224,7 @@ public final class BookWebView extends OffscreenBrowser {
         UnityPlayer.currentActivity.runOnUiThread(() -> {
             if (disposed || suspended || web == null || !isAppOrigin(Uri.parse(web.getUrl() == null ? "" : web.getUrl()))) return;
             final WebView current = web;
+            if (exports != null) exports.poll();
             final long request = snapshots.begin();
             if (request < 0) return;
             web.evaluateJavascript("window.maestroBook ? JSON.stringify(window.maestroBook.snapshot()) : ''", result -> {
@@ -270,10 +284,12 @@ public final class BookWebView extends OffscreenBrowser {
             web.resumeTimers(); web.onResume();
             web.evaluateJavascript("window.maestroBook && window.maestroBook.lifecycle(false)", null);
             if (requests != null) requests.resumed();
+            resetExports();
         });
     }
 
     private void suspendWebView() {
+        if (exports != null) { exports.close(); exports = null; }
         if (requests != null) requests.suspended();
         if (web == null || disposed) return;
         final WebView current = web;

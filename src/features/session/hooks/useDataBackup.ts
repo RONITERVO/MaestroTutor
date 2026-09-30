@@ -7,7 +7,8 @@
  * This hook extracts the backup/restore orchestration logic from App.tsx,
  * coordinating between multiple services (chats, metas, global profile, assets).
  */
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
+import { nativeFileWriter } from '../../../platform/browser/fileWriter';
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
@@ -43,6 +44,7 @@ export interface UseDataBackupConfig {
 }
 
 export interface UseDataBackupReturn {
+  exportStatus: string;
   handleSaveAllChats: (options?: { filename?: string; auto?: boolean }) => Promise<void>;
   handleLoadAllChats: (file: File) => Promise<void>;
   handleSaveCurrentChat: () => Promise<void>;
@@ -57,6 +59,7 @@ const MAX_CHUNK_CHARS = 1_000_000; // ~1MB per NDJSON line
 const MAX_CHUNK_MESSAGES = 200;
 
 type BackupLineWriter = {
+  location?: () => string | undefined;
   write: (line: string) => Promise<void>;
   close: () => Promise<void>;
   abort?: () => Promise<void>;
@@ -123,6 +126,8 @@ const createNativeLineWriter = (path: string, directory: Directory) => {
 };
 
 const createWebLineWriter = async (filename: string): Promise<BackupLineWriter> => {
+  const native = nativeFileWriter(filename, BACKUP_MIME);
+  if (native) return native;
   const picker = (typeof window !== 'undefined' ? (window as any).showSaveFilePicker : undefined) as undefined | ((options?: any) => Promise<any>);
   if (typeof picker !== 'function') {
     throw new Error('BROWSER_NOT_SUPPORTED');
@@ -189,12 +194,14 @@ const streamNdjsonLines = async (file: File, onLine: (line: string) => Promise<v
 };
 
 export const useDataBackup = ({ t }: UseDataBackupConfig): UseDataBackupReturn => {
+  const [exportStatus, setExportStatus] = useState('');
   const setMessages = useMaestroStore(state => state.setMessages);
   const setTempNativeLangCode = useMaestroStore(state => state.setTempNativeLangCode);
   const setTempTargetLangCode = useMaestroStore(state => state.setTempTargetLangCode);
   const setIsLanguageSelectionOpen = useMaestroStore(state => state.setIsLanguageSelectionOpen);
 
   const handleSaveAllChats = useCallback(async (options?: { filename?: string; auto?: boolean }) => {
+    setExportStatus('');
     const isAuto = options?.auto === true;
     try {
       const selectedPairId = useMaestroStore.getState().settings.selectedLanguagePairId;
@@ -313,6 +320,7 @@ export const useDataBackup = ({ t }: UseDataBackupConfig): UseDataBackupReturn =
       try {
         const writer = await createWebLineWriter(safeFilename);
         await writeBackupLines(writer);
+        setExportStatus(writer.location?.() ? `Saved: ${writer.location()}` : '');
       } catch (err) {
         if (isCancelError(err)) {
           return;
@@ -390,6 +398,7 @@ export const useDataBackup = ({ t }: UseDataBackupConfig): UseDataBackupReturn =
 
   // --- Save only the current language chat ---
   const handleSaveCurrentChat = useCallback(async () => {
+    setExportStatus('');
     try {
       const selectedPairId = useMaestroStore.getState().settings.selectedLanguagePairId;
       if (!selectedPairId) {
@@ -483,6 +492,7 @@ export const useDataBackup = ({ t }: UseDataBackupConfig): UseDataBackupReturn =
       try {
         const writer = await createWebLineWriter(safeFilename);
         await writeBackupLines(writer);
+        setExportStatus(writer.location?.() ? `Saved: ${writer.location()}` : '');
       } catch (err) {
         if (isCancelError(err)) return;
         const errMsg = err instanceof Error ? err.message : String(err);
@@ -621,6 +631,7 @@ export const useDataBackup = ({ t }: UseDataBackupConfig): UseDataBackupReturn =
   }, [t, setMessages]);
 
   return {
+    exportStatus,
     handleSaveAllChats,
     handleLoadAllChats,
     handleSaveCurrentChat,

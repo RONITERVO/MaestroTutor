@@ -718,3 +718,33 @@ thread, isolated damaged entries remain preserved, and motion retention includes
 saved modules. See [module library contract](QUEST_PROGRAM_MODULES.md). Installation,
 real-provider/device acceptance, library backup/export and the wider v1 release gates
 remain open; this checkpoint does not establish Quest Store readiness.
+
+
+### 2026-09-30: native book chat export
+
+The familiar Save All / Save Chat controls now have an Android Downloads writer
+instead of depending on the desktop save-file picker. The shared adapter streams
+bounded UTF-8 chunks with backpressure. Native code polls only the trusted book
+origin; no JavaScript-native interface, arbitrary path, new permission, provider
+call or Unity control is exposed. The success receipt appears in the original
+SessionControls only after native publication. Desktop and Capacitor retain their
+existing writers. This is chat-backup portability; room/model/motion/module-library
+export is still unfinished.
+
+The v1 export protocol accepts one active transaction, 24,576-byte chunks and up to
+256 MiB, with exact sequence/offset checks and duplicate-response replay. Per-document
+export IDs are retained (maximum 64 starts; reopen/resume for a fresh broker).
+All storage work is serialized off the UI thread. A 30-second web acknowledgement
+timeout reports uncertainty; 60 seconds without a native request abandons a pending
+file. Stale page callbacks are ignored after a 10-second poll timeout. Suspension,
+replacement and failures delete the transaction's pending row; an already queued
+finish may complete, so interrupted callers are told to check Downloads.
+
+MediaStore publication uses IS_PENDING until stream flush/close and the provider
+update succeed. Android controls expiration of crash-orphaned pending rows; the
+app does not write the read-only DATE_EXPIRES field. See the official
+[Downloads storage guidance](https://developer.android.com/training/data-storage/shared/media)
+and [pending expiry contract](https://developer.android.com/reference/android/provider/MediaStore.MediaColumns#DATE_EXPIRES).
+Hardware filesystem behavior and power-loss durability remain acceptance gates.
+The browser fixture uses simulated native acknowledgements and real original
+Save/Load controls/IndexedDB; Android tests use an isolated fake MediaStore provider.
