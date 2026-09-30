@@ -114,9 +114,10 @@ content ID. It never overwrites an existing damaged copy. Removal is an explicit
 permanent deletion of the chosen library copy, with no library Undo. Embedded copies
 in saved behaviours remain usable offline and unchanged. A dispatched write may
 finish after Stop: the operation reports this and the agent inspects library/receipts
-instead of replaying uncertain actions. App pause/quit flush pending work. Library
-backup/export and sharing between installations remain future work; the library is
-currently local to this Quest installation. Content hashes do not authenticate authors.
+instead of replaying uncertain actions. App pause/quit flush pending work. Individual
+definitions can travel between installations through the module files below; the
+library itself is local. Whole-library backup and dependent asset transfer remain
+unfinished. Content hashes do not authenticate authors.
 
 ## Canonical pin encoding
 
