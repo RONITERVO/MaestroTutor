@@ -43,7 +43,7 @@ namespace Maestro.Quest.Programs
         readonly Dictionary<JToken,ProgramValue> constants=new(new TokenIdentity());
         internal ProgramValue Constant(JToken expression)=>constants[expression];
         int expressions;
-        public static IReadOnlyDictionary<string,ProgramType> Facts=>BehaviourCatalog.FactTypes;
+        public static IReadOnlyDictionary<string,ProgramDataType> Facts=>BehaviourCatalog.FactTypes;
         public static bool TryParse(string source,out BehaviourProgram program,out string error)
         {
             program=null;error=null;
@@ -164,7 +164,15 @@ namespace Maestro.Quest.Programs
             if(expression.ContainsKey("value")) {Keys(expression,"value","type");var constant=Literal(expression["value"],expression["type"]);constants.Add(expression,constant);return constant.Type;}
             if(expression.ContainsKey("var")) {Keys(expression,"var");Need(function.Types.TryGetValue(Text(expression["var"]),out var type),"Unknown variable");return type;}
             if(expression.ContainsKey("state")) {Keys(expression,"state");Need(Version==3&&InitialState.TryGetValue(Text(expression["state"]),out var state),"Unknown program state");return InitialState[Text(expression["state"])].Type;}
-            if(expression.ContainsKey("fact")) {Keys(expression,"fact");Need(Facts.TryGetValue(Text(expression["fact"]),out var type),"Unknown room fact");return type;}
+            if(expression.ContainsKey("fact")) {
+                var fact=BehaviourCatalog.Fact(Text(expression["fact"]));Need(fact!=null,"Unknown room fact");
+                if(fact.Parameterized) {
+                    Need(Version==3,"Fact queries need program version 3");Keys(expression,"fact version arguments bindings");
+                    Need(expression["version"]?.Type==JTokenType.Integer&&fact.ValidArguments((int)expression["version"],Object(expression["arguments"]),out _),"Invalid fact query arguments or version");
+                    foreach(var binding in Object(expression["bindings"]).Properties()){var t=fact.ArgumentType(binding.Name);Need(t!=ProgramType.Void&&Expression(binding.Value,function,depth+1)==t,"Invalid fact argument binding");}
+                }else Keys(expression,"fact");
+                Need(structured||fact.Type.Kind<=ProgramType.Text,"Structured facts need dataVersion 1");return fact.Type;
+            }
             Keys(expression,"op args");string op=Text(expression["op"]);var args=Array(expression["args"],3);Need(args.Count>0,"Invalid expression argument count");
             var types=args.Select(x=>Expression(x,function,depth+1)).ToArray();
             var dataType=ProgramDataType.Operation(op,types,args.Count>1?args[1]["value"]:null);

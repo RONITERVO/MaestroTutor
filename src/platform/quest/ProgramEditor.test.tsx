@@ -14,7 +14,7 @@ it('lets a human wire a native creation result into the next action without writ
  if(first.op!=='invoke'||second.op!=='invoke')throw new Error('Expected calls');
  delete first.results;second.bindings={};initial.resources=[String(second.arguments.target)];
  initial.functions[0].locals=[];let source=JSON.stringify(initial);
- function Harness(){const [value,setValue]=useState(source);return <ProgramEditor source={value} targets={[]} eventsSupported eventFieldsSupported eventSubscriptionsSupported resultsSupported structuredSupported onEditingChange={()=>{}} onChange={next=>{source=next;setValue(next);}}/>;}
+ function Harness(){const [value,setValue]=useState(source);return <ProgramEditor source={value} targets={[]} eventsSupported eventFieldsSupported eventSubscriptionsSupported factQueriesSupported resultsSupported structuredSupported onEditingChange={()=>{}} onChange={next=>{source=next;setValue(next);}}/>;}
  const screen=render(<Harness/>);
  fireEvent.click(screen.getByLabelText('create new variable for objectId'));
  fireEvent.change(screen.getByLabelText('push argument target variable'),{target:{value:'objectId'}});
@@ -32,7 +32,7 @@ const empty:BehaviourProgram={version:2,entry:'main',resources:[],functions:[{na
 function harness(initial=empty,objects=[{id:'maestro',name:'Maestro'},{id:'book',name:'Book'}]) {
  let source=JSON.stringify(initial);
  const onChange=vi.fn();
- function Harness(){const [value,setValue]=useState(source);return <ProgramEditor source={value} targets={objects} eventsSupported eventFieldsSupported eventSubscriptionsSupported resultsSupported structuredSupported onEditingChange={()=>{}} onChange={next=>{source=next;setValue(next);onChange(next);}}/>;}
+ function Harness(){const [value,setValue]=useState(source);return <ProgramEditor source={value} targets={objects} eventsSupported eventFieldsSupported eventSubscriptionsSupported factQueriesSupported resultsSupported structuredSupported onEditingChange={()=>{}} onChange={next=>{source=next;setValue(next);onChange(next);}}/>;}
  const screen=render(<Harness/>);
  const change=(label:string,value:string)=>fireEvent.change(screen.getByLabelText(label),{target:{value}});
  const click=(name:string)=>fireEvent.click(screen.getByRole('button',{name}));
@@ -316,4 +316,12 @@ it('edits physics motion observations using native-generated fields and preserve
  h.change('Speed threshold (m/s) input mode','expression');h.change('Speed threshold (m/s) source','var:speed');h.change('Event field angularSpeed','');h.click('Update draft');
  const result=JSON.parse(h.source());expect(result.functions[0].body[0]).toMatchObject({arguments:{speedThreshold:.03,angularThreshold:.2,quietSeconds:.8,transition:'either',initial:'baseline'},bindings:{speedThreshold:{var:'speed'}},fields:{settled:'settled',speed:'speed',quietSeconds:'quiet'}});
  expect(result.functions[0].body.slice(1)).toEqual(initial.functions[0].body.slice(1));expect(parseProgram(h.source()).error).toBeNull();
+});
+
+it('edits a structured fact target and state binding through the same canonical expression',()=>{
+ const original=JSON.parse(readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-object-facts.json','utf8')) as BehaviourProgram;
+ const h=harness(original);h.click('Edit values read_before');h.change('Assigned value fact target mode','literal');h.change('Assigned value fact target','maestro');h.click('Update draft');
+ expect(parseProgram(h.source()).program?.functions[0].body[0]).toMatchObject({value:{fact:'object.position',arguments:{target:'maestro'},bindings:{}}});
+ h.click('Edit values read_before');h.change('Assigned value fact target mode','expression');h.change('Assigned value fact target expression source','state:target');h.click('Update draft');
+ expect(parseProgram(h.source()).program?.functions[0].body[0]).toMatchObject({value:{bindings:{target:{state:'target'}}}});expect(parseProgram(h.source()).program?.resources).toEqual([]);
 });

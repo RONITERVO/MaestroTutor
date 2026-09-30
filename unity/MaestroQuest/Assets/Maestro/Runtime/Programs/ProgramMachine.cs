@@ -12,6 +12,7 @@ namespace Maestro.Quest.Programs
     public sealed class ProgramWait {public string Event,Source;public float Seconds;public JObject Arguments;}
     public sealed class ProgramSignal {public string Event;public ProgramValue Value;}
     public interface IProgramFacts {bool TryRead(string name,out ProgramValue value);}
+    public interface IProgramFactQueries {bool TryRead(string name,int version,JObject arguments,out ProgramValue value);}
     /// <summary>Cooperatively evaluated statements; native action completion remains the host's responsibility.</summary>
     public sealed class ProgramMachine
     {
@@ -158,10 +159,15 @@ namespace Maestro.Quest.Programs
             if(e.ContainsKey("var"))return scope.Values[(string)e["var"]];
             if(e.ContainsKey("state"))return state[(string)e["state"]];
             if(e.ContainsKey("fact")) {
-                string name=(string)e["fact"];
-                if(facts==null||!facts.TryRead(name,out var value)||value.Type!=BehaviourProgram.Facts[name])throw new ProgramFault("Room fact unavailable: "+name);
-                if(value.Type==ProgramType.Number&&(!double.IsFinite(value.Number)||Math.Abs(value.Number)>1000000)||value.Type==ProgramType.Text&&(value.Text==null||value.Text.Length>128))throw new ProgramFault("Room fact is invalid: "+name);
-                return value;
+                string name=(string)e["fact"];var definition=BehaviourCatalog.Fact(name);ProgramValue value=default;bool available;
+                if(e["arguments"] is JObject input) {
+                    var arguments=(JObject)input.DeepClone();foreach(var binding in ((JObject)e["bindings"]).Properties())CapabilitySchema.Set(arguments,binding.Name,JToken.FromObject(Evaluate(binding.Value,scope).Value));
+                    if(!definition.ValidArguments((int)e["version"],arguments,out var error))throw new ProgramFault(error);
+                    available=facts is IProgramFactQueries queries&&queries.TryRead(name,(int)e["version"],arguments,out value);
+                }else available=facts!=null&&facts.TryRead(name,out value);
+                if(!available)throw new ProgramFault("Room fact unavailable: "+name);
+                if(!definition.ValidValue(value))throw new ProgramFault("Room fact is invalid: "+name);
+                Charge(value.Nodes);return value;
             }
             string op=(string)e["op"];var args=(JArray)e["args"];var a=Evaluate(args[0],scope);
             if(op is "length" or "at" or "append" or "replace" or "remove" or "field" or "withField") {

@@ -13,7 +13,7 @@ function catalogFixture(value:unknown):CatalogView {if(!validCatalogView(value))
 afterEach(cleanup);
 function setup(vocabulary=false){
  const client=new RoomAgentClient();let state=JSON.parse(JSON.stringify(nativeProgram)) as RoomAgentState;
- state={...state,capabilities:[...new Set([...state.capabilities!,'catalog.v1',...(vocabulary?['catalogVocabulary.v1']:[])])],catalog:null,visible:true,workspaceView:'rules',ack:0,revision:1};
+ state={...state,capabilities:[...new Set([...state.capabilities!,'catalog.v1',...(vocabulary?['catalogVocabulary.v1','factQueries.v1']:[])])],catalog:null,visible:true,workspaceView:'rules',ack:0,revision:1};
  client.receive(state);const screen=render(<RoomWorkspace client={client}/>);
  const receive=async(catalog?:CatalogView,changed=false)=>{
   state={...state,ack:client.snapshot().request?.sequence??state.ack,revision:state.revision+1,catalog:catalog??state.catalog,
@@ -160,4 +160,14 @@ it('renders live false and true readings and removes stale values when unavailab
 it('keeps older runtimes on their existing action catalog',()=>{
  const {client,screen}=setup();fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));
  expect(screen.queryByLabelText('Catalog category')).toBeNull();act(()=>client.cancel());
+});
+
+it('reads selected object arguments without showing a previous target as the new result',async()=>{
+ const {client,screen,receive}=setup(true);fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.change(screen.getByLabelText('Catalog category'),{target:{value:'facts'}});fireEvent.click(screen.getByRole('button',{name:/^Search$/}));
+ const definition=behaviourFact('object.position')!;await receive({operation:'search',category:'facts',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Fact search'});fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));
+ const inspection:CatalogView={operation:'inspect',category:'facts',capability:definition.id,version:1,definition,available:false,value:null,status:'Choose inputs'};await receive(inspection);
+ expect(screen.getByLabelText('Current fact value').textContent).toContain('Not read yet');fireEvent.click(screen.getByRole('button',{name:'Read fact'}));expect(client.snapshot().request?.commands[0]).toMatchObject({catalog:{arguments:{target:'book'}}});
+ const book:CatalogView={...inspection,arguments:{target:'book'},available:true,value:{x:1,y:2,z:3}};await receive(book);expect(screen.getByLabelText('Current fact value').textContent).toContain('"x":1');
+ fireEvent.change(screen.getByLabelText('Fact inputs target'),{target:{value:'maestro'}});expect(screen.getByLabelText('Current fact value').textContent).not.toContain('"x":1');await receive({...book,value:{x:4,y:2,z:3}});expect(screen.getByLabelText('Current fact value').textContent).toContain('Not read yet');
+ fireEvent.click(screen.getByRole('button',{name:'Read fact'}));expect(client.snapshot().request?.commands[0]).toMatchObject({catalog:{arguments:{target:'maestro'}}});await receive({...book,arguments:{target:'maestro'},value:{x:5,y:2,z:3}});expect(screen.getByLabelText('Current fact value').textContent).toContain('"x":5');expect(screen.queryByRole('button',{name:'Run action now'})).toBeNull();act(()=>client.cancel());
 });

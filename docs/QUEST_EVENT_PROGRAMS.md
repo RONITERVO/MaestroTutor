@@ -190,8 +190,9 @@ Omitted category retains action discovery. Search returns at most six ID/version
 label entries; inspect returns only the requested exact definition. Agent prompts
 explain the query contract instead of expanding the full growing vocabulary.
 Native event registrations expose their version, primary value type, source rules,
-feature requirements and optional typed fields. Facts expose version, scalar type
-and meaning. Unknown IDs or unsupported versions return an explicit null definition.
+feature requirements and optional typed fields. Facts expose version, scalar or
+structured type, meaning and optional input schema. Unknown IDs or unsupported
+versions return an explicit null definition.
 The shared web validator checks definitions against the committed native export.
 
 Fact inspection also returns `available` and `value` through the same native reader
@@ -382,3 +383,56 @@ previously boxed scalar readback as JValue.
 The browser probe edits thresholds with their units and displays actual native rest,
 new-throw, pause and failure observations. It performs no Unity execution or command
 acknowledgement. Quest timing/comfort and real-provider acceptance remain pending.
+
+## Parameterized native facts (2026-09-30)
+
+Fact definitions now support an input schema and a structural result type. The
+first registered query, `object.position` version 1, takes `{target}` and returns
+`{x,y,z}` in Unity world metres. Book, Maestro and active creations use the same
+native transform reader as proximity. This is the transform origin, not a mesh
+centre, floor contact, navigation destination or durable room anchor. Alignment
+and recentering can change world coordinates. Physics need not be running.
+
+A version-3 expression uses `{fact,version,arguments,bindings}` for parameterized
+facts. Arguments contain valid literal placeholders; scalar bindings evaluate
+against the current function/state and are validated again before a read. Record
+results require `dataVersion:1` and compose with existing field, comparison and
+collection expressions. Existing parameterless scalar facts retain `{fact:id}`.
+The generated manifest is the type/schema authority for both authoring and native
+execution; this adds no provider tool or separate interpreter.
+
+Each evaluation is a current read. Store its result in a local to reuse one
+snapshot across calculations: later reads can observe a later position, while a
+stored record remains detached. Results and arguments obey existing depth, size,
+value and instruction budgets. Query binding expressions participate in local/
+state refactoring and imported-module namespace traversal; literal native input
+data remains unchanged. Reads neither own an object nor grant authority to edit
+one. Missing/disabled objects, invalid coordinates and paused runtime are
+unavailable; a program fails explicitly instead of receiving an invented origin.
+A valid position of zero remains an available reading.
+
+With `factQueries.v1`, the existing catalog inspection accepts fact `arguments`.
+Inspecting without arguments discovers the schema without choosing an object.
+A selected concrete query refreshes through the same native reader as programs;
+the result echoes its inputs. The book exposes object selection and hides an old
+reading when its input draft changes. Search/read never saves, starts, pauses or
+reserves an action. Ordinary scalar inspections remain unchanged.
+
+The visual expression editor provides fixed or computed fact inputs and record
+field selection. The agent discovers the same typed definition progressively.
+These reads are not change subscriptions; use the existing event waits for
+reactions and timers to pace explicit repeated calculations.
+
+Verification uses `program-object-facts.json`. Native tests retain a first
+snapshot, read again after animation moves the object, compare the positions and
+verify that the active animation and saved room remain untouched. They also cover
+missing/disabled targets, pause, invalid computed inputs, module-scoped bindings
+and unavailable versus zero. Web tests cover the identical program, capability
+gates, declaration renaming, structured output validation, visual input editing
+and old-target reading removal. A simulated provider journey discovers the fact,
+receives its structured result through the existing agent context and saves the
+same program without starting it; this is not real-provider acceptance. The
+browser edits that source and replays actual native position/pause/failure
+observations; catalog acknowledgements and its search page are simulated.
+Screenshots were inspected. Final packaging and hardware acceptance are recorded
+separately; a browser does not execute Unity.

@@ -91,22 +91,42 @@ namespace Maestro.Quest.Programs
         {
             public readonly string Activity,RoomSessionId;
             public readonly bool? PhysicsReady, PhysicsRunning;
-            public FactContext(string activity=null, bool? physicsReady=null, bool? physicsRunning=null,string roomSessionId=null)
-            { Activity=activity;PhysicsReady=physicsReady;PhysicsRunning=physicsRunning;RoomSessionId=roomSessionId; }
+            public readonly IProgramEventWorld World;
+            public FactContext(string activity=null, bool? physicsReady=null, bool? physicsRunning=null,string roomSessionId=null,IProgramEventWorld world=null)
+            { Activity=activity;PhysicsReady=physicsReady;PhysicsRunning=physicsRunning;RoomSessionId=roomSessionId;World=world; }
         }
         public sealed class FactDefinition
         {
             public readonly string Id, Label, Description;
             public readonly int Version=1;
-            public readonly ProgramType Type;
-            readonly Func<FactContext,ProgramValue?> read;
-            public FactDefinition(string id, ProgramType type, string label,string description, Func<FactContext,ProgramValue?> read)
-            { Id=id;Type=type;Label=label;Description=description;this.read=read; }
-            public JObject ToJson()=>new() {["id"]=Id,["version"]=Version,["type"]=Type.ToString().ToLowerInvariant(),["label"]=Label,["description"]=Description};
-            public bool TryRead(FactContext context, out ProgramValue value)
-            {
-                var result=read(context);value=result??default;
-                return result.HasValue&&value.Type==Type;
+            public readonly ProgramDataType Type;
+            readonly JObject input,example;
+            readonly Func<FactContext,JObject,ProgramValue?> read;
+            public JObject Input=>input==null?null:(JObject)input.DeepClone();
+            public bool Parameterized=>input!=null;
+            public FactDefinition(string id,ProgramType type,string label,string description,Func<FactContext,ProgramValue?> read)
+                :this(id,type,label,description,null,null,(context,args)=>read(context)) {}
+            public FactDefinition(string id,ProgramDataType type,string label,string description,JObject input,JObject example,Func<FactContext,JObject,ProgramValue?> read)
+            {Id=id;Type=type;Label=label;Description=description;this.input=input==null?null:(JObject)input.DeepClone();this.example=example==null?null:(JObject)example.DeepClone();this.read=read;}
+            static JToken TypeJson(ProgramDataType type)=>type.Kind==ProgramType.Record?new JObject {["record"]=new JObject(type.Fields.Select(p=>new JProperty(p.Key,TypeJson(p.Value))))}:type.Kind==ProgramType.List?new JObject {["list"]=TypeJson(type.Item)}:new JValue(type.ToString().ToLowerInvariant());
+            public JObject ToJson() {
+                var value=new JObject {["id"]=Id,["version"]=Version,["type"]=TypeJson(Type),["label"]=Label,["description"]=Description};
+                if(input!=null){value["input"]=Input;value["example"]=example.DeepClone();value["features"]=new JArray("factQueries.v1");}return value;
+            }
+            public bool ValidArguments(int version,JObject arguments,out string error) {
+                error="Unknown fact version or arguments";return version==Version&&(input==null?arguments==null:arguments!=null&&CapabilityArguments.Validate(arguments,input,out error,"fact arguments"));
+            }
+            public ProgramType ArgumentType(string path) {
+                var field=CapabilitySchema.Field(input,path);if((bool?)field?["x-static"]==true)return ProgramType.Void;
+                return ((string)field?["type"]) switch {"string"=>ProgramType.Text,"number" or "integer"=>ProgramType.Number,"boolean"=>ProgramType.Boolean,_=>ProgramType.Void};
+            }
+            public bool ValidValue(ProgramValue value) {
+                try {return value.Type==Type&&value.Value!=null&&ProgramValue.Literal(JToken.FromObject(value.Value),Type).Type==Type;}catch(ProgramFault){return false;}
+            }
+            public bool TryRead(FactContext context,out ProgramValue value)=>TryRead(context,Version,null,out value);
+            public bool TryRead(FactContext context,int version,JObject arguments,out ProgramValue value) {
+                value=default;if(!ValidArguments(version,arguments,out _))return false;
+                var result=read(context,arguments);if(!result.HasValue||!ValidValue(result.Value))return false;value=result.Value;return true;
             }
         }
         public static readonly IReadOnlyList<ActionDefinition> Actions=Array.AsReadOnly(CapabilityModules.All.Select(module=>new ActionDefinition(module)).ToArray());
@@ -137,12 +157,13 @@ namespace Maestro.Quest.Programs
                 watch:(world,args,now)=>new ProximitySubscription(world,args,now)),
         });
         public static readonly IReadOnlyList<FactDefinition> Facts=Array.AsReadOnly(new[] {
+            NativeObjectFacts.Position(),
             new FactDefinition("room.sessionId",ProgramType.Text,"Current room session","Current explicit temporary-room session ID, or empty when using the saved room. Reading it does not begin, keep or discard a room.",context=>context.RoomSessionId==null?null:new ProgramValue(context.RoomSessionId)),
             new FactDefinition("maestro.state",ProgramType.Text,"Maestro state","Current observed tutor state: speaking, listening, thinking or idle. Unavailable before a reliable activity snapshot, during audio suspension or when the room runtime is paused.",context=>context.Activity==null?null:new ProgramValue(context.Activity)),
             new FactDefinition("physics.running",ProgramType.Boolean,"Physics running","Whether room physics is currently running. False is an observed value; it is not an unavailable reading.",context=>context.PhysicsRunning.HasValue?new ProgramValue(context.PhysicsRunning.Value):null),
             new FactDefinition("physics.ready",ProgramType.Boolean,"Room surfaces ready","Whether aligned room surfaces are currently ready for physics. This does not start physics or guarantee a particular navigation path.",context=>context.PhysicsReady.HasValue?new ProgramValue(context.PhysicsReady.Value):null),
         });
-        public static readonly IReadOnlyDictionary<string,ProgramType> FactTypes=new ReadOnlyDictionary<string,ProgramType>(Facts.ToDictionary(x=>x.Id,x=>x.Type));
+        public static readonly IReadOnlyDictionary<string,ProgramDataType> FactTypes=new ReadOnlyDictionary<string,ProgramDataType>(Facts.ToDictionary(x=>x.Id,x=>x.Type));
         static readonly Dictionary<RuleEventKind,EventDefinition> events=Events.Where(x=>x.Kind.HasValue).ToDictionary(x=>x.Kind.Value);
         static readonly Dictionary<string,EventDefinition> eventIds=Events.ToDictionary(x=>x.Id,StringComparer.Ordinal);
         static readonly Dictionary<string,FactDefinition> facts=Facts.ToDictionary(x=>x.Id,StringComparer.Ordinal);
@@ -179,7 +200,10 @@ namespace Maestro.Quest.Programs
         public static EventDefinition Event(RuleEventKind kind)=>events.TryGetValue(kind,out var value)?value:null;
         public static bool TryRead(string id, FactContext context, out ProgramValue value)
         {
-            value=default;return id!=null&&facts.TryGetValue(id,out var fact)&&fact.TryRead(context,out value);
+            return TryRead(id,1,null,context,out value);
+        }
+        public static bool TryRead(string id,int version,JObject arguments,FactContext context,out ProgramValue value) {
+            value=default;return id!=null&&facts.TryGetValue(id,out var fact)&&fact.TryRead(context,version,arguments,out value);
         }
         public static JObject Manifest()=>new JObject {
             ["version"]=1,

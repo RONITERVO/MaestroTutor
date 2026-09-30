@@ -2986,6 +2986,40 @@
   ],
   "facts": [
     {
+      "id": "object.position",
+      "version": 1,
+      "type": {
+        "record": {
+          "x": "number",
+          "y": "number",
+          "z": "number"
+        }
+      },
+      "label": "Object world position",
+      "description": "Current transform origin in Unity world metres as a record {x,y,z}. This is not a mesh centre, surface, floor height or navigation destination. Target may be the book, Maestro or an existing creation. Grabs, animations and physics all affect the reading; physics need not run. Missing/disabled targets, invalid positions and paused app runtime are unavailable. Reads take no ownership, grant no editing authority and do not subscribe. Save the result in a local when several calculations need the same snapshot. World coordinates may change after recentering/alignment; do not treat them as durable room anchors.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "book"
+      },
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
       "id": "room.sessionId",
       "version": 1,
       "type": "text",
@@ -3190,7 +3224,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "8f3720c5ea840f51ebe6d332bd75f1924f19bd8dcb749ae919fa1eaac3dfac42"
+      "sha256": "6fd24dc853b19df391e67700b122be22871f087d9041304095484ebfd22eb384"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -3198,7 +3232,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
-      "sha256": "bc2c00706a1bed21e99f629a8aaa719c77d4f6ef2235671c6e9cd0fd85547566"
+      "sha256": "5d40e95bd4c1fd5c580bad2feeae8fc01dc7f25a3ec3574b3bfbbabd08c63a36"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramSubscriptions.cs",
@@ -3209,12 +3243,16 @@
       "sha256": "1958c8cbc6fcd40bbdde8bb69cd618a3c0bf405a203065cc2084b7bb7111c1a0"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/NativeObjectFacts.cs",
+      "sha256": "70f36dd2e32d1e4fb55bad87f47c98c3249cf01f3502ab9e753ef012fe29a7f0"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramData.cs",
       "sha256": "63f6e6c6e6268dd1ebd9bd552aa333b1f05a094ecf53352fb9a42c8248e3e11d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramModules.cs",
-      "sha256": "cb1e12257cda89889ab8e30e2c4985cebfd0742426ce6f98cf09a560a0b62fa4"
+      "sha256": "af9ae2c46d94dadd9956fa501a2f136ffb620e52639086ab8a4b88b26cd47981"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramModuleLibrary.cs",

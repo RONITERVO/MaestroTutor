@@ -100,3 +100,15 @@ it('accepts native module pins and requires library support for human and agent 
  expect(()=>requireRoomCapabilities(commands,{capabilities:['execution.v1','moduleLibrary.v1']})).not.toThrow();
  expect(nativeModules.removed.definition).toBeNull();
 });
+
+it('correlates bounded fact arguments and validates structured available values',()=>{
+ const query={operation:'inspect',category:'facts',capability:'object.position',version:1,arguments:{target:'book'}};
+ expect(validCatalogRequest(query)).toBe(true);expect(parseRoomCommands({commands:[{action:'catalog',catalog:query}]})).toHaveLength(1);
+ for(const category of ['events','actions','modules'])expect(validCatalogRequest({...query,category})).toBe(false);
+ expect(validCatalogRequest({...query,arguments:{target:'x'.repeat(129)}})).toBe(false);
+ const view={...query,definition:behaviourFact('object.position'),available:true,value:{x:0,y:1,z:2},status:'Current position'};
+ expect(validCatalogView(view)).toBe(true);for(const value of [{x:0,y:1},{x:0,y:1,z:Infinity},{x:0,y:1,z:2,extra:0},'wrong',null])expect(validCatalogView({...view,value})).toBe(false);
+ expect(validCatalogView({...view,arguments:{target:'bad'}})).toBe(false);expect(validCatalogView({...view,available:false,value:null})).toBe(true);
+ const command=parseRoomCommands({commands:[{action:'catalog',catalog:query}]});expect(()=>requireRoomCapabilities(command,{capabilities:['catalog.v1','catalogVocabulary.v1']})).toThrow('factQueries.v1');
+ expect(()=>requireRoomCapabilities(command,{capabilities:['catalog.v1','catalogVocabulary.v1','factQueries.v1']})).not.toThrow();
+});

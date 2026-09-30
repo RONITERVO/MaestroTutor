@@ -5,6 +5,7 @@ export interface AvatarMovementSettings { distance:number; speed:number }
 export interface AvatarWalkObservation {source:'included'|'embedded'|'library';motionId:string;modelHash:string;clipIndex:number;name:string;available:boolean;status:string;playbackStatus:string}
 export interface PhysicsObservation { ready:boolean; running:boolean; status:string }
 export interface AvatarMovementObservation { active:boolean; mode:'look'|'follow'|'manual'|'stopped'; status:string; canLook:boolean; canFollow:boolean; lookReason:string; followReason:string; distance:number; speed:number }
+import {behaviourFact} from './behaviourCatalog';
 import {behaviourEvent} from './behaviourEvents';
 import {capabilityDefinition,capabilityInput} from './capabilities';
 import {roomControlFields} from './prompts/roomcontrols';
@@ -35,6 +36,7 @@ export function requireRoomCapabilities(commands:{action:string;rule?:unknown;ex
       if(value.fields!==undefined)features.add('eventFields.v1');
       for(const feature of behaviourEvent(String(value.event))?.features??[])features.add(feature);
     }
+    if(typeof value.fact==='string')for(const feature of behaviourFact(value.fact)?.features??[])features.add(feature);
     const capability=value.op==='invoke'?value.capability:value.id;
     if(typeof capability==='string'&&record(value.arguments))for(const feature of capabilityInput(capability,value.arguments)?.['x-features']??[])features.add(feature);
     Object.values(value).forEach(x=>needs(x,features));
@@ -42,6 +44,7 @@ export function requireRoomCapabilities(commands:{action:string;rule?:unknown;ex
   for(const command of commands) {
     if(command.action==='catalog'&&record(command.catalog)&&command.catalog.category==='modules'&&!scene.capabilities?.includes('moduleLibrary.v1'))throw new Error('Update the native app to browse reusable modules (moduleLibrary.v1).');
     if(command.action==='catalog'&&record(command.catalog)&&command.catalog.category!==undefined&&command.catalog.category!=='modules'&&!scene.capabilities?.includes('catalogVocabulary.v1'))throw new Error('Update the native app to discover events and facts (catalogVocabulary.v1).');
+    if(command.action==='catalog'&&record(command.catalog)&&command.catalog.arguments!==undefined&&!scene.capabilities?.includes('factQueries.v1'))throw new Error('Update the native app to read parameterized facts (factQueries.v1).');
     if(command.action==='execution'&&record(command.execution)&&command.execution.operation==='recover'&&!scene.capabilities?.includes('actionRecovery.v1'))throw new Error('Update the native app to recover action history.');
     if(command.action==='rules'&&record(command.rule)&&Array.isArray(command.rule.edits)&&command.rule.edits.some(e=>record(e)&&record(e.sequence)&&typeof e.sequence.program==='string'&&hasEdit(JSON.parse(e.sequence.program)))&&!scene.capabilities?.includes('objectEdits.v1'))
       throw new Error('Update the native app to edit objects in programs.');

@@ -3,14 +3,15 @@ import {linkProgram,compiledProgramName,type ProgramImport} from './programModul
 // SPDX-License-Identifier: Apache-2.0
 import {behaviourEvent,eventFieldType,validateEventArguments,eventArgumentType} from '../../../shared/behaviourEvents';
 import {type RuleStep} from './ruleSteps';
-import {behaviourFactTypes} from '../../../shared/behaviourCatalog';
+import {behaviourFactTypes,behaviourFact} from '../../../shared/behaviourCatalog';
+import {validateFactArguments,factArgumentType} from '../../../shared/behaviourFacts';
 import {validateCapabilityArguments,capabilityParameterType,argumentValue,capabilityOutputType,literalCapabilityResources} from '../../../shared/capabilities';
 import {stepInvocation,invocationStep} from './capabilitySteps';
 import {checkedDataValue,readDataType,sameDataType,dataOperationType,type DataValue,type DataType,type ScalarType} from '../../../shared/programValues';
 export type Value=DataValue;
 export type ValueType=DataType;
 export type {ScalarType};
-export type Expression={value:Value;type?:ValueType}|{var:string}|{state:string}|{fact:string}|{op:string;args:Expression[]};
+export type Expression={value:Value;type?:ValueType}|{var:string}|{state:string}|{fact:string;version?:number;arguments?:Record<string,unknown>;bindings?:Record<string,Expression>}|{op:string;args:Expression[]};
 export type ProgramNode={id:string}&(
  {op:'set'|'setState';variable:string;value:Expression}|{op:'forever';body:ProgramNode[]}|{op:'sleep';seconds:Expression}|{op:'awaitEvent';event:string;source:string;timeout:Expression;received:string;value:string;fields?:Record<string,string>;version?:number;arguments?:Record<string,unknown>;bindings?:Record<string,Expression>}|{op:'emitEvent';event:string;value:Expression}|{op:'if';test:Expression;then:ProgramNode[];else:ProgramNode[]}|
  {op:'repeat';count:Expression;body:ProgramNode[]}|{op:'switch';value:Expression;cases:{value:Value;body:ProgramNode[]}[];default:ProgramNode[]}|
@@ -66,7 +67,11 @@ function validateProgram(root:Record<string,unknown>):void {
    if(Object.prototype.hasOwnProperty.call(e,'value')){keys(e,'value','type');need(e.type===undefined||root.dataVersion===1,'Explicit value types need dataVersion 1');const t=literal(e.value,e.type);supported(t);return t;}
    if(Object.prototype.hasOwnProperty.call(e,'var')){keys(e,'var');const t=types.get(text(e.var));need(t,'Unknown variable');return t;}
    if(Object.prototype.hasOwnProperty.call(e,'state')){keys(e,'state');const t=state.get(text(e.state));need(root.version===3&&t,'Unknown program state');return t;}
-   if(Object.prototype.hasOwnProperty.call(e,'fact')){keys(e,'fact');const fact=text(e.fact);need(Object.prototype.hasOwnProperty.call(programFacts,fact),'Unknown room fact');return programFacts[fact];}
+   if(Object.prototype.hasOwnProperty.call(e,'fact')){
+    const id=text(e.fact),fact=behaviourFact(id);need(fact,'Unknown room fact');
+    if(fact.input){need(root.version===3,'Fact queries need program version 3');keys(e,'fact version arguments bindings');need(typeof e.version==='number'&&Number.isInteger(e.version),'Invalid fact version');const error=validateFactArguments(id,e.version,obj(e.arguments));need(!error,error??'Invalid fact query');for(const [path,value] of Object.entries(obj(e.bindings))){const t=factArgumentType(id,path);need(t&&expr(value,types,depth+1)===t,'Invalid fact argument binding');}}
+    else keys(e,'fact');supported(fact.type);return fact.type;
+   }
    keys(e,'op args');const op=text(e.op),args=array(e.args,3);need(args.length>0,'Invalid expression argument count');const ts=args.map(a=>expr(a,types,depth+1));
    const dataType=dataOperationType(op,ts,args.length>1?obj(args[1]).value:undefined);if(dataType){need(root.version===3&&root.dataVersion===1,'Structured values need version 3 and dataVersion 1');return dataType;}
    need(args.length===(op==='not'?1:2),'Invalid expression argument count');

@@ -41,7 +41,7 @@ namespace Maestro.Quest.Programs
    }
    Encode(module,0);using var sha=SHA256.Create();return string.Concat(sha.ComputeHash(Encoding.ASCII.GetBytes(b.ToString())).Select(v=>v.ToString("x2",CultureInfo.InvariantCulture)));
   }
-  static void Expression(JToken token,Action<JObject> visit){var e=Obj(token);visit(e);if(e.ContainsKey("op"))foreach(var arg in List(e["args"],3))Expression(arg,visit);}
+  static void Expression(JToken token,Action<JObject> visit){var e=Obj(token);visit(e);if(e.ContainsKey("op"))foreach(var arg in List(e["args"],3))Expression(arg,visit);if(e.ContainsKey("fact")&&e["bindings"] is JObject bindings)foreach(var binding in bindings.Properties())Expression(binding.Value,visit);}
   static void Expressions(JObject n,Action<JObject> visit){
    switch((string)n["op"]){
     case "set":case "setState":case "emitEvent":case "switch":Expression(n["value"],visit);break;

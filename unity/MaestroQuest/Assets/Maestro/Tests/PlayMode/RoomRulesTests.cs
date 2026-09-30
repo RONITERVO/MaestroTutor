@@ -820,6 +820,25 @@ namespace Maestro.Quest.Tests
             var unknown=Query(new JObject {["operation"]="inspect",["capability"]="future.unknown",["version"]=1},"unknown");
             Assert.That(unknown["definition"].Type,Is.EqualTo(JTokenType.Null));
         }
+        [UnityTest] public IEnumerator ParameterizedFactsObserveAnimationWithoutOwningEditingOrFabricatingTargets()
+        {
+            string target=editor.Identity(block),source=File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-object-facts.json")).Replace("\"book\"","\""+target+"\"");
+            var executor=new RoomAgentExecutor(editor);var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);
+            Assert.That(executor.Execute(new RoomAgentRequest {version=2,commands=new[]{new RoomAgentCommand {action="rules",rule=new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="save",reference="read",sequence=new RuleSequence {id="",name="Observe position",program=source}}}}}}},out var error,out var created),Is.True,error);
+            string id=created.Single();int revision=editor.Revision,rulesRevision=workshop.Revision;string document=JsonUtility.ToJson(editor.Snapshot());
+            var query=new JObject {["operation"]="inspect",["category"]="facts",["capability"]="object.position",["version"]=1};
+            JObject Evidence(string phase){var result=executor.Catalog.Observe();string output=Environment.GetEnvironmentVariable("MAESTRO_OBJECT_FACT_EVIDENCE");if(!string.IsNullOrEmpty(output)){Directory.CreateDirectory(output);var state=observer.Observe();state.catalog=result;state.visible=true;state.workspaceView="rules";state.rules=workshop.Observe(true);File.WriteAllText(Path.Combine(output,phase+".json"),RoomAgentWire.Serialize(state));}return result;}
+            Assert.That(executor.Catalog.Execute(query,out error),Is.True,error);Assert.That((bool)Evidence("definition")["available"],Is.False);
+            query["arguments"]=new JObject {["target"]=target};Assert.That(executor.Catalog.Execute(query,out error),Is.True,error);var before=Evidence("before");Assert.That((bool)before["available"],Is.True);Assert.That((float)before["value"]["x"],Is.EqualTo(block.transform.position.x).Within(.0001));
+            Assert.That(runtime.Trigger(sequenceId),Is.True);Assert.That(runtime.Trigger(id),Is.True);yield return new WaitForSeconds(.5f);
+            var run=runtime.Scheduler.ObserveRuns().Single(x=>x.sequenceId==id);Assert.That(run.nodeId,Is.EqualTo("finish"),runtime.Scheduler.LastError);Assert.That(run.state.Single(x=>x.name=="moved").value,Is.EqualTo("True"));
+            var after=Evidence("moving");Assert.That((float)after["value"]["x"],Is.GreaterThan((float)before["value"]["x"]));Assert.That(runtime.Scheduler.RunningCount,Is.EqualTo(2),"Reading cannot interrupt the animator");
+            Assert.That(editor.Revision,Is.EqualTo(revision));Assert.That(workshop.Revision,Is.EqualTo(rulesRevision));Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(document));Assert.That(workshop.Selected.program,Is.EqualTo(source));
+            root.SendMessage("OnApplicationPause",true,SendMessageOptions.DontRequireReceiver);Assert.That((bool)Evidence("paused")["available"],Is.False);root.SendMessage("OnApplicationPause",false,SendMessageOptions.DontRequireReceiver);yield return null;Assert.That(runtime.Scheduler.RunningCount,Is.Zero);Assert.That((bool)Evidence("resumed")["available"],Is.True);
+            query["arguments"]["target"]=new string('e',32);Assert.That(executor.Catalog.Execute(query,out error),Is.True,error);Assert.That((bool)Evidence("missing")["available"],Is.False);
+            query["arguments"]["target"]=target;Assert.That(executor.Catalog.Execute(query,out error),Is.True,error);block.gameObject.SetActive(false);Assert.That((bool)Evidence("disabled")["available"],Is.False);block.gameObject.SetActive(true);
+            var bad=JObject.Parse(source);bad["state"][0]["initial"]=new string('e',32);var seq=workshop.Selected;seq.program=bad.ToString();Assert.That(workshop.Execute(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="save",sequence=seq}}},out error,out _),Is.True,error);Assert.That(runtime.Trigger(id),Is.False,"An immediately unavailable fact must reject the run");yield return null;Assert.That(runtime.Scheduler.LastError,Does.Contain("unavailable"));Evidence("failed");
+        }
         [UnityTest] public IEnumerator VocabularyDiscoveryReadsLiveFactsWithoutEditingOrInterruptingPlayback()
         {
             var executor=new RoomAgentExecutor(editor);var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);

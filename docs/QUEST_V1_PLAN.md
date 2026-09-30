@@ -2,7 +2,16 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
-Latest PC increment (2026-09-30): physical motion subscriptions share the native
+Latest PC increment (2026-09-30): parameterized fact reads share native schemas,
+typed program expressions, catalog inspection and visual input editing. Programs
+and the agent can read current object positions without owning or editing them.
+Stored records stay detached; missing targets remain unavailable. See
+QUEST_EVENT_PROGRAMS.md. PC verification passes 1,458 app tests, 224 EditMode and
+137 PlayMode checks (three optional native skips), plus 25 Android tests. The ARM64
+development APK is built, signature-verified and uninstalled; device/provider/store
+gates remain open.
+
+Previous PC increment (2026-09-30): physical motion subscriptions share the native
 catalog, event runtime and generated book controls. Programs can detect sustained
 low linear/angular velocity and later motion, with explicit initial-state policy,
 hysteresis and reset rules for ownership/physics/placement/sampling interruptions.
@@ -79,7 +88,7 @@ branches; source editing remains available. See QUEST_BEHAVIOUR_PROGRAMS.md.
 
 Current architecture: the original app owns chat/Live handoff, Gemini access
 and durable task journals. Canonical behaviour programs, the shared native
-catalog (16 actions, ten events and four facts), one scheduler and native
+catalog (16 actions, ten events and five facts), one scheduler and native
 receipts serve human controls and agent calls. Version-3 programs retain typed
 session state across event/timer waits. Creation results compose with animation,
 physics and durable object edits; per-channel ownership permits supported

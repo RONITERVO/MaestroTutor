@@ -30,7 +30,7 @@ namespace Maestro.Quest.Creation
             if(value==null||value["operation"]?.Type!=JTokenType.String)return false;
             switch((string)value["operation"]) {
                 case "search":return QueryKeys(value,"operation","query","offset")&&Text(value["query"],80)&&value["offset"]?.Type==JTokenType.Integer&&(double)value["offset"]>=0&&(double)value["offset"]<=1000000;
-                case "inspect":return QueryKeys(value,"operation","capability","version")&&((string)value["category"]=="modules"?value["capability"]?.Type==JTokenType.String&&ProgramModuleLibrary.ValidHash((string)value["capability"]):Id(value["capability"]))&&Version(value["version"]);
+                case "inspect":return (value.ContainsKey("arguments")?value["category"]?.Type==JTokenType.String&&(string)value["category"]=="facts"&&QueryKeys(value,"operation","capability","version","arguments")&&ValidCall(new JObject {["id"]=value["capability"]?.DeepClone(),["version"]=value["version"]?.DeepClone(),["arguments"]=value["arguments"].DeepClone()}):QueryKeys(value,"operation","capability","version"))&&((string)value["category"]=="modules"?value["capability"]?.Type==JTokenType.String&&ProgramModuleLibrary.ValidHash((string)value["capability"]):Id(value["capability"]))&&Version(value["version"]);
                 case "check":return Exact(value,"operation","call")&&ValidCall(value["call"] as JObject);
                 default:return false;
             }
@@ -70,11 +70,11 @@ namespace Maestro.Quest.Creation
         JObject Cache(JObject value) {cached=(JObject)value.DeepClone();return value;}
         JObject ReadFact(JObject result,Entry entry) {
             var runtime=editor?editor.GetComponent<RoomRules>():null;ProgramValue value=default;
-            bool available=entry!=null&&runtime&&runtime.TryReadFact(entry.Id,out value)&&value.Type==BehaviourCatalog.Fact(entry.Id).Type;
-            JToken reading=available?JToken.FromObject(value.Value):JValue.CreateNull();
-            if(available&&!RuleScheduler.ValidEventValue(reading)) {available=false;reading=JValue.CreateNull();}
-            result["available"]=available;result["value"]=reading;
-            if(entry!=null)result["status"]=available?"Current fact value. Reading does not change the room.":"Fact value is currently unavailable; do not treat it as false or zero.";
+            var definition=entry==null?null:BehaviourCatalog.Fact(entry.Id);var arguments=request["arguments"] as JObject;
+            if(request.ContainsKey("arguments"))result["arguments"]=request["arguments"].DeepClone();
+            bool available=definition!=null&&runtime&&runtime.TryReadFact(entry.Id,entry.Version,arguments,out value)&&definition.ValidValue(value);
+            result["available"]=available;result["value"]=available?JToken.FromObject(value.Value):JValue.CreateNull();
+            if(entry!=null)result["status"]=available?"Current fact value. Reading does not change the room.":definition.Parameterized&&arguments==null?"Choose fact arguments to read a value.":!definition.ValidArguments(entry.Version,arguments,out _)?"Fact arguments do not match this definition.":"Fact value is currently unavailable; do not treat it as false or zero.";
             return result;
         }
         JObject ObserveModules(string operation) {

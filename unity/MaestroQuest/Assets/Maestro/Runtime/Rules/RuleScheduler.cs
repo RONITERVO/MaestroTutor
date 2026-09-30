@@ -5,6 +5,7 @@ using Maestro.Quest.Interaction;
 using System.Collections.Generic;
 using System.Linq;
 using Maestro.Quest.Programs;
+using Newtonsoft.Json.Linq;
 
 namespace Maestro.Quest.Rules
 {
@@ -22,7 +23,7 @@ namespace Maestro.Quest.Rules
     public interface IRuleReadiness { RuleActionState State(string runId,out string error); }
 
     /// <summary>Bounded scheduler; disjoint targets can run concurrently. No user code executes.</summary>
-    public sealed partial class RuleScheduler : IProgramFacts
+    public sealed partial class RuleScheduler : IProgramFacts, IProgramFactQueries
     {
         sealed class Run
         {
@@ -74,6 +75,10 @@ namespace Maestro.Quest.Rules
         public bool TryRead(string name,out ProgramValue value) {
             if(BehaviourCatalog.TryRead(name,new BehaviourCatalog.FactContext(activity),out value))return true;
             if(actions is IProgramFacts source)return source.TryRead(name,out value);value=default;return false;
+        }
+        public bool TryRead(string name,int version,JObject arguments,out ProgramValue value) {
+            if(BehaviourCatalog.TryRead(name,version,arguments,new BehaviourCatalog.FactContext(activity),out value))return true;
+            if(actions is IProgramFactQueries source)return source.TryRead(name,version,arguments,out value);value=default;return false;
         }
         public void Configure(RuleDocument value)
         {

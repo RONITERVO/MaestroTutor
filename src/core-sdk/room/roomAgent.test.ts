@@ -267,3 +267,23 @@ it('inspects native subscription parameters then saves the same program without 
  expect(JSON.parse(requests[1][0].contents[0].parts[0].text).scene.catalog.definition.input.properties.radius.maximum).toBe(10);
  expect(result.scene.status).toBe('Saved without starting');
 });
+
+import objectFactProgram from '../../../unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-object-facts.json';
+it('passes queried object records back to the existing agent and saves the shared program without starting it',async()=>{
+ const inspect:RoomCommand={action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.position',version:1}};
+ const read:RoomCommand={action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.position',version:1,arguments:{target:'book'}}};
+ const save:RoomCommand={action:'rules',rule:{action:'edit',revision:1,edits:[{kind:'save',reference:'position',sequence:{id:'',name:'Observe position',interruption:0,repeat:false,program:JSON.stringify(objectFactProgram)}}]}};
+ const ai=client([inspect,read,save].map(command=>JSON.stringify({commands:[command]})).concat('{"commands":[]}'));
+ let current:RoomAgentState={...scene,capabilities:['catalog.v1','catalogVocabulary.v1','factQueries.v1','behaviourPrograms.v3','eventPrograms.v1','structuredValues.v1']};
+ const execute=vi.fn(async(commands:RoomCommand[])=>{
+  const query=commands[0].catalog;
+  if(query?.operation==='inspect')current={...current,ack:current.ack+1,catalog:{...query,category:'facts',definition:behaviourFact(query.capability),available:query.arguments!==undefined,value:query.arguments?{x:0,y:1.2,z:-.4}:null,status:'Simulated native query'}};
+  else current={...current,ack:current.ack+1,status:'Saved without starting'};return current;
+ });
+ const result=await runRoomActionTask({...input,prompt:'Read the book position and prepare a position-change observer. Leave it stopped.'},{aiClient:ai},{state:()=>current,valid:()=>true,execute},()=>{});
+ expect(execute.mock.calls.map(x=>x[0])).toEqual([[inspect],[read],[save]]);expect(result.budgetExhausted).toBe(false);
+ const requests=ai.models.generateContentStream.mock.calls as unknown as [{contents:{parts:{text:string}[]}[]}][];
+ expect(JSON.parse(requests[1][0].contents[0].parts[0].text).scene.catalog.definition.type).toEqual({record:{x:'number',y:'number',z:'number'}});
+ expect(JSON.parse(requests[2][0].contents[0].parts[0].text).scene.catalog).toMatchObject({arguments:{target:'book'},available:true,value:{x:0,y:1.2,z:-.4}});
+ expect(result.scene.status).toBe('Saved without starting');expect(ai.live.connect).not.toHaveBeenCalled();
+});

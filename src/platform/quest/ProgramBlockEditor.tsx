@@ -4,19 +4,19 @@ import {sameDataType} from '../../../shared/programValues';
 // SPDX-License-Identifier: Apache-2.0
 import type {ReactNode} from 'react';
 import {behaviourEvent,eventFieldType,eventArgumentType} from '../../../shared/behaviourEvents';
-import {behaviourCatalog} from '../../../shared/behaviourCatalog';
+import {behaviourCatalog,behaviourFact} from '../../../shared/behaviourCatalog';
 import {capabilityDefinition,capabilityParameterType,capabilityInput,type CapabilitySchema} from '../../../shared/capabilities';
 import type {BehaviourProgram,Expression,ProgramFunction,ProgramNode,ValueType} from '../../core-sdk/room/programs';
 import {CapabilityFields,CapabilityVariant,initialCapabilityValue,type EditorObject} from './CapabilityFields';
 import {ProgramValueEditor,defaultValue,valueExpression,expressionType,roomValueSources,valueType,type ValueSource} from './ProgramValueEditor';
 
-export function ProgramBlockEditor({node,program,fn,objects,onChange,eventFieldsSupported=false,eventSubscriptionsSupported=false}:{
-  eventFieldsSupported?:boolean;eventSubscriptionsSupported?:boolean;node:ProgramNode;program:BehaviourProgram;fn:ProgramFunction;objects:readonly EditorObject[];onChange:(node:ProgramNode)=>void;
+export function ProgramBlockEditor({node,program,fn,objects,onChange,eventFieldsSupported=false,eventSubscriptionsSupported=false,factQueriesSupported=false}:{
+  eventFieldsSupported?:boolean;eventSubscriptionsSupported?:boolean;factQueriesSupported?:boolean;node:ProgramNode;program:BehaviourProgram;fn:ProgramFunction;objects:readonly EditorObject[];onChange:(node:ProgramNode)=>void;
 }) {
   const locals=[...fn.parameters,...fn.locals.map(v=>({name:v.name,type:valueType(v.initial,v.type)}))];
   const states=(program.state??[]).map(v=>({name:v.name,type:valueType(v.initial,v.type)}));
-  const sources:ValueSource[]=[...roomValueSources,...locals.map(v=>({...v,kind:'var' as const})),...states.map(v=>({...v,kind:'state' as const}))];
-  const expr=(label:string,value:Expression,type:ValueType,change:(value:Expression)=>void)=><ProgramValueEditor label={label} value={value} type={type} sources={sources} onChange={change}/>;
+  const sources:ValueSource[]=[...roomValueSources.filter(s=>!behaviourFact(s.name)?.input||factQueriesSupported&&program.version===3&&(typeof s.type==='string'||program.dataVersion===1)),...locals.map(v=>({...v,kind:'var' as const})),...states.map(v=>({...v,kind:'state' as const}))];
+  const expr=(label:string,value:Expression,type:ValueType,change:(value:Expression)=>void)=><ProgramValueEditor objects={objects} label={label} value={value} type={type} sources={sources} onChange={change}/>;
   const variable=(label:string,current:string,type:ValueType,change:(value:string)=>void,choices=locals)=><label>{label}<select aria-label={label} value={current} onChange={e=>change(e.target.value)}>
     {!choices.some(v=>v.name===current&&sameDataType(v.type,type))&&<option value={current}>{current||'Choose a variable'}</option>}
     {choices.filter(v=>sameDataType(v.type,type)).map(v=><option key={v.name} value={v.name}>{v.name}</option>)}

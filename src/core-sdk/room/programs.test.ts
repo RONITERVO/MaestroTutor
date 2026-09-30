@@ -1,3 +1,5 @@
+import {moduleHash} from './programModules';
+import {declarationDraft,editProgramDeclarations} from '../../platform/quest/programDeclarationEditing';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {describe,it,expect} from 'vitest';
@@ -129,4 +131,21 @@ it('uses catalog validation for motion thresholds, initial-state policy and meas
   const p=JSON.parse(source);edit(p.functions[0].body[0]);expect(parseProgram(JSON.stringify(p)).program).toBeNull();
  }
  const p=JSON.parse(source);p.functions[0].body[0].bindings={speedThreshold:{var:'speed'}};expect(parseProgram(JSON.stringify(p)).error).toBeNull();
+});
+
+it('validates typed object fact arguments, computed bindings and old-runtime gates',()=>{
+ const original=JSON.parse(readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-object-facts.json','utf8')) as BehaviourProgram;
+ expect(parseProgram(JSON.stringify(original)).error).toBeNull();expect(original.resources).toEqual([]);
+ for(const patch of [{version:2},{bindings:undefined},{arguments:{target:'wrong'}},{bindings:{target:{value:3}}},{bindings:{other:{value:'book'}}}]){const p=structuredClone(original),node=p.functions[0].body[0];if(node.op!=='set')throw new Error('Expected assignment');Object.assign(node.value,patch);expect(parseProgram(JSON.stringify(p)).program).toBeNull();}const scalarOnly=structuredClone(original);delete scalarOnly.dataVersion;expect(parseProgram(JSON.stringify(scalarOnly)).program).toBeNull();
+ const commands=parseRoomCommands({commands:[{action:'rules',rule:{action:'edit',revision:1,edits:[{kind:'save',sequence:{id:'a'.repeat(32),name:'Read position',interruption:0,repeat:false,program:JSON.stringify(original)}}]}}]});
+ const capabilities=['rules.v1','behaviourPrograms.v3','eventPrograms.v1','structuredValues.v1'];expect(()=>requireRoomCapabilities(commands,{capabilities})).toThrow('factQueries.v1');expect(()=>requireRoomCapabilities(commands,{capabilities:[...capabilities,'factQueries.v1']})).not.toThrow();
+});
+
+it('scopes and renames fact binding references while preserving native literal arguments',()=>{
+ const original=JSON.parse(readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-object-facts.json','utf8')) as BehaviourProgram;
+ const draft=declarationDraft(original);draft.state[0].name='observedTarget';const renamed=editProgramDeclarations(original,draft);
+ expect(renamed.functions[0].body[0]).toMatchObject({value:{arguments:{target:'book'},bindings:{target:{state:'observedTarget'}}}});
+ const module={version:1 as const,name:'Observer',exports:['main'],program:original};
+ const caller={version:3,dataVersion:1,moduleVersion:1,entry:'main',resources:[],state:[],events:[],imports:[{alias:'probe',hash:moduleHash(module),module,signals:{}}],functions:[{name:'main',returns:'void',parameters:[],locals:[],body:[{id:'call',op:'call',module:'probe',function:'main',args:[]}]}]};
+ const result=parseProgram(JSON.stringify(caller));expect(result.error).toBeNull();expect(result.linked?.functions.find(f=>f.name==='probe.main')?.body[0]).toMatchObject({value:{arguments:{target:'book'},bindings:{target:{state:'probe.target'}}}});
 });

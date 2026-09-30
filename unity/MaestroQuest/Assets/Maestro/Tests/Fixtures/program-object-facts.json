@@ -1,0 +1,164 @@
+{
+  "version": 3,
+  "dataVersion": 1,
+  "entry": "main",
+  "resources": [],
+  "state": [
+    {
+      "name": "target",
+      "initial": "book"
+    },
+    {
+      "name": "firstX",
+      "initial": 0
+    },
+    {
+      "name": "lastX",
+      "initial": 0
+    },
+    {
+      "name": "moved",
+      "initial": false
+    }
+  ],
+  "events": [],
+  "functions": [
+    {
+      "name": "main",
+      "returns": "void",
+      "parameters": [],
+      "locals": [
+        {
+          "name": "before",
+          "initial": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        {
+          "name": "after",
+          "initial": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        }
+      ],
+      "body": [
+        {
+          "id": "read_before",
+          "op": "set",
+          "variable": "before",
+          "value": {
+            "fact": "object.position",
+            "version": 1,
+            "arguments": {
+              "target": "book"
+            },
+            "bindings": {
+              "target": {
+                "state": "target"
+              }
+            }
+          }
+        },
+        {
+          "id": "first_x",
+          "op": "setState",
+          "variable": "firstX",
+          "value": {
+            "op": "field",
+            "args": [
+              {
+                "var": "before"
+              },
+              {
+                "value": "x"
+              }
+            ]
+          }
+        },
+        {
+          "id": "wait",
+          "op": "sleep",
+          "seconds": {
+            "value": 0.3
+          }
+        },
+        {
+          "id": "read_after",
+          "op": "set",
+          "variable": "after",
+          "value": {
+            "fact": "object.position",
+            "version": 1,
+            "arguments": {
+              "target": "book"
+            },
+            "bindings": {
+              "target": {
+                "state": "target"
+              }
+            }
+          }
+        },
+        {
+          "id": "last_x",
+          "op": "setState",
+          "variable": "lastX",
+          "value": {
+            "op": "field",
+            "args": [
+              {
+                "var": "after"
+              },
+              {
+                "value": "x"
+              }
+            ]
+          }
+        },
+        {
+          "id": "changed",
+          "op": "setState",
+          "variable": "moved",
+          "value": {
+            "op": "ne",
+            "args": [
+              {
+                "op": "field",
+                "args": [
+                  {
+                    "var": "before"
+                  },
+                  {
+                    "value": "x"
+                  }
+                ]
+              },
+              {
+                "op": "field",
+                "args": [
+                  {
+                    "var": "after"
+                  },
+                  {
+                    "value": "x"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "finish",
+          "op": "sleep",
+          "seconds": {
+            "value": 30
+          }
+        }
+      ]
+    }
+  ]
+}

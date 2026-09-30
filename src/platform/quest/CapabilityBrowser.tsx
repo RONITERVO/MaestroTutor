@@ -1,8 +1,10 @@
+import {dataTypeLabel} from '../../../shared/programValues';
+import {validateFactArguments} from '../../../shared/behaviourFacts';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {useState,useSyncExternalStore} from 'react';
 import {capabilityDefinition,validateCapabilityArguments,resolveCapabilitySchema,type CapabilityInvocation} from '../../../shared/capabilities';
-import {CapabilityVariant,initialCapabilityValue} from './CapabilityFields';
+import {CapabilityVariant,CapabilityFields,initialCapabilityValue} from './CapabilityFields';
 import type {ExecutionRequest} from '../../../shared/roomExecutions';
 import type {CatalogCategory,CatalogRequest,CatalogView} from '../../../shared/roomCatalog';
 import type {RoomAgentClient} from './roomAgentBridge';
@@ -25,12 +27,15 @@ export function CapabilityBrowser({client,onClose,onInsert}:{client:RoomAgentCli
  };
  const scope=category==='actions'?{}:{category};
  const search=async(offset=0)=>{setInspection(null);const result=await send({operation:'search',...scope,query:offset?page?.query??query:query,offset});if(result?.operation==='search'&&(result.category??'actions')===category)setPage(result);};
- const inspect=async(id:string,version:number)=>{const result=await send({operation:'inspect',...scope,capability:id,version});if(result?.operation==='inspect'&&(result.category??'actions')===category&&result.capability===id&&result.version===version){
+ const inspect=async(id:string,version:number,argumentsValue?:Record<string,unknown>)=>{const result=await send({operation:'inspect',...scope,capability:id,version,...(argumentsValue?{arguments:argumentsValue}:{})});if(result?.operation==='inspect'&&(result.category??'actions')===category&&result.capability===id&&result.version===version){
   setInspection(result);setChecked('');if(!result.definition)setError(result.status);
+  else if(result.category==='facts'&&result.definition.input)setArgs(JSON.stringify(result.arguments??result.definition.example??{},null,2));
   else if(result.category!=='events'&&result.category!=='facts'&&result.category!=='modules')setArgs(JSON.stringify(result.definition.example??initialCapabilityValue(result.definition.input,state?.objects??[]),null,2));
  }};
  const definition=inspection&&inspection.category!=='events'&&inspection.category!=='facts'&&inspection.category!=='modules'?inspection.definition:null;
- const currentFact=state?.catalog?.operation==='inspect'&&state.catalog.category==='facts'&&inspection?.category==='facts'&&state.catalog.capability===inspection.capability&&state.catalog.version===inspection.version?state.catalog:null;
+ const currentFact=state?.catalog?.operation==='inspect'&&state.catalog.category==='facts'&&inspection?.category==='facts'&&state.catalog.capability===inspection.capability&&state.catalog.version===inspection.version&&JSON.stringify(state.catalog.arguments)===JSON.stringify(inspection.arguments)?state.catalog:null;
+ let factArgs:Record<string,unknown>|undefined,factError='';if(inspection?.category==='facts'&&inspection.definition?.input)try{factArgs=JSON.parse(args);factError=validateFactArguments(inspection.capability,inspection.version,factArgs)??'';}catch{factError='Enter valid fact arguments.';}
+ const factDirty=inspection?.category==='facts'&&Boolean(inspection.definition?.input)&&JSON.stringify(factArgs)!==JSON.stringify(inspection.arguments);
  let call:CapabilityInvocation|null=null,invalid='',parsedArgs:unknown;
  if(definition)try {parsedArgs=JSON.parse(args);invalid=validateCapabilityArguments(definition.id,definition.version,parsedArgs)??'';
   if(!invalid)call={id:definition.id,version:definition.version,arguments:parsedArgs as Record<string,unknown>};
@@ -64,9 +69,10 @@ export function CapabilityBrowser({client,onClose,onInsert}:{client:RoomAgentCli
     <details><summary>Exact event definition</summary><pre>{JSON.stringify(inspection.definition,null,2)}</pre></details>
    </section>}
    {inspection?.category==='facts'&&inspection.definition&&<section aria-label="Fact definition">
-    <p>{inspection.definition.id} · version {inspection.definition.version}</p><p>{inspection.definition.description}</p><p>Value type: {inspection.definition.type}</p>
-    <div className="room-message" aria-label="Current fact value">{currentFact?.available?<><strong>Current value</strong><p>{JSON.stringify(currentFact.value)}</p></>:<><strong>Unavailable</strong><p>{currentFact?'The runtime has no reliable value now.':'Refresh this fact to read it again.'}</p></>}</div>
-    <button disabled={pending} onClick={()=>void inspect(inspection.capability,inspection.version)}>Refresh fact</button>
+    <p>{inspection.definition.id} · version {inspection.definition.version}</p><p>{inspection.definition.description}</p><p>Value type: {dataTypeLabel(inspection.definition.type)}</p>
+    <div className="room-message" aria-label="Current fact value">{factDirty?<><strong>Not read yet</strong><p>Read this fact with the chosen inputs.</p></>:currentFact?.available?<><strong>Current value</strong><p>{JSON.stringify(currentFact.value)}</p></>:<><strong>Unavailable</strong><p>{currentFact?'The runtime has no reliable value now.':'Refresh this fact to read it again.'}</p></>}</div>
+    {inspection.definition.input&&<><CapabilityFields schema={inspection.definition.input} value={factArgs} label="Fact inputs" objects={state?.objects??[]} onChange={value=>setArgs(JSON.stringify(value,null,2))}/>{factError&&<p className="room-message room-message-warning">{factError}</p>}</>}
+    <button disabled={pending||Boolean(factError)||Boolean(inspection.definition.input)&&!state?.capabilities?.includes('factQueries.v1')} onClick={()=>void inspect(inspection.capability,inspection.version,factArgs)}>{inspection.definition.input?'Read fact':'Refresh fact'}</button>
     <p className="room-workspace-intro">Choose this fact as a condition or calculation input in a program. This reading is a snapshot; it does not subscribe to changes or run a behaviour.</p>
    </section>}
    {definition&&<><p>{definition.id} · version {definition.version}</p>{definition.description&&<p>{definition.description}</p>}

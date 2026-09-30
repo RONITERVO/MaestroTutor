@@ -1309,3 +1309,16 @@ Release/resume and check fresh qualification, then throw again and detect moving
 Change a threshold in the book and through the agent; inspect the same saved source
 and measured fields. Stop and app pause must cancel without automatic replay. Check
 readability of units/help and behaviour under real headset frame timing.
+
+### Parameterized position reads — pending headset acceptance
+
+- In the optional book fact catalog, inspect Object world position, select the
+  book, Maestro and a creation, and read each. Change the target and verify the
+  previous coordinates are hidden until that target is read.
+- Run a program that stores a position, waits and reads again while the target is
+  grabbed or animated. Verify the first snapshot stays fixed, the new read follows
+  movement, and observation does not interrupt grip/animation.
+- Pause the app and remove/disable the target. Verify unavailable readings and
+  cancelled/failed runs rather than false origins or automatic replay.
+- Check labels, record-field editing, controller/hand selection, rendering cost
+  and the equivalent real-provider agent journey on Quest.

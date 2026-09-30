@@ -101,7 +101,7 @@ namespace Maestro.Quest.Tests
         {
             var manifest=BehaviourCatalog.Manifest();
             Assert.That(manifest["facts"].Count(),Is.EqualTo(BehaviourProgram.Facts.Count));
-            foreach(var entry in manifest["facts"]) Assert.That(BehaviourProgram.Facts[(string)entry["id"]].ToString().ToLowerInvariant(),Is.EqualTo((string)entry["type"]));
+            foreach(var entry in manifest["facts"]) Assert.That(BehaviourProgram.Facts[(string)entry["id"]],Is.EqualTo(ProgramDataType.Read(entry["type"])));
             foreach(var entry in manifest["events"])
             {
                 var kind=BehaviourCatalog.Events.Single(x=>x.Id==(string)entry["id"]).Kind;

@@ -9,7 +9,7 @@ using Newtonsoft.Json.Linq;
 namespace Maestro.Quest.Rules
 {
     /// <summary>One lifecycle host for every native module. No capability IDs, enum dispatch or argument fields.</summary>
-    public sealed class RoomRuleActions : IRuleActions, IRuleCompletion, IRuleReadiness, IRuleInterruptionInfo, IRuleOwnershipSource, IProgramFacts, IProgramEventWorld, IProgramPhysicsWorld, IRuleResults
+    public sealed class RoomRuleActions : IRuleActions, IRuleCompletion, IRuleReadiness, IRuleInterruptionInfo, IRuleOwnershipSource, IProgramFacts, IProgramFactQueries, IProgramEventWorld, IProgramPhysicsWorld, IRuleResults
     {
         readonly CapabilityContext context;
         readonly Dictionary<string,CapabilityOperation> operations=new();
@@ -29,10 +29,11 @@ namespace Maestro.Quest.Rules
             var rigid=item.GetComponent<RigidRoomItem>();if(!rigid||!rigid.TryReadMotion(out bool available,out float speed,out float spin))return false;
             sample=new PhysicsMotionSample(rigid.GetInstanceID(),rigid.MotionRevision,available,speed,spin);return true;
         }
-        public bool TryRead(string name,out ProgramValue value) {
+        public bool TryRead(string name,out ProgramValue value)=>TryRead(name,1,null,out value);
+        public bool TryRead(string name,int version,JObject arguments,out ProgramValue value) {
             value=default;if(!context.Editor)return false;
-            return BehaviourCatalog.TryRead(name,new BehaviourCatalog.FactContext(physicsReady:context.Editor.PhysicsWorld?context.Editor.PhysicsWorld.SurfacesReady:null,
-                physicsRunning:context.Editor.PhysicsWorld?context.Editor.PhysicsWorld.Running:null,roomSessionId:context.Editor.TemporarySessionId),out value);
+            return BehaviourCatalog.TryRead(name,version,arguments,new BehaviourCatalog.FactContext(physicsReady:context.Editor.PhysicsWorld?context.Editor.PhysicsWorld.SurfacesReady:null,
+                physicsRunning:context.Editor.PhysicsWorld?context.Editor.PhysicsWorld.Running:null,roomSessionId:context.Editor.TemporarySessionId,world:this),out value);
         }
         public bool CanRun(CapabilityCall call,out string error)=>call.Definition.Module.CanRun(context,call.Arguments,out error);
         public bool Start(string runId,CapabilityCall call,out float seconds,out string error) {

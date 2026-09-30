@@ -63,11 +63,12 @@ describe('prompt ownership', () => {
     expect(catalogueRuntimeViolations('const example = "window.document"; const data = { window: "example" };')).toEqual([]);
   });
 
-  it('keeps the native vocabulary adapter dependent only on generated data', () => {
+  it('keeps the native vocabulary runtime dependent only on generated data', () => {
     const source = readFileSync(new URL('../../../shared/behaviourCatalog.ts', import.meta.url), 'utf8');
     const ast = ts.createSourceFile('behaviourCatalog.ts', source, ts.ScriptTarget.Latest, true);
-    const imports = ast.statements.filter(ts.isImportDeclaration).map(node => (node.moduleSpecifier as ts.StringLiteral).text);
-    expect(imports).toEqual(['./generated/behaviourCatalog.json']);
+    const imports = ast.statements.filter(ts.isImportDeclaration);
+    expect(imports.filter(node=>!node.importClause?.isTypeOnly).map(node=>(node.moduleSpecifier as ts.StringLiteral).text)).toEqual(['./generated/behaviourCatalog.json']);
+    expect(imports.filter(node=>node.importClause?.isTypeOnly).map(node=>(node.moduleSpecifier as ts.StringLiteral).text)).toEqual(['./programValues','./capabilities']);
     expect(catalogueRuntimeViolations(source, 'behaviourCatalog.ts')).toEqual([]);
   });
 

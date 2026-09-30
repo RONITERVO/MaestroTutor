@@ -81,6 +81,9 @@ namespace Maestro.Quest.Rules
         public bool TryReadFact(string name,out Programs.ProgramValue value) {
             value=default;return !paused&&focused&&isActiveAndEnabled&&Scheduler!=null&&Scheduler.TryRead(name,out value);
         }
+        public bool TryReadFact(string name,int version,Newtonsoft.Json.Linq.JObject arguments,out Programs.ProgramValue value) {
+            value=default;return !paused&&focused&&isActiveAndEnabled&&Scheduler!=null&&Scheduler.TryRead(name,version,arguments,out value);
+        }
         public bool CanRun(Maestro.Quest.Programs.CapabilityCall step,out string error)
         {
             error="Action runtime is not ready";if(actions==null||Scheduler==null)return false;
