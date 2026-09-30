@@ -1204,3 +1204,19 @@ create a listener, alter saved work or offer Run action for an event/fact. Ask t
 chat agent to discover relevant events/facts and prepare a behaviour without starting
 it; compare its evidence with the book. PC checks and browser replay do not establish
 headset or real-provider acceptance. No installation is included in this increment.
+
+
+### Pending: parameterized distance reactions
+
+In the book's event editor, choose object.proximity.changed and select two room
+objects, radius, hysteresis and enter/exit/either. Prepare the same behaviour through
+chat and compare the saved program. Start it outside the radius, then move an object
+near the other using a controller/hand or animation. Confirm one enter reaction and
+one exit only beyond radius+hysteresis, with no jitter while hovering in the band.
+Initially inside is a baseline, not an immediate trigger. Distance measures object
+origins rather than visible mesh edges; check whether the labels make that clear.
+Pause/Stop must cancel; rearming or returning focus must not replay old crossings.
+Confirm missing objects fail visibly and independent waits use their own inputs.
+Measure frame timing and read/control the schema-generated inputs on the headset.
+PC Unity execution and browser replay do not establish these acceptance checks;
+no install is included in this increment.

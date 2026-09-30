@@ -1,15 +1,15 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
-import {eventFieldType} from '../../../shared/behaviourEvents';
+import {behaviourEvent,eventFieldType,validateEventArguments,eventArgumentType} from '../../../shared/behaviourEvents';
 import {type RuleStep} from './ruleSteps';
-import {behaviourFactTypes,behaviourCatalog} from '../../../shared/behaviourCatalog';
+import {behaviourFactTypes} from '../../../shared/behaviourCatalog';
 import {validateCapabilityArguments,capabilityParameterType,argumentValue,capabilityOutputType,literalCapabilityResources} from '../../../shared/capabilities';
 import {stepInvocation,invocationStep} from './capabilitySteps';
 export type Value=number|boolean|string;
 export type ValueType='number'|'boolean'|'text';
 export type Expression={value:Value}|{var:string}|{state:string}|{fact:string}|{op:string;args:Expression[]};
 export type ProgramNode={id:string}&(
- {op:'set'|'setState';variable:string;value:Expression}|{op:'forever';body:ProgramNode[]}|{op:'sleep';seconds:Expression}|{op:'awaitEvent';event:string;source:string;timeout:Expression;received:string;value:string;fields?:Record<string,string>}|{op:'emitEvent';event:string;value:Expression}|{op:'if';test:Expression;then:ProgramNode[];else:ProgramNode[]}|
+ {op:'set'|'setState';variable:string;value:Expression}|{op:'forever';body:ProgramNode[]}|{op:'sleep';seconds:Expression}|{op:'awaitEvent';event:string;source:string;timeout:Expression;received:string;value:string;fields?:Record<string,string>;version?:number;arguments?:Record<string,unknown>;bindings?:Record<string,Expression>}|{op:'emitEvent';event:string;value:Expression}|{op:'if';test:Expression;then:ProgramNode[];else:ProgramNode[]}|
  {op:'repeat';count:Expression;body:ProgramNode[]}|{op:'switch';value:Expression;cases:{value:Value;body:ProgramNode[]}[];default:ProgramNode[]}|
  {op:'call';function:string;args:Expression[];result?:string}|{op:'return';value?:Expression}|
  {op:'invoke';capability:string;version:number;arguments:Record<string,unknown>;bindings:Record<string,Expression>;results?:Record<string,string>});
@@ -78,8 +78,13 @@ export function parseProgram(source:unknown):{program:BehaviourProgram|null;erro
      case 'forever':need(root.version===3,'Events need program version 3');keys(n,'id op body');child('body');break;
      case 'sleep':need(root.version===3,'Timers need program version 3');keys(n,'id op seconds');expect('seconds','number');break;
      case 'awaitEvent': {
-      need(root.version===3,'Events need program version 3');keys(n,'id op event source timeout received value','fields');const eventName=text(n.event),definition=behaviourCatalog.events.find(e=>e.id===eventName),t=events.get(eventName)??(definition?'text':null);need(t,'Unknown event');
+      need(root.version===3,'Events need program version 3');keys(n,'id op event source timeout received value','fields version arguments bindings');const eventName=text(n.event),definition=behaviourEvent(eventName),t=events.get(eventName)??(definition?'text':null);need(t,'Unknown event');
       const source=text(n.source);need(source===''||definition?.objectEvent&&target(source),'Only object events accept a source');
+      if(definition?.input) {
+       need(typeof n.version==='number'&&Number.isInteger(n.version)&&n.version===definition.version,'Unsupported event subscription version');
+       const error=validateEventArguments(eventName,n.version,obj(n.arguments));need(!error,error??'Invalid event arguments');
+       for(const [path,value] of Object.entries(obj(n.bindings))){const type=eventArgumentType(eventName,path);need(type,'Unsupported event argument binding');need(expr(value,f.types)===type,'Event argument type differs');}
+      } else need(n.version===undefined&&n.arguments===undefined&&n.bindings===undefined,'This event has no subscription arguments');
       need(f.types.get(text(n.received))==='boolean','Event received needs a boolean local');need(f.types.get(text(n.value))===t,'Event value needs a matching local');need(n.received!==n.value,'Event destinations must differ');
       if(n.fields!==undefined){const assigned=new Set([n.received,n.value]);for(const [key,destination] of Object.entries(obj(n.fields))){const fieldType=eventFieldType(eventName,key);need(fieldType&&typeof destination==='string'&&f.types.get(destination)===fieldType&&!assigned.has(destination),'Invalid or duplicate event field destination');assigned.add(destination);}}
       expect('timeout','number');break;

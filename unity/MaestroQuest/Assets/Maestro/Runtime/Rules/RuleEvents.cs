@@ -15,6 +15,7 @@ namespace Maestro.Quest.Rules
         sealed class EventMessage {public Delivery[] Receivers;public ProgramValue Value;public JObject Fields;public float At;public int Depth;}
         readonly Dictionary<string,HashSet<Run>> subscriptions=new(StringComparer.Ordinal);
         readonly Queue<EventMessage> eventQueue=new();
+        readonly Run[] watched=new Run[MaximumConcurrent];
         float lastNow;
         public const int MaximumEvents=64,MaximumEventDepth=16;
         public int EventQueueCount=>eventQueue.Count;
@@ -47,7 +48,7 @@ namespace Maestro.Quest.Rules
         // declared user.* scalars and cannot manufacture physics observations.
         public bool EmitNative(string name,string source,ProgramValue value,JObject fields,float now,out string status) {
             var definition=BehaviourCatalog.Event(name);status="Invalid native event";
-            if(definition==null||value.Type!=ProgramType.Text||!definition.ValidFields(fields)||
+            if(definition==null||definition.HasSubscription||value.Type!=ProgramType.Text||!definition.ValidFields(fields)||
                 (definition.ObjectEvent?!RuleDocument.IsTarget(source)||value.Text!=source:source!=""||value.Text!=definition.Activity))return false;
             return EnqueueEvent(name,source,value,now,0,out status,fields);
         }
@@ -62,15 +63,36 @@ namespace Maestro.Quest.Rules
             if(eventQueue.Count>=MaximumEvents) {if(EventsDropped<int.MaxValue)EventsDropped++;status=LastError="Event queue is full; the event was not delivered";return false;}
             eventQueue.Enqueue(new EventMessage {Receivers=recipients,Value=value,Fields=fields==null?null:(JObject)fields.DeepClone(),At=now,Depth=depth});status="Event queued for "+recipients.Length+" waiting program(s)";return true;
         }
-        void WaitForEvent(Run run,float now)
+        bool WaitForEvent(Run run,float now)
         {
             lastNow=now;run.Targets.Clear();run.Claims=Array.Empty<BehaviourCatalog.Claim>();run.Active=null;run.WaitSerial++;run.Ends=now+run.Machine.Wait.Seconds;
-            string name=run.Machine.Wait.Event;if(name==null)return;
+            string name=run.Machine.Wait.Event;if(name==null)return true;
+            if(run.Machine.Wait.Arguments!=null) {
+                if(!BehaviourCatalog.Event(name).TryWatch(actions as IProgramEventWorld,run.Machine.Wait.Arguments,now,out run.Watch,out var error)) {
+                    LastError=error;Stop(run,false,"failed",error);return false;
+                }
+                for(int i=0;i<watched.Length;i++)if(watched[i]==null) {watched[i]=run;run.WatchSlot=i;run.WatchPending=false;return true;}
+                LastError="Native event subscription limit reached";Stop(run,false,"failed",LastError);return false;
+            }
             if(!subscriptions.TryGetValue(name,out var listeners))subscriptions[name]=listeners=new();
-            listeners.Add(run);
+            listeners.Add(run);return true;
+        }
+        void PollWatches(float now) {
+            // At most eight read-only watchers, no per-frame array/schema expansion.
+            for(int i=0;i<watched.Length;i++) {
+                var run=watched[i];if(run==null||run.WatchPending||run.Machine.Wait==null||run.Machine.Wait.Seconds>0&&now>run.Ends)continue;
+                bool emitted=run.Watch.Poll(now,out var value,out var fields,out var error);
+                if(error!=null) {LastError=error;Stop(run,false,"failed",error);continue;}
+                if(!emitted)continue;
+                if(value.Type!=ProgramType.Text||!ValidValue(value)||!BehaviourCatalog.Event(run.Machine.Wait.Event).ValidFields(fields)) {LastError="Native subscription produced invalid fields";Stop(run,false,"failed",LastError);continue;}
+                if(eventQueue.Count>=MaximumEvents) {if(EventsDropped<int.MaxValue)EventsDropped++;LastError="Event queue is full; the event was not delivered";continue;}
+                eventQueue.Enqueue(new EventMessage {Receivers=new[] {new Delivery {Run=run,Serial=run.WaitSerial}},Value=value,Fields=(JObject)fields.DeepClone(),At=now,Depth=0});run.WatchPending=true;
+            }
         }
         void Unsubscribe(Run run)
         {
+            if(run.WatchSlot>=0) {watched[run.WatchSlot]=null;run.WatchSlot=-1;}
+            run.Watch?.Dispose();run.Watch=null;run.WatchPending=false;
             var name=run.Machine?.Wait?.Event;if(name==null||!subscriptions.TryGetValue(name,out var listeners))return;
             listeners.Remove(run);if(listeners.Count==0)subscriptions.Remove(name);
         }

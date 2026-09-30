@@ -9,7 +9,7 @@ using Newtonsoft.Json.Linq;
 namespace Maestro.Quest.Programs
 {
     public enum ProgramYield { Action, Yield, Waiting, Signal, Completed, Failed }
-    public sealed class ProgramWait {public string Event,Source;public float Seconds;}
+    public sealed class ProgramWait {public string Event,Source;public float Seconds;public JObject Arguments;}
     public sealed class ProgramSignal {public string Event;public ProgramValue Value;}
     public interface IProgramFacts {bool TryRead(string name,out ProgramValue value);}
     /// <summary>Cooperatively evaluated statements; native action completion remains the host's responsibility.</summary>
@@ -84,7 +84,13 @@ namespace Maestro.Quest.Programs
                             double timeout=Eval("timeout").Number;if(!double.IsFinite(timeout)||timeout!=0&&(timeout<.1||timeout>3600))throw new ProgramFault("Event timeout must be zero or 0.1 to 3600 seconds");
                             waitingScope=frame.Scope;receivedVariable=(string)node["received"];valueVariable=(string)node["value"];eventBindings=node["fields"] as JObject;
                             waitingScope.Values[receivedVariable]=new ProgramValue(false);
-                            Wait=new ProgramWait {Event=(string)node["event"],Source=(string)node["source"],Seconds=(float)timeout};return ProgramYield.Waiting;
+                            JObject eventArguments=null;
+                            if(node["arguments"] is JObject input) {
+                                eventArguments=(JObject)input.DeepClone();
+                                foreach(var binding in ((JObject)node["bindings"]).Properties())CapabilitySchema.Set(eventArguments,binding.Name,JToken.FromObject(Evaluate(binding.Value,frame.Scope).Value));
+                                if(!BehaviourCatalog.Event((string)node["event"]).ValidArguments((int)node["version"],eventArguments,out var eventError))throw new ProgramFault(eventError);
+                            }
+                            Wait=new ProgramWait {Event=(string)node["event"],Source=(string)node["source"],Seconds=(float)timeout,Arguments=eventArguments};return ProgramYield.Waiting;
                         case "emitEvent":Signal=new ProgramSignal {Event=(string)node["event"],Value=Eval("value")};return ProgramYield.Signal;
                         case "set":frame.Scope.Values[(string)node["variable"]]=Eval("value");break;
                         case "if":Block((JArray)node[Eval("test").Boolean?"then":"else"],frame.Scope);break;

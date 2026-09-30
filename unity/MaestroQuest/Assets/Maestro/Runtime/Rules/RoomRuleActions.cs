@@ -9,7 +9,7 @@ using Newtonsoft.Json.Linq;
 namespace Maestro.Quest.Rules
 {
     /// <summary>One lifecycle host for every native module. No capability IDs, enum dispatch or argument fields.</summary>
-    public sealed class RoomRuleActions : IRuleActions, IRuleCompletion, IRuleReadiness, IRuleInterruptionInfo, IRuleOwnershipSource, IProgramFacts, IRuleResults
+    public sealed class RoomRuleActions : IRuleActions, IRuleCompletion, IRuleReadiness, IRuleInterruptionInfo, IRuleOwnershipSource, IProgramFacts, IProgramEventWorld, IRuleResults
     {
         readonly CapabilityContext context;
         readonly Dictionary<string,CapabilityOperation> operations=new();
@@ -19,6 +19,11 @@ namespace Maestro.Quest.Rules
         public RoomOwnership Ownership {get;}
         public RoomRuleActions(RoomEditor editor,AnimationWorkshop workshop) {context=new CapabilityContext(editor,workshop);Ownership=editor?editor.Ownership:new RoomOwnership();}
         public static ImportedModel ClipModel(RoomItem item)=>AnimationTargets.ClipModel(item);
+        public bool TryPosition(string id,out UnityEngine.Vector3 position) {
+            position=default;var item=context.Editor?context.Editor.Find(id):null;
+            if(!item||!item.isActiveAndEnabled)return false;position=item.transform.position;
+            return float.IsFinite(position.x)&&float.IsFinite(position.y)&&float.IsFinite(position.z);
+        }
         public bool TryRead(string name,out ProgramValue value) {
             value=default;if(!context.Editor)return false;
             return BehaviourCatalog.TryRead(name,new BehaviourCatalog.FactContext(physicsReady:context.Editor.PhysicsWorld?context.Editor.PhysicsWorld.SurfacesReady:null,

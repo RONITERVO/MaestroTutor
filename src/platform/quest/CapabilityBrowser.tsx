@@ -56,6 +56,7 @@ export function CapabilityBrowser({client,onClose,onInsert}:{client:RoomAgentCli
     <p>{inspection.definition.id} · version {inspection.definition.version}</p><p>{inspection.definition.description}</p>
     <p>Event value: {inspection.definition.valueType}. {inspection.definition.objectEvent?'Filter by an exact object ID, or leave source empty for any object.':'Source must be empty.'}</p>
     <p>Requires: {(inspection.definition.features??[]).join(', ')}.</p>
+    {inspection.definition.input&&<><h3>Subscription inputs</h3><p>Evaluated when a running program reaches this wait. Inspecting does not start a subscription.</p><pre>{JSON.stringify(inspection.definition.example,null,2)}</pre></>}
     <h3>Event fields</h3>
     {Object.entries(inspection.definition.fields?.properties??{}).map(([name,field])=><div className="room-message" key={name}><strong>{name}</strong> · {field.type==='string'?'text':field.type}{field.enum&&<p>{field.enum.join(', ')}</p>}</div>)}
     {!inspection.definition.fields&&<p>This event has only its primary value.</p>}

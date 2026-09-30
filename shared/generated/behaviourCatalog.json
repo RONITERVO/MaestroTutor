@@ -2637,6 +2637,94 @@
         ],
         "additionalProperties": false
       }
+    },
+    {
+      "id": "object.proximity.changed",
+      "version": 1,
+      "label": "Object distance crossed a boundary",
+      "activity": null,
+      "objectEvent": false,
+      "valueType": "text",
+      "description": "Sampled change between two explicit room-object transform origins in world metres, not mesh distance, contact, visibility or navigation. Source filter must be empty; choose source and target in subscription arguments. Samples at most 10 times/second while this wait is active. Initial distance is a baseline, never an event. Enter at distance <= radius; exit at distance >= radius + hysteresis. Transition selects enter, exit or either. Value is the source object ID; fields include the other ID, inside and measured distance. No missed crossings replay after an action, timeout, pause or reload. Missing/disabled objects fail the wait; observations never authorize edits. Physics need not run: grabs and animations also change positions.",
+      "features": [
+        "eventPrograms.v1",
+        "eventFields.v1",
+        "eventSubscriptions.v1"
+      ],
+      "fields": {
+        "type": "object",
+        "properties": {
+          "otherId": {
+            "type": "string",
+            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+            "maxLength": 32
+          },
+          "inside": {
+            "type": "boolean"
+          },
+          "distance": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1000000.0
+          }
+        },
+        "required": [
+          "otherId",
+          "inside",
+          "distance"
+        ],
+        "additionalProperties": false
+      },
+      "input": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string",
+            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "radius": {
+            "type": "number",
+            "minimum": 0.05,
+            "maximum": 10.0
+          },
+          "hysteresis": {
+            "type": "number",
+            "minimum": 0.01,
+            "maximum": 2.0
+          },
+          "transition": {
+            "type": "string",
+            "enum": [
+              "enter",
+              "exit",
+              "either"
+            ]
+          }
+        },
+        "required": [
+          "source",
+          "target",
+          "radius",
+          "hysteresis",
+          "transition"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "source": "maestro",
+        "target": "book",
+        "radius": 0.5,
+        "hysteresis": 0.05,
+        "transition": "either"
+      }
     }
   ],
   "facts": [
@@ -2845,7 +2933,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "ada300c4960d4dd859023e0513af1713443ad8cf08bd165505f18e10cbca2cc3"
+      "sha256": "2c6e95addc0d06719eb7ef3c9085bfe58853a95f5d3b45e04dd7aa1643542d27"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -2853,7 +2941,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
-      "sha256": "e730f9f2bff8fda6c38630c48f219c24571e2d56e7cc5917fe88509104ce54c9"
+      "sha256": "ca8ff2e7f034442b22b278dcc130d4966604947d2605bd1d544f7728ea017a9e"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramSubscriptions.cs",
+      "sha256": "6c38762b122ec0b22b9b29c73bbde4e5ee3eeee5ba4318a602e102075521b6b6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleDocument.cs",

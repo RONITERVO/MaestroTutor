@@ -2,7 +2,15 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
-Latest PC increment (2026-09-30): book and agent share paged discovery of native
+Latest PC increment (2026-09-30): parameterized native proximity waits let human
+and agent-authored programs react when two objects enter/leave a distance boundary.
+Schema-generated book inputs, computed arguments, typed fields and the existing
+queue/scheduler share one contract. Origin distance, baseline, hysteresis, bounded
+sampling and cancellation are explicit. Real Unity movement and browser editing
+checks pass: 1,360 app tests, 186 EditMode, 131 PlayMode and 25 Android tests.
+The verified development APK remains uninstalled. See QUEST_EVENT_PROGRAMS.md.
+
+Previous PC increment (2026-09-30): book and agent share paged discovery of native
 events and facts alongside actions. Exact schemas are inspected on demand;
 selected facts refresh through the same reader used by programs. Unavailable is
 separate from false/zero/empty values, and browsing never starts or interrupts
@@ -33,7 +41,7 @@ branches; source editing remains available. See QUEST_BEHAVIOUR_PROGRAMS.md.
 
 Current architecture: the original app owns chat/Live handoff, Gemini access
 and durable task journals. Canonical behaviour programs, the shared native
-catalog (14 actions, eight events and four facts), one scheduler and native
+catalog (14 actions, nine events and four facts), one scheduler and native
 receipts serve human controls and agent calls. Version-3 programs retain typed
 session state across event/timer waits. Creation results compose with animation,
 physics and durable object edits; per-channel ownership permits supported

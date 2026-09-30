@@ -216,3 +216,58 @@ same wire, feature gates, book controls and a simulated-agent discovery/save jou
 Chrome replays actual native observations through the real book/bridge with explicitly
 simulated transport acknowledgements; it does not execute Unity or a real provider.
 Headset readability and conversational provider acceptance remain pending.
+
+
+## Parameterized spatial subscriptions (2026-09-30)
+
+`eventSubscriptions.v1` adds private native watchers to existing version-3 event
+waits. A registered event with `input` and `example` requires `version`, `arguments`
+and `bindings` on its awaitEvent block. Version must match the inspected definition.
+The arguments use the same strict native schema validator as actions; scalar bindings
+may read locals, state, facts or calculations. They are evaluated once on reaching
+the wait and validated again before sampling. Plain events reject these extra fields.
+No new storage format or model tool is introduced.
+
+The first registration, `object.proximity.changed`, watches an explicit pair of
+active room objects. Its ordinary `source` filter is empty; the subscription's
+arguments name source and target IDs. The pair must differ and both must exist.
+`radius` is 0.05–10 metres; `hysteresis` is 0.01–2 metres. `transition` selects
+enter, exit or either. Native geometry is explicitly transform-origin distance in
+world metres, not mesh separation, collision, visibility or reachable path distance.
+
+Starting a wait reads a baseline but emits no event. An outside pair enters at
+`distance <= radius`; an inside pair exits at `distance >= radius + hysteresis`.
+The band between thresholds suppresses jitter. At most ten samples per second per
+wait are read from actual native transforms. A long frame samples once, with no
+catch-up; fast crossings between samples can be missed. Use `object.collided` for
+actual physics contact. Physics need not run for distance observations: controller
+movement and animations also change these positions. An action still performs its
+own physics/readiness and ownership checks.
+
+The event's primary text value is the source object ID; fields are `otherId` (text),
+`inside` (boolean) and `distance` (number in metres). Sampling is private to that exact
+wait generation; two waits for the same event with different inputs cannot wake each
+other. Native broadcast and user signals cannot manufacture a sampled observation.
+The same bounded event queue/dispatch and timeout ordering apply. Queue overflow
+drops that crossing visibly; staying across the boundary does not replay it later.
+
+A watch costs one of the existing eight run slots and owns no objects or animation
+channels. Polling uses a fixed eight-slot array, with no per-frame schema expansion.
+Missing/disabled objects or invalid positions fail the waiting run instead of
+inventing distance or an exit. Stop, timeout, edit, app pause/focus loss and reload
+dispose watches. Returning to a wait establishes a new baseline: crossings during
+an action or while stopped are not buffered. Observation IDs never grant authority
+to edit undeclared objects, even when input metadata marks an object reference.
+
+The book's existing Event wait editor generates input controls from the same native
+schema, supports variable/calculation bindings and typed field destinations, and
+preserves the full canonical program. The catalog and agent inspect that identical
+contract. Saving, browsing and inspecting still do not start a run.
+
+PC verification includes jitter/baselines, scoped routing, missing objects, timeouts,
+computed-value validation, bounded sampling and pause/no replay. A PlayMode scenario
+moves actual room transforms across the boundary, observes a program drive real
+recorded object motion, then verifies exit and pause. Browser tests replay native
+observations and check canonical visual editing. Quest timing/comfort and actual
+provider planning remain unverified. This is not semantic room zones, collision
+prediction, contact exit, body-part tracking or arbitrary condition-edge evaluation.

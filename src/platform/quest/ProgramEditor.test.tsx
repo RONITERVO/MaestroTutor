@@ -14,7 +14,7 @@ it('lets a human wire a native creation result into the next action without writ
  if(first.op!=='invoke'||second.op!=='invoke')throw new Error('Expected calls');
  delete first.results;second.bindings={};initial.resources=[String(second.arguments.target)];
  initial.functions[0].locals=[];let source=JSON.stringify(initial);
- function Harness(){const [value,setValue]=useState(source);return <ProgramEditor source={value} targets={[]} eventsSupported eventFieldsSupported resultsSupported onEditingChange={()=>{}} onChange={next=>{source=next;setValue(next);}}/>;}
+ function Harness(){const [value,setValue]=useState(source);return <ProgramEditor source={value} targets={[]} eventsSupported eventFieldsSupported eventSubscriptionsSupported resultsSupported onEditingChange={()=>{}} onChange={next=>{source=next;setValue(next);}}/>;}
  const screen=render(<Harness/>);
  fireEvent.click(screen.getByLabelText('create new variable for objectId'));
  fireEvent.change(screen.getByLabelText('push argument target variable'),{target:{value:'objectId'}});
@@ -32,7 +32,7 @@ const empty:BehaviourProgram={version:2,entry:'main',resources:[],functions:[{na
 function harness(initial=empty,objects=[{id:'maestro',name:'Maestro'},{id:'book',name:'Book'}]) {
  let source=JSON.stringify(initial);
  const onChange=vi.fn();
- function Harness(){const [value,setValue]=useState(source);return <ProgramEditor source={value} targets={objects} eventsSupported eventFieldsSupported resultsSupported onEditingChange={()=>{}} onChange={next=>{source=next;setValue(next);onChange(next);}}/>;}
+ function Harness(){const [value,setValue]=useState(source);return <ProgramEditor source={value} targets={objects} eventsSupported eventFieldsSupported eventSubscriptionsSupported resultsSupported onEditingChange={()=>{}} onChange={next=>{source=next;setValue(next);onChange(next);}}/>;}
  const screen=render(<Harness/>);
  const change=(label:string,value:string)=>fireEvent.change(screen.getByLabelText(label),{target:{value}});
  const click=(name:string)=>fireEvent.click(screen.getByRole('button',{name}));
@@ -180,4 +180,18 @@ it('keeps new physical events unavailable in editors connected to an older runti
  fireEvent.click(screen.getByRole('button',{name:'Edit values contact'}));
  expect((screen.getByRole('option',{name:'object.collided'}) as HTMLOptionElement).disabled).toBe(true);
  expect(screen.getByRole('group',{name:'Store event details'}).hasAttribute('disabled')).toBe(true);
+});
+
+it('edits native subscription inputs, expressions and field destinations without losing program structure',()=>{
+ const initial=JSON.parse(readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-proximity.json','utf8'));
+ const h=harness(initial);h.click('Edit values near');expect(h.screen.getByRole('group',{name:'Event subscription'})).toBeTruthy();
+ h.change('Event source','book');h.change('Event target','maestro');h.change('Event radius','.7');h.change('Event hysteresis','.2');h.change('Event transition','enter');
+ h.change('Event radius input mode','expression');h.change('Event radius source','var:distance');h.change('Event field distance','');h.click('Update draft');
+ const result=JSON.parse(h.source());const wait=result.functions[0].body[0].body[0];
+ expect(wait).toMatchObject({version:1,arguments:{source:'book',target:'maestro',radius:.7,hysteresis:.2,transition:'enter'},bindings:{radius:{var:'distance'}}});
+ expect(wait.fields).toEqual({inside:'inside',otherId:'other'});expect(result.functions[0].body[0].body.slice(1)).toEqual(initial.functions[0].body[0].body.slice(1));
+ expect(parseProgram(h.source()).error).toBeNull();h.click('Edit values near');h.change('Await event','object.tapped');h.click('Update draft');
+ const scalar=JSON.parse(h.source()).functions[0].body[0].body[0];expect(scalar.arguments).toBeUndefined();expect(scalar.bindings).toBeUndefined();expect(scalar.version).toBeUndefined();
+ h.click('Edit values near');h.change('Await event','object.proximity.changed');h.click('Update draft');
+ expect(JSON.parse(h.source()).functions[0].body[0].body[0]).toMatchObject({version:1,arguments:{source:'maestro',target:'book',radius:.5,hysteresis:.05,transition:'either'},bindings:{}});
 });

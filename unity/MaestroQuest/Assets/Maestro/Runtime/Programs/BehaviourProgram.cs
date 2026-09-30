@@ -187,10 +187,18 @@ namespace Maestro.Quest.Programs
                     case "forever":Need(Version==3,"Events need program version 3");Keys(node,"id op body");Child("body");break;
                     case "sleep":Need(Version==3,"Timers need program version 3");Keys(node,"id op seconds");Expr("seconds",ProgramType.Number);break;
                     case "awaitEvent":
-                        Need(Version==3,"Events need program version 3");Keys(node,"id op event source timeout received value","fields");
+                        Need(Version==3,"Events need program version 3");Keys(node,"id op event source timeout received value","fields version arguments bindings");
                         string eventName=Text(node["event"]);var eventType=EventType(eventName);string sourceId=Text(node["source"]);
                         var definition=BehaviourCatalog.Event(eventName);
                         Need(sourceId==""||definition?.ObjectEvent==true&&RuleDocument.IsTarget(sourceId),"Only object events accept a source");
+                        if(definition?.HasSubscription==true) {
+                            Need(node["version"]?.Type==JTokenType.Integer&&(double)node["version"]==definition.Version,"Unsupported event subscription version");
+                            Need(definition.ValidArguments((int)node["version"],Object(node["arguments"]),out var eventError),eventError??"Invalid event arguments");
+                            foreach(var binding in Object(node["bindings"]).Properties()) {
+                                var argumentType=definition.ArgumentType(binding.Name);Need(argumentType!=ProgramType.Void,"Unsupported event argument binding");
+                                Need(Expression(binding.Value,function)==argumentType,"Event argument type differs");
+                            }
+                        } else Need(!node.ContainsKey("version")&&!node.ContainsKey("arguments")&&!node.ContainsKey("bindings"),"This event has no subscription arguments");
                         Need(function.Types.TryGetValue(Text(node["received"]),out var received)&&received==ProgramType.Boolean,"Event received needs a boolean local");
                         Need(function.Types.TryGetValue(Text(node["value"]),out var payload)&&payload==eventType,"Event value needs a matching local");
                         Need(Text(node["received"])!=Text(node["value"]),"Event destinations must differ");

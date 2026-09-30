@@ -105,3 +105,20 @@ it('shares typed contact fields and rejects ambiguous bindings without granting 
  }
  wait.fields={speed:'speed'};wait.event='user.example';program.events=[{name:'user.example',type:'text'}];expect(parseProgram(JSON.stringify(program)).program).toBeNull();
 });
+
+it('shares strict versioned subscription inputs and gates the native producer',()=>{
+ const source=readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-proximity.json','utf8');expect(parseProgram(source).error).toBeNull();
+ const sequence={id:'a'.repeat(32),name:'Near',interruption:0,repeat:false,program:source};
+ const commands=parseRoomCommands({commands:[{action:'rules',rule:{action:'edit',revision:1,edits:[{kind:'save',sequence}]}}]});
+ const capabilities=['behaviourPrograms.v3','eventPrograms.v1','eventFields.v1'];
+ expect(()=>requireRoomCapabilities(commands,{capabilities})).toThrow('eventSubscriptions.v1');
+ expect(()=>requireRoomCapabilities(commands,{capabilities:[...capabilities,'eventSubscriptions.v1']})).not.toThrow();
+ for(const mutate of [
+  (n:any)=>{delete n.version;},(n:any)=>{n.version=2;},(n:any)=>{delete n.bindings;},(n:any)=>{delete n.arguments;},
+  (n:any)=>{n.source='book';},(n:any)=>{n.arguments.radius=0;},(n:any)=>{n.arguments.hysteresis=0;},(n:any)=>{n.arguments.extra=true;},
+  (n:any)=>{n.bindings.target={value:1};},(n:any)=>{n.bindings.unknown={value:1};},(n:any)=>{n.fields.inside='distance';},
+ ]){const p=JSON.parse(source);mutate(p.functions[0].body[0].body[0]);expect(parseProgram(JSON.stringify(p)).program).toBeNull();}
+ const p=JSON.parse(source);p.functions[0].body[0].body[0].bindings={radius:{value:20},target:{var:'other'}};
+ expect(parseProgram(JSON.stringify(p)).error).toBeNull(); // Native revalidates computed values when the wait starts.
+ p.functions[0].body[0].body[0].event='object.collided';expect(parseProgram(JSON.stringify(p)).program).toBeNull();
+});

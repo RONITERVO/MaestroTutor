@@ -13,8 +13,11 @@ namespace Maestro.Quest.Tests
 {
     public sealed class EventProgramTests
     {
-        sealed class Actions:IRuleActions,IRuleReadiness
+        sealed class Actions:IRuleActions,IRuleReadiness,IProgramEventWorld
         {
+            public readonly System.Collections.Generic.Dictionary<string,Vector3> Positions=new() {{"maestro",Vector3.zero},{"book",Vector3.right}};
+            public int PositionReads;
+            public bool TryPosition(string id,out Vector3 position) {PositionReads++;return Positions.TryGetValue(id,out position);}
             public int Starts,Stops;public RuleActionState Phase=RuleActionState.Ready;
             public bool CanRun(CapabilityCall step,out string error){error=null;return true;}
             public bool Start(string id,CapabilityCall invocation,out float seconds,out string error){ invocation.TryStep(out var step,out _);Starts++;seconds=1;error=null;return true;}
@@ -26,6 +29,67 @@ namespace Maestro.Quest.Tests
         static RuleSequence Sequence(JObject source=null)=>new() {id=Guid.NewGuid().ToString("N"),name="Reactive wave",program=(source??Source()).ToString(Newtonsoft.Json.Formatting.None)};
         static RuleScheduler Scheduler(Actions actions,params RuleSequence[] sequences){var result=new RuleScheduler(actions);result.Configure(new RuleDocument {sequences=sequences});return result;}
         static string State(RuleScheduler s,string name)=>s.ObserveRuns().Single().state.Single(x=>x.name==name).value;
+        static JObject ProximitySource()=>JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-proximity.json")));
+        [Test] public void ProximityBaselinesAndHysteresisUseBoundedSamplingWithoutReplayingOldCrossings()
+        {
+            var actions=new Actions();actions.Positions["book"]=Vector3.right*.4f;var sequence=Sequence(ProximitySource());var s=Scheduler(actions,sequence);
+            Assert.That(s.Trigger(sequence.id,0),Is.True);Assert.That(actions.PositionReads,Is.EqualTo(2));
+            for(int i=1;i<10;i++)s.Tick(i*.009f);Assert.That(actions.PositionReads,Is.EqualTo(2),"No per-frame world reads");
+            s.Tick(.2f);Assert.That(State(s,"crossings"),Is.EqualTo("0"),"Initially inside is only a baseline");
+            actions.Positions["book"]=Vector3.right*.55f;s.Tick(.4f);Assert.That(State(s,"crossings"),Is.EqualTo("0"),"Inside retains the hysteresis band");
+            actions.Positions["book"]=Vector3.right*.6f;s.Tick(.6f);Assert.That(State(s,"crossings"),Is.EqualTo("1"));Assert.That(State(s,"inside"),Is.EqualTo("False"));
+            actions.Positions["book"]=Vector3.right*.55f;s.Tick(.8f);Assert.That(State(s,"crossings"),Is.EqualTo("1"));
+            actions.Positions["book"]=Vector3.right*.5f;s.Tick(1);Assert.That(State(s,"crossings"),Is.EqualTo("2"));Assert.That(State(s,"inside"),Is.EqualTo("True"));
+            int before=actions.PositionReads;s.Tick(50);Assert.That(actions.PositionReads-before,Is.EqualTo(2),"A long frame samples once, with no catch-up");
+            s.StopAll();before=actions.PositionReads;s.Tick(60);Assert.That(actions.PositionReads,Is.EqualTo(before));
+            s.Trigger(sequence.id,61);s.Tick(62);Assert.That(State(s,"crossings"),Is.EqualTo("0"),"A new run never replays previous crossings");
+        }
+        [Test] public void ProximitySubscriptionsRouteOnlyToTheirExactWaitAndFailMissingObjects()
+        {
+            var actions=new Actions();var a=Sequence(ProximitySource());var second=ProximitySource();Loop(second)[0]["arguments"]["radius"]=.2;var b=Sequence(second);var s=Scheduler(actions,a,b);
+            Assert.That(s.Trigger(a.id,0),Is.True);Assert.That(s.Trigger(b.id,0),Is.True);
+            actions.Positions["book"]=Vector3.right*.4f;s.Tick(.2f);
+            Assert.That(s.ObserveRuns().Single(x=>x.sequenceId==a.id).state.Single(x=>x.name=="crossings").value,Is.EqualTo("1"));
+            Assert.That(s.ObserveRuns().Single(x=>x.sequenceId==b.id).state.Single(x=>x.name=="crossings").value,Is.EqualTo("0"));
+            Assert.That(s.EmitNative("object.proximity.changed","",new ProgramValue("maestro"),new JObject {["otherId"]="book",["inside"]=true,["distance"]=.1},.3f,out _),Is.False,"Parameterized observations cannot be broadcast or forged");
+            actions.Positions.Remove("book");s.Tick(.4f);Assert.That(s.RunningCount,Is.Zero);Assert.That(s.Outcomes.All(x=>x.phase=="failed"&&x.status.Contains("missing")),Is.True);
+            Assert.That(s.Trigger(a.id,.5f),Is.False);Assert.That(s.LastError,Does.Contain("missing"));
+            actions.Positions["book"]=Vector3.right;Assert.That(s.Trigger(a.id,1),Is.True);s.Suspend(true);s.Suspend(false);actions.Positions["book"]=Vector3.zero;s.Tick(2);Assert.That(s.RunningCount,Is.Zero);
+        }
+        [Test] public void ProximityInputsAreStrictVersionedAndComputedOnceWhenEachWaitStarts()
+        {
+            foreach(string field in new[]{"version","arguments","bindings"}) {var p=ProximitySource();((JObject)Loop(p)[0]).Remove(field);Assert.That(BehaviourProgram.TryParse(p.ToString(),out _,out _),Is.False,field);}
+            foreach(var bad in new[]{"radius","transition","extra"}) {var p=ProximitySource();Loop(p)[0]["arguments"][bad]="bad";Assert.That(BehaviourProgram.TryParse(p.ToString(),out _,out _),Is.False,bad);}
+            var unknown=ProximitySource();Loop(unknown)[0]["version"]=2;Assert.That(BehaviourProgram.TryParse(unknown.ToString(),out _,out _),Is.False);
+            var scalar=Source();Loop(scalar)[0]["arguments"]=new JObject();Assert.That(BehaviourProgram.TryParse(scalar.ToString(),out _,out _),Is.False);
+            var computed=ProximitySource();Loop(computed)[0]["bindings"]=new JObject {["radius"]=new JObject {["value"]=20}};
+            Assert.That(BehaviourProgram.TryParse(computed.ToString(),out var program,out var error),Is.True,error);var machine=new ProgramMachine(program,null);
+            Assert.That(machine.Advance(out _),Is.EqualTo(ProgramYield.Failed));Assert.That(machine.Error,Does.Contain("radius"));
+            Loop(computed)[0]["bindings"]["radius"]["value"]=.25;Assert.That(BehaviourProgram.TryParse(computed.ToString(),out program,out error),Is.True,error);machine=new ProgramMachine(program,null);
+            Assert.That(machine.Advance(out _),Is.EqualTo(ProgramYield.Waiting));Assert.That((double)machine.Wait.Arguments["radius"],Is.EqualTo(.25));
+            var same=ProximitySource();Loop(same)[0]["arguments"]["target"]="maestro";var sequence=Sequence(same);var s=Scheduler(new Actions(),sequence);Assert.That(s.Trigger(sequence.id,0),Is.False);Assert.That(s.LastError,Does.Contain("different"));
+        }
+        [Test] public void ProximityOverflowDropsTheCrossingWithoutDelayedReplayOrNewAuthority()
+        {
+            var actions=new Actions();var proximity=Sequence(ProximitySource());var contacts=Sequence(ContactSource());var s=Scheduler(actions,proximity,contacts);
+            s.Trigger(proximity.id,0);s.Trigger(contacts.id,0);
+            for(int i=0;i<64;i++)s.EmitNative("object.collided","book",new ProgramValue("book"),ContactFields(),.1f,out _);
+            actions.Positions["book"]=Vector3.right*.2f;s.Tick(.2f);Assert.That(s.EventsDropped,Is.EqualTo(1));
+            for(int i=0;i<6;i++)s.Tick(.4f+i*.2f);
+            Assert.That(s.ObserveRuns().Single(x=>x.sequenceId==proximity.id).state.Single(x=>x.name=="crossings").value,Is.EqualTo("0"));
+            s.StopAll();var source=ProximitySource();((JArray)Loop(source)[1]["then"]).Add(JObject.Parse(@"{'id':'unauthorized','op':'invoke','capability':'object.rotation.set','version':1,'arguments':{'target':'book','pitch':0,'yaw':20,'roll':0},'bindings':{'target':{'var':'other'}}}"));
+            var sequence=Sequence(source);s=Scheduler(actions,sequence);s.Trigger(sequence.id,2);actions.Positions["book"]=Vector3.right;s.Tick(2.2f);
+            Assert.That(s.RunningCount,Is.Zero);Assert.That(s.LastError,Does.Contain("declared or created"));Assert.That(actions.Starts,Is.Zero);
+        }
+        [Test] public void ProximityTimeoutKeepsValuesAndEnterOnlyStillTracksExitBaseline()
+        {
+            var actions=new Actions();var source=ProximitySource();Loop(source)[0]["arguments"]["transition"]="enter";var sequence=Sequence(source);var s=Scheduler(actions,sequence);s.Trigger(sequence.id,0);
+            actions.Positions["book"]=Vector3.right*.2f;s.Tick(.2f);Assert.That(State(s,"crossings"),Is.EqualTo("1"));
+            actions.Positions["book"]=Vector3.right;s.Tick(.4f);Assert.That(State(s,"crossings"),Is.EqualTo("1"));
+            actions.Positions["book"]=Vector3.right*.2f;s.Tick(.6f);Assert.That(State(s,"crossings"),Is.EqualTo("2"));
+            source=ProximitySource();Loop(source)[0]["timeout"]["value"]=.1;sequence=Sequence(source);s=Scheduler(actions,sequence);s.Trigger(sequence.id,1);
+            actions.Positions["book"]=Vector3.right;s.Tick(1.2f);Assert.That(State(s,"crossings"),Is.EqualTo("0"));Assert.That(State(s,"distance"),Is.EqualTo("0"),"A crossing first observed after the deadline loses to timeout");
+        }
         static JObject ContactSource()=>JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-contact.json")));
         static JObject ContactFields()=>new() {["otherId"]="book",["otherKind"]="object",["speed"]=4d,["x"]=1d,["y"]=2d,["z"]=3d};
         [Test] public void ContactFieldsAreTypedDetachedAndCannotBeForgedAsCustomSignals()

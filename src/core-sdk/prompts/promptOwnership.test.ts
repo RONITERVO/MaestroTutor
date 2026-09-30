@@ -83,12 +83,13 @@ describe('prompt ownership', () => {
     expect(catalogueRuntimeViolations(source, 'capabilities.ts')).toEqual([]);
   });
 
-  it('keeps event field descriptions dependent only on the native manifest and shared schema types', () => {
+  it('keeps event validation dependent only on the native manifest and pure shared schema helpers', () => {
     const source = readFileSync(new URL('../../../shared/behaviourEvents.ts', import.meta.url), 'utf8');
     const ast = ts.createSourceFile('behaviourEvents.ts', source, ts.ScriptTarget.Latest, true);
     const imports = ast.statements.filter(ts.isImportDeclaration);
     expect(imports.map(node => (node.moduleSpecifier as ts.StringLiteral).text)).toEqual(['./behaviourCatalog','./capabilities']);
-    expect(imports[1].importClause?.isTypeOnly).toBe(true);
+    const bindings=imports[1].importClause?.namedBindings;
+    expect(bindings&&ts.isNamedImports(bindings)&&bindings.elements.filter(node=>!node.isTypeOnly).map(node=>node.name.text)).toEqual(['validateCapabilityValue','schemaField']);
     expect(catalogueRuntimeViolations(source, 'behaviourEvents.ts')).toEqual([]);
   });
 

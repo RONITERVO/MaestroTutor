@@ -251,3 +251,19 @@ it('discovers event payloads and live facts before saving a program without star
  expect(JSON.parse(requests[4][0].contents[0].parts[0].text).scene.catalog).toMatchObject({category:'facts',available:true,value:false});
  expect(ai.live.connect).not.toHaveBeenCalled();
 });
+
+import proximityProgram from '../../../unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-proximity.json';
+it('inspects native subscription parameters then saves the same program without activating it',async()=>{
+ const query:RoomCommand={action:'catalog',catalog:{operation:'inspect',category:'events',capability:'object.proximity.changed',version:1}};
+ const save:RoomCommand={action:'rules',rule:{action:'edit',revision:1,edits:[{kind:'save',reference:'near',sequence:{id:'',name:'Near the book',interruption:0,repeat:false,program:JSON.stringify(proximityProgram)}}]}};
+ const ai=client([query,save].map(command=>JSON.stringify({commands:[command]})).concat('{"commands":[]}'));
+ let current:RoomAgentState={...scene,capabilities:['catalog.v1','catalogVocabulary.v1','behaviourPrograms.v3','eventPrograms.v1','eventFields.v1','eventSubscriptions.v1']};
+ const execute=vi.fn(async(commands:RoomCommand[])=>{
+  current={...current,ack:current.ack+1,status:commands[0].action==='catalog'?'Definition':'Saved without starting',catalog:{operation:'inspect',category:'events',capability:'object.proximity.changed',version:1,definition:behaviourEvent('object.proximity.changed'),status:'Test native definition'}};return current;
+ });
+ const result=await runRoomActionTask({...input,prompt:'Prepare a behaviour that notices when Maestro comes near the book. Leave it stopped.'},{aiClient:ai},{state:()=>current,valid:()=>true,execute},()=>{});
+ expect(execute.mock.calls.map(x=>x[0])).toEqual([[query],[save]]);expect(result.budgetExhausted).toBe(false);
+ const requests=ai.models.generateContentStream.mock.calls as unknown as [any][];
+ expect(JSON.parse(requests[1][0].contents[0].parts[0].text).scene.catalog.definition.input.properties.radius.maximum).toBe(10);
+ expect(result.scene.status).toBe('Saved without starting');
+});

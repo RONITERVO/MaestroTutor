@@ -33,7 +33,8 @@ namespace Maestro.Quest.Rules
             public BehaviourCatalog.Claim[] Claims=Array.Empty<BehaviourCatalog.Claim>();
             public float Ends, Duration, PrepareDeadline;
             public bool Preparing,Computing;
-            public int EventDepth,WaitSerial;
+            public int EventDepth,WaitSerial,WatchSlot=-1;
+            public IProgramEventWatch Watch;public bool WatchPending;
             public bool Reactive=>Sequence.Compile(out _).Version==3;
             public ProgramMachine Machine;
             public CapabilityCall Active;
@@ -147,7 +148,7 @@ namespace Maestro.Quest.Rules
             run.Computing=false;
             {
                 var yielded=run.Machine.Advance(out run.Active);
-                if(yielded==ProgramYield.Waiting) {WaitForEvent(run,now);return true;}
+                if(yielded==ProgramYield.Waiting)return WaitForEvent(run,now);
                 if(yielded==ProgramYield.Signal) {
                     var signal=run.Machine.Signal;
                     if(!EnqueueEvent(signal.Event,"",signal.Value,now,run.EventDepth+1,out var eventError)) {LastError=eventError;Stop(run,false,"failed",eventError);return false;}
@@ -206,7 +207,7 @@ namespace Maestro.Quest.Rules
         public void Tick(float now)
         {
             if (suspended || !float.IsFinite(now)) return;
-            lastNow=now;DispatchEvents(now);
+            lastNow=now;PollWatches(now);DispatchEvents(now);
             foreach (var run in running.ToArray())
             {
                 if(run.Machine.Wait!=null) {

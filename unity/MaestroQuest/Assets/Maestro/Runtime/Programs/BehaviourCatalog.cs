@@ -53,14 +53,28 @@ namespace Maestro.Quest.Programs
             public readonly RuleEventKind? Kind;
             public readonly bool ObjectEvent;
             public readonly string Description;
-            readonly JObject fields;
+            readonly JObject fields,input,example;
+            readonly Func<IProgramEventWorld,JObject,float,IProgramEventWatch> watch;
+            public bool HasSubscription=>watch!=null;
+            public JObject Input=>input==null?null:(JObject)input.DeepClone();
             public JObject Fields=>fields==null?null:(JObject)fields.DeepClone();
             public EventDefinition(string id, RuleEventKind kind, string label, string activity=null, bool objectEvent=false)
             { Id=id;Kind=kind;Label=label;Activity=activity;ObjectEvent=objectEvent;
                 Description=objectEvent?"An object interaction occurred. The primary text value is its object ID; source filters accept that exact ID or empty for any object.":"Maestro entered "+activity+". The primary text value is the state name. Source must be empty. The initial activity snapshot establishes a baseline without emitting an event."; }
             // New native events do not require a legacy tray enum or a signal route.
-            public EventDefinition(string id,string label,string description,JObject fields,bool objectEvent=false)
-            { Id=id;Label=label;Description=description;ObjectEvent=objectEvent;this.fields=(JObject)fields.DeepClone(); }
+            public EventDefinition(string id,string label,string description,JObject fields,bool objectEvent=false,JObject input=null,JObject example=null,Func<IProgramEventWorld,JObject,float,IProgramEventWatch> watch=null)
+            { Id=id;Label=label;Description=description;ObjectEvent=objectEvent;this.fields=(JObject)fields.DeepClone();this.input=input==null?null:(JObject)input.DeepClone();this.example=example==null?null:(JObject)example.DeepClone();this.watch=watch; }
+            public bool ValidArguments(int version,JObject arguments,out string error) {
+                error="Unknown event subscription version or arguments";return HasSubscription&&version==Version&&CapabilityArguments.Validate(arguments,input,out error,"event arguments");
+            }
+            public ProgramType ArgumentType(string path) {
+                var field=CapabilitySchema.Field(input,path);if((bool?)field?["x-static"]==true)return ProgramType.Void;
+                return ((string)field?["type"]) switch {"string"=>ProgramType.Text,"number" or "integer"=>ProgramType.Number,"boolean"=>ProgramType.Boolean,_=>ProgramType.Void};
+            }
+            public bool TryWatch(IProgramEventWorld world,JObject arguments,float now,out IProgramEventWatch result,out string error) {
+                result=null;if(!ValidArguments(Version,arguments,out error))return false;
+                try {result=watch(world,(JObject)arguments.DeepClone(),now);return true;}catch(ProgramFault fault) {error=fault.Message;return false;}
+            }
             public ProgramType FieldType(string name)=>((string)fields?["properties"]?[name]?["type"]) switch {
                 "string"=>ProgramType.Text,"number" or "integer"=>ProgramType.Number,"boolean"=>ProgramType.Boolean,_=>ProgramType.Void
             };
@@ -68,7 +82,9 @@ namespace Maestro.Quest.Programs
             public JObject ToJson() {
                 var result=new JObject {["id"]=Id,["version"]=Version,["label"]=Label,["activity"]=Activity,["objectEvent"]=ObjectEvent,["valueType"]="text",["description"]=Description,
                     ["features"]=fields==null?new JArray("eventPrograms.v1"):new JArray("eventPrograms.v1","eventFields.v1")};
-                if(fields!=null)result["fields"]=Fields;return result;
+                if(fields!=null)result["fields"]=Fields;
+                if(HasSubscription) {((JArray)result["features"]).Add("eventSubscriptions.v1");result["input"]=Input;result["example"]=example.DeepClone();}
+                return result;
             }
         }
         public readonly struct FactContext
@@ -110,6 +126,14 @@ namespace Maestro.Quest.Programs
                     ["speed"]=CapabilitySchema.Number(0,1000000),
                     ["x"]=CapabilitySchema.Number(-1000000,1000000),["y"]=CapabilitySchema.Number(-1000000,1000000),["z"]=CapabilitySchema.Number(-1000000,1000000)
                 }),objectEvent:true),
+            new EventDefinition("object.proximity.changed","Object distance crossed a boundary",
+                "Sampled change between two explicit room-object transform origins in world metres, not mesh distance, contact, visibility or navigation. Source filter must be empty; choose source and target in subscription arguments. Samples at most 10 times/second while this wait is active. Initial distance is a baseline, never an event. Enter at distance <= radius; exit at distance >= radius + hysteresis. Transition selects enter, exit or either. Value is the source object ID; fields include the other ID, inside and measured distance. No missed crossings replay after an action, timeout, pause or reload. Missing/disabled objects fail the wait; observations never authorize edits. Physics need not run: grabs and animations also change positions.",
+                CapabilitySchema.Object(new JObject {["otherId"]=CapabilitySchema.Text("^(maestro|book|[a-fA-F0-9]{32})$",32),["inside"]=new JObject {["type"]="boolean"},["distance"]=CapabilitySchema.Number(0,1000000)}),
+                input:CapabilitySchema.Object(new JObject {
+                    ["source"]=CapabilitySchema.Resource(CapabilitySchema.Text("^(maestro|book|[a-fA-F0-9]{32})$",32)),["target"]=CapabilitySchema.Resource(CapabilitySchema.Text("^(maestro|book|[a-fA-F0-9]{32})$",32)),
+                    ["radius"]=CapabilitySchema.Number(.05,10),["hysteresis"]=CapabilitySchema.Number(.01,2),["transition"]=CapabilitySchema.Choice("enter","exit","either")}),
+                example:new JObject {["source"]="maestro",["target"]="book",["radius"]=.5,["hysteresis"]=.05,["transition"]="either"},
+                watch:(world,args,now)=>new ProximitySubscription(world,args,now)),
         });
         public static readonly IReadOnlyList<FactDefinition> Facts=Array.AsReadOnly(new[] {
             new FactDefinition("room.sessionId",ProgramType.Text,"Current room session","Current explicit temporary-room session ID, or empty when using the saved room. Reading it does not begin, keep or discard a room.",context=>context.RoomSessionId==null?null:new ProgramValue(context.RoomSessionId)),

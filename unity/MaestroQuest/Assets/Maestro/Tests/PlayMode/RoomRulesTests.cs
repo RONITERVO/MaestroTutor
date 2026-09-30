@@ -114,6 +114,38 @@ namespace Maestro.Quest.Tests
             Assert.That(runtime.Scheduler.RunningCount,Is.Zero);Assert.That(physics.Running,Is.False);
         }
 
+        [UnityTest] public IEnumerator ProximityCrossingsDriveRecordedMotionAndRetainTheSharedProgram()
+        {
+            var a=editor.Find("maestro");var b=editor.Find("book");a.transform.position=new Vector3(4,1,4);b.transform.position=a.transform.position+Vector3.right;
+            string target=editor.Identity(block);var start=block.transform.localPosition;
+            var program=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-proximity.json")));program["resources"]=new JArray(target);
+            ((JArray)program["functions"][0]["body"][0]["body"][1]["then"]).Add(new JObject {
+                ["id"]="react",["op"]="invoke",["capability"]="animation.play",["version"]=1,
+                ["arguments"]=new JObject {["target"]=target,["source"]=new JObject {["kind"]="recording"},["channel"]="wholeTarget",["seconds"]=.4,["loop"]=false},["bindings"]=new JObject()});
+            var sequence=new RuleSequence {id="",name="React to distance",program=program.ToString(Newtonsoft.Json.Formatting.None)};var executor=new RoomAgentExecutor(editor);
+            Assert.That(executor.Execute(new RoomAgentRequest {version=2,commands=new[] {new RoomAgentCommand {action="rules",rule=new RuleRequest {action="edit",revision=workshop.Revision,edits=new[] {new RuleEdit {kind="save",reference="near",sequence=sequence}}}}}},out var error,out var created),Is.True,error);
+            string id=created.Single(),saved=workshop.Selected.program;int revision=workshop.Revision;
+            var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);
+            void Evidence(string phase) {
+                string output=Environment.GetEnvironmentVariable("MAESTRO_EVENT_EVIDENCE");if(string.IsNullOrEmpty(output))return;Directory.CreateDirectory(output);
+                var state=observer.Observe();state.visible=true;state.workspaceView="rules";state.rules=workshop.Observe(true);
+                File.WriteAllText(Path.Combine(output,"proximity-"+phase+".json"),RoomAgentWire.Serialize(state));
+            }
+            Assert.That(runtime.Trigger(id),Is.True);Evidence("waiting");yield return new WaitForSeconds(.15f);
+            Assert.That(runtime.Scheduler.ObserveRuns().Single().state.Single(x=>x.name=="crossings").value,Is.EqualTo("0"));
+            b.transform.position=a.transform.position+Vector3.right*.3f;
+            for(int i=0;i<90&&block.transform.localPosition.x<start.x+.02f;i++)yield return new WaitForSeconds(.02f);
+            Assert.That(block.transform.localPosition.x,Is.GreaterThan(start.x+.02f),runtime.Scheduler.LastError??"Distance crossing should start the recording");
+            Assert.That(runtime.Scheduler.ObserveRuns().Single().state.Single(x=>x.name=="inside").value,Is.EqualTo("True"));Evidence("reaction");
+            yield return new WaitForSeconds(.5f);b.transform.position=a.transform.position+Vector3.right*.55f;yield return new WaitForSeconds(.15f);
+            Assert.That(runtime.Scheduler.ObserveRuns().Single().state.Single(x=>x.name=="crossings").value,Is.EqualTo("1"));
+            b.transform.position=a.transform.position+Vector3.right*.8f;yield return new WaitForSeconds(.15f);
+            Assert.That(runtime.Scheduler.ObserveRuns().Single().state.Single(x=>x.name=="inside").value,Is.EqualTo("False"));Evidence("exit");
+            Assert.That(workshop.Revision,Is.EqualTo(revision));Assert.That(workshop.Selected.program,Is.EqualTo(saved));
+            runtime.SendMessage("OnApplicationPause",true);Evidence("paused");runtime.SendMessage("OnApplicationPause",false);yield return null;Assert.That(runtime.Scheduler.RunningCount,Is.Zero);
+            Assert.That(runtime.Trigger(id),Is.True);b.gameObject.SetActive(false);yield return new WaitForSeconds(.15f);Assert.That(runtime.Scheduler.RunningCount,Is.Zero);Assert.That(runtime.Scheduler.LastError,Does.Contain("disabled"));Evidence("missing");
+        }
+
         [UnityTest] public IEnumerator BookRecoveryStopsActualOneOffMotionAndPreservesObjectsAndSavedBehaviours()
         {
             var executor=new RoomAgentExecutor(editor);var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);
