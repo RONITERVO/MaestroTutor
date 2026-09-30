@@ -1,7 +1,8 @@
+import {visitProgramNodes as visit,visitNodeExpressions} from './programEditingTraversal';
 import {defaultDataValue} from '../../../shared/programValues';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
-import {parseProgram,type BehaviourProgram,type ProgramFunction,type ProgramNode,type Expression,type Value,type ValueType} from '../../core-sdk/room/programs';
+import {parseProgram,type BehaviourProgram,type ProgramFunction,type ProgramNode,type Value,type ValueType} from '../../core-sdk/room/programs';
 
 export interface FunctionDraft {
  name:string;returns:ProgramFunction['returns'];
@@ -12,26 +13,14 @@ export const functionDraft=(fn:ProgramFunction):FunctionDraft=>({name:fn.name,re
  parameters:fn.parameters.map((p,origin)=>({...p,origin})),locals:fn.locals.map((v,origin)=>({...v,origin}))});
 export const initialValue=defaultDataValue;
 export const initialExpression=(type:ValueType)=>({value:initialValue(type),...(typeof type==='object'?{type}:{})});
-const branches=(node:ProgramNode):ProgramNode[][]=>node.op==='if'?[node.then,node.else]:node.op==='repeat'||node.op==='forever'?[node.body]:node.op==='switch'?[...node.cases.map(c=>c.body),node.default]:[];
-function visit(body:ProgramNode[],action:(node:ProgramNode)=>void){for(const node of body){action(node);for(const child of branches(node))visit(child,action);}}
-/** Visit only typed variable references, never capability payloads, object IDs or literal text. */
+/** Rename variable references and destinations, leaving other namespaces and literal data alone. */
 function variables(body:ProgramNode[],map:(name:string)=>string) {
- const expression=(e:Expression)=>{if('var' in e)e.var=map(e.var);else if('op' in e)e.args.forEach(expression);};
  visit(body,n=>{
-  switch(n.op){
-   case 'set':n.variable=map(n.variable);expression(n.value);break;
-   case 'setState':case 'emitEvent':expression(n.value);break;
-   case 'if':expression(n.test);break;
-   case 'repeat':expression(n.count);break;
-   case 'switch':expression(n.value);break;
-   case 'sleep':expression(n.seconds);break;
-   case 'return':if(n.value)expression(n.value);break;
-   case 'call':n.args.forEach(expression);if(n.result)n.result=map(n.result);break;
-   case 'invoke':Object.values(n.bindings).forEach(expression);if(n.results)for(const key of Object.keys(n.results))n.results[key]=map(n.results[key]);break;
-   case 'awaitEvent':expression(n.timeout);n.received=map(n.received);n.value=map(n.value);
-    if(n.fields)for(const key of Object.keys(n.fields))n.fields[key]=map(n.fields[key]);
-    Object.values(n.bindings??{}).forEach(expression);break;
-  }
+  visitNodeExpressions(n,e=>{if('var' in e)e.var=map(e.var);});
+  if(n.op==='set')n.variable=map(n.variable);
+  if(n.op==='call'&&n.result)n.result=map(n.result);
+  if(n.op==='invoke'&&n.results)for(const key of Object.keys(n.results))n.results[key]=map(n.results[key]);
+  if(n.op==='awaitEvent'){n.received=map(n.received);n.value=map(n.value);if(n.fields)for(const key of Object.keys(n.fields))n.fields[key]=map(n.fields[key]);}
  });
 }
 function origins(items:{origin:number|null}[],length:number){

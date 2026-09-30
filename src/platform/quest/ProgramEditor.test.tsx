@@ -263,3 +263,33 @@ it('keeps an inferred nested list type when a human removes its last initial ite
  h.click('Edit function main');h.click('Add Initial value 1 ids item');h.change('Initial value 1 ids item 1','maestro');h.click('Update draft');
  expect(JSON.parse(h.source()).functions[0].locals[0].initial).toEqual({ids:['maestro']});
 });
+
+it('authors and renames the native state-and-signal fixture entirely through visual controls',()=>{
+ const h=harness();h.click('Edit state & signals');h.click('Add state variable');h.change('State 1 name','counter');
+ h.click('Add state variable');h.change('State 2 name','history');h.change('State 2 type','list');h.change('State 2 type item type','number');
+ h.click('Add named signal');h.change('Signal 1 name','user.input');h.click('Add named signal');h.change('Signal 2 name','user.output');h.click('Update draft');
+ h.click('+ Function');h.change('Function name','remember');h.click('Add parameter');h.change('Parameter 1 name','amount');h.click('Update draft');
+ fireEvent.click(h.screen.getByLabelText('+ Set state in remember'));h.click('Edit values block_1');h.change('Assigned value source','op:add');h.change('Assigned value left source','state:counter');h.change('Assigned value right source','var:amount');h.click('Update draft');
+ fireEvent.click(h.screen.getByLabelText('+ Set state in remember'));h.click('Edit values block_2');h.change('Assignment destination','history');
+ const choices=h.screen.getByLabelText('Assigned value source') as HTMLSelectElement;h.change('Assigned value source',Array.from(choices.options).find(o=>o.textContent==='append in history')!.value);h.change('Assigned value item source','var:amount');h.click('Update draft');
+ fireEvent.click(h.screen.getByLabelText('+ Send event in remember'));h.click('Edit values block_3');h.change('Send named event','user.output');h.change('Event payload source','state:counter');h.click('Update draft');
+ h.click('Edit function main');h.click('Add local variable');h.change('Variable 1 name','amount');h.click('Update draft');
+ fireEvent.click(h.screen.getByLabelText('+ Event wait in main'));h.click('Edit values block_4');h.change('Await event','user.input');h.click('Update draft');
+ fireEvent.click(h.screen.getByLabelText('+ If in main'));h.click('Edit values block_5');h.change('Condition source','var:received');h.click('Update draft');
+ fireEvent.click(h.screen.getByLabelText('+ Call function in block_5 Then'));h.click('Edit values block_6');h.change('Argument amount source','var:amount');h.click('Update draft');
+ fireEvent.click(h.screen.getByLabelText('+ Forever in main'));
+ h.click('Edit state & signals');h.change('State 1 name','total');h.change('State 2 name','amounts');h.change('Signal 1 name','user.add');h.change('Signal 2 name','user.stored');h.click('Update draft');
+ const expected=JSON.parse(readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-declarations.json','utf8'));expect(JSON.parse(h.source())).toEqual(expected);expect(h.screen.queryByLabelText('Program JSON')).toBeNull();
+});
+it('keeps invalid declaration drafts for repair and refuses to delete a used state',()=>{
+ const initial=JSON.parse(readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-declarations.json','utf8'));const h=harness(initial),before=h.source();
+ h.click('Edit state & signals');h.change('Signal 1 name','maestro.speaking.enter');h.click('Update draft');expect(h.screen.getByRole('alert').textContent).toContain('custom event');expect(h.source()).toBe(before);
+ h.change('Signal 1 name','user.add');h.click('Remove state 1');h.click('Update draft');expect(h.screen.getByRole('alert').textContent).toContain('still used');expect(h.source()).toBe(before);h.click('Discard editor draft');
+});
+it('refuses stale declaration edits after an incoming program change',()=>{
+ const initial=JSON.parse(readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-declarations.json','utf8')),onChange=vi.fn();const source=JSON.stringify(initial);
+ const screen=render(<ProgramEditor source={source} targets={[]} eventsSupported structuredSupported onChange={onChange} onEditingChange={()=>{}}/>);
+ fireEvent.click(screen.getByRole('button',{name:'Edit state & signals'}));fireEvent.change(screen.getByLabelText('State 1 name'),{target:{value:'sum'}});initial.state[0].initial=3;
+ screen.rerender(<ProgramEditor source={JSON.stringify(initial)} targets={[]} eventsSupported structuredSupported onChange={onChange} onEditingChange={()=>{}}/>);fireEvent.click(screen.getByRole('button',{name:'Update draft'}));
+ expect(screen.getByRole('alert').textContent).toContain('Program changed');expect(onChange).not.toHaveBeenCalled();
+});

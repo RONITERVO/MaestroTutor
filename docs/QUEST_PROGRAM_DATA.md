@@ -86,8 +86,10 @@ removed, including lists inside records. Invalid drafts retain the previous vali
 program. Source and agent
 editing use the same validator and canonical definition.
 
-State/event declaration editing, coordinated record-field renames, shared versioned
-function libraries and more convenient block movement remain work. The controls are
+State declarations now use the same recursive controls; see
+[the state/signal editor contract](QUEST_EVENT_PROGRAMS.md#visual-state-and-signal-declarations-2026-09-30).
+Coordinated record-field renames, shared versioned function libraries and more
+convenient block movement remain work. The controls are
 optional within the familiar book interface. This increment adds no external flat UI
 or automatic background execution.
 

@@ -464,3 +464,14 @@ type/literal controls and data expressions. Existing scalar programs are unchang
 See [the format, limits, evidence and remaining editor scope](QUEST_PROGRAM_DATA.md).
 This supersedes the earlier checkpoint's pending records/lists statement; shared
 versioned libraries and the broader release gates remain open.
+
+## State and signal authoring (2026-09-30)
+
+Names, types and initial values of program state, and names/types of custom signals,
+now have visual controls with atomic scoped refactoring. The same AST traversal
+visits typed expression positions for function-local and state renames; literal
+payloads never become references. Invalid removals, type edits and stale drafts are
+rejected without changing valid source. See [scope, event identity and native
+verification](QUEST_EVENT_PROGRAMS.md#visual-state-and-signal-declarations-2026-09-30).
+State/event declaration controls no longer require Source; coordinated incompatible
+changes and shared libraries remain separate work.

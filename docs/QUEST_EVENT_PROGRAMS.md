@@ -271,3 +271,46 @@ recorded object motion, then verifies exit and pause. Browser tests replay nativ
 observations and check canonical visual editing. Quest timing/comfort and actual
 provider planning remain unverified. This is not semantic room zones, collision
 prediction, contact exit, body-part tracking or arbitrary condition-edge evaluation.
+
+## Visual state and signal declarations (2026-09-30)
+
+The optional book's Functions & code workspace now includes **Edit state & signals**.
+Users can add, name, type and remove program state and custom signals without JSON.
+State initial values use the same bounded scalar/list/record controls as functions.
+Signals keep the existing scalar payload contract and `user.` prefix. There are still
+at most 16 state variables and 16 custom signals per program.
+
+State renames update state reads and assignments across every function, including
+nested branches and native action/subscription input expressions. Custom-signal
+renames update that program's waits and sends. Local variables, literal strings,
+record field names, native arguments, resource declarations and stable block IDs
+are unchanged. Simultaneous swaps retain declaration identity; deleting a referenced
+declaration is rejected even if a new declaration reuses its name.
+
+Named signals are shared by programs using the same name. Renaming one program's
+signal does not rename other programs or emit an event. The editor states this scope;
+coordinated changes across behaviours use existing revision-checked batch edits.
+Changing a signal's payload type must fit local blocks and all other declarations of
+that signal. Native collection validation rejects conflicts before saving or stopping
+valid runs. Invalid/stale editor drafts stay available for repair and do not overwrite
+the valid program. A successful behaviour edit retains the existing cancellation
+policy; saving does not start a subscriber or send a signal.
+
+State is still per-run memory. Changing its type resets the draft initial value,
+which must pass the whole-program validator. Compatible expressions stay intact;
+coordinated incompatible body/type changes can be made in Source. Emptying an inferred
+list keeps its declared item type. Runtime values are observations, never new saved
+initial values, and a new run resets state. No format, interpreter, storage migration
+or provider tool was added.
+
+`program-declarations.json` is authored without JSON in a Chrome walkthrough and a
+web integration test. Unity saves that exact source, starts two behaviours, sends
+2 and 4 to the first, and verifies a retained total of 6, list `[2,4]` and a custom
+signal received by the second. It also verifies conflict rejection without interrupting
+runs, source/initial-value preservation, Stop, a fresh run, pause and file read-back.
+The browser displays the actual native values and pause result; its surrounding room
+and command acknowledgements are synthetic. Screenshots were inspected. Headset and
+real-provider acceptance remain open; no APK installation is included.
+
+Shared versioned function libraries, coordinated record-field renames, cross-container
+block movement, richer subscriptions and the broader v1 release gates remain unfinished.

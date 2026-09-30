@@ -509,6 +509,39 @@ namespace Maestro.Quest.Tests
             ray.selectInput = new XRInputButtonReader { inputSourceMode = XRInputButtonReader.InputSourceMode.ManualValue,manualPerformed = true,manualValue = 1 };
             hand.SetActive(true); return ray;
         }
+        [UnityTest] public IEnumerator VisuallyAuthoredDeclarationsShareSignalsAndTypedStateWithoutSavingRuntimeValues()
+        {
+            string source=File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-declarations.json"));
+            var sender=workshop.Selected;sender.program=source;sender.repeat=false;sender.name="Remember amounts";
+            var executor=new RoomAgentExecutor(editor);var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);
+            bool Execute(RuleRequest rule,out string error)=>executor.Execute(new RoomAgentRequest {version=2,commands=new[]{new RoomAgentCommand {action="rules",rule=rule}}},out error,out _);
+            Assert.That(Execute(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="save",sequence=sender}}},out var error),Is.True,error);
+            var listener=JObject.Parse(@"{'version':3,'entry':'main','resources':[],'state':[{'name':'latest','initial':0}],'events':[{'name':'user.stored','type':'number'}],'functions':[{'name':'main','returns':'void','parameters':[],'locals':[{'name':'received','initial':false},{'name':'value','initial':0}],'body':[{'id':'loop','op':'forever','body':[{'id':'wait','op':'awaitEvent','event':'user.stored','source':'','timeout':{'value':0},'received':'received','value':'value'},{'id':'store','op':'setState','variable':'latest','value':{'var':'value'}}]}]}]}");
+            Assert.That(Execute(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="save",reference="listener",sequence=new RuleSequence {id="",name="Observe total",program=listener.ToString()}}}},out error),Is.True,error);
+            string listenerId=workshop.Selected.id;Assert.That(runtime.Scheduler.RunningCount,Is.Zero,"Saving declarations must not start either subscriber");
+            var saved=JsonUtility.ToJson(workshop.Snapshot());int revision=workshop.Revision;
+            Assert.That(Execute(new RuleRequest {action="play",revision=revision,target=listenerId},out error),Is.True,error);
+            Assert.That(Execute(new RuleRequest {action="play",revision=revision,target=sender.id},out error),Is.True,error);
+            Execute(new RuleRequest {action="inspect",target=sender.id},out _);
+            void Evidence(string phase){string output=Environment.GetEnvironmentVariable("MAESTRO_DECLARATIONS_EVIDENCE");if(string.IsNullOrEmpty(output))return;Directory.CreateDirectory(output);var state=observer.Observe();state.rules=workshop.Observe(true);state.visible=true;state.workspaceView="rules";File.WriteAllText(Path.Combine(output,phase+".json"),RoomAgentWire.Serialize(state));}
+            string Value(string id,string name)=>runtime.Scheduler.ObserveRuns().Single(r=>r.sequenceId==id).state.Single(v=>v.name==name).value;
+            Evidence("waiting");
+            foreach(int amount in new[]{2,4}){
+                Assert.That(Execute(new RuleRequest {action="signal",revision=revision,eventName="user.add",value=new JValue(amount)},out error),Is.True,error);
+                string expected=amount==2?"2":"6";for(int i=0;i<60&&Value(listenerId,"latest")!=expected;i++)yield return null;
+                Assert.That(Value(sender.id,"total"),Is.EqualTo(expected));Assert.That(Value(listenerId,"latest"),Is.EqualTo(expected),"The emitted signal must reach another running program");
+            }
+            CollectionAssert.AreEqual(new[]{2d,4d},JArray.Parse(Value(sender.id,"amounts")).Values<double>().ToArray());Evidence("received");
+            Assert.That(JsonUtility.ToJson(workshop.Snapshot()),Is.EqualTo(saved),"Session state must not rewrite initial declarations");Assert.That(workshop.Revision,Is.EqualTo(revision));
+            var conflicting=workshop.Snapshot().sequences.Single(x=>x.id==listenerId);listener["events"][0]["type"]="text";listener["functions"][0]["locals"][1]["initial"]="";((JArray)listener["functions"][0]["body"][0]["body"]).RemoveAt(1);conflicting.program=listener.ToString();
+            Assert.That(Execute(new RuleRequest {action="edit",revision=revision,edits=new[]{new RuleEdit {kind="save",sequence=conflicting}}},out error),Is.False);Assert.That(error,Does.Contain("different payload type"));
+            Assert.That(JsonUtility.ToJson(workshop.Snapshot()),Is.EqualTo(saved));Assert.That(runtime.Scheduler.RunningCount,Is.EqualTo(2),"A rejected conflicting edit must not interrupt valid runs");
+            Assert.That(Execute(new RuleRequest {action="stop"},out error),Is.True,error);Assert.That(runtime.Scheduler.RunningCount,Is.Zero);Evidence("stopped");
+            Assert.That(Execute(new RuleRequest {action="play",revision=revision,target=sender.id},out error),Is.True,error);Assert.That(Value(sender.id,"total"),Is.EqualTo("0"));Assert.That(Value(sender.id,"amounts"),Is.EqualTo("[]"));
+            runtime.SendMessage("OnApplicationPause",true);runtime.SendMessage("OnApplicationPause",false);yield return null;Assert.That(runtime.Scheduler.RunningCount,Is.Zero);Evidence("paused");
+            workshop.SendMessage("OnApplicationPause",true);var restored=new RuleStorage(directory).Load(out error);Assert.That(restored.sequences.Single(x=>x.id==sender.id).program,Is.EqualTo(source));
+        }
+
         [UnityTest] public IEnumerator EventProgramsSaveSignalAnimateAndStopThroughTheSharedNativeExecutor()
         {
             string target=editor.SelectedId;var program=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-events.json")));

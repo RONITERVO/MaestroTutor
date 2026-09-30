@@ -1250,3 +1250,22 @@ no install is included in this increment.
   data edits alongside MR and the browser.
 PC execution and browser replay are complete; these headset/provider checks are not.
 See [the exact limits and evidence](QUEST_PROGRAM_DATA.md). No install is included.
+
+### Pending: state and signal declaration editing (2026-09-30)
+
+- Open Functions & code > Edit state & signals. Create a number state, an empty list
+  of numbers and two named numeric signals. Use them in a helper function and a
+  Forever/event-wait loop. Verify naming, type selection, initial values and scrolling
+  are readable and operable with hands/controllers on the actual book.
+- Rename the states/signals after blocks use them. References in every function should
+  update, while literal text and native arguments stay unchanged. Try deleting a used
+  state and an incompatible type change: the draft must remain repairable.
+- Use another behaviour listening for the emitted signal. Rename only the sender's
+  signal and verify the listener keeps its original name. Attempt conflicting payload
+  types; native rejection must leave saved definitions and valid running work intact.
+- Compare the same creation/editing request through original Maestro chat with manual
+  results. Apply saves only; explicit Start arms waits, and signals are separate actions.
+  Stop/pause must cancel without replay; a new run starts from declared initial values.
+- Confirm stale edits after an incoming change require reopening the declarations.
+PC native execution and browser replay do not establish these device/provider checks.
+No headset query or installation was performed for this checkpoint.

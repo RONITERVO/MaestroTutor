@@ -2,7 +2,16 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
-Latest PC increment (2026-09-30): the book and agent share typed lists/records,
+Latest PC increment (2026-09-30): the optional book now edits typed program state
+and named signal declarations without JSON. Atomic scoped renames preserve references;
+invalid/removal/type conflicts and stale drafts preserve valid source. The same human-
+authored source runs in Unity, where two behaviours exchange signals and retain typed
+state without saving runtime values. PC verification passes 1,401 app tests, 195
+EditMode, 133 PlayMode and 25 Android tests, with three optional native skips. See
+QUEST_EVENT_PROGRAMS.md. Shared versioned libraries and device/provider/store gates
+remain open; no installation is included.
+
+Previous PC increment (2026-09-30): the book and agent share typed lists/records,
 function signatures and local declarations in the same native program. Immutable
 values, structural typing, data operations, bounded execution and exact object
 authority support collecting creation results and passing them between functions.

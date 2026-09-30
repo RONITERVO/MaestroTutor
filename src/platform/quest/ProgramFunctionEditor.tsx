@@ -11,7 +11,7 @@ export function ProgramFunctionEditor({value,onChange,entry,structured=false}:{v
   <ProgramDataTypeEditor value={value.returns} label="Function return type" allowVoid structured={structured} onChange={returns=>onChange({...value,returns})}/>
 
   <p>Names use letters, numbers and underscores. Renames update references. Existing calculations stay intact; incompatible edits are rejected. A typed function without a return gets a visible default return block.</p>
-  <fieldset><legend>Parameters</legend><p>New parameters start with 0, false or empty text at every call. Removing a parameter removes that argument at every call. A parameter still used by this function cannot be removed.</p>
+  <fieldset><legend>Parameters</legend><p>New parameters start with default values at every call. Removing a parameter removes that argument at every call. A parameter still used by this function cannot be removed.</p>
    {value.parameters.map((p,i)=><div key={i}>
     <label>Parameter {i+1} name<input aria-label={'Parameter '+(i+1)+' name'} maxLength={32} value={p.name} onChange={e=>onChange({...value,parameters:value.parameters.map((v,j)=>i===j?{...v,name:e.target.value}:v)})}/></label>
     <ProgramDataTypeEditor label={'Parameter '+(i+1)+' type'} value={p.type} structured={structured} onChange={type=>onChange({...value,parameters:value.parameters.map((v,j)=>i===j?{...v,type:type as ValueType}:v)})}/>
