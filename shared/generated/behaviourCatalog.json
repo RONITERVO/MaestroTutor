@@ -2495,51 +2495,100 @@
   "events": [
     {
       "id": "maestro.speaking.enter",
+      "version": 1,
       "label": "Speaking",
       "activity": "speaking",
-      "objectEvent": false
+      "objectEvent": false,
+      "valueType": "text",
+      "description": "Maestro entered speaking. The primary text value is the state name. Source must be empty. The initial activity snapshot establishes a baseline without emitting an event.",
+      "features": [
+        "eventPrograms.v1"
+      ]
     },
     {
       "id": "maestro.listening.enter",
+      "version": 1,
       "label": "Listening",
       "activity": "listening",
-      "objectEvent": false
+      "objectEvent": false,
+      "valueType": "text",
+      "description": "Maestro entered listening. The primary text value is the state name. Source must be empty. The initial activity snapshot establishes a baseline without emitting an event.",
+      "features": [
+        "eventPrograms.v1"
+      ]
     },
     {
       "id": "maestro.thinking.enter",
+      "version": 1,
       "label": "Thinking",
       "activity": "thinking",
-      "objectEvent": false
+      "objectEvent": false,
+      "valueType": "text",
+      "description": "Maestro entered thinking. The primary text value is the state name. Source must be empty. The initial activity snapshot establishes a baseline without emitting an event.",
+      "features": [
+        "eventPrograms.v1"
+      ]
     },
     {
       "id": "maestro.idle.enter",
+      "version": 1,
       "label": "Idle",
       "activity": "idle",
-      "objectEvent": false
+      "objectEvent": false,
+      "valueType": "text",
+      "description": "Maestro entered idle. The primary text value is the state name. Source must be empty. The initial activity snapshot establishes a baseline without emitting an event.",
+      "features": [
+        "eventPrograms.v1"
+      ]
     },
     {
       "id": "object.tapped",
+      "version": 1,
       "label": "Item tapped",
       "activity": null,
-      "objectEvent": true
+      "objectEvent": true,
+      "valueType": "text",
+      "description": "An object interaction occurred. The primary text value is its object ID; source filters accept that exact ID or empty for any object.",
+      "features": [
+        "eventPrograms.v1"
+      ]
     },
     {
       "id": "object.grabbed",
+      "version": 1,
       "label": "Item grabbed",
       "activity": null,
-      "objectEvent": true
+      "objectEvent": true,
+      "valueType": "text",
+      "description": "An object interaction occurred. The primary text value is its object ID; source filters accept that exact ID or empty for any object.",
+      "features": [
+        "eventPrograms.v1"
+      ]
     },
     {
       "id": "object.released",
+      "version": 1,
       "label": "Item released",
       "activity": null,
-      "objectEvent": true
+      "objectEvent": true,
+      "valueType": "text",
+      "description": "An object interaction occurred. The primary text value is its object ID; source filters accept that exact ID or empty for any object.",
+      "features": [
+        "eventPrograms.v1"
+      ]
     },
     {
       "id": "object.collided",
+      "version": 1,
       "label": "Object contact began",
       "activity": null,
       "objectEvent": true,
+      "valueType": "text",
+      "description": "A physics contact began while room physics was running. Value is the source object ID. otherId is a registered room object ID or empty; otherKind distinguishes object, scannedRoom, controller and environment. speed is relative speed in metres/second; x/y/z are one contact point in world metres. Compound colliders can produce separate contacts. This is not a continuous contact or precise impact-energy measurement. Fields do not authorize editing new objects.",
+      "features": [
+        "eventPrograms.v1",
+        "eventFields.v1"
+      ],
       "fields": {
         "type": "object",
         "properties": {
@@ -2587,33 +2636,37 @@
           "z"
         ],
         "additionalProperties": false
-      },
-      "description": "A physics contact began while room physics was running. Value is the source object ID. otherId is a registered room object ID or empty; otherKind distinguishes object, scannedRoom, controller and environment. speed is relative speed in metres/second; x/y/z are one contact point in world metres. Compound colliders can produce separate contacts. This is not a continuous contact or precise impact-energy measurement. Fields do not authorize editing new objects.",
-      "features": [
-        "eventFields.v1"
-      ]
+      }
     }
   ],
   "facts": [
     {
       "id": "room.sessionId",
+      "version": 1,
       "type": "text",
-      "label": "Current room session"
+      "label": "Current room session",
+      "description": "Current explicit temporary-room session ID, or empty when using the saved room. Reading it does not begin, keep or discard a room."
     },
     {
       "id": "maestro.state",
+      "version": 1,
       "type": "text",
-      "label": "Maestro state"
+      "label": "Maestro state",
+      "description": "Current observed tutor state: speaking, listening, thinking or idle. Unavailable before a reliable activity snapshot, during audio suspension or when the room runtime is paused."
     },
     {
       "id": "physics.running",
+      "version": 1,
       "type": "boolean",
-      "label": "Physics running"
+      "label": "Physics running",
+      "description": "Whether room physics is currently running. False is an observed value; it is not an unavailable reading."
     },
     {
       "id": "physics.ready",
+      "version": 1,
       "type": "boolean",
-      "label": "Room surfaces ready"
+      "label": "Room surfaces ready",
+      "description": "Whether aligned room surfaces are currently ready for physics. This does not start physics or guarantee a particular navigation path."
     }
   ],
   "adapters": {
@@ -2792,7 +2845,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "c5cf71274ec2066008bb4c80b9c505f50357aaed7d303dbe6f8b89067160f6eb"
+      "sha256": "ada300c4960d4dd859023e0513af1713443ad8cf08bd165505f18e10cbca2cc3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",

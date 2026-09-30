@@ -1,10 +1,14 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {capabilityDefinition,type CapabilityDefinition,type CapabilityInvocation} from './capabilities';
-export type CatalogRequest={operation:'search';query:string;offset:number}|{operation:'inspect';capability:string;version:number}|{operation:'check';call:CapabilityInvocation};
+import {behaviourEvent,type BehaviourEventDefinition} from './behaviourEvents';
+import {behaviourFact,type BehaviourFactDefinition} from './behaviourCatalog';
+export type CatalogCategory='actions'|'events'|'facts';
+export type CatalogRequest={operation:'search';query:string;offset:number;category?:CatalogCategory}|{operation:'inspect';capability:string;version:number;category?:CatalogCategory}|{operation:'check';call:CapabilityInvocation};
+type Inspection={operation:'inspect';capability:string;version:number};
 export type CatalogView=(
- {operation:'search';query:string;offset:number;pageSize:number;total:number;entries:{id:string;version:number;label:string}[]}|
- {operation:'inspect';capability:string;version:number;definition:CapabilityDefinition|null}|
+ {operation:'search';query:string;offset:number;pageSize:number;total:number;entries:{id:string;version:number;label:string}[];category?:CatalogCategory}|
+ Inspection&({category?:'actions';definition:CapabilityDefinition|null}|{category:'events';definition:BehaviourEventDefinition|null}|{category:'facts';definition:BehaviourFactDefinition|null;available:boolean;value:number|boolean|string|null})|
  {operation:'check';call:CapabilityInvocation;valid:boolean;available:boolean;occupied:boolean;resources:string[]}
 )&{status:string};
 const record=(v:unknown):v is Record<string,unknown>=>v!==null&&typeof v==='object'&&!Array.isArray(v);
@@ -22,10 +26,12 @@ export const boundedCapabilityCall=(v:unknown):v is CapabilityInvocation=>{
   return v===null||typeof v==='boolean'||typeof v==='number'&&Number.isFinite(v)&&Math.abs(v)<=1000000||text(v,128);
  };return bounded(v.arguments,0);
 };
+const queryKeys=(v:Record<string,unknown>,keys:string[])=>Object.prototype.hasOwnProperty.call(v,'category')?
+ typeof v.category==='string'&&['actions','events','facts'].includes(v.category)&&exact(v,[...keys,'category']):exact(v,keys);
 export function validCatalogRequest(v:unknown):v is CatalogRequest {
  if(!record(v))return false;
- if(v.operation==='search')return exact(v,['operation','query','offset'])&&text(v.query,80)&&integer(v.offset);
- if(v.operation==='inspect')return exact(v,['operation','capability','version'])&&id(v.capability)&&integer(v.version,1);
+ if(v.operation==='search')return queryKeys(v,['operation','query','offset'])&&text(v.query,80)&&integer(v.offset);
+ if(v.operation==='inspect')return queryKeys(v,['operation','capability','version'])&&id(v.capability)&&integer(v.version,1);
  return v.operation==='check'&&exact(v,['operation','call'])&&boundedCapabilityCall(v.call);
 }
 function equal(a:unknown,b:unknown):boolean {
@@ -36,13 +42,19 @@ function equal(a:unknown,b:unknown):boolean {
 }
 export function validCatalogView(v:unknown):v is CatalogView {
  if(!record(v)||!text(v.status,2048))return false;
- if(v.operation==='search')return exact(v,['operation','query','offset','pageSize','total','entries','status'])&&text(v.query,80)&&integer(v.offset)&&integer(v.total)&&v.pageSize===6&&Array.isArray(v.entries)&&v.entries.length<=6&&v.entries.every(x=>record(x)&&exact(x,['id','version','label'])&&id(x.id)&&integer(x.version,1)&&text(x.label,128))&&new Set(v.entries.map(x=>x.id)).size===v.entries.length&&v.offset+v.entries.length<=v.total;
+ if(v.operation==='search')return queryKeys(v,['operation','query','offset','pageSize','total','entries','status'])&&text(v.query,80)&&integer(v.offset)&&integer(v.total)&&v.pageSize===6&&Array.isArray(v.entries)&&v.entries.length<=6&&v.entries.every(x=>record(x)&&exact(x,['id','version','label'])&&id(x.id)&&integer(x.version,1)&&text(x.label,128))&&new Set(v.entries.map(x=>x.id)).size===v.entries.length&&v.offset+v.entries.length<=v.total;
  if(v.operation==='inspect'){
-  if(!exact(v,['operation','capability','version','definition','status'])||!id(v.capability)||!integer(v.version,1))return false;
-  if(v.definition===null)return true;const known=capabilityDefinition(v.capability as string);
-  // Native and its bundled web client must agree on a definition. Reordered
-  // JSON keys are harmless; changed fields are not silently reinterpreted.
-  return known!==null&&known.version===v.version&&equal(v.definition,known);
+  const keys=['operation','capability','version','definition','status',...(v.category==='facts'?['available','value']:[])];
+  if(!queryKeys(v,keys)||!id(v.capability)||!integer(v.version,1))return false;
+  const known=v.category==='events'?behaviourEvent(v.capability as string):v.category==='facts'?behaviourFact(v.capability as string):capabilityDefinition(v.capability as string);
+  // Native and its bundled web client must agree on the exact requested category
+  // and version. Reading an unavailable fact must never manufacture false/zero.
+  if(v.definition!==null&&(!known||known.version!==v.version||!equal(v.definition,known)))return false;
+  if(v.category!=='facts')return true;
+  if(typeof v.available!=='boolean')return false;
+  if(!v.available)return v.value===null;
+  if(v.definition===null||!known||!('type' in known))return false;
+  return known.type==='text'?text(v.value,128):known.type==='boolean'?typeof v.value==='boolean':typeof v.value==='number'&&Number.isFinite(v.value)&&Math.abs(v.value)<=1000000;
  }
  return v.operation==='check'&&exact(v,['operation','call','valid','available','occupied','resources','status'])&&boundedCapabilityCall(v.call)&&
   ['valid','available','occupied'].every(k=>typeof v[k]==='boolean')&&(!v.available||v.valid===true&&!v.occupied)&&Array.isArray(v.resources)&&v.resources.length<=16&&

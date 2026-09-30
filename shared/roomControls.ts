@@ -24,7 +24,7 @@ export function validRoomControl(c:Record<string,unknown>):boolean {
     default:return false;
   }
 }
-export function requireRoomCapabilities(commands:{action:string;rule?:unknown;execution?:unknown}[],scene:{capabilities?:string[]}) {
+export function requireRoomCapabilities(commands:{action:string;rule?:unknown;execution?:unknown;catalog?:unknown}[],scene:{capabilities?:string[]}) {
   const hasResults=(value:unknown):boolean=>Array.isArray(value)?value.some(hasResults):record(value)?value.op==='invoke'&&(value.results!==undefined||Object.keys(capabilityDefinition(String(value.capability))?.output?.properties??{}).length>0)||Object.values(value).some(hasResults):false;
   const hasRecipe=(value:unknown):boolean=>Array.isArray(value)?value.some(hasRecipe):record(value)?value.op==='invoke'&&record(value.arguments)&&capabilityInput(String(value.capability),value.arguments)?.['x-features']?.includes('recipeCreation.v1')===true||Object.values(value).some(hasRecipe):false;
   const hasEdit=(value:unknown):boolean=>Array.isArray(value)?value.some(hasEdit):record(value)?value.op==='invoke'&&['object.position.set','object.scale.set','object.color.set','object.delete'].includes(String(value.capability))||Object.values(value).some(hasEdit):false;
@@ -40,6 +40,7 @@ export function requireRoomCapabilities(commands:{action:string;rule?:unknown;ex
     Object.values(value).forEach(x=>needs(x,features));
   };
   for(const command of commands) {
+    if(command.action==='catalog'&&record(command.catalog)&&command.catalog.category!==undefined&&!scene.capabilities?.includes('catalogVocabulary.v1'))throw new Error('Update the native app to discover events and facts (catalogVocabulary.v1).');
     if(command.action==='execution'&&record(command.execution)&&command.execution.operation==='recover'&&!scene.capabilities?.includes('actionRecovery.v1'))throw new Error('Update the native app to recover action history.');
     if(command.action==='rules'&&record(command.rule)&&Array.isArray(command.rule.edits)&&command.rule.edits.some(e=>record(e)&&record(e.sequence)&&typeof e.sequence.program==='string'&&hasEdit(JSON.parse(e.sequence.program)))&&!scene.capabilities?.includes('objectEdits.v1'))
       throw new Error('Update the native app to edit objects in programs.');

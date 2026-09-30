@@ -76,6 +76,7 @@ setInterval(()=>{
     }else {state.ok=false;state.status='This browser fixture only replays the recorded native call. It does not execute actions.';}
    }else if(command.action==='catalog'&&command.catalog){
     const query=command.catalog;
+    if(query.operation!=='check'&&query.category&&query.category!=='actions'){state.ok=false;state.status='This older browser fixture supports action discovery only.';continue;}
     if(query.operation==='search'){
      const terms=query.query.toLowerCase().trim().split(/ +/).filter(Boolean);
      const matches=behaviourCatalog.actions.filter(x=>terms.every(term=>(x.id+' '+x.label+' '+x.requirements.join(' ')).toLowerCase().includes(term))).sort((a,b)=>a.id.localeCompare(b.id));
@@ -83,7 +84,7 @@ setInterval(()=>{
      state.catalog={operation:'search',query:query.query,offset,pageSize:6,total:matches.length,entries:matches.slice(offset,offset+6).map(({id,version,label})=>({id,version,label})),status:'Fixture catalog search'};
     }else if(query.operation==='inspect'){
      const definition=capabilityDefinition(query.capability);
-     state.catalog={...query,definition:definition?.version===query.version?definition:null,status:'Fixture definition'};
+     state.catalog={operation:'inspect',capability:query.capability,version:query.version,...(query.category?{category:'actions' as const}:{}),definition:definition?.version===query.version?definition:null,status:'Fixture definition'};
     }else{
      const call=query.call,valid=validateCapabilityArguments(call.id,call.version,call.arguments)===null;
      state.catalog={operation:'check',call,valid,available:false,occupied:false,resources:valid?capabilityResources(call.id,call.arguments):[],status:'Browser preview cannot verify live action availability. Check in Unity.'};

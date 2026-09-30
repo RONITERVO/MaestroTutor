@@ -1190,3 +1190,17 @@ reactions; returning focus must not restart the program. Check readability of
 field controls, repeated/compound contacts, event overflow and sustained Quest
 frame timing. scannedRoom intentionally does not claim floor/wall labels.
 No headset installation or acceptance is recorded for this increment.
+
+
+### Pending: shared event and fact discovery
+
+In Workshop > Action catalog, switch Browse to Events, page results and inspect
+Object contact began. Check typed field labels and source guidance on the book.
+Switch to Room facts and inspect Room surfaces ready: false is a value, while an
+unavailable runtime must show Unavailable. Load/check room surfaces and verify the
+reading refreshes without a new search. Inspect Maestro state across tutor states
+and audio suspension. Browsing must not stop a running animation, start physics,
+create a listener, alter saved work or offer Run action for an event/fact. Ask the
+chat agent to discover relevant events/facts and prepare a behaviour without starting
+it; compare its evidence with the book. PC checks and browser replay do not establish
+headset or real-provider acceptance. No installation is included in this increment.

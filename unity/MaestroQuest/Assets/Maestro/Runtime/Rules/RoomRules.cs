@@ -78,6 +78,9 @@ namespace Maestro.Quest.Rules
             if(issue!=null){workshop.Say(issue);return;}
             animations.Stop(); Trigger(workshop.Selected.id);
         }
+        public bool TryReadFact(string name,out Programs.ProgramValue value) {
+            value=default;return !paused&&focused&&isActiveAndEnabled&&Scheduler!=null&&Scheduler.TryRead(name,out value);
+        }
         public bool CanRun(Maestro.Quest.Programs.CapabilityCall step,out string error)
         {
             error="Action runtime is not ready";if(actions==null||Scheduler==null)return false;

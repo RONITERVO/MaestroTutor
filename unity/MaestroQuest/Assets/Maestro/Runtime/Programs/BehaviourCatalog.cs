@@ -49,13 +49,15 @@ namespace Maestro.Quest.Programs
         public sealed class EventDefinition
         {
             public readonly string Id, Label, Activity;
+            public readonly int Version=1;
             public readonly RuleEventKind? Kind;
             public readonly bool ObjectEvent;
             public readonly string Description;
             readonly JObject fields;
             public JObject Fields=>fields==null?null:(JObject)fields.DeepClone();
             public EventDefinition(string id, RuleEventKind kind, string label, string activity=null, bool objectEvent=false)
-            { Id=id;Kind=kind;Label=label;Activity=activity;ObjectEvent=objectEvent; }
+            { Id=id;Kind=kind;Label=label;Activity=activity;ObjectEvent=objectEvent;
+                Description=objectEvent?"An object interaction occurred. The primary text value is its object ID; source filters accept that exact ID or empty for any object.":"Maestro entered "+activity+". The primary text value is the state name. Source must be empty. The initial activity snapshot establishes a baseline without emitting an event."; }
             // New native events do not require a legacy tray enum or a signal route.
             public EventDefinition(string id,string label,string description,JObject fields,bool objectEvent=false)
             { Id=id;Label=label;Description=description;ObjectEvent=objectEvent;this.fields=(JObject)fields.DeepClone(); }
@@ -64,8 +66,9 @@ namespace Maestro.Quest.Programs
             };
             public bool ValidFields(JObject value)=>fields==null?value==null||value.Count==0:CapabilityArguments.Validate(value,fields,out _,"event fields");
             public JObject ToJson() {
-                var result=new JObject {["id"]=Id,["label"]=Label,["activity"]=Activity,["objectEvent"]=ObjectEvent};
-                if(fields!=null) {result["fields"]=Fields;result["description"]=Description;result["features"]=new JArray("eventFields.v1");}return result;
+                var result=new JObject {["id"]=Id,["version"]=Version,["label"]=Label,["activity"]=Activity,["objectEvent"]=ObjectEvent,["valueType"]="text",["description"]=Description,
+                    ["features"]=fields==null?new JArray("eventPrograms.v1"):new JArray("eventPrograms.v1","eventFields.v1")};
+                if(fields!=null)result["fields"]=Fields;return result;
             }
         }
         public readonly struct FactContext
@@ -77,11 +80,13 @@ namespace Maestro.Quest.Programs
         }
         public sealed class FactDefinition
         {
-            public readonly string Id, Label;
+            public readonly string Id, Label, Description;
+            public readonly int Version=1;
             public readonly ProgramType Type;
             readonly Func<FactContext,ProgramValue?> read;
-            public FactDefinition(string id, ProgramType type, string label, Func<FactContext,ProgramValue?> read)
-            { Id=id;Type=type;Label=label;this.read=read; }
+            public FactDefinition(string id, ProgramType type, string label,string description, Func<FactContext,ProgramValue?> read)
+            { Id=id;Type=type;Label=label;Description=description;this.read=read; }
+            public JObject ToJson()=>new() {["id"]=Id,["version"]=Version,["type"]=Type.ToString().ToLowerInvariant(),["label"]=Label,["description"]=Description};
             public bool TryRead(FactContext context, out ProgramValue value)
             {
                 var result=read(context);value=result??default;
@@ -107,10 +112,10 @@ namespace Maestro.Quest.Programs
                 }),objectEvent:true),
         });
         public static readonly IReadOnlyList<FactDefinition> Facts=Array.AsReadOnly(new[] {
-            new FactDefinition("room.sessionId",ProgramType.Text,"Current room session",context=>context.RoomSessionId==null?null:new ProgramValue(context.RoomSessionId)),
-            new FactDefinition("maestro.state",ProgramType.Text,"Maestro state",context=>context.Activity==null?null:new ProgramValue(context.Activity)),
-            new FactDefinition("physics.running",ProgramType.Boolean,"Physics running",context=>context.PhysicsRunning.HasValue?new ProgramValue(context.PhysicsRunning.Value):null),
-            new FactDefinition("physics.ready",ProgramType.Boolean,"Room surfaces ready",context=>context.PhysicsReady.HasValue?new ProgramValue(context.PhysicsReady.Value):null),
+            new FactDefinition("room.sessionId",ProgramType.Text,"Current room session","Current explicit temporary-room session ID, or empty when using the saved room. Reading it does not begin, keep or discard a room.",context=>context.RoomSessionId==null?null:new ProgramValue(context.RoomSessionId)),
+            new FactDefinition("maestro.state",ProgramType.Text,"Maestro state","Current observed tutor state: speaking, listening, thinking or idle. Unavailable before a reliable activity snapshot, during audio suspension or when the room runtime is paused.",context=>context.Activity==null?null:new ProgramValue(context.Activity)),
+            new FactDefinition("physics.running",ProgramType.Boolean,"Physics running","Whether room physics is currently running. False is an observed value; it is not an unavailable reading.",context=>context.PhysicsRunning.HasValue?new ProgramValue(context.PhysicsRunning.Value):null),
+            new FactDefinition("physics.ready",ProgramType.Boolean,"Room surfaces ready","Whether aligned room surfaces are currently ready for physics. This does not start physics or guarantee a particular navigation path.",context=>context.PhysicsReady.HasValue?new ProgramValue(context.PhysicsReady.Value):null),
         });
         public static readonly IReadOnlyDictionary<string,ProgramType> FactTypes=new ReadOnlyDictionary<string,ProgramType>(Facts.ToDictionary(x=>x.Id,x=>x.Type));
         static readonly Dictionary<RuleEventKind,EventDefinition> events=Events.Where(x=>x.Kind.HasValue).ToDictionary(x=>x.Kind.Value);
@@ -144,6 +149,7 @@ namespace Maestro.Quest.Programs
             return claims.ToArray();
         }
         public static bool HasAction(RuleActionKind kind)=>Action(kind)!=null;
+        public static FactDefinition Fact(string id)=>id!=null&&facts.TryGetValue(id,out var value)?value:null;
         public static EventDefinition Event(string id)=>id!=null&&eventIds.TryGetValue(id,out var value)?value:null;
         public static EventDefinition Event(RuleEventKind kind)=>events.TryGetValue(kind,out var value)?value:null;
         public static bool TryRead(string id, FactContext context, out ProgramValue value)
@@ -154,7 +160,7 @@ namespace Maestro.Quest.Programs
             ["version"]=1,
             ["actions"]=new JArray(Actions.Select(x=>x.ToJson())),
             ["events"]=new JArray(Events.Select(x=>x.ToJson())),
-            ["facts"]=new JArray(Facts.Select(x=>new JObject { ["id"]=x.Id,["type"]=x.Type.ToString().ToLowerInvariant(),["label"]=x.Label })),
+            ["facts"]=new JArray(Facts.Select(x=>x.ToJson())),
             ["adapters"]=new JObject { ["ruleStep"]=new JObject {
                 ["actionIds"]=new JArray(LegacyCapabilityAdapters.ActionIds),
                 ["invocations"]=LegacyCapabilityAdapters.Invocations(),

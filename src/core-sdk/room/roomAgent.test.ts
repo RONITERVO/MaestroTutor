@@ -220,3 +220,34 @@ it('does not use recovery to bypass an unconfirmed earlier task',async()=>{
  const result=await runRoomActionTask(input,{aiClient:ai},{state:()=>({...scene,capabilities:['execution.v1','actionRecovery.v1']}),valid:()=>true,execute},()=>{},{relatedTask});
  expect(execute).not.toHaveBeenCalled();expect(result.needsReview).toBe(true);
 });
+
+import {behaviourEvent} from '../../../shared/behaviourEvents';
+import {behaviourFact} from '../../../shared/behaviourCatalog';
+import contactProgram from '../../../unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-contact.json';
+it('discovers event payloads and live facts before saving a program without starting it',async()=>{
+ const queries:RoomCommand[]=[
+  {action:'catalog',catalog:{operation:'search',category:'events',query:'contact',offset:0}},
+  {action:'catalog',catalog:{operation:'inspect',category:'events',capability:'object.collided',version:1}},
+  {action:'catalog',catalog:{operation:'search',category:'facts',query:'ready',offset:0}},
+  {action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'physics.ready',version:1}},
+ ];
+ const save:RoomCommand={action:'rules',rule:{action:'edit',revision:1,edits:[{kind:'save',reference:'contact',sequence:{id:'',name:'Observe contacts',interruption:0,repeat:false,program:JSON.stringify(contactProgram)}}]}};
+ const ai=client([...queries,save].map(command=>JSON.stringify({commands:[command]})).concat('{"commands":[]}'));
+ let current:RoomAgentState={...scene,capabilities:['catalog.v1','catalogVocabulary.v1','behaviourPrograms.v3','eventPrograms.v1','eventFields.v1']};
+ const execute=vi.fn(async(commands:RoomCommand[])=>{
+  const query=commands[0].catalog;
+  if(query&&query.operation!=='check') {
+   const definition=query.category==='events'?behaviourEvent('object.collided')!:behaviourFact('physics.ready')!;
+   current={...current,ack:current.ack+1,catalog:query.operation==='search'?{...query,pageSize:6,total:1,entries:[{id:definition.id,version:1,label:definition.label}],status:'Test search'}:
+    query.category==='events'?{...query,category:'events',definition:behaviourEvent(query.capability),status:'Test event schema'}:
+    {...query,category:'facts',definition:behaviourFact(query.capability),available:true,value:false,status:'Test readiness'}};
+  }else current={...current,ack:current.ack+1,status:'Saved without starting'};
+  return current;
+ });
+ const result=await runRoomActionTask({...input,prompt:'Prepare a contact observer; do not start it yet'},{aiClient:ai},{state:()=>current,valid:()=>true,execute},()=>{});
+ expect(execute.mock.calls.map(x=>x[0])).toEqual([...queries,save].map(x=>[x]));expect(result.budgetExhausted).toBe(false);
+ const requests=ai.models.generateContentStream.mock.calls as unknown as [any][];
+ expect(JSON.parse(requests[2][0].contents[0].parts[0].text).scene.catalog.definition.fields.properties.speed.type).toBe('number');
+ expect(JSON.parse(requests[4][0].contents[0].parts[0].text).scene.catalog).toMatchObject({category:'facts',available:true,value:false});
+ expect(ai.live.connect).not.toHaveBeenCalled();
+});

@@ -94,7 +94,7 @@ export function ProgramBlockEditor({node,program,fn,objects,onChange,eventFields
         <label>Event<select aria-label="Await event" value={node.event} onChange={e=>{
           const event=events.find(v=>v.name===e.target.value)!;
           const next={...node,event:event.name,source:event.objectEvent?node.source:'',value:locals.find(v=>v.type===event.type&&v.name!==node.received)?.name??''};delete next.fields;onChange(next);
-        }}>{events.map(e=><option key={e.name} value={e.name} disabled={!eventFieldsSupported&&Boolean(behaviourEvent(e.name)?.features?.length)}>{e.name}</option>)}</select></label>
+        }}>{events.map(e=><option key={e.name} value={e.name} disabled={!eventFieldsSupported&&behaviourEvent(e.name)?.features?.includes('eventFields.v1')===true}>{e.name}</option>)}</select></label>
         {selected?.objectEvent&&<label>Event object<select aria-label="Event object" value={node.source} onChange={e=>onChange({...node,source:e.target.value})}><option value="">Any object</option>{objects.map(o=><option key={o.id} value={o.id}>{o.name??o.id}</option>)}</select></label>}
         {expr('Timeout seconds',node.timeout,'number',timeout=>onChange({...node,timeout}))}
         <p className="room-workspace-intro">Zero waits until the event arrives or the run is stopped.</p>
@@ -114,7 +114,7 @@ export function ProgramBlockEditor({node,program,fn,objects,onChange,eventFields
         <label>Named event<select aria-label="Send named event" value={node.event} onChange={e=>{
           const next=program.events!.find(v=>v.name===e.target.value)!;
           onChange({...node,event:next.name,value:next.type===type?node.value:{value:defaultValue(next.type)}});
-        }}>{program.events?.map(e=><option key={e.name} value={e.name} disabled={!eventFieldsSupported&&Boolean(behaviourEvent(e.name)?.features?.length)}>{e.name}</option>)}</select></label>
+        }}>{program.events?.map(e=><option key={e.name} value={e.name} disabled={!eventFieldsSupported&&behaviourEvent(e.name)?.features?.includes('eventFields.v1')===true}>{e.name}</option>)}</select></label>
         {expr('Event payload',node.value,type,value=>onChange({...node,value}))}
       </>;
     }

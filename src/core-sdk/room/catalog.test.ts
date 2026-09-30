@@ -57,3 +57,31 @@ it('sends a read-only nested call without reserving target revisions',async()=>{
  expect(client.snapshot().request?.commands).toEqual([command]);
  client.receive({...native.ready,ack:1,revision:native.ready.revision+1});await pending;client.cancel();
 });
+
+import {behaviourEvent} from '../../../shared/behaviourEvents';
+import {behaviourFact} from '../../../shared/behaviourCatalog';
+it('scopes discovery without allowing categories on execution checks or older runtimes',()=>{
+ for(const category of ['actions','events','facts']) {
+  const query={operation:'inspect',category,capability:'physics.ready',version:1};
+  expect(validCatalogRequest(query)).toBe(true);
+  const command={action:'catalog',catalog:query};
+  expect(()=>requireRoomCapabilities([command],{capabilities:['catalog.v1']})).toThrow('catalogVocabulary.v1');
+  expect(()=>requireRoomCapabilities([command],{capabilities:['catalog.v1','catalogVocabulary.v1']})).not.toThrow();
+ }
+ for(const bad of [{...check,category:'actions'},{operation:'search',category:null,query:'',offset:0},{operation:'search',category:'unknown',query:'',offset:0}])expect(validCatalogRequest(bad)).toBe(false);
+});
+it('checks exact event and fact definitions and distinguishes false, unavailable and wrong scalar types',()=>{
+ const event={operation:'inspect',category:'events',capability:'object.collided',version:1,definition:behaviourEvent('object.collided'),status:'Event definition'};
+ expect(validCatalogView(event)).toBe(true);expect(validCatalogView({...event,category:'actions'})).toBe(false);
+ expect(validCatalogView({...event,definition:{...event.definition,features:[]}})).toBe(false);
+ const fact={operation:'inspect',category:'facts',capability:'physics.ready',version:1,definition:behaviourFact('physics.ready'),available:true,value:false,status:'Current reading'};
+ expect(validCatalogView(fact)).toBe(true);expect(validCatalogView({...fact,value:true})).toBe(true);
+ expect(validCatalogView({...fact,available:false,value:null})).toBe(true);
+ for(const value of [null,0,'false',{},NaN])expect(validCatalogView({...fact,value})).toBe(false);
+ expect(validCatalogView({...fact,available:false})).toBe(false);
+ expect(validCatalogView({...fact,definition:null})).toBe(false);
+ expect(validCatalogView({...fact,capability:'future.fact',definition:null,available:false,value:null})).toBe(true);
+ const text={...fact,capability:'room.sessionId',definition:behaviourFact('room.sessionId'),value:''};expect(validCatalogView(text)).toBe(true);
+ expect(validCatalogView({...text,value:'x'.repeat(129)})).toBe(false);
+ fact.definition!.description='Changed';expect(behaviourFact('physics.ready')!.description).not.toBe('Changed');expect(validCatalogView(fact)).toBe(false);
+});

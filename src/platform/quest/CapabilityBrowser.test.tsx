@@ -11,9 +11,9 @@ import type {RoomAgentState} from '../../core-sdk/room/roomAgent';
 import {validCatalogView,type CatalogView} from '../../../shared/roomCatalog';
 function catalogFixture(value:unknown):CatalogView {if(!validCatalogView(value))throw new Error('Invalid native catalog fixture');return value;}
 afterEach(cleanup);
-function setup(){
+function setup(vocabulary=false){
  const client=new RoomAgentClient();let state=JSON.parse(JSON.stringify(nativeProgram)) as RoomAgentState;
- state={...state,capabilities:[...new Set([...state.capabilities!,'catalog.v1'])],catalog:null,visible:true,workspaceView:'rules',ack:0,revision:1};
+ state={...state,capabilities:[...new Set([...state.capabilities!,'catalog.v1',...(vocabulary?['catalogVocabulary.v1']:[])])],catalog:null,visible:true,workspaceView:'rules',ack:0,revision:1};
  client.receive(state);const screen=render(<RoomWorkspace client={client}/>);
  const receive=async(catalog?:CatalogView,changed=false)=>{
   state={...state,ack:client.snapshot().request?.sequence??state.ack,revision:state.revision+1,catalog:catalog??state.catalog,
@@ -122,4 +122,42 @@ it('keeps valid catalog draft fields when changing kind after another field beca
  const args=JSON.parse((screen.getByLabelText('Action arguments') as HTMLTextAreaElement).value);
  expect(args).toMatchObject({kind:'recipe',name:'Keep my name',x:.4,scale:1});expect(args.recipe.parts).toHaveLength(19);
  expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
+});
+
+import {behaviourEvent} from '../../../shared/behaviourEvents';
+import {behaviourFact} from '../../../shared/behaviourCatalog';
+it('browses event schemas without exposing action execution and clears the previous category',async()=>{
+ const {client,screen,receive}=setup(true);fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));
+ fireEvent.change(screen.getByLabelText('Catalog category'),{target:{value:'events'}});fireEvent.click(screen.getByRole('button',{name:/^Search$/}));
+ expect(client.snapshot().request?.commands[0]).toEqual({action:'catalog',catalog:{operation:'search',category:'events',query:'',offset:0}});
+ const definition=behaviourEvent('object.collided')!;
+ await receive({operation:'search',category:'events',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Test event search'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));
+ expect(client.snapshot().request?.commands[0]).toEqual({action:'catalog',catalog:{operation:'inspect',category:'events',capability:definition.id,version:1}});
+ await receive({operation:'inspect',category:'events',capability:definition.id,version:1,definition,status:'Test event definition'});
+ expect(screen.getByRole('region',{name:'Event definition'}).textContent).toContain('speed');
+ expect(screen.queryByRole('button',{name:'Run action now'})).toBeNull();expect(screen.queryByRole('button',{name:'Add first block to draft'})).toBeNull();
+ fireEvent.change(screen.getByLabelText('Catalog category'),{target:{value:'facts'}});
+ expect(screen.queryByRole('region',{name:'Event definition'})).toBeNull();expect(screen.queryByRole('button',{name:new RegExp(definition.label)})).toBeNull();
+ expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
+});
+it('renders live false and true readings and removes stale values when unavailable or replaced',async()=>{
+ const {client,screen,receive}=setup(true);fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));
+ fireEvent.change(screen.getByLabelText('Catalog category'),{target:{value:'facts'}});fireEvent.click(screen.getByRole('button',{name:/^Search$/}));
+ const definition=behaviourFact('physics.ready')!;
+ await receive({operation:'search',category:'facts',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Test fact search'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));
+ const reading:CatalogView={operation:'inspect',category:'facts',capability:definition.id,version:1,definition,available:true,value:false,status:'Test current reading'};
+ await receive(reading);expect(screen.getByLabelText('Current fact value').textContent).toContain('false');expect(client.snapshot().request).toBeNull();
+ await receive({...reading,value:true});expect(screen.getByLabelText('Current fact value').textContent).toContain('true');
+ await receive({...reading,value:null,available:false});expect(screen.getByLabelText('Current fact value').textContent).toContain('Unavailable');
+ expect(screen.getByLabelText('Current fact value').textContent).not.toContain('true');
+ await receive(catalogFixture(native.search.catalog));expect(screen.getByLabelText('Current fact value').textContent).toContain('Refresh this fact');
+ fireEvent.click(screen.getByRole('button',{name:'Refresh fact'}));
+ expect(client.snapshot().request?.commands[0]).toEqual({action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'physics.ready',version:1}});
+ await receive(reading);expect(screen.queryByRole('button',{name:'Run action now'})).toBeNull();act(()=>client.cancel());
+});
+it('keeps older runtimes on their existing action catalog',()=>{
+ const {client,screen}=setup();fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));
+ expect(screen.queryByLabelText('Catalog category')).toBeNull();act(()=>client.cancel());
 });

@@ -649,6 +649,41 @@ namespace Maestro.Quest.Tests
             var unknown=Query(new JObject {["operation"]="inspect",["capability"]="future.unknown",["version"]=1},"unknown");
             Assert.That(unknown["definition"].Type,Is.EqualTo(JTokenType.Null));
         }
+        [UnityTest] public IEnumerator VocabularyDiscoveryReadsLiveFactsWithoutEditingOrInterruptingPlayback()
+        {
+            var executor=new RoomAgentExecutor(editor);var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);
+            int roomRevision=editor.Revision,ruleRevision=workshop.Revision;string selected=editor.SelectedId,document=JsonUtility.ToJson(editor.Snapshot());
+            JObject Evidence(string phase) {
+                var result=executor.Catalog.Observe();string output=Environment.GetEnvironmentVariable("MAESTRO_CATALOG_EVIDENCE");
+                if(!string.IsNullOrEmpty(output)) {Directory.CreateDirectory(output);var state=observer.Observe();state.catalog=result;File.WriteAllText(Path.Combine(output,"vocabulary-"+phase+".json"),RoomAgentWire.Serialize(state));}
+                Assert.That(editor.Revision,Is.EqualTo(roomRevision));Assert.That(workshop.Revision,Is.EqualTo(ruleRevision));Assert.That(editor.SelectedId,Is.EqualTo(selected));
+                Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(document));return result;
+            }
+            JObject Query(JObject query,string phase) {
+                Assert.That(executor.Execute(new RoomAgentRequest {version=2,commands=new[]{new RoomAgentCommand {action="catalog",catalog=query}}},out var error,out var created),Is.True,error);
+                Assert.That(created,Is.Empty);return Evidence(phase);
+            }
+            Assert.That(runtime.Trigger(sequenceId),Is.True);var before=block.transform.localPosition;
+            var events=Query(new JObject {["operation"]="search",["category"]="events",["query"]="",["offset"]=0},"events");
+            var next=Query(new JObject {["operation"]="search",["category"]="events",["query"]="",["offset"]=6},"events-next");
+            Assert.That(events["entries"].Count()+next["entries"].Count(),Is.EqualTo(Maestro.Quest.Programs.BehaviourCatalog.Events.Count));
+            var contact=Query(new JObject {["operation"]="inspect",["category"]="events",["capability"]="object.collided",["version"]=1},"contact");
+            Assert.That((string)contact["definition"]["fields"]["properties"]["speed"]["type"],Is.EqualTo("number"));
+            yield return new WaitForSeconds(.2f);Assert.That(block.transform.localPosition.x,Is.GreaterThan(before.x+.01f));
+            Assert.That(runtime.Scheduler.RunningCount,Is.EqualTo(1));runtime.StopAll();
+            Query(new JObject {["operation"]="search",["category"]="facts",["query"]="",["offset"]=0},"facts");
+            var ready=Query(new JObject {["operation"]="inspect",["category"]="facts",["capability"]="physics.ready",["version"]=1},"false");
+            Assert.That((bool)ready["available"],Is.True);Assert.That((bool)ready["value"],Is.False);
+            physics.SetSurfaces(true,"Test surfaces");var refreshed=Evidence("true");Assert.That((bool)refreshed["available"],Is.True);Assert.That((bool)refreshed["value"],Is.True);
+            Assert.That(physics.Running,Is.False,"Reading readiness never starts physics");
+            runtime.enabled=false;var disabled=Evidence("disabled");Assert.That((bool)disabled["available"],Is.False);Assert.That(disabled["value"].Type,Is.EqualTo(JTokenType.Null));runtime.enabled=true;
+            runtime.SendMessage("OnApplicationPause",true);Assert.That((bool)Evidence("paused")["available"],Is.False);runtime.SendMessage("OnApplicationPause",false);
+            var state=Query(new JObject {["operation"]="inspect",["category"]="facts",["capability"]="maestro.state",["version"]=1},"unavailable");
+            Assert.That((bool)state["available"],Is.False);Assert.That(state["value"].Type,Is.EqualTo(JTokenType.Null));
+            runtime.ObserveSnapshot(new BookSnapshot {activity="speaking"});var speaking=Evidence("speaking");Assert.That((bool)speaking["available"],Is.True);Assert.That((string)speaking["value"],Is.EqualTo("speaking"));
+            runtime.ObserveSnapshot(new BookSnapshot {activity="speaking",audioPaused=true});Assert.That((bool)Evidence("audio-paused")["available"],Is.False);
+            Assert.That(runtime.Scheduler.RunningCount,Is.Zero,"Inspecting events never creates a listener or starts a program");
+        }
         [UnityTest] public IEnumerator RealButtonAndWebActivityTriggerTheSameRecordedActionAndPauseStopsIt()
         {
             workshop.AddBinding(); workshop.AddButton(ButtonMount.Room);

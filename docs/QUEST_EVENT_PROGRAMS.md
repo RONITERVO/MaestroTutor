@@ -180,3 +180,39 @@ the actual room executor, drops a rigid ball onto a registered object and observ
 the collision wake a program that drives recorded motion. It then checks scanned
 floor contacts, pause and no automatic restart. Quest timing/performance and
 real-provider conversational acceptance are still pending.
+
+
+## Progressive event and fact discovery (2026-09-30)
+
+The same native catalog used for actions now supports `category:"events"` and
+`category:"facts"` on search and inspect when `catalogVocabulary.v1` is advertised.
+Omitted category retains action discovery. Search returns at most six ID/version/
+label entries; inspect returns only the requested exact definition. Agent prompts
+explain the query contract instead of expanding the full growing vocabulary.
+Native event registrations expose their version, primary value type, source rules,
+feature requirements and optional typed fields. Facts expose version, scalar type
+and meaning. Unknown IDs or unsupported versions return an explicit null definition.
+The shared web validator checks definitions against the committed native export.
+
+Fact inspection also returns `available` and `value` through the same native reader
+used by program expressions. Unavailable means null; false, zero and empty text are
+valid values when available. The selected reading refreshes in observations without
+another query. Disabled/paused runtimes do not expose stale facts, and Maestro state
+is unavailable until an activity baseline exists or while audio is suspended.
+Reading physics readiness neither starts physics nor guarantees navigation.
+Search results and static definitions are cached per query; live readings are not.
+
+The optional book catalog offers Actions, Events and Room facts. Event details show
+payload fields and source rules; facts show the current value or Unavailable. These
+views use the same queries as the agent and never expose action execution buttons.
+Use the existing event-wait and expression editors to add them to programs. Browsing
+does not subscribe, emit, save, reserve resources, start or interrupt anything.
+Action-only clients retain their existing wire and controls. No save format changes.
+
+Native tests verify detached pages/schemas, strict categories/versions, real playback
+continuing while discovery runs, unchanged documents/revisions, false-to-true live
+readings and disabled/paused/audio-suspended availability. Shared tests cover the
+same wire, feature gates, book controls and a simulated-agent discovery/save journey.
+Chrome replays actual native observations through the real book/bridge with explicitly
+simulated transport acknowledgements; it does not execute Unity or a real provider.
+Headset readability and conversational provider acceptance remain pending.

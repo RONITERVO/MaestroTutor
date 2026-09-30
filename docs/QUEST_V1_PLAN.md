@@ -2,7 +2,16 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
-Latest PC increment (2026-09-30): typed native event fields let the book and agent
+Latest PC increment (2026-09-30): book and agent share paged discovery of native
+events and facts alongside actions. Exact schemas are inspected on demand;
+selected facts refresh through the same reader used by programs. Unavailable is
+separate from false/zero/empty values, and browsing never starts or interrupts
+anything. PC verification passes 1,357 app tests, 181 EditMode and 130 PlayMode
+tests, plus 25 Android bridge tests. The verified development APK is built but
+uninstalled. Real-provider and headset acceptance remain pending. See
+QUEST_EVENT_PROGRAMS.md for query semantics and evidence.
+
+Previous PC increment (2026-09-30): typed native event fields let the book and agent
 compose collision reactions through the same canonical programs. Actual PhysX
 contact entry carries counterpart, speed and world position; source filters,
 bounded dispatch and resource authority remain enforced. See

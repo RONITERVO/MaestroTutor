@@ -13,18 +13,23 @@ namespace Maestro.Quest.Creation
     {
         public const int PageSize=6;
         readonly RoomEditor editor;
-        JObject request;
+        JObject request,cached;
+        Entry inspected;
         public RoomCapabilityCatalog(RoomEditor editor) {this.editor=editor;}
         static bool Exact(JObject value,params string[] keys)=>value!=null&&value.Count==keys.Length&&keys.All(value.ContainsKey);
         static bool Text(JToken value,int max)=>value?.Type==JTokenType.String&&((string)value).Length<=max&&!((string)value).Any(char.IsControl);
         static bool Version(JToken value)=>value?.Type==JTokenType.Integer&&(double)value>=1&&(double)value<=1000000;
         static bool Id(JToken value)=>Text(value,96)&&Regex.IsMatch((string)value,@"^[a-z][a-zA-Z0-9]*(\.[a-z][a-zA-Z0-9]*)+$");
+        static bool QueryKeys(JObject value,params string[] keys) {
+            if(!value.ContainsKey("category"))return Exact(value,keys);
+            return value["category"]?.Type==JTokenType.String&&new[]{"actions","events","facts"}.Contains((string)value["category"])&&Exact(value,keys.Concat(new[]{"category"}).ToArray());
+        }
         public static bool ValidRequest(JObject value)
         {
             if(value==null||value["operation"]?.Type!=JTokenType.String)return false;
             switch((string)value["operation"]) {
-                case "search":return Exact(value,"operation","query","offset")&&Text(value["query"],80)&&value["offset"]?.Type==JTokenType.Integer&&(double)value["offset"]>=0&&(double)value["offset"]<=1000000;
-                case "inspect":return Exact(value,"operation","capability","version")&&Id(value["capability"])&&Version(value["version"]);
+                case "search":return QueryKeys(value,"operation","query","offset")&&Text(value["query"],80)&&value["offset"]?.Type==JTokenType.Integer&&(double)value["offset"]>=0&&(double)value["offset"]<=1000000;
+                case "inspect":return QueryKeys(value,"operation","capability","version")&&Id(value["capability"])&&Version(value["version"]);
                 case "check":return Exact(value,"operation","call")&&ValidCall(value["call"] as JObject);
                 default:return false;
             }
@@ -45,25 +50,53 @@ namespace Maestro.Quest.Creation
         public bool Execute(JObject value,out string status)
         {
             status="Invalid capability query";if(!ValidRequest(value))return false;
-            request=(JObject)value.DeepClone();status=(string)Observe()["status"];return true;
+            request=(JObject)value.DeepClone();cached=null;inspected=null;status=(string)Observe()["status"];return true;
+        }
+        sealed class Entry {
+            public string Id,Label,Search;public int Version;public Func<JObject> Definition;
+        }
+        // Descriptions are native vocabulary data. Search pages never expand every
+        // schema into the observation or agent prompt.
+        static Entry[] Entries(string category)=>category switch {
+            "events"=>BehaviourCatalog.Events.Select(x=>new Entry {Id=x.Id,Version=x.Version,Label=x.Label,Search=x.Id+" "+x.Label+" "+x.Description,Definition=x.ToJson}).ToArray(),
+            "facts"=>BehaviourCatalog.Facts.Select(x=>new Entry {Id=x.Id,Version=x.Version,Label=x.Label,Search=x.Id+" "+x.Label+" "+x.Description+" "+x.Type,Definition=x.ToJson}).ToArray(),
+            _=>BehaviourCatalog.Actions.Select(x=>new Entry {Id=x.Id,Version=x.Version,Label=x.Label,Search=x.SearchText,Definition=x.ToJson}).ToArray()
+        };
+        static readonly System.Collections.Generic.Dictionary<string,Entry[]> vocabulary=new() {
+            ["actions"]=Entries("actions"),["events"]=Entries("events"),["facts"]=Entries("facts")
+        };
+        JObject Scoped(JObject result) {if(request["category"]!=null)result["category"]=request["category"].DeepClone();return result;}
+        JObject Cache(JObject value) {cached=(JObject)value.DeepClone();return value;}
+        JObject ReadFact(JObject result,Entry entry) {
+            var runtime=editor?editor.GetComponent<RoomRules>():null;ProgramValue value=default;
+            bool available=entry!=null&&runtime&&runtime.TryReadFact(entry.Id,out value)&&value.Type==BehaviourCatalog.Fact(entry.Id).Type;
+            JToken reading=available?JToken.FromObject(value.Value):JValue.CreateNull();
+            if(available&&!RuleScheduler.ValidEventValue(reading)) {available=false;reading=JValue.CreateNull();}
+            result["available"]=available;result["value"]=reading;
+            if(entry!=null)result["status"]=available?"Current fact value. Reading does not change the room.":"Fact value is currently unavailable; do not treat it as false or zero.";
+            return result;
         }
         public JObject Observe()
         {
-            if(request==null)return null;string operation=(string)request["operation"];
+            if(request==null)return null;string operation=(string)request["operation"],category=(string)request["category"]??"actions";
+            // Search/definition expansion happens once per query. Only fact values
+            // and action readiness are live, through their existing native readers.
+            if(cached!=null) {var copy=(JObject)cached.DeepClone();return category=="facts"&&operation=="inspect"?ReadFact(copy,inspected):copy;}
             if(operation=="search") {
                 string query=((string)request["query"]).Trim();
                 var terms=query.Split(' ',StringSplitOptions.RemoveEmptyEntries);
-                var matches=BehaviourCatalog.Actions.Where(x=>terms.All(term=>x.SearchText.IndexOf(term,StringComparison.OrdinalIgnoreCase)>=0)).OrderBy(x=>x.Id,StringComparer.Ordinal).ToArray();
+                var matches=vocabulary[category].Where(x=>terms.All(term=>x.Search.IndexOf(term,StringComparison.OrdinalIgnoreCase)>=0)).OrderBy(x=>x.Id,StringComparer.Ordinal).ToArray();
                 int offset=Math.Min((int)request["offset"],Math.Max(0,(matches.Length-1)/PageSize*PageSize));
-                return new JObject {["operation"]=operation,["query"]=query,["offset"]=offset,["pageSize"]=PageSize,["total"]=matches.Length,
+                return Cache(Scoped(new JObject {["operation"]=operation,["query"]=query,["offset"]=offset,["pageSize"]=PageSize,["total"]=matches.Length,
                     ["entries"]=new JArray(matches.Skip(offset).Take(PageSize).Select(x=>new JObject {["id"]=x.Id,["version"]=x.Version,["label"]=x.Label})),
-                    ["status"]=matches.Length==0?"No matching actions":"Found "+matches.Length+" actions. Search does not run them."};
+                    ["status"]=matches.Length==0?"No matching "+category:"Found "+matches.Length+" "+category+". Search does not run or enable anything."}));
             }
             if(operation=="inspect") {
-                var definition=BehaviourCatalog.Action((string)request["capability"]);
-                bool known=definition!=null&&definition.Version==(int)request["version"];
-                return new JObject {["operation"]=operation,["capability"]=request["capability"].DeepClone(),["version"]=request["version"].DeepClone(),
-                    ["definition"]=known?definition.ToJson():JValue.CreateNull(),["status"]=known?"Action definition. Check concrete arguments before running it.":"Unknown capability or unsupported version"};
+                var entry=vocabulary[category].FirstOrDefault(x=>x.Id==(string)request["capability"]&&x.Version==(int)request["version"]);
+                var result=Scoped(new JObject {["operation"]=operation,["capability"]=request["capability"].DeepClone(),["version"]=request["version"].DeepClone(),
+                    ["definition"]=entry!=null?entry.Definition():JValue.CreateNull(),["status"]=entry==null?"Unknown "+category+" entry or unsupported version":category=="actions"?"Action definition. Check concrete arguments before running it.":"Event definition. Inspecting does not subscribe or start a behaviour."});
+                inspected=entry;Cache(result);
+                return category=="facts"?ReadFact(result,entry):result;
             }
             var call=(JObject)request["call"];
             bool valid=BehaviourCatalog.TryCall((string)call["id"],(int)call["version"],(JObject)call["arguments"],out var step,out var error);
