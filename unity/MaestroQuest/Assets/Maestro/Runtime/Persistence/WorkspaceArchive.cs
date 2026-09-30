@@ -24,8 +24,9 @@ namespace Maestro.Quest.Persistence
     {
         public string DirectoryPath {get;}
         public WorkspaceArchiveReceipt Receipt {get;}
-        readonly string parent;
-        internal PreparedWorkspaceArchive(string directory,string parent,WorkspaceArchiveReceipt receipt){DirectoryPath=directory;this.parent=parent;Receipt=receipt;}
+        readonly string parent;readonly byte[] manifest;
+        internal byte[] ManifestBytes=>(byte[])manifest.Clone();
+        internal PreparedWorkspaceArchive(string directory,string parent,WorkspaceArchiveReceipt receipt,byte[] manifest){DirectoryPath=directory;this.parent=parent;Receipt=receipt;this.manifest=(byte[])manifest.Clone();}
         public void Dispose()
         {
             if(!Directory.Exists(DirectoryPath))return;
@@ -136,12 +137,30 @@ namespace Maestro.Quest.Persistence
                 var documents=entries.Where(x=>!WorkspaceArchiveMetadata.IsAsset(x.Path)).ToDictionary(x=>x.Path,Verified,StringComparer.Ordinal);
                 var metadata=WorkspaceArchiveMetadata.Read(documents,entries.Where(x=>WorkspaceArchiveMetadata.IsAsset(x.Path)).Select(x=>x.Path));
                 var receipt=new WorkspaceArchiveReceipt {ManifestHash=ModelLibrary.Hash(manifest),Summary=CopySummary(metadata.Summary,entries.Sum(x=>x.Bytes))};
-                Directory.CreateDirectory(directory);owned=new PreparedWorkspaceArchive(directory,parent,receipt);
+                Directory.CreateDirectory(directory);owned=new PreparedWorkspaceArchive(directory,parent,receipt,manifest);
                 void Save(string path,byte[] bytes){cancellation.ThrowIfCancellationRequested();string target=Path.GetFullPath(Path.Combine(directory,path.Replace('/',Path.DirectorySeparatorChar)));if(!target.StartsWith(directory+Path.DirectorySeparatorChar,StringComparison.Ordinal))throw Invalid("Unsafe archive target.");Directory.CreateDirectory(Path.GetDirectoryName(target));using var file=new FileStream(target,FileMode.CreateNew,FileAccess.Write,FileShare.None);file.Write(bytes,0,bytes.Length);file.Flush(true);}
                 foreach(var pair in documents)Save(pair.Key,pair.Value);
                 foreach(var entry in entries.Where(x=>WorkspaceArchiveMetadata.IsAsset(x.Path))){var bytes=Verified(entry);metadata.ValidateAsset(entry.Path,bytes);Save(entry.Path,bytes);}
                 cancellation.ThrowIfCancellationRequested();return owned;
             }catch{owned?.Dispose();throw;}
+        }
+        // Reverify the private prepared generation immediately before activation. Its manifest
+        // is retained outside the writable workspace, and is never imported as a live document.
+        internal static WorkspaceArchiveReceipt VerifyPreparedDirectory(string directory,byte[] manifest,CancellationToken cancellation=default)
+        {
+            cancellation.ThrowIfCancellationRequested();
+            if(manifest==null||manifest.Length<1||manifest.Length>MaximumManifestBytes)throw Invalid("Invalid prepared manifest size.");
+            NoLink(directory);var entries=Manifest(manifest);var actual=new HashSet<string>(StringComparer.Ordinal);int visited=0;
+            void Walk(string folder,int depth=0){if(depth>2)throw Invalid("Prepared paths are too deep.");foreach(string path in Directory.EnumerateFileSystemEntries(folder)){
+                cancellation.ThrowIfCancellationRequested();if(++visited>MaximumEntries*2)throw Invalid("Too many prepared paths.");NoLink(path);
+                if(Directory.Exists(path))Walk(path,depth+1);else {string name=path.Substring(directory.Length+1).Replace(Path.DirectorySeparatorChar,'/');if(!actual.Add(name))throw Invalid("Duplicate prepared file.");}
+            }}
+            Walk(directory);if(actual.Count!=entries.Count||entries.Any(x=>!actual.Contains(x.Path)))throw Invalid("Prepared files differ from the inspected inventory.");
+            byte[] Verified(Entry entry){string path=Path.Combine(directory,entry.Path.Replace('/',Path.DirectorySeparatorChar));using var input=new FileStream(path,FileMode.Open,FileAccess.Read,FileShare.Read);if(input.Length!=entry.Bytes)throw Invalid("Prepared file length changed.");var bytes=Read(input,(int)entry.Bytes,cancellation);if(bytes.Length!=entry.Bytes||ModelLibrary.Hash(bytes)!=entry.Hash)throw Invalid("Prepared file changed after inspection.");return bytes;}
+            var documents=entries.Where(x=>!WorkspaceArchiveMetadata.IsAsset(x.Path)).ToDictionary(x=>x.Path,Verified,StringComparer.Ordinal);
+            var metadata=WorkspaceArchiveMetadata.Read(documents,entries.Where(x=>WorkspaceArchiveMetadata.IsAsset(x.Path)).Select(x=>x.Path));
+            foreach(var entry in entries.Where(x=>WorkspaceArchiveMetadata.IsAsset(x.Path)))metadata.ValidateAsset(entry.Path,Verified(entry));
+            cancellation.ThrowIfCancellationRequested();return new WorkspaceArchiveReceipt {ManifestHash=ModelLibrary.Hash(manifest),Summary=CopySummary(metadata.Summary,entries.Sum(x=>x.Bytes))};
         }
         sealed class OutputLimit:Stream
         {

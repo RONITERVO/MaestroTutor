@@ -823,3 +823,18 @@ PC native and Android provider tests cover publication, replay, failure and Stop
 Archive picking, reviewed generation activation/recovery and actual headset
 Downloads/performance acceptance remain open. See [native archive workflow](QUEST_NATIVE_ARCHIVES.md).
 Device work remains on hold; no build was installed.
+
+### 2026-10-01: recoverable native workspace generation foundation
+
+Native preparation now preserves a verified generation independently of active
+stores. Activation rechecks the preview and atomically selects the complete root,
+retaining the prior root and a replay-safe activation attempt. Restoration and
+previous-workspace recovery assign fresh receipt epochs and persist a review hold;
+review completion does not rewrite user code. Fault-injection/reopen tests cover
+interruption before and after pointer commit, stale/tampered requests and corruption.
+
+Production startup, runtime review enforcement and restore UI/actions are still
+unconnected. They must be integrated together; a persisted flag is not enough to
+prevent imported triggers. Android file selection also needs its own tracked
+request because the system picker pauses the app and stops ordinary running
+actions. See [generation contract and integration requirements](QUEST_NATIVE_ARCHIVES.md#recoverable-workspace-generation-store-native-foundation).

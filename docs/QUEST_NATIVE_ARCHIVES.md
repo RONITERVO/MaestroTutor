@@ -123,6 +123,69 @@ behaviour triggers/movement/physics paused until reviewed. Copying staged files 
 live stores one by one would not meet the restore contract. Activation must not
 restore old execution receipts or replay interrupted actions.
 
+## Recoverable workspace generation store (native foundation)
+
+`WorkspaceGenerationStore` prepares an imported archive in a new private generation,
+retaining the verified manifest outside its writable data directory. It rechecks
+all document/asset bytes and the exact inventory before activation; a changed
+preview cannot be selected. A single versioned selection file identifies the
+active and previous generations, a revision, an action-history epoch and a persisted
+review requirement. Existing development data remains the original `room` directory. The first mutation
+persists that original selection before any activation attempt, so the first switch
+also has a retained baseline. Preparing an archive does not migrate or clear current
+data and never selects the import.
+
+An exclusive filesystem writer lease serializes mutation, including separate store
+instances. Each activation first writes a durable attempt with the expected old
+revision and exact proposed selection. A flushed pending selection is then moved
+or atomically replaced; the old selection is retained as `.previous`. The exact
+same activation can reconcile or retry an interrupted commit without minting a
+second workspace/history identity. An altered identity, stale selection revision,
+newer format, corrupt pointer or missing active directory stops the operation. A
+corrupt selection is never silently replaced with the original or its backup. A
+missing pointer after an activation attempt also requires explicit recovery, even
+if its pointer backup is missing.
+
+Both activation and returning to the previous workspace assign a new action-history
+epoch and persist `ReviewRequired`. Completing review keeps that epoch and changes
+only the selection record, without rewriting programs or controller preferences.
+Returning to an earlier authored workspace preserves changes made after its import;
+it is not revalidated against the original, now historical archive manifest. A
+missing previous workspace does not hide a healthy active one, but recovery refuses
+to treat that missing folder as an empty replacement. Discard only removes an
+unactivated, unreserved preview, with owned-path and link checks. There is a 64
+generation retention bound; reaching it requires reviewed maintenance rather than
+automatic deletion of user content. Orphan cleanup and retained-generation browsing
+are still integration work.
+
+**This store is not connected to production startup or a restore command yet.**
+The runtime host must pass the selected root to room, behaviour and controller
+owners, pass the separate epoch directory to invocation receipts, recreate owners
+with a fresh bridge session, and enforce the persisted review hold before imported
+state can receive events, controller input or physics actions. A stored review flag
+alone is not runtime enforcement. The host must also define current-document review
+validation, failure recovery UI and writer/lifecycle transitions before exposing
+activation. Before switching, it must stop new edits and confirm that the current
+accepted documents and asset writes are durably retained (or create and verify a
+complete recovery snapshot). Merely retaining the old folder does not prove that
+its latest autosaves succeeded; a failed retention step must keep the old owners
+and their accepted in-memory state alive. These native APIs must stay behind the
+shared reviewed operation; an agent cannot supply a filesystem path.
+
+The Android picker needs a separately tracked request: `RoomRules` intentionally
+stops active actions when the app loses focus, and opening system file selection
+can cause that pause. Do not put the entire picker interaction inside an awaited
+action and then claim it survived cancellation. File selection, verified preparation,
+review and activation must each have observable outcomes across pause/resume.
+
+Fault-injection tests interrupt preparation, activation and previous-workspace
+recovery around the pointer commit, reopen the store and verify either complete
+old or complete new selection. They check identity reconciliation, pending review,
+new receipt epochs, real native room/model loads, stale requests, writer exclusion,
+changed manifests/content/inventory and corrupt-pointer behaviour. They are PC
+filesystem evidence; directory durability after actual device power loss is not
+proved by an atomic file replacement or these simulated interruptions.
+
 ## Evidence and remaining acceptance
 
 EditMode tests round-trip real fixture GLB/motion bytes and nested module definitions
