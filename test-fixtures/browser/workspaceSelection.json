@@ -1,0 +1,95 @@
+{
+  "receipt": {
+    "id": "45612be16d924f6f8a4a835b7e0ba3fa",
+    "capability": "workspace.archive.select",
+    "version": 1,
+    "resources": [],
+    "phase": "completed",
+    "status": "Action completed",
+    "output": {
+      "requestId": "8228be21d6f945cda68f79cbf6a3813d"
+    },
+    "call": {
+      "id": "workspace.archive.select",
+      "version": 1,
+      "arguments": {}
+    }
+  },
+  "prepared": {
+    "operation": "inspect",
+    "capability": "workspace.archive.selection",
+    "version": 1,
+    "definition": {
+      "id": "workspace.archive.selection",
+      "version": 1,
+      "type": {
+        "record": {
+          "requestId": "text",
+          "phase": "text",
+          "name": "text",
+          "error": "text",
+          "generationId": "text",
+          "manifestHash": "text",
+          "summary": {
+            "record": {
+              "files": "number",
+              "models": "number",
+              "motions": "number",
+              "modules": "number",
+              "unavailablePrograms": "number",
+              "missingModels": "number",
+              "missingMotions": "number",
+              "missingControllerPrograms": "number"
+            }
+          }
+        }
+      },
+      "label": "Archive selection status",
+      "description": "Read the exact archive request after returning from Android selection. Phases: selecting, copying, preparing, prepared, cancelling, cancelled or failed. Prepared means its manifest, documents and assets were verified into a private preview; nothing was activated. Summary counts describe that preview, including unavailable programs and missing references. Inspect errors before another choice. IDs and counts are empty/zero until a preview exists. An unknown request or paused runtime is unavailable. Read-only; never opens a chooser, imports or runs anything.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "requestId"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "requestId": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    "status": "Current fact value. Reading does not change the room.",
+    "category": "facts",
+    "arguments": {
+      "requestId": "8228be21d6f945cda68f79cbf6a3813d"
+    },
+    "available": true,
+    "value": {
+      "requestId": "8228be21d6f945cda68f79cbf6a3813d",
+      "phase": "prepared",
+      "name": "My workspace.zip",
+      "error": "",
+      "generationId": "afadab1ac30942fe8ab9f8732e86c607",
+      "manifestHash": "6e988068ce9eaf32fe06c3df7d32d341633d75cb5e1fdfbc77cb15ac6fe57f05",
+      "summary": {
+        "files": 5,
+        "models": 0,
+        "motions": 0,
+        "modules": 0,
+        "unavailablePrograms": 0,
+        "missingModels": 0,
+        "missingMotions": 0,
+        "missingControllerPrograms": 0
+      }
+    }
+  }
+}

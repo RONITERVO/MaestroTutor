@@ -33,7 +33,7 @@ namespace Maestro.Quest.Rules
         public bool TryRead(string name,int version,JObject arguments,out ProgramValue value) {
             value=default;if(!context.Editor)return false;
             return BehaviourCatalog.TryRead(name,version,arguments,new BehaviourCatalog.FactContext(physicsReady:context.Editor.PhysicsWorld?context.Editor.PhysicsWorld.SurfacesReady:null,
-                physicsRunning:context.Editor.PhysicsWorld?context.Editor.PhysicsWorld.Running:null,roomSessionId:context.Editor.TemporarySessionId,world:this),out value);
+                physicsRunning:context.Editor.PhysicsWorld?context.Editor.PhysicsWorld.Running:null,roomSessionId:context.Editor.TemporarySessionId,world:this,editor:context.Editor),out value);
         }
         public bool CanRun(CapabilityCall call,out string error)=>call.Definition.Module.CanRun(context,call.Arguments,out error);
         public bool Start(string runId,CapabilityCall call,out float seconds,out string error) {

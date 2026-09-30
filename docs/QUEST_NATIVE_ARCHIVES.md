@@ -2,8 +2,9 @@
 
 Native snapshot capture and Android Downloads publication are available through
 `workspace.archive.export` in the shared action catalog. The book, agent and saved
-programs use the same operation and execution receipts. **Archive selection,
-restore activation and recovery UI are not connected yet.** Original chat backup
+programs use the same operation and execution receipts. Native archive selection
+and verified previews also use the shared catalog. **Restore activation and recovery
+UI are not connected yet.** Original chat backup
 remains separate, and portable backup/restore is not a finished release feature.
 
 ## Snapshot boundary
@@ -115,13 +116,55 @@ counts unavailable programs. This is not exhaustive static dependency analysis:
 programs can calculate IDs, and explicit dependency inspection/rebinding remains
 unfinished. Restoring a reference never means silently choosing a different asset.
 
-Next integration must pick archives through the native file boundary, provide a
-shared inspection/review flow, and switch to a verified generation only through an
-explicit restore action.
+Next integration must complete the shared review flow and switch to a verified
+generation only through an explicit restore action.
 Keep the prior workspace recoverable, invalidate stale requests, and leave imported
 behaviour triggers/movement/physics paused until reviewed. Copying staged files over
 live stores one by one would not meet the restore contract. Activation must not
 restore old execution receipts or replay interrupted actions.
+
+## Native file selection and verified previews
+
+`workspace.archive.select` opens one Android file chooser and immediately returns
+an exact request ID. Its completed action receipt acknowledges a tracked request;
+it does not mean a file was chosen, verified or restored. Android's chooser pauses
+the app and stops ordinary room actions. The selection owner survives that pause,
+prepares the selected ZIP after returning and never resumes the stopped actions.
+The requesting chat/agent turn may also be interrupted; the retained native receipt
+and request status let the next turn inspect the outcome without opening another
+chooser or replaying the action.
+
+Read `workspace.archive.selection` with that ID through the same typed fact query
+used by the book, agent and programs. It reports selecting, copying, preparing,
+prepared, cancelling, cancelled or failed. A prepared preview includes its exact
+generation/manifest identities and counts for objects' supporting files, models,
+motions, modules, unavailable programs and known missing references. Display text
+and structured values stay within the shared program budgets. Reads grant no
+filesystem access, edit permission or execution authority. Unknown IDs are
+unavailable; a previous request cannot cancel or impersonate the next one.
+
+`workspace.archive.cancel` cancels the exact selection or discards its unused
+prepared generation. Cancellation during verification also discards a worker result
+that finishes before its cancellation is observed. It never deletes the selected
+source ZIP, changes the active workspace or starts imported code. A discard failure
+keeps the preview for inspection/retry. Only one choice/preview is offered at once.
+
+The native picker accepts a user-granted content URI and copies at most 512 MiB into
+its private session cache. Existing URI/provider-UID checks exclude app-private
+providers and arbitrary paths. C# accepts only the native-owned cache layout,
+rejects linked paths, checks the byte limit again and stages the verified archive on
+a worker. No URI, private path or binary archive crosses the book/agent bridge.
+Duplicate start IDs cannot reopen the chooser, late callbacks/releases cannot affect
+a newer owner, and a retiring provider worker blocks another selection until its
+stream closes—even when the provider ignores cancellation. Provider cancellation
+and preparation have bounded waits; an uncooperative stream can leave selection
+unavailable until it closes rather than allocating unbounded workers.
+
+**Selection and preview are connected; activation is not.** The current original
+room remains active throughout these operations. Generation ownership, review,
+accepted-current-state retention and startup/recovery handling below are still
+required before a restore action can be exposed. Headset picker acceptance remains
+unverified while device work is on hold.
 
 ## Recoverable workspace generation store (native foundation)
 
@@ -185,7 +228,7 @@ while the process lives, but do not guarantee recovery after termination during 
 unresolved storage failure. They also do not yet constitute the coordinated
 all-store retention required before switching workspaces.
 
-The Android picker needs a separately tracked request: `RoomRules` intentionally
+The Android picker uses the separately tracked request described above: `RoomRules` intentionally
 stops active actions when the app loses focus, and opening system file selection
 can cause that pause. Do not put the entire picker interaction inside an awaited
 action and then claim it survived cancellation. File selection, verified preparation,

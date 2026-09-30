@@ -70,7 +70,7 @@ final class SelectedFiles implements AutoCloseable {
                     if (cursor != null && cursor.moveToFirst()) {
                         int nameColumn = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME), sizeColumn = cursor.getColumnIndex(OpenableColumns.SIZE);
                         if (nameColumn >= 0 && !cursor.isNull(nameColumn)) name = safeName(cursor.getString(nameColumn));
-                        if (sizeColumn >= 0 && !cursor.isNull(sizeColumn) && cursor.getLong(sizeColumn) > fileLimit) throw new SelectionException("Each file must be 64 MB or smaller");
+                        if (sizeColumn >= 0 && !cursor.isNull(sizeColumn) && cursor.getLong(sizeColumn) > fileLimit) throw new SelectionException("Each file must be " + (fileLimit / (1024 * 1024)) + " MB or smaller");
                     }
                 }
                 String mime = context.getContentResolver().getType(source);

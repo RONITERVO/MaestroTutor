@@ -4,3 +4,4 @@
 -keep class com.robot9.shared.SharedTexture { *; }
 -keep class com.maestro.quest.browser.MotionBatchPicker { public *; }
 -keep class com.maestro.quest.browser.WorkspaceExports { public *; }
+-keep class com.maestro.quest.browser.WorkspacePicker { public *; }

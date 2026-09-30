@@ -1064,6 +1064,84 @@
       }
     },
     {
+      "id": "workspace.archive.select",
+      "version": 1,
+      "label": "Choose workspace archive",
+      "input": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false,
+        "x-features": [
+          "workspaceArchiveSelection.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [],
+      "description": "Open Android's file chooser for one workspace ZIP. Returns a tracked requestId immediately, not a selected or restored workspace. The user must choose the file in Android. The system chooser pauses room actions; they will not resume or replay. After returning, read workspace.archive.selection with this requestId to follow copy, validation and preview. Preparation never activates imported content. Cancel the request to discard its unused preview. Only one selection or preview at a time; file limit 512 MB. Activation is not available yet.",
+      "example": {},
+      "output": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "requestId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "workspace.archive.cancel",
+      "version": 1,
+      "label": "Cancel archive selection",
+      "input": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "requestId"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "workspaceArchiveSelection.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [],
+      "description": "Cancel the exact file-selection request or discard its verified, unused preview. It never deletes the source file or changes the active workspace. Cleanup may continue after this acknowledgement; read workspace.archive.selection for cancelled/failed and any retained preview. Cancelling does not restart paused room actions. A stale request cannot cancel a newer chooser.",
+      "example": {
+        "requestId": "00000000000000000000000000000000"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "requestId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "program.module.publish",
       "version": 1,
       "label": "Save reusable module",
@@ -3204,6 +3282,54 @@
       ]
     },
     {
+      "id": "workspace.archive.selection",
+      "version": 1,
+      "type": {
+        "record": {
+          "requestId": "text",
+          "phase": "text",
+          "name": "text",
+          "error": "text",
+          "generationId": "text",
+          "manifestHash": "text",
+          "summary": {
+            "record": {
+              "files": "number",
+              "models": "number",
+              "motions": "number",
+              "modules": "number",
+              "unavailablePrograms": "number",
+              "missingModels": "number",
+              "missingMotions": "number",
+              "missingControllerPrograms": "number"
+            }
+          }
+        }
+      },
+      "label": "Archive selection status",
+      "description": "Read the exact archive request after returning from Android selection. Phases: selecting, copying, preparing, prepared, cancelling, cancelled or failed. Prepared means its manifest, documents and assets were verified into a private preview; nothing was activated. Summary counts describe that preview, including unavailable programs and missing references. Inspect errors before another choice. IDs and counts are empty/zero until a preview exists. An unknown request or paused runtime is unavailable. Read-only; never opens a chooser, imports or runs anything.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "requestId"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "requestId": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
       "id": "room.sessionId",
       "version": 1,
       "type": "text",
@@ -3408,7 +3534,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "6fd24dc853b19df391e67700b122be22871f087d9041304095484ebfd22eb384"
+      "sha256": "8096934bec0c6315ce615fce3d9d33bc5c953e1bd94082e36f283420ae6b0e33"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -3472,7 +3598,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "f699c2d5e1895ac39adfd343ce70a30b55307fd4300c94b4f1dff1f917478393"
+      "sha256": "1da68b4c712776cab588a349c85152158dcc29c030227ec8d3dfafc7ff3fb165"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -3529,6 +3655,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceExportCapability.cs",
       "sha256": "a9baed5c3c95ba9ae532d2df578596601b0aaee2d0778a08adb4aed762841129"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceSelectionCapabilities.cs",
+      "sha256": "34163ec00518ca779f5dd76add94ff31b5516bce70705800d2cb6b297f9f4031"
     }
   ]
 }

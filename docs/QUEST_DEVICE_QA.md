@@ -1389,3 +1389,21 @@ must cancel/fail visibly without resuming on focus return. Confirm labels are
 readable and hand/controller editing remains practical. Profile eight active
 condition watchers with representative record/fact expressions alongside MR,
 physics and book rendering; PC sampling limits alone do not establish Quest timing.
+
+### Pending device acceptance: archive selection and preview
+
+This workflow has PC/native/provider coverage but has not been accepted on Quest.
+When device work resumes, use the shared book catalog or the chat agent to choose a
+workspace archive. Confirm Android opens exactly one file chooser, Cancel returns
+a cancelled request, and returning after choosing a valid ZIP shows its verified
+preview through the archive-selection fact. The current room, movements and saved
+programs must not be replaced or started. An interrupted chat task can inspect the
+retained opening receipt on return; do not automatically restart it or the chooser.
+
+Cancel a prepared preview and verify the original Downloads file remains. Try an
+invalid file, an oversized file and a slow provider; errors must remain readable,
+partial files must be cleaned, and another chooser must wait for the old provider
+stream to close. Confirm book/controller/hand operation still works after returning.
+Test application pause during verification and process interruption separately.
+A preview is not restore acceptance: reviewed activation and startup recovery are
+still unavailable and need their own tests once integrated.

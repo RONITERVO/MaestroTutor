@@ -92,8 +92,9 @@ namespace Maestro.Quest.Programs
             public readonly string Activity,RoomSessionId;
             public readonly bool? PhysicsReady, PhysicsRunning;
             public readonly IProgramEventWorld World;
-            public FactContext(string activity=null, bool? physicsReady=null, bool? physicsRunning=null,string roomSessionId=null,IProgramEventWorld world=null)
-            { Activity=activity;PhysicsReady=physicsReady;PhysicsRunning=physicsRunning;RoomSessionId=roomSessionId;World=world; }
+            public readonly RoomEditor Editor;
+            public FactContext(string activity=null, bool? physicsReady=null, bool? physicsRunning=null,string roomSessionId=null,IProgramEventWorld world=null,RoomEditor editor=null)
+            { Activity=activity;PhysicsReady=physicsReady;PhysicsRunning=physicsRunning;RoomSessionId=roomSessionId;World=world;Editor=editor; }
         }
         public sealed class FactDefinition
         {
@@ -158,6 +159,7 @@ namespace Maestro.Quest.Programs
         });
         public static readonly IReadOnlyList<FactDefinition> Facts=Array.AsReadOnly(new[] {
             NativeObjectFacts.Position(),
+            WorkspaceSelectionFacts.Selection(),
             new FactDefinition("room.sessionId",ProgramType.Text,"Current room session","Current explicit temporary-room session ID, or empty when using the saved room. Reading it does not begin, keep or discard a room.",context=>context.RoomSessionId==null?null:new ProgramValue(context.RoomSessionId)),
             new FactDefinition("maestro.state",ProgramType.Text,"Maestro state","Current observed tutor state: speaking, listening, thinking or idle. Unavailable before a reliable activity snapshot, during audio suspension or when the room runtime is paused.",context=>context.Activity==null?null:new ProgramValue(context.Activity)),
             new FactDefinition("physics.running",ProgramType.Boolean,"Physics running","Whether room physics is currently running. False is an observed value; it is not an unavailable reading.",context=>context.PhysicsRunning.HasValue?new ProgramValue(context.PhysicsRunning.Value):null),

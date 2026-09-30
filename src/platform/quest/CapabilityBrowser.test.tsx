@@ -4,20 +4,22 @@
 import {act,cleanup,fireEvent,render} from '@testing-library/react';
 import {afterEach,expect,it} from 'vitest';
 import exportReceipt from '../../../test-fixtures/browser/workspaceExportReceipt.json';
+import nativeSelection from '../../../test-fixtures/browser/workspaceSelection.json';
 import native from '../../../test-fixtures/browser/catalogStates.json';
 import nativeProgram from '../../../test-fixtures/browser/programBookState.json';
 import {RoomWorkspace} from './RoomWorkspace';
 import {RoomAgentClient} from './roomAgentBridge';
 import type {RoomAgentState} from '../../core-sdk/room/roomAgent';
 import {validCatalogView,type CatalogView} from '../../../shared/roomCatalog';
+import {validExecutionView} from '../../../shared/roomExecutions';
 function catalogFixture(value:unknown):CatalogView {if(!validCatalogView(value))throw new Error('Invalid native catalog fixture');return value;}
 afterEach(cleanup);
 function setup(vocabulary=false,extraFeatures:string[]=[]){
  const client=new RoomAgentClient();let state=JSON.parse(JSON.stringify(nativeProgram)) as RoomAgentState;
  state={...state,capabilities:[...new Set([...state.capabilities!,...extraFeatures,'catalog.v1',...(vocabulary?['catalogVocabulary.v1','factQueries.v1']:[])])],catalog:null,visible:true,workspaceView:'rules',ack:0,revision:1};
  client.receive(state);const screen=render(<RoomWorkspace client={client}/>);
- const receive=async(catalog?:CatalogView,changed=false)=>{
-  state={...state,ack:client.snapshot().request?.sequence??state.ack,revision:state.revision+1,catalog:catalog??state.catalog,
+ const receive=async(catalog?:CatalogView,changed=false,more:Partial<RoomAgentState>={})=>{
+  state={...state,...more,ack:client.snapshot().request?.sequence??state.ack,revision:state.revision+1,catalog:catalog??state.catalog,
    rules:changed?{...state.rules!,revision:state.rules!.revision+1}:state.rules};
   await act(async()=>{expect(client.receive(state)).toBe(true);});
  };
@@ -184,4 +186,28 @@ it('runs workspace export from the shared catalog and displays the native public
  const current=client.getSnapshot().state!;const next={...current,ack:client.snapshot().request!.sequence,revision:current.revision+1,execution:{selected:exportReceipt,running:[],outcomes:[Object.fromEntries(Object.entries(exportReceipt).filter(([key])=>key!=='call'))]}};
  await act(async()=>{expect(client.receive(next)).toBe(true);});
  expect(screen.getByLabelText('Action result').textContent).toContain(exportReceipt.output.location);expect(screen.getByLabelText('Action result').textContent).toContain(exportReceipt.output.manifestHash);
+});
+
+it('opens a tracked archive choice and inspects the real native preview without activating it',async()=>{
+ const {client,screen,receive}=setup(true,['workspaceArchiveSelection.v1','execution.v1','actionResults.v1']);
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:/^Search$/}));
+ const action=capabilityDefinition('workspace.archive.select')!;
+ await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:action.id,version:1,label:action.label}],status:'Select a file'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(action.label)}));await receive({operation:'inspect',capability:action.id,version:1,definition:action,status:'Tracked opening, not activation'});
+ fireEvent.click(screen.getByRole('button',{name:'Run action now'}));expect(client.snapshot().request?.commands[0]).toMatchObject({action:'execution',execution:{operation:'start',call:{id:action.id,version:1,arguments:{}}}});
+ const receipt=nativeSelection.receipt;
+ const execution={selected:receipt,running:[],outcomes:[Object.fromEntries(Object.entries(receipt).filter(([key])=>key!=='call'))]};
+ if(!validExecutionView(execution))throw new Error('Invalid native workspace selection receipt');
+ await receive(undefined,false,{execution});
+ expect(screen.getByLabelText('Action result').textContent).toContain(receipt.output.requestId);expect(client.snapshot().request).toBeNull();
+ fireEvent.change(screen.getByLabelText('Catalog category'),{target:{value:'facts'}});fireEvent.click(screen.getByRole('button',{name:/^Search$/}));
+ const fact=behaviourFact('workspace.archive.selection')!;
+ await receive({operation:'search',category:'facts',query:'',offset:0,total:1,pageSize:6,entries:[{id:fact.id,version:1,label:fact.label}],status:'Read selection'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(fact.label)}));await receive({operation:'inspect',category:'facts',capability:fact.id,version:1,definition:fact,available:false,value:null,status:'Choose request'});
+ fireEvent.change(screen.getByLabelText('Fact inputs requestId'),{target:{value:receipt.output.requestId}});fireEvent.click(screen.getByRole('button',{name:'Read fact'}));
+ expect(client.snapshot().request?.commands[0]).toEqual({action:'catalog',catalog:{operation:'inspect',category:'facts',capability:fact.id,version:1,arguments:{requestId:receipt.output.requestId}}});
+ await receive(catalogFixture(nativeSelection.prepared));expect(screen.getByLabelText('Current fact value').textContent).toContain(nativeSelection.prepared.value.manifestHash);
+ expect(screen.getByLabelText('Current fact value').textContent).toContain('prepared');expect(screen.queryByRole('button',{name:'Run action now'})).toBeNull();expect(client.snapshot().request).toBeNull();
+ fireEvent.change(screen.getByLabelText('Fact inputs requestId'),{target:{value:'f'.repeat(32)}});expect(screen.getByLabelText('Current fact value').textContent).toContain('Not read yet');expect(client.snapshot().request).toBeNull();
+ act(()=>client.cancel());
 });

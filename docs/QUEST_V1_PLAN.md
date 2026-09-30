@@ -849,3 +849,17 @@ Temporary-room pause/quit still cannot save unkept changes. Integration tests co
 real blocked storage and recovery, changes during a write and faulted workers.
 This is a prerequisite for restore retention, not coordinated activation or a
 promise to survive process loss while storage remains unavailable.
+
+### 2026-10-01: native archive chooser and shared verified preview
+
+The book, agent and programs can request an Android archive choice through
+`workspace.archive.select`, inspect its exact request through the parameterized
+`workspace.archive.selection` fact, and cancel/discard through
+`workspace.archive.cancel`. Selection outlives the chooser's app pause independently
+of the stopped action scheduler. Native code bounds the copy and verifies the ZIP
+into a private generation, with no activation or automatic program execution.
+Request identities prevent duplicate choosers and stale cancellation. A still-closing
+provider prevents another worker. Native tests capture a real workspace, verify the
+preview and its identical catalog fact, and prove active content remains unchanged.
+The book test consumes the real native receipt/preview. This does not yet implement
+reviewed activation, coordinated current-state retention or startup recovery.
