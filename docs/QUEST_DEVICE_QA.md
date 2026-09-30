@@ -1220,3 +1220,16 @@ Confirm missing objects fail visibly and independent waits use their own inputs.
 Measure frame timing and read/control the schema-generated inputs on the headset.
 PC Unity execution and browser replay do not establish these acceptance checks;
 no install is included in this increment.
+
+### Pending: visual function authoring (2026-09-30)
+
+- In Functions & code, create a function with two number parameters and a number
+  return. Use a multiply expression for its Return block; call it twice from the
+  starting function with different inputs and store the result in a local.
+- Bind a Wait action's seconds to that local. Its block should display the variable
+  name, not the unused literal. Apply saves only; Try starts execution.
+- Rename the function/parameters and reorder the parameters. Both calls and the
+  return calculation should retain their meaning. Invalid names or deleting a used
+  variable must keep the editor draft open without replacing the valid program.
+- Check hand/controller scrolling, text entry, focus and readability of these
+  controls in the actual book. This remains untested on the charging headset.

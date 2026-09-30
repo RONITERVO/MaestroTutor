@@ -195,3 +195,45 @@ it('edits native subscription inputs, expressions and field destinations without
  h.click('Edit values near');h.change('Await event','object.proximity.changed');h.click('Update draft');
  expect(JSON.parse(h.source()).functions[0].body[0].body[0]).toMatchObject({version:1,arguments:{source:'maestro',target:'book',radius:.5,hysteresis:.05,transition:'either'},bindings:{}});
 });
+
+
+it('creates, reuses and renames a typed function entirely through visual controls',()=>{
+ const h=harness();
+ h.click('+ Function');h.change('Function name','scaledDelay');h.change('Function return type','number');
+ h.click('Add parameter');h.change('Parameter 1 name','seconds');
+ h.click('Add parameter');h.change('Parameter 2 name','factor');h.click('Update draft');
+ h.click('Edit values return_1');h.change('Return value source','op:mul');
+ h.change('Return value left source','var:seconds');h.change('Return value right source','var:factor');h.click('Update draft');
+ h.click('Edit function main');h.click('Add local variable');h.change('Variable 1 name','delay');h.click('Update draft');
+ for(const [index,seconds] of [[1,'.25'],[3,'1']] as const){
+  fireEvent.click(h.screen.getByLabelText('+ Call function in main'));
+  h.click('Edit values block_'+index);h.change('Argument seconds value',seconds);h.change('Argument factor value','2');h.change('Function result','delay');h.click('Update draft');
+  fireEvent.click(h.screen.getByLabelText('+ Action in main'));
+  h.click('Edit values block_'+(index+1));h.change('seconds input mode','expression');h.change('seconds source','var:delay');h.click('Update draft');
+ }
+ h.click('Edit function scaledDelay');h.change('Function name','computeDelay');h.change('Parameter 2 name','scale');h.click('Move parameter 2 up');h.click('Update draft');
+ const expected=JSON.parse(readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-functions.json','utf8'));
+ expect(JSON.parse(h.source())).toEqual(expected);expect(h.screen.queryByLabelText('Program JSON')).toBeNull();
+ expect(h.screen.getAllByText('Pause · delay seconds')).toHaveLength(2);
+ // Adding an action to a typed function puts it before its final return, so it actually executes.
+ fireEvent.click(h.screen.getByLabelText('+ Action in computeDelay'));
+ expect(JSON.parse(h.source()).functions[1].body.map((n:{op:string})=>n.op)).toEqual(['invoke','return']);
+});
+it('keeps invalid function changes open and protects the starting signature',()=>{
+ const h=harness();h.click('Edit function main');
+ expect((h.screen.getByRole('button',{name:'Add parameter'}) as HTMLButtonElement).disabled).toBe(true);
+ h.change('Function name','not a name');h.click('Update draft');
+ expect(h.screen.getByRole('alert').textContent).toContain('function name');expect(JSON.parse(h.source())).toEqual(empty);
+ expect((h.screen.getByLabelText('Function name') as HTMLInputElement).value).toBe('not a name');
+ h.change('Function name','start');h.click('Update draft');expect(JSON.parse(h.source()).entry).toBe('start');
+});
+it('refuses a stale signature editor after the incoming program changes',()=>{
+ const source=JSON.stringify(empty),onChange=vi.fn(),editing=vi.fn();
+ const screen=render(<ProgramEditor source={source} targets={[]} onChange={onChange} onEditingChange={editing}/>);
+ fireEvent.click(screen.getByRole('button',{name:'Edit function main'}));
+ fireEvent.change(screen.getByLabelText('Function name'),{target:{value:'start'}});
+ const changed=structuredClone(empty);changed.functions[0].locals.push({name:'newData',initial:7});
+ screen.rerender(<ProgramEditor source={JSON.stringify(changed)} targets={[]} onChange={onChange} onEditingChange={editing}/>);
+ fireEvent.click(screen.getByRole('button',{name:'Update draft'}));
+ expect(screen.getByRole('alert').textContent).toContain('Program changed');expect(onChange).not.toHaveBeenCalled();
+});

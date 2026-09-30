@@ -234,6 +234,17 @@ namespace Maestro.Quest.Tests
             Assert.That(result,Is.EqualTo(ProgramYield.Completed),machine.Error);Assert.That(actions,Is.EqualTo(expected));
             Assert.That(machine.Advance(out _),Is.EqualTo(ProgramYield.Completed));
         }
+        [Test] public void VisuallyAuthoredTypedFunctionPreservesReorderedArgumentsAndReturns()
+        {
+            string source=File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-functions.json"));
+            var machine=new ProgramMachine(Compile(source),null);var durations=new System.Collections.Generic.List<float>();int ticks=0;ProgramYield result;
+            do {
+                result=machine.Advance(out var action,4);Assert.That(++ticks,Is.LessThan(50),machine.Error);
+                if(result==ProgramYield.Action){Assert.That(EditorStep(action).action,Is.EqualTo(RuleActionKind.Wait));durations.Add(EditorStep(action).seconds);}
+            }while(result==ProgramYield.Action||result==ProgramYield.Yield);
+            Assert.That(result,Is.EqualTo(ProgramYield.Completed),machine.Error);
+            Assert.That(durations,Is.EqualTo(new[] {.5f,2f}),"Both calls must preserve parameter identity after reordering and renaming");
+        }
         [Test] public void SharedWebAndNativeProgramFixturesAgree()
         {
             var fixtures=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-contract.json")));

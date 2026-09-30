@@ -626,3 +626,15 @@ shows starting/ready and baseline-failure recovery. Native checks pass 166 EditM
 and 125 PlayMode tests (three optional skips). Normal baseline writes no longer
 wait on Unity's main thread; snapshot capture, receipt/ordinary-save I/O and
 pause/quit waits still need device profiling/acceptance. Full v1 remains open.
+
+
+### 2026-09-30: human/agent function-authoring parity
+
+The book now exposes typed function signatures and local declarations as visual
+controls. Scoped renames, parameter reordering and call updates produce one validated
+canonical program; invalid/stale drafts preserve the previous definition. Return
+expressions and call arguments use the existing typed editor. Calculated wait labels
+show their variable/expression. Shared fixtures verify browser-authored source in
+Unity. This closes function-definition authoring parity within a program; shared
+libraries, records/collections and the other release gates remain unfinished.
+Headset work remains on hold; no installed data or source assets were changed.

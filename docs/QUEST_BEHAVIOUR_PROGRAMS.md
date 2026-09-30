@@ -422,3 +422,35 @@ pointer and state-trigger paths. The exported native observation is consumed by
 web validation and a Chrome repair probe. Browser acknowledgements are simulated;
 the native tests separately exercise actual Unity execution. Headset acceptance
 of the repair UI remains pending.
+
+## Visual function definitions (2026-09-30)
+
+The optional book workspace now creates and edits function names, typed parameters,
+return types and local variables without JSON. Calls and return-value expressions
+use the existing visual blocks and the same canonical program as the agent.
+Parameter order can be changed while preserving each call's corresponding argument.
+Function and variable renames update typed references atomically, including action
+result assignments, event field destinations and subscription expressions. Literal
+text, native payloads, state names and other functions' locals are unchanged.
+
+New parameters receive explicit zero/false/empty-text arguments at existing calls.
+Removing an unused parameter removes its argument from each call. Removing a used
+variable is rejected even if a new declaration reuses that name. Type changes retain
+existing calculations and must pass complete program validation. Complex incompatible
+signature/body changes still need a single Source edit. New typed functions receive
+a visible default return block; new blocks are inserted before a final return.
+
+The editor retains invalid drafts for repair, refuses stale function drafts after
+an incoming source change, and never starts a run on Apply. Entry functions still
+have no parameters. Existing limits remain: 16 functions, 8 parameters, 16 locals,
+8 call levels, no recursion, and bounded scalar values. These functions are reusable
+within a program; shared versioned libraries and typed records/lists remain open.
+No native format, interpreter, catalog entry or storage migration was added.
+
+A Chrome walkthrough creates a typed calculation, calls it twice, stores each result,
+renames the function and reorders/renames its parameters. Its exact saved source is
+`program-functions.json`. Unity executes that fixture and verifies the resulting
+0.5- and 2-second wait actions. Chrome transport acknowledgements are simulated;
+it does not execute Unity or a real model provider. Headset editing acceptance is
+still pending. The tests also cover reference scope, creation/event destinations,
+invalid type changes and stale drafts.
