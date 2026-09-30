@@ -14,7 +14,7 @@ it('lets a human wire a native creation result into the next action without writ
  if(first.op!=='invoke'||second.op!=='invoke')throw new Error('Expected calls');
  delete first.results;second.bindings={};initial.resources=[String(second.arguments.target)];
  initial.functions[0].locals=[];let source=JSON.stringify(initial);
- function Harness(){const [value,setValue]=useState(source);return <ProgramEditor source={value} targets={[]} eventsSupported eventFieldsSupported eventSubscriptionsSupported resultsSupported onEditingChange={()=>{}} onChange={next=>{source=next;setValue(next);}}/>;}
+ function Harness(){const [value,setValue]=useState(source);return <ProgramEditor source={value} targets={[]} eventsSupported eventFieldsSupported eventSubscriptionsSupported resultsSupported structuredSupported onEditingChange={()=>{}} onChange={next=>{source=next;setValue(next);}}/>;}
  const screen=render(<Harness/>);
  fireEvent.click(screen.getByLabelText('create new variable for objectId'));
  fireEvent.change(screen.getByLabelText('push argument target variable'),{target:{value:'objectId'}});
@@ -32,7 +32,7 @@ const empty:BehaviourProgram={version:2,entry:'main',resources:[],functions:[{na
 function harness(initial=empty,objects=[{id:'maestro',name:'Maestro'},{id:'book',name:'Book'}]) {
  let source=JSON.stringify(initial);
  const onChange=vi.fn();
- function Harness(){const [value,setValue]=useState(source);return <ProgramEditor source={value} targets={objects} eventsSupported eventFieldsSupported eventSubscriptionsSupported resultsSupported onEditingChange={()=>{}} onChange={next=>{source=next;setValue(next);onChange(next);}}/>;}
+ function Harness(){const [value,setValue]=useState(source);return <ProgramEditor source={value} targets={objects} eventsSupported eventFieldsSupported eventSubscriptionsSupported resultsSupported structuredSupported onEditingChange={()=>{}} onChange={next=>{source=next;setValue(next);onChange(next);}}/>;}
  const screen=render(<Harness/>);
  const change=(label:string,value:string)=>fireEvent.change(screen.getByLabelText(label),{target:{value}});
  const click=(name:string)=>fireEvent.click(screen.getByRole('button',{name}));
@@ -236,4 +236,20 @@ it('refuses a stale signature editor after the incoming program changes',()=>{
  screen.rerender(<ProgramEditor source={JSON.stringify(changed)} targets={[]} onChange={onChange} onEditingChange={editing}/>);
  fireEvent.click(screen.getByRole('button',{name:'Update draft'}));
  expect(screen.getByRole('alert').textContent).toContain('Program changed');expect(onChange).not.toHaveBeenCalled();
+});
+
+it('creates a list of typed records and edits its data without source',()=>{
+ const h=harness();h.click('Edit function main');h.click('Add local variable');h.change('Variable 1 name','items');
+ h.change('Variable 1 type','list');h.change('Variable 1 type item type','record');
+ h.change('Variable 1 type item type new field name','red');h.click('Add Variable 1 type item type field');
+ h.change('Variable 1 type item type new field name','id');h.click('Add Variable 1 type item type field');h.change('Variable 1 type item type id type','text');
+ h.click('Add Initial value 1 item');h.change('Initial value 1 item 1 red','.2');h.change('Initial value 1 item 1 id','book');h.click('Update draft');
+ const program=JSON.parse(h.source());expect(program.version).toBe(3);expect(program.dataVersion).toBe(1);
+ expect(program.functions[0].locals[0]).toEqual({name:'items',type:{list:{record:{red:'number',id:'text'}}},initial:[{red:.2,id:'book'}]});
+ fireEvent.click(h.screen.getByLabelText('+ Set variable in main'));h.click('Edit values block_1');
+ const source=h.screen.getByLabelText('Assigned value source') as HTMLSelectElement;
+ const append=Array.from(source.options).find(o=>o.textContent==='append in items')!;h.change('Assigned value source',append.value);
+ h.change('Assigned value item value red','.7');h.change('Assigned value item value id','maestro');h.click('Update draft');
+ expect(JSON.parse(h.source()).functions[0].body[0]).toMatchObject({op:'set',value:{op:'append',args:[{var:'items'},{value:{red:.7,id:'maestro'}}]}});
+ expect(h.screen.queryByLabelText('Program JSON')).toBeNull();expect(parseProgram(h.source()).error).toBeNull();
 });

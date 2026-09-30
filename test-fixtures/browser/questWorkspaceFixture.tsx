@@ -50,6 +50,11 @@ if(new URLSearchParams(location.search).has('creation')||recipeCreation||objectE
 if(new URLSearchParams(location.search).has('unavailablePrograms'))state=JSON.parse(JSON.stringify(unavailableProgram));
 const recovering=new URLSearchParams(location.search).has('recovery');if(recovering)state=JSON.parse(JSON.stringify(historyRecovery.error));
 state.capabilities=[...new Set([...state.capabilities??[],'catalog.v1'])];
+if(new URLSearchParams(location.search).has('structured')){
+ state.capabilities=[...state.capabilities,'structuredValues.v1'];
+ Object.assign(window,{maestroWorkspaceRulesEvidence:(rules:unknown)=>{if(!validRuleView(rules))throw new Error('Invalid native program observation');state={...state,rules:JSON.parse(JSON.stringify(rules)),visible:true,workspaceView:'rules'};}});
+}
+
 const prop=simpleProgramSteps(nativeRules.selected.program)?.[0]?.propId;
 if(prop)state.objects.push({id:prop,objectRevision:4,name:'Practice ball',kind:'Ball',position:{x:.3,y:.8,z:.8},scale:1,color:white,animated:false});
 const undo:typeof recipe[]=[],redo:typeof recipe[]=[];

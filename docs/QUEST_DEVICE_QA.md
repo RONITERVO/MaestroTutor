@@ -1233,3 +1233,20 @@ no install is included in this increment.
   variable must keep the editor draft open without replacing the valid program.
 - Check hand/controller scrolling, text entry, focus and readability of these
   controls in the actual book. This remains untested on the charging headset.
+
+### Pending: typed lists and records (2026-09-30)
+
+- In Functions & code, give a local a list-of-records type with id/text and red/number
+  fields. Add two items, edit their values and use append/at/field expressions. Confirm
+  the nested controls remain readable and usable with hands/controllers on the book.
+- Ask the original chat agent to create two objects, collect their returned IDs and
+  paint them through a typed function. Compare saved source and native observations
+  with the equivalent manual program. Apply must save only; an explicit start runs it.
+- Copy the collection and change one record in the copy. Inspect both: the source
+  should be unchanged. Invalid indexes/oversized values must fail visibly without
+  removing earlier creations; an arbitrary ID must not grant editing authority.
+- Exercise Stop, focus loss and reconnection while a program waits. No state restore
+  or automatic replay should occur. Check sustained frame timing for repeated bounded
+  data edits alongside MR and the browser.
+PC execution and browser replay are complete; these headset/provider checks are not.
+See [the exact limits and evidence](QUEST_PROGRAM_DATA.md). No install is included.

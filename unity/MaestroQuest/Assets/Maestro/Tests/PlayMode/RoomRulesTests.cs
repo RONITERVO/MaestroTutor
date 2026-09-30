@@ -440,6 +440,23 @@ namespace Maestro.Quest.Tests
             var program=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-create.json")));
             return new JObject {["id"]="object.create",["version"]=1,["arguments"]=program["functions"][0]["body"][0]["arguments"].DeepClone()};
         }
+        [UnityTest] public IEnumerator CreatedObjectCollectionsDriveActualNativeEditsAndPublishTypedState()
+        {
+            string source=File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-collections.json"));
+            var sequence=new RuleSequence {id="",name="Collection painting",program=source};
+            Assert.That(workshop.Execute(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="save",reference="collection",sequence=sequence}}},out var error,out var ids),Is.True,error);
+            int count=editor.Snapshot().objects.Length;Assert.That(runtime.Trigger(ids.Single()),Is.True,runtime.Scheduler.LastError);
+            for(int i=0;i<60&&!runtime.Scheduler.ObserveRuns().Any(r=>r.waiting);i++)yield return null;
+            var run=runtime.Scheduler.ObserveRuns().Single();Assert.That(run.waiting,Is.True,runtime.Scheduler.LastError);
+            var state=run.state.Single(v=>v.name=="items");Assert.That(state.type,Is.EqualTo("list"));var items=JArray.Parse(state.value);Assert.That(items.Count,Is.EqualTo(2));
+            Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count+2));
+            foreach(var item in items){var id=(string)item["id"];Assert.That(editor.Find(id),Is.Not.Null);Assert.That(editor.Read(id).color.r,Is.EqualTo(.2f).Within(.001f));Assert.That(editor.Read(id).color.g,Is.EqualTo(.4f).Within(.001f));}
+            Assert.That((double)items[0]["red"],Is.EqualTo(.2));Assert.That((double)JArray.Parse(run.locals.Single(v=>v.name=="copy").value)[0]["red"],Is.EqualTo(.9));
+            string output=Environment.GetEnvironmentVariable("MAESTRO_DATA_EVIDENCE");if(!string.IsNullOrEmpty(output)){Directory.CreateDirectory(output);File.WriteAllText(Path.Combine(output,"collections.json"),new JObject {["program"]=JObject.Parse(source),["rules"]=JObject.Parse(JsonUtility.ToJson(workshop.Observe(true))),["objects"]=JArray.FromObject(items.Select(v=>JObject.Parse(JsonUtility.ToJson(editor.Read((string)v["id"])))))}.ToString());}
+            Assert.That(runtime.Scheduler.StopSequence(ids.Single()),Is.True);Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count+2),"Stopping never erases completed creations");
+            workshop.SendMessage("OnApplicationPause",true);
+            Assert.That(new RuleStorage(directory).Load(out error).sequences.Single(v=>v.id==ids.Single()).program,Is.EqualTo(source));
+        }
         [UnityTest] public IEnumerator CreationResultChainsIntoRealPhysicsWithoutInterruptingAnotherObject()
         {
             string source=File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-create.json"));

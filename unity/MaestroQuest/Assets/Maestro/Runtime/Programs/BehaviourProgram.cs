@@ -10,28 +10,11 @@ using UnityEngine;
 
 namespace Maestro.Quest.Programs
 {
-    public enum ProgramType { Void, Number, Boolean, Text }
-    public readonly struct ProgramValue
-    {
-        public readonly ProgramType Type;
-        public readonly double Number;
-        public readonly bool Boolean;
-        public readonly string Text;
-        public ProgramValue(double value) {Type=ProgramType.Number;Number=value;Boolean=false;Text=null;}
-        public ProgramValue(bool value) {Type=ProgramType.Boolean;Boolean=value;Number=0;Text=null;}
-        public ProgramValue(string value) {Type=ProgramType.Text;Text=value;Number=0;Boolean=false;}
-        public object Value => Type switch {ProgramType.Number=>Number,ProgramType.Boolean=>Boolean,ProgramType.Text=>Text,_=>null};
-        public static ProgramValue Literal(JToken value) => value.Type switch {
-            JTokenType.Boolean=>new ProgramValue((bool)value),JTokenType.String=>new ProgramValue((string)value),
-            JTokenType.Integer or JTokenType.Float=>new ProgramValue((double)value),_=>throw new ProgramFault("Expected a number, boolean or text value")
-        };
-        public bool Same(ProgramValue value) => Type==value.Type && (Type switch {ProgramType.Number=>Number==value.Number,ProgramType.Boolean=>Boolean==value.Boolean,ProgramType.Text=>Text==value.Text,_=>true});
-    }
     public sealed class ProgramFault : Exception {public ProgramFault(string message):base(message) {}}
     internal sealed class ProgramFunction
     {
-        public string Name;public ProgramType Returns;
-        public string[] Parameters;public Dictionary<string,ProgramType> Types=new();
+        public string Name;public ProgramDataType Returns;
+        public string[] Parameters;public Dictionary<string,ProgramDataType> Types=new();
         public Dictionary<string,ProgramValue> Initial=new();public JArray Body;
     }
     /// <summary>Immutable validated program data. No code loading, reflection or evaluation of source strings.</summary>
@@ -40,6 +23,7 @@ namespace Maestro.Quest.Programs
         public const int MaximumCharacters=24000,MaximumNodes=128,MaximumFunctions=16;
         public string Source {get;private set;}
         public int Version {get;private set;}
+        bool structured;
         internal readonly Dictionary<string,ProgramValue> InitialState=new();
         internal readonly Dictionary<string,ProgramType> CustomEvents=new();
         internal ProgramType EventType(string name) => CustomEvents.TryGetValue(name,out var type)?type:BehaviourCatalog.Event(name)!=null?ProgramType.Text:throw new ProgramFault("Unknown event");
@@ -52,6 +36,12 @@ namespace Maestro.Quest.Programs
         readonly Dictionary<string,CapabilityCall> actions=new();
         readonly HashSet<string> ids=new();
         readonly Dictionary<string,HashSet<string>> calls=new();
+        sealed class TokenIdentity:IEqualityComparer<JToken> {
+            public bool Equals(JToken a,JToken b)=>ReferenceEquals(a,b);
+            public int GetHashCode(JToken value)=>System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(value);
+        }
+        readonly Dictionary<JToken,ProgramValue> constants=new(new TokenIdentity());
+        internal ProgramValue Constant(JToken expression)=>constants[expression];
         int expressions;
         public static IReadOnlyDictionary<string,ProgramType> Facts=>BehaviourCatalog.FactTypes;
         public static bool TryParse(string source,out BehaviourProgram program,out string error)
@@ -114,9 +104,10 @@ namespace Maestro.Quest.Programs
             var root=JObject.Load(reader,new JsonLoadSettings {DuplicatePropertyNameHandling=DuplicatePropertyNameHandling.Error});
             Need(!reader.Read(),"Extra data follows the program");
             Need((root["version"]?.Type==JTokenType.Integer||root["version"]?.Type==JTokenType.Float)&&((double)root["version"]==2||(double)root["version"]==3),"Unsupported program version");
-            Version=(int)root["version"];Keys(root,Version==3?"version entry resources functions state events":"version entry resources functions");
+            Version=(int)root["version"];Keys(root,Version==3?"version entry resources functions state events":"version entry resources functions","dataVersion");
+            Need(!root.ContainsKey("dataVersion")||Version==3&&(root["dataVersion"]?.Type==JTokenType.Integer||root["dataVersion"]?.Type==JTokenType.Float)&&(double)root["dataVersion"]==1,"Unsupported structured-value version");structured=root.ContainsKey("dataVersion");
             if(Version==3) {
-                foreach(var token in Array(root["state"],16)) {var item=Object(token);Keys(item,"name initial");string name=Text(item["name"]);Need(Name(name)&&InitialState.TryAdd(name,Literal(item["initial"])),"Invalid or duplicate state name");}
+                foreach(var token in Array(root["state"],16)) {var item=Object(token);Keys(item,"name initial","type");string name=Text(item["name"]);Need(Name(name)&&InitialState.TryAdd(name,Literal(item["initial"],item["type"])),"Invalid or duplicate state name");}
                 foreach(var token in Array(root["events"],16)) {var item=Object(token);Keys(item,"name type");string name=Text(item["name"]);var type=Type(Text(item["type"]));
                     Need(System.Text.RegularExpressions.Regex.IsMatch(name,@"^user\.[a-zA-Z0-9_]{1,32}$")&&type!=ProgramType.Void&&CustomEvents.TryAdd(name,type),"Invalid or duplicate custom event");}
             }
@@ -125,15 +116,15 @@ namespace Maestro.Quest.Programs
             var definitions=Array(root["functions"],MaximumFunctions);Need(definitions.Count>0,"A program needs a function");
             foreach(var token in definitions)
             {
-                var f=Object(token);Keys(f,"name returns parameters locals body");var function=new ProgramFunction {Name=Text(f["name"]),Returns=Type(Text(f["returns"])),Body=Array(f["body"],MaximumNodes)};
+                var f=Object(token);Keys(f,"name returns parameters locals body");var function=new ProgramFunction {Name=Text(f["name"]),Returns=DataType(f["returns"],true),Body=Array(f["body"],MaximumNodes)};
                 Need(Name(function.Name)&&!functions.ContainsKey(function.Name),"Invalid or duplicate function name");
                 var parameters=new List<string>();
                 foreach(var parameter in Array(f["parameters"],8)) {
-                    var p=Object(parameter);Keys(p,"name type");string name=Text(p["name"]);var type=Type(Text(p["type"]));
+                    var p=Object(parameter);Keys(p,"name type");string name=Text(p["name"]);var type=DataType(p["type"]);
                     Need(Name(name)&&type!=ProgramType.Void&&function.Types.TryAdd(name,type),"Invalid or duplicate parameter");parameters.Add(name);
                 }
                 foreach(var local in Array(f["locals"],16)) {
-                    var p=Object(local);Keys(p,"name initial");string name=Text(p["name"]);var value=Literal(p["initial"]);
+                    var p=Object(local);Keys(p,"name initial","type");string name=Text(p["name"]);var value=Literal(p["initial"],p["type"]);
                     Need(Name(name)&&function.Types.TryAdd(name,value.Type),"Invalid or duplicate local");function.Initial.Add(name,value);
                 }
                 function.Parameters=parameters.ToArray();functions.Add(function.Name,function);calls.Add(function.Name,new());
@@ -153,21 +144,26 @@ namespace Maestro.Quest.Programs
             referencedIds=root.Descendants().OfType<JValue>().Where(x=>x.Type==JTokenType.String&&Guid.TryParseExact((string)x,"N",out _)).Select(x=>(string)x).Distinct().ToArray();
             Source=root.ToString(Formatting.None);
         }
-        static ProgramValue Literal(JToken value)
-        {
-            var result=ProgramValue.Literal(value??JValue.CreateNull());
-            Need(result.Type!=ProgramType.Number||double.IsFinite(result.Number)&&Math.Abs(result.Number)<=1000000,"Number exceeds its limit");
-            Need(result.Type!=ProgramType.Text||result.Text.Length<=128&&!result.Text.Any(char.IsControl),"Text exceeds its limit");return result;
+        ProgramDataType DataType(JToken token,bool allowVoid=false) {
+            var type=ProgramDataType.Read(token);Need(allowVoid||type!=ProgramType.Void,"A value cannot be void");
+            Need(structured||type.Kind<=ProgramType.Text,"Structured values need program version 3");return type;
         }
-        ProgramType Expression(JToken token,ProgramFunction function,int depth=0)
+        ProgramValue Literal(JToken value,JToken declared=null) {
+            Need(declared==null||structured,"Explicit value types need dataVersion 1");var type=declared==null?null:DataType(declared);var result=ProgramValue.Literal(value,type);
+            Need(structured||result.Type.Kind<=ProgramType.Text,"Structured values need program version 3");return result;
+        }
+        ProgramDataType Expression(JToken token,ProgramFunction function,int depth=0)
         {
             Need(depth<=8&&++expressions<=512,"Expression limit exceeded");var expression=Object(token);
-            if(expression.ContainsKey("value")) {Keys(expression,"value");return Literal(expression["value"]).Type;}
+            if(expression.ContainsKey("value")) {Keys(expression,"value","type");var constant=Literal(expression["value"],expression["type"]);constants.Add(expression,constant);return constant.Type;}
             if(expression.ContainsKey("var")) {Keys(expression,"var");Need(function.Types.TryGetValue(Text(expression["var"]),out var type),"Unknown variable");return type;}
             if(expression.ContainsKey("state")) {Keys(expression,"state");Need(Version==3&&InitialState.TryGetValue(Text(expression["state"]),out var state),"Unknown program state");return InitialState[Text(expression["state"])].Type;}
             if(expression.ContainsKey("fact")) {Keys(expression,"fact");Need(Facts.TryGetValue(Text(expression["fact"]),out var type),"Unknown room fact");return type;}
-            Keys(expression,"op args");string op=Text(expression["op"]);var args=Array(expression["args"],2);Need(args.Count==(op=="not"?1:2),"Invalid expression argument count");
+            Keys(expression,"op args");string op=Text(expression["op"]);var args=Array(expression["args"],3);Need(args.Count>0,"Invalid expression argument count");
             var types=args.Select(x=>Expression(x,function,depth+1)).ToArray();
+            var dataType=ProgramDataType.Operation(op,types,args.Count>1?args[1]["value"]:null);
+            if(dataType!=null){Need(structured,"Structured values need version 3 and dataVersion 1");return dataType;}
+            Need(args.Count==(op=="not"?1:2),"Invalid expression argument count");
             if(op=="not"||op=="and"||op=="or") {Need(types.All(x=>x==ProgramType.Boolean),"Logic needs booleans");return ProgramType.Boolean;}
             if(op=="eq"||op=="ne") {Need(types[0]==types[1],"Comparison types differ");return ProgramType.Boolean;}
             Need(new[] {"add","sub","mul","div","mod","lt","le","gt","ge"}.Contains(op)&&types.All(x=>x==ProgramType.Number),"Unknown operation or nonnumeric argument");
@@ -180,7 +176,7 @@ namespace Maestro.Quest.Programs
             {
                 var node=Object(token);string id=Text(node["id"]),op=Text(node["op"]);Need(Name(id)&&ids.Add(id)&&ids.Count<=MaximumNodes,"Invalid, duplicate or excessive block identities");
                 void Child(string key)=>Body(Array(node[key],MaximumNodes),function,depth+1);
-                void Expr(string key,ProgramType type)=>Need(Expression(node[key],function)==type,"Expression type differs from its use");
+                void Expr(string key,ProgramDataType type)=>Need(Expression(node[key],function)==type,"Expression type differs from its use");
                 switch(op) {
                     case "setState":
                         Need(Version==3,"State needs program version 3");Keys(node,"id op variable value");Need(InitialState.TryGetValue(Text(node["variable"]),out var state),"Unknown program state");Expr("value",state.Type);break;
@@ -216,7 +212,7 @@ namespace Maestro.Quest.Programs
                     case "if": Keys(node,"id op test then else");Expr("test",ProgramType.Boolean);Child("then");Child("else");break;
                     case "repeat": Keys(node,"id op count body");Expr("count",ProgramType.Number);Child("body");break;
                     case "switch":
-                        Keys(node,"id op value cases default");var choice=Expression(node["value"],function);var values=new List<ProgramValue>();
+                        Keys(node,"id op value cases default");var choice=Expression(node["value"],function);Need(choice.Kind<=ProgramType.Text,"Cases require a scalar value");var values=new List<ProgramValue>();
                         foreach(var item in Array(node["cases"],16)) {var arm=Object(item);Keys(arm,"value body");var value=Literal(arm["value"]);Need(value.Type==choice&&!values.Any(x=>x.Same(value)),"Duplicate or differently typed case");values.Add(value);Body(Array(arm["body"],MaximumNodes),function,depth+1);}Child("default");break;
                     case "call":
                         Keys(node,"id op function args","result");string name=Text(node["function"]);Need(functions.TryGetValue(name,out var callee),"Unknown function");calls[function.Name].Add(name);

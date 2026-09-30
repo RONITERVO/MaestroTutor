@@ -21,6 +21,7 @@ namespace Maestro.Quest.Programs
         readonly BehaviourProgram program;
         readonly IProgramFacts facts;
         readonly Stack<Frame> frames=new();
+        readonly HashSet<Scope> memoryScopes=new();
         Scope observed;
         bool terminal;
         readonly Dictionary<string,ProgramValue> state;
@@ -62,7 +63,7 @@ namespace Maestro.Quest.Programs
             action=null;Signal=null;if(resultContract!=null)throw new InvalidOperationException("Complete the pending action result before advancing");if(Wait!=null)return ProgramYield.Waiting;if(terminal)return Error==null?ProgramYield.Completed:ProgramYield.Failed;
             if(budget<1||budget>256)throw new ArgumentOutOfRangeException(nameof(budget));
             try {
-                int began=Instructions;
+                CheckMemory();int began=Instructions;
                 while(Instructions-began<budget) {
                     if(frames.Count==0) {terminal=true;return ProgramYield.Completed;}
                     Charge();
@@ -112,6 +113,7 @@ namespace Maestro.Quest.Programs
                             }
                             action.NodeId=NodeId;return ProgramYield.Action;
                     }
+                    if(op=="set"||op=="setState"||op=="call"||op=="return")CheckMemory();
                 }return ProgramYield.Yield;
             } catch(ProgramFault error) {Error=error.Message;frames.Clear();terminal=true;action=null;return ProgramYield.Failed;}
         }
@@ -139,12 +141,20 @@ namespace Maestro.Quest.Programs
             BeginActivation(); // Scope/state/stack remain intact.
         }
         internal void BeginActivation()=>Instructions=0;
+        void CheckMemory(){
+            int nodes=0,characters=0;var scopes=memoryScopes;scopes.Clear();
+            void Add(ProgramValue value){nodes+=value.Nodes;characters+=value.Characters;}
+            foreach(var value in state.Values)Add(value);
+            foreach(var frame in frames)if(scopes.Add(frame.Scope))foreach(var value in frame.Scope.Values.Values)Add(value);
+            Add(Result);if(nodes>1024||characters>8192)throw new ProgramFault("Program retained-value budget exceeded");
+        }
+        void Charge(int count){for(int i=0;i<count;i++)Charge();}
         void Charge() {if(++Instructions>MaximumInstructions)throw new ProgramFault("Program instruction budget exhausted");}
         ProgramValue Evaluate(JToken token,Scope scope)
         {
             Charge();
             var e=(JObject)token;
-            if(e.ContainsKey("value"))return ProgramValue.Literal(e["value"]);
+            if(e.ContainsKey("value")){var literal=program.Constant(e);Charge(literal.Nodes);return literal;}
             if(e.ContainsKey("var"))return scope.Values[(string)e["var"]];
             if(e.ContainsKey("state"))return state[(string)e["state"]];
             if(e.ContainsKey("fact")) {
@@ -154,11 +164,15 @@ namespace Maestro.Quest.Programs
                 return value;
             }
             string op=(string)e["op"];var args=(JArray)e["args"];var a=Evaluate(args[0],scope);
+            if(op is "length" or "at" or "append" or "replace" or "remove" or "field" or "withField") {
+                var second=args.Count>1?Evaluate(args[1],scope):default;var third=args.Count>2?Evaluate(args[2],scope):default;
+                Charge(a.Nodes+second.Nodes+third.Nodes);return a.Operation(op,second,third);
+            }
             if(op=="not")return new ProgramValue(!a.Boolean);
             if(op=="and"&&!a.Boolean||op=="or"&&a.Boolean)return a;
             var b=Evaluate(args[1],scope);
             if(op=="and"||op=="or")return b;
-            if(op=="eq"||op=="ne")return new ProgramValue(op=="eq"?a.Same(b):!a.Same(b));
+            if(op=="eq"||op=="ne"){Charge(a.Nodes+b.Nodes);return new ProgramValue(op=="eq"?a.Same(b):!a.Same(b));}
             if(op=="lt")return new ProgramValue(a.Number<b.Number);if(op=="le")return new ProgramValue(a.Number<=b.Number);
             if(op=="gt")return new ProgramValue(a.Number>b.Number);if(op=="ge")return new ProgramValue(a.Number>=b.Number);
             if((op=="div"||op=="mod")&&b.Number==0)throw new ProgramFault("Division by zero");

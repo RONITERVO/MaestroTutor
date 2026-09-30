@@ -454,3 +454,13 @@ renames the function and reorders/renames its parameters. Its exact saved source
 it does not execute Unity or a real model provider. Headset editing acceptance is
 still pending. The tests also cover reference scope, creation/event destinations,
 invalid type changes and stale drafts.
+
+## Structured values (2026-09-30)
+
+Version-3 programs can now opt into typed lists/records with `dataVersion:1` when
+`structuredValues.v1` is advertised. Functions, state, locals, expressions and native
+observations share these immutable bounded values. The optional book has recursive
+type/literal controls and data expressions. Existing scalar programs are unchanged.
+See [the format, limits, evidence and remaining editor scope](QUEST_PROGRAM_DATA.md).
+This supersedes the earlier checkpoint's pending records/lists statement; shared
+versioned libraries and the broader release gates remain open.

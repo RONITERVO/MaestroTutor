@@ -638,3 +638,15 @@ show their variable/expression. Shared fixtures verify browser-authored source i
 Unity. This closes function-definition authoring parity within a program; shared
 libraries, records/collections and the other release gates remain unfinished.
 Headset work remains on hold; no installed data or source assets were changed.
+
+### 2026-09-30: typed collection and record parity
+
+The same canonical program now carries bounded typed lists/records through locals,
+session state, functions and native observations. The book exposes type/literal/data
+expression controls; the agent uses the same format and limits. Immutable copies,
+scalar projections into native actions and unchanged object authority are tested.
+Actual native creation/paint results are replayed in the book. See
+[the structured-value contract](QUEST_PROGRAM_DATA.md). PC checks pass 1,391 app,
+195 EditMode, 132 PlayMode and 25 Android tests (three optional native skips).
+Shared libraries, state/event declaration controls and the other v1 gates remain
+open. The new development APK is built but not installed; device work stays on hold.

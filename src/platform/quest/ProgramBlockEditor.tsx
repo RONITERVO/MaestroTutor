@@ -1,3 +1,4 @@
+import {sameDataType} from '../../../shared/programValues';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import type {ReactNode} from 'react';
@@ -6,18 +7,18 @@ import {behaviourCatalog} from '../../../shared/behaviourCatalog';
 import {capabilityDefinition,capabilityParameterType,capabilityInput,type CapabilitySchema} from '../../../shared/capabilities';
 import type {BehaviourProgram,Expression,ProgramFunction,ProgramNode,ValueType} from '../../core-sdk/room/programs';
 import {CapabilityFields,CapabilityVariant,initialCapabilityValue,type EditorObject} from './CapabilityFields';
-import {ProgramValueEditor,defaultValue,expressionType,roomValueSources,valueType,type ValueSource} from './ProgramValueEditor';
+import {ProgramValueEditor,defaultValue,valueExpression,expressionType,roomValueSources,valueType,type ValueSource} from './ProgramValueEditor';
 
 export function ProgramBlockEditor({node,program,fn,objects,onChange,eventFieldsSupported=false,eventSubscriptionsSupported=false}:{
   eventFieldsSupported?:boolean;eventSubscriptionsSupported?:boolean;node:ProgramNode;program:BehaviourProgram;fn:ProgramFunction;objects:readonly EditorObject[];onChange:(node:ProgramNode)=>void;
 }) {
-  const locals=[...fn.parameters,...fn.locals.map(v=>({name:v.name,type:valueType(v.initial)}))];
-  const states=(program.state??[]).map(v=>({name:v.name,type:valueType(v.initial)}));
+  const locals=[...fn.parameters,...fn.locals.map(v=>({name:v.name,type:valueType(v.initial,v.type)}))];
+  const states=(program.state??[]).map(v=>({name:v.name,type:valueType(v.initial,v.type)}));
   const sources:ValueSource[]=[...roomValueSources,...locals.map(v=>({...v,kind:'var' as const})),...states.map(v=>({...v,kind:'state' as const}))];
   const expr=(label:string,value:Expression,type:ValueType,change:(value:Expression)=>void)=><ProgramValueEditor label={label} value={value} type={type} sources={sources} onChange={change}/>;
   const variable=(label:string,current:string,type:ValueType,change:(value:string)=>void,choices=locals)=><label>{label}<select aria-label={label} value={current} onChange={e=>change(e.target.value)}>
-    {!choices.some(v=>v.name===current&&v.type===type)&&<option value={current}>{current||'Choose a variable'}</option>}
-    {choices.filter(v=>v.type===type).map(v=><option key={v.name} value={v.name}>{v.name}</option>)}
+    {!choices.some(v=>v.name===current&&sameDataType(v.type,type))&&<option value={current}>{current||'Choose a variable'}</option>}
+    {choices.filter(v=>sameDataType(v.type,type)).map(v=><option key={v.name} value={v.name}>{v.name}</option>)}
   </select></label>;
   switch(node.op) {
     case 'invoke': {
@@ -66,13 +67,13 @@ export function ProgramBlockEditor({node,program,fn,objects,onChange,eventFields
       return <>
         <label>Destination<select aria-label="Assignment destination" value={node.variable} onChange={e=>{
           const next=choices.find(v=>v.name===e.target.value)!;
-          onChange({...node,variable:next.name,value:next.type===type?node.value:{value:defaultValue(next.type)}});
+          onChange({...node,variable:next.name,value:sameDataType(next.type,type)?node.value:valueExpression(next.type)});
         }}>{choices.map(v=><option key={v.name} value={v.name}>{v.name}</option>)}</select></label>
         {expr('Assigned value',node.value,type,value=>onChange({...node,value}))}
       </>;
     }
     case 'switch': {
-      const type=expressionType(node.value,sources);
+      const type=expressionType(node.value,sources) as import('../../core-sdk/room/programs').ScalarType;
       return <>
         {expr('Case value',node.value,type,value=>onChange({...node,value}))}
         <p>Case bodies stay attached when their matching values change.</p>
@@ -124,7 +125,7 @@ export function ProgramBlockEditor({node,program,fn,objects,onChange,eventFields
       return <>
         <label>Named event<select aria-label="Send named event" value={node.event} onChange={e=>{
           const next=program.events!.find(v=>v.name===e.target.value)!;
-          onChange({...node,event:next.name,value:next.type===type?node.value:{value:defaultValue(next.type)}});
+          onChange({...node,event:next.name,value:sameDataType(next.type,type)?node.value:valueExpression(next.type)});
         }}>{program.events?.map(e=><option key={e.name} value={e.name} disabled={!eventFieldsSupported&&behaviourEvent(e.name)?.features?.includes('eventFields.v1')===true||!eventSubscriptionsSupported&&Boolean(behaviourEvent(e.name)?.input)}>{e.name}</option>)}</select></label>
         {expr('Event payload',node.value,type,value=>onChange({...node,value}))}
       </>;
@@ -134,12 +135,12 @@ export function ProgramBlockEditor({node,program,fn,objects,onChange,eventFields
       return <>
         <label>Function<select aria-label="Called function" value={node.function} onChange={e=>{
           const next=program.functions.find(f=>f.name===e.target.value)!;
-          onChange({id:node.id,op:'call',function:next.name,args:next.parameters.map(p=>({value:defaultValue(p.type)}))});
+          onChange({id:node.id,op:'call',function:next.name,args:next.parameters.map(p=>valueExpression(p.type))});
         }}>{program.functions.filter(f=>f.name!==fn.name).map(f=><option key={f.name} value={f.name}>{f.name}</option>)}</select></label>
         {callee.parameters.map((p,i)=><div key={p.name}>{expr('Argument '+p.name,node.args[i],p.type,next=>onChange({...node,args:node.args.map((v,j)=>j===i?next:v)}))}</div>)}
         {callee.returns!=='void'&&<label>Store return value<select aria-label="Function result" value={node.result??''} onChange={e=>{
           const next={...node};if(e.target.value)next.result=e.target.value;else delete next.result;onChange(next);
-        }}><option value="">Do not store</option>{locals.filter(v=>v.type===callee.returns).map(v=><option key={v.name} value={v.name}>{v.name}</option>)}</select></label>}
+        }}><option value="">Do not store</option>{locals.filter(v=>sameDataType(v.type,callee.returns)).map(v=><option key={v.name} value={v.name}>{v.name}</option>)}</select></label>}
       </>;
     }
     case 'return':return fn.returns==='void'?<p>Finish this function.</p>:expr('Return value',node.value!,fn.returns,value=>onChange({...node,value}));

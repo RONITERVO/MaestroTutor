@@ -93,7 +93,7 @@ namespace Maestro.Quest.Tests
             Assert.That(BehaviourCatalog.TryRead("maestro.state",default,out _),Is.False);
             Assert.That(BehaviourCatalog.TryRead("unknown.fact",default,out _),Is.False);
             Assert.That(BehaviourCatalog.TryRead("physics.ready",new BehaviourCatalog.FactContext(physicsReady:false),out var ready),Is.True);
-            Assert.That(ready.Type,Is.EqualTo(ProgramType.Boolean));Assert.That(ready.Boolean,Is.False);
+            Assert.That(ready.Type.Kind,Is.EqualTo(ProgramType.Boolean));Assert.That(ready.Boolean,Is.False);
             Assert.That(BehaviourCatalog.TryRead("maestro.state",new BehaviourCatalog.FactContext("speaking"),out var state),Is.True);
             Assert.That(state.Text,Is.EqualTo("speaking"));
         }
