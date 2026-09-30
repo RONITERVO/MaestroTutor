@@ -2,7 +2,16 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
-Latest PC increment (2026-09-30): parameterized native proximity waits let human
+Latest PC increment (2026-09-30): the book and agent share typed lists/records,
+function signatures and local declarations in the same native program. Immutable
+values, structural typing, data operations, bounded execution and exact object
+authority support collecting creation results and passing them between functions.
+PC verification passes 1,391 app tests, 195 EditMode, 132 PlayMode and 25 Android
+tests, with three optional private-asset skips. The development APK is built and
+uninstalled. See QUEST_PROGRAM_DATA.md; shared libraries, remaining declaration
+controls and real-provider/headset/store acceptance remain open.
+
+Previous PC increment (2026-09-30): parameterized native proximity waits let human
 and agent-authored programs react when two objects enter/leave a distance boundary.
 Schema-generated book inputs, computed arguments, typed fields and the existing
 queue/scheduler share one contract. Origin distance, baseline, hysteresis, bounded
