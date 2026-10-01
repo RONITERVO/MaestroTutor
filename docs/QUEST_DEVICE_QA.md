@@ -1490,3 +1490,24 @@ selection after restart; no fallback room or automatic activity is acceptable.
 A cancelled operation's evidence and a selected generation with a lost operation
 record must remain protected until explicit maintenance. Current storage tests do
 not establish this complete in-headset journey.
+
+
+## Damaged-workspace recovery through the book and agent
+
+Pending device acceptance; desktop PlayMode evidence is not headset acceptance.
+Use disposable test storage with a verified retained generation and damaged current
+selection or behaviour data. Inspect recovery choices, read the candidate by request
+and index, select its exact hash, inspect the copied preview and missing references,
+and commit only that requested preview. Confirm the ordinary book stays available,
+new contents require review, and completing review still does not start activity.
+Compare original damaged bytes and accepted-state evidence after replacement.
+
+Repeat without live content owners, cancelling during verification/preservation,
+and pausing or restarting around commit. Uncertain outcomes must stay held rather
+than retry; a restart must reconcile the durable selection without replaying old
+actions. Return to inspection for a different candidate after a safe failed attempt.
+Verify that another host waits for outstanding workers and that old owners never
+write into newly selected content. Exercise a low-storage failure without deleting
+original data or preserved evidence. No usable candidate or unreadable coordinator
+history currently reports unavailable; clean-start/external-import and history
+repair remain release work.

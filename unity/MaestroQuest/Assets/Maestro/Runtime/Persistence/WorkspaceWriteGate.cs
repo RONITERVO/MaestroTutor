@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 namespace Maestro.Quest.Persistence
 {
     /// <summary>Coordinates accepted edits, including asynchronous imports. A native freeze
@@ -13,14 +14,15 @@ namespace Maestro.Quest.Persistence
         {
             WorkspaceWriteGate owner;readonly bool freeze;
             internal Lease(WorkspaceWriteGate owner,bool freeze){this.owner=owner;this.freeze=freeze;}
-            public void Dispose(){var previous=Interlocked.Exchange(ref owner,null);if(previous==null)return;lock(previous.sync){if(freeze)previous.frozen=false;else previous.writers--;}}
+            public void Dispose(){var previous=Interlocked.Exchange(ref owner,null);if(previous==null)return;lock(previous.sync){if(freeze)previous.frozen=false;else if(--previous.writers==0)previous.drained?.TrySetResult(true);}}
         }
         internal const string FrozenReason="The workspace is being preserved. Editing will be available when it finishes.";
-        readonly object sync=new();int writers;bool frozen;
-        public bool Frozen {get {lock(sync)return frozen;}}
-        internal bool CanFreeze(out string error){lock(sync){error=frozen?FrozenReason:writers!=0?"Finish the current edit or import before preserving the workspace.":null;return error==null;}}
+        readonly object sync=new();int writers;bool frozen,retired;TaskCompletionSource<bool> drained;
+        public bool Frozen {get {lock(sync)return frozen||retired;}}
+        internal bool CanFreeze(out string error){lock(sync){error=retired?"The previous workspace is closing.":frozen?FrozenReason:writers!=0?"Finish the current edit or import before preserving the workspace.":null;return error==null;}}
         internal IDisposable TryFreeze(out string error){lock(sync){if(!CanFreeze(out error))return null;frozen=true;return new Lease(this,true);}}
-        internal IDisposable TryWrite(out string error){lock(sync){error=frozen?FrozenReason:writers>=256?"Too many concurrent workspace edits. Wait for the current edits to finish.":null;if(error!=null)return null;writers++;return new Lease(this,false);}}
+        internal IDisposable TryWrite(out string error){lock(sync){error=retired?"The previous workspace is closing.":frozen?FrozenReason:writers>=256?"Too many concurrent workspace edits. Wait for the current edits to finish.":null;if(error!=null)return null;if(writers++==0)drained=new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);return new Lease(this,false);}}
+        internal Task Retire(){lock(sync){retired=true;return writers==0?Task.CompletedTask:drained.Task;}}
         internal IDisposable Write(){var lease=TryWrite(out var error);return lease??throw new InvalidOperationException(error);}
     }
 }

@@ -9,6 +9,7 @@ import nativeMaintenance from '../../../test-fixtures/browser/workspaceMaintenan
 import nativeActivation from '../../../test-fixtures/browser/workspaceActivation.json';
 import nativeReview from '../../../test-fixtures/browser/workspaceReview.json';
 import nativePrevious from '../../../test-fixtures/browser/workspacePrevious.json';
+import nativeWorkspaceRecovery from '../../../test-fixtures/browser/workspaceRecovery.json';
 import {validFactValue} from '../../../shared/behaviourFacts';
 import nativeCreation from '../../../test-fixtures/browser/creationResult.json';
 import nativeProgram from '../../../test-fixtures/browser/programBookState.json';
@@ -218,4 +219,25 @@ it('keeps previous source, verified copy and retained current workspace distinct
  const command={action:'execution',execution:{operation:'start',call:receipt.call}};
  expect(()=>requireRoomCapabilities([command],{capabilities:['execution.v1']})).toThrow('workspacePrevious.v1');
  expect(()=>requireRoomCapabilities([command],{capabilities:['execution.v1','workspacePrevious.v1']})).not.toThrow();
+});
+
+it('keeps damaged recovery intent, preserved evidence and opening receipts separate',()=>{
+ for(const value of [nativeWorkspaceRecovery.inspected,nativeWorkspaceRecovery.prepared,nativeWorkspaceRecovery.completed])expect(validFactValue('workspace.recovery',value)).toBe(true);
+ expect(validFactValue('workspace.recovery.candidate',nativeWorkspaceRecovery.candidate)).toBe(true);
+ expect(validFactValue('workspace.recovery.preview',nativeWorkspaceRecovery.preview)).toBe(true);
+ expect(validExecutionView(nativeWorkspaceRecovery.opening)).toBe(true);
+ const receipt=nativeWorkspaceRecovery.opening.workspace.selected;
+ expect(receipt.call.arguments).toEqual({requestId:nativeWorkspaceRecovery.inspected.requestId,originHash:nativeWorkspaceRecovery.inspected.originHash,generationId:nativeWorkspaceRecovery.preview.generationId,manifestHash:nativeWorkspaceRecovery.preview.manifestHash});
+ expect(receipt.output).toEqual({requestId:nativeWorkspaceRecovery.completed.requestId});
+ expect(nativeWorkspaceRecovery.preview.generationId).not.toBe(nativeWorkspaceRecovery.candidate.generationId);
+ expect(nativeWorkspaceRecovery.preview.manifestHash).toBe(nativeWorkspaceRecovery.candidate.manifestHash);
+ expect(nativeWorkspaceRecovery.completed.preview.generationId).toBe(nativeWorkspaceRecovery.preview.generationId);
+ expect(nativeWorkspaceRecovery.completed.phase).toBe('review');expect(nativeWorkspaceRecovery.completed.evidenceHash).toMatch(/^[a-f0-9]{64}$/);
+ expect(nativeWorkspaceRecovery.completed.originHash).toBe(nativeWorkspaceRecovery.inspected.originHash);
+ expect(nativeWorkspaceRecovery.prepared.evidenceHash).toBe('');expect(nativeWorkspaceRecovery.prepared.committedRevision).toBe('');
+ expect(validFactValue('workspace.recovery',{...nativeWorkspaceRecovery.completed,path:'/private/workspace'})).toBe(false);
+ expect(validFactValue('workspace.recovery.preview',{...nativeWorkspaceRecovery.preview,summary:{files:5}})).toBe(false);
+ const command={action:'execution',execution:{operation:'start',call:receipt.call}};
+ expect(()=>requireRoomCapabilities([command],{capabilities:['execution.v1']})).toThrow('workspaceRecovery.v1');
+ expect(()=>requireRoomCapabilities([command],{capabilities:['execution.v1','workspaceRecovery.v1']})).not.toThrow();
 });

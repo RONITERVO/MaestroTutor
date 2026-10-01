@@ -28,7 +28,7 @@ namespace Maestro.Quest.Persistence
         string requestId,phase="idle",name="",error="",releasePending,previousRevision;
         string unavailable="Workspace selection requires the Quest app.";
         Task<PreparedWorkspaceGeneration> preparation;
-        Task discard;
+        Task discard,retirement;
         PreparedWorkspaceGeneration prepared;
         CancellationTokenSource cancellation;
         bool cancelRequested,paused,focused=true,activationOwned,previousSource;
@@ -44,9 +44,11 @@ namespace Maestro.Quest.Persistence
         }
         internal void InitializeForTests(string applicationData,IWorkspaceArchivePicker source)
         {store=new WorkspaceGenerationStore(applicationData,point=>Fault?.Invoke(point));picker=source;unavailable=null;}
+        internal bool Occupied=>preparation!=null||discard!=null||releasePending!=null||prepared!=null||activationOwned||phase is "selecting" or "copying" or "preparing" or "cancelling";
         public bool CanSelect(out string issue)
         {
-            issue=unavailable;
+            issue=unavailable;if(retirement!=null){issue="The previous workspace selection owner is closing.";return false;}
+            if(GetComponent<WorkspaceHost>()?.Recovery?.BlocksOtherOperations==true){issue="Finish or cancel workspace recovery before selecting an archive.";return false;}
             if(!Available){issue??="Workspace selection is unavailable.";return false;}
             if(preparation!=null||discard!=null||releasePending!=null||prepared!=null||phase is "selecting" or "copying" or "preparing" or "cancelling"){
                 issue="Finish or cancel the current archive selection before choosing another.";return false;
@@ -57,7 +59,7 @@ namespace Maestro.Quest.Persistence
         }
         bool Idle(out string issue)
         {
-            issue=null;if(preparation!=null||discard!=null||releasePending!=null||prepared!=null||activationOwned||phase is "selecting" or "copying" or "preparing" or "cancelling") {issue="Finish or cancel the current workspace selection first.";return false;}return true;
+            issue=null;if(retirement!=null||preparation!=null||discard!=null||releasePending!=null||prepared!=null||activationOwned||phase is "selecting" or "copying" or "preparing" or "cancelling") {issue="Finish or cancel the current workspace selection first.";return false;}return true;
         }
         internal JObject ReadPrevious()
         {
@@ -191,18 +193,20 @@ namespace Maestro.Quest.Persistence
         void Update(){if(paused||!focused||Time.unscaledTime<nextPoll)return;nextPoll=Time.unscaledTime+.2f;Poll();}
         void OnApplicationPause(bool value)=>paused=value;
         void OnApplicationFocus(bool value)=>focused=value;
-        void OnDestroy()
+        internal Task Retire()
         {
+            if(retirement!=null)return retirement;
             cancellation?.Cancel();var task=preparation;var remove=discard;var backend=previousSource?null:picker;var id=requestId;var owner=store;var tokenOwner=cancellation;
             // No scene owner or Unity API is touched by late cleanup. Keep already prepared previews
             // retained, but never leak a newly completed preparation whose owner was destroyed.
-            _=Task.Run(async()=>{
+            retirement=Task.Run(async()=>{
                 try {
                     if(task!=null) {PreparedWorkspaceGeneration abandoned=null;try{abandoned=await task.ConfigureAwait(false);}catch(Exception){}
                         if(abandoned!=null)owner.DiscardPrepared(abandoned.Id,abandoned.Receipt.ManifestHash);}
                     if(remove!=null)await remove.ConfigureAwait(false);
                 }catch(Exception){}finally{try{if(id!=null)backend?.Release(id);}catch(Exception){}tokenOwner?.Dispose();}
-            });
+            });return retirement;
         }
+        void OnDestroy()=>_=Retire();
     }
 }

@@ -58,7 +58,7 @@ namespace Maestro.Quest.Tests
             var durable=new RoomStorage(editor.SaveDirectory).Load(out var error);Assert.That(error,Is.Null);Assert.That(durable.objects.Single(x=>x.id==changed.id).name,Is.EqualTo(changed.name));
             var executions=new RoomExecutions(editor,host);Assert.That(executions.Execute(request,out error),Is.True,error);Assert.That(host.Current,Is.SameAs(content));Assert.That(host.Review.CanCancel(same,out _),Is.False);
             string evidence=Environment.GetEnvironmentVariable("MAESTRO_REVIEW_EVIDENCE");if(!string.IsNullOrEmpty(evidence)){Directory.CreateDirectory(evidence);File.WriteAllText(Path.Combine(evidence,"reviewed.json"),new JObject {["prepared"]=prepared,["completed"]=host.Review.Read(same),["current"]=host.Activation.Current(),["execution"]=executions.Observe()}.ToString());}
-            string path=directory,approvedRevision=host.Selection.Revision;UnityEngine.Object.Destroy(root);yield return null;BuildShell(path);Open();yield return null;
+            string path=directory,approvedRevision=host.Selection.Revision;UnityEngine.Object.Destroy(root);yield return null;BuildShell(path);Open();yield return ReadyHost();
             Assert.That(host.Selection.Revision,Is.EqualTo(approvedRevision));Assert.That(host.ReviewRequired,Is.False);Assert.That((string)host.Review.Read(same)["phase"],Is.EqualTo("completed"));
             Assert.That((string)host.Activation.Read((string)host.Activation.Current()["activationRequestId"])["phase"],Is.EqualTo("review"),"A later review does not turn an already completed activation into an interruption");
         }
@@ -71,7 +71,7 @@ namespace Maestro.Quest.Tests
         [UnityTest] public IEnumerator PreparedReviewSurvivesRestartButCompletionStillChecksReloadedAcceptedData()
         {
             yield return ReadyForReview();AcceptedEdit("Prepared before restart");string id=BeginReview();yield return FinishReview(id);var args=ReviewArguments(id);string path=directory;
-            UnityEngine.Object.Destroy(root);yield return null;BuildShell(path);Open();yield return ReadyReviewOwners();Assert.That((string)host.Review.Read(id)["phase"],Is.EqualTo("prepared"));Assert.That(host.ReviewRequired,Is.True);
+            UnityEngine.Object.Destroy(root);yield return null;BuildShell(path);Open();yield return ReadyHost();yield return ReadyReviewOwners();Assert.That((string)host.Review.Read(id)["phase"],Is.EqualTo("prepared"));Assert.That(host.ReviewRequired,Is.True);
             Assert.That(JToken.DeepEquals(ReviewArguments(id),args),Is.True);ApproveReview(id);yield return FinishReview(id);Assert.That((string)host.Review.Read(id)["phase"],Is.EqualTo("completed"));
         }
         [UnityTest] public IEnumerator CancelledReviewCompletionDrainsBeforeReleasingEditingAndDoesNotApprove()

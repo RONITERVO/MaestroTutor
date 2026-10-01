@@ -66,7 +66,7 @@ namespace Maestro.Quest.Persistence
         {
             issue=journalError;if(issue!=null)return false;
             if(disposed||paused||!focused||!host||!host.isActiveAndEnabled){issue="Resume Maestro before activating a workspace.";return false;}
-            if(Busy||host.Switching||host.Review?.Busy==true){issue="Wait for the current activation to finish.";return false;}
+            if(Busy||host.Retiring||host.Switching||host.Review?.Busy==true||host.Recovery?.BlocksOtherOperations==true){issue="Wait for the current activation to finish.";return false;}
             if(!host.Current||host.Selection==null){issue="Recover the current workspace before replacing it.";return false;}
             if(host.Selection.Revision!=(string)args["expectedRevision"]){issue="The workspace changed. Read workspace.current before activating.";return false;}
             if(!host.Import.MatchesOrigin((string)args["expectedRevision"])){issue="The previous-workspace preview belongs to an earlier selection. Cancel it and inspect the current previous workspace again.";return false;}
@@ -137,7 +137,7 @@ namespace Maestro.Quest.Persistence
             value["retained"]=new JObject {["generationId"]=(string)record["retainedId"],["manifestHash"]=(string)record["retainedHash"]};
             if(journalError!=null)value["status"]=journalError;return value;
         }
-        internal JObject Current()=>new JObject {["revision"]=host.Selection?.Revision??"",["generationId"]=host.Selection?.Active.Generation??"",["available"]=host.Current!=null,["reviewRequired"]=host.ReviewRequired,["changing"]=Busy||host.Switching,["activationRequestId"]=(string)record?["requestId"]??"",["reviewRequestId"]=host.Review?.RequestId??"",["error"]=journalError??""};
+        internal JObject Current()=>new JObject {["revision"]=host.Selection?.Revision??"",["generationId"]=host.Selection?.Active.Generation??"",["available"]=host.Current!=null,["reviewRequired"]=host.ReviewRequired,["changing"]=Busy||host.Switching||host.Retiring||host.Recovery?.Busy==true,["activationRequestId"]=(string)record?["requestId"]??"",["reviewRequestId"]=host.Review?.RequestId??"",["error"]=journalError??""};
         internal void Poll()
         {
             if(disposed)return;
@@ -156,7 +156,7 @@ namespace Maestro.Quest.Persistence
         internal void Pause(bool value){paused=value;if(value)cancellation?.Cancel();}
         internal void Focus(bool value){focused=value;if(!value)cancellation?.Cancel();}
         internal void Disable()=>cancellation?.Cancel();
-        internal async void Dispose()
+        internal async Task Dispose()
         {
             disposed=true;cancellation?.Cancel();
             // Capture the owner synchronization context. No Unity owner is released by the worker.

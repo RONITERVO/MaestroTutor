@@ -18,7 +18,7 @@ namespace Maestro.Quest.Programs
         public override bool CanRun(CapabilityContext context,JObject args,out string error)
         {
             error="The current workspace must be readable and idle before preparing previous-workspace recovery.";var host=context.Workspace;
-            if(!host||!host.Current||host.Switching||host.Activation?.Busy==true||host.Review?.Busy==true||host.Selection?.Revision!=(string)args["expectedRevision"])return false;
+            if(!host||!host.Current||host.Switching||host.Activation?.Busy==true||host.Review?.Busy==true||host.Retiring||host.Recovery?.BlocksOtherOperations==true||host.Selection?.Revision!=(string)args["expectedRevision"])return false;
             return WorkspaceArchiveCapture.CanStart(host.Current.Editor,host.Current.Rules,host.Current.Controls,out error)&&host.Import.CanSelectPrevious(args,out error);
         }
         public override bool Start(CapabilityContext context,string runId,JObject args,out CapabilityOperation operation,out string error)

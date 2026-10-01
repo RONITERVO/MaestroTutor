@@ -1464,6 +1464,218 @@
       }
     },
     {
+      "id": "workspace.recovery.inspect",
+      "version": 1,
+      "label": "Inspect workspace recovery choices",
+      "input": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false,
+        "x-features": [
+          "workspaceRecovery.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [],
+      "domain": "workspace",
+      "description": "Inspect retained workspace metadata without changing the selected root. Supports a missing/corrupt selection or unreadable current stores. Returns a tracked requestId. Read workspace.recovery until inspected, then read workspace.recovery.candidate by requestId and index. Metadata availability is not proof that content verifies. Existing content remains available during inspection. No fallback or empty room is opened. Cancel an unused prepared preview before inspecting again. Only the latest request is retained.",
+      "example": {},
+      "output": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "requestId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "workspace.recovery.select",
+      "version": 1,
+      "label": "Verify recovery candidate",
+      "input": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "originHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "generationId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "manifestHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "requestId",
+          "originHash",
+          "generationId",
+          "manifestHash"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "workspaceRecovery.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [],
+      "domain": "workspace",
+      "description": "Select one exact recovery candidate from the latest inspection using requestId, originHash, generationId and manifestHash. Native code verifies and copies its immutable content into a private preview and preserves both original selection files. Read workspace.recovery until prepared, then workspace.recovery.preview for its new generation/hash and missing-reference counts. Later authored changes can make an old candidate unverifiable. Selection never changes live content, starts activity or repairs original files.",
+      "example": {
+        "requestId": "00000000000000000000000000000000",
+        "originHash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "generationId": "00000000000000000000000000000000",
+        "manifestHash": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "requestId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "workspace.recovery.commit",
+      "version": 1,
+      "label": "Recover the inspected workspace",
+      "input": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "originHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "generationId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "manifestHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "requestId",
+          "originHash",
+          "generationId",
+          "manifestHash"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "workspaceRecovery.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [],
+      "domain": "workspace",
+      "description": "Commit only the exact verified recovery preview the user requested after inspection. Supply its requestId, originHash and preview generationId/manifestHash. Native code holds activity/edits, drains old saves and preserves original bytes plus labelled accepted state before checking the choice again. Missing live owners are explicitly labelled; existing roots remain protected. Returns the tracked requestId, not completion. Read workspace.recovery until review or failure. New content opens with fresh action history under review; complete that review separately. Cancellation cannot undo a committed selection. An uncertain result keeps old owners held and requires restart; never blindly retry an old preview/evidence pair. If no retained candidate verifies, this operation does not silently create an empty room.",
+      "example": {
+        "requestId": "00000000000000000000000000000000",
+        "originHash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "generationId": "00000000000000000000000000000000",
+        "manifestHash": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "requestId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "workspace.recovery.cancel",
+      "version": 1,
+      "label": "Cancel workspace recovery",
+      "input": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "requestId"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "workspaceRecovery.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [],
+      "domain": "workspace",
+      "description": "Cancel the exact tracked recovery. Workers and earlier saves must finish before editing releases. An unused preview can be discarded; preserved evidence remains retained. Cancellation cannot retract a committed selection. Read workspace.recovery for its actual outcome. A stale request ID cannot cancel a newer request.",
+      "example": {
+        "requestId": "00000000000000000000000000000000"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "requestId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "program.module.publish",
       "version": 1,
       "label": "Save reusable module",
@@ -3812,6 +4024,128 @@
       ]
     },
     {
+      "id": "workspace.recovery",
+      "version": 1,
+      "type": {
+        "record": {
+          "requestId": "text",
+          "phase": "text",
+          "status": "text",
+          "originHash": "text",
+          "candidateCount": "number",
+          "preview": {
+            "record": {
+              "generationId": "text",
+              "manifestHash": "text"
+            }
+          },
+          "committedRevision": "text",
+          "evidenceHash": "text"
+        }
+      },
+      "label": "Workspace recovery status",
+      "description": "Read the latest recovery request and verify its requestId matches your operation. Inspecting/inspected only describe metadata; preparing/prepared describe a verified copy. Preserving holds editing while workers finish; committed means selection changed, and review means recovered content opened under review. Failed, cancelled, interrupted or unavailable never imply an empty-room fallback or completed switch. EvidenceHash identifies private preserved bytes, not a download. This read never starts or retries an operation.",
+      "domain": "workspace",
+      "input": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "example": {},
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
+      "id": "workspace.recovery.candidate",
+      "version": 1,
+      "type": {
+        "record": {
+          "generationId": "text",
+          "manifestHash": "text",
+          "available": "boolean",
+          "error": "text"
+        }
+      },
+      "label": "Workspace recovery candidate",
+      "description": "Read one retained candidate by the exact inspection requestId and zero-based index below candidateCount. Availability means metadata only. Select the exact identity through workspace.recovery.select to verify documents and assets. Bad entries stay visible; original files are preserved. An outdated request or index is unavailable.",
+      "domain": "workspace",
+      "input": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "index": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 63.0
+          }
+        },
+        "required": [
+          "requestId",
+          "index"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "requestId": "00000000000000000000000000000000",
+        "index": 0
+      },
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
+      "id": "workspace.recovery.preview",
+      "version": 1,
+      "type": {
+        "record": {
+          "requestId": "text",
+          "generationId": "text",
+          "manifestHash": "text",
+          "summary": {
+            "record": {
+              "files": "number",
+              "models": "number",
+              "motions": "number",
+              "modules": "number",
+              "unavailablePrograms": "number",
+              "missingModels": "number",
+              "missingMotions": "number",
+              "missingControllerPrograms": "number"
+            }
+          }
+        }
+      },
+      "label": "Verified recovery preview",
+      "description": "Inspect the new copied generation/hash and verified semantic counts for the exact recovery request. Review missing references with the user before requesting workspace.recovery.commit. These counts do not approve execution or substitute missing models/motions. Recovered activity remains held until a separate workspace review completes.",
+      "domain": "workspace",
+      "input": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "requestId"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "requestId": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
       "id": "room.sessionId",
       "version": 1,
       "type": "text",
@@ -4016,7 +4350,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "1dabd298925199e7720e8cf8bbfc5b9dbc655c993a44301681b2e766613182b7"
+      "sha256": "231c68788bf3498344e6ab68b66df6cb7ce83bc0c0de9cd12eb51c3a6fa5eb43"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -4080,7 +4414,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "e0049465d257b6d928f0c0a3295561adf239da1324583a9d9b611991b832217e"
+      "sha256": "d2db172478898a577bd152164c3a5bed1657349f26a217a6401d0ae6c8ef9025"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -4144,7 +4478,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspacePreviousCapabilities.cs",
-      "sha256": "5b929b9704431c7993bd4f63cc5278c17c717ccaee7ba7673dd06f467e410abc"
+      "sha256": "5c29e7b784dc2d0920463a4eec6520257a2eeb0888175f42f90aef999b4ee7c0"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceRecoveryCapabilities.cs",
+      "sha256": "928be4c166a7a19781edbac09a5f2f3c7b76e8dad78089c23977b316aa9c5c01"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceReviewCapabilities.cs",

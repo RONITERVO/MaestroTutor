@@ -8,6 +8,7 @@ import nativeSelection from '../../../test-fixtures/browser/workspaceSelection.j
 import nativeActivation from '../../../test-fixtures/browser/workspaceActivation.json';
 import nativeReview from '../../../test-fixtures/browser/workspaceReview.json';
 import nativePrevious from '../../../test-fixtures/browser/workspacePrevious.json';
+import nativeWorkspaceRecovery from '../../../test-fixtures/browser/workspaceRecovery.json';
 import native from '../../../test-fixtures/browser/catalogStates.json';
 import nativeProgram from '../../../test-fixtures/browser/programBookState.json';
 import {RoomWorkspace} from './RoomWorkspace';
@@ -310,4 +311,28 @@ it('selects an exact previous workspace through ordinary action inputs and follo
  expect(screen.getByLabelText('Current fact value').textContent).toContain(nativePrevious.selection.generationId);
  expect(screen.getByLabelText('Current fact value').textContent).toContain('prepared');expect(client.snapshot().request).toBeNull();
  act(()=>client.cancel());
+});
+
+it('commits the exact recovery preview and reads preservation and review status through the shared catalog',async()=>{
+ const {client,screen,receive}=setup(true,['workspaceRecovery.v1','execution.v1','actionResults.v1']);
+ const receipt=nativeWorkspaceRecovery.opening.workspace.selected;
+ if(!validExecutionView(nativeWorkspaceRecovery.opening))throw new Error('Invalid native recovery execution');
+ await receive(undefined,false,{execution:{...nativeWorkspaceRecovery.opening,workspace:{selected:null,running:[],outcomes:[],nextRunId:receipt.id,storageError:null}}});
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:'Search'}));
+ const action=capabilityDefinition('workspace.recovery.commit')!;
+ await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:action.id,version:1,label:action.label}],status:'Inspect recovery'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(action.label)}));await receive({operation:'inspect',capability:action.id,version:1,definition:action,status:'Confirm exact preserved recovery'});
+ fireEvent.change(screen.getByLabelText('Action arguments'),{target:{value:JSON.stringify(receipt.call.arguments)}});fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
+ expect(client.snapshot().request?.commands[0]).toMatchObject({action:'execution',execution:{operation:'start',runId:receipt.id,call:receipt.call}});
+ await receive(undefined,false,{execution:nativeWorkspaceRecovery.opening});
+ expect(screen.getByLabelText('Action result').textContent).toContain(nativeWorkspaceRecovery.completed.requestId);
+ expect(screen.getByLabelText('Action result').textContent).not.toContain(nativeWorkspaceRecovery.completed.evidenceHash);
+ fireEvent.change(screen.getByLabelText('Catalog category'),{target:{value:'facts'}});fireEvent.click(screen.getByRole('button',{name:'Search'}));
+ const fact=behaviourFact('workspace.recovery')!;
+ await receive({operation:'search',category:'facts',query:'',offset:0,total:1,pageSize:6,entries:[{id:fact.id,version:1,label:fact.label}],status:'Inspect completion'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(fact.label)}));
+ await receive({operation:'inspect',category:'facts',capability:fact.id,version:1,definition:fact,arguments:{},available:true,value:nativeWorkspaceRecovery.completed,status:'Available'});
+ const displayed=screen.getByLabelText('Current fact value').textContent;
+ for(const value of [nativeWorkspaceRecovery.completed.requestId,nativeWorkspaceRecovery.completed.evidenceHash,nativeWorkspaceRecovery.completed.committedRevision,'review'])expect(displayed).toContain(value);
+ expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
 });

@@ -1,6 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 using System;
+using System.Threading.Tasks;
 using Maestro.Quest.Avatar;
 using Maestro.Quest.Book;
 using Maestro.Quest.Interaction;
@@ -13,6 +14,7 @@ namespace Maestro.Quest.Persistence
     /// <summary>Generation-scoped content. The XR rig, book/browser and room origin outlive it.</summary>
     public sealed class WorkspaceContent:MonoBehaviour
     {
+        readonly TaskCompletionSource<bool> destroyed=new(TaskCreationOptions.RunContinuationsAsynchronously);Task retirement;
         bool detached;RoomInteraction room;RoomItem bookItem;BookPointerRouter router;BookControllerInput input;
         public RoomEditor Editor {get;private set;}
         public RuleWorkshop Rules {get;private set;}
@@ -72,6 +74,25 @@ namespace Maestro.Quest.Persistence
             if(room)foreach(var item in GetComponentsInChildren<RoomItem>(true))room.Unregister(item);
             if(Editor&&!preserveBookLock){room?.DetachWrites(Editor.WriteGate);bookItem?.DetachWrites(Editor.WriteGate);}
         }
-        void OnDestroy()=>Detach();
+        internal Task Retire(bool preserveBookLock=false)
+        {
+            if(retirement!=null)return retirement;
+            IDisposable activity=null;
+            try{if(Editor){activity=Editor.RuntimeGate.Hold("Closing the previous workspace");Editor.PrepareAgentEdit();}}
+            catch(Exception){Debug.LogWarning("Previous workspace authoring could not finish while closing.");}
+            finally{
+                var writers=Editor?.WriteGate.Retire()??Task.CompletedTask;
+                if(this){Detach(preserveBookLock);gameObject.SetActive(false);Destroy(gameObject);}else destroyed.TrySetResult(true);
+                retirement=FinishRetirement(writers,activity);
+            }
+            return retirement;
+        }
+        async Task FinishRetirement(Task writers,IDisposable activity)
+        {
+            try{await Task.WhenAll(writers,destroyed.Task);await Task.Yield();}
+            finally{activity?.Dispose();}
+        }
+        void OnDestroy(){try{Detach();}finally{destroyed.TrySetResult(true);}}
+
     }
 }

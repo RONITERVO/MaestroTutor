@@ -64,7 +64,7 @@ namespace Maestro.Quest.Persistence
         {
             issue=journalError;if(issue!=null)return false;
             if(disposed||paused||!focused||!host||!host.isActiveAndEnabled){issue="Resume Maestro before reviewing a workspace.";return false;}
-            if(Busy||host.Switching||host.Activation?.Busy==true){issue="Wait for the current workspace operation to finish.";return false;}
+            if(Busy||host.Switching||host.Activation?.Busy==true||host.Retiring||host.Recovery?.BlocksOtherOperations==true){issue="Wait for the current workspace operation to finish.";return false;}
             if(!host.Current||!host.ReviewRequired||host.Selection?.Revision!=revision){issue="Read the current workspace and review its latest selected contents.";return false;}
             try{if(!JToken.DeepEquals(store.Load().Json(),host.Selection.Json())){issue="The stored workspace selection changed. Recover it before review.";return false;}}
             catch(Exception){issue="The workspace selection is unavailable. Its data is preserved; recovery is required.";return false;}
@@ -158,6 +158,6 @@ namespace Maestro.Quest.Persistence
         internal void Pause(bool value){paused=value;if(value)cancellation?.Cancel();}
         internal void Focus(bool value){focused=value;if(!value)cancellation?.Cancel();}
         internal void Disable()=>cancellation?.Cancel();
-        internal async void Dispose(){disposed=true;cancellation?.Cancel();try{if(pending!=null)await pending;}catch(Exception){}finally{hold?.Dispose();hold=null;cancellation?.Dispose();cancellation=null;}}
+        internal async Task Dispose(){disposed=true;cancellation?.Cancel();try{if(pending!=null)await pending;}catch(Exception){}finally{hold?.Dispose();hold=null;cancellation?.Dispose();cancellation=null;}}
     }
 }

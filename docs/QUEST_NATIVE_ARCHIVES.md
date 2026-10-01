@@ -604,13 +604,11 @@ more than 4,096 files or 512 MiB of accepted plus raw data; accepted JSON has a
 This evidence format is deliberately rejected by ordinary workspace import. It is
 not an executable backup or a promise that damaged content can be restored.
 
-This foundation captures the workspace data directory, not selection metadata.
-The next recovery operation must bind the exact damaged pointer, candidate and
-evidence identities, preserve their original records, reconcile a durable commit,
-and keep the retiring owners held until replacement is safe. Candidate inspection,
-clean-start handling when no candidate is usable, user/agent controls, storage
-path ownership across host replacement and retained-evidence cleanup remain work.
-On-device filesystem, capacity, lifecycle and interruption acceptance is pending.
+This evidence captures the workspace data directory; the recovery generation store
+below separately binds and preserves selection metadata. The shared coordinator
+now holds retiring owners through replacement. Clean-start/external-import choices
+when no candidate verifies, preserved-evidence maintenance, and on-device capacity,
+lifecycle and interruption acceptance remain work.
 
 
 ## Explicit storage recovery with damaged selection metadata
@@ -649,10 +647,53 @@ protected from ordinary preview deletion. A preview containing preserved evidenc
 requires explicit future maintenance even when its operation was cancelled. A
 selected generation cannot be discarded merely because its commit record vanished.
 
-These storage operations are not yet exposed to users or the agent. The host still
-needs to coordinate preservation, worker draining, exact intent and replacement;
-missing-owner recovery and an explicit clean-start/external-import choice when no
-candidate verifies also remain. No new automatic recovery or execution is enabled.
-Tests cover real model/archive copies, corrupt and missing selections, stale
-inspection, changed evidence, cancellation, lost provenance, and faults on both
-sides of pointer commit. Full end-to-end and device acceptance remain open.
+## Shared recovery and owner lifetime
+
+Users and the room agent use the same catalog actions and facts:
+
+1. Run `workspace.recovery.inspect`, retain its returned `requestId`, and read
+   `workspace.recovery` until `inspected`. This latest-request status is not keyed:
+   always check that its request ID still matches the opening receipt.
+2. Read `workspace.recovery.candidate` with that request ID and each index below
+   `candidateCount`. Metadata availability does not establish usable content.
+3. Run `workspace.recovery.select` with that request, inspected `originHash`, exact
+   candidate `generationId` and `manifestHash`. Wait for `prepared`, then inspect
+   `workspace.recovery.preview` with the request ID. It identifies a newly copied
+   generation and reports content and missing-reference counts.
+4. Only after the user chooses that recovery, run `workspace.recovery.commit` with
+   the request, origin and **preview** identity. Its opening receipt acknowledges
+   a tracked operation. Wait for `workspace.recovery` to report `review` or failure.
+   The completed status includes the preserved evidence hash and selected revision.
+5. Complete the ordinary workspace content review separately before starting any
+   desired activity. Recovery never resumes old programs, physics or action receipts.
+
+`workspace.recovery.cancel` targets an exact request. Workers and previous saves
+must finish before holds release; cancellation cannot undo a committed selection.
+Unused previews may be discarded, but generations with preserved evidence remain
+retained. Stale requests cannot select, commit or cancel newer operations. Prepared
+recovery excludes import, export, ordinary activation, previous selection and review.
+A failed or interrupted attempt requires fresh inspection rather than retrying its
+old preview/evidence pair. An uncertain commit or refused owner replacement stays
+held until restart, even if storage later becomes readable.
+
+The persistent host owns the app-data path until its import/export/review/recovery
+workers, accepted writes and content destruction have finished. Replacement retires
+old content before creating new owners. Partial initialization, external destruction,
+and immediate disable/enable follow the same drain boundary. Another host waits
+instead of opening that path concurrently. The book/browser survives content
+replacement; the agent receives a fresh session for the new workspace.
+
+If selection metadata cannot open any live owners, the same catalog remains usable.
+Preservation explicitly labels the accepted-state sections as unavailable; it does
+not manufacture an empty live room. The existing data roots remain protected and
+their original pointer bytes are saved in the recovery proof. Without live owners,
+the evidence ZIP does not contain an accepted snapshot of those roots or promise
+that their damaged contents can be restored.
+
+Remaining release work includes recovery when no retained candidate verifies
+(explicit clean start or external archive), repair of the recovery coordinator's own
+unreadable history, retained-evidence export/cleanup, and on-device lifecycle,
+capacity and interruption acceptance. These paths have no automatic fallback.
+Native tests cover preservation, missing owners, cancellation, commit faults,
+restart, stale requests and refused replacement. Captured native facts/receipts are
+also exercised through the web contracts and the book's ordinary catalog controls.

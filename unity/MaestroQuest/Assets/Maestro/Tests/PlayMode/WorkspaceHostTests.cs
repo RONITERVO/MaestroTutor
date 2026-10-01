@@ -43,6 +43,13 @@ namespace Maestro.Quest.Tests
             builds++;content.Build(room,book,browser,router,input,physics,navigation,scan,view,()=>false,directory,data,receipts,gate);afterContentBuild?.Invoke();
         }
         void Open()=>host.Initialize(directory,room.transform,Build,agent);
+        IEnumerator ReadyHost(bool content=true)
+        {
+            float deadline=Time.realtimeSinceStartup+15;
+            bool Waiting()=>!host.Ready||host.Retiring||host.Switching||content&&(!host.Current||host.Activation?.Busy==true||host.Review?.Busy==true||host.Recovery?.Busy==true);
+            while(Waiting()&&Time.realtimeSinceStartup<deadline)yield return null;
+            Assert.That(Waiting(),Is.False,host.Status);
+        }
         byte[] Archive(string label)
         {
             var recipe=RecipeTemplates.BoxRobot(true);recipe.playing=true;
@@ -83,7 +90,7 @@ namespace Maestro.Quest.Tests
                 try {var task=Task.Run(()=>{using var source=File.OpenRead(archive.Path);return store.Prepare(source);});while(!task.IsCompleted)yield return null;retained=task.GetAwaiter().GetResult();}finally{File.Delete(archive.Path);}
                 var incoming=Prepare(Archive("Replacement robot"));var selected=store.Activate(incoming.Id,incoming.Receipt.ManifestHash,host.Selection.Revision,retained.Id,retained.Receipt.ManifestHash);
                 Assert.That(host.ReplaceCommitted(selected,held,out error),Is.True,error);Assert.That(oldLibrary.State.visible,Is.False);
-                if(interrupt){root.SetActive(false);Assert.That(host.Switching,Is.False);root.SetActive(true);yield return null;yield return null;}
+                if(interrupt){root.SetActive(false);Assert.That(host.Switching,Is.False);root.SetActive(true);yield return ReadyHost();}
                 for(int i=0;i<30&&host.Switching;i++)yield return null;
                 Assert.That(host.Switching,Is.False);Assert.That(host.Current,Is.Not.Null,host.Status);Assert.That(!previous&&!editor,Is.True);
                 Assert.That(host.Current.Editor.Snapshot().objects.Single(x=>!x.IsBuiltIn).name,Is.EqualTo("Replacement robot"));Assert.That(host.Current.Editor.RuntimeGate.Held,Is.True);
@@ -158,7 +165,7 @@ namespace Maestro.Quest.Tests
             host.Runtime.SendMessage("OnApplicationPause",true);Assert.That(host.Runtime.TryRead("workspace.archive.selection",1,args,out _),Is.False);host.Runtime.SendMessage("OnApplicationPause",false);
             Assert.That(execution.Execute(request,out error),Is.True,error);Assert.That(picker.Starts,Is.EqualTo(1));
             var cancel=MaintenanceStart(execution,"workspace.archive.cancel",args);Assert.That(execution.Execute(cancel,out error),Is.True,error);Assert.That((string)host.Import.ReadSelection(id)["phase"],Is.EqualTo("cancelled"));
-            string saved=directory;UnityEngine.Object.Destroy(root);yield return null;BuildShell(saved);Open();Assert.That(host.Current,Is.Null);var after=new MaintenancePicker();host.Import.InitializeForTests(directory,after);
+            string saved=directory;UnityEngine.Object.Destroy(root);yield return null;BuildShell(saved);Open();yield return ReadyHost(false);Assert.That(host.Current,Is.Null);var after=new MaintenancePicker();host.Import.InitializeForTests(directory,after);
             execution=new RoomExecutions(null,host);Assert.That(execution.Execute(request,out error),Is.True,error);Assert.That(after.Starts,Is.Zero,"A retained opening receipt is not permission to reopen the picker");Assert.That(host.Import.ReadSelection(id),Is.Null);
             MaintenanceEvidence("restart-reconciled",execution.Observe());
         }
@@ -175,6 +182,6 @@ namespace Maestro.Quest.Tests
             Assert.That(execution.Execute(request,out error),Is.True,error);Assert.That(published,Is.EqualTo(1));MaintenanceEvidence("held-export",state);
             var roomCall=new JObject {["operation"]="start",["runId"]=roomId,["call"]=new JObject {["id"]="time.wait",["version"]=1,["arguments"]=new JObject {["seconds"]=1}}};Assert.That(execution.Execute(roomCall,out _),Is.False);
         }
-        [UnityTearDown] public IEnumerator Cleanup(){if(root)UnityEngine.Object.Destroy(root);yield return null;if(Directory.Exists(directory))Directory.Delete(directory,true);}
+        [UnityTearDown] public IEnumerator Cleanup(){var closing=host;if(root)UnityEngine.Object.Destroy(root);yield return null;if(!ReferenceEquals(closing,null))while(!closing.Retirement.IsCompleted)yield return null;if(Directory.Exists(directory))Directory.Delete(directory,true);}
     }
 }

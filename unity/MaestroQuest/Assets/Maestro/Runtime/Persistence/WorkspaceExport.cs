@@ -19,7 +19,7 @@ namespace Maestro.Quest.Persistence
         RoomEditor editor;RuleWorkshop rules;MovementControls controls;
         string outputDirectory,unavailable;
         Func<string,string> publish;
-        Task<JObject> pending;
+        Task<JObject> pending;bool retiring;
         CancellationTokenSource cancellation;
         public bool Available=>publish!=null;
         public bool Busy=>pending!=null&&!pending.IsCompleted;
@@ -41,7 +41,8 @@ namespace Maestro.Quest.Persistence
         internal void Bind(RoomEditor source,RuleWorkshop behaviours,MovementControls movement){editor=source;rules=behaviours;controls=movement;}
         public bool CanStart(out string error)
         {
-            error=unavailable;
+            error=unavailable;if(retiring){error="The previous workspace export owner is closing.";return false;}
+            if(GetComponent<WorkspaceHost>()?.Recovery?.BlocksOtherOperations==true){error="Finish or cancel workspace recovery before exporting.";return false;}
             if(!Available){error??="Workspace export is unavailable";return false;}
             if(Busy){error="Wait for the current workspace export to finish";return false;}
             return WorkspaceArchiveCapture.CanStart(editor,rules,controls,out error);
@@ -81,6 +82,7 @@ namespace Maestro.Quest.Persistence
             }finally{AndroidJNI.DetachCurrentThread();}
         }
 #endif
-        void OnDestroy(){cancellation?.Cancel();}
+        internal Task Retire(){retiring=true;cancellation?.Cancel();return (Task)pending??Task.CompletedTask;}
+        void OnDestroy()=>_=Retire();
     }
 }

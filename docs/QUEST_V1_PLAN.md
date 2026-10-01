@@ -1008,3 +1008,23 @@ faults. The user/agent recovery coordinator, live-owner replacement, missing-own
 handling, explicit alternatives when no candidate verifies and evidence maintenance
 remain to be integrated. This checkpoint does not enable automatic recovery or
 establish headset acceptance.
+
+
+### 2026-10-01: shared damaged-workspace recovery and retiring owners
+
+The persistent host now coordinates damaged recovery through four catalog actions
+(inspect, select, commit, cancel), three facts and the existing book/agent controls.
+It can recover an unreadable live store or a selection with no live owners, binding
+exact inspection, verified preview, preserved evidence and a fresh reviewed root.
+Original files remain retained; activity starts separately after ordinary review.
+
+Host replacement waits for accepted writes, background services and destruction;
+a new host cannot reuse the same data path while old workers still own it. Tests
+cover cancellation, before/after commit faults, teardown/restart, partial creation,
+disable/enable, stale requests and refused replacement. A captured Unity flow is
+validated by web contracts and the book controls. No device queries or installs
+are part of this checkpoint.
+
+Still open: explicit no-candidate clean start/external import, repair of corrupt
+recovery-operation history, evidence maintenance, broader release acceptance and
+headset testing. This is a release-work checkpoint, not completed Quest v1.

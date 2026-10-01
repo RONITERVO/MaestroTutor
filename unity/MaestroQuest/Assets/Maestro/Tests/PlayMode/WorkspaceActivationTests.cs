@@ -76,7 +76,7 @@ namespace Maestro.Quest.Tests
             yield return FinishActivation(id);AssertActivated(id);Assert.That(!original,Is.True);Assert.That(agent.Observe().session,Is.Not.EqualTo(oldSession));Assert.That(browser.GetInstanceID(),Is.EqualTo(browserId));
             var retained=new RoomStorage(store.DataDirectory(host.Selection.Previous)).Load(out var error);Assert.That(error,Is.Null);Assert.That(retained.objects.Single(x=>x.id==data.id).name,Is.EqualTo(data.name));
             var actions=new RoomExecutions(host.Current.Editor,host);Assert.That(actions.Execute(request,out error),Is.True,error);Assert.That((string)actions.Observe()["workspace"]["selected"]["output"]["requestId"],Is.EqualTo(id));
-            string path=directory;var selected=host.Selection.Json();UnityEngine.Object.Destroy(root);yield return null;BuildShell(path);Open();yield return null;AssertActivated(id);Assert.That(JToken.DeepEquals(selected,host.Selection.Json()),Is.True);
+            string path=directory;var selected=host.Selection.Json();UnityEngine.Object.Destroy(root);yield return null;BuildShell(path);Open();yield return ReadyHost();AssertActivated(id);Assert.That(JToken.DeepEquals(selected,host.Selection.Json()),Is.True);
             Assert.That(new RoomExecutions(host.Current.Editor,host).Execute(request,out error),Is.True,error);Assert.That(builds,Is.EqualTo(1));Assert.That(host.Activation.CanCancel(id,out _),Is.False);
             string evidence=Environment.GetEnvironmentVariable("MAESTRO_ACTIVATION_EVIDENCE");if(!string.IsNullOrEmpty(evidence)){Directory.CreateDirectory(evidence);File.WriteAllText(Path.Combine(evidence,"activated.json"),new JObject {["current"]=host.Activation.Current(),["activation"]=host.Activation.Read(id),["execution"]=new RoomExecutions(host.Current.Editor,host).Observe()}.ToString());}
         }
@@ -105,7 +105,7 @@ namespace Maestro.Quest.Tests
         {
             yield return ReadyForActivation();afterContentBuild=()=>throw new IOException("Simulated content initialization failure");
             var (_,id)=BeginActivation();yield return FinishActivation(id);Assert.That(host.Current,Is.Null);Assert.That((string)host.Activation.Read(id)["phase"],Is.EqualTo("unavailable"));Assert.That((string)host.Activation.Read(id)["committedRevision"],Is.EqualTo(store.Load().Revision));
-            string path=directory;UnityEngine.Object.Destroy(root);yield return null;BuildShell(path);Open();yield return null;AssertActivated(id);Assert.That(builds,Is.EqualTo(1));
+            string path=directory;UnityEngine.Object.Destroy(root);yield return null;BuildShell(path);Open();yield return ReadyHost();AssertActivated(id);Assert.That(builds,Is.EqualTo(1));
         }
         [UnityTest] public IEnumerator SynchronousCaptureFailureLeavesAnHonestTerminalJobAndReleasesEditing()
         {
@@ -139,7 +139,7 @@ namespace Maestro.Quest.Tests
             try {
                 var (_,id)=BeginActivation();float deadline=Time.realtimeSinceStartup+15;while(!entered.IsSet&&Time.realtimeSinceStartup<deadline)yield return null;Assert.That(entered.IsSet,Is.True);
                 root.SetActive(false);release.Set();while(host.Activation.WorkerPending&&Time.realtimeSinceStartup<deadline)yield return null;Assert.That(host.Activation.WorkerPending,Is.False);
-                string path=directory;var selected=store.Load().Json();UnityEngine.Object.Destroy(root);yield return null;BuildShell(path);Open();yield return null;AssertActivated(id);Assert.That(builds,Is.EqualTo(1));Assert.That(JToken.DeepEquals(selected,store.Load().Json()),Is.True);
+                string path=directory;var selected=store.Load().Json();UnityEngine.Object.Destroy(root);yield return null;BuildShell(path);Open();yield return ReadyHost();AssertActivated(id);Assert.That(builds,Is.EqualTo(1));Assert.That(JToken.DeepEquals(selected,store.Load().Json()),Is.True);
             }finally{release.Set();}
         }
         [UnityTest] public IEnumerator TeardownWaitsForRetentionBeforeReleasingItsOwnerThreadHold()
@@ -149,7 +149,7 @@ namespace Maestro.Quest.Tests
             try {
                 var (_,id)=BeginActivation();float deadline=Time.realtimeSinceStartup+15;while(!entered.IsSet&&Time.realtimeSinceStartup<deadline)yield return null;Assert.That(entered.IsSet,Is.True);
                 var operation=host.Activation;string path=directory;UnityEngine.Object.Destroy(root);yield return null;Assert.That(operation.WorkerPending,Is.True);release.Set();while(operation.WorkerPending&&Time.realtimeSinceStartup<deadline)yield return null;Assert.That(operation.WorkerPending,Is.False);yield return null;
-                BuildShell(path);Open();yield return null;Assert.That(store.Load().Revision,Is.EqualTo("initial"));Assert.That(host.Activation.Read(id)["phase"].ToString(),Is.EqualTo("cancelled"));Assert.That(host.Current.Editor.WriteGate.Frozen,Is.False);
+                BuildShell(path);Open();yield return ReadyHost();Assert.That(store.Load().Revision,Is.EqualTo("initial"));Assert.That(host.Activation.Read(id)["phase"].ToString(),Is.EqualTo("cancelled"));Assert.That(host.Current.Editor.WriteGate.Frozen,Is.False);
             }finally{release.Set();}
         }
         [Test] public void PersistentBrowserRetriesTheLatestLibraryCloseUntilThePageAcknowledgesIt()
