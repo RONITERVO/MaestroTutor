@@ -1405,5 +1405,41 @@ invalid file, an oversized file and a slow provider; errors must remain readable
 partial files must be cleaned, and another chooser must wait for the old provider
 stream to close. Confirm book/controller/hand operation still works after returning.
 Test application pause during verification and process interruption separately.
-A preview is not restore acceptance: reviewed activation and startup recovery are
-still unavailable and need their own tests once integrated.
+A preview is not restore acceptance. Activation and content-bound review now have
+PC coverage and need the separate device checks below; previous/corrupt-workspace
+recovery remains unfinished.
+
+
+### Pending device acceptance: activation and content-bound review
+
+Device work remains on hold. Run these checks only when it resumes, using a
+workspace and backup the tester can afford to replace. They are not yet device
+acceptance evidence.
+
+1. Edit an object and behaviour, then activate a verified archive through the book
+   catalog. Confirm the operation reports actual progress separately from its
+   opening receipt, retains the accepted old workspace, keeps the book/chat alive,
+   and loads imported content with programs, motion and physics stopped.
+2. Inspect the imported objects, programs, model/motion choices and missing-reference
+   counts. Prepare review, make an accepted edit, then attempt completion with the
+   earlier hash/revision. Expect a stale review and continued activity hold. Prepare
+   again and complete the new exact review. Verify stopped activity stays stopped,
+   held buttons require release, and explicit new actions work afterward.
+3. Repeat inspection/completion using the real chat agent. Confirm it explains the
+   inspected contents and obtains the intended approval before completing review,
+   reads the tracked result, and never treats the opening receipt as completion.
+   Compare its arguments/results with the manual book workflow.
+4. Pause/resume during preparation and completion; cancel while work is pending;
+   restart with a prepared review. Check honest cancelled/interrupted/completed
+   states, no automatic replay and no stuck or prematurely released controls.
+   Separate process-interruption/power-loss checks around activation and approval
+   from ordinary pause checks. Preserve logs and all candidate data on uncertainty.
+5. Profile representative large libraries and rooms for capture/hash/save stalls,
+   memory and thermal cost alongside passthrough and book rendering. Check status
+   readability and continued hand/controller recall. A failed save must preserve
+   live edits and keep review held; automate fault injection separately from any
+   manual storage-capacity check.
+
+Do not mark previous-workspace or corrupt-selection recovery accepted from these
+checks. Those operations and retained-generation cleanup still need implementation
+and their own exact-identity, preservation and lifecycle acceptance.

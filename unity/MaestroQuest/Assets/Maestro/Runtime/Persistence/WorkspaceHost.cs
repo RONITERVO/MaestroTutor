@@ -22,6 +22,7 @@ namespace Maestro.Quest.Persistence
         public WorkspaceExport Export {get;private set;}
         public WorkspaceRuntime Runtime {get;private set;}
         internal WorkspaceActivation Activation {get;private set;}
+        internal WorkspaceReview Review {get;private set;}
         internal WorkspaceSelection Selection {get;private set;}
         public WorkspaceContent Current {get;private set;}
         public bool Switching {get;private set;}
@@ -36,7 +37,7 @@ namespace Maestro.Quest.Persistence
             Import=gameObject.AddComponent<WorkspaceImport>();Import.Initialize(applicationData);
             Export=gameObject.AddComponent<WorkspaceExport>();Export.Initialize(null,null,null);
             Runtime=gameObject.AddComponent<WorkspaceRuntime>();Runtime.Initialize(this,System.IO.Path.Combine(applicationData,"workspace-maintenance.v1"));
-            TryOpenSelected(out _);Activation=new WorkspaceActivation(this,applicationData);
+            TryOpenSelected(out _);Activation=new WorkspaceActivation(this,applicationData);Review=new WorkspaceReview(this,applicationData);
         }
         internal bool TryOpenSelected(out string error)
         {
@@ -86,12 +87,20 @@ namespace Maestro.Quest.Persistence
             catch(Exception){Status="The selected workspace could not be opened. The retained previous workspace is available for recovery.";agent?.Bind(null,Status);}
             finally {replacing?.Dispose();replacing=null;Switching=false;Notify();}
         }
-        void Update()=>Activation?.Poll();
-        void OnApplicationPause(bool value)=>Activation?.Pause(value);
-        void OnApplicationFocus(bool value)=>Activation?.Focus(value);
+        internal bool ApplyReviewedSelection(WorkspaceSelection selected,WorkspaceEditHold held,out string error)
+        {
+            error="The reviewed selection does not match the live workspace.";
+            if(Switching||!Current||held==null||!held.Owns(Current.Editor)||selected==null||selected.Active.ReviewRequired||Selection==null||!Selection.Active.ReviewRequired||selected.Revision==Selection.Revision||selected.Active.Generation!=Selection.Active.Generation||selected.Active.ReceiptEpoch!=Selection.Active.ReceiptEpoch||!JToken.DeepEquals(selected.Previous?.Json(),Selection.Previous?.Json()))return false;
+            try{if(!JToken.DeepEquals(store.Load().Json(),selected.Json()))return false;}catch(Exception){return false;}
+            // The edit hold still owns an activity lease while review ownership is released.
+            Selection=selected;review?.Dispose();review=null;Status="Workspace review completed. Start desired activity explicitly.";agent?.WorkspaceStatus(Status);Notify();error=null;return true;
+        }
+        void Update(){Activation?.Poll();Review?.Poll();}
+        void OnApplicationPause(bool value){Activation?.Pause(value);Review?.Pause(value);}
+        void OnApplicationFocus(bool value){Activation?.Focus(value);Review?.Focus(value);}
         void OnDisable()
         {
-            Activation?.Disable();
+            Activation?.Disable();Review?.Disable();
             if(!Switching)return;
             StopAllCoroutines();replacing?.Dispose();replacing=null;Switching=false;
             Status="Workspace opening paused. The committed selection is preserved.";agent?.Bind(null,Status);Notify();
@@ -110,7 +119,7 @@ namespace Maestro.Quest.Persistence
         }
         void OnDestroy()
         {
-            Activation?.Dispose();
+            Activation?.Dispose();Review?.Dispose();
             if(Current){Current.Detach();Current.gameObject.SetActive(false);Destroy(Current.gameObject);Current=null;}
             replacing?.Dispose();replacing=null;review?.Dispose();review=null;
         }

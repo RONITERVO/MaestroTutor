@@ -249,6 +249,7 @@ namespace Maestro.Quest.Creation
         string[] created=Array.Empty<string>();
         string lastInspected;
         public void Initialize(RoomEditor source,NativeBookBrowser book) {browser=book;Bind(source,source?"Room actions ready":"Opening workspace");}
+        internal void WorkspaceStatus(string message){status=bindingStatus=message;next=0;}
         internal void Bind(RoomEditor source,string message)
         {
             // An editor replacement always invalidates old requests, even if object IDs/revisions

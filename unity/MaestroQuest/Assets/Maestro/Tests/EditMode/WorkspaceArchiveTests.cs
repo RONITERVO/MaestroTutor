@@ -45,6 +45,20 @@ namespace Maestro.Quest.Tests
         Dictionary<string,byte[]> Entries(byte[] archive){using var stream=new MemoryStream(archive);using var zip=new ZipArchive(stream,ZipArchiveMode.Read);return zip.Entries.ToDictionary(x=>x.FullName,x=>{using var output=new MemoryStream();using var input=x.Open();input.CopyTo(output);return output.ToArray();});}
         static byte[] Zip(IEnumerable<KeyValuePair<string,byte[]>> entries){using var output=new MemoryStream();using(var zip=new ZipArchive(output,ZipArchiveMode.Create,true)){foreach(var entry in entries){using var stream=zip.CreateEntry(entry.Key).Open();stream.Write(entry.Value,0,entry.Value.Length);}}return output.ToArray();}
         void NoStages()=>Assert.That(Directory.GetDirectories(directory,"workspace-import-*"),Is.Empty);
+        [Test] public void ReviewFingerprintIsTheExactArchiveManifestWithoutWritingAZip()
+        {
+            var first=WorkspaceArchive.Fingerprint(Snapshot());using var zip=new MemoryStream();var exported=WorkspaceArchive.Write(zip,Snapshot());
+            Assert.That(first.ManifestHash,Is.EqualTo(exported.ManifestHash));Assert.That(first.Summary.Bytes,Is.EqualTo(exported.Summary.Bytes));Assert.That(first.Summary.Files,Is.EqualTo(exported.Summary.Files));
+            var shuffled=new WorkspaceArchiveSnapshot(documents.Reverse().ToDictionary(x=>x.Key,x=>x.Value),payloads.Reverse().ToDictionary(x=>x.Key,x=>(Func<Stream>)(()=>new MemoryStream(x.Value,false))));
+            Assert.That(WorkspaceArchive.Fingerprint(shuffled).ManifestHash,Is.EqualTo(first.ManifestHash));
+            var preferences=JsonUtility.FromJson<ControllerPreferences>(Encoding.UTF8.GetString(documents["controls.v2.json"]));preferences.deadZone=.35f;documents["controls.v2.json"]=Document(preferences);
+            Assert.That(WorkspaceArchive.Fingerprint(Snapshot()).ManifestHash,Is.Not.EqualTo(first.ManifestHash));
+        }
+        [Test] public void ReviewFingerprintAppliesAssetValidationAndCancellationInsteadOfTrustingNames()
+        {
+            using var cancelled=new CancellationTokenSource();cancelled.Cancel();Assert.Throws<OperationCanceledException>(()=>WorkspaceArchive.Fingerprint(Snapshot(),cancelled.Token));
+            payloads["models/"+modelHash+".glb"][0]^=1;Assert.That(()=>WorkspaceArchive.Fingerprint(Snapshot()),Throws.Exception);
+        }
         [Test] public void RoundTripPreservesEveryIdentityPayloadAndNativeStoreWithoutActivating()
         {
             string sentinel=Path.Combine(directory,"existing-room.txt");File.WriteAllText(sentinel,"current live room");using var output=new MemoryStream();var written=WorkspaceArchive.Write(output,Snapshot());Assert.That(output.CanWrite,Is.True);

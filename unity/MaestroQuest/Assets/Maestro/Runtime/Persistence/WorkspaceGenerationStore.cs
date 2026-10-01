@@ -235,10 +235,45 @@ namespace Maestro.Quest.Persistence
             using var lease=Lease();var current=Load();Expected(current,expectedRevision);if(current.Previous==null)throw Invalid("There is no previous workspace to restore.");CheckLocation(current.Previous);if(current.Previous.Generation==Original&&!Directory.Exists(Path.Combine(appRoot,"room")))throw Invalid("The previous original workspace is missing.");
             var next=new WorkspaceSelection(Guid.NewGuid().ToString("N"),new WorkspaceLocation(current.Previous.Generation,Guid.NewGuid().ToString("N"),true),current.Active);Commit(next);return next;
         }
-        public WorkspaceSelection CompleteReview(string expectedRevision)
+        // capturedHash comes from a fresh native capture under WorkspaceEditHold after accepted
+        // documents were flushed. It is never accepted from the action's wire arguments.
+        public WorkspaceSelection CompleteReview(string reviewId,string generation,string inspectedHash,string expectedRevision,string capturedHash,CancellationToken cancellation=default)
         {
-            using var lease=Lease();var current=Load();Expected(current,expectedRevision);if(!current.Active.ReviewRequired)return current;
-            var next=new WorkspaceSelection(Guid.NewGuid().ToString("N"),new WorkspaceLocation(current.Active.Generation,current.Active.ReceiptEpoch,false),current.Previous);Commit(next);return next;
+            if(!Id(reviewId)||!ModelLibrary.ValidHash(inspectedHash)||capturedHash!=inspectedHash)throw Invalid("Workspace contents changed. Prepare and inspect a new review.");
+            using var lease=Lease();cancellation.ThrowIfCancellationRequested();var current=Load();string path=Path.Combine(root,"review.v1.json");
+            JObject record=File.Exists(path)?ReviewRecord(path):null;WorkspaceSelection next;
+            if(record!=null&&(string)record["reviewId"]==reviewId) {
+                var origin=Selection(record["origin"] as JObject);next=Selection(record["next"] as JObject);
+                if(origin.Revision!=expectedRevision||origin.Active.Generation!=generation||(string)record["manifestHash"]!=inspectedHash)throw Invalid("This review identity belongs to different contents.");
+                if(JToken.DeepEquals(current.Json(),next.Json()))return current;
+                if(!JToken.DeepEquals(current.Json(),origin.Json()))throw Invalid("The reviewed workspace selection changed.");
+            }else {
+                Expected(current,expectedRevision);
+                if(!current.Active.ReviewRequired||current.Active.Generation!=generation)throw Invalid("Inspect the selected workspace that requires review.");
+                next=new WorkspaceSelection(Guid.NewGuid().ToString("N"),new WorkspaceLocation(current.Active.Generation,current.Active.ReceiptEpoch,false),current.Previous);
+                var proof=new JObject {["version"]=1,["reviewId"]=reviewId,["manifestHash"]=inspectedHash,["origin"]=current.Json(),["next"]=next.Json()};
+                string pending=path+"."+Guid.NewGuid().ToString("N")+".pending";
+                try {
+                    WriteNew(pending,Json(proof));if(File.Exists(path)){WorkspaceArchive.NoLink(path);if(File.Exists(path+".previous"))WorkspaceArchive.NoLink(path+".previous");File.Replace(pending,path,path+".previous");}else File.Move(pending,path);
+                }finally{if(File.Exists(pending))File.Delete(pending);}
+                fault?.Invoke("review.reserved");
+            }
+            cancellation.ThrowIfCancellationRequested();Commit(next);return next;
+        }
+        internal WorkspaceSelection CommittedReview(string reviewId,string generation,string hash,string revision)
+        {
+            using var lease=Lease();var current=Load();string path=Path.Combine(root,"review.v1.json");if(!File.Exists(path))return null;
+            var record=ReviewRecord(path);var origin=Selection(record["origin"] as JObject);var next=Selection(record["next"] as JObject);
+            if((string)record["reviewId"]!=reviewId||(string)record["manifestHash"]!=hash||origin.Active.Generation!=generation||origin.Revision!=revision)return null;
+            return JToken.DeepEquals(current.Json(),next.Json())?current:null;
+        }
+        static JObject ReviewRecord(string path)
+        {
+            var record=Read(path);
+            if(!Exact(record,"version","reviewId","manifestHash","origin","next")||record["version"]?.Type!=JTokenType.Integer||(int)record["version"]!=1||!TextId(record["reviewId"])||record["manifestHash"]?.Type!=JTokenType.String||!ModelLibrary.ValidHash((string)record["manifestHash"]))throw Invalid("Invalid saved workspace review.");
+            var origin=Selection(record["origin"] as JObject);var next=Selection(record["next"] as JObject);
+            if(!origin.Active.ReviewRequired||next.Active.ReviewRequired||origin.Revision==next.Revision||origin.Active.Generation!=next.Active.Generation||origin.Active.ReceiptEpoch!=next.Active.ReceiptEpoch||!JToken.DeepEquals(origin.Previous?.Json(),next.Previous?.Json()))throw Invalid("Invalid saved review boundary.");
+            return record;
         }
         public void DiscardPrepared(string id,string hash)
         {

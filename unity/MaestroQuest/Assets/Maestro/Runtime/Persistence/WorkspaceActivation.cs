@@ -31,9 +31,9 @@ namespace Maestro.Quest.Persistence
                 record=JObject.Load(reader,new JsonLoadSettings {DuplicatePropertyNameHandling=DuplicatePropertyNameHandling.Error});
                 if(reader.Read()||!ValidRecord(record))throw new InvalidDataException();
                 // Even a previous unavailable/failed acknowledgement can follow a durable commit.
-                committed=Reconcile(record);
+                committed=(string)record["phase"]=="review"?null:Reconcile(record);
                 if(committed!=null){record["committedRevision"]=committed.Revision;record["phase"]="committed";}
-                else if((string)record["phase"] is "preserving" or "activating" or "committed" or "review" or "unavailable") {
+                else if((string)record["phase"] is "preserving" or "activating" or "committed" or "unavailable") {
                     record["phase"]="interrupted";record["status"]="Activation is no longer current or was interrupted. Inspect the workspace; it was not replayed.";Save(record);
                 }
             }catch(Exception){record=null;journalError="Activation history is unavailable. Its original files are preserved; recovery is required.";}
@@ -66,7 +66,7 @@ namespace Maestro.Quest.Persistence
         {
             issue=journalError;if(issue!=null)return false;
             if(disposed||paused||!focused||!host||!host.isActiveAndEnabled){issue="Resume Maestro before activating a workspace.";return false;}
-            if(Busy||host.Switching){issue="Wait for the current activation to finish.";return false;}
+            if(Busy||host.Switching||host.Review?.Busy==true){issue="Wait for the current activation to finish.";return false;}
             if(!host.Current||host.Selection==null){issue="Recover the current workspace before replacing it.";return false;}
             if(host.Selection.Revision!=(string)args["expectedRevision"]){issue="The workspace changed. Read workspace.current before activating.";return false;}
             if(!host.Import.CanActivate((string)args["selectionRequestId"],(string)args["generationId"],(string)args["manifestHash"],out issue))return false;
@@ -136,7 +136,7 @@ namespace Maestro.Quest.Persistence
             value["retained"]=new JObject {["generationId"]=(string)record["retainedId"],["manifestHash"]=(string)record["retainedHash"]};
             if(journalError!=null)value["status"]=journalError;return value;
         }
-        internal JObject Current()=>new JObject {["revision"]=host.Selection?.Revision??"",["generationId"]=host.Selection?.Active.Generation??"",["available"]=host.Current!=null,["reviewRequired"]=host.ReviewRequired,["changing"]=Busy||host.Switching,["activationRequestId"]=(string)record?["requestId"]??"",["error"]=journalError??""};
+        internal JObject Current()=>new JObject {["revision"]=host.Selection?.Revision??"",["generationId"]=host.Selection?.Active.Generation??"",["available"]=host.Current!=null,["reviewRequired"]=host.ReviewRequired,["changing"]=Busy||host.Switching,["activationRequestId"]=(string)record?["requestId"]??"",["reviewRequestId"]=host.Review?.RequestId??"",["error"]=journalError??""};
         internal void Poll()
         {
             if(disposed)return;

@@ -4,8 +4,9 @@ Native snapshot capture and Android Downloads publication are available through
 `workspace.archive.export` in the shared action catalog. The book, agent and saved
 programs use the same operation and execution receipts. Native archive selection
 and verified previews also use the shared catalog. Activation now connects the
-reviewed preview to the persistent host through that same catalog. **Content-bound
-review completion and previous-workspace recovery are not connected yet.** Original chat backup
+reviewed preview to the persistent host through that same catalog. Review completion
+independently verifies the exact inspected content before releasing its hold.
+**Previous-workspace recovery is not connected yet.** Original chat backup
 remains separate, and portable backup/restore is not a finished release feature.
 
 ## Snapshot boundary
@@ -117,8 +118,8 @@ counts unavailable programs. This is not exhaustive static dependency analysis:
 programs can calculate IDs, and explicit dependency inspection/rebinding remains
 unfinished. Restoring a reference never means silently choosing a different asset.
 
-Next integration must complete the shared review flow and switch to a verified
-generation only through an explicit restore action.
+The shared activation and review operations below switch to a verified generation
+only through an explicit restore action.
 Keep the prior workspace recoverable, invalidate stale requests, and leave imported
 behaviour triggers/movement/physics paused until reviewed. Copying staged files over
 live stores one by one would not meet the restore contract. Activation must not
@@ -288,8 +289,8 @@ An activity hold alone permits document editing and manual object placement. The
 separate accepted-edit boundary below closes those paths during retention. The
 startup host now resolves the stored selection and applies its activity hold before
 loading owners. A corrupt selection leaves the book and agent observation available
-without silently creating a replacement room. Review completion still needs to bind
-to the inspected documents; activation deliberately keeps that hold in place.
+without silently creating a replacement room. Activation keeps that hold in place;
+review completion below binds its release to the exact inspected contents.
 
 
 ## Preserving accepted edits before activation
@@ -335,7 +336,7 @@ async gaps. Filesystem tests cover changed retained content, substitution on ret
 reservation protection and interruptions around the pointer commit.
 
 The production activation coordinator below now owns private archive cleanup and
-shared maintenance execution. Content-bound review completion remains unfinished.
+shared maintenance execution. Content-bound review completion is described below.
 The edit lease lasts until all retention/activation workers settle; native owners
 are preserved on failed retention. Previous-workspace recovery still needs an exact operation identity
 before exposure. An activation retry after releasing the edit hold or restarting
@@ -373,8 +374,8 @@ and stale requests. A captured native unavailable-room state is accepted by the 
 bridge regression, which also checks replacement invalidates pending work.
 
 This is the startup and owner-lifetime boundary used by activation below.
-Previous-workspace recovery and review completion remain unfinished. Maintenance
-execution uses the persistent domain below.
+Previous-workspace recovery remains unfinished. Review completion and maintenance
+execution use the persistent domain below.
 
 
 ## Maintenance while room content is held or unavailable
@@ -415,8 +416,8 @@ restart reconciliation, replacement interruption, export under a review hold and
 refusal of another domain's issued ID. Captured native results are validated by web
 tests; the book Run control is exercised with unavailable room history and healthy
 maintenance. These checks do not establish a complete restore journey. Activation
-now uses that route, but previous-workspace recovery, content-bound review completion
-and retained-generation maintenance are still unfinished.
+and review completion now use that route. Previous-workspace recovery and
+retained-generation maintenance are still unfinished.
 
 ## Tracked activation through the book and agent
 
@@ -474,9 +475,60 @@ captured native activation/retention result and exercise the shared Run and fact
 controls. These are PC and simulated-transport checks; headset storage, chooser,
 pause/power-loss, readability and performance acceptance remain open.
 
-Review completion is still intentionally held: a future command must bind approval
-to the current inspected documents, which can be edited while under review. It must
-not resume stopped programs, restart physics or rearm held input. Previous-workspace
-recovery, corrupt-selection recovery and retained-generation browsing/cleanup also
-remain release gates. The existing storage-only helpers are not exposed as complete
-user recovery commands.
+Review completion below binds approval to the current inspected contents, which
+can be edited while under review. Previous-workspace recovery, corrupt-selection
+recovery and retained-generation browsing/cleanup remain release gates. The
+existing storage-only helpers are not exposed as complete user recovery commands.
+
+
+## Completing an exact content review
+
+The book and agent share `workspace.review.prepare`, `workspace.review.complete`
+and `workspace.review.cancel`, with the typed `workspace.review` fact. These are
+ordinary catalog entries in the persistent workspace domain; room programs remain
+held. `workspace.current.reviewRequestId` identifies the latest retained request.
+The opening receipt acknowledges a tracked operation. It does not mean inspection
+or approval has completed. Read its fact for the eventual outcome.
+
+Prepare requires the exact current selection revision. A short accepted-edit hold
+captures documents, library indexes and asset hashes through the same validated
+manifest encoder used by archive export, without writing another ZIP. The prepared
+fact exposes a content hash, the generation/revision identity and bounded counts
+for assets, programs and known missing references. Inspect the actual workspace
+and these counts before completing review. This is not a claim that all computed
+program references have been statically resolved. Only the latest review candidate
+is retained. A prepared candidate can survive restart; it never authorizes content
+without another native check.
+
+Complete accepts only that prepared request ID, hash and selection revision. Native
+code reacquires the edit hold, flushes accepted room and behaviour documents, and
+independently captures their content again. Preferences, activity assignments and
+libraries already save before accepting their changes; in-flight writers prevent
+the hold. Changed contents produce `stale` and require a fresh inspection. A failed
+save cannot approve the live edit or lose it from the editor. The caller cannot
+supply a replacement capture or bypass native comparison.
+
+A bounded durable approval record binds the exact origin selection and content
+hash to the next selection revision before the pointer commits. Approval preserves
+the generation, previous-workspace identity and action-history epoch. The host
+verifies that exact durable selection and its edit lease before releasing only the
+review activity hold, keeping the same content owners, Undo and agent session.
+Stopped programs, recipe/file playback, physics and held controller inputs do not
+restart from approval. Other native holds still apply. Fresh user intent and later
+normal Maestro activity remain possible after the holds are released.
+
+Cancellation drains the worker before releasing editing. It cannot retract a
+committed approval. Failure after commit and startup reconcile the exact approval
+record without replaying completion. An unreadable outcome or unverified owner
+keeps editing/activity held; corrupted journal files are preserved rather than
+replaced silently. Terminal activation history remains history after review changes
+the current revision. Applications should consult `workspace.current` for the
+current requirement, and the review fact for that operation's outcome.
+
+Native tests cover unchanged and changed captures, restart, pending cancellation,
+failed accepted saves, faults before/after pointer commit, unreadable outcomes and
+another owner's hold. Captured native review results are validated by the web
+contract and exercised through the ordinary book Run and fact controls. These are
+PC/simulated-transport checks. Headset storage, power-loss, lifecycle and user
+acceptance still need device evidence. In-process workspace recovery must also
+wait for any retiring host's workers before constructing fresh content owners.

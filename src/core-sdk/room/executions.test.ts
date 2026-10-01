@@ -7,6 +7,7 @@ import {RoomAgentClient} from '../../platform/quest/roomAgentBridge';
 import {requireRoomCapabilities} from '../../../shared/roomControls';
 import nativeMaintenance from '../../../test-fixtures/browser/workspaceMaintenance.json';
 import nativeActivation from '../../../test-fixtures/browser/workspaceActivation.json';
+import nativeReview from '../../../test-fixtures/browser/workspaceReview.json';
 import {validFactValue} from '../../../shared/behaviourFacts';
 import nativeCreation from '../../../test-fixtures/browser/creationResult.json';
 import nativeProgram from '../../../test-fixtures/browser/programBookState.json';
@@ -179,4 +180,20 @@ it('validates the native activation job independently from its opening receipt a
  expect(nativeActivation.current.reviewRequired).toBe(true);
  expect(receipt.call.arguments.generationId).toBe(nativeActivation.activation.preview.generationId);
  expect(validFactValue('workspace.archive.activation',{...nativeActivation.activation,retained:{generationId:'unverified'}})).toBe(false);
+});
+
+it('binds native review completion to its inspected content and separates the opening receipt from approval',()=>{
+ expect(validExecutionView(nativeReview.execution)).toBe(true);
+ expect(validFactValue('workspace.current',nativeReview.current)).toBe(true);
+ for(const value of [nativeReview.prepared,nativeReview.completed])expect(validFactValue('workspace.review',value)).toBe(true);
+ const receipt=nativeReview.execution.workspace.selected;
+ expect(receipt.call.arguments).toEqual({requestId:nativeReview.prepared.requestId,manifestHash:nativeReview.prepared.manifestHash,expectedRevision:nativeReview.prepared.workspace.revision});
+ expect(receipt.output).toEqual({requestId:nativeReview.completed.requestId});
+ expect(nativeReview.prepared.activityHeld).toBe(true);expect(nativeReview.completed.activityHeld).toBe(false);
+ expect(nativeReview.current.reviewRequired).toBe(false);expect(nativeReview.current.reviewRequestId).toBe(nativeReview.completed.requestId);
+ expect(nativeReview.completed.committedRevision).toBe(nativeReview.current.revision);
+ expect(nativeReview.completed.workspace.revision).not.toBe(nativeReview.current.revision);
+ expect(nativeReview.completed.manifestHash).toBe(nativeReview.prepared.manifestHash);
+ expect(validFactValue('workspace.review',{...nativeReview.completed,path:'/private/workspace'})).toBe(false);
+ expect(validFactValue('workspace.review',{...nativeReview.completed,summary:{files:5}})).toBe(false);
 });

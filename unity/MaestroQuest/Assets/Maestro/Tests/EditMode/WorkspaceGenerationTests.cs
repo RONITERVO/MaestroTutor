@@ -53,10 +53,23 @@ namespace Maestro.Quest.Tests
             Assert.That(Activate(store,prepared.Id,prepared.Receipt.ManifestHash,initial.Revision).Revision,Is.EqualTo(active.Revision),"Exact activation retry reconciles without switching twice");
             string evidence=Environment.GetEnvironmentVariable("MAESTRO_WORKSPACE_GENERATION_EVIDENCE");if(!string.IsNullOrEmpty(evidence)){Directory.CreateDirectory(evidence);File.WriteAllText(Path.Combine(evidence,"selection.json"),active.Json().ToString());File.WriteAllText(Path.Combine(evidence,"prepared-manifest.json"),File.ReadAllText(Path.Combine(Generation(prepared.Id),"manifest.json")));}
         }
+        [TestCase("review.reserved",false)] [TestCase("pointer.beforeCommit",false)] [TestCase("pointer.afterCommit",true)]
+        public void ReviewBindsExactContentsAndReconcilesCommitWithoutChangingReceiptEpoch(string point,bool committed)
+        {
+            var p=Prepare();var selected=Activate(store,p.Id,p.Receipt.ManifestHash,"initial");string id=Guid.NewGuid().ToString("N"),hash=p.Receipt.ManifestHash;
+            var interrupted=new WorkspaceGenerationStore(directory,where=>{if(where==point)throw new IOException("Injected review interruption");});
+            Assert.Throws<IOException>(()=>interrupted.CompleteReview(id,p.Id,hash,selected.Revision,hash));
+            var found=store.CommittedReview(id,p.Id,hash,selected.Revision);Assert.That(found!=null,Is.EqualTo(committed));
+            Assert.Throws<InvalidDataException>(()=>store.CompleteReview(id,p.Id,hash,selected.Revision,new string('f',64)));
+            var completed=store.CompleteReview(id,p.Id,hash,selected.Revision,hash);Assert.That(completed.Active.ReviewRequired,Is.False);Assert.That(completed.Active.ReceiptEpoch,Is.EqualTo(selected.Active.ReceiptEpoch));
+            Assert.That(store.CompleteReview(id,p.Id,hash,selected.Revision,hash).Revision,Is.EqualTo(completed.Revision));
+            Assert.Throws<InvalidDataException>(()=>store.CompleteReview(id,p.Id,new string('f',64),selected.Revision,new string('f',64)));
+            Assert.That(store.CommittedReview(id,p.Id,hash,selected.Revision).Revision,Is.EqualTo(completed.Revision));
+        }
         [Test] public void ReviewAndRecoveryPersistWithoutRewritingProgramsOrReusingReceipts()
         {
             var p=Prepare();var selected=Activate(store,p.Id,p.Receipt.ManifestHash,"initial");string data=store.DataDirectory(selected.Active);var original=File.ReadAllBytes(Path.Combine(data,"behaviours.v2.json"));
-            var reviewed=store.CompleteReview(selected.Revision);Assert.That(reviewed.Active.ReviewRequired,Is.False);Assert.That(reviewed.Active.ReceiptEpoch,Is.EqualTo(selected.Active.ReceiptEpoch));Assert.That(store.Load().Active.ReviewRequired,Is.False);
+            var reviewed=store.CompleteReview(Guid.NewGuid().ToString("N"),selected.Active.Generation,new string('a',64),selected.Revision,new string('a',64));Assert.That(reviewed.Active.ReviewRequired,Is.False);Assert.That(reviewed.Active.ReceiptEpoch,Is.EqualTo(selected.Active.ReceiptEpoch));Assert.That(store.Load().Active.ReviewRequired,Is.False);
             File.WriteAllText(Path.Combine(data,"accepted-later.txt"),"Preserve authored changes");var back=store.RestorePrevious(reviewed.Revision);Assert.That(back.Active.Generation,Is.EqualTo(Retained(p.Id).Id));Assert.That(back.Active.ReviewRequired,Is.True);Assert.That(back.Active.ReceiptEpoch,Is.Not.EqualTo("original"));
             var forward=store.RestorePrevious(back.Revision);Assert.That(forward.Active.Generation,Is.EqualTo(p.Id));Assert.That(forward.Active.ReviewRequired,Is.True);Assert.That(forward.Active.ReceiptEpoch,Is.Not.EqualTo(selected.Active.ReceiptEpoch));Assert.That(File.ReadAllText(Path.Combine(data,"accepted-later.txt")),Is.EqualTo("Preserve authored changes"));Assert.That(File.ReadAllBytes(Path.Combine(data,"behaviours.v2.json")),Is.EqualTo(original));
             Assert.Throws<InvalidDataException>(()=>store.InspectPrepared(p.Id,p.Receipt.ManifestHash),"An authored workspace cannot be reused as an untouched import preview");
@@ -85,20 +98,20 @@ namespace Maestro.Quest.Tests
         [Test] public void StaleReviewOrPreviewCannotOverwriteANewerSelection()
         {
             var first=Prepare();var second=Prepare();var active=Activate(store,first.Id,first.Receipt.ManifestHash,"initial");
-            Assert.Throws<InvalidDataException>(()=>Activate(store,second.Id,second.Receipt.ManifestHash,"initial"));Assert.Throws<InvalidDataException>(()=>store.CompleteReview("initial"));Assert.Throws<InvalidDataException>(()=>store.RestorePrevious("initial"));
+            Assert.Throws<InvalidDataException>(()=>Activate(store,second.Id,second.Receipt.ManifestHash,"initial"));Assert.Throws<InvalidDataException>(()=>store.CompleteReview(Guid.NewGuid().ToString("N"),new string('b',32),new string('a',64),"initial",new string('a',64)));Assert.Throws<InvalidDataException>(()=>store.RestorePrevious("initial"));
             Assert.That(store.Load().Revision,Is.EqualTo(active.Revision));Assert.That(store.InspectPrepared(second.Id,second.Receipt.ManifestHash).Id,Is.EqualTo(second.Id));
             store.DiscardPrepared(second.Id,second.Receipt.ManifestHash);Assert.That(Directory.Exists(Generation(second.Id)),Is.False);Assert.Throws<InvalidDataException>(()=>store.DiscardPrepared(first.Id,first.Receipt.ManifestHash));
         }
         [Test] public void CorruptPointerCannotSilentlyFallBackToOriginalOrBackup()
         {
-            var p=Prepare();var selected=Activate(store,p.Id,p.Receipt.ManifestHash,"initial");store.CompleteReview(selected.Revision);Assert.That(File.Exists(Pointer+".previous"),Is.True);
+            var p=Prepare();var selected=Activate(store,p.Id,p.Receipt.ManifestHash,"initial");store.CompleteReview(Guid.NewGuid().ToString("N"),selected.Active.Generation,new string('a',64),selected.Revision,new string('a',64));Assert.That(File.Exists(Pointer+".previous"),Is.True);
             File.WriteAllText(Pointer,"{\"version\":1,\"version\":2}");Assert.That(()=>new WorkspaceGenerationStore(directory).Load(),Throws.Exception);Assert.That(File.Exists(Pointer+".previous"),Is.True);
             File.Delete(Pointer);Assert.Throws<InvalidDataException>(()=>store.Load());Assert.That(File.Exists(Path.Combine(directory,"room","keep.txt")),Is.True);
         }
         [TestCase(false)] [TestCase(true)] public void LostFirstSelectionNeverLooksLikeAFreshInstall(bool removeBackup)
         {
             var p=Prepare();Activate(store,p.Id,p.Receipt.ManifestHash,"initial");Assert.That(File.Exists(Pointer+".previous"),Is.True);File.Delete(Pointer);if(removeBackup)File.Delete(Pointer+".previous");
-            Assert.Throws<InvalidDataException>(()=>new WorkspaceGenerationStore(directory).Load());Assert.Throws<InvalidDataException>(()=>store.CompleteReview("initial"));Assert.That(File.Exists(Pointer),Is.False);Assert.That(File.Exists(Path.Combine(directory,"room","keep.txt")),Is.True);
+            Assert.Throws<InvalidDataException>(()=>new WorkspaceGenerationStore(directory).Load());Assert.Throws<InvalidDataException>(()=>store.CompleteReview(Guid.NewGuid().ToString("N"),new string('b',32),new string('a',64),"initial",new string('a',64)));Assert.That(File.Exists(Pointer),Is.False);Assert.That(File.Exists(Path.Combine(directory,"room","keep.txt")),Is.True);
         }
         [Test] public void MissingPreviousDoesNotHideHealthyActiveWorkspaceButCannotBeRestoredAsEmpty()
         {

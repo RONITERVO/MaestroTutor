@@ -66,25 +66,31 @@ namespace Maestro.Quest.Persistence
         public static WorkspaceArchiveReceipt Write(Stream destination,WorkspaceArchiveSnapshot snapshot,CancellationToken cancellation=default)
         {
             if(destination==null||!destination.CanWrite||snapshot==null)throw new ArgumentException("A writable archive stream and detached snapshot are required.");
-            cancellation.ThrowIfCancellationRequested();var entries=new List<Entry>();var budget=new Budget();var limited=new OutputLimit(destination);
-            byte[] manifest;
-            using(var zip=new ZipArchive(limited,ZipArchiveMode.Create,true)){
-                void Put(string path,byte[] bytes)
-                {
-                    cancellation.ThrowIfCancellationRequested();budget.Add(path,bytes.Length);
+            cancellation.ThrowIfCancellationRequested();WorkspaceArchiveReceipt receipt;
+            using(var zip=new ZipArchive(new OutputLimit(destination),ZipArchiveMode.Create,true)) {
+                receipt=Manifest(snapshot,(path,bytes)=>{
                     var entry=zip.CreateEntry(path,WorkspaceArchiveMetadata.IsAsset(path)?CompressionLevel.NoCompression:CompressionLevel.Optimal);
-                    using(var stream=entry.Open())for(int at=0;at<bytes.Length;at+=65536){cancellation.ThrowIfCancellationRequested();stream.Write(bytes,at,Math.Min(65536,bytes.Length-at));}
-                    entries.Add(new Entry {Path=path,Bytes=bytes.Length,Hash=ModelLibrary.Hash(bytes)});
-                }
-                foreach(var pair in snapshot.Documents.OrderBy(x=>x.Key,StringComparer.Ordinal))Put(pair.Key,pair.Value);
-                foreach(var pair in snapshot.Assets.OrderBy(x=>x.Key,StringComparer.Ordinal)){
-                    cancellation.ThrowIfCancellationRequested();using var stream=pair.Value();if(stream==null||!stream.CanRead)throw Invalid("The asset could not be opened.");
-                    var bytes=Read(stream,WorkspaceArchiveMetadata.Limit(pair.Key),cancellation);snapshot.Metadata.ValidateAsset(pair.Key,bytes);Put(pair.Key,bytes);
-                }
-                var json=new JObject {["format"]="maestro-native-workspace",["version"]=1,["entries"]=new JArray(entries.Select(x=>new JObject {["path"]=x.Path,["bytes"]=x.Bytes,["sha256"]=x.Hash}))};
-                manifest=Utf8.GetBytes(json.ToString(Formatting.None));if(manifest.Length>MaximumManifestBytes)throw Invalid("Archive manifest is too large.");
+                    using var stream=entry.Open();for(int at=0;at<bytes.Length;at+=65536){cancellation.ThrowIfCancellationRequested();stream.Write(bytes,at,Math.Min(65536,bytes.Length-at));}
+                },cancellation,out var manifest);
                 using var output=zip.CreateEntry("manifest.json",CompressionLevel.Optimal).Open();output.Write(manifest,0,manifest.Length);
             }
+            cancellation.ThrowIfCancellationRequested();return receipt;
+        }
+        // Review hashes use the same validation, ordering, limits and manifest as ZIP export,
+        // without another 512 MB private file or a redundant compression/write pass.
+        internal static WorkspaceArchiveReceipt Fingerprint(WorkspaceArchiveSnapshot snapshot,CancellationToken cancellation=default)=>Manifest(snapshot,null,cancellation,out _);
+        static WorkspaceArchiveReceipt Manifest(WorkspaceArchiveSnapshot snapshot,Action<string,byte[]> write,CancellationToken cancellation,out byte[] manifest)
+        {
+            if(snapshot==null)throw new ArgumentNullException(nameof(snapshot));
+            cancellation.ThrowIfCancellationRequested();var entries=new List<Entry>();var budget=new Budget();
+            void Put(string path,byte[] bytes){cancellation.ThrowIfCancellationRequested();budget.Add(path,bytes.Length);write?.Invoke(path,bytes);entries.Add(new Entry {Path=path,Bytes=bytes.Length,Hash=ModelLibrary.Hash(bytes)});}
+            foreach(var pair in snapshot.Documents.OrderBy(x=>x.Key,StringComparer.Ordinal))Put(pair.Key,pair.Value);
+            foreach(var pair in snapshot.Assets.OrderBy(x=>x.Key,StringComparer.Ordinal)){
+                cancellation.ThrowIfCancellationRequested();using var stream=pair.Value();if(stream==null||!stream.CanRead)throw Invalid("The asset could not be opened.");
+                var bytes=Read(stream,WorkspaceArchiveMetadata.Limit(pair.Key),cancellation);snapshot.Metadata.ValidateAsset(pair.Key,bytes);Put(pair.Key,bytes);
+            }
+            var json=new JObject {["format"]="maestro-native-workspace",["version"]=1,["entries"]=new JArray(entries.Select(x=>new JObject {["path"]=x.Path,["bytes"]=x.Bytes,["sha256"]=x.Hash}))};
+            manifest=Utf8.GetBytes(json.ToString(Formatting.None));if(manifest.Length>MaximumManifestBytes)throw Invalid("Archive manifest is too large.");
             cancellation.ThrowIfCancellationRequested();return new WorkspaceArchiveReceipt {ManifestHash=ModelLibrary.Hash(manifest),Summary=CopySummary(snapshot.Metadata.Summary,budget.Total)};
         }
         static List<Entry> Manifest(byte[] bytes)

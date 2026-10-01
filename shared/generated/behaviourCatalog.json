@@ -1256,6 +1256,155 @@
       }
     },
     {
+      "id": "workspace.review.prepare",
+      "version": 1,
+      "label": "Inspect workspace for review",
+      "input": {
+        "type": "object",
+        "properties": {
+          "expectedRevision": {
+            "type": "string",
+            "pattern": "^(initial|[a-f0-9]{32})$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "expectedRevision"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "workspaceReview.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [],
+      "domain": "workspace",
+      "description": "Prepare an exact review of the current imported workspace, using expectedRevision from workspace.current. Briefly hold editing while native code captures accepted documents, libraries and assets. Return a tracked requestId immediately; read workspace.review for prepared status, manifestHash, workspace identity and missing-reference counts. No ZIP download is written and no activity is enabled. Inspect the actual contents and missing references before requesting completion. Editing is available again after inspection, but later edits require a new review. Only the latest review request is retained.",
+      "example": {
+        "expectedRevision": "00000000000000000000000000000000"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "requestId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "workspace.review.complete",
+      "version": 1,
+      "label": "Complete inspected workspace review",
+      "input": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "manifestHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "expectedRevision": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "requestId",
+          "manifestHash",
+          "expectedRevision"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "workspaceReview.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [],
+      "domain": "workspace",
+      "description": "Complete only the exact review the user inspected and approved. Supply requestId, manifestHash and expectedRevision from the prepared workspace.review value. Native code freezes editing, saves accepted documents and independently captures their current content hash; a mismatch stays under review and requires a new inspection. Returns the tracked review requestId, not proof of completion. Read workspace.review until completed or an explicit failure. Completion records approval before releasing the review hold. Stopped programs, physics and held controller input do not restart. Other native holds can still prevent activity. A cancellation or lost response cannot undo committed approval; inspect its outcome rather than retry blindly.",
+      "example": {
+        "requestId": "00000000000000000000000000000000",
+        "manifestHash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "expectedRevision": "00000000000000000000000000000000"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "requestId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "workspace.review.cancel",
+      "version": 1,
+      "label": "Cancel workspace review",
+      "input": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "requestId"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "workspaceReview.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [],
+      "domain": "workspace",
+      "description": "Cancel the exact review inspection or request cancellation before approval commits. Editing stays held until its worker finishes; room activity stays under review. Cancellation cannot retract a committed approval. Read workspace.review for the actual outcome. An old ID never cancels a newer review.",
+      "example": {
+        "requestId": "00000000000000000000000000000000"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "requestId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "program.module.publish",
       "version": 1,
       "label": "Save reusable module",
@@ -3455,11 +3604,12 @@
           "reviewRequired": "boolean",
           "changing": "boolean",
           "activationRequestId": "text",
+          "reviewRequestId": "text",
           "error": "text"
         }
       },
       "label": "Current workspace",
-      "description": "Read the live selection revision, active generation, content availability, review hold and latest tracked activation ID. Empty identity means no selection could be read. This does not release review or recover anything. Use the revision with an explicitly reviewed archive activation.",
+      "description": "Read the live selection revision, active generation, content availability, review hold and latest tracked activation/review IDs. Empty identity means no selection could be read. This does not release review or recover anything. Use the revision with an explicitly reviewed archive activation.",
       "domain": "workspace",
       "input": {
         "type": "object",
@@ -3498,7 +3648,62 @@
         }
       },
       "label": "Workspace activation status",
-      "description": "Read the exact tracked activation. Preserving/activating precede the switch; committed means the durable selection changed. Review means imported content opened and remains held for review. Unavailable, failed, cancelled or interrupted require inspecting workspace.current; never invent success or replay the old request. Retained identity describes the previous accepted snapshot, not an instruction to discard it. Only the latest job is retained. Startup reconciles its exact committed pair and never repeats a commit.",
+      "description": "Read the exact tracked activation. Preserving/activating precede the switch; committed means the durable selection changed. Review means imported content opened under its review hold. Read workspace.current for subsequent review completion or selection changes. Unavailable, failed, cancelled or interrupted require inspecting workspace.current; never invent success or replay the old request. Retained identity describes the previous accepted snapshot, not an instruction to discard it. Only the latest job is retained. Startup reconciles its exact committed pair and never repeats a commit.",
+      "domain": "workspace",
+      "input": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "requestId"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "requestId": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
+      "id": "workspace.review",
+      "version": 1,
+      "type": {
+        "record": {
+          "requestId": "text",
+          "phase": "text",
+          "status": "text",
+          "workspace": {
+            "record": {
+              "generationId": "text",
+              "revision": "text"
+            }
+          },
+          "manifestHash": "text",
+          "committedRevision": "text",
+          "summary": {
+            "record": {
+              "files": "number",
+              "models": "number",
+              "motions": "number",
+              "modules": "number",
+              "unavailablePrograms": "number",
+              "missingModels": "number",
+              "missingMotions": "number",
+              "missingControllerPrograms": "number"
+            }
+          },
+          "activityHeld": "boolean"
+        }
+      },
+      "label": "Workspace review status",
+      "description": "Read the latest exact review request. Preparing captures accepted content; prepared means its manifestHash and summary are ready to inspect, not that activity is approved. Completing rechecks and saves that content. Completed means approval was durably committed; activityHeld reports any remaining native hold. Stale means accepted content changed and needs new inspection. Failed/cancelled/interrupted/unavailable never imply approval; read workspace.current before further action. Completion is not an animation or program start. The first receipt only acknowledges this tracked operation.",
       "domain": "workspace",
       "input": {
         "type": "object",
@@ -3726,7 +3931,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "36d546052407a2e2d2352ebadb5a1db2d370b469e88229427ebffad4a2d7224a"
+      "sha256": "70c8f8a6be709ed19f54c3951b0d00d96ead88b55019602aad7fc67bad8ccf21"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -3790,7 +3995,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "19508a4a1290c449e241c13f08e8ea129cd9860798f0162e66f1e65a704a2b18"
+      "sha256": "0ab046813e0966f10bd65b236140b66805688d41ee3efb87411736893fcb6fa0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -3846,11 +4051,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceActivationCapabilities.cs",
-      "sha256": "7b717231da00e510f59d4d6a0b9cc03b44d7d81f48ac8fefeff8bca6bc3524e8"
+      "sha256": "41291c4504ba8289406e2973eb482323f5dd99f17419d8b0432eb192d954543d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceExportCapability.cs",
       "sha256": "2086149e3b214491ce7998944ee53f5a08e76a3588dee833b48fcc0c028f98df"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceReviewCapabilities.cs",
+      "sha256": "c308475c689b9bc4c89fe947a3532084ec2cad0fae51973ab358a66973412097"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceSelectionCapabilities.cs",

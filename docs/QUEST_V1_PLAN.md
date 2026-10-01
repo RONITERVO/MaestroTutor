@@ -940,3 +940,22 @@ failure boundaries, restart and teardown; web tests exercise the same action/fac
 using native captures. Content-bound review completion, exact previous/corrupt
 workspace recovery, generation maintenance and real-headset acceptance are still
 required before portable restore is release-ready.
+
+
+### 2026-10-01: content-bound native workspace review
+
+The shared catalog now prepares an inspection snapshot and completes only its
+exact content hash and selection revision. Native completion freezes editing,
+saves accepted documents and independently rechecks the manifest. Changed content
+requires a fresh review; failed saves preserve live edits without approving them.
+A durable record reconciles commit-boundary failures and restart. Approval keeps
+the same live owners, Undo, agent session and action-history epoch, releases only
+its own hold, and does not restart stopped activity. Cancellation retains ownership
+until the worker drains; uncertain outcomes keep content frozen.
+
+Native tests cover stale reviews, restart, save failure, cancellation, commit
+faults and nested holds. Web tests use captured native results for the same action
+and fact controls, distinguishing an opening receipt from actual completion.
+Previous/corrupt-workspace recovery, retained-generation maintenance and headset
+acceptance remain release gates. Recovery must settle retiring workers before
+opening new owners for the same persistent storage.
