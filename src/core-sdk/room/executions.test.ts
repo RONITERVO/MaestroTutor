@@ -12,6 +12,7 @@ import nativePrevious from '../../../test-fixtures/browser/workspacePrevious.jso
 import nativeWorkspaceRecovery from '../../../test-fixtures/browser/workspaceRecovery.json';
 import nativeFreshRecovery from '../../../test-fixtures/browser/workspaceFreshRecovery.json';
 import nativeHistory from '../../../test-fixtures/browser/workspaceHistory.json';
+import nativeEvidence from '../../../test-fixtures/browser/workspaceEvidence.json';
 import {validFactValue} from '../../../shared/behaviourFacts';
 import nativeCreation from '../../../test-fixtures/browser/creationResult.json';
 import nativeProgram from '../../../test-fixtures/browser/programBookState.json';
@@ -284,4 +285,28 @@ it('uses native history repair results and preserves exact inspection identity a
   expect(validExecutionRequest({operation:'start',call:{...reset,arguments:args}})).toBe(false);
  for(const target of ['activation','review','recovery'])expect(validExecutionRequest({operation:'start',call:{id:'workspace.history.inspect',version:1,arguments:{target}}})).toBe(true);
  expect(validExecutionRequest({operation:'start',call:{id:'workspace.history.inspect',version:1,arguments:{target:'../selection'}}})).toBe(false);
+});
+
+it('binds native evidence removal to a completed export of the exact inspected bytes',()=>{
+ for(const state of [nativeEvidence.inspectExecution,nativeEvidence.exportExecution,nativeEvidence.removeExecution])expect(validExecutionView(state)).toBe(true);
+ expect(validFactValue('workspace.evidence',nativeEvidence.status)).toBe(true);
+ expect(validFactValue('workspace.evidence.entry',nativeEvidence.entry)).toBe(true);
+ expect(nativeEvidence.inspection.count).toBe(1);
+ expect(nativeEvidence.entry.kind).toBe('history');
+ expect(nativeEvidence.export.fingerprint).toBe(nativeEvidence.entry.fingerprint);
+ expect(nativeEvidence.export.evidenceId).toBe(nativeEvidence.entry.evidenceId);
+ expect(nativeEvidence.export.archiveHash).toMatch(/^[a-f0-9]{64}$/);
+ expect(nativeEvidence.export.location).toMatch(/^Downloads\/Maestro\/maestro-evidence-[a-f0-9]{32}\.zip$/);
+ expect(nativeEvidence.removed).toEqual({evidenceId:nativeEvidence.entry.evidenceId,fingerprint:nativeEvidence.entry.fingerprint,removed:true});
+ expect(nativeEvidence.removeExecution.workspace.selected.call.arguments).toEqual({inspectionId:nativeEvidence.inspection.inspectionId,evidenceId:nativeEvidence.entry.evidenceId,fingerprint:nativeEvidence.entry.fingerprint,exportRunId:nativeEvidence.exportExecution.workspace.selected.id});
+ expect(nativeEvidence.status).toMatchObject({requestId:nativeEvidence.removeExecution.workspace.selected.id,phase:'removed',inspectionId:''});
+ for(const state of [nativeEvidence.inspectExecution,nativeEvidence.exportExecution,nativeEvidence.removeExecution]){
+  const execution={operation:'start',call:state.workspace.selected.call};
+  expect(validExecutionRequest(execution)).toBe(true);
+  expect(()=>requireRoomCapabilities([{action:'execution',execution}],{capabilities:['execution.v1']})).toThrow('workspaceEvidence.v1');
+  expect(()=>requireRoomCapabilities([{action:'execution',execution}],{capabilities:['execution.v1','workspaceEvidence.v1']})).not.toThrow();
+ }
+ expect(validFactValue('workspace.evidence.entry',{...nativeEvidence.entry,path:'/private/evidence'})).toBe(false);
+ const call=nativeEvidence.removeExecution.workspace.selected.call;
+ for(const args of [{...call.arguments,exportRunId:''},{...call.arguments,fingerprint:'changed'},{...call.arguments,path:'/private/file'}])expect(validExecutionRequest({operation:'start',call:{...call,arguments:args}})).toBe(false);
 });

@@ -11,6 +11,7 @@ import nativePrevious from '../../../test-fixtures/browser/workspacePrevious.jso
 import nativeWorkspaceRecovery from '../../../test-fixtures/browser/workspaceRecovery.json';
 import nativeFreshRecovery from '../../../test-fixtures/browser/workspaceFreshRecovery.json';
 import nativeHistory from '../../../test-fixtures/browser/workspaceHistory.json';
+import nativeEvidence from '../../../test-fixtures/browser/workspaceEvidence.json';
 import native from '../../../test-fixtures/browser/catalogStates.json';
 import nativeProgram from '../../../test-fixtures/browser/programBookState.json';
 import {RoomWorkspace} from './RoomWorkspace';
@@ -378,4 +379,28 @@ it('uses the generated history reset form and reports preserved evidence separat
  const value=screen.getByLabelText('Current fact value').textContent;
  for(const text of [nativeHistory.reset.requestId,nativeHistory.reset.evidenceId,'reset','recovery'])expect(value).toContain(text);
  expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
+});
+
+it('shows the published evidence result and submits removal with its exact native export receipt',async()=>{
+ const {client,screen,receive}=setup(true,['workspaceEvidence.v1','execution.v1','actionResults.v1']);
+ const receipt=nativeEvidence.removeExecution.workspace.selected;
+ if(!validExecutionView(nativeEvidence.exportExecution)||!validExecutionView(nativeEvidence.removeExecution))throw new Error('Invalid native evidence execution');
+ await receive(undefined,false,{execution:{...nativeEvidence.exportExecution,workspace:{...nativeEvidence.exportExecution.workspace,nextRunId:receipt.id}}});
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));
+ expect(screen.getByLabelText('Action result').textContent).toContain(nativeEvidence.export.location);
+ expect(screen.getByLabelText('Action result').textContent).toContain(nativeEvidence.export.archiveHash);
+ fireEvent.click(screen.getByRole('button',{name:'Search'}));
+ const definition=capabilityDefinition('workspace.evidence.remove')!;
+ await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Inspect evidence removal'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Remove the requested exported evidence'});
+ fireEvent.change(screen.getByLabelText('Action arguments'),{target:{value:JSON.stringify(receipt.call.arguments)}});fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
+ expect(client.snapshot().request?.commands[0]).toMatchObject({action:'execution',execution:{operation:'start',runId:receipt.id,call:receipt.call}});
+ await receive(undefined,false,{execution:nativeEvidence.removeExecution});
+ expect(screen.getByLabelText('Action result').textContent).toContain('true');
+ fireEvent.change(screen.getByLabelText('Catalog category'),{target:{value:'facts'}});fireEvent.click(screen.getByRole('button',{name:'Search'}));
+ const fact=behaviourFact('workspace.evidence')!;
+ await receive({operation:'search',category:'facts',query:'',offset:0,total:1,pageSize:6,entries:[{id:fact.id,version:1,label:fact.label}],status:'Inspect actual removal'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(fact.label)}));await receive({operation:'inspect',category:'facts',capability:fact.id,version:1,definition:fact,arguments:{},available:true,value:nativeEvidence.status,status:'Available'});
+ const value=screen.getByLabelText('Current fact value').textContent;
+ expect(value).toContain(receipt.id);expect(value).toContain('removed');expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
 });

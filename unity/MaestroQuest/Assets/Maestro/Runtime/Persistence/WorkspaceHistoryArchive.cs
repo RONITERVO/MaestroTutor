@@ -3,7 +3,7 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
+using static Maestro.Quest.Persistence.WorkspaceFileInventory;
 using System.Text;
 using System.Threading;
 using Newtonsoft.Json;
@@ -29,29 +29,6 @@ namespace Maestro.Quest.Persistence
             var bytes=new UTF8Encoding(false,true).GetBytes((value??JValue.CreateNull()).ToString(Formatting.None));
             if(bytes.Length>65536)throw new InvalidDataException("Accepted history exceeds its preservation limit.");return bytes;
         }
-        static string Hash(byte[] bytes){using var sha=SHA256.Create();return ConvertHash(sha.ComputeHash(bytes));}
-        static string ConvertHash(byte[] hash)=>BitConverter.ToString(hash).Replace("-","").ToLowerInvariant();
-        static string Kind(string path)
-        {
-            try {var attributes=File.GetAttributes(path);if((attributes&FileAttributes.ReparsePoint)!=0)throw new InvalidDataException("Linked history paths are not supported.");return (attributes&FileAttributes.Directory)!=0?"directory":"file";}
-            catch(FileNotFoundException){return "absent";}catch(DirectoryNotFoundException){return "absent";}
-        }
-        // Check every existing parent, including the application root. Never traverse a reparse point.
-        static void Parents(string path){for(string p=path;p!=null;p=Path.GetDirectoryName(p)){string kind=Kind(p);if(kind=="file")throw new IOException("A history parent is not a directory.");}}
-        static void Scan(string path,string relative,JArray entries,ref int files,ref long bytes,long maxBytes,int maxEntries,bool hash,CancellationToken token,int depth=0)
-        {
-            token.ThrowIfCancellationRequested();if(depth>(hash?6:10)||relative.Length>512||entries.Count>=maxEntries)throw new InvalidDataException("History inventory exceeds its preservation limit.");
-            string kind=Kind(path);var entry=new JObject {["path"]=relative,["kind"]=kind};entries.Add(entry);
-            if(kind=="file"){
-                using var input=new FileStream(path,FileMode.Open,FileAccess.Read,FileShare.Read);long length=input.Length;
-                bytes=checked(bytes+length);if(bytes>maxBytes)throw new InvalidDataException("History bytes exceed their preservation limit.");files++;entry["bytes"]=length;
-                if(hash){using var sha=SHA256.Create();var buffer=new byte[65536];long read=0;int count;while((count=input.Read(buffer,0,buffer.Length))>0){token.ThrowIfCancellationRequested();read+=count;if(read>length)throw new IOException("History changed during inspection.");sha.TransformBlock(buffer,0,count,buffer,0);}sha.TransformFinalBlock(Array.Empty<byte>(),0,0);if(read!=length)throw new IOException("History changed during inspection.");entry["sha256"]=ConvertHash(sha.Hash);}
-            }else if(kind=="directory"){
-                var children=Directory.EnumerateFileSystemEntries(path).Take(maxEntries+1).OrderBy(p=>Path.GetFileName(p),StringComparer.Ordinal).ToArray();
-                if(children.Length>maxEntries)throw new InvalidDataException("History inventory exceeds its preservation limit.");
-                foreach(string child in children)Scan(child,relative==""?Path.GetFileName(child):relative+"/"+Path.GetFileName(child),entries,ref files,ref bytes,maxBytes,maxEntries,hash,token,depth+1);
-            }
-        }
         internal Snapshot Inspect(string target,byte[] accepted,CancellationToken token)
         {
             if(!ValidTarget(target)||accepted==null||accepted.Length>65536)throw new ArgumentException("Invalid history inspection.");Parents(root);
@@ -68,7 +45,7 @@ namespace Maestro.Quest.Persistence
         {
             Same(snapshot,accepted,token);Parents(Path.GetDirectoryName(evidence));
             // Inventory is bounded and does not follow links. Partial evidence is retained too.
-            var entries=new JArray();int files=0;long bytes=0;Scan(evidence,"",entries,ref files,ref bytes,MaxEvidenceBytes,4096,false,token);
+            var entries=new JArray();int files=0;long bytes=0;Scan(evidence,"",entries,ref files,ref bytes,MaxEvidenceBytes,4096,false,token,maxDepth:10);
             byte[] manifest=Encoding.UTF8.GetBytes(snapshot.Manifest().ToString(Formatting.None));
             if(bytes+snapshot.Bytes+accepted.Length+manifest.Length>MaxEvidenceBytes||entries.Count+snapshot.Entries.Count+4>4096)throw new IOException("History evidence is full. Preserve/export it before repairing more history.");
             Directory.CreateDirectory(evidence);Parents(evidence);

@@ -16,7 +16,7 @@ final class BookExportStorage implements BookExportSession.Storage {
     private final ContentResolver resolver;
     BookExportStorage(ContentResolver resolver) { this.resolver = resolver; }
     static boolean validArchiveName(String name) {
-        return name != null && name.length() <= 110 && name.matches("maestro-workspace-[a-f0-9]{32}( \\([0-9]+\\))?\\.zip");
+        return name != null && name.length() <= 110 && name.matches("maestro-(?:workspace|evidence)-[a-f0-9]{32}( \\([0-9]+\\))?\\.zip");
     }
     public BookExportSession.Sink open(String name, String mime) throws IOException {
         ContentValues values = new ContentValues();

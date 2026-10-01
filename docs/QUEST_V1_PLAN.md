@@ -6,7 +6,9 @@ Current recovery implementation supports retained candidates, an external backup
 and an explicitly requested fresh workspace through the same shared book/agent
 catalog. Original data stays preserved; preview, commit and content review remain
 separate. Unavailable activation, review and recovery tracking now has a shared
-inspect/preserve/reset path; it cannot bypass content review or live workers.
+inspect/preserve/reset path; its evidence can be exported and explicitly removed
+using a matching completed native receipt. Neither path bypasses content review
+or live workers.
 PR #248 records the current verified commit and package. Earlier entries
 below are historical evidence, not current test totals or release acceptance.
 
@@ -1074,3 +1076,33 @@ inventory/capacity, stale history, exact raw/accepted preservation, missing owne
 separate content review, cancellation and retiring-host ownership are covered.
 No headset installation is part of this checkpoint. Evidence export/retention,
 full-storage handling and physical-device acceptance remain release work.
+
+
+### 2026-10-01: export and removal of preserved operation-history evidence
+
+The shared catalog now exposes inspection, diagnostic export and explicit removal
+of history-repair evidence. Each entry has a byte-bound fingerprint. Publication
+uses the existing native Downloads service; a distinct maestro-evidence filename
+separates diagnostics from playable workspace backups. Numeric ZIP payload names,
+a verifiable manifest, and importer rejection keep damaged status data inert.
+
+Removal requires a retained completed native export receipt for the exact same
+bytes. That proof survives restart; failed, interrupted, stale or expired proof
+cannot authorize deletion. Cancellation before deletion preserves everything;
+partial removal stays observable and requires fresh inspection. The worker keeps
+path ownership through host teardown. Current room content, review holds, workspace
+selection and action history remain independent. A full evidence quota can now be
+reclaimed after export; there is no automatic deletion.
+
+Verification passed 345 EditMode, 233 PlayMode (three optional private-model skips),
+55 Android and 1,538 web checks. The final native capture passed 39 book/contract
+checks. Independent ZIP inspection verifies every raw payload, the inventory hash
+and its completed-export receipt. The final development APK and its v2 signature
+were verified against the tested sources and packaged web build. No headset action
+was taken.
+
+Retained-generation cleanup is still open: the 64-generation limit can block new
+imports/recovery, and current/previous pointers plus activation/recovery reservations
+must be handled before old generations can be removed. Original, selected and
+reserved roots are not made deletable by the new evidence feature. Other v1
+device/provider/asset/performance and store acceptance gates remain unchanged.

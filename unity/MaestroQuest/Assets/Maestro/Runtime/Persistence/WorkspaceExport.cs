@@ -39,10 +39,13 @@ namespace Maestro.Quest.Persistence
         internal void InitializeForTests(RoomEditor editor,RuleWorkshop rules,MovementControls controls,string directory,Func<string,string> publisher)
         {this.editor=editor;this.rules=rules;this.controls=controls;outputDirectory=directory;publish=publisher;}
         internal void Bind(RoomEditor source,RuleWorkshop behaviours,MovementControls movement){editor=source;rules=behaviours;controls=movement;}
+        internal bool TryPublisher(out string directory,out Func<string,string> publisher,out string error)
+        {directory=outputDirectory;publisher=publish;error=unavailable;if(retiring||Busy||publish==null){error??="Workspace publication is unavailable.";return false;}error=null;return true;}
+        internal static bool ValidLocation(string location)=>!string.IsNullOrEmpty(location)&&location.Length<=128&&location.StartsWith("Downloads/Maestro/",StringComparison.Ordinal)&&location.EndsWith(".zip",StringComparison.OrdinalIgnoreCase)&&location.Substring(18).IndexOfAny(new[]{'/','\\'})<0&&!System.Linq.Enumerable.Any(location,char.IsControl);
         public bool CanStart(out string error)
         {
             error=unavailable;if(retiring){error="The previous workspace export owner is closing.";return false;}
-            if(GetComponent<WorkspaceHost>()?.History?.Busy==true){error="Wait for history preservation to finish.";return false;}
+            if(GetComponent<WorkspaceHost>()?.Evidence?.Busy==true||GetComponent<WorkspaceHost>()?.History?.Busy==true){error="Wait for history preservation to finish.";return false;}
             if(GetComponent<WorkspaceHost>()?.Recovery?.BlocksOtherOperations==true){error="Finish or cancel workspace recovery before exporting.";return false;}
             if(!Available){error??="Workspace export is unavailable";return false;}
             if(Busy){error="Wait for the current workspace export to finish";return false;}
@@ -64,7 +67,7 @@ namespace Maestro.Quest.Persistence
                 long bytes=new FileInfo(archive.Path).Length;
                 // The platform call streams on this worker and returns only after closing and publishing.
                 string location=publisher(archive.Path);
-                if(string.IsNullOrEmpty(location)||location.Length>128||!location.StartsWith("Downloads/Maestro/",StringComparison.Ordinal)||!location.EndsWith(".zip",StringComparison.OrdinalIgnoreCase)||location.Substring(18).IndexOfAny(new[]{'/','\\'})>=0||System.Linq.Enumerable.Any(location,char.IsControl))throw new IOException("The archive publication result is unavailable; check Downloads/Maestro before exporting again.");
+                if(!ValidLocation(location))throw new IOException("The archive publication result is unavailable; check Downloads/Maestro before exporting again.");
                 var summary=archive.Receipt.Summary;
                 return new JObject {["location"]=location,["sizeKiB"]=bytes/1024d,["manifestHash"]=archive.Receipt.ManifestHash,["files"]=summary.Files,["models"]=summary.Models,["motions"]=summary.Motions,["modules"]=summary.Modules,["unavailablePrograms"]=summary.UnavailablePrograms,["missingModels"]=summary.MissingModels.Length,["missingMotions"]=summary.MissingMotions.Length,["missingControllerPrograms"]=summary.MissingControllerPrograms.Length};
             } finally {

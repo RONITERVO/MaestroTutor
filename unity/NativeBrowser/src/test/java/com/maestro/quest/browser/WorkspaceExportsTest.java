@@ -43,5 +43,9 @@ public class WorkspaceExportsTest {
         assertTrue(BookExportStorage.validArchiveName(source.getName()));assertTrue(BookExportStorage.validArchiveName(source.getName().replace(".zip"," (2).zip")));
         for(String name:new String[]{"../"+source.getName(),source.getName()+".txt",source.getName()+"\n",source.getName().replace(".zip","/x.zip"),"secrets.zip"})assertFalse(name,BookExportStorage.validArchiveName(name));
         assertFalse("Browser text exports must not gain ZIP permission",BookExportSession.validName(source.getName()));
+        String evidence=source.getName().replace("workspace","evidence");
+        assertTrue(BookExportStorage.validArchiveName(evidence));assertTrue(BookExportStorage.validArchiveName(evidence.replace(".zip"," (2).zip")));
+        assertFalse(BookExportSession.validName(evidence));assertFalse(BookExportStorage.validArchiveName("maestro-evidence-not-an-id.zip"));
+
     }
 }

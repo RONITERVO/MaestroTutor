@@ -26,7 +26,7 @@ public final class WorkspaceExports {
     static String publish(File root, File source, BookExportSession.Storage storage) throws IOException {
         File canonical = source.getCanonicalFile();
         if (!root.equals(root.getCanonicalFile()) || !source.isAbsolute() || !source.equals(canonical) || !root.equals(canonical.getParentFile()) ||
-            !source.getName().matches("maestro-workspace-[a-f0-9]{32}\\.zip") || !Files.isRegularFile(source.toPath(),LinkOption.NOFOLLOW_LINKS))
+            !source.getName().matches("maestro-(?:workspace|evidence)-[a-f0-9]{32}\\.zip") || !Files.isRegularFile(source.toPath(),LinkOption.NOFOLLOW_LINKS))
             throw new IOException("Only a privately captured workspace can be exported.");
         long bytes = source.length();
         if (bytes <= 0 || bytes > MAX_BYTES) throw new IOException("Workspace archive exceeds the export limit.");

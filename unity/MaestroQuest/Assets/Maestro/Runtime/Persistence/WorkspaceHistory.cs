@@ -28,7 +28,7 @@ namespace Maestro.Quest.Persistence
         {
             error=null;
             if(disposed||paused||!focused||!host||!host.isActiveAndEnabled||!host.Ready||host.Retiring){error="Resume Maestro and wait for previous owners to finish.";return false;}
-            if(Busy||host.Switching||host.Activation.Busy||host.Review.Busy||host.Recovery.Busy||host.Import.Occupied||host.Export.Busy){error="Finish the current workspace operation first. Restart if its outcome remains uncertain.";return false;}
+            if(host.Evidence?.Busy==true||Busy||host.Switching||host.Activation.Busy||host.Review.Busy||host.Recovery.Busy||host.Import.Occupied||host.Export.Busy){error="Finish the current workspace operation first. Restart if its outcome remains uncertain.";return false;}
             if(!WorkspaceHistoryArchive.ValidTarget(target)||!Unavailable(target)){error="Only unavailable operation history can be repaired.";return false;}
             return true;
         }

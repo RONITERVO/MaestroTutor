@@ -769,7 +769,60 @@ perform that separate operation afterwards.
 
 Preservation rejects linked paths and bounds source inspection to 16 MiB, 256
 entries and six nested levels; retained evidence is capped at 128 MiB and 4,096
-entries. Hitting a limit preserves the originals and refuses reset. Evidence
-export/retention management and on-device storage/lifecycle acceptance remain
-release work. This is recovery from unavailable tracking, not a general filesystem
+entries. Hitting a limit preserves the originals and refuses reset. History-evidence export/removal is described below. Other evidence/generation
+retention and on-device storage/lifecycle acceptance remain release work. This is recovery from unavailable tracking, not a general filesystem
 editor or a way to erase healthy action history.
+
+
+### Exporting and removing operation-history evidence
+
+The shared catalog provides `workspace.evidence.inspect`, `.export` and `.remove`.
+This first evidence source is `history`: immutable entries from
+`workspace.history.reset`. It excludes active operation records, captures, selected
+workspaces, room content and action receipts. Retained workspace generations and
+their activation/recovery dependencies need separate maintenance; these actions do
+not make the 64-generation retention limit reclaimable yet.
+
+Inspection returns `inspectionId`, item count and total KiB. Read
+`workspace.evidence.entry {inspectionId, index}` for each bounded entry's identity,
+fingerprint, file count and size. Inspection is read-only and session-local. A
+later inspection replaces the old one; export/removal rechecks exact bytes on the
+worker before effects. Only trusted native IDs are accepted, never filesystem paths.
+
+Export accepts `{inspectionId, evidenceId, fingerprint}` and completes only after
+the existing Android publisher closes and publishes a diagnostic ZIP named `maestro-evidence-<id>.zip` in
+`Downloads/Maestro`. Playable backups keep their separate `maestro-workspace-` prefix.
+Every raw byte is preserved, including malformed status and
+accepted tracking. `evidence-manifest.json` records original relative names, empty
+directories, lengths and SHA-256 hashes; actual ZIP payload names are fixed numeric
+indices. The inventory fingerprint can be independently reconstructed by removing
+the manifest's fingerprint and per-file payload mapping fields. The returned
+`archiveHash` covers the complete ZIP. This diagnostic format is rejected by the
+playable workspace importer; it cannot approve or replay an old action.
+
+Removal additionally requires `exportRunId`: the native execution ID of a retained,
+completed export for the same evidence ID and fingerprint. It reuses durable
+native receipts, including after restart and fresh inspection. A changed entry,
+failed/interrupted publication, another action's receipt, or expired receipt cannot
+authorize removal. Export again if proof has expired. A receipt proves publication
+completed at that time; it cannot prove a user still has the public copy. Removal
+must reflect the user's request after keeping that copy. There is no automatic
+quota cleanup or Undo.
+
+Cancellation before deletion preserves all files. Once deletion begins it cannot
+roll back; a filesystem failure can leave a partially removed entry. No uninspected
+child is deleted, and successful completion means the inspected entry is gone.
+Inspect remaining evidence after uncertainty; a changed remainder requires its own
+completed export. Duplicate execution IDs only return their recorded outcome.
+Public Downloads files are never removed by this operation. The 128 MiB / 4,096
+entry bound stays enforced, and deleting an exported full-quota entry makes room
+for another history repair.
+
+`workspace.evidence` reports the latest operation. Its `requestId` is the native
+execution run ID; match that ID rather than an old status. A cancelled wait may
+still finish publication/removal, while its execution receipt stays cancelled and
+cannot be used as completed-export proof. All workers retain native path ownership
+through pause, disable and host retirement. Another host cannot open those paths
+until the old worker drains. Book controls and the app agent use these same schemas,
+facts, receipts and readiness checks. Physical Quest publication and lifecycle
+acceptance remain pending.

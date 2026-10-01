@@ -44,8 +44,10 @@ public class BookExportStorageTest {
         byte[] bytes="{\"name\":\"音楽\"}".getBytes(StandardCharsets.UTF_8);session.handle(BookExportSessionTest.chunk(1,0,bytes));assertEquals(0,provider.publications);
         assertEquals("Downloads/Maestro/backup (1).json",session.handle(BookExportSessionTest.end(2,bytes.length,"finish")).getString("location"));assertArrayEquals(bytes,Files.readAllBytes(provider.file.toPath()));assertEquals(Integer.valueOf(0),provider.values.getAsInteger(MediaStore.MediaColumns.IS_PENDING));assertNull(provider.values.get(MediaStore.MediaColumns.DATE_EXPIRES));session.close();assertEquals(0,provider.deleted);
     }
-    @Test public void nativeArchivePublishesBinaryThroughTheSamePendingDownloadsProvider() throws Exception {
-        String directory=WorkspaceExports.Directory(RuntimeEnvironment.getApplication());File source=new File(directory,"maestro-workspace-"+"a".repeat(32)+".zip");
+    @Test public void nativeArchivePublishesBinaryThroughTheSamePendingDownloadsProvider() throws Exception { publishNativeArchive("workspace"); }
+    @Test public void diagnosticEvidenceHasADistinctNameAndPublishesThroughPendingDownloads() throws Exception { publishNativeArchive("evidence"); }
+    void publishNativeArchive(String kind) throws Exception {
+        String directory=WorkspaceExports.Directory(RuntimeEnvironment.getApplication());File source=new File(directory,"maestro-"+kind+"-"+"a".repeat(32)+".zip");
         byte[] bytes=new byte[]{0,80,75,-1,1,2};Files.write(source.toPath(),bytes);provider.resolvedName=source.getName().replace(".zip"," (1).zip");
         try {assertEquals("Downloads/Maestro/"+provider.resolvedName,WorkspaceExports.Publish(RuntimeEnvironment.getApplication(),source.getAbsolutePath()));assertArrayEquals(bytes,Files.readAllBytes(provider.file.toPath()));assertEquals("application/zip",provider.values.getAsString(MediaStore.MediaColumns.MIME_TYPE));assertEquals(Integer.valueOf(0),provider.values.getAsInteger(MediaStore.MediaColumns.IS_PENDING));assertEquals(1,provider.publications);assertEquals(0,provider.deleted);}finally{source.delete();}
     }

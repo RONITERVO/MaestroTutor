@@ -966,6 +966,212 @@
       }
     },
     {
+      "id": "workspace.evidence.inspect",
+      "version": 1,
+      "label": "Inspect preserved recovery evidence",
+      "input": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false,
+        "x-features": [
+          "workspaceEvidence.v1"
+        ]
+      },
+      "duration": "completion",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [],
+      "domain": "workspace",
+      "description": "Inspect the preserved files from workspace.history.reset, without changing them. Returns a session-local inspectionId, count and total size. Read workspace.evidence.entry for each index to obtain exact evidenceId and fingerprint. This currently inventories operation-history evidence, not retained workspace generations, room content or action receipts. No private path or original status contents are exposed. A new inspection replaces the previous inventory.",
+      "example": {},
+      "output": {
+        "type": "object",
+        "properties": {
+          "inspectionId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 4096.0
+          },
+          "sizeKiB": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 131072.0
+          }
+        },
+        "required": [
+          "inspectionId",
+          "count",
+          "sizeKiB"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "workspace.evidence.export",
+      "version": 1,
+      "label": "Export preserved recovery evidence",
+      "input": {
+        "type": "object",
+        "properties": {
+          "inspectionId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "evidenceId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "fingerprint": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "inspectionId",
+          "evidenceId",
+          "fingerprint"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "workspaceEvidence.v1"
+        ]
+      },
+      "duration": "completion",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [],
+      "domain": "workspace",
+      "description": "Publish the exact inspected recovery-evidence entry as a diagnostic ZIP in Downloads/Maestro. Preserves every file byte and empty-directory identity, including malformed tracking and accepted state, with a hashed manifest and fixed payload names. This is diagnostic evidence, not an importable playable workspace. Completion confirms publication and returns the archive hash. Keep the native execution runId: workspace.evidence.remove requires that retained completed export receipt for the exact same evidence bytes, including after restart. Stop requests cancellation before publication; after uncertainty check Downloads and workspace.evidence, never assume publication failed.",
+      "example": {
+        "inspectionId": "00000000000000000000000000000000",
+        "evidenceId": "00000000000000000000000000000000",
+        "fingerprint": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "evidenceId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "fingerprint": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "location": {
+            "type": "string",
+            "pattern": "^Downloads/Maestro/.+\\.zip$",
+            "maxLength": 128
+          },
+          "archiveHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "sizeKiB": {
+            "type": "number",
+            "minimum": 0.0009765625,
+            "maximum": 524288.0
+          }
+        },
+        "required": [
+          "evidenceId",
+          "fingerprint",
+          "location",
+          "archiveHash",
+          "sizeKiB"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "workspace.evidence.remove",
+      "version": 1,
+      "label": "Remove exported recovery evidence",
+      "input": {
+        "type": "object",
+        "properties": {
+          "inspectionId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "evidenceId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "fingerprint": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "exportRunId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "inspectionId",
+          "evidenceId",
+          "fingerprint",
+          "exportRunId"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "workspaceEvidence.v1"
+        ]
+      },
+      "duration": "completion",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [],
+      "domain": "workspace",
+      "description": "Remove only the exact inspected operation-history evidence that the user requested to remove after keeping its exported copy. Requires exportRunId from a retained completed workspace.evidence.export receipt with the same evidenceId and fingerprint. A changed entry requires new inspection/export; an expired or interrupted receipt requires another completed export. Publication proves a copy existed at completion, not that the user still has it. Workspace content, selection, captures, pending files and action receipts are never removed. No Undo. Cancellation before deletion preserves everything; once deletion begins it cannot roll back, and a storage failure may leave a partial entry. Inspect again after interruption. No automatic quota cleanup or replay occurs.",
+      "example": {
+        "inspectionId": "00000000000000000000000000000000",
+        "evidenceId": "00000000000000000000000000000000",
+        "fingerprint": "0000000000000000000000000000000000000000000000000000000000000000",
+        "exportRunId": "00000000000000000000000000000000"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "evidenceId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "fingerprint": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "removed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "evidenceId",
+          "fingerprint",
+          "removed"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "workspace.history.inspect",
       "version": 1,
       "label": "Inspect unavailable workspace history",
@@ -4074,6 +4280,78 @@
       ]
     },
     {
+      "id": "workspace.evidence",
+      "version": 1,
+      "type": {
+        "record": {
+          "requestId": "text",
+          "phase": "text",
+          "status": "text",
+          "inspectionId": "text",
+          "evidenceId": "text",
+          "fingerprint": "text",
+          "location": "text",
+          "archiveHash": "text"
+        }
+      },
+      "label": "Evidence maintenance status",
+      "description": "Latest session-local inspection, publication or removal status. requestId is the native execution runId; match that ID and evidence identity. Exported confirms a Downloads publication, not removal permission by itself: removal checks the retained completed native execution receipt. A cancelled wait can still finish publication/removal. Failed removal may leave partial evidence; inspect again. Restart clears this status and inventory, but retained native receipts remain inspectable.",
+      "domain": "workspace",
+      "input": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "example": {},
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
+      "id": "workspace.evidence.entry",
+      "version": 1,
+      "type": {
+        "record": {
+          "kind": "text",
+          "evidenceId": "text",
+          "fingerprint": "text",
+          "files": "number",
+          "sizeKiB": "number"
+        }
+      },
+      "label": "Inspected evidence entry",
+      "description": "Read one bounded item from the exact completed evidence inspection. kind history identifies operation-history preservation. It never identifies a live workspace or authorizes deletion. Use this exact identity/fingerprint for export, then retain its completed export execution receipt before requesting removal.",
+      "domain": "workspace",
+      "input": {
+        "type": "object",
+        "properties": {
+          "inspectionId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "index": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 4095.0
+          }
+        },
+        "required": [
+          "inspectionId",
+          "index"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "inspectionId": "00000000000000000000000000000000",
+        "index": 0
+      },
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
       "id": "workspace.history",
       "version": 1,
       "type": {
@@ -4648,7 +4926,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "84a54af66c400f7c02a4f1e46cf0c01a9dbb22724c8c6885b09471defe051312"
+      "sha256": "0948a36302a251c2c3c21eff19cf6cf1f287e97218226b750bb73a9fe7b4fedf"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -4712,7 +4990,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "2ef6c4e0630f5b24726e5f924746098e6178262b371331fec2518f991872d488"
+      "sha256": "302c64f6db0573141dafbe426c763f9683419755928aeaea3eb8b5a77f17c36e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -4769,6 +5047,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceActivationCapabilities.cs",
       "sha256": "41291c4504ba8289406e2973eb482323f5dd99f17419d8b0432eb192d954543d"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceEvidenceCapabilities.cs",
+      "sha256": "9bffe99cb1f030f6383b69c3eb3a407f68fa4a6bca05e9b59d32f4f6076dafa4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceExportCapability.cs",
