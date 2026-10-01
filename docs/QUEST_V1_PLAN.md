@@ -10,8 +10,10 @@ inspect/preserve/reset path; its evidence can be exported and explicitly removed
 using a matching completed native receipt. Neither path bypasses content review
 or live workers. Retained generations can now be inventoried and exported as
 portable content without opening them, including newer saved edits than their
-original import manifest. Private recovery evidence remains separate; generation
-removal is still open.
+original import manifest. A separate whole-generation preview now supports
+confirmed permanent discard with optional backup. Current, previous, pointer-backup
+and tracked operation roots remain protected. Private recovery export remains
+separate; a full store with unreadable selection still requires recovery/repair.
 PR #248 records the current verified commit and package. Earlier entries
 below are historical evidence, not current test totals or release acceptance.
 
