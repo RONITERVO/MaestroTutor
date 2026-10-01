@@ -47,6 +47,7 @@ namespace Maestro.Quest.Creation
         public void Tapped(RoomItem item) { var id = Identity(item); if (id != null) ItemTapped?.Invoke(id); }
         public int Revision { get; private set; } = 1;
         public Vector3 CreationPosition => SpawnPosition();
+        internal Transform Viewer=>room?room.Viewer:null;
         public string SelectedId => selected;
         public RoomItem Find(string id) => id != null && objects.TryGetValue(id,out var value) ? value : null;
         public RoomObjectData Read(string id) => journal.Read(id);

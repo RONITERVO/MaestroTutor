@@ -18,7 +18,8 @@ namespace Maestro.Quest.Interaction
         RoomPhysicsWorld world;
         ScannedRoom scan;
         TextMesh status, selection, scanLabel; RuleToolAction scanAction;
-        string placementId;
+        string placementId,placementSetup;
+        int placementRevision,placementGeneration;
         bool preparingPlacement;
         public bool Placing => placementId != null;
         public void Build(RoomEditor source, RoomPhysicsWorld physics, ScannedRoom environment, RoomInteraction room)
@@ -48,27 +49,25 @@ namespace Maestro.Quest.Interaction
             if (Placing) { CancelPlacement(); return; }
             var item = editor.Find(editor.SelectedId);
             if (!item || editor.AnyHeld) { status.text = "Select and release an item first"; return; }
-            string id = editor.SelectedId; preparingPlacement = true;
+            string id = editor.SelectedId;int generation=++placementGeneration;preparingPlacement = true;
+            int revision=editor.ObjectRevision(id);string setup=scan.SetupIdentity;
             bool ready;
             try { ready = await scan.PreparePlacement(); }
             catch (Exception) { ready = false; }
             finally { if (this) preparingPlacement = false; }
-            if (!this || !isActiveAndEnabled) return;
-            if (!ready || id != editor.SelectedId) { status.text = "Live surface placement needs Quest room access"; return; }
-            placementId = id;
+            if (!this || !isActiveAndEnabled || generation!=placementGeneration) return;
+            if (!ready || id != editor.SelectedId || revision!=editor.ObjectRevision(id) || setup!=scan.SetupIdentity) { status.text = "Room or object changed; finish room access and try Place surface again"; return; }
+            placementId = id;placementRevision=revision;placementSetup=setup;
             status.text = "Aim at a real floor or table and tap trigger";
         }
-        public void CancelPlacement() { placementId = null; Refresh(); }
+        public void CancelPlacement() { placementGeneration++;placementId = null; Refresh(); }
         public void Place(Ray ray)
         {
-            var item = editor.Find(placementId); placementId = null;
-            if (!item || editor.AnyHeld || !scan.TrySurface(ray,out var point,out var normal) || normal.y < .7f)
-            { status.text = "No clear level surface detected — try Place surface again"; return; }
-            var colliders = item.Grab.colliders.Where(value => value && value.enabled).ToArray();
-            if (colliders.Length == 0) return;
-            var bounds = colliders[0].bounds; foreach (var collider in colliders.Skip(1)) bounds.Encapsulate(collider.bounds);
-            float support = Vector3.Dot(new Vector3(Mathf.Abs(normal.x),Mathf.Abs(normal.y),Mathf.Abs(normal.z)),bounds.extents);
-            editor.Select(item); editor.PlaceSelected(point + normal * (support+.01f) - (bounds.center-item.transform.position));
+            string id=placementId;placementId=null;if(id==null)return;
+            if(editor.AnyHeld){status.text="Release held objects before placing";return;}
+            // Preserve the physical tool's explicit human interruption priority.
+            editor.PrepareAgentEdit();
+            if(!scan.PlaceObject(editor,id,placementRevision,placementSetup,ray,out _,out var error))status.text=error;
         }
         void Refresh()
         {
@@ -92,6 +91,7 @@ namespace Maestro.Quest.Interaction
             root.GetComponent<MeshRenderer>().sharedMaterial = IllustratedMaterials.TextMaterial(mesh.font); return mesh;
         }
         void OnApplicationPause(bool paused) { if (paused) CancelPlacement(); }
+        void OnApplicationFocus(bool focused) { if(!focused)CancelPlacement(); }
         void OnDisable() { if (editor) CancelPlacement(); }
         void OnDestroy() { if (world) world.Changed -= Refresh; if(scan)scan.Changed-=Refresh; if (editor) editor.Changed -= Refresh; foreach (var material in materials) ArtResources.Release(material); }
     }

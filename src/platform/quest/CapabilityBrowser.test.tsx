@@ -797,3 +797,15 @@ it('keeps both native guards read-only for cancelling the current setup request'
  for(const field of ['stateId','requestId'] as const){const input=screen.getByLabelText('Action inputs '+field) as HTMLInputElement;expect(input.readOnly).toBe(true);expect(input.value).toBe(nativeEnvironment.loading[field]);}
  expect(JSON.parse((screen.getByLabelText('Action arguments') as HTMLTextAreaElement).value)).toEqual({operation:'cancel',stateId:nativeEnvironment.loading.stateId,requestId:nativeEnvironment.loading.requestId});expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
 });
+
+import nativeSurface from '../../../test-fixtures/browser/surfacePlacement.json';
+it('runs surface placement from native room guards and displays its actual saved position',async()=>{
+ const {client,screen,receive,state}=setup(true,['surfacePlacement.v1','execution.v1','actionResults.v1']);const view=nativeSurface.receipt,definition=capabilityDefinition('object.surface.place')!;
+ await receive(undefined,false,{objects:[...state.objects,{id:nativeSurface.request.call.arguments.target,objectRevision:nativeSurface.beforeRevision,name:'Placement block',kind:'Block',position:nativeSurface.before,scale:1,color:{r:1,g:1,b:1,a:1},animated:false}],execution:{...view,selected:null,running:[],outcomes:[],nextRunId:view.selected.id} as RoomAgentState['execution']});
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:'Search'}));await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Placement'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Placement'});fireEvent.click(screen.getByText('Edit action fields'));
+ fireEvent.change(screen.getByLabelText('Action inputs target'),{target:{value:nativeSurface.request.call.arguments.target}});expect((screen.getByRole('button',{name:'Run action now'}) as HTMLButtonElement).disabled).toBe(true);
+ await loadCurrentDraft(screen,receive,definition,nativeSurface.environment);expect((screen.getByLabelText('Action inputs stateId') as HTMLInputElement).readOnly).toBe(true);
+ fireEvent.click(screen.getByRole('button',{name:'Run action now'}));expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:nativeSurface.request.call,runId:view.selected.id}});
+ await receive(undefined,false,{execution:view as RoomAgentState['execution']});expect(screen.getByLabelText('Action result').textContent).toContain('"position"');expect(screen.getByLabelText('Action result').textContent).toContain('"temporary": false');act(()=>client.cancel());
+});

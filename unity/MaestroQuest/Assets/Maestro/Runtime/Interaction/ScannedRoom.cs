@@ -59,21 +59,10 @@ namespace Maestro.Quest.Interaction
             sceneRoot.SetActive(true);
             tracked = new InputAction("Physics head tracking",InputActionType.Button,"<XRHMD>/isTracked"); tracked.Enable();
 #endif
-            source=new DeviceRoomSource(this);NotifySetup();
+            source=new DeviceRoomSource(this);surfaceSource=new DeviceSurfaceSource(this);NotifySetup();
         }
         public void Load() => ManualRequest(false);
         public void Scan() => ManualRequest(true);
-        public async Task<bool> PreparePlacement()
-        {
-            if (virtualView || !SetupActive || Busy || world.RuntimeHeld) return false;
-#if UNITY_ANDROID && !UNITY_EDITOR
-            if (!await ScenePermission() || !this || !SetupActive || Busy || virtualView || world.RuntimeHeld || !EnvironmentRaycastManager.IsSupported) return false;
-            if (!liveSurfaces) liveSurfaces = gameObject.AddComponent<EnvironmentRaycastManager>();
-            return true;
-#else
-            await Task.CompletedTask; return false;
-#endif
-        }
 #if UNITY_ANDROID && !UNITY_EDITOR
         static Task<bool> pendingPermission;
         static Task<bool> ScenePermission(bool retainPending=false)
@@ -113,13 +102,6 @@ namespace Maestro.Quest.Interaction
         public void ToggleSurfaces()
         {
             SetShowing(!showing);
-        }
-        public bool TrySurface(Ray ray, out Vector3 point, out Vector3 normal)
-        {
-            point = normal = default;
-            if (!SetupActive || Busy || world.RuntimeHeld || virtualView || !liveSurfaces || !EnvironmentRaycastManager.IsSupported || !liveSurfaces.Raycast(ray,out var hit,4)) return false;
-            if (!float.IsFinite(hit.point.sqrMagnitude) || hit.normal.sqrMagnitude < .9f || hit.normalConfidence < .5f) return false;
-            point = hit.point; normal = hit.normal.normalized; return true;
         }
         void Update()
         {

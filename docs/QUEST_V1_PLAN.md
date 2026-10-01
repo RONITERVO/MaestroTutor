@@ -12,7 +12,7 @@ posing now exposes start/rotate/save/finish/discard with native session IDs and
 pose versions, the same physical joint limits and imported retargeter, held-joint
 exclusion, failed-pose recovery and recording interoperation. Saved edits are
 durable outside temporary mode; temporary edits stay in the fork until Keep.
-No authoring operation starts playback. The catalog contains 53 actions, 10
+No authoring operation starts playback. The catalog contains 54 actions, 10
 events and 38 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
 Single-file GLB/VRM selection, preview and acceptance now share the physical
 import path with book fields and agent/program calls. See QUEST_MODEL_IMPORT.md.
@@ -28,7 +28,9 @@ the catalog through fresh native simulation identities and the physical service;
 see QUEST_PHYSICS_SIMULATION.md. Load/Scan/Show/Hide/Cancel room setup now shares
 the physical service through catalog requests and observable progress. Platform
 permission/scan handoffs remain explicit; completion never claims alignment or
-starts physics. See QUEST_ROOM_ENVIRONMENT.md. The book action editor now loads real settings
+starts physics. See QUEST_ROOM_ENVIRONMENT.md. Live floor/table placement now shares
+the physical support-offset calculation, saved edits and Undo through the catalog;
+see QUEST_SURFACE_PLACEMENT.md. The book action editor now loads real settings
 and concurrency guards from catalog-declared facts. It requires an explicit
 snapshot before running and never silently advances revisions; see QUEST_CURRENT_INPUTS.md.
 Reusable behaviours can now choose visible current-value reads and live/fixed
@@ -52,6 +54,30 @@ and tracked operation roots remain protected. Private recovery export remains
 separate; a full store with unreadable selection still requires recovery/repair.
 PR #248 records the current verified commit and package. Earlier entries
 below are historical evidence, not current test totals or release acceptance.
+
+PC shared-surface-placement increment (2026-10-01): object.surface.place exposes
+the physical Place surface service to the book, agent and programs. It captures
+one below-object or head-gaze ray, uses live upward-surface detection within four
+metres, and applies collision-bound support plus 1 cm clearance through the same
+saved edit and Undo. Results report actual room-space position/contact/normal and
+revision. Missing surfaces never substitute coordinates or retry. Target ownership,
+Stop, lifecycle changes, current room identity and target revision guard delayed
+completion. Cancel/Recall/focus loss also prevent late physical tray arming.
+Permission UI and real surface/fit/alignment acceptance remain device work.
+
+Verification passed 389 EditMode and 342 PlayMode tests (three optional private
+model checks skipped), 1,629 web tests in 188 files, and 61 Android browser tests.
+The seven new native scenarios exercise actual colliders, journal, scheduler,
+receipts and physical tray with a controlled surface-provider boundary. Chrome
+replay submits the captured native request and displays its actual result;
+screenshots were inspected. TypeScript, lint, catalog drift, prompt ownership,
+core boundaries, production web build and Android checks pass. The full build
+helper exited zero. All 193 runtime and 92 test C# files, 26 fixtures plus metadata,
+and 113 packaged web files match the tested source/build. ARM64-only and v2
+signature verify. Development checkpoint `MaestroQuest-surface-placement-0C9AEB09.apk`
+has SHA-256 `0C9AEB09933E1F99406AAABA446007585E61D10A4DF5A10F4CCA7E6FB42C8C75`.
+Evidence: `.quest-evidence/surface-placement/verification.json`. It remains
+uninstalled; full v1 provider/device/Store acceptance is unfinished.
 
 PC shared-room-setup increment (2026-10-01): Load/Scan/Show/Hide/Cancel now
 share the native physical service through the catalog and generated book fields.

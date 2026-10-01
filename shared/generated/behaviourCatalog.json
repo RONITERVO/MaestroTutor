@@ -6688,6 +6688,180 @@
       }
     },
     {
+      "id": "object.surface.place",
+      "version": 1,
+      "label": "Place on a detected surface",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "stateId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "below",
+              "gaze"
+            ]
+          }
+        },
+        "required": [
+          "target",
+          "stateId",
+          "direction"
+        ],
+        "additionalProperties": false,
+        "x-current": {
+          "fact": "room.environment",
+          "version": 1,
+          "arguments": {},
+          "fields": {
+            "stateId": [
+              "stateId"
+            ]
+          },
+          "guards": [
+            "stateId"
+          ]
+        },
+        "x-features": [
+          "surfacePlacement.v1"
+        ]
+      },
+      "duration": "completion",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "storage.writable",
+        "room.setup.current",
+        "surface.supported"
+      ],
+      "description": "Use the physical Place surface service to move one object onto a live detected floor/table. Read room.environment for stateId. below casts downward from just above the target's collision bounds; gaze captures the user's current head ray. The ray is sampled once at invocation, not continuously steered. Detection is limited to four metres and upward surfaces (normal.y >= 0.7). The same collision-bounds support offset leaves a 1 cm gap and preserves rotation/scale; this does not prove the whole object fits or avoids other geometry. Preparation may request room permission; a system focus handoff cancels this action, so finish permission or Load room first and explicitly request placement again. Stop, lifecycle interruption, changed room identity or changed target revision prevent a late placement. A missed ray never substitutes guessed coordinates or retries. Completion means the native placement was saved with one Undo (local only in temporary play), not settled physics. Velocity resets; existing gravity may continue, but this never starts physics. Result position/point/normal use room axes. Other objects keep running; an agent cannot steal another actor's target.",
+      "example": {
+        "target": "book",
+        "stateId": "00000000000000000000000000000000",
+        "direction": "below"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+            "maxLength": 32
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 1000000.0
+          },
+          "position": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "y": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "z": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "additionalProperties": false
+          },
+          "point": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": -128.0,
+                "maximum": 128.0
+              },
+              "y": {
+                "type": "number",
+                "minimum": -128.0,
+                "maximum": 128.0
+              },
+              "z": {
+                "type": "number",
+                "minimum": -128.0,
+                "maximum": 128.0
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "additionalProperties": false
+          },
+          "normal": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": -1.0,
+                "maximum": 1.0
+              },
+              "y": {
+                "type": "number",
+                "minimum": -1.0,
+                "maximum": 1.0
+              },
+              "z": {
+                "type": "number",
+                "minimum": -1.0,
+                "maximum": 1.0
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "additionalProperties": false
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "target",
+          "revision",
+          "position",
+          "point",
+          "normal",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "room.environment.set",
       "version": 1,
       "label": "Load, scan or show the room",
@@ -9100,7 +9274,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "c61cfd57dcf694849c709158b8f31ab3928caef1a0e85d8aca23820c38b24662"
+      "sha256": "33862658697243ee2ebe68606fcde5ec97f27386117f2cd62a6e2bd3c1bcd3cd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectSettings.cs",
@@ -9152,11 +9326,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ScannedRoom.cs",
-      "sha256": "ace92aac34df83284d198c31304309730a1dee4e743f6d6bf121cddab71199f9"
+      "sha256": "12811b13ecf7b96c869f0aca2e350db36cac67d385aa1633f5926eadeddff53d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ScannedRoomRequests.cs",
       "sha256": "dd5cb943596fe015dc3e80f3d634f234003dd246671d711d613fa0a60a9bc774"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ScannedRoomPlacement.cs",
+      "sha256": "7b52fd703d9d9e4ec504155ce97ed41577040000703e759c4a1d8ac586fa8a55"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportAcceptance.cs",
@@ -9220,7 +9398,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "b27ab98cf3ad6967ff9392257a33c05a443b1750a6dff0d9cdeb36782eac8058"
+      "sha256": "683d3846e98bb56ad635e8772c48fecdad0f702b22b665be7417305b1f4e690a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -9301,6 +9479,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SpatialSettingsCapabilities.cs",
       "sha256": "faebc69594b6d79f929bdb18f43264f98c749124d86df11c7f2268e910315eb5"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SurfacePlacementCapability.cs",
+      "sha256": "97bd59f67d31a6e83ce507691b4341be245d82724751e23b245fe311f633902e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceActivationCapabilities.cs",
