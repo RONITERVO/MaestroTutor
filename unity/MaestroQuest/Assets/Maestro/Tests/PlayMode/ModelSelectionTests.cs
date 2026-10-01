@@ -58,7 +58,7 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator SharedMotionImportReturnsExactIdsWithoutSavingAnotherModelOrAutoplay()
         {
-            ImportRuntime();yield return ChooseModel(ModelFixture.Mixamo());yield return ImportAction(ImportAccept("motions"));var value=ImportFact();var ids=((JArray)value["accepted"]["motionIds"]).Select(x=>(string)x).ToArray();
+            ImportRuntime();yield return ChooseModel(ModelFixture.Mixamo());yield return ImportAction(ImportAccept("motions"));var value=ImportFact();var motionPage=Fact("model.import.motions",new JObject {["requestId"]=imports.SelectionRequestId,["motionOffset"]=0});var ids=((JArray)motionPage["motionIds"]).Select(x=>(string)x).ToArray();Assert.That((int)value["accepted"]["motionCount"],Is.EqualTo(ids.Length));
             Assert.That(ids,Is.Not.Empty);Assert.That(ids.All(id=>editor.Motions.Inspect(id)!=null),Is.True);Assert.That(editor.Snapshot().objects.Count(x=>x.kind==RoomObjectKind.ImportedModel),Is.Zero);Assert.That(avatar.IsImportedClipPlaying,Is.False);
             Assert.That(Directory.Exists(Path.Combine(directory,"models")),Is.False);Assert.That(editor.WriteGate.CanFreeze(out _),Is.True);
         }

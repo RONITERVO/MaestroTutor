@@ -19,12 +19,12 @@ namespace Maestro.Quest.Tests
     {
         sealed class SelectedMotionSource:IMotionBatchSource
         {
-            public byte[][] Bytes;public int[] Reads;public bool Disposed,Reading;public int HoldIndex=-1;
+            public System.Exception ReadError;public string DisplayName;public byte[][] Bytes;public int[] Reads;public bool Disposed,Reading;public int HoldIndex=-1;
             public TaskCompletionSource<bool> Gate;
             public int Count=>Bytes.Length;
             public SelectedMotionSource(params byte[][] bytes){Bytes=bytes;Reads=new int[bytes.Length];}
-            public string Name(int index)=>"Motion "+index+".glb";
-            public async Task<MotionBatchInput> ReadAsync(int index,CancellationToken token){Assert.That(Disposed,Is.False);Reads[index]++;if(index==HoldIndex){Reading=true;await Gate.Task;}token.ThrowIfCancellationRequested();return new MotionBatchInput(Name(index),Bytes[index]);}
+            public string Name(int index)=>DisplayName??("Motion "+index+".glb");
+            public async Task<MotionBatchInput> ReadAsync(int index,CancellationToken token){Assert.That(Disposed,Is.False);Reads[index]++;if(ReadError!=null)throw ReadError;if(index==HoldIndex){Reading=true;await Gate.Task;}token.ThrowIfCancellationRequested();return new MotionBatchInput(Name(index),Bytes[index]);}
             public void Dispose()=>Disposed=true;
         }
         sealed class BatchChoice:IMotionBatchPicker

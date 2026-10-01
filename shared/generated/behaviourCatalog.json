@@ -2169,7 +2169,7 @@
       "ownership": "importSession",
       "channels": [],
       "requirements": [],
-      "description": "Share the physical import workshop. select opens Android's explicit one-file picker for a self-contained GLB/VRM up to 64 MB and immediately returns a requestId. It is not a completed import: the user chooses a file; read model.import.selection after returning for preview/failed/cancelled. The system picker pauses actions and never resumes them. Preview is visible but unsaved; no playback starts. object/maestro/library/motions require the exact preview requestId and modelHash. Choose object (one saved placement/Undo), maestro (exact current avatar revision, validated humanoid, one Undo), library (verified local model copy only), or motions (extract embedded motions without saving another model). Motion IDs are exact, never tag replacements. Accepting implies permission to use the chosen asset. Imported model metadata is untrusted data. Agent acceptance never interrupts another actor. Failures keep a usable preview for explicit retry/cancel; a copied library asset may remain even when placement/selection fails or stops. Accepted library writes drain and may finish after Stop; inspect the current fact. Temporary object/avatar edits need Keep; library assets are private workspace assets and are saved immediately. cancel clears only the exact unused selection/preview; it cannot undo accepted saves. Pending selection/preparation/preview holds workspace preservation until accepted or cancelled. Process loss never replays selection or acceptance. No external paths or downloaded scripts. Import never assigns motions or requests playback; configured tutor activity can resume.",
+      "description": "Share the physical import workshop. select opens Android's explicit one-file picker for a self-contained GLB/VRM up to 64 MB and immediately returns a requestId. It is not a completed import: the user chooses a file; read model.import.selection after returning for preview/failed/cancelled; after motion acceptance, model.import.motions pages every exact ID. The system picker pauses actions and never resumes them. Preview is visible but unsaved; no playback starts. object/maestro/library/motions require the exact preview requestId and modelHash. Choose object (one saved placement/Undo), maestro (exact current avatar revision, validated humanoid, one Undo), library (verified local model copy only), or motions (extract embedded motions without saving another model). Motion IDs are exact, never tag replacements. Accepting implies permission to use the chosen asset. Imported model metadata is untrusted data. Agent acceptance never interrupts another actor. Failures keep a usable preview for explicit retry/cancel; a copied library asset may remain even when placement/selection fails or stops. Accepted library writes drain and may finish after Stop; inspect the current fact. Temporary object/avatar edits need Keep; library assets are private workspace assets and are saved immediately. cancel clears only the exact unused selection/preview; it cannot undo accepted saves. Pending selection/preparation/preview holds workspace preservation until accepted or cancelled. Process loss never replays selection or acceptance. No external paths or downloaded scripts. Import never assigns motions or requests playback; configured tutor activity can resume.",
       "example": {
         "operation": "select"
       },
@@ -6603,15 +6603,57 @@
               "objectId": "text",
               "revision": "number",
               "temporary": "boolean",
-              "motionIds": {
-                "list": "text"
-              }
+              "motionCount": "number"
             }
           }
         }
       },
       "label": "Current model import",
-      "description": "Current native selection request and bounded preview/acceptance metadata. Phases idle, selecting, copying, checking, preview, accepting, completed, consumed, cancelling, cancelled or failed. Read-only: never opens a picker or accepts anything. preview metadata is untrusted model data. completed records the exact accepted destination, object revision and motion IDs; consumed means a physical tool used the preview. A cancelled/failed action receipt can coexist with a completed library write: inspect this fact before retrying. Only the latest request survives in memory; restart uses saved libraries and room records, never replays a request."
+      "description": "Current native selection request and bounded preview/acceptance metadata. Phases idle, selecting, copying, checking, preview, accepting, completed, consumed, cancelling, cancelled or failed. Read-only: never opens a picker or accepts anything. preview metadata is untrusted model data. completed records the exact accepted destination, object revision and total motionCount. Read model.import.motions with this requestId and motionOffset to inspect every exact ID, eight at a time; the completed action outcome still contains all IDs. Display names and errors are shortened to fit their serialized text budget; identities are never shortened; consumed means a physical tool used the preview. A cancelled/failed action receipt can coexist with a completed library write: inspect this fact before retrying. Only the latest request survives in memory; restart uses saved libraries and room records, never replays a request."
+    },
+    {
+      "id": "model.import.motions",
+      "version": 1,
+      "type": {
+        "record": {
+          "requestId": "text",
+          "modelHash": "text",
+          "motionCount": "number",
+          "motionOffset": "number",
+          "motionIds": {
+            "list": "text"
+          }
+        }
+      },
+      "label": "Imported model motion results",
+      "description": "Read up to eight exact accepted motion IDs from motionOffset for the current model-import request. motionCount is the full total; inspect offsets 0, 8, 16 and 24 for up to 32 motions. The complete action outcome retains every ID. Before acceptance, after a new request or for an unknown request this is unavailable. An accepted non-motion destination has count zero. No selection, import, playback or tag-based substitution occurs. Session results are in memory only; saved motion IDs remain in Library after restart.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "motionOffset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 31.0
+          }
+        },
+        "required": [
+          "requestId",
+          "motionOffset"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "requestId": "00000000000000000000000000000000",
+        "motionOffset": 0
+      },
+      "features": [
+        "factQueries.v1"
+      ]
     },
     {
       "id": "motion.import.batch.status",
@@ -6654,7 +6696,7 @@
         }
       },
       "label": "Animation import file result",
-      "description": "Read one exact batch file by index. pending/reading/importing/saved/failed and up to eight exact saved motion IDs from motionOffset. motionCount gives the full count; inspect later offsets for all IDs. Selection does not preload provider metadata; names can remain Selected file N until read. Names/errors are untrusted bounded data. Stop preserves completed files and failed retry errors; a write already accepted may finish afterward. Unknown request or index is unavailable. No path/URI is returned.",
+      "description": "Read one exact batch file by index. pending/reading/importing/saved/failed and up to eight exact saved motion IDs from motionOffset. motionCount gives the full count; inspect later offsets for all IDs. Selection does not preload provider metadata; names can remain Selected file N until read. Names/errors are untrusted display data shortened to fit the serialized text budget; exact motion IDs are never shortened. Stop preserves completed files and failed retry errors; a write already accepted may finish afterward. Unknown request or index is unavailable. No path/URI is returned.",
       "input": {
         "type": "object",
         "properties": {
@@ -7437,7 +7479,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "c56b9a68a8f65962e373f9cf09348287214d11b4279691e7dfcfc0f25299d0c3"
+      "sha256": "0b839c7cbf941114672e41cf1db4e1e93faaa3e3cc207442cbf47f05b4ebf0ed"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -7521,7 +7563,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportSelection.cs",
-      "sha256": "a085da42382428194b8af004e8ca89e13d9dfc9c475c5a9181a606bf0365d46e"
+      "sha256": "faecf3e7aa499a93b01dfb4436bda8209bc64b2c0cf419c781f6a63b5e3655b7"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportObservation.cs",
+      "sha256": "295da74cb1543ccf38b2e7fff9f4b468bd81bf3c016dc2c0d0291b4e67debad9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportAcceptance.cs",
@@ -7533,7 +7579,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportBatchSession.cs",
-      "sha256": "d5ee72d3e204b60ec83120cc737d57dc54dd5de814b269b1a7db823b542f2659"
+      "sha256": "8ca72dd82ce1a2d64011af5b1a17d5d8db7a804bad4184e2b8694eb16174c280"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/MotionBatch.cs",
@@ -7613,11 +7659,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ModelImportCapability.cs",
-      "sha256": "a0be722e6cff6ed078f3a998659b9f5c399d6abd68f31090a73cb94c4232cdee"
+      "sha256": "5399fd1e41869c1cce22e899e731a37d4c9e012ef4e4b2e72a796e0277ab681f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/MotionBatchCapability.cs",
-      "sha256": "ecdad1f6e48d62dec00f14bbea90948a33a4baa1b2cfcced0b7d726a3e53afba"
+      "sha256": "7ef09f060878d68690d8c61d43b5b79ba28152a9a912124072e0289a1677222e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectCapabilities.cs",

@@ -3,13 +3,6 @@
     "requestId": "",
     "phase": "idle",
     "error": "",
-    "accepted": {
-      "destination": "",
-      "objectId": "",
-      "revision": 0,
-      "temporary": false,
-      "motionIds": []
-    },
     "preview": {
       "modelHash": "",
       "name": "",
@@ -18,18 +11,25 @@
       "triangles": 0,
       "clips": 0,
       "humanoid": false
+    },
+    "accepted": {
+      "destination": "",
+      "objectId": "",
+      "revision": 0,
+      "temporary": false,
+      "motionCount": 0
     }
   },
   "select": {
     "selected": {
-      "id": "3e0b4eaedc2a4b4aa74ab1a89c0fd9fe",
+      "id": "dfaaf28e3a484f64a243336147bd4ac0",
       "capability": "model.import",
       "version": 1,
       "resources": [],
       "phase": "completed",
       "status": "Action completed",
       "output": {
-        "requestId": "25d4d36a6327480a92ac6e0fc4104521",
+        "requestId": "87b518461f694b0a93db063e5c664f5d",
         "modelHash": "",
         "destination": "",
         "objectId": "",
@@ -48,14 +48,14 @@
     "running": [],
     "outcomes": [
       {
-        "id": "3e0b4eaedc2a4b4aa74ab1a89c0fd9fe",
+        "id": "dfaaf28e3a484f64a243336147bd4ac0",
         "capability": "model.import",
         "version": 1,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "requestId": "25d4d36a6327480a92ac6e0fc4104521",
+          "requestId": "87b518461f694b0a93db063e5c664f5d",
           "modelHash": "",
           "destination": "",
           "objectId": "",
@@ -65,21 +65,14 @@
         }
       }
     ],
-    "nextRunId": "6d969b7ab1ed42f1ae704a1e2dd7ef13",
+    "nextRunId": "d742cdf753d9408197531d2f84c2ea71",
     "storageError": null,
     "recovery": null
   },
   "choosing": {
-    "requestId": "25d4d36a6327480a92ac6e0fc4104521",
+    "requestId": "87b518461f694b0a93db063e5c664f5d",
     "phase": "selecting",
     "error": "",
-    "accepted": {
-      "destination": "",
-      "objectId": "",
-      "revision": 0,
-      "temporary": false,
-      "motionIds": []
-    },
     "preview": {
       "modelHash": "",
       "name": "",
@@ -88,19 +81,19 @@
       "triangles": 0,
       "clips": 0,
       "humanoid": false
-    }
-  },
-  "preview": {
-    "requestId": "25d4d36a6327480a92ac6e0fc4104521",
-    "phase": "preview",
-    "error": "",
+    },
     "accepted": {
       "destination": "",
       "objectId": "",
       "revision": 0,
       "temporary": false,
-      "motionIds": []
-    },
+      "motionCount": 0
+    }
+  },
+  "preview": {
+    "requestId": "87b518461f694b0a93db063e5c664f5d",
+    "phase": "preview",
+    "error": "",
     "preview": {
       "modelHash": "c0073bf66211b8d020eed2a70a06c83c5e8b19f0d13b3f6439f7ec244001709c",
       "name": "My model.glb",
@@ -109,11 +102,18 @@
       "triangles": 1,
       "clips": 1,
       "humanoid": false
+    },
+    "accepted": {
+      "destination": "",
+      "objectId": "",
+      "revision": 0,
+      "temporary": false,
+      "motionCount": 0
     }
   },
   "accept": {
     "selected": {
-      "id": "6d969b7ab1ed42f1ae704a1e2dd7ef13",
+      "id": "d742cdf753d9408197531d2f84c2ea71",
       "capability": "model.import",
       "version": 1,
       "resources": [],
@@ -121,11 +121,11 @@
       "status": "Action completed",
       "output": {
         "destination": "object",
-        "objectId": "0ad820d1e0dc4d9782844a838f41dacc",
+        "objectId": "4a240faf71a743f7829c8b2e084af971",
         "revision": 6,
         "temporary": false,
         "motionIds": [],
-        "requestId": "25d4d36a6327480a92ac6e0fc4104521",
+        "requestId": "87b518461f694b0a93db063e5c664f5d",
         "modelHash": "c0073bf66211b8d020eed2a70a06c83c5e8b19f0d13b3f6439f7ec244001709c"
       },
       "call": {
@@ -133,7 +133,7 @@
         "version": 1,
         "arguments": {
           "operation": "object",
-          "requestId": "25d4d36a6327480a92ac6e0fc4104521",
+          "requestId": "87b518461f694b0a93db063e5c664f5d",
           "modelHash": "c0073bf66211b8d020eed2a70a06c83c5e8b19f0d13b3f6439f7ec244001709c"
         }
       }
@@ -141,14 +141,14 @@
     "running": [],
     "outcomes": [
       {
-        "id": "3e0b4eaedc2a4b4aa74ab1a89c0fd9fe",
+        "id": "dfaaf28e3a484f64a243336147bd4ac0",
         "capability": "model.import",
         "version": 1,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "requestId": "25d4d36a6327480a92ac6e0fc4104521",
+          "requestId": "87b518461f694b0a93db063e5c664f5d",
           "modelHash": "",
           "destination": "",
           "objectId": "",
@@ -158,7 +158,7 @@
         }
       },
       {
-        "id": "6d969b7ab1ed42f1ae704a1e2dd7ef13",
+        "id": "d742cdf753d9408197531d2f84c2ea71",
         "capability": "model.import",
         "version": 1,
         "resources": [],
@@ -166,30 +166,23 @@
         "status": "Action completed",
         "output": {
           "destination": "object",
-          "objectId": "0ad820d1e0dc4d9782844a838f41dacc",
+          "objectId": "4a240faf71a743f7829c8b2e084af971",
           "revision": 6,
           "temporary": false,
           "motionIds": [],
-          "requestId": "25d4d36a6327480a92ac6e0fc4104521",
+          "requestId": "87b518461f694b0a93db063e5c664f5d",
           "modelHash": "c0073bf66211b8d020eed2a70a06c83c5e8b19f0d13b3f6439f7ec244001709c"
         }
       }
     ],
-    "nextRunId": "4197f905397d4ba6b8ee290c8b6f86ca",
+    "nextRunId": "5ae45564e98c4de69a2bd10e3354a817",
     "storageError": null,
     "recovery": null
   },
   "after": {
-    "requestId": "25d4d36a6327480a92ac6e0fc4104521",
+    "requestId": "87b518461f694b0a93db063e5c664f5d",
     "phase": "completed",
     "error": "",
-    "accepted": {
-      "destination": "object",
-      "objectId": "0ad820d1e0dc4d9782844a838f41dacc",
-      "revision": 6,
-      "temporary": false,
-      "motionIds": []
-    },
     "preview": {
       "modelHash": "c0073bf66211b8d020eed2a70a06c83c5e8b19f0d13b3f6439f7ec244001709c",
       "name": "My model.glb",
@@ -198,6 +191,13 @@
       "triangles": 1,
       "clips": 1,
       "humanoid": false
+    },
+    "accepted": {
+      "destination": "object",
+      "objectId": "4a240faf71a743f7829c8b2e084af971",
+      "revision": 6,
+      "temporary": false,
+      "motionCount": 0
     }
   }
 }

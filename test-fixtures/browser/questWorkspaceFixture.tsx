@@ -15,6 +15,7 @@ import nativeAuthoring from './animationAuthoring.json';
 import nativeRecording from './recordingSessions.json';
 import nativePosing from './posingSessions.json';
 import nativeModelImport from './modelSelection.json';
+import nativeImportReadback from './importReadback.json';
 import nativeMotionBatch from './motionBatchImport.json';
 import nativeAvatar from './avatarSelection.json';
 import nativeEvents from './eventProgramStates.json';
@@ -52,6 +53,12 @@ if(avatarSelection){
  state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';
  state.execution={...JSON.parse(JSON.stringify(nativeAvatar.library)),selected:null,running:[],outcomes:[],nextRunId:nativeAvatar.library.selected.id};
  state.capabilities=[...state.capabilities??[],'catalogVocabulary.v1','avatarModels.v1','execution.v1','executionReceipts.v1','actionResults.v1'];
+}
+const importReadback=new URLSearchParams(location.search).has('importReadback');
+if(importReadback){
+ if(!validExecutionView(nativeImportReadback.execution))throw new Error('Invalid native import readback fixture');
+ state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';state.execution=JSON.parse(JSON.stringify(nativeImportReadback.execution));
+ state.capabilities=[...state.capabilities??[],'catalogVocabulary.v1','factQueries.v1','modelImport.v1','execution.v1','executionReceipts.v1','actionResults.v1'];
 }
 const motionBatch=new URLSearchParams(location.search).has('motionBatch');
 let batchObservation:typeof nativeMotionBatch.after=nativeMotionBatch.before;
@@ -175,6 +182,17 @@ setInterval(()=>{
     if(moduleEvidence&&query.operation!=='check'&&query.category==='modules'){
      if(query.operation==='search')state.catalog=copy(moduleEvidence.search.catalog);
      else {const view=moduleEvidence.inspected.catalog;state.catalog=view?.operation==='inspect'&&query.capability===view.capability?copy(view):{operation:'inspect',category:'modules',capability:query.capability,version:query.version,definition:null,revision:1,ready:true,pending:false,status:'Not present in recorded evidence'};}
+     continue;
+    }
+    if(importReadback&&query.operation!=='check'&&query.category==='facts'){
+     const definitions=['model.import.selection','model.import.motions'].map(id=>behaviourFact(id)!);
+     if(query.operation==='search')state.catalog={operation:'search',category:'facts',query:query.query,offset:0,total:2,pageSize:6,entries:definitions.map(d=>({id:d.id,version:1,label:d.label})),status:'Found model-import facts'};
+     else{
+      const definition=definitions.find(d=>d.id===query.capability)??null;const args=definition?.id==='model.import.motions'?(query.arguments??definition.example):undefined;
+      const page=nativeImportReadback.pages.find(p=>p.arguments.requestId===args?.requestId&&p.arguments.motionOffset===args.motionOffset);
+      const value=definition?.id==='model.import.selection'?copy(nativeImportReadback.summary):page?copy(page.value):null;
+      state.catalog={operation:'inspect',category:'facts',capability:query.capability,version:1,definition,arguments:args,available:value!==null,value,status:'Captured native model-import readback'};
+     }
      continue;
     }
     if(motionBatch&&query.operation!=='check'&&query.category==='facts'){

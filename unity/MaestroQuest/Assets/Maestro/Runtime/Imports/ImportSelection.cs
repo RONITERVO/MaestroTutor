@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Maestro.Quest.Persistence;
@@ -127,9 +128,21 @@ namespace Maestro.Quest.Imports
             selectionCancel?.Cancel();if(preparingSelection||selectionPhase=="accepting"){selectionPhase="cancelling";return;}
             if(picking||selectionWrite!=null){selectionPhase="cancelled";ReleaseSelectionPicker(selectionId);ClearPreview();EndSelectionOwner();}
         }
-        static string Bounded(string text){string value=(text??"").Replace("\r"," ").Replace("\n"," ");return value.Length>128?value[..128]:value;}
-        internal JObject ObserveSelection()=>new() {["requestId"]=selectionId,["phase"]=selectionPhase,["error"]=Bounded(selectionError),
-            ["accepted"]=selectionResult?.DeepClone()??EmptyImportResult(),["preview"]=selectionInfo?.DeepClone()??new JObject {["modelHash"]="",["name"]="",["kibibytes"]=0,["vertices"]=0,["triangles"]=0,["clips"]=0,["humanoid"]=false}};
+        static string Bounded(string text)=>ImportObservation.Text(text);
+        internal JObject ObserveSelection()
+        {
+            var accepted=selectionResult??EmptyImportResult();
+            var preview=(JObject)selectionInfo?.DeepClone()??new JObject {["modelHash"]="",["name"]="",["kibibytes"]=0,["vertices"]=0,["triangles"]=0,["clips"]=0,["humanoid"]=false};
+            preview["name"]=ImportObservation.Text((string)preview["name"]);
+            return new JObject {["requestId"]=selectionId,["phase"]=selectionPhase,["error"]=Bounded(selectionError),["preview"]=preview,
+                ["accepted"]=new JObject {["destination"]=accepted["destination"].DeepClone(),["objectId"]=accepted["objectId"].DeepClone(),["revision"]=accepted["revision"].DeepClone(),["temporary"]=accepted["temporary"].DeepClone(),["motionCount"]=((JArray)accepted["motionIds"]).Count}};
+        }
+        internal JObject ObserveAcceptedMotions(string requestId,int offset)
+        {
+            if(requestId!=selectionId||selectionResult==null||selectionInfo==null||offset<0||offset>31)return null;
+            var ids=(JArray)selectionResult["motionIds"];
+            return new JObject {["requestId"]=selectionId,["modelHash"]=selectionInfo["modelHash"].DeepClone(),["motionCount"]=ids.Count,["motionOffset"]=offset,["motionIds"]=new JArray(ids.Skip(offset).Take(ImportObservation.MotionPageSize).Select(id=>id.DeepClone()))};
+        }
     }
 #if UNITY_ANDROID && !UNITY_EDITOR
     internal sealed class AndroidModelPicker:IModelPicker

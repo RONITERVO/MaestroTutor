@@ -13,7 +13,7 @@ pose versions, the same physical joint limits and imported retargeter, held-join
 exclusion, failed-pose recovery and recording interoperation. Saved edits are
 durable outside temporary mode; temporary edits stay in the fork until Keep.
 No authoring operation starts playback. The catalog contains 46 actions, 10
-events and 29 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
+events and 30 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
 Single-file GLB/VRM selection, preview and acceptance now share the physical
 import path with book fields and agent/program calls. See QUEST_MODEL_IMPORT.md.
 Animation collections now share native selection, versioned start/retry/tag controls,
@@ -34,6 +34,27 @@ and tracked operation roots remain protected. Private recovery export remains
 separate; a full store with unreadable selection still requires recovery/repair.
 PR #248 records the current verified commit and package. Earlier entries
 below are historical evidence, not current test totals or release acceptance.
+
+PC bounded-import-readback increment (2026-10-01): a maximum-size single-file
+motion import now reports a count in its summary and exposes all exact IDs through
+four bounded pages. The completed action outcome retains every ID; a new selection
+invalidates old session reads. Shared single-file/batch display names and errors
+are bounded by serialized JSON cost, including escapes, without shortening asset
+identities or relaxing the global value budget. Category tags keep their existing
+input normalization and remain untruncated in readback. Three native regressions
+first reproduced the former oversized-value errors; the final suite passes 386
+EditMode and 303 PlayMode tests, with three optional private-model skips. Web checks
+pass 1,577 tests across 179 files and 33 focused final-capture tests; 61 Android
+tests, build/lint and catalog checks pass. Browser walkthroughs read all 32 exact
+motion IDs and exercise model selection through generated fields; screenshots were
+inspected. These replay native captures and do not prove provider/headset behavior.
+The full build helper exited successfully. All 182 runtime and 86 test C# sources,
+24 fixtures plus metadata and 113 packaged web files match. ARM64/v2 verified:
+`MaestroQuest-import-readback-02327703.apk`, SHA-256
+`02327703DCDB56B743E47571167E7C477E3300C0305466A57727700F932D2507`.
+The APK remains uninstalled. The broader runtime, provider/device and Store gates
+below remain open; this resolves the readback follow-up in the preceding batch
+checkpoint.
 
 PC shared-animation-batch increment (2026-10-01): physical batch tools, generated
 book fields and agent/program requests use the existing sequential motion importer

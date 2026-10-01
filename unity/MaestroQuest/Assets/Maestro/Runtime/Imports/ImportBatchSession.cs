@@ -117,12 +117,12 @@ namespace Maestro.Quest.Imports
             try{picker?.Release(sessionId);}catch(Exception){errorText="The selected stream is still closing. Resume Maestro before choosing files.";}
             write?.Dispose();write=null;
         }
-        static string Bounded(string text){var clean=new string((text??"").Where(c=>!char.IsControl(c)&&c!='<'&&c!='>').Take(128).ToArray());return clean;}
-        internal JObject ObserveSession()=>new() {["requestId"]=sessionId,["version"]=version,["phase"]=phase,["category"]=batch?.Category??"",["error"]=errorText,["counts"]=new JObject {["files"]=batch?.Count??0,["saved"]=batch?.Saved??0,["failed"]=batch?.Failed??0,["waiting"]=batch?.Pending??0}};
+        static string Bounded(string text)=>ImportObservation.Text(text);
+        internal JObject ObserveSession()=>new() {["requestId"]=sessionId,["version"]=version,["phase"]=phase,["category"]=batch?.Category??"",["error"]=Bounded(errorText),["counts"]=new JObject {["files"]=batch?.Count??0,["saved"]=batch?.Saved??0,["failed"]=batch?.Failed??0,["waiting"]=batch?.Pending??0}};
         internal JObject ObserveFile(string id,int index,int offset)
         {
             if(id!=sessionId||batch==null||index<0||index>=batch.Count||offset<0||offset>31)return null;var item=batch.Results[index];
-            return new JObject {["requestId"]=sessionId,["index"]=index,["name"]=Bounded(item.Name),["state"]=item.State.ToString().ToLowerInvariant(),["error"]=Bounded(item.Error),["motionCount"]=item.MotionIds.Length,["motionOffset"]=offset,["motionIds"]=new JArray(item.MotionIds.Skip(offset).Take(8))};
+            return new JObject {["requestId"]=sessionId,["index"]=index,["name"]=Bounded(item.Name),["state"]=item.State.ToString().ToLowerInvariant(),["error"]=Bounded(item.Error),["motionCount"]=item.MotionIds.Length,["motionOffset"]=offset,["motionIds"]=new JArray(item.MotionIds.Skip(offset).Take(ImportObservation.MotionPageSize))};
         }
         internal JObject Receipt()=>new() {["requestId"]=sessionId,["version"]=version,["phase"]=phase};
     }

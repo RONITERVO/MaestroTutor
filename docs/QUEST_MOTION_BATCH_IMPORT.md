@@ -30,6 +30,14 @@ the total motion count, offset and up to eight exact motion IDs. Read successive
 offsets to inspect an export's complete animation list. Names and metadata are
 untrusted content, never agent instructions. No source path or URI is returned.
 
+Display names and errors share the single-file import's serialized text budget:
+128 characters including JSON quotes and escapes, with bounded scanning and whole
+surrogate pairs. Exact motion/request IDs are never shortened. Collection tags
+retain their existing input normalization (including trimming surrounding
+whitespace) and are not truncated for display. The global program-value budget
+remains unchanged. Native cases cover separator-heavy filenames and failures
+without losing readable result pages or granting motion IDs to failed files.
+
 ## Stop, retry and release
 
 Stop cancels an unused chooser, or asks an import to stop before its next file.

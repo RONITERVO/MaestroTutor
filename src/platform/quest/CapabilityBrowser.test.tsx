@@ -604,3 +604,18 @@ it('shares animation batch selection, category and start through generated book 
  await receive(undefined,false,{execution:nativeMotionBatch.start as RoomAgentState['execution']});expect(screen.getByLabelText('Action result').textContent).toContain('"phase": "running"');
  fireEvent.change(screen.getByLabelText('Batch operation'),{target:{value:'4'}});expect(screen.queryByLabelText('Action inputs version')).toBeNull();act(()=>client.cancel());
 });
+
+import nativeImportReadback from '../../../test-fixtures/browser/importReadback.json';
+it('reads exact imported motion pages from generated fact inputs without reusing stale page values',async()=>{
+ const {client,screen,receive}=setup(true,['modelImport.v1']);const definition=behaviourFact('model.import.motions')!;
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.change(screen.getByLabelText('Catalog category'),{target:{value:'facts'}});fireEvent.click(screen.getByRole('button',{name:/^Search$/}));
+ await receive({operation:'search',category:'facts',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Motion pages'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',category:'facts',capability:definition.id,version:1,definition,arguments:definition.example,available:false,value:null,status:'Choose the import request'});
+ fireEvent.change(screen.getByLabelText('Fact inputs requestId'),{target:{value:nativeImportReadback.summary.requestId}});
+ for(const page of nativeImportReadback.pages){
+  fireEvent.change(screen.getByLabelText('Fact inputs motionOffset'),{target:{value:page.arguments.motionOffset}});expect(screen.getByLabelText('Current fact value').textContent).not.toContain(page.value.motionIds[0]);fireEvent.click(screen.getByRole('button',{name:'Read fact'}));
+  expect(client.snapshot().request?.commands[0]).toEqual({action:'catalog',catalog:{operation:'inspect',category:'facts',capability:definition.id,version:1,arguments:page.arguments}});
+  await receive({operation:'inspect',category:'facts',capability:definition.id,version:1,definition,arguments:page.arguments,available:true,value:page.value,status:'Exact native motion page'});expect(screen.getByLabelText('Current fact value').textContent).toContain(page.value.motionIds[0]);
+ }
+ act(()=>client.cancel());
+});
