@@ -21,6 +21,7 @@ export function editProgramImport(program:BehaviourProgram,hash:string,module:Mo
   const name=draft.signals[event.name];if(!/^user\.[a-zA-Z0-9_]{1,32}$/.test(name??''))throw new Error('Connect every module signal to a named user signal.');
   const existing=next.events.find(e=>e.name===name);if(existing&&existing.type!==event.type)throw new Error(name+' already has a different payload type.');if(!existing)next.events.push({name,type:event.type});
  }
+ if(definition.program.parallelVersion===1)next.parallelVersion=1;
  if(definition.program.dataVersion===1)next.dataVersion=1;
  const imported={alias:draft.alias,hash,module:definition,signals:{...draft.signals}};
  if(previous)next.imports[next.imports.indexOf(previous)]=imported;else next.imports.push(imported);

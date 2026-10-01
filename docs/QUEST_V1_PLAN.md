@@ -45,6 +45,10 @@ preferences through the same typed program representation; see QUEST_REUSABLE_IN
 The book now explicitly converts sequence Repeat to editable call/wait loops and
 lets authors select the function receiving catalog blocks. Code and module edits
 retain rejected drafts rather than silently disabling Repeat.
+Parallel function branches now share the same interpreter, catalog ownership and
+book/agent authoring, with explicit joined results and group cancellation. See
+QUEST_PARALLEL_PROGRAMS.md. The PC checkpoint below is verified; headset acceptance
+remains outstanding.
 The remaining runtime, provider, device and Store acceptance gates remain unfinished; the complete v1 goal remains active.
 
 Current recovery implementation supports retained candidates, an external backup,
@@ -61,6 +65,39 @@ and tracked operation roots remain protected. Private recovery export remains
 separate; a full store with unreadable selection still requires recovery/repair.
 PR #248 records the current verified commit and package. Earlier entries
 below are historical evidence, not current test totals or release acceptance.
+
+PC parallel-functions increment (2026-10-02): version-3 programs can opt into
+parallelVersion:1 and run two to four function calls together, waiting for all.
+Branches use private locals/state snapshots, explicit typed results and the same
+native invocation/event/timer paths. All siblings are admitted before effects;
+parent/children share the eight slots, creation quota and retained-value budget.
+Stop or failure cancels the group without undoing completed effects. Failed
+cleanup attempts every sibling before preserving the refusal of manual takeover.
+Only the root emits a terminal behaviour outcome; child completion cannot claim
+that the user request is complete. Failure retains its branch function/block.
+
+The book's existing editor provides typed branch calls and separate live traces.
+Pinned modules and function/declaration edits preserve the same program. Native
+verification passed 403 EditMode and 365 PlayMode tests, with three optional private
+model checks skipped. Eleven native logic scenarios and a two-object PlayMode
+journey exercise concurrency, joins, private state, events, capacity, creation and
+memory/work budgets, cancellation, ownership, cleanup failures and module imports.
+An initial runtime pass hit two existing prop-interruption timing assertions;
+the following two complete runtime passes passed those assertions unchanged.
+Quest timing and comfort remain unverified.
+
+All 1,684 web tests in 192 files passed; 39 final contract/book checks also validate
+the final native capture. Chrome changes a branch argument through typed controls,
+sends the identical native program and displays actual running/joined observations.
+Screenshots were inspected; browser save acknowledgements are simulated. The full
+build helper exited zero, 61 Android browser tests passed, and the 202 runtime /
+99 test C# files, 29 fixtures with metadata and 113 packaged web files match.
+TypeScript, lint, catalog drift, prompt ownership and core boundaries pass.
+ARM64 contents and v2 signing verify. Development checkpoint
+`MaestroQuest-parallel-programs-2A876967.apk` has SHA-256
+`2A876967D83528F274DDBC5B6F6087F26B2C1E0AEECC7E8D7B7CC437D67912D2`.
+It remains uninstalled. PR #248 stays draft; physical Quest, provider, asset,
+persistence/performance and Store release gates remain open.
 
 PC shared-recipe-authoring increment (2026-10-02): object.recipe.edit patches
 existing parts and tracks through the catalog and the book workshop's Apply action.

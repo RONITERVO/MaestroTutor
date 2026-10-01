@@ -217,6 +217,11 @@ if(new URLSearchParams(location.search).has('structured')){
  Object.assign(window,{maestroWorkspaceRulesEvidence:(rules:unknown)=>{if(!validRuleView(rules))throw new Error('Invalid native program observation');state={...state,rules:JSON.parse(JSON.stringify(rules)),visible:true,workspaceView:'rules'};}});
 }
 
+if(new URLSearchParams(location.search).has('parallel'))Object.assign(window,{maestroParallelEvidence:(evidence:RoomAgentState)=>{
+ if(!validRuleView(evidence.rules))throw new Error('Invalid native parallel observation');
+ state={...JSON.parse(JSON.stringify(evidence)),revision:state.revision+1,ack:state.ack,visible:true,workspaceView:'rules'};
+}});
+
 let moduleEvidence:Record<string,RoomAgentState>|null=null;
 if(new URLSearchParams(location.search).has('moduleLibrary'))Object.assign(window,{maestroModuleLibraryEvidence:(evidence:Record<string,RoomAgentState>)=>{
  for(const key of ['published','search','inspected','running','removed'])if(!evidence[key]||!validRuleView(evidence[key].rules))throw new Error('Native module evidence is missing');

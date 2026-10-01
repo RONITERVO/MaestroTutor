@@ -44,6 +44,7 @@ namespace Maestro.Quest.Programs
    var program=(JObject)module["program"];var result=new JObject {["version"]=3,["moduleVersion"]=1,["entry"]="main",["resources"]=program["resources"]?.DeepClone(),["state"]=new JArray(),["events"]=program["events"]?.DeepClone(),
     ["functions"]=new JArray(new JObject {["name"]="main",["returns"]="void",["parameters"]=new JArray(),["locals"]=new JArray(),["body"]=new JArray()}),
     ["imports"]=new JArray(new JObject {["alias"]="module",["hash"]=ProgramModules.Hash(module),["module"]=module.DeepClone(),["signals"]=new JObject(((JArray)program["events"]).Select(e=>new JProperty((string)e["name"],(string)e["name"])))})};
+   if(program.ContainsKey("parallelVersion"))result["parallelVersion"]=program["parallelVersion"].DeepClone();
    if(program.ContainsKey("dataVersion"))result["dataVersion"]=program["dataVersion"].DeepClone();return result;
   }
   public static JObject Definition(string source,string name,string[] exports){

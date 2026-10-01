@@ -1,5 +1,9 @@
 # Event programs and session state
 
+Parallel function calls now use the explicit `parallelVersion:1` extension; see
+[the current parallel contract](QUEST_PARALLEL_PROGRAMS.md). The dated entries below
+record earlier implementation stages.
+
 Development contract, 2026-09-27. This extends the existing canonical program and
 interpreter. It does not add a second playback engine or move Gemini into Unity.
 

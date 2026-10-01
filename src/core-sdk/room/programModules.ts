@@ -3,7 +3,7 @@
 import {moduleHash} from '../../../shared/programModuleIdentity';
 export {moduleHash} from '../../../shared/programModuleIdentity';
 import type {BehaviourProgram,ProgramFunction} from './programs';
-import {visitProgramNodes,visitNodeExpressions} from './programTraversal';
+import {visitProgramNodes,visitNodeExpressions,programCalls} from './programTraversal';
 export interface ProgramModule {version:1;name:string;exports:string[];program:BehaviourProgram}
 export interface ProgramImport {alias:string;hash:string;module:ProgramModule;signals:Record<string,string>}
 const own=(v:object,k:PropertyKey)=>Object.prototype.hasOwnProperty.call(v,k);
@@ -32,6 +32,7 @@ export function linkProgram(source:Record<string,unknown>,validate:(value:Record
     need(exports.every(n=>list(child.functions,16).some(f=>object(f).name===n)),'Export must name a local function');
     need(list(child.resources,16).every(r=>list(raw.resources,16).includes(r)),'Declare every imported module resource in its caller');
     need(child.dataVersion===undefined||raw.dataVersion===1,'Caller must enable imported structured values');
+    need(child.parallelVersion===undefined||raw.parallelVersion===1,'Caller must enable imported parallel calls');
     const linked=scope(child,depth+1),signals=object(imp.signals),events=list(raw.events,16).map(object);
     need(Object.keys(signals).length===(linked.events??[]).length,'Connect every module signal explicitly');
     for(const event of linked.events??[])need(own(signals,event.name)&&events.some(e=>e.name===signals[event.name]&&e.type===event.type),'Module signal needs a matching caller declaration');
@@ -50,15 +51,15 @@ export function linkProgram(source:Record<string,unknown>,validate:(value:Record
    });
   }
   for(const f of p.functions)visitProgramNodes(f.body,n=>{
-   if(n.op!=='call')return;need(plain(n.function),'Call functions must be local names');
-   if(own(n,'module')){need(plain(n.module),'Invalid module alias');const imported=imports.get(n.module!);need(imported&&imported.item.module.exports.includes(n.function),'Unknown module or unexported function');n.function=n.module+'.'+n.function;delete n.module;}
+   for(const call of programCalls(n)){need(plain(call.function),'Call functions must be local names');
+   if(own(call,'module')){need(plain(call.module),'Invalid module alias');const imported=imports.get(call.module!);need(imported&&imported.item.module.exports.includes(call.function),'Unknown module or unexported function');call.function=call.module+'.'+call.function;delete call.module;}}
   });
   for(const [alias,{item,linked}] of imports){
    const prefix=alias+'.';
    for(const state of linked.state??[])state.name=prefix+state.name;
    for(const f of linked.functions){f.name=prefix+f.name;visitProgramNodes(f.body,n=>{
     n.id=prefix+n.id;visitNodeExpressions(n,e=>{if('state' in e)e.state=prefix+e.state;});
-    if(n.op==='setState')n.variable=prefix+n.variable;if(n.op==='call')n.function=prefix+n.function;
+    if(n.op==='setState')n.variable=prefix+n.variable;for(const call of programCalls(n))call.function=prefix+call.function;
     if((n.op==='awaitEvent'||n.op==='emitEvent')&&own(item.signals,n.event))n.event=item.signals[n.event];
    });}
    p.functions.push(...linked.functions);p.state!.push(...linked.state!);

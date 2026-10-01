@@ -10509,11 +10509,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
-      "sha256": "719be37aacc9700a0c3207ada3f9eedfb3bda2d147f7018f634ab176ead5cc6d"
+      "sha256": "215d3decfd07a0bd5fd43c45f2b6fc0430425df334f3df9f63c1c19751e55bfd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramMachine.cs",
-      "sha256": "bb2b1a73f8746d6ab61699314a76978575efc3194d4bf5e0b8e333f7ecae3be3"
+      "sha256": "2fdac5ef57dc53782ad00ae8dabd9474f20c1e52f3f66c84513a2fc5b5e72465"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramSubscriptions.cs",
@@ -10533,15 +10533,27 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramModules.cs",
-      "sha256": "e7124a26f7cec091eb760449a685ff42453718b9bafd34147ad9ae9557875f48"
+      "sha256": "78d5b9b597006417ecdff06f6701407e561849a03fc992882342f3d5710b56c6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramModuleLibrary.cs",
-      "sha256": "26d6744e6130712df3307c1c899fe2cc38dd8b88809671b242bc3147f72d2908"
+      "sha256": "8c4679608cd348523b58c379f19d54afed4cc7913b7642cd4856572d37cba153"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleDocument.cs",
       "sha256": "1474f2a638a00d2e8174c7a0def2cd6a39d48a36e9fb40647035dd5a0d56f47e"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleScheduler.cs",
+      "sha256": "9c96323bd6bb6bf35295aedd40c244646c527a4a09723b6bee4af7a1fc18050f"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleEvents.cs",
+      "sha256": "de1ff160a991b36938e39eabc5112834dd1f0a5c05e44729f4e37d0838a3cbe8"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleCommands.cs",
+      "sha256": "344cf9af9de3b137faeebb5b056f6d469b6232d466f09e53712d988634fb6690"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRecipe.cs",

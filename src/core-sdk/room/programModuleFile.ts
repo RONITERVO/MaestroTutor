@@ -9,7 +9,7 @@ export function checkedModuleFile(value:unknown):ProgramModuleFile {
  const f=value as ProgramModuleFile;
  if(!f||typeof f!=='object'||Array.isArray(f)||Object.keys(f).length!==4||f.format!=='maestro-program-module'||f.version!==1||typeof f.hash!=='string'||!validModuleRecord(f.definition,f.hash))throw new Error('Invalid Maestro module file or mismatched content ID.');
  const p=f.definition.program;
- const wrapper={version:3,moduleVersion:1,...(p.dataVersion===1?{dataVersion:1}:{}),entry:'main',resources:p.resources,state:[],events:p.events,
+ const wrapper={version:3,moduleVersion:1,...(p.parallelVersion===1?{parallelVersion:1}:{}),...(p.dataVersion===1?{dataVersion:1}:{}),entry:'main',resources:p.resources,state:[],events:p.events,
   functions:[{name:'main',returns:'void',parameters:[],locals:[],body:[]}],
   imports:[{alias:'module',hash:f.hash,module:f.definition,signals:Object.fromEntries((p.events as {name:string}[]).map(e=>[e.name,e.name]))}]};
  const parsed=parseProgram(JSON.stringify(wrapper));if(!parsed.program)throw new Error('Module cannot be imported: '+parsed.error);

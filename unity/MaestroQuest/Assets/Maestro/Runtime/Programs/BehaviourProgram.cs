@@ -23,7 +23,7 @@ namespace Maestro.Quest.Programs
         public const int MaximumCharacters=24000,MaximumNodes=128,MaximumFunctions=16;
         public string Source {get;private set;}
         public int Version {get;private set;}
-        bool structured;
+        bool structured,parallel;
         internal readonly Dictionary<string,ProgramValue> InitialState=new();
         internal readonly Dictionary<string,ProgramType> CustomEvents=new();
         internal ProgramType EventType(string name) => CustomEvents.TryGetValue(name,out var type)?type:BehaviourCatalog.Event(name)!=null?ProgramType.Text:throw new ProgramFault("Unknown event");
@@ -112,8 +112,9 @@ namespace Maestro.Quest.Programs
         void ReadRoot(JObject root)
         {
             Need((root["version"]?.Type==JTokenType.Integer||root["version"]?.Type==JTokenType.Float)&&((double)root["version"]==2||(double)root["version"]==3),"Unsupported program version");
-            Version=(int)root["version"];Keys(root,Version==3?"version entry resources functions state events":"version entry resources functions","dataVersion");
+            Version=(int)root["version"];Keys(root,Version==3?"version entry resources functions state events":"version entry resources functions","dataVersion parallelVersion");
             Need(!root.ContainsKey("dataVersion")||Version==3&&(root["dataVersion"]?.Type==JTokenType.Integer||root["dataVersion"]?.Type==JTokenType.Float)&&(double)root["dataVersion"]==1,"Unsupported structured-value version");structured=root.ContainsKey("dataVersion");
+            Need(!root.ContainsKey("parallelVersion")||Version==3&&(root["parallelVersion"]?.Type==JTokenType.Integer||root["parallelVersion"]?.Type==JTokenType.Float)&&(double)root["parallelVersion"]==1,"Unsupported parallel-program version");parallel=root.ContainsKey("parallelVersion");
             if(Version==3) {
                 foreach(var token in Array(root["state"],16)) {var item=Object(token);Keys(item,"name initial","type");string name=Text(item["name"]);Need(ProgramModules.CompiledName(name)&&InitialState.TryAdd(name,Literal(item["initial"],item["type"])),"Invalid or duplicate state name");}
                 foreach(var token in Array(root["events"],16)) {var item=Object(token);Keys(item,"name type");string name=Text(item["name"]);var type=Type(Text(item["type"]));
@@ -233,6 +234,17 @@ namespace Maestro.Quest.Programs
                     case "switch":
                         Keys(node,"id op value cases default");var choice=Expression(node["value"],function);Need(choice.Kind<=ProgramType.Text,"Cases require a scalar value");var values=new List<ProgramValue>();
                         foreach(var item in Array(node["cases"],16)) {var arm=Object(item);Keys(arm,"value body");var value=Literal(arm["value"]);Need(value.Type==choice&&!values.Any(x=>x.Same(value)),"Duplicate or differently typed case");values.Add(value);Body(Array(arm["body"],MaximumNodes),function,depth+1);}Child("default");break;
+                    case "parallel":
+                        Need(parallel,"Parallel calls need parallelVersion 1");Keys(node,"id op branches");
+                        var branches=Array(node["branches"],4);Need(branches.Count>=2,"Parallel needs two to four branches");var destinations=new HashSet<string>();
+                        foreach(var tokenBranch in branches) {
+                            var branch=Object(tokenBranch);Keys(branch,"function args","result");string branchName=Text(branch["function"]);
+                            Need(functions.TryGetValue(branchName,out var branchFunction),"Unknown parallel function");calls[function.Name].Add(branchName);
+                            var branchArgs=Array(branch["args"],8);Need(branchArgs.Count==branchFunction.Parameters.Length,"Wrong parallel argument count");
+                            for(int i=0;i<branchArgs.Count;i++)Need(Expression(branchArgs[i],function)==branchFunction.Types[branchFunction.Parameters[i]],"Parallel argument type differs");
+                            if(branch.ContainsKey("result")) {string destination=Text(branch["result"]);Need(destinations.Add(destination)&&function.Types.TryGetValue(destination,out var resultType)&&resultType==branchFunction.Returns&&resultType!=ProgramType.Void,"Invalid or duplicate parallel result destination");}
+                        }
+                        break;
                     case "call":
                         Keys(node,"id op function args","result");string name=Text(node["function"]);Need(functions.TryGetValue(name,out var callee),"Unknown function");calls[function.Name].Add(name);
                         var args=Array(node["args"],8);Need(args.Count==callee.Parameters.Length,"Wrong function argument count");

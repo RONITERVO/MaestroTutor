@@ -32,6 +32,7 @@ export function requireRoomCapabilities(commands:{action:string;rule?:unknown;ex
   const needs=(value:unknown,features:Set<string>)=>{
     if(Array.isArray(value)){value.forEach(x=>needs(x,features));return;}
     if(!record(value))return;
+    if(value.op==='parallel'||value.parallelVersion!==undefined)features.add('parallelPrograms.v1');
     if(value.op==='awaitCondition')features.add('conditionWaits.v1');
     if(value.op==='awaitEvent'){
       if(value.fields!==undefined)features.add('eventFields.v1');

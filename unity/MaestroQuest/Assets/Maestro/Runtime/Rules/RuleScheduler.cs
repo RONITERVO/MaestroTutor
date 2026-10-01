@@ -38,6 +38,7 @@ namespace Maestro.Quest.Rules
             public IProgramEventWatch Watch;public bool WatchPending;
             public bool Reactive=>Sequence.Compile(out _).Version==3;
             public ProgramMachine Machine;
+            public Run Parent;public Run[] Children;public string TerminalNode;
             public CapabilityCall Active;
             public RoomOwnership.Lease OwnershipLease;
             public Newtonsoft.Json.Linq.JObject Invocation,Output;
@@ -66,7 +67,7 @@ namespace Maestro.Quest.Rules
         public bool ActionBusy(CapabilityCall call)=>call.RequiresQuietRoom?(running.Count>0||queued.Count>0):running.Any(run=>run.Active?.RequiresQuietRoom==true)||!Ownership.CanAcquire("catalog-check",RoomActorRole.Program,call.Claims,out _);
         public RoomOwnership Ownership {get;}
         public string LastError { get; private set; }
-        public RuleRunView[] ObserveRuns() => running.Where(x=>x.Invocation==null).Select(x=>new RuleRunView {id=x.Id,sequenceId=x.Sequence.id,preparing=x.Preparing,nodeId=x.Machine?.NodeId,functionName=x.Machine?.Function,status=x.Machine?.Wait!=null?x.Machine.Wait.Condition!=null?"Waiting for condition":x.Machine.Wait.Event==null?"Waiting for timer":"Waiting for "+x.Machine.Wait.Event:x.Computing?"Evaluating":x.Preparing?x.Active?.AwaitCompletion==true?"Waiting for action completion":"Loading":"Running",
+        public RuleRunView[] ObserveRuns() => running.Where(x=>x.Invocation==null).Select(x=>new RuleRunView {id=x.Id,sequenceId=x.Sequence.id,parentRunId=x.Parent?.Id,preparing=x.Preparing,nodeId=x.Machine?.NodeId,functionName=x.Machine?.Function,status=x.Children!=null?"Waiting for parallel branches":x.Machine?.Wait!=null?x.Machine.Wait.Condition!=null?"Waiting for condition":x.Machine.Wait.Event==null?"Waiting for timer":"Waiting for "+x.Machine.Wait.Event:x.Computing?"Evaluating":x.Preparing?x.Active?.AwaitCompletion==true?"Waiting for action completion":"Loading":"Running",
             waiting=x.Machine?.Wait!=null,waitEvent=x.Machine?.Wait?.Event,waitSeconds=x.Machine?.Wait!=null&&x.Machine.Wait.Seconds>0?Math.Max(0,x.Ends-lastNow):0,
             state=x.Machine?.State.Select(v=>new ProgramVariableView {name=v.Key,type=v.Value.Type.ToString().ToLowerInvariant(),value=v.Value.Display}).ToArray()??Array.Empty<ProgramVariableView>(),
             locals=x.Machine?.Locals.Select(v=>new ProgramVariableView {name=v.Key,type=v.Value.Type.ToString().ToLowerInvariant(),value=v.Value.Display}).ToArray()??Array.Empty<ProgramVariableView>()}).ToArray();
@@ -153,6 +154,7 @@ namespace Maestro.Quest.Rules
             run.Computing=false;
             {
                 var yielded=run.Machine.Advance(out run.Active);
+                if(yielded==ProgramYield.Parallel)return StartParallel(run);
                 if(yielded==ProgramYield.Waiting)return WaitForEvent(run,now);
                 if(yielded==ProgramYield.Signal) {
                     var signal=run.Machine.Signal;
@@ -215,6 +217,7 @@ namespace Maestro.Quest.Rules
             lastNow=now;PollWatches(now);DispatchEvents(now);
             foreach (var run in running.ToArray())
             {
+                if(!running.Contains(run)||run.Children!=null)continue;
                 if(run.Machine.Wait!=null) {
                     if(run.Machine.Wait.Seconds==0||now<run.Ends)continue;
                     Unsubscribe(run);run.Machine.Resume(false);run.EventDepth=0;StartStep(run,now);continue;
@@ -276,16 +279,44 @@ namespace Maestro.Quest.Rules
             foreach (var run in running.Where(x => x.Targets.Contains(targetId)).ToArray()) Stop(run,preservePlacement && run.Active!=null && run.Active.Resources.Contains(targetId));
             queued.RemoveAll(x => document.sequences.FirstOrDefault(y => y.id == x.SequenceId)?.Targets().Contains(targetId) == true);
         }
-        void Finish(Run run,string phase,string status) {
+        void Finish(Run run,string phase,string status,bool joining=true) {
+            if(!running.Contains(run))return;
             if(run.Invocation!=null) {if(phase=="completed")status="Action completed";else if(phase=="cancelled"&&status=="Behaviour stopped")status="Action cancelled";}
-            ReleaseClaims(run);Unsubscribe(run);running.Remove(run);outcomes.Enqueue(new FinishedRun {Outcome=new RuleOutcome {id=run.Id,sequenceId=run.Sequence.id,phase=phase,nodeId=run.Machine?.NodeId,status=status??phase},Invocation=run.Invocation,Output=run.Output,Resources=run.Targets.ToArray()});
+            ReleaseClaims(run);Unsubscribe(run);running.Remove(run);
+            // A child completing is not a completed behaviour. Keep the existing
+            // outcome contract root-only so readers cannot mistake a branch for
+            // the requested program's result while its parent is still waiting.
+            if(run.Parent==null)outcomes.Enqueue(new FinishedRun {Outcome=new RuleOutcome {id=run.Id,sequenceId=run.Sequence.id,phase=phase,nodeId=run.TerminalNode??run.Machine?.NodeId,status=status??phase},Invocation=run.Invocation,Output=run.Output,Resources=run.Targets.ToArray()});
             while(outcomes.Count>MaximumOutcomes)outcomes.Dequeue();
             if(run.Invocation!=null)Receipts?.Update(LiveInvocation(run.Id));
+            if(joining&&phase=="completed"&&run.Parent!=null)JoinParallel(run.Parent);
         }
+        bool StartParallel(Run parent) {
+            var branches=parent.Machine.Branches;
+            if(running.Count+branches.Length>MaximumConcurrent) {LastError="Not enough scheduler slots for all parallel branches";Stop(parent,false,"failed",LastError);return false;}
+            parent.Children=branches.Select(machine=>new Run {Id=Guid.NewGuid().ToString("N"),Sequence=parent.Sequence,Parent=parent,Machine=machine,Targets=new(),Computing=true,EventDepth=parent.EventDepth}).ToArray();
+            running.AddRange(parent.Children);return true;
+        }
+        void JoinParallel(Run parent) {
+            if(!running.Contains(parent)||parent.Children.Any(running.Contains))return;
+            // Preserve causal depth through fork/join, including child signals.
+            parent.EventDepth=parent.Children.Max(child=>child.EventDepth);parent.Children=null;
+            if(!parent.Machine.CompleteParallel(out var error)){LastError=error;Stop(parent,false,"failed",error);return;}
+            parent.Computing=true;
+        }
+        static Run Root(Run run){while(run.Parent!=null)run=run.Parent;return run;}
         void Stop(Run run,bool preservePlacement,string phase="cancelled",string status="Behaviour stopped") {
+            if(!running.Contains(run))return;
+            var root=Root(run);if(run!=root){root.TerminalNode=run.Machine?.NodeId;status="Branch "+run.Machine?.Function+": "+status;}var group=running.Where(candidate=>Root(candidate)==root).Reverse().ToArray();
             var notice=(actions as IRuleInterruptionInfo)?.InterruptionStatus(run.Id);
             if(!string.IsNullOrEmpty(notice))status=phase=="cancelled"?notice:status+". "+notice;
-            try {actions.Stop(run.Id,preservePlacement);} finally {Finish(run,phase,status);}
+            Exception cleanupFailure=null;
+            foreach(var member in group) {
+                try {actions.Stop(member.Id,member==run&&preservePlacement);}
+                catch(Exception exception) {cleanupFailure??=exception;if(group.Length>1)phase="failed";status=LastError="An action could not stop cleanly; inspect the room before running again";}
+                finally {Finish(member,phase,status,false);}
+            }
+            if(cleanupFailure!=null)throw new InvalidOperationException(LastError,cleanupFailure);
         }
         public bool StopSequence(string id)
         {

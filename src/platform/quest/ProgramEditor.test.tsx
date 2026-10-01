@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import {useState} from 'react';
 import {readFileSync} from 'node:fs';
-import {cleanup,fireEvent,render} from '@testing-library/react';
+import {cleanup,fireEvent,render,within} from '@testing-library/react';
 import {afterEach,expect,it,vi} from 'vitest';
 import {ProgramEditor} from './ProgramEditor';
 import {parseProgram,simpleProgramSteps,type BehaviourProgram} from '../../core-sdk/room/programs';
@@ -14,7 +14,7 @@ it('lets a human wire a native creation result into the next action without writ
  if(first.op!=='invoke'||second.op!=='invoke')throw new Error('Expected calls');
  delete first.results;second.bindings={};initial.resources=[String(second.arguments.target)];
  initial.functions[0].locals=[];let source=JSON.stringify(initial);
- function Harness(){const [value,setValue]=useState(source);return <ProgramEditor source={value} targets={[]} eventsSupported eventFieldsSupported eventSubscriptionsSupported factQueriesSupported conditionWaitsSupported resultsSupported structuredSupported onEditingChange={()=>{}} onChange={next=>{source=next;setValue(next);}}/>;}
+ function Harness(){const [value,setValue]=useState(source);return <ProgramEditor source={value} targets={[]} eventsSupported eventFieldsSupported eventSubscriptionsSupported factQueriesSupported conditionWaitsSupported parallelSupported resultsSupported structuredSupported onEditingChange={()=>{}} onChange={next=>{source=next;setValue(next);}}/>;}
  const screen=render(<Harness/>);
  fireEvent.click(screen.getByLabelText('create new variable for objectId'));
  fireEvent.change(screen.getByLabelText('push argument target variable'),{target:{value:'objectId'}});
@@ -32,7 +32,7 @@ const empty:BehaviourProgram={version:2,entry:'main',resources:[],functions:[{na
 function harness(initial=empty,objects=[{id:'maestro',name:'Maestro'},{id:'book',name:'Book'}]) {
  let source=JSON.stringify(initial);
  const onChange=vi.fn();
- function Harness(){const [value,setValue]=useState(source);return <ProgramEditor source={value} targets={objects} eventsSupported eventFieldsSupported eventSubscriptionsSupported factQueriesSupported conditionWaitsSupported resultsSupported structuredSupported onEditingChange={()=>{}} onChange={next=>{source=next;setValue(next);onChange(next);}}/>;}
+ function Harness(){const [value,setValue]=useState(source);return <ProgramEditor source={value} targets={objects} eventsSupported eventFieldsSupported eventSubscriptionsSupported factQueriesSupported conditionWaitsSupported parallelSupported resultsSupported structuredSupported onEditingChange={()=>{}} onChange={next=>{source=next;setValue(next);onChange(next);}}/>;}
  const screen=render(<Harness/>);
  const change=(label:string,value:string)=>fireEvent.change(screen.getByLabelText(label),{target:{value}});
  const click=(name:string)=>fireEvent.click(screen.getByRole('button',{name}));
@@ -333,4 +333,16 @@ it('authors condition watches visually with explicit initial, stable and result 
 });
 it('does not offer new condition waits when the native feature is unavailable',()=>{
  const screen=render(<ProgramEditor source={JSON.stringify(empty)} targets={[]} eventsSupported onEditingChange={()=>{}} onChange={()=>{}}/>);expect(screen.queryByLabelText('+ Condition wait in main')).toBeNull();
+});
+
+it('authors parallel function calls, typed arguments and results through book controls',()=>{
+ const p:BehaviourProgram=JSON.parse(JSON.stringify(empty));p.functions.push({name:'answer',returns:'number',parameters:[],locals:[],body:[{id:'answer',op:'return',value:{value:4}}]});p.functions[0].locals=[{name:'left',initial:0},{name:'right',initial:0}];
+ const h=harness(p);h.click('+ Run together in main');let parsed=parseProgram(h.source()).program!;expect(parsed.parallelVersion).toBe(1);expect(parsed.functions[0].body[0].op).toBe('parallel');
+ h.click('Edit values block_1');const branches=h.screen.getAllByRole('group').filter(group=>group.querySelector('legend')?.textContent?.startsWith('Branch'));
+ fireEvent.change(within(branches[0]).getByLabelText('Function result'),{target:{value:'left'}});fireEvent.change(within(branches[1]).getByLabelText('Function result'),{target:{value:'right'}});h.click('Update draft');
+ parsed=parseProgram(h.source()).program!;expect(parsed.functions[0].body[0]).toMatchObject({branches:[{function:'answer',result:'left'},{function:'answer',result:'right'}]});expect(h.screen.getByText(/Run together: answer/)).toBeTruthy();
+});
+it('hides new parallel authoring without support and shows separate native branch traces',()=>{
+ const p:BehaviourProgram=JSON.parse(JSON.stringify(empty));const screen=render(<ProgramEditor source={JSON.stringify(p)} targets={[]} onChange={()=>{}} onEditingChange={()=>{}} runs={[{id:'a'.repeat(32),sequenceId:'b'.repeat(32),preparing:false,functionName:'main',status:'Waiting for parallel branches'},{id:'c'.repeat(32),sequenceId:'b'.repeat(32),parentRunId:'a'.repeat(32),preparing:false,functionName:'worker',status:'Running',locals:[{name:'x',type:'number',value:'4'}]}]}/>);
+ expect(screen.queryByLabelText('+ Run together in main')).toBeNull();expect(screen.getAllByLabelText('Live program values')).toHaveLength(2);expect(screen.getByText(/branch cccccc/)).toBeTruthy();
 });

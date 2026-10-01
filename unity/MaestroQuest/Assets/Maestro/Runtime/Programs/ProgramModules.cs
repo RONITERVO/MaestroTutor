@@ -42,12 +42,13 @@ namespace Maestro.Quest.Programs
    Encode(module,0);using var sha=SHA256.Create();return string.Concat(sha.ComputeHash(Encoding.ASCII.GetBytes(b.ToString())).Select(v=>v.ToString("x2",CultureInfo.InvariantCulture)));
   }
   static void Expression(JToken token,Action<JObject> visit){var e=Obj(token);visit(e);if(e.ContainsKey("op"))foreach(var arg in List(e["args"],3))Expression(arg,visit);if(e.ContainsKey("fact")&&e["bindings"] is JObject bindings)foreach(var binding in bindings.Properties())Expression(binding.Value,visit);}
+  static IEnumerable<JObject> Calls(JObject node)=>(string)node["op"]=="call"?new[]{node}:(string)node["op"]=="parallel"?List(node["branches"],4).Select(Obj):Enumerable.Empty<JObject>();
   static void Expressions(JObject n,Action<JObject> visit){
    switch((string)n["op"]){
     case "set":case "setState":case "emitEvent":case "switch":Expression(n["value"],visit);break;
     case "if":Expression(n["test"],visit);break;case "repeat":Expression(n["count"],visit);break;case "sleep":Expression(n["seconds"],visit);break;
     case "return":if(n.ContainsKey("value"))Expression(n["value"],visit);break;
-    case "call":foreach(var arg in List(n["args"],8))Expression(arg,visit);break;
+    case "call":case "parallel":foreach(var call in Calls(n))foreach(var arg in List(call["args"],8))Expression(arg,visit);break;
     case "invoke":foreach(var p in Obj(n["bindings"]).Properties())Expression(p.Value,visit);break;
     case "awaitCondition":Expression(n["test"],visit);Expression(n["stableSeconds"],visit);Expression(n["timeout"],visit);break;
     case "awaitEvent":Expression(n["timeout"],visit);if(n.ContainsKey("bindings"))foreach(var p in Obj(n["bindings"]).Properties())Expression(p.Value,visit);break;
@@ -74,6 +75,7 @@ namespace Maestro.Quest.Programs
       Need(exports.All(n=>List(child["functions"],16).Any(f=>Text(Obj(f)["name"])==Text(n))),"Export must name a local function");
       Need(List(child["resources"],16).All(r=>List(raw["resources"],16).Any(v=>JToken.DeepEquals(r,v))),"Declare every imported module resource in its caller");
       Need(!child.ContainsKey("dataVersion")||NumberIs(raw["dataVersion"],1),"Caller must enable imported structured values");
+      Need(!child.ContainsKey("parallelVersion")||NumberIs(raw["parallelVersion"],1),"Caller must enable imported parallel calls");
       var linked=Scope(child,depth+1);var signals=Obj(imp["signals"]);var events=List(raw["events"],16).Select(Obj).ToArray();var declared=List(linked["events"],16);
       Need(signals.Count==declared.Count,"Connect every module signal explicitly");foreach(var e in declared){var ev=Obj(e);string name=Text(ev["name"]);Need(signals.ContainsKey(name)&&signals[name].Type==JTokenType.String&&events.Any(c=>JToken.DeepEquals(c["name"],signals[name])&&JToken.DeepEquals(c["type"],ev["type"])),"Module signal needs a matching caller declaration");}
       imports.Add((string)imp["alias"],(imp,linked));
@@ -83,9 +85,9 @@ namespace Maestro.Quest.Programs
     foreach(var token in List(p["functions"],16)){var f=Obj(token);Need(Plain(f["name"]),"Function names must be local");Nodes(List(f["body"],128),n=>{
      Need(Plain(n["id"]),"Block identities must be local");Expressions(n,e=>{if(e.ContainsKey("state"))Need(Plain(e["state"]),"State references must be local");});
      if((string)n["op"]=="setState")Need(Plain(n["variable"]),"State destinations must be local");
-     if((string)n["op"]=="call"){
-      Need(Plain(n["function"]),"Call functions must be local names");if(n.ContainsKey("module")){
-       Need(Plain(n["module"]),"Invalid module alias");string alias=(string)n["module"];Need(imports.TryGetValue(alias,out var imported)&&List(imported.item["module"]["exports"],16).Any(x=>Text(x)==Text(n["function"])),"Unknown module or unexported function");n["function"]=alias+"."+Text(n["function"]);n.Remove("module");
+     foreach(var call in Calls(n)){
+      Need(Plain(call["function"]),"Call functions must be local names");if(call.ContainsKey("module")){
+       Need(Plain(call["module"]),"Invalid module alias");string alias=(string)call["module"];Need(imports.TryGetValue(alias,out var imported)&&List(imported.item["module"]["exports"],16).Any(x=>Text(x)==Text(call["function"])),"Unknown module or unexported function");call["function"]=alias+"."+Text(call["function"]);call.Remove("module");
       }
      }
     });}
@@ -93,7 +95,7 @@ namespace Maestro.Quest.Programs
      foreach(var state in (JArray)linked["state"])state["name"]=prefix+Text(state["name"]);
      foreach(var f in (JArray)linked["functions"]){f["name"]=prefix+Text(f["name"]);Nodes((JArray)f["body"],n=>{
       n["id"]=prefix+Text(n["id"]);Expressions(n,e=>{if(e.ContainsKey("state"))e["state"]=prefix+Text(e["state"]);});
-      if((string)n["op"]=="setState")n["variable"]=prefix+Text(n["variable"]);if((string)n["op"]=="call")n["function"]=prefix+Text(n["function"]);
+      if((string)n["op"]=="setState")n["variable"]=prefix+Text(n["variable"]);foreach(var call in Calls(n))call["function"]=prefix+Text(call["function"]);
       if(((string)n["op"]=="awaitEvent"||(string)n["op"]=="emitEvent")&&signals.TryGetValue(Text(n["event"]),out var target))n["event"]=target.DeepClone();
      });}
      foreach(var f in (JArray)linked["functions"])((JArray)p["functions"]).Add(f.DeepClone());foreach(var state in (JArray)linked["state"])((JArray)p["state"]).Add(state.DeepClone());

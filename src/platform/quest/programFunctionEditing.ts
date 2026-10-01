@@ -1,3 +1,4 @@
+import {programCalls} from '../../core-sdk/room/programTraversal';
 import {visitProgramNodes as visit,visitNodeExpressions} from './programEditingTraversal';
 import {defaultDataValue} from '../../../shared/programValues';
 // Copyright 2026 Roni Tervo
@@ -18,7 +19,7 @@ function variables(body:ProgramNode[],map:(name:string)=>string) {
  visit(body,n=>{
   visitNodeExpressions(n,e=>{if('var' in e)e.var=map(e.var);});
   if(n.op==='set')n.variable=map(n.variable);
-  if(n.op==='call'&&n.result)n.result=map(n.result);
+  for(const call of programCalls(n))if(call.result)call.result=map(call.result);
   if(n.op==='invoke'&&n.results)for(const key of Object.keys(n.results))n.results[key]=map(n.results[key]);
   if(n.op==='awaitEvent'||n.op==='awaitCondition'){n.received=map(n.received);n.value=map(n.value);if(n.op==='awaitEvent'&&n.fields)for(const key of Object.keys(n.fields))n.fields[key]=map(n.fields[key]);}
  });
@@ -44,8 +45,8 @@ export function editProgramFunction(program:BehaviourProgram,originalName:string
  if(index<0)next.functions.push(fn);else next.functions[index]=fn;
  if(previous){
   if(next.entry===originalName)next.entry=fn.name;
-  for(const f of next.functions)visit(f.body,n=>{if(n.op==='call'&&!n.module&&n.function===originalName){
-   n.function=fn.name;n.args=draft.parameters.map(p=>p.origin===null?initialExpression(p.type):n.args[p.origin]);
+  for(const f of next.functions)visit(f.body,n=>{for(const call of programCalls(n))if(!call.module&&call.function===originalName){
+   call.function=fn.name;call.args=draft.parameters.map(p=>p.origin===null?initialExpression(p.type):call.args[p.origin]);
   }});
  }
  // Supply a visible return block for a new typed function (or a formerly void body).

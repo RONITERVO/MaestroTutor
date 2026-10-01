@@ -142,6 +142,11 @@ export function ProgramBlockEditor({node,program,fn,objects,onChange,eventFields
         {expr('Event payload',node.value,type,value=>onChange({...node,value}))}
       </>;
     }
+    case 'parallel':return <>
+      <p>Run all branches together, then continue. Each gets a copy of state; only chosen return values reach this function. A failed or stopped branch cancels the group. Completed actions are not undone.</p>
+      {node.branches.map((branch,index)=><fieldset key={index}><legend>Branch {index+1}</legend><ProgramBlockEditor node={{...branch,id:node.id,op:'call'}} program={program} fn={fn} objects={objects} factQueriesSupported={factQueriesSupported} eventFieldsSupported={eventFieldsSupported} eventSubscriptionsSupported={eventSubscriptionsSupported} onChange={value=>{if(value.op!=='call')return;const {id:_id,op:_op,...call}=value;onChange({...node,branches:node.branches.map((b,i)=>i===index?call:b)});}}/><button disabled={node.branches.length<=2} onClick={()=>onChange({...node,branches:node.branches.filter((_,i)=>i!==index)})}>Remove branch {index+1}</button></fieldset>)}
+      <button disabled={node.branches.length>=4} onClick={()=>onChange({...node,branches:[...node.branches,{...node.branches[0],result:undefined}]})}>Add parallel branch</button>
+    </>;
     case 'call': {
       const choices=programCallables(program),key=(node.module?node.module+'.':'')+node.function,callee=choices.find(c=>c.key===key)!.fn;
       return <>

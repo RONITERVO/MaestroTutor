@@ -22,7 +22,7 @@ namespace Maestro.Quest.Rules
         public RuleEdit[] edits;
     }
     [Serializable] public sealed class RuleSummary { public string id,name,error; public int steps; public bool repeat,program; }
-    [Serializable] public sealed class RuleRunView { public string id,sequenceId; public bool preparing,waiting;public string waitEvent;public float waitSeconds;public ProgramVariableView[] state=Array.Empty<ProgramVariableView>(); public string nodeId,functionName,status; public ProgramVariableView[] locals=Array.Empty<ProgramVariableView>(); }
+    [Serializable] public sealed class RuleRunView { public string parentRunId; public string id,sequenceId; public bool preparing,waiting;public string waitEvent;public float waitSeconds;public ProgramVariableView[] state=Array.Empty<ProgramVariableView>(); public string nodeId,functionName,status; public ProgramVariableView[] locals=Array.Empty<ProgramVariableView>(); }
     [Serializable] public sealed class RuleOutcome {public string id,sequenceId,phase,nodeId,status;}
     [Serializable] public sealed class ProgramVariableView {public string name,type,value;}
     [Serializable] public sealed class RuleView

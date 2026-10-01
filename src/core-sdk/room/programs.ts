@@ -12,14 +12,15 @@ export type Value=DataValue;
 export type ValueType=DataType;
 export type {ScalarType};
 export type Expression={value:Value;type?:ValueType}|{var:string}|{state:string}|{fact:string;version?:number;arguments?:Record<string,unknown>;bindings?:Record<string,Expression>}|{op:string;args:Expression[]};
+export interface ProgramCall {module?:string;function:string;args:Expression[];result?:string}
 export type ProgramNode={id:string}&(
  {op:'awaitCondition';test:Expression;transition:'true'|'false'|'either';initial:'baseline'|'report';stableSeconds:Expression;timeout:Expression;received:string;value:string}|
  {op:'set'|'setState';variable:string;value:Expression}|{op:'forever';body:ProgramNode[]}|{op:'sleep';seconds:Expression}|{op:'awaitEvent';event:string;source:string;timeout:Expression;received:string;value:string;fields?:Record<string,string>;version?:number;arguments?:Record<string,unknown>;bindings?:Record<string,Expression>}|{op:'emitEvent';event:string;value:Expression}|{op:'if';test:Expression;then:ProgramNode[];else:ProgramNode[]}|
  {op:'repeat';count:Expression;body:ProgramNode[]}|{op:'switch';value:Expression;cases:{value:Value;body:ProgramNode[]}[];default:ProgramNode[]}|
- {op:'call';module?:string;function:string;args:Expression[];result?:string}|{op:'return';value?:Expression}|
+ {op:'parallel';branches:ProgramCall[]}|{op:'call';module?:string;function:string;args:Expression[];result?:string}|{op:'return';value?:Expression}|
  {op:'invoke';capability:string;version:number;arguments:Record<string,unknown>;bindings:Record<string,Expression>;results?:Record<string,string>});
 export interface ProgramFunction {name:string;returns:ValueType|'void';parameters:{name:string;type:ValueType}[];locals:{name:string;initial:Value;type?:ValueType}[];body:ProgramNode[]}
-export interface BehaviourProgram {version:2|3;dataVersion?:1;moduleVersion?:1;imports?:ProgramImport[];entry:string;resources:string[];functions:ProgramFunction[];state?:{name:string;initial:Value;type?:ValueType}[];events?:{name:string;type:ScalarType}[]}
+export interface BehaviourProgram {version:2|3;parallelVersion?:1;dataVersion?:1;moduleVersion?:1;imports?:ProgramImport[];entry:string;resources:string[];functions:ProgramFunction[];state?:{name:string;initial:Value;type?:ValueType}[];events?:{name:string;type:ScalarType}[]}
 export const programFacts=behaviourFactTypes;
 const record=(v:unknown):v is Record<string,unknown>=>v!==null&&typeof v==='object'&&!Array.isArray(v);
 function need(condition:unknown,message:string):asserts condition {if(!condition)throw new Error(message);}
@@ -45,7 +46,7 @@ export function parseProgram(source:unknown):{program:BehaviourProgram|null;link
  catch(error){return {program:null,error:error instanceof Error?error.message:'Invalid program'};}
 }
 function validateProgram(root:Record<string,unknown>):void {
-  need(root.version===2||root.version===3,'Unsupported program version');keys(root,root.version===3?'version entry resources functions state events':'version entry resources functions','dataVersion');need(root.dataVersion===undefined||root.version===3&&root.dataVersion===1,'Unsupported structured-value version');
+  need(root.version===2||root.version===3,'Unsupported program version');keys(root,root.version===3?'version entry resources functions state events':'version entry resources functions','dataVersion parallelVersion');need(root.parallelVersion===undefined||root.version===3&&root.parallelVersion===1,'Unsupported parallel-program version');need(root.dataVersion===undefined||root.version===3&&root.dataVersion===1,'Unsupported structured-value version');
   const state=new Map<string,ValueType>(),events=new Map<string,ScalarType>();
   const supported=(t:ValueType|'void')=>{need(root.version===3&&root.dataVersion===1||typeof t==='string','Structured values need version 3 and dataVersion 1');return t;};
   if(root.version===3){
@@ -112,6 +113,11 @@ function validateProgram(root:Record<string,unknown>):void {
      case 'if':keys(n,'id op test then else');expect('test','boolean');child('then');child('else');break;
      case 'repeat':keys(n,'id op count body');expect('count','number');child('body');break;
      case 'switch': {keys(n,'id op value cases default');const t=expr(n.value,f.types),values=new Set<unknown>();need(typeof t==='string','Cases require a scalar value');for(const value of array(n.cases,16)){const arm=obj(value);keys(arm,'value body');need(literal(arm.value)===t&&!values.has(arm.value),'Duplicate or differently typed case');values.add(arm.value);body(array(arm.body,128),f,depth+1);}child('default');break;}
+     case 'parallel': {
+      need(root.parallelVersion===1,'Parallel calls need parallelVersion 1');keys(n,'id op branches');const branches=array(n.branches,4);need(branches.length>=2,'Parallel needs two to four branches');const destinations=new Set<string>();
+      for(const token of branches){const branch=obj(token);keys(branch,'function args','result');const callee=functions.get(text(branch.function));need(callee,'Unknown parallel function');calls.get(f.source.name as string)!.add(branch.function as string);const args=array(branch.args,8),params=array(callee.source.parameters,8);need(args.length===params.length,'Wrong parallel argument count');args.forEach((a,i)=>need(sameDataType(expr(a,f.types),readDataType(obj(params[i]).type)),'Parallel argument type differs'));if(branch.result!==undefined){const destination=text(branch.result),t=f.types.get(destination);need(!destinations.has(destination)&&t&&sameDataType(t,type(callee.source.returns)),'Invalid or duplicate parallel result destination');destinations.add(destination);}}
+      break;
+     }
      case 'call': {keys(n,'id op function args','result');const callee=functions.get(text(n.function));need(callee,'Unknown function');calls.get(f.source.name as string)!.add(n.function as string);const args=array(n.args,8),params=array(callee.source.parameters,8);need(args.length===params.length,'Wrong function argument count');args.forEach((a,i)=>need(sameDataType(expr(a,f.types),readDataType(obj(params[i]).type)),'Function argument type differs'));if(Object.prototype.hasOwnProperty.call(n,'result')){const t=f.types.get(text(n.result));need(t&&sameDataType(t,type(callee.source.returns)),'Invalid return destination');}break;}
      case 'return':keys(n,f.source.returns==='void'?'id op':'id op value');if(f.source.returns!=='void')expect('value',f.source.returns as ValueType);break;
      case 'invoke': {

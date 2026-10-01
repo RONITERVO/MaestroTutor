@@ -8,7 +8,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Maestro.Quest.Programs
 {
-    public enum ProgramYield { Action, Yield, Waiting, Signal, Completed, Failed }
+    public enum ProgramYield { Action, Parallel, Yield, Waiting, Signal, Completed, Failed }
     public sealed class ProgramWait {public string Event,Source;public float Seconds;public JObject Arguments;public Func<float,IProgramEventWatch> Condition;}
     public sealed class ProgramSignal {public string Event;public ProgramValue Value;}
     public interface IProgramFacts {bool TryRead(string name,out ProgramValue value);}
@@ -31,6 +31,13 @@ namespace Maestro.Quest.Programs
         Scope waitingScope;string receivedVariable,valueVariable;JObject eventBindings;
         Scope resultScope;JObject resultBindings;BehaviourCatalog.ActionDefinition resultContract;
         readonly HashSet<string> createdResources=new();
+        sealed class CreationBudget {public readonly HashSet<string> Created=new();public int Reserved;public ProgramMachine Root;}
+        readonly CreationBudget creationBudget;
+        int reservedCreations;
+        Scope parallelScope;string[] parallelResults;
+        public ProgramMachine[] Branches {get;private set;}
+        public long TotalInstructions {get;private set;}
+        public int Activations {get;private set;}
         public JObject LastOutput {get;private set;}
         public ProgramWait Wait {get;private set;}
         public ProgramSignal Signal {get;private set;}
@@ -43,8 +50,30 @@ namespace Maestro.Quest.Programs
         public string Function=>observed?.Function.Name;
         public ProgramMachine(BehaviourProgram program,IProgramFacts facts)
         {
-            this.program=program??throw new ArgumentNullException(nameof(program));this.facts=facts;state=new(program.InitialState);
+            this.program=program??throw new ArgumentNullException(nameof(program));this.facts=facts;state=new(program.InitialState);creationBudget=new(){Root=this};
             Call(program.Entry,Array.Empty<ProgramValue>(),null,null);
+        }
+        ProgramMachine(ProgramMachine parent,string function,ProgramValue[] arguments) {
+            program=parent.program;facts=parent.facts;state=new(parent.state);creationBudget=parent.creationBudget;
+            createdResources.UnionWith(parent.createdResources);Instructions=parent.Instructions;
+            Call(function,arguments,null,null);
+        }
+        public bool CompleteParallel(out string error) {
+            error=null;if(Branches==null){error="No parallel calls are pending";return false;}
+            if(Branches.Any(branch=>!branch.terminal||branch.Error!=null)){error="Every parallel branch must complete successfully before joining";return false;}
+            try {
+                // A join is not a work-budget reset. Only a branch's actual event,
+                // delay or timed action can establish a fresh activation.
+                long work=Branches.Sum(branch=>branch.TotalInstructions);
+                if(Branches.Any(branch=>branch.Activations>0))BeginActivation();
+                else {if(work>MaximumInstructions-Instructions)throw new ProgramFault("Program instruction budget exhausted");Instructions+=(int)work;}
+                TotalInstructions+=work;
+                for(int i=0;i<Branches.Length;i++) {
+                    if(parallelResults[i]!=null)parallelScope.Values[parallelResults[i]]=Branches[i].Result;
+                    createdResources.UnionWith(Branches[i].createdResources);
+                }
+                Branches=null;parallelScope=null;parallelResults=null;CheckMemory();return true;
+            }catch(ProgramFault fault){error=fault.Message;return false;}
         }
         void Call(string name,ProgramValue[] args,Scope caller,string result)
         {
@@ -63,7 +92,7 @@ namespace Maestro.Quest.Programs
         }
         public ProgramYield Advance(out CapabilityCall action,int budget=32)
         {
-            action=null;Signal=null;if(resultContract!=null)throw new InvalidOperationException("Complete the pending action result before advancing");if(Wait!=null)return ProgramYield.Waiting;if(terminal)return Error==null?ProgramYield.Completed:ProgramYield.Failed;
+            action=null;Signal=null;if(Branches!=null)return ProgramYield.Parallel;if(resultContract!=null)throw new InvalidOperationException("Complete the pending action result before advancing");if(Wait!=null)return ProgramYield.Waiting;if(terminal)return Error==null?ProgramYield.Completed:ProgramYield.Failed;
             if(budget<1||budget>256)throw new ArgumentOutOfRangeException(nameof(budget));
             try {
                 CheckMemory();int began=Instructions;
@@ -108,6 +137,13 @@ namespace Maestro.Quest.Programs
                         case "repeat":
                             double repeats=Eval("count").Number;if(repeats<0||repeats>10000||Math.Truncate(repeats)!=repeats)throw new ProgramFault("Repeat count must be an integer from 0 to 10000");
                             Block((JArray)node["body"],frame.Scope,(int)repeats);break;
+                        case "parallel":
+                            parallelScope=frame.Scope;var branches=(JArray)node["branches"];
+                            // Evaluate every argument before a branch can produce an effect.
+                            var argumentsByBranch=branches.Select(branch=>((JArray)branch["args"]).Select(arg=>Evaluate(arg,frame.Scope)).ToArray()).ToArray();
+                            parallelResults=branches.Select(branch=>(string)branch["result"]).ToArray();
+                            Branches=branches.Select((branch,index)=>new ProgramMachine(this,(string)branch["function"],argumentsByBranch[index])).ToArray();
+                            CheckMemory();return ProgramYield.Parallel;
                         case "call":Call((string)node["function"],((JArray)node["args"]).Select(x=>Evaluate(x,frame.Scope)).ToArray(),frame.Scope,(string)node["result"]);break;
                         case "return":Return(node.ContainsKey("value")?Eval("value"):default);break;
                         case "invoke":
@@ -117,7 +153,9 @@ namespace Maestro.Quest.Programs
                             if(!action.Resources.All(id=>program.Allows(id)||createdResources.Contains(id)))throw new ProgramFault("Computed target is not a declared or created resource");
                             var contract=BehaviourCatalog.Action((string)node["capability"]);
                             if(((JObject)contract.OutputSchema["properties"]).Count>0) {
-                                if(createdResources.Count+contract.Module.MaximumCreatedObjects(arguments)>16)throw new ProgramFault("This run has reached its limit of 16 created objects");
+                                reservedCreations=contract.Module.MaximumCreatedObjects(arguments);
+                                if(creationBudget.Created.Count+creationBudget.Reserved+reservedCreations>16)throw new ProgramFault("This run has reached its limit of 16 created objects");
+                                creationBudget.Reserved+=reservedCreations;
                                 resultScope=frame.Scope;resultBindings=node["results"] as JObject;resultContract=contract;
                             }
                             action.NodeId=NodeId;return ProgramYield.Action;
@@ -131,7 +169,8 @@ namespace Maestro.Quest.Programs
             if(resultContract==null) {if(output.Count!=0) {error="Unexpected native action result";return false;}return true;}
             if(!CapabilityArguments.Validate(output,resultContract.OutputSchema,out error,"result"))return false;
             // Only validated results from the native handler authorize newly created IDs.
-            foreach(var id in CapabilityArguments.Resources(output,resultContract.OutputSchema))if(!string.IsNullOrEmpty(id)&&!program.Allows(id))createdResources.Add(id);
+            foreach(var id in CapabilityArguments.Resources(output,resultContract.OutputSchema))if(!string.IsNullOrEmpty(id)&&!program.Allows(id)){createdResources.Add(id);creationBudget.Created.Add(id);}
+            creationBudget.Reserved-=reservedCreations;reservedCreations=0;
             if(resultBindings!=null)foreach(var binding in resultBindings.Properties())resultScope.Values[(string)binding.Value]=ProgramValue.Literal(output[binding.Name]);
             LastOutput=(JObject)output.DeepClone();resultContract=null;resultScope=null;resultBindings=null;return true;
         }
@@ -153,18 +192,24 @@ namespace Maestro.Quest.Programs
             Wait=null;waitingScope=null;receivedVariable=valueVariable=null;eventBindings=null;
             BeginActivation(); // Scope/state/stack remain intact.
         }
-        internal void BeginActivation()=>Instructions=0;
+        internal void BeginActivation(){Instructions=0;Activations++;}
         void CheckMemory(){
-            int nodes=0,characters=0;var scopes=memoryScopes;scopes.Clear();
+            int nodes=0,characters=0;
             void Add(ProgramValue value){nodes+=value.Nodes;characters+=value.Characters;}
-            foreach(var value in state.Values)Add(value);
-            foreach(var frame in frames)if(scopes.Add(frame.Scope))foreach(var value in frame.Scope.Values.Values)Add(value);
-            Add(Result);if(nodes>1024||characters>8192)throw new ProgramFault("Program retained-value budget exceeded");
+            void Read(ProgramMachine machine) {
+                var scopes=machine.memoryScopes;scopes.Clear();
+                foreach(var value in machine.state.Values)Add(value);
+                foreach(var frame in machine.frames)if(scopes.Add(frame.Scope))foreach(var value in frame.Scope.Values.Values)Add(value);
+                Add(machine.Result);
+                if(machine.Branches!=null)foreach(var branch in machine.Branches)Read(branch);
+            }
+            Read(creationBudget.Root);
+            if(nodes>1024||characters>8192)throw new ProgramFault("Program retained-value budget exceeded");
         }
         void Charge(int count){for(int i=0;i<count;i++)Charge();}
         void Charge() {
             if(sampleBudget>=0){if(sampleBudget==0)throw new ProgramFault("Condition sample instruction budget exhausted");sampleBudget--;return;}
-            if(++Instructions>MaximumInstructions)throw new ProgramFault("Program instruction budget exhausted");
+            TotalInstructions++;if(++Instructions>MaximumInstructions)throw new ProgramFault("Program instruction budget exhausted");
         }
         bool EvaluateCondition(JToken test,Scope scope) {
             // A bounded sample is independent of accumulated statement work. False

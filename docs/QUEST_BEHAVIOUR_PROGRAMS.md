@@ -53,7 +53,8 @@ recovery copies) makes the collection read-only instead of rolling back to an
 older backup. An incompatible embedded program/capability instead disables only
 that program while preserving its source, as described in the compatibility section below. Current save files and incoming native save commands reject
 legacy/mixed sequence fields before deserialization can silently discard them.
-New opcodes still require a program-version change.
+New language constructs require explicit versioning. Parallel calls now use the
+`parallelVersion:1` extension described in [QUEST_PARALLEL_PROGRAMS.md](QUEST_PARALLEL_PROGRAMS.md).
 
 Invocations store `{id, op:"invoke", capability:"avatar.gesture.play", version:1,
 arguments:{target:"maestro", gesture:"greeting", seconds:1}, bindings:{}}`.
