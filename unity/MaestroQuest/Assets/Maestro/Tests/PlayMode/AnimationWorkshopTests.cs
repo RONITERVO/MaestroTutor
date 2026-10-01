@@ -16,7 +16,7 @@ using UnityEngine.XR.Interaction.Toolkit.Inputs.Readers;
 
 namespace Maestro.Quest.Tests
 {
-    public sealed class AnimationWorkshopTests
+    public sealed partial class AnimationWorkshopTests
     {
         GameObject root;
         XRInteractionManager manager;

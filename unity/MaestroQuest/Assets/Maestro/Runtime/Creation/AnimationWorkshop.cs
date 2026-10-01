@@ -111,9 +111,8 @@ namespace Maestro.Quest.Creation
             StopPlayback();
             var motion = editor.Read(targetId).motion ?? new RoomMotion();
             if (motion.frames.Length >= RoomMotion.MaximumFrames || motion.Duration >= RoomMotion.MaximumSeconds) { Say("This animation is full"); return; }
-            var frames = new List<MotionFrame>(motion.frames);
-            frames.Add(Capture(frames.Count == 0 ? 0 : motion.Duration + 1)); motion.frames = frames.ToArray();
-            if (Save(motion,avatar,avatar ? avatar.PoseRig.Capture() : null)) { selectedFrame = frames.Count - 1; Say("Frame " + frames.Count + " saved; move or pose, then add another"); }
+            if(!RoomMotionEdits.Put(motion,new[]{Capture(motion.frames.Length==0?0:motion.Duration+1)},false,out var edited,out var error)){Say(error);return;}
+            if (Save(edited,avatar,avatar ? avatar.PoseRig.Capture() : null)) { selectedFrame = edited.frames.Length - 1; Say("Frame " + edited.frames.Length + " saved; move or pose, then add another"); }
         }
         public void StepFrame(int direction)
         {
@@ -130,17 +129,16 @@ namespace Maestro.Quest.Creation
             if (!Ready() || IsRecording || IsPlaying) return;
             var motion = editor.Read(targetId).motion;
             if (motion == null || selectedFrame < 0 || selectedFrame >= motion.frames.Length) { Say("Choose a frame first"); return; }
-            motion.frames[selectedFrame] = Capture(motion.frames[selectedFrame].time);
-            if (Save(motion)) Say("Frame " + (selectedFrame+1) + " replaced");
+            if(!RoomMotionEdits.Put(motion,new[]{Capture(motion.frames[selectedFrame].time)},false,out var edited,out var error)){Say(error);return;}
+            if (Save(edited)) Say("Frame " + (selectedFrame+1) + " replaced");
         }
         public void DeleteFrame()
         {
             if (!Ready() || IsRecording) return;
             StopPlayback(); var motion = editor.Read(targetId).motion;
             if (motion == null || selectedFrame < 0 || selectedFrame >= motion.frames.Length) { Say("Choose a frame first"); return; }
-            var frames = new List<MotionFrame>(motion.frames); frames.RemoveAt(selectedFrame);
-            if (frames.Count > 0) { float start = frames[0].time; foreach (var frame in frames) frame.time -= start; }
-            motion.frames = frames.ToArray(); if (Save(frames.Count == 0 ? null : motion)) { selectedFrame = -1; Say("Frame removed — Undo restores it"); }
+            if(!RoomMotionEdits.Remove(motion,new[]{motion.frames[selectedFrame].time},out var edited,out var error)){Say(error);return;}
+            if (Save(edited)) { selectedFrame = -1; Say("Frame removed — Undo restores it"); }
         }
         public void ToggleRecord()
         {
@@ -175,7 +173,8 @@ namespace Maestro.Quest.Creation
             if (!Ready() || IsRecording) return;
             StopPlayback(); var motion = editor.Read(targetId).motion;
             if (motion == null) { Say("Save a frame first"); return; }
-            motion.loop = !motion.loop; if (Save(motion)) Say(motion.loop ? "Loop on" : "Loop off");
+            if(!RoomMotionEdits.Settings(motion,!motion.loop,null,out var edited,out var error)){Say(error);return;}
+            if (Save(edited)) Say(edited.loop ? "Loop on" : "Loop off");
         }
         void Apply(MotionFrame frame)
         {
@@ -187,7 +186,7 @@ namespace Maestro.Quest.Creation
         {
             if (!Ready() || IsRecording) return;
             Stop(); if (!avatar) { Say("Choose Maestro to restore automatic gestures"); return; }
-            Save(editor.Read(targetId).motion,true,null); Say("Maestro follows tutor activity again");
+            if(Save(editor.Read(targetId).motion,true,null))Say("Maestro follows tutor activity again");
         }
         public void Gesture()
         {
@@ -228,10 +227,8 @@ namespace Maestro.Quest.Creation
             StopPlayback(); var motion = editor.Read(targetId).motion;
             if (motion == null || motion.frames.Length < 2) { Say("Save at least two frames first"); return; }
             float duration = Mathf.Clamp(motion.Duration * factor,.1f,RoomMotion.MaximumSeconds);
-            float ratio = duration / motion.Duration;
-            foreach (var frame in motion.frames) frame.time *= ratio;
-            motion.frames[^1].time = duration;
-            if (Save(motion)) Say("Animation duration: " + duration.ToString("0.0") + " seconds");
+            if(!RoomMotionEdits.Settings(motion,null,duration,out var edited,out var error)){Say(error);return;}
+            if (Save(edited)) Say("Animation duration: " + duration.ToString("0.0") + " seconds");
         }
         void StopPlayback()
         {

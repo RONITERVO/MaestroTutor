@@ -163,7 +163,7 @@ namespace Maestro.Quest.Programs
                 watch:(world,args,now)=>new ProximitySubscription(world,args,now)),
         });
         public static readonly IReadOnlyList<FactDefinition> Facts=Array.AsReadOnly(new[] {
-            NativeObjectFacts.Position(),
+            NativeObjectFacts.Position(),AnimationAuthoringFacts.Summary(),AnimationAuthoringFacts.Frame(),AnimationAuthoringFacts.Joint(),
             WorkspaceRetentionFacts.Status(),WorkspaceRetentionFacts.Entry(),WorkspaceRetentionFacts.Removal(),
             WorkspaceEvidenceFacts.Status(),WorkspaceEvidenceFacts.Entry(),
             WorkspaceHistoryFacts.Status(),

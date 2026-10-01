@@ -81,7 +81,7 @@ export function CapabilityFields({schema,value,onChange,label,objects,depth=0}:{
   }
   const stringValue=typeof value==='string'?value:'';
   let options=schema.enum;
-  if(schema['x-resource']==='object') options=objects.filter(o=>!schema.pattern||new RegExp(schema.pattern).test(o.id)).map(o=>o.id);
+  if(schema['x-resource']==='object') options=objects.filter(o=>(!schema.pattern||new RegExp(schema.pattern).test(o.id))&&(!schema.enum||schema.enum.includes(o.id))).map(o=>o.id);
   if(options) return <label>{label}<select aria-label={label} value={stringValue} onChange={e=>onChange(e.target.value)}>
     {!options.includes(stringValue)&&<option value={stringValue}>{stringValue||'Choose an object'}</option>}
     {options.map(option=><option key={option} value={option}>{schema['x-resource']==='object'?objects.find(o=>o.id===option)?.name??option:option}</option>)}

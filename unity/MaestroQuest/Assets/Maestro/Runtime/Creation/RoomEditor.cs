@@ -335,10 +335,18 @@ namespace Maestro.Quest.Creation
         }
         public bool SaveAnimation(string id, RoomMotion motion, JointPose[] joints, bool savePose)
         {
-            var data = journal.Read(id); if (data == null) return false;
-            data.motion = motion?.Copy();
-            if (savePose) data.joints = MotionFrame.CopyJoints(joints);
-            return Commit(new[] { data },Array.Empty<string>(),"Animation saved",true);
+            bool saved=WriteAnimation(id,ObjectRevision(id),motion,joints,savePose,out var error);
+            if(!saved)SetStatus(error);return saved;
+        }
+        internal bool WriteAnimation(string id,int revision,RoomMotion motion,JointPose[] joints,bool savePose,out string error)
+        {
+            error="The object changed; inspect its animation before editing";
+            if(journal==null||ObjectRevision(id)!=revision)return false;
+            var data=Read(id);if(data==null)return false;
+            data.motion=motion?.Copy();if(savePose)data.joints=MotionFrame.CopyJoints(joints);
+            // Physical authoring already owns the target (and can be recording a grip).
+            // Remote callers separately require released/idle ownership before entering.
+            return CommitPersisted(new[]{data},Array.Empty<string>(),"Animation saved",false,out error);
         }
         public void RestorePose(string id)
         {

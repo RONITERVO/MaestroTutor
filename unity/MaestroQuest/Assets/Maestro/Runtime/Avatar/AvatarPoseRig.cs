@@ -38,6 +38,7 @@ namespace Maestro.Quest.Avatar
                 bindPositions.Add(joint,transform.InverseTransformPoint(bone.position));
             }
         }
+        public JointPose[] RestPose()=>rest.Select(x=>new JointPose {joint=x.Key,rotation=x.Value.normalized}).ToArray();
         public JointPose[] Capture() => bones.Select(x => new JointPose { joint = x.Key, rotation = x.Value.localRotation.normalized }).ToArray();
         public void Apply(JointPose[] pose)
         {

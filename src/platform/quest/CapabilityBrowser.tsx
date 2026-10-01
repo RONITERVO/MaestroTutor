@@ -80,6 +80,7 @@ export function CapabilityBrowser({client,onClose,onInsert}:{client:RoomAgentCli
    {definition&&<><p>{definition.id} · version {definition.version}</p>{definition.description&&<p>{definition.description}</p>}
     {definition.input.oneOf&&<CapabilityVariant schema={definition.input} value={parsedArgs} objects={state?.objects??[]} onChange={value=>{setArgs(JSON.stringify(value,null,2));setChecked('');setConfirming('');}}/>}
     {resolveCapabilitySchema(definition.input,call?.arguments)?.description&&<p>{resolveCapabilitySchema(definition.input,call?.arguments)?.description}</p>}
+    <details><summary>Edit action fields</summary><CapabilityFields schema={resolveCapabilitySchema(definition.input,parsedArgs)??definition.input} value={parsedArgs} label="Action inputs" objects={state?.objects??[]} onChange={value=>{setArgs(JSON.stringify(value,null,2));setChecked('');setConfirming('');}}/></details>
     <label>Action arguments<textarea aria-label="Action arguments" rows={12} spellCheck={false} value={args} disabled={pending} onChange={e=>{setArgs(e.target.value);setChecked('');setConfirming('');}}/></label>
     {invalid&&<p className="room-message room-message-warning">{invalid}</p>}
     <div className="room-workspace-actions"><button disabled={pending||!call} onClick={async()=>{if(call){const result=await send({operation:'check',call});if(result?.operation==='check')setChecked(key);}}}>Check availability</button>

@@ -11,6 +11,7 @@ import unavailableProgram from './unavailableProgramState.json';
 import historyRecovery from './actionHistoryRecoveryStates.json';
 import nativeExecutions from './executionStates.json';
 import nativeRemoval from './workspaceRemoval.json';
+import nativeAuthoring from './animationAuthoring.json';
 import nativeEvents from './eventProgramStates.json';
 import creationProgram from '../../unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-create.json';
 import creationResult from './creationResult.json';
@@ -39,6 +40,13 @@ const eventPrograms=new URLSearchParams(location.search).has('events');let signa
 if(eventPrograms)state=JSON.parse(JSON.stringify(nativeEvents.waiting));
 const programs=new URLSearchParams(location.search).has('program');if(programs)state=JSON.parse(JSON.stringify(nativeProgram));
 if(new URLSearchParams(location.search).has('execution')){state=JSON.parse(JSON.stringify(nativeExecutions.running));state.visible=true;state.execution={selected:null,running:[],outcomes:[]};}
+const authoring=new URLSearchParams(location.search).has('animationAuthoring');
+if(authoring){
+ if(!validExecutionView(nativeAuthoring.execution))throw new Error('Invalid native authoring fixture');
+ state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';
+ state.execution={...JSON.parse(JSON.stringify(nativeAuthoring.execution)),selected:null,running:[],outcomes:[],nextRunId:nativeAuthoring.execution.selected.id};
+ state.capabilities=[...state.capabilities??[],'animationAuthoring.v1','execution.v1','executionReceipts.v1','actionResults.v1'];
+}
 const disposal=new URLSearchParams(location.search).has('disposal');
 if(disposal){state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';state.execution=JSON.parse(JSON.stringify(nativeRemoval.previewExecution));state.execution!.workspace!.nextRunId=nativeRemoval.removeExecution.workspace.selected.id;state.capabilities=[...state.capabilities??[],'workspaceRetention.v1','workspaceDisposal.v1','execution.v1','executionReceipts.v1','actionResults.v1'];}
 const visualBlocks=new URLSearchParams(location.search).has('visualBlocks');
@@ -87,7 +95,8 @@ setInterval(()=>{
   for(const command of request.commands){
    if(command.action==='execution'&&command.execution){
     const input=command.execution;
-    if(disposal&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeRemoval.removeExecution.workspace.selected.call)){state.execution=copy(nativeRemoval.removeExecution) as RoomAgentState['execution'];state.status='Recorded native disposal result; no files are changed by this browser fixture';}
+    if(authoring&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeAuthoring.execution.selected.call)){state.execution=copy(nativeAuthoring.execution) as RoomAgentState['execution'];state.status='Recorded native authoring result; browser acknowledgement is simulated';}
+    else if(disposal&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeRemoval.removeExecution.workspace.selected.call)){state.execution=copy(nativeRemoval.removeExecution) as RoomAgentState['execution'];state.status='Recorded native disposal result; no files are changed by this browser fixture';}
     else if(moduleEvidence&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(moduleEvidence.published.execution?.selected?.call)){
      state.execution=copy(moduleEvidence.published.execution);state.status='Recorded native publication; browser acknowledgement is simulated';
     }else if(input.operation==='recover'&&recovering&&input.recoveryId===historyRecovery.error.execution.recovery.id){state.execution=copy(historyRecovery.success.execution);state.status=historyRecovery.success.status;}

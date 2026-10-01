@@ -2,6 +2,14 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
+Current animation authoring lets agent/program calls and optional typed book
+fields edit the same pose and keyframes as the physical tray. Exact object
+revisions prevent stale writes; saved edits are durable, temporary edits stay in
+the fork until Keep, and neither starts playback. The catalog now contains 40
+actions, 10 events and 22 facts. See QUEST_ANIMATION_AUTHORING.md. The shared
+recording-session lifecycle is still pending, along with device/provider and
+Store acceptance; the complete v1 goal remains active.
+
 Current recovery implementation supports retained candidates, an external backup,
 and an explicitly requested fresh workspace through the same shared book/agent
 catalog. Original data stays preserved; preview, commit and content review remain
@@ -1184,3 +1192,34 @@ ARM64 contents and v2 signature verify. All 167 runtime and 75 test C# sources,
 source/build. Development APK `MaestroQuest-workspace-removal-908B17FF.apk` has
 SHA-256 `908B17FF7D590D1ABBB2214F322EE4768AA3464AB5F4C4D9A7BF282BC1A1FAF2`
 and remains uninstalled. PR #248 stays draft and the full release goal remains open.
+
+
+### 2026-10-01: shared pose and keyframe authoring
+
+`animation.author` supports replacing/patching/removing recorded frames, timing,
+looping, saved Maestro poses and clearing motion. Metadata, frame and canonical
+joint facts bind readback to an exact object revision. Physical frame operations
+share detached mutation helpers; all animation saves use the same validated
+persist-before-journal path. Failed writes preserve saved data and Undo state.
+Temporary edits remain in the fork until Keep; stale reads fail after Discard.
+Remote edits refuse active physical authoring and conflicting ownership. Imported
+Maestro rigs use the same canonical pose and retargeting as manual posing.
+
+The book action catalog now also derives nested typed inputs from native schemas.
+A Chrome fixture authors the captured three-frame, 17-joint nod entirely through
+those controls and dispatches the exact native request. Its acknowledgement is
+simulated; native PlayMode tests separately verify included/imported-rig movement,
+manual/agent editing, duplicate receipts, saved Undo/Redo, rejected writes and
+Keep/Discard. Recording Start/Finish/Discard is still a physical control pending
+shared session ownership/identity work. This is saved-motion parity, not complete
+manual-control parity or headset/provider acceptance.
+
+Verification passed 370 EditMode, 249 PlayMode (three optional private-model skips),
+1,551 web tests in 173 files, 48 focused contract/book tests and 55 Android tests.
+Production build, lint, catalog drift, prompt ownership and boundaries pass. The
+full build helper exited zero. All 169 runtime and 77 test C# files, 24 native
+fixtures plus metadata, and 113 packaged web files match the tested source/build.
+The ARM64 package and v2 signature verify. Development checkpoint
+`MaestroQuest-animation-authoring-E0821836.apk` has SHA-256
+`E08218360895D4BA978EDC3C099D3A0BB8D5DFA1DEBA234509D65E1BD08745AF`.
+It remains uninstalled, and PR #248 remains draft.

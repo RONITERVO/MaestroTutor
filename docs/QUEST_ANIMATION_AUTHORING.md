@@ -1,0 +1,85 @@
+# Shared pose and motion authoring
+
+The agent, programs and optional book action catalog can edit the same saved
+motion used by the physical animation tray. `animation.author` is an instant,
+whole-target capability; discovery, schema validation, readiness, execution
+receipts and Undo use the existing shared paths. It adds no model-provider
+connection. Saving an edit never starts playback.
+
+## Read, edit, inspect
+
+Read `animation.authored {target}` first. Its result includes the current object
+revision, frame count, duration, looping and whether a saved pose overrides
+automatic tutor activity. Every edit must supply that exact revision. A manual
+edit, Undo, or discarded temporary room invalidates older revisions.
+
+- `animation.frame {target, revision, index}` reads one saved keyframe. Index `-1`
+  reads saved object placement at time zero, not its current animated or physical
+  position. `joints` names the ordered channels; `jointChannels` distinguishes a
+  null channel list from a present empty one.
+- `animation.joint {target, revision, index, joint}` reads one canonical local
+  quaternion: `-2` is canonical rest, `-1` is saved pose, and nonnegative indices
+  select keyframes. These are not imported-model raw bone rotations. Supported
+  imported Maestro models use the same retargeting as physical posing.
+- Missing data and stale reads are unavailable. No identity rotations, frames or
+  channels are invented. Facts do not acquire ownership or enter posing mode.
+
+`animation.author` selects one operation:
+
+| Operation | Effect |
+| --- | --- |
+| `frames` | Replace a motion or patch up to eight frames by exact time. Existing loop setting is preserved. |
+| `removeFrames` | Remove up to eight exact existing times; rebase the first survivor to zero. Removing all frames clears motion. |
+| `settings` | Set looping and/or total duration; retiming needs at least two frames. |
+| `pose` | Replace Maestro's complete saved canonical pose. `null` returns control to automatic activity; motion stays saved. |
+| `clear` | Remove recorded motion while preserving saved pose. |
+
+The native runtime validates the complete resulting room before committing. Each
+motion starts at zero, has distinct increasing times, and uses identical ordered
+joint channels on every frame. Existing limits remain: 301 frames / 30 seconds,
+17 canonical joints, 1,200 frames / 6,000 joint poses across the room. Root
+placement is relative to the object's room parent; scale is uniform and the
+object kind's limits apply. Joint arrays and frames are literal inputs; scalar
+arguments such as revision can be bound to typed program expressions.
+
+Each call returns `{target, revision, frames, duration, loop, poseSaved}`. Inspect
+the returned revision before the next edit. Large clips can be built in batches;
+every intermediate result must be valid, so supply the complete joint-channel set
+for every authored frame. Animation-library imports and immutable motion IDs are
+unchanged. Recorded keyframes are bounded room content, not a replacement for the
+large imported animation library.
+
+## Saving and ownership
+
+Physical Add/Replace/Remove frame, timing and loop controls share the detached
+`RoomMotionEdits` helpers. Physical and agent saves share `RoomEditor.WriteAnimation`:
+one validated durable edit and one Undo entry. Storage failure leaves the saved
+motion, journal and revision unchanged. Physical recording can still sample an
+object while the user grips it. A remote edit requires the target released,
+physical authoring stopped and compatible ownership available; it cannot overwrite
+a live take or pose preview.
+
+Temporary-room edits affect only the fork until Keep. Discard restores the
+baseline; Keep persists a detached snapshot. Stopping an already completed edit
+does not undo it. Action receipts prevent duplicate dispatch; a separate Undo
+reverts an edit. Recording Start/Finish/Discard sessions are not yet exposed as
+shared capabilities. This increment covers saved pose/keyframe authoring.
+
+## Book and verification
+
+The expert action catalog derives typed fields, nested frame/joint lists and
+operation choices from the native schema, while retaining the source editor.
+Maestro-only target fields exclude other objects. The agent uses the same contract
+through the existing delegated-room task; no separate animation-specific LLM tool
+is required. Native feature `animationAuthoring.v1` is required for direct calls
+and saved program invocations.
+
+Native tests cover actual included/imported-rig playback, physical/agent edits,
+Undo/Redo, stale and invalid input, active authoring refusal, failed writes and
+temporary Keep/Discard. `test-fixtures/browser/animationAuthoring.json` is captured
+from native execution, including a three-frame, 17-joint nod and exact readback.
+The web verifies its receipt and fact types. `scripts/probe-animation-authoring.mjs`
+fills the nested book controls without entering JSON and checks that the generated
+request matches the captured native call. The Chrome acknowledgement is a fixture;
+it is not a real-provider or headset test. Device comfort, authoring performance
+and real-provider journeys remain release gates.
