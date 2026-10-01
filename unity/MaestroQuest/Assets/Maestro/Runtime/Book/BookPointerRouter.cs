@@ -61,6 +61,14 @@ namespace Maestro.Quest.Book
             Clear();
         }
 
+        internal void DetachContent(RoomEditor editor)
+        {
+            if(Editor!=editor)return;
+            // Room gestures cannot finish against a replacement owner. An active page gesture
+            // still belongs to the persistent browser and keeps its ordinary Up/Cancel path.
+            if(capturedPage==null&&owner!=-1)Cancel(owner);
+            Editor=null;Placement=null;
+        }
         public void Cancel(int pointerId)
         {
             if (pointerId != owner) return;

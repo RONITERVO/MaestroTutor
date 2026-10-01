@@ -1,11 +1,8 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
-using Maestro.Quest.Avatar;
 using Maestro.Quest.Book;
 using Maestro.Quest.Interaction;
 using Maestro.Quest.Creation;
-using Maestro.Quest.Rules;
-using Maestro.Quest.Imports;
 using Unity.XR.CoreUtils;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -89,50 +86,12 @@ namespace Maestro.Quest
             var input = gameObject.AddComponent<BookControllerInput>();
             input.Router = router; input.TrackingSpace = offset.transform; input.DesktopCamera = camera; input.Room = room;
             input.PhysicsWorld = physics;
-            var avatar = new GameObject("Full body Maestro");
-            avatar.transform.SetParent(content.transform, false);
-            avatar.transform.localPosition = new Vector3(-.78f,0,1.4f);
-            avatar.transform.localRotation = Quaternion.Euler(0,160,0);
-            avatar.AddComponent<MaestroAvatar>().Browser = browser;
-            var avatarHandle = avatar.AddComponent<CapsuleCollider>(); avatarHandle.center = new Vector3(0,.85f,0); avatarHandle.height = 1.7f; avatarHandle.radius = .25f;
-            avatar.layer = RoomPhysicsLayers.Environment;
-            var avatarItem = avatar.AddComponent<RoomItem>(); avatarItem.Configure(new Collider[] { avatarHandle }, .3f, 1.5f); room.Register(avatarItem);
-            var editor = content.AddComponent<RoomEditor>(); editor.Initialize(room,bookItem,avatarItem,physics:physics);
-            router.Editor = editor; input.Editor = editor;
-            content.AddComponent<RoomAgent>().Initialize(editor,browser);
-            var drawing = gameObject.AddComponent<SpatialDrawing>(); drawing.Editor = editor; input.Drawing = drawing;
-            var tray = new GameObject("Creation tools"); tray.transform.SetParent(content.transform,false);
-            tray.transform.localPosition = new Vector3(.87f,.98f,.9f); tray.transform.localRotation = Quaternion.Euler(24,35,0);
-            tray.AddComponent<RoomToolTray>().Build(editor,room);
-            var workshop = content.AddComponent<AnimationWorkshop>(); workshop.Initialize(editor);
-            var movement = avatar.AddComponent<AvatarSpatialMotion>(); movement.Initialize(editor,workshop,room,navigation,() => headTracking == null || (headTracking.ReadValue<int>() & 3) == 3);
-            var animationTools = new GameObject("Animation tools"); animationTools.transform.SetParent(content.transform,false);
-            animationTools.transform.localPosition = new Vector3(.87f,.55f,.9f); animationTools.transform.localRotation = Quaternion.Euler(40,35,0);
-            animationTools.AddComponent<AnimationTools>().Build(workshop,room);
-            var rules = content.AddComponent<RuleWorkshop>(); rules.Initialize(editor);
-            content.AddComponent<RoomRules>().Initialize(rules,editor,workshop,browser,room,input);
-            var ruleTools = new GameObject("Behaviour rules"); ruleTools.transform.SetParent(content.transform,false);
-            ruleTools.transform.localPosition = new Vector3(-.95f,.68f,.75f); ruleTools.transform.localRotation = Quaternion.Euler(28,-35,0);
-            ruleTools.AddComponent<RuleTools>().Build(rules,room);
-            var imports = content.AddComponent<ImportWorkshop>(); imports.Initialize(editor, content.GetComponent<AnimationWorkshop>());
-            content.AddComponent<LibraryBookController>().Initialize(editor,imports,rules,browser);
-            var importTools = new GameObject("Model import tools"); importTools.transform.SetParent(content.transform, false);
-            importTools.transform.localPosition = new Vector3(1.25f, .80f, 1.65f); importTools.transform.localRotation = Quaternion.Euler(20, 55, 0);
-            importTools.AddComponent<ImportTools>().Build(imports, room);
-            var physicsTools = new GameObject("Room physics tools"); physicsTools.transform.SetParent(content.transform,false);
-            physicsTools.transform.localPosition = new Vector3(-1.2f,1.0f,1.55f); physicsTools.transform.localRotation = Quaternion.Euler(20,-45,0);
-            router.Placement = physicsTools.AddComponent<PhysicsTools>(); router.Placement.Build(editor,physics,scan,room);
-            var movementTools = new GameObject("Maestro movement tools"); movementTools.transform.SetParent(content.transform,false);
-            movementTools.transform.localPosition = new Vector3(.85f,.38f,1.25f); movementTools.transform.localRotation = Quaternion.Euler(40,25,0);
-            movementTools.AddComponent<AvatarSpatialTools>().Build(movement,editor,workshop,content.GetComponent<RoomRules>(),room);
             var virtualView=gameObject.AddComponent<VirtualRoomView>(); virtualView.Initialize(originObject.transform,camera,scan,physics);
-            var movementControls=gameObject.AddComponent<MovementControls>();
-            movementControls.Initialize(room,editor,workshop,movement,content.GetComponent<RoomRules>(),rules,input,virtualView,() => headTracking == null || (headTracking.ReadValue<int>() & 3) == 3);
-            content.AddComponent<Maestro.Quest.Persistence.WorkspaceExport>().Initialize(editor,rules,movementControls);
-            content.AddComponent<Maestro.Quest.Persistence.WorkspaceImport>().Initialize(Application.persistentDataPath);
-            var controlTools=new GameObject("Movement and controller bindings"); controlTools.transform.SetParent(content.transform,false);
-            controlTools.transform.localPosition=new Vector3(-1.15f,.4f,1.25f); controlTools.transform.localRotation=Quaternion.Euler(40,-30,0);
-            controlTools.AddComponent<MovementTools>().Build(movementControls,room);
+            var agent=gameObject.AddComponent<RoomAgent>();agent.Initialize(null,browser);
+            var workspace=gameObject.AddComponent<Maestro.Quest.Persistence.WorkspaceHost>();
+            workspace.Initialize(Application.persistentDataPath,room.transform,(session,directory,receipts,gate)=>session.Build(room,bookItem,browser,router,input,physics,navigation,scan,virtualView,
+                () => headTracking == null || (headTracking.ReadValue<int>() & 3) == 3,Application.persistentDataPath,directory,receipts,gate),agent);
+
         }
 
         void Update()

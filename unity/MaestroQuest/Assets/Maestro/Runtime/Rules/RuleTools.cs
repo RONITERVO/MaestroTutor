@@ -95,7 +95,7 @@ namespace Maestro.Quest.Rules
         void Prop(Action action) {if(Draft.SelectLegacyStep()) {action();Draft.Refresh();Draft.Say(workshop.Status);}Refresh();}
         void OpenBook() {
             if(!Draft.Clean()) {Refresh();return;}
-            var agent=workshop.Editor.GetComponent<RoomAgent>();
+            var agent=workshop.Editor.GetComponentInParent<RoomAgent>();
             if(agent&&agent.OpenRules(workshop.Selected?.id,out var error))Draft.Say("Full behaviour editor opened on the book");
             else Draft.Say("The book workspace is unavailable");
             Refresh();

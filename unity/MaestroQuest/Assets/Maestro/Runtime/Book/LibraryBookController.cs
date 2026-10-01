@@ -243,6 +243,14 @@ namespace Maestro.Quest.Book
         }
         void OnApplicationPause(bool value) { paused = value; Lifecycle(); }
         void OnApplicationFocus(bool value) { focused = value; Lifecycle(); }
+        internal void DetachWorkspace()
+        {
+            if(disposed)return;
+            SetVisible(false);suspended=true;operation++;imports?.StopPreview();
+            // The browser outlives this owner, including a failed replacement. Close its old
+            // library immediately so a stale editor cannot cover the still-usable conversation.
+            if(browser&&State!=null)browser.PublishLibraryState(Newtonsoft.Json.JsonConvert.SerializeObject(State));
+        }
         void OnDisable() { if (imports) { suspended = true; operation++; imports.StopPreview(); } }
         void OnDestroy()
         {

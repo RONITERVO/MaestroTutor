@@ -104,6 +104,11 @@ namespace Maestro.Quest.Creation
             created=Array.Empty<string>(); status="Invalid room request";
             if(request == null || (request.version != 1 && request.version != 2) || request.commands == null || request.commands.Length<1 || request.commands.Length>8) return false;
             var commands=request.commands;
+            if(!editor) {
+                if(commands.Length==1&&commands[0]?.action=="catalog")return Catalog.Execute(commands[0].catalog,out status);
+                if(commands.Length==1&&commands[0]?.action=="workspace") {WorkspaceVisible=commands[0].visible;status=WorkspaceVisible?"Workspace inspection opened":"Returned to chat";return true;}
+                status="The selected workspace is unavailable. Its saved files are preserved; room actions cannot run.";return false;
+            }
             if(commands.Any(command=>command?.action=="execution")) {
                 if(commands.Length!=1||!RoomExecutions.ValidRequest(commands[0].execution)) {status="Action requests must be valid and sent on their own";return false;}
                 if((string)commands[0].execution["operation"]=="start") {
@@ -237,13 +242,20 @@ namespace Maestro.Quest.Creation
         NativeBookBrowser browser;
         RoomAgentExecutor executor;
         readonly RoomAgentInbox inbox=new();
-        string status="Room actions ready";
+        string status="Room actions ready",bindingStatus="Room actions ready";
         int revision;
         float next;
         bool connected,ok=true;
         string[] created=Array.Empty<string>();
         string lastInspected;
-        public void Initialize(RoomEditor source,NativeBookBrowser book) {editor=source;browser=book;executor=new RoomAgentExecutor(source);}
+        public void Initialize(RoomEditor source,NativeBookBrowser book) {browser=book;Bind(source,source?"Room actions ready":"Opening workspace");}
+        internal void Bind(RoomEditor source,string message)
+        {
+            // An editor replacement always invalidates old requests, even if object IDs/revisions
+            // happen to match the incoming document. The browser and chat themselves stay alive.
+            editor=source;executor=new RoomAgentExecutor(source);inbox.Reset();revision=0;next=0;
+            status=bindingStatus=message;connected=false;ok=source;created=Array.Empty<string>();lastInspected=null;
+        }
         public bool OpenRules(string id,out string error) {
             error="The book workspace is unavailable";if(executor==null)return false;
             if(!executor.Execute(new RoomAgentRequest {version=2,commands=new[] {new RoomAgentCommand {action="rules",rule=new RuleRequest {action="inspect",target=id}}}},out error,out _))return false;
@@ -252,15 +264,20 @@ namespace Maestro.Quest.Creation
         }
         void Update()
         {
-            if(!editor || !browser) return;
+            if(executor==null || !browser) return;
             if(browser.Snapshot==null)
             {
-                if(connected) {inbox.Reset();revision=0;connected=false;created=Array.Empty<string>();status="Room session reopened";}
+                if(connected) {inbox.Reset();revision=0;connected=false;created=Array.Empty<string>();status=editor?"Room session reopened":bindingStatus;}
                 return;
             }
             connected=true;
             if(Time.unscaledTime<next) return;next=Time.unscaledTime+.25f;
-            string json=browser.ReadRoomAgentSnapshot();
+            Receive(browser.ReadRoomAgentSnapshot());
+            browser.PublishRoomAgentState(RoomAgentWire.Serialize(Observe()));
+        }
+        internal void Receive(string json)
+        {
+            if(executor==null)return;
             if(!string.IsNullOrEmpty(json) && json.Length<=32768)
             {
                 try {
@@ -275,10 +292,12 @@ namespace Maestro.Quest.Creation
                     }
                 } catch(Exception ex) when(ex is ArgumentException || ex is Newtonsoft.Json.JsonException) { /* Invalid or partial messages never execute. */ }
             }
-            browser.PublishRoomAgentState(RoomAgentWire.Serialize(Observe()));
         }
         public RoomAgentState Observe()
         {
+            if(!editor)return new RoomAgentState {session=inbox.Session,revision=++revision,sceneRevision=1,ack=inbox.Ack,ok=ok,status=status,created=created,
+                objects=Array.Empty<RoomAgentObject>(),capabilities=new[]{"catalog.v1","catalogVocabulary.v1"},visible=executor?.WorkspaceVisible==true,
+                workspaceView="objects",catalog=executor?.Catalog.Observe()};
             if(executor.WorkspaceVisible && editor.SelectedId!=null) lastInspected=editor.SelectedId;
             else if(executor.InspectionId!=null) lastInspected=executor.InspectionId;
             var inspected=editor.Read(lastInspected);

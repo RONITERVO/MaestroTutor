@@ -19,6 +19,7 @@ namespace Maestro.Quest.Interaction
         public bool canProcess=>isActiveAndEnabled;
         public bool Process(IXRSelectInteractor interactor,IXRSelectInteractable interactable)=>writes?.Frozen!=true;
         internal void ConfigureWrites(WorkspaceWriteGate gate){writes=gate;}
+        internal void DetachWrites(WorkspaceWriteGate gate){if(ReferenceEquals(writes,gate))writes=null;}
         public event Action<RoomItem> GrabStarted, GrabFinished;
         Vector3 homePosition, homeScale;
         Quaternion homeRotation;

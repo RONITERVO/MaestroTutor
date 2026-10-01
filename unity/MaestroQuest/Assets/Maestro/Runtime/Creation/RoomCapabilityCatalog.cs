@@ -125,7 +125,7 @@ namespace Maestro.Quest.Creation
             bool available=false,occupied=false;string[] resources=Array.Empty<string>();
             if(valid) {
                 resources=step.Resources.Distinct().ToArray();
-                var runtime=editor.GetComponent<RoomRules>();
+                var runtime=editor?editor.GetComponent<RoomRules>():null;
                 if(!runtime)error="Action runtime is not ready";
                 else {
                     occupied=runtime.Scheduler?.ActionBusy(step)==true;

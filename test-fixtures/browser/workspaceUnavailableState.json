@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "revision": 1,
+  "sceneRevision": 1,
+  "ack": 0,
+  "session": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "status": "The selected workspace could not be opened. Saved files are preserved; recovery is required.",
+  "selectedId": "",
+  "ok": false,
+  "canUndo": false,
+  "canRedo": false,
+  "physicsRunning": false,
+  "visible": false,
+  "inspection": null,
+  "workspaceView": "objects",
+  "rules": null,
+  "motions": null,
+  "capabilities": [
+    "catalog.v1",
+    "catalogVocabulary.v1"
+  ],
+  "physics": null,
+  "ownership": null,
+  "avatar": null,
+  "walk": null,
+  "activityProfile": null,
+  "objects": [],
+  "created": [],
+  "catalog": null,
+  "execution": null
+}

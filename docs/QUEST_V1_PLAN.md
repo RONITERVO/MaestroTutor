@@ -887,3 +887,18 @@ Native tests exercise accepted unsaved edits, async writer gaps, failure without
 owner destruction, and both sides of the pointer commit. These are reusable native
 services; production startup/switching, maintenance parity and content-bound review
 remain unfinished, and no device installation is included.
+
+
+### 2026-10-01: persistent book and selected workspace startup
+
+Production startup resolves the saved workspace selection before building content,
+passes its data and receipt directories, and applies any review hold before the
+first frame. The XR rig, physical book/browser and agent transport stay alive while
+content owners are replaced. An exact committed-pointer check and accepted-edit
+hold protect the replacement; old item registrations, library UI and input links
+are detached before new owners load. Interrupted replacement reopens the committed
+selection after old destruction. Agent sessions rotate so stale requests cannot
+write to a replacement room. Corrupt selection metadata preserves the shell and
+reports unavailability; independent store damage retains its existing read-only
+behavior. Activation/recovery commands, held-content maintenance parity and
+content-bound review remain unfinished release work.

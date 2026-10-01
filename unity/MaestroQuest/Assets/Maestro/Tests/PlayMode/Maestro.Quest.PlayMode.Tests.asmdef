@@ -8,7 +8,8 @@
     "UniGLTF",
     "UniGLTF.Utils",
     "Unity.InputSystem",
-    "Unity.XR.OpenXR"
+    "Unity.XR.OpenXR",
+    "TLab.Capture"
   ],
   "optionalUnityReferences": [
     "TestAssemblies"

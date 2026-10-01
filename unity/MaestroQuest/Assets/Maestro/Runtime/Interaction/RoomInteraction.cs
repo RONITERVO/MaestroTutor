@@ -11,7 +11,9 @@ namespace Maestro.Quest.Interaction
         public Transform Viewer;
         Maestro.Quest.Persistence.WorkspaceWriteGate writes;
         internal void ConfigureWrites(Maestro.Quest.Persistence.WorkspaceWriteGate gate){writes=gate;}
+        internal void DetachWrites(Maestro.Quest.Persistence.WorkspaceWriteGate gate){if(ReferenceEquals(writes,gate))writes=null;}
         readonly List<RoomItem> items = new();
+        internal int RegisteredCount=>items.Count;
         public event Action Restoring, Restored;
 
         public void Register(RoomItem item) => items.Add(item);

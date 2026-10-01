@@ -201,14 +201,14 @@ generation retention bound; reaching it requires reviewed maintenance rather tha
 automatic deletion of user content. Orphan cleanup and retained-generation browsing
 are still integration work.
 
-**This store is not connected to production startup or a restore command yet.**
-The runtime host must pass the selected root to room, behaviour and controller
-owners, pass the separate epoch directory to invocation receipts, recreate owners
-with a fresh bridge session, and enforce the persisted review hold before imported
-state can receive events, controller input or physics actions. A stored review flag
-alone is not runtime enforcement. The host must also define current-document review
-validation, failure recovery UI and writer/lifecycle transitions before exposing
-activation. Before switching, it must stop new edits and confirm that the current
+**Production startup now resolves this selection before creating room owners.**
+The persistent shell keeps XR, the book/browser and the agent connection alive.
+The host supplies selected data and receipt roots and acquires a required activity
+hold before loading any content. A content replacement verifies the exact committed
+selection and retains the edit hold through destruction of old owners, then opens a
+new session. No user-facing restore command is enabled yet. Current-document review
+validation, recovery controls and coordinated writer/lifecycle transitions are needed
+before exposing activation. Before switching, it must stop new edits and confirm that the current
 accepted documents and asset writes are durably retained (or create and verify a
 complete recovery snapshot). Merely retaining the old folder does not prove that
 its latest autosaves succeeded; a failed retention step must keep the old owners
@@ -285,10 +285,10 @@ object clip controls also stop on the hold and require a new Play after release.
 
 An activity hold alone permits document editing and manual object placement. The
 separate accepted-edit boundary below closes those paths during retention. The
-startup host still needs to resolve the generation selection, acquire the activity
-hold before loading owners, handle corrupt selections explicitly, and bind review
-completion to the inspected documents. No restore command or automatic selection
-has been enabled by these boundaries.
+startup host now resolves the stored selection and applies its activity hold before
+loading owners. A corrupt selection leaves the book and agent observation available
+without silently creating a replacement room. Review completion still needs to bind
+to the inspected documents; no restore command is exposed yet.
 
 
 ## Preserving accepted edits before activation
@@ -334,9 +334,8 @@ async gaps. Filesystem tests cover changed retained content, substitution on ret
 reservation protection and interruptions around the pointer commit.
 
 These services are not yet the production restore workflow. The host still needs
-persistent shell/content separation, coordinated private archive cleanup, selection
-on startup, owner/session replacement, content-bound review and shared maintenance
-commands that work while content actions are held. Preserve the lease until all
+coordinated private archive cleanup, content-bound review and shared maintenance
+commands that work while content actions are held or unavailable. Preserve the lease until all
 retention/activation workers have settled; native owners must not be destroyed on a
 failed retention. Previous-workspace recovery still needs an exact operation identity
 before exposure. An activation retry after releasing the edit hold or restarting
@@ -344,3 +343,36 @@ must first verify that the retained snapshot still represents the accepted curre
 state; otherwise the host needs a new import/retention pair. Selection revision
 alone does not track edits within a room. Headset power-loss and storage/performance
 acceptance remain open.
+
+
+## Persistent book and workspace content
+
+`MaestroRoom` creates the XR rig, physical room origin, scanned surfaces, book and
+browser once. `WorkspaceHost` resolves the selection before `WorkspaceContent`
+constructs room documents, avatar, objects, tools and library owners under an
+identity-local child. Ordinary per-store read-only handling remains independent:
+a damaged controls file does not hide a healthy room or overwrite that file.
+Missing or corrupt selection metadata creates no fallback content. Failed partial
+initialization removes its owners, registrations and input links while retaining
+the shell and a descriptive agent observation.
+
+A committed replacement requires the exact current editor's accepted-edit hold.
+It verifies the selected pointer before removing anything, closes the old motion
+library view, cancels room pointer gestures and unregisters old room items. The
+book/browser survive, including page gestures. Old subscriptions are destroyed
+before new owners load. Disabling the host during that frame releases its consumed
+hold; re-enabling waits for destruction before reopening the durable selection.
+A required review hold is applied before loaded recipes or other activity can run.
+
+The persistent agent rotates its session when content is detached or replaced;
+matching object IDs and revisions cannot authorize an old request in the new room.
+Without content, read-only catalog discovery and returning to chat remain available,
+while room effects and edits are refused. Native integration tests cover selection,
+replacement, interruption, registration cleanup, damaged stores, observer failures
+and stale requests. A captured native unavailable-room state is accepted by the web
+bridge regression, which also checks replacement invalidates pending work.
+
+This is the startup and owner-lifetime boundary. It does not yet expose activation,
+previous-workspace recovery, review completion, or maintenance execution independent
+of held content. The production coordinator must still own retention workers and
+private-file cleanup before those commands can be released.

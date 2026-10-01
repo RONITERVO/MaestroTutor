@@ -12,8 +12,9 @@ namespace Maestro.Quest.Persistence
     internal sealed class WorkspaceEditHold:IDisposable
     {
         readonly int thread=Environment.CurrentManagedThreadId;
-        IDisposable activity,writes;
-        WorkspaceEditHold(IDisposable activity,IDisposable writes){this.activity=activity;this.writes=writes;}
+        IDisposable activity,writes;readonly RoomEditor editor;
+        internal bool Owns(RoomEditor owner)=>ReferenceEquals(editor,owner)&&writes!=null&&activity!=null&&owner&&owner.WriteGate.Frozen;
+        WorkspaceEditHold(RoomEditor editor,IDisposable activity,IDisposable writes){this.editor=editor;this.activity=activity;this.writes=writes;}
         internal static bool TryAcquire(RoomEditor editor,RuleWorkshop rules,MovementControls controls,out WorkspaceEditHold hold,out string error)
         {
             hold=null;
@@ -28,7 +29,7 @@ namespace Maestro.Quest.Persistence
                 if(!WorkspaceArchiveCapture.CanStart(editor,rules,controls,out error)||!editor.CanChangeTemporaryBoundary(out error))return false;
                 if(rules.Runtime&&rules.Runtime.AnyButtonHeld){error="Release action buttons before preserving the workspace.";return false;}
                 writes=editor.WriteGate.TryFreeze(out error);if(writes==null)return false;
-                hold=new WorkspaceEditHold(activity,writes);activity=null;writes=null;return true;
+                hold=new WorkspaceEditHold(editor,activity,writes);activity=null;writes=null;return true;
             }catch(Exception){error="Workspace preparation failed. Your current room and accepted edits remain available.";return false;}
             finally {writes?.Dispose();activity?.Dispose();}
         }
