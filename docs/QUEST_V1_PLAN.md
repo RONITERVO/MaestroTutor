@@ -991,3 +991,20 @@ This is an internal prerequisite, not a user-facing corrupt-workspace recovery
 flow. Exact pointer/candidate inspection, durable recovery selection, coordinated
 content replacement and shared book/agent controls remain to be connected. The
 checkpoint does not query or install on the headset; device acceptance is pending.
+
+
+### 2026-10-01: explicit damaged-selection recovery storage
+
+The generation store can inspect recovery candidates without creating a fallback
+pointer, preserve both original selection files, and verify/copy an exact candidate
+into a fresh preview. Commit requires private preserved evidence, rechecks all
+identities, records its intended outcome durably and selects fresh action receipts
+under review. Reconciliation does not replay commits. Cancelled evidence, old
+generations and selected data remain protected from ordinary preview deletion.
+
+Seventeen additional native storage cases cover stale/missing/corrupt metadata,
+real model copies, altered evidence/provenance, cancellation and commit-boundary
+faults. The user/agent recovery coordinator, live-owner replacement, missing-owner
+handling, explicit alternatives when no candidate verifies and evidence maintenance
+remain to be integrated. This checkpoint does not enable automatic recovery or
+establish headset acceptance.

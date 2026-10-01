@@ -1479,3 +1479,14 @@ entry hashes independently and verify ordinary archive import rejects the eviden
 format. Exact selection metadata, durable recovery outcome and replacement must be
 checked as part of the eventual full recovery journey; these foundation checks
 alone cannot establish that corrupt-workspace recovery is accepted.
+
+
+After the damaged-selection coordinator is integrated, also test both missing and
+unreadable pointer files. Inspection must leave them unchanged; selection must
+verify a chosen candidate, and an altered pointer or backup must invalidate that
+choice. Verify the exact original files and capture hashes after recovery. Inject
+interruption immediately before/after pointer commit and compare the recorded
+selection after restart; no fallback room or automatic activity is acceptable.
+A cancelled operation's evidence and a selected generation with a lost operation
+record must remain protected until explicit maintenance. Current storage tests do
+not establish this complete in-headset journey.

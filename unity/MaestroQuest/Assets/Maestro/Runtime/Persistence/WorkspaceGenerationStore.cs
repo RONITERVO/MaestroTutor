@@ -42,7 +42,7 @@ namespace Maestro.Quest.Persistence
     /// activation commits one pointer only after all content is verified and keeps the previous root.
     /// The host must quiesce/recreate its owners and enforce ReviewRequired before executing imports.
     /// No live runtime is switched by this store alone.</summary>
-    internal sealed class WorkspaceGenerationStore
+    internal sealed partial class WorkspaceGenerationStore
     {
         const string Original="original",Initial="initial";
         const int MaximumGenerations=64;
@@ -66,7 +66,7 @@ namespace Maestro.Quest.Persistence
             if(Directory.Exists(appRoot)&&Directory.EnumerateDirectories(appRoot,"workspace-generations.v*").Any(x=>Path.GetFileName(x)!="workspace-generations.v1"))throw Invalid("A different workspace generation format exists; its data is preserved.");
             if(Directory.Exists(root)&&Directory.EnumerateFiles(root,"current.v*.json").Any(x=>Path.GetFileName(x)!="current.v1.json"))throw Invalid("A different workspace selection format exists; its data is preserved.");
         }
-        FileStream Lease()
+        FileStream Lease(bool initialize=true)
         {
             CheckRoots();Directory.CreateDirectory(generations);Directory.CreateDirectory(staging);CheckRoots();
             string path=Path.Combine(root,"writer.lock");if(File.Exists(path))WorkspaceArchive.NoLink(path);
@@ -74,7 +74,7 @@ namespace Maestro.Quest.Persistence
             try {
                 // Establish the original selection before any activation attempt. The first switch
                 // then replaces an existing pointer and retains its baseline just like later switches.
-                if(!File.Exists(pointer)){var original=Load();Commit(original);}return lease;
+                if(initialize&&!File.Exists(pointer)){var original=Load();Commit(original);}return lease;
             }catch{lease.Dispose();throw;}
         }
         static byte[] Bytes(string path,int limit)
@@ -108,7 +108,7 @@ namespace Maestro.Quest.Persistence
         JObject Metadata(string id)
         {
             string path=GenerationPath(id);if(!Directory.Exists(path))throw Invalid("The selected workspace directory is missing.");WorkspaceArchive.NoLink(path);var metadata=Read(Path.Combine(path,"generation.v1.json"));
-            if(!(Exact(metadata,"version","id","manifestHash")||Exact(metadata,"version","id","manifestHash","recovery")&&metadata["recovery"]?.Type==JTokenType.Boolean&&(bool)metadata["recovery"])||metadata["version"]?.Type!=JTokenType.Integer||(int)metadata["version"]!=1||metadata["id"]?.Type!=JTokenType.String||(string)metadata["id"]!=id||metadata["manifestHash"]?.Type!=JTokenType.String||!ModelLibrary.ValidHash((string)metadata["manifestHash"]))throw Invalid("Invalid prepared workspace metadata.");
+            if(!(Exact(metadata,"version","id","manifestHash")||Exact(metadata,"version","id","manifestHash","recovery")&&metadata["recovery"]?.Type==JTokenType.Boolean&&(bool)metadata["recovery"]||Exact(metadata,"version","id","manifestHash","damagedRecovery")&&metadata["damagedRecovery"]?.Type==JTokenType.Boolean&&(bool)metadata["damagedRecovery"])||metadata["version"]?.Type!=JTokenType.Integer||(int)metadata["version"]!=1||metadata["id"]?.Type!=JTokenType.String||(string)metadata["id"]!=id||metadata["manifestHash"]?.Type!=JTokenType.String||!ModelLibrary.ValidHash((string)metadata["manifestHash"]))throw Invalid("Invalid prepared workspace metadata.");
             string data=Path.Combine(path,"data");if(!Directory.Exists(data))throw Invalid("The selected workspace directory is missing.");WorkspaceArchive.NoLink(data);return metadata;
         }
         void CheckLocation(WorkspaceLocation location)
@@ -184,6 +184,7 @@ namespace Maestro.Quest.Persistence
         }
         void CheckRecoveryOrigin(string id,WorkspaceSelection current=null)
         {
+            if((bool?)Metadata(id)["damagedRecovery"]==true)throw Invalid("Use the damaged-workspace recovery operation for this preview.");
             string path=Path.Combine(GenerationPath(id),"recovery.v1.json");if(Directory.Exists(path))throw Invalid("Recovery identity is unavailable.");if(!File.Exists(path)){if((bool?)Metadata(id)["recovery"]==true)throw Invalid("The recovery preview identity is missing. Its files are preserved.");return;}
             current??=Load();
             var record=Read(path);
@@ -260,11 +261,12 @@ namespace Maestro.Quest.Persistence
             if(origin.Revision!=(string)record["from"]||next.Revision==origin.Revision||next.Previous?.Generation!=(string)retained["generation"]||!next.Active.ReviewRequired||!next.Previous.ReviewRequired||next.Active.Generation==Original||next.Active.ReceiptEpoch==next.Previous.ReceiptEpoch||next.Active.Generation==origin.Active.Generation||next.Previous.Generation==origin.Active.Generation)throw Invalid("Invalid saved workspace activation boundary.");
             return record;
         }
-        bool Reserved(string id)
+        bool Reserved(string id,string except=null)
         {
             int count=0;
             foreach(string folder in Directory.EnumerateDirectories(generations)) {
-                if(++count>MaximumGenerations)throw Invalid("Unexpected workspace retention count.");WorkspaceArchive.NoLink(folder);
+                if(++count>MaximumGenerations)throw Invalid("Unexpected workspace retention count.");WorkspaceArchive.NoLink(folder);if(Path.GetFileName(folder)==except)continue;
+                if(DamageReferences(folder,id))return true;
                 string path=Path.Combine(folder,"activation.v1.json");if(!File.Exists(path))continue;
                 var record=ActivationRecord(path);if((string)record["next"]["active"]["generation"]!=Path.GetFileName(folder))throw Invalid("Invalid activation reservation location.");
                 if(Path.GetFileName(folder)==id||(string)record["retained"]["generation"]==id)return true;

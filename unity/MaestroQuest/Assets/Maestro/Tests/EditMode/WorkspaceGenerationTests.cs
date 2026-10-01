@@ -17,7 +17,7 @@ using NUnit.Framework;
 using UnityEngine;
 namespace Maestro.Quest.Tests
 {
-    public sealed class WorkspaceGenerationTests
+    public sealed partial class WorkspaceGenerationTests
     {
         string directory,root;WorkspaceGenerationStore store;byte[] archive;string modelHash;
         static byte[] Json(object value)=>new UTF8Encoding(false,true).GetBytes(JsonUtility.ToJson(value));

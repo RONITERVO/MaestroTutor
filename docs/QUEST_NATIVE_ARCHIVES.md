@@ -611,3 +611,48 @@ and keep the retiring owners held until replacement is safe. Candidate inspectio
 clean-start handling when no candidate is usable, user/agent controls, storage
 path ownership across host replacement and retained-evidence cleanup remain work.
 On-device filesystem, capacity, lifecycle and interruption acceptance is pending.
+
+
+## Explicit storage recovery with damaged selection metadata
+
+The generation store now has a separate internal recovery path that never creates
+an original-selection fallback. Metadata inspection is read-only, includes
+unavailable candidates, and identifies the exact current selection and its
+`.previous` file by a combined hash. Missing files, empty files and unreadable
+bytes remain distinct; each selection file is bounded to 64 KiB. A different
+workspace format or unsafe path is refused with its data preserved. Candidate
+availability describes metadata only, not verified content.
+
+Preparation fully verifies a chosen candidate and copies its manifest/documents/
+assets into a fresh generation. It preserves the exact original selection bytes,
+records their hashes and the source identity, and rechecks the observed origin.
+A required metadata marker prevents this preview from using ordinary activation.
+Previously active folders that no longer match their immutable manifest fail
+verification; recovery does not silently discard their later edits. No pointer or
+live content changes during inspection or preparation.
+
+Commit requires evidence already captured into this preview's private preservation
+directory by the native preservation boundary. It verifies that evidence's complete
+file hash, rechecks the origin and verifies the copied candidate again. One durable
+operation record binds the preview, manifest, origin, evidence and intended new
+selection. The pointer then changes atomically to a fresh receipt epoch with review
+required. The damaged roots are retained as evidence, not advertised as a valid
+previous workspace. Both original pointer files survive independently of the
+normal pointer replacement's `.previous` file.
+
+Reconciliation reads the exact recorded outcome without retrying a commit. A lost
+record after the selection changed reports uncertainty. An exact retry is a
+storage-level facility for a coordinator that continuously owns preservation;
+once that ownership is released, the old evidence/preview pair must not be retried.
+Reserved generations and every existing generation recorded at preparation are
+protected from ordinary preview deletion. A preview containing preserved evidence
+requires explicit future maintenance even when its operation was cancelled. A
+selected generation cannot be discarded merely because its commit record vanished.
+
+These storage operations are not yet exposed to users or the agent. The host still
+needs to coordinate preservation, worker draining, exact intent and replacement;
+missing-owner recovery and an explicit clean-start/external-import choice when no
+candidate verifies also remain. No new automatic recovery or execution is enabled.
+Tests cover real model/archive copies, corrupt and missing selections, stale
+inspection, changed evidence, cancellation, lost provenance, and faults on both
+sides of pointer commit. Full end-to-end and device acceptance remain open.
