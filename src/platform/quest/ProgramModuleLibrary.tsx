@@ -10,7 +10,7 @@ import {createBrowserFileWriter,type AppFileWriter} from '../browser/fileWriter'
 import {decodeModuleFile,encodeModuleFile,MODULE_FILE_MAX_BYTES,type ProgramModuleFile} from '../../core-sdk/room/programModuleFile';
 import {editProgramImport} from './programImportEditing';
 /** Book authoring uses the same catalog and durable one-off actions as the room agent. */
-export function ProgramModuleLibrary({client,sequence,rulesRevision,dirty,disabled,onChange,onClose}:{client:RoomAgentClient;sequence:RuleSequence;rulesRevision:number;dirty:boolean;disabled:boolean;onChange:(source:string)=>void;onClose:()=>void}) {
+export function ProgramModuleLibrary({client,sequence,rulesRevision,dirty,disabled,onChange,onClose}:{client:RoomAgentClient;sequence:RuleSequence;rulesRevision:number;dirty:boolean;disabled:boolean;onChange:(source:string)=>string|null|void;onClose:()=>void}) {
  const {state,pending}=useSyncExternalStore(client.subscribe,client.getSnapshot);
  const program=parseProgram(sequence.program).program;
  const [base]=useState({source:sequence.program,id:sequence.id}),[query,setQuery]=useState(''),[name,setName]=useState(sequence.name),[exports,setExports]=useState<string[]>(program?[program.entry]:[]);
@@ -50,7 +50,7 @@ export function ProgramModuleLibrary({client,sequence,rulesRevision,dirty,disabl
  const execute=async(call:CapabilityInvocation)=>{
   setError('');try{const result=await client.request([{action:'execution',execution:{operation:'start',call}}],state??undefined);if(!result.ok)setError(result.status);else setRunId(result.execution?.selected?.id??null);}catch(e){setError((e instanceof Error?e.message:'Library write could not be confirmed.')+' Inspect action history before retrying.');}
  };
- const insert=()=>{if(!program||!module||!inspection)return;try{if(stale)throw new Error('The behaviour changed. Close and reopen the library.');const updated=editProgramImport(program,inspection.capability,module,{alias,replace:replace||undefined,grantResources:grant,signals:Object.fromEntries(events.map(e=>[e.name,signalTarget(e.name)]))});onChange(JSON.stringify(updated));onClose();}catch(e){setError(e instanceof Error?e.message:'Module import failed.');}};
+ const insert=()=>{if(!program||!module||!inspection)return;try{if(stale)throw new Error('The behaviour changed. Close and reopen the library.');const updated=editProgramImport(program,inspection.capability,module,{alias,replace:replace||undefined,grantResources:grant,signals:Object.fromEntries(events.map(e=>[e.name,signalTarget(e.name)]))});const rejected=onChange(JSON.stringify(updated));if(rejected)throw new Error(rejected);onClose();}catch(e){setError(e instanceof Error?e.message:'Module import failed.');}};
  return <section aria-label="Reusable module library" className="program-editor">
   <div className="room-workspace-actions"><h3>Reusable modules</h3><button disabled={pending||fileBusy} onClick={onClose}>Back to program</button></div>
   <p>Save a reusable definition, then choose the exact version for a behaviour. Library edits never upgrade existing imports.</p>

@@ -8,12 +8,13 @@ import {parseProgram,type BehaviourProgram,type Expression,type ProgramNode} fro
 import {visitProgramNodes} from './programTraversal';
 export type ProgramCapabilityInputs={kind:'snapshot'}|{kind:'current';fields:string[]};
 /** Produce ordinary, editable program nodes. No hidden executor or retry policy. */
-export function insertProgramCapability(source:string,call:CapabilityInvocation,inputs:ProgramCapabilityInputs={kind:'snapshot'}):BehaviourProgram {
+export function insertProgramCapability(source:string,call:CapabilityInvocation,inputs:ProgramCapabilityInputs={kind:'snapshot'},functionName?:string):BehaviourProgram {
  if(inputs.kind!=='snapshot'&&inputs.kind!=='current')throw new Error('Choose snapshot or current program inputs.');
  const parsed=parseProgram(source);if(!parsed.program)throw new Error(parsed.error??'Invalid draft.');
  const invalid=validateCapabilityArguments(call.id,call.version,call.arguments);if(invalid)throw new Error(invalid);
  const definition=capabilityDefinition(call.id)!;if(definition.domain==='workspace')throw new Error('Workspace maintenance cannot run as a room behaviour.');
- const program=parsed.program,entry=program.functions.find(fn=>fn.name===program.entry)!;
+ const program=parsed.program,entry=program.functions.find(fn=>fn.name===(functionName??program.entry));
+ if(!entry)throw new Error('Choose an existing function for this action.');
  const ids=new Set<string>();for(const fn of program.functions)visitProgramNodes(fn.body,node=>ids.add(node.id));
  const fresh=(prefix:string,used:Set<string>)=>{let i=1;while(used.has(prefix+i))i++;const value=prefix+i;used.add(value);return value;};
  const invoke:Extract<ProgramNode,{op:'invoke'}>={id:fresh('action_',ids),op:'invoke',capability:call.id,version:call.version,arguments:structuredClone(call.arguments),bindings:{}};

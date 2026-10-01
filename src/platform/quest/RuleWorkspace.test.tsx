@@ -4,6 +4,7 @@ import {act,cleanup,fireEvent,render,waitFor} from '@testing-library/react';
 import {afterEach,describe,expect,it} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {parseProgram,sequenceProgram,simpleProgramSteps,type BehaviourProgram} from '../../core-sdk/room/programs';
+import {loopProgram} from '../../core-sdk/room/programLoopEditing';
 import {RuleWorkspace} from './RuleWorkspace';
 import {RoomAgentClient} from './roomAgentBridge';
 import {newRuleStep,type RuleView} from '../../core-sdk/room/rules';
@@ -194,4 +195,23 @@ it('lets the user inspect and repair an unavailable source without dispatching i
  expect(client.snapshot().request!.commands[0].rule!.edits![0]).toEqual({kind:'save',sequence:good});
  await act(async()=>{client.receive(state({ack:1,revision:2,rules:{...rules(),revision:5}}));});
  expect((screen.getByRole('button',{name:'Try behaviour'}) as HTMLButtonElement).disabled).toBe(false);
+});
+
+const repeatingState=()=>{const value=state();value.capabilities!.push('eventPrograms.v1');value.rules!.selected!.repeat=true;return value;};
+it('converts a repeat only on request, retains its cycle, and saves without starting',()=>{
+ const initial=repeatingState(),client=new RoomAgentClient();client.receive(initial);const screen=render(<RuleWorkspace client={client} onCatalog={()=>{}}/>);
+ expect(client.snapshot().request).toBeNull();expect((screen.getByLabelText('Sequence Repeat (older form)') as HTMLInputElement).checked).toBe(true);
+ fireEvent.change(screen.getByLabelText('Delay between cycles (seconds)'),{target:{value:'0'}});fireEvent.click(screen.getByRole('button',{name:'Convert Repeat to loop'}));
+ expect(screen.getByRole('status').textContent).toContain('0.1 to 3600');expect(screen.getByLabelText('Sequence Repeat (older form)')).toBeTruthy();
+ fireEvent.change(screen.getByLabelText('Delay between cycles (seconds)'),{target:{value:'0.5'}});fireEvent.click(screen.getByRole('button',{name:'Convert Repeat to loop'}));
+ expect(screen.queryByLabelText('Sequence Repeat (older form)')).toBeNull();expect((screen.getByLabelText(/Add catalog actions to function/) as HTMLSelectElement).value).toBe('main');expect(client.snapshot().request).toBeNull();
+ fireEvent.click(screen.getByRole('button',{name:'Apply changes'}));const request=client.snapshot().request!;expect(request.commands).toHaveLength(1);
+ const saved=request.commands[0].rule!.edits![0].sequence!;expect(saved.repeat).toBe(false);expect(JSON.parse(saved.program)).toEqual(loopProgram(initial.rules!.selected!.program,.5));expect(request.commands[0].rule!.action).toBe('edit');client.cancel();
+});
+it('retains the source editor buffer and Repeat flag when an incompatible source change is rejected',()=>{
+ const initial=repeatingState(),client=new RoomAgentClient();client.receive(initial);const screen=render(<RuleWorkspace client={client}/>);
+ fireEvent.click(screen.getByRole('button',{name:'Functions & code'}));fireEvent.click(screen.getByRole('button',{name:'Edit full source'}));
+ const source=JSON.stringify(loopProgram(initial.rules!.selected!.program,1));fireEvent.change(screen.getByLabelText('Program JSON'),{target:{value:source}});fireEvent.click(screen.getByRole('button',{name:'Update draft'}));
+ expect(screen.getByRole('alert').textContent).toContain('Convert');expect((screen.getByLabelText('Program JSON') as HTMLTextAreaElement).value).toBe(source);expect((screen.getByLabelText('Sequence Repeat (older form)') as HTMLInputElement).checked).toBe(true);expect(client.snapshot().request).toBeNull();
+ expect((screen.getByRole('button',{name:'Convert Repeat to loop'}) as HTMLButtonElement).disabled).toBe(true);
 });

@@ -30,6 +30,9 @@ and concurrency guards from catalog-declared facts. It requires an explicit
 snapshot before running and never silently advances revisions; see QUEST_CURRENT_INPUTS.md.
 Reusable behaviours can now choose visible current-value reads and live/fixed
 preferences through the same typed program representation; see QUEST_REUSABLE_INPUTS.md.
+The book now explicitly converts sequence Repeat to editable call/wait loops and
+lets authors select the function receiving catalog blocks. Code and module edits
+retain rejected drafts rather than silently disabling Repeat.
 The remaining runtime, provider, device and Store acceptance gates remain unfinished; the complete v1 goal remains active.
 
 Current recovery implementation supports retained candidates, an external backup,
@@ -46,6 +49,29 @@ and tracked operation roots remain protected. Private recovery export remains
 separate; a full store with unreadable selection still requires recovery/repair.
 PR #248 records the current verified commit and package. Earlier entries
 below are historical evidence, not current test totals or release acceptance.
+
+PC repeat-loop authoring increment (2026-10-01): explicit conversion wraps the
+existing entry function in a version-3 Forever/call/sleep loop with a user-selected
+cycle delay. Original function bodies, local resets and early returns remain;
+version-3 per-action ownership and run-wide limits are made explicit. Code and
+module editors retain rejected buffers/previews rather than silently clearing the
+older Repeat flag. Catalog insertion has a visible function destination, including
+the original cycle function. Shared agent guidance describes the same representation.
+Saving never starts a run. Native scheduler coverage verifies locals, returns,
+timing, released ownership, Stop and no lifecycle restart. Browser authoring replay
+checks conversion, insertion into the cycle and save without execution commands.
+The full v1 release goal remains open; this is not provider/headset acceptance.
+
+Verification passed 389 EditMode and 328 PlayMode tests (three optional private
+model checks skipped), 1,621 web tests in 186 files, and 61 Android browser tests.
+Production build, TypeScript, ESLint, catalog drift, prompt ownership and core
+boundaries pass. The full build helper exited zero. All 189 runtime and 90 test
+C# files, 26 fixture files plus metadata, and 113 packaged web files match the
+tested source/build. ARM64-only and v2 signature verify. Development checkpoint
+`MaestroQuest-repeat-loops-CEEFB33E.apk` has SHA-256
+`CEEFB33EBECDF26188B3A2B7C85A49BAC8BA9DBE4ABBE44A5D4B5916BF73F879`.
+Evidence: `.quest-evidence/repeat-loops/verification.json`. It remains uninstalled;
+device/provider/Store acceptance and the complete v1 release remain unfinished.
 
 PC reusable-input increment (2026-10-01): program insertion now offers a literal
 snapshot or ordinary editable read/action blocks generated from native current-input

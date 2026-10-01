@@ -24,6 +24,30 @@ namespace Maestro.Quest.Tests
             public void Stop(string id,bool placement){Stops++;}
             public RuleActionState State(string id,out string error){error=null;return Phase;}
         }
+        sealed class RepeatingActions:IRuleActions
+        {
+            public int Starts;public double LastSeconds;
+            public bool CanRun(CapabilityCall call,out string error){error=null;return true;}
+            public bool Start(string id,CapabilityCall call,out float seconds,out string error){Starts++;LastSeconds=(double)call.Arguments["seconds"];seconds=(float)LastSeconds;error=null;return true;}
+            public void Stop(string id,bool placement){}
+        }
+        [Test] public void ConvertedRepeatResetsCycleLocalsHonoursReturnAndWaitsWithoutOwningTargets()
+        {
+            var source=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-repeat-conversion.json")));
+            var sequence=Sequence(source);var actions=new RepeatingActions();var scheduler=new RuleScheduler(actions);
+            scheduler.Configure(new RuleDocument {sequences=new[]{sequence}});
+            Assert.That(actions.Starts,Is.Zero,"Authoring and saving do not execute a program");
+            Assert.That(scheduler.Trigger(sequence.id,0),Is.True,scheduler.LastError);
+            Assert.That(actions.Starts,Is.EqualTo(1));Assert.That(actions.LastSeconds,Is.EqualTo(1));Assert.That(scheduler.TargetsBusy(new[]{"maestro"}),Is.True);
+            scheduler.Tick(1.1f);Assert.That(scheduler.ObserveRuns().Single().waiting,Is.True);Assert.That(scheduler.TargetsBusy(new[]{"maestro"}),Is.False);
+            scheduler.Tick(1.4f);Assert.That(actions.Starts,Is.EqualTo(1),"The explicit cycle delay must elapse");
+            scheduler.Tick(1.7f);Assert.That(actions.Starts,Is.EqualTo(2));Assert.That(actions.LastSeconds,Is.EqualTo(1),"Each call has fresh locals");
+            scheduler.Tick(2.8f);Assert.That(actions.Starts,Is.EqualTo(2),"Return skips the unreachable second action but permits another cycle");
+            scheduler.Tick(3.4f);Assert.That(actions.Starts,Is.EqualTo(3));Assert.That(actions.LastSeconds,Is.EqualTo(1));
+            scheduler.Tick(4.5f);scheduler.StopAll();scheduler.Tick(20);Assert.That(actions.Starts,Is.EqualTo(3));Assert.That(scheduler.RunningCount,Is.Zero);
+            Assert.That(scheduler.Trigger(sequence.id,21),Is.True);Assert.That(actions.Starts,Is.EqualTo(4));
+            scheduler.Suspend(true);scheduler.Suspend(false);scheduler.Tick(30);Assert.That(actions.Starts,Is.EqualTo(4),"Focus return never restarts converted loops");
+        }
         static JObject Source()=>JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-events.json")));
         static JArray Loop(JObject p)=>(JArray)p["functions"][0]["body"][0]["body"];
         static RuleSequence Sequence(JObject source=null)=>new() {id=Guid.NewGuid().ToString("N"),name="Reactive wave",program=(source??Source()).ToString(Newtonsoft.Json.Formatting.None)};

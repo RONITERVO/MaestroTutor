@@ -1,3 +1,4 @@
+import repeatConversion from '../../unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-repeat-conversion.json';
 import nativeSimulation from './physicsSimulation.json';
 import type {DataValue} from '../../shared/programValues';
 // Development-only UI fixture. Simulated receipts; no provider or headset access.
@@ -94,6 +95,12 @@ if(spatialSettings){
  state.objects.push({id:nativeSpatial.beforePhysics.target,objectRevision:nativeSpatial.beforePhysics.revision,name:'Native settings block',kind:'Block',position:{x:0,y:1,z:1},scale:1,color:white,animated:false});
  state.execution={...JSON.parse(JSON.stringify(nativeSpatial.physics)),selected:null,running:[],outcomes:[],nextRunId:nativeSpatial.physics.selected.id};
  state.capabilities=[...state.capabilities??[],'catalogVocabulary.v1','factQueries.v1','structuredValues.v1','spatialSettings.v1','execution.v1','executionReceipts.v1','actionResults.v1'];
+}
+if(spatialSettings&&new URLSearchParams(location.search).has('repeatLoops')){
+ const cycle=repeatConversion.functions[0];const selected=state.rules!.selected!;
+ state.rules!.running=[];state.rules!.outcomes=[];state.rules!.queued=0;state.rules!.status='Ready';
+ selected.name='Repeat greeting';selected.repeat=true;selected.program=JSON.stringify({version:2,entry:cycle.name,resources:repeatConversion.resources,functions:[cycle]});
+ state.rules!.sequences=[{id:selected.id,name:selected.name,repeat:true,program:true,steps:cycle.body.length}];
 }
 const importReadback=new URLSearchParams(location.search).has('importReadback');
 if(importReadback){

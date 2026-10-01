@@ -22,12 +22,12 @@ function findBlock(program:BehaviourProgram,id:string):{body:ProgramNode[];at:nu
  const search=(body:ProgramNode[]):{body:ProgramNode[];at:number}|null=>{for(let at=0;at<body.length;at++){if(body[at].id===id)return {body,at};for(const c of children(body[at])){const found=search(c.body);if(found)return found;}}return null;};
  for(const fn of program.functions){const found=search(fn.body);if(found)return found;}return null;
 }
-export function ProgramEditor({source,onChange,run,onEditingChange,targets,eventsSupported=false,eventFieldsSupported=false,eventSubscriptionsSupported=false,factQueriesSupported=false,conditionWaitsSupported=false,resultsSupported=false,structuredSupported=false,onSignal,disabled=false}:{source:string;onChange:(source:string)=>void;run?:RuleRun;onEditingChange:(value:boolean)=>void;targets:readonly {id:string;name:string}[];eventsSupported?:boolean;eventFieldsSupported?:boolean;eventSubscriptionsSupported?:boolean;factQueriesSupported?:boolean;conditionWaitsSupported?:boolean;resultsSupported?:boolean;structuredSupported?:boolean;onSignal?:(name:string,value:number|boolean|string)=>void;disabled?:boolean}) {
+export function ProgramEditor({source,onChange,run,onEditingChange,targets,eventsSupported=false,eventFieldsSupported=false,eventSubscriptionsSupported=false,factQueriesSupported=false,conditionWaitsSupported=false,resultsSupported=false,structuredSupported=false,onSignal,disabled=false}:{source:string;onChange:(source:string)=>string|null|void;run?:RuleRun;onEditingChange:(value:boolean)=>void;targets:readonly {id:string;name:string}[];eventsSupported?:boolean;eventFieldsSupported?:boolean;eventSubscriptionsSupported?:boolean;factQueriesSupported?:boolean;conditionWaitsSupported?:boolean;resultsSupported?:boolean;structuredSupported?:boolean;onSignal?:(name:string,value:number|boolean|string)=>void;disabled?:boolean}) {
  const parsed=parseProgram(source),program=parsed.program;
  const [signalValues,setSignalValues]=useState<Record<string,string>>({});
  const [editing,setEditing]=useState<{kind:'source'|'node'|'function'|'visual'|'signature'|'newFunction'|'declarations';id:string;buffer:string;base?:string}|null>(null),[error,setError]=useState('');
  useEffect(()=>{onEditingChange(editing!==null);return ()=>onEditingChange(false);},[editing!==null,onEditingChange]);
- const write=(value:BehaviourProgram)=>{const json=JSON.stringify(value),result=parseProgram(json);if(!result.program){setError(result.error!);return false;}onChange(json);setError('');return true;};
+ const write=(value:BehaviourProgram)=>{const json=JSON.stringify(value),result=parseProgram(json);if(!result.program){setError(result.error!);return false;}const rejected=onChange(json);if(rejected){setError(rejected);return false;}setError('');return true;};
  const update=(fn:(value:BehaviourProgram)=>void)=>{if(!program)return;const next=copy(program);fn(next);write(next);};
  const saveEditor=()=>{
   if(!editing)return;

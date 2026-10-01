@@ -71,3 +71,11 @@ it('keeps invalid and whitespace-preserving module source drafts editable in the
  const screen=render(<Editor/>),input=screen.getByLabelText('definition');fireEvent.change(input,{target:{value:'{'}});expect((input as HTMLTextAreaElement).value).toBe('{');expect(changed).toHaveBeenLastCalledWith(null);expect(screen.getByRole('alert')).toBeTruthy();
  const source='  '+JSON.stringify(module);fireEvent.change(input,{target:{value:source}});expect((input as HTMLTextAreaElement).value).toBe(source);expect(changed).toHaveBeenLastCalledWith(module);expect(screen.queryByRole('alert')).toBeNull();
 });
+
+it('keeps the module preview open when the parent rejects a repeat-changing edit',async()=>{
+ const {screen,receive,onChange,onClose}=setup();onChange.mockReturnValue('Convert sequence Repeat first.');
+ fireEvent.click(screen.getByRole('button',{name:'Search modules'}));await receive({operation:'search',category:'modules',query:'',offset:0,pageSize:6,total:1,entries:[{id:hash,version:1,label:module.name}],revision:2,ready:true,pending:false,status:'Found'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(module.name)}));await receive({operation:'inspect',category:'modules',capability:hash,version:1,definition:module,revision:2,ready:true,pending:false,status:'Inspected'});
+ fireEvent.click(screen.getByLabelText('Allow additional module objects'));fireEvent.click(screen.getByRole('button',{name:'Add pinned import to draft'}));
+ expect(onChange).toHaveBeenCalledOnce();expect(onClose).not.toHaveBeenCalled();expect(screen.getByRole('status').textContent).toContain('Convert sequence Repeat');
+});
