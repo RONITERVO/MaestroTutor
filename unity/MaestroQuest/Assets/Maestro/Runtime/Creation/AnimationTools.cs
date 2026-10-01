@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Maestro.Quest.Creation
 {
-    public enum AnimationTool { Pose, Record, AddFrame, Play, Stop, Previous, Next, Replace, Delete, Loop, Gesture, Automatic, Faster, Slower, DiscardTake }
+    public enum AnimationTool { Pose, Record, AddFrame, Play, Stop, Previous, Next, Replace, Delete, Loop, Gesture, Automatic, Faster, Slower, DiscardTake, SavePose, DiscardPose }
     public sealed class AnimationToolAction : PhysicalAction
     {
         public AnimationWorkshop Workshop;
@@ -19,6 +19,8 @@ namespace Maestro.Quest.Creation
                 case AnimationTool.Pose: Workshop.TogglePose(); break;
                 case AnimationTool.Record: Workshop.ToggleRecord(); break;
                 case AnimationTool.DiscardTake: Workshop.DiscardTake(); break;
+                case AnimationTool.SavePose: Workshop.SaveRetainedPose(); break;
+                case AnimationTool.DiscardPose: Workshop.DiscardRetainedPose(); break;
                 case AnimationTool.AddFrame: Workshop.AddFrame(); break;
                 case AnimationTool.Play: Workshop.Play(); break;
                 case AnimationTool.Stop: Workshop.Stop(); break;
@@ -51,8 +53,8 @@ namespace Maestro.Quest.Creation
             var handle = gameObject.AddComponent<BoxCollider>(); handle.size = new Vector3(.76f,.50f,.055f);
             var item = gameObject.AddComponent<RoomItem>(); item.Configure(new Collider[] { handle },1,1); room.Register(item);
             var kinds = new[] { AnimationTool.Pose,AnimationTool.Record,AnimationTool.AddFrame,AnimationTool.Play,AnimationTool.Stop,AnimationTool.Loop,
-                AnimationTool.Previous,AnimationTool.Next,AnimationTool.Replace,AnimationTool.Delete,AnimationTool.Gesture,AnimationTool.Automatic,AnimationTool.Faster,AnimationTool.Slower,AnimationTool.DiscardTake };
-            var labels = new[] { "Pose Maestro","Record","Save frame","Play","Stop","Loop","Earlier","Later","Replace","Remove","Gesture","Auto gestures","Faster","Slower","Discard take" };
+                AnimationTool.Previous,AnimationTool.Next,AnimationTool.Replace,AnimationTool.Delete,AnimationTool.Gesture,AnimationTool.Automatic,AnimationTool.Faster,AnimationTool.Slower,AnimationTool.DiscardTake,AnimationTool.SavePose,AnimationTool.DiscardPose };
+            var labels = new[] { "Pose Maestro","Record","Save frame","Play","Stop","Loop","Earlier","Later","Replace","Remove","Gesture","Auto gestures","Faster","Slower","Discard take","Save pose","Discard pose" };
             for (int i = 0; i < kinds.Length; i++)
             {
                 var tool = new GameObject(labels[i]); tool.transform.SetParent(transform,false);
@@ -62,7 +64,7 @@ namespace Maestro.Quest.Creation
                 var paint = kinds[i] == AnimationTool.Record ? recordPaint : kinds[i] == AnimationTool.Pose ? posePaint : teal;
                 Part(tool.transform,kinds[i] == AnimationTool.Record || kinds[i] == AnimationTool.Pose ? PrimitiveType.Sphere : PrimitiveType.Cube,Vector3.zero,new Vector3(.046f,.041f,.035f),paint);
                 if (kinds[i] == AnimationTool.AddFrame || kinds[i] == AnimationTool.Replace) Part(tool.transform,PrimitiveType.Cube,new Vector3(0,0,-.02f),new Vector3(.027f,.025f,.006f),paper);
-                Label(tool.transform,new Vector3(0,-.048f,-.02f),labels[i],.0048f);
+                Label(tool.transform,new Vector3(0,-.059f,-.02f),labels[i].Replace(" ","\n"),.0044f);
             }
             status = Label(transform,new Vector3(0,-.215f,-.029f),"",.0048f);
             workshop.Changed += Refresh; Refresh();
@@ -71,7 +73,7 @@ namespace Maestro.Quest.Creation
         {
             status.text = workshop.Status.Length > 80 ? workshop.Status.Substring(0,80) + "…" : workshop.Status;
             recordPaint.color = IllustratedMaterials.Hex(workshop.IsRecording ? "F04C42" : workshop.HasUnsavedRecording ? "E5A42A" : "B8644E");
-            posePaint.color = IllustratedMaterials.Hex(workshop.IsPosing ? "2B8D88" : "73534E");
+            posePaint.color = IllustratedMaterials.Hex(workshop.HasUnsavedPose ? "E5A42A" : workshop.IsPosing ? "2B8D88" : "73534E");
         }
         Material Paint(string hex) { var value = IllustratedMaterials.Create(IllustratedMaterials.Hex(hex)); materials.Add(value); return value; }
         static void Part(Transform parent, PrimitiveType type, Vector3 position, Vector3 size, Material paint)

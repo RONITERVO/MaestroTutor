@@ -10,7 +10,9 @@ start/save/discard with exact native session IDs, retained failed takes and
 matching physical controls. Shared avatar selection now discovers imported model
 identities and prepares a humanoid before saving/replacing Maestro through the
 same physical selection path. Failure/cancellation keeps the previous selection;
-readback distinguishes saved, loading and displayed state. The catalog contains
+readback distinguishes saved, loading and displayed state. Failed manual poses
+now remain frozen in memory for exact-revision retry or explicit discard through
+the solid tray controls, with avatar/workspace boundary protection. The catalog contains
 43 actions, 10 events and 24 facts. See QUEST_ANIMATION_AUTHORING.md and
 QUEST_AVATAR_SELECTION.md. Shared picker/import sessions, live posing controls
 and device/provider/Store acceptance remain unfinished; the complete v1 goal
@@ -30,6 +32,23 @@ and tracked operation roots remain protected. Private recovery export remains
 separate; a full store with unreadable selection still requires recovery/repair.
 PR #248 records the current verified commit and package. Earlier entries
 below are historical evidence, not current test totals or release acceptance.
+
+PC pose-recovery increment (2026-10-01): a reproduced failed-write regression
+could replace an unsaved manual pose when a new pose session started. Failed
+poses now remain frozen for exact-revision retry or explicit discard; new
+animation authoring, avatar selection and workspace boundaries wait for that
+resolution. The solid tray has Save pose and Discard pose controls with wrapped
+labels verified by rendered bounds and actual ray taps. Eight new native cases
+cover lifecycle stops, Undo/Redo, changed targets, holds, temporary Keep and
+imported-rig readback. PC verification passes 1,559 web tests across 175 files,
+372 EditMode and 272 PlayMode tests (three optional private-model skips), and
+55 Android browser tests. The full helper exited successfully; 174 runtime and
+81 test C# sources, 24 fixture files plus metadata, and 113 packaged web files
+match. ARM64/v2 signature-verified checkpoint:
+`MaestroQuest-pose-retention-91C5A8B3.apk`, SHA-256
+`91C5A8B3F911130DCBE8AA3752A9B2821B09380CCA85CE128ADDA95C1C859617`.
+It remains uninstalled. Retained poses are in memory only; shared live posing
+and device/provider/Store acceptance remain unfinished.
 
 PC avatar-selection increment (2026-10-01): shared library discovery and exact-
 revision model selection use the same prepare/save/apply path as physical Use

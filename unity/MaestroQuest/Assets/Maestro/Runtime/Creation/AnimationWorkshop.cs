@@ -34,6 +34,7 @@ namespace Maestro.Quest.Creation
         readonly string ownershipId="authoring:"+Guid.NewGuid().ToString("N");
         RoomOwnership.Lease ownershipLease;
         bool TakeControl(bool allowsGrab=false,bool notify=true) {
+            if(HasUnsavedPose){Say(RetainedPosePrompt);return false;}
             if(editor.RuntimeGate.Held){Say(editor.RuntimeGate.Reason);return false;}
             if(ownershipLease?.Held!=true&&!editor.Ownership.TryAcquire(ownershipId,"Animation authoring",RoomActorRole.Control,
                 new[]{new Maestro.Quest.Programs.BehaviourCatalog.Claim(targetId,"wholeTarget")},_=>Stop(),out ownershipLease,out var error,replaceControl:true,allowsGrab:allowsGrab)) {Say(error);return false;}
@@ -56,12 +57,13 @@ namespace Maestro.Quest.Creation
         {
             if (saving || stopping || targetId == editor.SelectedId) return;
             Stop(); targetId = editor.SelectedId; target = editor.Find(targetId); avatar = target ? target.GetComponent<MaestroAvatar>() : null;
-            selectedFrame = -1; Say(target ? "Selected " + editor.Read(targetId).kind : "Select an object, or choose Pose Maestro");
+            selectedFrame = -1; Say(HasUnsavedPose ? RetainedPosePrompt : target ? "Selected " + editor.Read(targetId).kind : "Select an object, or choose Pose Maestro");
         }
         void Grabbed(RoomItem item) { if (IsPlaying || importedPreview || walkPreview) Stop(); }
         void Say(string value) { Status = value; Changed?.Invoke(); }
         bool Ready()
         {
+            if(HasUnsavedPose){Say(RetainedPosePrompt);return false;}
             if(editor.RuntimeGate.Held){Say(editor.RuntimeGate.Reason);return false;}
             if(HasUnsavedRecording){Say("Save or discard the retained take first");return false;}
             if (!target) { Say("Select an object first"); return false; }
@@ -84,10 +86,13 @@ namespace Maestro.Quest.Creation
         }
         public void TogglePose()
         {
+            if(HasUnsavedPose){Say(RetainedPosePrompt);return;}
+            if(HasUnsavedRecording){Say("Save or discard the retained take first");return;}
             if (posing) { Stop(); return; }
             if (editor.AnyHeld) { Say("Release the object first"); return; }
             var currentPose = avatar && avatar.PoseRig ? avatar.PoseRig.Capture() : null;
-            Stop(); editor.Select(editor.Find("maestro")); SelectionChanged();
+            Stop(); if(HasUnsavedPose||HasUnsavedRecording)return;
+            editor.Select(editor.Find("maestro")); SelectionChanged();
             if (avatar && avatar.ModelBusy) { Say("Wait for Maestro to finish changing avatars"); return; }
             if (editor.DrawingMode) editor.ToggleDrawing();
             if (!avatar || !avatar.PoseRig) { Say("Maestro is still loading"); return; }
@@ -102,8 +107,9 @@ namespace Maestro.Quest.Creation
         }
         void SavePose()
         {
-            if (stopping || !posing || IsRecording || !avatar) return;
-            if (Save(editor.Read(targetId).motion,true,avatar.PoseRig.Capture())) Say("Pose saved — use Undo to restore the previous pose");
+            if (stopping || !posing || IsRecording || !avatar || HasUnsavedPose) return;
+            if (SaveCurrentPose()) Say("Pose saved — use Undo to restore the previous pose");
+            else Stop();
         }
         public void AddFrame()
         {
@@ -171,7 +177,8 @@ namespace Maestro.Quest.Creation
         public void ResetPose()
         {
             if (!Ready() || IsRecording) return;
-            Stop(); if (!avatar) { Say("Choose Maestro to restore automatic gestures"); return; }
+            Stop(); if(!Ready())return;
+            if (!avatar) { Say("Choose Maestro to restore automatic gestures"); return; }
             if(Save(editor.Read(targetId).motion,true,null))Say("Maestro follows tutor activity again");
         }
         public void Gesture()
@@ -230,7 +237,7 @@ namespace Maestro.Quest.Creation
             stopping = true;
             try
             {
-                if (!resolvingRecording && posing && !IsRecording && !HasUnsavedRecording && avatar && avatar.PoseRig) Save(editor.Read(targetId).motion,true,avatar.PoseRig.Capture());
+                if (!resolvingRecording && posing && !IsRecording && !HasUnsavedRecording && !HasUnsavedPose && avatar && avatar.PoseRig) SaveCurrentPose();
                 if(!resolvingRecording)FinishRecording(); StopPlayback();
                 if (avatar && avatar.PoseRig)
                 {

@@ -34,6 +34,7 @@ namespace Maestro.Quest.Creation
         {
             error="The recording session changed; inspect animation.recording first";
             if(sessionId!=recordingSession)return false;
+            if(HasUnsavedPose){error=RetainedPosePrompt;return false;}
             if(IsRecording||HasUnsavedRecording){error="Finish or discard the current take first";return false;}
             if(!editor||editor.RuntimeGate.Held){error=editor?editor.RuntimeGate.Reason:"The room editor is unavailable";return false;}
             if(!editor.CanSaveRoom||editor.WriteGate.Frozen){error="The room is unavailable for saving";return false;}

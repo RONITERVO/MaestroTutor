@@ -96,6 +96,30 @@ object revision or room session. A retained take blocks workspace and temporary
 room boundaries until saved or discarded. App/process termination loses any
 unsaved in-memory take; recording is never automatically restored on launch.
 
+## Failed manual pose saves
+
+Releasing a joint or leaving Pose Maestro attempts to save the complete canonical
+pose. If that write fails, authoring stops and the displayed avatar returns to its
+saved state. The failed pose remains frozen in memory; the amber Pose Maestro
+control and tray status identify it. Save pose retries the retained pose even if
+another object is selected. Discard pose explicitly abandons only that failed
+pose, leaving the saved pose and animation unchanged.
+
+Retry requires the original room session and exact Maestro revision, checks
+runtime/write holds and held objects, and cannot replace another manual owner.
+It rechecks the revision after interrupting a lower-priority actor. A successful
+retry saves one Undo entry and restores the pose through the normal imported or
+included rig. Repeated Stop, pause and focus notifications cannot silently retry
+or erase the retained pose. A stale retry stays retained until explicitly
+discarded; it never merges into newer edits.
+
+Pending poses block new animation authoring, avatar replacement, workspace
+switches and temporary-room Begin/Keep/Discard. A pose retained in a temporary
+room saves into that fork; Keep is still required for persistence. App/process
+termination loses unsaved in-memory poses. These recovery controls are currently
+physical tray controls; shared live posing and its exact session identities are
+still a separate unfinished increment.
+
 ## Book and verification
 
 The expert action catalog derives typed fields, nested frame/joint lists and
@@ -122,3 +146,9 @@ and temporary Keep. `test-fixtures/browser/recordingSessions.json` captures nati
 start/finish receipts and facts. `scripts/probe-recording-sessions.mjs` reads the
 session identity in the book, fills typed controls, saves and observes the next
 idle identity; its acknowledgement uses the native capture as a local fixture.
+
+Pose recovery tests reproduce the previous failed-write loss and cover exact
+retry after selection changes, repeated lifecycle stops, stale revision refusal,
+Undo/Redo, temporary Keep, imported-rig readback, competing owners and real ray
+taps on the solid Save pose/Discard pose controls. The desktop-rendered tray
+capture checks layout only; headset readability remains a device acceptance gate.

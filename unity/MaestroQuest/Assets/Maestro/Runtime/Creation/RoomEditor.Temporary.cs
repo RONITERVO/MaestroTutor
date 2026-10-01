@@ -45,6 +45,7 @@ namespace Maestro.Quest.Creation
         {
             error=null;
             if(journal==null) {error="Room editor is not ready";return false;}
+            if(GetComponent<AnimationWorkshop>()?.HasUnsavedPose==true){error="Save or discard the retained pose before changing workspaces or temporary rooms";return false;}
             if(GetComponent<AnimationWorkshop>()?.HasUnsavedRecording==true){error="Save or discard the retained recording before changing workspaces or temporary rooms";return false;}
             if(AnyHeld) {error="Release held objects before changing the temporary room";return false;}
             foreach(var item in objects.Values) {

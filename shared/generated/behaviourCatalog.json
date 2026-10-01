@@ -6461,11 +6461,19 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationRecording.cs",
-      "sha256": "ebe2e045b6deab008454bff4a33c8dbcfe1cded6c5a79d7fa30eea3d5ac89b43"
+      "sha256": "d8a900429139f97ab82f4e8a57409164c6aee12b9b58c2733f16745b7b269303"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationWorkshop.cs",
+      "sha256": "49a06629db24b53b577c70a064de86e96722eb0186fcb03ee819bd0a8fdb618b"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationPoseRetention.cs",
+      "sha256": "27ca880f445d771f153559a07da1d7de1e6297be92bc76fe223213440c7fb1a0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AvatarModelSelection.cs",
-      "sha256": "5aa2ead87a8c22ed06f4a220445c9d368e170afcd629672d945401d83e75f06b"
+      "sha256": "d58e84f527ebfd1eb4e7dff56f0a8ffd849ec8078b28eb773d81b5360fd65f8f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeTemplates.cs",
