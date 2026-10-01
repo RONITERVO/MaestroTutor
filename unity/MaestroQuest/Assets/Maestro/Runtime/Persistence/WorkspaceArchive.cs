@@ -152,7 +152,7 @@ namespace Maestro.Quest.Persistence
         }
         // Reverify the private prepared generation immediately before activation. Its manifest
         // is retained outside the writable workspace, and is never imported as a live document.
-        internal static WorkspaceArchiveReceipt VerifyPreparedDirectory(string directory,byte[] manifest,CancellationToken cancellation=default)
+        internal static WorkspaceArchiveReceipt VerifyPreparedDirectory(string directory,byte[] manifest,CancellationToken cancellation=default,Action<string,byte[]> copy=null)
         {
             cancellation.ThrowIfCancellationRequested();
             if(manifest==null||manifest.Length<1||manifest.Length>MaximumManifestBytes)throw Invalid("Invalid prepared manifest size.");
@@ -165,7 +165,8 @@ namespace Maestro.Quest.Persistence
             byte[] Verified(Entry entry){string path=Path.Combine(directory,entry.Path.Replace('/',Path.DirectorySeparatorChar));using var input=new FileStream(path,FileMode.Open,FileAccess.Read,FileShare.Read);if(input.Length!=entry.Bytes)throw Invalid("Prepared file length changed.");var bytes=Read(input,(int)entry.Bytes,cancellation);if(bytes.Length!=entry.Bytes||ModelLibrary.Hash(bytes)!=entry.Hash)throw Invalid("Prepared file changed after inspection.");return bytes;}
             var documents=entries.Where(x=>!WorkspaceArchiveMetadata.IsAsset(x.Path)).ToDictionary(x=>x.Path,Verified,StringComparer.Ordinal);
             var metadata=WorkspaceArchiveMetadata.Read(documents,entries.Where(x=>WorkspaceArchiveMetadata.IsAsset(x.Path)).Select(x=>x.Path));
-            foreach(var entry in entries.Where(x=>WorkspaceArchiveMetadata.IsAsset(x.Path)))metadata.ValidateAsset(entry.Path,Verified(entry));
+            foreach(var document in documents)copy?.Invoke(document.Key,document.Value);
+            foreach(var entry in entries.Where(x=>WorkspaceArchiveMetadata.IsAsset(x.Path))){var bytes=Verified(entry);metadata.ValidateAsset(entry.Path,bytes);copy?.Invoke(entry.Path,bytes);}
             cancellation.ThrowIfCancellationRequested();return new WorkspaceArchiveReceipt {ManifestHash=ModelLibrary.Hash(manifest),Summary=CopySummary(metadata.Summary,entries.Sum(x=>x.Bytes))};
         }
         sealed class OutputLimit:Stream

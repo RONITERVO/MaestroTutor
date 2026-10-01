@@ -6,7 +6,9 @@ programs use the same operation and execution receipts. Native archive selection
 and verified previews also use the shared catalog. Activation now connects the
 reviewed preview to the persistent host through that same catalog. Review completion
 independently verifies the exact inspected content before releasing its hold.
-**Previous-workspace recovery is not connected yet.** Original chat backup
+A verified previous workspace can now be selected through the same preview and
+activation flow. **Recovery with corrupt/unavailable current content remains
+unimplemented.** Original chat backup
 remains separate, and portable backup/restore is not a finished release feature.
 
 ## Snapshot boundary
@@ -338,8 +340,8 @@ reservation protection and interruptions around the pointer commit.
 The production activation coordinator below now owns private archive cleanup and
 shared maintenance execution. Content-bound review completion is described below.
 The edit lease lasts until all retention/activation workers settle; native owners
-are preserved on failed retention. Previous-workspace recovery still needs an exact operation identity
-before exposure. An activation retry after releasing the edit hold or restarting
+are preserved on failed retention. Previous-workspace selection below binds a fresh preview to the complete origin
+selection before exposure. An activation retry after releasing the edit hold or restarting
 must first verify that the retained snapshot still represents the accepted current
 state; otherwise the host needs a new import/retention pair. Selection revision
 alone does not track edits within a room. Headset power-loss and storage/performance
@@ -374,8 +376,8 @@ and stale requests. A captured native unavailable-room state is accepted by the 
 bridge regression, which also checks replacement invalidates pending work.
 
 This is the startup and owner-lifetime boundary used by activation below.
-Previous-workspace recovery remains unfinished. Review completion and maintenance
-execution use the persistent domain below.
+Previous-workspace selection, review completion and maintenance execution use the
+persistent domain below. Recovery with unreadable current content remains unfinished.
 
 
 ## Maintenance while room content is held or unavailable
@@ -416,8 +418,9 @@ restart reconciliation, replacement interruption, export under a review hold and
 refusal of another domain's issued ID. Captured native results are validated by web
 tests; the book Run control is exercised with unavailable room history and healthy
 maintenance. These checks do not establish a complete restore journey. Activation
-and review completion now use that route. Previous-workspace recovery and
-retained-generation maintenance are still unfinished.
+and review completion now use that route, as does previous-workspace selection
+below. Corrupt/unavailable workspace recovery and retained-generation maintenance
+are still unfinished.
 
 ## Tracked activation through the book and agent
 
@@ -476,8 +479,8 @@ controls. These are PC and simulated-transport checks; headset storage, chooser,
 pause/power-loss, readability and performance acceptance remain open.
 
 Review completion below binds approval to the current inspected contents, which
-can be edited while under review. Previous-workspace recovery, corrupt-selection
-recovery and retained-generation browsing/cleanup remain release gates. The
+can be edited while under review. Recovery with corrupt/unavailable current content
+and retained-generation browsing/cleanup remain release gates. The
 existing storage-only helpers are not exposed as complete user recovery commands.
 
 
@@ -532,3 +535,45 @@ contract and exercised through the ordinary book Run and fact controls. These ar
 PC/simulated-transport checks. Headset storage, power-loss, lifecycle and user
 acceptance still need device evidence. In-process workspace recovery must also
 wait for any retiring host's workers before constructing fresh content owners.
+
+
+## Selecting and recovering a verified previous workspace
+
+`workspace.previous` reads the retained previous generation, its manifest hash and
+the current selection revision. Its `available` field describes metadata only;
+large document/asset verification happens on a worker after an explicit selection.
+The read does not create a workspace, clone content or change the selected root.
+
+`workspace.previous.select` accepts that exact generation/hash/revision and returns
+an opening request ID. It uses no Android chooser. The existing
+`workspace.archive.selection` fact reports preparation, verified preview counts or
+failure, and `workspace.archive.cancel` cancels the worker or removes only its
+unused preview. The selected current content remains available during inspection.
+
+The worker verifies the retained source inventory, documents and asset digests
+while copying those same bytes into a fresh private generation. The original
+retained generation is preserved. Its copy has a durable origin record binding
+the complete selection, source generation and manifest hash. Metadata marks that
+record as required: a lost record cannot silently turn a recovery preview into an
+unbound ordinary import. Changed source files fail without repairing, replacing or
+deleting them. Cancellation/failure removes only the newly created partial copy.
+
+After inspecting the preview, use ordinary `workspace.archive.activate` with the
+preview's new generation/hash and the same expected selection revision. The
+existing coordinator captures and retains today's accepted current content before
+switching. Recovery uses the same content replacement, fresh action-history epoch,
+review hold, cancellation and committed-outcome reconciliation as archive
+activation. Complete content review separately; selection and activation never
+start imported programs, physics or motion. An origin revision change, including
+review completion, invalidates an earlier previous-workspace preview. Updating the
+caller argument alone cannot bypass its durable origin binding; cancel and inspect
+again. Exact committed activation retries remain idempotent.
+
+This is recovery from a healthy retained snapshot while current content can be
+preserved. It does not recover missing/corrupt current selection metadata, failed
+content initialization or damaged current stores that cannot be captured. The
+storage-only `RestorePrevious` helper remains unexposed. Those cases need explicit
+candidate inspection, preservation of damaged evidence and a separate coordinated
+recovery boundary. In-process host replacement must drain retiring workers before
+opening new owners. Generation inventory/cleanup and real-headset acceptance also
+remain release work.

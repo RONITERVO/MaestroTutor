@@ -1441,5 +1441,23 @@ acceptance evidence.
    manual storage-capacity check.
 
 Do not mark previous-workspace or corrupt-selection recovery accepted from these
-checks. Those operations and retained-generation cleanup still need implementation
-and their own exact-identity, preservation and lifecycle acceptance.
+checks. Previous-workspace selection needs the checks below; corrupt-selection
+recovery and retained-generation cleanup still need implementation.
+
+
+### Pending device acceptance: verified previous-workspace recovery
+
+When device work resumes, make a visible accepted edit in the current workspace,
+then use the book or real chat agent to read `workspace.previous` and select its
+exact identity. Confirm no Android chooser opens, no live content changes during
+inspection, and the tracked preview eventually verifies or reports a readable
+failure. Inspect the preview, then activate it. Verify the previous room opens
+under review and today's accepted edit exists in the newly retained previous
+workspace. Complete review and start desired activity explicitly.
+
+Repeat with cancellation during preparation, app pause, restart and a large motion
+library. Change the selection revision after preparing a preview and confirm it
+cannot activate with either old or newly substituted revision arguments. Never
+silently substitute a missing source with an empty room. Test corrupt files through
+controlled fixtures; retain their original bytes. These checks do not establish
+recovery from unreadable current content or corrupt selection metadata.

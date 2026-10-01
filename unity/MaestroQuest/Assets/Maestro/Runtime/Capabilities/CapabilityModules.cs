@@ -19,6 +19,7 @@ namespace Maestro.Quest.Programs
             new RoomSessionCapability(),
             new WorkspaceExportCapability(),
             new WorkspaceSelectCapability(),
+            new WorkspaceSelectPreviousCapability(),
             new WorkspaceCancelSelectionCapability(),
             new WorkspaceActivateCapability(),
             new WorkspaceCancelActivationCapability(),

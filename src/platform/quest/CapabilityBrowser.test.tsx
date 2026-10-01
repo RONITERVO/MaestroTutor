@@ -7,6 +7,7 @@ import exportReceipt from '../../../test-fixtures/browser/workspaceExportReceipt
 import nativeSelection from '../../../test-fixtures/browser/workspaceSelection.json';
 import nativeActivation from '../../../test-fixtures/browser/workspaceActivation.json';
 import nativeReview from '../../../test-fixtures/browser/workspaceReview.json';
+import nativePrevious from '../../../test-fixtures/browser/workspacePrevious.json';
 import native from '../../../test-fixtures/browser/catalogStates.json';
 import nativeProgram from '../../../test-fixtures/browser/programBookState.json';
 import {RoomWorkspace} from './RoomWorkspace';
@@ -281,5 +282,32 @@ it('submits the exact inspected review through shared inputs and reads its compl
  await receive({operation:'inspect',category:'facts',capability:fact.id,version:1,definition:fact,arguments:{requestId:nativeReview.completed.requestId},available:true,value:nativeReview.completed,status:'Available'});
  expect(screen.getByLabelText('Current fact value').textContent).toContain(nativeReview.completed.committedRevision);
  expect(screen.getByLabelText('Current fact value').textContent).toContain('completed');expect(client.snapshot().request).toBeNull();
+ act(()=>client.cancel());
+});
+
+it('selects an exact previous workspace through ordinary action inputs and follows its verified preview',async()=>{
+ const {client,screen,receive}=setup(true,['workspacePrevious.v1','execution.v1','actionResults.v1']);
+ const receipt=nativePrevious.selectionExecution.workspace.selected;
+ if(!validExecutionView(nativePrevious.selectionExecution))throw new Error('Invalid native previous-workspace execution');
+ const issued={...nativePrevious.selectionExecution,workspace:{selected:null,running:[],outcomes:[],nextRunId:receipt.id,storageError:null}};
+ await receive(undefined,false,{execution:issued});
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:'Search'}));
+ const action=capabilityDefinition('workspace.previous.select')!;
+ await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:action.id,version:1,label:action.label}],status:'Inspect previous'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(action.label)}));await receive({operation:'inspect',capability:action.id,version:1,definition:action,status:'Select exact previous identity'});
+ fireEvent.change(screen.getByLabelText('Action arguments'),{target:{value:JSON.stringify(receipt.call.arguments)}});fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
+ expect(client.snapshot().request?.commands[0]).toMatchObject({action:'execution',execution:{operation:'start',runId:receipt.id,call:receipt.call}});
+ await receive(undefined,false,{execution:nativePrevious.selectionExecution});
+ expect(screen.getByLabelText('Action result').textContent).toContain(nativePrevious.selection.requestId);
+ expect(screen.getByLabelText('Action result').textContent).not.toContain(nativePrevious.selection.generationId);
+ fireEvent.change(screen.getByLabelText('Catalog category'),{target:{value:'facts'}});fireEvent.click(screen.getByRole('button',{name:'Search'}));
+ const fact=behaviourFact('workspace.archive.selection')!;
+ await receive({operation:'search',category:'facts',query:'',offset:0,total:1,pageSize:6,entries:[{id:fact.id,version:1,label:fact.label}],status:'Inspect preview'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(fact.label)}));await receive({operation:'inspect',category:'facts',capability:fact.id,version:1,definition:fact,available:false,value:null,status:'Choose request'});
+ fireEvent.change(screen.getByLabelText('Fact inputs requestId'),{target:{value:nativePrevious.selection.requestId}});fireEvent.click(screen.getByRole('button',{name:'Read fact'}));
+ expect(client.snapshot().request?.commands[0]).toEqual({action:'catalog',catalog:{operation:'inspect',category:'facts',capability:fact.id,version:1,arguments:{requestId:nativePrevious.selection.requestId}}});
+ await receive({operation:'inspect',category:'facts',capability:fact.id,version:1,definition:fact,arguments:{requestId:nativePrevious.selection.requestId},available:true,value:nativePrevious.selection,status:'Available'});
+ expect(screen.getByLabelText('Current fact value').textContent).toContain(nativePrevious.selection.generationId);
+ expect(screen.getByLabelText('Current fact value').textContent).toContain('prepared');expect(client.snapshot().request).toBeNull();
  act(()=>client.cancel());
 });

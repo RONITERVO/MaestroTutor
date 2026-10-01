@@ -959,3 +959,19 @@ and fact controls, distinguishing an opening receipt from actual completion.
 Previous/corrupt-workspace recovery, retained-generation maintenance and headset
 acceptance remain release gates. Recovery must settle retiring workers before
 opening new owners for the same persistent storage.
+
+
+### 2026-10-01: verified previous-workspace recovery
+
+The book and agent can inspect previous-workspace metadata and select its exact
+retained identity without an Android chooser. A worker verifies and copies it into
+a fresh preview bound to the full origin selection. Existing activation preserves
+today's accepted edits before switching and keeps recovered activity under review.
+Stale previews, missing provenance and corrupt sources cannot bypass that boundary;
+cancellation removes only the unused copy. This reuses the shared catalog, preview,
+activation and review operations instead of a second switching runtime.
+
+Tests cover verified asset copies, source preservation, stale selection, lost
+provenance, worker faults/cancellation and the native book/agent recovery journey.
+Unreadable current content, corrupt selection and failed initialization still need
+a separate recovery path, followed by generation maintenance and device acceptance.

@@ -8,6 +8,7 @@ import {requireRoomCapabilities} from '../../../shared/roomControls';
 import nativeMaintenance from '../../../test-fixtures/browser/workspaceMaintenance.json';
 import nativeActivation from '../../../test-fixtures/browser/workspaceActivation.json';
 import nativeReview from '../../../test-fixtures/browser/workspaceReview.json';
+import nativePrevious from '../../../test-fixtures/browser/workspacePrevious.json';
 import {validFactValue} from '../../../shared/behaviourFacts';
 import nativeCreation from '../../../test-fixtures/browser/creationResult.json';
 import nativeProgram from '../../../test-fixtures/browser/programBookState.json';
@@ -196,4 +197,25 @@ it('binds native review completion to its inspected content and separates the op
  expect(nativeReview.completed.manifestHash).toBe(nativeReview.prepared.manifestHash);
  expect(validFactValue('workspace.review',{...nativeReview.completed,path:'/private/workspace'})).toBe(false);
  expect(validFactValue('workspace.review',{...nativeReview.completed,summary:{files:5}})).toBe(false);
+});
+
+it('keeps previous source, verified copy and retained current workspace distinct through shared contracts',()=>{
+ for(const view of [nativePrevious.selectionExecution,nativePrevious.execution])expect(validExecutionView(view)).toBe(true);
+ expect(validFactValue('workspace.previous',nativePrevious.previous)).toBe(true);
+ expect(validFactValue('workspace.archive.selection',nativePrevious.selection)).toBe(true);
+ expect(validFactValue('workspace.archive.activation',nativePrevious.activation)).toBe(true);
+ expect(validFactValue('workspace.current',nativePrevious.current)).toBe(true);
+ const receipt=nativePrevious.selectionExecution.workspace.selected;
+ expect(receipt.call.arguments).toEqual({expectedRevision:nativePrevious.previous.revision,generationId:nativePrevious.previous.generationId,manifestHash:nativePrevious.previous.manifestHash});
+ expect(receipt.output.requestId).toBe(nativePrevious.selection.requestId);
+ expect(nativePrevious.selection.generationId).not.toBe(nativePrevious.previous.generationId);
+ expect(nativePrevious.selection.manifestHash).toBe(nativePrevious.previous.manifestHash);
+ expect(nativePrevious.current.generationId).toBe(nativePrevious.selection.generationId);
+ expect(nativePrevious.activation.retained.generationId).not.toBe(nativePrevious.previous.generationId);
+ expect(nativePrevious.activation.retained.generationId).not.toBe(nativePrevious.current.generationId);
+ expect(nativePrevious.current.reviewRequired).toBe(true);
+ expect(validFactValue('workspace.previous',{...nativePrevious.previous,path:'/private/generation'})).toBe(false);
+ const command={action:'execution',execution:{operation:'start',call:receipt.call}};
+ expect(()=>requireRoomCapabilities([command],{capabilities:['execution.v1']})).toThrow('workspacePrevious.v1');
+ expect(()=>requireRoomCapabilities([command],{capabilities:['execution.v1','workspacePrevious.v1']})).not.toThrow();
 });

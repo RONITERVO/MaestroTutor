@@ -162,5 +162,52 @@ namespace Maestro.Quest.Tests
             Assert.That(Activate(store,imported.Id,imported.Receipt.ManifestHash,"initial").Revision,Is.EqualTo(completed.Revision));
             Assert.Throws<InvalidDataException>(()=>store.Activate(imported.Id,imported.Receipt.ManifestHash,"initial",substitute.Id,substitute.Receipt.ManifestHash));
         }
+        [Test] public void ReadingPreviousIdentityDoesNotInitializeStorage()
+        {
+            string empty=Path.Combine(directory,"unused-identity-read");Assert.That(new WorkspaceGenerationStore(empty).Previous(),Is.Null);Assert.That(Directory.Exists(empty),Is.False);
+        }
+        [Test] public void PreviousPreviewCopiesVerifiedAssetsAndCannotReuseTheProtectedSourceAsAnActivation()
+        {
+            var incoming=Prepare();var selected=Activate(store,incoming.Id,incoming.Receipt.ManifestHash,"initial");var previous=store.Previous();
+            Assert.That(previous.Revision,Is.EqualTo(selected.Revision));Assert.That(previous.Generation,Is.EqualTo(selected.Previous.Generation));
+            var copy=store.PreparePrevious(previous.Revision,previous.Generation,previous.ManifestHash);
+            Assert.That(copy.Id,Is.Not.EqualTo(previous.Generation));Assert.That(copy.Receipt.ManifestHash,Is.EqualTo(previous.ManifestHash));Assert.That(copy.Receipt.Summary.Models,Is.EqualTo(1));
+            Assert.That(store.Load().Revision,Is.EqualTo(selected.Revision));Assert.That(store.InspectPrepared(copy.Id,copy.Receipt.ManifestHash).Receipt.Summary.Models,Is.EqualTo(1));
+            Assert.Throws<InvalidDataException>(()=>store.DiscardPrepared(previous.Generation,previous.ManifestHash));
+            var retained=Prepare();var next=store.Activate(copy.Id,copy.Receipt.ManifestHash,selected.Revision,retained.Id,retained.Receipt.ManifestHash);
+            Assert.That(next.Active.Generation,Is.EqualTo(copy.Id));Assert.That(next.Previous.Generation,Is.EqualTo(retained.Id));Assert.That(next.Active.ReviewRequired,Is.True);
+            Assert.That(next.Active.ReceiptEpoch,Is.Not.EqualTo(selected.Active.ReceiptEpoch));Assert.That(Directory.Exists(Generation(previous.Generation)),Is.True);
+            Assert.That(store.Activate(copy.Id,copy.Receipt.ManifestHash,selected.Revision,retained.Id,retained.Receipt.ManifestHash).Revision,Is.EqualTo(next.Revision));
+        }
+        [Test] public void ChangedSelectionCannotActivateAnEarlierRecoveryPreviewEvenWithANewRevisionArgument()
+        {
+            var incoming=Prepare();var selected=Activate(store,incoming.Id,incoming.Receipt.ManifestHash,"initial");var previous=store.Previous();var copy=store.PreparePrevious(previous.Revision,previous.Generation,previous.ManifestHash);
+            var reviewed=store.CompleteReview(Guid.NewGuid().ToString("N"),selected.Active.Generation,incoming.Receipt.ManifestHash,selected.Revision,incoming.Receipt.ManifestHash);var retained=Prepare();
+            Assert.Throws<InvalidDataException>(()=>store.PreparePrevious(previous.Revision,previous.Generation,previous.ManifestHash));
+            Assert.Throws<InvalidDataException>(()=>store.InspectPrepared(copy.Id,copy.Receipt.ManifestHash));
+            Assert.Throws<InvalidDataException>(()=>store.Activate(copy.Id,copy.Receipt.ManifestHash,reviewed.Revision,retained.Id,retained.Receipt.ManifestHash));
+            Assert.That(store.Load().Revision,Is.EqualTo(reviewed.Revision));store.DiscardPrepared(copy.Id,copy.Receipt.ManifestHash);
+        }
+        [Test] public void PreviousCopyRejectsChangedPayloadAndMissingProvenanceWithoutChangingSelection()
+        {
+            var incoming=Prepare();var selected=Activate(store,incoming.Id,incoming.Receipt.ManifestHash,"initial");var previous=store.Previous();var copy=store.PreparePrevious(previous.Revision,previous.Generation,previous.ManifestHash);
+            File.Delete(Path.Combine(Generation(copy.Id),"recovery.v1.json"));Assert.Throws<InvalidDataException>(()=>store.InspectPrepared(copy.Id,copy.Receipt.ManifestHash));
+            int count=Directory.GetDirectories(Path.Combine(root,"generations")).Length;string payload=Path.Combine(Generation(previous.Generation),"data","models",modelHash+".glb");var original=File.ReadAllBytes(payload);var changed=(byte[])original.Clone();changed[changed.Length-1]^=1;File.WriteAllBytes(payload,changed);
+            Assert.Throws<InvalidDataException>(()=>store.PreparePrevious(previous.Revision,previous.Generation,previous.ManifestHash));
+            Assert.That(Directory.GetDirectories(Path.Combine(root,"generations")).Length,Is.EqualTo(count));Assert.That(store.Load().Revision,Is.EqualTo(selected.Revision));Assert.That(File.ReadAllBytes(payload),Is.EqualTo(changed),"Corrupt source evidence must be preserved");
+        }
+        [TestCase("previous.copied")] [TestCase("previous.ready")]
+        public void FailedPreviousCopyCleansOnlyItsOwnPartialGeneration(string point)
+        {
+            var incoming=Prepare();var selected=Activate(store,incoming.Id,incoming.Receipt.ManifestHash,"initial");var previous=store.Previous();int count=Directory.GetDirectories(Path.Combine(root,"generations")).Length;
+            var failing=new WorkspaceGenerationStore(directory,where=>{if(where==point)throw new IOException("Injected copy failure");});Assert.Throws<IOException>(()=>failing.PreparePrevious(previous.Revision,previous.Generation,previous.ManifestHash));
+            Assert.That(Directory.GetDirectories(Path.Combine(root,"generations")).Length,Is.EqualTo(count));Assert.That(store.Load().Revision,Is.EqualTo(selected.Revision));Assert.That(store.Previous().Generation,Is.EqualTo(previous.Generation));
+        }
+        [Test] public void CancelledPreviousCopyRetainsItsSourceAndOriginalSelection()
+        {
+            var incoming=Prepare();var selected=Activate(store,incoming.Id,incoming.Receipt.ManifestHash,"initial");var previous=store.Previous();int count=Directory.GetDirectories(Path.Combine(root,"generations")).Length;using var cancellation=new CancellationTokenSource();
+            var cancelling=new WorkspaceGenerationStore(directory,point=>{if(point=="previous.copied")cancellation.Cancel();});Assert.Throws<OperationCanceledException>(()=>cancelling.PreparePrevious(previous.Revision,previous.Generation,previous.ManifestHash,cancellation.Token));
+            Assert.That(Directory.GetDirectories(Path.Combine(root,"generations")).Length,Is.EqualTo(count));Assert.That(store.Load().Revision,Is.EqualTo(selected.Revision));
+        }
     }
 }

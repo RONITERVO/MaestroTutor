@@ -19,6 +19,7 @@
     "workspaceMaintenance.v1",
     "workspaceArchiveActivation.v1",
     "workspaceReview.v1",
+    "workspacePrevious.v1",
     "execution.v1",
     "executionReceipts.v1",
     "actionRecovery.v1",

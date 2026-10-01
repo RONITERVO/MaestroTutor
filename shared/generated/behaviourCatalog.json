@@ -1100,6 +1100,65 @@
       }
     },
     {
+      "id": "workspace.previous.select",
+      "version": 1,
+      "label": "Inspect previous workspace",
+      "input": {
+        "type": "object",
+        "properties": {
+          "expectedRevision": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "generationId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "manifestHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "expectedRevision",
+          "generationId",
+          "manifestHash"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "workspacePrevious.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [],
+      "domain": "workspace",
+      "description": "Prepare a verified private preview of the exact retained previous workspace identified by workspace.previous. No Android chooser is needed. Supply its generationId, manifestHash and revision as expectedRevision. Returns a tracked requestId; read workspace.archive.selection until prepared or failed. Metadata availability is not proof that files are intact. Inspect the preview and known missing references before using workspace.archive.activate with its new generation/hash and the same expectedRevision. Activation preserves today's accepted contents before switching, with fresh action history and activity held for content review. A changed selection makes this preview stale; cancel it and inspect again. This path requires readable current content; it does not recover a corrupt or unavailable current workspace. Cancel through workspace.archive.cancel. No file, motion or program starts from selection.",
+      "example": {
+        "expectedRevision": "00000000000000000000000000000000",
+        "generationId": "00000000000000000000000000000000",
+        "manifestHash": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "requestId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "workspace.archive.cancel",
       "version": 1,
       "label": "Cancel archive selection",
@@ -1125,7 +1184,7 @@
       "channels": [],
       "requirements": [],
       "domain": "workspace",
-      "description": "Cancel the exact file-selection request or discard its verified, unused preview. It never deletes the source file or changes the active workspace. Cleanup may continue after this acknowledgement; read workspace.archive.selection for cancelled/failed and any retained preview. Cancelling does not restart paused room actions. A stale request cannot cancel a newer chooser.",
+      "description": "Cancel the exact file-selection or previous-workspace request, or discard its verified, unused preview. It never deletes the source file or changes the active workspace. Cleanup may continue after this acknowledgement; read workspace.archive.selection for cancelled/failed and any retained preview. Cancelling does not restart paused room actions. A stale request cannot cancel a newer chooser.",
       "example": {
         "requestId": "00000000000000000000000000000000"
       },
@@ -3570,7 +3629,7 @@
         }
       },
       "label": "Archive selection status",
-      "description": "Read the exact archive request after returning from Android selection. Phases: selecting, copying, preparing, prepared, activating, activated, retained, cancelling, cancelled or failed. Activated means the preview was committed; follow workspace.archive.activation to establish whether content opened. Retained means an interrupted attempt must not be reused; its files are preserved. Prepared means its manifest, documents and assets were verified into a private preview; nothing was activated. Summary counts describe that preview, including unavailable programs and missing references. Inspect errors before another choice. IDs and counts are empty/zero until a preview exists. An unknown request or paused runtime is unavailable. Read-only; never opens a chooser, imports or runs anything.",
+      "description": "Read the exact archive or previous-workspace preview request. Previous-workspace preparation uses no file chooser. Phases: selecting, copying, preparing, prepared, activating, activated, retained, cancelling, cancelled or failed. Activated means the preview was committed; follow workspace.archive.activation to establish whether content opened. Retained means an interrupted attempt must not be reused; its files are preserved. Prepared means its manifest, documents and assets were verified into a private preview; nothing was activated. Summary counts describe that preview, including unavailable programs and missing references. Inspect errors before another choice. IDs and counts are empty/zero until a preview exists. An unknown request or paused runtime is unavailable. Read-only; never opens a chooser, imports or runs anything.",
       "domain": "workspace",
       "input": {
         "type": "object",
@@ -3722,6 +3781,32 @@
       "example": {
         "requestId": "00000000000000000000000000000000"
       },
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
+      "id": "workspace.previous",
+      "version": 1,
+      "type": {
+        "record": {
+          "revision": "text",
+          "generationId": "text",
+          "manifestHash": "text",
+          "available": "boolean",
+          "error": "text"
+        }
+      },
+      "label": "Previous workspace identity",
+      "description": "Read the exact retained previous-workspace metadata and the current selection revision. Available means metadata can be read, not that its assets have passed verification. Use workspace.previous.select to create and verify a separate preview, then follow workspace.archive.selection. This read never switches, resumes, clones or deletes content. Missing/corrupt metadata is unavailable; no empty or original workspace is substituted.",
+      "domain": "workspace",
+      "input": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "example": {},
       "features": [
         "factQueries.v1"
       ]
@@ -3931,7 +4016,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "70c8f8a6be709ed19f54c3951b0d00d96ead88b55019602aad7fc67bad8ccf21"
+      "sha256": "1dabd298925199e7720e8cf8bbfc5b9dbc655c993a44301681b2e766613182b7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -3995,7 +4080,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "0ab046813e0966f10bd65b236140b66805688d41ee3efb87411736893fcb6fa0"
+      "sha256": "e0049465d257b6d928f0c0a3295561adf239da1324583a9d9b611991b832217e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -4058,12 +4143,16 @@
       "sha256": "2086149e3b214491ce7998944ee53f5a08e76a3588dee833b48fcc0c028f98df"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspacePreviousCapabilities.cs",
+      "sha256": "5b929b9704431c7993bd4f63cc5278c17c717ccaee7ba7673dd06f467e410abc"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceReviewCapabilities.cs",
       "sha256": "c308475c689b9bc4c89fe947a3532084ec2cad0fae51973ab358a66973412097"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceSelectionCapabilities.cs",
-      "sha256": "81ec5b0425fd4835436bff9afce7726292a7b6eee240fad67c3ff129fb74a99c"
+      "sha256": "1a8f9aa19660de404afba49f8a7b4f794c9d26af31a0cd5dcc5b0f7c995639b0"
     }
   ]
 }

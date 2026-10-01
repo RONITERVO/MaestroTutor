@@ -1,13 +1,13 @@
 {
   "receipt": {
-    "id": "45612be16d924f6f8a4a835b7e0ba3fa",
+    "id": "6e6d9376ada249f383adbd01b8c33ac6",
     "capability": "workspace.archive.select",
     "version": 1,
     "resources": [],
     "phase": "completed",
     "status": "Action completed",
     "output": {
-      "requestId": "8228be21d6f945cda68f79cbf6a3813d"
+      "requestId": "b2c88a17473e47e6b39b04c1813f31d8"
     },
     "call": {
       "id": "workspace.archive.select",
@@ -45,7 +45,7 @@
         }
       },
       "label": "Archive selection status",
-      "description": "Read the exact archive request after returning from Android selection. Phases: selecting, copying, preparing, prepared, activating, activated, retained, cancelling, cancelled or failed. Activated means the preview was committed; follow workspace.archive.activation to establish whether content opened. Retained means an interrupted attempt must not be reused; its files are preserved. Prepared means its manifest, documents and assets were verified into a private preview; nothing was activated. Summary counts describe that preview, including unavailable programs and missing references. Inspect errors before another choice. IDs and counts are empty/zero until a preview exists. An unknown request or paused runtime is unavailable. Read-only; never opens a chooser, imports or runs anything.",
+      "description": "Read the exact archive or previous-workspace preview request. Previous-workspace preparation uses no file chooser. Phases: selecting, copying, preparing, prepared, activating, activated, retained, cancelling, cancelled or failed. Activated means the preview was committed; follow workspace.archive.activation to establish whether content opened. Retained means an interrupted attempt must not be reused; its files are preserved. Prepared means its manifest, documents and assets were verified into a private preview; nothing was activated. Summary counts describe that preview, including unavailable programs and missing references. Inspect errors before another choice. IDs and counts are empty/zero until a preview exists. An unknown request or paused runtime is unavailable. Read-only; never opens a chooser, imports or runs anything.",
       "domain": "workspace",
       "input": {
         "type": "object",
@@ -71,16 +71,16 @@
     "status": "Current fact value. Reading does not change the room.",
     "category": "facts",
     "arguments": {
-      "requestId": "8228be21d6f945cda68f79cbf6a3813d"
+      "requestId": "b2c88a17473e47e6b39b04c1813f31d8"
     },
     "available": true,
     "value": {
-      "requestId": "8228be21d6f945cda68f79cbf6a3813d",
+      "requestId": "b2c88a17473e47e6b39b04c1813f31d8",
       "phase": "prepared",
       "name": "My workspace.zip",
       "error": "",
-      "generationId": "afadab1ac30942fe8ab9f8732e86c607",
-      "manifestHash": "6e988068ce9eaf32fe06c3df7d32d341633d75cb5e1fdfbc77cb15ac6fe57f05",
+      "generationId": "9da0318ad4134b82b8993dc24481c5b2",
+      "manifestHash": "9ae5ace4dbc991416def36402766665daf65226bd30f728b33731123fc50d31f",
       "summary": {
         "files": 5,
         "models": 0,
