@@ -10,6 +10,7 @@ import nativeActivation from '../../../test-fixtures/browser/workspaceActivation
 import nativeReview from '../../../test-fixtures/browser/workspaceReview.json';
 import nativePrevious from '../../../test-fixtures/browser/workspacePrevious.json';
 import nativeWorkspaceRecovery from '../../../test-fixtures/browser/workspaceRecovery.json';
+import nativeFreshRecovery from '../../../test-fixtures/browser/workspaceFreshRecovery.json';
 import {validFactValue} from '../../../shared/behaviourFacts';
 import nativeCreation from '../../../test-fixtures/browser/creationResult.json';
 import nativeProgram from '../../../test-fixtures/browser/programBookState.json';
@@ -240,4 +241,22 @@ it('keeps damaged recovery intent, preserved evidence and opening receipts separ
  const command={action:'execution',execution:{operation:'start',call:receipt.call}};
  expect(()=>requireRoomCapabilities([command],{capabilities:['execution.v1']})).toThrow('workspaceRecovery.v1');
  expect(()=>requireRoomCapabilities([command],{capabilities:['execution.v1','workspaceRecovery.v1']})).not.toThrow();
+});
+
+it('distinguishes explicit fresh recovery from a retained or imported source and keeps both feature-gated',()=>{
+ expect(validFactValue('workspace.recovery.preview',nativeFreshRecovery.preview)).toBe(true);
+ expect(validFactValue('workspace.recovery',nativeFreshRecovery.completed)).toBe(true);
+ expect(validExecutionView(nativeFreshRecovery.opening)).toBe(true);
+ expect(nativeFreshRecovery.preview.source).toEqual({kind:'fresh',generationId:''});
+ expect(nativeWorkspaceRecovery.preview.source).toEqual({kind:'retained',generationId:nativeWorkspaceRecovery.candidate.generationId});
+ const base={requestId:nativeFreshRecovery.completed.requestId,originHash:nativeFreshRecovery.completed.originHash};
+ for(const source of [{kind:'fresh'},{kind:'retained',generationId:nativeWorkspaceRecovery.candidate.generationId,manifestHash:nativeWorkspaceRecovery.candidate.manifestHash}]){
+  const call={id:'workspace.recovery.select',version:1,arguments:{...base,source}},execution={operation:'start',call};
+  expect(validExecutionRequest(execution)).toBe(true);
+  expect(()=>requireRoomCapabilities([{action:'execution',execution}],{capabilities:['execution.v1']})).toThrow('workspaceRecovery.v1');
+  expect(()=>requireRoomCapabilities([{action:'execution',execution}],{capabilities:['execution.v1','workspaceRecovery.v1']})).not.toThrow();
+ }
+ for(const args of [{...base,source:{kind:'fresh',generationId:nativeFreshRecovery.preview.generationId}},{...base,source:{kind:'retained'}},{...base,generationId:nativeFreshRecovery.preview.generationId,manifestHash:nativeFreshRecovery.preview.manifestHash}])
+  expect(validExecutionRequest({operation:'start',call:{id:'workspace.recovery.select',version:1,arguments:args}})).toBe(false);
+ expect(nativeFreshRecovery.completed.phase).toBe('review');expect(nativeFreshRecovery.preview.summary.models).toBe(0);expect(nativeFreshRecovery.preview.summary.modules).toBe(0);
 });

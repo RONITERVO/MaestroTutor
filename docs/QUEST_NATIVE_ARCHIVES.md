@@ -657,7 +657,8 @@ Users and the room agent use the same catalog actions and facts:
 2. Read `workspace.recovery.candidate` with that request ID and each index below
    `candidateCount`. Metadata availability does not establish usable content.
 3. Run `workspace.recovery.select` with that request, inspected `originHash`, exact
-   candidate `generationId` and `manifestHash`. Wait for `prepared`, then inspect
+   `source: {kind: "retained", generationId, manifestHash}` for that exact candidate.
+   Wait for `prepared`, then inspect
    `workspace.recovery.preview` with the request ID. It identifies a newly copied
    generation and reports content and missing-reference counts.
 4. Only after the user chooses that recovery, run `workspace.recovery.commit` with
@@ -690,10 +691,46 @@ their original pointer bytes are saved in the recovery proof. Without live owner
 the evidence ZIP does not contain an accepted snapshot of those roots or promise
 that their damaged contents can be restored.
 
-Remaining release work includes recovery when no retained candidate verifies
-(explicit clean start or external archive), repair of the recovery coordinator's own
+Remaining release work includes repair of the recovery coordinator's own
 unreadable history, retained-evidence export/cleanup, and on-device lifecycle,
 capacity and interruption acceptance. These paths have no automatic fallback.
 Native tests cover preservation, missing owners, cancellation, commit faults,
 restart, stale requests and refused replacement. Captured native facts/receipts are
 also exercised through the web contracts and the book's ordinary catalog controls.
+
+
+## When no retained candidate is usable
+
+Two explicit source choices use the same `workspace.recovery.select` action. The
+`source` is a tagged object: `retained` requires its inspected `generationId` and
+`manifestHash`; `fresh` takes no candidate identity. The preview exposes its source
+kind separately from the new generation/hash. Choosing a source only prepares it;
+commit still requires the exact inspected preview and preserves current data.
+
+For an external backup, start the existing `workspace.archive.select` file chooser
+and wait for its selection fact to report `prepared`. Then inspect recovery again:
+the verified import appears as a retained candidate in that request. Import preview
+never initializes or repairs the selection pointer, including when the pointer is
+missing but its damaged backup exists. Ordinary activation establishes its baseline
+when needed. The recovery coordinator temporarily owns a selected archive while
+copying it; cancellation cannot discard that source concurrently. On completion or
+cancellation, the source is retained independently of the recovery copy and can be
+found in a fresh inspection. Finish/cancel a different selected archive before
+recovering another candidate or choosing a fresh workspace.
+
+For a fresh workspace, inspect recovery first and explicitly select
+`source: {kind: "fresh"}` using that request and origin hash. Its verified preview
+contains only the included book and Maestro at their normal starting poses, default
+controls, and empty user behaviour, activity-assignment and motion libraries. It
+imports no user models, recordings or program modules. The book browser and chat
+remain in the persistent shell. Original data is retained, not erased. The source
+choice and exact selection bytes are preserved in the recovery proof even when no
+old generation exists. Restart keeps a prepared fresh preview pending; it does not
+commit it automatically. Both source choices open under the same separate content
+review and stopped-activity rules.
+
+Native tests cover zero candidates, fresh review after restart, newer live edits
+alongside damaged files, imported models with a missing pointer, stale origins,
+preparation cancellation and source ownership. The book's source selector uses the
+native schema; mixed fresh/retained arguments and clients missing recovery support
+are rejected. Device file-chooser, storage and lifecycle acceptance remains pending.

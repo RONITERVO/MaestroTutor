@@ -9,6 +9,7 @@ import nativeActivation from '../../../test-fixtures/browser/workspaceActivation
 import nativeReview from '../../../test-fixtures/browser/workspaceReview.json';
 import nativePrevious from '../../../test-fixtures/browser/workspacePrevious.json';
 import nativeWorkspaceRecovery from '../../../test-fixtures/browser/workspaceRecovery.json';
+import nativeFreshRecovery from '../../../test-fixtures/browser/workspaceFreshRecovery.json';
 import native from '../../../test-fixtures/browser/catalogStates.json';
 import nativeProgram from '../../../test-fixtures/browser/programBookState.json';
 import {RoomWorkspace} from './RoomWorkspace';
@@ -335,4 +336,22 @@ it('commits the exact recovery preview and reads preservation and review status 
  const displayed=screen.getByLabelText('Current fact value').textContent;
  for(const value of [nativeWorkspaceRecovery.completed.requestId,nativeWorkspaceRecovery.completed.evidenceHash,nativeWorkspaceRecovery.completed.committedRevision,'review'])expect(displayed).toContain(value);
  expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
+});
+
+it('chooses a fresh recovery preview explicitly without carrying the retained candidate identity',async()=>{
+ const {client,screen,receive}=setup(true,['workspaceRecovery.v1','execution.v1','actionResults.v1']);
+ const receipt=nativeFreshRecovery.opening.workspace.selected;
+ if(!validExecutionView(nativeFreshRecovery.opening))throw new Error('Invalid native fresh recovery execution');
+ await receive(undefined,false,{execution:{...nativeFreshRecovery.opening,workspace:{selected:null,running:[],outcomes:[],nextRunId:receipt.id,storageError:null}}});
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:'Search'}));
+ const definition=capabilityDefinition('workspace.recovery.select')!;
+ await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Choose recovery source'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Prepare the requested source'});
+ const base={requestId:nativeFreshRecovery.completed.requestId,originHash:nativeFreshRecovery.completed.originHash};
+ fireEvent.change(screen.getByLabelText('Action arguments'),{target:{value:JSON.stringify({...base,source:{kind:'retained',generationId:nativeWorkspaceRecovery.candidate.generationId,manifestHash:nativeWorkspaceRecovery.candidate.manifestHash}})}});
+ fireEvent.change(screen.getByLabelText('Recovery source'),{target:{value:'1'}});
+ expect(JSON.parse((screen.getByLabelText('Action arguments') as HTMLTextAreaElement).value)).toEqual({...base,source:{kind:'fresh'}});
+ expect(client.snapshot().request).toBeNull();fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
+ expect(client.snapshot().request?.commands[0]).toMatchObject({action:'execution',execution:{operation:'start',call:{id:'workspace.recovery.select',version:1,arguments:{...base,source:{kind:'fresh'}}}}});
+ act(()=>client.cancel());
 });

@@ -16,7 +16,7 @@ namespace Maestro.Quest.Persistence
     {
         readonly WorkspaceHost host;readonly WorkspaceGenerationStore store;readonly string directory,path;
         JObject record;string historyError;Task<Outcome> pending;CancellationTokenSource cancellation;WorkspaceRecoveryHold hold;
-        WorkspaceSelection committed;bool disposed,paused,focused=true,uncertain,opening;
+        WorkspaceSelection committed;bool disposed,paused,focused=true,uncertain,opening,importBorrowed;
         internal Action<string> Fault;
         sealed class Outcome {internal JObject Record;internal WorkspaceSelection Committed;internal bool Uncertain,Saved=true;}
         internal WorkspaceRecovery(WorkspaceHost host,string applicationData)
@@ -54,14 +54,14 @@ namespace Maestro.Quest.Persistence
         bool SaveQuiet(JObject value){try{Save(value);return true;}catch(Exception){return false;}}
         internal bool Busy=>pending!=null||hold!=null||committed!=null;
         internal bool BlocksOtherOperations=>Busy||(string)record?["phase"]=="prepared";
-        bool Ready(out string issue)
+        bool Ready(out string issue,bool allowPreparedImport=false)
         {
             issue=historyError;if(issue!=null)return false;
             if(disposed||paused||!focused||!host||!host.isActiveAndEnabled||!host.Ready||host.Retiring){issue="Wait for previous owners to finish and resume Maestro before recovery.";return false;}
-            if(Busy||host.Switching||host.Activation?.Busy==true||host.Review?.Busy==true||host.Import?.Occupied==true||host.Export?.Busy==true){issue="Finish the current workspace operation. Restart Maestro if its outcome remains unavailable.";return false;}
+            if(Busy||host.Switching||host.Activation?.Busy==true||host.Review?.Busy==true||(host.Import?.Occupied==true&&(!allowPreparedImport||host.Import.StableForRecovery!=true))||host.Export?.Busy==true){issue="Finish the current workspace operation. Restart Maestro if its outcome remains unavailable.";return false;}
             return true;
         }
-        internal bool CanInspect(out string issue){if(!Ready(out issue))return false;if((string)record?["phase"]=="prepared"){issue="Cancel the current recovery preview before inspecting again.";return false;}return true;}
+        internal bool CanInspect(out string issue){if(!Ready(out issue,true))return false;if((string)record?["phase"]=="prepared"){issue="Cancel the current recovery preview before inspecting again.";return false;}return true;}
         internal string Inspect()
         {
             if(!CanInspect(out var issue))throw new InvalidOperationException(issue);uncertain=false;opening=false;
@@ -78,18 +78,25 @@ namespace Maestro.Quest.Persistence
         bool Matches(string request)=>record!=null&&(string)record["requestId"]==request;
         internal bool CanSelect(JObject args,out string issue)
         {
-            issue="Inspect this exact recovery request before selecting a candidate.";
-            if(!Matches((string)args["requestId"])||(string)record["phase"]!="inspected"||(string)record["originHash"]!=(string)args["originHash"]||!((JArray)record["candidates"]).Any(x=>(string)x["generationId"]==(string)args["generationId"]&&(string)x["manifestHash"]==(string)args["manifestHash"]&&(bool)x["available"]))return false;
-            return Ready(out issue);
+            issue="Inspect this exact recovery request before choosing its source.";
+            if(!Matches((string)args["requestId"])||(string)record["phase"]!="inspected"||(string)record["originHash"]!=(string)args["originHash"]||args["source"] is not JObject source)return false;
+            if((string)source["kind"]=="fresh"){
+                if(source.Count!=1)return false;
+                if(host.Import?.Occupied==true){issue="Cancel or recover the selected archive before choosing a fresh workspace.";return false;}
+            }else if((string)source["kind"]!="retained"||!((JArray)record["candidates"]).Any(x=>(string)x["generationId"]==(string)source["generationId"]&&(string)x["manifestHash"]==(string)source["manifestHash"]&&(bool)x["available"])||host.Import?.CanRecoverCandidate((string)source["generationId"],(string)source["manifestHash"])==false)return false;
+            return Ready(out issue,true);
         }
         internal string Select(JObject args)
         {
-            if(!CanSelect(args,out var issue))throw new InvalidOperationException(issue);record["sourceId"]=args["generationId"].DeepClone();Set(record,"preparing","Verifying and copying the selected recovery candidate");Save(record);
-            cancellation=new CancellationTokenSource();var token=cancellation.Token;var copy=(JObject)record.DeepClone();string hash=(string)args["manifestHash"];pending=Task.Run(()=>PrepareWorker(copy,hash,token));return (string)record["requestId"];
+            if(!CanSelect(args,out var issue))throw new InvalidOperationException(issue);var source=(JObject)args["source"];bool fresh=(string)source["kind"]=="fresh";
+            record["sourceId"]=fresh?"":(string)source["generationId"];Set(record,"preparing",fresh?"Preparing a fresh workspace with the included book and Maestro":"Verifying and copying the selected recovery candidate");Save(record);
+            if(!fresh)importBorrowed=host.Import?.BorrowForRecovery((string)source["generationId"],(string)source["manifestHash"])==true;
+            cancellation=new CancellationTokenSource();var token=cancellation.Token;var copy=(JObject)record.DeepClone();string hash=(string)source["manifestHash"];pending=Task.Run(()=>PrepareWorker(copy,hash,token));return (string)record["requestId"];
         }
+        void ReleaseImportedSource(){if(!importBorrowed)return;host.Import?.FinishRecovery();importBorrowed=false;}
         Outcome PrepareWorker(JObject value,string hash,CancellationToken token)
         {
-            try{var prepared=store.PrepareDamagedRecovery((string)value["originHash"],(string)value["sourceId"],hash,token);value["previewId"]=prepared.Id;value["manifestHash"]=prepared.Receipt.ManifestHash;value["summary"]=Summary(prepared.Receipt.Summary);Set(value,"prepared","Inspect verified contents and missing references before explicitly committing recovery.");}
+            try{var prepared=(string)value["sourceId"]==""?store.PrepareFreshRecovery((string)value["originHash"],token):store.PrepareDamagedRecovery((string)value["originHash"],(string)value["sourceId"],hash,token);value["previewId"]=prepared.Id;value["manifestHash"]=prepared.Receipt.ManifestHash;value["summary"]=Summary(prepared.Receipt.Summary);Set(value,"prepared","Inspect verified contents and missing references before explicitly committing recovery.");}
             catch(Exception ex){Set(value,ex is OperationCanceledException?"cancelled":"failed","Candidate verification stopped. Original data is preserved; inspect another candidate if needed.");}
             return new Outcome {Record=value,Saved=SaveQuiet(value)};
         }
@@ -150,12 +157,12 @@ namespace Maestro.Quest.Persistence
         }
         internal JObject Status()=>new() {["requestId"]=(string)record?["requestId"]??"",["phase"]=historyError!=null?"unavailable":(string)record?["phase"]??"idle",["status"]=historyError??(string)record?["status"]??"Inspect recovery choices to begin.",["originHash"]=(string)record?["originHash"]??"",["candidateCount"]=(record?["candidates"] as JArray)?.Count??0,["preview"]=new JObject {["generationId"]=(string)record?["previewId"]??"",["manifestHash"]=(string)record?["manifestHash"]??""},["committedRevision"]=(string)record?["committedRevision"]??"",["evidenceHash"]=(string)record?["evidenceHash"]??""};
         internal JObject Candidate(string request,int index)=>!Matches(request)||index<0||index>=((JArray)record["candidates"]).Count?null:(JObject)record["candidates"][index].DeepClone();
-        internal JObject Preview(string request)=>!Matches(request)||(string)record["previewId"]==""?null:new JObject {["requestId"]=request,["generationId"]=(string)record["previewId"],["manifestHash"]=(string)record["manifestHash"],["summary"]=record["summary"].DeepClone()};
+        internal JObject Preview(string request)=>!Matches(request)||(string)record["previewId"]==""?null:new JObject {["requestId"]=request,["generationId"]=(string)record["previewId"],["manifestHash"]=(string)record["manifestHash"],["summary"]=record["summary"].DeepClone(),["source"]=new JObject {["kind"]=(string)record["sourceId"]==""?"fresh":"retained",["generationId"]=record["sourceId"].DeepClone()}};
         internal void Poll()
         {
             if(disposed)return;
             if(pending!=null&&pending.IsCompleted){
-                var result=pending.GetAwaiter().GetResult();pending=null;record=result.Record;committed=result.Committed;uncertain=result.Uncertain;if(!result.Saved)historyError="Recovery status could not be saved. Inspect current storage before another request.";
+                var result=pending.GetAwaiter().GetResult();pending=null;ReleaseImportedSource();record=result.Record;committed=result.Committed;uncertain=result.Uncertain;if(!result.Saved)historyError="Recovery status could not be saved. Inspect current storage before another request.";
                 bool cancelled=cancellation?.IsCancellationRequested==true;cancellation?.Dispose();cancellation=null;
                 if(committed==null){if(!uncertain){hold?.Dispose();hold=null;}if(cancelled&&(string)record["phase"]=="prepared")Cancel((string)record["requestId"]);return;}
             }
@@ -172,7 +179,7 @@ namespace Maestro.Quest.Persistence
         {
             disposed=true;cancellation?.Cancel();
             try{if(pending!=null){var result=await pending;record=result.Record;if((string)record["phase"]=="prepared")await Task.Run(()=>DiscardWorker(record));}if(hold!=null)try{await hold.Completion;}catch(Exception){}}
-            catch(Exception){}finally{hold?.Dispose();hold=null;cancellation?.Dispose();cancellation=null;}
+            catch(Exception){}finally{ReleaseImportedSource();hold?.Dispose();hold=null;cancellation?.Dispose();cancellation=null;}
         }
     }
 }

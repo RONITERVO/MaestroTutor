@@ -3,6 +3,7 @@
 using Maestro.Quest.Book;
 using Maestro.Quest.Interaction;
 using Maestro.Quest.Creation;
+using Maestro.Quest.Persistence;
 using Unity.XR.CoreUtils;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -71,8 +72,8 @@ namespace Maestro.Quest
             }
             var bookObject = new GameObject("Maestro book");
             bookObject.transform.SetParent(content.transform, false);
-            bookObject.transform.localPosition = new Vector3(0, 1.16f, .65f);
-            bookObject.transform.localRotation = Quaternion.Euler(24,0,0);
+            bookObject.transform.localPosition = WorkspaceDefaults.BookPosition;
+            bookObject.transform.localRotation = WorkspaceDefaults.BookRotation;
             book = bookObject.AddComponent<IllustratedBook>(); book.Build();
             browser = bookObject.AddComponent<NativeBookBrowser>();
             browser.SnapshotChanged += UpdateBook;

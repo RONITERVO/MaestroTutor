@@ -125,7 +125,7 @@ namespace Maestro.Quest.Persistence
                 bool reserved=false;
                 if(Directory.Exists(generations)){int count=0;foreach(string folder in Directory.EnumerateDirectories(generations)){
                     if(++count>MaximumGenerations)throw Invalid("Unexpected workspace retention count.");WorkspaceArchive.NoLink(folder);
-                    if(File.Exists(Path.Combine(folder,"activation.v1.json")))reserved=true;
+                    if(new[]{"activation.v1.json",DamageCommit}.Any(name=>File.Exists(Path.Combine(folder,name))||Directory.Exists(Path.Combine(folder,name))))reserved=true;
                 }}
                 if(File.Exists(pointer+".previous")||reserved)throw Invalid("Workspace selection is missing; explicit recovery is required.");
                 var first=new WorkspaceSelection(Initial,new WorkspaceLocation(Original,Original,false),null);CheckLocation(first.Active);return first;
@@ -142,9 +142,13 @@ namespace Maestro.Quest.Persistence
         static void WriteNew(string path,byte[] bytes)
         {using var file=new FileStream(path,FileMode.CreateNew,FileAccess.Write,FileShare.None);file.Write(bytes,0,bytes.Length);file.Flush(true);}
         static byte[] Json(JObject value)=>Utf8.GetBytes(value.ToString(Formatting.None));
-        public PreparedWorkspaceGeneration Prepare(Stream archive,CancellationToken cancellation=default)
+        public PreparedWorkspaceGeneration Prepare(Stream archive,CancellationToken cancellation=default)=>PrepareArchive(archive,true,cancellation);
+        // A file chooser preview must also work with missing/damaged selection metadata, and never
+        // writes an implicit original pointer. Ordinary activation establishes its own baseline.
+        internal PreparedWorkspaceGeneration PrepareImport(Stream archive,CancellationToken cancellation=default)=>PrepareArchive(archive,false,cancellation);
+        PreparedWorkspaceGeneration PrepareArchive(Stream archive,bool initialize,CancellationToken cancellation)
         {
-            using var lease=Lease();cancellation.ThrowIfCancellationRequested();
+            using var lease=Lease(initialize);cancellation.ThrowIfCancellationRequested();
             if(Directory.EnumerateDirectories(generations).Take(MaximumGenerations).Count()>=MaximumGenerations)throw Invalid("Workspace retention is full. Review retained workspaces before importing another.");
             string id=Guid.NewGuid().ToString("N"),target=GenerationPath(id);bool created=false;
             try {

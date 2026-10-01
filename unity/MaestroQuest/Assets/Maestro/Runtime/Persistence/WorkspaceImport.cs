@@ -45,6 +45,14 @@ namespace Maestro.Quest.Persistence
         internal void InitializeForTests(string applicationData,IWorkspaceArchivePicker source)
         {store=new WorkspaceGenerationStore(applicationData,point=>Fault?.Invoke(point));picker=source;unavailable=null;}
         internal bool Occupied=>preparation!=null||discard!=null||releasePending!=null||prepared!=null||activationOwned||phase is "selecting" or "copying" or "preparing" or "cancelling";
+        internal bool StableForRecovery=>retirement==null&&preparation==null&&discard==null&&releasePending==null&&!activationOwned&&phase is not ("selecting" or "copying" or "preparing" or "cancelling");
+        internal bool CanRecoverCandidate(string generation,string hash)=>StableForRecovery&&(prepared==null||phase=="prepared"&&prepared.Id==generation&&prepared.Receipt.ManifestHash==hash);
+        internal bool BorrowForRecovery(string generation,string hash)
+        {
+            if(!CanRecoverCandidate(generation,hash))throw new InvalidOperationException("Finish the selected archive before preparing recovery.");
+            if(prepared==null)return false;activationOwned=true;phase="recovering";return true;
+        }
+        internal void FinishRecovery(){activationOwned=false;prepared=null;phase="retained";error="Archive retained as a recovery candidate. Read workspace.recovery for the prepared copy.";}
         public bool CanSelect(out string issue)
         {
             issue=unavailable;if(retirement!=null){issue="The previous workspace selection owner is closing.";return false;}
@@ -94,7 +102,7 @@ namespace Maestro.Quest.Persistence
         {
             issue=null;
             if((!Available&&!previousSource)||id!=requestId){issue="This archive request is no longer available. Inspect the current request.";return false;}
-            if(activationOwned){issue="Cancel the tracked activation before changing its archive selection.";return false;}
+            if(activationOwned){issue="Cancel the tracked workspace operation before changing its archive selection.";return false;}
             return true;
         }
         internal void Cancel(string id)
@@ -176,7 +184,7 @@ namespace Maestro.Quest.Persistence
                 token.ThrowIfCancellationRequested();string file=PrivateCopy(path,cacheRoot);
                 using var stream=new FileStream(file,FileMode.Open,FileAccess.Read,FileShare.Read);
                 if(stream.Length<1||stream.Length>WorkspaceArchive.MaximumArchiveBytes)throw new InvalidDataException("Choose a workspace ZIP no larger than 512 MB.");
-                return ownerStore.Prepare(stream,token);
+                return ownerStore.PrepareImport(stream,token);
             });
         }
         static string SafeText(string value,int maximum)

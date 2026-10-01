@@ -1508,6 +1508,10 @@ than retry; a restart must reconcile the durable selection without replaying old
 actions. Return to inspection for a different candidate after a safe failed attempt.
 Verify that another host waits for outstanding workers and that old owners never
 write into newly selected content. Exercise a low-storage failure without deleting
-original data or preserved evidence. No usable candidate or unreadable coordinator
-history currently reports unavailable; clean-start/external-import and history
-repair remain release work.
+original data or preserved evidence. If no retained candidate verifies, test both an external archive and an explicitly
+requested fresh workspace. Import preparation must leave a missing/damaged pointer
+unchanged. Fresh preview must identify its source and survive restart without
+automatic commit. After separate commit/review it has only the included book and
+Maestro, default controls and no user programs or assets; inspect preservation of
+the prior data. Unreadable coordinator history still reports unavailable; its repair
+remains release work.

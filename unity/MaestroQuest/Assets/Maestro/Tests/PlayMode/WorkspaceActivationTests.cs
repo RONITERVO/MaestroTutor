@@ -113,14 +113,21 @@ namespace Maestro.Quest.Tests
             var actions=new RoomExecutions(host.Current.Editor,host);Assert.That(actions.Execute(MaintenanceStart(actions,"workspace.archive.activate",activationArgs),out _),Is.False);
             string id=(string)host.Activation.Current()["activationRequestId"];Assert.That((string)host.Activation.Read(id)["phase"],Is.EqualTo("failed"));Assert.That(host.Activation.Busy,Is.False);Assert.That(host.Current.Editor.WriteGate.Frozen,Is.False);Assert.That(store.Load().Revision,Is.EqualTo("initial"));
         }
+        [UnityTest] public IEnumerator InitialSelectionWriteFailureDoesNotClaimTheImportedWorkspaceWasActivated()
+        {
+            yield return ReadyForActivation();var old=host.Current;Assert.That(File.Exists(Path.Combine(directory,"workspace-generations.v1","current.v1.json")),Is.False);
+            host.Activation.Fault=point=>{if(point=="pointer.afterCommit")throw new IOException("Initial selection acknowledgement failed");};
+            var (_,id)=BeginActivation();yield return FinishActivation(id);Assert.That(host.Current,Is.SameAs(old));Assert.That(store.Load().Active.Generation,Is.EqualTo("original"));
+            Assert.That((string)host.Activation.Read(id)["phase"],Is.EqualTo("failed"));Assert.That((string)host.Activation.Read(id)["committedRevision"],Is.Empty);Assert.That(old.Editor.WriteGate.Frozen,Is.False);
+        }
         [UnityTest] public IEnumerator PostCommitFailureIsReconciledAsCommittedInsteadOfReportedAsAnUnchangedRoom()
         {
-            yield return ReadyForActivation();AcceptedEdit("Kept before commit");host.Activation.Fault=point=>{if(point=="pointer.afterCommit")throw new IOException("Simulated acknowledgement failure");};
+            yield return ReadyForActivation();AcceptedEdit("Kept before commit");bool reserved=false;host.Activation.Fault=point=>{if(point=="activation.reserved")reserved=true;if(reserved&&point=="pointer.afterCommit")throw new IOException("Simulated acknowledgement failure");};
             var (_,id)=BeginActivation();yield return FinishActivation(id);AssertActivated(id);Assert.That((string)host.Activation.Read(id)["committedRevision"],Is.EqualTo(store.Load().Revision));
         }
         [UnityTest] public IEnumerator UnreadableCommitOutcomeDoesNotReleaseOldOwnersForFurtherEditing()
         {
-            yield return ReadyForActivation();var editor=host.Current.Editor;host.Activation.Fault=point=>{if(point=="pointer.afterCommit"){File.WriteAllText(Path.Combine(directory,"workspace-generations.v1","current.v1.json"),"{damaged");throw new IOException("Simulated unreadable commit outcome");}};
+            yield return ReadyForActivation();var editor=host.Current.Editor;bool reserved=false;host.Activation.Fault=point=>{if(point=="activation.reserved")reserved=true;if(reserved&&point=="pointer.afterCommit"){File.WriteAllText(Path.Combine(directory,"workspace-generations.v1","current.v1.json"),"{damaged");throw new IOException("Simulated unreadable commit outcome");}};
             var (_,id)=BeginActivation();float deadline=Time.realtimeSinceStartup+15;while(host.Activation.WorkerPending&&Time.realtimeSinceStartup<deadline)yield return null;Assert.That(host.Activation.WorkerPending,Is.False);yield return null;
             Assert.That(host.Current.Editor,Is.SameAs(editor));Assert.That(editor.WriteGate.Frozen,Is.True);Assert.That((string)host.Activation.Read(id)["phase"],Is.EqualTo("unavailable"));Assert.That(host.Activation.CanCancel(id,out _),Is.False);
             var data=editor.Snapshot().objects.First(x=>!x.IsBuiltIn);data.name="Must not be accepted into a stale workspace";Assert.That(editor.ApplyAgentEdit(editor.Revision,new[]{data},Array.Empty<string>(),out _),Is.False);
@@ -135,7 +142,7 @@ namespace Maestro.Quest.Tests
         [UnityTest] public IEnumerator StartupOpensAnExactlyCommittedActivationWithoutReplayingAnInterruptedReplacement()
         {
             yield return ReadyForActivation();using var entered=new ManualResetEventSlim();using var release=new ManualResetEventSlim();
-            host.Activation.Fault=point=>{if(point=="pointer.afterCommit"){entered.Set();if(!release.Wait(TimeSpan.FromSeconds(20)))throw new IOException("Test worker timeout");}};
+            bool reserved=false;host.Activation.Fault=point=>{if(point=="activation.reserved")reserved=true;if(reserved&&point=="pointer.afterCommit"){entered.Set();if(!release.Wait(TimeSpan.FromSeconds(20)))throw new IOException("Test worker timeout");}};
             try {
                 var (_,id)=BeginActivation();float deadline=Time.realtimeSinceStartup+15;while(!entered.IsSet&&Time.realtimeSinceStartup<deadline)yield return null;Assert.That(entered.IsSet,Is.True);
                 root.SetActive(false);release.Set();while(host.Activation.WorkerPending&&Time.realtimeSinceStartup<deadline)yield return null;Assert.That(host.Activation.WorkerPending,Is.False);

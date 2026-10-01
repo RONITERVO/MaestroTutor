@@ -2,7 +2,13 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
-Latest PC increment (2026-09-30): calculated condition waits compose inspected facts
+Current recovery implementation supports retained candidates, an external backup,
+and an explicitly requested fresh workspace through the same shared book/agent
+catalog. Original data stays preserved; preview, commit and content review remain
+separate. PR #248 records the current verified commit and package. Earlier entries
+below are historical evidence, not current test totals or release acceptance.
+
+Earlier PC increment (2026-09-30): calculated condition waits compose inspected facts
 with existing typed expressions, debounce and explicit initial-state policies.
 Programs, agent instructions and book controls use the same source; module linking
 and declaration renames include condition inputs. Native tests observe actual
@@ -98,7 +104,7 @@ branches; source editing remains available. See QUEST_BEHAVIOUR_PROGRAMS.md.
 
 Current architecture: the original app owns chat/Live handoff, Gemini access
 and durable task journals. Canonical behaviour programs, the shared native
-catalog (16 actions, ten events and five facts), one scheduler and native
+catalog (30 actions, ten events and 13 facts), one scheduler and native
 receipts serve human controls and agent calls. Version-3 programs retain typed
 session state across event/timer waits. Creation results compose with animation,
 physics and durable object edits; per-channel ownership permits supported
@@ -1028,3 +1034,21 @@ are part of this checkpoint.
 Still open: explicit no-candidate clean start/external import, repair of corrupt
 recovery-operation history, evidence maintenance, broader release acceptance and
 headset testing. This is a release-work checkpoint, not completed Quest v1.
+
+
+### 2026-10-01: external and fresh recovery sources
+
+Recovery can prepare an explicitly requested fresh workspace when no retained
+candidate verifies. The same select action uses a typed source choice; fresh content
+has only the included book and Maestro, normal defaults and no user assets/programs.
+It preserves the observed selection and original data, requires a separate commit,
+opens under review and never resumes prior activity. Prepared previews survive
+restart without automatic activation.
+
+The existing external archive picker now prepares without writing a selection
+pointer. A prepared import can enter the same inspected recovery candidate flow,
+even with a missing pointer and damaged backup. Its source is owned while copying
+and retained after cancellation. Ordinary activation still establishes its baseline
+and distinguishes failures there from failures after its actual selection commit.
+Native and shared-control verification covers these paths; device acceptance,
+corrupt recovery-history repair and evidence maintenance remain open.

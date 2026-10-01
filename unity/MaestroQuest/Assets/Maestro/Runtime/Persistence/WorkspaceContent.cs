@@ -26,8 +26,8 @@ namespace Maestro.Quest.Persistence
             room=interaction;bookItem=bookOwner;router=pointer;input=controller;var content=gameObject;
             var avatar = new GameObject("Full body Maestro");
             avatar.transform.SetParent(content.transform, false);
-            avatar.transform.localPosition = new Vector3(-.78f,0,1.4f);
-            avatar.transform.localRotation = Quaternion.Euler(0,160,0);
+            avatar.transform.localPosition = WorkspaceDefaults.MaestroPosition;
+            avatar.transform.localRotation = WorkspaceDefaults.MaestroRotation;
             avatar.AddComponent<MaestroAvatar>().Browser = browser;
             var avatarHandle = avatar.AddComponent<CapsuleCollider>(); avatarHandle.center = new Vector3(0,.85f,0); avatarHandle.height = 1.7f; avatarHandle.radius = .25f;
             avatar.layer = RoomPhysicsLayers.Environment;
