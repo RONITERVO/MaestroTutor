@@ -59,6 +59,31 @@ namespace Maestro.Quest.Tests
             Assert.That(BehaviourCatalog.Action("avatar.follow.user").Channels,Is.EqualTo(new[] {"locomotion","gaze"}));
             Assert.That(BehaviourCatalog.Action(RuleActionKind.LibraryMotion).Channels,Is.EqualTo(new[] {"wholeTarget"}));
         }
+        [Test] public void CurrentInputMappingsReferenceRegisteredFactFieldsAndActionGuards()
+        {
+            int count=0;
+            foreach(var action in BehaviourCatalog.Actions)foreach(var schema in action.InputSchema["oneOf"] as JArray??new JArray(action.InputSchema)){
+                if(schema["x-current"] is not JObject mapping)continue;count++;
+                var fact=BehaviourCatalog.Fact((string)mapping["fact"]);Assert.That(fact,Is.Not.Null,action.Id);
+                Assert.That((int)mapping["version"],Is.EqualTo(fact.Version));
+                var props=(JObject)schema["properties"];var args=(JObject)mapping["arguments"];
+                foreach(var entry in args.Properties()){
+                    Assert.That(props.ContainsKey((string)entry.Value),Is.True);
+                    Assert.That(fact.Input?["properties"]?[entry.Name],Is.Not.Null);
+                }
+                foreach(var required in (JArray)(fact.Input?["required"]??new JArray()))Assert.That(args.ContainsKey((string)required),Is.True);
+                foreach(var field in ((JObject)mapping["fields"]).Properties()){
+                    Assert.That(props.ContainsKey(field.Name),Is.True);JToken type=fact.ToJson()["type"];
+                    Assert.That(field.Value.Count(),Is.InRange(1,4));
+                    foreach(var part in (JArray)field.Value)type=type?["record"]?[(string)part];
+                    string expected=(string)props[field.Name]["type"];if(expected=="integer")expected="number";if(expected=="string")expected="text";
+                    Assert.That((string)type,Is.EqualTo(expected),action.Id+"."+field.Name);
+                    Assert.That(args.Properties().Any(x=>(string)x.Value==field.Name),Is.False,"A query cannot overwrite its input target");
+                }
+                foreach(var guard in (JArray)mapping["guards"])Assert.That(mapping["fields"][(string)guard],Is.Not.Null);
+            }
+            Assert.That(count,Is.EqualTo(14));
+        }
         [Test] public void EveryExistingAdapterHasExactlyOneStableRegistration()
         {
             Assert.That(LegacyCapabilityAdapters.ActionIds.Select(id=>LegacyCapabilityAdapters.Kind(id).Value),Is.EquivalentTo(Enum.GetValues(typeof(RuleActionKind))));

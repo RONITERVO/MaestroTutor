@@ -2689,7 +2689,26 @@
             "title": "Maestro on right stick",
             "x-features": [
               "controllerConfiguration.v1"
-            ]
+            ],
+            "x-current": {
+              "fact": "controller.settings",
+              "version": 1,
+              "arguments": {},
+              "fields": {
+                "configurationId": [
+                  "configurationId"
+                ],
+                "deadZone": [
+                  "deadZone"
+                ],
+                "userSpeed": [
+                  "userSpeed"
+                ]
+              },
+              "guards": [
+                "configurationId"
+              ]
+            }
           },
           {
             "type": "object",
@@ -2735,7 +2754,26 @@
             "title": "Maestro on left stick",
             "x-features": [
               "controllerConfiguration.v1"
-            ]
+            ],
+            "x-current": {
+              "fact": "controller.settings",
+              "version": 1,
+              "arguments": {},
+              "fields": {
+                "configurationId": [
+                  "configurationId"
+                ],
+                "deadZone": [
+                  "deadZone"
+                ],
+                "userSpeed": [
+                  "userSpeed"
+                ]
+              },
+              "guards": [
+                "configurationId"
+              ]
+            }
           },
           {
             "type": "object",
@@ -2782,7 +2820,26 @@
             "title": "Maestro stick disabled",
             "x-features": [
               "controllerConfiguration.v1"
-            ]
+            ],
+            "x-current": {
+              "fact": "controller.settings",
+              "version": 1,
+              "arguments": {},
+              "fields": {
+                "configurationId": [
+                  "configurationId"
+                ],
+                "deadZone": [
+                  "deadZone"
+                ],
+                "userSpeed": [
+                  "userSpeed"
+                ]
+              },
+              "guards": [
+                "configurationId"
+              ]
+            }
           },
           {
             "type": "object",
@@ -2824,7 +2881,20 @@
             "title": "Bind a saved program",
             "x-features": [
               "controllerConfiguration.v1"
-            ]
+            ],
+            "x-current": {
+              "fact": "controller.settings",
+              "version": 1,
+              "arguments": {},
+              "fields": {
+                "configurationId": [
+                  "configurationId"
+                ]
+              },
+              "guards": [
+                "configurationId"
+              ]
+            }
           },
           {
             "type": "object",
@@ -2860,7 +2930,20 @@
             "title": "Clear a button",
             "x-features": [
               "controllerConfiguration.v1"
-            ]
+            ],
+            "x-current": {
+              "fact": "controller.settings",
+              "version": 1,
+              "arguments": {},
+              "fields": {
+                "configurationId": [
+                  "configurationId"
+                ]
+              },
+              "guards": [
+                "configurationId"
+              ]
+            }
           },
           {
             "type": "object",
@@ -2896,7 +2979,20 @@
             "title": "Bind left snap turn",
             "x-features": [
               "controllerConfiguration.v1"
-            ]
+            ],
+            "x-current": {
+              "fact": "controller.settings",
+              "version": 1,
+              "arguments": {},
+              "fields": {
+                "configurationId": [
+                  "configurationId"
+                ]
+              },
+              "guards": [
+                "configurationId"
+              ]
+            }
           },
           {
             "type": "object",
@@ -2932,7 +3028,20 @@
             "title": "Bind right snap turn",
             "x-features": [
               "controllerConfiguration.v1"
-            ]
+            ],
+            "x-current": {
+              "fact": "controller.settings",
+              "version": 1,
+              "arguments": {},
+              "fields": {
+                "configurationId": [
+                  "configurationId"
+                ]
+              },
+              "guards": [
+                "configurationId"
+              ]
+            }
           }
         ]
       },
@@ -3002,7 +3111,20 @@
         "additionalProperties": false,
         "x-features": [
           "controllerModes.v1"
-        ]
+        ],
+        "x-current": {
+          "fact": "controller.mode",
+          "version": 1,
+          "arguments": {},
+          "fields": {
+            "stateId": [
+              "stateId"
+            ]
+          },
+          "guards": [
+            "stateId"
+          ]
+        }
       },
       "duration": "instant",
       "ownership": "none",
@@ -6172,7 +6294,31 @@
         "additionalProperties": false,
         "x-features": [
           "spatialSettings.v1"
-        ]
+        ],
+        "x-current": {
+          "fact": "object.physics.settings",
+          "version": 1,
+          "arguments": {
+            "target": "target"
+          },
+          "fields": {
+            "revision": [
+              "revision"
+            ],
+            "mode": [
+              "mode"
+            ],
+            "shape": [
+              "shape"
+            ],
+            "mass": [
+              "mass"
+            ]
+          },
+          "guards": [
+            "revision"
+          ]
+        }
       },
       "duration": "instant",
       "ownership": "exclusiveTargetAndProp",
@@ -6259,7 +6405,26 @@
         "additionalProperties": false,
         "x-features": [
           "spatialSettings.v1"
-        ]
+        ],
+        "x-current": {
+          "fact": "avatar.movement.settings",
+          "version": 1,
+          "arguments": {},
+          "fields": {
+            "revision": [
+              "revision"
+            ],
+            "distance": [
+              "distance"
+            ],
+            "speed": [
+              "speed"
+            ]
+          },
+          "guards": [
+            "revision"
+          ]
+        }
       },
       "duration": "instant",
       "ownership": "exclusiveTargetAndProp",
@@ -6349,6 +6514,19 @@
             "x-features": [
               "spatialSettings.v1"
             ],
+            "x-current": {
+              "fact": "avatar.walk.settings",
+              "version": 1,
+              "arguments": {},
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
             "title": "Included walk"
           },
           {
@@ -6389,6 +6567,19 @@
             "x-features": [
               "spatialSettings.v1"
             ],
+            "x-current": {
+              "fact": "avatar.walk.settings",
+              "version": 1,
+              "arguments": {},
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
             "title": "Saved motion"
           },
           {
@@ -6435,6 +6626,19 @@
             "x-features": [
               "spatialSettings.v1"
             ],
+            "x-current": {
+              "fact": "avatar.walk.settings",
+              "version": 1,
+              "arguments": {},
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
             "title": "Embedded model clip"
           }
         ]
@@ -6510,7 +6714,20 @@
         "additionalProperties": false,
         "x-features": [
           "physicsSimulation.v1"
-        ]
+        ],
+        "x-current": {
+          "fact": "physics.simulation",
+          "version": 1,
+          "arguments": {},
+          "fields": {
+            "stateId": [
+              "stateId"
+            ]
+          },
+          "guards": [
+            "stateId"
+          ]
+        }
       },
       "duration": "instant",
       "ownership": "none",
@@ -8744,7 +8961,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
-      "sha256": "040653d4fb7523254f2409fefbed333d95b5168560048ac4de354d18dbd6ff6d"
+      "sha256": "427fc2daa092328a8cfd4a75040f9d3b1db50205bab13f9f06e2519307caed55"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityStepAdapter.cs",
@@ -8752,11 +8969,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ControllerConfigurationCapability.cs",
-      "sha256": "f06cd3db40f0ebd87d67f268d53660f30c2afdd5c05de6ba2b23ca587adbd39e"
+      "sha256": "2b23761add0e3dbcbfea3c44d6868214b6d1059ac1832df33f1e9c77b905ecf7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ControllerModeCapability.cs",
-      "sha256": "13b12272289e17801ff59619fbb32ac2211b3427a13b24ad44d7358466f8c7e8"
+      "sha256": "bf0e42b77bc9e42c02eb4ab4287d9532120b15f33c2e22963c57e1abc4f9318c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreateObjectCapability.cs",
@@ -8788,7 +9005,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsSimulationCapability.cs",
-      "sha256": "82cbe30032849bc52c746934eb7839464154a9a9526dfb16fe2b580f1bd52dc7"
+      "sha256": "ad4a77a798294faf02926da628a46ce0ad7bbaf8077e723e99bf176ac3974dc4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ProgramModuleCapabilities.cs",
@@ -8816,7 +9033,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SpatialSettingsCapabilities.cs",
-      "sha256": "e63503de540e9637fa193705af155457bcc5ffbf165a1bf116b0e90faad4760b"
+      "sha256": "faebc69594b6d79f929bdb18f43264f98c749124d86df11c7f2268e910315eb5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceActivationCapabilities.cs",

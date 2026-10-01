@@ -17,7 +17,7 @@ namespace Maestro.Quest.Programs
         static JObject Variant(string operation,string title,JObject fields)
         {
             var props=new JObject {["operation"]=Choice(operation),["configurationId"]=Text("^[a-f0-9]{32}$",32)};props["operation"]["x-static"]=true;
-            foreach(var p in fields.Properties())props[p.Name]=p.Value.DeepClone();var schema=Object(props);schema["title"]=title;schema["x-features"]=new JArray("controllerConfiguration.v1");return schema;
+            foreach(var p in fields.Properties())props[p.Name]=p.Value.DeepClone();var schema=Object(props);schema["title"]=title;schema["x-features"]=new JArray("controllerConfiguration.v1");return CurrentInputs(schema,"controller.settings","configurationId",null,operation.StartsWith("movement.",StringComparison.Ordinal)?new[]{"deadZone","userSpeed"}:System.Array.Empty<string>());
         }
         static JObject Movement(string stick,string title,params string[] other)
         {

@@ -1,6 +1,6 @@
 {
   "before": {
-    "configurationId": "d764d12148cc42a9a1b1d4a0756b778a",
+    "configurationId": "ed0b98c28fb643f4a0aae801ccf9a6ac",
     "storageReady": true,
     "avatarStick": "right",
     "userStick": "left",
@@ -40,14 +40,14 @@
   },
   "movement": {
     "selected": {
-      "id": "43f5c73d3bef425cba90df591eab048c",
+      "id": "46093c52a8804b349817403313e9b266",
       "capability": "controller.configure",
       "version": 1,
       "resources": [],
       "phase": "completed",
       "status": "Action completed",
       "output": {
-        "configurationId": "d7f8546ef18e45268cdefa1fad0d037a",
+        "configurationId": "56785f4e33d3473697130e968dc323da",
         "saved": true
       },
       "call": {
@@ -55,7 +55,7 @@
         "version": 1,
         "arguments": {
           "operation": "movement.left",
-          "configurationId": "d764d12148cc42a9a1b1d4a0756b778a",
+          "configurationId": "ed0b98c28fb643f4a0aae801ccf9a6ac",
           "userStick": "right",
           "deadZone": 0.3,
           "userSpeed": 0.8
@@ -65,24 +65,24 @@
     "running": [],
     "outcomes": [
       {
-        "id": "43f5c73d3bef425cba90df591eab048c",
+        "id": "46093c52a8804b349817403313e9b266",
         "capability": "controller.configure",
         "version": 1,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "configurationId": "d7f8546ef18e45268cdefa1fad0d037a",
+          "configurationId": "56785f4e33d3473697130e968dc323da",
           "saved": true
         }
       }
     ],
-    "nextRunId": "a442b35a1f874d038e3b82511dd0fbe7",
+    "nextRunId": "9c6d687773a44e3187f0173402c8a18f",
     "storageError": null,
     "recovery": null
   },
   "afterMovement": {
-    "configurationId": "d7f8546ef18e45268cdefa1fad0d037a",
+    "configurationId": "56785f4e33d3473697130e968dc323da",
     "storageReady": true,
     "avatarStick": "left",
     "userStick": "right",
@@ -122,14 +122,14 @@
   },
   "button": {
     "selected": {
-      "id": "a442b35a1f874d038e3b82511dd0fbe7",
+      "id": "9c6d687773a44e3187f0173402c8a18f",
       "capability": "controller.configure",
       "version": 1,
       "resources": [],
       "phase": "completed",
       "status": "Action completed",
       "output": {
-        "configurationId": "ca212ac900cf485ab5fd34b8fa20c736",
+        "configurationId": "45ec1a0d11c34de9a6cf4d6a88ac8687",
         "saved": true
       },
       "call": {
@@ -137,45 +137,45 @@
         "version": 1,
         "arguments": {
           "operation": "button.program",
-          "configurationId": "d7f8546ef18e45268cdefa1fad0d037a",
+          "configurationId": "56785f4e33d3473697130e968dc323da",
           "button": "a",
-          "programId": "4b2440cd6d1747769a82b4bc56bf6a28"
+          "programId": "47d41b83361a4e4f9d524239d8edb3f7"
         }
       }
     },
     "running": [],
     "outcomes": [
       {
-        "id": "43f5c73d3bef425cba90df591eab048c",
+        "id": "46093c52a8804b349817403313e9b266",
         "capability": "controller.configure",
         "version": 1,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "configurationId": "d7f8546ef18e45268cdefa1fad0d037a",
+          "configurationId": "56785f4e33d3473697130e968dc323da",
           "saved": true
         }
       },
       {
-        "id": "a442b35a1f874d038e3b82511dd0fbe7",
+        "id": "9c6d687773a44e3187f0173402c8a18f",
         "capability": "controller.configure",
         "version": 1,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "configurationId": "ca212ac900cf485ab5fd34b8fa20c736",
+          "configurationId": "45ec1a0d11c34de9a6cf4d6a88ac8687",
           "saved": true
         }
       }
     ],
-    "nextRunId": "211094bcdeba49d09c0bdf5c39848ba3",
+    "nextRunId": "6baa3e607a1c4474a1cda4f2d82e6702",
     "storageError": null,
     "recovery": null
   },
   "after": {
-    "configurationId": "ca212ac900cf485ab5fd34b8fa20c736",
+    "configurationId": "45ec1a0d11c34de9a6cf4d6a88ac8687",
     "storageReady": true,
     "avatarStick": "left",
     "userStick": "right",
@@ -191,7 +191,7 @@
       {
         "button": "a",
         "command": "program",
-        "programId": "4b2440cd6d1747769a82b4bc56bf6a28",
+        "programId": "47d41b83361a4e4f9d524239d8edb3f7",
         "available": true
       },
       {
@@ -213,5 +213,5 @@
       "virtualView": false
     }
   },
-  "programId": "4b2440cd6d1747769a82b4bc56bf6a28"
+  "programId": "47d41b83361a4e4f9d524239d8edb3f7"
 }

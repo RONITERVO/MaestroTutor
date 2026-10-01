@@ -7,7 +7,7 @@ import {resolve} from 'node:path';
 import assert from 'node:assert/strict';
 const base=process.env.MAESTRO_HANDOFF_FIXTURE_URL||'http://127.0.0.1:5187';
 if(!['localhost','127.0.0.1'].includes(new URL(base).hostname))throw new Error('Local fixture required');
-const out=resolve('.quest-evidence/spatial-settings');await mkdir(out,{recursive:true});
+const out=resolve(process.env.MAESTRO_PROBE_OUTPUT||'.quest-evidence/spatial-settings');await mkdir(out,{recursive:true});
 const native=JSON.parse(await readFile('test-fixtures/browser/spatialSettings.json','utf8'));
 const manifest=JSON.parse(await readFile('shared/generated/behaviourCatalog.json','utf8'));
 const views=[native.physics,native.movement,native.walk];
@@ -33,8 +33,10 @@ try{
   await page.getByLabel('Catalog category',{exact:true}).selectOption('actions');await page.getByRole('textbox',{name:'Search actions',exact:true}).fill(call.id);await page.getByRole('button',{name:'Search',exact:true}).click();
   await page.getByRole('button',{name:new RegExp('^'+definition.label+'\\s*'+call.id+' · v1$')}).click();await page.getByText('Edit action fields',{exact:true}).click();
   if('source' in call.arguments)await page.getByLabel('Walking animation source',{exact:true}).selectOption(String(['included','library','embedded'].indexOf(call.arguments.source)));
+  if('target' in call.arguments)await page.getByLabel('Action inputs target',{exact:true}).selectOption(call.arguments.target);
+  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();assert.equal(Number(await page.getByLabel('Action inputs revision',{exact:true}).inputValue()),call.arguments.revision);
   for(const [key,value] of Object.entries(call.arguments)){
-   if(key==='source')continue;const input=page.getByLabel('Action inputs '+key,{exact:true});
+   if(key==='source'||key==='revision')continue;const input=page.getByLabel('Action inputs '+key,{exact:true});
    if(await input.evaluate(el=>el.tagName)==='SELECT')await input.selectOption(String(value));else await input.fill(String(value));
   }
   await page.getByRole('button',{name:'Run action now',exact:true}).click();await page.getByLabel('Action result',{exact:true}).filter({hasText:String(view.selected.output.revision)}).waitFor();

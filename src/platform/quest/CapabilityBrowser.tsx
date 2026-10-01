@@ -2,7 +2,8 @@ import {dataTypeLabel} from '../../../shared/programValues';
 import {validateFactArguments} from '../../../shared/behaviourFacts';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
-import {useState,useSyncExternalStore} from 'react';
+import {useEffect,useRef,useState,useSyncExternalStore} from 'react';
+import {currentInputMapping,currentInputRequest,applyCurrentInputs,currentInputIdentity} from '../../../shared/currentCapabilityInputs';
 import {capabilityDefinition,validateCapabilityArguments,resolveCapabilitySchema,type CapabilityInvocation} from '../../../shared/capabilities';
 import {CapabilityVariant,CapabilityFields,initialCapabilityValue} from './CapabilityFields';
 import {executionForCapability,type ExecutionLane,type ExecutionRequest} from '../../../shared/roomExecutions';
@@ -15,8 +16,14 @@ export function CapabilityBrowser({client,onClose,onInsert}:{client:RoomAgentCli
  const {state,pending}=useSyncExternalStore(client.subscribe,client.getSnapshot);
  const [category,setCategory]=useState<CatalogCategory>('actions');
  const [query,setQuery]=useState(''),[page,setPage]=useState<Extract<CatalogView,{operation:'search'}>|null>(null);
- const [inspection,setInspection]=useState<Extract<CatalogView,{operation:'inspect'}>|null>(null),[args,setArgs]=useState('{}'),[error,setError]=useState('');
+ const [inspection,setInspection]=useState<Extract<CatalogView,{operation:'inspect'}>|null>(null),[args,writeArgs]=useState('{}'),[error,setError]=useState('');
  const [checked,setChecked]=useState(''),[recoveryNotice,setRecoveryNotice]=useState(''),[confirming,setConfirming]=useState('');
+ const draftEpoch=useRef(0),alive=useRef(true);
+ const [loaded,setLoaded]=useState(''),[acceptedSnapshot,setAcceptedSnapshot]=useState('');
+ const previousSession=useRef(state?.session);
+ useEffect(()=>{if(previousSession.current!==state?.session){previousSession.current=state?.session;draftEpoch.current++;setInspection(null);setLoaded('');setAcceptedSnapshot('');setChecked('');setConfirming('');}},[state?.session]);
+ useEffect(()=>{alive.current=true;return()=>{alive.current=false;draftEpoch.current++;};},[]);
+ const setArgs=(value:string)=>{draftEpoch.current++;writeArgs(value);setLoaded('');};
  const send=async(catalog:CatalogRequest)=>{
   setError('');setRecoveryNotice('');try {const result=await client.request([{action:'catalog',catalog}]);if(!result.ok){setError(result.status);return null;}return result.catalog??null;}
   catch(e){setError(e instanceof Error?e.message:'The room is unavailable.');return null;}
@@ -28,7 +35,7 @@ export function CapabilityBrowser({client,onClose,onInsert}:{client:RoomAgentCli
  const scope=category==='actions'?{}:{category};
  const search=async(offset=0)=>{setInspection(null);const result=await send({operation:'search',...scope,query:offset?page?.query??query:query,offset});if(result?.operation==='search'&&(result.category??'actions')===category)setPage(result);};
  const inspect=async(id:string,version:number,argumentsValue?:Record<string,unknown>)=>{const result=await send({operation:'inspect',...scope,capability:id,version,...(argumentsValue?{arguments:argumentsValue}:{})});if(result?.operation==='inspect'&&(result.category??'actions')===category&&result.capability===id&&result.version===version){
-  setInspection(result);setChecked('');setConfirming('');if(!result.definition)setError(result.status);
+  setInspection(result);setAcceptedSnapshot('');setChecked('');setConfirming('');if(!result.definition)setError(result.status);
   else if(result.category==='facts'&&result.definition.input)setArgs(JSON.stringify(result.arguments??result.definition.example??{},null,2));
   else if(result.category!=='events'&&result.category!=='facts'&&result.category!=='modules')setArgs(JSON.stringify(result.definition.example??initialCapabilityValue(result.definition.input,state?.objects??[]),null,2));
  }};
@@ -40,6 +47,23 @@ export function CapabilityBrowser({client,onClose,onInsert}:{client:RoomAgentCli
  if(definition)try {parsedArgs=JSON.parse(args);invalid=validateCapabilityArguments(definition.id,definition.version,parsedArgs)??'';
   if(!invalid)call={id:definition.id,version:definition.version,arguments:parsedArgs as Record<string,unknown>};
  }catch{invalid='Enter valid JSON arguments.';}
+ const selectedSchema=definition?resolveCapabilitySchema(definition.input,parsedArgs):undefined;
+ const currentMapping=definition?currentInputMapping(definition.input,parsedArgs):undefined;
+ let currentQuery:CatalogRequest|undefined,currentError='',snapshotKey='';
+ if(definition&&currentMapping)try{currentQuery=currentInputRequest(definition.input,parsedArgs);snapshotKey=currentInputIdentity(definition.input,parsedArgs,state?.session??'');}catch(e){currentError=e instanceof Error?e.message:'Current values cannot be read.';}
+ const snapshotReady=!currentMapping||Boolean(snapshotKey&&snapshotKey===acceptedSnapshot);
+ const loadCurrent=async()=>{
+  if(!definition||!currentQuery)return;
+  const epoch=draftEpoch.current,session=state?.session;
+  setError('');setLoaded('');setChecked('');setConfirming('');
+  try{
+   const result=await client.request([{action:'catalog',catalog:currentQuery}]);
+   if(!alive.current||draftEpoch.current!==epoch||client.snapshot().session!==session)return;
+   if(!result.ok||!result.catalog)throw new Error(result.status||'Current values are unavailable.');
+   const next=applyCurrentInputs(definition.input,parsedArgs,result.catalog);
+   setArgs(JSON.stringify(next,null,2));setAcceptedSnapshot(currentInputIdentity(definition.input,next,session??''));setLoaded('Current values loaded. Review your changes before running.');
+  }catch(e){if(alive.current&&draftEpoch.current===epoch&&client.snapshot().session===session)setError(e instanceof Error?e.message:'Current values could not be read.');}
+ };
  const key=call?JSON.stringify(call):'';
  const confirmation=definition?.input['x-confirmation'];
  const observation=state?.catalog;
@@ -78,14 +102,23 @@ export function CapabilityBrowser({client,onClose,onInsert}:{client:RoomAgentCli
     <p className="room-workspace-intro">Choose this fact as a condition or calculation input in a program. This reading is a snapshot; it does not subscribe to changes or run a behaviour.</p>
    </section>}
    {definition&&<><p>{definition.id} · version {definition.version}</p>{definition.description&&<p>{definition.description}</p>}
+    <fieldset disabled={pending} className="capability-input-editor">
     {definition.input.oneOf&&<CapabilityVariant schema={definition.input} value={parsedArgs} objects={state?.objects??[]} onChange={value=>{setArgs(JSON.stringify(value,null,2));setChecked('');setConfirming('');}}/>}
     {resolveCapabilitySchema(definition.input,call?.arguments)?.description&&<p>{resolveCapabilitySchema(definition.input,call?.arguments)?.description}</p>}
-    <details><summary>Edit action fields</summary><CapabilityFields schema={resolveCapabilitySchema(definition.input,parsedArgs)??definition.input} value={parsedArgs} label="Action inputs" objects={state?.objects??[]} onChange={value=>{setArgs(JSON.stringify(value,null,2));setChecked('');setConfirming('');}}/></details>
-    <label>Action arguments<textarea aria-label="Action arguments" rows={12} spellCheck={false} value={args} disabled={pending} onChange={e=>{setArgs(e.target.value);setChecked('');setConfirming('');}}/></label>
+    {currentMapping&&<section aria-label="Current action inputs"><p>Load {Object.keys(currentMapping.fields).join(', ')} from the room. This replaces those draft values; other inputs stay as you chose them.</p>
+     <button disabled={pending||!currentQuery||Object.keys(currentMapping.arguments).length>0&&!state?.capabilities?.includes('factQueries.v1')} onClick={()=>void loadCurrent()}>Load current values</button>
+     {currentError&&<p>{currentError}</p>}{loaded&&<p role="status">{loaded}</p>}
+     {!snapshotReady&&<p>Load current values before checking, running or adding this action. Advanced arguments can supply an explicit snapshot.</p>}
+     <p>Revision and state identifiers protect this snapshot. They are never silently refreshed when you run. Load again after a stale-edit error.</p>
+    </section>}
+    <details><summary>Edit action fields</summary><CapabilityFields locked={currentMapping?.guards} schema={selectedSchema??definition.input} value={parsedArgs} label="Action inputs" objects={state?.objects??[]} onChange={value=>{setArgs(JSON.stringify(value,null,2));setChecked('');setConfirming('');}}/></details>
+    <details open={!currentMapping}><summary>Advanced action arguments</summary><label>Action arguments<textarea aria-label="Action arguments" rows={12} spellCheck={false} value={args} disabled={pending} onChange={e=>{setArgs(e.target.value);setChecked('');setConfirming('');try{setAcceptedSnapshot(currentInputIdentity(definition.input,JSON.parse(e.target.value),state?.session??''));}catch{setAcceptedSnapshot('');}}}/></label></details>
+    </fieldset>
     {invalid&&<p className="room-message room-message-warning">{invalid}</p>}
-    <div className="room-workspace-actions"><button disabled={pending||!call} onClick={async()=>{if(call){const result=await send({operation:'check',call});if(result?.operation==='check')setChecked(key);}}}>Check availability</button>
-     {state?.capabilities?.includes('execution.v1')&&<button disabled={pending||!call||Boolean(execution?.storageError)} onClick={()=>{if(call){if(confirmation)setConfirming(key);else void execute({operation:'start',call});}}}>Run action now</button>}
-     {onInsert&&definition.domain!=='workspace'&&<button disabled={pending||!call} onClick={()=>{if(call){const error=onInsert(call);if(error)setError(error);else onClose();}}}>Add first block to draft</button>}</div>
+    <div className="room-workspace-actions"><button disabled={pending||!call||!snapshotReady} onClick={async()=>{if(call){const result=await send({operation:'check',call});if(result?.operation==='check')setChecked(key);}}}>Check availability</button>
+     {state?.capabilities?.includes('execution.v1')&&<button disabled={pending||!call||!snapshotReady||Boolean(execution?.storageError)} onClick={()=>{if(call){if(confirmation)setConfirming(key);else void execute({operation:'start',call});}}}>Run action now</button>}
+     {onInsert&&definition.domain!=='workspace'&&<button disabled={pending||!call||!snapshotReady} onClick={()=>{if(call){const error=onInsert(call);if(error)setError(error);else onClose();}}}>Add first block to draft</button>}</div>
+    {onInsert&&currentMapping&&definition.domain!=='workspace'&&<p>Adding this action keeps these exact snapshot values. For a reusable program, bind fresh fact values to its revision or state inputs before each run.</p>}
     {confirmation&&call&&confirming===key&&<section aria-label="Confirm permanent action" className="room-message room-message-warning"><p>{confirmation}</p><pre>{JSON.stringify(call.arguments,null,2)}</pre><button disabled={pending} onClick={()=>setConfirming('')}>Cancel confirmation</button><button disabled={pending||Boolean(execution?.storageError)} onClick={()=>{setConfirming('');void execute({operation:'start',call});}}>Confirm permanent action</button></section>}
     <p className="room-workspace-intro">{definition.domain==='workspace'?'Workspace maintenance runs once and cannot be added to a room behaviour.':onInsert?'Adding a block changes your draft. Apply it in the workshop when ready.':'Choose a behaviour in the workshop to add an action block.'} Availability can change before execution.</p>
     <details><summary>Argument reference</summary><p>Duration: {definition.duration}. Uses: {(resolveCapabilitySchema(definition.input,call?.arguments)?.['x-channels']??definition.channels).join(', ')||'no animation channel'}.</p><p>Needs: {(resolveCapabilitySchema(definition.input,call?.arguments)?.['x-requirements']??definition.requirements).join(', ')||'no additional requirements'}.</p><pre>{JSON.stringify(definition.input,null,2)}</pre></details>

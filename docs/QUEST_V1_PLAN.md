@@ -25,7 +25,9 @@ QUEST_CONTROLLER_MODES.md. Object physics, avatar distance/speed and exact walki
 animation selection now use catalog actions with native readback and the physical
 tools' save path. See QUEST_SPATIAL_SETTINGS.md. Physics Start/Pause now shares
 the catalog through fresh native simulation identities and the physical service;
-see QUEST_PHYSICS_SIMULATION.md.
+see QUEST_PHYSICS_SIMULATION.md. The book action editor now loads real settings
+and concurrency guards from catalog-declared facts. It requires an explicit
+snapshot before running and never silently advances revisions; see QUEST_CURRENT_INPUTS.md.
 The remaining runtime, provider, device and Store acceptance gates remain unfinished; the complete v1 goal remains active.
 
 Current recovery implementation supports retained candidates, an external backup,
@@ -42,6 +44,29 @@ and tracked operation roots remain protected. Private recovery export remains
 separate; a full store with unreadable selection still requires recovery/repair.
 PR #248 records the current verified commit and package. Earlier entries
 below are historical evidence, not current test totals or release acceptance.
+
+PC current-input editing increment (2026-10-01): six shared actions (14 variants)
+now declare read-only fact-to-draft mappings in their native schemas. The book
+loads real settings and guards before running, preserves explicit operations and
+identities, and rejects late reads after draft/session changes. Default examples
+cannot execute without loading or explicit advanced arguments. Recurring programs
+still need fresh fact bindings; insertion retains the reviewed literal snapshot.
+See QUEST_CURRENT_INPUTS.md. A final capture also corrected an older test assumption:
+normal physics placement capture can advance a revision after a successful save
+receipt, so later readback checks settings and monotonic revision ordering.
+
+Verification: 387 EditMode + 327 PlayMode tests passed (three optional private-model
+checks skipped), 1,604 web tests across 184 files, 49 focused final-capture checks,
+and 61 Android browser tests. Four Chrome probes loaded native snapshots and
+replayed 11 exact native commands; screenshots were inspected. A transient empty
+browser startup retried successfully, and the final captures passed. TypeScript,
+ESLint, catalog drift, prompt ownership and core boundaries passed. The full build
+helper exited 0; all 189 runtime and 90 test C# sources, 24 fixtures plus metadata,
+and 113 packaged web files match. ARM64-only, v2-signature-verified development APK:
+`D:\Projects\Builds\MaestroQuestVerify\Builds\Checkpoints\MaestroQuest-current-inputs-8F2398CF.apk`.
+SHA-256 `8F2398CFC85188465D2AD7B4FE09F1B324F3B212D9B7D539DB0A8FAB88249E1B`.
+Evidence: `.quest-evidence/current-inputs/verification.json`. Not installed; device,
+provider and Store acceptance remain separate. No production deployment.
 
 PC shared-physics-simulation increment (2026-10-01): `physics.simulation.set`
 and `physics.simulation` expose Start/Pause through the physical world service.

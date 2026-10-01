@@ -51,6 +51,13 @@ namespace Maestro.Quest.Programs
             var fields=new JObject {["x"]=Number(-1,1),["y"]=Number(-1,1),["z"]=Number(-1,1)};
             if(rotation)fields["w"]=Number(-1,1);var schema=Object(fields);schema["format"]=rotation?"unitQuaternion":"boundedOffset";return schema;
         }
+        /// <summary>Read-only fact snapshot used to fill an action draft; never an automatic refresh at execution.</summary>
+        public static JObject CurrentInputs(JObject schema,string fact,string guard,JObject arguments=null,params string[] fields) {
+            var mappings=new JObject {[guard]=new JArray(guard)};
+            foreach(var field in fields)mappings[field]=new JArray(field);
+            schema["x-current"]=new JObject {["fact"]=fact,["version"]=1,["arguments"]=arguments??new JObject(),["fields"]=mappings,["guards"]=new JArray(guard)};
+            return schema;
+        }
         public static JObject Resource(JObject schema) {schema["x-resource"]="object";return schema;}
         public static JObject Prop()=>Object(new JObject {
             ["objectId"]=Resource(Text("^[a-fA-F0-9]{32}$",32)),["avatarHash"]=Text("^(|[a-f0-9]{64})$",64),

@@ -48,10 +48,11 @@ function ModuleDefinitionField({value,onChange,label}:{value:unknown;onChange:(v
  }}/>{error&&<span role="alert">{error}</span>}<small>Paste the complete module definition. Its content must match the separately supplied hash; changing a definition creates a different identity.</small></label>;
 }
 
-export function CapabilityFields({schema,value,onChange,label,objects,depth=0}:{
+export function CapabilityFields({schema,value,onChange,label,objects,depth=0,locked,readOnly=false}:{
   schema:CapabilitySchema; value:unknown; onChange:(value:unknown)=>void;
-  label:string; objects:readonly EditorObject[]; depth?:number;
+  label:string; objects:readonly EditorObject[]; depth?:number;locked?:string[];readOnly?:boolean;
 }) {
+  if(readOnly)return <label>{label}<input aria-label={label} readOnly value={typeof value==='string'||typeof value==='number'?value:''}/><small>Filled by Load current values. Advanced arguments allow an explicit snapshot.</small></label>;
   if(schema.format==='programModule')return <ModuleDefinitionField value={value} onChange={onChange} label={label}/>;
   if(schema.oneOf){const selected=resolveCapabilitySchema(schema,value);return <><CapabilityVariant schema={schema} value={value} onChange={onChange} objects={objects} label={schema.title??label+' variant'}/>{selected&&<CapabilityFields schema={selected} value={value} onChange={onChange} objects={objects} label={label} depth={depth}/>}</>;}
   if(depth>12) return <p>Use the source editor for this deeply nested value.</p>;
@@ -65,7 +66,7 @@ export function CapabilityFields({schema,value,onChange,label,objects,depth=0}:{
         {!required&&<label className="rule-checkbox"><input type="checkbox" aria-label={'Include '+name} checked={present} onChange={e=>{
           const next={...fields};if(e.target.checked)next[key]=initialCapabilityValue(child,objects);else delete next[key];onChange(next);
         }}/>Include {key}</label>}
-        {(required||present)&&<CapabilityFields schema={child} value={fields[key]} label={name} objects={objects} depth={depth+1} onChange={next=>onChange({...fields,[key]:next})}/>}
+        {(required||present)&&<CapabilityFields readOnly={locked?.includes(key)} schema={child} value={fields[key]} label={name} objects={objects} depth={depth+1} onChange={next=>onChange({...fields,[key]:next})}/>}
       </div>;
     })}{optionalNull}</fieldset>;
   }

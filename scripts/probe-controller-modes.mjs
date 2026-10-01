@@ -7,7 +7,7 @@ import {resolve} from 'node:path';
 import assert from 'node:assert/strict';
 const base=process.env.MAESTRO_HANDOFF_FIXTURE_URL||'http://127.0.0.1:5187';
 if(!['localhost','127.0.0.1'].includes(new URL(base).hostname))throw new Error('Local fixture required');
-const out=resolve('.quest-evidence/controller-modes');await mkdir(out,{recursive:true});
+const out=resolve(process.env.MAESTRO_PROBE_OUTPUT||'.quest-evidence/controller-modes');await mkdir(out,{recursive:true});
 const native=JSON.parse(await readFile('test-fixtures/browser/controllerModes.json','utf8'));
 const views=[native.enable,native.virtualView,native.user,native.mixed];
 const browser=await chromium.launch({channel:'chrome',headless:true});let page;
@@ -24,7 +24,7 @@ try{
  for(const view of views){
   assert.equal(view.selected.call.arguments.stateId,current.stateId);
   await page.getByLabel('Catalog category',{exact:true}).selectOption('actions');await page.getByRole('textbox',{name:'Search actions',exact:true}).fill('controller.mode.set');await page.getByRole('button',{name:'Search',exact:true}).click();await page.getByRole('button',{name:/Change movement or room view/}).click();await page.getByText('Edit action fields',{exact:true}).click();
-  await page.getByLabel('Action inputs operation',{exact:true}).selectOption(view.selected.call.arguments.operation);await page.getByLabel('Action inputs stateId',{exact:true}).fill(current.stateId);
+  await page.getByLabel('Action inputs operation',{exact:true}).selectOption(view.selected.call.arguments.operation);await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();assert.equal(await page.getByLabel('Action inputs stateId',{exact:true}).inputValue(),current.stateId);
   await page.getByRole('button',{name:'Run action now',exact:true}).click();await page.getByLabel('Action result',{exact:true}).filter({hasText:view.selected.output.stateId}).waitFor();
   if(view===native.virtualView)await page.screenshot({path:resolve(out,'book-mode-action.png')});
   current=await observe();assert.deepEqual(current,view.selected.output);

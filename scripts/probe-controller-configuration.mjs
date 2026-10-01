@@ -7,7 +7,7 @@ import {resolve} from 'node:path';
 import assert from 'node:assert/strict';
 const base=process.env.MAESTRO_HANDOFF_FIXTURE_URL||'http://127.0.0.1:5187';
 if(!['localhost','127.0.0.1'].includes(new URL(base).hostname))throw new Error('Local fixture required');
-const out=resolve('.quest-evidence/controller-configuration');await mkdir(out,{recursive:true});
+const out=resolve(process.env.MAESTRO_PROBE_OUTPUT||'.quest-evidence/controller-configuration');await mkdir(out,{recursive:true});
 const native=JSON.parse(await readFile('test-fixtures/browser/controllerConfiguration.json','utf8'));
 const browser=await chromium.launch({channel:'chrome',headless:true});let page;
 try{
@@ -25,11 +25,11 @@ try{
  }
  const before=await observe();assert.deepEqual(before,native.before);await edit(1);
  const move=native.movement.selected.call.arguments;
- await page.getByLabel('Action inputs configurationId',{exact:true}).fill(move.configurationId);await page.getByLabel('Action inputs userStick',{exact:true}).selectOption(move.userStick);
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();assert.equal(await page.getByLabel('Action inputs configurationId',{exact:true}).inputValue(),move.configurationId);await page.getByLabel('Action inputs userStick',{exact:true}).selectOption(move.userStick);
  for(const key of ['deadZone','userSpeed'])await page.getByLabel('Action inputs '+key,{exact:true}).fill(String(move[key]));
  await page.getByRole('button',{name:'Run action now',exact:true}).click();await page.getByLabel('Action result',{exact:true}).filter({hasText:native.afterMovement.configurationId}).waitFor();
  const afterMovement=await observe();assert.deepEqual(afterMovement,native.afterMovement);await edit(3);const bind=native.button.selected.call.arguments;
- await page.getByLabel('Action inputs configurationId',{exact:true}).fill(bind.configurationId);await page.getByLabel('Action inputs button',{exact:true}).selectOption(bind.button);await page.getByLabel('Action inputs programId',{exact:true}).fill(bind.programId);
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();assert.equal(await page.getByLabel('Action inputs configurationId',{exact:true}).inputValue(),bind.configurationId);await page.getByLabel('Action inputs button',{exact:true}).selectOption(bind.button);await page.getByLabel('Action inputs programId',{exact:true}).fill(bind.programId);
  const buttonValues=await page.getByLabel('Action inputs button',{exact:true}).locator('option').evaluateAll(options=>options.map(option=>option.value));assert.deepEqual(buttonValues,['x','a','leftStickClick','rightStickClick']);
  await page.getByRole('button',{name:'Run action now',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:resolve(out,'book-button.png')});
  await page.getByRole('button',{name:'Run action now',exact:true}).click();await page.getByLabel('Action result',{exact:true}).filter({hasText:native.after.configurationId}).waitFor();const after=await observe();assert.deepEqual(after,native.after);

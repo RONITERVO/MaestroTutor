@@ -14,7 +14,11 @@ it('validates native saved settings and exact post-save object revisions',()=>{
  for(const value of [native.beforePhysics,native.afterPhysics])expect(validFactValue('object.physics.settings',value)).toBe(true);
  for(const value of [native.beforeMovement,native.afterMovement])expect(validFactValue('avatar.movement.settings',value)).toBe(true);
  for(const value of [native.beforeWalk,native.walkBeforeSave,native.afterWalk,walk.before,walk.after])expect(validFactValue('avatar.walk.settings',value)).toBe(true);
- expect(native.physics.selected.call.arguments.revision).toBe(native.beforePhysics.revision);expect(native.physics.selected.output.revision).toBe(native.afterPhysics.revision);
+ expect(native.physics.selected.call.arguments.revision).toBe(native.beforePhysics.revision);
+ // Physics placement capture can advance the object again between the save receipt and this later fact.
+ expect(native.physics.selected.output.revision).toBeGreaterThan(native.beforePhysics.revision);
+ expect(native.afterPhysics.revision).toBeGreaterThanOrEqual(native.physics.selected.output.revision);
+ expect(native.afterPhysics).toMatchObject({target:native.physics.selected.output.target,mode:native.physics.selected.call.arguments.mode,shape:native.physics.selected.call.arguments.shape,mass:native.physics.selected.call.arguments.mass});
  expect(native.movement.selected.call.arguments.revision).toBe(native.beforeMovement.revision);expect(native.movement.selected.output.revision).toBe(native.afterMovement.revision);
  expect(native.walk.selected.call.arguments.revision).toBe(native.walkBeforeSave.revision);expect(native.afterMovement.live.active).toBe(false);
  expect(walk.after.selection.motionId).toBe(walk.library.selected.call.arguments.motionId);expect(walk.embedded.selected.call.arguments.modelHash).toBe(walk.before.selection.modelHash);

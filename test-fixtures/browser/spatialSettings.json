@@ -1,6 +1,6 @@
 {
   "beforePhysics": {
-    "target": "aaa83d8d36c14761823e17dab10306c2",
+    "target": "d68e50e249d54747bb0d0ee4672f9fb6",
     "revision": 3,
     "mode": "fixed",
     "shape": "automatic",
@@ -38,16 +38,16 @@
   },
   "physics": {
     "selected": {
-      "id": "0b3682b18ac242bc9eb00675ba417bc6",
+      "id": "d1e7be5efb5a4093936025dc0110e045",
       "capability": "object.physics.configure",
       "version": 1,
       "resources": [
-        "aaa83d8d36c14761823e17dab10306c2"
+        "d68e50e249d54747bb0d0ee4672f9fb6"
       ],
       "phase": "completed",
       "status": "Action completed",
       "output": {
-        "target": "aaa83d8d36c14761823e17dab10306c2",
+        "target": "d68e50e249d54747bb0d0ee4672f9fb6",
         "revision": 6,
         "temporary": false
       },
@@ -55,7 +55,7 @@
         "id": "object.physics.configure",
         "version": 1,
         "arguments": {
-          "target": "aaa83d8d36c14761823e17dab10306c2",
+          "target": "d68e50e249d54747bb0d0ee4672f9fb6",
           "revision": 3,
           "mode": "bouncy",
           "shape": "sphere",
@@ -66,28 +66,28 @@
     "running": [],
     "outcomes": [
       {
-        "id": "0b3682b18ac242bc9eb00675ba417bc6",
+        "id": "d1e7be5efb5a4093936025dc0110e045",
         "capability": "object.physics.configure",
         "version": 1,
         "resources": [
-          "aaa83d8d36c14761823e17dab10306c2"
+          "d68e50e249d54747bb0d0ee4672f9fb6"
         ],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "target": "aaa83d8d36c14761823e17dab10306c2",
+          "target": "d68e50e249d54747bb0d0ee4672f9fb6",
           "revision": 6,
           "temporary": false
         }
       }
     ],
-    "nextRunId": "eb5b0d2aed8c42718b53bfbc2c1a91ac",
+    "nextRunId": "1d54f3080f0a4fa8b38fecdb4917facb",
     "storageError": null,
     "recovery": null
   },
   "afterPhysics": {
-    "target": "aaa83d8d36c14761823e17dab10306c2",
-    "revision": 6,
+    "target": "d68e50e249d54747bb0d0ee4672f9fb6",
+    "revision": 7,
     "mode": "bouncy",
     "shape": "sphere",
     "mass": 2.0,
@@ -95,7 +95,7 @@
   },
   "movement": {
     "selected": {
-      "id": "eb5b0d2aed8c42718b53bfbc2c1a91ac",
+      "id": "1d54f3080f0a4fa8b38fecdb4917facb",
       "capability": "avatar.movement.configure",
       "version": 1,
       "resources": [
@@ -105,7 +105,7 @@
       "status": "Action completed",
       "output": {
         "target": "maestro",
-        "revision": 7,
+        "revision": 8,
         "temporary": false
       },
       "call": {
@@ -122,22 +122,22 @@
     "running": [],
     "outcomes": [
       {
-        "id": "0b3682b18ac242bc9eb00675ba417bc6",
+        "id": "d1e7be5efb5a4093936025dc0110e045",
         "capability": "object.physics.configure",
         "version": 1,
         "resources": [
-          "aaa83d8d36c14761823e17dab10306c2"
+          "d68e50e249d54747bb0d0ee4672f9fb6"
         ],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "target": "aaa83d8d36c14761823e17dab10306c2",
+          "target": "d68e50e249d54747bb0d0ee4672f9fb6",
           "revision": 6,
           "temporary": false
         }
       },
       {
-        "id": "eb5b0d2aed8c42718b53bfbc2c1a91ac",
+        "id": "1d54f3080f0a4fa8b38fecdb4917facb",
         "capability": "avatar.movement.configure",
         "version": 1,
         "resources": [
@@ -147,17 +147,17 @@
         "status": "Action completed",
         "output": {
           "target": "maestro",
-          "revision": 7,
+          "revision": 8,
           "temporary": false
         }
       }
     ],
-    "nextRunId": "dc813ae3701946918ac8d07e434655fb",
+    "nextRunId": "6247af54a3f44086a3947511186072e1",
     "storageError": null,
     "recovery": null
   },
   "afterMovement": {
-    "revision": 7,
+    "revision": 8,
     "distance": 1.8,
     "speed": 1.0,
     "temporary": false,
@@ -172,7 +172,7 @@
     }
   },
   "walkBeforeSave": {
-    "revision": 7,
+    "revision": 8,
     "temporary": false,
     "selection": {
       "source": "included",
@@ -187,7 +187,7 @@
   },
   "walk": {
     "selected": {
-      "id": "dc813ae3701946918ac8d07e434655fb",
+      "id": "6247af54a3f44086a3947511186072e1",
       "capability": "avatar.walk.select",
       "version": 1,
       "resources": [
@@ -197,7 +197,7 @@
       "status": "Action completed",
       "output": {
         "target": "maestro",
-        "revision": 7,
+        "revision": 8,
         "temporary": false
       },
       "call": {
@@ -205,7 +205,7 @@
         "version": 1,
         "arguments": {
           "target": "maestro",
-          "revision": 7,
+          "revision": 8,
           "source": "included"
         }
       }
@@ -213,22 +213,22 @@
     "running": [],
     "outcomes": [
       {
-        "id": "0b3682b18ac242bc9eb00675ba417bc6",
+        "id": "d1e7be5efb5a4093936025dc0110e045",
         "capability": "object.physics.configure",
         "version": 1,
         "resources": [
-          "aaa83d8d36c14761823e17dab10306c2"
+          "d68e50e249d54747bb0d0ee4672f9fb6"
         ],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "target": "aaa83d8d36c14761823e17dab10306c2",
+          "target": "d68e50e249d54747bb0d0ee4672f9fb6",
           "revision": 6,
           "temporary": false
         }
       },
       {
-        "id": "eb5b0d2aed8c42718b53bfbc2c1a91ac",
+        "id": "1d54f3080f0a4fa8b38fecdb4917facb",
         "capability": "avatar.movement.configure",
         "version": 1,
         "resources": [
@@ -238,12 +238,12 @@
         "status": "Action completed",
         "output": {
           "target": "maestro",
-          "revision": 7,
+          "revision": 8,
           "temporary": false
         }
       },
       {
-        "id": "dc813ae3701946918ac8d07e434655fb",
+        "id": "6247af54a3f44086a3947511186072e1",
         "capability": "avatar.walk.select",
         "version": 1,
         "resources": [
@@ -253,17 +253,17 @@
         "status": "Action completed",
         "output": {
           "target": "maestro",
-          "revision": 7,
+          "revision": 8,
           "temporary": false
         }
       }
     ],
-    "nextRunId": "8d734d959f0748ccb45df18f5330a6ed",
+    "nextRunId": "8faea9106a15427e9eb6185b8b4f9318",
     "storageError": null,
     "recovery": null
   },
   "afterWalk": {
-    "revision": 7,
+    "revision": 8,
     "temporary": false,
     "selection": {
       "source": "included",

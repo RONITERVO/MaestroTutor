@@ -3,8 +3,12 @@
 import {moduleHash,validModuleRecord} from './programModuleIdentity';
 import {parseRecipe} from './roomRecipe';
 import {behaviourCatalog,type BehaviourValueType} from './behaviourCatalog';
+export interface CurrentInputMapping {
+ fact:string;version:number;arguments:Record<string,string>;fields:Record<string,string[]>;guards:string[];
+}
 export interface CapabilitySchema {
  type:'object'|'array'|'string'|'number'|'integer'|'boolean';
+ 'x-current'?:CurrentInputMapping;
  oneOf?:CapabilitySchema[];'x-confirmation'?:string;'x-discriminators'?:string[];title?:string;description?:string;examples?:unknown[];'x-static'?:boolean;'x-channels'?:string[];'x-requirements'?:string[];'x-features'?:string[];
  items?:CapabilitySchema;minItems?:number;maxItems?:number;nullable?:boolean;
  properties?:Record<string,CapabilitySchema>;required?:string[];additionalProperties?:false;
