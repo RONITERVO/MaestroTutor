@@ -15,6 +15,7 @@ import nativeAuthoring from './animationAuthoring.json';
 import nativeRecording from './recordingSessions.json';
 import nativePosing from './posingSessions.json';
 import nativeModelImport from './modelSelection.json';
+import nativeMotionBatch from './motionBatchImport.json';
 import nativeAvatar from './avatarSelection.json';
 import nativeEvents from './eventProgramStates.json';
 import creationProgram from '../../unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-create.json';
@@ -51,6 +52,14 @@ if(avatarSelection){
  state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';
  state.execution={...JSON.parse(JSON.stringify(nativeAvatar.library)),selected:null,running:[],outcomes:[],nextRunId:nativeAvatar.library.selected.id};
  state.capabilities=[...state.capabilities??[],'catalogVocabulary.v1','avatarModels.v1','execution.v1','executionReceipts.v1','actionResults.v1'];
+}
+const motionBatch=new URLSearchParams(location.search).has('motionBatch');
+let batchObservation:typeof nativeMotionBatch.after=nativeMotionBatch.before;
+if(motionBatch){
+ if(![nativeMotionBatch.select,nativeMotionBatch.category,nativeMotionBatch.start].every(validExecutionView))throw new Error('Invalid native batch fixture');
+ state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';
+ state.execution={...JSON.parse(JSON.stringify(nativeMotionBatch.select)),selected:null,running:[],outcomes:[],nextRunId:nativeMotionBatch.select.selected.id};
+ state.capabilities=[...state.capabilities??[],'catalogVocabulary.v1','factQueries.v1','motionBatchImport.v1','execution.v1','executionReceipts.v1','actionResults.v1'];
 }
 const modelSelection=new URLSearchParams(location.search).has('modelSelection');
 let modelImportObservation:typeof nativeModelImport.after=nativeModelImport.before;
@@ -133,6 +142,12 @@ setInterval(()=>{
     const input=command.execution;
     if(avatarSelection&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeAvatar.library.selected.call)){state.execution=copy(nativeAvatar.library) as RoomAgentState['execution'];state.status='Recorded native library metadata; browser acknowledgement is simulated';}
     else if(avatarSelection&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeAvatar.selection.selected.call)){state.execution=copy(nativeAvatar.selection) as RoomAgentState['execution'];avatarObservation=nativeAvatar.after;state.status='Recorded native model selection; browser acknowledgement is simulated';}
+    else if(motionBatch&&input.operation==='start'){
+     const views=[nativeMotionBatch.select,nativeMotionBatch.category,nativeMotionBatch.start];
+     const index=views.findIndex(view=>input.call?.id===view.selected.call.id&&input.call.version===view.selected.call.version&&JSON.stringify(Object.entries(input.call.arguments).sort())===JSON.stringify(Object.entries(view.selected.call.arguments).sort()));
+     if(index<0){state.ok=false;state.status='Only the captured batch requests can be replayed';}
+     else{state.execution=copy(views[index]) as RoomAgentState['execution'];batchObservation=[nativeMotionBatch.ready,nativeMotionBatch.tagged,nativeMotionBatch.after][index];state.status='Captured native batch result; this browser does not open the headset picker';}
+    }
     else if(modelSelection&&input.operation==='start'){
      const index=[nativeModelImport.select,nativeModelImport.accept].findIndex(view=>input.call?.id===view.selected.call.id&&input.call.version===view.selected.call.version&&JSON.stringify(Object.entries(input.call.arguments).sort())===JSON.stringify(Object.entries(view.selected.call.arguments).sort()));
      if(index<0){state.ok=false;state.status='Only the captured native import requests can be replayed';}
@@ -160,6 +175,17 @@ setInterval(()=>{
     if(moduleEvidence&&query.operation!=='check'&&query.category==='modules'){
      if(query.operation==='search')state.catalog=copy(moduleEvidence.search.catalog);
      else {const view=moduleEvidence.inspected.catalog;state.catalog=view?.operation==='inspect'&&query.capability===view.capability?copy(view):{operation:'inspect',category:'modules',capability:query.capability,version:query.version,definition:null,revision:1,ready:true,pending:false,status:'Not present in recorded evidence'};}
+     continue;
+    }
+    if(motionBatch&&query.operation!=='check'&&query.category==='facts'){
+     const definitions=['motion.import.batch.status','motion.import.batch.file'].map(id=>behaviourFact(id)!);
+     if(query.operation==='search')state.catalog={operation:'search',category:'facts',query:query.query,offset:0,total:2,pageSize:6,entries:definitions.map(d=>({id:d.id,version:1,label:d.label})),status:'Found batch facts'};
+     else{
+      const definition=definitions.find(d=>d.id===query.capability)??null;
+      const args=definition?.id==='motion.import.batch.file'?(query.arguments??definition.example):undefined;
+      const value=definition?.id==='motion.import.batch.status'?copy(batchObservation):args?.requestId===nativeMotionBatch.after.requestId&&args.motionOffset===0?(args.index===0?copy(nativeMotionBatch.file):args.index===1?copy(nativeMotionBatch.failedFile):null):null;
+      state.catalog={operation:'inspect',category:'facts',capability:query.capability,version:1,definition,arguments:args,available:value!==null,value,status:'Captured native animation import'};
+     }
      continue;
     }
     if(modelSelection&&query.operation!=='check'&&query.category==='facts'){

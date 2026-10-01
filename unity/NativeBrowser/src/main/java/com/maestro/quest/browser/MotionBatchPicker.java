@@ -12,7 +12,7 @@ import android.os.Handler;
 import android.os.Looper;
 import org.json.JSONObject;
 import java.util.LinkedHashSet;
-import java.util.UUID;
+import java.io.File;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -20,7 +20,8 @@ import java.util.concurrent.Executors;
 @SuppressWarnings("deprecation")
 public final class MotionBatchPicker extends Fragment {
     static final int REQUEST=4811, MAX_FILES=128;
-    private static MotionBatchPicker current;
+    private static final Object GATE=new Object();
+    private static volatile MotionBatchPicker current;
     private static volatile String result="";
     private final Handler main=new Handler(Looper.getMainLooper());
     private final ExecutorService worker=Executors.newSingleThreadExecutor(r -> { Thread t=new Thread(r,"Maestro motion copy"); t.setDaemon(true); return t; });
@@ -34,33 +35,37 @@ public final class MotionBatchPicker extends Fragment {
     private final Runnable selectionTimeout=() -> selectionError("File selection timed out. Choose files again.");
     private final Runnable copyTimeout=() -> cancelCopy(requestId,"Reading this file timed out. Try a local copy and Retry failed.");
 
-    public static String Start(Activity activity) {
-        String requested=UUID.randomUUID().toString();
-        activity.runOnUiThread(() -> {
-            if (current != null || activity.isFinishing() || activity.isDestroyed()) return;
-            result=""; current=new MotionBatchPicker(); current.session=requested;
-            MotionBatchPicker owner=current;
-            try { activity.getFragmentManager().beginTransaction().add(current,"MaestroMotionBatchPicker").commit(); }
-            catch (RuntimeException error) { owner.close(); current=null; owner.publish("error",0,-1,0,"","","The document picker is unavailable. Resume Maestro and try again."); }
-        });
-        return requested;
+    public static boolean ReadyToStart(){synchronized(GATE){return current==null&&FileSelectionGate.ready();}}
+    public static String CacheRoot(Activity activity) throws java.io.IOException{return DocumentPicker.CacheRoot(activity);}
+    public static String Start(Activity activity,String requested) {
+        synchronized(GATE){
+            if(requested==null||!requested.matches("[a-f0-9]{32}"))throw new IllegalArgumentException("Invalid batch identity");
+            if(current!=null){if(current.session.equals(requested))return requested;throw new IllegalStateException("Finish or clear the current batch first");}
+            if(activity==null||activity.isFinishing()||activity.isDestroyed())throw new IllegalStateException("Resume Maestro before choosing files");
+            MotionBatchPicker owner=new MotionBatchPicker();owner.session=requested;FileSelectionGate.acquire(owner);current=owner;result="";
+            activity.runOnUiThread(()->{
+                if(current!=owner||owner.closed)return;
+                try {activity.getFragmentManager().beginTransaction().add(owner,"MaestroMotionBatchPicker").commit();}
+                catch(RuntimeException error){owner.selectionError("The document picker is unavailable. Resume Maestro and try again.");}
+            });
+            return requested;
+        }
     }
-    public static String ReadResult() { return result; }
-    public static void Copy(String session,int index,int request) { new Handler(Looper.getMainLooper()).post(() -> { if (owns(session)) current.copy(index,request); }); }
-    public static void CancelCopy(String session,int request) { new Handler(Looper.getMainLooper()).post(() -> { if (owns(session)) current.cancelCopy(request,"File read cancelled."); }); }
+    public static String ReadResult(String session){synchronized(GATE){return owns(session)?result:"";}}
+    public static void Copy(String session,int index,int request) { new Handler(Looper.getMainLooper()).post(() -> { synchronized(GATE){if (owns(session)) current.copy(index,request);} }); }
+    public static void CancelCopy(String session,int request) { new Handler(Looper.getMainLooper()).post(() -> { synchronized(GATE){if (owns(session)) current.cancelCopy(request,"File read cancelled.");} }); }
     public static void ReleaseFile(String session,int request) {
         new Handler(Looper.getMainLooper()).post(() -> {
-            if (!owns(session) || current.requestId != request || current.copying) return;
-            MotionBatchPicker owner=current; owner.worker.execute(owner::clearCopy);
+            synchronized(GATE){if (!owns(session) || current.requestId != request || current.copying) return;
+            MotionBatchPicker owner=current; owner.worker.execute(owner::clearCopy);}
         });
     }
     private static boolean owns(String session) { return current != null && current.session.equals(session); }
-    private static void releaseCurrent() {
-        if (current != null) { MotionBatchPicker owner=current; current=null; owner.close(); if (owner.isAdded()) owner.getFragmentManager().beginTransaction().remove(owner).commitAllowingStateLoss(); }
-        result="";
+    public static void ReleaseSession(String session) {
+        MotionBatchPicker owner;
+        synchronized(GATE){if(!owns(session))return;owner=current;current=null;result="";owner.close();}
+        owner.main.post(()->{if(owner.isAdded())owner.getFragmentManager().beginTransaction().remove(owner).commitAllowingStateLoss();});
     }
-    public static void Release() { new Handler(Looper.getMainLooper()).post(MotionBatchPicker::releaseCurrent); }
-    public static void ReleaseSession(String session) { new Handler(Looper.getMainLooper()).post(() -> { if (owns(session)) releaseCurrent(); }); }
     static Intent selectionIntent() { return ModelPicker.selectionIntent().putExtra(Intent.EXTRA_ALLOW_MULTIPLE,true); }
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
@@ -124,15 +129,18 @@ public final class MotionBatchPicker extends Fragment {
     // private disk use bounded to one 64 MiB source even for 128 selections.
     private void clearCopy() { if (files != null) { files.close(); files=null; } }
     private void publish(String kind,int count,int index,int request,String path,String name,String error) {
+        if(current!=this||closed)return;
         try { result=new JSONObject().put("session",session).put("kind",kind).put("count",count).put("index",index).put("request",request).put("path",path).put("name",name).put("error",error).toString(); }
         catch (Exception ignored) { result="{\"kind\":\"error\",\"error\":\"File selection failed.\"}"; }
     }
     private void close() {
         if (closed) return; closed=true; main.removeCallbacks(selectionTimeout); main.removeCallbacks(copyTimeout);
-        SelectedFiles cache=files; if (cache != null) cache.cancelCopy(); worker.execute(this::clearCopy); worker.shutdown(); sources=null;
+        SelectedFiles cache=files; if (cache != null) cache.cancelCopy(); worker.execute(()->{try{clearCopy();}finally{FileSelectionGate.release(this);}}); worker.shutdown(); sources=null;
     }
     @Override public void onDestroy() {
-        if (current == this) { current=null; publish("error",0,-1,0,"","","File selection was interrupted. Choose files again."); }
-        close(); super.onDestroy();
+        // A selected copy may still be under Unity validation. Keep its bytes
+        // until the exact source owner releases them, even after Activity loss.
+        if(current==this&&!closed){if(copying)cancelCopy(requestId,"File selection was interrupted. Choose files again.");else if(sources==null)selectionError("File selection was interrupted. Choose files again.");}
+        super.onDestroy();
     }
 }

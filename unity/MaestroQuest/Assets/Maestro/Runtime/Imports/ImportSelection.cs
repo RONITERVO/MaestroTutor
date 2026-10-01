@@ -34,13 +34,13 @@ namespace Maestro.Quest.Imports
 #endif
         }
         internal void SetPickerForTests(IModelPicker value)=>modelPicker=value;
-        internal bool CanBeginSelection(bool requirePicker,out string error)
+        internal bool CanBeginSelection(bool requirePicker,out string error,bool ignoreBatch=false)
         {
             error=null;
             if(!editor||disposed||!isActiveAndEnabled||selectionPaused||!selectionFocused)error="Resume Maestro before importing a model";
             else if(editor.RuntimeGate.Held)error=editor.RuntimeGate.Reason;
             else if(editor.WriteGate.Frozen||!editor.CanSaveRoom)error="Room saving is unavailable";
-            else if(Busy||HasPreview||selectionWrite!=null)error="Finish or cancel the current import first";
+            else if(busy||picking||HasPreview||selectionWrite!=null||!ignoreBatch&&Batches&&Batches.HasSession)error="Finish or cancel the current import first";
             else if(editor.AnyHeld||editor.DrawingInProgress)error="Release objects and finish drawing before opening the picker";
             else if(animationWorkshop&&(animationWorkshop.IsPosing||animationWorkshop.IsRecording||animationWorkshop.HasUnsavedPose||animationWorkshop.HasUnsavedRecording))error="Finish authoring and save or discard the retained pose or take first";
             else if(requirePicker)try{if(modelPicker==null||!modelPicker.ReadyToStart)error="The file chooser is unavailable or its previous stream is still closing";}catch(Exception){error="Resume Maestro before choosing a model";}
@@ -76,7 +76,7 @@ namespace Maestro.Quest.Imports
                 _=PrepareSelectionAsync(()=>Task.Run(()=>ModelLibrary.Inspect(name,ModelLibrary.ReadBounded(path))),selectionId,true);
             }catch(Exception){SelectionFailed("The selected model could not be read. Choose the file again.");ReleaseSelectionPicker(selectionId);EndSelectionOwner();}
         }
-        static string SelectedPath(string value,string root)
+        internal static string SelectedPath(string value,string root)
         {
             if(string.IsNullOrEmpty(value)||string.IsNullOrEmpty(root)||!Path.IsPathRooted(value))throw new IOException("Missing selected copy");
             string path=Path.GetFullPath(value),parent=Path.GetDirectoryName(path),cache=Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar,Path.AltDirectorySeparatorChar);

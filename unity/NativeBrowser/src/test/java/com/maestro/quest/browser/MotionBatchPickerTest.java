@@ -20,14 +20,15 @@ import static org.robolectric.Shadows.shadowOf;
 @SuppressWarnings("deprecation")
 @RunWith(RobolectricTestRunner.class) @Config(sdk=35)
 public class MotionBatchPickerTest {
-    Activity activity; SelectedFilesTest.Fixture fixture;
+    Activity activity; SelectedFilesTest.Fixture fixture;String session;
     @Before public void setup() throws Exception {
         activity=Robolectric.buildActivity(Activity.class).setup().get(); fixture=SelectedFilesTest.install(activity);
-        MotionBatchPicker.Release(); shadowOf(Looper.getMainLooper()).idle();
+        MotionBatchPicker.ReleaseSession(session); shadowOf(Looper.getMainLooper()).idle();
     }
-    @After public void cleanup() { MotionBatchPicker.Release(); shadowOf(Looper.getMainLooper()).idle(); fixture.data.delete(); activity.finish(); }
+    @After public void cleanup() { MotionBatchPicker.ReleaseSession(session); shadowOf(Looper.getMainLooper()).idle(); fixture.data.delete(); activity.finish(); }
     MotionBatchPicker start() {
-        MotionBatchPicker.Start(activity); shadowOf(Looper.getMainLooper()).idle(); activity.getFragmentManager().executePendingTransactions();
+        long until=System.currentTimeMillis()+3000;while(!MotionBatchPicker.ReadyToStart()&&System.currentTimeMillis()<until)try{Thread.sleep(5);}catch(InterruptedException ex){throw new AssertionError(ex);}
+        session=java.util.UUID.randomUUID().toString().replace("-","");MotionBatchPicker.Start(activity,session); shadowOf(Looper.getMainLooper()).idle(); activity.getFragmentManager().executePendingTransactions();
         return (MotionBatchPicker)activity.getFragmentManager().findFragmentByTag("MaestroMotionBatchPicker");
     }
     Intent selection(Uri... values) {
@@ -35,14 +36,14 @@ public class MotionBatchPickerTest {
         for (int i=1;i<values.length;i++) clip.addItem(new ClipData.Item(values[i]));
         Intent result=new Intent(); result.setClipData(clip); return result;
     }
-    JSONObject result() throws Exception { return new JSONObject(MotionBatchPicker.ReadResult()); }
+    JSONObject result() throws Exception { return new JSONObject(MotionBatchPicker.ReadResult(session)); }
     JSONObject copy(int index,int request) throws Exception {
         MotionBatchPicker.Copy(result().getString("session"),index,request); shadowOf(Looper.getMainLooper()).idle(); return waitFile(request);
     }
     JSONObject waitFile(int request) throws Exception {
         long until=System.currentTimeMillis()+4000;
         while (System.currentTimeMillis()<until) {
-            shadowOf(Looper.getMainLooper()).idle(); String text=MotionBatchPicker.ReadResult();
+            shadowOf(Looper.getMainLooper()).idle(); String text=MotionBatchPicker.ReadResult(session);
             if (!text.isEmpty()) { JSONObject value=new JSONObject(text); if (value.optString("kind").equals("file") && value.optInt("request")==request) return value; }
             Thread.sleep(10);
         }
@@ -50,6 +51,29 @@ public class MotionBatchPickerTest {
     }
     void removed(File file) throws Exception {
         long until=System.currentTimeMillis()+3000; while(file.exists() && System.currentTimeMillis()<until) Thread.sleep(10); assertFalse(file.exists());
+    }
+    @Test public void batchAndSinglePickersCannotOverlapOrReleaseEachOther() throws Exception {
+        MotionBatchPicker picker=start();String id=session,other="bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+        assertEquals(id,MotionBatchPicker.Start(activity,id));assertFalse(ModelPicker.ReadyToStart());
+        assertThrows(IllegalStateException.class,()->ModelPicker.Start(activity,other));assertThrows(IllegalStateException.class,()->WorkspacePicker.Start(activity,other));
+        ModelPicker.Release(id);WorkspacePicker.Release(id);MotionBatchPicker.ReleaseSession(other);assertEquals("",MotionBatchPicker.ReadResult(other));
+        picker.onActivityResult(MotionBatchPicker.REQUEST,Activity.RESULT_OK,selection(SelectedFilesTest.SOURCE));File file=new File(copy(0,1).getString("path"));
+        picker.onDestroy();assertTrue("Activity loss must preserve a copy still being read",file.exists());
+        MotionBatchPicker.ReleaseSession(id);shadowOf(Looper.getMainLooper()).idle();removed(file);
+        long until=System.currentTimeMillis()+3000;while(!ModelPicker.ReadyToStart()&&System.currentTimeMillis()<until)Thread.sleep(5);
+        ModelPicker.Start(activity,other);assertFalse(MotionBatchPicker.ReadyToStart());assertThrows(IllegalStateException.class,()->MotionBatchPicker.Start(activity,id));
+        MotionBatchPicker.ReleaseSession(id);assertFalse(ModelPicker.Read(other).isEmpty());ModelPicker.Release(other);shadowOf(Looper.getMainLooper()).idle();
+    }
+    @Test public void aRetiringBatchWorkerKeepsEveryPickerClosedUntilItDrains() throws Exception {
+        MotionBatchPicker picker=start();java.lang.reflect.Field field=MotionBatchPicker.class.getDeclaredField("worker");field.setAccessible(true);
+        java.util.concurrent.ExecutorService worker=(java.util.concurrent.ExecutorService)field.get(picker);
+        java.util.concurrent.CountDownLatch entered=new java.util.concurrent.CountDownLatch(1),finish=new java.util.concurrent.CountDownLatch(1);
+        worker.execute(()->{entered.countDown();try{finish.await();}catch(InterruptedException ex){Thread.currentThread().interrupt();}});
+        assertTrue(entered.await(3,java.util.concurrent.TimeUnit.SECONDS));String next="cccccccccccccccccccccccccccccccc";
+        try{MotionBatchPicker.ReleaseSession(session);assertFalse(MotionBatchPicker.ReadyToStart());assertFalse(ModelPicker.ReadyToStart());assertFalse(WorkspacePicker.ReadyToStart());
+            assertThrows(IllegalStateException.class,()->MotionBatchPicker.Start(activity,next));assertThrows(IllegalStateException.class,()->WorkspacePicker.Start(activity,next));
+        }finally{finish.countDown();}
+        long until=System.currentTimeMillis()+3000;while(!MotionBatchPicker.ReadyToStart()&&System.currentTimeMillis()<until)Thread.sleep(5);assertTrue(ModelPicker.ReadyToStart());assertTrue(WorkspacePicker.ReadyToStart());
     }
     @Test public void multiSelectionIsReadOnlyBoundedAndDoesNotCopyUntilConfirmed() throws Exception {
         Intent intent=MotionBatchPicker.selectionIntent(); assertTrue(intent.getBooleanExtra(Intent.EXTRA_ALLOW_MULTIPLE,false));
@@ -68,7 +92,7 @@ public class MotionBatchPickerTest {
     @Test public void rejectsTooManySelectionsAndAcceptsSingleUriWithoutClipData() throws Exception {
         MotionBatchPicker picker=start(); Uri[] values=new Uri[129]; for(int i=0;i<values.length;i++) values[i]=SelectedFilesTest.SOURCE;
         picker.onActivityResult(MotionBatchPicker.REQUEST,Activity.RESULT_OK,selection(values)); assertEquals("error",result().getString("kind"));
-        MotionBatchPicker.Release(); shadowOf(Looper.getMainLooper()).idle(); picker=start();
+        MotionBatchPicker.ReleaseSession(session); shadowOf(Looper.getMainLooper()).idle(); picker=start();
         picker.onActivityResult(MotionBatchPicker.REQUEST,Activity.RESULT_OK,new Intent().setData(SelectedFilesTest.SOURCE));
         assertEquals(1,result().getInt("count")); assertEquals("",copy(0,1).getString("error"));
     }
@@ -87,7 +111,7 @@ public class MotionBatchPickerTest {
         assertTrue(waitFile(1).getString("path").isEmpty());
         File copy=new File(copy(0,2).getString("path")); assertTrue(copy.exists());
         MotionBatchPicker.CancelCopy(oldSession,1); shadowOf(Looper.getMainLooper()).idle(); assertEquals(2,result().getInt("request"));
-        MotionBatchPicker.Release(); shadowOf(Looper.getMainLooper()).idle(); removed(copy);
+        MotionBatchPicker.ReleaseSession(session); shadowOf(Looper.getMainLooper()).idle(); removed(copy);
         MotionBatchPicker replacement=start(); replacement.onActivityResult(MotionBatchPicker.REQUEST,Activity.RESULT_OK,selection(SelectedFilesTest.SOURCE));
         picker.onActivityResult(MotionBatchPicker.REQUEST,Activity.RESULT_OK,selection(SelectedFilesTest.SOURCE));
         MotionBatchPicker.Copy(oldSession,0,3); MotionBatchPicker.ReleaseSession(oldSession); shadowOf(Looper.getMainLooper()).idle();
@@ -96,7 +120,7 @@ public class MotionBatchPickerTest {
     @Test public void cancellationAndMalformedClipDataDoNotGrantAnyFiles() throws Exception {
         MotionBatchPicker picker=start(); picker.onActivityResult(MotionBatchPicker.REQUEST,Activity.RESULT_CANCELED,null);
         assertTrue(result().getString("error").contains("cancelled"));
-        MotionBatchPicker.Release(); shadowOf(Looper.getMainLooper()).idle(); picker=start();
+        MotionBatchPicker.ReleaseSession(session); shadowOf(Looper.getMainLooper()).idle(); picker=start();
         Intent text=new Intent(); text.setClipData(ClipData.newPlainText("text","not a file"));
         picker.onActivityResult(MotionBatchPicker.REQUEST,Activity.RESULT_OK,text);
         assertEquals("error",result().getString("kind")); assertEquals("",result().getString("path"));

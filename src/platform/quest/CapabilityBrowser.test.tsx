@@ -586,3 +586,21 @@ it('chooses and accepts the exact native model preview through typed book fields
  fireEvent.change(screen.getByLabelText('Import operation'),{target:{value:'3'}});expect(screen.getByLabelText('Action inputs revision')).toBeTruthy();
  fireEvent.change(screen.getByLabelText('Import operation'),{target:{value:'5'}});expect(screen.queryByLabelText('Action inputs revision')).toBeNull();expect(screen.queryByLabelText('Action inputs target')).toBeNull();act(()=>client.cancel());
 });
+
+import nativeMotionBatch from '../../../test-fixtures/browser/motionBatchImport.json';
+it('shares animation batch selection, category and start through generated book fields',async()=>{
+ const {client,screen,receive}=setup(true,['motionBatchImport.v1','execution.v1','actionResults.v1']);
+ await receive(undefined,false,{execution:{...nativeMotionBatch.select,selected:null,running:[],outcomes:[],nextRunId:nativeMotionBatch.select.selected.id} as RoomAgentState['execution']});
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:/^Search$/}));const definition=capabilityDefinition('motion.import.batch')!;
+ await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Batch definition'});fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));
+ await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Batch definition'});fireEvent.click(screen.getByText('Edit action fields'));
+ fireEvent.click(screen.getByRole('button',{name:'Run action now'}));expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:nativeMotionBatch.select.selected.call,runId:nativeMotionBatch.select.selected.id}});
+ await receive(undefined,false,{execution:nativeMotionBatch.select as RoomAgentState['execution']});fireEvent.change(screen.getByLabelText('Batch operation'),{target:{value:'1'}});
+ fireEvent.change(screen.getByLabelText('Action inputs requestId'),{target:{value:nativeMotionBatch.ready.requestId}});fireEvent.change(screen.getByLabelText('Action inputs version'),{target:{value:nativeMotionBatch.ready.version}});fireEvent.change(screen.getByLabelText('Action inputs category'),{target:{value:'gesture'}});
+ fireEvent.click(screen.getByRole('button',{name:'Run action now'}));expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:nativeMotionBatch.category.selected.call,runId:nativeMotionBatch.category.selected.id}});
+ await receive(undefined,false,{execution:nativeMotionBatch.category as RoomAgentState['execution']});fireEvent.change(screen.getByLabelText('Batch operation'),{target:{value:'2'}});expect(screen.queryByLabelText('Action inputs category')).toBeNull();
+ fireEvent.change(screen.getByLabelText('Action inputs version'),{target:{value:nativeMotionBatch.tagged.version}});fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
+ expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:nativeMotionBatch.start.selected.call,runId:nativeMotionBatch.start.selected.id}});
+ await receive(undefined,false,{execution:nativeMotionBatch.start as RoomAgentState['execution']});expect(screen.getByLabelText('Action result').textContent).toContain('"phase": "running"');
+ fireEvent.change(screen.getByLabelText('Batch operation'),{target:{value:'4'}});expect(screen.queryByLabelText('Action inputs version')).toBeNull();act(()=>client.cancel());
+});

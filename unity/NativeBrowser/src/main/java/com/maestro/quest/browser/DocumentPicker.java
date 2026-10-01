@@ -46,7 +46,7 @@ public final class DocumentPicker extends Fragment {
             }
             if(retiring!=null)throw new IllegalStateException("Wait for the previous selected stream to close");
             if(activity==null||activity.isFinishing()||activity.isDestroyed())throw new IllegalStateException("Resume Maestro before choosing a file");
-            DocumentPicker picker=new DocumentPicker();picker.id=requestId;picker.kind=kind;picker.maximumBytes="model".equals(kind)?64L*1024*1024:MAX_BYTES;current=picker;
+            DocumentPicker picker=new DocumentPicker();picker.id=requestId;picker.kind=kind;picker.maximumBytes="model".equals(kind)?64L*1024*1024:MAX_BYTES;FileSelectionGate.acquire(picker);current=picker;
             activity.runOnUiThread(()->{
                 synchronized(GATE) {
                     if(current!=picker||picker.closed)return;
@@ -57,7 +57,7 @@ public final class DocumentPicker extends Fragment {
             return requestId;
         }
     }
-    public static boolean ReadyToStart(){synchronized(GATE){return current==null&&retiring==null;}}
+    public static boolean ReadyToStart(){synchronized(GATE){return current==null&&retiring==null&&FileSelectionGate.ready();}}
     public static String Read(String requestId,String kind) {
         synchronized(GATE) {
             if(current==null||!current.id.equals(requestId)||!current.kind.equals(kind))return "";
@@ -124,7 +124,7 @@ public final class DocumentPicker extends Fragment {
     }
     private void closeFiles(){
         if(files!=null)files.cancelCopy();
-        worker.execute(()->{try{if(files!=null)files.close();}finally{synchronized(GATE){if(retiring==this)retiring=null;}}});worker.shutdown();
+        worker.execute(()->{try{if(files!=null)files.close();}finally{synchronized(GATE){if(retiring==this)retiring=null;FileSelectionGate.release(this);}}});worker.shutdown();
     }
     @Override public void onDestroy(){
         synchronized(GATE){if(current==this&&!closed)fail("File selection was interrupted. Choose the file again.");}

@@ -114,10 +114,11 @@ namespace Maestro.Quest.Imports
             {
                 Running=false; cancellation.Dispose(); cancellation=null;
                 Status=Saved+" saved, "+Failed+" failed, "+Pending+" waiting. "+(Pending > 0 ? "Resume continues waiting files." : Failed > 0 ? "Retry failed keeps completed files." : "Open Library to browse motions.");
+                if(disposed)source.Dispose();
                 Notify();
             }
         }
         void Notify() { if (!disposed) Changed?.Invoke(); }
-        public void Dispose() { if (disposed) return; disposed=true; cancellation?.Cancel(); source.Dispose(); }
+        public void Dispose() { if (disposed) return; disposed=true; cancellation?.Cancel(); if(!Running)source.Dispose(); }
     }
 }

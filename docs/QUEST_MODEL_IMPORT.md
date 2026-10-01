@@ -69,8 +69,9 @@ These are private, content-addressed copies, not duplicate room objects.
 Only the latest import session is retained in memory. Restart never reopens a picker
 or replays an uncertain acceptance. Saved objects and libraries use the existing
 persistence and receipt rules. The preview and any unsaved selection are lost on
-process termination. Large animation batches still need shared agent/book coverage;
-real-provider and headset picker, lifecycle and memory acceptance remain release gates.
+process termination. Large animation batches now share native sessions and paged results; see
+QUEST_MOTION_BATCH_IMPORT.md. The single-file embedded-motion result fact still
+needs bounded paging for maximum-size motion lists. Real-provider and headset picker, lifecycle and memory acceptance remain release gates.
 
 ## Verification
 

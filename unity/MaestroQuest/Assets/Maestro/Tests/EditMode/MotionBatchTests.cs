@@ -82,6 +82,13 @@ namespace Maestro.Quest.Tests
             Assert.That(new FileInfo(large).Length,Is.EqualTo(64L*1024*1024+1)); Assert.That(File.ReadAllBytes(good),Is.EqualTo(bytes));
             using var restart=new MotionLibrary(Path.Combine(directory,"library")); Assert.That(restart.List().Single().id,Is.EqualTo(batch.Results[1].MotionIds.Single()));
         }).GetAwaiter().GetResult();
+        [Test] public void DisposeKeepsSourceUntilAnAcceptedReadHasDrained()=>Task.Run(async()=>
+        {
+            using var library=new MotionLibrary(directory);var source=new Source(1);var gate=new TaskCompletionSource<bool>();using var batch=new MotionBatch(library,source);
+            source.Read=async(i,token)=>{await gate.Task;Assert.That(source.Disposed,Is.False);return Input("held.glb",ModelFixture.Mixamo());};
+            var run=batch.RunAsync();Assert.That(source.Reads[0],Is.EqualTo(1));batch.Dispose();Assert.That(source.Disposed,Is.False);Assert.That(run.IsCompleted,Is.False);
+            gate.SetResult(true);await run;Assert.That(source.Disposed,Is.True);Assert.That(source.Previous.Bytes,Is.Null);Assert.That(library.List(),Is.Empty);
+        }).GetAwaiter().GetResult();
         [Test] public void SelectionLimitsAndCancelledRetryKeepPriorFailure() => Task.Run(async () =>
         {
             using var library=new MotionLibrary(directory);

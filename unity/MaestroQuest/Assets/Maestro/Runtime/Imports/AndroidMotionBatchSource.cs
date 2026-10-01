@@ -22,18 +22,19 @@ namespace Maestro.Quest.Imports
         public int Count { get; }
         public AndroidMotionBatchSource(int count,string session) { Count=count; this.session=session; names=new string[count]; }
         public string Name(int index) => names[index];
-        public static string Open()
+        public static bool ReadyToStart {get{using var picker=new AndroidJavaClass(Picker);return picker.CallStatic<bool>("ReadyToStart");}}
+        public static string Open(string id)
         {
             using var player=new AndroidJavaClass("com.unity3d.player.UnityPlayer");
             using var activity=player.GetStatic<AndroidJavaObject>("currentActivity");
-            using var picker=new AndroidJavaClass(Picker); return picker.CallStatic<string>("Start",activity);
+            using var picker=new AndroidJavaClass(Picker); return picker.CallStatic<string>("Start",activity,id);
         }
-        public static Selection Poll()
+        public static Selection Poll(string session)
         {
-            using var picker=new AndroidJavaClass(Picker); string json=picker.CallStatic<string>("ReadResult");
+            using var picker=new AndroidJavaClass(Picker); string json=picker.CallStatic<string>("ReadResult",session);
             return string.IsNullOrEmpty(json) ? null : JsonUtility.FromJson<Selection>(json);
         }
-        public static void ClosePicker() { using var picker=new AndroidJavaClass(Picker); picker.CallStatic("Release"); }
+        public static void ClosePicker(string session) { using var picker=new AndroidJavaClass(Picker); picker.CallStatic("ReleaseSession",session); }
         public async Task<MotionBatchInput> ReadAsync(int index,CancellationToken cancellation)
         {
             if (disposed) throw new ObjectDisposedException(nameof(AndroidMotionBatchSource));
@@ -50,7 +51,7 @@ namespace Maestro.Quest.Imports
                 {
                     cancellation.ThrowIfCancellationRequested();
                     if (disposed) throw new OperationCanceledException(cancellation);
-                    selected=Poll();
+                    selected=Poll(session);
                     if (selected?.kind == "error") throw new ModelImportException(selected.error);
                     if (selected != null && selected.session != session) throw new ModelImportException("This selection has ended. Choose files again.");
                     if (selected?.kind == "file" && selected.request == attempt && selected.index == index) break;
@@ -59,7 +60,10 @@ namespace Maestro.Quest.Imports
                 }
                 names[index]=selected.name;
                 if (!string.IsNullOrEmpty(selected.error)) throw new ModelImportException(selected.error);
-                var bytes=await Task.Run(() => ModelLibrary.ReadBounded(selected.path),cancellation);
+                using var player=new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+                using var activity=player.GetStatic<AndroidJavaObject>("currentActivity");
+                string cache=picker.CallStatic<string>("CacheRoot",activity),path=ImportWorkshop.SelectedPath(selected.path,cache);
+                var bytes=await Task.Run(() => ModelLibrary.ReadBounded(path),cancellation);
                 cancellation.ThrowIfCancellationRequested();
                 return new MotionBatchInput(selected.name,bytes);
             }

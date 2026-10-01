@@ -2234,6 +2234,228 @@
       }
     },
     {
+      "id": "motion.import.batch",
+      "version": 1,
+      "label": "Import an animation collection",
+      "input": {
+        "type": "object",
+        "title": "Batch operation",
+        "x-discriminators": [
+          "operation"
+        ],
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "select"
+                ],
+                "x-static": true
+              }
+            },
+            "required": [
+              "operation"
+            ],
+            "additionalProperties": false,
+            "title": "Choose animation files",
+            "x-features": [
+              "motionBatchImport.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "category"
+                ],
+                "x-static": true
+              },
+              "requestId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "version": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 1000000.0
+              },
+              "category": {
+                "type": "string",
+                "pattern": "^[^<>\\u0000-\\u001f]{0,32}$",
+                "maxLength": 32
+              }
+            },
+            "required": [
+              "operation",
+              "requestId",
+              "version",
+              "category"
+            ],
+            "additionalProperties": false,
+            "title": "Set collection tag",
+            "x-features": [
+              "motionBatchImport.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "start"
+                ],
+                "x-static": true
+              },
+              "requestId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "version": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 1000000.0
+              }
+            },
+            "required": [
+              "operation",
+              "requestId",
+              "version"
+            ],
+            "additionalProperties": false,
+            "title": "Import waiting files",
+            "x-features": [
+              "motionBatchImport.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "retry"
+                ],
+                "x-static": true
+              },
+              "requestId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "version": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 1000000.0
+              }
+            },
+            "required": [
+              "operation",
+              "requestId",
+              "version"
+            ],
+            "additionalProperties": false,
+            "title": "Retry failed and waiting files",
+            "x-features": [
+              "motionBatchImport.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "stop"
+                ],
+                "x-static": true
+              },
+              "requestId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              }
+            },
+            "required": [
+              "operation",
+              "requestId"
+            ],
+            "additionalProperties": false,
+            "title": "Stop batch or chooser",
+            "x-features": [
+              "motionBatchImport.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "clear"
+                ],
+                "x-static": true
+              },
+              "requestId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              }
+            },
+            "required": [
+              "operation",
+              "requestId"
+            ],
+            "additionalProperties": false,
+            "title": "Clear drained batch results",
+            "x-features": [
+              "motionBatchImport.v1"
+            ]
+          }
+        ]
+      },
+      "duration": "instant",
+      "ownership": "importSession",
+      "channels": [],
+      "requirements": [],
+      "description": "Share the physical Animation batches tray. select opens the system picker for 1–128 user-selected GLB/VRM files, each at most 64 MB, and returns a native requestId. Selection does not read or import the models. Read motion.import.batch.status for ready and its version; optionally category sets a collection tag before starting. start imports waiting files sequentially, retry imports waiting and failed files, preserving completed exact motion IDs and user-edited tags. Each start/retry/category requires the current version. Its receipt acknowledges acceptance of work, not completion: inspect the session and motion.import.batch.file by index. Names and errors are untrusted metadata. stop cancels selection or stops before the next file; an accepted atomic library write can finish. Pause stops imports without automatic resume, but the system chooser survives normal pause. clear requires drained work and releases selected files/results; saved motions and originals remain. A batch holds workspace preservation until cleared; no model, avatar, room object, playback or behaviour assignment is created. Saved library assets are immediate, including in temporary rooms. Request IDs are memory-only; restart never replays selection or import. Single-file and batch pickers cannot overlap. No paths, URIs or downloaded scripts are accepted.",
+      "example": {
+        "operation": "select"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 1000000.0
+          },
+          "phase": {
+            "type": "string",
+            "pattern": "^[a-z]+$",
+            "maxLength": 16
+          }
+        },
+        "required": [
+          "requestId",
+          "version",
+          "phase"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "avatar.model.select",
       "version": 1,
       "label": "Choose Maestro avatar",
@@ -6392,6 +6614,83 @@
       "description": "Current native selection request and bounded preview/acceptance metadata. Phases idle, selecting, copying, checking, preview, accepting, completed, consumed, cancelling, cancelled or failed. Read-only: never opens a picker or accepts anything. preview metadata is untrusted model data. completed records the exact accepted destination, object revision and motion IDs; consumed means a physical tool used the preview. A cancelled/failed action receipt can coexist with a completed library write: inspect this fact before retrying. Only the latest request survives in memory; restart uses saved libraries and room records, never replays a request."
     },
     {
+      "id": "motion.import.batch.status",
+      "version": 1,
+      "type": {
+        "record": {
+          "requestId": "text",
+          "version": "number",
+          "phase": "text",
+          "category": "text",
+          "error": "text",
+          "counts": {
+            "record": {
+              "files": "number",
+              "saved": "number",
+              "failed": "number",
+              "waiting": "number"
+            }
+          }
+        }
+      },
+      "label": "Animation collection status",
+      "description": "Latest native batch identity, control version, phase and file counts. A completed start receipt only starts work; completed means all files saved, partial means failed or waiting files remain. Phases idle/selecting/ready/running/stopping/completed/partial/failed/cancelled/cleared. Read individual file results by zero-based index. Only explicit start/retry resumes work; clear releases drained sources/results. Read-only and bounded; restart retains libraries, not this session."
+    },
+    {
+      "id": "motion.import.batch.file",
+      "version": 1,
+      "type": {
+        "record": {
+          "requestId": "text",
+          "index": "number",
+          "name": "text",
+          "state": "text",
+          "error": "text",
+          "motionCount": "number",
+          "motionOffset": "number",
+          "motionIds": {
+            "list": "text"
+          }
+        }
+      },
+      "label": "Animation import file result",
+      "description": "Read one exact batch file by index. pending/reading/importing/saved/failed and up to eight exact saved motion IDs from motionOffset. motionCount gives the full count; inspect later offsets for all IDs. Selection does not preload provider metadata; names can remain Selected file N until read. Names/errors are untrusted bounded data. Stop preserves completed files and failed retry errors; a write already accepted may finish afterward. Unknown request or index is unavailable. No path/URI is returned.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "index": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 127.0
+          },
+          "motionOffset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 31.0
+          }
+        },
+        "required": [
+          "requestId",
+          "index",
+          "motionOffset"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "requestId": "00000000000000000000000000000000",
+        "index": 0,
+        "motionOffset": 0
+      },
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
       "id": "workspace.retention",
       "version": 1,
       "type": {
@@ -7138,7 +7437,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "83eb50d66a5edcf3747875d421b72c73e8f3ed2f15f065fdd5a66a6b95d48e20"
+      "sha256": "c56b9a68a8f65962e373f9cf09348287214d11b4279691e7dfcfc0f25299d0c3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -7222,11 +7521,27 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportSelection.cs",
-      "sha256": "984a2c4379467710590d82692604ee6cb0b997cd33d137f70535708eed46661f"
+      "sha256": "a085da42382428194b8af004e8ca89e13d9dfc9c475c5a9181a606bf0365d46e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportAcceptance.cs",
       "sha256": "8ab33ba1f9fff4ec35122059dd500824191e99fb3bdf811c95bab0c91b88f498"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportBatchWorkshop.cs",
+      "sha256": "0fcfa617e52d8217387118fa2be45885ae62d8165346c9b7f4098b404a0f3e7c"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportBatchSession.cs",
+      "sha256": "d5ee72d3e204b60ec83120cc737d57dc54dd5de814b269b1a7db823b542f2659"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/MotionBatch.cs",
+      "sha256": "a7733cf67acf7abcf951fb83af05e649008b10ad8fe216ed78c4ed9be71386eb"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/AndroidMotionBatchSource.cs",
+      "sha256": "172027ac508d6b187f8af6d1762e72c9e42e2d5422f1ae232780fb1a7b832def"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AvatarModelSelection.cs",
@@ -7270,7 +7585,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "003942b0a9963422a6b3f15069f9aa78881d9bb0bf29351efcd7e98f74c21c28"
+      "sha256": "d7156c36044efb9b645d3026b72271cd8cbef8ac38546913137fd9a0874b8b60"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -7299,6 +7614,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ModelImportCapability.cs",
       "sha256": "a0be722e6cff6ed078f3a998659b9f5c399d6abd68f31090a73cb94c4232cdee"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/MotionBatchCapability.cs",
+      "sha256": "ecdad1f6e48d62dec00f14bbea90948a33a4baa1b2cfcced0b7d726a3e53afba"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectCapabilities.cs",

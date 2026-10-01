@@ -12,12 +12,13 @@ posing now exposes start/rotate/save/finish/discard with native session IDs and
 pose versions, the same physical joint limits and imported retargeter, held-joint
 exclusion, failed-pose recovery and recording interoperation. Saved edits are
 durable outside temporary mode; temporary edits stay in the fork until Keep.
-No authoring operation starts playback. The catalog contains 45 actions, 10
-events and 27 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
+No authoring operation starts playback. The catalog contains 46 actions, 10
+events and 29 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
 Single-file GLB/VRM selection, preview and acceptance now share the physical
 import path with book fields and agent/program calls. See QUEST_MODEL_IMPORT.md.
-Shared batch imports and the remaining runtime, provider, device and Store
-acceptance gates remain unfinished; the complete v1 goal remains active.
+Animation collections now share native selection, versioned start/retry/tag controls,
+Stop/Clear and bounded per-file motion results. See QUEST_MOTION_BATCH_IMPORT.md.
+The remaining runtime, provider, device and Store acceptance gates remain unfinished; the complete v1 goal remains active.
 
 Current recovery implementation supports retained candidates, an external backup,
 and an explicitly requested fresh workspace through the same shared book/agent
@@ -33,6 +34,27 @@ and tracked operation roots remain protected. Private recovery export remains
 separate; a full store with unreadable selection still requires recovery/repair.
 PR #248 records the current verified commit and package. Earlier entries
 below are historical evidence, not current test totals or release acceptance.
+
+PC shared-animation-batch increment (2026-10-01): physical batch tools, generated
+book fields and agent/program requests use the existing sequential motion importer
+through native session IDs and control versions. Selecting files reads no provider
+streams. Start/retry receipts acknowledge work; separate status and indexed file
+facts expose partial results and pages of eight exact motion IDs. Explicit Stop,
+resume/retry and Clear preserve completed files and user-edited metadata. Pending
+sources hold workspace ownership; disable/destruction waits for reads/writes to
+drain. All native chooser kinds now share admission through worker retirement.
+Seven native journeys include an actual 32-distinct-clip export. PC checks pass
+1,573 web tests across 178 files, 30 focused final-capture checks, 378 EditMode and
+299 PlayMode tests (three optional private-model skips), and 61 Android tests.
+The Chrome walkthrough uses native-capture replay, not provider/headset execution;
+status and file screenshots were inspected. The full helper exited successfully;
+181 runtime and 84 test C# sources, 24 fixtures plus metadata, and 113 packaged web
+files match. ARM64/v2 signature-verified checkpoint:
+`MaestroQuest-motion-batches-CA33D34F.apk`, SHA-256
+`CA33D34F051AF3EAE79C69CA760E4920B3CA9DF0E89C3F17AD0C9EE022C182D6`.
+It remains uninstalled. Next, bound the single-file model-import result fact for
+maximum-size embedded motion lists too; its existing full list can exceed the
+shared value budget. Other runtime, provider/device and Store gates remain open.
 
 PC shared-model-import increment (2026-10-01): physical tools, generated book
 fields and agent/program calls share one native file-choice/preview/acceptance
