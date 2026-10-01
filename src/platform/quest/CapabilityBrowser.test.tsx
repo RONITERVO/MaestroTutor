@@ -619,3 +619,21 @@ it('reads exact imported motion pages from generated fact inputs without reusing
  }
  act(()=>client.cancel());
 });
+
+import nativeController from '../../../test-fixtures/browser/controllerConfiguration.json';
+it('edits independent sticks and binds a saved program through generated controller fields',async()=>{
+ const {client,screen,receive}=setup(true,['controllerConfiguration.v1','execution.v1','actionResults.v1']);
+ await receive(undefined,false,{execution:{...nativeController.movement,selected:null,running:[],outcomes:[],nextRunId:nativeController.movement.selected.id} as RoomAgentState['execution']});
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:/^Search$/}));const definition=capabilityDefinition('controller.configure')!;
+ await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Controller definition'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Controller definition'});fireEvent.click(screen.getByText('Edit action fields'));
+ fireEvent.change(screen.getByLabelText('Controller settings'),{target:{value:'1'}});
+ for(const key of ['configurationId','deadZone','userSpeed','userStick'] as const)fireEvent.change(screen.getByLabelText('Action inputs '+key),{target:{value:nativeController.movement.selected.call.arguments[key]}});
+ expect(screen.queryByLabelText('Action inputs programId')).toBeNull();fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
+ expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:nativeController.movement.selected.call,runId:nativeController.movement.selected.id}});
+ await receive(undefined,false,{execution:nativeController.movement as RoomAgentState['execution']});fireEvent.change(screen.getByLabelText('Controller settings'),{target:{value:'3'}});
+ for(const key of ['configurationId','button','programId'] as const)fireEvent.change(screen.getByLabelText('Action inputs '+key),{target:{value:nativeController.button.selected.call.arguments[key]}});
+ expect(screen.queryByLabelText('Action inputs userSpeed')).toBeNull();fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
+ expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:nativeController.button.selected.call,runId:nativeController.button.selected.id}});
+ await receive(undefined,false,{execution:nativeController.button as RoomAgentState['execution']});expect(screen.getByLabelText('Action result').textContent).toContain(nativeController.after.configurationId);act(()=>client.cancel());
+});

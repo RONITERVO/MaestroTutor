@@ -12,12 +12,14 @@ posing now exposes start/rotate/save/finish/discard with native session IDs and
 pose versions, the same physical joint limits and imported retargeter, held-joint
 exclusion, failed-pose recovery and recording interoperation. Saved edits are
 durable outside temporary mode; temporary edits stay in the fork until Keep.
-No authoring operation starts playback. The catalog contains 46 actions, 10
-events and 30 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
+No authoring operation starts playback. The catalog contains 47 actions, 10
+events and 31 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
 Single-file GLB/VRM selection, preview and acceptance now share the physical
 import path with book fields and agent/program calls. See QUEST_MODEL_IMPORT.md.
 Animation collections now share native selection, versioned start/retry/tag controls,
 Stop/Clear and bounded per-file motion results. See QUEST_MOTION_BATCH_IMPORT.md.
+Controller stick preferences and programmable buttons now share the native catalog
+and physical save path. See QUEST_CONTROLLER_CONFIGURATION.md.
 The remaining runtime, provider, device and Store acceptance gates remain unfinished; the complete v1 goal remains active.
 
 Current recovery implementation supports retained candidates, an external backup,
@@ -34,6 +36,30 @@ and tracked operation roots remain protected. Private recovery export remains
 separate; a full store with unreadable selection still requires recovery/repair.
 PR #248 records the current verified commit and package. Earlier entries
 below are historical evidence, not current test totals or release acceptance.
+
+PC shared-controller-configuration increment (2026-10-01): generated book fields
+and agent/program calls now edit the physical movement tray's preferences through
+`controller.configure`. Native configuration IDs rotate only after accepted saves
+and on a new runtime; stale edits and duplicate receipts cannot reapply settings.
+Independent sticks, speed/dead zone and exact saved-program button assignments
+preserve unrelated values. Reserved inputs remain unavailable. Input gates require
+neutral/release after saving, and later button presses use the existing scheduler.
+Preferences remain immediately saved outside the temporary-room Undo boundary;
+workspace preservation blocks edits, while activity review still allows manual
+configuration without starting movement. Unavailable storage is explicit in facts.
+Seven native journeys cover persistence/restart, failure/retry, actual button
+playback, stale/reserved inputs, all four program bindings and workspace holds.
+PC validation passes 386 EditMode and 310 PlayMode tests (three optional private-model
+skips), 1,582 web tests across 180 files, 33 focused capture/control checks and 61
+Android tests. Browser screenshots were inspected; acknowledgements replay actual
+native captures, not live headset/provider execution. The full build helper exited
+zero. All 184 runtime and 87 test C# sources, 24 fixtures plus metadata and 113
+packaged web files match. ARM64/v2 verified checkpoint:
+`MaestroQuest-controller-settings-2DF18A19.apk`, SHA-256
+`2DF18A191785EEF2F2D7C3B4ADC8E857F997A1C0711CB22CFD3DA1359BE8B2DB`.
+It remains uninstalled. Shared movement enable/disable and MR/Virtual view selection
+are the next controller parity gap; broader runtime, provider/device and Store
+acceptance remain open.
 
 PC bounded-import-readback increment (2026-10-01): a maximum-size single-file
 motion import now reports a count in its summary and exposes all exact IDs through

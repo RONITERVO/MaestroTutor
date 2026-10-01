@@ -18,7 +18,7 @@ using UnityEngine.XR.Interaction.Toolkit.Inputs.Readers;
 
 namespace Maestro.Quest.Tests
 {
-    public sealed class RoomRulesTests
+    public sealed partial class RoomRulesTests
     {
         GameObject root, leftAnchor, rightAnchor;
         XRInteractionManager manager;

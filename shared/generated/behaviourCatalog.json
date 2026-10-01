@@ -2635,6 +2635,343 @@
       }
     },
     {
+      "id": "controller.configure",
+      "version": 1,
+      "label": "Configure controller bindings",
+      "input": {
+        "type": "object",
+        "title": "Controller settings",
+        "x-discriminators": [
+          "operation"
+        ],
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "movement.right"
+                ],
+                "x-static": true
+              },
+              "configurationId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "userStick": {
+                "type": "string",
+                "enum": [
+                  "left",
+                  "none"
+                ]
+              },
+              "deadZone": {
+                "type": "number",
+                "minimum": 0.1,
+                "maximum": 0.4
+              },
+              "userSpeed": {
+                "type": "number",
+                "minimum": 0.2,
+                "maximum": 1.2
+              }
+            },
+            "required": [
+              "operation",
+              "configurationId",
+              "userStick",
+              "deadZone",
+              "userSpeed"
+            ],
+            "additionalProperties": false,
+            "title": "Maestro on right stick",
+            "x-features": [
+              "controllerConfiguration.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "movement.left"
+                ],
+                "x-static": true
+              },
+              "configurationId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "userStick": {
+                "type": "string",
+                "enum": [
+                  "right",
+                  "none"
+                ]
+              },
+              "deadZone": {
+                "type": "number",
+                "minimum": 0.1,
+                "maximum": 0.4
+              },
+              "userSpeed": {
+                "type": "number",
+                "minimum": 0.2,
+                "maximum": 1.2
+              }
+            },
+            "required": [
+              "operation",
+              "configurationId",
+              "userStick",
+              "deadZone",
+              "userSpeed"
+            ],
+            "additionalProperties": false,
+            "title": "Maestro on left stick",
+            "x-features": [
+              "controllerConfiguration.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "movement.none"
+                ],
+                "x-static": true
+              },
+              "configurationId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "userStick": {
+                "type": "string",
+                "enum": [
+                  "left",
+                  "right",
+                  "none"
+                ]
+              },
+              "deadZone": {
+                "type": "number",
+                "minimum": 0.1,
+                "maximum": 0.4
+              },
+              "userSpeed": {
+                "type": "number",
+                "minimum": 0.2,
+                "maximum": 1.2
+              }
+            },
+            "required": [
+              "operation",
+              "configurationId",
+              "userStick",
+              "deadZone",
+              "userSpeed"
+            ],
+            "additionalProperties": false,
+            "title": "Maestro stick disabled",
+            "x-features": [
+              "controllerConfiguration.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "button.program"
+                ],
+                "x-static": true
+              },
+              "configurationId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "button": {
+                "type": "string",
+                "enum": [
+                  "x",
+                  "a",
+                  "leftStickClick",
+                  "rightStickClick"
+                ]
+              },
+              "programId": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32
+              }
+            },
+            "required": [
+              "operation",
+              "configurationId",
+              "button",
+              "programId"
+            ],
+            "additionalProperties": false,
+            "title": "Bind a saved program",
+            "x-features": [
+              "controllerConfiguration.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "button.none"
+                ],
+                "x-static": true
+              },
+              "configurationId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "button": {
+                "type": "string",
+                "enum": [
+                  "x",
+                  "a",
+                  "leftStickClick",
+                  "rightStickClick"
+                ]
+              }
+            },
+            "required": [
+              "operation",
+              "configurationId",
+              "button"
+            ],
+            "additionalProperties": false,
+            "title": "Clear a button",
+            "x-features": [
+              "controllerConfiguration.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "button.snapLeft"
+                ],
+                "x-static": true
+              },
+              "configurationId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "button": {
+                "type": "string",
+                "enum": [
+                  "x",
+                  "a",
+                  "leftStickClick",
+                  "rightStickClick"
+                ]
+              }
+            },
+            "required": [
+              "operation",
+              "configurationId",
+              "button"
+            ],
+            "additionalProperties": false,
+            "title": "Bind left snap turn",
+            "x-features": [
+              "controllerConfiguration.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "button.snapRight"
+                ],
+                "x-static": true
+              },
+              "configurationId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "button": {
+                "type": "string",
+                "enum": [
+                  "x",
+                  "a",
+                  "leftStickClick",
+                  "rightStickClick"
+                ]
+              }
+            },
+            "required": [
+              "operation",
+              "configurationId",
+              "button"
+            ],
+            "additionalProperties": false,
+            "title": "Bind right snap turn",
+            "x-features": [
+              "controllerConfiguration.v1"
+            ]
+          }
+        ]
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [
+        "controls.available",
+        "controls.configuration.current",
+        "storage.writable"
+      ],
+      "description": "Edit the same saved controller preferences as the physical movement tray. Read controller.settings and supply its exact configurationId; every successful manual/shared save issues a new ID, as does a new room runtime. movement changes the two independent stick bindings, user's speed and dead zone together, preserving buttons. button changes only one of X, A or the two stick clicks, preserving other settings. program binds an exact existing readable saved program ID, never runs it; missing references are visible and can be replaced or cleared. B/Y, system controls and palm Recall are reserved and cannot be reassigned. A successful save resets input gates: sticks/buttons must return to neutral before acting. It never enables movement, enters Virtual view or starts a program. Existing enabled modes remain enabled unless their stick becomes none. Preferences save immediately even in temporary rooms; room Undo/Discard does not revert controller settings. To revert, read the new identity and explicitly restore the prior values. Duplicate receipts do not apply again. Saved bindings survive restart but movement remains opt-in; a receipt ID is not a current configuration ID.",
+      "example": {
+        "operation": "movement.right",
+        "configurationId": "00000000000000000000000000000000",
+        "userStick": "left",
+        "deadZone": 0.2,
+        "userSpeed": 0.65
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "configurationId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "saved": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "configurationId",
+          "saved"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "workspace.retention.inspect",
       "version": 1,
       "label": "Inspect retained workspaces",
@@ -6282,6 +6619,39 @@
       ]
     },
     {
+      "id": "controller.settings",
+      "version": 1,
+      "type": {
+        "record": {
+          "configurationId": "text",
+          "storageReady": "boolean",
+          "avatarStick": "text",
+          "userStick": "text",
+          "deadZone": "number",
+          "userSpeed": "number",
+          "buttons": {
+            "list": {
+              "record": {
+                "button": "text",
+                "command": "text",
+                "programId": "text",
+                "available": "boolean"
+              }
+            }
+          },
+          "live": {
+            "record": {
+              "avatarEnabled": "boolean",
+              "userEnabled": "boolean",
+              "virtualView": "boolean"
+            }
+          }
+        }
+      },
+      "label": "Controller settings and bindings",
+      "description": "Accepted stick preferences and all four configurable buttons, plus live opt-in flags. storageReady false means the preserved preferences file is unavailable for editing; displayed preferences can be startup fallback defaults. Other runtime holds may also temporarily prevent writes. configurationId binds an edit to this exact accepted configuration/runtime; saves rotate it, rejected writes keep it, and restart issues a new ID. Read again before each edit. programId is an exact saved program ID; available reports readable program presence, not that all targets/assets are currently ready. Snap turns require Virtual view and user movement enabled; this read never enables anything. Settings persist immediately even during temporary room mode. System buttons, B/Y and palm Recall stay reserved."
+    },
+    {
       "id": "animation.authored",
       "version": 1,
       "type": {
@@ -7479,7 +7849,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "0b839c7cbf941114672e41cf1db4e1e93faaa3e3cc207442cbf47f05b4ebf0ed"
+      "sha256": "6c237bcab8822c60d029142bc49d029bf49862b4a3125afd14a3757ba16b8ac0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -7570,6 +7940,18 @@
       "sha256": "295da74cb1543ccf38b2e7fff9f4b468bd81bf3c016dc2c0d0291b4e67debad9"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ControllerPreferences.cs",
+      "sha256": "98cba76c895db2fcc68d2c4fcde875f23a53b70fe4aafa10b0273a437c04ff8e"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MovementControls.cs",
+      "sha256": "d6c2c02250271248cc4edad523ab86cf478ab1f28a552d7341fd0ad023320ac2"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MovementConfiguration.cs",
+      "sha256": "77880b4fcc21d2ff29fc978112e541a070a19ace1fd70ff49afa667e5606c5ae"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportAcceptance.cs",
       "sha256": "8ab33ba1f9fff4ec35122059dd500824191e99fb3bdf811c95bab0c91b88f498"
     },
@@ -7631,7 +8013,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "d7156c36044efb9b645d3026b72271cd8cbef8ac38546913137fd9a0874b8b60"
+      "sha256": "5ead66e1c1646d93c0260d90b8ec28c0b0d5ffd80a5426784e18f67bb948240c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -7640,6 +8022,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityStepAdapter.cs",
       "sha256": "8f4844cf3b0e8205960515ddb500701dcbea69827d3c9390bd647933bd599d5c"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ControllerConfigurationCapability.cs",
+      "sha256": "f06cd3db40f0ebd87d67f268d53660f30c2afdd5c05de6ba2b23ca587adbd39e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreateObjectCapability.cs",

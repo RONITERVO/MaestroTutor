@@ -38,8 +38,10 @@ separate explicit room action. No per-frame model movement is involved.
 
 Physics requires a loaded, aligned scan and active application. Losing focus or
 alignment pauses simulation and returning never restarts it automatically. Scan,
-room access prompts, surface placement, user locomotion/bindings, avatar assignment
-and animation library selection remain manual. Existing bounded visual rules can
+room access prompts, surface placement and user locomotion/view activation remain
+manual. Controller preference bindings now share the native catalog; see
+QUEST_CONTROLLER_CONFIGURATION.md. Avatar and model selection use their later
+shared capabilities; see QUEST_AVATAR_SELECTION.md and QUEST_MODEL_IMPORT.md. Existing bounded visual rules can
 still invoke their supported motion actions through the original scheduler.
 
 The wire observation uses live object positions plus held/simulating state; saved

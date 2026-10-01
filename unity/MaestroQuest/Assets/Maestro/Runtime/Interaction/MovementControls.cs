@@ -11,7 +11,7 @@ using UnityEngine;
 namespace Maestro.Quest.Interaction
 {
     [DefaultExecutionOrder(-150)]
-    public sealed class MovementControls : MonoBehaviour
+    public sealed partial class MovementControls : MonoBehaviour
     {
         const string Owner="controller movement";
         RoomInteraction room;
@@ -49,10 +49,7 @@ namespace Maestro.Quest.Interaction
         }
         public bool Apply(ControllerPreferences next)
         {
-            using var write=editor.WriteGate.TryWrite(out var blocked);if(write==null){Say(blocked);return false;}
-            if (next == null || !next.Validate()) { Say("Each movement needs its own stick; check the control values"); return false; }
-            if (!storage.Save(next,out var error)) { Say(error); return false; }
-            preferences=next.Copy(); if (preferences.avatarStick == MovementStick.None) AvatarEnabled=false; if (preferences.userStick == MovementStick.None) UserEnabled=false; Interrupt(); Status="Controls saved — release sticks and buttons before using them"; Changed?.Invoke(); return true;
+            if(TryApplyPreferences(next,out var error))return true;Say(error);return false;
         }
         public void CycleStick(bool user)
         {
