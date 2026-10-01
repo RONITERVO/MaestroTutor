@@ -6,10 +6,13 @@ fields copied from the action draft, action fields copied from fact paths, and
 concurrency guards. This metadata reaches both the book and agent through the same
 catalog. No action-specific React map, extra tool or new catalog operation is used.
 
-Nine actions currently declare it (18 resolved variants): object copying, object physics settings,
+Eleven actions currently declare it (21 resolved variants): object copying, drawing edits,
+retained-stroke resolution, object physics settings,
 Maestro distance/speed, walking-animation selection, controller configuration,
 controller live modes, physics Start/Pause, room setup/visibility, and surface
-placement. Surface placement loads only the room identity; target and ray choice
+placement. Drawing edits load only the exact target revision; chosen point edits
+and thickness stay explicit. Retained-stroke resolution loads only its native
+session ID and preserves the chosen retry/discard operation. Surface placement loads only the room identity; target and ray choice
 remain explicit. Room setup loads its native state identity; cancelling the current setup also loads the
 request identity. Neither read opens permission or scanning. Walking selection reads only the
 revision: it never replaces the chosen source, model, clip index or exact motion ID.

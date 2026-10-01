@@ -6077,6 +6077,151 @@
               "actionResults.v1",
               "objectCopy.v1"
             ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "pattern": "^.{0,80}$",
+                "maxLength": 80
+              },
+              "x": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "y": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "z": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "scale": {
+                "type": "number",
+                "minimum": 0.1,
+                "maximum": 4.0
+              },
+              "red": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 1.0
+              },
+              "green": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 1.0
+              },
+              "blue": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 1.0
+              },
+              "radius": {
+                "type": "number",
+                "minimum": 0.001,
+                "maximum": 0.02
+              },
+              "points": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "number",
+                      "minimum": -10.0,
+                      "maximum": 10.0
+                    },
+                    "y": {
+                      "type": "number",
+                      "minimum": -10.0,
+                      "maximum": 10.0
+                    },
+                    "z": {
+                      "type": "number",
+                      "minimum": -10.0,
+                      "maximum": 10.0
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y",
+                    "z"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 2,
+                "maxItems": 64
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "drawing"
+                ],
+                "x-static": true
+              }
+            },
+            "required": [
+              "name",
+              "x",
+              "y",
+              "z",
+              "scale",
+              "red",
+              "green",
+              "blue",
+              "radius",
+              "points",
+              "kind"
+            ],
+            "additionalProperties": false,
+            "title": "Draw a 3D stroke",
+            "description": "Create one editable 3D pencil stroke through the physical pencil's saved creation path. points are ordered object-local metres, within 10 metres of its origin; x/y/z place that origin in room metres, and scale uniformly scales the stroke and radius. Supply 2–64 points per call, radius .001–.02 metres, and RGB colour. Use object.drawing.edit to grow or reshape it up to the native 2048-point stroke limit; all saved strokes together stay within 32768 points. Every intermediate shape must remain visible and valid. Return the exact new objectId only after saving with one Undo, or locally in a temporary room until Keep. Selection, pencil mode and other actors are unchanged. No automatic animation or physics start. Drawings are fixed initially; existing physics controls can change them. Collision uses the existing bounded approximate shape, not a flexible rope or a per-segment surface. Replay cannot create another stroke. No numeric action adapter is required.",
+            "examples": [
+              {
+                "name": "Pencil arch",
+                "x": 0.3,
+                "y": 1.3,
+                "z": 0.65,
+                "scale": 1,
+                "red": 0.2,
+                "green": 0.6,
+                "blue": 0.9,
+                "radius": 0.003,
+                "points": [
+                  {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  {
+                    "x": 0.08,
+                    "y": 0.14,
+                    "z": 0
+                  },
+                  {
+                    "x": 0.16,
+                    "y": 0,
+                    "z": 0
+                  }
+                ],
+                "kind": "drawing"
+              }
+            ],
+            "x-channels": [],
+            "x-requirements": [
+              "room.capacity",
+              "drawing.valid",
+              "storage.writable"
+            ],
+            "x-features": [
+              "actionResults.v1",
+              "drawingEdits.v1"
+            ]
           }
         ],
         "x-discriminators": [
@@ -6093,7 +6238,7 @@
         "storage.writable",
         "kind.valid"
       ],
-      "description": "Choose a creation kind: a physical shape, an editable recipe with optional animation tracks, or a copy of an existing creation. Inspect the selected kind's example, fields and requirements. All kinds return the exact new objectId. Outside temporary play it is saved with one Undo; inside temporary play it stays unsaved until room.session keep completes. Stop leaves created objects in the room. Imported models still use the existing asset import workflow.",
+      "description": "Choose a creation kind: a physical shape, an editable recipe with optional animation tracks, a copy of an existing creation, or an editable pencil stroke. Inspect the selected kind's example, fields and requirements. All kinds return the exact new objectId. Outside temporary play it is saved with one Undo; inside temporary play it stays unsaved until room.session keep completes. Stop leaves created objects in the room. Imported models still use the existing asset import workflow.",
       "example": {
         "shape": "ball",
         "name": "Ball",
@@ -6118,6 +6263,313 @@
         },
         "required": [
           "objectId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "object.drawing.edit",
+      "version": 1,
+      "label": "Edit a pencil stroke",
+      "input": {
+        "type": "object",
+        "title": "Drawing edit",
+        "x-discriminators": [
+          "operation"
+        ],
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "splice"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 1000000.0
+              },
+              "index": {
+                "type": "integer",
+                "minimum": 0.0,
+                "maximum": 2048.0
+              },
+              "deleteCount": {
+                "type": "integer",
+                "minimum": 0.0,
+                "maximum": 2048.0
+              },
+              "points": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "number",
+                      "minimum": -10.0,
+                      "maximum": 10.0
+                    },
+                    "y": {
+                      "type": "number",
+                      "minimum": -10.0,
+                      "maximum": 10.0
+                    },
+                    "z": {
+                      "type": "number",
+                      "minimum": -10.0,
+                      "maximum": 10.0
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y",
+                    "z"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 0,
+                "maxItems": 64
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "revision",
+              "index",
+              "deleteCount",
+              "points"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "object.drawing",
+              "version": 1,
+              "arguments": {
+                "target": "target"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
+            "title": "Insert, replace or remove points",
+            "x-features": [
+              "drawingEdits.v1",
+              "actionResults.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "radius"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 1000000.0
+              },
+              "radius": {
+                "type": "number",
+                "minimum": 0.001,
+                "maximum": 0.02
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "revision",
+              "radius"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "object.drawing",
+              "version": 1,
+              "arguments": {
+                "target": "target"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
+            "title": "Set stroke thickness",
+            "x-features": [
+              "drawingEdits.v1",
+              "actionResults.v1"
+            ]
+          }
+        ]
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.drawing",
+        "target.unheld",
+        "source.revision.current",
+        "authoring.inactive",
+        "storage.writable"
+      ],
+      "description": "Edit saved stroke points or thickness at the exact revision read from object.drawing. splice removes deleteCount points at zero-based index then inserts 0–64 points there; index equal to the current count appends, and deleteCount=0 inserts. An empty insertion deletes a range. Use several explicit edits to reach all 2048 native points; each intermediate result must retain at least two points and a visible stroke, with points within 10 local metres. radius changes only local stroke thickness. Position, rotation, scale, colour, physics settings and recorded motion remain; point coordinates use the object's local axes, not room/world coordinates. The visible mesh, selection and approximate collision shape update together. Each successful call saves one Undo, or changes the temporary fork until Keep, and returns the exact new revision/count/radius. Failure preserves geometry and saved state. Reads use object.drawing.points in pages of eight. Held/owned/actively authored targets are refused. It never starts drawing input, playback or physics; unrelated actors continue. Stop after completion does not undo it; receipt replay cannot edit twice.",
+      "example": {
+        "operation": "radius",
+        "target": "00000000000000000000000000000000",
+        "revision": 1,
+        "radius": 0.005
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 1000000.0
+          },
+          "points": {
+            "type": "integer",
+            "minimum": 2.0,
+            "maximum": 2048.0
+          },
+          "radius": {
+            "type": "number",
+            "minimum": 0.001,
+            "maximum": 0.02
+          }
+        },
+        "required": [
+          "target",
+          "revision",
+          "points",
+          "radius"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "object.drawing.resolve",
+      "version": 1,
+      "label": "Retry or discard an unsaved pencil stroke",
+      "input": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "enum": [
+              "retry",
+              "discard"
+            ]
+          },
+          "sessionId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "operation",
+          "sessionId"
+        ],
+        "additionalProperties": false,
+        "x-current": {
+          "fact": "object.drawing.capture",
+          "version": 1,
+          "arguments": {},
+          "fields": {
+            "sessionId": [
+              "sessionId"
+            ]
+          },
+          "guards": [
+            "sessionId"
+          ]
+        },
+        "x-features": [
+          "drawingEdits.v1",
+          "actionResults.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [
+        "drawing.retained",
+        "drawing.session.current"
+      ],
+      "description": "Resolve the same frozen failed physical-pencil draft as the tray's Retry stroke and Discard stroke controls. Read object.drawing.capture and supply its current sessionId. Retry creates exactly that stroke through normal saved creation and Undo, or locally in its original temporary room until Keep; failure retains the points and error for another explicit attempt. Discard removes only the unsaved in-memory draft, never a saved selected object. No live stroke is interrupted, no drawing mode is enabled and no automatic retry occurs. The retained draft blocks workspace/temporary-room changes until resolved. App/room destruction loses unsaved memory; it is not a crash recovery archive. Saved output acknowledges an object, while discarded output has empty objectId. A completed receipt is historical and cannot save/discard a later draft. Neither path starts playback or physics.",
+      "example": {
+        "operation": "retry",
+        "sessionId": "00000000000000000000000000000000"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "phase": {
+            "type": "string",
+            "enum": [
+              "saved",
+              "discarded"
+            ]
+          },
+          "objectId": {
+            "type": "string",
+            "pattern": "^(|[a-f0-9]{32})$",
+            "maxLength": 32
+          },
+          "points": {
+            "type": "integer",
+            "minimum": 2.0,
+            "maximum": 2048.0
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "sessionId",
+          "phase",
+          "objectId",
+          "points",
+          "temporary"
         ],
         "additionalProperties": false
       }
@@ -7890,6 +8342,113 @@
       ]
     },
     {
+      "id": "object.drawing",
+      "version": 1,
+      "type": {
+        "record": {
+          "target": "text",
+          "revision": "number",
+          "points": "number",
+          "radius": "number"
+        }
+      },
+      "label": "Saved pencil stroke",
+      "description": "Current saved stroke revision, count and object-local radius; reads the temporary fork when active. Does not sample the live pencil or alter geometry. Missing/non-drawing targets are unavailable. Use the exact revision for edits and paged point reads.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
+      "id": "object.drawing.points",
+      "version": 1,
+      "type": {
+        "record": {
+          "revision": "number",
+          "offset": "number",
+          "total": "number",
+          "points": {
+            "list": {
+              "record": {
+                "x": "number",
+                "y": "number",
+                "z": "number"
+              }
+            }
+          }
+        }
+      },
+      "label": "Saved stroke point page",
+      "description": "Read at most eight exact object-local points at offset, with the current saved revision. Total is the complete stroke count. Offset equal to total returns an empty page; a later offset, stale revision or missing/non-drawing target is unavailable. No simplification, coordinate conversion or ownership is implied.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 1000000.0
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 2048.0
+          }
+        },
+        "required": [
+          "target",
+          "revision",
+          "offset"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000",
+        "revision": 1,
+        "offset": 0
+      },
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
+      "id": "object.drawing.capture",
+      "version": 1,
+      "type": {
+        "record": {
+          "sessionId": "text",
+          "phase": "text",
+          "points": "number",
+          "temporary": "boolean",
+          "error": "text"
+        }
+      },
+      "label": "Physical pencil draft",
+      "description": "Live pencil phase (idle, drawing, unsaved), point count, temporary-room flag and bounded error. Unsaved retains a frozen failed stroke in memory and requires explicit Retry or Discard with this exact identity. Reads do not capture geometry or save it. Completed receipts and a later draft have different identities."
+    },
+    {
       "id": "object.position",
       "version": 1,
       "type": {
@@ -9360,7 +9919,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "29e6a6f6e68419ab351660e50457c361c05dc616d30cc94fed29660d2690d231"
+      "sha256": "79a86afdff114c493bd253706ebe70ab219303a6d0311e5e880174b75f7bf3d5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -9432,11 +9991,31 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "2afca65b38740aba4676c73ff059df73729c0228467c5468d3644848961235f7"
+      "sha256": "3a39e03b7503fa698c568de669cfcfefa76575cca46c8483090d469a0dafb670"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectCopy.cs",
       "sha256": "aa4ebc8616422ccd86af9e8e90216cba35c8740c4cf9272f9c36f6785566c32d"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDrawingEdits.cs",
+      "sha256": "643a28cd4f7df0510ef1c7cce3331d63a920e63d64f08673ed605618813cbc51"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
+      "sha256": "63b7859aad58529e3f1ebfca564054de8f3e8da247fde85ac147ed4d07a8281b"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedDrawing.cs",
+      "sha256": "503ccfa43be3d4b348c8787f7f61ccc2f9dd2ddcc3c04cd58b104b850e2d9b52"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SpatialDrawing.cs",
+      "sha256": "beda025d362a47bff103236f7467cc6df08af1ba471aedc3ad6c70ae168a9d24"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedRoomObject.cs",
+      "sha256": "c9bed99034fd114545dcb40c6dcf143928ff44d7ed18ea64ad6e3ab9d25e52ad"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectSettings.cs",
@@ -9560,7 +10139,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "683d3846e98bb56ad635e8772c48fecdad0f702b22b665be7417305b1f4e690a"
+      "sha256": "1d71805a028e3d9e236e426e50357964e382ea8ca86a7f3d8cab3d5e7367490e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -9584,7 +10163,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreateObjectCapability.cs",
-      "sha256": "c537d6e20bc705db7f72227e2ece048a81990ea29dd97f1ccfc131b2fd6ef1f9"
+      "sha256": "5b01c8bf89d70329120d1a207d4a127179e13c3b2108079941aa5666559fc262"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingCapabilities.cs",
+      "sha256": "65ccebab86d4597633403e1ecccc3bef44704952a981294acd26cdbee2e4e063"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingResolveCapability.cs",
+      "sha256": "7791807556ce67a5e5ddafe4d3809cd792e79861e0d68c96eed10c8f1ee9c681"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/EmbeddedAnimationCapability.cs",

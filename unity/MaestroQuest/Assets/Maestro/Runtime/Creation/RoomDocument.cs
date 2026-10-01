@@ -95,16 +95,8 @@ namespace Maestro.Quest.Creation
                     return Fail("An object has an invalid paint color.", out error);
                 if (item.kind == RoomObjectKind.Drawing)
                 {
-                    if (item.points == null || item.points.Length < 2 || item.points.Length > MaximumStrokePoints || !float.IsFinite(item.radius) || item.radius < .001f || item.radius > .02f)
-                        return Fail("A drawing exceeds the supported size.", out error);
-                    pointCount += item.points.Length;
-                    bool hasLength = false;
-                    foreach (var point in item.points)
-                    {
-                        if (!Finite(point) || point.sqrMagnitude > 100) return Fail("A drawing contains invalid coordinates.", out error);
-                        hasLength |= (point - item.points[0]).sqrMagnitude > .000001f;
-                    }
-                    if (!hasLength) return Fail("A drawing must have a visible stroke.", out error);
+                    if(!ValidateDrawing(item.points,item.radius,out error))return false;
+                    pointCount+=item.points.Length;
                 }
                 else if (item.points != null && item.points.Length != 0) return Fail("Only drawings can contain stroke points.", out error);
                 if (!MotionFrame.ValidJoints(item.joints) || (item.kind != RoomObjectKind.Maestro && item.joints?.Length > 0) || (item.motion != null && !item.motion.Validate(item.kind)))
@@ -120,6 +112,14 @@ namespace Maestro.Quest.Creation
             return true;
         }
 
+        internal static bool ValidateDrawing(Vector3[] points,float radius,out string error)
+        {
+            error=null;
+            if(points==null||points.Length<2||points.Length>MaximumStrokePoints||!float.IsFinite(radius)||radius<.001f||radius>.02f)return Fail("A drawing exceeds the supported size.",out error);
+            bool hasLength=false;
+            foreach(var point in points){if(!Finite(point)||point.sqrMagnitude>100)return Fail("A drawing contains invalid coordinates.",out error);hasLength|=(point-points[0]).sqrMagnitude>.000001f;}
+            return hasLength||Fail("A drawing must have a visible stroke.",out error);
+        }
         static bool Unit(float value) => float.IsFinite(value) && value >= 0 && value <= 1;
         static bool Finite(Vector3 value) => float.IsFinite(value.x) && float.IsFinite(value.y) && float.IsFinite(value.z);
         static bool Fail(string message, out string error) { error = message; return false; }

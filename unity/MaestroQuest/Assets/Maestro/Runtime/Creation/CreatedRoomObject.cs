@@ -9,7 +9,7 @@ using UnityEngine;
 namespace Maestro.Quest.Creation
 {
     /// <summary>Owned geometry and paint for one user-created object.</summary>
-    public sealed class CreatedRoomObject : MonoBehaviour
+    public sealed partial class CreatedRoomObject : MonoBehaviour
     {
         Material pigment;
         RecipeObject recipe;
@@ -34,6 +34,7 @@ namespace Maestro.Quest.Creation
             else if (data.kind == RoomObjectKind.Drawing)
             {
                 drawing = gameObject.AddComponent<PencilMarks>(); drawing.SetPaths(new[] { data.points }, data.radius);
+                drawingPoints=(Vector3[])data.points.Clone();drawingRadius=data.radius;
                 bounds = GetComponent<MeshFilter>().sharedMesh.bounds;
                 var box = gameObject.AddComponent<BoxCollider>(); box.center = bounds.center;
                 box.size = bounds.size + Vector3.one * .018f; collider = box;

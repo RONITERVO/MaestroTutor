@@ -1,3 +1,4 @@
+import nativeDrawing from './drawingAuthoring.json';
 import nativeCopy from './objectCopy.json';
 import nativeSurface from './surfacePlacement.json';
 import nativeEnvironment from './roomEnvironment.json';
@@ -79,6 +80,14 @@ if(controllerModes){
  state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';
  state.execution={...JSON.parse(JSON.stringify(nativeModes.enable)),selected:null,running:[],outcomes:[],nextRunId:nativeModes.enable.selected.id};
  state.capabilities=[...state.capabilities??[],'catalogVocabulary.v1','controllerModes.v1','execution.v1','executionReceipts.v1','actionResults.v1'];
+}
+const drawingAuthoring=new URLSearchParams(location.search).has('drawingAuthoring');
+let drawingObservation=nativeDrawing.before;
+if(drawingAuthoring){
+ if(![nativeDrawing.creation,nativeDrawing.edit].every(validExecutionView))throw new Error('Invalid native drawing fixture');
+ state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';state.rules={...state.rules!,selected:null,running:[],outcomes:[]};
+ state.execution={...JSON.parse(JSON.stringify(nativeDrawing.creation)),selected:null,running:[],outcomes:[],nextRunId:nativeDrawing.creation.selected.id};
+ state.capabilities=[...state.capabilities??[],'catalogVocabulary.v1','drawingEdits.v1','structuredValues.v1','factQueries.v1','execution.v1','executionReceipts.v1','actionResults.v1'];
 }
 const objectCopy=new URLSearchParams(location.search).has('objectCopy');
 if(objectCopy){
@@ -236,6 +245,11 @@ setInterval(()=>{
      if(index<0){state.ok=false;state.status='Only captured native mode transitions can be replayed';}
      else{state.execution=copy(modeViews[index]) as RoomAgentState['execution'];modeObservation=modeViews[index].selected.output;state.status='Captured native mode result; this browser does not move a headset';}
     }
+    else if(drawingAuthoring&&input.operation==='start'){
+     const view=[nativeDrawing.creation,nativeDrawing.edit].find(v=>input.runId===v.selected.id&&input.call?.id===v.selected.call.id&&input.call.version===v.selected.call.version&&JSON.stringify(Object.entries(input.call.arguments).sort())===JSON.stringify(Object.entries(v.selected.call.arguments).sort()));
+     if(!view){state.ok=false;state.status='Only captured native drawing requests can be replayed';}
+     else{state.execution=copy(view) as RoomAgentState['execution'];drawingObservation=view===nativeDrawing.creation?nativeDrawing.before:nativeDrawing.after;if(!state.objects.some(o=>o.id===nativeDrawing.before.target))state.objects.push({id:nativeDrawing.before.target,objectRevision:drawingObservation.revision,name:'Pencil arch',kind:'Drawing',position:{x:.3,y:1.3,z:.65},scale:1,color:{r:.2,g:.6,b:.9,a:1},animated:false});else state.objects=state.objects.map(o=>o.id===nativeDrawing.before.target?{...o,objectRevision:drawingObservation.revision}:o);state.status='Captured native drawing result; no headset execution';}
+    }
     else if(objectCopy&&input.operation==='start'){
      const view=nativeCopy.receipt;
      if(input.runId!==view.selected.id||input.call?.id!==view.selected.call.id||input.call.version!==view.selected.call.version||JSON.stringify(Object.entries(input.call.arguments).sort())!==JSON.stringify(Object.entries(view.selected.call.arguments).sort())){state.ok=false;state.status='Only the captured native copy can be replayed';}
@@ -307,6 +321,12 @@ setInterval(()=>{
      const definition=behaviourFact('controller.mode')!;
      if(query.operation==='search')state.catalog={operation:'search',category:'facts',query:query.query,offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Found live control modes'};
      else state.catalog={operation:'inspect',category:'facts',capability:query.capability,version:1,definition:query.capability===definition.id?definition:null,available:query.capability===definition.id,value:query.capability===definition.id?copy(modeObservation):null,status:'Captured native control modes'};
+     continue;
+    }
+    if(drawingAuthoring&&query.operation!=='check'&&query.category==='facts'){
+     const definition=behaviourFact('object.drawing')!;
+     if(query.operation==='search')state.catalog={operation:'search',category:'facts',query:query.query,offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Found pencil stroke'};
+     else{const available=query.capability===definition.id&&query.arguments?.target===nativeDrawing.before.target&&state.objects.some(o=>o.id===nativeDrawing.before.target);state.catalog={operation:'inspect',category:'facts',capability:query.capability,version:1,arguments:query.arguments,definition:query.capability===definition.id?definition:null,available,value:available?copy(drawingObservation):null,status:'Captured native stroke'};}
      continue;
     }
     if(objectCopy&&query.operation!=='check'&&query.category==='facts'){

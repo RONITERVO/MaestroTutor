@@ -822,3 +822,28 @@ it('copies an existing drawing through generic creation fields and the native so
  fireEvent.click(screen.getByRole('button',{name:'Run action now'}));expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:nativeCopy.call,runId:view.selected.id}});
  await receive(undefined,false,{execution:view as RoomAgentState['execution']});expect(screen.getByLabelText('Action result').textContent).toContain(nativeCopy.copied.target);act(()=>client.cancel());
 });
+
+import nativeDrawing from '../../../test-fixtures/browser/drawingAuthoring.json';
+it('authors and reshapes a real captured stroke through generic typed fields',async()=>{
+ const {client,screen,receive,state}=setup(true,['drawingEdits.v1','execution.v1','actionResults.v1']);const create=capabilityDefinition('object.create')!,edit=capabilityDefinition('object.drawing.edit')!;
+ await receive(undefined,false,{execution:{...nativeDrawing.creation,selected:null,running:[],outcomes:[],nextRunId:nativeDrawing.creation.selected.id} as RoomAgentState['execution']});
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:'Search'}));await receive({operation:'search',query:'',offset:0,total:2,pageSize:6,entries:[create,edit].map(d=>({id:d.id,version:1,label:d.label})),status:'Drawing'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(create.label)}));await receive({operation:'inspect',capability:create.id,version:1,definition:create,status:'Creation'});fireEvent.click(screen.getByText('Edit action fields'));fireEvent.change(screen.getByLabelText('Creation kind'),{target:{value:'3'}});fireEvent.change(screen.getByLabelText('Action inputs name'),{target:{value:nativeDrawing.createCall.arguments.name}});
+ fireEvent.click(screen.getByRole('button',{name:'Run action now'}));expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:nativeDrawing.createCall,runId:nativeDrawing.creation.selected.id}});
+ await receive(undefined,false,{execution:nativeDrawing.creation as RoomAgentState['execution'],objects:[...state.objects,{id:nativeDrawing.before.target,objectRevision:nativeDrawing.before.revision,name:'Pencil arch',kind:'Drawing',position:{x:.3,y:1.3,z:.65},scale:1,color:{r:.2,g:.6,b:.9,a:1},animated:false}]});expect(screen.getByLabelText('Action result').textContent).toContain(nativeDrawing.before.target);
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(edit.label)}));await receive({operation:'inspect',capability:edit.id,version:1,definition:edit,status:'Stroke edit'});fireEvent.click(screen.getByText('Edit action fields'));fireEvent.change(screen.getByLabelText('Drawing edit'),{target:{value:'0'}});fireEvent.change(screen.getByLabelText('Action inputs target'),{target:{value:nativeDrawing.before.target}});await loadCurrentDraft(screen,receive,edit,nativeDrawing.before);
+ fireEvent.change(screen.getByLabelText('Action inputs index'),{target:{value:3}});fireEvent.click(screen.getByText('Action inputs points · 0 entries'));fireEvent.click(screen.getByRole('button',{name:'Add Action inputs points entry'}));for(const k of ['x','y','z'] as const)fireEvent.change(screen.getByLabelText('Action inputs points 1 '+k),{target:{value:nativeDrawing.editCall.arguments.points[0][k]}});
+ fireEvent.click(screen.getByRole('button',{name:'Run action now'}));expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:nativeDrawing.editCall,runId:nativeDrawing.edit.selected.id}});await receive(undefined,false,{execution:nativeDrawing.edit as RoomAgentState['execution']});expect(screen.getByLabelText('Action result').textContent).toContain('"points": 4');act(()=>client.cancel());
+});
+
+import nativeDrawingRecovery from '../../../test-fixtures/browser/drawingRecovery.json';
+it('retries a retained physical stroke through current native identity and shows its actual saved result',async()=>{
+ const {client,screen,receive}=setup(true,['drawingEdits.v1','execution.v1','actionResults.v1']);const definition=capabilityDefinition('object.drawing.resolve')!,view=nativeDrawingRecovery.receipt;
+ await receive(undefined,false,{execution:{...view,selected:null,running:[],outcomes:[],nextRunId:view.selected.id} as RoomAgentState['execution']});
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:'Search'}));await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Retained stroke'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Retained stroke'});fireEvent.click(screen.getByText('Edit action fields'));
+ expect((screen.getByRole('button',{name:'Run action now'}) as HTMLButtonElement).disabled).toBe(true);
+ await loadCurrentDraft(screen,receive,definition,nativeDrawingRecovery.before);expect((screen.getByLabelText('Action inputs sessionId') as HTMLInputElement).readOnly).toBe(true);
+ fireEvent.click(screen.getByRole('button',{name:'Run action now'}));expect(client.snapshot().request?.commands).toEqual([{action:'execution',execution:{operation:'start',call:nativeDrawingRecovery.call,runId:view.selected.id}}]);
+ await receive(undefined,false,{execution:view as RoomAgentState['execution']});expect(JSON.parse(screen.getByLabelText('Action result').textContent!)).toEqual(view.selected.output);act(()=>client.cancel());
+});

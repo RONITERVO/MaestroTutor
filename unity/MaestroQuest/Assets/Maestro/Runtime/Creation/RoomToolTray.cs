@@ -13,7 +13,7 @@ namespace Maestro.Quest.Creation
         readonly List<Material> materials = new();
         RoomEditor editor;
         RoomInteraction room;
-        TextMesh status;
+        TextMesh status,pencilLabel,eraseLabel;
         Material pencilPaint;
         public void Build(RoomEditor editor, RoomInteraction room)
         {
@@ -31,6 +31,7 @@ namespace Maestro.Quest.Creation
                 Part(tool,primitives[i],Vector3.zero,primitives[i] == PrimitiveType.Cylinder ? new Vector3(.046f,.025f,.046f) : Vector3.one*.046f,teal);
             }
             var pencil = Tool(RoomTool.Pencil,new Vector3(.12f,.12f,-.04f),"Draw");
+            pencilLabel=pencil.GetComponentInChildren<TextMesh>();
             pencilPaint = Material(IllustratedMaterials.Ribbon);
             Part(pencil,PrimitiveType.Cylinder,new Vector3(0,.012f,0),new Vector3(.016f,.031f,.016f),pencilPaint);
             Part(pencil,PrimitiveType.Sphere,new Vector3(0,-.025f,0),Vector3.one*.012f,ink);
@@ -48,6 +49,7 @@ namespace Maestro.Quest.Creation
             for (int i = 0; i < bottom.Length; i++)
             {
                 var tool = Tool(bottom[i],new Vector3(-.24f+i*.12f,-.11f,-.035f),labels[i]);
+                if(bottom[i]==RoomTool.Erase)eraseLabel=tool.GetComponentInChildren<TextMesh>();
                 if (bottom[i] == RoomTool.Undo || bottom[i] == RoomTool.Redo) Arrow(tool,bottom[i] == RoomTool.Undo ? -1 : 1,teal);
                 else
                 {
@@ -76,9 +78,11 @@ namespace Maestro.Quest.Creation
 
         void Refresh()
         {
+            bool retained=editor.GetComponent<SpatialDrawing>()?.HasUnsavedStroke==true;pencilLabel.text=retained?"Retry stroke":"Draw";eraseLabel.text=retained?"Discard stroke":"Erase";
+            pencilLabel.GetComponentInParent<PhysicalRoomAction>().AccessibleName=pencilLabel.text;eraseLabel.GetComponentInParent<PhysicalRoomAction>().AccessibleName=eraseLabel.text;
             status.text = (editor.TemporaryRoom?"TEMPORARY | ":"SAVED ROOM | ")+editor.Status;
             if (status.text.Length > 70) status.text = status.text.Substring(0,70) + "…";
-            pencilPaint.color = editor.DrawingMode ? IllustratedMaterials.Hex("2B8D88") : IllustratedMaterials.Ribbon;
+            pencilPaint.color = retained ? IllustratedMaterials.Hex("D99B43") : editor.DrawingMode ? IllustratedMaterials.Hex("2B8D88") : IllustratedMaterials.Ribbon;
         }
         static TextMesh Label(Transform parent, Vector3 position, string text, float size)
         {

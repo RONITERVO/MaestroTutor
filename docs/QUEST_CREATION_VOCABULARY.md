@@ -3,7 +3,10 @@
 Development checkpoint, 2026-09-28. The public catalog now exposes one
 object.create action with primitive and recipe kinds, replacing two prototype
 creation IDs. The later copy kind shares Duplicate, exact source revisions and
-returned identities; see QUEST_OBJECT_COPY.md. The current total catalog count is
+returned identities; see QUEST_OBJECT_COPY.md. The drawing kind now shares the
+physical pencil geometry and save path, with typed local points, placement, scale,
+colour and radius. Shared splice/radius edits cover the full native stroke capacity;
+see QUEST_DRAWING_AUTHORING.md. The current total catalog count is
 tracked in QUEST_V1_PLAN.md. Existing imported-model workflows remain available separately; this
 change does not add model generation or bypass asset validation.
 

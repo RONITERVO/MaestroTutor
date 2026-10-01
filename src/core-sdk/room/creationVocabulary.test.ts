@@ -3,13 +3,14 @@
 import {readFileSync} from 'node:fs';
 import {expect,it} from 'vitest';
 import {capabilityDefinition,capabilityInput,capabilityResources,validateCapabilityArguments,type CapabilityInvocation} from '../../../shared/capabilities';
+import {boundedCapabilityCall} from '../../../shared/roomCatalog';
 import {invocationStep,stepInvocation} from './capabilitySteps';
 import {parseProgram,sequenceProgram} from './programs';
 import {newRuleStep} from './rules';
 const cases=JSON.parse(readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/creation-contract.json','utf8')) as {name:string;call:CapabilityInvocation;valid:boolean}[];
 it.each(cases)('shares the native creation contract for $name',entry=>{
  expect(validateCapabilityArguments(entry.call.id,entry.call.version,entry.call.arguments)===null).toBe(entry.valid);
- if(entry.valid){if(entry.call.arguments.kind==='copy'){expect(capabilityResources(entry.call.id,entry.call.arguments)).toEqual([entry.call.arguments.target]);expect(()=>invocationStep(entry.call,'create')).toThrow();}else{expect(capabilityResources(entry.call.id,entry.call.arguments)).toEqual([]);expect(stepInvocation(invocationStep(entry.call,'create'))).toEqual(entry.call);}}
+ if(entry.valid){expect(boundedCapabilityCall(entry.call)).toBe(true);if(entry.call.arguments.kind==='copy'){expect(capabilityResources(entry.call.id,entry.call.arguments)).toEqual([entry.call.arguments.target]);expect(()=>invocationStep(entry.call,'create')).toThrow();}else if(entry.call.arguments.kind==='drawing'){expect(capabilityResources(entry.call.id,entry.call.arguments)).toEqual([]);expect(()=>invocationStep(entry.call,'create')).toThrow();}else{expect(capabilityResources(entry.call.id,entry.call.arguments)).toEqual([]);expect(stepInvocation(invocationStep(entry.call,'create'))).toEqual(entry.call);}}
 });
 it('preserves the creation kind, recipe and exact result wiring without exposing old public IDs',()=>{
  expect(capabilityDefinition('object.create.primitive')).toBeNull();expect(capabilityDefinition('object.create.recipe')).toBeNull();

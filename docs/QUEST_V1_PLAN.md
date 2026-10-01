@@ -12,8 +12,8 @@ posing now exposes start/rotate/save/finish/discard with native session IDs and
 pose versions, the same physical joint limits and imported retargeter, held-joint
 exclusion, failed-pose recovery and recording interoperation. Saved edits are
 durable outside temporary mode; temporary edits stay in the fork until Keep.
-No authoring operation starts playback. The catalog contains 54 actions, 10
-events and 39 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
+No authoring operation starts playback. The catalog contains 56 actions, 10
+events and 42 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
 Single-file GLB/VRM selection, preview and acceptance now share the physical
 import path with book fields and agent/program calls. See QUEST_MODEL_IMPORT.md.
 Animation collections now share native selection, versioned start/retry/tag controls,
@@ -33,7 +33,9 @@ the physical support-offset calculation, saved edits and Undo through the catalo
 see QUEST_SURFACE_PLACEMENT.md. Object copying now shares the physical Duplicate
 operation through object.create kind=copy and object.definition; geometry, asset
 references and translated recordings are preserved with one Undo. See
-QUEST_OBJECT_COPY.md. The book action editor now loads real settings
+QUEST_OBJECT_COPY.md. Drawing creation, point/radius edits and failed physical
+capture resolution now share the physical pencil, catalog and optional typed book
+fields. See QUEST_DRAWING_AUTHORING.md. The book action editor now loads real settings
 and concurrency guards from catalog-declared facts. It requires an explicit
 snapshot before running and never silently advances revisions; see QUEST_CURRENT_INPUTS.md.
 Reusable behaviours can now choose visible current-value reads and live/fixed
@@ -57,6 +59,37 @@ and tracked operation roots remain protected. Private recovery export remains
 separate; a full store with unreadable selection still requires recovery/repair.
 PR #248 records the current verified commit and package. Earlier entries
 below are historical evidence, not current test totals or release acceptance.
+
+PC shared-drawing-authoring increment (2026-10-01): object.create kind=drawing,
+object.drawing.edit and object.drawing.resolve now share native geometry, saved
+edits and physical capture recovery with book fields and agent/program calls.
+Creation and splicing accept 64 points per call; repeated explicit edits reach
+all 2,048 native stroke points. Exact-revision pages return eight coordinates at
+a time without simplification. Mesh, selection and approximate collision bounds
+refresh together. Saved edits preserve placement, motion, paint and physics;
+held/owned/authoring targets and stale revisions are refused. Undo requires
+release, temporary changes stay in their fork, and replay is historical.
+
+Failed physical saves retain frozen points in memory and expose exact-session
+Retry/Discard through the catalog and solid tray controls. Save also retries.
+New pencil input and workspace/temporary boundaries cannot replace the draft.
+Discard affects only that draft. Retirement releases the write lease; unsaved
+memory is not a crash archive. See QUEST_DRAWING_AUTHORING.md.
+
+Verification passed 391 EditMode and 358 PlayMode tests (three optional private
+model checks skipped), 1,661 web tests in 190 files and 61 Android browser tests.
+Nine native drawing scenarios cover geometry, full-capacity edit/readback, ownership,
+stale edits, Undo, temporary isolation, failed saves, retention and physical controls.
+The existing avatar-wall test failed once with an interrupted-motion result, then
+passed both final native runs without assertion changes. Browser replay uses actual
+native creation/edit captures through generated point fields; generic book tests
+also replay retained-stroke retry. These checks do not execute Quest actions.
+Production build, TypeScript, lint, catalog drift, prompt ownership and boundaries
+pass. The full build helper exited zero. All 199 runtime and 95 test C# files,
+27 fixtures plus metadata and 113 packaged web files match. ARM64 and v2 signature
+verify. Development checkpoint `MaestroQuest-drawing-authoring-BBE8417A.apk` has SHA-256
+`BBE8417A05001A3B422740DBEB10572D141373ACDD558CA7E7B0DD3D504CF8C1`. It remains uninstalled. Physical Quest, provider, performance and
+Store acceptance remain open; PR #248 remains draft.
 
 PC shared-object-copy increment (2026-10-01): object.create kind=copy and
 object.definition share the physical Duplicate operation with book fields and

@@ -261,7 +261,7 @@ namespace Maestro.Quest.Creation
 
         public void Undo() { using var write=WriteGate.TryWrite(out var blocked);if(write==null){SetStatus(blocked);return;} Editing?.Invoke(); if (Busy()) return; if (journal.Undo()) { Reconcile(); MarkDirty(); SetStatus("Undone"); } else SetStatus("Nothing to undo"); }
         public void Redo() { using var write=WriteGate.TryWrite(out var blocked);if(write==null){SetStatus(blocked);return;} Editing?.Invoke(); if (Busy()) return; if (journal.Redo()) { Reconcile(); MarkDirty(); SetStatus("Redone"); } else SetStatus("Nothing to redo"); }
-        internal bool DrawingInProgress=>GetComponent<SpatialDrawing>()?.IsDrawing==true;
+        internal bool DrawingInProgress=>GetComponent<SpatialDrawing>() is SpatialDrawing drawing&&(drawing.IsDrawing||drawing.HasUnsavedStroke);
         internal bool PutPencilAwayForPose(out string error)
         {
             error=null;if(DrawingInProgress){error="Finish the current stroke before posing";return false;}
@@ -273,12 +273,11 @@ namespace Maestro.Quest.Creation
 
         public bool AddDrawing(IReadOnlyList<Vector3> worldPoints, Color color)
         {
-            if (worldPoints.Count < 2) return false;
-            var origin = transform.InverseTransformPoint(worldPoints[0]);
-            var points = worldPoints.Select(point => transform.InverseTransformPoint(point) - origin).ToArray();
-            var data = new RoomObjectData { id = Guid.NewGuid().ToString("N"), kind = RoomObjectKind.Drawing, position = origin, color = color, points = points };
-            if (!Commit(new[] { data }, Array.Empty<string>(), "Drawing added", true)) return false;
-            selected = data.id; UpdateSelection(); return true;
+            if(worldPoints==null||worldPoints.Count<2)return false;
+            var origin=transform.InverseTransformPoint(worldPoints[0]);
+            var points=worldPoints.Select(point=>transform.InverseTransformPoint(point)-origin).ToArray();
+            if(!CreateDrawing("",origin,1,color,.003f,points,out var id,out var error)){SetStatus(error);return false;}
+            selected=id;UpdateSelection();return true;
         }
 
         public bool ApplyAgentEdit(int expectedRevision,RoomObjectData[] replacements,string[] removals,out string error)
@@ -383,6 +382,7 @@ namespace Maestro.Quest.Creation
                 if (!item.Grab.isSelected && (created || changed == null || (applyChangedPose && changed.Contains(data.id)))) ApplyPose(item,data);
                 if(created || changed==null || changed.Contains(data.id)) {
                 item.GetComponent<CreatedRoomObject>()?.ApplyRecipe(data.recipe);
+                item.GetComponent<CreatedRoomObject>()?.ApplyDrawing(data);
                 item.GetComponent<CreatedRoomObject>()?.SetCollisionShape(data.collisionShape);
                 item.GetComponent<RigidRoomItem>()?.Configure(PhysicsWorld,data.physics,data.mass);
                 item.GetComponent<MaestroAvatar>()?.SetSavedPose(data.joints);
