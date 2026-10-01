@@ -33,7 +33,11 @@ namespace Maestro.Quest.Tests
             }
             Assert.That((string)definition.InputSchema["oneOf"][0]["examples"][0]["kind"],Is.EqualTo("primitive"));
             var catalog=new Maestro.Quest.Creation.RoomCapabilityCatalog(null);
-            foreach(string query in new[]{"shape","recipe","storage.writable"}) {Assert.That(catalog.Execute(new JObject {["operation"]="search",["query"]=query,["offset"]=0},out _),Is.True);Assert.That(catalog.Observe()["entries"].Any(x=>(string)x["id"]==definition.Id),Is.True,query);}
+            foreach(string query in new[]{"shape","recipe","storage.writable"}) {
+                bool found=false;int offset=0,total;
+                do{Assert.That(catalog.Execute(new JObject {["operation"]="search",["query"]=query,["offset"]=offset},out _),Is.True);var page=catalog.Observe();found|=page["entries"].Any(x=>(string)x["id"]==definition.Id);total=(int)page["total"];offset+=(int)page["pageSize"];}while(offset<total);
+                Assert.That(found,Is.True,query);
+            }
         }
         [Test] public void CreationKindIsStaticButCoordinatesRemainTypedExpressions() {
             var source=JObject.Parse(BehaviourProgram.FromInvocation((JObject)Cases()[0]["call"]));var node=source["functions"][0]["body"][0];

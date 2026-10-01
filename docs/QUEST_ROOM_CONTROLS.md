@@ -1,6 +1,9 @@
 # Shared avatar and physics controls
 
-The original Maestro agent can use four additional versioned native operations.
+The original Maestro agent can use the versioned native operations below.
+Current settings workflows prefer the shared catalog and exact native facts in
+QUEST_SPATIAL_SETTINGS.md; the older operations remain for legacy runtimes and
+atomic create/settings batches.
 Their availability is declared by `scene.capabilities`; the web bridge and planner
 refuse new operations against older native runtimes. The existing Gemini access,
 handoff verification, task journal and same-chat result path remain authoritative.
@@ -38,9 +41,9 @@ separate explicit room action. No per-frame model movement is involved.
 
 Physics requires a loaded, aligned scan and active application. Losing focus or
 alignment pauses simulation and returning never restarts it automatically. Scan,
-room access prompts, surface placement and user locomotion/view activation remain
-manual. Controller preference bindings now share the native catalog; see
-QUEST_CONTROLLER_CONFIGURATION.md. Avatar and model selection use their later
+room access prompts and surface placement remain manual. Controller bindings and
+explicit movement/view activation now share the native catalog; see
+QUEST_CONTROLLER_CONFIGURATION.md and QUEST_CONTROLLER_MODES.md. Avatar and model selection use their later
 shared capabilities; see QUEST_AVATAR_SELECTION.md and QUEST_MODEL_IMPORT.md. Existing bounded visual rules can
 still invoke their supported motion actions through the original scheduler.
 

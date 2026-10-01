@@ -1,3 +1,4 @@
+import type {DataValue} from '../../shared/programValues';
 // Development-only UI fixture. Simulated receipts; no provider or headset access.
 import {createRoot} from 'react-dom/client';
 import {QuestBookSurface} from '../../src/platform/quest/QuestBookSurface';
@@ -18,6 +19,7 @@ import nativeModelImport from './modelSelection.json';
 import nativeImportReadback from './importReadback.json';
 import nativeController from './controllerConfiguration.json';
 import nativeModes from './controllerModes.json';
+import nativeSpatial from './spatialSettings.json';
 import nativeMotionBatch from './motionBatchImport.json';
 import nativeAvatar from './avatarSelection.json';
 import nativeEvents from './eventProgramStates.json';
@@ -72,6 +74,16 @@ if(controllerModes){
  state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';
  state.execution={...JSON.parse(JSON.stringify(nativeModes.enable)),selected:null,running:[],outcomes:[],nextRunId:nativeModes.enable.selected.id};
  state.capabilities=[...state.capabilities??[],'catalogVocabulary.v1','controllerModes.v1','execution.v1','executionReceipts.v1','actionResults.v1'];
+}
+const spatialSettings=new URLSearchParams(location.search).has('spatialSettings');
+const spatialViews=[nativeSpatial.physics,nativeSpatial.movement,nativeSpatial.walk];
+let spatialFacts:Record<string,DataValue>={'object.physics.settings':nativeSpatial.beforePhysics,'avatar.movement.settings':nativeSpatial.beforeMovement,'avatar.walk.settings':nativeSpatial.beforeWalk};
+if(spatialSettings){
+ if(!spatialViews.every(validExecutionView))throw new Error('Invalid native spatial settings fixture');
+ state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';
+ state.objects.push({id:nativeSpatial.beforePhysics.target,objectRevision:nativeSpatial.beforePhysics.revision,name:'Native settings block',kind:'Block',position:{x:0,y:1,z:1},scale:1,color:white,animated:false});
+ state.execution={...JSON.parse(JSON.stringify(nativeSpatial.physics)),selected:null,running:[],outcomes:[],nextRunId:nativeSpatial.physics.selected.id};
+ state.capabilities=[...state.capabilities??[],'catalogVocabulary.v1','factQueries.v1','spatialSettings.v1','execution.v1','executionReceipts.v1','actionResults.v1'];
 }
 const importReadback=new URLSearchParams(location.search).has('importReadback');
 if(importReadback){
@@ -168,6 +180,11 @@ setInterval(()=>{
     const input=command.execution;
     if(avatarSelection&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeAvatar.library.selected.call)){state.execution=copy(nativeAvatar.library) as RoomAgentState['execution'];state.status='Recorded native library metadata; browser acknowledgement is simulated';}
     else if(avatarSelection&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeAvatar.selection.selected.call)){state.execution=copy(nativeAvatar.selection) as RoomAgentState['execution'];avatarObservation=nativeAvatar.after;state.status='Recorded native model selection; browser acknowledgement is simulated';}
+    else if(spatialSettings&&input.operation==='start'){
+     const index=spatialViews.findIndex(view=>input.call?.id===view.selected.call.id&&input.call.version===view.selected.call.version&&JSON.stringify(Object.entries(input.call.arguments).sort())===JSON.stringify(Object.entries(view.selected.call.arguments).sort()));
+     if(index<0){state.ok=false;state.status='Only captured native spatial settings can be replayed';}
+     else{state.execution=copy(spatialViews[index]) as RoomAgentState['execution'];spatialFacts=index===0?{...spatialFacts,'object.physics.settings':nativeSpatial.afterPhysics}:index===1?{...spatialFacts,'avatar.movement.settings':nativeSpatial.afterMovement,'avatar.walk.settings':nativeSpatial.walkBeforeSave}:{...spatialFacts,'avatar.walk.settings':nativeSpatial.afterWalk};state.status='Captured native settings result; no headset or provider execution';}
+    }
     else if(controllerModes&&input.operation==='start'){
      const index=modeViews.findIndex(view=>input.call?.id===view.selected.call.id&&input.call.version===view.selected.call.version&&JSON.stringify(Object.entries(input.call.arguments).sort())===JSON.stringify(Object.entries(view.selected.call.arguments).sort()));
      if(index<0){state.ok=false;state.status='Only captured native mode transitions can be replayed';}
@@ -212,6 +229,12 @@ setInterval(()=>{
     if(moduleEvidence&&query.operation!=='check'&&query.category==='modules'){
      if(query.operation==='search')state.catalog=copy(moduleEvidence.search.catalog);
      else {const view=moduleEvidence.inspected.catalog;state.catalog=view?.operation==='inspect'&&query.capability===view.capability?copy(view):{operation:'inspect',category:'modules',capability:query.capability,version:query.version,definition:null,revision:1,ready:true,pending:false,status:'Not present in recorded evidence'};}
+     continue;
+    }
+    if(spatialSettings&&query.operation!=='check'&&query.category==='facts'){
+     const definitions=Object.keys(spatialFacts).filter(id=>query.operation!=='search'||id.includes(query.query??'')).map(id=>behaviourFact(id)!);
+     if(query.operation==='search')state.catalog={operation:'search',category:'facts',query:query.query,offset:0,total:definitions.length,pageSize:6,entries:definitions.map(d=>({id:d.id,version:1,label:d.label})),status:'Found spatial settings'};
+     else{const definition=behaviourFact(query.capability??'');const value=spatialFacts[query.capability??''];const available=!!value&&(query.capability!=='object.physics.settings'||query.arguments?.target===nativeSpatial.beforePhysics.target);state.catalog={operation:'inspect',category:'facts',capability:query.capability,version:1,definition,arguments:query.arguments,available,value:available?copy(value):null,status:'Captured native spatial settings'};}
      continue;
     }
     if(controllerModes&&query.operation!=='check'&&query.category==='facts'){

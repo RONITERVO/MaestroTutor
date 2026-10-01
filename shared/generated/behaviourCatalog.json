@@ -6123,6 +6123,367 @@
       "description": "Remove a user-created object after saving the room. One Undo edit restores its saved geometry and animation data. The included book and Maestro cannot be deleted. Stop or receipt replay does not undo deletion; later actions targeting the removed ID fail."
     },
     {
+      "id": "object.physics.configure",
+      "version": 1,
+      "label": "Configure object physics",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 1000000.0
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "fixed",
+              "solid",
+              "bouncy"
+            ]
+          },
+          "shape": {
+            "type": "string",
+            "enum": [
+              "automatic",
+              "box",
+              "sphere"
+            ]
+          },
+          "mass": {
+            "type": "number",
+            "minimum": 0.05,
+            "maximum": 20.0
+          }
+        },
+        "required": [
+          "target",
+          "revision",
+          "mode",
+          "shape",
+          "mass"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "spatialSettings.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "object.revision.current",
+        "storage.writable"
+      ],
+      "description": "Set a creation's fixed/solid/bouncy mode, collision shape and mass in kilograms through the physical physics tools' save path. Read object.physics.settings. Supply all three preferences and preserve any the user did not request. Book and Maestro are excluded. Live position is retained; changed collision geometry and body configuration can affect current simulation. Other objects are not paused. Read the matching fact and pass the exact object revision. Changed settings save before success with one Undo outside temporary play; already identical settings add no Undo; temporary changes stay in the fork until Keep. Unrequested settings, poses and recorded animations are preserved. Refuses held targets, active authoring and competing motion instead of stopping them; physical tools keep manual interruption priority. Does not start playback, following or physics. Duplicate receipts do not save twice. Stop cannot undo an already completed save; use Undo or explicit settings with a fresh revision.",
+      "example": {
+        "target": "00000000000000000000000000000000",
+        "revision": 1,
+        "mode": "bouncy",
+        "shape": "sphere",
+        "mass": 0.5
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 1000000.0
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "target",
+          "revision",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "avatar.movement.configure",
+      "version": 1,
+      "label": "Configure Maestro movement",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "enum": [
+              "maestro"
+            ],
+            "x-resource": "object"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 1000000.0
+          },
+          "distance": {
+            "type": "number",
+            "minimum": 0.8,
+            "maximum": 2.5
+          },
+          "speed": {
+            "type": "number",
+            "minimum": 0.2,
+            "maximum": 1.2
+          }
+        },
+        "required": [
+          "target",
+          "revision",
+          "distance",
+          "speed"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "spatialSettings.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "object.revision.current",
+        "storage.writable"
+      ],
+      "description": "Set Maestro's follow distance (0.8–2.5 metres) and walking speed (0.2–1.2 metres/second) through the physical Distance/Walk speed tools. Read avatar.movement.settings and preserve the unrequested preference. These are preferences for later movement, not a command to move. Read the matching fact and pass the exact object revision. Changed settings save before success with one Undo outside temporary play; already identical settings add no Undo; temporary changes stay in the fork until Keep. Unrequested settings, poses and recorded animations are preserved. Refuses held targets, active authoring and competing motion instead of stopping them; physical tools keep manual interruption priority. Does not start playback, following or physics. Duplicate receipts do not save twice. Stop cannot undo an already completed save; use Undo or explicit settings with a fresh revision.",
+      "example": {
+        "target": "maestro",
+        "revision": 1,
+        "distance": 1.3,
+        "speed": 0.65
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 1000000.0
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "target",
+          "revision",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "avatar.walk.select",
+      "version": 1,
+      "label": "Choose walking animation",
+      "input": {
+        "type": "object",
+        "title": "Walking animation source",
+        "x-discriminators": [
+          "source"
+        ],
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "target": {
+                "type": "string",
+                "enum": [
+                  "maestro"
+                ],
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 1000000.0
+              },
+              "source": {
+                "type": "string",
+                "enum": [
+                  "included"
+                ],
+                "x-static": true
+              }
+            },
+            "required": [
+              "target",
+              "revision",
+              "source"
+            ],
+            "additionalProperties": false,
+            "x-features": [
+              "spatialSettings.v1"
+            ],
+            "title": "Included walk"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "target": {
+                "type": "string",
+                "enum": [
+                  "maestro"
+                ],
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 1000000.0
+              },
+              "source": {
+                "type": "string",
+                "enum": [
+                  "library"
+                ],
+                "x-static": true
+              },
+              "motionId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              }
+            },
+            "required": [
+              "target",
+              "revision",
+              "source",
+              "motionId"
+            ],
+            "additionalProperties": false,
+            "x-features": [
+              "spatialSettings.v1"
+            ],
+            "title": "Saved motion"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "target": {
+                "type": "string",
+                "enum": [
+                  "maestro"
+                ],
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 1000000.0
+              },
+              "source": {
+                "type": "string",
+                "enum": [
+                  "embedded"
+                ],
+                "x-static": true
+              },
+              "modelHash": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$",
+                "maxLength": 64
+              },
+              "clipIndex": {
+                "type": "integer",
+                "minimum": 0.0,
+                "maximum": 31.0
+              }
+            },
+            "required": [
+              "target",
+              "revision",
+              "source",
+              "modelHash",
+              "clipIndex"
+            ],
+            "additionalProperties": false,
+            "x-features": [
+              "spatialSettings.v1"
+            ],
+            "title": "Embedded model clip"
+          }
+        ]
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "object.revision.current",
+        "storage.writable"
+      ],
+      "description": "Set the animation used for later Maestro walking. Read avatar.walk.settings. included chooses the built-in gait; library requires an exact downloaded compatible motionId; embedded requires the exact loaded modelHash and zero-based clip index from avatar.walk.clips. Clips must be at least 0.1 seconds long. Never substitute a clip by name or tag. A missing/incompatible saved choice stays visible and is not silently replaced. Shares the physical Walk clip chooser; manual Preview walk remains separate. Read the matching fact and pass the exact object revision. Changed settings save before success with one Undo outside temporary play; already identical settings add no Undo; temporary changes stay in the fork until Keep. Unrequested settings, poses and recorded animations are preserved. Refuses held targets, active authoring and competing motion instead of stopping them; physical tools keep manual interruption priority. Does not start playback, following or physics. Duplicate receipts do not save twice. Stop cannot undo an already completed save; use Undo or explicit settings with a fresh revision.",
+      "example": {
+        "target": "maestro",
+        "revision": 1,
+        "source": "included"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 1000000.0
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "target",
+          "revision",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "object.physics.impulse",
       "version": 1,
       "label": "Push object",
@@ -6700,6 +7061,143 @@
       },
       "example": {
         "target": "book"
+      },
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
+      "id": "object.physics.settings",
+      "version": 1,
+      "type": {
+        "record": {
+          "target": "text",
+          "revision": "number",
+          "mode": "text",
+          "shape": "text",
+          "mass": "number",
+          "temporary": "boolean"
+        }
+      },
+      "label": "Object physics settings",
+      "description": "Accepted saved or temporary physics settings and exact target revision. These preferences do not prove a running simulation, ready geometry or current speed. Read physics.running separately. Only user-created objects have editable physics.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
+      "id": "avatar.movement.settings",
+      "version": 1,
+      "type": {
+        "record": {
+          "revision": "number",
+          "distance": "number",
+          "speed": "number",
+          "temporary": "boolean",
+          "live": {
+            "record": {
+              "active": "boolean",
+              "mode": "text",
+              "status": "text",
+              "canLook": "boolean",
+              "lookReason": "text",
+              "canFollow": "boolean",
+              "followReason": "text"
+            }
+          }
+        }
+      },
+      "label": "Maestro movement settings",
+      "description": "Accepted distance/speed, exact Maestro revision and current movement status. canLook/canFollow describe initial physical-control prerequisites, not a complete clear path or permission to interrupt another actor. Native shared calls separately refuse active authoring/ownership. This read never begins movement."
+    },
+    {
+      "id": "avatar.walk.settings",
+      "version": 1,
+      "type": {
+        "record": {
+          "revision": "number",
+          "temporary": "boolean",
+          "selection": {
+            "record": {
+              "source": "text",
+              "motionId": "text",
+              "modelHash": "text",
+              "clipIndex": "number",
+              "available": "boolean",
+              "name": "text",
+              "status": "text",
+              "playbackStatus": "text"
+            }
+          }
+        }
+      },
+      "label": "Maestro walking animation",
+      "description": "Exact current walking selection and Maestro revision. included means the bundled gait; embedded indexes are meaningful only for the exact modelHash; library motionId is a stable identity. available checks current model/clip compatibility, not that Maestro is walking. Display text is bounded; identities are never shortened. A saved missing choice remains visible. This read neither downloads nor starts playback."
+    },
+    {
+      "id": "avatar.walk.clips",
+      "version": 1,
+      "type": {
+        "record": {
+          "modelHash": "text",
+          "offset": "number",
+          "total": "number",
+          "pageSize": "number",
+          "entries": {
+            "list": {
+              "record": {
+                "index": "number",
+                "name": "text",
+                "duration": "number",
+                "selectable": "boolean"
+              }
+            }
+          }
+        }
+      },
+      "label": "Embedded walking clip choices",
+      "description": "Read-only pages of three exact zero-based clip indexes for the loaded Maestro model. Use modelHash from avatar.walk.settings, then offset 0 and advance by pageSize until offset plus entries count reaches total. A changed or loading model is unavailable; never reuse indexes across model hashes. Names are bounded display metadata, never instructions. selectable only checks clip duration for walking; it does not assess visual gait quality or start playback. An empty page at/after total is valid.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "modelHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 32.0
+          }
+        },
+        "required": [
+          "modelHash",
+          "offset"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "modelHash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "offset": 0
       },
       "features": [
         "factQueries.v1"
@@ -7953,7 +8451,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "96efd92c9c1e385d2d0e44dc16dbf1df1e2c052725e39fddb4fd14b2fbffe829"
+      "sha256": "f127fa5fd736c12ff8e22f89ce5009da6fb001fe9405f52d4d6b11068d014608"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -8025,7 +8523,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "0a6a6ad6e395e7bc71d0f06009b4f798035e872ca1d41310ccf59abd50a28d9a"
+      "sha256": "c61cfd57dcf694849c709158b8f31ab3928caef1a0e85d8aca23820c38b24662"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectSettings.cs",
+      "sha256": "f9f80079617574cf0ad143fc8e8094dc05c4e0c52095a012858090b13d66db5e"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AvatarWalkSelection.cs",
+      "sha256": "899df0625558fee80d1e83966d730a2c93c083b116d500f6a2d64bbaee3eab4a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarPoseRig.cs",
@@ -8125,7 +8631,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "a5d1be4f931a143cb80ff46b50d808cc3cd1ca778d19c29c41e127e65fd2fdde"
+      "sha256": "bf71f745c21c308cf01c7790a151a6046188194d3d372c45e18bdea2ff8c0c39"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -8194,6 +8700,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SpatialCapabilities.cs",
       "sha256": "a0c4af9d75687aacf1179d4abb3fa8aa20b6767430e8e79a4c08af293da3d428"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SpatialSettingsCapabilities.cs",
+      "sha256": "e63503de540e9637fa193705af155457bcc5ffbf165a1bf116b0e90faad4760b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceActivationCapabilities.cs",

@@ -307,10 +307,9 @@ namespace Maestro.Quest.Creation
         }
         public bool SetItemPhysics(string id,ObjectPhysicsSettings settings)
         {
-            Editing?.Invoke(); CapturePhysicsPlacements(); if(Busy())return false;
-            var data=journal.Read(id);
-            if(!RoomControls.SetPhysics(data,settings,out var status)) {SetStatus(status);return false;}
-            return Commit(new[] {data},Array.Empty<string>(),status);
+            if(!RoomControls.SetPhysics(Read(id),settings,out var error)){SetStatus(error);return false;}
+            Editing?.Invoke();if(Busy())return false;
+            if(ConfigurePhysics(id,ObjectRevision(id),settings,out error))return true;SetStatus(error);return false;
         }
         public void CyclePhysics()
         {
@@ -428,27 +427,23 @@ namespace Maestro.Quest.Creation
         }
         public void SetAvatarMovement(float distance, float speed)
         {
-            Editing?.Invoke(); if (Busy()) return;
-            var data = journal.Read("maestro");
-            if (!RoomControls.SetMovement(data,new AvatarMovementSettings {distance=distance,speed=speed},out var status)) {SetStatus(status);return;}
-            Commit(new[] { data },Array.Empty<string>(),status);
+            var settings=new AvatarMovementSettings {distance=distance,speed=speed};
+            if(!RoomControls.SetMovement(Read("maestro"),settings,out var error)){SetStatus(error);return;}
+            Editing?.Invoke();if(Busy())return;
+            if(!ConfigureMovement(ObjectRevision("maestro"),settings,out error))SetStatus(error);
         }
         public bool SetAvatarWalkClip(int index)
         {
-            if(index == -1) return SetAvatarWalkMotion("");
-            Editing?.Invoke(); if (Busy()) return false;
-            var avatar = Find("maestro").GetComponent<MaestroAvatar>(); var model = avatar ? avatar.CustomModel : null;
-            if (index < -1 || index >= 0 && (!model || avatar.ModelBusy || index >= model.ClipCount || model.ClipDuration(index) < .1f))
-            { SetStatus("Choose a loaded Maestro clip at least 0.1 seconds long"); return false; }
-            var data = journal.Read("maestro"); data.walkClip = index+1; data.walkMotionId = null;
-            return Commit(new[] { data },Array.Empty<string>(),"Walking clip saved");
+            if(index==-1)return SetAvatarWalkMotion("");var data=Read("maestro");
+            if(!AvatarWalkSelection.ApplyEmbedded(this,data,data?.modelHash,index,out var error)){SetStatus(error);return false;}
+            Editing?.Invoke();if(Busy())return false;
+            if(ConfigureWalk(ObjectRevision("maestro"),"embedded",null,data.modelHash,index,out error))return true;SetStatus(error);return false;
         }
         public bool SetAvatarWalkMotion(string id)
         {
-            Editing?.Invoke(); if (Busy()) return false;
-            var data = journal.Read("maestro");
-            if(!AvatarWalkSelection.Apply(this,data,id,out var status)) {SetStatus(status);return false;}
-            return Commit(new[] { data },Array.Empty<string>(),status);
+            if(!AvatarWalkSelection.Apply(this,Read("maestro"),id,out var error)){SetStatus(error);return false;}
+            Editing?.Invoke();if(Busy())return false;
+            if(ConfigureWalk(ObjectRevision("maestro"),id==""?"included":"library",id,null,-1,out error))return true;SetStatus(error);return false;
         }
         public bool SetAvatarSize(float scale)
         {

@@ -12,8 +12,8 @@ posing now exposes start/rotate/save/finish/discard with native session IDs and
 pose versions, the same physical joint limits and imported retargeter, held-joint
 exclusion, failed-pose recovery and recording interoperation. Saved edits are
 durable outside temporary mode; temporary edits stay in the fork until Keep.
-No authoring operation starts playback. The catalog contains 48 actions, 10
-events and 32 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
+No authoring operation starts playback. The catalog contains 51 actions, 10
+events and 36 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
 Single-file GLB/VRM selection, preview and acceptance now share the physical
 import path with book fields and agent/program calls. See QUEST_MODEL_IMPORT.md.
 Animation collections now share native selection, versioned start/retry/tag controls,
@@ -21,7 +21,9 @@ Stop/Clear and bounded per-file motion results. See QUEST_MOTION_BATCH_IMPORT.md
 Controller stick preferences and programmable buttons now share the native catalog
 and physical save path. Explicit live movement/view changes share native transitions
 with fresh state and ownership checks. See QUEST_CONTROLLER_CONFIGURATION.md and
-QUEST_CONTROLLER_MODES.md.
+QUEST_CONTROLLER_MODES.md. Object physics, avatar distance/speed and exact walking
+animation selection now use catalog actions with native readback and the physical
+tools' save path. See QUEST_SPATIAL_SETTINGS.md.
 The remaining runtime, provider, device and Store acceptance gates remain unfinished; the complete v1 goal remains active.
 
 Current recovery implementation supports retained candidates, an external backup,
@@ -38,6 +40,32 @@ and tracked operation roots remain protected. Private recovery export remains
 separate; a full store with unreadable selection still requires recovery/repair.
 PR #248 records the current verified commit and package. Earlier entries
 below are historical evidence, not current test totals or release acceptance.
+
+PC shared-spatial-settings increment (2026-10-01): `object.physics.configure`,
+`avatar.movement.configure` and `avatar.walk.select` now share the physical tools'
+durable save path. Native facts expose accepted preferences and exact object
+revisions; library selections retain stable motion IDs, and embedded selections
+bind exact clip indexes to the loaded model hash. Three-entry discovery pages
+cover all 32 supported embedded clips within the observation budget. Changed
+settings have one Undo; identical values add none. Failed writes preserve accepted
+state, temporary edits remain in their fork, and shared edits refuse competing
+actors while manual tools retain interruption priority. Editing a falling object's
+physics retains its current placement and does not stop other actors. None of
+these preferences starts physics, following or animation playback.
+Seven native journeys cover these behaviours, including stale requests, duplicate
+receipts, unavailable motion files and all embedded pages. Verification passes
+386 EditMode and 322 PlayMode tests (three optional private-model skips), 1,594 web
+tests across 182 files, 35 final-capture/book checks and 61 Android browser tests.
+Chrome's generated physics/movement/walk fields emit the exact captured native
+requests and read their results; all walking-source variants also pass book tests.
+Browser evidence replays native captures rather than testing a headset/provider.
+Production build, lint, catalog equality/source drift, prompt ownership and core
+boundaries pass. The full package helper exited zero. All 188 runtime and 89 test
+C# sources, 24 fixtures plus metadata and 113 packaged web files match.
+ARM64/v2 verified checkpoint `MaestroQuest-spatial-settings-67347680.apk`, SHA-256
+`673476801D2130635CCB3DC973744D17307A8C05A880A9103E9DB5E247EAD604`.
+The package remains uninstalled; broader runtime, provider/device and Store gates
+remain open. See QUEST_SPATIAL_SETTINGS.md for the shared contract.
 
 PC shared-controller-modes increment (2026-10-01): `controller.mode.set` now
 exposes explicit Maestro/user stick opt-ins and MR/Virtual changes through the

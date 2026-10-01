@@ -652,3 +652,23 @@ it('uses generated live-mode fields and each current native identity without inj
  }
  act(()=>client.cancel());
 });
+
+import nativeSpatial from '../../../test-fixtures/browser/spatialSettings.json';
+import nativeWalkSettings from '../../../test-fixtures/browser/walkSettings.json';
+it('authors saved physics, movement and every walk source through native generated fields',async()=>{
+ const {client,screen,receive,state}=setup(true,['spatialSettings.v1','execution.v1','actionResults.v1']);
+ const object={...state.objects.find(o=>o.id==='maestro')!,id:nativeSpatial.beforePhysics.target,name:'Settings block',kind:'Block'};
+ await receive(undefined,false,{objects:[...state.objects,object]});fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));
+ for(const group of [[nativeSpatial.physics,nativeSpatial.movement,nativeSpatial.walk],[nativeWalkSettings.embedded,nativeWalkSettings.library]]){
+  await receive(undefined,false,{execution:{...group[0],selected:null,running:[],outcomes:[],nextRunId:group[0].selected.id} as RoomAgentState['execution']});
+  for(const view of group){
+   const definition=capabilityDefinition(view.selected.call.id)!;fireEvent.click(screen.getByRole('button',{name:/^Search$/}));await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Settings definition'});
+   fireEvent.click(screen.getByRole('button',{name:new RegExp('^'+definition.label+'\\s*'+definition.id+' · v1$')}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Settings definition'});fireEvent.click(screen.getByText('Edit action fields'));
+   const args=view.selected.call.arguments;if('source' in args)fireEvent.change(screen.getByLabelText('Walking animation source'),{target:{value:String(['included','library','embedded'].indexOf(args.source))}});
+   for(const [key,value] of Object.entries(args)){if(key==='source')continue;fireEvent.change(screen.getByLabelText('Action inputs '+key),{target:{value}});}
+   fireEvent.click(screen.getByRole('button',{name:'Run action now'}));expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:view.selected.call,runId:view.selected.id}});
+   await receive(undefined,false,{execution:view as RoomAgentState['execution']});expect(screen.getByLabelText('Action result').textContent).toContain(String(view.selected.output.revision));
+  }
+ }
+ act(()=>client.cancel());
+});

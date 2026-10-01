@@ -33,6 +33,13 @@ namespace Maestro.Quest.Creation
             data.walkClip=0;data.walkMotionId=id == "" ? null : id;
             status=id == "" ? "Included walking animation selected" : "Saved walking motion assigned";return true;
         }
+        public static bool ApplyEmbedded(RoomEditor editor,RoomObjectData data,string modelHash,int index,out string status)
+        {
+            status="Choose an embedded walking clip at least 0.1 seconds long from the exact loaded Maestro model";
+            var avatar=editor.Find("maestro")?.GetComponent<MaestroAvatar>();var model=avatar?avatar.CustomModel:null;
+            if(data?.kind!=RoomObjectKind.Maestro||!ModelLibrary.ValidHash(modelHash)||data.modelHash!=modelHash||!avatar||avatar.ModelBusy||avatar.ModelHash!=modelHash||!model||!model.Ready||index<0||index>=model.ClipCount||model.ClipDuration(index)<.1f)return false;
+            data.walkClip=index+1;data.walkMotionId=null;status="Embedded walking animation selected";return true;
+        }
         public static AvatarWalkObservation Observe(RoomEditor editor)
         {
             var data=editor.Read("maestro");var avatar=editor.Find("maestro")?.GetComponent<MaestroAvatar>();

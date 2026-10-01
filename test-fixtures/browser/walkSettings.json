@@ -1,0 +1,142 @@
+{
+  "before": {
+    "revision": 6,
+    "temporary": false,
+    "selection": {
+      "source": "included",
+      "motionId": "",
+      "modelHash": "c440b687d487a8f8f82bc727a321573e4fbac7c368514788cc8a9c5159226561",
+      "clipIndex": -1,
+      "available": true,
+      "name": "Included walk",
+      "status": "Included walking animation selected",
+      "playbackStatus": ""
+    }
+  },
+  "embedded": {
+    "selected": {
+      "id": "e51c7d7e4a774f6f8da7d7c6f8e3e45e",
+      "capability": "avatar.walk.select",
+      "version": 1,
+      "resources": [
+        "maestro"
+      ],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "target": "maestro",
+        "revision": 7,
+        "temporary": false
+      },
+      "call": {
+        "id": "avatar.walk.select",
+        "version": 1,
+        "arguments": {
+          "target": "maestro",
+          "revision": 6,
+          "source": "embedded",
+          "modelHash": "c440b687d487a8f8f82bc727a321573e4fbac7c368514788cc8a9c5159226561",
+          "clipIndex": 0
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "e51c7d7e4a774f6f8da7d7c6f8e3e45e",
+        "capability": "avatar.walk.select",
+        "version": 1,
+        "resources": [
+          "maestro"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "target": "maestro",
+          "revision": 7,
+          "temporary": false
+        }
+      }
+    ],
+    "nextRunId": "f803c7b418cf441c9e1a2ddddfb2c4b4",
+    "storageError": null,
+    "recovery": null
+  },
+  "library": {
+    "selected": {
+      "id": "f803c7b418cf441c9e1a2ddddfb2c4b4",
+      "capability": "avatar.walk.select",
+      "version": 1,
+      "resources": [
+        "maestro"
+      ],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "target": "maestro",
+        "revision": 8,
+        "temporary": false
+      },
+      "call": {
+        "id": "avatar.walk.select",
+        "version": 1,
+        "arguments": {
+          "target": "maestro",
+          "revision": 7,
+          "source": "library",
+          "motionId": "60fff81a4ed54b2ab22c322a4428d72f"
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "e51c7d7e4a774f6f8da7d7c6f8e3e45e",
+        "capability": "avatar.walk.select",
+        "version": 1,
+        "resources": [
+          "maestro"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "target": "maestro",
+          "revision": 7,
+          "temporary": false
+        }
+      },
+      {
+        "id": "f803c7b418cf441c9e1a2ddddfb2c4b4",
+        "capability": "avatar.walk.select",
+        "version": 1,
+        "resources": [
+          "maestro"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "target": "maestro",
+          "revision": 8,
+          "temporary": false
+        }
+      }
+    ],
+    "nextRunId": "50556865662a4246af4ade11e7905e36",
+    "storageError": null,
+    "recovery": null
+  },
+  "after": {
+    "revision": 8,
+    "temporary": false,
+    "selection": {
+      "source": "library",
+      "motionId": "60fff81a4ed54b2ab22c322a4428d72f",
+      "modelHash": "c440b687d487a8f8f82bc727a321573e4fbac7c368514788cc8a9c5159226561",
+      "clipIndex": -1,
+      "available": true,
+      "name": "Walking",
+      "status": "Saved walking motion is available",
+      "playbackStatus": ""
+    }
+  }
+}

@@ -19,7 +19,7 @@ using UnityEngine.XR.Interaction.Toolkit;
 
 namespace Maestro.Quest.Tests
 {
-    public sealed class LibraryRuleAndWalkTests
+    public sealed partial class LibraryRuleAndWalkTests
     {
         GameObject root,anchor;
         RoomEditor editor;
