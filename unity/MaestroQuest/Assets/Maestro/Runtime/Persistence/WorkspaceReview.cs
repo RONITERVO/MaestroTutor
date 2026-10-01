@@ -67,7 +67,7 @@ namespace Maestro.Quest.Persistence
         {
             issue=journalError;if(issue!=null)return false;
             if(disposed||paused||!focused||!host||!host.isActiveAndEnabled){issue="Resume Maestro before reviewing a workspace.";return false;}
-            if(host.Evidence?.Busy==true||host.History?.Busy==true||Busy||host.Switching||host.Activation?.Busy==true||host.Retiring||host.Recovery?.BlocksOtherOperations==true){issue="Wait for the current workspace operation to finish.";return false;}
+            if(host.Retention?.Busy==true||host.Evidence?.Busy==true||host.History?.Busy==true||Busy||host.Switching||host.Activation?.Busy==true||host.Retiring||host.Recovery?.BlocksOtherOperations==true){issue="Wait for the current workspace operation to finish.";return false;}
             if(!host.Current||!host.ReviewRequired||host.Selection?.Revision!=revision){issue="Read the current workspace and review its latest selected contents.";return false;}
             try{if(!JToken.DeepEquals(store.Load().Json(),host.Selection.Json())){issue="The stored workspace selection changed. Recover it before review.";return false;}}
             catch(Exception){issue="The workspace selection is unavailable. Its data is preserved; recovery is required.";return false;}
@@ -124,7 +124,7 @@ namespace Maestro.Quest.Persistence
         }
         internal bool CanCancel(string id,out string issue)
         {
-            if(host.Evidence?.Busy==true||host.History?.Busy==true){issue="Wait for history preservation to finish.";return false;}
+            if(host.Retention?.Busy==true||host.Evidence?.Busy==true||host.History?.Busy==true){issue="Wait for history preservation to finish.";return false;}
             issue=null;if(id!=RequestId||record==null){issue="This review request is no longer retained.";return false;}
             if(committed!=null||(string)record["committedRevision"]!=""||uncertain){issue="Review may already be committed. Inspect its outcome; cancellation cannot undo it.";return false;}return true;
         }

@@ -966,6 +966,176 @@
       }
     },
     {
+      "id": "workspace.retention.inspect",
+      "version": 1,
+      "label": "Inspect retained workspaces",
+      "input": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false,
+        "x-features": [
+          "workspaceRetention.v1"
+        ]
+      },
+      "duration": "completion",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [],
+      "domain": "workspace",
+      "description": "List up to 64 retained generations, without initializing or changing selection. Read workspace.retention.entry with the returned inspectionId and each index. Metadata availability is not content verification. Roles distinguish active, previous, pointer-backup, inactive or unknown; reservation describes stored activation/recovery dependencies, not deletion permission. A new inspection replaces this session inventory. No private paths or documents are exposed.",
+      "example": {},
+      "output": {
+        "type": "object",
+        "properties": {
+          "inspectionId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 64.0
+          },
+          "selectionReadable": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "inspectionId",
+          "count",
+          "selectionReadable"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "workspace.retention.export",
+      "version": 1,
+      "label": "Export retained workspace",
+      "input": {
+        "type": "object",
+        "properties": {
+          "inspectionId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "generationId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "originalManifestHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "inspectionId",
+          "generationId",
+          "originalManifestHash"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "workspaceRetention.v1"
+        ]
+      },
+      "duration": "completion",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [],
+      "domain": "workspace",
+      "description": "Export one inspected inactive generation as an importable portable workspace ZIP in Downloads/Maestro. Validates its actual current saved documents/models/motions/modules and creates a new manifest: originalManifestHash identifies its original import, while output manifestHash identifies exported content, which may include newer autosaves. Refuses active/live sources, changed selection, unavailable required documents and invalid assets; never falls back to old manifests, backup files or empty defaults. excludedFiles counts other files inside its data directory omitted from the portable archive; generation metadata, recovery preservation, action receipts, scans, Undo and chat are not portable content. They remain on-device. Missing-reference and unavailable-program counts describe preserved unresolved references, not repaired content. This is not a full raw backup or permission to delete a generation. Completion means native publication; after interrupted publication check Downloads and the matching receipt instead of assuming failure.",
+      "example": {
+        "inspectionId": "00000000000000000000000000000000",
+        "generationId": "00000000000000000000000000000000",
+        "originalManifestHash": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "generationId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "originalManifestHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "manifestHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "sourceFingerprint": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "location": {
+            "type": "string",
+            "pattern": "^Downloads/Maestro/.+\\.zip$",
+            "maxLength": 128
+          },
+          "archiveHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "sizeKiB": {
+            "type": "number",
+            "minimum": 0.0009765625,
+            "maximum": 524288.0
+          },
+          "excludedFiles": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 4096.0
+          },
+          "missingModels": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 4096.0
+          },
+          "missingMotions": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 4096.0
+          },
+          "missingControllerPrograms": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 4096.0
+          },
+          "unavailablePrograms": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 4096.0
+          }
+        },
+        "required": [
+          "generationId",
+          "originalManifestHash",
+          "manifestHash",
+          "sourceFingerprint",
+          "location",
+          "archiveHash",
+          "sizeKiB",
+          "excludedFiles",
+          "missingModels",
+          "missingMotions",
+          "missingControllerPrograms",
+          "unavailablePrograms"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "workspace.evidence.inspect",
       "version": 1,
       "label": "Inspect preserved recovery evidence",
@@ -4280,6 +4450,78 @@
       ]
     },
     {
+      "id": "workspace.retention",
+      "version": 1,
+      "type": {
+        "record": {
+          "requestId": "text",
+          "phase": "text",
+          "status": "text",
+          "inspectionId": "text",
+          "generationId": "text",
+          "manifestHash": "text",
+          "location": "text",
+          "archiveHash": "text"
+        }
+      },
+      "label": "Retained workspace status",
+      "description": "Latest session-local inspection or publication. requestId is its native execution runId. Exported does not mean restored, reviewed, or removable. Cancelled waits may still finish publication. Restart clears this status/inventory; durable action receipts remain inspectable.",
+      "domain": "workspace",
+      "input": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "example": {},
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
+      "id": "workspace.retention.entry",
+      "version": 1,
+      "type": {
+        "record": {
+          "generationId": "text",
+          "originalManifestHash": "text",
+          "metadataAvailable": "boolean",
+          "role": "text",
+          "reservation": "text"
+        }
+      },
+      "label": "Retained workspace entry",
+      "description": "Read one metadata entry from the exact completed inspection. metadataAvailable never asserts valid saved contents. role is active, previous, pointer-backup, inactive or unknown; reservation is reserved, unreserved or unknown. Unknown means evidence could not be interpreted. Original manifest hashes can differ from the actual saved content. None of these fields grants deletion permission; an inactive export verifies content separately.",
+      "domain": "workspace",
+      "input": {
+        "type": "object",
+        "properties": {
+          "inspectionId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "index": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 63.0
+          }
+        },
+        "required": [
+          "inspectionId",
+          "index"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "inspectionId": "00000000000000000000000000000000",
+        "index": 0
+      },
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
       "id": "workspace.evidence",
       "version": 1,
       "type": {
@@ -4926,7 +5168,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "0948a36302a251c2c3c21eff19cf6cf1f287e97218226b750bb73a9fe7b4fedf"
+      "sha256": "e3cd94378010626233864366e3c36409d32abe7ab92960de245ba23eb7f7609f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -4990,7 +5232,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "302c64f6db0573141dafbe426c763f9683419755928aeaea3eb8b5a77f17c36e"
+      "sha256": "4b63ab22f31888ab26bf03aaeab6e980d9dcfa5f4206ec737a03a5ad3e4aa39b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -5067,6 +5309,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceRecoveryCapabilities.cs",
       "sha256": "b1363e07932d4189e5854f7e087f6855cdbf51dafde12d2c97721e52f7200c00"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceRetentionCapabilities.cs",
+      "sha256": "7e1f048412e91f92868bf84855082351b202d2fd6ce998708c6613000e484f17"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceReviewCapabilities.cs",

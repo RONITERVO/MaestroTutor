@@ -12,6 +12,7 @@ import nativePrevious from '../../../test-fixtures/browser/workspacePrevious.jso
 import nativeWorkspaceRecovery from '../../../test-fixtures/browser/workspaceRecovery.json';
 import nativeFreshRecovery from '../../../test-fixtures/browser/workspaceFreshRecovery.json';
 import nativeHistory from '../../../test-fixtures/browser/workspaceHistory.json';
+import nativeRetention from '../../../test-fixtures/browser/workspaceRetention.json';
 import nativeEvidence from '../../../test-fixtures/browser/workspaceEvidence.json';
 import {validFactValue} from '../../../shared/behaviourFacts';
 import nativeCreation from '../../../test-fixtures/browser/creationResult.json';
@@ -309,4 +310,30 @@ it('binds native evidence removal to a completed export of the exact inspected b
  expect(validFactValue('workspace.evidence.entry',{...nativeEvidence.entry,path:'/private/evidence'})).toBe(false);
  const call=nativeEvidence.removeExecution.workspace.selected.call;
  for(const args of [{...call.arguments,exportRunId:''},{...call.arguments,fingerprint:'changed'},{...call.arguments,path:'/private/file'}])expect(validExecutionRequest({operation:'start',call:{...call,arguments:args}})).toBe(false);
+});
+
+
+it('accepts native retained exports with distinct original and current portable identities',()=>{
+ for(const state of [nativeRetention.inspectExecution,nativeRetention.exportExecution]){
+  expect(validExecutionView(state)).toBe(true);
+  const execution={operation:'start',call:state.workspace.selected.call};
+  expect(validExecutionRequest(execution)).toBe(true);
+  expect(()=>requireRoomCapabilities([{action:'execution',execution}],{capabilities:['execution.v1']})).toThrow('workspaceRetention.v1');
+  expect(()=>requireRoomCapabilities([{action:'execution',execution}],{capabilities:['execution.v1','workspaceRetention.v1']})).not.toThrow();
+ }
+ expect(validFactValue('workspace.retention',nativeRetention.status)).toBe(true);
+ expect(validFactValue('workspace.retention.entry',nativeRetention.entry)).toBe(true);
+ expect(nativeRetention.export.generationId).toBe(nativeRetention.entry.generationId);
+ expect(nativeRetention.export.originalManifestHash).toBe(nativeRetention.entry.originalManifestHash);
+ expect(nativeRetention.export.manifestHash).not.toBe(nativeRetention.export.originalManifestHash);
+ expect(nativeRetention.export.sourceFingerprint).toMatch(/^[a-f0-9]{64}$/);
+ expect(nativeRetention.export.archiveHash).toMatch(/^[a-f0-9]{64}$/);
+ expect(nativeRetention.export.excludedFiles).toBe(1);
+ expect(nativeRetention.export.missingModels).toBe(0);
+ expect(nativeRetention.export.location).toMatch(/^Downloads\/Maestro\/maestro-workspace-[a-f0-9]{32}\.zip$/);
+ expect(nativeRetention.status.requestId).toBe(nativeRetention.exportExecution.workspace.selected.id);
+ expect(nativeRetention.status.phase).toBe('exported');
+ const call=nativeRetention.exportExecution.workspace.selected.call;
+ for(const args of [{...call.arguments,generationId:'../room'},{...call.arguments,originalManifestHash:'changed'},{...call.arguments,path:'/private/file'}])expect(validExecutionRequest({operation:'start',call:{...call,arguments:args}})).toBe(false);
+ expect(validFactValue('workspace.retention.entry',{...nativeRetention.entry,canDelete:true})).toBe(false);
 });

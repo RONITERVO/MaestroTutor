@@ -58,13 +58,22 @@ if (Test-Path -LiteralPath $buildLog) { Remove-Item -LiteralPath $buildLog }
 Stop-QuestBuildHelper
 $process = Start-Process -FilePath $editorPath -ArgumentList @('-batchmode','-force-d3d11','-quit','-buildTarget','Android','-projectPath',('"'+$mirrorRoot+'"'),'-executeMethod','Maestro.Quest.Editor.QuestDevelopmentBuild.Build','-logFile',('"'+$buildLog+'"')) -WindowStyle Hidden -PassThru -Environment @{ ADB_SERVER_SOCKET = 'tcp:localhost:5041' }
 $deadline = [DateTime]::UtcNow.AddMinutes(45)
+$reportWrittenAt = $null
 $shutdownAt = $null
+$helperStopped = $false
 try { while (!$process.WaitForExit(1000)) {
-    if (!$shutdownAt -and (Test-Path -LiteralPath $buildLog) -and (Select-String -LiteralPath $buildLog -Pattern 'MAESTRO_DEVELOPMENT_APK|Batchmode quit successfully invoked' -Quiet)) {
-        $shutdownAt = [DateTime]::UtcNow
-        Stop-QuestBuildHelper
+    if (!$reportWrittenAt -and (Test-Path -LiteralPath $buildLog) -and (Select-String -LiteralPath $buildLog -Pattern 'MAESTRO_DEVELOPMENT_APK|Batchmode quit successfully invoked' -Quiet)) {
+        $reportWrittenAt = [DateTime]::UtcNow
     }
-    if ([DateTime]::UtcNow -gt $deadline -or ($shutdownAt -and [DateTime]::UtcNow -gt $shutdownAt.AddSeconds(60))) {
+    # The APK marker precedes shutdown; do not interrupt a still-working editor.
+    if (!$shutdownAt -and (Test-Path -LiteralPath $buildLog) -and (Select-String -LiteralPath $buildLog -Pattern 'Batchmode quit successfully invoked|Killing ADB server|Exiting batchmode' -Quiet)) {
+        $shutdownAt = [DateTime]::UtcNow
+    }
+    if (!$helperStopped -and $shutdownAt -and [DateTime]::UtcNow -gt $shutdownAt.AddSeconds(10)) {
+        Stop-QuestBuildHelper
+        $helperStopped = $true
+    }
+    if ([DateTime]::UtcNow -gt $deadline -or ($reportWrittenAt -and [DateTime]::UtcNow -gt $reportWrittenAt.AddSeconds(60))) {
         $process.Kill(); $process.WaitForExit()
         throw "Unity Android build timed out; see $buildLog. An APK alone is not a successful build."
     }

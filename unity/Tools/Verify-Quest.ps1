@@ -66,11 +66,23 @@ function Invoke-QuestEditor([string[]]$Arguments, [string]$LogName, [string]$Res
     $process = Start-Process -FilePath $editorPath -ArgumentList $argumentsWithPaths -WindowStyle Hidden -PassThru -Environment @{ ADB_SERVER_SOCKET = 'tcp:localhost:5041' }
     $deadline = [DateTime]::UtcNow.AddMinutes(20)
     $reportWrittenAt = $null
+    $shutdownAt = $null
+    $helperStopped = $false
     try { while (!$process.WaitForExit(1000)) {
         if (!$reportWrittenAt -and (($ResultPath -and (Test-Path -LiteralPath $ResultPath)) -or
             ((Test-Path -LiteralPath $logPath) -and (Select-String -LiteralPath $logPath -Pattern 'MAESTRO_PROJECT_CONFIGURED|Batchmode quit successfully invoked' -Quiet)))) {
             $reportWrittenAt = [DateTime]::UtcNow
+        }
+        # A configuration/test marker is not shutdown. Killing ADB at that point can
+        # strand Unity before it enters its normal exit path. Give normal shutdown
+        # time to finish; only clean an inherited helper if shutdown itself stalls.
+        if (!$shutdownAt -and (Test-Path -LiteralPath $logPath) -and
+            (Select-String -LiteralPath $logPath -Pattern 'Batchmode quit successfully invoked|Killing ADB server|Exiting batchmode' -Quiet)) {
+            $shutdownAt = [DateTime]::UtcNow
+        }
+        if (!$helperStopped -and $shutdownAt -and [DateTime]::UtcNow -gt $shutdownAt.AddSeconds(10)) {
             Stop-QuestBuildHelper
+            $helperStopped = $true
         }
         if ([DateTime]::UtcNow -gt $deadline -or ($reportWrittenAt -and [DateTime]::UtcNow -gt $reportWrittenAt.AddSeconds(60))) {
             $process.Kill(); $process.WaitForExit()

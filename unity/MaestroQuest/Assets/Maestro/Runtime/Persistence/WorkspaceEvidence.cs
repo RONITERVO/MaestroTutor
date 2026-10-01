@@ -23,7 +23,7 @@ namespace Maestro.Quest.Persistence
         internal bool Ready(out string error)
         {
             error=null;if(disposed||paused||!focused||!host||!host.isActiveAndEnabled||!host.Ready||host.Retiring){error="Resume Maestro and wait for previous owners to finish.";return false;}
-            if(Busy||host.Switching||host.Activation.Busy||host.Review.Busy||host.Recovery.BlocksOtherOperations||host.History.Busy||host.Import.Occupied||host.Export.Busy){error="Finish or cancel the current workspace operation first.";return false;}return true;
+            if(host.Retention?.Busy==true||Busy||host.Switching||host.Activation.Busy||host.Review.Busy||host.Recovery.BlocksOtherOperations||host.History.Busy||host.Import.Occupied||host.Export.Busy){error="Finish or cancel the current workspace operation first.";return false;}return true;
         }
         WorkspaceEvidenceStore.Entry Find(JObject args)=>entries!=null&&(string)args["inspectionId"]==inspectionId?entries.FirstOrDefault(e=>e.Id==(string)args["evidenceId"]&&e.Fingerprint==(string)args["fingerprint"]):null;
         internal bool CanStart(string mode,JObject args,out string error)

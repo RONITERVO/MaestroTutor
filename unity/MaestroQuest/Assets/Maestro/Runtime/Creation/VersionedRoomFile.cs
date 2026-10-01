@@ -35,7 +35,7 @@ namespace Maestro.Quest.Creation
         }
         // A newer app writes a different filename. Do not load an older save
         // merely because its contents are still valid after a downgrade.
-        bool HasNewerFiles()
+        internal static bool HasNewerFiles(string directory,string stem,int version)
         {
             try
             {
@@ -60,7 +60,7 @@ namespace Maestro.Quest.Creation
         public T Load(out string message)
         {
             message = null;
-            if (HasNewerFiles())
+            if (HasNewerFiles(directory,stem,version))
             {
                 ReadOnly=true; message="Saved "+label+" needs a different app version; its files are preserved"; return null;
             }
@@ -106,7 +106,7 @@ namespace Maestro.Quest.Creation
         {
             lock (retainedGate)
             {
-                bool found=false; uncertain=HasNewerFiles();
+                bool found=false; uncertain=HasNewerFiles(directory,stem,version);
                 for (int v=minimumVersion;v<=version;v++)
                     foreach (string suffix in new[] { "", ".backup", ".pending", ".unreadable" })
                     {
@@ -131,7 +131,7 @@ namespace Maestro.Quest.Creation
         public bool Save(T value,out string error)
         {
             error = "Saved "+label+" is unavailable for editing; its original files are preserved";
-            if (ReadOnly || HasNewerFiles()) { ReadOnly=true; return false; }
+            if (ReadOnly || HasNewerFiles(directory,stem,version)) { ReadOnly=true; return false; }
             Read(primary,version,out _,out bool newer); if (newer) { ReadOnly = true; return false; }
             if (value == null || !validate(value)) { error = "Invalid "+label+" data"; return false; }
             var candidate = copy(value); upgrade(candidate);

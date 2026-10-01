@@ -11,6 +11,7 @@ import nativePrevious from '../../../test-fixtures/browser/workspacePrevious.jso
 import nativeWorkspaceRecovery from '../../../test-fixtures/browser/workspaceRecovery.json';
 import nativeFreshRecovery from '../../../test-fixtures/browser/workspaceFreshRecovery.json';
 import nativeHistory from '../../../test-fixtures/browser/workspaceHistory.json';
+import nativeRetention from '../../../test-fixtures/browser/workspaceRetention.json';
 import nativeEvidence from '../../../test-fixtures/browser/workspaceEvidence.json';
 import native from '../../../test-fixtures/browser/catalogStates.json';
 import nativeProgram from '../../../test-fixtures/browser/programBookState.json';
@@ -403,4 +404,28 @@ it('shows the published evidence result and submits removal with its exact nativ
  fireEvent.click(screen.getByRole('button',{name:new RegExp(fact.label)}));await receive({operation:'inspect',category:'facts',capability:fact.id,version:1,definition:fact,arguments:{},available:true,value:nativeEvidence.status,status:'Available'});
  const value=screen.getByLabelText('Current fact value').textContent;
  expect(value).toContain(receipt.id);expect(value).toContain('removed');expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
+});
+
+
+it('exports an inspected retained workspace using shared forms and displays portable identity and exclusions',async()=>{
+ const {client,screen,receive}=setup(true,['workspaceRetention.v1','execution.v1','actionResults.v1']);
+ const receipt=nativeRetention.exportExecution.workspace.selected;
+ if(!validExecutionView(nativeRetention.exportExecution))throw new Error('Invalid native retained export execution');
+ await receive(undefined,false,{execution:{...nativeRetention.inspectExecution,workspace:{selected:null,running:[],outcomes:[],nextRunId:receipt.id,storageError:null}}});
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:'Search'}));
+ const definition=capabilityDefinition('workspace.retention.export')!;
+ await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Inspect retained export'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Export inspected inactive content'});
+ fireEvent.change(screen.getByLabelText('Action arguments'),{target:{value:JSON.stringify(receipt.call.arguments)}});fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
+ expect(client.snapshot().request?.commands[0]).toMatchObject({action:'execution',execution:{operation:'start',runId:receipt.id,call:receipt.call}});
+ await receive(undefined,false,{execution:nativeRetention.exportExecution});
+ const output=screen.getByLabelText('Action result').textContent;
+ for(const value of [nativeRetention.export.location,nativeRetention.export.originalManifestHash,nativeRetention.export.manifestHash,nativeRetention.export.archiveHash,'excludedFiles'])expect(output).toContain(value);
+ fireEvent.change(screen.getByLabelText('Catalog category'),{target:{value:'facts'}});fireEvent.click(screen.getByRole('button',{name:'Search'}));
+ const fact=behaviourFact('workspace.retention.entry')!;
+ await receive({operation:'search',category:'facts',query:'',offset:0,total:1,pageSize:6,entries:[{id:fact.id,version:1,label:fact.label}],status:'Inspect retained metadata'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(fact.label)}));
+ await receive({operation:'inspect',category:'facts',capability:fact.id,version:1,definition:fact,arguments:{inspectionId:nativeRetention.inspection.inspectionId,index:0},available:true,value:nativeRetention.entry,status:'Available'});
+ expect(screen.getByLabelText('Current fact value').textContent).toContain(nativeRetention.entry.generationId);
+ expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
 });

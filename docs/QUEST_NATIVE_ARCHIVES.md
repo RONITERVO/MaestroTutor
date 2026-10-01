@@ -826,3 +826,55 @@ through pause, disable and host retirement. Another host cannot open those paths
 until the old worker drains. Book controls and the app agent use these same schemas,
 facts, receipts and readiness checks. Physical Quest publication and lifecycle
 acceptance remain pending.
+
+
+## Retained content inspection and portable export
+
+`workspace.retention.inspect` inventories generation metadata without opening a
+room, initializing a selection, or consuming another retention slot. Its native
+completion returns an inspection ID and count; `workspace.retention.entry`
+reads each item by index. The entry distinguishes the current selection, previous
+snapshot, pointer-backup references, inactive entries, and unknown roles. Stored
+activation/recovery reservations are reported separately. Unknown or unavailable
+metadata is explicit, and neither field is a deletion decision. The original
+application room is not a generation entry; the ordinary live export owns it.
+
+`workspace.retention.export` accepts the inspected generation ID and original
+manifest hash. The persistent host excludes concurrent workspace operations and
+holds its path lease until the worker/publisher drains, including across host
+replacement. The store binds both selection pointer files and refuses the
+selected or still-live root. Current room owners remain in place.
+
+An inactive generation can have newer saved documents than its import manifest.
+The exporter reads the actual current primary documents, model library, active
+motion payloads and reusable definitions, validates them with the same portable
+archive codec, and constructs a new manifest. It never recovers a primary file
+from a backup, substitutes defaults, exports an older primary when newer-version files exist,
+or treats the old manifest as current
+content verification. Damaged required documents or assets fail explicitly.
+Document hashes and a bounded before/after data inventory detect changed bytes;
+content and selection must remain unchanged through capture. File links are
+refused. Metadata listing does not hash all retained assets.
+
+Completion returns the original manifest hash, the exported manifest hash,
+source inventory fingerprint, archive SHA-256, public location and size. Missing
+model/motion/controller-program references and unavailable programs are counted,
+as with live export. `excludedFiles` counts nonportable files inside `data`,
+such as autosave backups, abandoned payloads and receipts. Files outside `data`,
+including generation metadata and preserved recovery bundles, are not included
+in that count and remain on-device. The ZIP is a normal `maestro-workspace` archive
+that uses the existing chooser, preview, activation and content-review flow.
+
+This portable export is deliberately **not removal authority**: it omits private
+recovery evidence and execution history. A diagnostic history-evidence export
+is also insufficient to delete a retained room. Dependency-aware generation
+removal and complete recovery-evidence preservation remain required release
+work. The 64-generation cap still applies, but inventory and export work when it
+is full. No retention slot is required to export.
+
+`workspace.retention` reports the native execution run ID and session-local
+inspection/publication state. Stop requests cancellation; a publisher already
+running may still complete. Its cancelled native receipt remains cancelled even
+if the service later reports publication. Private temporary exports are cleaned
+up after completion/failure; originals and public Downloads are never removed.
+Restart clears the inventory/status but retains ordinary native action receipts.

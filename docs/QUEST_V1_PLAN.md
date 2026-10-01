@@ -8,7 +8,10 @@ catalog. Original data stays preserved; preview, commit and content review remai
 separate. Unavailable activation, review and recovery tracking now has a shared
 inspect/preserve/reset path; its evidence can be exported and explicitly removed
 using a matching completed native receipt. Neither path bypasses content review
-or live workers.
+or live workers. Retained generations can now be inventoried and exported as
+portable content without opening them, including newer saved edits than their
+original import manifest. Private recovery evidence remains separate; generation
+removal is still open.
 PR #248 records the current verified commit and package. Earlier entries
 below are historical evidence, not current test totals or release acceptance.
 
@@ -108,7 +111,7 @@ branches; source editing remains available. See QUEST_BEHAVIOUR_PROGRAMS.md.
 
 Current architecture: the original app owns chat/Live handoff, Gemini access
 and durable task journals. Canonical behaviour programs, the shared native
-catalog (30 actions, ten events and 13 facts), one scheduler and native
+catalog (37 actions, ten events and 18 facts), one scheduler and native
 receipts serve human controls and agent calls. Version-3 programs retain typed
 session state across event/timer waits. Creation results compose with animation,
 physics and durable object edits; per-channel ownership permits supported
@@ -1106,3 +1109,31 @@ imports/recovery, and current/previous pointers plus activation/recovery reserva
 must be handled before old generations can be removed. Original, selected and
 reserved roots are not made deletable by the new evidence feature. Other v1
 device/provider/asset/performance and store acceptance gates remain unchanged.
+
+
+Retained-content export increment (2026-10-01): `workspace.retention.inspect`
+and `workspace.retention.export` share native catalog discovery, generated book
+forms, agent calls and persistent action receipts. Inspection separates selected,
+previous, pointer-backup and other retained generations from their reservations.
+Inactive exports validate actual saved content into a fresh portable manifest,
+including edits newer than the import, without opening the room or consuming a
+retention slot. Excluded private files stay on-device. The live storage's
+newer-version detector is reused to prevent exporting an older primary as current.
+Generation removal remains unfinished; portable exports are not full raw evidence.
+
+Native checks cover newer primary content, model payloads, complete ZIP re-import,
+full retention capacity, corrupt and stale inputs, newer-version files, publication
+failure, duplicate receipts, cancellation and retiring host ownership. Captured
+native output is validated by the web contracts and original book controls.
+Build helpers defer private ADB cleanup until actual editor shutdown; this fixes
+a reproduced configuration shutdown stall while retaining terminal exit-code and
+timeout checks. PC verification passed 357 EditMode and 237 PlayMode tests (three optional
+private-model skips), 1,542 web tests in 172 files, 41 final native-capture
+book/contract checks, and 55 Android tests. Production build, lint, catalog drift,
+boundaries and prompt ownership pass. The helper exited successfully; ARM64 and
+v2 signature verify. All 166 runtime and 73 test C# sources, 24 fixtures with their
+metadata, and 113 packaged web files match the tested sources. Development APK
+`MaestroQuest-workspace-retention-AA7C2D35.apk` has SHA-256
+`AA7C2D35164A3A5F218F06A5BCA326ECB0A5A5C1CE0C65570531167457E22C85`
+and remains uninstalled. PR #248 records the corresponding verified checkpoint.
+Device/provider/Store acceptance and the full release goal remain open.
