@@ -743,3 +743,36 @@ it('requires an explicit settings snapshot, preserves edits, invalidates changed
  await receive(fact,false,{session:'f'.repeat(32)});
  expect(screen.queryByRole('button',{name:'Load current values'})).toBeNull();expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
 });
+
+it('adds visible current-value reads with live unedited preferences and fixed user edits to the existing program',async()=>{
+ const {client,screen,receive,state}=setup(true,['structuredValues.v1','spatialSettings.v1','actionResults.v1']);
+ const original=JSON.parse(state.rules!.selected!.program),definition=capabilityDefinition('avatar.movement.configure')!;
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:'Search'}));
+ await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Found'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Action'});
+ fireEvent.click(screen.getByText('Edit action fields'));await loadCurrentDraft(screen,receive,definition,nativeSpatial.beforeMovement);
+ expect((screen.getByLabelText('Keep current distance when running') as HTMLInputElement).checked).toBe(true);
+ expect((screen.getByLabelText('Keep current speed when running') as HTMLInputElement).checked).toBe(true);
+ fireEvent.change(screen.getByLabelText('Action inputs speed'),{target:{value:.9}});
+ expect((screen.getByLabelText('Keep current speed when running') as HTMLInputElement).checked).toBe(false);
+ fireEvent.click(screen.getByRole('button',{name:'Add read and action to draft'}));expect(client.snapshot().request).toBeNull();
+ fireEvent.click(screen.getByRole('button',{name:'Apply changes'}));
+ const saved=JSON.parse(client.snapshot().request!.commands[0].rule!.edits![0].sequence!.program);
+ expect(saved.dataVersion).toBe(1);expect(saved.functions[0].body.slice(2)).toEqual(original.functions[0].body);expect(saved.functions[1]).toEqual(original.functions[1]);
+ const read=saved.functions[0].body[0],action=saved.functions[0].body[1];expect(read).toMatchObject({op:'set',value:{fact:'avatar.movement.settings'}});
+ expect(action).toMatchObject({op:'invoke',capability:definition.id,arguments:{speed:.9},bindings:{revision:{op:'field',args:[{var:read.variable},{value:'revision'}]},distance:{op:'field',args:[{var:read.variable},{value:'distance'}]}}});
+ expect(action.bindings.speed).toBeUndefined();expect(client.snapshot().request!.commands.every(c=>c.action==='rules'&&c.rule!.action==='edit')).toBe(true);
+ await receive();act(()=>client.cancel());
+});
+it('keeps literal insertion available on runtimes without structured values',async()=>{
+ const {client,screen,receive,state}=setup(true,['spatialSettings.v1','actionResults.v1']);
+ await receive(undefined,false,{capabilities:state.capabilities!.filter(f=>f!=='structuredValues.v1')});
+ const definition=capabilityDefinition('avatar.movement.configure')!;
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:'Search'}));
+ await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Found'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Action'});
+ await loadCurrentDraft(screen,receive,definition,nativeSpatial.beforeMovement);
+ expect((screen.getByLabelText('Behaviour input timing') as HTMLSelectElement).value).toBe('snapshot');expect(screen.queryByRole('button',{name:'Add read and action to draft'})).toBeNull();
+ fireEvent.click(screen.getByRole('button',{name:'Add first block to draft'}));fireEvent.click(screen.getByRole('button',{name:'Apply changes'}));
+ const saved=JSON.parse(client.snapshot().request!.commands[0].rule!.edits![0].sequence!.program);expect(saved.functions[0].body[0]).toMatchObject({op:'invoke',bindings:{},arguments:{revision:nativeSpatial.beforeMovement.revision}});await receive();act(()=>client.cancel());
+});

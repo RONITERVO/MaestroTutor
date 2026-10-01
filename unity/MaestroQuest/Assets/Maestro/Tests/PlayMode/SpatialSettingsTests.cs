@@ -9,6 +9,7 @@ using Maestro.Quest.Creation;
 using Maestro.Quest.Interaction;
 using Maestro.Quest.Imports;
 using Maestro.Quest.Programs;
+using Maestro.Quest.Rules;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using UnityEngine;
@@ -45,6 +46,24 @@ namespace Maestro.Quest.Tests
             editor.Undo();Assert.That(editor.Read(target).mass,Is.EqualTo(2));Assert.That(motion.Speed,Is.EqualTo(.65f),"Selecting the already included walk adds no spurious Undo");editor.Undo();Assert.That(editor.Read(target).mass,Is.EqualTo(.5f));
             editor.Redo();Assert.That(editor.Read(target).mass,Is.EqualTo(2));
             string evidence=Environment.GetEnvironmentVariable("MAESTRO_SPATIAL_SETTINGS");if(!string.IsNullOrEmpty(evidence)){Directory.CreateDirectory(evidence);File.WriteAllText(Path.Combine(evidence,"settings.json"),new JObject {["beforePhysics"]=beforePhysics,["beforeMovement"]=beforeMovement,["beforeWalk"]=beforeWalk,["physics"]=physicsResult,["afterPhysics"]=afterPhysics,["movement"]=movement,["afterMovement"]=afterMovement,["walkBeforeSave"]=walkBeforeSave,["walk"]=walk,["afterWalk"]=afterWalk}.ToString());}
+        }
+        [UnityTest] public IEnumerator BookGeneratedBehaviourUsesFreshGuardsAndPreservesLivePreferencesOnLaterRuns()
+        {
+            SharedModes(out _,out _);
+            var source=File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/current-input-program.json"));
+            var sequence=new RuleSequence {id=Guid.NewGuid().ToString("N"),name="Book current inputs",program=source};var runs=new JArray();
+            modeRules.Scheduler.Configure(new RuleDocument {sequences=new[]{sequence}});
+            foreach(float distance in new[]{1.6f,2.2f}){
+                Assert.That(editor.ConfigureMovement(editor.ObjectRevision("maestro"),new AvatarMovementSettings {distance=distance,speed=.3f},out var error),Is.True,error);
+                var before=SettingsFact("avatar.movement.settings");int revision=editor.ObjectRevision("maestro");Assert.That(motion.Speed,Is.EqualTo(.3f),"Saving a definition must not execute it");
+                Assert.That(modeRules.Scheduler.Trigger(sequence.id,Time.unscaledTime),Is.True,modeRules.Scheduler.LastError);
+                float until=Time.unscaledTime+2;while(modeRules.Scheduler.RunningCount>0&&Time.unscaledTime<until)yield return null;
+                Assert.That(modeRules.Scheduler.RunningCount,Is.Zero);Assert.That(modeRules.Scheduler.Outcomes.Last().phase,Is.EqualTo("completed"),modeRules.Scheduler.LastError);
+                Assert.That(motion.Distance,Is.EqualTo(distance));Assert.That(motion.Speed,Is.EqualTo(.9f));Assert.That(editor.ObjectRevision("maestro"),Is.GreaterThan(revision));Assert.That(motion.Active,Is.False);
+                var saved=new RoomStorage(directory).Load(out error);Assert.That(error,Is.Null);Assert.That(saved.objects.Single(x=>x.id=="maestro").followDistance,Is.EqualTo(distance));
+                runs.Add(new JObject {["before"]=before,["after"]=SettingsFact("avatar.movement.settings"),["phase"]=modeRules.Scheduler.Outcomes.Last().phase});
+            }
+            string evidence=Environment.GetEnvironmentVariable("MAESTRO_REUSABLE_INPUTS");if(!string.IsNullOrEmpty(evidence)){Directory.CreateDirectory(evidence);File.WriteAllText(Path.Combine(evidence,"program.json"),new JObject {["program"]=JObject.Parse(source),["runs"]=runs,["inactive"]=!motion.Active}.ToString());}
         }
         [UnityTest] public IEnumerator SharedSettingsPreserveOtherActorsAndLivePhysicsPositions()
         {

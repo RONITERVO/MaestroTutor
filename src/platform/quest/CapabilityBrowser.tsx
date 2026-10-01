@@ -8,8 +8,9 @@ import {capabilityDefinition,validateCapabilityArguments,resolveCapabilitySchema
 import {CapabilityVariant,CapabilityFields,initialCapabilityValue} from './CapabilityFields';
 import {executionForCapability,type ExecutionLane,type ExecutionRequest} from '../../../shared/roomExecutions';
 import type {CatalogCategory,CatalogRequest,CatalogView} from '../../../shared/roomCatalog';
+import type {ProgramCapabilityInputs} from '../../core-sdk/room/programCapabilityEditing';
 import type {RoomAgentClient} from './roomAgentBridge';
-export type CatalogInsert=(call:CapabilityInvocation)=>string|null;
+export type CatalogInsert=(call:CapabilityInvocation,inputs?:ProgramCapabilityInputs)=>string|null;
 export type OpenCatalog=(insert?:CatalogInsert)=>void;
 /** Optional expert authoring on the book; queries use the same native path as the agent. */
 export function CapabilityBrowser({client,onClose,onInsert}:{client:RoomAgentClient;onClose:()=>void;onInsert?:CatalogInsert}) {
@@ -20,6 +21,8 @@ export function CapabilityBrowser({client,onClose,onInsert}:{client:RoomAgentCli
  const [checked,setChecked]=useState(''),[recoveryNotice,setRecoveryNotice]=useState(''),[confirming,setConfirming]=useState('');
  const draftEpoch=useRef(0),alive=useRef(true);
  const [loaded,setLoaded]=useState(''),[acceptedSnapshot,setAcceptedSnapshot]=useState('');
+ const [programInputs,setProgramInputs]=useState<'snapshot'|'current'>('current');
+ const [currentChoices,setCurrentChoices]=useState<Record<string,boolean>>({}),[loadedInputs,setLoadedInputs]=useState<Record<string,unknown>|null>(null);
  const previousSession=useRef(state?.session);
  useEffect(()=>{if(previousSession.current!==state?.session){previousSession.current=state?.session;draftEpoch.current++;setInspection(null);setLoaded('');setAcceptedSnapshot('');setChecked('');setConfirming('');}},[state?.session]);
  useEffect(()=>{alive.current=true;return()=>{alive.current=false;draftEpoch.current++;};},[]);
@@ -35,7 +38,7 @@ export function CapabilityBrowser({client,onClose,onInsert}:{client:RoomAgentCli
  const scope=category==='actions'?{}:{category};
  const search=async(offset=0)=>{setInspection(null);const result=await send({operation:'search',...scope,query:offset?page?.query??query:query,offset});if(result?.operation==='search'&&(result.category??'actions')===category)setPage(result);};
  const inspect=async(id:string,version:number,argumentsValue?:Record<string,unknown>)=>{const result=await send({operation:'inspect',...scope,capability:id,version,...(argumentsValue?{arguments:argumentsValue}:{})});if(result?.operation==='inspect'&&(result.category??'actions')===category&&result.capability===id&&result.version===version){
-  setInspection(result);setAcceptedSnapshot('');setChecked('');setConfirming('');if(!result.definition)setError(result.status);
+  setInspection(result);setCurrentChoices({});setLoadedInputs(null);setProgramInputs('current');setAcceptedSnapshot('');setChecked('');setConfirming('');if(!result.definition)setError(result.status);
   else if(result.category==='facts'&&result.definition.input)setArgs(JSON.stringify(result.arguments??result.definition.example??{},null,2));
   else if(result.category!=='events'&&result.category!=='facts'&&result.category!=='modules')setArgs(JSON.stringify(result.definition.example??initialCapabilityValue(result.definition.input,state?.objects??[]),null,2));
  }};
@@ -52,6 +55,14 @@ export function CapabilityBrowser({client,onClose,onInsert}:{client:RoomAgentCli
  let currentQuery:CatalogRequest|undefined,currentError='',snapshotKey='';
  if(definition&&currentMapping)try{currentQuery=currentInputRequest(definition.input,parsedArgs);snapshotKey=currentInputIdentity(definition.input,parsedArgs,state?.session??'');}catch(e){currentError=e instanceof Error?e.message:'Current values cannot be read.';}
  const snapshotReady=!currentMapping||Boolean(snapshotKey&&snapshotKey===acceptedSnapshot);
+ const liveSupported=state?.capabilities?.includes('structuredValues.v1')===true&&(!currentMapping||Object.keys(currentMapping.arguments).length===0||state?.capabilities?.includes('factQueries.v1')===true);
+ const reusable=currentMapping&&programInputs==='current'&&liveSupported;
+ const currentFields=currentMapping?Object.keys(currentMapping.fields).filter(key=>currentMapping.guards.includes(key)||(currentChoices[key]??(loadedInputs!==null&&JSON.stringify(loadedInputs[key])===JSON.stringify((parsedArgs as Record<string,unknown>)?.[key])))):[];
+ const editActionInputs=(value:unknown)=>{
+  const choices={...currentChoices};
+  for(const key of Object.keys(currentMapping?.fields??{}))if(!currentMapping!.guards.includes(key)&&JSON.stringify((parsedArgs as Record<string,unknown>)?.[key])!==JSON.stringify((value as Record<string,unknown>)?.[key]))choices[key]=false;
+  setCurrentChoices(choices);setArgs(JSON.stringify(value,null,2));setChecked('');setConfirming('');
+ };
  const loadCurrent=async()=>{
   if(!definition||!currentQuery)return;
   const epoch=draftEpoch.current,session=state?.session;
@@ -61,7 +72,7 @@ export function CapabilityBrowser({client,onClose,onInsert}:{client:RoomAgentCli
    if(!alive.current||draftEpoch.current!==epoch||client.snapshot().session!==session)return;
    if(!result.ok||!result.catalog)throw new Error(result.status||'Current values are unavailable.');
    const next=applyCurrentInputs(definition.input,parsedArgs,result.catalog);
-   setArgs(JSON.stringify(next,null,2));setAcceptedSnapshot(currentInputIdentity(definition.input,next,session??''));setLoaded('Current values loaded. Review your changes before running.');
+   setArgs(JSON.stringify(next,null,2));setLoadedInputs(next);setCurrentChoices({});setAcceptedSnapshot(currentInputIdentity(definition.input,next,session??''));setLoaded('Current values loaded. Review your changes before running.');
   }catch(e){if(alive.current&&draftEpoch.current===epoch&&client.snapshot().session===session)setError(e instanceof Error?e.message:'Current values could not be read.');}
  };
  const key=call?JSON.stringify(call):'';
@@ -103,7 +114,7 @@ export function CapabilityBrowser({client,onClose,onInsert}:{client:RoomAgentCli
    </section>}
    {definition&&<><p>{definition.id} · version {definition.version}</p>{definition.description&&<p>{definition.description}</p>}
     <fieldset disabled={pending} className="capability-input-editor">
-    {definition.input.oneOf&&<CapabilityVariant schema={definition.input} value={parsedArgs} objects={state?.objects??[]} onChange={value=>{setArgs(JSON.stringify(value,null,2));setChecked('');setConfirming('');}}/>}
+    {definition.input.oneOf&&<CapabilityVariant schema={definition.input} value={parsedArgs} objects={state?.objects??[]} onChange={editActionInputs}/>}
     {resolveCapabilitySchema(definition.input,call?.arguments)?.description&&<p>{resolveCapabilitySchema(definition.input,call?.arguments)?.description}</p>}
     {currentMapping&&<section aria-label="Current action inputs"><p>Load {Object.keys(currentMapping.fields).join(', ')} from the room. This replaces those draft values; other inputs stay as you chose them.</p>
      <button disabled={pending||!currentQuery||Object.keys(currentMapping.arguments).length>0&&!state?.capabilities?.includes('factQueries.v1')} onClick={()=>void loadCurrent()}>Load current values</button>
@@ -111,14 +122,20 @@ export function CapabilityBrowser({client,onClose,onInsert}:{client:RoomAgentCli
      {!snapshotReady&&<p>Load current values before checking, running or adding this action. Advanced arguments can supply an explicit snapshot.</p>}
      <p>Revision and state identifiers protect this snapshot. They are never silently refreshed when you run. Load again after a stale-edit error.</p>
     </section>}
-    <details><summary>Edit action fields</summary><CapabilityFields locked={currentMapping?.guards} schema={selectedSchema??definition.input} value={parsedArgs} label="Action inputs" objects={state?.objects??[]} onChange={value=>{setArgs(JSON.stringify(value,null,2));setChecked('');setConfirming('');}}/></details>
-    <details open={!currentMapping}><summary>Advanced action arguments</summary><label>Action arguments<textarea aria-label="Action arguments" rows={12} spellCheck={false} value={args} disabled={pending} onChange={e=>{setArgs(e.target.value);setChecked('');setConfirming('');try{setAcceptedSnapshot(currentInputIdentity(definition.input,JSON.parse(e.target.value),state?.session??''));}catch{setAcceptedSnapshot('');}}}/></label></details>
+    <details><summary>Edit action fields</summary><CapabilityFields locked={currentMapping?.guards} schema={selectedSchema??definition.input} value={parsedArgs} label="Action inputs" objects={state?.objects??[]} onChange={editActionInputs}/></details>
+    <details open={!currentMapping}><summary>Advanced action arguments</summary><label>Action arguments<textarea aria-label="Action arguments" rows={12} spellCheck={false} value={args} disabled={pending} onChange={e=>{setArgs(e.target.value);setLoadedInputs(null);setCurrentChoices({});setChecked('');setConfirming('');try{setAcceptedSnapshot(currentInputIdentity(definition.input,JSON.parse(e.target.value),state?.session??''));}catch{setAcceptedSnapshot('');}}}/></label></details>
     </fieldset>
     {invalid&&<p className="room-message room-message-warning">{invalid}</p>}
+    {onInsert&&currentMapping&&definition.domain!=='workspace'&&<section aria-label="Behaviour input choices"><h3>Behaviour inputs</h3>
+     <label>When this behaviour runs<select aria-label="Behaviour input timing" disabled={pending} value={reusable?'current':'snapshot'} onChange={e=>setProgramInputs(e.target.value as 'current'|'snapshot')}><option value="current" disabled={!liveSupported}>Read current values at this action</option><option value="snapshot">Use this exact snapshot</option></select></label>
+     {reusable?<><p>A visible Read block takes one snapshot of {currentMapping.fact} immediately before the action. Revision and state guards always come from that read. No action starts when you add or save it.</p>
+      {Object.keys(currentMapping.fields).filter(key=>!currentMapping.guards.includes(key)).map(key=><label key={key} className="rule-checkbox"><input type="checkbox" aria-label={'Keep current '+key+' when running'} disabled={pending} checked={currentFields.includes(key)} onChange={e=>setCurrentChoices({...currentChoices,[key]:e.target.checked})}/>Keep current {key} when running{!currentFields.includes(key)&&<small> · fixed to {JSON.stringify((parsedArgs as Record<string,unknown>)?.[key])}</small>}</label>)}
+      <p>The read and action stay editable in your program. A missing fact or stale/blocked action stops the run; it does not retry. Place both blocks inside a loop if each iteration needs a fresh read.</p>
+     </>:<p>This keeps literal values, including revision or state identifiers. A later run can fail if the room changed. {liveSupported?'Choose current values for a reusable action.':'Update the native app to author current-value program inputs.'}</p>}
+    </section>}
     <div className="room-workspace-actions"><button disabled={pending||!call||!snapshotReady} onClick={async()=>{if(call){const result=await send({operation:'check',call});if(result?.operation==='check')setChecked(key);}}}>Check availability</button>
      {state?.capabilities?.includes('execution.v1')&&<button disabled={pending||!call||!snapshotReady||Boolean(execution?.storageError)} onClick={()=>{if(call){if(confirmation)setConfirming(key);else void execute({operation:'start',call});}}}>Run action now</button>}
-     {onInsert&&definition.domain!=='workspace'&&<button disabled={pending||!call||!snapshotReady} onClick={()=>{if(call){const error=onInsert(call);if(error)setError(error);else onClose();}}}>Add first block to draft</button>}</div>
-    {onInsert&&currentMapping&&definition.domain!=='workspace'&&<p>Adding this action keeps these exact snapshot values. For a reusable program, bind fresh fact values to its revision or state inputs before each run.</p>}
+     {onInsert&&definition.domain!=='workspace'&&<button disabled={pending||!call||!snapshotReady} onClick={()=>{if(call){const error=onInsert(call,reusable?{kind:'current',fields:currentFields}:{kind:'snapshot'});if(error)setError(error);else onClose();}}}>{reusable?'Add read and action to draft':'Add first block to draft'}</button>}</div>
     {confirmation&&call&&confirming===key&&<section aria-label="Confirm permanent action" className="room-message room-message-warning"><p>{confirmation}</p><pre>{JSON.stringify(call.arguments,null,2)}</pre><button disabled={pending} onClick={()=>setConfirming('')}>Cancel confirmation</button><button disabled={pending||Boolean(execution?.storageError)} onClick={()=>{setConfirming('');void execute({operation:'start',call});}}>Confirm permanent action</button></section>}
     <p className="room-workspace-intro">{definition.domain==='workspace'?'Workspace maintenance runs once and cannot be added to a room behaviour.':onInsert?'Adding a block changes your draft. Apply it in the workshop when ready.':'Choose a behaviour in the workshop to add an action block.'} Availability can change before execution.</p>
     <details><summary>Argument reference</summary><p>Duration: {definition.duration}. Uses: {(resolveCapabilitySchema(definition.input,call?.arguments)?.['x-channels']??definition.channels).join(', ')||'no animation channel'}.</p><p>Needs: {(resolveCapabilitySchema(definition.input,call?.arguments)?.['x-requirements']??definition.requirements).join(', ')||'no additional requirements'}.</p><pre>{JSON.stringify(definition.input,null,2)}</pre></details>

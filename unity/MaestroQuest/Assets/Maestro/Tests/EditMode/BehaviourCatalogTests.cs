@@ -84,6 +84,24 @@ namespace Maestro.Quest.Tests
             }
             Assert.That(count,Is.EqualTo(14));
         }
+        sealed class ChangingCurrentInputs:IProgramFacts
+        {
+            public int Reads;
+            public bool TryRead(string name,out ProgramValue value){
+                Reads++;var source=JObject.Parse("{\"revision\":101,\"distance\":1.8,\"speed\":0.4,\"temporary\":false,\"live\":{\"active\":false,\"mode\":\"stopped\",\"status\":\"Ready\",\"canLook\":true,\"lookReason\":\"\",\"canFollow\":true,\"followReason\":\"\"}}");
+                source["revision"]=100+Reads;source["distance"]=1.7+Reads*.1;value=ProgramValue.Literal(source,BehaviourCatalog.Fact(name).Type);return true;
+            }
+        }
+        [Test] public void BookGeneratedCurrentInputsReadOnceAndNeverFallBackWhenUnavailable()
+        {
+            var source=File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/current-input-program.json"));
+            Assert.That(BehaviourProgram.TryParse(source,out var program,out var error),Is.True,error);
+            var facts=new ChangingCurrentInputs();var machine=new ProgramMachine(program,facts);
+            Assert.That(machine.Advance(out var action,256),Is.EqualTo(ProgramYield.Action),machine.Error);Assert.That(facts.Reads,Is.EqualTo(1));
+            Assert.That(action.Definition.Id,Is.EqualTo("avatar.movement.configure"));Assert.That((int)action.Arguments["revision"],Is.EqualTo(101));
+            Assert.That((double)action.Arguments["distance"],Is.EqualTo(1.8).Within(.0001));Assert.That((double)action.Arguments["speed"],Is.EqualTo(.9));
+            var unavailable=new ProgramMachine(program,null);Assert.That(unavailable.Advance(out var missing,256),Is.EqualTo(ProgramYield.Failed));Assert.That(missing,Is.Null);Assert.That(unavailable.Error,Does.Contain("fact unavailable"));
+        }
         [Test] public void EveryExistingAdapterHasExactlyOneStableRegistration()
         {
             Assert.That(LegacyCapabilityAdapters.ActionIds.Select(id=>LegacyCapabilityAdapters.Kind(id).Value),Is.EquivalentTo(Enum.GetValues(typeof(RuleActionKind))));

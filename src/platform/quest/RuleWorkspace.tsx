@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import {ProgramModuleLibrary} from './ProgramModuleLibrary';
 import {ProgramEditor} from './ProgramEditor';
-import {capabilityResources} from '../../../shared/capabilities';
+import {insertProgramCapability} from '../../core-sdk/room/programCapabilityEditing';
 import type {OpenCatalog} from './CapabilityBrowser';
 import {parseProgram,sequenceProgram,simpleProgramSteps,withSimpleProgramSteps} from '../../core-sdk/room/programs';
 import {useCallback,useEffect,useState,useSyncExternalStore} from 'react';
@@ -33,13 +33,12 @@ export function RuleWorkspace({client,onCatalog}:{client:RoomAgentClient;onCatal
  const changeSteps=(fn:(steps:RuleStep[])=>void)=>change(value=>{const steps=simpleProgramSteps(value.program);if(steps===null)return;fn(steps);value.program=withSimpleProgramSteps(value.program,steps);});
  const updateStep=(index:number,fn:(step:RuleStep)=>void)=>changeSteps(steps=>fn(steps[index]));
  const create=async()=>{const target=state.objects.find(o=>o.kind==='Assembly');const step=newRuleStep(target?8:1);step.targetId=target?.id??'maestro';await edit([{kind:'save',reference:'newBehaviour',sequence:{id:'',name:'New behaviour',interruption:0,repeat:false,program:JSON.stringify(sequenceProgram([step]))}}]);};
- const browse=()=>onCatalog?.(draft&&!blocked?call=>{
-  const parsed=parseProgram(draft.sequence.program);if(!parsed.program)return parsed.error??'Invalid draft.';
-  const program=parsed.program,entry=program.functions.find(f=>f.name===program.entry)!;
-  entry.body.unshift({id:crypto.randomUUID().replace(/-/g,''),op:'invoke',capability:call.id,version:call.version,arguments:call.arguments,bindings:{}});
-  program.resources=[...new Set([...program.resources,...capabilityResources(call.id,call.arguments)])];
-  const source=JSON.stringify(program),validated=parseProgram(source);if(validated.error)return validated.error;
-  setDraft({...draft,sequence:{...draft.sequence,program:source}});setDirty(true);setEditorReset(value=>value+1);return null;
+ const browse=()=>onCatalog?.(draft&&!blocked?(call,inputs)=>{
+  try{
+   const program=insertProgramCapability(draft.sequence.program,call,inputs);
+   if(draft.sequence.repeat&&program.version===3)return 'This draft uses sequence Repeat. Turn it off and add an explicit Repeat until stopped block with a wait before adding current-value inputs. Your draft is unchanged.';
+   setDraft({...draft,sequence:{...draft.sequence,program:JSON.stringify(program)}});setDirty(true);setEditorReset(value=>value+1);return null;
+  }catch(e){return e instanceof Error?e.message:'The action could not be added to this draft.';}
  }:undefined);
  const exit=async(objects:boolean)=>{try {const result=await client.request(objects?[{action:'inspect',target:state.selectedId??state.objects[0]?.id??'maestro'}]:[{action:'workspace',visible:false}]);if(!result.ok)setError(result.status);else setDirty(false);}catch(e){setError(e instanceof Error?e.message:'The book is unavailable.');}};
  return <div className="room-workspace rule-workspace" aria-label="Behaviour workspace">

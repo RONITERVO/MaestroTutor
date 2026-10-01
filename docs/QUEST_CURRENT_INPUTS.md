@@ -27,14 +27,15 @@ query target, variant, guard or native session requires another snapshot. Guards
 are read-only in simple fields; advanced JSON permits explicitly supplied snapshots.
 The native availability check and execution remain authoritative. Load again after
 a stale-edit error, review the intended change, and run explicitly.
+This one-off execution path always uses the reviewed snapshot; program authoring
+has a separate current-value option described in QUEST_REUSABLE_INPUTS.md.
 
 Inputs are disabled during a pending native request. An additional draft epoch,
 mounted-state and session check rejects late reads after edits, navigation or
 session replacement. Failed reads do not manufacture defaults. Action insertion
-retains the exact reviewed values: it does not claim those literal guards will be
-reusable. Recurring programs must use the existing typed fact expressions/bindings
-to read current guards at the intended execution point. This release increment
-adds snapshot editing, not automatic program dataflow generation.
+now offers either literal snapshots or visible fact-read blocks
+with selected live preferences and fresh guards. The agent and book use the same
+typed program representation; no hidden retry or new execution path is added.
 
 Native EditMode checks and web CI validate metadata references, field types and
 guard mappings. Web tests cover native snapshots, unrequested settings, unavailable

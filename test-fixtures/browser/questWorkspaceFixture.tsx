@@ -93,7 +93,7 @@ if(spatialSettings){
  state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';
  state.objects.push({id:nativeSpatial.beforePhysics.target,objectRevision:nativeSpatial.beforePhysics.revision,name:'Native settings block',kind:'Block',position:{x:0,y:1,z:1},scale:1,color:white,animated:false});
  state.execution={...JSON.parse(JSON.stringify(nativeSpatial.physics)),selected:null,running:[],outcomes:[],nextRunId:nativeSpatial.physics.selected.id};
- state.capabilities=[...state.capabilities??[],'catalogVocabulary.v1','factQueries.v1','spatialSettings.v1','execution.v1','executionReceipts.v1','actionResults.v1'];
+ state.capabilities=[...state.capabilities??[],'catalogVocabulary.v1','factQueries.v1','structuredValues.v1','spatialSettings.v1','execution.v1','executionReceipts.v1','actionResults.v1'];
 }
 const importReadback=new URLSearchParams(location.search).has('importReadback');
 if(importReadback){

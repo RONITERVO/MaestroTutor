@@ -28,6 +28,8 @@ the catalog through fresh native simulation identities and the physical service;
 see QUEST_PHYSICS_SIMULATION.md. The book action editor now loads real settings
 and concurrency guards from catalog-declared facts. It requires an explicit
 snapshot before running and never silently advances revisions; see QUEST_CURRENT_INPUTS.md.
+Reusable behaviours can now choose visible current-value reads and live/fixed
+preferences through the same typed program representation; see QUEST_REUSABLE_INPUTS.md.
 The remaining runtime, provider, device and Store acceptance gates remain unfinished; the complete v1 goal remains active.
 
 Current recovery implementation supports retained candidates, an external backup,
@@ -44,6 +46,33 @@ and tracked operation roots remain protected. Private recovery export remains
 separate; a full store with unreadable selection still requires recovery/repair.
 PR #248 records the current verified commit and package. Earlier entries
 below are historical evidence, not current test totals or release acceptance.
+
+PC reusable-input increment (2026-10-01): program insertion now offers a literal
+snapshot or ordinary editable read/action blocks generated from native current-input
+metadata. Guards and chosen live preferences use one typed fact snapshot; edited
+preferences stay fixed. Existing functions/state/imports survive, symbols avoid
+collisions, unavailable reads stop before effects, and stale/blocked actions do not
+retry. One-off Run keeps its exact reviewed snapshot. Native and web limits remain
+enforced. Older sequence-level Repeat requires explicit conversion to a typed loop;
+the editor preserves that draft rather than changing timing silently. The shared
+room-agent guide describes the same dataflow and stable-identity rules.
+
+Verification: 388 EditMode + 328 PlayMode tests passed, with three optional private
+model checks skipped. The web suite passed 1,614 tests in 185 files, and 61 Android
+browser tests passed. A generated program fixture proves a single fact read and
+failure without fallback; actual scheduler/storage runs preserve later distance
+changes while applying fixed speed with fresh revisions. The Chrome authoring probe
+saved visible read/action blocks without execution commands; screenshots were
+inspected. Its save acknowledgement now waits for the actual request, not an old
+status message. Initial native test compilation needed a missing namespace import;
+the final full build passed. TypeScript, lint, catalog drift, prompt ownership and
+core boundary checks pass. All 189 runtime and 90 test C# files, 25 fixtures plus
+metadata and 113 web files match. The full helper exited 0.
+
+ARM64-only, v2-signature-verified development APK: `D:\Projects\Builds\MaestroQuestVerify\Builds\Checkpoints\MaestroQuest-reusable-inputs-D74BFC44.apk`.
+SHA-256 `D74BFC440DC1C0D8EE44BDF4DE8A6580131781CB5F025DE50DD531C7546758A4`.
+Evidence: `.quest-evidence/reusable-inputs/verification.json`. Not installed on
+Quest; device/provider/Store acceptance and the complete v1 remain unfinished.
 
 PC current-input editing increment (2026-10-01): six shared actions (14 variants)
 now declare read-only fact-to-draft mappings in their native schemas. The book
