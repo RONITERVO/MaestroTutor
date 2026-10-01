@@ -65,7 +65,8 @@
       },
       "features": [
         "factQueries.v1"
-      ]
+      ],
+      "domain": "workspace"
     },
     "status": "Current fact value. Reading does not change the room.",
     "category": "facts",

@@ -6,6 +6,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using Maestro.Quest.Rules;
 using Maestro.Quest.Creation;
+using Maestro.Quest.Persistence;
 using UnityEngine;
 using Newtonsoft.Json.Linq;
 
@@ -37,12 +38,14 @@ namespace Maestro.Quest.Programs
             public JObject ToJson() {
                 var value=new JObject {["id"]=Id,["version"]=Version,["label"]=Label,["input"]=InputSchema,
                     ["duration"]=Duration,["ownership"]=Ownership,["channels"]=new JArray(Channels),["requirements"]=new JArray(Requirements)};
+                if(Module.Domain!="room")value["domain"]=Module.Domain;
                 if(Description!=null)value["description"]=Description;
                 if(Example!=null)value["example"]=Example;
                 if(((JObject)OutputSchema["properties"]).Count>0)value["output"]=OutputSchema;return value;
             }
             public ActionDefinition(CapabilityModule module) {
                 Module=module??throw new ArgumentNullException(nameof(module));
+                if(module.Domain is not ("room" or "workspace"))throw new ArgumentException("Unknown capability execution domain.");
                 SearchText=Id+" "+Label+" "+Description+" "+string.Join(" ",Requirements)+" "+string.Join(" ",InputSchema.Descendants().OfType<JProperty>().Where(p=>p.Name=="title"||p.Name=="x-requirements"||p.Name=="x-channels").Select(p=>p.Value.ToString()));
             }
         }
@@ -93,12 +96,13 @@ namespace Maestro.Quest.Programs
             public readonly bool? PhysicsReady, PhysicsRunning;
             public readonly IProgramEventWorld World;
             public readonly RoomEditor Editor;
-            public FactContext(string activity=null, bool? physicsReady=null, bool? physicsRunning=null,string roomSessionId=null,IProgramEventWorld world=null,RoomEditor editor=null)
-            { Activity=activity;PhysicsReady=physicsReady;PhysicsRunning=physicsRunning;RoomSessionId=roomSessionId;World=world;Editor=editor; }
+            public readonly WorkspaceHost Workspace;
+            public FactContext(string activity=null, bool? physicsReady=null, bool? physicsRunning=null,string roomSessionId=null,IProgramEventWorld world=null,RoomEditor editor=null,WorkspaceHost workspace=null)
+            { Activity=activity;PhysicsReady=physicsReady;PhysicsRunning=physicsRunning;RoomSessionId=roomSessionId;World=world;Editor=editor;Workspace=workspace??(editor?editor.GetComponentInParent<WorkspaceHost>():null); }
         }
         public sealed class FactDefinition
         {
-            public readonly string Id, Label, Description;
+            public readonly string Id, Label, Description, Domain;
             public readonly int Version=1;
             public readonly ProgramDataType Type;
             readonly JObject input,example;
@@ -107,11 +111,12 @@ namespace Maestro.Quest.Programs
             public bool Parameterized=>input!=null;
             public FactDefinition(string id,ProgramType type,string label,string description,Func<FactContext,ProgramValue?> read)
                 :this(id,type,label,description,null,null,(context,args)=>read(context)) {}
-            public FactDefinition(string id,ProgramDataType type,string label,string description,JObject input,JObject example,Func<FactContext,JObject,ProgramValue?> read)
-            {Id=id;Type=type;Label=label;Description=description;this.input=input==null?null:(JObject)input.DeepClone();this.example=example==null?null:(JObject)example.DeepClone();this.read=read;}
+            public FactDefinition(string id,ProgramDataType type,string label,string description,JObject input,JObject example,Func<FactContext,JObject,ProgramValue?> read,string domain="room")
+            {Id=id;Type=type;Label=label;Description=description;Domain=domain;this.input=input==null?null:(JObject)input.DeepClone();this.example=example==null?null:(JObject)example.DeepClone();this.read=read;}
             static JToken TypeJson(ProgramDataType type)=>type.Kind==ProgramType.Record?new JObject {["record"]=new JObject(type.Fields.Select(p=>new JProperty(p.Key,TypeJson(p.Value))))}:type.Kind==ProgramType.List?new JObject {["list"]=TypeJson(type.Item)}:new JValue(type.ToString().ToLowerInvariant());
             public JObject ToJson() {
                 var value=new JObject {["id"]=Id,["version"]=Version,["type"]=TypeJson(Type),["label"]=Label,["description"]=Description};
+                if(Domain!="room")value["domain"]=Domain;
                 if(input!=null){value["input"]=Input;value["example"]=example.DeepClone();value["features"]=new JArray("factQueries.v1");}return value;
             }
             public bool ValidArguments(int version,JObject arguments,out string error) {

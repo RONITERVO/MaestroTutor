@@ -78,11 +78,11 @@ namespace Maestro.Quest.Creation
         public RoomMotionSearch Motions { get; }
         public RoomCapabilityCatalog Catalog { get; }
         public RoomExecutions Executions { get; }
-        public RoomAgentExecutor(RoomEditor source) { editor=source;Motions=new RoomMotionSearch(source);Catalog=new RoomCapabilityCatalog(source);Executions=new RoomExecutions(source); }
+        public RoomAgentExecutor(RoomEditor source,Maestro.Quest.Persistence.WorkspaceHost host=null) { editor=source;Motions=new RoomMotionSearch(source);Catalog=new RoomCapabilityCatalog(source,host);Executions=new RoomExecutions(source,host); }
         bool Preconditions(RoomAgentRequest request,out string error)
         {
             error="The target changed; inspect its latest state before retrying.";
-            if(request.version==1) return request.sceneRevision==editor.Revision;
+            if(request.version==1) return editor&&request.sceneRevision==editor.Revision;
             if(request.conditions==null || request.conditions.Length>16 || request.conditions.Any(x=>x==null || x.id==null) || request.conditions.Select(x=>x.id).Distinct().Count()!=request.conditions.Length) return false;
             var aliases=new HashSet<string>();
             foreach(var command in request.commands)
@@ -94,7 +94,7 @@ namespace Maestro.Quest.Creation
                 foreach(var target in targets) {
                     if(aliases.Contains(target))continue;
                     var condition=request.conditions.FirstOrDefault(x=>x.id==target);
-                    if(condition==null || condition.revision<=0 || condition.revision!=editor.ObjectRevision(target)) return false;
+                    if(condition==null || condition.revision<=0 || !editor||condition.revision!=editor.ObjectRevision(target)) return false;
                 }
             }
             return true;
@@ -104,7 +104,7 @@ namespace Maestro.Quest.Creation
             created=Array.Empty<string>(); status="Invalid room request";
             if(request == null || (request.version != 1 && request.version != 2) || request.commands == null || request.commands.Length<1 || request.commands.Length>8) return false;
             var commands=request.commands;
-            if(!editor) {
+            if(!editor&&!commands.Any(command=>command?.action=="execution")) {
                 if(commands.Length==1&&commands[0]?.action=="catalog")return Catalog.Execute(commands[0].catalog,out status);
                 if(commands.Length==1&&commands[0]?.action=="workspace") {WorkspaceVisible=commands[0].visible;status=WorkspaceVisible?"Workspace inspection opened":"Returned to chat";return true;}
                 status="The selected workspace is unavailable. Its saved files are preserved; room actions cannot run.";return false;
@@ -253,7 +253,7 @@ namespace Maestro.Quest.Creation
         {
             // An editor replacement always invalidates old requests, even if object IDs/revisions
             // happen to match the incoming document. The browser and chat themselves stay alive.
-            editor=source;executor=new RoomAgentExecutor(source);inbox.Reset();revision=0;next=0;
+            editor=source;executor=new RoomAgentExecutor(source,GetComponent<Maestro.Quest.Persistence.WorkspaceHost>());inbox.Reset();revision=0;next=0;
             status=bindingStatus=message;connected=false;ok=source;created=Array.Empty<string>();lastInspected=null;
         }
         public bool OpenRules(string id,out string error) {
@@ -296,7 +296,7 @@ namespace Maestro.Quest.Creation
         public RoomAgentState Observe()
         {
             if(!editor)return new RoomAgentState {session=inbox.Session,revision=++revision,sceneRevision=1,ack=inbox.Ack,ok=ok,status=status,created=created,
-                objects=Array.Empty<RoomAgentObject>(),capabilities=new[]{"catalog.v1","catalogVocabulary.v1"},visible=executor?.WorkspaceVisible==true,
+                objects=Array.Empty<RoomAgentObject>(),capabilities=RoomControls.WorkspaceCapabilities(GetComponent<Maestro.Quest.Persistence.WorkspaceHost>()).Concat(new[]{"catalog.v1","catalogVocabulary.v1"}).Distinct().ToArray(),execution=executor?.Executions.Observe(),visible=executor?.WorkspaceVisible==true,
                 workspaceView="objects",catalog=executor?.Catalog.Observe()};
             if(executor.WorkspaceVisible && editor.SelectedId!=null) lastInspected=editor.SelectedId;
             else if(executor.InspectionId!=null) lastInspected=executor.InspectionId;

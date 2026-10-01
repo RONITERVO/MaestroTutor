@@ -902,3 +902,22 @@ write to a replacement room. Corrupt selection metadata preserves the shell and
 reports unavailability; independent store damage retains its existing read-only
 behavior. Activation/recovery commands, held-content maintenance parity and
 content-bound review remain unfinished release work.
+
+
+### 2026-10-01: persistent workspace maintenance through the shared catalog
+
+Archive selection, cancellation, export and selection-status observation now work
+through a catalog-declared workspace domain. The shell owns their services and a
+persistent runner using the existing interpreter, native handlers and receipt
+store. Room holds or missing content do not block maintenance; app pause still
+interrupts active invocations. Native and the shared web/agent helper independently
+route each start to its domain's issued ID. The book displays both histories and
+supports their existing inspection, Stop and explicit receipt-recovery operations.
+
+Native tests prove picker and receipt ownership survive room replacement, including
+an interruption, and that completed opening receipts reconcile across app restart
+without reopening the chooser. Export succeeds under review while room activity
+stays held. Web tests accept captured native outcomes and operate the book Run
+control despite unavailable room history. Complete restore activation and recovery,
+content-bound review completion, retained-generation browsing/maintenance and
+headset acceptance remain release work.

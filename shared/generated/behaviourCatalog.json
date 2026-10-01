@@ -986,6 +986,7 @@
         "libraries.idle",
         "downloads.available"
       ],
+      "domain": "workspace",
       "description": "Save a portable ZIP in Quest Downloads/Maestro containing accepted room objects and recipes, recorded animations, saved behaviours, controller settings, avatar activities, models, motion files and reusable modules. It captures one snapshot; later edits stay in the workspace. Keep or discard temporary play first. Chat, credentials, room scans, active takes, running programs, Undo and execution receipts are excluded. Missing references remain unchanged and are counted in the result. Export does not change the workspace. Completion means Android closed and published the file; waiting is bounded to ten minutes. Stop cannot retract publication; after interruption check Downloads/Maestro before retrying. Restore is not available yet.",
       "example": {},
       "output": {
@@ -1080,6 +1081,7 @@
       "ownership": "none",
       "channels": [],
       "requirements": [],
+      "domain": "workspace",
       "description": "Open Android's file chooser for one workspace ZIP. Returns a tracked requestId immediately, not a selected or restored workspace. The user must choose the file in Android. The system chooser pauses room actions; they will not resume or replay. After returning, read workspace.archive.selection with this requestId to follow copy, validation and preview. Preparation never activates imported content. Cancel the request to discard its unused preview. Only one selection or preview at a time; file limit 512 MB. Activation is not available yet.",
       "example": {},
       "output": {
@@ -1122,6 +1124,7 @@
       "ownership": "none",
       "channels": [],
       "requirements": [],
+      "domain": "workspace",
       "description": "Cancel the exact file-selection request or discard its verified, unused preview. It never deletes the source file or changes the active workspace. Cleanup may continue after this acknowledgement; read workspace.archive.selection for cancelled/failed and any retained preview. Cancelling does not restart paused room actions. A stale request cannot cancel a newer chooser.",
       "example": {
         "requestId": "00000000000000000000000000000000"
@@ -3308,6 +3311,7 @@
       },
       "label": "Archive selection status",
       "description": "Read the exact archive request after returning from Android selection. Phases: selecting, copying, preparing, prepared, cancelling, cancelled or failed. Prepared means its manifest, documents and assets were verified into a private preview; nothing was activated. Summary counts describe that preview, including unavailable programs and missing references. Inspect errors before another choice. IDs and counts are empty/zero until a preview exists. An unknown request or paused runtime is unavailable. Read-only; never opens a chooser, imports or runs anything.",
+      "domain": "workspace",
       "input": {
         "type": "object",
         "properties": {
@@ -3534,7 +3538,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "8096934bec0c6315ce615fce3d9d33bc5c953e1bd94082e36f283420ae6b0e33"
+      "sha256": "741f355fb7cda777ebf643a28740c45b2b1d09b564d62c0dae10d624c1c825f2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -3594,7 +3598,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModule.cs",
-      "sha256": "91dc56c02b804ab3c4a7040190ffc50edd4e63410d213e0c57406920d94f42f9"
+      "sha256": "2a7a9bcb825597e2b60c8bd684fe3438356101330898905358593c9f8f86140a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
@@ -3654,11 +3658,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceExportCapability.cs",
-      "sha256": "a9baed5c3c95ba9ae532d2df578596601b0aaee2d0778a08adb4aed762841129"
+      "sha256": "a298dd51f8166239999c7d96d4645dbbd852d0f696e576a8328978cc49286f2e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceSelectionCapabilities.cs",
-      "sha256": "34163ec00518ca779f5dd76add94ff31b5516bce70705800d2cb6b297f9f4031"
+      "sha256": "9762294f0551fec82a165da8b9d1066db85a0168617eaf880ed17f67849683a6"
     }
   ]
 }

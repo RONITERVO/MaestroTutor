@@ -211,3 +211,19 @@ it('opens a tracked archive choice and inspects the real native preview without 
  fireEvent.change(screen.getByLabelText('Fact inputs requestId'),{target:{value:'f'.repeat(32)}});expect(screen.getByLabelText('Current fact value').textContent).toContain('Not read yet');expect(client.snapshot().request).toBeNull();
  act(()=>client.cancel());
 });
+
+it('can start a workspace action with its own issued ID while room history is unavailable',async()=>{
+ const {capabilityDefinition}=await import('../../../shared/capabilities');
+ const client=new RoomAgentClient(),workspaceId='d'.repeat(32);
+ let state={...JSON.parse(JSON.stringify(nativeProgram)),session:'f'.repeat(32),revision:1,ack:0,visible:true,workspaceView:'objects',objects:[],rules:null,
+  capabilities:['catalog.v1','catalogVocabulary.v1','execution.v1','executionReceipts.v1','workspaceMaintenance.v1','workspaceArchiveSelection.v1','actionRecovery.v1'],
+  execution:{selected:null,running:[],outcomes:[],nextRunId:null,storageError:'Room unavailable',workspace:{selected:null,running:[],outcomes:[],nextRunId:workspaceId,storageError:null}},catalog:null} as RoomAgentState;
+ state.inspection=null;state.selectedId='';expect(client.receive(state)).toBe(true);const screen=render(<RoomWorkspace client={client}/>);
+ const respond=async(catalog:CatalogView)=>{state={...state,revision:state.revision+1,ack:client.snapshot().request!.sequence,catalog};await act(async()=>{expect(client.receive(state)).toBe(true);});};
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:'Search'}));
+ await respond({operation:'search',query:'',offset:0,pageSize:6,total:1,status:'Found',entries:[{id:'workspace.archive.select',version:1,label:'Choose workspace archive'}]});
+ fireEvent.click(screen.getByRole('button',{name:/Choose workspace archive/}));await respond({operation:'inspect',capability:'workspace.archive.select',version:1,definition:capabilityDefinition('workspace.archive.select'),status:'Ready'});
+ expect((screen.getByRole('button',{name:'Run action now'}) as HTMLButtonElement).disabled).toBe(false);
+ fireEvent.click(screen.getByRole('button',{name:'Run action now'}));expect(client.snapshot().request?.commands[0]).toMatchObject({action:'execution',execution:{operation:'start',runId:workspaceId,call:{id:'workspace.archive.select'}}});
+ await act(async()=>{client.cancel();});
+});

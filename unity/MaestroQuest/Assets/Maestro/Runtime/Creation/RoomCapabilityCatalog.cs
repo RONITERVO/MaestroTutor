@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Maestro.Quest.Programs;
 using Maestro.Quest.Rules;
+using Maestro.Quest.Persistence;
 using Newtonsoft.Json.Linq;
 namespace Maestro.Quest.Creation
 {
@@ -12,11 +13,11 @@ namespace Maestro.Quest.Creation
     public sealed class RoomCapabilityCatalog
     {
         public const int PageSize=6;
-        readonly RoomEditor editor;
+        readonly RoomEditor editor;readonly WorkspaceHost workspace;
         JObject request,cached;
         Entry inspected;
         int moduleRevision;bool moduleReady,modulePending;string moduleNotice;
-        public RoomCapabilityCatalog(RoomEditor editor) {this.editor=editor;}
+        public RoomCapabilityCatalog(RoomEditor editor,WorkspaceHost workspace=null) {this.editor=editor;this.workspace=workspace??(editor?editor.GetComponentInParent<WorkspaceHost>():null);}
         static bool Exact(JObject value,params string[] keys)=>value!=null&&value.Count==keys.Length&&keys.All(value.ContainsKey);
         static bool Text(JToken value,int max)=>value?.Type==JTokenType.String&&((string)value).Length<=max&&!((string)value).Any(char.IsControl);
         static bool Version(JToken value)=>value?.Type==JTokenType.Integer&&(double)value>=1&&(double)value<=1000000;
@@ -74,7 +75,7 @@ namespace Maestro.Quest.Creation
             var runtime=editor?editor.GetComponent<RoomRules>():null;ProgramValue value=default;
             var definition=entry==null?null:BehaviourCatalog.Fact(entry.Id);var arguments=request["arguments"] as JObject;
             if(request.ContainsKey("arguments"))result["arguments"]=request["arguments"].DeepClone();
-            bool available=definition!=null&&runtime&&runtime.TryReadFact(entry.Id,entry.Version,arguments,out value)&&definition.ValidValue(value);
+            bool available=definition!=null&&(definition.Domain=="workspace"&&workspace?workspace.Runtime.TryRead(entry.Id,entry.Version,arguments,out value):runtime&&runtime.TryReadFact(entry.Id,entry.Version,arguments,out value))&&definition.ValidValue(value);
             result["available"]=available;result["value"]=available?JToken.FromObject(value.Value):JValue.CreateNull();
             if(entry!=null)result["status"]=available?"Current fact value. Reading does not change the room.":definition.Parameterized&&arguments==null?"Choose fact arguments to read a value.":!definition.ValidArguments(entry.Version,arguments,out _)?"Fact arguments do not match this definition.":"Fact value is currently unavailable; do not treat it as false or zero.";
             return result;
@@ -126,12 +127,14 @@ namespace Maestro.Quest.Creation
             if(valid) {
                 resources=step.Resources.Distinct().ToArray();
                 var runtime=editor?editor.GetComponent<RoomRules>():null;
-                if(!runtime)error="Action runtime is not ready";
+                bool maintenance=step.Definition.Module.Domain=="workspace"&&workspace;
+                var scheduler=maintenance?workspace.Runtime?.Scheduler:runtime?runtime.Scheduler:null;
+                if(scheduler==null)error="Action runtime is not ready";
                 else {
-                    occupied=runtime.Scheduler?.ActionBusy(step)==true;
-                    available=runtime.CanRun(step,out error);
+                    occupied=scheduler.ActionBusy(step);
+                    available=maintenance?workspace.Runtime.CanRun(step,out error):runtime.CanRun(step,out error);
                     if(available&&occupied) {available=false;error=step.RequiresQuietRoom?"Stop other room actions before this room-wide action":"A running action owns a required animation channel or object";}
-                    if(available&&!runtime.Scheduler.HasCapacity) {available=false;error="All action slots are currently in use";}
+                    if(available&&!scheduler.HasCapacity) {available=false;error="All action slots are currently in use";}
                 }
             }
             return new JObject {["operation"]="check",["call"]=call.DeepClone(),["valid"]=valid,["available"]=available,["occupied"]=occupied,

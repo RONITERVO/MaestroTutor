@@ -1,10 +1,11 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {expect,it} from 'vitest';
-import {validExecutionRequest,validExecutionView,type ExecutionView} from '../../../shared/roomExecutions';
+import {identifyExecution,validExecutionRequest,validExecutionView,type ExecutionView} from '../../../shared/roomExecutions';
 import {parseRoomCommands,isRoomQuery,type RoomAgentState} from './roomAgent';
 import {RoomAgentClient} from '../../platform/quest/roomAgentBridge';
 import {requireRoomCapabilities} from '../../../shared/roomControls';
+import nativeMaintenance from '../../../test-fixtures/browser/workspaceMaintenance.json';
 import nativeCreation from '../../../test-fixtures/browser/creationResult.json';
 import nativeProgram from '../../../test-fixtures/browser/programBookState.json';
 const id='a'.repeat(32),prop='b'.repeat(32);
@@ -142,4 +143,23 @@ it('reads actual Unity error and recovered observations through the same bridge'
  expect(historyRecovery.error.execution.recovery!.id).toMatch(/^[a-f0-9]{32}$/);
  expect(historyRecovery.success.execution.recovery).toBeNull();expect(historyRecovery.success.execution.nextRunId).toMatch(/^[a-f0-9]{32}$/);
  expect(historyRecovery.success.execution.running).toEqual([]);expect(historyRecovery.success.execution.outcomes).toEqual([]);
+});
+
+it('uses the workspace issuer when room history is unavailable and never invents a replacement identity',()=>{
+ const workspaceId='d'.repeat(32),oldId='e'.repeat(32);
+ const view:ExecutionView={selected:null,running:[],outcomes:[],nextRunId:null,storageError:'Room unavailable',workspace:{selected:null,running:[],outcomes:[],nextRunId:workspaceId,storageError:null}};
+ const start={operation:'start' as const,call:{id:'workspace.archive.select',version:1,arguments:{}}};
+ expect(validExecutionView(view)).toBe(true);expect(identifyExecution(start,view)).toEqual({...start,runId:workspaceId});
+ expect(identifyExecution({...start,runId:oldId},view)).toEqual({...start,runId:oldId});
+ expect(()=>identifyExecution({operation:'start',call:{id:'time.wait',version:1,arguments:{seconds:1}}},view)).toThrow('Room unavailable');
+ expect(()=>identifyExecution(start,{...view,workspace:{...view.workspace!,nextRunId:null,storageError:'Workspace history unavailable'}})).toThrow('Workspace history unavailable');
+ expect(validExecutionView({...view,workspace:{...view.workspace,workspace:view.workspace}})).toBe(false);
+});
+
+it('accepts actual native maintenance receipts from a held room, an unavailable room and a restarted host',()=>{
+ for(const view of Object.values(nativeMaintenance))expect(validExecutionView(view)).toBe(true);
+ const chosen=nativeMaintenance['no-room-selected'],restarted=nativeMaintenance['restart-reconciled'];
+ expect(chosen.nextRunId).toBeNull();expect(chosen.workspace.selected.phase).toBe('completed');
+ expect(restarted.workspace.selected.id).toBe(chosen.workspace.selected.id);expect(restarted.workspace.selected.output).toEqual(chosen.workspace.selected.output);
+ expect(nativeMaintenance['held-export'].workspace.selected.output.location).toBe('Downloads/Maestro/test.zip');
 });

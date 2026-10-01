@@ -7,6 +7,7 @@ using Maestro.Quest.Avatar;
 using Maestro.Quest.Creation;
 using Maestro.Quest.Interaction;
 using Maestro.Quest.Rules;
+using Maestro.Quest.Persistence;
 using Newtonsoft.Json.Linq;
 namespace Maestro.Quest.Programs
 {
@@ -21,6 +22,7 @@ namespace Maestro.Quest.Programs
         public abstract JObject InputSchema {get;}
         public virtual JObject OutputSchema=>CapabilitySchema.Object(new JObject());
         public virtual JObject Example=>null;
+        public virtual string Domain=>"room";
         public abstract string Duration {get;}
         // Trusted native I/O deadline, never a user-program argument. Animation loading stays at 30s.
         internal virtual float CompletionTimeoutSeconds=>30;
@@ -51,9 +53,14 @@ namespace Maestro.Quest.Programs
     }
     public sealed class CapabilityContext
     {
-        public readonly RoomEditor Editor;
-        public readonly AnimationWorkshop Workshop;
-        public CapabilityContext(RoomEditor editor,AnimationWorkshop workshop) {Editor=editor;Workshop=workshop;}
+        readonly RoomEditor editor;readonly AnimationWorkshop workshop;readonly bool followsWorkspace;
+        public readonly WorkspaceHost Workspace;
+        public RoomEditor Editor=>followsWorkspace?Workspace?.Current?.Editor:editor;
+        public AnimationWorkshop Workshop=>followsWorkspace?(Editor?Editor.GetComponent<AnimationWorkshop>():null):workshop;
+        public WorkspaceImport ArchiveImport=>Workspace?Workspace.Import:Editor?Editor.GetComponent<WorkspaceImport>():null;
+        public WorkspaceExport ArchiveExport=>Workspace?Workspace.Export:Editor?Editor.GetComponent<WorkspaceExport>():null;
+        public CapabilityContext(RoomEditor editor,AnimationWorkshop workshop) {this.editor=editor;this.workshop=workshop;Workspace=editor?editor.GetComponentInParent<WorkspaceHost>():null;}
+        public CapabilityContext(WorkspaceHost workspace){Workspace=workspace;followsWorkspace=true;}
         public bool Target(JObject arguments,out RoomItem item,out string error,bool allowSpatial=false,bool allowUpperBody=false) {
             item=Editor?Editor.Find((string)arguments["target"]):null;error=null;
             if(!item) {error="An action target was removed; choose another target";return false;}

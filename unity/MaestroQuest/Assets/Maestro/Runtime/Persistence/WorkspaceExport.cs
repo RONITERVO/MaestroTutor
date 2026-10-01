@@ -38,6 +38,7 @@ namespace Maestro.Quest.Persistence
         }
         internal void InitializeForTests(RoomEditor editor,RuleWorkshop rules,MovementControls controls,string directory,Func<string,string> publisher)
         {this.editor=editor;this.rules=rules;this.controls=controls;outputDirectory=directory;publish=publisher;}
+        internal void Bind(RoomEditor source,RuleWorkshop behaviours,MovementControls movement){editor=source;rules=behaviours;controls=movement;}
         public bool CanStart(out string error)
         {
             error=unavailable;

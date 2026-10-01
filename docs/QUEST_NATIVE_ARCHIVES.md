@@ -366,13 +366,55 @@ A required review hold is applied before loaded recipes or other activity can ru
 
 The persistent agent rotates its session when content is detached or replaced;
 matching object IDs and revisions cannot authorize an old request in the new room.
-Without content, read-only catalog discovery and returning to chat remain available,
-while room effects and edits are refused. Native integration tests cover selection,
+Without content, catalog discovery, workspace maintenance and returning to chat
+remain available, while room effects and edits are refused. Native integration tests cover selection,
 replacement, interruption, registration cleanup, damaged stores, observer failures
 and stale requests. A captured native unavailable-room state is accepted by the web
 bridge regression, which also checks replacement invalidates pending work.
 
 This is the startup and owner-lifetime boundary. It does not yet expose activation,
-previous-workspace recovery, review completion, or maintenance execution independent
-of held content. The production coordinator must still own retention workers and
-private-file cleanup before those commands can be released.
+previous-workspace recovery or review completion. Maintenance execution now uses the
+persistent domain below. The production coordinator must still own retention workers
+and private-file cleanup before activation and recovery commands can be released.
+
+
+## Maintenance while room content is held or unavailable
+
+The native capability catalog declares `domain: "workspace"` for archive selection,
+cancellation and export, and for the selection-status fact. Omitted domain means
+ordinary room execution. Invocation arguments cannot override the domain. Saved
+programs still belong to their room scheduler and remain suspended during review;
+the separate domain routes explicit one-off maintenance requests.
+
+`WorkspaceHost` owns the archive chooser, exporter and `WorkspaceRuntime` for the
+shell lifetime. The persistent runner uses the same `RuleScheduler`, interpreter,
+capability handlers and write-ahead receipt implementation as room actions. App
+pause/focus loss still interrupts active invocations. A room review hold or damaged
+selection does not suspend maintenance. Export requires available native stores;
+selection/cancellation and its read-only status do not require a loaded room.
+The exporter rebinds new room owners without discarding already captured operations.
+
+Room outcomes remain in `execution`; maintenance outcomes are in
+`execution.workspace`. Each has its own native-issued next ID, errors, recovery
+identity and bounded history. The shared app helper chooses the correct issued ID
+from the catalog before task journaling and dispatch. A supplied old ID is retained
+for reconciliation, never substituted. Native dispatch independently chooses the
+same scheduler and refuses an ID issued by the other one. Inspect, Stop and history
+recovery resolve the exact observed identity. An error in one history does not
+invalidate the other. The book shows both histories and uses the same command path
+as the agent.
+
+Maintenance receipt storage lives outside selected room generations. Replacing
+content rotates the room bridge session but preserves chooser/runtime ownership,
+tracked selections and maintenance outcomes. A restart marks unfinished actions
+interrupted using the normal receipt rules; replaying a completed picker-opening
+receipt does not open another chooser. A request whose chooser no longer exists
+has no invented selection-status fact.
+
+Real-host tests exercise an unavailable room, selection/read/cancel, app pause,
+restart reconciliation, replacement interruption, export under a review hold and
+refusal of another domain's issued ID. Captured native results are validated by web
+tests; the book Run control is exercised with unavailable room history and healthy
+maintenance. These checks do not yet establish a complete restore journey. Archive
+activation, previous-workspace recovery, content-bound review completion and
+retained-generation maintenance are still unfinished.

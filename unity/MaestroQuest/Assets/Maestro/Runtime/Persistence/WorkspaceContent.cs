@@ -59,8 +59,6 @@ namespace Maestro.Quest.Persistence
             movementTools.AddComponent<AvatarSpatialTools>().Build(movement,editor,workshop,content.GetComponent<RoomRules>(),room);
             Controls=content.AddComponent<MovementControls>();var movementControls=Controls;
             movementControls.Initialize(room,editor,workshop,movement,content.GetComponent<RoomRules>(),rules,input,virtualView,headTracked);
-            content.AddComponent<Maestro.Quest.Persistence.WorkspaceExport>().Initialize(editor,rules,movementControls);
-            content.AddComponent<Maestro.Quest.Persistence.WorkspaceImport>().Initialize(applicationData);
             var controlTools=new GameObject("Movement and controller bindings"); controlTools.transform.SetParent(content.transform,false);
             controlTools.transform.localPosition=new Vector3(-1.15f,.4f,1.25f); controlTools.transform.localRotation=Quaternion.Euler(40,-30,0);
             controlTools.AddComponent<MovementTools>().Build(movementControls,room);

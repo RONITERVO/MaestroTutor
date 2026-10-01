@@ -13,7 +13,7 @@ export interface CapabilitySchema {
 }
 export interface CapabilityDefinition {
  id:string;version:number;label:string;description?:string;input:CapabilitySchema;output?:CapabilitySchema;example?:Record<string,unknown>;
- duration:string;ownership:string;channels:string[];requirements:string[];
+ domain?:'room'|'workspace';duration:string;ownership:string;channels:string[];requirements:string[];
 }
 export interface CapabilityInvocation {id:string;version:number;arguments:Record<string,unknown>}
 const clone=<T>(value:T):T=>JSON.parse(JSON.stringify(value));

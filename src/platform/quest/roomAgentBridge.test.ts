@@ -10,7 +10,7 @@ describe('native room agent client',()=>{
  it('accepts the native shell while its room is unavailable and interrupts stale work on replacement',async()=>{
   const unavailable=JSON.parse(readFileSync('test-fixtures/browser/workspaceUnavailableState.json','utf8'));
   const client=new RoomAgentClient();expect(client.receive(unavailable)).toBe(true);
-  const original=client.lease()!;expect(original.state().objects).toEqual([]);expect(original.state().capabilities).not.toContain('execution.v1');
+  const original=client.lease()!;expect(original.state().objects).toEqual([]);expect(original.state().capabilities).toContain('workspaceMaintenance.v1');
   const pending=original.execute([{action:'catalog',catalog:{operation:'search',query:'workspace',offset:0}}],unavailable.sceneRevision);
   const interrupted=expect(pending).rejects.toThrow('interrupted');
   expect(client.receive(state({session:'b'.repeat(32)}))).toBe(true);await interrupted;

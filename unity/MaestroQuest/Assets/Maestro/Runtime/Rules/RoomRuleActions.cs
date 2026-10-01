@@ -17,7 +17,10 @@ namespace Maestro.Quest.Rules
         readonly Dictionary<string,RoomOwnership.Lease> owned=new();
         readonly Dictionary<string,string> interrupted=new();
         public RoomOwnership Ownership {get;}
-        public RoomRuleActions(RoomEditor editor,AnimationWorkshop workshop) {context=new CapabilityContext(editor,workshop);Ownership=editor?editor.Ownership:new RoomOwnership();}
+        readonly string domain;
+        public RoomRuleActions(RoomEditor editor,AnimationWorkshop workshop):this(new CapabilityContext(editor,workshop)){}
+        internal static RoomRuleActions ForWorkspace(Maestro.Quest.Persistence.WorkspaceHost host)=>new(new CapabilityContext(host),"workspace");
+        RoomRuleActions(CapabilityContext context,string domain=null){this.context=context;this.domain=domain;Ownership=domain=="workspace"?new RoomOwnership():context.Editor?context.Editor.Ownership:new RoomOwnership();}
         public static ImportedModel ClipModel(RoomItem item)=>AnimationTargets.ClipModel(item);
         public bool TryPosition(string id,out UnityEngine.Vector3 position) {
             position=default;var item=context.Editor?context.Editor.Find(id):null;
@@ -31,11 +34,11 @@ namespace Maestro.Quest.Rules
         }
         public bool TryRead(string name,out ProgramValue value)=>TryRead(name,1,null,out value);
         public bool TryRead(string name,int version,JObject arguments,out ProgramValue value) {
-            value=default;if(!context.Editor)return false;
-            return BehaviourCatalog.TryRead(name,version,arguments,new BehaviourCatalog.FactContext(physicsReady:context.Editor.PhysicsWorld?context.Editor.PhysicsWorld.SurfacesReady:null,
-                physicsRunning:context.Editor.PhysicsWorld?context.Editor.PhysicsWorld.Running:null,roomSessionId:context.Editor.TemporarySessionId,world:this,editor:context.Editor),out value);
+            value=default;var definition=BehaviourCatalog.Fact(name);if(definition==null||domain!=null&&definition.Domain!=domain||!context.Editor&&!context.Workspace)return false;
+            return BehaviourCatalog.TryRead(name,version,arguments,new BehaviourCatalog.FactContext(physicsReady:context.Editor&&context.Editor.PhysicsWorld?context.Editor.PhysicsWorld.SurfacesReady:null,
+                physicsRunning:context.Editor&&context.Editor.PhysicsWorld?context.Editor.PhysicsWorld.Running:null,roomSessionId:context.Editor?.TemporarySessionId,world:this,editor:context.Editor,workspace:context.Workspace),out value);
         }
-        public bool CanRun(CapabilityCall call,out string error){if(context.Editor&&context.Editor.RuntimeGate.Held){error=context.Editor.RuntimeGate.Reason;return false;}return call.Definition.Module.CanRun(context,call.Arguments,out error);}
+        public bool CanRun(CapabilityCall call,out string error){if(domain!=null&&call.Definition.Module.Domain!=domain){error="This action belongs to another execution domain.";return false;}if(call.Definition.Module.Domain=="room"&&context.Editor&&context.Editor.RuntimeGate.Held){error=context.Editor.RuntimeGate.Reason;return false;}return call.Definition.Module.CanRun(context,call.Arguments,out error);}
         public bool Start(string runId,CapabilityCall call,out float seconds,out string error) {
             seconds=0;error="This action is already running";if(operations.ContainsKey(runId))return false;
             if(!CanRun(call,out error))return false;results.Remove(runId);interrupted.Remove(runId);

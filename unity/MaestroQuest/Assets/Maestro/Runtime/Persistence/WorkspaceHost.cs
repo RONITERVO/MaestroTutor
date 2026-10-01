@@ -18,6 +18,9 @@ namespace Maestro.Quest.Persistence
         WorkspaceEditHold replacing;
         RoomRuntimeGate gate;
         bool initialized;
+        public WorkspaceImport Import {get;private set;}
+        public WorkspaceExport Export {get;private set;}
+        public WorkspaceRuntime Runtime {get;private set;}
         internal WorkspaceSelection Selection {get;private set;}
         public WorkspaceContent Current {get;private set;}
         public bool Switching {get;private set;}
@@ -28,7 +31,11 @@ namespace Maestro.Quest.Persistence
         {
             if(initialized)throw new InvalidOperationException("Workspace host is already initialized.");
             if(!contentOrigin||factory==null)throw new ArgumentException("Workspace shell is unavailable.");
-            initialized=true;origin=contentOrigin;build=factory;agent=connection;store=new WorkspaceGenerationStore(applicationData);TryOpenSelected(out _);
+            initialized=true;origin=contentOrigin;build=factory;agent=connection;store=new WorkspaceGenerationStore(applicationData);
+            Import=gameObject.AddComponent<WorkspaceImport>();Import.Initialize(applicationData);
+            Export=gameObject.AddComponent<WorkspaceExport>();Export.Initialize(null,null,null);
+            Runtime=gameObject.AddComponent<WorkspaceRuntime>();Runtime.Initialize(this,System.IO.Path.Combine(applicationData,"workspace-maintenance.v1"));
+            TryOpenSelected(out _);
         }
         internal bool TryOpenSelected(out string error)
         {
@@ -50,6 +57,7 @@ namespace Maestro.Quest.Persistence
                 // Ordinary stores already preserve damaged/unsupported documents independently.
                 // A bad controls file must not hide a healthy room or its other tools.
                 bool partial=!Current.Editor.CanSaveRoom||Current.Rules.ReadOnly||Current.Editor.ActivityProfiles.ReadOnly||!Current.Controls.ArchiveReady;
+                Export.Bind(Current.Editor,Current.Rules,Current.Controls);
                 Status=partial?"Workspace opened. Some saved data is unavailable; affected tools preserve its original files.":selected.Active.ReviewRequired?"Workspace opened. Review its contents before starting activity.":"Workspace ready";agent?.Bind(Current.Editor,Status);Notify();
             }catch {
                 // Initialization can fail after some owners were created. Stop them before any frame.
@@ -67,7 +75,7 @@ namespace Maestro.Quest.Persistence
         }
         IEnumerator Replace(WorkspaceSelection selected)
         {
-            var previous=Current;Current=null;
+            var previous=Current;Current=null;Export.Bind(null,null,null);
             // Keep the old book edit lock through the destruction frame. The new editor binds its
             // gate before input resumes; old subscriptions are gone before the new owners exist.
             previous.Detach(preserveBookLock:true);previous.gameObject.SetActive(false);Destroy(previous.gameObject);

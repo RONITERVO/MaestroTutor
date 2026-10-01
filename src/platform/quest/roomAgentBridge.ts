@@ -43,6 +43,7 @@ export class RoomAgentClient {
     if(input.objects.some(o=>o.physics!==undefined&&!validObjectPhysics(o.physics)||o.movement!==undefined&&o.movement!==null&&!validAvatarMovement(o.movement)||['held','simulating'].some(key=>o[key]!==undefined&&typeof o[key]!=='boolean')))return false;
     if(input.visible!==undefined && typeof input.visible!=='boolean')return false;
     if(input.execution!==undefined&&input.execution!==null&&!validExecutionView(input.execution))return false;
+    if(Array.isArray(input.capabilities)&&input.capabilities.includes('workspaceMaintenance.v1')&&(!record(input.execution)||!record(input.execution.workspace)))return false;
     if(input.catalog!==undefined&&input.catalog!==null&&!validCatalogView(input.catalog))return false;
     if(input.motions!==undefined&&input.motions!==null&&!validMotionSearchView(input.motions))return false;
     if(input.rules!==undefined&&input.rules!==null&&!validRuleView(input.rules))return false;

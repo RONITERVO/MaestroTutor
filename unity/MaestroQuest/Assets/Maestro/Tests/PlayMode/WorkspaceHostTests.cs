@@ -14,6 +14,7 @@ using Maestro.Quest.Interaction;
 using Maestro.Quest.Persistence;
 using Maestro.Quest.Rules;
 using NUnit.Framework;
+using Newtonsoft.Json.Linq;
 using UnityEngine;
 using UnityEngine.TestTools;
 using UnityEngine.XR.Interaction.Toolkit;
@@ -23,9 +24,10 @@ namespace Maestro.Quest.Tests
     {
         GameObject root;string directory;RoomInteraction room;RoomItem book;NativeBookBrowser browser;BookPointerRouter router;BookControllerInput input;
         RoomPhysicsWorld physics;RoomNavigation navigation;ScannedRoom scan;VirtualRoomView view;RoomAgent agent;WorkspaceHost host;WorkspaceGenerationStore store;int builds;
-        [SetUp] public void Setup()
+        [SetUp] public void Setup()=>BuildShell(Path.Combine(Path.GetTempPath(),"mqh-"+Guid.NewGuid().ToString("N")));
+        void BuildShell(string path)
         {
-            builds=0;directory=Path.Combine(Path.GetTempPath(),"mqh-"+Guid.NewGuid().ToString("N"));store=new WorkspaceGenerationStore(directory);
+            builds=0;directory=path;store=new WorkspaceGenerationStore(directory);
             root=new GameObject("Persistent shell test");root.AddComponent<XRInteractionManager>();
             var cameraObject=new GameObject("Viewer",typeof(Camera));cameraObject.transform.SetParent(root.transform,false);var camera=cameraObject.GetComponent<Camera>();
             var content=new GameObject("Persistent room origin");content.transform.SetParent(root.transform,false);room=content.AddComponent<RoomInteraction>();room.Viewer=camera.transform;
@@ -70,6 +72,9 @@ namespace Maestro.Quest.Tests
             var objectData=editor.Snapshot().objects.First(x=>!x.IsBuiltIn);objectData.name="Accepted just before replacement";
             Assert.That(editor.ApplyAgentEdit(editor.Revision,new[]{objectData},Array.Empty<string>(),out var error),Is.True,error);
             var oldLibrary=previous.GetComponent<LibraryBookController>();oldLibrary.SetVisible(true);Assert.That(oldLibrary.State.visible,Is.True);
+            var picker=new MaintenancePicker();host.Import.InitializeForTests(directory,picker);var execution=new RoomExecutions(editor,host);
+            var select=MaintenanceStart(execution,"workspace.archive.select",new JObject());Assert.That(execution.Execute(select,out var selectError),Is.True,selectError);
+            var selectReceipt=(JObject)execution.Observe()["workspace"]["selected"];string requestId=(string)selectReceipt["output"]["requestId"];int importOwner=host.Import.GetInstanceID(),runtimeOwner=host.Runtime.GetInstanceID();
             var beforeSession=agent.Observe().session;int bookId=book.GetInstanceID(),browserId=browser.GetInstanceID();
             Assert.That(WorkspaceEditHold.TryAcquire(editor,previous.Rules,previous.Controls,out var held,out error),Is.True,error);
             try {
@@ -87,13 +92,15 @@ namespace Maestro.Quest.Tests
                 Assert.That(room.RegisteredCount,Is.EqualTo(root.GetComponentsInChildren<RoomItem>().Length));Assert.That(router.Editor,Is.SameAs(host.Current.Editor));Assert.That(input.Drawing,Is.SameAs(host.Current.GetComponent<SpatialDrawing>()));
                 Assert.That(new RoomStorage(store.DataDirectory(selected.Previous)).Load(out error).objects.Single(x=>x.id==objectData.id).name,Is.EqualTo(objectData.name));Assert.That(error,Is.Null);
                 Assert.That(host.TryOpenSelected(out _),Is.False,"A retry must not replace a live editor without retention");
+                Assert.That(host.Import.GetInstanceID(),Is.EqualTo(importOwner));Assert.That(host.Runtime.GetInstanceID(),Is.EqualTo(runtimeOwner));
+                var reopened=new RoomExecutions(host.Current.Editor,host);Assert.That(reopened.Execute(select,out error),Is.True,error);Assert.That(picker.Starts,Is.EqualTo(1));Assert.That(host.Import.ReadSelection(requestId),Is.Not.Null);
             }finally{held.Dispose();}
         }
         [UnityTest] public IEnumerator DamagedSelectionNeverCreatesFallbackOwnersAndExplicitRetryUsesTheSameShell()
         {
             Prepare(Archive("Unused preview"));string path=Path.Combine(directory,"workspace-generations.v1","current.v1.json");var saved=File.ReadAllText(path);File.WriteAllText(path,"{broken");
             Open();yield return null;Assert.That(host.Current,Is.Null);Assert.That(builds,Is.Zero);Assert.That(root.GetComponentsInChildren<RoomEditor>().Length,Is.Zero);StringAssert.Contains("recovery",host.Status);
-            Assert.That(browser&&book,Is.True);var unavailable=agent.Observe();StringAssert.Contains("recovery",unavailable.status);Assert.That(unavailable.objects,Is.Empty);Assert.That(unavailable.capabilities,Does.Not.Contain("execution.v1"));Assert.DoesNotThrow(()=>RoomAgentWire.Serialize(unavailable));
+            Assert.That(browser&&book,Is.True);var unavailable=agent.Observe();StringAssert.Contains("recovery",unavailable.status);Assert.That(unavailable.objects,Is.Empty);Assert.That(unavailable.capabilities,Does.Contain("workspaceMaintenance.v1"));Assert.DoesNotThrow(()=>RoomAgentWire.Serialize(unavailable));
             string evidence=Environment.GetEnvironmentVariable("MAESTRO_HOST_EVIDENCE");if(!string.IsNullOrEmpty(evidence)){Directory.CreateDirectory(evidence);File.WriteAllText(Path.Combine(evidence,"unavailable.json"),RoomAgentWire.Serialize(unavailable));}Assert.That(File.ReadAllText(path),Is.EqualTo("{broken"));
             File.WriteAllText(path,saved);Assert.That(host.TryOpenSelected(out var error),Is.True,error);Assert.That(host.Current,Is.Not.Null);Assert.That(builds,Is.EqualTo(1));
         }
@@ -128,6 +135,45 @@ namespace Maestro.Quest.Tests
         {
             int delivered=0;host.Changed+=()=>throw new InvalidOperationException("Test observer failure");host.Changed+=()=>delivered++;
             LogAssert.Expect(LogType.Warning,"A workspace status observer failed.");Open();Assert.That(host.Current,Is.Not.Null,host.Status);Assert.That(delivered,Is.EqualTo(1));yield return null;
+        }
+        sealed class MaintenancePicker:IWorkspaceArchivePicker
+        {
+            public string CacheRoot=>null;public bool ReadyToStart=>true;public int Starts,Releases;
+            public void Start(string id){Starts++;}
+            public JObject Read(string id)=>new JObject {["id"]=id,["phase"]="selecting",["name"]="",["path"]="",["error"]=""};
+            public void Release(string id){Releases++;}
+        }
+        static JObject MaintenanceStart(RoomExecutions executions,string id,JObject args)=>new JObject {["operation"]="start",["runId"]=executions.Observe()["workspace"]["nextRunId"].DeepClone(),["call"]=new JObject {["id"]=id,["version"]=1,["arguments"]=args}};
+        void MaintenanceEvidence(string name,JObject value)
+        {string evidence=Environment.GetEnvironmentVariable("MAESTRO_MAINTENANCE_EVIDENCE");if(string.IsNullOrEmpty(evidence))return;Directory.CreateDirectory(evidence);File.WriteAllText(Path.Combine(evidence,name+".json"),value.ToString());}
+        [UnityTest] public IEnumerator MaintenanceWorksWithoutRoomContentAndReconcilesAfterRestart()
+        {
+            Prepare(Archive("Preview"));File.WriteAllText(Path.Combine(directory,"workspace-generations.v1","current.v1.json"),"{broken");Open();Assert.That(host.Current,Is.Null);
+            var picker=new MaintenancePicker();host.Import.InitializeForTests(directory,picker);var actions=new RoomAgentExecutor(null,host);var execution=actions.Executions;
+            var request=MaintenanceStart(execution,"workspace.archive.select",new JObject());
+            Assert.That(actions.Execute(new RoomAgentRequest {version=2,conditions=Array.Empty<RoomObjectCondition>(),commands=new[]{new RoomAgentCommand {action="execution",execution=request}}},out var error,out _),Is.True,error);
+            Assert.That(picker.Starts,Is.EqualTo(1));var state=execution.Observe();Assert.That((string)state["storageError"],Is.Not.Empty);Assert.That((string)state["workspace"]["selected"]["phase"],Is.EqualTo("completed"));
+            string id=(string)state["workspace"]["selected"]["output"]["requestId"];var args=new JObject {["requestId"]=id};
+            Assert.That(host.Runtime.TryRead("workspace.archive.selection",1,args,out var fact),Is.True);Assert.That((string)JObject.FromObject(fact.Value)["phase"],Is.EqualTo("selecting"));MaintenanceEvidence("no-room-selected",state);
+            host.Runtime.SendMessage("OnApplicationPause",true);Assert.That(host.Runtime.TryRead("workspace.archive.selection",1,args,out _),Is.False);host.Runtime.SendMessage("OnApplicationPause",false);
+            Assert.That(execution.Execute(request,out error),Is.True,error);Assert.That(picker.Starts,Is.EqualTo(1));
+            var cancel=MaintenanceStart(execution,"workspace.archive.cancel",args);Assert.That(execution.Execute(cancel,out error),Is.True,error);Assert.That((string)host.Import.ReadSelection(id)["phase"],Is.EqualTo("cancelled"));
+            string saved=directory;UnityEngine.Object.Destroy(root);yield return null;BuildShell(saved);Open();Assert.That(host.Current,Is.Null);var after=new MaintenancePicker();host.Import.InitializeForTests(directory,after);
+            execution=new RoomExecutions(null,host);Assert.That(execution.Execute(request,out error),Is.True,error);Assert.That(after.Starts,Is.Zero,"A retained opening receipt is not permission to reopen the picker");Assert.That(host.Import.ReadSelection(id),Is.Null);
+            MaintenanceEvidence("restart-reconciled",execution.Observe());
+        }
+        [UnityTest] public IEnumerator ReviewHoldAllowsExportWithoutBorrowingRoomReceiptIds()
+        {
+            var incoming=Prepare(Archive("Reviewed robot"));var retained=Prepare(Archive("Old robot"));store.Activate(incoming.Id,incoming.Receipt.ManifestHash,"initial",retained.Id,retained.Receipt.ManifestHash);Open();Assert.That(host.Current,Is.Not.Null);
+            var current=host.Current;current.Rules.Modules.Flush();while(current.Editor.Find("maestro").GetComponent<MaestroAvatar>().ModelBusy)yield return null;
+            int published=0;host.Export.InitializeForTests(current.Editor,current.Rules,current.Controls,Path.Combine(directory,"out"),path=>{System.Threading.Interlocked.Increment(ref published);return "Downloads/Maestro/test.zip";});
+            var execution=new RoomExecutions(current.Editor,host);string roomId=(string)execution.Observe()["nextRunId"];
+            var wrong=MaintenanceStart(execution,"workspace.archive.export",new JObject());wrong["runId"]=roomId;Assert.That(execution.Execute(wrong,out _),Is.False);Assert.That(published,Is.Zero);
+            var request=MaintenanceStart(execution,"workspace.archive.export",new JObject());Assert.That(execution.Execute(request,out var error),Is.True,error);
+            for(int i=0;i<900&&(string)execution.Observe()["workspace"]["selected"]["phase"]=="preparing";i++)yield return null;
+            var state=execution.Observe();Assert.That((string)state["workspace"]["selected"]["phase"],Is.EqualTo("completed"),state.ToString());Assert.That(published,Is.EqualTo(1));Assert.That((string)state["nextRunId"],Is.EqualTo(roomId));Assert.That(current.Editor.RuntimeGate.Held,Is.True);Assert.That(physics.Running,Is.False);
+            Assert.That(execution.Execute(request,out error),Is.True,error);Assert.That(published,Is.EqualTo(1));MaintenanceEvidence("held-export",state);
+            var roomCall=new JObject {["operation"]="start",["runId"]=roomId,["call"]=new JObject {["id"]="time.wait",["version"]=1,["arguments"]=new JObject {["seconds"]=1}}};Assert.That(execution.Execute(roomCall,out _),Is.False);
         }
         [UnityTearDown] public IEnumerator Cleanup(){if(root)UnityEngine.Object.Destroy(root);yield return null;if(Directory.Exists(directory))Directory.Delete(directory,true);}
     }

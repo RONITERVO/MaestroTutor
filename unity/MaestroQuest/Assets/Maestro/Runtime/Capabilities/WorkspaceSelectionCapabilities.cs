@@ -10,15 +10,16 @@ namespace Maestro.Quest.Programs
         public override string Id=>"workspace.archive.select";
         public override string Label=>"Choose workspace archive";
         public override string Description=>"Open Android's file chooser for one workspace ZIP. Returns a tracked requestId immediately, not a selected or restored workspace. The user must choose the file in Android. The system chooser pauses room actions; they will not resume or replay. After returning, read workspace.archive.selection with this requestId to follow copy, validation and preview. Preparation never activates imported content. Cancel the request to discard its unused preview. Only one selection or preview at a time; file limit 512 MB. Activation is not available yet.";
+        public override string Domain=>"workspace";
         public override string Duration=>"instant";
         public override JObject InputSchema {get{var schema=Object(new JObject());schema["x-features"]=new JArray("workspaceArchiveSelection.v1");return schema;}}
         public override JObject Example=>new JObject();
         public override JObject OutputSchema=>WorkspaceSelectionFacts.RequestSchema();
-        public override bool CanRun(CapabilityContext context,JObject args,out string error){var owner=context.Editor?context.Editor.GetComponent<WorkspaceImport>():null;error="Workspace selection is unavailable";return owner&&owner.CanSelect(out error);}
+        public override bool CanRun(CapabilityContext context,JObject args,out string error){var owner=context.ArchiveImport;error="Workspace selection is unavailable";return owner&&owner.CanSelect(out error);}
         public override bool Start(CapabilityContext context,string runId,JObject args,out CapabilityOperation operation,out string error)
         {
             operation=null;if(!CanRun(context,args,out error))return false;
-            operation=new CompletedCapability(new JObject {["requestId"]=context.Editor.GetComponent<WorkspaceImport>().Select()});return true;
+            operation=new CompletedCapability(new JObject {["requestId"]=context.ArchiveImport.Select()});return true;
         }
     }
     internal sealed class WorkspaceCancelSelectionCapability:CapabilityModule
@@ -26,15 +27,16 @@ namespace Maestro.Quest.Programs
         public override string Id=>"workspace.archive.cancel";
         public override string Label=>"Cancel archive selection";
         public override string Description=>"Cancel the exact file-selection request or discard its verified, unused preview. It never deletes the source file or changes the active workspace. Cleanup may continue after this acknowledgement; read workspace.archive.selection for cancelled/failed and any retained preview. Cancelling does not restart paused room actions. A stale request cannot cancel a newer chooser.";
+        public override string Domain=>"workspace";
         public override string Duration=>"instant";
         public override JObject InputSchema {get{var schema=WorkspaceSelectionFacts.RequestSchema();schema["x-features"]=new JArray("workspaceArchiveSelection.v1");return schema;}}
         public override JObject Example=>new JObject {["requestId"]="00000000000000000000000000000000"};
         public override JObject OutputSchema=>WorkspaceSelectionFacts.RequestSchema();
-        public override bool CanRun(CapabilityContext context,JObject args,out string error){var owner=context.Editor?context.Editor.GetComponent<WorkspaceImport>():null;error="Workspace selection is unavailable";return owner&&owner.CanCancel((string)args["requestId"],out error);}
+        public override bool CanRun(CapabilityContext context,JObject args,out string error){var owner=context.ArchiveImport;error="Workspace selection is unavailable";return owner&&owner.CanCancel((string)args["requestId"],out error);}
         public override bool Start(CapabilityContext context,string runId,JObject args,out CapabilityOperation operation,out string error)
         {
             operation=null;if(!CanRun(context,args,out error))return false;
-            context.Editor.GetComponent<WorkspaceImport>().Cancel((string)args["requestId"]);operation=new CompletedCapability(args);return true;
+            context.ArchiveImport.Cancel((string)args["requestId"]);operation=new CompletedCapability(args);return true;
         }
     }
     internal static class WorkspaceSelectionFacts
@@ -47,9 +49,9 @@ namespace Maestro.Quest.Programs
             return new BehaviourCatalog.FactDefinition("workspace.archive.selection",ProgramDataType.Read(new JObject {["record"]=fields}),"Archive selection status",
                 "Read the exact archive request after returning from Android selection. Phases: selecting, copying, preparing, prepared, cancelling, cancelled or failed. Prepared means its manifest, documents and assets were verified into a private preview; nothing was activated. Summary counts describe that preview, including unavailable programs and missing references. Inspect errors before another choice. IDs and counts are empty/zero until a preview exists. An unknown request or paused runtime is unavailable. Read-only; never opens a chooser, imports or runs anything.",
                 RequestSchema(),new JObject {["requestId"]="00000000000000000000000000000000"},(context,args)=>{
-                    var owner=context.Editor?context.Editor.GetComponent<WorkspaceImport>():null;var value=owner?owner.ReadSelection((string)args["requestId"]):null;
+                    var owner=context.Workspace?context.Workspace.Import:context.Editor?context.Editor.GetComponent<WorkspaceImport>():null;var value=owner?owner.ReadSelection((string)args["requestId"]):null;
                     return value==null?null:ProgramValue.Literal(value);
-                });
+                },domain:"workspace");
         }
     }
 }
