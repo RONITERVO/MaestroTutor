@@ -56,10 +56,12 @@ normal physics placement capture can advance a revision after a successful save
 receipt, so later readback checks settings and monotonic revision ordering.
 
 Verification: 387 EditMode + 327 PlayMode tests passed (three optional private-model
-checks skipped), 1,604 web tests across 184 files, 49 focused final-capture checks,
+checks skipped), 1,608 web tests across 184 files, 49 focused final-capture checks,
 and 61 Android browser tests. Four Chrome probes loaded native snapshots and
 replayed 11 exact native commands; screenshots were inspected. A transient empty
-browser startup retried successfully, and the final captures passed. TypeScript,
+browser startup retried successfully, and the final captures passed. CI exposed a
+five-second timeout in one test spanning five editor scenarios; those scenarios
+now run as independent tests with all assertions retained. TypeScript,
 ESLint, catalog drift, prompt ownership and core boundaries passed. The full build
 helper exited 0; all 189 runtime and 90 test C# sources, 24 fixtures plus metadata,
 and 113 packaged web files match. ARM64-only, v2-signature-verified development APK:
