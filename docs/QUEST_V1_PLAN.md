@@ -12,14 +12,16 @@ posing now exposes start/rotate/save/finish/discard with native session IDs and
 pose versions, the same physical joint limits and imported retargeter, held-joint
 exclusion, failed-pose recovery and recording interoperation. Saved edits are
 durable outside temporary mode; temporary edits stay in the fork until Keep.
-No authoring operation starts playback. The catalog contains 47 actions, 10
-events and 31 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
+No authoring operation starts playback. The catalog contains 48 actions, 10
+events and 32 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
 Single-file GLB/VRM selection, preview and acceptance now share the physical
 import path with book fields and agent/program calls. See QUEST_MODEL_IMPORT.md.
 Animation collections now share native selection, versioned start/retry/tag controls,
 Stop/Clear and bounded per-file motion results. See QUEST_MOTION_BATCH_IMPORT.md.
 Controller stick preferences and programmable buttons now share the native catalog
-and physical save path. See QUEST_CONTROLLER_CONFIGURATION.md.
+and physical save path. Explicit live movement/view changes share native transitions
+with fresh state and ownership checks. See QUEST_CONTROLLER_CONFIGURATION.md and
+QUEST_CONTROLLER_MODES.md.
 The remaining runtime, provider, device and Store acceptance gates remain unfinished; the complete v1 goal remains active.
 
 Current recovery implementation supports retained candidates, an external backup,
@@ -36,6 +38,28 @@ and tracked operation roots remain protected. Private recovery export remains
 separate; a full store with unreadable selection still requires recovery/repair.
 PR #248 records the current verified commit and package. Earlier entries
 below are historical evidence, not current test totals or release acceptance.
+
+PC shared-controller-modes increment (2026-10-01): `controller.mode.set` now
+exposes explicit Maestro/user stick opt-ins and MR/Virtual changes through the
+physical movement service. The separate `controller.mode` fact supplies native
+state IDs; manual changes, configuration saves, focus/tracking changes and Recall
+invalidate old requests. Recall also invalidates requests while already off.
+Shared changes preserve other actors and complete their own scheduler invocation.
+Independent neutral-input gates prevent held sticks/buttons from starting input.
+MR restores the physical camera origin and pauses physics; live modes never save.
+Manual takeover and B/Y/palm recovery retain priority. Five native journeys cover
+actual avatar/user movement, snap turns, stale IDs, tracking/focus loss, held
+input, actor refusal, duplicate receipts and final recovery notification identity.
+PC validation passes 386 EditMode and 315 PlayMode tests (three optional private-model
+skips), 1,586 web tests across 181 files, 33 final-capture/book checks and 61 Android
+tests. Chrome emits four explicit changes using exact native readback; its
+acknowledgements replay captures. Screenshots, production build, lint, catalog,
+prompt ownership and boundaries passed. One configuration shutdown timed out;
+the successful final helper exited zero. All 186 runtime and 88 test C# sources,
+24 fixtures plus metadata, and 113 packaged web files match the final build.
+ARM64/v2 verified checkpoint `MaestroQuest-controller-modes-177BC2D0.apk`, SHA-256
+`177BC2D0A32A20F1F7DFDD43ED25729D6B1458989613F80B254DA9B69EF7ED53`.
+It remains uninstalled. Broader runtime, provider/device and Store gates stay open.
 
 PC shared-controller-configuration increment (2026-10-01): generated book fields
 and agent/program calls now edit the physical movement tray's preferences through

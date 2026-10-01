@@ -59,33 +59,9 @@ namespace Maestro.Quest.Interaction
             if (user) next.userStick=choice; else next.avatarStick=choice; Apply(next);
         }
         public void SwapSticks() { var next=Preferences; (next.userStick,next.avatarStick)=(next.avatarStick,next.userStick); Apply(next); }
-        public void ToggleAvatar()
-        {
-            if(!RuntimeReady())return;
-            if (!AvatarEnabled && preferences.avatarStick == MovementStick.None) { Say("Choose a Maestro binding first"); return; }
-            Interrupt(); AvatarEnabled=!AvatarEnabled;
-            if (AvatarEnabled) { animations.Stop(); rules?.Scheduler.StopConflicting(new RuleStep {action=RuleActionKind.FollowUser,targetId="maestro"},true); avatar.Stop(); }
-            Say(AvatarEnabled ? "Maestro stick on — center the stick, then move" : "Maestro stick off");
-        }
-        public void ToggleUser()
-        {
-            if(!RuntimeReady())return;
-            if (!Virtual) { Say("Choose Virtual view before enabling your own movement"); return; }
-            if (!UserEnabled && preferences.userStick == MovementStick.None) { Say("Choose your movement binding first"); return; }
-            Interrupt(); UserEnabled=!UserEnabled; Say(UserEnabled ? "Your movement on — center the stick, then move" : "Your movement off");
-        }
-        public void ToggleView()
-        {
-            if(!RuntimeReady())return;
-            if (Virtual) { Recover(); Say("Mixed reality restored — check scan alignment before Start physics"); return; }
-            // Physical actions run on release, before BookControllerInput clears PageHeld.
-            // That finishing click is allowed; a held grab or drawing is not.
-            if (paused || !focused || !headTracked() || sample().manipulating || editor.AnyHeld || rules && rules.AnyButtonHeld)
-            { Say("Release held items and wait for tracking before changing view"); return; }
-            Interrupt(); animations.Stop(); rules?.StopAll(); avatar.Stop(); input?.CancelAll();
-            if (!view.Enter()) { Say("Wait for the room scan to finish before changing view"); return; }
-            Say("Virtual view — real room hidden; enable Your movement to walk");
-        }
+        public void ToggleAvatar()=>ManualMode(AvatarEnabled?"maestro.disable":"maestro.enable");
+        public void ToggleUser()=>ManualMode(UserEnabled?"user.disable":"user.enable");
+        public void ToggleView()=>ManualMode(Virtual?"view.mixedReality":"view.virtual");
         public void BindButton(int index,ControllerCommand command,string sequenceId=null)
         {
             if (index < 0 || index >= 4) return;
@@ -103,8 +79,8 @@ namespace Maestro.Quest.Interaction
             var action=workshop?.Snapshot().sequences; var found=action == null ? null : Array.Find(action,x => x.id == binding.sequenceId);
             return found == null ? "Missing action" : found.name;
         }
-        bool RuntimeReady(){if(!editor.RuntimeGate.Held)return true;Recover();Say(editor.RuntimeGate.Reason);return false;}
-        void RuntimeChanged(){if(editor.RuntimeGate.Held){Recover();Say(editor.RuntimeGate.Reason);}}
+        bool RuntimeReady(){if(!editor.RuntimeGate.Held)return true;Recover(false);Say(editor.RuntimeGate.Reason);return false;}
+        void RuntimeChanged(){if(editor.RuntimeGate.Held){Recover(false);Say(editor.RuntimeGate.Reason);}}
         void RulesChanged() => Changed?.Invoke();
         void Authoring(string _) => Interrupt();
         public void Interrupt()
@@ -112,16 +88,21 @@ namespace Maestro.Quest.Interaction
             userGate.Reset(); avatarGate.Reset(); Array.Clear(buttonReady,0,buttonReady.Length);
             avatar?.End(Owner); driving=false;
         }
-        public void Recover()
+        public void Recover()=>Recover(true);
+        void Recover(bool invalidate)
         {
             bool changed=AvatarEnabled || UserEnabled || Virtual;
-            Interrupt(); AvatarEnabled=UserEnabled=false; if (changed) { input?.CancelAll(); view?.Exit(); Status="Movement off — choose controls to enable again"; Changed?.Invoke(); }
+            Interrupt(); AvatarEnabled=UserEnabled=false;
+            if (changed) { input?.CancelAll(); view?.Exit(); Status="Movement off — choose controls to enable again"; }
+            CurrentModeId(); if(invalidate)modeId=Guid.NewGuid().ToString("N");
+            if(changed)Changed?.Invoke();
         }
         void Update() => Tick(Mathf.Min(Time.deltaTime,.05f));
         public void Tick(float deltaTime)
         {
             if (preferences == null) return;
-            if (!RuntimeReady()||paused || !focused || !headTracked()) { Recover(); return; }
+            CurrentModeId();
+            if (!RuntimeReady()||paused || !focused || !HeadReady || UserEnabled&&!Virtual) { Recover(false); return; }
             var frame=sample();
             if (frame.busy || editor.AnyHeld || rules && rules.AnyButtonHeld) { Interrupt(); return; }
             if (driving && !avatar.OwnedBy(Owner)) { driving=false; avatarGate.Reset(); }
@@ -164,8 +145,8 @@ namespace Maestro.Quest.Interaction
             forward.Normalize(); return forward*axis.y+Vector3.Cross(Vector3.up,forward)*axis.x;
         }
         void Say(string message) { if (Status == message) return; Status=message; Changed?.Invoke(); }
-        void OnApplicationPause(bool value) { paused=value; if (value) Recover(); }
-        void OnApplicationFocus(bool value) { focused=value; if (!value) Recover(); }
+        void OnApplicationPause(bool value) { paused=value; CurrentModeId(); if (value) Recover(); }
+        void OnApplicationFocus(bool value) { focused=value; CurrentModeId(); if (!value) Recover(); }
         void OnDisable() => Recover();
         void OnDestroy()
         {

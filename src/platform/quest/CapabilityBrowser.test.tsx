@@ -637,3 +637,18 @@ it('edits independent sticks and binds a saved program through generated control
  expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:nativeController.button.selected.call,runId:nativeController.button.selected.id}});
  await receive(undefined,false,{execution:nativeController.button as RoomAgentState['execution']});expect(screen.getByLabelText('Action result').textContent).toContain(nativeController.after.configurationId);act(()=>client.cancel());
 });
+
+import nativeModes from '../../../test-fixtures/browser/controllerModes.json';
+it('uses generated live-mode fields and each current native identity without injecting movement',async()=>{
+ const {client,screen,receive}=setup(true,['controllerModes.v1','execution.v1','actionResults.v1']);
+ await receive(undefined,false,{execution:{...nativeModes.enable,selected:null,running:[],outcomes:[],nextRunId:nativeModes.enable.selected.id} as RoomAgentState['execution']});
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:/^Search$/}));const definition=capabilityDefinition('controller.mode.set')!;
+ await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Live mode definition'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Live mode definition'});fireEvent.click(screen.getByText('Edit action fields'));
+ for(const view of [nativeModes.enable,nativeModes.virtualView,nativeModes.user,nativeModes.mixed]){
+  for(const key of ['stateId','operation'] as const)fireEvent.change(screen.getByLabelText('Action inputs '+key),{target:{value:view.selected.call.arguments[key]}});
+  fireEvent.click(screen.getByRole('button',{name:'Run action now'}));expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:view.selected.call,runId:view.selected.id}});
+  await receive(undefined,false,{execution:view as RoomAgentState['execution']});expect(screen.getByLabelText('Action result').textContent).toContain(view.selected.output.stateId);
+ }
+ act(()=>client.cancel());
+});

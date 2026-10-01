@@ -24,12 +24,13 @@ namespace Maestro.Quest.Interaction
         readonly RaycastHit[] hits = new RaycastHit[32];
         readonly Collider[] overlaps = new Collider[32];
         public bool Active { get; private set; }
+        public bool CanEnter=>isActiveAndEnabled&&origin&&viewer&&(!scan||!scan.Busy);
         public void Initialize(Transform userOrigin,Camera camera,ScannedRoom scanned,RoomPhysicsWorld world)
         { origin=userOrigin; viewer=camera; scan=scanned; physics=world; passthrough=viewer.GetComponent<ARCameraManager>(); }
         public bool Enter()
         {
             if (Active) return true;
-            if (!origin || !viewer || scan && scan.Busy) return false;
+            if (!CanEnter) return false;
             homePosition=origin.localPosition; homeRotation=origin.localRotation; homeBackground=viewer.backgroundColor; homeFlags=viewer.clearFlags;
             scan?.SetVirtualView(true);
             passthroughWasEnabled=passthrough && passthrough.enabled;

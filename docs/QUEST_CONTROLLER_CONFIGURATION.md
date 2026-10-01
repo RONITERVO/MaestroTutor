@@ -2,8 +2,8 @@
 
 `controller.configure` connects the physical movement tray, generated book fields
 and delegated room agent to the same `MovementControls` preference save. It edits
-controller settings; enabling movement and changing between MR and Virtual view
-remain separate manual actions. Original Maestro owns conversation and delegation.
+controller settings. Separate `controller.mode.set` actions now expose explicit live
+movement and MR/Virtual changes through the same native controls. Original Maestro owns conversation and delegation.
 
 ## Inspect and edit
 
@@ -67,5 +67,5 @@ the existing structured-value budget with all four program buttons populated.
 Book contract and browser tests use exact captured native results. They verify
 generated fields, reserved-button exclusion and the exact requests emitted, but
 do not prove real headset input or a provider's interpretation of spoken intent.
-Shared movement enable/disable and MR/Virtual view selection remain release work,
-as do physical Quest comfort, controller/hand switching, provider and Store gates.
+See QUEST_CONTROLLER_MODES.md for live opt-ins. Physical Quest comfort,
+controller/hand switching, provider and Store gates remain unverified.

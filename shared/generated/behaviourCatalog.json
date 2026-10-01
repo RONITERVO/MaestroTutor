@@ -2972,6 +2972,93 @@
       }
     },
     {
+      "id": "controller.mode.set",
+      "version": 1,
+      "label": "Change movement or room view",
+      "input": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "enum": [
+              "view.virtual",
+              "view.mixedReality",
+              "maestro.enable",
+              "maestro.disable",
+              "user.enable",
+              "user.disable"
+            ]
+          },
+          "stateId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "operation",
+          "stateId"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "controllerModes.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [
+        "controls.mode.current",
+        "tracking.available",
+        "manual.released"
+      ],
+      "description": "Explicit live opt-in only: enable/disable Maestro's stick or the user's separate movement, or switch Virtual/Mixed Reality view. Use only when the user requests that movement or view change; entering Virtual hides the real room. Read controller.mode immediately beforehand and pass its exact stateId. Manual changes, settings saves, focus/tracking changes and recovery invalidate it. Enabling never injects movement: sticks must return to neutral first. Your movement requires Virtual view; enabling Maestro requires loaded avatar and aligned running room physics. Enabling or changing view requires other runs and animation authoring to finish; it does not stop another actor. Disabling a stick is allowed alongside other runs. Returning to MR disables both sticks, restores the physical camera origin and pauses physics for alignment review. B/Y and palm Recall remain immediate manual recovery. These live modes are never saved; restart or tracking/focus loss requires explicit reenable. A completed receipt reports that moment, not continued tracking or path readiness; read the fact for current state. Cancelling a completed action does not undo its mode: issue the explicit disable or MR action with a fresh identity. Duplicate receipts never enable again.",
+      "example": {
+        "operation": "view.virtual",
+        "stateId": "00000000000000000000000000000000"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "stateId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "configurationId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "avatarEnabled": {
+            "type": "boolean"
+          },
+          "userEnabled": {
+            "type": "boolean"
+          },
+          "virtualView": {
+            "type": "boolean"
+          },
+          "headTracked": {
+            "type": "boolean"
+          },
+          "focused": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "stateId",
+          "configurationId",
+          "avatarEnabled",
+          "userEnabled",
+          "virtualView",
+          "headTracked",
+          "focused"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "workspace.retention.inspect",
       "version": 1,
       "label": "Inspect retained workspaces",
@@ -6652,6 +6739,23 @@
       "description": "Accepted stick preferences and all four configurable buttons, plus live opt-in flags. storageReady false means the preserved preferences file is unavailable for editing; displayed preferences can be startup fallback defaults. Other runtime holds may also temporarily prevent writes. configurationId binds an edit to this exact accepted configuration/runtime; saves rotate it, rejected writes keep it, and restart issues a new ID. Read again before each edit. programId is an exact saved program ID; available reports readable program presence, not that all targets/assets are currently ready. Snap turns require Virtual view and user movement enabled; this read never enables anything. Settings persist immediately even during temporary room mode. System buttons, B/Y and palm Recall stay reserved."
     },
     {
+      "id": "controller.mode",
+      "version": 1,
+      "type": {
+        "record": {
+          "stateId": "text",
+          "configurationId": "text",
+          "avatarEnabled": "boolean",
+          "userEnabled": "boolean",
+          "virtualView": "boolean",
+          "headTracked": "boolean",
+          "focused": "boolean"
+        }
+      },
+      "label": "Live movement and room view",
+      "description": "Current transient opt-ins and view, with exact stateId for controller.mode.set. Read controller.settings for independent stick bindings. Focus/tracking and mode changes invalidate old state IDs. Enabled does not mean a clear path, controller tracking, or that a held stick has returned to neutral. Mode changes never save an artificial camera offset."
+    },
+    {
       "id": "animation.authored",
       "version": 1,
       "type": {
@@ -7849,7 +7953,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "6c237bcab8822c60d029142bc49d029bf49862b4a3125afd14a3757ba16b8ac0"
+      "sha256": "96efd92c9c1e385d2d0e44dc16dbf1df1e2c052725e39fddb4fd14b2fbffe829"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -7945,11 +8049,19 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MovementControls.cs",
-      "sha256": "d6c2c02250271248cc4edad523ab86cf478ab1f28a552d7341fd0ad023320ac2"
+      "sha256": "1b48e4b3e6f3053331b43931454bebeccaafa713b849d9c30ad71ef7e14f855c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MovementConfiguration.cs",
-      "sha256": "77880b4fcc21d2ff29fc978112e541a070a19ace1fd70ff49afa667e5606c5ae"
+      "sha256": "9f75b574b6ba4c37cbc14340cfd04d2bf01bc4d00a0b59ceb4fbd82dfa9ab29b"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MovementModes.cs",
+      "sha256": "d98159c90cb6054ee87e2b89d588256b8e4d7fd8696138d1be81559f9f11c7af"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/VirtualRoomView.cs",
+      "sha256": "4d28505b3692fc88a3df5ff46b1580b5a8213e8ed8dd6ddd4e63996c478304dc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportAcceptance.cs",
@@ -8013,7 +8125,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "5ead66e1c1646d93c0260d90b8ec28c0b0d5ffd80a5426784e18f67bb948240c"
+      "sha256": "a5d1be4f931a143cb80ff46b50d808cc3cd1ca778d19c29c41e127e65fd2fdde"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -8026,6 +8138,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ControllerConfigurationCapability.cs",
       "sha256": "f06cd3db40f0ebd87d67f268d53660f30c2afdd5c05de6ba2b23ca587adbd39e"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ControllerModeCapability.cs",
+      "sha256": "13b12272289e17801ff59619fbb32ac2211b3427a13b24ad44d7358466f8c7e8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreateObjectCapability.cs",

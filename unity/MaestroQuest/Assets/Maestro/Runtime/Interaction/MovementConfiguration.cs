@@ -41,7 +41,7 @@ namespace Maestro.Quest.Interaction
             preferences=next.Copy();configurationId=Guid.NewGuid().ToString("N");
             if(preferences.avatarStick==MovementStick.None)AvatarEnabled=false;
             if(preferences.userStick==MovementStick.None)UserEnabled=false;
-            Interrupt();Status="Controls saved — release sticks and buttons before using them";Changed?.Invoke();return true;
+            Interrupt();CurrentModeId();Status="Controls saved — release sticks and buttons before using them";Changed?.Invoke();return true;
         }
         internal bool Configure(string expected,ControllerPreferences next,out JObject result,out string error)
         {

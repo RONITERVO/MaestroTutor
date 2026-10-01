@@ -17,6 +17,7 @@ import nativePosing from './posingSessions.json';
 import nativeModelImport from './modelSelection.json';
 import nativeImportReadback from './importReadback.json';
 import nativeController from './controllerConfiguration.json';
+import nativeModes from './controllerModes.json';
 import nativeMotionBatch from './motionBatchImport.json';
 import nativeAvatar from './avatarSelection.json';
 import nativeEvents from './eventProgramStates.json';
@@ -62,6 +63,15 @@ if(controllerConfiguration){
  state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';
  state.execution={...JSON.parse(JSON.stringify(nativeController.movement)),selected:null,running:[],outcomes:[],nextRunId:nativeController.movement.selected.id};
  state.capabilities=[...state.capabilities??[],'catalogVocabulary.v1','controllerConfiguration.v1','execution.v1','executionReceipts.v1','actionResults.v1'];
+}
+const controllerModes=new URLSearchParams(location.search).has('controllerModes');
+const modeViews=[nativeModes.enable,nativeModes.virtualView,nativeModes.user,nativeModes.mixed];
+let modeObservation=nativeModes.before;
+if(controllerModes){
+ if(!modeViews.every(validExecutionView))throw new Error('Invalid native controller mode fixture');
+ state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';
+ state.execution={...JSON.parse(JSON.stringify(nativeModes.enable)),selected:null,running:[],outcomes:[],nextRunId:nativeModes.enable.selected.id};
+ state.capabilities=[...state.capabilities??[],'catalogVocabulary.v1','controllerModes.v1','execution.v1','executionReceipts.v1','actionResults.v1'];
 }
 const importReadback=new URLSearchParams(location.search).has('importReadback');
 if(importReadback){
@@ -158,6 +168,11 @@ setInterval(()=>{
     const input=command.execution;
     if(avatarSelection&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeAvatar.library.selected.call)){state.execution=copy(nativeAvatar.library) as RoomAgentState['execution'];state.status='Recorded native library metadata; browser acknowledgement is simulated';}
     else if(avatarSelection&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeAvatar.selection.selected.call)){state.execution=copy(nativeAvatar.selection) as RoomAgentState['execution'];avatarObservation=nativeAvatar.after;state.status='Recorded native model selection; browser acknowledgement is simulated';}
+    else if(controllerModes&&input.operation==='start'){
+     const index=modeViews.findIndex(view=>input.call?.id===view.selected.call.id&&input.call.version===view.selected.call.version&&JSON.stringify(Object.entries(input.call.arguments).sort())===JSON.stringify(Object.entries(view.selected.call.arguments).sort()));
+     if(index<0){state.ok=false;state.status='Only captured native mode transitions can be replayed';}
+     else{state.execution=copy(modeViews[index]) as RoomAgentState['execution'];modeObservation=modeViews[index].selected.output;state.status='Captured native mode result; this browser does not move a headset';}
+    }
     else if(controllerConfiguration&&input.operation==='start'){
      const views=[nativeController.movement,nativeController.button];
      const index=views.findIndex(view=>input.call?.id===view.selected.call.id&&input.call.version===view.selected.call.version&&JSON.stringify(Object.entries(input.call.arguments).sort())===JSON.stringify(Object.entries(view.selected.call.arguments).sort()));
@@ -197,6 +212,12 @@ setInterval(()=>{
     if(moduleEvidence&&query.operation!=='check'&&query.category==='modules'){
      if(query.operation==='search')state.catalog=copy(moduleEvidence.search.catalog);
      else {const view=moduleEvidence.inspected.catalog;state.catalog=view?.operation==='inspect'&&query.capability===view.capability?copy(view):{operation:'inspect',category:'modules',capability:query.capability,version:query.version,definition:null,revision:1,ready:true,pending:false,status:'Not present in recorded evidence'};}
+     continue;
+    }
+    if(controllerModes&&query.operation!=='check'&&query.category==='facts'){
+     const definition=behaviourFact('controller.mode')!;
+     if(query.operation==='search')state.catalog={operation:'search',category:'facts',query:query.query,offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Found live control modes'};
+     else state.catalog={operation:'inspect',category:'facts',capability:query.capability,version:1,definition:query.capability===definition.id?definition:null,available:query.capability===definition.id,value:query.capability===definition.id?copy(modeObservation):null,status:'Captured native control modes'};
      continue;
     }
     if(controllerConfiguration&&query.operation!=='check'&&query.category==='facts'){

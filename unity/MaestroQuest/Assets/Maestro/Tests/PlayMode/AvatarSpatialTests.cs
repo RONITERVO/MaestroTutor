@@ -28,7 +28,7 @@ namespace Maestro.Quest.Tests
         public Action Sample;
         void LateUpdate()=>Sample?.Invoke();
     }
-    public sealed class AvatarSpatialTests
+    public sealed partial class AvatarSpatialTests
     {
         GameObject root, viewer;
         RoomPhysicsWorld world;
