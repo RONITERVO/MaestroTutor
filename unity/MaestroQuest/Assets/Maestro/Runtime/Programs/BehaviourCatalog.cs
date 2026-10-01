@@ -175,7 +175,7 @@ namespace Maestro.Quest.Programs
             WorkspaceRecoveryFacts.Status(),WorkspaceRecoveryFacts.Candidate(),WorkspaceRecoveryFacts.Preview(),
             new FactDefinition("room.sessionId",ProgramType.Text,"Current room session","Current explicit temporary-room session ID, or empty when using the saved room. Reading it does not begin, keep or discard a room.",context=>context.RoomSessionId==null?null:new ProgramValue(context.RoomSessionId)),
             new FactDefinition("maestro.state",ProgramType.Text,"Maestro state","Current observed tutor state: speaking, listening, thinking or idle. Unavailable before a reliable activity snapshot, during audio suspension or when the room runtime is paused.",context=>context.Activity==null?null:new ProgramValue(context.Activity)),
-            PhysicsSimulationCapability.Fact(),
+            RoomEnvironmentCapability.Fact(),PhysicsSimulationCapability.Fact(),
             new FactDefinition("physics.running",ProgramType.Boolean,"Physics running","Whether room physics is currently running. False is an observed value; it is not an unavailable reading.",context=>context.PhysicsRunning.HasValue?new ProgramValue(context.PhysicsRunning.Value):null),
             new FactDefinition("physics.ready",ProgramType.Boolean,"Room surfaces ready","Whether aligned room surfaces are currently ready for physics. This does not start physics or guarantee a particular navigation path.",context=>context.PhysicsReady.HasValue?new ProgramValue(context.PhysicsReady.Value):null),
         });

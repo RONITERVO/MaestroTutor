@@ -12,8 +12,8 @@ posing now exposes start/rotate/save/finish/discard with native session IDs and
 pose versions, the same physical joint limits and imported retargeter, held-joint
 exclusion, failed-pose recovery and recording interoperation. Saved edits are
 durable outside temporary mode; temporary edits stay in the fork until Keep.
-No authoring operation starts playback. The catalog contains 52 actions, 10
-events and 37 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
+No authoring operation starts playback. The catalog contains 53 actions, 10
+events and 38 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
 Single-file GLB/VRM selection, preview and acceptance now share the physical
 import path with book fields and agent/program calls. See QUEST_MODEL_IMPORT.md.
 Animation collections now share native selection, versioned start/retry/tag controls,
@@ -25,7 +25,10 @@ QUEST_CONTROLLER_MODES.md. Object physics, avatar distance/speed and exact walki
 animation selection now use catalog actions with native readback and the physical
 tools' save path. See QUEST_SPATIAL_SETTINGS.md. Physics Start/Pause now shares
 the catalog through fresh native simulation identities and the physical service;
-see QUEST_PHYSICS_SIMULATION.md. The book action editor now loads real settings
+see QUEST_PHYSICS_SIMULATION.md. Load/Scan/Show/Hide/Cancel room setup now shares
+the physical service through catalog requests and observable progress. Platform
+permission/scan handoffs remain explicit; completion never claims alignment or
+starts physics. See QUEST_ROOM_ENVIRONMENT.md. The book action editor now loads real settings
 and concurrency guards from catalog-declared facts. It requires an explicit
 snapshot before running and never silently advances revisions; see QUEST_CURRENT_INPUTS.md.
 Reusable behaviours can now choose visible current-value reads and live/fixed
@@ -49,6 +52,29 @@ and tracked operation roots remain protected. Private recovery export remains
 separate; a full store with unreadable selection still requires recovery/repair.
 PR #248 records the current verified commit and package. Earlier entries
 below are historical evidence, not current test totals or release acceptance.
+
+PC shared-room-setup increment (2026-10-01): Load/Scan/Show/Hide/Cancel now
+share the native physical service through the catalog and generated book fields.
+Fresh setup/request identities bind intent. Completion acknowledges a request;
+progress, loaded geometry, collider readiness and physical alignment remain
+separate. Load never silently launches scanning. Expected permission/Meta setup
+focus handoffs may return; interrupted geometry loading, workspace holds and
+component retirement discard late work. Cancellation and timeout retain admission
+until the actual OS/SDK task drains. Physics and movement never restart themselves.
+The physical Scan control becomes Cancel setup, then Wait for system while draining.
+Native tests substitute only the OS/SDK boundary. Browser replay uses actual native
+observations/receipts; device system screens and alignment still need acceptance.
+
+Verification passed 389 EditMode and 335 PlayMode tests (three optional private
+model checks skipped), 1,626 web tests in 187 files, and 61 Android browser tests.
+Production build, TypeScript, ESLint, catalog drift, prompt ownership and core
+boundaries pass. The full build helper exited zero. All 191 runtime and 91 test
+C# files, 26 fixture files plus metadata, and 113 packaged web files match the
+tested source/build. ARM64-only and v2 signature verify. Development checkpoint
+`MaestroQuest-room-environment-5B120FAB.apk` has SHA-256
+`5B120FABD8A983ED33ECCE7118D5C2E4AA152A750F91A3ACF4D0A3A9D0A1C62C`.
+Evidence: `.quest-evidence/room-environment/verification.json`. It remains
+uninstalled; the complete v1 goal and provider/device/Store acceptance remain open.
 
 PC repeat-loop authoring increment (2026-10-01): explicit conversion wraps the
 existing entry function in a version-3 Forever/call/sleep loop with a user-selected

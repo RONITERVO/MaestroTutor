@@ -19,8 +19,9 @@ exact `stateId`. The fact and completed result contain:
 | `status`, `reason` | Bounded display text; `reason` explains an unavailable start |
 
 `canStart` does not authorize an action, approve real-world alignment, guarantee
-all imported geometry is ready, or bypass a workspace boundary. Scanning, room
-permission and checking alignment remain manual. A ready scan also does not prove
+all imported geometry is ready, or bypass a workspace boundary. Loading, explicit scanning and surface visibility can be requested through
+`room.environment.set` ([room setup](QUEST_ROOM_ENVIRONMENT.md)). System permission
+and setup screens, and checking actual alignment, still require the user. A ready scan also does not prove
 a clear walking path. Fixed, held, carried and animated objects retain their own
 physics/ownership rules while the world is running.
 

@@ -6688,6 +6688,227 @@
       }
     },
     {
+      "id": "room.environment.set",
+      "version": 1,
+      "label": "Load, scan or show the room",
+      "input": {
+        "type": "object",
+        "x-discriminators": [
+          "operation"
+        ],
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "load",
+                  "scan",
+                  "show",
+                  "hide"
+                ]
+              },
+              "stateId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              }
+            },
+            "required": [
+              "operation",
+              "stateId"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "room.environment",
+              "version": 1,
+              "arguments": {},
+              "fields": {
+                "stateId": [
+                  "stateId"
+                ]
+              },
+              "guards": [
+                "stateId"
+              ]
+            },
+            "x-features": [
+              "roomEnvironment.v1"
+            ],
+            "title": "Room setup and visibility"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "cancel"
+                ]
+              },
+              "stateId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "requestId": {
+                "type": "string",
+                "pattern": "^(|[a-f0-9]{32})$",
+                "maxLength": 32
+              }
+            },
+            "required": [
+              "operation",
+              "stateId",
+              "requestId"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "room.environment",
+              "version": 1,
+              "arguments": {},
+              "fields": {
+                "stateId": [
+                  "stateId"
+                ],
+                "requestId": [
+                  "requestId"
+                ]
+              },
+              "guards": [
+                "stateId",
+                "requestId"
+              ]
+            },
+            "x-features": [
+              "roomEnvironment.v1"
+            ],
+            "title": "Cancel current setup"
+          }
+        ]
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [
+        "room.setup.current",
+        "room.active",
+        "workspace.available"
+      ],
+      "description": "Uses the physical Load room/Scan room/Show room service. Read room.environment for an exact stateId. Load requests permission and loads an existing saved Meta room; it never opens scanning automatically when no data exists. Scan explicitly opens Meta room setup, then loads the result. The user must handle system permission/setup screens and check real floor/wall alignment. Success acknowledges a request, not completed scanning or alignment: observe requestId, phase and busy in the fact. Physics pauses and never starts itself. Show/hide changes scan-surface visibility intent only; visible means requested or virtual-view-forced visibility, not proof of rendered geometry. Virtual view keeps surfaces visible. Cancel binds the exact current requestId and abandons its continuation; it cannot close a system screen or undo a room scan already saved by Meta. New requests remain blocked until the actual platform task drains, including after timeout or cancellation. Permission/setup focus handoffs may finish on return; focus loss during loading, disable, virtual view or workspace holds cancel continuation. Stop on a completed receipt does not cancel a request; use explicit cancel. Duplicate receipts never reopen system screens. No Maestro room save or Undo, no geometry sent to the agent, no automatic retry or physics restart.",
+      "example": {
+        "operation": "load",
+        "stateId": "00000000000000000000000000000000"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "stateId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "requestId": {
+            "type": "string",
+            "pattern": "^(|[a-f0-9]{32})$",
+            "maxLength": 32
+          },
+          "phase": {
+            "type": "string",
+            "enum": [
+              "idle",
+              "permission",
+              "scan",
+              "returning",
+              "loading",
+              "loaded",
+              "failed",
+              "cancelled"
+            ]
+          },
+          "busy": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "availability": {
+            "type": "object",
+            "properties": {
+              "supported": {
+                "type": "boolean"
+              },
+              "active": {
+                "type": "boolean"
+              },
+              "virtualView": {
+                "type": "boolean"
+              },
+              "canLoad": {
+                "type": "boolean"
+              },
+              "canScan": {
+                "type": "boolean"
+              },
+              "canCancel": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "supported",
+              "active",
+              "virtualView",
+              "canLoad",
+              "canScan",
+              "canCancel"
+            ],
+            "additionalProperties": false
+          },
+          "surfaces": {
+            "type": "object",
+            "properties": {
+              "showing": {
+                "type": "boolean"
+              },
+              "visible": {
+                "type": "boolean"
+              },
+              "ready": {
+                "type": "boolean"
+              },
+              "physicsRunning": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "showing",
+              "visible",
+              "ready",
+              "physicsRunning"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "stateId",
+          "requestId",
+          "phase",
+          "busy",
+          "status",
+          "reason",
+          "availability",
+          "surfaces"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "physics.simulation.set",
       "version": 1,
       "label": "Start or pause room physics",
@@ -8565,6 +8786,40 @@
       "description": "Current observed tutor state: speaking, listening, thinking or idle. Unavailable before a reliable activity snapshot, during audio suspension or when the room runtime is paused."
     },
     {
+      "id": "room.environment",
+      "version": 1,
+      "type": {
+        "record": {
+          "stateId": "text",
+          "requestId": "text",
+          "phase": "text",
+          "busy": "boolean",
+          "status": "text",
+          "reason": "text",
+          "availability": {
+            "record": {
+              "supported": "boolean",
+              "active": "boolean",
+              "virtualView": "boolean",
+              "canLoad": "boolean",
+              "canScan": "boolean",
+              "canCancel": "boolean"
+            }
+          },
+          "surfaces": {
+            "record": {
+              "showing": "boolean",
+              "visible": "boolean",
+              "ready": "boolean",
+              "physicsRunning": "boolean"
+            }
+          }
+        }
+      },
+      "label": "Room setup state",
+      "description": "Native room request and visibility state; readiness never verifies physical alignment. busy includes a cancelled platform worker until it drains. canLoad/canScan need an active MR room, available platform and no workspace hold. canCancel identifies an uncancelled worker, not permission to bypass lifecycle gates. A completed action receipt only acknowledges intent; inspect this fact for progress. No room geometry is included."
+    },
+    {
       "id": "physics.simulation",
       "version": 1,
       "type": {
@@ -8773,7 +9028,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "26291934915bf93275707bb79fce58d6373e4843c64499d1f426734db6d9e1a0"
+      "sha256": "8c573ccb4c89f138a75a60752faec953bd1b52b752030630c3d4cdbbbfce9586"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -8893,7 +9148,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomPhysicsWorld.cs",
-      "sha256": "a2ef5a4d5289157de1ab56765b74efa351c2b9d456cad096e3cbc6980b0c72eb"
+      "sha256": "aade605230c6b4a2f92db559001d3432bfe5805508d98ac900f609178243defd"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ScannedRoom.cs",
+      "sha256": "ace92aac34df83284d198c31304309730a1dee4e743f6d6bf121cddab71199f9"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ScannedRoomRequests.cs",
+      "sha256": "dd5cb943596fe015dc3e80f3d634f234003dd246671d711d613fa0a60a9bc774"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportAcceptance.cs",
@@ -8957,7 +9220,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "caee10565a486d8bb7a6d8534f21d09d7f660aeee844cead9f3958117f3762e4"
+      "sha256": "b27ab98cf3ad6967ff9392257a33c05a443b1750a6dff0d9cdeb36782eac8058"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -9018,6 +9281,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RecordedAnimationCapabilities.cs",
       "sha256": "97e3f51b525991801f3162069ec66234f061dfe8b7348856ad4fc611b5e4e5b6"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RoomEnvironmentCapability.cs",
+      "sha256": "f0ee8b95058044fadc99ea54bb091d5677ddf3b68b842897629db177e7a9c47d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RoomSessionCapability.cs",

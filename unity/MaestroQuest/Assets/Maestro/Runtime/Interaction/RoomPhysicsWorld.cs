@@ -21,6 +21,8 @@ namespace Maestro.Quest.Interaction
         void Notify(){stateId=Guid.NewGuid().ToString("N");Changed?.Invoke();}
         string IdleStatus=>SurfacesReady?"Physics paused — Start resumes without old throw speeds":"Load or scan your room to use gravity";
         RoomRuntimeGate runtimeGate;
+        internal bool RuntimeHeld=>runtimeGate?.Held==true;
+        internal string RuntimeHoldReason=>runtimeGate?.Reason;
         internal void ConfigureRuntime(RoomRuntimeGate gate){if(runtimeGate==gate)return;if(runtimeGate!=null)runtimeGate.Changed-=RuntimeChanged;runtimeGate=gate;if(gate!=null)gate.Changed+=RuntimeChanged;RuntimeChanged();}
         void RuntimeChanged(){if(runtimeGate?.Held==true){Running=false;Status=runtimeGate.Reason;}else if(!Running)Status=IdleStatus;Notify();}
         public void SetSurfaces(bool ready, string message)

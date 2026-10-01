@@ -776,3 +776,24 @@ it('keeps literal insertion available on runtimes without structured values',asy
  fireEvent.click(screen.getByRole('button',{name:'Add first block to draft'}));fireEvent.click(screen.getByRole('button',{name:'Apply changes'}));
  const saved=JSON.parse(client.snapshot().request!.commands[0].rule!.edits![0].sequence!.program);expect(saved.functions[0].body[0]).toMatchObject({op:'invoke',bindings:{},arguments:{revision:nativeSpatial.beforeMovement.revision}});await receive();act(()=>client.cancel());
 });
+
+import nativeEnvironment from '../../../test-fixtures/browser/roomEnvironment.json';
+it('loads native room setup guards and displays acceptance without claiming the scan completed',async()=>{
+ const {client,screen,receive}=setup(true,['roomEnvironment.v1','execution.v1','actionResults.v1']);const view=nativeEnvironment.loadReceipt,definition=capabilityDefinition('room.environment.set')!;
+ await receive(undefined,false,{execution:{...view,selected:null,running:[],outcomes:[],nextRunId:view.selected.id} as RoomAgentState['execution']});
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:'Search'}));
+ await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Room setup'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Room setup'});fireEvent.click(screen.getByText('Edit action fields'));
+ expect((screen.getByRole('button',{name:'Run action now'}) as HTMLButtonElement).disabled).toBe(true);await loadCurrentDraft(screen,receive,definition,nativeEnvironment.before);
+ expect((screen.getByLabelText('Action inputs stateId') as HTMLInputElement).readOnly).toBe(true);fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
+ expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:nativeEnvironment.loadRequest.call,runId:view.selected.id}});
+ await receive(undefined,false,{execution:view as RoomAgentState['execution']});expect(screen.getByLabelText('Action result').textContent).toContain('"phase": "permission"');expect(screen.getByLabelText('Action result').textContent).toContain('"physicsRunning": false');act(()=>client.cancel());
+});
+it('keeps both native guards read-only for cancelling the current setup request',async()=>{
+ const {client,screen,receive}=setup(true,['roomEnvironment.v1','execution.v1']);const definition=capabilityDefinition('room.environment.set')!;
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:'Search'}));await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Room setup'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Room setup'});fireEvent.click(screen.getByText('Edit action fields'));
+ fireEvent.change(screen.getByLabelText('Variant'),{target:{value:'1'}});await loadCurrentDraft(screen,receive,definition,nativeEnvironment.loading);
+ for(const field of ['stateId','requestId'] as const){const input=screen.getByLabelText('Action inputs '+field) as HTMLInputElement;expect(input.readOnly).toBe(true);expect(input.value).toBe(nativeEnvironment.loading[field]);}
+ expect(JSON.parse((screen.getByLabelText('Action arguments') as HTMLTextAreaElement).value)).toEqual({operation:'cancel',stateId:nativeEnvironment.loading.stateId,requestId:nativeEnvironment.loading.requestId});expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
+});

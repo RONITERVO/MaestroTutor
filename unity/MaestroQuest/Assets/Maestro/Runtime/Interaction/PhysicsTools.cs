@@ -17,7 +17,7 @@ namespace Maestro.Quest.Interaction
         RoomEditor editor;
         RoomPhysicsWorld world;
         ScannedRoom scan;
-        TextMesh status, selection;
+        TextMesh status, selection, scanLabel; RuleToolAction scanAction;
         string placementId;
         bool preparingPlacement;
         public bool Placing => placementId != null;
@@ -29,18 +29,18 @@ namespace Maestro.Quest.Interaction
             var handle = gameObject.AddComponent<BoxCollider>(); handle.size = new Vector3(.72f,.59f,.04f);
             var item = gameObject.AddComponent<RoomItem>(); item.Configure(new Collider[] { handle },1,1); room.Register(item);
             var labels = new[] { "Load room","Scan room","Show room","Start physics","Pause","Object mode","Mass","Place surface","Collision shape" };
-            Action[] commands = { scan.Load,scan.Scan,scan.ToggleSurfaces,world.StartPhysics,world.PausePhysics,editor.CyclePhysics,editor.CycleMass,ArmPlacement,editor.CycleCollider };
+            Action[] commands = { scan.Load,()=>{if(scan.Busy)scan.CancelSetup();else scan.Scan();},scan.ToggleSurfaces,world.StartPhysics,world.PausePhysics,editor.CyclePhysics,editor.CycleMass,ArmPlacement,editor.CycleCollider };
             for (int i = 0; i < labels.Length; i++)
             {
                 var tool = new GameObject(labels[i]); tool.transform.SetParent(transform,false); tool.transform.localPosition = new Vector3(-.23f+i%3*.23f,.11f-i/3*.12f,-.05f);
                 var collider = tool.AddComponent<BoxCollider>(); collider.size = new Vector3(.10f,.06f,.065f);
                 var action = tool.AddComponent<RuleToolAction>(); action.Command = commands[i]; action.AccessibleName = labels[i];
                 Part(tool.transform,Vector3.zero,new Vector3(.06f,.03f,.04f),teal);
-                Label(tool.transform,new Vector3(0,-.04f,-.024f),labels[i],.0048f);
+                var label=Label(tool.transform,new Vector3(0,-.04f,-.024f),labels[i],.0048f);if(i==1){scanLabel=label;scanAction=action;}
             }
             selection = Label(transform,new Vector3(0,.23f,-.023f),"",.005f);
             status = Label(transform,new Vector3(0,-.235f,-.023f),"",.0047f);
-            world.Changed += Refresh; editor.Changed += Refresh; Refresh();
+            world.Changed += Refresh; scan.Changed += Refresh; editor.Changed += Refresh; Refresh();
         }
         async void ArmPlacement()
         {
@@ -75,7 +75,8 @@ namespace Maestro.Quest.Interaction
             if (!status || !editor) return;
             var data = editor.Read(editor.SelectedId);
             selection.text = data == null ? "Select a creation to set physics" : data.kind + " · " + data.physics + " · " + data.mass.ToString("0.##") + " kg\nCollision: " + data.collisionShape;
-            if (!Placing) status.text = string.Join("\n",ModelText.Wrap(world.Status,62).Take(3));
+            if(scanLabel){scanLabel.text=scan.Busy?(scan.CanCancel?"Cancel setup":"Wait for system"):"Scan room";scanAction.AccessibleName=scanLabel.text;scanAction.GetComponent<Collider>().enabled=!scan.Busy||scan.CanCancel;}
+            if (!Placing) status.text = string.Join("\n",ModelText.Wrap(scan.Status,62).Take(3));
         }
         Material Paint(string color) { var material = IllustratedMaterials.Create(IllustratedMaterials.Hex(color)); materials.Add(material); return material; }
         static void Part(Transform parent,Vector3 position,Vector3 scale,Material material)
@@ -92,6 +93,6 @@ namespace Maestro.Quest.Interaction
         }
         void OnApplicationPause(bool paused) { if (paused) CancelPlacement(); }
         void OnDisable() { if (editor) CancelPlacement(); }
-        void OnDestroy() { if (world) world.Changed -= Refresh; if (editor) editor.Changed -= Refresh; foreach (var material in materials) ArtResources.Release(material); }
+        void OnDestroy() { if (world) world.Changed -= Refresh; if(scan)scan.Changed-=Refresh; if (editor) editor.Changed -= Refresh; foreach (var material in materials) ArtResources.Release(material); }
     }
 }

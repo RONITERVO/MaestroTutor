@@ -6,9 +6,11 @@ fields copied from the action draft, action fields copied from fact paths, and
 concurrency guards. This metadata reaches both the book and agent through the same
 catalog. No action-specific React map, extra tool or new catalog operation is used.
 
-Six actions currently declare it (14 resolved variants): object physics settings,
+Seven actions currently declare it (16 resolved variants): object physics settings,
 Maestro distance/speed, walking-animation selection, controller configuration,
-controller live modes, and physics Start/Pause. Walking selection reads only the
+controller live modes, physics Start/Pause, and room setup/visibility. Room setup
+loads its native state identity; cancelling the current setup also loads the
+request identity. Neither read opens permission or scanning. Walking selection reads only the
 revision: it never replaces the chosen source, model, clip index or exact motion ID.
 Controller configuration reads its identity, plus speed/dead zone for movement
 variants. The desired stick assignment, button and program stay explicit because a
