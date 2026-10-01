@@ -16,15 +16,17 @@ namespace Maestro.Quest.Tests
             foreach(var entry in Cases()) {
                 var source=entry["call"];bool valid=BehaviourCatalog.TryCall((string)source["id"],1,(JObject)source["arguments"],out var call,out var error);
                 Assert.That(valid,Is.EqualTo((bool)entry["valid"]),(string)entry["name"]+": "+error);
-                if(valid) {Assert.That(call.Resources,Is.Empty);Assert.That(call.Claims,Is.Empty);Assert.That(call.Instant,Is.True);Assert.That(JToken.DeepEquals(call.Arguments,source["arguments"]),Is.True);}
+                if(valid) {if((string)source["arguments"]["kind"]=="copy"){Assert.That(call.Resources,Is.EqualTo(new[]{(string)source["arguments"]["target"]}));Assert.That(call.Claims.Length,Is.EqualTo(1));Assert.That(call.Claims[0].Channel,Is.EqualTo("wholeTarget"));}else {Assert.That(call.Resources,Is.Empty);Assert.That(call.Claims,Is.Empty);}Assert.That(call.Instant,Is.True);Assert.That(JToken.DeepEquals(call.Arguments,source["arguments"]),Is.True);}
             }
+            var outside=(JObject)BehaviourCatalog.Action("object.create").InputSchema["oneOf"][2]["examples"][0];outside["x"]=25;outside["y"]=25;Assert.That(BehaviourCatalog.TryCall("object.create",1,outside,out _,out _),Is.False,"Native room radius is authoritative beyond structural field bounds");
             var definition=BehaviourCatalog.Action("object.create");Assert.That((string)definition.OutputSchema["properties"]["objectId"]["x-resource"],Is.EqualTo("object"));
-            foreach(string old in new[]{"object.create.primitive","object.create.recipe"})Assert.That(BehaviourCatalog.Action(old),Is.Null);
+            foreach(string old in new[]{"object.create.primitive","object.create.recipe","object.create.copy"})Assert.That(BehaviourCatalog.Action(old),Is.Null);
         }
         [Test] public void VariantExamplesAreCompleteDetachedAndDiscoverable() {
             var definition=BehaviourCatalog.Action("object.create");var shape=definition.InputSchema;
             foreach(var variant in (JArray)shape["oneOf"]) {
                 var example=(JObject)variant["examples"][0];Assert.That(BehaviourCatalog.TryCall(definition.Id,1,example,out var call,out var error),Is.True,error);
+                if((string)example["kind"]=="copy"){Assert.That(call.TryStep(out _,out _),Is.False,"Copy needs no numeric action adapter");continue;}
                 Assert.That(call.TryStep(out var step,out error),Is.True,error);
                 Assert.That(LegacyCapabilityAdapters.TryCall(step,out var restored,out error),Is.True,error);// Numeric JSON integer/float representation changes through Unity's legacy float fields.
                 JObject Numbers(JObject value) {var copy=(JObject)value.DeepClone();foreach(var number in copy.Descendants().OfType<JValue>().Where(v=>v.Type==JTokenType.Integer||v.Type==JTokenType.Float).ToArray())number.Replace(new JValue(number.Value<double>()));return copy;}

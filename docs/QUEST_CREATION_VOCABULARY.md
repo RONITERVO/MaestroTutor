@@ -2,8 +2,9 @@
 
 Development checkpoint, 2026-09-28. The public catalog now exposes one
 object.create action with primitive and recipe kinds, replacing two prototype
-creation IDs. Together with animation consolidation, this leaves thirteen public
-actions. Existing imported-model workflows remain available separately; this
+creation IDs. The later copy kind shares Duplicate, exact source revisions and
+returned identities; see QUEST_OBJECT_COPY.md. The current total catalog count is
+tracked in QUEST_V1_PLAN.md. Existing imported-model workflows remain available separately; this
 change does not add model generation or bypass asset validation.
 
 ## Contract and behavior
@@ -23,7 +24,7 @@ forbidden on shapes. The kind selector stays literal; valid scalar parameters
 can be expression-bound. Recipe arrays stay literal and editable. Native domain,
 room capacity, aggregate geometry and storage checks still apply.
 
-Both kinds return the exact objectId only after saving. Existing native operations
+All kinds return the exact objectId only after saving. Existing native operations
 still create through RoomEditor, with one room Undo edit per creation. Stop never
 erases completed creations. Duplicate one-off receipt delivery returns the same
 historical result without creating again. Programs retain their native-result

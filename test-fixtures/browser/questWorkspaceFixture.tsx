@@ -1,3 +1,4 @@
+import nativeCopy from './objectCopy.json';
 import nativeSurface from './surfacePlacement.json';
 import nativeEnvironment from './roomEnvironment.json';
 import repeatConversion from '../../unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-repeat-conversion.json';
@@ -78,6 +79,14 @@ if(controllerModes){
  state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';
  state.execution={...JSON.parse(JSON.stringify(nativeModes.enable)),selected:null,running:[],outcomes:[],nextRunId:nativeModes.enable.selected.id};
  state.capabilities=[...state.capabilities??[],'catalogVocabulary.v1','controllerModes.v1','execution.v1','executionReceipts.v1','actionResults.v1'];
+}
+const objectCopy=new URLSearchParams(location.search).has('objectCopy');
+if(objectCopy){
+ if(!validExecutionView(nativeCopy.receipt))throw new Error('Invalid native object copy fixture');
+ state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';state.rules={...state.rules!,selected:null,running:[],outcomes:[]};
+ state.objects=[...state.objects.filter(o=>o.id==='book'||o.id==='maestro'),{id:nativeCopy.before.target,objectRevision:nativeCopy.before.revision,name:'Drawing source',kind:'Drawing',position:nativeCopy.before.position,scale:nativeCopy.before.scale,color:white,animated:true}];
+ state.execution={...JSON.parse(JSON.stringify(nativeCopy.receipt)),selected:null,running:[],outcomes:[],nextRunId:nativeCopy.receipt.selected.id};
+ state.capabilities=[...state.capabilities??[],'catalogVocabulary.v1','objectCopy.v1','structuredValues.v1','factQueries.v1','execution.v1','executionReceipts.v1','actionResults.v1'];
 }
 const surfacePlacement=new URLSearchParams(location.search).has('surfacePlacement');
 if(surfacePlacement){
@@ -227,6 +236,11 @@ setInterval(()=>{
      if(index<0){state.ok=false;state.status='Only captured native mode transitions can be replayed';}
      else{state.execution=copy(modeViews[index]) as RoomAgentState['execution'];modeObservation=modeViews[index].selected.output;state.status='Captured native mode result; this browser does not move a headset';}
     }
+    else if(objectCopy&&input.operation==='start'){
+     const view=nativeCopy.receipt;
+     if(input.runId!==view.selected.id||input.call?.id!==view.selected.call.id||input.call.version!==view.selected.call.version||JSON.stringify(Object.entries(input.call.arguments).sort())!==JSON.stringify(Object.entries(view.selected.call.arguments).sort())){state.ok=false;state.status='Only the captured native copy can be replayed';}
+     else{state.execution=copy(view) as RoomAgentState['execution'];if(!state.objects.some(o=>o.id===nativeCopy.copied.target))state.objects.push({id:nativeCopy.copied.target,objectRevision:nativeCopy.copied.revision,name:'Copied drawing',kind:nativeCopy.copied.kind,position:copy(nativeCopy.copied.position),scale:nativeCopy.copied.scale,color:white,animated:true});state.status='Captured native object copy; no headset execution';}
+    }
     else if(surfacePlacement&&input.operation==='start'){
      const view=nativeSurface.receipt;
      if(input.call?.id!==view.selected.call.id||JSON.stringify(Object.entries(input.call.arguments).sort())!==JSON.stringify(Object.entries(view.selected.call.arguments).sort())){state.ok=false;state.status='Only the captured native placement can be replayed';}
@@ -293,6 +307,12 @@ setInterval(()=>{
      const definition=behaviourFact('controller.mode')!;
      if(query.operation==='search')state.catalog={operation:'search',category:'facts',query:query.query,offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Found live control modes'};
      else state.catalog={operation:'inspect',category:'facts',capability:query.capability,version:1,definition:query.capability===definition.id?definition:null,available:query.capability===definition.id,value:query.capability===definition.id?copy(modeObservation):null,status:'Captured native control modes'};
+     continue;
+    }
+    if(objectCopy&&query.operation!=='check'&&query.category==='facts'){
+     const definition=behaviourFact('object.definition')!;
+     if(query.operation==='search')state.catalog={operation:'search',category:'facts',query:query.query,offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Found object definition'};
+     else{const value=query.arguments?.target===nativeCopy.before.target?nativeCopy.before:state.objects.some(o=>o.id===nativeCopy.copied.target)&&query.arguments?.target===nativeCopy.copied.target?nativeCopy.copied:null;state.catalog={operation:'inspect',category:'facts',capability:query.capability,version:1,arguments:query.arguments,definition:query.capability===definition.id?definition:null,available:query.capability===definition.id&&!!value,value:query.capability===definition.id?copy(value):null,status:'Captured native definition'};}
      continue;
     }
     if(surfacePlacement&&query.operation!=='check'&&query.category==='facts'){

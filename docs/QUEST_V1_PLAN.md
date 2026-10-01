@@ -13,7 +13,7 @@ pose versions, the same physical joint limits and imported retargeter, held-join
 exclusion, failed-pose recovery and recording interoperation. Saved edits are
 durable outside temporary mode; temporary edits stay in the fork until Keep.
 No authoring operation starts playback. The catalog contains 54 actions, 10
-events and 38 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
+events and 39 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
 Single-file GLB/VRM selection, preview and acceptance now share the physical
 import path with book fields and agent/program calls. See QUEST_MODEL_IMPORT.md.
 Animation collections now share native selection, versioned start/retry/tag controls,
@@ -30,7 +30,10 @@ the physical service through catalog requests and observable progress. Platform
 permission/scan handoffs remain explicit; completion never claims alignment or
 starts physics. See QUEST_ROOM_ENVIRONMENT.md. Live floor/table placement now shares
 the physical support-offset calculation, saved edits and Undo through the catalog;
-see QUEST_SURFACE_PLACEMENT.md. The book action editor now loads real settings
+see QUEST_SURFACE_PLACEMENT.md. Object copying now shares the physical Duplicate
+operation through object.create kind=copy and object.definition; geometry, asset
+references and translated recordings are preserved with one Undo. See
+QUEST_OBJECT_COPY.md. The book action editor now loads real settings
 and concurrency guards from catalog-declared facts. It requires an explicit
 snapshot before running and never silently advances revisions; see QUEST_CURRENT_INPUTS.md.
 Reusable behaviours can now choose visible current-value reads and live/fixed
@@ -54,6 +57,31 @@ and tracked operation roots remain protected. Private recovery export remains
 separate; a full store with unreadable selection still requires recovery/repair.
 PR #248 records the current verified commit and package. Earlier entries
 below are historical evidence, not current test totals or release acceptance.
+
+PC shared-object-copy increment (2026-10-01): object.create kind=copy and
+object.definition share the physical Duplicate operation with book fields and
+agent/program calls. An exact source revision guards the copy; native IDs, source
+ownership and normal saved-edit budgets remain authoritative. Drawing geometry,
+recipe parts/tracks, model references, physics settings and recorded motion remain
+editable. The copied origin translates recorded paths without retargeting them.
+Copies start without animation playback; unrelated actors and the source remain
+unchanged. Physical Duplicate selects the copy; agent/program calls do not.
+Temporary copies stay in the fork, Undo removes one copy, and replay returns the
+old receipt without another object. See QUEST_OBJECT_COPY.md.
+
+Verification passed 389 EditMode and 349 PlayMode tests (three optional private
+model checks skipped), 1,638 web tests in 189 files, and 61 Android browser tests.
+Seven native copy tests cover translated drawings/recordings, recipes, independent
+GLB instances/playback, physical Duplicate, temporary isolation, Undo/replay,
+stale/held/owned sources, failed writes, aggregate limits and returned-ID program
+chaining. The browser submits the captured native copy through generated fields
+and displays its exact returned identity. It does not run a Quest action.
+Production build, TypeScript, lint, catalog drift, prompt ownership and boundaries
+pass. The full build helper exited zero. All 195 runtime and 93 test C# files,
+26 fixtures plus metadata, and 113 packaged web files match. ARM64 and v2 signature
+verify. Development checkpoint `MaestroQuest-object-copy-24B02EEB.apk` has SHA-256
+`24B02EEB7D29DA47918BE6E0BCA973BC66B0377B3F3511366AD551D61FBD13A9`. It remains uninstalled. Physical Quest,
+provider, performance and Store acceptance remain open; PR #248 remains draft.
 
 PC shared-surface-placement increment (2026-10-01): object.surface.place exposes
 the physical Place surface service to the book, agent and programs. It captures

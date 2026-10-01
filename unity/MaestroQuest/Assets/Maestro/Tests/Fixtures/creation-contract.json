@@ -2771,5 +2771,91 @@
       }
     },
     "valid": false
+  },
+  {
+    "name": "copy an exact creation revision",
+    "call": {
+      "id": "object.create",
+      "version": 1,
+      "arguments": {
+        "kind": "copy",
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 1,
+        "name": "Copy",
+        "x": 0.5,
+        "y": 1,
+        "z": 0.5
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "copy cannot target built-ins",
+    "call": {
+      "id": "object.create",
+      "version": 1,
+      "arguments": {
+        "kind": "copy",
+        "target": "book",
+        "revision": 1,
+        "name": "Copy",
+        "x": 0.5,
+        "y": 1,
+        "z": 0.5
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "copy needs source revision",
+    "call": {
+      "id": "object.create",
+      "version": 1,
+      "arguments": {
+        "kind": "copy",
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 0,
+        "name": "Copy",
+        "x": 0.5,
+        "y": 1,
+        "z": 0.5
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "copy forbids primitive fields",
+    "call": {
+      "id": "object.create",
+      "version": 1,
+      "arguments": {
+        "kind": "copy",
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 1,
+        "name": "Copy",
+        "x": 0.5,
+        "y": 1,
+        "z": 0.5,
+        "shape": "ball"
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "copy respects coordinate bound",
+    "call": {
+      "id": "object.create",
+      "version": 1,
+      "arguments": {
+        "kind": "copy",
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 1,
+        "name": "Copy",
+        "x": 26,
+        "y": 25,
+        "z": 0.5
+      }
+    },
+    "valid": false
   }
 ]

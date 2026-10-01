@@ -10,8 +10,8 @@ namespace Maestro.Quest.Programs
     internal sealed class CreateObjectCapability : CapabilityModule
     {
         internal sealed class Kind {
-            public readonly string Name;public readonly CapabilityModule Provider;public readonly CapabilityStepAdapter Adapter;
-            public Kind(string name,CapabilityModule provider) {Name=name;Provider=provider;Adapter=new("object.create",provider,new JObject {["kind"]=name});}
+            public readonly string Name;public readonly CapabilityModule Provider;public readonly CapabilityStepAdapter Adapter;readonly string[] features;
+            public Kind(string name,CapabilityModule provider,params string[] features) {Name=name;Provider=provider;this.features=features;Adapter=new("object.create",provider,new JObject {["kind"]=name});}
             public JObject Schema {
                 get {
                     var schema=Provider.InputSchema;var properties=(JObject)schema["properties"];
@@ -19,17 +19,20 @@ namespace Maestro.Quest.Programs
                     schema["title"]=Provider.Label;schema["description"]=Provider.Description;
                     schema["examples"]=new JArray(Adapter.Public(Provider.Example));schema["x-channels"]=new JArray(Provider.Channels);
                     schema["x-requirements"]=new JArray(Provider.Requirements);
-                    schema["x-features"]=Name=="recipe"?new JArray("actionResults.v1","recipeCreation.v1"):new JArray("actionResults.v1");return schema;
+                    schema["x-features"]=new JArray(new[]{"actionResults.v1"}.Concat(features));return schema;
                 }
             }
         }
-        internal static readonly Kind[] Kinds={new("primitive",new CreatePrimitiveCapability()),new("recipe",new CreateRecipeCapability())};
-        internal override IEnumerable<CapabilityStepAdapter> StepAdapters=>Kinds.Select(k=>k.Adapter);
+        internal static readonly Kind[] Kinds={new("primitive",new CreatePrimitiveCapability()),new("recipe",new CreateRecipeCapability(),"recipeCreation.v1"),new("copy",new CopyObjectCapability(),"objectCopy.v1")};
+        internal override IEnumerable<CapabilityStepAdapter> StepAdapters=>Kinds.Where(k=>k.Name!="copy").Select(k=>k.Adapter);
         Kind Selected(JObject args)=>Kinds.Single(k=>k.Adapter.Matches(args));
         public override string Id=>"object.create";
         public override string Label=>"Create object";
-        public override string Description=>"Choose a creation kind: a physical shape or an editable recipe with optional animation tracks. Inspect the selected kind's example, fields and requirements. Both return the exact live objectId. Outside temporary play it is saved with one Undo; inside temporary play it stays unsaved until room.session keep completes. Stop leaves created objects in the room. Imported models still use the existing asset import workflow.";
+        public override string Description=>"Choose a creation kind: a physical shape, an editable recipe with optional animation tracks, or a copy of an existing creation. Inspect the selected kind's example, fields and requirements. All kinds return the exact new objectId. Outside temporary play it is saved with one Undo; inside temporary play it stays unsaved until room.session keep completes. Stop leaves created objects in the room. Imported models still use the existing asset import workflow.";
         public override string Duration=>"instant";
+        public override string Ownership=>"kindChannels";
+        public override IReadOnlyList<string> Channels=>Kinds.SelectMany(k=>k.Provider.Channels).Distinct().ToArray();
+        public override BehaviourCatalog.Claim[] Claims(JObject args){var kind=Selected(args);return kind.Provider.Claims(kind.Adapter.Native(args));}
         public override IReadOnlyList<string> Requirements=>new[] {"room.capacity","storage.writable","kind.valid"};
         public override JObject InputSchema=>new() {["type"]="object",["title"]="Creation kind",["oneOf"]=new JArray(Kinds.Select(k=>k.Schema)),["x-discriminators"]=new JArray("kind")};
         public override JObject OutputSchema=>Kinds[0].Provider.OutputSchema;

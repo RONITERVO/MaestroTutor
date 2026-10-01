@@ -246,11 +246,10 @@ namespace Maestro.Quest.Creation
 
         public void Duplicate()
         {
-            CapturePhysicsPlacements();
-            var item = journal.Read(selected);
-            if (item == null || item.IsBuiltIn) { SetStatus("Select one of your creations to duplicate"); return; }
-            item.id = Guid.NewGuid().ToString("N"); item.position += Vector3.right * .18f;
-            if (Commit(new[] { item }, Array.Empty<string>(), "Copy added")) { selected = item.id; UpdateSelection(); }
+            var item=Read(selected);var live=Find(selected);
+            if(item==null||item.IsBuiltIn||!live){SetStatus("Select one of your creations to duplicate");return;}
+            if(CopyObject(selected,ObjectRevision(selected),item.name,live.transform.localPosition+Vector3.right*.18f,out var id,out var error)){selected=id;UpdateSelection();}
+            else SetStatus(error);
         }
 
         public void Erase()

@@ -5981,6 +5981,102 @@
               "actionResults.v1",
               "recipeCreation.v1"
             ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "target": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 1000000.0
+              },
+              "name": {
+                "type": "string",
+                "pattern": "^.{0,80}$",
+                "maxLength": 80
+              },
+              "x": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "y": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "z": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "copy"
+                ],
+                "x-static": true
+              }
+            },
+            "required": [
+              "target",
+              "revision",
+              "name",
+              "x",
+              "y",
+              "z",
+              "kind"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "object.definition",
+              "version": 1,
+              "arguments": {
+                "target": "target"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
+            "title": "Copy an existing creation",
+            "description": "Copy one user-created object's canonical data, using object.definition for its exact revision. The included book and Maestro cannot be copied. Choose the new origin x/y/z in room metres; preserve current rotation/scale, colour, physics settings, drawing points, recipe parts/tracks and exact model reference. Empty name keeps the source name. Recorded frame positions receive the same translation as the copied origin; their times, rotations, scales and loop remain unchanged. Copying never starts playback: recipe tracks are retained with playing=false, and live playback, velocities, grabs, program/button bindings and unsaved authoring are not copied. A copied recording may still begin away from the object's current pose, exactly as the source's timeline does. The source remains unchanged and unrelated actors continue. The exact new objectId is returned only after a normal saved creation with one Undo (local in a temporary room until Keep). This acknowledges the saved object, not completed asynchronous model loading; imported assets retain their bounded loader and unavailable placeholder behavior. No model or motion bytes are duplicated. Source ownership, stale revisions, aggregate room/model/point/frame budgets and failed saves reject without a partial copy. Stop after completion does not erase it; replaying a receipt cannot create another object.",
+            "examples": [
+              {
+                "target": "00000000000000000000000000000000",
+                "revision": 1,
+                "name": "",
+                "x": 0.5,
+                "y": 1.3,
+                "z": 0.65,
+                "kind": "copy"
+              }
+            ],
+            "x-channels": [
+              "wholeTarget"
+            ],
+            "x-requirements": [
+              "target.exists",
+              "target.unheld",
+              "source.revision.current",
+              "authoring.inactive",
+              "room.capacity",
+              "storage.writable"
+            ],
+            "x-features": [
+              "actionResults.v1",
+              "objectCopy.v1"
+            ]
           }
         ],
         "x-discriminators": [
@@ -5988,14 +6084,16 @@
         ]
       },
       "duration": "instant",
-      "ownership": "none",
-      "channels": [],
+      "ownership": "kindChannels",
+      "channels": [
+        "wholeTarget"
+      ],
       "requirements": [
         "room.capacity",
         "storage.writable",
         "kind.valid"
       ],
-      "description": "Choose a creation kind: a physical shape or an editable recipe with optional animation tracks. Inspect the selected kind's example, fields and requirements. Both return the exact live objectId. Outside temporary play it is saved with one Undo; inside temporary play it stays unsaved until room.session keep completes. Stop leaves created objects in the room. Imported models still use the existing asset import workflow.",
+      "description": "Choose a creation kind: a physical shape, an editable recipe with optional animation tracks, or a copy of an existing creation. Inspect the selected kind's example, fields and requirements. All kinds return the exact new objectId. Outside temporary play it is saved with one Undo; inside temporary play it stays unsaved until room.session keep completes. Stop leaves created objects in the room. Imported models still use the existing asset import workflow.",
       "example": {
         "shape": "ball",
         "name": "Ball",
@@ -7732,6 +7830,66 @@
   ],
   "facts": [
     {
+      "id": "object.definition",
+      "version": 1,
+      "type": {
+        "record": {
+          "target": "text",
+          "revision": "number",
+          "kind": "text",
+          "name": "text",
+          "position": {
+            "record": {
+              "x": "number",
+              "y": "number",
+              "z": "number"
+            }
+          },
+          "rotation": {
+            "record": {
+              "x": "number",
+              "y": "number",
+              "z": "number",
+              "w": "number"
+            }
+          },
+          "scale": "number",
+          "content": {
+            "record": {
+              "points": "number",
+              "parts": "number",
+              "frames": "number",
+              "modelHash": "text",
+              "recipePlaying": "boolean"
+            }
+          }
+        }
+      },
+      "label": "Saved object definition",
+      "description": "Canonical object metadata and exact authored revision, from the temporary fork when active. Position/rotation/scale are saved room-local values, not live physics, camera coordinates or the animated pose. Content counts describe stored drawings, recipe parts and recorded frames; modelHash is an exact asset reference, not proof of availability or completed loading. Name is bounded display text; an empty copy name retains the original full name. Reading grants no edit authority and takes no ownership. Use this revision for kind=copy; a missing source is unavailable.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "book"
+      },
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
       "id": "object.position",
       "version": 1,
       "type": {
@@ -9202,7 +9360,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "8c573ccb4c89f138a75a60752faec953bd1b52b752030630c3d4cdbbbfce9586"
+      "sha256": "29e6a6f6e68419ab351660e50457c361c05dc616d30cc94fed29660d2690d231"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -9226,7 +9384,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/NativeObjectFacts.cs",
-      "sha256": "70f36dd2e32d1e4fb55bad87f47c98c3249cf01f3502ab9e753ef012fe29a7f0"
+      "sha256": "63e9576093f5aa6ae38979911dae0d4b22efa0b216f71115bf4ebb5fc4f50855"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramData.cs",
@@ -9274,7 +9432,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "33862658697243ee2ebe68606fcde5ec97f27386117f2cd62a6e2bd3c1bcd3cd"
+      "sha256": "2afca65b38740aba4676c73ff059df73729c0228467c5468d3644848961235f7"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectCopy.cs",
+      "sha256": "aa4ebc8616422ccd86af9e8e90216cba35c8740c4cf9272f9c36f6785566c32d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectSettings.cs",
@@ -9417,8 +9579,12 @@
       "sha256": "bf0e42b77bc9e42c02eb4ab4287d9532120b15f33c2e22963c57e1abc4f9318c"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CopyObjectCapability.cs",
+      "sha256": "92ded20a9931e7cca2180d2cbb7c072c6a02619cd6543a94893d2e923adbf5ee"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreateObjectCapability.cs",
-      "sha256": "ead4616185c6e82ef165a12401de65d1f5ec7cbc3f29475af749d8f8a3da85f8"
+      "sha256": "c537d6e20bc705db7f72227e2ece048a81990ea29dd97f1ccfc131b2fd6ef1f9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/EmbeddedAnimationCapability.cs",

@@ -6,7 +6,7 @@ fields copied from the action draft, action fields copied from fact paths, and
 concurrency guards. This metadata reaches both the book and agent through the same
 catalog. No action-specific React map, extra tool or new catalog operation is used.
 
-Eight actions currently declare it (17 resolved variants): object physics settings,
+Nine actions currently declare it (18 resolved variants): object copying, object physics settings,
 Maestro distance/speed, walking-animation selection, controller configuration,
 controller live modes, physics Start/Pause, room setup/visibility, and surface
 placement. Surface placement loads only the room identity; target and ray choice

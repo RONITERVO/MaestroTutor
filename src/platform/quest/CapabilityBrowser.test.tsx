@@ -809,3 +809,16 @@ it('runs surface placement from native room guards and displays its actual saved
  fireEvent.click(screen.getByRole('button',{name:'Run action now'}));expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:nativeSurface.request.call,runId:view.selected.id}});
  await receive(undefined,false,{execution:view as RoomAgentState['execution']});expect(screen.getByLabelText('Action result').textContent).toContain('"position"');expect(screen.getByLabelText('Action result').textContent).toContain('"temporary": false');act(()=>client.cancel());
 });
+
+import nativeCopy from '../../../test-fixtures/browser/objectCopy.json';
+it('copies an existing drawing through generic creation fields and the native source revision',async()=>{
+ const {client,screen,receive,state}=setup(true,['objectCopy.v1','execution.v1','actionResults.v1']);const view=nativeCopy.receipt,definition=capabilityDefinition('object.create')!;
+ await receive(undefined,false,{objects:[...state.objects,{id:nativeCopy.before.target,objectRevision:nativeCopy.before.revision,name:'Drawing source',kind:'Drawing',position:nativeCopy.before.position,scale:1,color:{r:1,g:1,b:1,a:1},animated:true}],execution:{...view,selected:null,running:[],outcomes:[],nextRunId:view.selected.id} as RoomAgentState['execution']});
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:'Search'}));await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Creation'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Creation'});fireEvent.click(screen.getByText('Edit action fields'));fireEvent.change(screen.getByLabelText('Creation kind'),{target:{value:'2'}});
+ fireEvent.change(screen.getByLabelText('Action inputs target'),{target:{value:nativeCopy.before.target}});expect((screen.getByRole('button',{name:'Run action now'}) as HTMLButtonElement).disabled).toBe(true);
+ await loadCurrentDraft(screen,receive,definition,nativeCopy.before);expect((screen.getByLabelText('Action inputs revision') as HTMLInputElement).readOnly).toBe(true);
+ for(const key of ['name','x','y','z'] as const)fireEvent.change(screen.getByLabelText('Action inputs '+key),{target:{value:nativeCopy.call.arguments[key]}});
+ fireEvent.click(screen.getByRole('button',{name:'Run action now'}));expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:nativeCopy.call,runId:view.selected.id}});
+ await receive(undefined,false,{execution:view as RoomAgentState['execution']});expect(screen.getByLabelText('Action result').textContent).toContain(nativeCopy.copied.target);act(()=>client.cancel());
+});
