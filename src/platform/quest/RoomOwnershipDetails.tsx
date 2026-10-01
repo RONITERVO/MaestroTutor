@@ -9,7 +9,7 @@ export function RoomOwnershipDetails({state}:{state:RoomAgentState}) {
  return <details className="room-ownership"><summary>In control now · {view.owners.length}</summary>
   {view.error?<p role="status">{view.error}</p>:view.suspended?<p>Room actions are paused.</p>:view.owners.length===0?<p>No actions are controlling objects.</p>:null}
   {view.owners.map(owner=><div key={owner.id} className="room-owner"><strong>{owner.label}</strong><small>{roles[owner.role]}{owner.allowsGrab?' · You can grip and move this object':''}</small>
-   <ul>{owner.claims.map(claim=><li key={JSON.stringify([claim.target,claim.channel])}>{state.objects.find(o=>o.id===claim.target)?.name??claim.target} · {channels[claim.channel]??claim.channel}</li>)}</ul>
+   <ul>{owner.claims.map(claim=><li key={JSON.stringify([claim.target,claim.channel])}>{state.objects.find(o=>o.id===claim.target)?.name??claim.target} · {claim.channel.startsWith('recipePart:')?'part '+claim.channel.slice(11):channels[claim.channel]??claim.channel}</li>)}</ul>
   </div>)}
   <p>Interrupted behaviours stay stopped. Use their Run control when you want to start again.</p>
  </details>;

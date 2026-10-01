@@ -33,15 +33,16 @@ namespace Maestro.Quest.Programs
             new("embedded","wholeTarget",new EmbeddedAnimationCapability(),"modelHash","clipIndex"),
             new("library","wholeTarget",new LibraryAnimationCapability(),"motionId"),
             new("recipe","wholeTarget",new RecipeAnimationCapability()),
+            new("recipe","recipePart",new RecipePartAnimationCapability(),"part"),
         };
         internal static Source Find(JObject args)=>Sources.SingleOrDefault(x=>x.Kind==(string)args["source"]?["kind"]&&x.Channel==(string)args["channel"]);
         internal override IEnumerable<CapabilityStepAdapter> StepAdapters=>Sources.Select(s=>s.Adapter);
         public override string Id=>"animation.play";
         public override string Label=>"Play animation";
-        public override string Description=>"Choose a typed source and channel. Library and embedded sources keep exact motion/model identities. Only built-in gestures currently support upperBody; wholeTarget owns the complete object. Inspect the selected variant's prerequisites; no automatic source substitution.";
+        public override string Description=>"Choose a typed source and channel. Library and embedded sources keep exact motion/model identities. Only built-in gestures currently support upperBody; wholeTarget owns the complete object. For recipePart choose source.part, an exact saved track ID. Different local part rotations compose, including parent/child parts; the same part conflicts. Playback starts that track at zero, seconds=0 uses its saved duration, and loop repeats it. Stop/completion holds the last pose and suppresses autoplay for that track until explicit whole-recipe Restart. Other tracks continue. Root physics and the stable whole-object collider remain unchanged; parts are visual joints, not independent rigid bodies. Read object.recipe.pose for live local/world pose. Playback never changes saved keys. Inspect the selected variant's prerequisites; no automatic source substitution.";
         public override string Duration=>"timed";
         public override string Ownership=>"sourceChannels";
-        public override IReadOnlyList<string> Channels=>new[] {"wholeTarget","upperBody"};
+        public override IReadOnlyList<string> Channels=>new[] {"wholeTarget","upperBody","recipePart"};
         public override IReadOnlyList<string> Requirements=>new[] {"target.exists","target.unheld","authoring.inactive","source.ready"};
         public override JObject InputSchema=>new() {["type"]="object",["title"]="Source and channel",["oneOf"]=new JArray(Sources.Select(x=>x.Schema)),["x-discriminators"]=new JArray("source.kind","channel")};
         public override JObject Example=>Sources[0].Public(new JObject {["target"]="maestro",["seconds"]=2,["gesture"]="greeting"});

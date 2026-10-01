@@ -842,6 +842,75 @@
               "authoring.inactive",
               "recipe.tracksAvailable"
             ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "target": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "seconds": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 30.0
+              },
+              "loop": {
+                "type": "boolean"
+              },
+              "source": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "recipe"
+                    ],
+                    "x-static": true
+                  },
+                  "part": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9_]{1,32}$",
+                    "maxLength": 32
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part"
+                ],
+                "additionalProperties": false
+              },
+              "channel": {
+                "type": "string",
+                "enum": [
+                  "recipePart"
+                ],
+                "x-static": true
+              }
+            },
+            "required": [
+              "target",
+              "seconds",
+              "loop",
+              "source",
+              "channel"
+            ],
+            "additionalProperties": false,
+            "x-features": [
+              "recipePartPlayback.v1"
+            ],
+            "title": "Recipe part animation",
+            "x-channels": [
+              "recipePart"
+            ],
+            "x-requirements": [
+              "target.recipe",
+              "target.unheld",
+              "authoring.inactive",
+              "recipe.part.trackAvailable"
+            ]
           }
         ],
         "x-discriminators": [
@@ -853,7 +922,8 @@
       "ownership": "sourceChannels",
       "channels": [
         "wholeTarget",
-        "upperBody"
+        "upperBody",
+        "recipePart"
       ],
       "requirements": [
         "target.exists",
@@ -861,7 +931,7 @@
         "authoring.inactive",
         "source.ready"
       ],
-      "description": "Choose a typed source and channel. Library and embedded sources keep exact motion/model identities. Only built-in gestures currently support upperBody; wholeTarget owns the complete object. Inspect the selected variant's prerequisites; no automatic source substitution.",
+      "description": "Choose a typed source and channel. Library and embedded sources keep exact motion/model identities. Only built-in gestures currently support upperBody; wholeTarget owns the complete object. For recipePart choose source.part, an exact saved track ID. Different local part rotations compose, including parent/child parts; the same part conflicts. Playback starts that track at zero, seconds=0 uses its saved duration, and loop repeats it. Stop/completion holds the last pose and suppresses autoplay for that track until explicit whole-recipe Restart. Other tracks continue. Root physics and the stable whole-object collider remain unchanged; parts are visual joints, not independent rigid bodies. Read object.recipe.pose for live local/world pose. Playback never changes saved keys. Inspect the selected variant's prerequisites; no automatic source substitution.",
       "example": {
         "target": "maestro",
         "seconds": 2,
@@ -9031,6 +9101,87 @@
       ]
     },
     {
+      "id": "object.recipe.pose",
+      "version": 1,
+      "type": {
+        "record": {
+          "target": "text",
+          "part": "text",
+          "parent": "text",
+          "revision": "number",
+          "local": {
+            "record": {
+              "position": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number"
+                }
+              },
+              "rotation": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number",
+                  "w": "number"
+                }
+              }
+            }
+          },
+          "world": {
+            "record": {
+              "position": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number"
+                }
+              },
+              "rotation": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number",
+                  "w": "number"
+                }
+              }
+            }
+          },
+          "playing": "boolean"
+        }
+      },
+      "label": "Live recipe part pose",
+      "description": "Read one named part's current local/world position and unit rotation, exact saved object revision, parent and whether that track is playing. Local coordinates are relative to its parent; world coordinates use the current room origin. Parent motion carries descendants. Reads neither start playback nor grant edit authority. Missing, inactive or non-recipe parts are unavailable; parts without tracks are still readable. This is a live observation, never a saved key or independent physical body.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "part": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_]{1,32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "target",
+          "part"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000",
+        "part": "Head"
+      },
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
       "id": "object.position",
       "version": 1,
       "type": {
@@ -10434,6 +10585,20 @@
           }
         },
         {
+          "id": "animation.recipe.part",
+          "capability": "animation.play",
+          "selectors": {
+            "source.kind": "recipe",
+            "channel": "recipePart"
+          },
+          "fields": {
+            "target": "target",
+            "part": "source.part",
+            "seconds": "seconds",
+            "loop": "loop"
+          }
+        },
+        {
           "id": "object.create.primitive",
           "capability": "object.create",
           "selectors": {
@@ -10501,7 +10666,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "d1a3fc7c169a8d91b20e73d28b2ba38298ccc4ed60bf8f09e70b748f401b5312"
+      "sha256": "a71dbe119206956684a176740c451b9d035c2ad3de41a99f12e9e533af6ea010"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -10558,6 +10723,14 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRecipe.cs",
       "sha256": "401ad282a0054fac7142e1e3e593d6ce93e9db723efd6945f5eed3f2d594dff8"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeObject.cs",
+      "sha256": "c696d398e10030366a4f7c643922126cb0bab9d015f147f9f936b314292fb09f"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipePartPlayback.cs",
+      "sha256": "a45745715be1ef0f222de9c233edc0cb1e81a4c269fc35dc4c77e2d67159ec0e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomMotion.cs",
@@ -10717,7 +10890,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationPlayCapability.cs",
-      "sha256": "08016146c4a69829095687637214119a83978e66ffab5b66571e0eb1e72afc1d"
+      "sha256": "a7c482455cd1a9ea54e7a9ee1134a425c2c07562a9a04cdaefb466f3e89ac167"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationPosingCapability.cs",
@@ -10814,6 +10987,14 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RecipeEditFacts.cs",
       "sha256": "a1fd8851d600e6330d877f7a027fa6eb8f0db8d2a9481ecaa151c5f9bb29b5c9"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RecipePartAnimationCapability.cs",
+      "sha256": "701b3f5a12b179cd45c46763e462af021aeac2121212b7fe194e7a57f7a72ae6"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RecipePartAnimationFacts.cs",
+      "sha256": "2f64f17185e25d2a9c038e29b891de31ead7d0d00849a4f44256ace3810e0379"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RecordedAnimationCapabilities.cs",

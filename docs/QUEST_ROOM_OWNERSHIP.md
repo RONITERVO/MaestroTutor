@@ -85,7 +85,8 @@ controls; recipe programs and physics capabilities enter through the scheduler.
 Subsequent increments added typed contact, proximity and physical-motion
 subscriptions ([event programs](QUEST_EVENT_PROGRAMS.md)), structured collections
 ([program data](QUEST_PROGRAM_DATA.md)) and pinned local module libraries
-([program modules](QUEST_PROGRAM_MODULES.md)). Named robot-part channels,
-declarative resume policies, reflex behaviors, broader world/action coverage and
+([program modules](QUEST_PROGRAM_MODULES.md)). Named recipe-part playback now uses independent local-joint channels and
+explicit autoplay suppression ([recipe parts](QUEST_RECIPE_PART_PLAYBACK.md)).
+Generalized prop sockets, declarative resume policies, reflex behaviors, broader world/action coverage and
 Quest timing remain release work. No automatic replay was added to approximate
 resume.

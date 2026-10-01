@@ -8,7 +8,7 @@ using UnityEngine;
 namespace Maestro.Quest.Creation
 {
     /// <summary>Native evaluation of saved recipes, shared by manual and agent edits.</summary>
-    public sealed class RecipeObject : MonoBehaviour
+    public sealed partial class RecipeObject : MonoBehaviour
     {
         readonly Dictionary<string,Transform> nodes = new();
         readonly Dictionary<string,Quaternion> rest = new();
@@ -26,17 +26,18 @@ namespace Maestro.Quest.Creation
         bool? runtimeLoop;
         bool RuntimePlaying => runtimeLoop.HasValue || recipe.playing;
         public Bounds LocalBounds { get; private set; }
-        public bool IsPlaying => recipe != null && runtimeGate?.Held!=true && RuntimePlaying && !interrupted && ((runtimeLoop ?? recipe.loop) || time < recipe.duration);
+        bool WholePlaying => recipe != null && runtimeGate?.Held!=true && RuntimePlaying && !interrupted && ((runtimeLoop ?? recipe.loop) || time < recipe.duration);
+        public bool IsPlaying => partsPlaying.Count>0 || WholePlaying && System.Array.Exists(recipe.tracks,t=>!suppressedParts.Contains(t.part));
         public void StartRule(bool loop) {if(runtimeGate?.Held==true)return;runtimeLoop=loop;Restart();}
         public void StopRule() {runtimeLoop=null;Stop();}
-        public void Restart() { if(runtimeGate?.Held==true||recipe == null || recipe.tracks.Length == 0) return; time=0; interrupted=false; }
-        public void Stop() { interrupted=true; }
+        public void Restart() { if(runtimeGate?.Held==true||recipe == null || recipe.tracks.Length == 0) return; CancelParts();suppressedParts.Clear();time=0; interrupted=false; }
+        public void Stop() { interrupted=true;CancelParts(); }
         public Transform Part(string id) => nodes.TryGetValue(id,out var node) ? node : null;
         public bool Apply(RoomRecipe value)
         {
             if (value == null || !value.Validate(out _)) return false;
             string json = JsonUtility.ToJson(value); if (encoded == json) return false;
-            encoded = json; recipe = value.Copy(); time = 0; interrupted = runtimeGate?.Held==true; runtimeLoop=null;
+            CancelParts();suppressedParts.Clear();encoded = json; recipe = value.Copy(); time = 0; interrupted = runtimeGate?.Held==true; runtimeLoop=null;
             if (geometry) { geometry.SetActive(false); ArtResources.Release(geometry); }
             foreach (var material in materials) ArtResources.Release(material);
             nodes.Clear(); rest.Clear(); materials.Clear(); colors.Clear();
@@ -76,12 +77,16 @@ namespace Maestro.Quest.Creation
         public void Tint(Color tint) { for(int i=0;i<materials.Count;i++) materials[i].color=colors[i]*tint; }
         void Update()
         {
-            if (runtimeGate?.Held==true||recipe == null || !RuntimePlaying || interrupted) return;
-            time += Mathf.Min(Time.deltaTime,.05f);
-            foreach (var track in recipe.tracks) nodes[track.part].localRotation=rest[track.part]*recipe.Sample(track,time,runtimeLoop);
+            if (runtimeGate?.Held==true||recipe == null) return;
+            float delta=Mathf.Min(Time.deltaTime,.05f);
+            AdvanceParts(delta);
+            if(!WholePlaying)return;
+            time += delta;
+            foreach (var track in recipe.tracks) if(!suppressedParts.Contains(track.part))nodes[track.part].localRotation=rest[track.part]*recipe.Sample(track,time,runtimeLoop);
         }
-        void OnApplicationPause(bool paused) { if (paused) interrupted=true; }
-        void OnApplicationFocus(bool focused) { if (!focused) interrupted=true; }
-        void OnDestroy() {if(runtimeGate!=null)runtimeGate.Changed-=RuntimeChanged; foreach (var material in materials) ArtResources.Release(material); }
+        void OnApplicationPause(bool paused) { if (paused) Stop(); }
+        void OnApplicationFocus(bool focused) { if (!focused) Stop(); }
+        void OnDisable() {Stop();}
+        void OnDestroy() {CancelParts();if(runtimeGate!=null)runtimeGate.Changed-=RuntimeChanged; foreach (var material in materials) ArtResources.Release(material); }
     }
 }

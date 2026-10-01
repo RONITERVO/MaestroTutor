@@ -346,3 +346,11 @@ it('hides new parallel authoring without support and shows separate native branc
  const p:BehaviourProgram=JSON.parse(JSON.stringify(empty));const screen=render(<ProgramEditor source={JSON.stringify(p)} targets={[]} onChange={()=>{}} onEditingChange={()=>{}} runs={[{id:'a'.repeat(32),sequenceId:'b'.repeat(32),preparing:false,functionName:'main',status:'Waiting for parallel branches'},{id:'c'.repeat(32),sequenceId:'b'.repeat(32),parentRunId:'a'.repeat(32),preparing:false,functionName:'worker',status:'Running',locals:[{name:'x',type:'number',value:'4'}]}]}/>);
  expect(screen.queryByLabelText('+ Run together in main')).toBeNull();expect(screen.getAllByLabelText('Live program values')).toHaveLength(2);expect(screen.getByText(/branch cccccc/)).toBeTruthy();
 });
+
+it('authors an exact named recipe track with the same animation form as whole-object playback',()=>{
+ const target='0'.repeat(32),initial=structuredClone(empty);initial.resources=[target];
+ initial.functions[0].body=[{id:'arm',op:'invoke',capability:'animation.play',version:1,arguments:{target,source:{kind:'recipe'},channel:'wholeTarget',seconds:.8,loop:false},bindings:{}}];
+ const h=harness(initial,[{id:target,name:'Practice robot'}]);h.click('Edit values arm');h.change('Source and channel','6');h.change('source.part','RightUpperArm');h.click('Update draft');
+ const changed=parseProgram(h.source());expect(changed.error).toBeNull();expect(changed.program?.functions[0].body[0]).toMatchObject({capability:'animation.play',arguments:{target,source:{kind:'recipe',part:'RightUpperArm'},channel:'recipePart',seconds:.8,loop:false}});
+ h.click('Edit values arm');h.change('source.part','arm/child');h.click('Update draft');expect(h.screen.getByRole('alert').textContent).toContain('contract');expect(parseProgram(h.source()).program).toEqual(changed.program);
+});

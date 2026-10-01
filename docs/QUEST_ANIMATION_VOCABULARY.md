@@ -3,7 +3,7 @@
 Development checkpoint, 2026-09-28. The public catalog has one animation.play
 verb, replacing six prototype animation/gesture IDs. Fourteen public actions
 remain at that checkpoint. Subsequent [creation consolidation](QUEST_CREATION_VOCABULARY.md)
-reduces the current count to thirteen. This is the animation portion of vocabulary consolidation; creation,
+reduced the count to thirteen at that later checkpoint. See QUEST_V1_PLAN.md for current totals. This is the animation portion of vocabulary consolidation; creation,
 spatial verbs and the other release architecture work remain separate.
 
 ## Public call
@@ -28,12 +28,15 @@ The supported combinations are:
 | embedded | exact modelHash and clipIndex | wholeTarget |
 | library | exact motionId | wholeTarget |
 | recipe | target's saved recipe tracks | wholeTarget |
+| recipe | exact saved part track in source.part | recipePart |
 
 Only supported inputs appear in each variant. Upper-body gestures exclude Walk
 and props. Full-body gesture/recording/embedded/library sources retain fitted
 props; recipe playback has none. Each source keeps its prior duration/loop
 constraints, readiness, graph/clip/lease ownership and cancellation behavior.
-Recorded throwing remains a separate physical release action.
+Recorded throwing remains a separate physical release action. Named recipe parts
+use independent local-joint ownership and live pose readback; see
+[recipe-part playback](QUEST_RECIPE_PART_PLAYBACK.md).
 
 ## One schema, several editors
 

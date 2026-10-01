@@ -1,0 +1,1672 @@
+{
+  "program": {
+    "version": 3,
+    "parallelVersion": 1,
+    "entry": "main",
+    "resources": [
+      "dff5a562e30e47aea3c8e874a5d32c89"
+    ],
+    "state": [],
+    "events": [],
+    "functions": [
+      {
+        "name": "main",
+        "returns": "void",
+        "parameters": [],
+        "locals": [],
+        "body": [
+          {
+            "id": "together",
+            "op": "parallel",
+            "branches": [
+              {
+                "function": "animate",
+                "args": [
+                  {
+                    "value": "dff5a562e30e47aea3c8e874a5d32c89"
+                  },
+                  {
+                    "value": "RightUpperArm"
+                  },
+                  {
+                    "value": 0.8
+                  }
+                ]
+              },
+              {
+                "function": "animate",
+                "args": [
+                  {
+                    "value": "dff5a562e30e47aea3c8e874a5d32c89"
+                  },
+                  {
+                    "value": "RightLowerArm"
+                  },
+                  {
+                    "value": 1.2
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "animate",
+        "returns": "void",
+        "parameters": [
+          {
+            "name": "target",
+            "type": "text"
+          },
+          {
+            "name": "part",
+            "type": "text"
+          },
+          {
+            "name": "seconds",
+            "type": "number"
+          }
+        ],
+        "locals": [],
+        "body": [
+          {
+            "id": "playPart",
+            "op": "invoke",
+            "capability": "animation.play",
+            "version": 1,
+            "arguments": {
+              "target": "00000000000000000000000000000000",
+              "source": {
+                "kind": "recipe",
+                "part": "RightUpperArm"
+              },
+              "channel": "recipePart",
+              "seconds": 1,
+              "loop": false
+            },
+            "bindings": {
+              "target": {
+                "var": "target"
+              },
+              "source.part": {
+                "var": "part"
+              },
+              "seconds": {
+                "var": "seconds"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "saved": {
+    "version": 1,
+    "revision": 1,
+    "sceneRevision": 3,
+    "ack": 0,
+    "session": "99c2701bd30b496fb6683448cb1e1747",
+    "status": "Room actions ready",
+    "selectedId": "acce86aaa5634792b9ce0cbb5f9a54fa",
+    "ok": true,
+    "canUndo": true,
+    "canRedo": false,
+    "physicsRunning": false,
+    "visible": true,
+    "inspection": null,
+    "workspaceView": "rules",
+    "rules": {
+      "revision": 20,
+      "bindingPage": 0,
+      "bindingCount": 0,
+      "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
+      "canUndo": true,
+      "canRedo": false,
+      "readOnly": false,
+      "status": "Behaviour edit applied. Undo restores this batch.",
+      "selectedError": "",
+      "sequences": [
+        {
+          "id": "62770235338e4285a5c7f6495c411c5b",
+          "name": "Action 1",
+          "error": "",
+          "steps": 1,
+          "repeat": false,
+          "program": true
+        },
+        {
+          "id": "97da5ba4121441cebfb22d439e87a6ba",
+          "name": "Robot arm parts together",
+          "error": "",
+          "steps": 2,
+          "repeat": false,
+          "program": true
+        }
+      ],
+      "selected": {
+        "id": "97da5ba4121441cebfb22d439e87a6ba",
+        "name": "Robot arm parts together",
+        "interruption": 0,
+        "repeat": false,
+        "program": "{\"version\":3,\"parallelVersion\":1,\"entry\":\"main\",\"resources\":[\"dff5a562e30e47aea3c8e874a5d32c89\"],\"state\":[],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[],\"body\":[{\"id\":\"together\",\"op\":\"parallel\",\"branches\":[{\"function\":\"animate\",\"args\":[{\"value\":\"dff5a562e30e47aea3c8e874a5d32c89\"},{\"value\":\"RightUpperArm\"},{\"value\":0.8}]},{\"function\":\"animate\",\"args\":[{\"value\":\"dff5a562e30e47aea3c8e874a5d32c89\"},{\"value\":\"RightLowerArm\"},{\"value\":1.2}]}]}]},{\"name\":\"animate\",\"returns\":\"void\",\"parameters\":[{\"name\":\"target\",\"type\":\"text\"},{\"name\":\"part\",\"type\":\"text\"},{\"name\":\"seconds\",\"type\":\"number\"}],\"locals\":[],\"body\":[{\"id\":\"playPart\",\"op\":\"invoke\",\"capability\":\"animation.play\",\"version\":1,\"arguments\":{\"target\":\"00000000000000000000000000000000\",\"source\":{\"kind\":\"recipe\",\"part\":\"RightUpperArm\"},\"channel\":\"recipePart\",\"seconds\":1,\"loop\":false},\"bindings\":{\"target\":{\"var\":\"target\"},\"source.part\":{\"var\":\"part\"},\"seconds\":{\"var\":\"seconds\"}}}]}]}"
+      },
+      "bindings": [],
+      "buttons": [],
+      "running": [],
+      "outcomes": []
+    },
+    "motions": null,
+    "capabilities": [
+      "physicsSettings.v1",
+      "avatarSettings.v1",
+      "physicsRun.v1",
+      "motions.v1",
+      "avatarActivities.v1",
+      "catalog.v1",
+      "catalogVocabulary.v1",
+      "roomOwnership.v1",
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "eventFields.v1",
+      "eventSubscriptions.v1",
+      "factQueries.v1",
+      "conditionWaits.v1",
+      "parallelPrograms.v1",
+      "structuredValues.v1",
+      "programModules.v1",
+      "moduleLibrary.v1",
+      "moduleLibraryFiles.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "objectEdits.v1",
+      "objectCopy.v1",
+      "drawingEdits.v1",
+      "recipeEdits.v1",
+      "recipePartPlayback.v1",
+      "animationAuthoring.v1",
+      "animationRecording.v1",
+      "animationPosing.v1",
+      "avatarModels.v1",
+      "modelImport.v1",
+      "motionBatchImport.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1",
+      "temporaryRoom.v1",
+      "spatialSettings.v1",
+      "physicsSimulation.v1"
+    ],
+    "physics": {
+      "ready": false,
+      "running": false,
+      "status": "Load or scan your room to use gravity"
+    },
+    "temporaryRoom": {
+      "active": false,
+      "pending": false,
+      "id": "7b95565e261146d6a966e7abcc033b2d",
+      "saveId": "",
+      "phase": "idle",
+      "error": "",
+      "savedRevision": 0
+    },
+    "ownership": {
+      "suspended": false,
+      "error": "",
+      "owners": []
+    },
+    "avatar": null,
+    "walk": null,
+    "activityProfile": {
+      "modelHash": "",
+      "status": "Uses included animations where no state motion is assigned",
+      "revision": 1,
+      "canAssign": false,
+      "readOnly": false,
+      "canUndo": false,
+      "canRedo": false,
+      "roles": [
+        {
+          "role": 0,
+          "choices": []
+        },
+        {
+          "role": 1,
+          "choices": []
+        },
+        {
+          "role": 2,
+          "choices": []
+        },
+        {
+          "role": 3,
+          "choices": []
+        }
+      ]
+    },
+    "objects": [
+      {
+        "id": "99af209880f14265819a68ea755c3bc6",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.68999999761581421,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.76470589637756348,
+          "g": 0.60000002384185791,
+          "b": 0.31372550129890442,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "a8c8fe2d27c04966875459f7b061d52a",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.86000001430511475,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.55294120311737061,
+          "b": 0.53333336114883423,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "acce86aaa5634792b9ce0cbb5f9a54fa",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 6,
+        "position": {
+          "x": 0.51999998092651367,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "dff5a562e30e47aea3c8e874a5d32c89",
+        "name": "Practice robot",
+        "kind": "Assembly",
+        "objectRevision": 7,
+        "position": {
+          "x": 0.30000001192092896,
+          "y": 1.2999999523162842,
+          "z": 0.64999997615814209
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "maestro",
+        "name": "Maestro",
+        "kind": "Maestro",
+        "objectRevision": 2,
+        "position": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": {
+          "distance": 1.3,
+          "speed": 0.65
+        }
+      }
+    ],
+    "created": [],
+    "catalog": null,
+    "execution": {
+      "selected": null,
+      "running": [],
+      "outcomes": [],
+      "nextRunId": "23a05f7981c34e25a80da10e6d184620",
+      "storageError": null,
+      "recovery": null
+    }
+  },
+  "savedPose": {
+    "target": "dff5a562e30e47aea3c8e874a5d32c89",
+    "part": "RightUpperArm",
+    "parent": "Chest",
+    "revision": 7,
+    "local": {
+      "position": {
+        "x": 0.2199999988079071,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      }
+    },
+    "world": {
+      "position": {
+        "x": 0.51999998092651367,
+        "y": 2.0199999809265137,
+        "z": 0.64999997615814209
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      }
+    },
+    "playing": false
+  },
+  "running": {
+    "version": 1,
+    "revision": 2,
+    "sceneRevision": 3,
+    "ack": 0,
+    "session": "99c2701bd30b496fb6683448cb1e1747",
+    "status": "Room actions ready",
+    "selectedId": "acce86aaa5634792b9ce0cbb5f9a54fa",
+    "ok": true,
+    "canUndo": true,
+    "canRedo": false,
+    "physicsRunning": false,
+    "visible": true,
+    "inspection": null,
+    "workspaceView": "rules",
+    "rules": {
+      "revision": 20,
+      "bindingPage": 0,
+      "bindingCount": 0,
+      "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
+      "canUndo": true,
+      "canRedo": false,
+      "readOnly": false,
+      "status": "Action triggered",
+      "selectedError": "",
+      "sequences": [
+        {
+          "id": "62770235338e4285a5c7f6495c411c5b",
+          "name": "Action 1",
+          "error": "",
+          "steps": 1,
+          "repeat": false,
+          "program": true
+        },
+        {
+          "id": "97da5ba4121441cebfb22d439e87a6ba",
+          "name": "Robot arm parts together",
+          "error": "",
+          "steps": 2,
+          "repeat": false,
+          "program": true
+        }
+      ],
+      "selected": {
+        "id": "97da5ba4121441cebfb22d439e87a6ba",
+        "name": "Robot arm parts together",
+        "interruption": 0,
+        "repeat": false,
+        "program": "{\"version\":3,\"parallelVersion\":1,\"entry\":\"main\",\"resources\":[\"dff5a562e30e47aea3c8e874a5d32c89\"],\"state\":[],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[],\"body\":[{\"id\":\"together\",\"op\":\"parallel\",\"branches\":[{\"function\":\"animate\",\"args\":[{\"value\":\"dff5a562e30e47aea3c8e874a5d32c89\"},{\"value\":\"RightUpperArm\"},{\"value\":0.8}]},{\"function\":\"animate\",\"args\":[{\"value\":\"dff5a562e30e47aea3c8e874a5d32c89\"},{\"value\":\"RightLowerArm\"},{\"value\":1.2}]}]}]},{\"name\":\"animate\",\"returns\":\"void\",\"parameters\":[{\"name\":\"target\",\"type\":\"text\"},{\"name\":\"part\",\"type\":\"text\"},{\"name\":\"seconds\",\"type\":\"number\"}],\"locals\":[],\"body\":[{\"id\":\"playPart\",\"op\":\"invoke\",\"capability\":\"animation.play\",\"version\":1,\"arguments\":{\"target\":\"00000000000000000000000000000000\",\"source\":{\"kind\":\"recipe\",\"part\":\"RightUpperArm\"},\"channel\":\"recipePart\",\"seconds\":1,\"loop\":false},\"bindings\":{\"target\":{\"var\":\"target\"},\"source.part\":{\"var\":\"part\"},\"seconds\":{\"var\":\"seconds\"}}}]}]}"
+      },
+      "bindings": [],
+      "buttons": [],
+      "running": [
+        {
+          "parentRunId": "",
+          "id": "380ad43cd82a4543be3d4f20c66a4037",
+          "sequenceId": "97da5ba4121441cebfb22d439e87a6ba",
+          "preparing": false,
+          "waiting": false,
+          "waitEvent": "",
+          "waitSeconds": 0.0,
+          "state": [],
+          "nodeId": "together",
+          "functionName": "main",
+          "status": "Waiting for parallel branches",
+          "locals": []
+        },
+        {
+          "parentRunId": "380ad43cd82a4543be3d4f20c66a4037",
+          "id": "c8c0933196694fdc80ce80915a7b8a00",
+          "sequenceId": "97da5ba4121441cebfb22d439e87a6ba",
+          "preparing": false,
+          "waiting": false,
+          "waitEvent": "",
+          "waitSeconds": 0.0,
+          "state": [],
+          "nodeId": "playPart",
+          "functionName": "animate",
+          "status": "Running",
+          "locals": [
+            {
+              "name": "target",
+              "type": "text",
+              "value": "dff5a562e30e47aea3c8e874a5d32c89"
+            },
+            {
+              "name": "part",
+              "type": "text",
+              "value": "RightUpperArm"
+            },
+            {
+              "name": "seconds",
+              "type": "number",
+              "value": "0.8"
+            }
+          ]
+        },
+        {
+          "parentRunId": "380ad43cd82a4543be3d4f20c66a4037",
+          "id": "f477bbf06be745149c8f1e19fa40119f",
+          "sequenceId": "97da5ba4121441cebfb22d439e87a6ba",
+          "preparing": false,
+          "waiting": false,
+          "waitEvent": "",
+          "waitSeconds": 0.0,
+          "state": [],
+          "nodeId": "playPart",
+          "functionName": "animate",
+          "status": "Running",
+          "locals": [
+            {
+              "name": "target",
+              "type": "text",
+              "value": "dff5a562e30e47aea3c8e874a5d32c89"
+            },
+            {
+              "name": "part",
+              "type": "text",
+              "value": "RightLowerArm"
+            },
+            {
+              "name": "seconds",
+              "type": "number",
+              "value": "1.2"
+            }
+          ]
+        }
+      ],
+      "outcomes": []
+    },
+    "motions": null,
+    "capabilities": [
+      "physicsSettings.v1",
+      "avatarSettings.v1",
+      "physicsRun.v1",
+      "motions.v1",
+      "avatarActivities.v1",
+      "catalog.v1",
+      "catalogVocabulary.v1",
+      "roomOwnership.v1",
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "eventFields.v1",
+      "eventSubscriptions.v1",
+      "factQueries.v1",
+      "conditionWaits.v1",
+      "parallelPrograms.v1",
+      "structuredValues.v1",
+      "programModules.v1",
+      "moduleLibrary.v1",
+      "moduleLibraryFiles.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "objectEdits.v1",
+      "objectCopy.v1",
+      "drawingEdits.v1",
+      "recipeEdits.v1",
+      "recipePartPlayback.v1",
+      "animationAuthoring.v1",
+      "animationRecording.v1",
+      "animationPosing.v1",
+      "avatarModels.v1",
+      "modelImport.v1",
+      "motionBatchImport.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1",
+      "temporaryRoom.v1",
+      "spatialSettings.v1",
+      "physicsSimulation.v1"
+    ],
+    "physics": {
+      "ready": false,
+      "running": false,
+      "status": "Load or scan your room to use gravity"
+    },
+    "temporaryRoom": {
+      "active": false,
+      "pending": false,
+      "id": "7b95565e261146d6a966e7abcc033b2d",
+      "saveId": "",
+      "phase": "idle",
+      "error": "",
+      "savedRevision": 0
+    },
+    "ownership": {
+      "suspended": false,
+      "error": "",
+      "owners": [
+        {
+          "id": "c8c0933196694fdc80ce80915a7b8a00",
+          "label": "Robot arm parts together",
+          "role": "program",
+          "allowsGrab": false,
+          "claims": [
+            {
+              "target": "dff5a562e30e47aea3c8e874a5d32c89",
+              "channel": "recipePart:RightUpperArm"
+            }
+          ]
+        },
+        {
+          "id": "f477bbf06be745149c8f1e19fa40119f",
+          "label": "Robot arm parts together",
+          "role": "program",
+          "allowsGrab": false,
+          "claims": [
+            {
+              "target": "dff5a562e30e47aea3c8e874a5d32c89",
+              "channel": "recipePart:RightLowerArm"
+            }
+          ]
+        }
+      ]
+    },
+    "avatar": null,
+    "walk": null,
+    "activityProfile": {
+      "modelHash": "",
+      "status": "Uses included animations where no state motion is assigned",
+      "revision": 1,
+      "canAssign": false,
+      "readOnly": false,
+      "canUndo": false,
+      "canRedo": false,
+      "roles": [
+        {
+          "role": 0,
+          "choices": []
+        },
+        {
+          "role": 1,
+          "choices": []
+        },
+        {
+          "role": 2,
+          "choices": []
+        },
+        {
+          "role": 3,
+          "choices": []
+        }
+      ]
+    },
+    "objects": [
+      {
+        "id": "99af209880f14265819a68ea755c3bc6",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.68999999761581421,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.76470589637756348,
+          "g": 0.60000002384185791,
+          "b": 0.31372550129890442,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "a8c8fe2d27c04966875459f7b061d52a",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.86000001430511475,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.55294120311737061,
+          "b": 0.53333336114883423,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "acce86aaa5634792b9ce0cbb5f9a54fa",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 6,
+        "position": {
+          "x": 0.51999998092651367,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "dff5a562e30e47aea3c8e874a5d32c89",
+        "name": "Practice robot",
+        "kind": "Assembly",
+        "objectRevision": 7,
+        "position": {
+          "x": 0.30000001192092896,
+          "y": 1.2999999523162842,
+          "z": 0.64999997615814209
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
+          "a": 1.0
+        },
+        "animated": true,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "maestro",
+        "name": "Maestro",
+        "kind": "Maestro",
+        "objectRevision": 2,
+        "position": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": {
+          "distance": 1.3,
+          "speed": 0.65
+        }
+      }
+    ],
+    "created": [],
+    "catalog": null,
+    "execution": {
+      "selected": null,
+      "running": [],
+      "outcomes": [],
+      "nextRunId": "23a05f7981c34e25a80da10e6d184620",
+      "storageError": null,
+      "recovery": null
+    }
+  },
+  "runningPose": {
+    "target": "dff5a562e30e47aea3c8e874a5d32c89",
+    "part": "RightUpperArm",
+    "parent": "Chest",
+    "revision": 7,
+    "local": {
+      "position": {
+        "x": 0.2199999988079071,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.49782422184944153,
+        "w": 0.867277979850769
+      }
+    },
+    "world": {
+      "position": {
+        "x": 0.51999998092651367,
+        "y": 2.0199999809265137,
+        "z": 0.64999997615814209
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.49782422184944153,
+        "w": 0.867277979850769
+      }
+    },
+    "playing": true
+  },
+  "completed": {
+    "version": 1,
+    "revision": 3,
+    "sceneRevision": 3,
+    "ack": 0,
+    "session": "99c2701bd30b496fb6683448cb1e1747",
+    "status": "Room actions ready",
+    "selectedId": "acce86aaa5634792b9ce0cbb5f9a54fa",
+    "ok": true,
+    "canUndo": true,
+    "canRedo": false,
+    "physicsRunning": false,
+    "visible": true,
+    "inspection": null,
+    "workspaceView": "rules",
+    "rules": {
+      "revision": 20,
+      "bindingPage": 0,
+      "bindingCount": 0,
+      "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
+      "canUndo": true,
+      "canRedo": false,
+      "readOnly": false,
+      "status": "Action triggered",
+      "selectedError": "",
+      "sequences": [
+        {
+          "id": "62770235338e4285a5c7f6495c411c5b",
+          "name": "Action 1",
+          "error": "",
+          "steps": 1,
+          "repeat": false,
+          "program": true
+        },
+        {
+          "id": "97da5ba4121441cebfb22d439e87a6ba",
+          "name": "Robot arm parts together",
+          "error": "",
+          "steps": 2,
+          "repeat": false,
+          "program": true
+        }
+      ],
+      "selected": {
+        "id": "97da5ba4121441cebfb22d439e87a6ba",
+        "name": "Robot arm parts together",
+        "interruption": 0,
+        "repeat": false,
+        "program": "{\"version\":3,\"parallelVersion\":1,\"entry\":\"main\",\"resources\":[\"dff5a562e30e47aea3c8e874a5d32c89\"],\"state\":[],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[],\"body\":[{\"id\":\"together\",\"op\":\"parallel\",\"branches\":[{\"function\":\"animate\",\"args\":[{\"value\":\"dff5a562e30e47aea3c8e874a5d32c89\"},{\"value\":\"RightUpperArm\"},{\"value\":0.8}]},{\"function\":\"animate\",\"args\":[{\"value\":\"dff5a562e30e47aea3c8e874a5d32c89\"},{\"value\":\"RightLowerArm\"},{\"value\":1.2}]}]}]},{\"name\":\"animate\",\"returns\":\"void\",\"parameters\":[{\"name\":\"target\",\"type\":\"text\"},{\"name\":\"part\",\"type\":\"text\"},{\"name\":\"seconds\",\"type\":\"number\"}],\"locals\":[],\"body\":[{\"id\":\"playPart\",\"op\":\"invoke\",\"capability\":\"animation.play\",\"version\":1,\"arguments\":{\"target\":\"00000000000000000000000000000000\",\"source\":{\"kind\":\"recipe\",\"part\":\"RightUpperArm\"},\"channel\":\"recipePart\",\"seconds\":1,\"loop\":false},\"bindings\":{\"target\":{\"var\":\"target\"},\"source.part\":{\"var\":\"part\"},\"seconds\":{\"var\":\"seconds\"}}}]}]}"
+      },
+      "bindings": [],
+      "buttons": [],
+      "running": [],
+      "outcomes": [
+        {
+          "id": "380ad43cd82a4543be3d4f20c66a4037",
+          "sequenceId": "97da5ba4121441cebfb22d439e87a6ba",
+          "phase": "completed",
+          "nodeId": "together",
+          "status": "Program completed"
+        }
+      ]
+    },
+    "motions": null,
+    "capabilities": [
+      "physicsSettings.v1",
+      "avatarSettings.v1",
+      "physicsRun.v1",
+      "motions.v1",
+      "avatarActivities.v1",
+      "catalog.v1",
+      "catalogVocabulary.v1",
+      "roomOwnership.v1",
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "eventFields.v1",
+      "eventSubscriptions.v1",
+      "factQueries.v1",
+      "conditionWaits.v1",
+      "parallelPrograms.v1",
+      "structuredValues.v1",
+      "programModules.v1",
+      "moduleLibrary.v1",
+      "moduleLibraryFiles.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "objectEdits.v1",
+      "objectCopy.v1",
+      "drawingEdits.v1",
+      "recipeEdits.v1",
+      "recipePartPlayback.v1",
+      "animationAuthoring.v1",
+      "animationRecording.v1",
+      "animationPosing.v1",
+      "avatarModels.v1",
+      "modelImport.v1",
+      "motionBatchImport.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1",
+      "temporaryRoom.v1",
+      "spatialSettings.v1",
+      "physicsSimulation.v1"
+    ],
+    "physics": {
+      "ready": false,
+      "running": false,
+      "status": "Load or scan your room to use gravity"
+    },
+    "temporaryRoom": {
+      "active": false,
+      "pending": false,
+      "id": "7b95565e261146d6a966e7abcc033b2d",
+      "saveId": "",
+      "phase": "idle",
+      "error": "",
+      "savedRevision": 0
+    },
+    "ownership": {
+      "suspended": false,
+      "error": "",
+      "owners": []
+    },
+    "avatar": null,
+    "walk": null,
+    "activityProfile": {
+      "modelHash": "",
+      "status": "Uses included animations where no state motion is assigned",
+      "revision": 1,
+      "canAssign": false,
+      "readOnly": false,
+      "canUndo": false,
+      "canRedo": false,
+      "roles": [
+        {
+          "role": 0,
+          "choices": []
+        },
+        {
+          "role": 1,
+          "choices": []
+        },
+        {
+          "role": 2,
+          "choices": []
+        },
+        {
+          "role": 3,
+          "choices": []
+        }
+      ]
+    },
+    "objects": [
+      {
+        "id": "99af209880f14265819a68ea755c3bc6",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.68999999761581421,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.76470589637756348,
+          "g": 0.60000002384185791,
+          "b": 0.31372550129890442,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "a8c8fe2d27c04966875459f7b061d52a",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.86000001430511475,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.55294120311737061,
+          "b": 0.53333336114883423,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "acce86aaa5634792b9ce0cbb5f9a54fa",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 6,
+        "position": {
+          "x": 0.51999998092651367,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "dff5a562e30e47aea3c8e874a5d32c89",
+        "name": "Practice robot",
+        "kind": "Assembly",
+        "objectRevision": 7,
+        "position": {
+          "x": 0.30000001192092896,
+          "y": 1.2999999523162842,
+          "z": 0.64999997615814209
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "maestro",
+        "name": "Maestro",
+        "kind": "Maestro",
+        "objectRevision": 2,
+        "position": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": {
+          "distance": 1.3,
+          "speed": 0.65
+        }
+      }
+    ],
+    "created": [],
+    "catalog": null,
+    "execution": {
+      "selected": null,
+      "running": [],
+      "outcomes": [],
+      "nextRunId": "23a05f7981c34e25a80da10e6d184620",
+      "storageError": null,
+      "recovery": null
+    }
+  },
+  "completedPose": {
+    "target": "dff5a562e30e47aea3c8e874a5d32c89",
+    "part": "RightUpperArm",
+    "parent": "Chest",
+    "revision": 7,
+    "local": {
+      "position": {
+        "x": 0.2199999988079071,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.92387956380844116,
+        "w": 0.38268345594406128
+      }
+    },
+    "world": {
+      "position": {
+        "x": 0.51999998092651367,
+        "y": 2.0199999809265137,
+        "z": 0.64999997615814209
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.92387956380844116,
+        "w": 0.38268345594406128
+      }
+    },
+    "playing": false
+  },
+  "held": {
+    "version": 1,
+    "revision": 4,
+    "sceneRevision": 3,
+    "ack": 0,
+    "session": "99c2701bd30b496fb6683448cb1e1747",
+    "status": "Room actions ready",
+    "selectedId": "dff5a562e30e47aea3c8e874a5d32c89",
+    "ok": true,
+    "canUndo": true,
+    "canRedo": false,
+    "physicsRunning": false,
+    "visible": true,
+    "inspection": null,
+    "workspaceView": "rules",
+    "rules": {
+      "revision": 20,
+      "bindingPage": 0,
+      "bindingCount": 0,
+      "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
+      "canUndo": true,
+      "canRedo": false,
+      "readOnly": false,
+      "status": "Action triggered",
+      "selectedError": "",
+      "sequences": [
+        {
+          "id": "62770235338e4285a5c7f6495c411c5b",
+          "name": "Action 1",
+          "error": "",
+          "steps": 1,
+          "repeat": false,
+          "program": true
+        },
+        {
+          "id": "97da5ba4121441cebfb22d439e87a6ba",
+          "name": "Robot arm parts together",
+          "error": "",
+          "steps": 2,
+          "repeat": false,
+          "program": true
+        }
+      ],
+      "selected": {
+        "id": "97da5ba4121441cebfb22d439e87a6ba",
+        "name": "Robot arm parts together",
+        "interruption": 0,
+        "repeat": false,
+        "program": "{\"version\":3,\"parallelVersion\":1,\"entry\":\"main\",\"resources\":[\"dff5a562e30e47aea3c8e874a5d32c89\"],\"state\":[],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[],\"body\":[{\"id\":\"together\",\"op\":\"parallel\",\"branches\":[{\"function\":\"animate\",\"args\":[{\"value\":\"dff5a562e30e47aea3c8e874a5d32c89\"},{\"value\":\"RightUpperArm\"},{\"value\":0.8}]},{\"function\":\"animate\",\"args\":[{\"value\":\"dff5a562e30e47aea3c8e874a5d32c89\"},{\"value\":\"RightLowerArm\"},{\"value\":1.2}]}]}]},{\"name\":\"animate\",\"returns\":\"void\",\"parameters\":[{\"name\":\"target\",\"type\":\"text\"},{\"name\":\"part\",\"type\":\"text\"},{\"name\":\"seconds\",\"type\":\"number\"}],\"locals\":[],\"body\":[{\"id\":\"playPart\",\"op\":\"invoke\",\"capability\":\"animation.play\",\"version\":1,\"arguments\":{\"target\":\"00000000000000000000000000000000\",\"source\":{\"kind\":\"recipe\",\"part\":\"RightUpperArm\"},\"channel\":\"recipePart\",\"seconds\":1,\"loop\":false},\"bindings\":{\"target\":{\"var\":\"target\"},\"source.part\":{\"var\":\"part\"},\"seconds\":{\"var\":\"seconds\"}}}]}]}"
+      },
+      "bindings": [],
+      "buttons": [],
+      "running": [],
+      "outcomes": [
+        {
+          "id": "380ad43cd82a4543be3d4f20c66a4037",
+          "sequenceId": "97da5ba4121441cebfb22d439e87a6ba",
+          "phase": "completed",
+          "nodeId": "together",
+          "status": "Program completed"
+        },
+        {
+          "id": "b99a01f5d20141fe9845ce08b18bc798",
+          "sequenceId": "97da5ba4121441cebfb22d439e87a6ba",
+          "phase": "cancelled",
+          "nodeId": "playPart",
+          "status": "Branch animate: Interrupted by Your grip"
+        }
+      ]
+    },
+    "motions": null,
+    "capabilities": [
+      "physicsSettings.v1",
+      "avatarSettings.v1",
+      "physicsRun.v1",
+      "motions.v1",
+      "avatarActivities.v1",
+      "catalog.v1",
+      "catalogVocabulary.v1",
+      "roomOwnership.v1",
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "eventFields.v1",
+      "eventSubscriptions.v1",
+      "factQueries.v1",
+      "conditionWaits.v1",
+      "parallelPrograms.v1",
+      "structuredValues.v1",
+      "programModules.v1",
+      "moduleLibrary.v1",
+      "moduleLibraryFiles.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "objectEdits.v1",
+      "objectCopy.v1",
+      "drawingEdits.v1",
+      "recipeEdits.v1",
+      "recipePartPlayback.v1",
+      "animationAuthoring.v1",
+      "animationRecording.v1",
+      "animationPosing.v1",
+      "avatarModels.v1",
+      "modelImport.v1",
+      "motionBatchImport.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1",
+      "temporaryRoom.v1",
+      "spatialSettings.v1",
+      "physicsSimulation.v1"
+    ],
+    "physics": {
+      "ready": false,
+      "running": false,
+      "status": "Load or scan your room to use gravity"
+    },
+    "temporaryRoom": {
+      "active": false,
+      "pending": false,
+      "id": "7b95565e261146d6a966e7abcc033b2d",
+      "saveId": "",
+      "phase": "idle",
+      "error": "",
+      "savedRevision": 0
+    },
+    "ownership": {
+      "suspended": false,
+      "error": "",
+      "owners": [
+        {
+          "id": "hand:dff5a562e30e47aea3c8e874a5d32c89",
+          "label": "Your grip",
+          "role": "grab",
+          "allowsGrab": false,
+          "claims": [
+            {
+              "target": "dff5a562e30e47aea3c8e874a5d32c89",
+              "channel": "wholeTarget"
+            }
+          ]
+        }
+      ]
+    },
+    "avatar": null,
+    "walk": null,
+    "activityProfile": {
+      "modelHash": "",
+      "status": "Uses included animations where no state motion is assigned",
+      "revision": 1,
+      "canAssign": false,
+      "readOnly": false,
+      "canUndo": false,
+      "canRedo": false,
+      "roles": [
+        {
+          "role": 0,
+          "choices": []
+        },
+        {
+          "role": 1,
+          "choices": []
+        },
+        {
+          "role": 2,
+          "choices": []
+        },
+        {
+          "role": 3,
+          "choices": []
+        }
+      ]
+    },
+    "objects": [
+      {
+        "id": "99af209880f14265819a68ea755c3bc6",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.68999999761581421,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.76470589637756348,
+          "g": 0.60000002384185791,
+          "b": 0.31372550129890442,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "a8c8fe2d27c04966875459f7b061d52a",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.86000001430511475,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.55294120311737061,
+          "b": 0.53333336114883423,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "acce86aaa5634792b9ce0cbb5f9a54fa",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 6,
+        "position": {
+          "x": 0.51999998092651367,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "dff5a562e30e47aea3c8e874a5d32c89",
+        "name": "Practice robot",
+        "kind": "Assembly",
+        "objectRevision": 7,
+        "position": {
+          "x": 0.30000001192092896,
+          "y": 1.2999999523162842,
+          "z": 0.64999997615814209
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": true,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "maestro",
+        "name": "Maestro",
+        "kind": "Maestro",
+        "objectRevision": 2,
+        "position": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": {
+          "distance": 1.3,
+          "speed": 0.65
+        }
+      }
+    ],
+    "created": [],
+    "catalog": null,
+    "execution": {
+      "selected": null,
+      "running": [],
+      "outcomes": [],
+      "nextRunId": "23a05f7981c34e25a80da10e6d184620",
+      "storageError": null,
+      "recovery": null
+    }
+  },
+  "heldPose": {
+    "target": "dff5a562e30e47aea3c8e874a5d32c89",
+    "part": "RightUpperArm",
+    "parent": "Chest",
+    "revision": 7,
+    "local": {
+      "position": {
+        "x": 0.2199999988079071,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.28471377491950989,
+        "w": 0.95861256122589111
+      }
+    },
+    "world": {
+      "position": {
+        "x": 0.51999998092651367,
+        "y": 2.0199999809265137,
+        "z": 0.64999997615814209
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.28471377491950989,
+        "w": 0.95861256122589111
+      }
+    },
+    "playing": false
+  }
+}

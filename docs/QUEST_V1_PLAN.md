@@ -13,7 +13,7 @@ pose versions, the same physical joint limits and imported retargeter, held-join
 exclusion, failed-pose recovery and recording interoperation. Saved edits are
 durable outside temporary mode; temporary edits stay in the fork until Keep.
 No authoring operation starts playback. The catalog contains 57 actions, 10
-events and 45 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
+events and 46 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
 Single-file GLB/VRM selection, preview and acceptance now share the physical
 import path with book fields and agent/program calls. See QUEST_MODEL_IMPORT.md.
 Animation collections now share native selection, versioned start/retry/tag controls,
@@ -47,8 +47,10 @@ lets authors select the function receiving catalog blocks. Code and module edits
 retain rejected drafts rather than silently disabling Repeat.
 Parallel function branches now share the same interpreter, catalog ownership and
 book/agent authoring, with explicit joined results and group cancellation. See
-QUEST_PARALLEL_PROGRAMS.md. The PC checkpoint below is verified; headset acceptance
-remains outstanding.
+QUEST_PARALLEL_PROGRAMS.md. Recipe objects now also play exact named rotation tracks
+on independent part channels through animation.play; live part poses share the
+catalog. See QUEST_RECIPE_PART_PLAYBACK.md. The PC checkpoint below is verified;
+headset acceptance remains outstanding.
 The remaining runtime, provider, device and Store acceptance gates remain unfinished; the complete v1 goal remains active.
 
 Current recovery implementation supports retained candidates, an external backup,
@@ -65,6 +67,36 @@ and tracked operation roots remain protected. Private recovery export remains
 separate; a full store with unreadable selection still requires recovery/repair.
 PR #248 records the current verified commit and package. Earlier entries
 below are historical evidence, not current test totals or release acceptance.
+
+PC named-recipe-part increment (2026-10-02): animation.play now selects a saved
+recipe track through source.part and channel=recipePart. Independent local joints
+compose, including parent/child parts; same-part and whole-object claims conflict.
+Playback leaves saved keys and root physics untouched. Stop/completion keeps the
+live pose and suppresses that track's autoplay until an explicit whole-recipe
+Restart. Unrelated tracks continue. Grips, pause, disabled/replaced objects and
+parallel-group interruption retain cancellation without automatic replay.
+object.recipe.pose reports actual local/world transforms, parent and playback.
+These remain visual joints with the existing whole-assembly proxy collider;
+generalized physical links, sockets and reflex policies remain separate work.
+
+The same catalog schema drives typed book fields and agent/program calls. Chrome
+edits a part argument into the exact program run by Unity, displays both native
+joint ownership claims and their traces, then shows native completion. Rendered
+screenshots were inspected; book save acknowledgements are simulated. No physical
+Quest acceptance is implied. The catalog remains 57 actions and 10 events, with
+46 facts; no new public animation verb, model tool or numeric action was added.
+
+Verification passed 406 EditMode and 368 PlayMode tests (three optional private
+model skips), all 1,689 web tests in 193 files, and 61 Android tests. Native catalog
+observations were recaptured after the source schema changed. TypeScript, ESLint,
+prompt ownership, core boundaries and catalog drift checks pass. The full build
+helper exited zero; all 205 runtime/101 test C# files, 30 native fixtures plus
+metadata, 113 packaged web files and the Android browser library match the verified
+inputs. ARM64 contents and v2 signature verify. Development checkpoint
+`MaestroQuest-recipe-parts-2AE8EBAA.apk` has SHA-256
+`2AE8EBAA15071705D52155AD6C358C99BA283B0153CDCD9CEDA11E3998387D48`.
+It is uninstalled. Remaining v1/provider/device/storage/performance/Store gates
+stay open; the active goal and draft PR do not claim a release-ready app.
 
 PC parallel-functions increment (2026-10-02): version-3 programs can opt into
 parallelVersion:1 and run two to four function calls together, waiting for all.
