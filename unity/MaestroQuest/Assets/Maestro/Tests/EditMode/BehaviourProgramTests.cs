@@ -80,6 +80,32 @@ namespace Maestro.Quest.Tests
             Assert.That(BehaviourCatalog.TryInvocation("object.color.set",1,new JObject {["target"]="book",["red"]=1,["green"]=0,["blue"]=0},out _,out _),Is.False);
         }
 
+        static JObject ImportOutput(string id="")=>new() {["requestId"]=new string('a',32),["modelHash"]=new string('b',64),["objectId"]=id,["destination"]=id==""?"":"object",["revision"]=id==""?0:1,["temporary"]=false,["motionIds"]=new JArray()};
+        static JObject ImportProgram()
+        {
+            var source=CreationProgram();var call=source["functions"][0]["body"][0];call["capability"]="model.import";
+            call["arguments"]=new JObject {["operation"]="object",["requestId"]=new string('a',32),["modelHash"]=new string('b',64)};return source;
+        }
+        [Test] public void ModelImportResultsLetTheSameProgramActOnItsNewObject()
+        {
+            var source=ImportProgram();Assert.That(BehaviourProgram.TryParse(source.ToString(),out var program,out var error),Is.True,error);var machine=new ProgramMachine(program,null);
+            Assert.That(machine.Advance(out var action),Is.EqualTo(ProgramYield.Action));Assert.That(action.Definition.Id,Is.EqualTo("model.import"));string id=Guid.NewGuid().ToString("N");
+            Assert.That(machine.CompleteAction(ImportOutput(id),out error),Is.True,error);Assert.That(machine.Advance(out var edit),Is.EqualTo(ProgramYield.Action),machine.Error);Assert.That((string)edit.Arguments["target"],Is.EqualTo(id));
+        }
+        [TestCase("select")] [TestCase("cancel")] [TestCase("library")] [TestCase("motions")]
+        public void ModelImportCreationBudgetDoesNotCountSelectionCancellationOrLibrarySaves(string operation)
+        {
+            var source=ImportProgram();var original=source["functions"][0]["body"][0];var body=new JArray();
+            for(int i=0;i<16;i++){var node=original.DeepClone();node["id"]="create"+i;body.Add(node);}
+            var harmless=(JObject)original.DeepClone();harmless["id"]="inspect";harmless["arguments"]["operation"]=operation;
+            if(operation=="select")harmless["arguments"]=new JObject {["operation"]="select"};else if(operation=="cancel")((JObject)harmless["arguments"]).Remove("modelHash");body.Add(harmless);
+            var over=original.DeepClone();over["id"]="over";body.Add(over);source["functions"][0]["body"]=body;
+            Assert.That(BehaviourProgram.TryParse(source.ToString(),out var program,out var error),Is.True,error);var machine=new ProgramMachine(program,null);
+            for(int i=1;i<=16;i++){Assert.That(machine.Advance(out _),Is.EqualTo(ProgramYield.Action),machine.Error);Assert.That(machine.CompleteAction(ImportOutput(i.ToString("x32")),out error),Is.True,error);}
+            Assert.That(machine.Advance(out var allowed),Is.EqualTo(ProgramYield.Action),machine.Error);Assert.That((string)allowed.Arguments["operation"],Is.EqualTo(operation));Assert.That(machine.CompleteAction(ImportOutput(),out error),Is.True,error);
+            Assert.That(machine.Advance(out _),Is.EqualTo(ProgramYield.Failed));Assert.That(machine.Error,Does.Contain("16 created"));
+        }
+
         static JObject CreationProgram()=>JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-create.json")));
         [Test] public void TypedNativeResultsAuthorizeOnlyCreatedObjectsAndNeverFlattenToSimpleSteps()
         {

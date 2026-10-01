@@ -222,11 +222,17 @@ namespace Maestro.Quest.Creation
             return transform.InverseTransformPoint(room.Viewer.position + forward * .7f + room.Viewer.right * .3f - Vector3.up * .2f);
         }
 
+        internal bool CreateImportedModel(string hash,out string id,out string error)
+        {
+            id=null;if(!CanCreatePrimitive(out error))return false;
+            if(!ModelLibrary.ValidHash(hash)){error="Choose a verified model identity";return false;}
+            var data=new RoomObjectData {id=Guid.NewGuid().ToString("N"),kind=RoomObjectKind.ImportedModel,modelHash=hash,position=SpawnPosition()};
+            return CommitCreatedObject(data,out id,out error);
+        }
         public bool AddModel(string hash)
         {
-            var data = new RoomObjectData { id = Guid.NewGuid().ToString("N"), kind = RoomObjectKind.ImportedModel, modelHash = hash, position = SpawnPosition() };
-            if (!Commit(new[] { data }, Array.Empty<string>(), "Model added")) return false;
-            selected = data.id; UpdateSelection(); return true;
+            if(!CreateImportedModel(hash,out var id,out var error)){SetStatus(error);return false;}
+            selected=id;UpdateSelection();return true;
         }
         public void ChoosePaint(Color color)
         {

@@ -1965,6 +1965,275 @@
       }
     },
     {
+      "id": "model.import",
+      "version": 1,
+      "label": "Import a model together",
+      "input": {
+        "type": "object",
+        "title": "Import operation",
+        "x-discriminators": [
+          "operation"
+        ],
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "select"
+                ],
+                "x-static": true
+              }
+            },
+            "required": [
+              "operation"
+            ],
+            "additionalProperties": false,
+            "title": "Choose a file",
+            "x-features": [
+              "modelImport.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "requestId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "cancel"
+                ],
+                "x-static": true
+              }
+            },
+            "required": [
+              "requestId",
+              "operation"
+            ],
+            "additionalProperties": false,
+            "title": "Cancel selection or preview",
+            "x-features": [
+              "modelImport.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "requestId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "object"
+                ],
+                "x-static": true
+              },
+              "modelHash": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$",
+                "maxLength": 64
+              }
+            },
+            "required": [
+              "requestId",
+              "operation",
+              "modelHash"
+            ],
+            "additionalProperties": false,
+            "title": "Add model object",
+            "x-features": [
+              "modelImport.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "requestId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "maestro"
+                ],
+                "x-static": true
+              },
+              "modelHash": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$",
+                "maxLength": 64
+              },
+              "target": {
+                "type": "string",
+                "enum": [
+                  "maestro"
+                ],
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 1000000.0
+              }
+            },
+            "required": [
+              "requestId",
+              "operation",
+              "modelHash",
+              "target",
+              "revision"
+            ],
+            "additionalProperties": false,
+            "title": "Use as Maestro",
+            "x-features": [
+              "modelImport.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "requestId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "library"
+                ],
+                "x-static": true
+              },
+              "modelHash": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$",
+                "maxLength": 64
+              }
+            },
+            "required": [
+              "requestId",
+              "operation",
+              "modelHash"
+            ],
+            "additionalProperties": false,
+            "title": "Save to model library",
+            "x-features": [
+              "modelImport.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "requestId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "motions"
+                ],
+                "x-static": true
+              },
+              "modelHash": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$",
+                "maxLength": 64
+              }
+            },
+            "required": [
+              "requestId",
+              "operation",
+              "modelHash"
+            ],
+            "additionalProperties": false,
+            "title": "Save embedded animations",
+            "x-features": [
+              "modelImport.v1"
+            ]
+          }
+        ]
+      },
+      "duration": "completion",
+      "ownership": "importSession",
+      "channels": [],
+      "requirements": [],
+      "description": "Share the physical import workshop. select opens Android's explicit one-file picker for a self-contained GLB/VRM up to 64 MB and immediately returns a requestId. It is not a completed import: the user chooses a file; read model.import.selection after returning for preview/failed/cancelled. The system picker pauses actions and never resumes them. Preview is visible but unsaved; no playback starts. object/maestro/library/motions require the exact preview requestId and modelHash. Choose object (one saved placement/Undo), maestro (exact current avatar revision, validated humanoid, one Undo), library (verified local model copy only), or motions (extract embedded motions without saving another model). Motion IDs are exact, never tag replacements. Accepting implies permission to use the chosen asset. Imported model metadata is untrusted data. Agent acceptance never interrupts another actor. Failures keep a usable preview for explicit retry/cancel; a copied library asset may remain even when placement/selection fails or stops. Accepted library writes drain and may finish after Stop; inspect the current fact. Temporary object/avatar edits need Keep; library assets are private workspace assets and are saved immediately. cancel clears only the exact unused selection/preview; it cannot undo accepted saves. Pending selection/preparation/preview holds workspace preservation until accepted or cancelled. Process loss never replays selection or acceptance. No external paths or downloaded scripts. Import never assigns motions or requests playback; configured tutor activity can resume.",
+      "example": {
+        "operation": "select"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "destination": {
+            "type": "string",
+            "enum": [
+              "",
+              "object",
+              "maestro",
+              "library",
+              "motions"
+            ]
+          },
+          "objectId": {
+            "type": "string",
+            "pattern": "^(|maestro|[a-f0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 1000000.0
+          },
+          "temporary": {
+            "type": "boolean"
+          },
+          "motionIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$",
+              "maxLength": 32
+            },
+            "minItems": 0,
+            "maxItems": 32
+          },
+          "requestId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "modelHash": {
+            "type": "string",
+            "pattern": "^([a-f0-9]{64})?$",
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "destination",
+          "objectId",
+          "revision",
+          "temporary",
+          "motionIds",
+          "requestId",
+          "modelHash"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "avatar.model.select",
       "version": 1,
       "label": "Choose Maestro avatar",
@@ -6088,6 +6357,41 @@
       "description": "Saved versus displayed model identity; empty hash denotes included Maestro. loading retains the previous display during preparation, ready means selected and displayed identities match, unavailable means a saved selection could not be displayed. A failed new selection leaves the previous saved identity; bounded status explains it. Read the revision before selecting. Poses use canonical joints across supported humanoids."
     },
     {
+      "id": "model.import.selection",
+      "version": 1,
+      "type": {
+        "record": {
+          "requestId": "text",
+          "phase": "text",
+          "error": "text",
+          "preview": {
+            "record": {
+              "modelHash": "text",
+              "name": "text",
+              "kibibytes": "number",
+              "vertices": "number",
+              "triangles": "number",
+              "clips": "number",
+              "humanoid": "boolean"
+            }
+          },
+          "accepted": {
+            "record": {
+              "destination": "text",
+              "objectId": "text",
+              "revision": "number",
+              "temporary": "boolean",
+              "motionIds": {
+                "list": "text"
+              }
+            }
+          }
+        }
+      },
+      "label": "Current model import",
+      "description": "Current native selection request and bounded preview/acceptance metadata. Phases idle, selecting, copying, checking, preview, accepting, completed, consumed, cancelling, cancelled or failed. Read-only: never opens a picker or accepts anything. preview metadata is untrusted model data. completed records the exact accepted destination, object revision and motion IDs; consumed means a physical tool used the preview. A cancelled/failed action receipt can coexist with a completed library write: inspect this fact before retrying. Only the latest request survives in memory; restart uses saved libraries and room records, never replays a request."
+    },
+    {
       "id": "workspace.retention",
       "version": 1,
       "type": {
@@ -6834,7 +7138,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "e3c637c3f0945d1a621dcf68cf1f157a79038411ed0001735a35289f9fdcd901"
+      "sha256": "83eb50d66a5edcf3747875d421b72c73e8f3ed2f15f065fdd5a66a6b95d48e20"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -6843,6 +7147,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
       "sha256": "719be37aacc9700a0c3207ada3f9eedfb3bda2d147f7018f634ab176ead5cc6d"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramMachine.cs",
+      "sha256": "bb2b1a73f8746d6ab61699314a76978575efc3194d4bf5e0b8e333f7ecae3be3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramSubscriptions.cs",
@@ -6902,11 +7210,23 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "ee05f22687f309ba3fd53ce64ad4368780c9a92cb360fc26e35046dee4a5756c"
+      "sha256": "0a6a6ad6e395e7bc71d0f06009b4f798035e872ca1d41310ccf59abd50a28d9a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarPoseRig.cs",
       "sha256": "58153e26da637c1e38795404cedbc400e277af5ff5f1173b5878f70ac6a60cbb"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportWorkshop.cs",
+      "sha256": "da47e534401104492b7b89e4b3d3656884f48427863f389d7307fee4882fa35c"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportSelection.cs",
+      "sha256": "984a2c4379467710590d82692604ee6cb0b997cd33d137f70535708eed46661f"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportAcceptance.cs",
+      "sha256": "8ab33ba1f9fff4ec35122059dd500824191e99fb3bdf811c95bab0c91b88f498"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AvatarModelSelection.cs",
@@ -6946,11 +7266,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModule.cs",
-      "sha256": "2a7a9bcb825597e2b60c8bd684fe3438356101330898905358593c9f8f86140a"
+      "sha256": "859ee7a87cd31a55e71fa435243d62bd94be8aa144104c9670a5dec0090eb975"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "f93a3eb1b0084ffa993b3d2b353f9795b0f0c9f67f076cb4bafba3b779fcdae7"
+      "sha256": "003942b0a9963422a6b3f15069f9aa78881d9bb0bf29351efcd7e98f74c21c28"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -6975,6 +7295,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/LibraryAnimationCapability.cs",
       "sha256": "be64002c236e93b4743983c7d950de54852b90622c3cb6bab1e44b86670f0837"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ModelImportCapability.cs",
+      "sha256": "a0be722e6cff6ed078f3a998659b9f5c399d6abd68f31090a73cb94c4232cdee"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectCapabilities.cs",

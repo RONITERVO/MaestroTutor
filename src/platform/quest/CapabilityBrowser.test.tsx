@@ -565,3 +565,24 @@ it('shares native pose identities and versions through typed joint fields and a 
  expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:nativePosing.finish.selected.call,runId:nativePosing.finish.selected.id}});
  await receive(undefined,false,{execution:nativePosing.finish as RoomAgentState['execution']});expect(screen.getByLabelText('Action result').textContent).toContain('"phase": "saved"');expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
 });
+
+import nativeModelImport from '../../../test-fixtures/browser/modelSelection.json';
+it('chooses and accepts the exact native model preview through typed book fields',async()=>{
+ const {client,screen,receive}=setup(true,['modelImport.v1','execution.v1','actionResults.v1']);
+ await receive(undefined,false,{execution:{...nativeModelImport.select,selected:null,running:[],outcomes:[],nextRunId:nativeModelImport.select.selected.id} as RoomAgentState['execution']});
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:/^Search$/}));
+ const definition=capabilityDefinition('model.import')!;
+ await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Import definition'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Import definition'});
+ fireEvent.click(screen.getByText('Edit action fields'));fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
+ expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:nativeModelImport.select.selected.call,runId:nativeModelImport.select.selected.id}});
+ await receive(undefined,false,{execution:nativeModelImport.select as RoomAgentState['execution']});
+ fireEvent.change(screen.getByLabelText('Import operation'),{target:{value:'2'}});
+ fireEvent.change(screen.getByLabelText('Action inputs requestId'),{target:{value:nativeModelImport.preview.requestId}});
+ fireEvent.change(screen.getByLabelText('Action inputs modelHash'),{target:{value:nativeModelImport.preview.preview.modelHash}});
+ fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
+ expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:nativeModelImport.accept.selected.call,runId:nativeModelImport.accept.selected.id}});
+ await receive(undefined,false,{execution:nativeModelImport.accept as RoomAgentState['execution']});expect(screen.getByLabelText('Action result').textContent).toContain(nativeModelImport.after.accepted.objectId);
+ fireEvent.change(screen.getByLabelText('Import operation'),{target:{value:'3'}});expect(screen.getByLabelText('Action inputs revision')).toBeTruthy();
+ fireEvent.change(screen.getByLabelText('Import operation'),{target:{value:'5'}});expect(screen.queryByLabelText('Action inputs revision')).toBeNull();expect(screen.queryByLabelText('Action inputs target')).toBeNull();act(()=>client.cancel());
+});

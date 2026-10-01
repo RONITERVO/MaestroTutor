@@ -26,11 +26,11 @@ public class WorkspacePickerTest {
         WorkspacePicker.Release(A);WorkspacePicker.Release(B);shadowOf(Looper.getMainLooper()).idle();
     }
     @After public void cleanup(){WorkspacePicker.Release(A);WorkspacePicker.Release(B);shadowOf(Looper.getMainLooper()).idle();fixture.data.delete();activity.finish();}
-    WorkspacePicker start(String id){
+    DocumentPicker start(String id){
         long deadline=System.currentTimeMillis()+3000;
         while(!WorkspacePicker.ReadyToStart()&&WorkspacePicker.Read(id).isEmpty()&&System.currentTimeMillis()<deadline)try{Thread.sleep(5);}catch(InterruptedException ex){throw new AssertionError(ex);}
         assertEquals(id,WorkspacePicker.Start(activity,id));shadowOf(Looper.getMainLooper()).idle();activity.getFragmentManager().executePendingTransactions();
-        return (WorkspacePicker)activity.getFragmentManager().findFragmentByTag("MaestroWorkspacePicker");
+        return (DocumentPicker)activity.getFragmentManager().findFragmentByTag("MaestroDocumentPicker");
     }
     JSONObject read(String id) throws Exception{return new JSONObject(WorkspacePicker.Read(id));}
     void waitPhase(String phase) throws Exception {
@@ -41,29 +41,29 @@ public class WorkspacePickerTest {
     @Test public void singleExplicitReadOnlyChoiceHasStableIdAndSurvivesPause() throws Exception {
         Intent intent=WorkspacePicker.selectionIntent();assertEquals(Intent.ACTION_OPEN_DOCUMENT,intent.getAction());assertTrue(intent.hasCategory(Intent.CATEGORY_OPENABLE));
         assertEquals(Intent.FLAG_GRANT_READ_URI_PERMISSION,intent.getFlags());assertFalse(intent.getBooleanExtra(Intent.EXTRA_ALLOW_MULTIPLE,false));
-        WorkspacePicker picker=start(A);assertEquals(A,WorkspacePicker.Start(activity,A));assertThrows(IllegalStateException.class,()->WorkspacePicker.Start(activity,B));
+        DocumentPicker picker=start(A);assertEquals(A,WorkspacePicker.Start(activity,A));assertThrows(IllegalStateException.class,()->WorkspacePicker.Start(activity,B));
         picker.onPause();assertEquals("selecting",read(A).getString("phase"));picker.onResume();
         picker.onActivityResult(WorkspacePicker.REQUEST,Activity.RESULT_CANCELED,null);assertEquals("cancelled",read(A).getString("phase"));
         assertEquals("",read(A).getString("path"));assertEquals("",WorkspacePicker.Read(B));
     }
     @Test public void copiedArchiveIsPrivateAndExactReleaseKeepsNewOwnerSafe() throws Exception {
-        WorkspacePicker picker=start(A);picker.onActivityResult(WorkspacePicker.REQUEST,Activity.RESULT_OK,new Intent().setData(SelectedFilesTest.SOURCE));waitPhase("selected");
+        DocumentPicker picker=start(A);picker.onActivityResult(WorkspacePicker.REQUEST,Activity.RESULT_OK,new Intent().setData(SelectedFilesTest.SOURCE));waitPhase("selected");
         File copy=new File(read(A).getString("path"));assertTrue(copy.exists());assertEquals(5,copy.length());
         assertEquals(new File(WorkspacePicker.CacheRoot(activity)),copy.getParentFile().getParentFile());
         WorkspacePicker.Release(B);assertTrue(copy.exists());assertEquals("selected",read(A).getString("phase"));
-        WorkspacePicker.Release(A);shadowOf(Looper.getMainLooper()).idle();WorkspacePicker next=start(B);
+        WorkspacePicker.Release(A);shadowOf(Looper.getMainLooper()).idle();DocumentPicker next=start(B);
         picker.onActivityResult(WorkspacePicker.REQUEST,Activity.RESULT_CANCELED,null);WorkspacePicker.Release(A);
         assertEquals("selecting",read(B).getString("phase"));assertEquals("",WorkspacePicker.Read(A));assertNotSame(picker,next);
         long until=System.currentTimeMillis()+3000;while(copy.exists()&&System.currentTimeMillis()<until)Thread.sleep(10);assertFalse(copy.exists());
     }
     @Test public void forgedSourcesAndOversizedMetadataFailWithoutReturningPaths() throws Exception {
-        WorkspacePicker picker=start(A);picker.onActivityResult(WorkspacePicker.REQUEST,Activity.RESULT_OK,new Intent().setData(Uri.parse("file:///private/settings")));waitPhase("failed");
+        DocumentPicker picker=start(A);picker.onActivityResult(WorkspacePicker.REQUEST,Activity.RESULT_OK,new Intent().setData(Uri.parse("file:///private/settings")));waitPhase("failed");
         assertEquals("",read(A).getString("path"));WorkspacePicker.Release(A);shadowOf(Looper.getMainLooper()).idle();
         fixture.advertisedSize=WorkspacePicker.MAX_BYTES+1;picker=start(A);picker.onActivityResult(WorkspacePicker.REQUEST,Activity.RESULT_OK,new Intent().setData(SelectedFilesTest.SOURCE));waitPhase("failed");
         assertTrue(read(A).getString("error").contains("512 MB"));assertEquals("",read(A).getString("path"));
     }
     @Test public void timeoutAndDestroyedChooserHaveTerminalOutcomes() throws Exception {
-        WorkspacePicker picker=start(A);shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMinutes(5));assertEquals("failed",read(A).getString("phase"));
+        DocumentPicker picker=start(A);shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMinutes(5));assertEquals("failed",read(A).getString("phase"));
         picker.onActivityResult(WorkspacePicker.REQUEST,Activity.RESULT_OK,new Intent().setData(SelectedFilesTest.SOURCE));assertEquals("failed",read(A).getString("phase"));
         WorkspacePicker.Release(A);shadowOf(Looper.getMainLooper()).idle();picker=start(A);picker.onDestroy();assertEquals("failed",read(A).getString("phase"));
     }
@@ -78,7 +78,7 @@ public class WorkspacePickerTest {
         blocked.data=fixture.data;blocked.attachInfo(activity,activity.getPackageManager().resolveContentProvider(SelectedFilesTest.SOURCE.getAuthority(),0));
         org.robolectric.shadows.ShadowContentResolver.registerProviderInternal(SelectedFilesTest.SOURCE.getAuthority(),blocked);
         try{
-            WorkspacePicker picker=start(A);picker.onActivityResult(WorkspacePicker.REQUEST,Activity.RESULT_OK,new Intent().setData(SelectedFilesTest.SOURCE));
+            DocumentPicker picker=start(A);picker.onActivityResult(WorkspacePicker.REQUEST,Activity.RESULT_OK,new Intent().setData(SelectedFilesTest.SOURCE));
             assertTrue(entered.await(3,java.util.concurrent.TimeUnit.SECONDS));WorkspacePicker.Release(A);assertFalse(WorkspacePicker.ReadyToStart());
             assertThrows(IllegalStateException.class,()->WorkspacePicker.Start(activity,B));
         }finally{released.countDown();}
@@ -86,7 +86,7 @@ public class WorkspacePickerTest {
         assertTrue(WorkspacePicker.ReadyToStart());
     }
     @Test public void duplicateResultsNeverReplaceTheFirstCopiedFile() throws Exception {
-        WorkspacePicker picker=start(A);picker.onActivityResult(WorkspacePicker.REQUEST,Activity.RESULT_OK,new Intent().setData(SelectedFilesTest.SOURCE));waitPhase("selected");String path=read(A).getString("path");
+        DocumentPicker picker=start(A);picker.onActivityResult(WorkspacePicker.REQUEST,Activity.RESULT_OK,new Intent().setData(SelectedFilesTest.SOURCE));waitPhase("selected");String path=read(A).getString("path");
         picker.onActivityResult(WorkspacePicker.REQUEST,Activity.RESULT_CANCELED,null);assertEquals("selected",read(A).getString("phase"));assertEquals(path,read(A).getString("path"));
         picker.onDestroy();assertEquals("selected",read(A).getString("phase"));assertTrue(new File(path).exists());
     }

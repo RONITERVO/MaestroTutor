@@ -1,0 +1,203 @@
+{
+  "before": {
+    "requestId": "",
+    "phase": "idle",
+    "error": "",
+    "accepted": {
+      "destination": "",
+      "objectId": "",
+      "revision": 0,
+      "temporary": false,
+      "motionIds": []
+    },
+    "preview": {
+      "modelHash": "",
+      "name": "",
+      "kibibytes": 0,
+      "vertices": 0,
+      "triangles": 0,
+      "clips": 0,
+      "humanoid": false
+    }
+  },
+  "select": {
+    "selected": {
+      "id": "3e0b4eaedc2a4b4aa74ab1a89c0fd9fe",
+      "capability": "model.import",
+      "version": 1,
+      "resources": [],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "requestId": "25d4d36a6327480a92ac6e0fc4104521",
+        "modelHash": "",
+        "destination": "",
+        "objectId": "",
+        "revision": 0,
+        "temporary": false,
+        "motionIds": []
+      },
+      "call": {
+        "id": "model.import",
+        "version": 1,
+        "arguments": {
+          "operation": "select"
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "3e0b4eaedc2a4b4aa74ab1a89c0fd9fe",
+        "capability": "model.import",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "requestId": "25d4d36a6327480a92ac6e0fc4104521",
+          "modelHash": "",
+          "destination": "",
+          "objectId": "",
+          "revision": 0,
+          "temporary": false,
+          "motionIds": []
+        }
+      }
+    ],
+    "nextRunId": "6d969b7ab1ed42f1ae704a1e2dd7ef13",
+    "storageError": null,
+    "recovery": null
+  },
+  "choosing": {
+    "requestId": "25d4d36a6327480a92ac6e0fc4104521",
+    "phase": "selecting",
+    "error": "",
+    "accepted": {
+      "destination": "",
+      "objectId": "",
+      "revision": 0,
+      "temporary": false,
+      "motionIds": []
+    },
+    "preview": {
+      "modelHash": "",
+      "name": "",
+      "kibibytes": 0,
+      "vertices": 0,
+      "triangles": 0,
+      "clips": 0,
+      "humanoid": false
+    }
+  },
+  "preview": {
+    "requestId": "25d4d36a6327480a92ac6e0fc4104521",
+    "phase": "preview",
+    "error": "",
+    "accepted": {
+      "destination": "",
+      "objectId": "",
+      "revision": 0,
+      "temporary": false,
+      "motionIds": []
+    },
+    "preview": {
+      "modelHash": "c0073bf66211b8d020eed2a70a06c83c5e8b19f0d13b3f6439f7ec244001709c",
+      "name": "My model.glb",
+      "kibibytes": 2.0,
+      "vertices": 3,
+      "triangles": 1,
+      "clips": 1,
+      "humanoid": false
+    }
+  },
+  "accept": {
+    "selected": {
+      "id": "6d969b7ab1ed42f1ae704a1e2dd7ef13",
+      "capability": "model.import",
+      "version": 1,
+      "resources": [],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "destination": "object",
+        "objectId": "0ad820d1e0dc4d9782844a838f41dacc",
+        "revision": 6,
+        "temporary": false,
+        "motionIds": [],
+        "requestId": "25d4d36a6327480a92ac6e0fc4104521",
+        "modelHash": "c0073bf66211b8d020eed2a70a06c83c5e8b19f0d13b3f6439f7ec244001709c"
+      },
+      "call": {
+        "id": "model.import",
+        "version": 1,
+        "arguments": {
+          "operation": "object",
+          "requestId": "25d4d36a6327480a92ac6e0fc4104521",
+          "modelHash": "c0073bf66211b8d020eed2a70a06c83c5e8b19f0d13b3f6439f7ec244001709c"
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "3e0b4eaedc2a4b4aa74ab1a89c0fd9fe",
+        "capability": "model.import",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "requestId": "25d4d36a6327480a92ac6e0fc4104521",
+          "modelHash": "",
+          "destination": "",
+          "objectId": "",
+          "revision": 0,
+          "temporary": false,
+          "motionIds": []
+        }
+      },
+      {
+        "id": "6d969b7ab1ed42f1ae704a1e2dd7ef13",
+        "capability": "model.import",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "destination": "object",
+          "objectId": "0ad820d1e0dc4d9782844a838f41dacc",
+          "revision": 6,
+          "temporary": false,
+          "motionIds": [],
+          "requestId": "25d4d36a6327480a92ac6e0fc4104521",
+          "modelHash": "c0073bf66211b8d020eed2a70a06c83c5e8b19f0d13b3f6439f7ec244001709c"
+        }
+      }
+    ],
+    "nextRunId": "4197f905397d4ba6b8ee290c8b6f86ca",
+    "storageError": null,
+    "recovery": null
+  },
+  "after": {
+    "requestId": "25d4d36a6327480a92ac6e0fc4104521",
+    "phase": "completed",
+    "error": "",
+    "accepted": {
+      "destination": "object",
+      "objectId": "0ad820d1e0dc4d9782844a838f41dacc",
+      "revision": 6,
+      "temporary": false,
+      "motionIds": []
+    },
+    "preview": {
+      "modelHash": "c0073bf66211b8d020eed2a70a06c83c5e8b19f0d13b3f6439f7ec244001709c",
+      "name": "My model.glb",
+      "kibibytes": 2.0,
+      "vertices": 3,
+      "triangles": 1,
+      "clips": 1,
+      "humanoid": false
+    }
+  }
+}

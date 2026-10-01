@@ -12,10 +12,12 @@ posing now exposes start/rotate/save/finish/discard with native session IDs and
 pose versions, the same physical joint limits and imported retargeter, held-joint
 exclusion, failed-pose recovery and recording interoperation. Saved edits are
 durable outside temporary mode; temporary edits stay in the fork until Keep.
-No authoring operation starts playback. The catalog contains 44 actions, 10
-events and 26 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
-Shared picker/import sessions and the remaining runtime, provider, device and
-Store acceptance gates remain unfinished; the complete v1 goal remains active.
+No authoring operation starts playback. The catalog contains 45 actions, 10
+events and 27 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
+Single-file GLB/VRM selection, preview and acceptance now share the physical
+import path with book fields and agent/program calls. See QUEST_MODEL_IMPORT.md.
+Shared batch imports and the remaining runtime, provider, device and Store
+acceptance gates remain unfinished; the complete v1 goal remains active.
 
 Current recovery implementation supports retained candidates, an external backup,
 and an explicitly requested fresh workspace through the same shared book/agent
@@ -31,6 +33,25 @@ and tracked operation roots remain protected. Private recovery export remains
 separate; a full store with unreadable selection still requires recovery/repair.
 PR #248 records the current verified commit and package. Earlier entries
 below are historical evidence, not current test totals or release acceptance.
+
+PC shared-model-import increment (2026-10-01): physical tools, generated book
+fields and agent/program calls share one native file-choice/preview/acceptance
+session. Object, Maestro, model-library and embedded-motion destinations preserve
+exact asset identities and revisions; selection alone does not accept content.
+Android model/archive pickers share one request/kind owner and retiring-worker
+guard. Native tests cover real loaders, stale identities, failed saves, ownership,
+new physical edits during acceptance, cancellation, temporary Keep and exact motion
+IDs. Program object results authorize subsequent edits without charging selection
+or library operations against the creation budget. PC checks pass 1,568 web tests
+across 177 files, 29 focused final-capture checks, 377 EditMode and 292 PlayMode
+tests (three optional private-model skips), and 59 Android browser tests. Chrome
+sends exact selection/acceptance requests through generated fields; acknowledgements
+replay native captures and are not provider/headset acceptance. Screenshots were
+inspected. The full build helper exited successfully; 179 runtime and 83 test C#
+sources, 24 fixtures plus metadata, and 113 packaged web files match.
+ARM64/v2 signature-verified checkpoint: `MaestroQuest-model-import-69E4430E.apk`,
+SHA-256 `69E4430E9D3534F8260E745D3ACE7D93BEBDDBECA29BBD66639DF41B652AF46B`.
+It remains uninstalled. Shared batch imports and other release gates stay open.
 
 PC shared-posing increment (2026-10-01): the physical joint handles, typed book
 controls and agent/program calls share a versioned live pose session and the

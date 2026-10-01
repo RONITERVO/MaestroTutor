@@ -12,9 +12,8 @@ using UnityEngine;
 
 namespace Maestro.Quest.Imports
 {
-    public sealed class ImportWorkshop : MonoBehaviour
+    public sealed partial class ImportWorkshop : MonoBehaviour
     {
-        [Serializable] sealed class Selection { public string path, name, error; }
         RoomEditor editor;
         RoomRuntimeGate runtimeGate;
         ModelAsset pending;
@@ -38,7 +37,7 @@ namespace Maestro.Quest.Imports
         public void Initialize(RoomEditor source, AnimationWorkshop animations = null)
         {
             Batches=gameObject.AddComponent<ImportBatchWorkshop>(); Batches.Initialize(source,this);
-            editor = source; editor.Changed += SelectionChanged; editor.Editing += Stop;
+            editor = source; editor.Changed += SelectionChanged; editor.Editing += Stop; InitializeSelection();
             runtimeGate=editor.RuntimeGate;runtimeGate.Changed+=RuntimeChanged;RuntimeChanged();
             editor.ItemGrabbed += Grabbed; if (animations) animations.Starting += StopTarget;
             animationWorkshop = animations;
@@ -48,51 +47,25 @@ namespace Maestro.Quest.Imports
         AnimationWorkshop animationWorkshop;
         public void Pick()
         {
-            if (Busy) return;
-            Cancel(); Stop();
-#if UNITY_ANDROID && !UNITY_EDITOR
-            try
-            {
-                using var player = new AndroidJavaClass("com.unity3d.player.UnityPlayer"); using var activity = player.GetStatic<AndroidJavaObject>("currentActivity");
-                using var picker = new AndroidJavaClass("com.maestro.quest.browser.ModelPicker"); picker.CallStatic("Start", activity);
-                picking = true; Say("Choose one .glb or .vrm file in the document picker");
-            }
-            catch (Exception) { Say("The document picker could not open. Resume Maestro and try again."); }
-#elif UNITY_EDITOR
-            string path = UnityEditor.EditorUtility.OpenFilePanelWithFilters("Import a model you may use", "", new[] { "GLB and VRM models", "glb,vrm" });
-            if (!string.IsNullOrEmpty(path)) _ = PreparePathAsync(path, Path.GetFileName(path));
+#if UNITY_EDITOR
+            if(!CanBeginSelection(false,out var error)){Say(error);return;}
+            string path=UnityEditor.EditorUtility.OpenFilePanelWithFilters("Import a model you may use","",new[]{"GLB and VRM models","glb,vrm"});
+            if(!string.IsNullOrEmpty(path))_ = PrepareLocalPathAsync(path);
 #else
-            Say("File selection is currently available on Quest and in the Unity Editor.");
+            if(!CanBeginSelection(true,out var error)){Say(error);return;}
+            BeginSelection();
 #endif
         }
-        void Update()
+        void Update()=>PollSelection();
+        public Task PrepareAsync(string name,byte[] bytes)
         {
-#if UNITY_ANDROID && !UNITY_EDITOR
-            if (!picking) return;
-            try
-            {
-                using var picker = new AndroidJavaClass("com.maestro.quest.browser.ModelPicker"); var json = picker.CallStatic<string>("ReadResult");
-                if (string.IsNullOrEmpty(json)) return;
-                picking = false; var result = JsonUtility.FromJson<Selection>(json);
-                if (!string.IsNullOrEmpty(result.error)) { Say(result.error); ReleasePicker(); }
-                else _ = PreparePathAsync(result.path, result.name, true);
-            }
-            catch (Exception) { picking = false; ReleasePicker(); Say("The selected model could not be read."); }
-#endif
+            if(!CanBeginSelection(false,out var error)){Say(error);return Task.CompletedTask;}
+            BeginSelectionOwner();var copy=(byte[])bytes.Clone();
+            return PrepareSelectionAsync(()=>Task.Run(()=>ModelLibrary.Inspect(name,copy)),selectionId,false);
         }
-        async Task PreparePathAsync(string path, string name, bool releasePicker = false)
+        Task PrepareLocalPathAsync(string path)
         {
-            busy = true; Say("Checking model…");
-            try { var asset = await Task.Run(() => ModelLibrary.Inspect(name, ModelLibrary.ReadBounded(path))); await PreviewAsync(asset); }
-            catch (Exception error) { Report(error); }
-            finally { busy = false; if (releasePicker) ReleasePicker(); }
-        }
-        public async Task PrepareAsync(string name, byte[] bytes)
-        {
-            if (Busy) return; Cancel(); busy = true; Say("Checking model…");
-            try { var asset = await Task.Run(() => ModelLibrary.Inspect(name, bytes)); await PreviewAsync(asset); }
-            catch (Exception error) { Report(error); }
-            finally { busy = false; }
+            BeginSelectionOwner();return PrepareSelectionAsync(()=>Task.Run(()=>ModelLibrary.Inspect(Path.GetFileName(path),ModelLibrary.ReadBounded(path))),selectionId,false);
         }
         async Task PreviewAsync(ModelAsset asset)
         {
@@ -105,26 +78,13 @@ namespace Maestro.Quest.Imports
             pending = asset; libraryMode = false; clip = 0; page = 0; ShowDetails(); Say("Preview ready — choose Add model" + (preview.IsHumanoid ? " or Use Maestro" : ""));
         }
         public async void Accept() => await AcceptAsync();
-        public async Task<bool> AcceptAsync()
-        {
-            using var write=editor.WriteGate.TryWrite(out var blocked);if(write==null){Say(blocked);return false;}
-            if (Busy || !HasPreview) return false;
-            if (editor.AnyHeld) { Say("Release the object before adding the model"); return false; }
-            busy = true;
-            try
-            {
-                await editor.Models.SaveAsync(pending); if (!this || disposed) return false;
-                if (!editor.AddModel(pending.Hash)) { Say(editor.Status); return false; }
-                ClearPreview(); Say("Model added — pick it up to move, paint or animate it"); return true;
-            }
-            catch (Exception error) { Report(error); return false; }
-            finally { busy = false; }
-        }
-        public void Cancel() { if (Busy) { Say("Please wait for the model check to finish"); return; } ClearPreview(); Say("Import cancelled"); }
-        void ClearPreview() { if (preview) { preview.gameObject.SetActive(false); Destroy(preview.gameObject); } preview = null; pending = null; Details = "Select Maestro or an imported object to play its clips.\nUse Maestro selects a compatible GLB or VRM humanoid."; Changed?.Invoke(); }
+        public Task<bool> AcceptAsync()=>AcceptPreviewManually("object");
+        public void Cancel() { if(!CanCancelSelection(selectionId,out var error)){Say(error);return;} CancelSelection(selectionId); }
+        void ClearPreview() { if (preview) { preview.gameObject.SetActive(false); Destroy(preview.gameObject); } preview = null; pending = null; FinishSelectionPreview(); Details = "Select Maestro or an imported object to play its clips.\nUse Maestro selects a compatible GLB or VRM humanoid."; Changed?.Invoke(); }
         public async void UseMaestro() => await UseMaestroAsync();
         public async Task<bool> UseMaestroAsync()
         {
+            if(HasPreview)return await AcceptPreviewManually("maestro");
             using var write=editor.WriteGate.TryWrite(out var blocked);if(write==null){Say(blocked);return false;}
             if (Busy || !maestro || maestro.ModelBusy) return false;
             if (editor.AnyHeld) { Say("Release the object before changing Maestro"); return false; }
@@ -233,6 +193,7 @@ namespace Maestro.Quest.Imports
         public async void SaveMotions() => await SaveMotionsAsync();
         public async Task<bool> SaveMotionsAsync()
         {
+            if(HasPreview)return await AcceptPreviewManually("motions");
             using var write=editor.WriteGate.TryWrite(out var blocked);if(write==null){Say(blocked);return false;}
             if (Busy) return false; busy = true; Stop(); Say("Extracting motions without saving another model…");
             try
@@ -275,19 +236,13 @@ namespace Maestro.Quest.Imports
         }
         void Say(string value) { if (disposed) return; Status = value; Changed?.Invoke(); }
         void Report(Exception error) { if (!this || disposed) return; Say(error is ModelImportException ? error.Message : "The model could not be imported. Try exporting a self-contained GLB or VRM."); }
-        static void ReleasePicker()
-        {
-#if UNITY_ANDROID && !UNITY_EDITOR
-            using var picker = new AndroidJavaClass("com.maestro.quest.browser.ModelPicker"); picker.CallStatic("Release");
-#endif
-        }
-        void OnApplicationPause(bool value) { if (value) Stop(); }
-        void OnApplicationFocus(bool value) { if (!value) Stop(); }
-        void OnDisable() { if (editor) Stop(); }
+        void OnApplicationPause(bool value) { selectionPaused=value; if (value) { if(selectionPhase=="accepting")selectionCancel?.Cancel(); Stop(); } }
+        void OnApplicationFocus(bool value) { selectionFocused=value; if (!value) { if(selectionPhase=="accepting")selectionCancel?.Cancel(); Stop(); } }
+        void OnDisable() { CloseSelection(); if (editor) Stop(); }
         void OnDestroy()
         {
             if(runtimeGate!=null)runtimeGate.Changed-=RuntimeChanged;
-            Stop(); disposed = true; ClearPreview(); if (picking) ReleasePicker();
+            Stop(); disposed = true; CloseSelection(); ClearPreview();
             if (Batches) Destroy(Batches);
             if (editor) { editor.Changed -= SelectionChanged; editor.Editing -= Stop; editor.ItemGrabbed -= Grabbed; }
             if (animationWorkshop) animationWorkshop.Starting -= StopTarget;

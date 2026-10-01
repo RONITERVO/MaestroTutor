@@ -66,7 +66,7 @@ fills its exact hash/revision using typed fields and inspects the ready identity
 The browser uses captured native acknowledgements; it does not import a file,
 contact a provider or test a headset.
 
-The existing physical document picker/import preview remains the entry for new
-files. Shared picker/import sessions and broader live posing controls remain
-unfinished. Real-provider selection requests and Quest memory, performance and
-lifecycle acceptance with users' large models remain release gates.
+New files use the shared picker/preview/acceptance flow in QUEST_MODEL_IMPORT.md.
+Shared live posing is documented in QUEST_ANIMATION_AUTHORING.md. Real-provider
+selection requests and Quest memory, performance and lifecycle acceptance with
+users' large models remain release gates.

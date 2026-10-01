@@ -117,7 +117,7 @@ namespace Maestro.Quest.Programs
                             if(!action.Resources.All(id=>program.Allows(id)||createdResources.Contains(id)))throw new ProgramFault("Computed target is not a declared or created resource");
                             var contract=BehaviourCatalog.Action((string)node["capability"]);
                             if(((JObject)contract.OutputSchema["properties"]).Count>0) {
-                                if(createdResources.Count+((JObject)contract.OutputSchema["properties"]).Properties().Count(p=>(string)p.Value["x-resource"]=="object")>16)throw new ProgramFault("This run has reached its limit of 16 created objects");
+                                if(createdResources.Count+contract.Module.MaximumCreatedObjects(arguments)>16)throw new ProgramFault("This run has reached its limit of 16 created objects");
                                 resultScope=frame.Scope;resultBindings=node["results"] as JObject;resultContract=contract;
                             }
                             action.NodeId=NodeId;return ProgramYield.Action;
@@ -131,7 +131,7 @@ namespace Maestro.Quest.Programs
             if(resultContract==null) {if(output.Count!=0) {error="Unexpected native action result";return false;}return true;}
             if(!CapabilityArguments.Validate(output,resultContract.OutputSchema,out error,"result"))return false;
             // Only validated results from the native handler authorize newly created IDs.
-            foreach(var id in CapabilityArguments.Resources(output,resultContract.OutputSchema))createdResources.Add(id);
+            foreach(var id in CapabilityArguments.Resources(output,resultContract.OutputSchema))if(!string.IsNullOrEmpty(id)&&!program.Allows(id))createdResources.Add(id);
             if(resultBindings!=null)foreach(var binding in resultBindings.Properties())resultScope.Values[(string)binding.Value]=ProgramValue.Literal(output[binding.Name]);
             LastOutput=(JObject)output.DeepClone();resultContract=null;resultScope=null;resultBindings=null;return true;
         }
