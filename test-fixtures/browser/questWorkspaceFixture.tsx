@@ -1,3 +1,4 @@
+import nativeRecipeEdit from './recipeAuthoring.json';
 import nativeDrawing from './drawingAuthoring.json';
 import nativeCopy from './objectCopy.json';
 import nativeSurface from './surfacePlacement.json';
@@ -80,6 +81,14 @@ if(controllerModes){
  state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';
  state.execution={...JSON.parse(JSON.stringify(nativeModes.enable)),selected:null,running:[],outcomes:[],nextRunId:nativeModes.enable.selected.id};
  state.capabilities=[...state.capabilities??[],'catalogVocabulary.v1','controllerModes.v1','execution.v1','executionReceipts.v1','actionResults.v1'];
+}
+const recipeAuthoring=new URLSearchParams(location.search).has('recipeAuthoring');
+if(recipeAuthoring){
+ if(!validExecutionView(nativeRecipeEdit.receipt))throw new Error('Invalid native recipe edit fixture');
+ state.objects=[...state.objects.filter(o=>o.id==='book'||o.id==='maestro'),{id:nativeRecipeEdit.before.target,objectRevision:nativeRecipeEdit.before.revision,name:'Practice robot',kind:'Assembly',position:{x:.3,y:1.3,z:.65},scale:1,color:{r:.4,g:.5,b:.6,a:1},animated:true}];state.selectedId=nativeRecipeEdit.before.target;
+ state.inspection={id:nativeRecipeEdit.before.target,objectRevision:nativeRecipeEdit.before.revision,recipe:parseRecipe(nativeRecipeEdit.beforeRecipe)};
+ state.execution={...JSON.parse(JSON.stringify(nativeRecipeEdit.receipt)),selected:null,running:[],outcomes:[],nextRunId:nativeRecipeEdit.receipt.selected.id};
+ state.capabilities=[...state.capabilities??[],'catalog.v1','catalogVocabulary.v1','recipeEdits.v1','structuredValues.v1','factQueries.v1','execution.v1','executionReceipts.v1','actionResults.v1'];
 }
 const drawingAuthoring=new URLSearchParams(location.search).has('drawingAuthoring');
 let drawingObservation=nativeDrawing.before;
@@ -245,6 +254,11 @@ setInterval(()=>{
      if(index<0){state.ok=false;state.status='Only captured native mode transitions can be replayed';}
      else{state.execution=copy(modeViews[index]) as RoomAgentState['execution'];modeObservation=modeViews[index].selected.output;state.status='Captured native mode result; this browser does not move a headset';}
     }
+    else if(recipeAuthoring&&input.operation==='start'){
+     const view=nativeRecipeEdit.receipt;
+     if(input.runId!==view.selected.id||input.call.id!==view.selected.call.id||input.call.version!==view.selected.call.version||JSON.stringify(Object.entries(input.call.arguments).sort())!==JSON.stringify(Object.entries(view.selected.call.arguments).sort())){state.ok=false;state.status='Only the captured native recipe edit can be replayed';}
+     else{state.execution=copy(view) as RoomAgentState['execution'];state.objects=state.objects.map(o=>o.id===nativeRecipeEdit.after.target?{...o,objectRevision:nativeRecipeEdit.after.revision,animated:false}:o);state.inspection={...state.inspection!,id:nativeRecipeEdit.after.target,objectRevision:nativeRecipeEdit.after.revision,recipe:parseRecipe(nativeRecipeEdit.afterRecipe)};state.status='Captured native recipe edit; no headset execution';}
+    }
     else if(drawingAuthoring&&input.operation==='start'){
      const view=[nativeDrawing.creation,nativeDrawing.edit].find(v=>input.runId===v.selected.id&&input.call?.id===v.selected.call.id&&input.call.version===v.selected.call.version&&JSON.stringify(Object.entries(input.call.arguments).sort())===JSON.stringify(Object.entries(v.selected.call.arguments).sort()));
      if(!view){state.ok=false;state.status='Only captured native drawing requests can be replayed';}
@@ -321,6 +335,12 @@ setInterval(()=>{
      const definition=behaviourFact('controller.mode')!;
      if(query.operation==='search')state.catalog={operation:'search',category:'facts',query:query.query,offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Found live control modes'};
      else state.catalog={operation:'inspect',category:'facts',capability:query.capability,version:1,definition:query.capability===definition.id?definition:null,available:query.capability===definition.id,value:query.capability===definition.id?copy(modeObservation):null,status:'Captured native control modes'};
+     continue;
+    }
+    if(recipeAuthoring&&query.operation!=='check'&&query.category==='facts'){
+     const definition=behaviourFact('object.recipe')!;
+     if(query.operation==='search')state.catalog={operation:'search',category:'facts',query:query.query,offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Recipe summary'};
+     else{const available=query.capability===definition.id&&query.arguments?.target===nativeRecipeEdit.before.target;state.catalog={operation:'inspect',category:'facts',capability:query.capability,version:1,arguments:query.arguments,definition:query.capability===definition.id?definition:null,available,value:available?copy(state.execution?.selected?.phase==='completed'?nativeRecipeEdit.after:nativeRecipeEdit.before):null,status:'Captured native recipe'};}
      continue;
     }
     if(drawingAuthoring&&query.operation!=='check'&&query.category==='facts'){
@@ -419,6 +439,7 @@ setInterval(()=>{
      state.catalog={operation:'check',call,valid,available:false,occupied:false,resources:valid?capabilityResources(call.id,call.arguments):[],status:'Browser preview cannot verify live action availability. Check in Unity.'};
     }
    }else if(command.action==='workspace')state.visible=command.visible;
+   else if(recipeAuthoring&&command.action==='inspect'&&command.target===nativeRecipeEdit.before.target){state.workspaceView='objects';state.inspection={id:command.target,objectRevision:state.objects.find(o=>o.id===command.target)!.objectRevision!,partId:command.partId,recipe:parseRecipe(state.execution?.selected?.phase==='completed'?nativeRecipeEdit.afterRecipe:nativeRecipeEdit.beforeRecipe)};}
    else if(command.action==='inspect'){state.workspaceView='objects';state.inspection={id:command.target!,objectRevision:state.objects.find(x=>x.id===command.target)!.objectRevision!,recipe:command.target===id?recipe:null};}
    else if(command.action==='recipe'&&command.target===id&&parseRecipe(command.recipe)){
     undo.push(copyRecipe(recipe));redo.length=0;Object.assign(recipe,copyRecipe(command.recipe as typeof recipe));state.sceneRevision++;

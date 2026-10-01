@@ -6,6 +6,7 @@ import type {RoomAgentState,RoomCommand} from '../../core-sdk/room/roomAgent';
 import {copyRecipe,parseRecipe,rotateBy,type RoomRecipe,type Rotation} from '../../core-sdk/room/recipe';
 import type {RoomAgentClient} from './roomAgentBridge';
 import './roomWorkspace.css';
+import {recipeEditCall} from '../../../shared/recipeEdits';
 import {TemporaryRoomControls} from './TemporaryRoomControls';
 import {RuleWorkspace} from './RuleWorkspace';
 import {CapabilityBrowser,type CatalogInsert,type OpenCatalog} from './CapabilityBrowser';
@@ -45,8 +46,14 @@ function ObjectsWorkspace({client,onCatalog}:{client:RoomAgentClient;onCatalog:O
  const select=async(id:string)=>{if(dirty){setError('Apply or discard your draft before choosing another object.');return;}await send([{action:'inspect',target:id}]);};
  const save=async()=>{
   if(!draft?.recipe||!parseRecipe(draft.recipe)){setError('This recipe needs valid sizes, joints and animation keys before it can be applied.');return;}
-  const result=await send([{action:'recipe',target:draft.id,recipe:draft.recipe}],draft.source);
-  if(result?.ok){setDraft(fromState(result));setDirty(false);}
+  const runId=state.execution?.nextRunId;
+  if(!state.capabilities?.includes('recipeEdits.v1')||!runId){setError('This room cannot accept shared recipe edits yet. Your draft is kept.');return;}
+  try {
+   const call=recipeEditCall(draft.id,draft.revision,draft.source.inspection!.recipe!,draft.recipe);
+   const result=await send([{action:'execution',execution:{operation:'start',call,runId}}],draft.source);
+   if(result?.ok&&result.execution?.selected?.id===runId&&result.execution.selected.phase==='completed'){setDraft(fromState(result));setDirty(false);}
+   else if(result?.ok)setError('The recipe edit has not completed. Your draft is kept.');
+  } catch(e){setError(e instanceof Error?e.message:'The recipe edit could not be prepared.');}
  };
  const create=async()=>{if(dirty){setError('Apply or discard your draft first.');return;}const result=await send([{action:'create',reference:'robot',name:'Practice robot',kind:'boxRobot',scale:.4}]);if(result?.ok&&result.created[0])await select(result.created[0]);};
  return <div className="room-workspace" aria-label="Room workspace">
@@ -61,7 +68,7 @@ function ObjectsWorkspace({client,onCatalog}:{client:RoomAgentClient;onCatalog:O
   </section>
   <section className="room-workspace-page room-inspector" aria-label="Object editor">
    <div className="room-workspace-heading"><div><span className="room-eyebrow">EDIT TOGETHER</span><h2>{item?.name??'Choose an object'}</h2></div>{item?.kind==='Assembly'&&<span className="room-status-pill">{item.animated?'Playing':'Stopped'}</span>}</div>
-   <div role="status" className={error||stale?'room-message room-message-warning':'room-message'}>{error||(stale?'This object changed while you were editing. Your draft is kept; reload the latest version before applying.':pending?'Waiting for the room…':dirty?'Draft changes · Apply to update the room':state.status)}</div>
+   <div role="status" className={error||stale?'room-message room-message-warning':'room-message'}>{error||(stale?'This object changed while you were editing. Your draft is kept; reload the latest version before applying.':pending?'Waiting for the room…':dirty?'Draft changes · Apply saves one edit and stops this object’s recipe animation':state.status)}</div>
    {draft&&<div className="room-workspace-actions"><button disabled={pending||!dirty||stale} onClick={()=>void save()}>Apply changes</button><button disabled={pending} onClick={()=>{setDirty(false);setDraft(fromState(state));setError('');}}> {stale?'Reload latest':'Discard draft'}</button></div>}
    {item&&!recipe&&<div className="room-simple-inspector"><p>{item.kind==='ImportedModel'?'This imported asset retains its original mesh. Its placement, size and tint can be edited here.':'Edit this object directly, or describe a change in chat.'}</p>
     <fieldset disabled={pending}><legend>Size · {item.scale.toFixed(2)}×</legend><button onClick={()=>void send([{action:'resize',target:item.id,scale:Number((item.scale-.1).toFixed(2))}])}>Smaller</button><button onClick={()=>void send([{action:'resize',target:item.id,scale:Number((item.scale+.1).toFixed(2))}])}>Larger</button></fieldset>

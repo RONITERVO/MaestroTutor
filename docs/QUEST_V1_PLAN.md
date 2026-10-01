@@ -12,8 +12,8 @@ posing now exposes start/rotate/save/finish/discard with native session IDs and
 pose versions, the same physical joint limits and imported retargeter, held-joint
 exclusion, failed-pose recovery and recording interoperation. Saved edits are
 durable outside temporary mode; temporary edits stay in the fork until Keep.
-No authoring operation starts playback. The catalog contains 56 actions, 10
-events and 42 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
+No authoring operation starts playback. The catalog contains 57 actions, 10
+events and 45 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
 Single-file GLB/VRM selection, preview and acceptance now share the physical
 import path with book fields and agent/program calls. See QUEST_MODEL_IMPORT.md.
 Animation collections now share native selection, versioned start/retry/tag controls,
@@ -35,7 +35,9 @@ operation through object.create kind=copy and object.definition; geometry, asset
 references and translated recordings are preserved with one Undo. See
 QUEST_OBJECT_COPY.md. Drawing creation, point/radius edits and failed physical
 capture resolution now share the physical pencil, catalog and optional typed book
-fields. See QUEST_DRAWING_AUTHORING.md. The book action editor now loads real settings
+fields. See QUEST_DRAWING_AUTHORING.md. Recipe part/track edits now use a shared
+patch with paged exact readback; the book workshop uses that same action. See
+QUEST_RECIPE_AUTHORING.md. The book action editor now loads real settings
 and concurrency guards from catalog-declared facts. It requires an explicit
 snapshot before running and never silently advances revisions; see QUEST_CURRENT_INPUTS.md.
 Reusable behaviours can now choose visible current-value reads and live/fixed
@@ -59,6 +61,33 @@ and tracked operation roots remain protected. Private recovery export remains
 separate; a full store with unreadable selection still requires recovery/repair.
 PR #248 records the current verified commit and package. Earlier entries
 below are historical evidence, not current test totals or release acceptance.
+
+PC shared-recipe-authoring increment (2026-10-02): object.recipe.edit patches
+existing parts and tracks through the catalog and the book workshop's Apply action.
+The shared agent guide uses the same operation. Explicit stable-ID changes preserve
+unrequested entries; hierarchy validation rejects missing parents/cycles and never
+silently removes descendants. Duration retimes untouched keys proportionally.
+Exact revisions, ownership and save-before-completion keep failed edits from changing
+geometry or data. The target's recipe animation stops; unrelated actors continue.
+Root motion, placement, physics and tint remain. Rebuilt recipe meshes now retain tint.
+
+Paged exact-revision facts expose all 32 parts, 17 tracks and 16 keys per track.
+Existing message/value budgets remain unchanged; large edits use explicit smaller
+patches. The book sends only changed entries and retains stale/rejected drafts until
+a matching completed native receipt. See QUEST_RECIPE_AUTHORING.md.
+
+Verification passed 392 EditMode and 364 PlayMode tests (three optional private
+model checks skipped), 1,675 web tests in 191 files and 61 Android browser tests.
+Six native scenarios cover geometry/tint, Undo/replay, retiming, hierarchy, motion,
+full-capacity readback, ownership, failures and temporary isolation. Chrome replays
+the same captured native patch from the workshop and generated catalog fields;
+their requests/results match and screenshots were inspected. This is PC evidence.
+Production build, TypeScript, lint, catalog drift, prompt ownership and boundaries
+pass. The full build helper exited zero. All 202 runtime and 97 test C# files,
+28 fixtures plus metadata and 113 packaged web files match. ARM64 and v2 signature
+verify. Development checkpoint `MaestroQuest-recipe-authoring-85BF40EB.apk` has SHA-256
+`85BF40EBCB878B2CF98752AE636D20D684E93953BE7EAC8378F586D11AB07A59`. It remains uninstalled. Physical Quest, provider, performance and
+Store acceptance remain open; PR #248 remains draft.
 
 PC shared-drawing-authoring increment (2026-10-01): object.create kind=drawing,
 object.drawing.edit and object.drawing.resolve now share native geometry, saved

@@ -61,6 +61,7 @@ namespace Maestro.Quest.Creation
         public void ApplyRecipe(RoomRecipe value)
         {
             if (!recipe || !recipe.Apply(value)) return;
+            recipe.Tint(tint);
             geometryBounds=recipe.LocalBounds;
             var box=(BoxCollider)originalCollider; box.center=geometryBounds.center; box.size=geometryBounds.size;
             bool selected=selection && selection.activeSelf; if(selection) { selection.SetActive(false); Destroy(selection); }
