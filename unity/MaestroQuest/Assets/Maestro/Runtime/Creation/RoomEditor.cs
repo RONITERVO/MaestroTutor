@@ -228,20 +228,6 @@ namespace Maestro.Quest.Creation
             if (!Commit(new[] { data }, Array.Empty<string>(), "Model added")) return false;
             selected = data.id; UpdateSelection(); return true;
         }
-        public bool SetMaestroModel(string hash)
-        {
-            // Finish authoring before copying the record so its last pose/take
-            // is included in the replacement and in the switch's undo state.
-            Editing?.Invoke(); if (Busy()) return false;
-            var data = journal.Read("maestro");
-            if (data.modelHash != hash) data.walkClip = 0;
-            data.modelHash = string.IsNullOrEmpty(hash) ? null : hash;
-            if (!Commit(new[] { data },Array.Empty<string>(),string.IsNullOrEmpty(hash) ? "Included Maestro selected" : "Custom Maestro selected")) return false;
-            var avatar = Find("maestro").GetComponent<MaestroAvatar>();
-            if (avatar) _ = avatar.SetModel(data.modelHash,Models,retry:true);
-            return true;
-        }
-
         public void ChoosePaint(Color color)
         {
             CapturePhysicsPlacements();

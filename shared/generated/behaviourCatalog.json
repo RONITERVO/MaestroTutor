@@ -1543,6 +1543,174 @@
       }
     },
     {
+      "id": "model.library.inspect",
+      "version": 1,
+      "label": "Browse imported models",
+      "input": {
+        "type": "object",
+        "properties": {
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 32.0
+          }
+        },
+        "required": [
+          "offset"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "avatarModels.v1"
+        ]
+      },
+      "duration": "completion",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [],
+      "description": "Read a page of metadata from this workspace's private imported-model library (32 models/256 MB maximum). Results contain exact content hashes, safe display names and byte sizes, never external paths. Entries are sorted by hash and offsets are session snapshots, not stable indexes: inspect again after an import. Metadata is not proof of valid content, humanoid compatibility or permitted use; avatar.model.select verifies the chosen bytes and rig before saving. Empty modelHash on avatar.model.select chooses included Maestro. This does not open a file picker, download or import a file.",
+      "example": {
+        "offset": 0
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 32.0
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 32.0
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "modelHash": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$",
+                  "maxLength": 64
+                },
+                "name": {
+                  "type": "string",
+                  "pattern": "^[^\\u0000-\\u001f]{0,100}$",
+                  "maxLength": 100
+                },
+                "bytes": {
+                  "type": "integer",
+                  "minimum": 28.0,
+                  "maximum": 67108864.0
+                }
+              },
+              "required": [
+                "modelHash",
+                "name",
+                "bytes"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 0,
+            "maxItems": 8
+          }
+        },
+        "required": [
+          "total",
+          "offset",
+          "entries"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "avatar.model.select",
+      "version": 1,
+      "label": "Choose Maestro avatar",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "enum": [
+              "maestro"
+            ],
+            "x-resource": "object"
+          },
+          "modelHash": {
+            "type": "string",
+            "pattern": "^([a-f0-9]{64})?$",
+            "maxLength": 64
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 1000000.0
+          }
+        },
+        "required": [
+          "target",
+          "modelHash",
+          "revision"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "avatarModels.v1"
+        ]
+      },
+      "duration": "completion",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "object.revision.current",
+        "model.humanoid",
+        "storage.writable"
+      ],
+      "description": "Choose included Maestro with empty modelHash, or an exact imported hash from model.library.inspect. Inspect avatar.model and supply its revision. Shares the physical Use Maestro/Default path: loads and validates a hidden humanoid first, then saves and applies it as one Undo; temporary rooms remain unsaved until Keep. The current model, saved pose and recorded motions survive preparation/save failure or cancellation before commit. Embedded walk index resets on model change; exact library motion/activity choices are retained and may be incompatible, never silently replaced. Other actions must release Maestro first. Stop while preparing prevents later commit; after a successful commit use Undo or explicit selection to revert. No file picker or downloaded code is used. Selection does not request a clip or recording; configured automatic tutor activity may resume when ready. Restart loads only the saved selection. Completion reports a ready selected model; avatar.model separates saved and displayed identities when an existing saved model later becomes unavailable.",
+      "example": {
+        "target": "maestro",
+        "modelHash": "",
+        "revision": 1
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "enum": [
+              "maestro"
+            ]
+          },
+          "modelHash": {
+            "type": "string",
+            "pattern": "^([a-f0-9]{64})?$",
+            "maxLength": 64
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 1000000.0
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "target",
+          "modelHash",
+          "revision",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "time.wait",
       "version": 1,
       "label": "Wait",
@@ -5477,6 +5645,24 @@
       "description": "Native recorder identity and phase: idle issues the next start ID; recording samples a live take; unsaved retains a frozen failed take in memory. Duration is sampled seconds, not wall time. Idle has empty target and zero counts/revision. Read target's authored revision before starting. Finish/discard take the current exact ID; completed receipt cancellation is separate. Error is bounded status, not a recovery token. A new app/room instance never restores an active recording."
     },
     {
+      "id": "avatar.model",
+      "version": 1,
+      "type": {
+        "record": {
+          "revision": "number",
+          "selectedHash": "text",
+          "displayedHash": "text",
+          "busy": "boolean",
+          "phase": "text",
+          "status": "text",
+          "temporary": "boolean",
+          "canPose": "boolean"
+        }
+      },
+      "label": "Current Maestro model",
+      "description": "Saved versus displayed model identity; empty hash denotes included Maestro. loading retains the previous display during preparation, ready means selected and displayed identities match, unavailable means a saved selection could not be displayed. A failed new selection leaves the previous saved identity; bounded status explains it. Read the revision before selecting. Poses use canonical joints across supported humanoids."
+    },
+    {
       "id": "workspace.retention",
       "version": 1,
       "type": {
@@ -6223,7 +6409,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "4119c889dfe9c23fe7ceb72c279750f4b17d83b64b631551597dc1f137778b63"
+      "sha256": "b8b7d5e94e43268da5772494273268e6a5df72f4256c591609ebfd1c1098ab62"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -6278,6 +6464,10 @@
       "sha256": "ebe2e045b6deab008454bff4a33c8dbcfe1cded6c5a79d7fa30eea3d5ac89b43"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AvatarModelSelection.cs",
+      "sha256": "5aa2ead87a8c22ed06f4a220445c9d368e170afcd629672d945401d83e75f06b"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeTemplates.cs",
       "sha256": "2f4156e6d20fa4a4b8ec15fafc9ff1604c1bf3f2df11824a7c9d420ba298255a"
     },
@@ -6302,12 +6492,16 @@
       "sha256": "d43c0f21d8786000effde056bcebda1cecbc87577e8ebe45187da6654985f8af"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AvatarModelCapabilities.cs",
+      "sha256": "2bafa50679a117aca6b64e1d5d1c6550c27e616707195141ecf3855c8e0d6cab"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModule.cs",
       "sha256": "2a7a9bcb825597e2b60c8bd684fe3438356101330898905358593c9f8f86140a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "035897f06683423d56773dbcae4f6d93eb56fbd87b94fa235c94583ef1093467"
+      "sha256": "29554ee0460e980aebfc4da12562512fe85e308c82ae8a667c7bb95bfd500a19"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",

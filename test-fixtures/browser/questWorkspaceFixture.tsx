@@ -13,6 +13,7 @@ import nativeExecutions from './executionStates.json';
 import nativeRemoval from './workspaceRemoval.json';
 import nativeAuthoring from './animationAuthoring.json';
 import nativeRecording from './recordingSessions.json';
+import nativeAvatar from './avatarSelection.json';
 import nativeEvents from './eventProgramStates.json';
 import creationProgram from '../../unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-create.json';
 import creationResult from './creationResult.json';
@@ -41,6 +42,14 @@ const eventPrograms=new URLSearchParams(location.search).has('events');let signa
 if(eventPrograms)state=JSON.parse(JSON.stringify(nativeEvents.waiting));
 const programs=new URLSearchParams(location.search).has('program');if(programs)state=JSON.parse(JSON.stringify(nativeProgram));
 if(new URLSearchParams(location.search).has('execution')){state=JSON.parse(JSON.stringify(nativeExecutions.running));state.visible=true;state.execution={selected:null,running:[],outcomes:[]};}
+const avatarSelection=new URLSearchParams(location.search).has('avatarSelection');
+let avatarObservation=nativeAvatar.before;
+if(avatarSelection){
+ if(!validExecutionView(nativeAvatar.library)||!validExecutionView(nativeAvatar.selection))throw new Error('Invalid native avatar fixture');
+ state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';
+ state.execution={...JSON.parse(JSON.stringify(nativeAvatar.library)),selected:null,running:[],outcomes:[],nextRunId:nativeAvatar.library.selected.id};
+ state.capabilities=[...state.capabilities??[],'catalogVocabulary.v1','avatarModels.v1','execution.v1','executionReceipts.v1','actionResults.v1'];
+}
 const recordingSessions=new URLSearchParams(location.search).has('recordingSessions');
 let recordingObservation=nativeRecording.before;
 if(recordingSessions){
@@ -104,7 +113,9 @@ setInterval(()=>{
   for(const command of request.commands){
    if(command.action==='execution'&&command.execution){
     const input=command.execution;
-    if(recordingSessions&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeRecording.start.selected.call)){state.execution=copy(nativeRecording.start) as RoomAgentState['execution'];recordingObservation=nativeRecording.active;state.status='Recorded native start; browser acknowledgement is simulated';}
+    if(avatarSelection&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeAvatar.library.selected.call)){state.execution=copy(nativeAvatar.library) as RoomAgentState['execution'];state.status='Recorded native library metadata; browser acknowledgement is simulated';}
+    else if(avatarSelection&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeAvatar.selection.selected.call)){state.execution=copy(nativeAvatar.selection) as RoomAgentState['execution'];avatarObservation=nativeAvatar.after;state.status='Recorded native model selection; browser acknowledgement is simulated';}
+    else if(recordingSessions&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeRecording.start.selected.call)){state.execution=copy(nativeRecording.start) as RoomAgentState['execution'];recordingObservation=nativeRecording.active;state.status='Recorded native start; browser acknowledgement is simulated';}
     else if(recordingSessions&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeRecording.finish.selected.call)){state.execution=copy(nativeRecording.finish) as RoomAgentState['execution'];recordingObservation=nativeRecording.idle;state.status='Recorded native finish; browser acknowledgement is simulated';}
     else if(authoring&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeAuthoring.execution.selected.call)){state.execution=copy(nativeAuthoring.execution) as RoomAgentState['execution'];state.status='Recorded native authoring result; browser acknowledgement is simulated';}
     else if(disposal&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeRemoval.removeExecution.workspace.selected.call)){state.execution=copy(nativeRemoval.removeExecution) as RoomAgentState['execution'];state.status='Recorded native disposal result; no files are changed by this browser fixture';}
@@ -123,7 +134,13 @@ setInterval(()=>{
      else {const view=moduleEvidence.inspected.catalog;state.catalog=view?.operation==='inspect'&&query.capability===view.capability?copy(view):{operation:'inspect',category:'modules',capability:query.capability,version:query.version,definition:null,revision:1,ready:true,pending:false,status:'Not present in recorded evidence'};}
      continue;
     }
-    if(recordingSessions&&query.operation!=='check'&&query.category==='facts'){
+    if(avatarSelection&&query.operation!=='check'&&query.category==='facts'){
+     const definition=behaviourFact('avatar.model')!;
+     if(query.operation==='search')state.catalog={operation:'search',category:'facts',query:query.query,offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Found model state'};
+     else state.catalog={operation:'inspect',category:'facts',capability:query.capability,version:1,definition:query.capability===definition.id?definition:null,available:query.capability===definition.id,value:query.capability===definition.id?copy(avatarObservation):null,status:'Recorded native model state'};
+     continue;
+    }
+    else if(recordingSessions&&query.operation!=='check'&&query.category==='facts'){
      const definition=behaviourFact('animation.recording')!;
      if(query.operation==='search')state.catalog={operation:'search',category:'facts',query:query.query,offset:0,pageSize:6,total:1,entries:[{id:definition.id,version:1,label:definition.label}],status:'Recorded fact discovery'};
      else state.catalog={operation:'inspect',category:'facts',capability:query.capability,version:1,definition:query.capability===definition.id?definition:null,available:query.capability===definition.id,value:query.capability===definition.id?copy(recordingObservation):null,status:'Recorded native recorder state'};

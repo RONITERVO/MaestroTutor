@@ -486,7 +486,7 @@ namespace Maestro.Quest.Tests
                 var probe=editor.Motions.AcquireAsync(gait.id,gait.rigHash);
                 yield return Until(()=>probe.IsCompleted);Assert.That(probe.Exception,Is.Null);probe.Result.Dispose();
                 yield return Until(()=>host.State("replacement",out _)!=RuleActionState.Preparing);
-                Assert.That(host.State("replacement",out error),Is.EqualTo(RuleActionState.Failed));Assert.That(error,Does.Contain("changed while loading"));
+                Assert.That(host.State("replacement",out error),Is.EqualTo(RuleActionState.Failed));Assert.That(error,Is.EqualTo("Interrupted by Avatar selection"),"Trusted manual selection now stops the pending actor through shared ownership");
                 Assert.That(avatar.LibraryMotionId,Is.Null,"A compatible replacement must not inherit a pending request for the previous model");
             } finally {host.Stop("replacement",false);}
             Assert.That(editor.Motions.Pinned(gait.id),Is.False);

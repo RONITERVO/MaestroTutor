@@ -144,7 +144,13 @@ namespace Maestro.Quest.Imports
             catch (Exception error) { Report(error); return false; }
             finally { busy = false; }
         }
-        public void DefaultMaestro() { if (Busy) return; if (editor.SetMaestroModel(null)) Say("Included Maestro restored — Undo brings back your custom avatar"); }
+        public async void DefaultMaestro()
+        {
+            if(Busy)return;
+            if(!editor.SetMaestroModel(null)){Say(editor.Status);return;}
+            bool ready=await maestro.ModelLoad;
+            if(this&&!disposed)Say(ready?"Included Maestro restored — Undo brings back your custom avatar":maestro.ModelStatus);
+        }
         void MaestroChanged() { motionRequest++; if (libraryMode) ShowLibraryDetails(); if (maestro) Say(maestro.ModelStatus); }
         ImportedModel Target => HasPreview ? preview : editor.SelectedId == "maestro" ? maestro?.CustomModel : editor.Find(editor.SelectedId)?.GetComponent<CreatedRoomObject>()?.Model;
         public void NextClip() { if (libraryMode) { NextLibraryMotion(); return; } var target = Target; if (!target || target.ClipCount == 0) { Say("This model has no embedded animation clips"); return; } Stop(); clip = (clip + 1) % target.ClipCount; Say("Clip " + (clip + 1) + ": " + target.ClipName(clip)); }

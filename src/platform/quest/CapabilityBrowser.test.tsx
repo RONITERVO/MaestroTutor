@@ -519,3 +519,25 @@ it('starts and finishes an exact recording session from typed fields while disti
  fireEvent.click(screen.getByRole('button',{name:new RegExp(fact.label)}));await receive({operation:'inspect',category:'facts',capability:fact.id,version:1,definition:fact,available:true,value:nativeRecording.idle,status:'New idle session'});
  expect(screen.getByLabelText('Current fact value').textContent).toContain(nativeRecording.idle.sessionId);expect(screen.getByLabelText('Current fact value').textContent).toContain('"phase":"idle"');expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
 });
+
+import nativeAvatar from '../../../test-fixtures/browser/avatarSelection.json';
+it('chooses an exact Maestro model from typed book fields and displays the ready native receipt',async()=>{
+ const {client,screen,receive}=setup(true,['avatarModels.v1','execution.v1','actionResults.v1']);
+ await receive(undefined,false,{execution:{...nativeAvatar.library,selected:null,running:[],outcomes:[],nextRunId:nativeAvatar.selection.selected.id} as RoomAgentState['execution']});
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:/^Search$/}));
+ const definition=capabilityDefinition('avatar.model.select')!;
+ await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Found model selection'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Model contract'});
+ fireEvent.click(screen.getByText('Edit action fields'));
+ expect(Array.from((screen.getByLabelText('Action inputs target') as HTMLSelectElement).options).map(x=>x.value)).toEqual(['maestro']);
+ fireEvent.change(screen.getByLabelText('Action inputs modelHash'),{target:{value:nativeAvatar.library.selected.output.entries[0].modelHash}});
+ fireEvent.change(screen.getByLabelText('Action inputs revision'),{target:{value:nativeAvatar.before.revision}});
+ fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
+ expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:nativeAvatar.selection.selected.call,runId:nativeAvatar.selection.selected.id}});
+ await receive(undefined,false,{execution:nativeAvatar.selection as RoomAgentState['execution']});
+ expect(screen.getByLabelText('Action result').textContent).toContain(nativeAvatar.after.displayedHash);expect(screen.queryByRole('button',{name:/Stop action/})).toBeNull();
+ fireEvent.change(screen.getByLabelText('Catalog category'),{target:{value:'facts'}});fireEvent.click(screen.getByRole('button',{name:/^Search$/}));
+ const fact=behaviourFact('avatar.model')!;await receive({operation:'search',category:'facts',query:'',offset:0,total:1,pageSize:6,entries:[{id:fact.id,version:1,label:fact.label}],status:'Model fact'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(fact.label)}));await receive({operation:'inspect',category:'facts',capability:fact.id,version:1,definition:fact,available:true,value:nativeAvatar.after,status:'Ready model'});
+ expect(screen.getByLabelText('Current fact value').textContent).toContain('"phase":"ready"');expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
+});

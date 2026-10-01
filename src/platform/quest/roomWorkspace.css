@@ -51,3 +51,5 @@
 .program-editor .program-value-array {padding:6px;border-left:3px solid #7b65a1;}
 
 .room-ownership{margin:1rem 0;padding:.8rem;border:1px solid var(--room-line,#cbd5df);border-radius:.8rem;font-size:.85rem}.room-ownership summary{cursor:pointer;font-weight:700;min-height:44px;box-sizing:border-box;padding:10px 0}.room-ownership summary:focus-visible{outline:3px solid #368a85;outline-offset:2px}.room-owner{margin-top:.8rem}.room-owner strong,.room-owner small{display:block}.room-owner ul{margin:.3rem 0;padding-left:1.2rem}.room-ownership p{margin:.6rem 0 0}
+
+.capability-browser .room-message {overflow-wrap:anywhere;}

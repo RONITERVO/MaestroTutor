@@ -8,6 +8,7 @@ using Maestro.Quest.Interaction;
 using Maestro.Quest.Programs;
 using System;
 using System.Threading.Tasks;
+using System.Threading;
 using UnityEngine;
 
 namespace Maestro.Quest.Avatar
@@ -130,48 +131,58 @@ namespace Maestro.Quest.Avatar
         {
             hash ??= "";
             if (requestedModel == hash && (!retry || ModelBusy)) return ModelLoad;
-            EndAmbient();walkMotion?.Stop(); StopImportedClip();
-            gestureLayer?.Stop(); requestedModel = hash; int generation = ++modelGeneration;
-            if (hash.Length == 0)
-            {
-                UseIncluded(); ModelBusy = false; ModelStatus = "Included Maestro"; ModelChanged?.Invoke();
-                return ModelLoad = Task.FromResult(true);
-            }
-            ModelBusy = true; ModelStatus = "Loading custom Maestro…"; ModelChanged?.Invoke();
-            return ModelLoad = LoadModel(hash,library,generation);
+            return BeginModel(hash,library,null,CancellationToken.None);
         }
-        async Task<bool> LoadModel(string hash, ModelLibrary library, int generation)
+        // Selection prepares a hidden candidate, then commits the room before
+        // replacing the visible model. Restore still falls back to the included rig.
+        internal Task<bool> SelectModel(string hash,ModelLibrary library,Func<bool> commit,CancellationToken cancellation)=>BeginModel(hash??"",library,commit,cancellation);
+        Task<bool> BeginModel(string hash,ModelLibrary library,Func<bool> commit,CancellationToken cancellation)
         {
-            GameObject candidateRoot = null;
+            EndAmbient();walkMotion?.Stop();StopImportedClip();gestureLayer?.Stop();
+            string previous=requestedModel;requestedModel=hash;int generation=++modelGeneration;
+            ModelBusy=true;ModelStatus=hash.Length==0?"Selecting included Maestro…":"Loading custom Maestro…";ModelChanged?.Invoke();
+            return ModelLoad=LoadModel(hash,library,generation,previous,commit,cancellation);
+        }
+        async Task<bool> LoadModel(string hash,ModelLibrary library,int generation,string previous,Func<bool> commit,CancellationToken cancellation)
+        {
+            GameObject candidateRoot=null;bool accepted=false;
             try
             {
-                var asset = await library.ReadAsync(hash);
-                if (!this || disposed || generation != modelGeneration) return false;
-                candidateRoot = new GameObject("Custom Maestro"); candidateRoot.SetActive(false); candidateRoot.transform.SetParent(transform,false);
-                var candidate = candidateRoot.AddComponent<ImportedModel>(); await candidate.LoadAsync(asset);
-                if (!this || disposed || generation != modelGeneration) return false;
-                candidate.FitAsMaestro();
-                var retargeter = candidateRoot.AddComponent<HumanoidRetargeter>(); retargeter.Initialize(PoseRig,candidate.Humanoid);
-                UseIncluded(); custom = candidate; candidateRoot = null;
-                PoseRig.SetDisplayRig(retargeter);
-                foreach (var renderer in included.GetComponentsInChildren<Renderer>()) renderer.enabled = false;
-                custom.gameObject.SetActive(true); retargeter.ApplyPose();
-                ModelHash = hash; ModelStatus = "Custom Maestro ready — gestures, poses and recordings retained";
-                return true;
+                ImportedModel candidate=null;HumanoidRetargeter retargeter=null;
+                if(hash.Length!=0){
+                    var asset=await library.ReadAsync(hash);
+                    cancellation.ThrowIfCancellationRequested();if(!this||disposed||generation!=modelGeneration)return false;
+                    candidateRoot=new GameObject("Custom Maestro");candidateRoot.SetActive(false);candidateRoot.transform.SetParent(transform,false);
+                    candidate=candidateRoot.AddComponent<ImportedModel>();await candidate.LoadAsync(asset);
+                    cancellation.ThrowIfCancellationRequested();if(!this||disposed||generation!=modelGeneration)return false;
+                    candidate.FitAsMaestro();retargeter=candidateRoot.AddComponent<HumanoidRetargeter>();retargeter.Initialize(PoseRig,candidate.Humanoid);
+                }
+                cancellation.ThrowIfCancellationRequested();if(!this||disposed||generation!=modelGeneration)return false;
+                if(commit!=null&&!commit()){ModelStatus="Avatar selection was not saved; previous avatar kept.";return false;}
+                accepted=true;UseIncluded();
+                if(candidate){
+                    custom=candidate;candidateRoot=null;PoseRig.SetDisplayRig(retargeter);
+                    foreach(var renderer in included.GetComponentsInChildren<Renderer>())renderer.enabled=false;
+                    custom.gameObject.SetActive(true);retargeter.ApplyPose();ModelHash=hash;
+                }
+                ModelStatus=hash.Length==0?"Included Maestro":"Custom Maestro ready — gestures, poses and recordings retained";return true;
             }
-            catch (Exception error)
+            catch(Exception error)
             {
-                if (this && !disposed && generation == modelGeneration)
-                {
-                    UseIncluded();
-                    ModelStatus = (error is ModelImportException ? error.Message : "The custom avatar could not load.") + " Using included Maestro.";
+                if(this&&!disposed&&generation==modelGeneration){
+                    if(commit==null)UseIncluded();
+                    string reason=error is OperationCanceledException?"Avatar selection cancelled.":error is ModelImportException?error.Message:"The custom avatar could not load.";
+                    ModelStatus=reason+(commit==null?" Using included Maestro.":" Previous avatar kept.");
                 }
                 return false;
             }
             finally
             {
-                if (candidateRoot) Destroy(candidateRoot);
-                if (this && !disposed && generation == modelGeneration) { ModelBusy = false; ModelChanged?.Invoke(); }
+                if(candidateRoot)Destroy(candidateRoot);
+                if(this&&!disposed&&generation==modelGeneration){
+                    if(commit!=null&&!accepted)requestedModel=previous;
+                    ModelBusy=false;ModelChanged?.Invoke();
+                }
             }
         }
         void UseIncluded()

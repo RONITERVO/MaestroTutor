@@ -7,9 +7,14 @@ fields edit the same pose and keyframes as the physical tray. Exact object
 revisions prevent stale writes; saved edits are durable, temporary edits stay in
 the fork until Keep, and neither starts playback. Shared recording now exposes
 start/save/discard with exact native session IDs, retained failed takes and
-matching physical controls. The catalog contains 41 actions, 10 events and 23
-facts. See QUEST_ANIMATION_AUTHORING.md. Broader shared controls and device/provider/
-Store acceptance remain unfinished; the complete v1 goal remains active.
+matching physical controls. Shared avatar selection now discovers imported model
+identities and prepares a humanoid before saving/replacing Maestro through the
+same physical selection path. Failure/cancellation keeps the previous selection;
+readback distinguishes saved, loading and displayed state. The catalog contains
+43 actions, 10 events and 24 facts. See QUEST_ANIMATION_AUTHORING.md and
+QUEST_AVATAR_SELECTION.md. Shared picker/import sessions, live posing controls
+and device/provider/Store acceptance remain unfinished; the complete v1 goal
+remains active.
 
 Current recovery implementation supports retained candidates, an external backup,
 and an explicitly requested fresh workspace through the same shared book/agent
@@ -25,6 +30,19 @@ and tracked operation roots remain protected. Private recovery export remains
 separate; a full store with unreadable selection still requires recovery/repair.
 PR #248 records the current verified commit and package. Earlier entries
 below are historical evidence, not current test totals or release acceptance.
+
+PC avatar-selection increment (2026-10-01): shared library discovery and exact-
+revision model selection use the same prepare/save/apply path as physical Use
+Maestro and Default. Failed, cancelled or stale preparation keeps the previous
+avatar and saved record. Readback separates selected/displayed identities; long
+values wrap inside the book page. See QUEST_AVATAR_SELECTION.md. PC verification
+passes 1,559 web tests across 175 files plus 27 focused checks against the final
+native capture, 372 EditMode and 264 PlayMode tests (three optional native skips),
+and 55 Android browser tests. The full helper exited successfully. All 173 runtime
+and 80 test C# sources, 24 fixture files plus metadata, and 113 packaged web files
+match. ARM64/v2 signature-verified checkpoint: `MaestroQuest-avatar-selection-82080CAE.apk`,
+SHA-256 `82080CAE72DD7569DF4064470DF50B429B3CA679CA4044DDAC6D186728E07A4B`.
+It remains uninstalled; provider/device/Store acceptance is still open.
 
 PC recording increment (2026-10-01): agent, programs and physical tools share
 one recording session. Start returns immediately while native sampling continues;
