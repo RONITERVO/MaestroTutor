@@ -1,23 +1,27 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 using System.Collections.Generic;
+using System.Linq;
+using Maestro.Quest.Avatar;
 using Maestro.Quest.Creation;
 using Maestro.Quest.Interaction;
 using Maestro.Quest.Rules;
 using UnityEngine;
 
-namespace Maestro.Quest.Avatar
+namespace Maestro.Quest.Interaction
 {
-    // Sample after the avatar and its retargeter have presented this frame's pose.
+    // One trajectory/release implementation for animation-fitted and standalone props.
+    // Sample after avatar retargeting, recipe animation and root movement.
     [DefaultExecutionOrder(250)]
-    public sealed class AvatarHeldProp : MonoBehaviour
+    public sealed class HeldRoomProp : MonoBehaviour
     {
         struct Sample { public float Time; public Vector3 Position; public Quaternion Rotation; }
         readonly List<Sample> samples=new();
         readonly Collider[] overlaps=new Collider[48];
         readonly RaycastHit[] hits=new RaycastHit[48];
         RoomEditor editor;
-        MaestroAvatar avatar;
+        RoomItem holder;
+        RoomPropAnchor anchor;
         RoomItem item;
         RigidRoomItem rigid;
         Rigidbody body;
@@ -30,15 +34,21 @@ namespace Maestro.Quest.Avatar
         public string Error { get; private set; }
         public bool Released => released;
         public bool Holding => holding;
-        public static bool CanAttach(RoomEditor editor,PropAttachment attachment,out string error)
+        public string HolderId=>anchor?.HolderId??"";
+        public string AnchorKind=>anchor?.Kind??"";
+        public string AnchorPart=>anchor?.Part??"";
+        public string ReleaseMode=>attachment?.Release.ToString().ToLowerInvariant()??"";
+        public static bool CanAttach(RoomEditor editor,PropAttachment attachment,out string error)=>CanAttach(editor,attachment,attachment==null?null:RoomPropAnchor.Avatar(attachment),out error);
+        public static bool CanAttach(RoomEditor editor,PropAttachment attachment,RoomPropAnchor anchor,out string error)
         {
-            error=null;
-            if (attachment == null) return true;
-            var avatar=editor.Find("maestro")?.GetComponent<MaestroAvatar>(); var item=editor.Find(attachment.ObjectId);
-            if (!avatar || avatar.ModelBusy || !avatar.PoseRig || (avatar.ModelHash ?? "") != (attachment.AvatarHash ?? ""))
-            { error="Choose Maestro's current avatar and fit the prop again"; return false; }
-            var hand=avatar.PoseRig.Bone(attachment.Hand == PropHand.Left ? PoseJoint.LeftHand : PoseJoint.RightHand);
-            if (!hand) { error="This avatar has no mapped hand for the prop"; return false; }
+            error=null;if(attachment==null)return true;
+            if(anchor==null||!anchor.Resolve(editor,out var holder,out _,out error))return false;
+            if(anchor.HolderId==attachment.ObjectId){error="An object cannot hold itself";return false;}
+            var item=editor.Find(attachment.ObjectId);
+            // Chains would depend on component update order. Refuse them explicitly,
+            // including adding a parent above an already active attachment.
+            if(holder.GetComponents<HeldRoomProp>().Any(p=>p.Holding)||editor.GetComponentsInChildren<HeldRoomProp>(true).Any(p=>p.Holding&&p.HolderId==attachment.ObjectId))
+            {error="Finish the existing attachment before nesting held objects";return false;}
             var rigid=item ? item.GetComponent<RigidRoomItem>() : null;
             if (!item || editor.Read(attachment.ObjectId)?.IsBuiltIn != false || !rigid || !rigid.GeometryReady || item.Grab.isSelected)
             { error="Select a loaded creation and release it before using it as a prop"; return false; }
@@ -46,14 +56,15 @@ namespace Maestro.Quest.Avatar
             { error="Drop or throw needs a Solid/Bouncy prop and running aligned room physics"; return false; }
             return true;
         }
-        public static AvatarHeldProp Begin(RoomEditor editor,PropAttachment attachment,float duration,out string error)
+        public static HeldRoomProp Begin(RoomEditor editor,PropAttachment attachment,float duration,out string error)=>Begin(editor,attachment,attachment==null?null:RoomPropAnchor.Avatar(attachment),duration,out error);
+        public static HeldRoomProp Begin(RoomEditor editor,PropAttachment attachment,RoomPropAnchor anchor,float duration,out string error)
         {
-            if (!CanAttach(editor,attachment,out error) || attachment == null) return null;
+            if (!CanAttach(editor,attachment,anchor,out error) || attachment == null) return null;
             var item=editor.Find(attachment.ObjectId); var rigid=item.GetComponent<RigidRoomItem>();
             if (rigid.AnimationOwned) { error="Another animation owns this prop"; return null; }
-            var value=item.gameObject.AddComponent<AvatarHeldProp>(); value.editor=editor; value.item=item; value.rigid=rigid; value.body=item.GetComponent<Rigidbody>();
-            value.avatar=editor.Find("maestro").GetComponent<MaestroAvatar>(); value.attachment=attachment;
-            value.hand=value.avatar.PoseRig.Bone(attachment.Hand == PropHand.Left ? PoseJoint.LeftHand : PoseJoint.RightHand);
+            var value=item.gameObject.AddComponent<HeldRoomProp>(); value.editor=editor; value.item=item; value.rigid=rigid; value.body=item.GetComponent<Rigidbody>();
+            value.anchor=anchor;value.attachment=attachment;
+            if(!anchor.Resolve(editor,out value.holder,out value.hand,out error)){Destroy(value);return null;}
             value.homePosition=item.transform.localPosition; value.homeRotation=item.transform.localRotation;
             value.duration=duration; value.began=Time.unscaledTime; value.requiresRoom=editor.PhysicsWorld && editor.PhysicsWorld.Running;
             Physics.SyncTransforms(); var bounds=item.Grab.colliders[0].bounds;
@@ -63,7 +74,7 @@ namespace Maestro.Quest.Avatar
             if (!value.Follow()) { error=value.Error; value.End(false); return null; }
             return value;
         }
-        bool Obstacle(Collider collider,bool includeAvatar) => collider && !collider.isTrigger && !collider.transform.IsChildOf(item.transform) && (includeAvatar || !collider.transform.IsChildOf(avatar.transform));
+        bool Obstacle(Collider collider,bool includeAvatar) => collider && !collider.isTrigger && !collider.transform.IsChildOf(item.transform) && (includeAvatar || !collider.transform.IsChildOf(holder.transform));
         bool Clear(Vector3 position,Quaternion rotation,bool includeAvatar,bool sweep)
         {
             Physics.SyncTransforms();
@@ -93,8 +104,9 @@ namespace Maestro.Quest.Avatar
         {
             error=Error; if (error != null) return false;
             if (!holding) return true;
-            if (!item || !avatar || !hand || avatar.ModelBusy || (avatar.ModelHash ?? "") != (attachment.AvatarHash ?? "") || item.Grab.isSelected)
-                error="Prop action stopped — its avatar or item changed";
+            if (!editor||editor.RuntimeGate.Held||!item||!item.isActiveAndEnabled||editor.Find(attachment.ObjectId)!=item||!hand||item.Grab.isSelected)
+                error="Prop action stopped — its holder or item changed";
+            else if(!anchor.Matches(editor,holder,hand,out error)) {}
             else if (requiresRoom && (!editor.PhysicsWorld || !editor.PhysicsWorld.CanSimulate(item.transform.position)))
                 error="Prop action stopped — check room alignment and restart physics";
             if (error != null) Error=error;
@@ -105,11 +117,11 @@ namespace Maestro.Quest.Avatar
             if (!Valid(out _)) return false;
             float now=Time.unscaledTime;
             if (samples.Count > 0 && now-lastPoseAt > .25f) { Error="Motion was interrupted; try the prop action again"; return false; }
-            float scale=avatar.transform.lossyScale.y;
+            float scale=holder.transform.lossyScale.y;
             var position=hand.position+hand.rotation*(attachment.Offset*scale); var rotation=hand.rotation*attachment.Rotation;
             if (!float.IsFinite(position.sqrMagnitude) || !MotionFrame.ValidRotation(rotation) ||
                 requiresRoom && !editor.PhysicsWorld.CanSimulate(position) || !Clear(position,rotation,false,true))
-            { Error="Prop path is blocked — adjust its fit, motion or Maestro's placement"; return false; }
+            { Error="Prop path is blocked — adjust its fit, motion or holder placement"; return false; }
             item.transform.SetPositionAndRotation(position,rotation); body.position=position; body.rotation=rotation;
             lastPoseAt=now;
             // Bound history by time as well as count, including fast desktop frames.
@@ -131,7 +143,7 @@ namespace Maestro.Quest.Avatar
         {
             if (!Valid(out _) || !holding) return false;
             if (!editor.PhysicsWorld || !editor.PhysicsWorld.CanSimulate(item.transform.position) || !Clear(item.transform.position,item.transform.rotation,true,false))
-            { Error="Cannot release here — move the prop clear of Maestro and room surfaces"; return false; }
+            { Error="Cannot release here — move the prop clear of the holder and room surfaces"; return false; }
             var first=samples[0]; var last=new Sample { Time=Time.unscaledTime,Position=item.transform.position,Rotation=item.transform.rotation }; float dt=last.Time-first.Time;
             if (Time.unscaledTime-lastPoseAt > .25f) { Error="Motion was interrupted; try the prop action again"; return false; }
             Vector3 velocity=Vector3.zero,spin=Vector3.zero;
@@ -149,6 +161,7 @@ namespace Maestro.Quest.Avatar
         }
         public void End(bool preservePlacement)
         {
+            preservePlacement|=holder&&holder.Grab.isSelected;
             if (holding && item && !preservePlacement && !item.Grab.isSelected)
             { item.transform.SetLocalPositionAndRotation(homePosition,homeRotation); rigid.Teleported(); }
             holding=false; if (rigid) rigid.SetAnimationOwner(this,false);

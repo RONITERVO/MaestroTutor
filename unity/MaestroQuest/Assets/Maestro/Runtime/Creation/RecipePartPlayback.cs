@@ -10,7 +10,7 @@ namespace Maestro.Quest.Creation
         // Ancestor motion still carries descendants, just as in the saved hierarchy.
         internal sealed class PartPlayback
         {
-            internal RecipeTrack Track;internal bool Loop,Active=true;internal float Time;
+            internal RecipeTrack Track;internal bool Loop,Active=true;internal float Began;
         }
         readonly Dictionary<string,PartPlayback> partsPlaying=new();
         readonly HashSet<string> suppressedParts=new();
@@ -22,7 +22,7 @@ namespace Maestro.Quest.Creation
             if(!HasTrack(part))return false;
             if(!isActiveAndEnabled||runtimeGate?.Held==true){error="Recipe playback is paused";return false;}
             if(partsPlaying.ContainsKey(part)){error="This recipe part is already playing";return false;}
-            playback=new PartPlayback{Track=System.Array.Find(recipe.tracks,t=>t.part==part),Loop=loop};
+            playback=new PartPlayback{Track=System.Array.Find(recipe.tracks,t=>t.part==part),Loop=loop,Began=UnityEngine.Time.unscaledTime};
             partsPlaying.Add(part,playback);suppressedParts.Add(part);SamplePart(playback,0);error=null;return true;
         }
         internal bool OwnsPart(PartPlayback playback)=>playback!=null&&playback.Active&&isActiveAndEnabled&&runtimeGate?.Held!=true&&partsPlaying.TryGetValue(playback.Track.part,out var active)&&ReferenceEquals(playback,active);
@@ -39,6 +39,7 @@ namespace Maestro.Quest.Creation
             // Hold the observed pose. No saved edit, root snap or autoplay resume.
         }
         void CancelParts(){foreach(var playback in partsPlaying.Values)playback.Active=false;partsPlaying.Clear();}
-        void AdvanceParts(float delta){foreach(var playback in partsPlaying.Values){playback.Time+=delta;SamplePart(playback,playback.Time);}}
+        // Scheduled actions share the scheduler clock, including when physics time is scaled.
+        void AdvanceParts(){foreach(var playback in partsPlaying.Values)SamplePart(playback,UnityEngine.Time.unscaledTime-playback.Began);}
     }
 }

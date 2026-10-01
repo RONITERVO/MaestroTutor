@@ -18,7 +18,7 @@ using UnityEngine.XR.Interaction.Toolkit.Interactors;
 using UnityEngine.XR.Interaction.Toolkit.Inputs.Readers;
 namespace Maestro.Quest.Tests
 {
-    public sealed class AvatarPropTests
+    public sealed partial class AvatarPropTests
     {
         GameObject root;
         RoomEditor editor;
@@ -76,7 +76,7 @@ namespace Maestro.Quest.Tests
         {
             Configure(PropRelease.Throw); Assert.That(runtime.Trigger(rules.Selected.id),Is.True,rules.Status);
             yield return new WaitForSeconds(.2f);
-            var hold=ball.GetComponent<AvatarHeldProp>(); Assert.That(hold && hold.Holding,Is.True); Assert.That(ball.GetComponent<Rigidbody>().isKinematic,Is.True);
+            var hold=ball.GetComponent<HeldRoomProp>(); Assert.That(hold && hold.Holding,Is.True); Assert.That(ball.GetComponent<Rigidbody>().isKinematic,Is.True);
             var hand=avatar.PoseRig.Bone(PoseJoint.RightHand); var step=rules.Selected.SimpleSteps()[0];
             Assert.That(Vector3.Distance(ball.transform.position,hand.position+hand.rotation*step.propOffset),Is.LessThan(.02f));
             yield return Until(() => hold && hold.Released || runtime.Scheduler.RunningCount == 0);
@@ -92,6 +92,7 @@ namespace Maestro.Quest.Tests
             Configure(PropRelease.Throw,.9f); var start=ball.transform.position;
             var wall=GameObject.CreatePrimitive(PrimitiveType.Cube); wall.transform.SetParent(root.transform,false); wall.layer=RoomPhysicsLayers.Scanned;
             wall.transform.position=start+Vector3.right*.4f; wall.transform.localScale=new Vector3(.05f,4,4); Physics.SyncTransforms();
+            yield return null; // Let scene setup finish before measuring a live motion gap.
             Assert.That(runtime.Trigger(rules.Selected.id),Is.True,rules.Status); yield return Until(() => runtime.Scheduler.RunningCount == 0);
             Assert.That(runtime.Scheduler.LastError,Does.Contain("blocked")); Assert.That(ball.GetComponent<Rigidbody>().linearVelocity.x,Is.EqualTo(0).Within(.01f));
             wall.SetActive(false); world.PausePhysics(); ball.transform.position=start; ball.GetComponent<RigidRoomItem>().Teleported(); world.StartPhysics();

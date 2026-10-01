@@ -20,7 +20,7 @@ still conflict with every part channel. A physical grip has the existing higher
 priority and cancels affected programs; parallel-program cancellation stops the
 whole related group. No priority or automatic-resume argument is exposed.
 
-Each selected track starts at time zero with its own clock. `seconds:0` uses the
+Each selected track starts at time zero on the scheduler’s unscaled clock. `seconds:0` uses the
 recipe's saved duration. `loop` repeats the track during the requested lifetime;
 a non-looping track holds its final key if the lifetime is longer. Completion
 samples the requested endpoint. Stop/cancellation freezes the latest sampled pose.
@@ -37,7 +37,8 @@ Saved autoplay preferences retain their existing meaning on a fresh room load.
 Part animation leaves the root rigid-body state and stable whole-assembly proxy
 collider unchanged. These are visual joints, not independently colliding physics
 links. Root motion and separate grabbable physical links still require the relevant
-whole-object capabilities; this does not claim generalized robot prop sockets.
+whole-object capabilities. Named parts can now anchor a carried prop through
+`object.hold`; see QUEST_OBJECT_ATTACHMENTS.md. This does not create physics joints.
 
 `object.recipe.pose@1 {target,part}` reports the current local and world
 position/quaternion, parent ID, saved object revision and track playback flag.

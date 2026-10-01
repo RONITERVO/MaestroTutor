@@ -31,6 +31,14 @@ namespace Maestro.Quest.Tests
    var pose=LivePart(target,"RightLowerArm");Assert.That((string)pose["parent"],Is.EqualTo("RightUpperArm"));Assert.That(Vector3.Distance(pose["world"]["position"].ToObject<Vector3>(),recipe.Part("RightLowerArm").position),Is.LessThan(.0001f));
    recipe.Restart();yield return new WaitForSeconds(.1f);Assert.That((bool)LivePart(target,"RightUpperArm")["playing"],Is.True,"Only explicit whole restart re-enables suppressed autoplay");
   }
+  [UnityTest] public IEnumerator ScheduledRecipePartsUseTheSchedulerClockWhenPhysicsTimeIsPaused(){
+   string target=RecipeTarget();var recipe=editor.Find(target).GetComponent<RecipeObject>();float scale=Time.timeScale;
+   try{
+    Time.timeScale=0;Assert.That(runtime.Scheduler.Invoke(PartCall(target,"RightUpperArm",.3f),Time.unscaledTime,out var run,out var error),Is.True,error);
+    yield return new WaitForSecondsRealtime(.15f);Assert.That(Quaternion.Angle(recipe.Part("RightUpperArm").localRotation,Quaternion.identity),Is.GreaterThan(10));
+    yield return new WaitForSecondsRealtime(.2f);Assert.That((string)runtime.Scheduler.Invocation(run)["phase"],Is.EqualTo("completed"));Assert.That(recipe.IsPlaying,Is.False);
+   }finally{Time.timeScale=scale;}
+  }
   [UnityTest] public IEnumerator RecipePartFailureLifecycleAndConflictsDoNotClaimSuccessOrRestart(){
    string target=RecipeTarget();var item=editor.Find(target);var recipe=item.GetComponent<RecipeObject>();var call=PartCall(target,"RightUpperArm");
    Assert.That(runtime.Scheduler.Invoke(call,Time.unscaledTime,out var run,out var error),Is.True,error);Assert.That(runtime.Scheduler.Invoke(call,Time.unscaledTime,out _,out _),Is.False);

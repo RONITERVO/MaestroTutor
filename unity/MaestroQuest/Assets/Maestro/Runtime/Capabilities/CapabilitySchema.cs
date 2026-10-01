@@ -17,8 +17,8 @@ namespace Maestro.Quest.Programs
             })).Take(2).ToArray();return matches.Length==1?matches[0]:null;
         }
         public static JToken Value(JToken value,string path) {foreach(var key in path.Split('.'))value=(value as JObject)?[key];return value;}
-        public static JObject Field(JObject schema,string path) {
-            foreach(var key in path.Split('.'))schema=schema?["properties"]?[key] as JObject;return schema;
+        public static JObject Field(JObject schema,string path,JToken value=null) {
+            foreach(var key in path.Split('.')){schema=Resolve(schema,value)?["properties"]?[key] as JObject;value=(value as JObject)?[key];}return schema;
         }
         public static void Set(JObject value,string path,JToken next) {
             var keys=path.Split('.');for(int i=0;i<keys.Length-1;i++)value=value[keys[i]] as JObject??throw new ProgramFault("Unknown argument path");

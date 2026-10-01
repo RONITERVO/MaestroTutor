@@ -354,3 +354,12 @@ it('authors an exact named recipe track with the same animation form as whole-ob
  const changed=parseProgram(h.source());expect(changed.error).toBeNull();expect(changed.program?.functions[0].body[0]).toMatchObject({capability:'animation.play',arguments:{target,source:{kind:'recipe',part:'RightUpperArm'},channel:'recipePart',seconds:.8,loop:false}});
  h.click('Edit values arm');h.change('source.part','arm/child');h.click('Update draft');expect(h.screen.getByRole('alert').textContent).toContain('contract');expect(parseProgram(h.source()).program).toEqual(changed.program);
 });
+
+it('authors a nested attachment choice and removes only bindings made incompatible by changing its kind',()=>{
+ const p=JSON.parse(readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-object-hold.json','utf8')) as BehaviourProgram;
+ const h=harness(p,[{id:'0'.repeat(32),name:'Ball'},{id:'1'.repeat(32),name:'Robot'},{id:'maestro',name:'Maestro'},{id:'book',name:'Book'}]);
+ h.click('Edit values carryProp');h.change('holder.part input mode','expression');h.change('holder.part value','RightHand');h.click('Update draft');
+ let node=JSON.parse(h.source()).functions[1].body[0];expect(node.bindings['holder.part']).toEqual({value:'RightHand'});expect(node.bindings['holder.objectId']).toEqual({var:'holder'});
+ h.click('Edit values carryProp');h.change('Attachment point','2');h.click('Update draft');node=JSON.parse(h.source()).functions[1].body[0];
+ expect(node.arguments.holder.kind).toBe('object');expect(node.arguments.holder.part).toBeUndefined();expect(node.bindings['holder.part']).toBeUndefined();expect(node.bindings['holder.objectId']).toEqual({var:'holder'});expect(parseProgram(h.source()).error).toBeNull();
+});

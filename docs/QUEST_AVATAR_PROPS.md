@@ -1,5 +1,9 @@
 # Avatar-held props: development checkpoint
 
+The shared runtime is now `Interaction/HeldRoomProp`. The original fitted-avatar
+route remains supported; standalone recipe-part, avatar-hand and root attachment
+uses `object.hold` through the same implementation. See QUEST_OBJECT_ATTACHMENTS.md.
+
 A Maestro animation step can carry one created room item in the left or right
 hand and return, drop or throw it. Included gestures, recorded avatar motions,
 embedded model clips and compatible saved-library motions use the same workflow.

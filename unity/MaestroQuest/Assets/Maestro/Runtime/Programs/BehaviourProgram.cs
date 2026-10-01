@@ -170,7 +170,7 @@ namespace Maestro.Quest.Programs
                 if(fact.Parameterized) {
                     Need(Version==3,"Fact queries need program version 3");Keys(expression,"fact version arguments bindings");
                     Need(expression["version"]?.Type==JTokenType.Integer&&fact.ValidArguments((int)expression["version"],Object(expression["arguments"]),out _),"Invalid fact query arguments or version");
-                    foreach(var binding in Object(expression["bindings"]).Properties()){var t=fact.ArgumentType(binding.Name);Need(t!=ProgramType.Void&&Expression(binding.Value,function,depth+1)==t,"Invalid fact argument binding");}
+                    foreach(var binding in Object(expression["bindings"]).Properties()){var t=fact.ArgumentType(binding.Name,Object(expression["arguments"]));Need(t!=ProgramType.Void&&Expression(binding.Value,function,depth+1)==t,"Invalid fact argument binding");}
                 }else Keys(expression,"fact");
                 Need(structured||fact.Type.Kind<=ProgramType.Text,"Structured facts need dataVersion 1");return fact.Type;
             }
@@ -286,7 +286,7 @@ namespace Maestro.Quest.Programs
         }
         internal static ProgramType BindingType(string capability,string name,JObject arguments)
         {
-            var schema=CapabilitySchema.Field(CapabilitySchema.Resolve(BehaviourCatalog.Action(capability)?.InputSchema,arguments),name);
+            var schema=CapabilitySchema.Field(CapabilitySchema.Resolve(BehaviourCatalog.Action(capability)?.InputSchema,arguments),name,arguments);
             Need((bool?)schema?["x-static"]!=true,"Variant selectors must stay literal");
             return (string)(schema?["type"]) switch {"string"=>ProgramType.Text,"number" or "integer"=>ProgramType.Number,"boolean"=>ProgramType.Boolean,_=>throw new ProgramFault("Unsupported capability argument binding")};
         }

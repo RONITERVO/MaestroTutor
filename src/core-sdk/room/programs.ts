@@ -71,7 +71,7 @@ function validateProgram(root:Record<string,unknown>):void {
    if(Object.prototype.hasOwnProperty.call(e,'state')){keys(e,'state');const t=state.get(text(e.state));need(root.version===3&&t,'Unknown program state');return t;}
    if(Object.prototype.hasOwnProperty.call(e,'fact')){
     const id=text(e.fact),fact=behaviourFact(id);need(fact,'Unknown room fact');
-    if(fact.input){need(root.version===3,'Fact queries need program version 3');keys(e,'fact version arguments bindings');need(typeof e.version==='number'&&Number.isInteger(e.version),'Invalid fact version');const error=validateFactArguments(id,e.version,obj(e.arguments));need(!error,error??'Invalid fact query');for(const [path,value] of Object.entries(obj(e.bindings))){const t=factArgumentType(id,path);need(t&&expr(value,types,depth+1)===t,'Invalid fact argument binding');}}
+    if(fact.input){need(root.version===3,'Fact queries need program version 3');keys(e,'fact version arguments bindings');need(typeof e.version==='number'&&Number.isInteger(e.version),'Invalid fact version');const error=validateFactArguments(id,e.version,obj(e.arguments));need(!error,error??'Invalid fact query');for(const [path,value] of Object.entries(obj(e.bindings))){const t=factArgumentType(id,path,obj(e.arguments));need(t&&expr(value,types,depth+1)===t,'Invalid fact argument binding');}}
     else keys(e,'fact');supported(fact.type);return fact.type;
    }
    keys(e,'op args');const op=text(e.op),args=array(e.args,3);need(args.length>0,'Invalid expression argument count');const ts=args.map(a=>expr(a,types,depth+1));

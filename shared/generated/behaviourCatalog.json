@@ -8386,6 +8386,297 @@
         "physics.running",
         "navigation.floorReady"
       ]
+    },
+    {
+      "id": "object.hold",
+      "version": 1,
+      "label": "Hold and release object",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "holder": {
+            "type": "object",
+            "title": "Attachment point",
+            "x-discriminators": [
+              "kind"
+            ],
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "objectId": {
+                    "type": "string",
+                    "pattern": "^[a-fA-F0-9]{32}$",
+                    "maxLength": 32,
+                    "x-resource": "object"
+                  },
+                  "part": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9_]{1,32}$",
+                    "maxLength": 32
+                  },
+                  "revision": {
+                    "type": "integer",
+                    "minimum": 1.0,
+                    "maximum": 1000000.0
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "recipePart"
+                    ],
+                    "x-static": true
+                  }
+                },
+                "required": [
+                  "objectId",
+                  "part",
+                  "revision",
+                  "kind"
+                ],
+                "additionalProperties": false,
+                "title": "Recipe part"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "objectId": {
+                    "type": "string",
+                    "enum": [
+                      "maestro"
+                    ],
+                    "x-resource": "object"
+                  },
+                  "hand": {
+                    "type": "string",
+                    "enum": [
+                      "left",
+                      "right"
+                    ]
+                  },
+                  "avatarHash": {
+                    "type": "string",
+                    "pattern": "^(|[a-f0-9]{64})$",
+                    "maxLength": 64
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "avatarHand"
+                    ],
+                    "x-static": true
+                  }
+                },
+                "required": [
+                  "objectId",
+                  "hand",
+                  "avatarHash",
+                  "kind"
+                ],
+                "additionalProperties": false,
+                "title": "Maestro hand"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "objectId": {
+                    "type": "string",
+                    "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+                    "maxLength": 32,
+                    "x-resource": "object"
+                  },
+                  "revision": {
+                    "type": "integer",
+                    "minimum": 1.0,
+                    "maximum": 1000000.0
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "object"
+                    ],
+                    "x-static": true
+                  }
+                },
+                "required": [
+                  "objectId",
+                  "revision",
+                  "kind"
+                ],
+                "additionalProperties": false,
+                "title": "Object root"
+              }
+            ]
+          },
+          "offset": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": -1.0,
+                "maximum": 1.0
+              },
+              "y": {
+                "type": "number",
+                "minimum": -1.0,
+                "maximum": 1.0
+              },
+              "z": {
+                "type": "number",
+                "minimum": -1.0,
+                "maximum": 1.0
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "additionalProperties": false,
+            "format": "boundedOffset"
+          },
+          "rotation": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": -1.0,
+                "maximum": 1.0
+              },
+              "y": {
+                "type": "number",
+                "minimum": -1.0,
+                "maximum": 1.0
+              },
+              "z": {
+                "type": "number",
+                "minimum": -1.0,
+                "maximum": 1.0
+              },
+              "w": {
+                "type": "number",
+                "minimum": -1.0,
+                "maximum": 1.0
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z",
+              "w"
+            ],
+            "additionalProperties": false,
+            "format": "unitQuaternion"
+          },
+          "seconds": {
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 30.0
+          },
+          "release": {
+            "type": "string",
+            "enum": [
+              "return",
+              "drop",
+              "throw"
+            ]
+          },
+          "releaseAt": {
+            "type": "number",
+            "minimum": 0.05,
+            "maximum": 1.0
+          }
+        },
+        "required": [
+          "target",
+          "holder",
+          "offset",
+          "rotation",
+          "seconds",
+          "release",
+          "releaseAt"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "objectAttachments.v1",
+          "actionResults.v1"
+        ]
+      },
+      "duration": "timed",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.creationReady",
+        "target.unheld",
+        "holder.anchorReady",
+        "authoring.inactive",
+        "release.physicsReady"
+      ],
+      "description": "Temporarily carry a loaded creation at an exact recipe part, Maestro hand or object-root anchor. Owns only the prop, so holder animation can run in parallel. Both object IDs must be authorized resources. holder.revision guards root/recipe admission; avatarHand requires the current avatarHash. Read object.anchor for the anchor pose and use an explicit offset (at most one root-scale metre) and unit rotation relative to it. Gripping either object, missing/replaced anchors, room pause and path obstruction stop the action. Self-attachment and nested held-object chains are refused. seconds is the bounded lifetime; return restores the initial prop pose on completion/cancellation, while drop/throw releases at seconds*releaseAt and leaves real physics running. Throw derives velocity from actual recent anchor motion, using the existing 15 m/s and 30 rad/s caps; a stationary anchor is not an aimed throw. Drop/throw needs solid/bouncy physics and aligned running room surfaces, with clearance from the holder on release. Stop or failure never intentionally releases an unreleased prop; grip takeover preserves its current placement. Released motion cannot be undone by cancellation. This is live motion, not a saved constraint or animation edit; no auto-restart. Use object.attachment and the native receipt for the actual outcome.",
+      "example": {
+        "target": "00000000000000000000000000000000",
+        "holder": {
+          "kind": "recipePart",
+          "objectId": "11111111111111111111111111111111",
+          "part": "RightHand",
+          "revision": 1
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0.3
+        },
+        "rotation": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "seconds": 2,
+        "release": "return",
+        "releaseAt": 1
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32
+          },
+          "holder": {
+            "type": "string",
+            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+            "maxLength": 32
+          },
+          "phase": {
+            "type": "string",
+            "enum": [
+              "returned",
+              "dropped",
+              "thrown"
+            ]
+          },
+          "released": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "target",
+          "holder",
+          "phase",
+          "released"
+        ],
+        "additionalProperties": false
+      }
     }
   ],
   "events": [
@@ -9176,6 +9467,206 @@
       "example": {
         "target": "00000000000000000000000000000000",
         "part": "Head"
+      },
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
+      "id": "object.anchor",
+      "version": 1,
+      "type": {
+        "record": {
+          "holder": "text",
+          "kind": "text",
+          "part": "text",
+          "position": {
+            "record": {
+              "x": "number",
+              "y": "number",
+              "z": "number"
+            }
+          },
+          "rotation": {
+            "record": {
+              "x": "number",
+              "y": "number",
+              "z": "number",
+              "w": "number"
+            }
+          },
+          "scale": "number"
+        }
+      },
+      "label": "Live attachment point",
+      "description": "Read the exact selected anchor in world coordinates using the same admission checks as object.hold. Part is a recipe ID, left/right hand, or empty for a root. Offset units scale with the holder root; returned scale is that root's uniform scale. Matching revision/hash is required; held/missing/replaced anchors fail. This does not reserve an object, fit a prop, start motion or grant mutation authority.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "holder": {
+            "type": "object",
+            "title": "Attachment point",
+            "x-discriminators": [
+              "kind"
+            ],
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "objectId": {
+                    "type": "string",
+                    "pattern": "^[a-fA-F0-9]{32}$",
+                    "maxLength": 32,
+                    "x-resource": "object"
+                  },
+                  "part": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9_]{1,32}$",
+                    "maxLength": 32
+                  },
+                  "revision": {
+                    "type": "integer",
+                    "minimum": 1.0,
+                    "maximum": 1000000.0
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "recipePart"
+                    ],
+                    "x-static": true
+                  }
+                },
+                "required": [
+                  "objectId",
+                  "part",
+                  "revision",
+                  "kind"
+                ],
+                "additionalProperties": false,
+                "title": "Recipe part"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "objectId": {
+                    "type": "string",
+                    "enum": [
+                      "maestro"
+                    ],
+                    "x-resource": "object"
+                  },
+                  "hand": {
+                    "type": "string",
+                    "enum": [
+                      "left",
+                      "right"
+                    ]
+                  },
+                  "avatarHash": {
+                    "type": "string",
+                    "pattern": "^(|[a-f0-9]{64})$",
+                    "maxLength": 64
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "avatarHand"
+                    ],
+                    "x-static": true
+                  }
+                },
+                "required": [
+                  "objectId",
+                  "hand",
+                  "avatarHash",
+                  "kind"
+                ],
+                "additionalProperties": false,
+                "title": "Maestro hand"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "objectId": {
+                    "type": "string",
+                    "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+                    "maxLength": 32,
+                    "x-resource": "object"
+                  },
+                  "revision": {
+                    "type": "integer",
+                    "minimum": 1.0,
+                    "maximum": 1000000.0
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "object"
+                    ],
+                    "x-static": true
+                  }
+                },
+                "required": [
+                  "objectId",
+                  "revision",
+                  "kind"
+                ],
+                "additionalProperties": false,
+                "title": "Object root"
+              }
+            ]
+          }
+        },
+        "required": [
+          "holder"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "holder": {
+          "kind": "object",
+          "objectId": "book",
+          "revision": 1
+        }
+      },
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
+      "id": "object.attachment",
+      "version": 1,
+      "type": {
+        "record": {
+          "target": "text",
+          "holder": "text",
+          "kind": "text",
+          "part": "text",
+          "phase": "text",
+          "release": "text",
+          "error": "text"
+        }
+      },
+      "label": "Current prop attachment",
+      "description": "Observe the current shared hold component for one loaded creation: holding, released, failed or idle. It covers animation-fitted avatar props and object.hold. Released means physical handoff actually occurred, not just a planned throw. Once the component retires, idle does not erase its historical receipt; inspect that receipt for the completed/interrupted outcome. No automatic recovery or replay.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000"
       },
       "features": [
         "factQueries.v1"
@@ -10666,15 +11157,15 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "a71dbe119206956684a176740c451b9d035c2ad3de41a99f12e9e533af6ea010"
+      "sha256": "6e52924e5d0d624947423438ad37cab7d2628fc6e86e9326d68b9145cc9585db"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "bbfdf86a7b8eb4ca3d188b3c71877a4ed14199b00a8761349a1dffd8dd8bab03"
+      "sha256": "3b43f7f64289d1fd561f2d4b00b88a89337809308325a5cdf68996aab50b56a2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
-      "sha256": "215d3decfd07a0bd5fd43c45f2b6fc0430425df334f3df9f63c1c19751e55bfd"
+      "sha256": "d799833a525064c001be00f918e35648727749e39560425c6db7f942fc363161"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramMachine.cs",
@@ -10726,11 +11217,19 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeObject.cs",
-      "sha256": "c696d398e10030366a4f7c643922126cb0bab9d015f147f9f936b314292fb09f"
+      "sha256": "d2b5a0f78ceaebea7895b570a285aeee568c5993640ae742acada29faa9fd061"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipePartPlayback.cs",
-      "sha256": "a45745715be1ef0f222de9c233edc0cb1e81a4c269fc35dc4c77e2d67159ec0e"
+      "sha256": "b8a75d39fe220a32b922653613924255ddc45bee479be8c4ba8b321988cb077a"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/HeldRoomProp.cs",
+      "sha256": "2f33c389d7068e60501279b49e76e5a50e6a6db582c87671315d7aa4aebaa314"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomPropAnchor.cs",
+      "sha256": "2052e92c539db3babe49213f45776d69fcde7859d6aa3d536f1a721330a86ac1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomMotion.cs",
@@ -10886,7 +11385,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationCapabilitySupport.cs",
-      "sha256": "94db1978b31a711c5f13d242ca9a91863121d079710123982b0b401d4386ee49"
+      "sha256": "9fac5ed74df27c62b059b90fed074340ee5983959126493d22ee694208527f82"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationPlayCapability.cs",
@@ -10910,11 +11409,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "55da1327e658a8d689fc4ea5775415b73527414bb05eed98a38eecb1b0c9131c"
+      "sha256": "e6b3d51ca9a06d79aade46abc00defe659c6aa98d54df9cca7a35554f9965441"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
-      "sha256": "427fc2daa092328a8cfd4a75040f9d3b1db50205bab13f9f06e2519307caed55"
+      "sha256": "3a2ef10cc41fcf40614a3f43e9f275dff67bde265f2abc24bd2ff87a4544d8ec"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityStepAdapter.cs",
@@ -10953,6 +11452,10 @@
       "sha256": "84d2aad5dba840bd58229547c45e12a2028b1253ee3192c8fcd69cb283a7db6a"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/HoldObjectCapability.cs",
+      "sha256": "6653301800bc55304ea1b464b18363307c65e3821ef8a6be82bce031057a5850"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/LibraryAnimationCapability.cs",
       "sha256": "be64002c236e93b4743983c7d950de54852b90622c3cb6bab1e44b86670f0837"
     },
@@ -10963,6 +11466,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/MotionBatchCapability.cs",
       "sha256": "7ef09f060878d68690d8c61d43b5b79ba28152a9a912124072e0289a1677222e"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectAttachmentFacts.cs",
+      "sha256": "36a2c4394036cf80edfa10c41e0f720e07d7f37a9e7c517715a7fc079d1ccf45"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectCapabilities.cs",

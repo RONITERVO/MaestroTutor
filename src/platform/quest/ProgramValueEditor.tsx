@@ -3,7 +3,9 @@
 import {inferDataType,defaultDataValue,sameDataType,dataOperationType,dataTypeLabel} from '../../../shared/programValues';
 import {behaviourFact} from '../../../shared/behaviourCatalog';
 import {factArgumentType} from '../../../shared/behaviourFacts';
-import {CapabilityFields,type EditorObject} from './CapabilityFields';
+import type {ReactNode} from 'react';
+import {argumentValue,resolveCapabilitySchema,type CapabilitySchema} from '../../../shared/capabilities';
+import {CapabilityFields,CapabilityVariant,type EditorObject} from './CapabilityFields';
 import {ProgramDataValueEditor} from './ProgramDataEditor';
 import {programFacts,type Expression,type Value,type ValueType} from '../../core-sdk/room/programs';
 
@@ -59,11 +61,19 @@ export function ProgramValueEditor({value,type,sources,onChange,label,depth=0,ob
     </select></label>
     {'fact' in value&&behaviourFact(value.fact)?.input&&(()=>{
       const definition=behaviourFact(value.fact)!;
-      return <div className="program-fact-inputs"><p>{definition.description}</p>{Object.entries(definition.input!.properties??{}).map(([key,schema])=>{
-       const binding=value.bindings?.[key],t=factArgumentType(value.fact,key),fieldLabel=label+' fact '+(schema.title??key);
-       return <div key={key}>{t&&depth<8&&<label>{schema.title??key} input<select aria-label={fieldLabel+' mode'} value={binding?'expression':'literal'} onChange={e=>{const bindings={...value.bindings};if(e.target.value==='literal')delete bindings[key];else bindings[key]=valueExpression(t,value.arguments?.[key] as Value);onChange({...value,bindings});}}><option value="literal">Fixed value</option><option value="expression">Expression</option></select></label>}
-        {binding&&t?<ProgramValueEditor objects={objects} label={fieldLabel+' expression'} value={binding} type={t} sources={sources} depth={depth+1} onChange={next=>onChange({...value,bindings:{...value.bindings,[key]:next}})}/>:<CapabilityFields schema={schema} value={value.arguments?.[key]} label={fieldLabel} objects={objects} onChange={next=>onChange({...value,arguments:{...value.arguments,[key]:next}})}/>}</div>;
-      })}</div>;
+      const changeArgument=(path:string,next:unknown)=>{
+       const args=structuredClone(value.arguments??{});let parent=args;const parts=path.split('.');for(const key of parts.slice(0,-1))parent=parent[key] as Record<string,unknown>;parent[parts[parts.length-1]]=next;
+       const bindings=Object.fromEntries(Object.entries(value.bindings??{}).filter(([key])=>factArgumentType(value.fact,key,args)!==null));onChange({...value,arguments:args,bindings});
+      };
+      const field=(path:string,schema:CapabilitySchema):ReactNode=>{
+       const actual=argumentValue(value.arguments,path);
+       if(schema.oneOf){const selected=resolveCapabilitySchema(schema,actual);return <div key={path}><CapabilityVariant schema={schema} value={actual} objects={objects} onChange={next=>changeArgument(path,next)}/>{selected&&field(path,selected)}</div>;}
+       if(schema.type==='object')return <fieldset key={path}><legend>{path}</legend>{Object.entries(schema.properties??{}).map(([key,child])=>field(path+'.'+key,child))}</fieldset>;
+       const binding=value.bindings?.[path],t=factArgumentType(value.fact,path,value.arguments),fieldLabel=label+' fact '+(schema.title??path);
+       return <div key={path}>{t&&depth<8&&<label>{schema.title??path} input<select aria-label={fieldLabel+' mode'} value={binding?'expression':'literal'} onChange={e=>{const bindings={...value.bindings};if(e.target.value==='literal')delete bindings[path];else bindings[path]=valueExpression(t,actual as Value);onChange({...value,bindings});}}><option value="literal">Fixed value</option><option value="expression">Expression</option></select></label>}
+        {binding&&t?<ProgramValueEditor objects={objects} label={fieldLabel+' expression'} value={binding} type={t} sources={sources} depth={depth+1} onChange={next=>onChange({...value,bindings:{...value.bindings,[path]:next}})}/>:<CapabilityFields schema={schema} value={actual} label={fieldLabel} objects={objects} onChange={next=>changeArgument(path,next)}/>}</div>;
+      };
+      return <div className="program-fact-inputs"><p>{definition.description}</p>{Object.entries(definition.input!.properties??{}).map(([key,schema])=>field(key,schema))}</div>;
     })()}
     {'value' in value&&<ProgramDataValueEditor label={label+' value'} value={value.value} type={type} onChange={v=>onChange(valueExpression(type,v))}/>}
     {dataOp&&'op' in value&&(()=>{

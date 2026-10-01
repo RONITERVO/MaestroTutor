@@ -26,7 +26,7 @@ namespace Maestro.Quest.Programs
         }
         public static bool PropReady(CapabilityContext context,JObject arguments,out string error) {
             var attachment=Attachment(arguments);error=null;if(attachment==null)return true;
-            if((string)arguments["target"]!="maestro"||!AvatarHeldProp.CanAttach(context.Editor,attachment,out error)) {error??="Only Maestro can carry this fitted prop";return false;}
+            if((string)arguments["target"]!="maestro"||!HeldRoomProp.CanAttach(context.Editor,attachment,out error)) {error??="Only Maestro can carry this fitted prop";return false;}
             if(context.Workshop&&context.Workshop.ControlsTarget(attachment.ObjectId)) {error="Stop authoring the prop before running this action";return false;}
             if(context.Editor.Find(attachment.ObjectId).GetComponent<RigidRoomItem>().AnimationOwned) {error="Another animation owns this prop";return false;}
             return true;
@@ -59,7 +59,7 @@ namespace Maestro.Quest.Programs
         protected float Duration;
         readonly PropAttachment attachment;
         RigidRoomItem targetRigid,propReservation;
-        AvatarHeldProp prop;
+        HeldRoomProp prop;
         bool acquired;
         protected FullBodyOperation(CapabilityContext context,JObject arguments) {
             Context=context;TargetId=(string)arguments["target"];Duration=(float?)arguments["seconds"]??0;
@@ -79,7 +79,7 @@ namespace Maestro.Quest.Programs
         protected bool BeginProp(out string error) {
             error=null;if(attachment==null)return true;
             if(propReservation) {propReservation.SetAnimationOwner(this,false);propReservation=null;}
-            prop=AvatarHeldProp.Begin(Context.Editor,attachment,Duration,out error);return prop;
+            prop=HeldRoomProp.Begin(Context.Editor,attachment,Duration,out error);return prop;
         }
         public override RuleActionState State(out string error) {
             error=null;return prop&&!prop.Valid(out error)?RuleActionState.Failed:RuleActionState.Ready;

@@ -12,8 +12,8 @@ posing now exposes start/rotate/save/finish/discard with native session IDs and
 pose versions, the same physical joint limits and imported retargeter, held-joint
 exclusion, failed-pose recovery and recording interoperation. Saved edits are
 durable outside temporary mode; temporary edits stay in the fork until Keep.
-No authoring operation starts playback. The catalog contains 57 actions, 10
-events and 46 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
+No authoring operation starts playback. The catalog contains 58 actions, 10
+events and 48 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
 Single-file GLB/VRM selection, preview and acceptance now share the physical
 import path with book fields and agent/program calls. See QUEST_MODEL_IMPORT.md.
 Animation collections now share native selection, versioned start/retry/tag controls,
@@ -49,7 +49,9 @@ Parallel function branches now share the same interpreter, catalog ownership and
 book/agent authoring, with explicit joined results and group cancellation. See
 QUEST_PARALLEL_PROGRAMS.md. Recipe objects now also play exact named rotation tracks
 on independent part channels through animation.play; live part poses share the
-catalog. See QUEST_RECIPE_PART_PLAYBACK.md. The PC checkpoint below is verified;
+catalog. See QUEST_RECIPE_PART_PLAYBACK.md. Shared object.hold now lets these
+parts, Maestro hands and object roots carry and release created props using the
+existing collision and throw runtime; see QUEST_OBJECT_ATTACHMENTS.md. The PC checkpoint below is verified;
 headset acceptance remains outstanding.
 The remaining runtime, provider, device and Store acceptance gates remain unfinished; the complete v1 goal remains active.
 
@@ -67,6 +69,37 @@ and tracked operation roots remain protected. Private recovery export remains
 separate; a full store with unreadable selection still requires recovery/repair.
 PR #248 records the current verified commit and package. Earlier entries
 below are historical evidence, not current test totals or release acceptance.
+
+PC shared-object-attachment increment (2026-10-02): object.hold now carries a
+created prop at an exact recipe part, Maestro hand or object root. It shares the
+existing avatar prop trajectory, collision checks and physical release runtime.
+Both IDs are authorized resources; only the prop receives a whole-object claim,
+so holder animation composes in parallel. Grip, replaced anchors, blocked paths,
+room/app interruption and nested-chain refusal have explicit results without
+hidden release or replay. object.anchor and object.attachment report live state;
+programs can branch on the native release result after joining their actions.
+See QUEST_OBJECT_ATTACHMENTS.md. Recipe parts now use the scheduler clock, with
+an explicit physics-time-paused regression; existing whole autoplay is unchanged.
+
+Nested catalog variants have shared native/web typed argument bindings and
+resource checks, including fact inputs. The generated book editor authored the
+exact robot carry/arm-motion program executed in Unity; native observations show
+its ownership, release and joined didThrow=True result. Browser acknowledgements
+are simulated. Inspected screenshots also exposed and verified a fix for unnamed
+objects in ownership inspection. Recipe joints retain their static assembly proxy;
+IK catching, physical joint chains and aimed ballistic throws remain separate work.
+
+Verification passed 409 EditMode and 372 PlayMode tests (three optional private
+model skips), all 1,697 web tests across 195 files and 61 Android tests. Eight
+catalog observations were refreshed from the final native suite. TypeScript,
+ESLint, prompt/core boundaries, catalog drift, Android assembly/lint and the full
+build helper passed. All 208 runtime / 103 test C# files, 31 native fixtures plus
+metadata and 113 packaged web files match the tested inputs. The APK is ARM64-only
+with a verified v2 signature. Catalog: 58 actions, 10 events, 48 facts.
+APK: `D:\Projects\Builds\MaestroQuestVerify\Builds\Checkpoints\MaestroQuest-object-attachments-61DC553D.apk`.
+SHA-256: `61DC553DC27E638EF455120962DFA8A3EEF6C245DBEDA92E880A96DC2C661775`.
+Development signing; not installed or accepted on Quest. No device, production
+or Store operation was performed. The complete v1 goal remains active.
 
 PC named-recipe-part increment (2026-10-02): animation.play now selects a saved
 recipe track through source.part and channel=recipePart. Independent local joints

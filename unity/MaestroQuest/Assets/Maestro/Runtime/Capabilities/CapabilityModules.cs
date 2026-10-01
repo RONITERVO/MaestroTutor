@@ -44,7 +44,7 @@ namespace Maestro.Quest.Programs
             new PhysicsStopCapability(),
             new ThrowRecordingCapability(),
             new LookAtUserCapability(),
-            new FollowUserCapability(),
+            new FollowUserCapability(),new HoldObjectCapability(),
         });
     }
 }

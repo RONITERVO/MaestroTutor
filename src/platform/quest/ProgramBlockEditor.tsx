@@ -5,7 +5,7 @@ import {sameDataType} from '../../../shared/programValues';
 import type {ReactNode} from 'react';
 import {behaviourEvent,eventFieldType,eventArgumentType} from '../../../shared/behaviourEvents';
 import {behaviourCatalog,behaviourFact} from '../../../shared/behaviourCatalog';
-import {capabilityDefinition,capabilityParameterType,capabilityInput,type CapabilitySchema} from '../../../shared/capabilities';
+import {capabilityDefinition,capabilityParameterType,capabilityInput,resolveCapabilitySchema,type CapabilitySchema} from '../../../shared/capabilities';
 import type {BehaviourProgram,Expression,ProgramFunction,ProgramNode,ValueType} from '../../core-sdk/room/programs';
 import {CapabilityFields,CapabilityVariant,initialCapabilityValue,type EditorObject} from './CapabilityFields';
 import {ProgramValueEditor,defaultValue,valueExpression,expressionType,roomValueSources,valueType,type ValueSource} from './ProgramValueEditor';
@@ -26,6 +26,7 @@ export function ProgramBlockEditor({node,program,fn,objects,onChange,eventFields
       const definition=capabilityDefinition(node.capability)!;
       const input=capabilityInput(node.capability,node.arguments);
       const field=(path:string,schema:CapabilitySchema,value:unknown,present:boolean,required:boolean,change:(value:unknown,remove?:boolean)=>void):ReactNode=>{
+        if(schema.oneOf){const selected=resolveCapabilitySchema(schema,value);return <div key={path}><CapabilityVariant schema={schema} value={value} objects={objects} onChange={next=>change(next)}/>{selected&&field(path,selected,value,present,required,change)}</div>;}
         const type=capabilityParameterType(node.capability,path,node.arguments),bound=node.bindings[path];
         return <div key={path}>
           {!required&&<label className="rule-checkbox"><input type="checkbox" aria-label={'Include '+path} checked={present} onChange={e=>change(e.target.checked?initialCapabilityValue(schema,objects):undefined,!e.target.checked)}/>Include {path}</label>}
@@ -55,6 +56,7 @@ export function ProgramBlockEditor({node,program,fn,objects,onChange,eventFields
         {Object.entries(input?.properties??{}).map(([key,schema])=>field(key,schema,node.arguments[key],Object.prototype.hasOwnProperty.call(node.arguments,key),input?.required?.includes(key)??false,(value,remove)=>{
           const args={...node.arguments},bindings={...node.bindings};
           if(remove){delete args[key];for(const path of Object.keys(bindings))if(path===key||path.startsWith(key+'.'))delete bindings[path];}else args[key]=value;
+          for(const path of Object.keys(bindings))if(capabilityParameterType(node.capability,path,args)===null)delete bindings[path];
           onChange({...node,arguments:args,bindings});
         }))}
       </div>;

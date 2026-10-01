@@ -22,7 +22,7 @@ namespace Maestro.Quest.Programs
         public static string[] LiteralResources(JObject arguments,JObject schema,JObject bindings,int version) {
             var literal=(JObject)arguments.DeepClone();schema=CapabilitySchema.Resolve(schema,arguments);
             if(version==3)foreach(var field in bindings.Properties())
-                if((string)CapabilitySchema.Field(schema,field.Name)?["x-resource"]=="object")CapabilitySchema.Remove(literal,field.Name);
+                if((string)CapabilitySchema.Field(schema,field.Name,arguments)?["x-resource"]=="object")CapabilitySchema.Remove(literal,field.Name);
             return Resources(literal,schema);
         }
         public static bool Validate(JToken value,JObject schema,out string error,string path="arguments")

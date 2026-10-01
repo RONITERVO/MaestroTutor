@@ -79,7 +79,7 @@ namespace Maestro.Quest.Creation
         {
             if (runtimeGate?.Held==true||recipe == null) return;
             float delta=Mathf.Min(Time.deltaTime,.05f);
-            AdvanceParts(delta);
+            AdvanceParts();
             if(!WholePlaying)return;
             time += delta;
             foreach (var track in recipe.tracks) if(!suppressedParts.Contains(track.part))nodes[track.part].localRotation=rest[track.part]*recipe.Sample(track,time,runtimeLoop);

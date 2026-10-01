@@ -122,8 +122,8 @@ namespace Maestro.Quest.Programs
             public bool ValidArguments(int version,JObject arguments,out string error) {
                 error="Unknown fact version or arguments";return version==Version&&(input==null?arguments==null:arguments!=null&&CapabilityArguments.Validate(arguments,input,out error,"fact arguments"));
             }
-            public ProgramType ArgumentType(string path) {
-                var field=CapabilitySchema.Field(input,path);if((bool?)field?["x-static"]==true)return ProgramType.Void;
+            public ProgramType ArgumentType(string path,JObject arguments=null) {
+                var field=CapabilitySchema.Field(input,path,arguments);if((bool?)field?["x-static"]==true)return ProgramType.Void;
                 return ((string)field?["type"]) switch {"string"=>ProgramType.Text,"number" or "integer"=>ProgramType.Number,"boolean"=>ProgramType.Boolean,_=>ProgramType.Void};
             }
             public bool ValidValue(ProgramValue value) {
@@ -163,7 +163,7 @@ namespace Maestro.Quest.Programs
                 watch:(world,args,now)=>new ProximitySubscription(world,args,now)),
         });
         public static readonly IReadOnlyList<FactDefinition> Facts=Array.AsReadOnly(new[] {
-            NativeObjectFacts.Definition(),DrawingEditCapability.SummaryFact(),DrawingEditCapability.PointsFact(),DrawingResolveCapability.Fact(),RecipeEditFacts.Overview(),RecipeEditFacts.Part(),RecipeEditFacts.Track(),RecipePartAnimationFacts.Pose(),NativeObjectFacts.Position(),PhysicsSettingsCapability.Fact(),AvatarMovementSettingsCapability.Fact(),AvatarWalkSettingsCapability.Fact(),AvatarWalkSettingsCapability.Clips(),ControllerConfigurationCapability.Fact(),ControllerModeCapability.Fact(),AnimationAuthoringFacts.Summary(),AnimationAuthoringFacts.Frame(),AnimationAuthoringFacts.Joint(),AnimationRecordingCapability.Fact(),AnimationPosingCapability.Fact(),AnimationPosingCapability.Joint(),AvatarModelCapability.Fact(),ModelImportCapability.Fact(),ModelImportCapability.Motions(),MotionBatchCapability.Session(),MotionBatchCapability.File(),
+            NativeObjectFacts.Definition(),DrawingEditCapability.SummaryFact(),DrawingEditCapability.PointsFact(),DrawingResolveCapability.Fact(),RecipeEditFacts.Overview(),RecipeEditFacts.Part(),RecipeEditFacts.Track(),RecipePartAnimationFacts.Pose(),ObjectAttachmentFacts.Anchor(),ObjectAttachmentFacts.Attachment(),NativeObjectFacts.Position(),PhysicsSettingsCapability.Fact(),AvatarMovementSettingsCapability.Fact(),AvatarWalkSettingsCapability.Fact(),AvatarWalkSettingsCapability.Clips(),ControllerConfigurationCapability.Fact(),ControllerModeCapability.Fact(),AnimationAuthoringFacts.Summary(),AnimationAuthoringFacts.Frame(),AnimationAuthoringFacts.Joint(),AnimationRecordingCapability.Fact(),AnimationPosingCapability.Fact(),AnimationPosingCapability.Joint(),AvatarModelCapability.Fact(),ModelImportCapability.Fact(),ModelImportCapability.Motions(),MotionBatchCapability.Session(),MotionBatchCapability.File(),
             WorkspaceRetentionFacts.Status(),WorkspaceRetentionFacts.Entry(),WorkspaceRetentionFacts.Removal(),
             WorkspaceEvidenceFacts.Status(),WorkspaceEvidenceFacts.Entry(),
             WorkspaceHistoryFacts.Status(),
