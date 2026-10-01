@@ -1,0 +1,144 @@
+{
+  "before": {
+    "stateId": "8edbdb7c21c44c1699a964166f46aa1a",
+    "ready": true,
+    "running": false,
+    "active": true,
+    "held": false,
+    "canStart": true,
+    "status": "Physics paused — Start resumes without old throw speeds",
+    "reason": ""
+  },
+  "start": {
+    "selected": {
+      "id": "adfac792cb1e486392388adb2cd4b63b",
+      "capability": "physics.simulation.set",
+      "version": 1,
+      "resources": [],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "stateId": "4a3cabcb5f184763b12cd26ba2778346",
+        "ready": true,
+        "running": true,
+        "active": true,
+        "held": false,
+        "canStart": true,
+        "status": "Physics on — grip to pick up, release to throw",
+        "reason": ""
+      },
+      "call": {
+        "id": "physics.simulation.set",
+        "version": 1,
+        "arguments": {
+          "operation": "start",
+          "stateId": "8edbdb7c21c44c1699a964166f46aa1a"
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "adfac792cb1e486392388adb2cd4b63b",
+        "capability": "physics.simulation.set",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "stateId": "4a3cabcb5f184763b12cd26ba2778346",
+          "ready": true,
+          "running": true,
+          "active": true,
+          "held": false,
+          "canStart": true,
+          "status": "Physics on — grip to pick up, release to throw",
+          "reason": ""
+        }
+      }
+    ],
+    "nextRunId": "7645fe9e95b74cbca275221f1f81562e",
+    "storageError": null,
+    "recovery": null
+  },
+  "pause": {
+    "selected": {
+      "id": "7645fe9e95b74cbca275221f1f81562e",
+      "capability": "physics.simulation.set",
+      "version": 1,
+      "resources": [],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "stateId": "170489a016704220a8d8518606e64d92",
+        "ready": true,
+        "running": false,
+        "active": true,
+        "held": false,
+        "canStart": true,
+        "status": "Physics paused — Start resumes without old throw speeds",
+        "reason": ""
+      },
+      "call": {
+        "id": "physics.simulation.set",
+        "version": 1,
+        "arguments": {
+          "operation": "pause",
+          "stateId": "4a3cabcb5f184763b12cd26ba2778346"
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "adfac792cb1e486392388adb2cd4b63b",
+        "capability": "physics.simulation.set",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "stateId": "4a3cabcb5f184763b12cd26ba2778346",
+          "ready": true,
+          "running": true,
+          "active": true,
+          "held": false,
+          "canStart": true,
+          "status": "Physics on — grip to pick up, release to throw",
+          "reason": ""
+        }
+      },
+      {
+        "id": "7645fe9e95b74cbca275221f1f81562e",
+        "capability": "physics.simulation.set",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "stateId": "170489a016704220a8d8518606e64d92",
+          "ready": true,
+          "running": false,
+          "active": true,
+          "held": false,
+          "canStart": true,
+          "status": "Physics paused — Start resumes without old throw speeds",
+          "reason": ""
+        }
+      }
+    ],
+    "nextRunId": "931de194b2324eb7ac6510afafbc6eaa",
+    "storageError": null,
+    "recovery": null
+  },
+  "after": {
+    "stateId": "170489a016704220a8d8518606e64d92",
+    "ready": true,
+    "running": false,
+    "active": true,
+    "held": false,
+    "canStart": true,
+    "status": "Physics paused — Start resumes without old throw speeds",
+    "reason": ""
+  }
+}

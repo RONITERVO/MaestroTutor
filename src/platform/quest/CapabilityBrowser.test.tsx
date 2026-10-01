@@ -672,3 +672,18 @@ it('authors saved physics, movement and every walk source through native generat
  }
  act(()=>client.cancel());
 });
+
+import nativeSimulation from '../../../test-fixtures/browser/physicsSimulation.json';
+it('uses generated physics start and pause fields with each current native identity',async()=>{
+ const {client,screen,receive}=setup(true,['physicsSimulation.v1','execution.v1','actionResults.v1']);
+ await receive(undefined,false,{execution:{...nativeSimulation.start,selected:null,running:[],outcomes:[],nextRunId:nativeSimulation.start.selected.id} as RoomAgentState['execution']});
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:/^Search$/}));const definition=capabilityDefinition('physics.simulation.set')!;
+ await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Physics definition'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Physics definition'});fireEvent.click(screen.getByText('Edit action fields'));
+ for(const view of [nativeSimulation.start,nativeSimulation.pause]){
+  for(const key of ['stateId','operation'] as const)fireEvent.change(screen.getByLabelText('Action inputs '+key),{target:{value:view.selected.call.arguments[key]}});
+  fireEvent.click(screen.getByRole('button',{name:'Run action now'}));expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:view.selected.call,runId:view.selected.id}});
+  await receive(undefined,false,{execution:view as RoomAgentState['execution']});expect(screen.getByLabelText('Action result').textContent).toContain(view.selected.output.stateId);
+ }
+ act(()=>client.cancel());
+});

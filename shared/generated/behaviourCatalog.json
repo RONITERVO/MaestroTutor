@@ -6484,6 +6484,93 @@
       }
     },
     {
+      "id": "physics.simulation.set",
+      "version": 1,
+      "label": "Start or pause room physics",
+      "input": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "enum": [
+              "start",
+              "pause"
+            ]
+          },
+          "stateId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "operation",
+          "stateId"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "physicsSimulation.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [
+        "physics.state.current",
+        "room.active",
+        "workspace.available"
+      ],
+      "description": "Explicitly start or pause gravity and object physics through the physical Start physics/Pause controls. Read physics.simulation and pass its exact stateId. Manual Start/Pause, scan changes, focus/lifecycle transitions and workspace holds invalidate older intents, even after returning to the same mode. Start needs loaded aligned surfaces and an active room; this action cannot scan, grant room permission or verify alignment. Pause freezes dynamic bodies and clears throw velocities; it can stop physics-dependent walking or actions, but does not stop unrelated gestures, programs or authoring. Held/carried/animated objects keep their own existing owners when physics starts. These world transitions may run alongside other actions; they do not acquire those actors or clear the scheduler. Returning focus/alignment never automatically restarts physics or cancelled movement. No save or Undo; pausing cannot reverse a throw. A completed result describes that moment only; read the fact for current state. Duplicate receipts never restart physics. Stop on a completed receipt does not pause simulation: issue explicit pause with a fresh stateId.",
+      "example": {
+        "operation": "start",
+        "stateId": "00000000000000000000000000000000"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "stateId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "ready": {
+            "type": "boolean"
+          },
+          "running": {
+            "type": "boolean"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "held": {
+            "type": "boolean"
+          },
+          "canStart": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "stateId",
+          "ready",
+          "running",
+          "active",
+          "held",
+          "canStart",
+          "status",
+          "reason"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "object.physics.impulse",
       "version": 1,
       "label": "Push object",
@@ -8261,6 +8348,24 @@
       "description": "Current observed tutor state: speaking, listening, thinking or idle. Unavailable before a reliable activity snapshot, during audio suspension or when the room runtime is paused."
     },
     {
+      "id": "physics.simulation",
+      "version": 1,
+      "type": {
+        "record": {
+          "stateId": "text",
+          "ready": "boolean",
+          "running": "boolean",
+          "active": "boolean",
+          "held": "boolean",
+          "canStart": "boolean",
+          "status": "text",
+          "reason": "text"
+        }
+      },
+      "label": "Room physics state",
+      "description": "Current native simulation state and exact stateId for physics.simulation.set. canStart describes scan/lifecycle prerequisites, not permission to act, alignment approval, all-object geometry readiness or workspace admission. ready is the scanned-room observation, not a guarantee of a clear navigation path. Running does not mean held/animated/fixed objects simulate. This read never starts, pauses or saves anything."
+    },
+    {
       "id": "physics.running",
       "version": 1,
       "type": "boolean",
@@ -8451,7 +8556,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "f127fa5fd736c12ff8e22f89ce5009da6fb001fe9405f52d4d6b11068d014608"
+      "sha256": "26291934915bf93275707bb79fce58d6373e4843c64499d1f426734db6d9e1a0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -8570,6 +8675,10 @@
       "sha256": "4d28505b3692fc88a3df5ff46b1580b5a8213e8ed8dd6ddd4e63996c478304dc"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomPhysicsWorld.cs",
+      "sha256": "a2ef5a4d5289157de1ab56765b74efa351c2b9d456cad096e3cbc6980b0c72eb"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportAcceptance.cs",
       "sha256": "8ab33ba1f9fff4ec35122059dd500824191e99fb3bdf811c95bab0c91b88f498"
     },
@@ -8631,7 +8740,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "bf71f745c21c308cf01c7790a151a6046188194d3d372c45e18bdea2ff8c0c39"
+      "sha256": "caee10565a486d8bb7a6d8534f21d09d7f660aeee844cead9f3958117f3762e4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -8676,6 +8785,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectCapabilities.cs",
       "sha256": "b799cda29b567b47230fcb7a340281b9f27def17bc8c9e457c6b32ca9db821fe"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsSimulationCapability.cs",
+      "sha256": "82cbe30032849bc52c746934eb7839464154a9a9526dfb16fe2b580f1bd52dc7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ProgramModuleCapabilities.cs",

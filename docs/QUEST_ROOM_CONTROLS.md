@@ -2,7 +2,8 @@
 
 The original Maestro agent can use the versioned native operations below.
 Current settings workflows prefer the shared catalog and exact native facts in
-QUEST_SPATIAL_SETTINGS.md; the older operations remain for legacy runtimes and
+QUEST_SPATIAL_SETTINGS.md. Start/Pause now also has a shared catalog action and
+fact in QUEST_PHYSICS_SIMULATION.md; the older operations remain for legacy runtimes and
 atomic create/settings batches.
 Their availability is declared by `scene.capabilities`; the web bridge and planner
 refuse new operations against older native runtimes. The existing Gemini access,
@@ -16,7 +17,7 @@ handoff verification, task journal and same-chat result path remain authoritativ
 | `avatarMotion` look/follow/stop | Look at me/Follow me/Stop through RoomControls.AvatarMotion | Active mode, live status and prerequisite reasons | No; stopped position is remembered |
 
 Saved edits use existing object revisions (global revision for the older v1
-request envelope). Runtime controls must be alone in a request; physics start/pause
+request envelope). Legacy runtime controls must be alone in a request; legacy physics start/pause
 checks the scene revision, while avatar controls check the Maestro revision.
 Invalid setting batches do not partially change the document. Manual and agent
 primitive creation now agree: new balls are bouncy, blocks/cylinders solid, and

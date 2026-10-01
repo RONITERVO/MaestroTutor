@@ -12,8 +12,8 @@ posing now exposes start/rotate/save/finish/discard with native session IDs and
 pose versions, the same physical joint limits and imported retargeter, held-joint
 exclusion, failed-pose recovery and recording interoperation. Saved edits are
 durable outside temporary mode; temporary edits stay in the fork until Keep.
-No authoring operation starts playback. The catalog contains 51 actions, 10
-events and 36 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
+No authoring operation starts playback. The catalog contains 52 actions, 10
+events and 37 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
 Single-file GLB/VRM selection, preview and acceptance now share the physical
 import path with book fields and agent/program calls. See QUEST_MODEL_IMPORT.md.
 Animation collections now share native selection, versioned start/retry/tag controls,
@@ -23,7 +23,9 @@ and physical save path. Explicit live movement/view changes share native transit
 with fresh state and ownership checks. See QUEST_CONTROLLER_CONFIGURATION.md and
 QUEST_CONTROLLER_MODES.md. Object physics, avatar distance/speed and exact walking
 animation selection now use catalog actions with native readback and the physical
-tools' save path. See QUEST_SPATIAL_SETTINGS.md.
+tools' save path. See QUEST_SPATIAL_SETTINGS.md. Physics Start/Pause now shares
+the catalog through fresh native simulation identities and the physical service;
+see QUEST_PHYSICS_SIMULATION.md.
 The remaining runtime, provider, device and Store acceptance gates remain unfinished; the complete v1 goal remains active.
 
 Current recovery implementation supports retained candidates, an external backup,
@@ -40,6 +42,30 @@ and tracked operation roots remain protected. Private recovery export remains
 separate; a full store with unreadable selection still requires recovery/repair.
 PR #248 records the current verified commit and package. Earlier entries
 below are historical evidence, not current test totals or release acceptance.
+
+PC shared-physics-simulation increment (2026-10-01): `physics.simulation.set`
+and `physics.simulation` expose Start/Pause through the physical world service.
+Native state identities reject delayed intent after manual reversal, scan changes,
+focus/lifecycle transitions and workspace holds. Pause clears old throw velocities
+and ends physics-dependent walking without restarting it later. Unrelated gestures,
+timers and programs can continue; held and animated objects retain their owners.
+Readiness checks are read-only, unchanged shared requests do not reset observations,
+and duplicate receipts cannot restart gravity after manual Pause. Programs can
+read each current state identity before invoking Start or Pause. These transient
+transitions do not edit room documents or add Undo; normal placement tracking is
+separate. See QUEST_PHYSICS_SIMULATION.md.
+Five new native journeys test actual falling/frozen bodies, throw reset, stale
+requests, workspace/lifecycle holds, actor coexistence and a start/wait/pause
+program. Validation passes 386 EditMode and 327 PlayMode tests (three optional
+private-model skips), 1,598 web tests across 183 files, 35 final-capture/book checks
+and 61 Android browser tests. Chrome uses generated fields and reads exact captured
+native state; it is capture replay, not headset/provider acceptance. Production
+build, lint, native catalog equality/source drift, prompt ownership and boundaries
+pass. The complete package helper exited zero. All 189 runtime and 90 test C#
+sources, 24 fixtures plus metadata and 113 packaged web files match.
+ARM64/v2 verified checkpoint `MaestroQuest-physics-simulation-E0E65A8E.apk`, SHA-256
+`E0E65A8E6FE97D6053FAF97EA13D6CE1061556CD27F7918135391EAAD29A7A5C`.
+It remains uninstalled; broader runtime, provider/device and Store gates remain.
 
 PC shared-spatial-settings increment (2026-10-01): `object.physics.configure`,
 `avatar.movement.configure` and `avatar.walk.select` now share the physical tools'
