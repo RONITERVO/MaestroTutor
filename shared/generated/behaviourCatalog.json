@@ -1366,6 +1366,183 @@
       }
     },
     {
+      "id": "animation.record",
+      "version": 1,
+      "label": "Record, save or discard a take",
+      "input": {
+        "type": "object",
+        "title": "Recording operation",
+        "x-discriminators": [
+          "operation"
+        ],
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "start"
+                ],
+                "x-static": true
+              },
+              "sessionId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 1000000.0
+              }
+            },
+            "required": [
+              "operation",
+              "sessionId",
+              "target",
+              "revision"
+            ],
+            "additionalProperties": false,
+            "title": "Start a take",
+            "x-features": [
+              "animationRecording.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "finish"
+                ],
+                "x-static": true
+              },
+              "sessionId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+                "maxLength": 32,
+                "x-resource": "object"
+              }
+            },
+            "required": [
+              "operation",
+              "sessionId",
+              "target"
+            ],
+            "additionalProperties": false,
+            "title": "Save this take",
+            "x-features": [
+              "animationRecording.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "discard"
+                ],
+                "x-static": true
+              },
+              "sessionId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              }
+            },
+            "required": [
+              "operation",
+              "sessionId"
+            ],
+            "additionalProperties": false,
+            "title": "Discard this take",
+            "x-features": [
+              "animationRecording.v1"
+            ]
+          }
+        ]
+      },
+      "duration": "instant",
+      "ownership": "authoringSession",
+      "channels": [],
+      "requirements": [
+        "authoring.session.current",
+        "recording.control.available"
+      ],
+      "description": "Control the same recorder as the physical Record/Discard take controls. Read animation.recording first and pass its exact sessionId. start also takes target and its current object revision; it refuses another live actor or retained unsaved take. It begins a persistent authoring session, samples at most 10 times/second for 30 seconds/301 frames, permits gripping the recorded object, and completes the start action immediately. The session owns wholeTarget independently until finish, discard or lifecycle Stop; stopping the completed start receipt does not end the take. finish freezes then saves that exact take as one Undo (temporary in a room fork); failed saves stop sampling and retain frames in memory for retry or discard. Retried saves refuse changed target revisions or room sessions. discard destroys only the matching live/retained take, without changing the previous saved animation. Start a new take only using the next observed sessionId. Pause, focus loss, selection/avatar change, physical Stop and time/frame limits attempt to finish automatically; unsaved failures remain visible. App termination/reopening loses unsaved in-memory frames and issues a different identity. Neither finish nor discard starts playback. Only one recording session exists per room.",
+      "example": {
+        "operation": "start",
+        "sessionId": "00000000000000000000000000000000",
+        "target": "maestro",
+        "revision": 1
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+            "maxLength": 32
+          },
+          "phase": {
+            "type": "string",
+            "enum": [
+              "recording",
+              "saved",
+              "discarded"
+            ]
+          },
+          "frames": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 301.0
+          },
+          "duration": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 30.0
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 1000000.0
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "sessionId",
+          "target",
+          "phase",
+          "frames",
+          "duration",
+          "revision",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "time.wait",
       "version": 1,
       "label": "Wait",
@@ -5282,6 +5459,24 @@
       ]
     },
     {
+      "id": "animation.recording",
+      "version": 1,
+      "type": {
+        "record": {
+          "sessionId": "text",
+          "target": "text",
+          "phase": "text",
+          "frames": "number",
+          "duration": "number",
+          "revision": "number",
+          "temporary": "boolean",
+          "error": "text"
+        }
+      },
+      "label": "Current recording session",
+      "description": "Native recorder identity and phase: idle issues the next start ID; recording samples a live take; unsaved retains a frozen failed take in memory. Duration is sampled seconds, not wall time. Idle has empty target and zero counts/revision. Read target's authored revision before starting. Finish/discard take the current exact ID; completed receipt cancellation is separate. Error is bounded status, not a recovery token. A new app/room instance never restores an active recording."
+    },
+    {
       "id": "workspace.retention",
       "version": 1,
       "type": {
@@ -6028,7 +6223,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "453fb679b7d6662416cb1c813502037e1d6e1a9c7e6119a4460da9c770fd17ac"
+      "sha256": "4119c889dfe9c23fe7ceb72c279750f4b17d83b64b631551597dc1f137778b63"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -6079,6 +6274,10 @@
       "sha256": "ef34ed8543fb4477394d51e05d39ccd6a682a13553ea4fe036ad7b290a919078"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationRecording.cs",
+      "sha256": "ebe2e045b6deab008454bff4a33c8dbcfe1cded6c5a79d7fa30eea3d5ac89b43"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeTemplates.cs",
       "sha256": "2f4156e6d20fa4a4b8ec15fafc9ff1604c1bf3f2df11824a7c9d420ba298255a"
     },
@@ -6099,12 +6298,16 @@
       "sha256": "08016146c4a69829095687637214119a83978e66ffab5b66571e0eb1e72afc1d"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationRecordingCapability.cs",
+      "sha256": "d43c0f21d8786000effde056bcebda1cecbc87577e8ebe45187da6654985f8af"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModule.cs",
       "sha256": "2a7a9bcb825597e2b60c8bd684fe3438356101330898905358593c9f8f86140a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "0bb232ec92551981300528440b975bd1417d577914973b604d8214e5338a2b5c"
+      "sha256": "035897f06683423d56773dbcae4f6d93eb56fbd87b94fa235c94583ef1093467"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",

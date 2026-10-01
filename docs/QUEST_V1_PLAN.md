@@ -5,10 +5,11 @@ Status: active implementation. Nothing in this document claims store readiness.
 Current animation authoring lets agent/program calls and optional typed book
 fields edit the same pose and keyframes as the physical tray. Exact object
 revisions prevent stale writes; saved edits are durable, temporary edits stay in
-the fork until Keep, and neither starts playback. The catalog now contains 40
-actions, 10 events and 22 facts. See QUEST_ANIMATION_AUTHORING.md. The shared
-recording-session lifecycle is still pending, along with device/provider and
-Store acceptance; the complete v1 goal remains active.
+the fork until Keep, and neither starts playback. Shared recording now exposes
+start/save/discard with exact native session IDs, retained failed takes and
+matching physical controls. The catalog contains 41 actions, 10 events and 23
+facts. See QUEST_ANIMATION_AUTHORING.md. Broader shared controls and device/provider/
+Store acceptance remain unfinished; the complete v1 goal remains active.
 
 Current recovery implementation supports retained candidates, an external backup,
 and an explicitly requested fresh workspace through the same shared book/agent
@@ -24,6 +25,20 @@ and tracked operation roots remain protected. Private recovery export remains
 separate; a full store with unreadable selection still requires recovery/repair.
 PR #248 records the current verified commit and package. Earlier entries
 below are historical evidence, not current test totals or release acceptance.
+
+PC recording increment (2026-10-01): agent, programs and physical tools share
+one recording session. Start returns immediately while native sampling continues;
+finish saves one Undo without autoplay, and discard preserves the prior motion.
+Failed saves retain frozen frames; retries require the same object revision and
+room session. Retained takes block workspace boundaries. PC checks pass 1,555
+web tests across 174 files, 370 EditMode and 257 PlayMode tests (three optional
+native skips), plus 55 Android tests. The local Chrome book probe sends exact
+start/finish requests against captured native acknowledgements. The full APK
+helper exited successfully; 171 runtime and 78 test C# sources, 24 fixture files
+plus metadata, and 113 packaged web files match the checked build. ARM64/v2
+signature-verified checkpoint: `MaestroQuest-recording-sessions-67665749.apk`,
+SHA-256 `67665749689FAAFA1257B93C161729FA436151ECD8CA7EF00C98ECCE756B670F`.
+It remains uninstalled. Device/provider and Store release gates stay open.
 
 Earlier PC increment (2026-09-30): calculated condition waits compose inspected facts
 with existing typed expressions, debounce and explicit initial-state policies.

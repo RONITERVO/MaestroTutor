@@ -62,8 +62,39 @@ a live take or pose preview.
 Temporary-room edits affect only the fork until Keep. Discard restores the
 baseline; Keep persists a detached snapshot. Stopping an already completed edit
 does not undo it. Action receipts prevent duplicate dispatch; a separate Undo
-reverts an edit. Recording Start/Finish/Discard sessions are not yet exposed as
-shared capabilities. This increment covers saved pose/keyframe authoring.
+reverts an edit. The same catalog also exposes live recording sessions below.
+
+## Shared recording sessions
+
+`animation.record` (feature `animationRecording.v1`) controls the same recorder
+as the solid Record and Discard take buttons. Inspect `animation.recording`
+first. Its native-issued session ID identifies the next start, or the exact
+live/retained take; stale commands cannot finish or discard a later take.
+
+- `start {sessionId, target, revision}` requires the current authored object
+  revision. Its receipt completes immediately while the recorder continues to
+  own the object, permitting grip movement. Cancelling the completed receipt
+  does not end the recording. A program can start, wait and finish through the
+  same capability. Agent/program starts refuse another live actor; only the
+  trusted physical Record entry point has manual interruption priority.
+- `finish {sessionId, target}` freezes samples and saves one motion with one
+  Undo entry, without playback. Temporary-room recording stays in the fork until
+  Keep. Selection/avatar changes, pause/focus loss, physical Stop and the
+  30-second/301-frame limit attempt the same finish operation.
+- `discard {sessionId}` removes only that in-memory take, preserving the
+  previous saved animation. No target resource is required, so a retained take
+  remains discardable after its object is deleted. Successful save/discard
+  issues a new session ID. Old action receipts do not replay recording.
+
+The read-only fact exposes phase (`idle`, `recording`, `unsaved`), target, frame
+count, sampled duration, object revision, temporary-room state and bounded error
+text. Recording samples on a 0.1-second interval with a final endpoint. Failed
+saves stop sampling and release controls while retaining the frozen frames in
+memory. Record retries that exact take; Discard take abandons it. The Record
+button is amber while a failed take awaits resolution. Retry refuses a changed
+object revision or room session. A retained take blocks workspace and temporary
+room boundaries until saved or discarded. App/process termination loses any
+unsaved in-memory take; recording is never automatically restored on launch.
 
 ## Book and verification
 
@@ -83,3 +114,11 @@ fills the nested book controls without entering JSON and checks that the generat
 request matches the captured native call. The Chrome acknowledgement is a fixture;
 it is not a real-provider or headset test. Device comfort, authoring performance
 and real-provider journeys remain release gates.
+
+Recording verification additionally covers physical ray taps, program start/wait/
+finish, gripped object movement, manual interruption priority, stale session IDs,
+duplicate receipts, write-failure retry, deletion/discard, lifecycle auto-finish
+and temporary Keep. `test-fixtures/browser/recordingSessions.json` captures native
+start/finish receipts and facts. `scripts/probe-recording-sessions.mjs` reads the
+session identity in the book, fills typed controls, saves and observes the next
+idle identity; its acknowledgement uses the native capture as a local fixture.

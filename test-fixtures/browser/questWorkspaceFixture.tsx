@@ -12,6 +12,7 @@ import historyRecovery from './actionHistoryRecoveryStates.json';
 import nativeExecutions from './executionStates.json';
 import nativeRemoval from './workspaceRemoval.json';
 import nativeAuthoring from './animationAuthoring.json';
+import nativeRecording from './recordingSessions.json';
 import nativeEvents from './eventProgramStates.json';
 import creationProgram from '../../unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-create.json';
 import creationResult from './creationResult.json';
@@ -21,7 +22,7 @@ import objectEditResults from './objectEditResults.json';
 import recipeCreationProgram from './recipeCreationProgram.json';
 import recipeCreationResult from './recipeCreationResult.json';
 import {capabilityDefinition,validateCapabilityArguments,capabilityResources} from '../../shared/capabilities';
-import {behaviourCatalog} from '../../shared/behaviourCatalog';
+import {behaviourCatalog,behaviourFact} from '../../shared/behaviourCatalog';
 import {validCatalogView} from '../../shared/roomCatalog';
 import {validExecutionView} from '../../shared/roomExecutions';
 import nativeRules from './ruleBookState.json';
@@ -40,6 +41,14 @@ const eventPrograms=new URLSearchParams(location.search).has('events');let signa
 if(eventPrograms)state=JSON.parse(JSON.stringify(nativeEvents.waiting));
 const programs=new URLSearchParams(location.search).has('program');if(programs)state=JSON.parse(JSON.stringify(nativeProgram));
 if(new URLSearchParams(location.search).has('execution')){state=JSON.parse(JSON.stringify(nativeExecutions.running));state.visible=true;state.execution={selected:null,running:[],outcomes:[]};}
+const recordingSessions=new URLSearchParams(location.search).has('recordingSessions');
+let recordingObservation=nativeRecording.before;
+if(recordingSessions){
+ if(!validExecutionView(nativeRecording.start)||!validExecutionView(nativeRecording.finish))throw new Error('Invalid native recording fixture');
+ state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';
+ state.execution={...JSON.parse(JSON.stringify(nativeRecording.start)),selected:null,running:[],outcomes:[],nextRunId:nativeRecording.start.selected.id};
+ state.capabilities=[...state.capabilities??[],'catalogVocabulary.v1','animationRecording.v1','execution.v1','executionReceipts.v1','actionResults.v1'];
+}
 const authoring=new URLSearchParams(location.search).has('animationAuthoring');
 if(authoring){
  if(!validExecutionView(nativeAuthoring.execution))throw new Error('Invalid native authoring fixture');
@@ -95,7 +104,9 @@ setInterval(()=>{
   for(const command of request.commands){
    if(command.action==='execution'&&command.execution){
     const input=command.execution;
-    if(authoring&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeAuthoring.execution.selected.call)){state.execution=copy(nativeAuthoring.execution) as RoomAgentState['execution'];state.status='Recorded native authoring result; browser acknowledgement is simulated';}
+    if(recordingSessions&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeRecording.start.selected.call)){state.execution=copy(nativeRecording.start) as RoomAgentState['execution'];recordingObservation=nativeRecording.active;state.status='Recorded native start; browser acknowledgement is simulated';}
+    else if(recordingSessions&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeRecording.finish.selected.call)){state.execution=copy(nativeRecording.finish) as RoomAgentState['execution'];recordingObservation=nativeRecording.idle;state.status='Recorded native finish; browser acknowledgement is simulated';}
+    else if(authoring&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeAuthoring.execution.selected.call)){state.execution=copy(nativeAuthoring.execution) as RoomAgentState['execution'];state.status='Recorded native authoring result; browser acknowledgement is simulated';}
     else if(disposal&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeRemoval.removeExecution.workspace.selected.call)){state.execution=copy(nativeRemoval.removeExecution) as RoomAgentState['execution'];state.status='Recorded native disposal result; no files are changed by this browser fixture';}
     else if(moduleEvidence&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(moduleEvidence.published.execution?.selected?.call)){
      state.execution=copy(moduleEvidence.published.execution);state.status='Recorded native publication; browser acknowledgement is simulated';
@@ -110,6 +121,12 @@ setInterval(()=>{
     if(moduleEvidence&&query.operation!=='check'&&query.category==='modules'){
      if(query.operation==='search')state.catalog=copy(moduleEvidence.search.catalog);
      else {const view=moduleEvidence.inspected.catalog;state.catalog=view?.operation==='inspect'&&query.capability===view.capability?copy(view):{operation:'inspect',category:'modules',capability:query.capability,version:query.version,definition:null,revision:1,ready:true,pending:false,status:'Not present in recorded evidence'};}
+     continue;
+    }
+    if(recordingSessions&&query.operation!=='check'&&query.category==='facts'){
+     const definition=behaviourFact('animation.recording')!;
+     if(query.operation==='search')state.catalog={operation:'search',category:'facts',query:query.query,offset:0,pageSize:6,total:1,entries:[{id:definition.id,version:1,label:definition.label}],status:'Recorded fact discovery'};
+     else state.catalog={operation:'inspect',category:'facts',capability:query.capability,version:1,definition:query.capability===definition.id?definition:null,available:query.capability===definition.id,value:query.capability===definition.id?copy(recordingObservation):null,status:'Recorded native recorder state'};
      continue;
     }
     if(query.operation!=='check'&&query.category&&query.category!=='actions'){state.ok=false;state.status='This older browser fixture supports action discovery only.';continue;}

@@ -493,3 +493,29 @@ it('authors motion from typed book fields and shows the native receipt without s
  expect(Array.from((screen.getByLabelText('Action inputs target') as HTMLSelectElement).options).map(x=>x.value)).toEqual(['maestro']);
  expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
 });
+
+import nativeRecording from '../../../test-fixtures/browser/recordingSessions.json';
+it('starts and finishes an exact recording session from typed fields while distinguishing the live take from its receipt',async()=>{
+ const {client,screen,receive}=setup(true,['animationRecording.v1','execution.v1','actionResults.v1']);
+ await receive(undefined,false,{execution:{...nativeRecording.start,selected:null,running:[],outcomes:[],nextRunId:nativeRecording.start.selected.id} as RoomAgentState['execution']});
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:/^Search$/}));
+ const definition=capabilityDefinition('animation.record')!;
+ await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Found recorder'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Recorder definition'});
+ fireEvent.click(screen.getByText('Edit action fields'));
+ fireEvent.change(screen.getByLabelText('Action inputs sessionId'),{target:{value:nativeRecording.before.sessionId}});
+ fireEvent.change(screen.getByLabelText('Action inputs revision'),{target:{value:nativeRecording.start.selected.call.arguments.revision}});
+ fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
+ expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:nativeRecording.start.selected.call,runId:nativeRecording.start.selected.id}});
+ await receive(undefined,false,{execution:nativeRecording.start as RoomAgentState['execution']});
+ expect(screen.getByLabelText('Selected action').textContent).toContain('completed');expect(screen.getByLabelText('Action result').textContent).toContain('"phase": "recording"');expect(screen.queryByRole('button',{name:/Stop action/})).toBeNull();
+ fireEvent.change(screen.getByLabelText('Recording operation'),{target:{value:'1'}});
+ expect(screen.queryByLabelText('Action inputs revision')).toBeNull();
+ fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
+ expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:nativeRecording.finish.selected.call,runId:nativeRecording.finish.selected.id}});
+ await receive(undefined,false,{execution:nativeRecording.finish as RoomAgentState['execution']});expect(screen.getByLabelText('Action result').textContent).toContain('"phase": "saved"');
+ fireEvent.change(screen.getByLabelText('Catalog category'),{target:{value:'facts'}});fireEvent.click(screen.getByRole('button',{name:/^Search$/}));
+ const fact=behaviourFact('animation.recording')!;await receive({operation:'search',category:'facts',query:'',offset:0,total:1,pageSize:6,entries:[{id:fact.id,version:1,label:fact.label}],status:'Recorder fact'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(fact.label)}));await receive({operation:'inspect',category:'facts',capability:fact.id,version:1,definition:fact,available:true,value:nativeRecording.idle,status:'New idle session'});
+ expect(screen.getByLabelText('Current fact value').textContent).toContain(nativeRecording.idle.sessionId);expect(screen.getByLabelText('Current fact value').textContent).toContain('"phase":"idle"');expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
+});

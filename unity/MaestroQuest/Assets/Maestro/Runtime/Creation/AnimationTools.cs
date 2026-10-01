@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Maestro.Quest.Creation
 {
-    public enum AnimationTool { Pose, Record, AddFrame, Play, Stop, Previous, Next, Replace, Delete, Loop, Gesture, Automatic, Faster, Slower }
+    public enum AnimationTool { Pose, Record, AddFrame, Play, Stop, Previous, Next, Replace, Delete, Loop, Gesture, Automatic, Faster, Slower, DiscardTake }
     public sealed class AnimationToolAction : PhysicalAction
     {
         public AnimationWorkshop Workshop;
@@ -18,6 +18,7 @@ namespace Maestro.Quest.Creation
             {
                 case AnimationTool.Pose: Workshop.TogglePose(); break;
                 case AnimationTool.Record: Workshop.ToggleRecord(); break;
+                case AnimationTool.DiscardTake: Workshop.DiscardTake(); break;
                 case AnimationTool.AddFrame: Workshop.AddFrame(); break;
                 case AnimationTool.Play: Workshop.Play(); break;
                 case AnimationTool.Stop: Workshop.Stop(); break;
@@ -50,8 +51,8 @@ namespace Maestro.Quest.Creation
             var handle = gameObject.AddComponent<BoxCollider>(); handle.size = new Vector3(.76f,.50f,.055f);
             var item = gameObject.AddComponent<RoomItem>(); item.Configure(new Collider[] { handle },1,1); room.Register(item);
             var kinds = new[] { AnimationTool.Pose,AnimationTool.Record,AnimationTool.AddFrame,AnimationTool.Play,AnimationTool.Stop,AnimationTool.Loop,
-                AnimationTool.Previous,AnimationTool.Next,AnimationTool.Replace,AnimationTool.Delete,AnimationTool.Gesture,AnimationTool.Automatic,AnimationTool.Faster,AnimationTool.Slower };
-            var labels = new[] { "Pose Maestro","Record","Save frame","Play","Stop","Loop","Earlier","Later","Replace","Remove","Gesture","Auto gestures","Faster","Slower" };
+                AnimationTool.Previous,AnimationTool.Next,AnimationTool.Replace,AnimationTool.Delete,AnimationTool.Gesture,AnimationTool.Automatic,AnimationTool.Faster,AnimationTool.Slower,AnimationTool.DiscardTake };
+            var labels = new[] { "Pose Maestro","Record","Save frame","Play","Stop","Loop","Earlier","Later","Replace","Remove","Gesture","Auto gestures","Faster","Slower","Discard take" };
             for (int i = 0; i < kinds.Length; i++)
             {
                 var tool = new GameObject(labels[i]); tool.transform.SetParent(transform,false);
@@ -69,7 +70,7 @@ namespace Maestro.Quest.Creation
         void Refresh()
         {
             status.text = workshop.Status.Length > 80 ? workshop.Status.Substring(0,80) + "…" : workshop.Status;
-            recordPaint.color = IllustratedMaterials.Hex(workshop.IsRecording ? "F04C42" : "B8644E");
+            recordPaint.color = IllustratedMaterials.Hex(workshop.IsRecording ? "F04C42" : workshop.HasUnsavedRecording ? "E5A42A" : "B8644E");
             posePaint.color = IllustratedMaterials.Hex(workshop.IsPosing ? "2B8D88" : "73534E");
         }
         Material Paint(string hex) { var value = IllustratedMaterials.Create(IllustratedMaterials.Hex(hex)); materials.Add(value); return value; }

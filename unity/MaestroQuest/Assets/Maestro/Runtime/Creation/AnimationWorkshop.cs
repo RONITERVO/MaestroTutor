@@ -12,7 +12,7 @@ namespace Maestro.Quest.Creation
 {
     /// <summary>One explicit authoring/preview owner; clips never autoplay on app launch.</summary>
     [DefaultExecutionOrder(-100)]
-    public sealed class AnimationWorkshop : MonoBehaviour
+    public sealed partial class AnimationWorkshop : MonoBehaviour
     {
         RoomEditor editor;
         string targetId;
@@ -33,12 +33,12 @@ namespace Maestro.Quest.Creation
         public bool ControlsTarget(string id) => controlling && targetId == id;
         readonly string ownershipId="authoring:"+Guid.NewGuid().ToString("N");
         RoomOwnership.Lease ownershipLease;
-        bool TakeControl(bool allowsGrab=false) {
+        bool TakeControl(bool allowsGrab=false,bool notify=true) {
             if(editor.RuntimeGate.Held){Say(editor.RuntimeGate.Reason);return false;}
             if(ownershipLease?.Held!=true&&!editor.Ownership.TryAcquire(ownershipId,"Animation authoring",RoomActorRole.Control,
                 new[]{new Maestro.Quest.Programs.BehaviourCatalog.Claim(targetId,"wholeTarget")},_=>Stop(),out ownershipLease,out var error,replaceControl:true,allowsGrab:allowsGrab)) {Say(error);return false;}
             if(!ownershipLease.SetAllowsGrab(allowsGrab)){Say("Release the object before changing animation controls");return false;}
-            controlling=true;Starting?.Invoke(targetId);target?.GetComponent<RigidRoomItem>()?.SetAnimationOwner(this,true);return true;
+            controlling=true;if(notify)Starting?.Invoke(targetId);target?.GetComponent<RigidRoomItem>()?.SetAnimationOwner(this,true);return true;
         }
         public bool IsRecording => recording != null;
         public bool IsPlaying => graph.IsValid();
@@ -63,6 +63,7 @@ namespace Maestro.Quest.Creation
         bool Ready()
         {
             if(editor.RuntimeGate.Held){Say(editor.RuntimeGate.Reason);return false;}
+            if(HasUnsavedRecording){Say("Save or discard the retained take first");return false;}
             if (!target) { Say("Select an object first"); return false; }
             if (avatar && avatar.ModelBusy) { Say("Wait for Maestro to finish changing avatars"); return false; }
             if (editor.AnyHeld || (avatar && avatar.PoseRig && avatar.PoseRig.IsHolding)) { Say("Release the object or joint first"); return false; }
@@ -139,21 +140,6 @@ namespace Maestro.Quest.Creation
             if (motion == null || selectedFrame < 0 || selectedFrame >= motion.frames.Length) { Say("Choose a frame first"); return; }
             if(!RoomMotionEdits.Remove(motion,new[]{motion.frames[selectedFrame].time},out var edited,out var error)){Say(error);return;}
             if (Save(edited)) { selectedFrame = -1; Say("Frame removed — Undo restores it"); }
-        }
-        public void ToggleRecord()
-        {
-            if (IsRecording) { FinishRecording(); return; }
-            if (!Ready()) return;
-            StopPlayback(); if(!TakeControl(allowsGrab:true))return; recording = new List<MotionFrame> { Capture(0) }; began = Time.unscaledTime; nextSample = .1f;
-            Say("Recording a new take — move or pose; tap Record again to save");
-        }
-        void FinishRecording()
-        {
-            if (!IsRecording) return;
-            var frames = recording; recording = null;
-            float end = Mathf.Min(Time.unscaledTime - began,RoomMotion.MaximumSeconds);
-            if (target && end > frames[^1].time + .001f && frames.Count < RoomMotion.MaximumFrames) frames.Add(Capture(end));
-            if (target && Save(new RoomMotion { frames = frames.ToArray() },posing,posing ? avatar.PoseRig.Capture() : null)) { selectedFrame = -1; Say("Recorded " + end.ToString("0.0") + " seconds — Undo restores the previous take"); }
         }
         public void Play()
         {
@@ -244,13 +230,13 @@ namespace Maestro.Quest.Creation
             stopping = true;
             try
             {
-                if (posing && !IsRecording && avatar && avatar.PoseRig) Save(editor.Read(targetId).motion,true,avatar.PoseRig.Capture());
-                FinishRecording(); StopPlayback();
+                if (!resolvingRecording && posing && !IsRecording && !HasUnsavedRecording && avatar && avatar.PoseRig) Save(editor.Read(targetId).motion,true,avatar.PoseRig.Capture());
+                if(!resolvingRecording)FinishRecording(); StopPlayback();
                 if (avatar && avatar.PoseRig)
                 {
                     avatar.PoseRig.PoseChanged -= SavePose; avatar.PoseRig.SetPosing(false); avatar.SetEditing(false);
                 }
-                if (target) { foreach (var collider in target.Grab.colliders) collider.enabled = true; target.Grab.enabled = true; editor.RestorePose(targetId); }
+                if (target) { foreach (var collider in target.Grab.colliders) collider.enabled = true; target.Grab.enabled = true; if(!target.Grab.isSelected)editor.RestorePose(targetId); }
                 posing = false;
                 importedPreview = false; walkPreview = false;
                 controlling = false;
