@@ -29,6 +29,7 @@ namespace Maestro.Quest.Persistence
         public WorkspaceRuntime Runtime {get;private set;}
         internal WorkspaceActivation Activation {get;private set;}
         internal WorkspaceReview Review {get;private set;}
+        internal WorkspaceHistory History {get;private set;}
         internal WorkspaceRecovery Recovery {get;private set;}
         internal WorkspaceSelection Selection {get;private set;}
         public WorkspaceContent Current {get;private set;}
@@ -53,7 +54,7 @@ namespace Maestro.Quest.Persistence
             Import=gameObject.AddComponent<WorkspaceImport>();Import.Initialize(applicationData);
             Export=gameObject.AddComponent<WorkspaceExport>();Export.Initialize(null,null,null);
             Runtime=gameObject.AddComponent<WorkspaceRuntime>();Runtime.Initialize(this,System.IO.Path.Combine(applicationData,"workspace-maintenance.v1"));
-            TryOpenSelected(out _);Activation=new WorkspaceActivation(this,applicationData);Review=new WorkspaceReview(this,applicationData);Recovery=new WorkspaceRecovery(this,applicationData);
+            TryOpenSelected(out _);Activation=new WorkspaceActivation(this,applicationData);Review=new WorkspaceReview(this,applicationData);Recovery=new WorkspaceRecovery(this,applicationData);History=new WorkspaceHistory(this,applicationData);
         }
         internal bool TryOpenSelected(out string error)
         {
@@ -128,12 +129,12 @@ namespace Maestro.Quest.Persistence
             // The edit hold still owns an activity lease while review ownership is released.
             Selection=selected;review?.Dispose();review=null;Status="Workspace review completed. Start desired activity explicitly.";agent?.WorkspaceStatus(Status);Notify();error=null;return true;
         }
-        void Update(){if(!ReferenceEquals(Current,null)&&!Current){retirements.Add(Current.Retire());Current=null;}if(!Ready){TryInitializeServices();return;}Activation?.Poll();Review?.Poll();Recovery?.Poll();for(int i=retirements.Count-1;i>=0;i--)if(retirements[i].IsCompleted){_=retirements[i].Exception;retirements.RemoveAt(i);}}
-        void OnApplicationPause(bool value){Activation?.Pause(value);Review?.Pause(value);Recovery?.Pause(value);}
-        void OnApplicationFocus(bool value){Activation?.Focus(value);Review?.Focus(value);Recovery?.Focus(value);}
+        void Update(){if(!ReferenceEquals(Current,null)&&!Current){retirements.Add(Current.Retire());Current=null;}if(!Ready){TryInitializeServices();return;}Activation?.Poll();Review?.Poll();Recovery?.Poll();History?.Poll();for(int i=retirements.Count-1;i>=0;i--)if(retirements[i].IsCompleted){_=retirements[i].Exception;retirements.RemoveAt(i);}}
+        void OnApplicationPause(bool value){Activation?.Pause(value);Review?.Pause(value);Recovery?.Pause(value);History?.Pause(value);}
+        void OnApplicationFocus(bool value){Activation?.Focus(value);Review?.Focus(value);Recovery?.Focus(value);History?.Focus(value);}
         void OnDisable()
         {
-            Activation?.Disable();Review?.Disable();Recovery?.Disable();
+            Activation?.Disable();Review?.Disable();Recovery?.Disable();History?.Disable();
             if(!Switching)return;
             StopAllCoroutines();DrainReplacement();Switching=false;
             Status="Workspace opening paused. The committed selection is preserved.";agent?.Bind(null,Status);Notify();
@@ -153,6 +154,7 @@ namespace Maestro.Quest.Persistence
         void OnDestroy()
         {
             destroying=true;Runtime?.Scheduler?.StopAll();agent?.Bind(null,"Closing workspace");
+            if(History!=null)retirements.Add(History.Dispose());
             if(Activation!=null)retirements.Add(Activation.Dispose());if(Review!=null)retirements.Add(Review.Dispose());if(Recovery!=null)retirements.Add(Recovery.Dispose());
             if(!ReferenceEquals(Import,null))retirements.Add(Import.Retire());if(!ReferenceEquals(Export,null))retirements.Add(Export.Retire());
             if(!ReferenceEquals(Current,null)){retirements.Add(Current.Retire());Current=null;}

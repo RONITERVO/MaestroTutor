@@ -11,6 +11,7 @@ import nativeReview from '../../../test-fixtures/browser/workspaceReview.json';
 import nativePrevious from '../../../test-fixtures/browser/workspacePrevious.json';
 import nativeWorkspaceRecovery from '../../../test-fixtures/browser/workspaceRecovery.json';
 import nativeFreshRecovery from '../../../test-fixtures/browser/workspaceFreshRecovery.json';
+import nativeHistory from '../../../test-fixtures/browser/workspaceHistory.json';
 import {validFactValue} from '../../../shared/behaviourFacts';
 import nativeCreation from '../../../test-fixtures/browser/creationResult.json';
 import nativeProgram from '../../../test-fixtures/browser/programBookState.json';
@@ -259,4 +260,28 @@ it('distinguishes explicit fresh recovery from a retained or imported source and
  for(const args of [{...base,source:{kind:'fresh',generationId:nativeFreshRecovery.preview.generationId}},{...base,source:{kind:'retained'}},{...base,generationId:nativeFreshRecovery.preview.generationId,manifestHash:nativeFreshRecovery.preview.manifestHash}])
   expect(validExecutionRequest({operation:'start',call:{id:'workspace.recovery.select',version:1,arguments:args}})).toBe(false);
  expect(nativeFreshRecovery.completed.phase).toBe('review');expect(nativeFreshRecovery.preview.summary.models).toBe(0);expect(nativeFreshRecovery.preview.summary.modules).toBe(0);
+});
+
+
+it('uses native history repair results and preserves exact inspection identity across the shared boundary',()=>{
+ for(const state of [nativeHistory.inspectExecution,nativeHistory.resetExecution])expect(validExecutionView(state)).toBe(true);
+ expect(validFactValue('workspace.history',nativeHistory.status)).toBe(true);
+ expect(nativeHistory.inspection.evidenceId).toBe('');
+ expect(nativeHistory.reset.evidenceId).toMatch(/^[a-f0-9]{32}$/);
+ expect(nativeHistory.reset.fingerprint).toBe(nativeHistory.inspection.fingerprint);
+ expect(nativeHistory.reset.requestId).not.toBe(nativeHistory.inspection.requestId);
+ expect(nativeHistory.status).toMatchObject({phase:'reset',target:'recovery',requestId:nativeHistory.reset.requestId,evidenceId:nativeHistory.reset.evidenceId});
+ expect(nativeHistory.resetExecution.workspace.selected.call.arguments).toEqual({inspectionId:nativeHistory.inspection.requestId,fingerprint:nativeHistory.inspection.fingerprint});
+ for(const state of [nativeHistory.inspectExecution,nativeHistory.resetExecution]){
+  const receipt=state.workspace.selected,execution={operation:'start',call:receipt.call};
+  expect(validExecutionRequest(execution)).toBe(true);
+  expect(()=>requireRoomCapabilities([{action:'execution',execution}],{capabilities:['execution.v1']})).toThrow('workspaceHistory.v1');
+  expect(()=>requireRoomCapabilities([{action:'execution',execution}],{capabilities:['execution.v1','workspaceHistory.v1']})).not.toThrow();
+ }
+ expect(validFactValue('workspace.history',{...nativeHistory.status,path:'/private/history'})).toBe(false);
+ const reset=nativeHistory.resetExecution.workspace.selected.call;
+ for(const args of [{...reset.arguments,fingerprint:'stale'},{...reset.arguments,path:'/private/file'},{...reset.arguments,target:'review'}])
+  expect(validExecutionRequest({operation:'start',call:{...reset,arguments:args}})).toBe(false);
+ for(const target of ['activation','review','recovery'])expect(validExecutionRequest({operation:'start',call:{id:'workspace.history.inspect',version:1,arguments:{target}}})).toBe(true);
+ expect(validExecutionRequest({operation:'start',call:{id:'workspace.history.inspect',version:1,arguments:{target:'../selection'}}})).toBe(false);
 });

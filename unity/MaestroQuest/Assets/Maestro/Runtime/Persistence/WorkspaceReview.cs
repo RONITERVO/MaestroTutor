@@ -58,13 +58,16 @@ namespace Maestro.Quest.Persistence
         void SaveStatus(){try{Save(record);}catch(Exception){journalError="Review status could not be saved. Inspect the current workspace before another review.";}}
         WorkspaceSelection Reconcile(JObject value)=>string.IsNullOrEmpty((string)value["manifestHash"])?null:store.CommittedReview((string)value["requestId"],(string)value["generationId"],(string)value["manifestHash"],(string)value["revision"]);
         internal string RequestId=>(string)record?["requestId"]??"";
+        internal bool HistoryUnavailable=>journalError!=null;
+        internal JToken HistorySnapshot()=>record?.DeepClone()??JValue.CreateNull();
+        internal void ClearHistory(){if(Busy)throw new InvalidOperationException("History is still owned.");record=null;journalError=null;uncertain=false;}
         internal bool Busy=>pending!=null||hold!=null||committed!=null;
         internal bool WorkerPending=>pending!=null&&!pending.IsCompleted;
         bool Ready(string revision,out string issue)
         {
             issue=journalError;if(issue!=null)return false;
             if(disposed||paused||!focused||!host||!host.isActiveAndEnabled){issue="Resume Maestro before reviewing a workspace.";return false;}
-            if(Busy||host.Switching||host.Activation?.Busy==true||host.Retiring||host.Recovery?.BlocksOtherOperations==true){issue="Wait for the current workspace operation to finish.";return false;}
+            if(host.History?.Busy==true||Busy||host.Switching||host.Activation?.Busy==true||host.Retiring||host.Recovery?.BlocksOtherOperations==true){issue="Wait for the current workspace operation to finish.";return false;}
             if(!host.Current||!host.ReviewRequired||host.Selection?.Revision!=revision){issue="Read the current workspace and review its latest selected contents.";return false;}
             try{if(!JToken.DeepEquals(store.Load().Json(),host.Selection.Json())){issue="The stored workspace selection changed. Recover it before review.";return false;}}
             catch(Exception){issue="The workspace selection is unavailable. Its data is preserved; recovery is required.";return false;}
@@ -121,6 +124,7 @@ namespace Maestro.Quest.Persistence
         }
         internal bool CanCancel(string id,out string issue)
         {
+            if(host.History?.Busy==true){issue="Wait for history preservation to finish.";return false;}
             issue=null;if(id!=RequestId||record==null){issue="This review request is no longer retained.";return false;}
             if(committed!=null||(string)record["committedRevision"]!=""||uncertain){issue="Review may already be committed. Inspect its outcome; cancellation cannot undo it.";return false;}return true;
         }

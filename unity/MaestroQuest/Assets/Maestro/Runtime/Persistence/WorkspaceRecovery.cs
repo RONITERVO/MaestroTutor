@@ -52,13 +52,16 @@ namespace Maestro.Quest.Persistence
             try{byte[] bytes=new UTF8Encoding(false,true).GetBytes(value.ToString(Formatting.None));using(var file=new FileStream(next,FileMode.CreateNew,FileAccess.Write,FileShare.None)){file.Write(bytes,0,bytes.Length);file.Flush(true);}if(File.Exists(path))File.Replace(next,path,null);else File.Move(next,path);}finally{if(File.Exists(next))File.Delete(next);}
         }
         bool SaveQuiet(JObject value){try{Save(value);return true;}catch(Exception){return false;}}
+        internal bool HistoryUnavailable=>historyError!=null;
+        internal JToken HistorySnapshot()=>record?.DeepClone()??JValue.CreateNull();
+        internal void ClearHistory(){if(Busy)throw new InvalidOperationException("History is still owned.");record=null;historyError=null;uncertain=false;opening=false;}
         internal bool Busy=>pending!=null||hold!=null||committed!=null;
         internal bool BlocksOtherOperations=>Busy||(string)record?["phase"]=="prepared";
         bool Ready(out string issue,bool allowPreparedImport=false)
         {
             issue=historyError;if(issue!=null)return false;
             if(disposed||paused||!focused||!host||!host.isActiveAndEnabled||!host.Ready||host.Retiring){issue="Wait for previous owners to finish and resume Maestro before recovery.";return false;}
-            if(Busy||host.Switching||host.Activation?.Busy==true||host.Review?.Busy==true||(host.Import?.Occupied==true&&(!allowPreparedImport||host.Import.StableForRecovery!=true))||host.Export?.Busy==true){issue="Finish the current workspace operation. Restart Maestro if its outcome remains unavailable.";return false;}
+            if(host.History?.Busy==true||Busy||host.Switching||host.Activation?.Busy==true||host.Review?.Busy==true||(host.Import?.Occupied==true&&(!allowPreparedImport||host.Import.StableForRecovery!=true))||host.Export?.Busy==true){issue="Finish the current workspace operation. Restart Maestro if its outcome remains unavailable.";return false;}
             return true;
         }
         internal bool CanInspect(out string issue){if(!Ready(out issue,true))return false;if((string)record?["phase"]=="prepared"){issue="Cancel the current recovery preview before inspecting again.";return false;}return true;}
@@ -141,6 +144,7 @@ namespace Maestro.Quest.Persistence
         }
         internal bool CanCancel(string request,out string issue)
         {
+            if(host.History?.Busy==true){issue="Wait for history preservation to finish.";return false;}
             issue="This recovery request is not cancellable.";if(!Matches(request)||committed!=null||(string)record["committedRevision"]!=""||uncertain&&hold!=null)return false;issue=null;return true;
         }
         internal void Cancel(string request)

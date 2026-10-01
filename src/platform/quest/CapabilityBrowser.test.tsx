@@ -10,6 +10,7 @@ import nativeReview from '../../../test-fixtures/browser/workspaceReview.json';
 import nativePrevious from '../../../test-fixtures/browser/workspacePrevious.json';
 import nativeWorkspaceRecovery from '../../../test-fixtures/browser/workspaceRecovery.json';
 import nativeFreshRecovery from '../../../test-fixtures/browser/workspaceFreshRecovery.json';
+import nativeHistory from '../../../test-fixtures/browser/workspaceHistory.json';
 import native from '../../../test-fixtures/browser/catalogStates.json';
 import nativeProgram from '../../../test-fixtures/browser/programBookState.json';
 import {RoomWorkspace} from './RoomWorkspace';
@@ -354,4 +355,27 @@ it('chooses a fresh recovery preview explicitly without carrying the retained ca
  expect(client.snapshot().request).toBeNull();fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
  expect(client.snapshot().request?.commands[0]).toMatchObject({action:'execution',execution:{operation:'start',call:{id:'workspace.recovery.select',version:1,arguments:{...base,source:{kind:'fresh'}}}}});
  act(()=>client.cancel());
+});
+
+
+it('uses the generated history reset form and reports preserved evidence separately from workspace recovery',async()=>{
+ const {client,screen,receive}=setup(true,['workspaceHistory.v1','execution.v1','actionResults.v1']);
+ const receipt=nativeHistory.resetExecution.workspace.selected;
+ if(!validExecutionView(nativeHistory.resetExecution))throw new Error('Invalid native history repair execution');
+ await receive(undefined,false,{execution:{...nativeHistory.resetExecution,workspace:{selected:null,running:[],outcomes:[],nextRunId:receipt.id,storageError:null}}});
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:'Search'}));
+ const definition=capabilityDefinition('workspace.history.reset')!;
+ await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Inspect history reset'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Reset inspected history'});
+ fireEvent.change(screen.getByLabelText('Action arguments'),{target:{value:JSON.stringify(receipt.call.arguments)}});fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
+ expect(client.snapshot().request?.commands[0]).toMatchObject({action:'execution',execution:{operation:'start',runId:receipt.id,call:receipt.call}});
+ await receive(undefined,false,{execution:nativeHistory.resetExecution});
+ expect(screen.getByLabelText('Action result').textContent).toContain(nativeHistory.reset.evidenceId);
+ fireEvent.change(screen.getByLabelText('Catalog category'),{target:{value:'facts'}});fireEvent.click(screen.getByRole('button',{name:'Search'}));
+ const fact=behaviourFact('workspace.history')!;
+ await receive({operation:'search',category:'facts',query:'',offset:0,total:1,pageSize:6,entries:[{id:fact.id,version:1,label:fact.label}],status:'Inspect reset outcome'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(fact.label)}));await receive({operation:'inspect',category:'facts',capability:fact.id,version:1,definition:fact,arguments:{},available:true,value:nativeHistory.status,status:'Available'});
+ const value=screen.getByLabelText('Current fact value').textContent;
+ for(const text of [nativeHistory.reset.requestId,nativeHistory.reset.evidenceId,'reset','recovery'])expect(value).toContain(text);
+ expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
 });

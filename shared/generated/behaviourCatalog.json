@@ -966,6 +966,190 @@
       }
     },
     {
+      "id": "workspace.history.inspect",
+      "version": 1,
+      "label": "Inspect unavailable workspace history",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "enum": [
+              "activation",
+              "review",
+              "recovery"
+            ]
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "workspaceHistory.v1"
+        ]
+      },
+      "duration": "completion",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [],
+      "domain": "workspace",
+      "description": "Inspect unavailable activation, review or recovery operation history for an explicit tracking reset. Waits for bounded native file inspection; returns a requestId and fingerprint for workspace.history.reset. Only history already reported unavailable can be reset, after all workspace operations finish. This does not change files or approve any workspace content. The inspection is held only in this app session; restart requires a new inspection. A changed file or accepted record makes reset stale.",
+      "example": {
+        "target": "recovery"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "target": {
+            "type": "string",
+            "enum": [
+              "activation",
+              "review",
+              "recovery"
+            ]
+          },
+          "fingerprint": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "evidenceId": {
+            "type": "string",
+            "pattern": "^([a-f0-9]{32})?$",
+            "maxLength": 32
+          },
+          "summary": {
+            "type": "object",
+            "properties": {
+              "files": {
+                "type": "integer",
+                "minimum": 0.0,
+                "maximum": 256.0
+              },
+              "sizeKiB": {
+                "type": "integer",
+                "minimum": 0.0,
+                "maximum": 16384.0
+              }
+            },
+            "required": [
+              "files",
+              "sizeKiB"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "requestId",
+          "target",
+          "fingerprint",
+          "evidenceId",
+          "summary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "workspace.history.reset",
+      "version": 1,
+      "label": "Preserve and reset unavailable history",
+      "input": {
+        "type": "object",
+        "properties": {
+          "inspectionId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "fingerprint": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "inspectionId",
+          "fingerprint"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "workspaceHistory.v1"
+        ]
+      },
+      "duration": "completion",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [],
+      "domain": "workspace",
+      "description": "Reset only the exact unavailable operation history from the latest completed workspace.history.inspect result. Native code checks its fingerprint again, preserves the unreadable status and accepted tracking state, then atomically removes that status from use. Saved captures, room data, selected workspace, action receipts and required content review stay intact. No old action is replayed or approved. Requires all workspace workers/holds idle. Stop or lost focus requests cancellation, but cannot retract a completed rename. Inspect workspace.history and workspace.current after uncertainty; do not blindly replay. The inspection is consumed even on failure; inspect again to retry.",
+      "example": {
+        "inspectionId": "00000000000000000000000000000000",
+        "fingerprint": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "target": {
+            "type": "string",
+            "enum": [
+              "activation",
+              "review",
+              "recovery"
+            ]
+          },
+          "fingerprint": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "evidenceId": {
+            "type": "string",
+            "pattern": "^([a-f0-9]{32})?$",
+            "maxLength": 32
+          },
+          "summary": {
+            "type": "object",
+            "properties": {
+              "files": {
+                "type": "integer",
+                "minimum": 0.0,
+                "maximum": 256.0
+              },
+              "sizeKiB": {
+                "type": "integer",
+                "minimum": 0.0,
+                "maximum": 16384.0
+              }
+            },
+            "required": [
+              "files",
+              "sizeKiB"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "requestId",
+          "target",
+          "fingerprint",
+          "evidenceId",
+          "summary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "workspace.archive.export",
       "version": 1,
       "label": "Export native workspace",
@@ -3890,6 +4074,40 @@
       ]
     },
     {
+      "id": "workspace.history",
+      "version": 1,
+      "type": {
+        "record": {
+          "requestId": "text",
+          "target": "text",
+          "phase": "text",
+          "status": "text",
+          "fingerprint": "text",
+          "evidenceId": "text",
+          "summary": {
+            "record": {
+              "files": "number",
+              "sizeKiB": "number"
+            }
+          },
+          "acceptedAvailable": "boolean"
+        }
+      },
+      "label": "Workspace history repair status",
+      "description": "Read the latest history inspection/reset in this app session. Match requestId and target; another request replaces this status. Reset means history was preserved and tracking cleared, not that workspace content was recovered or approved. Failed/cancelled never implies reset. After restart inspect current workspace and action receipts; old operations never replay. Evidence is retained privately; no filesystem path is accepted or exposed.",
+      "domain": "workspace",
+      "input": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "example": {},
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
       "id": "workspace.archive.selection",
       "version": 1,
       "type": {
@@ -4430,7 +4648,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "231c68788bf3498344e6ab68b66df6cb7ce83bc0c0de9cd12eb51c3a6fa5eb43"
+      "sha256": "84a54af66c400f7c02a4f1e46cf0c01a9dbb22724c8c6885b09471defe051312"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -4494,7 +4712,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "d2db172478898a577bd152164c3a5bed1657349f26a217a6401d0ae6c8ef9025"
+      "sha256": "2ef6c4e0630f5b24726e5f924746098e6178262b371331fec2518f991872d488"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -4555,6 +4773,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceExportCapability.cs",
       "sha256": "2086149e3b214491ce7998944ee53f5a08e76a3588dee833b48fcc0c028f98df"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceHistoryCapabilities.cs",
+      "sha256": "4ce888d3814286124c8791c11354fcf8e5fe4418b0a4ee838543c4ff128e6bcf"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspacePreviousCapabilities.cs",

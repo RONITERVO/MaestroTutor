@@ -42,6 +42,7 @@ namespace Maestro.Quest.Persistence
         public bool CanStart(out string error)
         {
             error=unavailable;if(retiring){error="The previous workspace export owner is closing.";return false;}
+            if(GetComponent<WorkspaceHost>()?.History?.Busy==true){error="Wait for history preservation to finish.";return false;}
             if(GetComponent<WorkspaceHost>()?.Recovery?.BlocksOtherOperations==true){error="Finish or cancel workspace recovery before exporting.";return false;}
             if(!Available){error??="Workspace export is unavailable";return false;}
             if(Busy){error="Wait for the current workspace export to finish";return false;}

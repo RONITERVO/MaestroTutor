@@ -734,3 +734,42 @@ alongside damaged files, imported models with a missing pointer, stale origins,
 preparation cancellation and source ownership. The book's source selector uses the
 native schema; mixed fresh/retained arguments and clients missing recovery support
 are rejected. Device file-chooser, storage and lifecycle acceptance remains pending.
+
+
+### Unavailable operation history
+
+`workspace.history.inspect {target}` and `workspace.history.reset
+{inspectionId, fingerprint}` repair unavailable `activation`, `review` or
+`recovery` tracking through the same native capability catalog, book forms and
+agent calls. These are completion actions: their result means inspection or
+preservation finished, rather than merely acknowledging a background request.
+`workspace.history` exposes the latest request and outcome in this app session.
+Match its request ID and target. Native action receipts still distinguish a
+completed call from an interrupted wait; restarting does not replay either action.
+
+Only an unavailable coordinator can be reset. All workspace workers and operation
+holds must finish first; a live uncertain selection cannot be bypassed this way.
+Inspection binds the raw status bytes and accepted in-memory tracking separately.
+Reset consumes the inspection, checks it again and preserves both before an atomic
+rename removes the damaged status from use. A stale fingerprint requires a new
+inspection. Stopping, pausing or losing focus requests cancellation and retains
+ownership until the worker drains. Cancellation after the rename cannot retract
+it. A new host cannot open the same paths until the old history worker finishes.
+
+The preserved source is `latest.json`, including an unexpected directory at that
+path, or a file obstructing its coordinator directory. Capture archives and
+leftover pending files stay in their original locations. Immutable private
+`workspace-history.v1/evidence/<id>` entries retain the original bytes, accepted
+tracking and manifest. Inspection is read-only; interrupted preservation may leave
+additional evidence. There is no automatic evidence deletion or status replay.
+The selected workspace, room data, review requirement and action receipts are
+independent records: resetting history does not select content, approve review,
+start activity or rotate receipt IDs. If content still needs review or recovery,
+perform that separate operation afterwards.
+
+Preservation rejects linked paths and bounds source inspection to 16 MiB, 256
+entries and six nested levels; retained evidence is capped at 128 MiB and 4,096
+entries. Hitting a limit preserves the originals and refuses reset. Evidence
+export/retention management and on-device storage/lifecycle acceptance remain
+release work. This is recovery from unavailable tracking, not a general filesystem
+editor or a way to erase healthy action history.

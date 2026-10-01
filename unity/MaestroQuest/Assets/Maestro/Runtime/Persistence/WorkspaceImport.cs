@@ -55,6 +55,7 @@ namespace Maestro.Quest.Persistence
         internal void FinishRecovery(){activationOwned=false;prepared=null;phase="retained";error="Archive retained as a recovery candidate. Read workspace.recovery for the prepared copy.";}
         public bool CanSelect(out string issue)
         {
+            if(GetComponent<WorkspaceHost>()?.History?.Busy==true){issue="Wait for history preservation to finish.";return false;}
             issue=unavailable;if(retirement!=null){issue="The previous workspace selection owner is closing.";return false;}
             if(GetComponent<WorkspaceHost>()?.Recovery?.BlocksOtherOperations==true){issue="Finish or cancel workspace recovery before selecting an archive.";return false;}
             if(!Available){issue??="Workspace selection is unavailable.";return false;}
@@ -78,6 +79,7 @@ namespace Maestro.Quest.Persistence
         internal bool CanSelectPrevious(JObject args,out string issue)
         {
             issue=null;if(store==null||paused||!focused||!isActiveAndEnabled){issue="Resume Maestro before inspecting its previous workspace.";return false;}
+            if(GetComponent<WorkspaceHost>()?.History?.Busy==true){issue="Wait for history preservation to finish.";return false;}
             if(!Idle(out issue))return false;
             try {var value=store.Previous();if(value==null||value.Revision!=(string)args["expectedRevision"]||value.Generation!=(string)args["generationId"]||value.ManifestHash!=(string)args["manifestHash"]){issue="The previous workspace identity changed. Read workspace.previous again.";return false;}}
             catch(Exception){issue="Previous workspace metadata is unavailable. Original files are preserved.";return false;}

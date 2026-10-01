@@ -5,7 +5,9 @@ Status: active implementation. Nothing in this document claims store readiness.
 Current recovery implementation supports retained candidates, an external backup,
 and an explicitly requested fresh workspace through the same shared book/agent
 catalog. Original data stays preserved; preview, commit and content review remain
-separate. PR #248 records the current verified commit and package. Earlier entries
+separate. Unavailable activation, review and recovery tracking now has a shared
+inspect/preserve/reset path; it cannot bypass content review or live workers.
+PR #248 records the current verified commit and package. Earlier entries
 below are historical evidence, not current test totals or release acceptance.
 
 Earlier PC increment (2026-09-30): calculated condition waits compose inspected facts
@@ -1052,3 +1054,23 @@ and retained after cancellation. Ordinary activation still establishes its basel
 and distinguishes failures there from failures after its actual selection commit.
 Native and shared-control verification covers these paths; device acceptance,
 corrupt recovery-history repair and evidence maintenance remain open.
+
+
+### 2026-10-01: shared repair of unavailable operation history
+
+Activation, review and recovery coordinators now expose unavailable tracking to a
+shared inspect/reset capability pair. Inspection binds original status bytes and
+accepted in-memory state; reset preserves both before atomically moving only the
+damaged status out of use. Changed histories require a new inspection. Captures,
+workspace selection, live content, review holds and receipt IDs stay independent.
+No uncertain operation is replayed or approved. All workspace workers must be idle;
+reset cancellation and host teardown retain ownership until their worker drains.
+A cancellation after the rename still reports committed preservation.
+
+The final native build passed 333 EditMode and 226 PlayMode checks, with three
+optional private-model skips. Web checks passed 1,534 tests across 172 files;
+native inspection/reset results also exercise the shared book controls. Bounded
+inventory/capacity, stale history, exact raw/accepted preservation, missing owners,
+separate content review, cancellation and retiring-host ownership are covered.
+No headset installation is part of this checkpoint. Evidence export/retention,
+full-storage handling and physical-device acceptance remain release work.

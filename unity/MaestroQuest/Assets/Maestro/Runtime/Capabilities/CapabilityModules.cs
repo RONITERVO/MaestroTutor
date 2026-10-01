@@ -17,6 +17,7 @@ namespace Maestro.Quest.Programs
             new AnimationPlayCapability(),
             new WaitCapability(),
             new RoomSessionCapability(),
+            new WorkspaceHistoryCapability(false),new WorkspaceHistoryCapability(true),
             new WorkspaceExportCapability(),
             new WorkspaceSelectCapability(),
             new WorkspaceSelectPreviousCapability(),
