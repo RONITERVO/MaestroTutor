@@ -40,6 +40,7 @@ namespace Maestro.Quest.Creation
         public string TemporarySaveError {get;private set;}
         public int TemporarySaveRevision {get;private set;}
 
+        internal RoomDocument RecoverySavedSnapshot()=>savedJournal?.Snapshot()??journal.Snapshot();
         internal bool CanChangeTemporaryBoundary(out string error)
         {
             error=null;

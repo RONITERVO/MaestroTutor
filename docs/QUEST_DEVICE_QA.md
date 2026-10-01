@@ -1461,3 +1461,21 @@ cannot activate with either old or newly substituted revision arguments. Never
 silently substitute a missing source with an empty room. Test corrupt files through
 controlled fixtures; retain their original bytes. These checks do not establish
 recovery from unreadable current content or corrupt selection metadata.
+
+
+### Pending integration and device acceptance: damaged-workspace preservation
+
+The internal preservation boundary has PC coverage; there is no user-facing
+corrupt-workspace recovery control yet. After that operation is integrated, use a
+disposable fixture containing an unreadable store and a valid newer unsaved edit.
+Verify that recovery keeps both the exact damaged bytes and labelled accepted
+state, that temporary and saved rooms stay distinct, and that pause/teardown cannot
+overwrite originals while the hold is owned. Cancel while older saves are pending
+and confirm controls stay held until those saves settle.
+
+Validate private-path/link checks on the real Quest filesystem, limited available
+storage, large captures, app suspension and process termination. Compare evidence
+entry hashes independently and verify ordinary archive import rejects the evidence
+format. Exact selection metadata, durable recovery outcome and replacement must be
+checked as part of the eventual full recovery journey; these foundation checks
+alone cannot establish that corrupt-workspace recovery is accepted.

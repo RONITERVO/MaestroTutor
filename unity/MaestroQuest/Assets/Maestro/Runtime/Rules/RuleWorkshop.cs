@@ -32,6 +32,8 @@ namespace Maestro.Quest.Rules
         bool stopOnExit;
         public RoomRules Runtime;
         public int Revision { get; private set; }=1;
+        readonly Persistence.WorkspaceWriteGate saveDispatch=new();
+        internal IDisposable HoldSaveDispatch(out Task dispatched,out string error){var lease=saveDispatch.TryFreeze(out error);dispatched=(Task)saveTask??Task.CompletedTask;return lease;}
         public bool ReadOnly => storage?.ReadOnly ?? false;
         public bool CanUndo => editor && !editor.WriteGate.Frozen && !ReadOnly && undo.Count>0;
         public bool CanRedo => editor && !editor.WriteGate.Frozen && !ReadOnly && redo.Count>0;
@@ -259,7 +261,7 @@ namespace Maestro.Quest.Rules
         {
             Modules?.Poll();
             CompleteSave();
-            if (!dirty || storage == null || saveTask != null || Time.unscaledTime < saveAt) return;
+            if (saveDispatch.Frozen || !dirty || storage == null || saveTask != null || Time.unscaledTime < saveAt) return;
             var snapshot = document.Copy(); dirty = false;
             saveTask = Task.Run(() => SaveSnapshot(snapshot));
         }
@@ -290,6 +292,7 @@ namespace Maestro.Quest.Rules
         internal bool TryFlush(out string error)
         {
             error=null;
+            if(saveDispatch.Frozen){error="Behaviour saves are paused while recovery preserves original files.";return false;}
             if(storage==null){error="Behaviour storage is not ready.";return false;}
             CompleteSave(wait:true);
             if(storage.ReadOnly){error="Behaviour storage is unavailable; original files are preserved.";return false;}

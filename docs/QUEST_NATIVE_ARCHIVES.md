@@ -577,3 +577,37 @@ candidate inspection, preservation of damaged evidence and a separate coordinate
 recovery boundary. In-process host replacement must drain retiring workers before
 opening new owners. Generation inventory/cleanup and real-headset acceptance also
 remain release work.
+
+
+## Preserving unreadable workspace data before recovery
+
+The native recovery preservation boundary is implemented and tested, but is not
+yet connected to a user or agent recovery operation. `WorkspaceRecoveryHold` stops
+activity, freezes accepted edits and pauses new room/behaviour saves, including
+lifecycle flushes. It waits for every already dispatched save before reading disk.
+Cancellation does not release ownership early; a future coordinator must drain
+`Completion` before disposing the hold or replacing owners. Other existing holds
+remain owned and stopped activity is not replayed when preservation ends.
+
+The snapshot is taken on the Unity owner thread. It keeps accepted room, behaviour,
+control and activity documents separately from their original disk bytes. A
+read-only store's fallback document is labelled unavailable, never described as a
+repaired original. A temporary room and its saved baseline remain separate. Thus a
+damaged behaviour store can be preserved alongside a valid, newer unsaved room edit
+without letting autosave or teardown overwrite the original files.
+
+`WorkspaceRecoveryEvidence` writes a private evidence ZIP on a worker. It contains
+labelled accepted documents, untouched raw workspace files and a length/SHA-256
+inventory. It rejects links, overlapping output, excessive directory depth and
+more than 4,096 files or 512 MiB of accepted plus raw data; accepted JSON has a
+12 MiB limit. Failed or cancelled writes remove only their own partial artifact.
+This evidence format is deliberately rejected by ordinary workspace import. It is
+not an executable backup or a promise that damaged content can be restored.
+
+This foundation captures the workspace data directory, not selection metadata.
+The next recovery operation must bind the exact damaged pointer, candidate and
+evidence identities, preserve their original records, reconcile a durable commit,
+and keep the retiring owners held until replacement is safe. Candidate inspection,
+clean-start handling when no candidate is usable, user/agent controls, storage
+path ownership across host replacement and retained-evidence cleanup remain work.
+On-device filesystem, capacity, lifecycle and interruption acceptance is pending.

@@ -975,3 +975,19 @@ Tests cover verified asset copies, source preservation, stale selection, lost
 provenance, worker faults/cancellation and the native book/agent recovery journey.
 Unreadable current content, corrupt selection and failed initialization still need
 a separate recovery path, followed by generation maintenance and device acceptance.
+
+
+### 2026-10-01: damaged-workspace preservation foundation
+
+A native recovery hold can preserve accepted edits even when a current store is
+unreadable. It pauses autosave and lifecycle writes, drains prior saves, and records
+original bytes separately from labelled accepted documents and any temporary room.
+A bounded evidence ZIP carries per-entry hashes and cannot be imported as an
+ordinary workspace. Tests cover damaged data with newer live edits, cancellation
+while both save workers are pending, older save completion, temporary-room
+separation, capture failure and teardown without overwriting originals.
+
+This is an internal prerequisite, not a user-facing corrupt-workspace recovery
+flow. Exact pointer/candidate inspection, durable recovery selection, coordinated
+content replacement and shared book/agent controls remain to be connected. The
+checkpoint does not query or install on the headset; device acceptance is pending.

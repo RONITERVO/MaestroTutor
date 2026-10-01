@@ -29,6 +29,8 @@ namespace Maestro.Quest.Creation
         bool applying, dirty;
         float saveAt;
         Task<string> saveTask;
+        readonly Persistence.WorkspaceWriteGate saveDispatch=new();
+        internal IDisposable HoldSaveDispatch(out Task dispatched,out string error){var lease=saveDispatch.TryFreeze(out error);dispatched=(Task)saveTask??Task.CompletedTask;return lease;}
         string lastSaveError;
         internal bool HasUnsavedChanges => dirty || saveTask != null;
         public string Status { get; private set; } = "Choose a shape or pick up an object";
@@ -468,7 +470,7 @@ namespace Maestro.Quest.Creation
             CompleteTemporarySave();
             if (Time.unscaledTime >= captureAt) { captureAt = Time.unscaledTime + 1; CapturePhysicsPlacements(); }
             CompleteSave();
-            if (journal == null || TemporaryRoom || !dirty || saveTask != null || Time.unscaledTime < saveAt) return;
+            if (saveDispatch.Frozen || journal == null || TemporaryRoom || !dirty || saveTask != null || Time.unscaledTime < saveAt) return;
             var snapshot = journal.Snapshot(); dirty = false;
             saveTask = Task.Run(() => SaveSnapshot(snapshot));
         }
@@ -501,6 +503,7 @@ namespace Maestro.Quest.Creation
         internal bool TryFlush(out string error)
         {
             error=null;
+            if(saveDispatch.Frozen){error="Room saves are paused while recovery preserves original files.";return false;}
             if (journal == null || storage == null) { error="Room storage is not ready."; return false; }
             if (TemporaryRoom) { error="Keep or discard the temporary room before saving the ordinary workspace."; return false; }
             CapturePhysicsPlacements(); CompleteSave(wait:true);
