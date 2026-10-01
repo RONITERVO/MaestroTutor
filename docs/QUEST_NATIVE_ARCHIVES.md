@@ -867,10 +867,10 @@ that uses the existing chooser, preview, activation and content-review flow.
 
 This portable export is deliberately **not removal authority**: it omits private
 recovery evidence and execution history. A diagnostic history-evidence export
-is also insufficient to delete a retained room. Dependency-aware generation
-removal and complete recovery-evidence preservation remain required release
-work. The 64-generation cap still applies, but inventory and export work when it
-is full. No retention slot is required to export.
+is also insufficient to delete a retained room. Permanent generation disposal uses the separate confirmation flow below; complete
+raw recovery-evidence export remains separate release work. The 64-generation cap
+still applies, but inventory and export work when it is full. No retention slot is
+required to export.
 
 `workspace.retention` reports the native execution run ID and session-local
 inspection/publication state. Stop requests cancellation; a publisher already
@@ -878,3 +878,52 @@ running may still complete. Its cancelled native receipt remains cancelled even
 if the service later reports publication. Private temporary exports are cleaned
 up after completion/failure; originals and public Downloads are never removed.
 Restart clears the inventory/status but retains ordinary native action receipts.
+
+
+## Confirmed permanent disposal of a retained generation
+
+The release policy allows the user to discard an old saved room after a clear
+confirmation. A backup is optional. `workspace.retention.reviewRemoval` accepts
+an exact inspection ID and generation ID. It checks both selection pointers,
+live owners and accepted/persisted activation, review and recovery history.
+Current, previous, pointer-backup and tracked operation roots remain protected.
+Unavailable or changed tracking state refuses disposal. Historical immutable
+reservation records alone do not indefinitely pin old generations after all live
+and tracked dependencies have moved on.
+
+An eligible preview hashes the complete generation, including private recovery
+files and action epochs. It returns a session-local preview ID, fingerprint,
+file count, size in MiB and explanation. `workspace.retention.removal` exposes
+that same preview without private paths. The scan is bounded to 2 GiB, 16,384
+entries and 12 directory levels; links are refused. Previewing needs no export
+or free retention slot. A corrupt target manifest can be discarded once its
+actual files and dependencies are verified. Unclear current or backup selection
+still requires recovery first; disposal cannot guess which files are live.
+
+`workspace.retention.remove` requires the exact preview ID, generation ID,
+fingerprint and `confirmation: "delete <generationId>"`. The agent must obtain
+explicit intent to permanently discard this generation, including private
+recovery evidence and action history. Export, inspection and a generic request
+to free space are insufficient. The optional book catalog derives a separate
+confirmation step from `x-confirmation` metadata and shows the exact call;
+changing arguments or cancelling clears it. The agent and book then use the same
+native operation, workspace gate and durable receipt. Room programs cannot run
+workspace maintenance.
+
+Immediately before deletion the worker rechecks all files and dependencies under
+the generation-store writer lease, then removes only the inspected paths. Files
+are rechecked before unlinking and directory removal is nonrecursive, so a newly
+added child is preserved. Stop before deletion preserves everything; once deletion
+starts it cannot undo prior deletions. A failure can leave a partial generation.
+Inspect that remainder and obtain a new preview and confirmation before another
+attempt. Never replay an uncertain result. Duplicate run IDs return retained
+outcomes, and restart never resumes disposal. A cancelled wait can coexist with a
+completed disposal service status; inspect actual state and the matching receipt.
+
+Inspection/removal do not replace current content owners or change the book,
+conversation or pointer. Workers keep the path lease through host retirement;
+new owners wait until they drain. Success frees a generation slot even at the
+64-generation cap. This is deliberate whole-generation disposal, without Undo,
+not automatic quota eviction or proof that a portable export contains every file.
+A full store with unreadable selection may still need an external repair path;
+it does not relax dependency checks. No device files are removed by desktop tests.

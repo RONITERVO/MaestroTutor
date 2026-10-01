@@ -40,7 +40,7 @@ namespace Maestro.Quest.Persistence
         }
         static readonly string[] Keys={"version","requestId","selectionRequestId","generationId","manifestHash","originRevision","retainedId","retainedHash","committedRevision","phase","status"};
         static bool Id(string value)=>value!=null&&System.Text.RegularExpressions.Regex.IsMatch(value,"^[a-f0-9]{32}$");
-        static bool ValidRecord(JObject value)
+        internal static bool ValidRecord(JObject value)
         {
             if(value.Count!=Keys.Length||!Keys.All(value.ContainsKey)||value["version"]?.Type!=JTokenType.Integer||(int)value["version"]!=1||Keys.Skip(1).Any(k=>value[k]?.Type!=JTokenType.String||((string)value[k]).Length>256))return false;
             return Id((string)value["requestId"])&&Id((string)value["selectionRequestId"])&&Id((string)value["generationId"])&&Imports.ModelLibrary.ValidHash((string)value["manifestHash"])&&

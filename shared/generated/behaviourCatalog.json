@@ -1136,6 +1136,169 @@
       }
     },
     {
+      "id": "workspace.retention.reviewRemoval",
+      "version": 1,
+      "label": "Review permanent workspace removal",
+      "input": {
+        "type": "object",
+        "properties": {
+          "inspectionId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "generationId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "inspectionId",
+          "generationId"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "workspaceDisposal.v1"
+        ]
+      },
+      "duration": "completion",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [],
+      "domain": "workspace",
+      "description": "Read-only preview of permanent disposal for one inspected generation. Hashes its complete tree, including private recovery evidence and action history. Returns eligible, reason, file count, size, previewId and fingerprint. Protects selected, previous, pointer-backup and live workspaces plus tracked operation dependencies; refuses unavailable or changed history. Historical reservations alone do not permanently prohibit explicit disposal. Export is optional: a portable export omits private recovery files. Preview does not authorize deletion.",
+      "example": {
+        "inspectionId": "00000000000000000000000000000000",
+        "generationId": "00000000000000000000000000000000"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "previewId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "generationId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "fingerprint": {
+            "type": "string",
+            "pattern": "^([a-f0-9]{64})?$",
+            "maxLength": 64
+          },
+          "eligible": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string",
+            "pattern": "^[^\\u0000-\\u001f]{0,256}$",
+            "maxLength": 256
+          },
+          "files": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 16384.0
+          },
+          "sizeMiB": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 2048.0
+          }
+        },
+        "required": [
+          "previewId",
+          "generationId",
+          "fingerprint",
+          "eligible",
+          "reason",
+          "files",
+          "sizeMiB"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "workspace.retention.remove",
+      "version": 1,
+      "label": "Permanently discard retained workspace",
+      "input": {
+        "type": "object",
+        "properties": {
+          "previewId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "generationId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "fingerprint": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "confirmation": {
+            "type": "string",
+            "pattern": "^delete [a-f0-9]{32}$",
+            "maxLength": 39
+          }
+        },
+        "required": [
+          "previewId",
+          "generationId",
+          "fingerprint",
+          "confirmation"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "workspaceDisposal.v1"
+        ],
+        "x-confirmation": "Permanently discard this saved workspace, including private recovery files and action history? Export is optional and may omit those files. No Undo. Stop cannot roll back deletion after it starts."
+      },
+      "duration": "completion",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [],
+      "domain": "workspace",
+      "description": "Permanently discard exactly the eligible generation from workspace.retention.reviewRemoval. Requires that previewId, generationId and fingerprint, and confirmation equal to delete followed by a space and the exact generationId. Obtain explicit user intent to permanently discard this generation and its private recovery evidence/action history; never infer permission from inspection, export or a request to free space. No Undo. Rechecks all files and live dependencies before deletion. Does not touch selected/previous/pointer-backup roots or pending restores. Stop cannot undo deletion after it starts; failure may leave a partial generation. Inspect current state and obtain a fresh preview/confirmation before another attempt. Never automatically replay or retry an uncertain result.",
+      "example": {
+        "previewId": "00000000000000000000000000000000",
+        "generationId": "00000000000000000000000000000000",
+        "fingerprint": "0000000000000000000000000000000000000000000000000000000000000000",
+        "confirmation": "delete 00000000000000000000000000000000"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "generationId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "fingerprint": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "removed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "generationId",
+          "fingerprint",
+          "removed"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "workspace.evidence.inspect",
       "version": 1,
       "label": "Inspect preserved recovery evidence",
@@ -4465,7 +4628,7 @@
         }
       },
       "label": "Retained workspace status",
-      "description": "Latest session-local inspection or publication. requestId is its native execution runId. Exported does not mean restored, reviewed, or removable. Cancelled waits may still finish publication. Restart clears this status/inventory; durable action receipts remain inspectable.",
+      "description": "Latest session-local inspection, publication or disposal. requestId is its native execution runId. Exported does not mean restored, reviewed, or removable. Cancelled waits may still finish publication or disposal. Restart clears this status/inventory; durable action receipts remain inspectable.",
       "domain": "workspace",
       "input": {
         "type": "object",
@@ -4517,6 +4680,34 @@
         "inspectionId": "00000000000000000000000000000000",
         "index": 0
       },
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
+      "id": "workspace.retention.removal",
+      "version": 1,
+      "type": {
+        "record": {
+          "previewId": "text",
+          "generationId": "text",
+          "fingerprint": "text",
+          "eligible": "boolean",
+          "reason": "text",
+          "files": "number",
+          "sizeMiB": "number"
+        }
+      },
+      "label": "Permanent removal preview",
+      "description": "The latest completed removal preview in this session. eligible is a snapshot, not deletion permission; native removal rechecks the exact fingerprint and dependencies. Protected entries have no fingerprint or file count. Restart, a new inspection or a removal attempt clears this preview. No private paths or file contents are exposed.",
+      "domain": "workspace",
+      "input": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "example": {},
       "features": [
         "factQueries.v1"
       ]
@@ -5168,7 +5359,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "e3cd94378010626233864366e3c36409d32abe7ab92960de245ba23eb7f7609f"
+      "sha256": "4609489a4e3545b3bbd6c3515a56b0a7520864f33cb78ba9e00eeefa70f04f42"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -5232,7 +5423,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "4b63ab22f31888ab26bf03aaeab6e980d9dcfa5f4206ec737a03a5ad3e4aa39b"
+      "sha256": "4aaae8654999eccbb2c4888275d4d1b52f60f8ec8ea2efca6188e81c68a540fe"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -5312,7 +5503,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceRetentionCapabilities.cs",
-      "sha256": "7e1f048412e91f92868bf84855082351b202d2fd6ce998708c6613000e484f17"
+      "sha256": "15f052ba4b25f3e555f0d4f8bc4c8f1f3802b7fb719ce1be5cd2de7672568aeb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceReviewCapabilities.cs",

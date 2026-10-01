@@ -337,3 +337,16 @@ it('accepts native retained exports with distinct original and current portable 
  for(const args of [{...call.arguments,generationId:'../room'},{...call.arguments,originalManifestHash:'changed'},{...call.arguments,path:'/private/file'}])expect(validExecutionRequest({operation:'start',call:{...call,arguments:args}})).toBe(false);
  expect(validFactValue('workspace.retention.entry',{...nativeRetention.entry,canDelete:true})).toBe(false);
 });
+
+import nativeRemoval from '../../../test-fixtures/browser/workspaceRemoval.json';
+it('accepts native disposal previews and receipts and requires the explicit disposal contract',()=>{
+ for(const execution of [nativeRemoval.previewExecution,nativeRemoval.removeExecution,nativeRemoval.restartedExecution])expect(validExecutionView(execution)).toBe(true);
+ expect(validFactValue('workspace.retention.removal',nativeRemoval.preview)).toBe(true);
+ const call=nativeRemoval.removeExecution.workspace.selected.call,execution={operation:'start' as const,call};
+ expect(validExecutionRequest(execution)).toBe(true);
+ expect(()=>requireRoomCapabilities([{action:'execution',execution}],{capabilities:['execution.v1','workspaceRetention.v1']})).toThrow('workspaceDisposal.v1');
+ expect(()=>requireRoomCapabilities([{action:'execution',execution}],{capabilities:['execution.v1','workspaceDisposal.v1']})).not.toThrow();
+ for(const args of [{...call.arguments,confirmation:''},{...call.arguments,previewId:'changed'},{...call.arguments,generationId:'../room'},{...call.arguments,path:'/private/file'}])expect(validExecutionRequest({operation:'start',call:{...call,arguments:args}})).toBe(false);
+ expect(nativeRemoval.remove.removed).toBe(true);expect(nativeRemoval.preview.fingerprint).toBe(nativeRemoval.remove.fingerprint);
+ expect(nativeRemoval.restartedExecution.workspace.selected.id).toBe(nativeRemoval.removeExecution.workspace.selected.id);
+});

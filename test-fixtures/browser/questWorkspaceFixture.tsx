@@ -10,6 +10,7 @@ import nativeProgram from './programBookState.json';
 import unavailableProgram from './unavailableProgramState.json';
 import historyRecovery from './actionHistoryRecoveryStates.json';
 import nativeExecutions from './executionStates.json';
+import nativeRemoval from './workspaceRemoval.json';
 import nativeEvents from './eventProgramStates.json';
 import creationProgram from '../../unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-create.json';
 import creationResult from './creationResult.json';
@@ -21,10 +22,12 @@ import recipeCreationResult from './recipeCreationResult.json';
 import {capabilityDefinition,validateCapabilityArguments,capabilityResources} from '../../shared/capabilities';
 import {behaviourCatalog} from '../../shared/behaviourCatalog';
 import {validCatalogView} from '../../shared/roomCatalog';
+import {validExecutionView} from '../../shared/roomExecutions';
 import nativeRules from './ruleBookState.json';
 import {validRuleView,type RuleView} from '../../src/core-sdk/room/rules';
 import '../../src/app/index.css';
 if(!import.meta.env.DEV)throw new Error('Development fixture only');
+if(!validExecutionView(nativeRemoval.previewExecution)||!validExecutionView(nativeRemoval.removeExecution))throw new Error('Invalid native removal fixture');
 useMaestroStore.setState({settings:{...initialSettings,selectedLanguagePairId:'es-en'},isSettingsLoaded:true,needsLanguageSelection:false,isLoadingHistory:false,messages:[]});
 const recipe=parseRecipe(robot);if(!recipe)throw new Error('Native recipe fixture is invalid');
 const id='b'.repeat(32),white={r:1,g:1,b:1,a:1};
@@ -36,6 +39,8 @@ const eventPrograms=new URLSearchParams(location.search).has('events');let signa
 if(eventPrograms)state=JSON.parse(JSON.stringify(nativeEvents.waiting));
 const programs=new URLSearchParams(location.search).has('program');if(programs)state=JSON.parse(JSON.stringify(nativeProgram));
 if(new URLSearchParams(location.search).has('execution')){state=JSON.parse(JSON.stringify(nativeExecutions.running));state.visible=true;state.execution={selected:null,running:[],outcomes:[]};}
+const disposal=new URLSearchParams(location.search).has('disposal');
+if(disposal){state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';state.execution=JSON.parse(JSON.stringify(nativeRemoval.previewExecution));state.execution!.workspace!.nextRunId=nativeRemoval.removeExecution.workspace.selected.id;state.capabilities=[...state.capabilities??[],'workspaceRetention.v1','workspaceDisposal.v1','execution.v1','executionReceipts.v1','actionResults.v1'];}
 const visualBlocks=new URLSearchParams(location.search).has('visualBlocks');
 const objectEdits=new URLSearchParams(location.search).has('objectEdits');
 const recipeCreation=new URLSearchParams(location.search).has('recipeCreation');
@@ -82,7 +87,8 @@ setInterval(()=>{
   for(const command of request.commands){
    if(command.action==='execution'&&command.execution){
     const input=command.execution;
-    if(moduleEvidence&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(moduleEvidence.published.execution?.selected?.call)){
+    if(disposal&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeRemoval.removeExecution.workspace.selected.call)){state.execution=copy(nativeRemoval.removeExecution) as RoomAgentState['execution'];state.status='Recorded native disposal result; no files are changed by this browser fixture';}
+    else if(moduleEvidence&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(moduleEvidence.published.execution?.selected?.call)){
      state.execution=copy(moduleEvidence.published.execution);state.status='Recorded native publication; browser acknowledgement is simulated';
     }else if(input.operation==='recover'&&recovering&&input.recoveryId===historyRecovery.error.execution.recovery.id){state.execution=copy(historyRecovery.success.execution);state.status=historyRecovery.success.status;}
     else if(input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeExecutions.running.execution.selected.call)){

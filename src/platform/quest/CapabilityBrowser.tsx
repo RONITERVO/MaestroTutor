@@ -16,7 +16,7 @@ export function CapabilityBrowser({client,onClose,onInsert}:{client:RoomAgentCli
  const [category,setCategory]=useState<CatalogCategory>('actions');
  const [query,setQuery]=useState(''),[page,setPage]=useState<Extract<CatalogView,{operation:'search'}>|null>(null);
  const [inspection,setInspection]=useState<Extract<CatalogView,{operation:'inspect'}>|null>(null),[args,setArgs]=useState('{}'),[error,setError]=useState('');
- const [checked,setChecked]=useState(''),[recoveryNotice,setRecoveryNotice]=useState('');
+ const [checked,setChecked]=useState(''),[recoveryNotice,setRecoveryNotice]=useState(''),[confirming,setConfirming]=useState('');
  const send=async(catalog:CatalogRequest)=>{
   setError('');setRecoveryNotice('');try {const result=await client.request([{action:'catalog',catalog}]);if(!result.ok){setError(result.status);return null;}return result.catalog??null;}
   catch(e){setError(e instanceof Error?e.message:'The room is unavailable.');return null;}
@@ -28,7 +28,7 @@ export function CapabilityBrowser({client,onClose,onInsert}:{client:RoomAgentCli
  const scope=category==='actions'?{}:{category};
  const search=async(offset=0)=>{setInspection(null);const result=await send({operation:'search',...scope,query:offset?page?.query??query:query,offset});if(result?.operation==='search'&&(result.category??'actions')===category)setPage(result);};
  const inspect=async(id:string,version:number,argumentsValue?:Record<string,unknown>)=>{const result=await send({operation:'inspect',...scope,capability:id,version,...(argumentsValue?{arguments:argumentsValue}:{})});if(result?.operation==='inspect'&&(result.category??'actions')===category&&result.capability===id&&result.version===version){
-  setInspection(result);setChecked('');if(!result.definition)setError(result.status);
+  setInspection(result);setChecked('');setConfirming('');if(!result.definition)setError(result.status);
   else if(result.category==='facts'&&result.definition.input)setArgs(JSON.stringify(result.arguments??result.definition.example??{},null,2));
   else if(result.category!=='events'&&result.category!=='facts'&&result.category!=='modules')setArgs(JSON.stringify(result.definition.example??initialCapabilityValue(result.definition.input,state?.objects??[]),null,2));
  }};
@@ -41,6 +41,7 @@ export function CapabilityBrowser({client,onClose,onInsert}:{client:RoomAgentCli
   if(!invalid)call={id:definition.id,version:definition.version,arguments:parsedArgs as Record<string,unknown>};
  }catch{invalid='Enter valid JSON arguments.';}
  const key=call?JSON.stringify(call):'';
+ const confirmation=definition?.input['x-confirmation'];
  const observation=state?.catalog;
  const check=checked===key&&key&&observation?.operation==='check'&&JSON.stringify(observation.call)===key?observation:null;
  const supported=state?.capabilities?.includes('catalog.v1')===true;
@@ -77,14 +78,15 @@ export function CapabilityBrowser({client,onClose,onInsert}:{client:RoomAgentCli
     <p className="room-workspace-intro">Choose this fact as a condition or calculation input in a program. This reading is a snapshot; it does not subscribe to changes or run a behaviour.</p>
    </section>}
    {definition&&<><p>{definition.id} · version {definition.version}</p>{definition.description&&<p>{definition.description}</p>}
-    {definition.input.oneOf&&<CapabilityVariant schema={definition.input} value={parsedArgs} objects={state?.objects??[]} onChange={value=>{setArgs(JSON.stringify(value,null,2));setChecked('');}}/>}
+    {definition.input.oneOf&&<CapabilityVariant schema={definition.input} value={parsedArgs} objects={state?.objects??[]} onChange={value=>{setArgs(JSON.stringify(value,null,2));setChecked('');setConfirming('');}}/>}
     {resolveCapabilitySchema(definition.input,call?.arguments)?.description&&<p>{resolveCapabilitySchema(definition.input,call?.arguments)?.description}</p>}
-    <label>Action arguments<textarea aria-label="Action arguments" rows={12} spellCheck={false} value={args} disabled={pending} onChange={e=>{setArgs(e.target.value);setChecked('');}}/></label>
+    <label>Action arguments<textarea aria-label="Action arguments" rows={12} spellCheck={false} value={args} disabled={pending} onChange={e=>{setArgs(e.target.value);setChecked('');setConfirming('');}}/></label>
     {invalid&&<p className="room-message room-message-warning">{invalid}</p>}
     <div className="room-workspace-actions"><button disabled={pending||!call} onClick={async()=>{if(call){const result=await send({operation:'check',call});if(result?.operation==='check')setChecked(key);}}}>Check availability</button>
-     {state?.capabilities?.includes('execution.v1')&&<button disabled={pending||!call||Boolean(execution?.storageError)} onClick={()=>{if(call)void execute({operation:'start',call});}}>Run action now</button>}
-     {onInsert&&<button disabled={pending||!call} onClick={()=>{if(call){const error=onInsert(call);if(error)setError(error);else onClose();}}}>Add first block to draft</button>}</div>
-    <p className="room-workspace-intro">{onInsert?'Adding a block changes your draft. Apply it in the workshop when ready.':'Choose a behaviour in the workshop to add an action block.'} Availability can change before a behaviour runs.</p>
+     {state?.capabilities?.includes('execution.v1')&&<button disabled={pending||!call||Boolean(execution?.storageError)} onClick={()=>{if(call){if(confirmation)setConfirming(key);else void execute({operation:'start',call});}}}>Run action now</button>}
+     {onInsert&&definition.domain!=='workspace'&&<button disabled={pending||!call} onClick={()=>{if(call){const error=onInsert(call);if(error)setError(error);else onClose();}}}>Add first block to draft</button>}</div>
+    {confirmation&&call&&confirming===key&&<section aria-label="Confirm permanent action" className="room-message room-message-warning"><p>{confirmation}</p><pre>{JSON.stringify(call.arguments,null,2)}</pre><button disabled={pending} onClick={()=>setConfirming('')}>Cancel confirmation</button><button disabled={pending||Boolean(execution?.storageError)} onClick={()=>{setConfirming('');void execute({operation:'start',call});}}>Confirm permanent action</button></section>}
+    <p className="room-workspace-intro">{definition.domain==='workspace'?'Workspace maintenance runs once and cannot be added to a room behaviour.':onInsert?'Adding a block changes your draft. Apply it in the workshop when ready.':'Choose a behaviour in the workshop to add an action block.'} Availability can change before execution.</p>
     <details><summary>Argument reference</summary><p>Duration: {definition.duration}. Uses: {(resolveCapabilitySchema(definition.input,call?.arguments)?.['x-channels']??definition.channels).join(', ')||'no animation channel'}.</p><p>Needs: {(resolveCapabilitySchema(definition.input,call?.arguments)?.['x-requirements']??definition.requirements).join(', ')||'no additional requirements'}.</p><pre>{JSON.stringify(definition.input,null,2)}</pre></details>
    </>}
    {category==='actions'&&state?.execution&&<>

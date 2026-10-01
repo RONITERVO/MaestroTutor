@@ -164,7 +164,7 @@ namespace Maestro.Quest.Programs
         });
         public static readonly IReadOnlyList<FactDefinition> Facts=Array.AsReadOnly(new[] {
             NativeObjectFacts.Position(),
-            WorkspaceRetentionFacts.Status(),WorkspaceRetentionFacts.Entry(),
+            WorkspaceRetentionFacts.Status(),WorkspaceRetentionFacts.Entry(),WorkspaceRetentionFacts.Removal(),
             WorkspaceEvidenceFacts.Status(),WorkspaceEvidenceFacts.Entry(),
             WorkspaceHistoryFacts.Status(),
             WorkspaceSelectionFacts.Selection(),

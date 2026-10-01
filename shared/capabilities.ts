@@ -5,7 +5,7 @@ import {parseRecipe} from './roomRecipe';
 import {behaviourCatalog,type BehaviourValueType} from './behaviourCatalog';
 export interface CapabilitySchema {
  type:'object'|'array'|'string'|'number'|'integer'|'boolean';
- oneOf?:CapabilitySchema[];'x-discriminators'?:string[];title?:string;description?:string;examples?:unknown[];'x-static'?:boolean;'x-channels'?:string[];'x-requirements'?:string[];'x-features'?:string[];
+ oneOf?:CapabilitySchema[];'x-confirmation'?:string;'x-discriminators'?:string[];title?:string;description?:string;examples?:unknown[];'x-static'?:boolean;'x-channels'?:string[];'x-requirements'?:string[];'x-features'?:string[];
  items?:CapabilitySchema;minItems?:number;maxItems?:number;nullable?:boolean;
  properties?:Record<string,CapabilitySchema>;required?:string[];additionalProperties?:false;
  format?:'unitQuaternion'|'boundedOffset'|'roomRecipe'|'programModule';'x-resource'?:'object';'x-requires'?:Record<string,string>;

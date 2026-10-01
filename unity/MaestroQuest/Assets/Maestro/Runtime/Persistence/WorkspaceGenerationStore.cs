@@ -84,9 +84,10 @@ namespace Maestro.Quest.Persistence
             while(offset<bytes.Length){int count=file.Read(bytes,offset,bytes.Length-offset);if(count==0)throw Invalid("Workspace metadata was truncated.");offset+=count;}
             if(file.ReadByte()!=-1)throw Invalid("Workspace metadata changed while reading.");return bytes;
         }
-        static JObject Read(string path,int limit=4096)
+        static JObject Read(string path,int limit=4096)=>Read(Bytes(path,limit));
+        static JObject Read(byte[] bytes)
         {
-            using var reader=new JsonTextReader(new StringReader(Utf8.GetString(Bytes(path,limit)))) {MaxDepth=8,DateParseHandling=DateParseHandling.None};
+            using var reader=new JsonTextReader(new StringReader(Utf8.GetString(bytes))) {MaxDepth=8,DateParseHandling=DateParseHandling.None};
             var value=JObject.Load(reader,new JsonLoadSettings {DuplicatePropertyNameHandling=DuplicatePropertyNameHandling.Error});if(reader.Read())throw Invalid("Trailing workspace metadata.");return value;
         }
         static WorkspaceLocation Location(JToken value)

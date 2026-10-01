@@ -1119,7 +1119,8 @@ Inactive exports validate actual saved content into a fresh portable manifest,
 including edits newer than the import, without opening the room or consuming a
 retention slot. Excluded private files stay on-device. The live storage's
 newer-version detector is reused to prevent exporting an older primary as current.
-Generation removal remains unfinished; portable exports are not full raw evidence.
+At this export checkpoint, generation removal remained unfinished; portable
+exports are not full raw evidence. The later disposal increment is recorded below.
 
 Native checks cover newer primary content, model payloads, complete ZIP re-import,
 full retention capacity, corrupt and stale inputs, newer-version files, publication
@@ -1137,3 +1138,47 @@ metadata, and 113 packaged web files match the tested sources. Development APK
 `AA7C2D35164A3A5F218F06A5BCA326ECB0A5A5C1CE0C65570531167457E22C85`
 and remains uninstalled. PR #248 records the corresponding verified checkpoint.
 Device/provider/Store acceptance and the full release goal remain open.
+
+
+### 2026-10-01: explicit retained-generation disposal
+
+The user selected confirmed discard with optional backup. Retained inventory now
+leads to a separate whole-generation preview and an exact confirmed removal call.
+The preview binds actual files, both selection pointers, live owners and accepted
+operation history. Current, previous, pointer-backup and pending/tracked roots
+remain protected; historical reservations alone no longer pin unrelated old rooms
+forever. Damaged target metadata can be disposed of, but unclear selection/history
+must be repaired first. No automatic quota eviction, fallback or replay is added.
+
+`workspace.retention.reviewRemoval`, `workspace.retention.remove` and the
+`workspace.retention.removal` fact use the shared catalog and durable workspace
+receipts. The book derives a separate confirmation from schema metadata, resets it
+when arguments change, and no longer offers workspace actions as room-program
+blocks. Native deletion checks exact contents before starting and before each
+file unlink; nonrecursive directory removal preserves new children. Stop after
+deletion begins cannot roll back; interruption may leave a partial generation
+requiring another inspection, preview and explicit confirmation. Retirement holds
+the path until workers drain. Full-capacity cleanup needs no spare generation.
+
+Desktop tests exercise selected/previous/backup/live dependencies, tracked and
+changed history, corrupt target metadata, stale file/pointer identities, full
+capacity, cancellation before/after the boundary, partial deletion and changed
+files, duplicate durable outcomes, restart and host retirement. Captured native
+previews/results are checked by the web contract and book tests. A local Chrome
+fixture verifies cancel-without-dispatch and exact confirmed dispatch; its native
+acknowledgement is simulated and no actual room files are deleted by that UI run.
+
+Generation disposal does not constitute a complete raw recovery archive. The
+64-generation cap plus unreadable selection still needs recovery/repair; unknown
+roots are never guessed to make space. Quest device/provider/lifecycle/performance
+and Store acceptance remain required for the complete v1 release.
+
+Verification for this disposal checkpoint: 368 EditMode and 242 PlayMode tests
+passed (three optional private-model skips), 1,545 web tests in 172 files, 43 final
+book/contract checks, and 55 Android tests. Production build, lint, catalog drift,
+prompt ownership and boundaries pass. The complete build helper exited zero;
+ARM64 contents and v2 signature verify. All 167 runtime and 75 test C# sources,
+24 fixture files and metadata, and 113 packaged web files match the verified
+source/build. Development APK `MaestroQuest-workspace-removal-908B17FF.apk` has
+SHA-256 `908B17FF7D590D1ABBB2214F322EE4768AA3464AB5F4C4D9A7BF282BC1A1FAF2`
+and remains uninstalled. PR #248 stays draft and the full release goal remains open.

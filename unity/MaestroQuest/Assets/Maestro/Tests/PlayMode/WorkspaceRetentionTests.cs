@@ -43,7 +43,7 @@ namespace Maestro.Quest.Tests
         {
             var saved=Prepare(Archive("Current"));var previous=Prepare(Archive("Previous"));store.Activate(saved.Id,saved.Receipt.ManifestHash,"initial",previous.Id,previous.Receipt.ManifestHash);Open();yield return ReadyHost();EvidencePublisher();
             yield return RetentionInspect(saved.Id);Assert.That(host.Retention.CanStart("export",RetentionArgs(),out _),Is.False);yield return RetentionInspect(previous.Id);var stale=RetentionArgs();yield return RetentionInspect(previous.Id);Assert.That(host.Retention.CanStart("export",stale,out _),Is.False);
-            EvidencePublisher(path=>throw new IOException("No publication"));var job=host.Retention.Start("export",RetentionArgs());while(job.Pending)yield return null;Assert.That(job.Phase,Is.EqualTo("failed"));Assert.That(Directory.GetFiles(Path.Combine(directory,"evidence-cache")),Is.Empty);Assert.That(Directory.Exists(store.DataDirectory(host.Selection.Previous)),Is.True);
+            EvidencePublisher(path=>throw new IOException("No publication"));var job=host.Retention.Start("export",RetentionArgs());while(job.Pending)yield return null;Assert.That(job.Phase,Is.EqualTo("failed"));Assert.That(host.Runtime.TryRead("workspace.retention",1,new JObject(),out var failure),Is.True);Assert.That((string)JObject.FromObject(failure.Value)["phase"],Is.EqualTo("failed"));Assert.That(Directory.GetFiles(Path.Combine(directory,"evidence-cache")),Is.Empty);Assert.That(Directory.Exists(store.DataDirectory(host.Selection.Previous)),Is.True);
         }
         [UnityTest] public IEnumerator RetainedPublisherCancellationKeepsOwnershipAndCancelledReceiptUntilWorkerDrains()
         {

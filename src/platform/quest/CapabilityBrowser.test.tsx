@@ -429,3 +429,30 @@ it('exports an inspected retained workspace using shared forms and displays port
  expect(screen.getByLabelText('Current fact value').textContent).toContain(nativeRetention.entry.generationId);
  expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
 });
+
+import nativeRemoval from '../../../test-fixtures/browser/workspaceRemoval.json';
+it('requires confirmation of the exact disposal call and clears it on edits or cancellation',async()=>{
+ const {client,screen,receive}=setup(true,['workspaceDisposal.v1','execution.v1','actionResults.v1']);
+ const receipt=nativeRemoval.removeExecution.workspace.selected;
+ if(!validExecutionView(nativeRemoval.previewExecution)||!validExecutionView(nativeRemoval.removeExecution))throw new Error('Invalid native removal execution');
+ await receive(undefined,false,{execution:{...nativeRemoval.previewExecution,workspace:{...nativeRemoval.previewExecution.workspace,nextRunId:receipt.id}}});
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));
+ expect(screen.getByLabelText('Action result').textContent).toContain(nativeRemoval.preview.fingerprint);
+ fireEvent.click(screen.getByRole('button',{name:'Search'}));const definition=capabilityDefinition('workspace.retention.remove')!;
+ await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Inspect disposal'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Confirm permanent discard'});
+ expect(screen.queryByRole('button',{name:'Add first block to draft'})).toBeNull();
+ fireEvent.change(screen.getByLabelText('Action arguments'),{target:{value:JSON.stringify(receipt.call.arguments)}});
+ fireEvent.click(screen.getByRole('button',{name:'Run action now'}));expect(client.snapshot().request).toBeNull();
+ expect(screen.getByRole('region',{name:'Confirm permanent action'}).textContent).toContain('No Undo');
+ fireEvent.click(screen.getByRole('button',{name:'Cancel confirmation'}));expect(screen.queryByRole('button',{name:'Confirm permanent action'})).toBeNull();expect(client.snapshot().request).toBeNull();
+ fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
+ fireEvent.change(screen.getByLabelText('Action arguments'),{target:{value:JSON.stringify({...receipt.call.arguments,fingerprint:'a'.repeat(64)})}});
+ expect(screen.queryByRole('button',{name:'Confirm permanent action'})).toBeNull();
+ fireEvent.change(screen.getByLabelText('Action arguments'),{target:{value:JSON.stringify(receipt.call.arguments)}});
+ expect(screen.queryByRole('button',{name:'Confirm permanent action'})).toBeNull();
+ fireEvent.click(screen.getByRole('button',{name:'Run action now'}));fireEvent.click(screen.getByRole('button',{name:'Confirm permanent action'}));
+ expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',runId:receipt.id,call:receipt.call}});
+ await receive(undefined,false,{execution:nativeRemoval.removeExecution});expect(screen.getByLabelText('Action result').textContent).toContain('true');
+ expect(screen.queryByRole('button',{name:'Confirm permanent action'})).toBeNull();expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
+});

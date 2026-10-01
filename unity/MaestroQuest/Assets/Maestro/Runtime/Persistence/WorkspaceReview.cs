@@ -38,7 +38,7 @@ namespace Maestro.Quest.Persistence
                 else if((string)record["phase"] is "preparing" or "completing" or "committed" or "unavailable") {record["phase"]="interrupted";record["status"]="Review was interrupted or the selection changed. Inspect current contents; completion was not replayed.";}
             }catch(Exception){record=null;journalError="Workspace review history is unavailable. Its original files are preserved; recovery is required.";}
         }
-        static bool Valid(JObject value)
+        internal static bool Valid(JObject value)
         {
             if(value.Count!=Fields.Length||!Fields.All(value.ContainsKey)||value["version"]?.Type!=JTokenType.Integer||(int)value["version"]!=1||Fields.Skip(1).Where(x=>x!="summary").Any(x=>value[x]?.Type!=JTokenType.String||((string)value[x]).Length>256))return false;
             if((string)value["phase"] is "prepared" or "completing" or "committed" or "completed"&&!ModelLibrary.ValidHash((string)value["manifestHash"]))return false;
