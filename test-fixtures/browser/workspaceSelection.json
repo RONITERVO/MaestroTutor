@@ -45,7 +45,8 @@
         }
       },
       "label": "Archive selection status",
-      "description": "Read the exact archive request after returning from Android selection. Phases: selecting, copying, preparing, prepared, cancelling, cancelled or failed. Prepared means its manifest, documents and assets were verified into a private preview; nothing was activated. Summary counts describe that preview, including unavailable programs and missing references. Inspect errors before another choice. IDs and counts are empty/zero until a preview exists. An unknown request or paused runtime is unavailable. Read-only; never opens a chooser, imports or runs anything.",
+      "description": "Read the exact archive request after returning from Android selection. Phases: selecting, copying, preparing, prepared, activating, activated, retained, cancelling, cancelled or failed. Activated means the preview was committed; follow workspace.archive.activation to establish whether content opened. Retained means an interrupted attempt must not be reused; its files are preserved. Prepared means its manifest, documents and assets were verified into a private preview; nothing was activated. Summary counts describe that preview, including unavailable programs and missing references. Inspect errors before another choice. IDs and counts are empty/zero until a preview exists. An unknown request or paused runtime is unavailable. Read-only; never opens a chooser, imports or runs anything.",
+      "domain": "workspace",
       "input": {
         "type": "object",
         "properties": {
@@ -65,8 +66,7 @@
       },
       "features": [
         "factQueries.v1"
-      ],
-      "domain": "workspace"
+      ]
     },
     "status": "Current fact value. Reading does not change the room.",
     "category": "facts",

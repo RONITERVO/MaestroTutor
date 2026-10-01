@@ -20,6 +20,8 @@ namespace Maestro.Quest.Programs
             new WorkspaceExportCapability(),
             new WorkspaceSelectCapability(),
             new WorkspaceCancelSelectionCapability(),
+            new WorkspaceActivateCapability(),
+            new WorkspaceCancelActivationCapability(),
             new PublishProgramModuleCapability(),
             new ImportProgramModuleCapability(),
             new RemoveProgramModuleCapability(),

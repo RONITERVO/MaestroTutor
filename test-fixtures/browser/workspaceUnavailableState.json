@@ -17,6 +17,7 @@
   "motions": null,
   "capabilities": [
     "workspaceMaintenance.v1",
+    "workspaceArchiveActivation.v1",
     "execution.v1",
     "executionReceipts.v1",
     "actionRecovery.v1",

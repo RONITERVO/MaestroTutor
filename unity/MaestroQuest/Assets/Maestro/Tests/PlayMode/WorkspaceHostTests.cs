@@ -20,14 +20,14 @@ using UnityEngine.TestTools;
 using UnityEngine.XR.Interaction.Toolkit;
 namespace Maestro.Quest.Tests
 {
-    public sealed class WorkspaceHostTests
+    public sealed partial class WorkspaceHostTests
     {
         GameObject root;string directory;RoomInteraction room;RoomItem book;NativeBookBrowser browser;BookPointerRouter router;BookControllerInput input;
         RoomPhysicsWorld physics;RoomNavigation navigation;ScannedRoom scan;VirtualRoomView view;RoomAgent agent;WorkspaceHost host;WorkspaceGenerationStore store;int builds;
         [SetUp] public void Setup()=>BuildShell(Path.Combine(Path.GetTempPath(),"mqh-"+Guid.NewGuid().ToString("N")));
         void BuildShell(string path)
         {
-            builds=0;directory=path;store=new WorkspaceGenerationStore(directory);
+            builds=0;afterContentBuild=null;directory=path;store=new WorkspaceGenerationStore(directory);
             root=new GameObject("Persistent shell test");root.AddComponent<XRInteractionManager>();
             var cameraObject=new GameObject("Viewer",typeof(Camera));cameraObject.transform.SetParent(root.transform,false);var camera=cameraObject.GetComponent<Camera>();
             var content=new GameObject("Persistent room origin");content.transform.SetParent(root.transform,false);room=content.AddComponent<RoomInteraction>();room.Viewer=camera.transform;
@@ -40,7 +40,7 @@ namespace Maestro.Quest.Tests
         }
         void Build(WorkspaceContent content,string data,string receipts,RoomRuntimeGate gate)
         {
-            builds++;content.Build(room,book,browser,router,input,physics,navigation,scan,view,()=>false,directory,data,receipts,gate);
+            builds++;content.Build(room,book,browser,router,input,physics,navigation,scan,view,()=>false,directory,data,receipts,gate);afterContentBuild?.Invoke();
         }
         void Open()=>host.Initialize(directory,room.transform,Build,agent);
         byte[] Archive(string label)

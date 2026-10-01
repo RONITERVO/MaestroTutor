@@ -47,7 +47,8 @@ namespace Maestro.Quest.Book
         bool? nativeSuspended;
         bool applicationPaused, applicationFocused = true;
         float nextPoll;
-        string previousSnapshot;
+        string previousSnapshot,libraryPublication,libraryPublicationSession;
+        int libraryPublicationRevision;
 
         void Start()
         {
@@ -91,6 +92,7 @@ namespace Maestro.Quest.Book
             string json = m_NativePlugin.Call<string>("ReadSnapshot");
             Error = m_NativePlugin.Call<string>("ReadError");
             ReadSnapshot(json);
+            DeliverLibraryState(true,Snapshot,value=>m_NativePlugin.Call("PublishLibraryState",value));
             var link = m_NativePlugin.Call<string>("TakeExternalLink");
             if (Uri.TryCreate(link, UriKind.Absolute, out var uri) && uri.Scheme == "https") ExternalLinkRequested?.Invoke(link);
 #endif
@@ -149,10 +151,24 @@ namespace Maestro.Quest.Book
 
         public void PublishLibraryState(string json)
         {
-            if (!IsReady || suspended || string.IsNullOrEmpty(json) || json.Length > 32768) return;
+            if (string.IsNullOrEmpty(json) || json.Length > 32768) return;
+            try {
+                var value=Newtonsoft.Json.Linq.JObject.Parse(json);string session=(string)value["session"];int revision=(int)value["revision"];
+                if(string.IsNullOrEmpty(session)||revision<1)return;
+                libraryPublication=json;libraryPublicationSession=session;libraryPublicationRevision=revision;
+            }catch(Exception){return;}
 #if UNITY_ANDROID && !UNITY_EDITOR
-            m_NativePlugin.Call("PublishLibraryState",json);
+            DeliverLibraryState(IsReady,Snapshot,value=>m_NativePlugin.Call("PublishLibraryState",value));
 #endif
+        }
+
+        // The persistent browser owns retry/ack after a library owner is destroyed. JNI dispatch
+        // alone is not delivery: the Android UI thread may still be suspended or navigating.
+        internal void DeliverLibraryState(bool ready,BookSnapshot snapshot,Action<string> publish)
+        {
+            if(!ready||suspended||libraryPublication==null)return;
+            if(snapshot?.librarySession==libraryPublicationSession&&snapshot.libraryRevision==libraryPublicationRevision)return;
+            publish(libraryPublication);
         }
 
         public void SetSuspended(bool value)

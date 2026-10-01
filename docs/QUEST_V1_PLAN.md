@@ -921,3 +921,22 @@ stays held. Web tests accept captured native outcomes and operate the book Run
 control despite unavailable room history. Complete restore activation and recovery,
 content-bound review completion, retained-generation browsing/maintenance and
 headset acceptance remain release work.
+
+
+### 2026-10-01: tracked activation of reviewed native archives
+
+The shared catalog now starts a persistent activation operation. It preserves the
+accepted current workspace before committing the exact imported/retained pair,
+replaces content through the persistent host and keeps imported activity held for
+review. The opening action receipt identifies a job; typed current-workspace and
+activation facts report the real result. Cancellation and teardown retain the edit
+lease until workers settle. A bounded durable journal reconciles post-commit failure
+and restart without replaying the switch. Reserved pairs cannot be retried after
+editing resumes. The persistent browser owns library-close delivery retries until
+page acknowledgement.
+
+Native integration covers successful replacement and retention, cancellation and
+failure boundaries, restart and teardown; web tests exercise the same action/facts
+using native captures. Content-bound review completion, exact previous/corrupt
+workspace recovery, generation maintenance and real-headset acceptance are still
+required before portable restore is release-ready.

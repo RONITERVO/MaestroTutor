@@ -201,6 +201,16 @@ namespace Maestro.Quest.Persistence
             }
             cancellation.ThrowIfCancellationRequested();Commit(next);return next;
         }
+        // Read-only reconciliation never retries a commit after an edit hold was released.
+        internal WorkspaceSelection CommittedActivation(string id,string hash,string revision,string retainedId,string retainedHash)
+        {
+            using var lease=Lease();var current=Load();string path=Path.Combine(GenerationPath(id),"activation.v1.json");
+            if(!File.Exists(path))return null;
+            var record=ActivationRecord(path);
+            if((string)record["from"]!=revision||(string)record["manifestHash"]!=hash||(string)record["retained"]["generation"]!=retainedId||(string)record["retained"]["manifestHash"]!=retainedHash)throw Invalid("The activation belongs to a different retained snapshot.");
+            var next=Selection(record["next"] as JObject);if(next.Active.Generation!=id)throw Invalid("Invalid activation generation.");
+            return JToken.DeepEquals(current.Json(),next.Json())?current:null;
+        }
         static JObject ActivationRecord(string path)
         {
             var record=Read(path);

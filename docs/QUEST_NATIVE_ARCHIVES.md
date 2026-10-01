@@ -3,8 +3,9 @@
 Native snapshot capture and Android Downloads publication are available through
 `workspace.archive.export` in the shared action catalog. The book, agent and saved
 programs use the same operation and execution receipts. Native archive selection
-and verified previews also use the shared catalog. **Restore activation and recovery
-UI are not connected yet.** Original chat backup
+and verified previews also use the shared catalog. Activation now connects the
+reviewed preview to the persistent host through that same catalog. **Content-bound
+review completion and previous-workspace recovery are not connected yet.** Original chat backup
 remains separate, and portable backup/restore is not a finished release feature.
 
 ## Snapshot boundary
@@ -288,7 +289,7 @@ separate accepted-edit boundary below closes those paths during retention. The
 startup host now resolves the stored selection and applies its activity hold before
 loading owners. A corrupt selection leaves the book and agent observation available
 without silently creating a replacement room. Review completion still needs to bind
-to the inspected documents; no restore command is exposed yet.
+to the inspected documents; activation deliberately keeps that hold in place.
 
 
 ## Preserving accepted edits before activation
@@ -333,11 +334,10 @@ owners, accepted data and Undo; queued-worker and module-observation tests cover
 async gaps. Filesystem tests cover changed retained content, substitution on retry,
 reservation protection and interruptions around the pointer commit.
 
-These services are not yet the production restore workflow. The host still needs
-coordinated private archive cleanup, content-bound review and shared maintenance
-commands that work while content actions are held or unavailable. Preserve the lease until all
-retention/activation workers have settled; native owners must not be destroyed on a
-failed retention. Previous-workspace recovery still needs an exact operation identity
+The production activation coordinator below now owns private archive cleanup and
+shared maintenance execution. Content-bound review completion remains unfinished.
+The edit lease lasts until all retention/activation workers settle; native owners
+are preserved on failed retention. Previous-workspace recovery still needs an exact operation identity
 before exposure. An activation retry after releasing the edit hold or restarting
 must first verify that the retained snapshot still represents the accepted current
 state; otherwise the host needs a new import/retention pair. Selection revision
@@ -372,10 +372,9 @@ replacement, interruption, registration cleanup, damaged stores, observer failur
 and stale requests. A captured native unavailable-room state is accepted by the web
 bridge regression, which also checks replacement invalidates pending work.
 
-This is the startup and owner-lifetime boundary. It does not yet expose activation,
-previous-workspace recovery or review completion. Maintenance execution now uses the
-persistent domain below. The production coordinator must still own retention workers
-and private-file cleanup before activation and recovery commands can be released.
+This is the startup and owner-lifetime boundary used by activation below.
+Previous-workspace recovery and review completion remain unfinished. Maintenance
+execution uses the persistent domain below.
 
 
 ## Maintenance while room content is held or unavailable
@@ -415,6 +414,69 @@ Real-host tests exercise an unavailable room, selection/read/cancel, app pause,
 restart reconciliation, replacement interruption, export under a review hold and
 refusal of another domain's issued ID. Captured native results are validated by web
 tests; the book Run control is exercised with unavailable room history and healthy
-maintenance. These checks do not yet establish a complete restore journey. Archive
-activation, previous-workspace recovery, content-bound review completion and
-retained-generation maintenance are still unfinished.
+maintenance. These checks do not establish a complete restore journey. Activation
+now uses that route, but previous-workspace recovery, content-bound review completion
+and retained-generation maintenance are still unfinished.
+
+## Tracked activation through the book and agent
+
+After selecting and inspecting a prepared archive, read `workspace.current` and call
+`workspace.archive.activate` with the exact selection request, generation ID,
+manifest hash and current revision. It acquires `WorkspaceEditHold`, copies accepted
+current documents on the owner thread and retains a separately verified archive on
+a worker. Only then does it commit the exact imported/retained pair. The persistent
+host replaces content owners and applies the imported workspace's review hold
+before its first frame. XR, the book/browser and the original agent transport stay
+alive; the room session changes. The latest library page state stays in the browser
+and is retried after pause/navigation until the page acknowledges its session and
+revision, including after the old library owner has been destroyed.
+
+The action's output is an activation `requestId`, not a completed switch. Read
+`workspace.archive.activation` with it. Its `preview` and `retained` records keep
+exact identities; `committedRevision` records a confirmed switch. `review` means
+content opened under its required activity hold. `unavailable` can mean the pointer
+committed but content initialization failed. The current-workspace fact reports
+content availability separately. Opening-action receipts and actual operation
+outcomes must never be conflated.
+
+The operation owns a bounded, versioned `workspace-activation.v1/latest.json`
+journal outside room generations. It records the retained pair before activation.
+Only the latest operation is retained; older IDs have an unavailable status rather
+than a fabricated result. Startup reads that exact pair and reconciles it against
+the durable selection, without calling Activate again. A previous failed/unavailable
+acknowledgement can therefore resolve to a healthy reviewed workspace on restart.
+Malformed or unsupported history is preserved and blocks another activation until
+explicit recovery; no automatic migration or reset is performed.
+
+`workspace.archive.activation.cancel`, app pause, focus loss and host disable request
+cancellation before commit. The editing lease remains held while workers can still
+write, even while the host is disabled. Teardown cancels and drains the worker before
+releasing its owner-thread lease. A cancellation request cannot undo a committed
+pointer; reconciliation distinguishes post-commit failure from an unchanged room.
+If the pointer is committed but live replacement cannot be verified, old content
+remains held rather than accepting edits into a workspace that will not reopen.
+
+An archive selection cannot be cancelled/discarded while activation owns it. An
+unused preview can be reused after a cancelled preservation; an already reserved
+pair becomes retained and requires a new selection. After editing resumes, the old
+pair is never automatically retried with its stale snapshot. Capture ZIPs are
+private and removed after worker completion. Unreserved failed retention generations
+are discarded when possible; reserved generations remain protected for recovery.
+Storage cleanup failure cannot change a confirmed commit into a reported failure.
+
+Eleven native checks cover actual host activation, accepted-edit retention, stale
+revision rejection, shared receipt reconciliation across restart, cancellation under
+a disabled host, failed retention, synchronous capture failure, failure after pointer
+commit, failed content opening followed by restart, unreadable commit outcomes that keep
+old owners frozen, reserved-pair retry refusal,
+teardown with a live worker, and browser close acknowledgement. Web tests consume a
+captured native activation/retention result and exercise the shared Run and fact
+controls. These are PC and simulated-transport checks; headset storage, chooser,
+pause/power-loss, readability and performance acceptance remain open.
+
+Review completion is still intentionally held: a future command must bind approval
+to the current inspected documents, which can be edited while under review. It must
+not resume stopped programs, restart physics or rearm held input. Previous-workspace
+recovery, corrupt-selection recovery and retained-generation browsing/cleanup also
+remain release gates. The existing storage-only helpers are not exposed as complete
+user recovery commands.

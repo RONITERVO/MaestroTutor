@@ -987,7 +987,7 @@
         "downloads.available"
       ],
       "domain": "workspace",
-      "description": "Save a portable ZIP in Quest Downloads/Maestro containing accepted room objects and recipes, recorded animations, saved behaviours, controller settings, avatar activities, models, motion files and reusable modules. It captures one snapshot; later edits stay in the workspace. Keep or discard temporary play first. Chat, credentials, room scans, active takes, running programs, Undo and execution receipts are excluded. Missing references remain unchanged and are counted in the result. Export does not change the workspace. Completion means Android closed and published the file; waiting is bounded to ten minutes. Stop cannot retract publication; after interruption check Downloads/Maestro before retrying. Restore is not available yet.",
+      "description": "Save a portable ZIP in Quest Downloads/Maestro containing accepted room objects and recipes, recorded animations, saved behaviours, controller settings, avatar activities, models, motion files and reusable modules. It captures one snapshot; later edits stay in the workspace. Keep or discard temporary play first. Chat, credentials, room scans, active takes, running programs, Undo and execution receipts are excluded. Missing references remain unchanged and are counted in the result. Export does not change the workspace. Completion means Android closed and published the file; waiting is bounded to ten minutes. Stop cannot retract publication; after interruption check Downloads/Maestro before retrying. To restore, choose the ZIP with workspace.archive.select, inspect its preview and explicitly activate that exact preview. Imported activity remains held for review.",
       "example": {},
       "output": {
         "type": "object",
@@ -1082,7 +1082,7 @@
       "channels": [],
       "requirements": [],
       "domain": "workspace",
-      "description": "Open Android's file chooser for one workspace ZIP. Returns a tracked requestId immediately, not a selected or restored workspace. The user must choose the file in Android. The system chooser pauses room actions; they will not resume or replay. After returning, read workspace.archive.selection with this requestId to follow copy, validation and preview. Preparation never activates imported content. Cancel the request to discard its unused preview. Only one selection or preview at a time; file limit 512 MB. Activation is not available yet.",
+      "description": "Open Android's file chooser for one workspace ZIP. Returns a tracked requestId immediately, not a selected or restored workspace. The user must choose the file in Android. The system chooser pauses room actions; they will not resume or replay. After returning, read workspace.archive.selection with this requestId to follow copy, validation and preview. Preparation never activates imported content. Cancel the request to discard its unused preview. Only one selection or preview at a time; file limit 512 MB. Activate only an explicitly reviewed preview with workspace.archive.activate and the current workspace revision.",
       "example": {},
       "output": {
         "type": "object",
@@ -1126,6 +1126,117 @@
       "requirements": [],
       "domain": "workspace",
       "description": "Cancel the exact file-selection request or discard its verified, unused preview. It never deletes the source file or changes the active workspace. Cleanup may continue after this acknowledgement; read workspace.archive.selection for cancelled/failed and any retained preview. Cancelling does not restart paused room actions. A stale request cannot cancel a newer chooser.",
+      "example": {
+        "requestId": "00000000000000000000000000000000"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "requestId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "workspace.archive.activate",
+      "version": 1,
+      "label": "Activate reviewed workspace archive",
+      "input": {
+        "type": "object",
+        "properties": {
+          "selectionRequestId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "generationId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "manifestHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "expectedRevision": {
+            "type": "string",
+            "pattern": "^(initial|[a-f0-9]{32})$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "selectionRequestId",
+          "generationId",
+          "manifestHash",
+          "expectedRevision"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "workspaceArchiveActivation.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [],
+      "domain": "workspace",
+      "description": "Start activating the exact prepared preview after the user requests the switch. Read workspace.archive.selection for selectionRequestId, generationId and manifestHash, and workspace.current for expectedRevision. Preserve accepted current content in a separate verified generation before any switch. Editing and activity are held until preservation/commit finish. Returns a tracked activation requestId, not completed activation. Read workspace.archive.activation with that ID. The book and agent transport survive; the room agent session changes. Imported activity stays held for review. Pause or cancellation attempts to stop before commit, but cannot undo a committed selection; always inspect the outcome. Never silently retry an interrupted pair after editing resumes. Startup reconciles the exact pair without replay. Only the latest activation status is retained.",
+      "example": {
+        "selectionRequestId": "00000000000000000000000000000000",
+        "generationId": "00000000000000000000000000000000",
+        "manifestHash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "expectedRevision": "initial"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "requestId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "workspace.archive.activation.cancel",
+      "version": 1,
+      "label": "Cancel workspace activation",
+      "input": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "requestId"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "workspaceArchiveActivation.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [],
+      "domain": "workspace",
+      "description": "Request cancellation of the exact tracked activation. Preservation/cleanup can continue under the edit hold until workers finish. Cancellation cannot retract a committed selection. Read workspace.archive.activation to learn the outcome; the cancellation acknowledgement is not proof that no switch occurred. An old request never cancels a newer one.",
       "example": {
         "requestId": "00000000000000000000000000000000"
       },
@@ -3310,7 +3421,84 @@
         }
       },
       "label": "Archive selection status",
-      "description": "Read the exact archive request after returning from Android selection. Phases: selecting, copying, preparing, prepared, cancelling, cancelled or failed. Prepared means its manifest, documents and assets were verified into a private preview; nothing was activated. Summary counts describe that preview, including unavailable programs and missing references. Inspect errors before another choice. IDs and counts are empty/zero until a preview exists. An unknown request or paused runtime is unavailable. Read-only; never opens a chooser, imports or runs anything.",
+      "description": "Read the exact archive request after returning from Android selection. Phases: selecting, copying, preparing, prepared, activating, activated, retained, cancelling, cancelled or failed. Activated means the preview was committed; follow workspace.archive.activation to establish whether content opened. Retained means an interrupted attempt must not be reused; its files are preserved. Prepared means its manifest, documents and assets were verified into a private preview; nothing was activated. Summary counts describe that preview, including unavailable programs and missing references. Inspect errors before another choice. IDs and counts are empty/zero until a preview exists. An unknown request or paused runtime is unavailable. Read-only; never opens a chooser, imports or runs anything.",
+      "domain": "workspace",
+      "input": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "requestId"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "requestId": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
+      "id": "workspace.current",
+      "version": 1,
+      "type": {
+        "record": {
+          "revision": "text",
+          "generationId": "text",
+          "available": "boolean",
+          "reviewRequired": "boolean",
+          "changing": "boolean",
+          "activationRequestId": "text",
+          "error": "text"
+        }
+      },
+      "label": "Current workspace",
+      "description": "Read the live selection revision, active generation, content availability, review hold and latest tracked activation ID. Empty identity means no selection could be read. This does not release review or recover anything. Use the revision with an explicitly reviewed archive activation.",
+      "domain": "workspace",
+      "input": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "example": {},
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
+      "id": "workspace.archive.activation",
+      "version": 1,
+      "type": {
+        "record": {
+          "requestId": "text",
+          "selectionRequestId": "text",
+          "originRevision": "text",
+          "committedRevision": "text",
+          "phase": "text",
+          "status": "text",
+          "preview": {
+            "record": {
+              "generationId": "text",
+              "manifestHash": "text"
+            }
+          },
+          "retained": {
+            "record": {
+              "generationId": "text",
+              "manifestHash": "text"
+            }
+          }
+        }
+      },
+      "label": "Workspace activation status",
+      "description": "Read the exact tracked activation. Preserving/activating precede the switch; committed means the durable selection changed. Review means imported content opened and remains held for review. Unavailable, failed, cancelled or interrupted require inspecting workspace.current; never invent success or replay the old request. Retained identity describes the previous accepted snapshot, not an instruction to discard it. Only the latest job is retained. Startup reconciles its exact committed pair and never repeats a commit.",
       "domain": "workspace",
       "input": {
         "type": "object",
@@ -3538,7 +3726,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "741f355fb7cda777ebf643a28740c45b2b1d09b564d62c0dae10d624c1c825f2"
+      "sha256": "36d546052407a2e2d2352ebadb5a1db2d370b469e88229427ebffad4a2d7224a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -3602,7 +3790,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "1da68b4c712776cab588a349c85152158dcc29c030227ec8d3dfafc7ff3fb165"
+      "sha256": "19508a4a1290c449e241c13f08e8ea129cd9860798f0162e66f1e65a704a2b18"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -3657,12 +3845,16 @@
       "sha256": "a0c4af9d75687aacf1179d4abb3fa8aa20b6767430e8e79a4c08af293da3d428"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceActivationCapabilities.cs",
+      "sha256": "7b717231da00e510f59d4d6a0b9cc03b44d7d81f48ac8fefeff8bca6bc3524e8"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceExportCapability.cs",
-      "sha256": "a298dd51f8166239999c7d96d4645dbbd852d0f696e576a8328978cc49286f2e"
+      "sha256": "2086149e3b214491ce7998944ee53f5a08e76a3588dee833b48fcc0c028f98df"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceSelectionCapabilities.cs",
-      "sha256": "9762294f0551fec82a165da8b9d1066db85a0168617eaf880ed17f67849683a6"
+      "sha256": "81ec5b0425fd4835436bff9afce7726292a7b6eee240fad67c3ff129fb74a99c"
     }
   ]
 }

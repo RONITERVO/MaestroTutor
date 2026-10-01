@@ -31,7 +31,7 @@ namespace Maestro.Quest.Persistence
         Task discard;
         PreparedWorkspaceGeneration prepared;
         CancellationTokenSource cancellation;
-        bool cancelRequested,paused,focused=true;
+        bool cancelRequested,paused,focused=true,activationOwned;
         float nextPoll;
         public bool Available=>picker!=null;
         public void Initialize(string applicationData)
@@ -66,6 +66,7 @@ namespace Maestro.Quest.Persistence
         {
             issue=null;
             if(!Available||id!=requestId){issue="This archive request is no longer available. Inspect the current request.";return false;}
+            if(activationOwned){issue="Cancel the tracked activation before changing its archive selection.";return false;}
             return true;
         }
         internal void Cancel(string id)
@@ -76,6 +77,20 @@ namespace Maestro.Quest.Persistence
             if(preparation!=null){phase="cancelling";return;}
             if(prepared!=null){Discard();return;}
             phase="cancelled";error="";Release();
+        }
+        internal bool CanActivate(string id,string generation,string hash,out string issue)
+        {
+            issue="Inspect the current prepared archive before activating it.";
+            if(activationOwned||phase!="prepared"||prepared==null||preparation!=null||discard!=null||releasePending!=null||id!=requestId||generation!=prepared.Id||hash!=prepared.Receipt.ManifestHash)return false;
+            issue=null;return true;
+        }
+        internal void BorrowForActivation(){activationOwned=true;phase="activating";}
+        internal void FinishActivation(bool reusable,bool committed)
+        {
+            activationOwned=false;
+            if(reusable){phase="prepared";return;}
+            prepared=null;phase=committed?"activated":"retained";
+            error=committed?"":"The attempted generations are retained. Choose the archive again before another activation.";
         }
         void Discard()
         {

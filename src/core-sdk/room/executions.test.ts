@@ -6,6 +6,8 @@ import {parseRoomCommands,isRoomQuery,type RoomAgentState} from './roomAgent';
 import {RoomAgentClient} from '../../platform/quest/roomAgentBridge';
 import {requireRoomCapabilities} from '../../../shared/roomControls';
 import nativeMaintenance from '../../../test-fixtures/browser/workspaceMaintenance.json';
+import nativeActivation from '../../../test-fixtures/browser/workspaceActivation.json';
+import {validFactValue} from '../../../shared/behaviourFacts';
 import nativeCreation from '../../../test-fixtures/browser/creationResult.json';
 import nativeProgram from '../../../test-fixtures/browser/programBookState.json';
 const id='a'.repeat(32),prop='b'.repeat(32);
@@ -162,4 +164,19 @@ it('accepts actual native maintenance receipts from a held room, an unavailable 
  expect(chosen.nextRunId).toBeNull();expect(chosen.workspace.selected.phase).toBe('completed');
  expect(restarted.workspace.selected.id).toBe(chosen.workspace.selected.id);expect(restarted.workspace.selected.output).toEqual(chosen.workspace.selected.output);
  expect(nativeMaintenance['held-export'].workspace.selected.output.location).toBe('Downloads/Maestro/test.zip');
+});
+
+it('validates the native activation job independently from its opening receipt and retained workspace identity',()=>{
+ expect(validExecutionView(nativeActivation.execution)).toBe(true);
+ expect(validFactValue('workspace.current',nativeActivation.current)).toBe(true);
+ expect(validFactValue('workspace.archive.activation',nativeActivation.activation)).toBe(true);
+ const receipt=nativeActivation.execution.workspace.selected;
+ expect(receipt.output.requestId).toBe(nativeActivation.activation.requestId);
+ expect(nativeActivation.activation.phase).toBe('review');
+ expect(nativeActivation.activation.committedRevision).toBe(nativeActivation.current.revision);
+ expect(nativeActivation.activation.preview.generationId).toBe(nativeActivation.current.generationId);
+ expect(nativeActivation.activation.retained.generationId).not.toBe(nativeActivation.current.generationId);
+ expect(nativeActivation.current.reviewRequired).toBe(true);
+ expect(receipt.call.arguments.generationId).toBe(nativeActivation.activation.preview.generationId);
+ expect(validFactValue('workspace.archive.activation',{...nativeActivation.activation,retained:{generationId:'unverified'}})).toBe(false);
 });
