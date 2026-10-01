@@ -79,6 +79,7 @@ namespace Maestro.Quest.Creation
             {
                 bool accepted = editor.SaveAnimation(targetId,motion,joints,savePose);
                 saveError = accepted ? null : editor.Status;
+                if(accepted&&posing)PoseEdited();
                 if (!accepted) Say(saveError);
                 return accepted;
             }
@@ -92,19 +93,9 @@ namespace Maestro.Quest.Creation
             if (editor.AnyHeld) { Say("Release the object first"); return; }
             var currentPose = avatar && avatar.PoseRig ? avatar.PoseRig.Capture() : null;
             Stop(); if(HasUnsavedPose||HasUnsavedRecording)return;
-            editor.Select(editor.Find("maestro")); SelectionChanged();
-            if (avatar && avatar.ModelBusy) { Say("Wait for Maestro to finish changing avatars"); return; }
-            if (editor.DrawingMode) editor.ToggleDrawing();
-            if (!avatar || !avatar.PoseRig) { Say("Maestro is still loading"); return; }
-            if(!TakeControl())return;
-            avatar.SetEditing(true); avatar.PoseRig.SetManual(true); avatar.PoseRig.SetPosing(true);
-            avatar.PoseRig.Apply(currentPose);
-            avatar.PoseRig.PoseChanged += SavePose;
-            // Keep the body from intercepting grips aimed at a joint handle.
-            foreach (var collider in target.Grab.colliders) collider.enabled = false;
-            target.Grab.enabled = false; posing = true;
-            Say("Grip a teal joint handle to pose; Save frame keeps a keyframe");
+            if(!StartPose(poseSession,editor.ObjectRevision("maestro"),out _,out var error,manual:true,initial:currentPose))Say(error);
         }
+
         void SavePose()
         {
             if (stopping || !posing || IsRecording || !avatar || HasUnsavedPose) return;
@@ -234,17 +225,17 @@ namespace Maestro.Quest.Creation
         {
             if (stopping) return;
             if (!controlling && !posing && !IsPlaying && !IsRecording) return;
-            stopping = true;
+            bool wasPosing=posing;stopping = true;
             try
             {
-                if (!resolvingRecording && posing && !IsRecording && !HasUnsavedRecording && !HasUnsavedPose && avatar && avatar.PoseRig) SaveCurrentPose();
+                if (!resolvingPose && !resolvingRecording && posing && !IsRecording && !HasUnsavedRecording && !HasUnsavedPose && avatar && avatar.PoseRig) SaveCurrentPose();
                 if(!resolvingRecording)FinishRecording(); StopPlayback();
                 if (avatar && avatar.PoseRig)
                 {
-                    avatar.PoseRig.PoseChanged -= SavePose; avatar.PoseRig.SetPosing(false); avatar.SetEditing(false);
+                    avatar.PoseRig.PoseChanged -= SavePose; avatar.PoseRig.PoseEdited -= PoseEdited; avatar.PoseRig.SetPosing(false); avatar.SetEditing(false);
                 }
                 if (target) { foreach (var collider in target.Grab.colliders) collider.enabled = true; target.Grab.enabled = true; if(!target.Grab.isSelected)editor.RestorePose(targetId); }
-                posing = false;
+                posing = false;if(wasPosing&&!HasUnsavedPose)EndPoseSession();
                 importedPreview = false; walkPreview = false;
                 controlling = false;
                 target?.GetComponent<RigidRoomItem>()?.SetAnimationOwner(this,false);

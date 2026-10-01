@@ -255,6 +255,14 @@ namespace Maestro.Quest.Creation
 
         public void Undo() { using var write=WriteGate.TryWrite(out var blocked);if(write==null){SetStatus(blocked);return;} Editing?.Invoke(); if (Busy()) return; if (journal.Undo()) { Reconcile(); MarkDirty(); SetStatus("Undone"); } else SetStatus("Nothing to undo"); }
         public void Redo() { using var write=WriteGate.TryWrite(out var blocked);if(write==null){SetStatus(blocked);return;} Editing?.Invoke(); if (Busy()) return; if (journal.Redo()) { Reconcile(); MarkDirty(); SetStatus("Redone"); } else SetStatus("Nothing to redo"); }
+        internal bool DrawingInProgress=>GetComponent<SpatialDrawing>()?.IsDrawing==true;
+        internal bool PutPencilAwayForPose(out string error)
+        {
+            error=null;if(DrawingInProgress){error="Finish the current stroke before posing";return false;}
+            // The pose caller already coordinates its target. The manual global
+            // Editing signal would cancel its own invocation and unrelated actors.
+            DrawingMode=false;SetStatus("Pencil put away");return true;
+        }
         public void ToggleDrawing() { Editing?.Invoke(); DrawingMode = !DrawingMode; SetStatus(DrawingMode ? "Pencil: hold trigger or pinch to draw" : "Pencil put away"); }
 
         public bool AddDrawing(IReadOnlyList<Vector3> worldPoints, Color color)

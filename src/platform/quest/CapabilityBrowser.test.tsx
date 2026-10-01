@@ -541,3 +541,27 @@ it('chooses an exact Maestro model from typed book fields and displays the ready
  fireEvent.click(screen.getByRole('button',{name:new RegExp(fact.label)}));await receive({operation:'inspect',category:'facts',capability:fact.id,version:1,definition:fact,available:true,value:nativeAvatar.after,status:'Ready model'});
  expect(screen.getByLabelText('Current fact value').textContent).toContain('"phase":"ready"');expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
 });
+
+import nativePosing from '../../../test-fixtures/browser/posingSessions.json';
+it('shares native pose identities and versions through typed joint fields and a finish receipt',async()=>{
+ const {client,screen,receive}=setup(true,['animationPosing.v1','execution.v1','actionResults.v1']);
+ await receive(undefined,false,{execution:{...nativePosing.start,selected:null,running:[],outcomes:[],nextRunId:nativePosing.start.selected.id} as RoomAgentState['execution']});
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:/^Search$/}));
+ const definition=capabilityDefinition('animation.pose')!;
+ await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Found posing'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Pose definition'});
+ fireEvent.click(screen.getByText('Edit action fields'));
+ fireEvent.change(screen.getByLabelText('Action inputs sessionId'),{target:{value:nativePosing.before.sessionId}});
+ fireEvent.change(screen.getByLabelText('Action inputs revision'),{target:{value:nativePosing.before.revision}});
+ fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
+ expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:nativePosing.start.selected.call,runId:nativePosing.start.selected.id}});
+ await receive(undefined,false,{execution:nativePosing.start as RoomAgentState['execution']});expect(screen.getByLabelText('Action result').textContent).toContain('"phase": "posing"');expect(screen.queryByRole('button',{name:/Stop action/})).toBeNull();
+ fireEvent.change(screen.getByLabelText('Pose operation'),{target:{value:'1'}});fireEvent.change(screen.getByLabelText('Action inputs version'),{target:{value:nativePosing.active.version}});
+ fireEvent.click(screen.getByText('Action inputs joints · 1 entries'));const joint=nativePosing.rotate.selected.call.arguments.joints[0];fireEvent.change(screen.getByLabelText('Action inputs joints 1 joint'),{target:{value:joint.joint}});
+ for(const field of ['x','y','z','w'] as const)fireEvent.change(screen.getByLabelText('Action inputs joints 1 rotation '+field),{target:{value:joint.rotation[field]}});
+ fireEvent.click(screen.getByRole('button',{name:'Run action now'}));expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:nativePosing.rotate.selected.call,runId:nativePosing.rotate.selected.id}});
+ await receive(undefined,false,{execution:nativePosing.rotate as RoomAgentState['execution']});fireEvent.change(screen.getByLabelText('Pose operation'),{target:{value:'3'}});fireEvent.change(screen.getByLabelText('Action inputs version'),{target:{value:nativePosing.edited.version}});
+ expect(screen.queryByLabelText('Action inputs joints 1 joint')).toBeNull();fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
+ expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:nativePosing.finish.selected.call,runId:nativePosing.finish.selected.id}});
+ await receive(undefined,false,{execution:nativePosing.finish as RoomAgentState['execution']});expect(screen.getByLabelText('Action result').textContent).toContain('"phase": "saved"');expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
+});

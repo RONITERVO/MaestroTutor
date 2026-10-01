@@ -116,9 +116,53 @@ discarded; it never merges into newer edits.
 Pending poses block new animation authoring, avatar replacement, workspace
 switches and temporary-room Begin/Keep/Discard. A pose retained in a temporary
 room saves into that fork; Keep is still required for persistence. App/process
-termination loses unsaved in-memory poses. These recovery controls are currently
-physical tray controls; shared live posing and its exact session identities are
-still a separate unfinished increment.
+termination loses unsaved in-memory poses. The shared live-pose capability below uses these same recovery controls and
+retained data; the physical tray can also save or discard a live pose.
+
+## Shared live posing
+
+`animation.pose` (feature `animationPosing.v1`) shares the physical joint-handle
+session. Inspect `animation.posing`: it reports the native session ID, opaque
+pose version, phase (`idle`, `posing`, `unsaved`), object revision, held-joint
+state, temporary-room state, supported joint names and bounded error text. Idle
+has version zero and no live joint values. A completed action receipt does not
+mean the pose session has ended; stopping that receipt does not stop posing.
+
+- `start {target: "maestro", sessionId, revision}` enters posing using the current
+  idle identity and Maestro revision. The session owns Maestro until it ends.
+  Physical Pose Maestro uses the same entry point with manual interruption
+  priority. Agent/program starts cannot steal another live actor. An active
+  pencil stroke blocks posing until released. An idle pencil is put away without
+  a global stop signal, preserving the initiating program and unrelated actors.
+- `rotate {target, sessionId, version, joints}` applies 1–8 distinct supported
+  joints atomically to the preview. Rotations are normalized canonical local
+  quaternions. The included and imported display rigs use the physical limits
+  relative to rest: head 75 degrees, spine/chest 45, other joints 150. Read the
+  actual clamped rotation with `animation.pose.joint {sessionId, version, joint}`.
+  Joint reads/edits refuse a held physical handle. No save or playback occurs.
+- `save {target, sessionId, version}` saves one Undo and keeps the session open.
+  Physical Save pose does the same. Physical handle releases save automatically,
+  including any agent edits currently in the shared preview.
+- `finish {target, sessionId, version}` saves and closes posing. Physical Stop,
+  focus loss, pause and selection changes attempt the same save on exit.
+- `discard {target, sessionId, version}` drops the unsaved preview and closes the
+  session. It keeps previous explicit saves and physical handle-release saves;
+  Undo is separate. Physical Discard pose uses the same path.
+
+Inspect the session again before each mutation. Handle movement, applied frames
+and saved edits advance the pose version; do not assume the next value is +1.
+Finished sessions issue a fresh identity. Duplicate execution receipts do not
+repeat edits, and stale identities/versions cannot affect a newer session.
+Failed saves release authoring while preserving the frozen pose and identity;
+`save` or `finish` retries its exact room/object revision. Shared recovery cannot
+interrupt another live actor. `discard` explicitly removes only that retained
+pose. Both facts can inspect retained poses even after selecting another object.
+
+During recording, physical and shared rotations feed the same sampled rig.
+Save/finish/discard of the pose must wait for recording finish/discard, which
+ends both sessions; a failed recording retains the combined take through
+`animation.record`. Temporary poses stay in the fork until Keep. No authoring
+session auto-resumes on app launch, and unsaved memory is lost on termination.
 
 ## Book and verification
 
@@ -152,3 +196,12 @@ retry after selection changes, repeated lifecycle stops, stale revision refusal,
 Undo/Redo, temporary Keep, imported-rig readback, competing owners and real ray
 taps on the solid Save pose/Discard pose controls. The desktop-rendered tray
 capture checks layout only; headset readability remains a device acceptance gate.
+
+Shared posing verification covers actual rig rotations and clamps, physical XRI
+holds, stale versions and session turnover, duplicate receipts, direct program
+start/finish, physical/agent save and discard, failed-save recovery and refusal
+to interrupt another actor, recording interoperation, imported retargeting and
+temporary Keep. `test-fixtures/browser/posingSessions.json` contains native
+start/rotate/finish receipts and session/joint facts. The Chrome probe reads each
+version and sends matching requests through generated fields; acknowledgements
+replay the native capture and are not provider/headset acceptance.

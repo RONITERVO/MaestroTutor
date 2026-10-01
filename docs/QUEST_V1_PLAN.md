@@ -4,19 +4,18 @@ Status: active implementation. Nothing in this document claims store readiness.
 
 Current animation authoring lets agent/program calls and optional typed book
 fields edit the same pose and keyframes as the physical tray. Exact object
-revisions prevent stale writes; saved edits are durable, temporary edits stay in
-the fork until Keep, and neither starts playback. Shared recording now exposes
-start/save/discard with exact native session IDs, retained failed takes and
-matching physical controls. Shared avatar selection now discovers imported model
-identities and prepares a humanoid before saving/replacing Maestro through the
-same physical selection path. Failure/cancellation keeps the previous selection;
-readback distinguishes saved, loading and displayed state. Failed manual poses
-now remain frozen in memory for exact-revision retry or explicit discard through
-the solid tray controls, with avatar/workspace boundary protection. The catalog contains
-43 actions, 10 events and 24 facts. See QUEST_ANIMATION_AUTHORING.md and
-QUEST_AVATAR_SELECTION.md. Shared picker/import sessions, live posing controls
-and device/provider/Store acceptance remain unfinished; the complete v1 goal
-remains active.
+revisions prevent stale saved edits. Shared recording exposes start/save/discard
+with native session IDs and retained failed takes. Shared avatar selection
+prepares a humanoid before saving/replacing Maestro through the same physical
+selection path; failure/cancellation keeps the previous selection. Shared live
+posing now exposes start/rotate/save/finish/discard with native session IDs and
+pose versions, the same physical joint limits and imported retargeter, held-joint
+exclusion, failed-pose recovery and recording interoperation. Saved edits are
+durable outside temporary mode; temporary edits stay in the fork until Keep.
+No authoring operation starts playback. The catalog contains 44 actions, 10
+events and 26 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
+Shared picker/import sessions and the remaining runtime, provider, device and
+Store acceptance gates remain unfinished; the complete v1 goal remains active.
 
 Current recovery implementation supports retained candidates, an external backup,
 and an explicitly requested fresh workspace through the same shared book/agent
@@ -32,6 +31,23 @@ and tracked operation roots remain protected. Private recovery export remains
 separate; a full store with unreadable selection still requires recovery/repair.
 PR #248 records the current verified commit and package. Earlier entries
 below are historical evidence, not current test totals or release acceptance.
+
+PC shared-posing increment (2026-10-01): the physical joint handles, typed book
+controls and agent/program calls share a versioned live pose session and the
+same canonical joint clamps, imported retargeter and save/recovery path. Eleven
+new native cases cover stale requests, held joints, failed saves, ownership,
+lifecycle, recording interoperation and temporary Keep. Starting from pencil
+mode preserves active strokes and never sends a global stop to unrelated actions.
+PC checks pass 1,564 web tests across 176 files, 28 focused checks against the
+final native capture, 372 EditMode and 283 PlayMode tests (three optional private-
+model skips), and 55 Android browser tests. Chrome sends exact native start,
+rotate and finish requests through generated fields; its acknowledgements replay
+a native capture and are not provider/headset acceptance. Screenshots were
+inspected. The full build helper exited successfully; 176 runtime and 82 test
+C# sources, 24 fixtures plus metadata, and 113 packaged web files match.
+ARM64/v2 signature-verified checkpoint: `MaestroQuest-pose-sessions-444E6F9F.apk`,
+SHA-256 `444E6F9FCCA0BB4F1CE11B8AE60A0FB28CF2DD07F20EE3E763F242AF803CEBC9`.
+It remains uninstalled. Shared picker/import and other release gates remain open.
 
 PC pose-recovery increment (2026-10-01): a reproduced failed-write regression
 could replace an unsaved manual pose when a new pose session started. Failed

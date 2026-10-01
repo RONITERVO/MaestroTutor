@@ -25,6 +25,7 @@ namespace Maestro.Quest.Avatar
         public bool IsPosing { get; private set; }
         public bool IsHolding => handles.Any(x => x && x.Item.Grab.isSelected);
         public event Action PoseChanged;
+        public event Action PoseEdited;
 
         public void Initialize(Animator source)
         {
@@ -43,11 +44,13 @@ namespace Maestro.Quest.Avatar
         public void Apply(JointPose[] pose)
         {
             if (pose == null) return;
-            foreach (var value in pose) if (bones.TryGetValue(value.joint,out var bone)) bone.localRotation = value.rotation;
+            bool changed=false;
+            foreach (var value in pose) if (bones.TryGetValue(value.joint,out var bone)) {changed|=Quaternion.Angle(bone.localRotation,value.rotation)>.001f;bone.localRotation=value.rotation;}
             if (displayRig) displayRig.ApplyPose();
+            if(changed)PoseEdited?.Invoke();
         }
         public void SetManual(bool manual) { if (animator) animator.enabled = !manual; }
-        public void ResetPose() { foreach (var pair in bones) pair.Value.localRotation = rest[pair.Key]; PoseChanged?.Invoke(); }
+        public void ResetPose() { Apply(RestPose()); PoseChanged?.Invoke(); }
         public void SetPosing(bool enabled)
         {
             IsPosing = enabled;
@@ -83,10 +86,16 @@ namespace Maestro.Quest.Avatar
         {
             if (!bones.TryGetValue(joint,out var bone)) return;
             if (displayRig) worldRotation = displayRig.ToCanonicalRotation(joint,worldRotation);
-            var local = Quaternion.Inverse(bone.parent.rotation) * worldRotation;
-            float limit = joint == PoseJoint.Head ? 75 : joint == PoseJoint.Spine || joint == PoseJoint.Chest ? 45 : 150;
-            bone.localRotation = Quaternion.RotateTowards(rest[joint],local,limit).normalized;
-            if (displayRig) displayRig.ApplyPose();
+            RotateCanonical(joint,Quaternion.Inverse(bone.parent.rotation)*worldRotation);
+        }
+        public void RotateCanonical(PoseJoint joint,Quaternion local)
+        {
+            if(!bones.TryGetValue(joint,out var bone))return;
+            float limit=joint==PoseJoint.Head?75:joint==PoseJoint.Spine||joint==PoseJoint.Chest?45:150;
+            var rotation=Quaternion.RotateTowards(rest[joint],local,limit).normalized;
+            bool changed=Quaternion.Angle(bone.localRotation,rotation)>.001f;bone.localRotation=rotation;
+            if(displayRig)displayRig.ApplyPose();
+            if(changed)PoseEdited?.Invoke();
         }
         public void FinishedHandle() => PoseChanged?.Invoke();
         public Transform Bone(PoseJoint joint) => displayRig ? displayRig.Bone(joint) : CanonicalBone(joint);

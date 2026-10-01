@@ -1543,6 +1543,346 @@
       }
     },
     {
+      "id": "animation.pose",
+      "version": 1,
+      "label": "Pose Maestro together",
+      "input": {
+        "type": "object",
+        "title": "Pose operation",
+        "x-discriminators": [
+          "operation"
+        ],
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "start"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "enum": [
+                  "maestro"
+                ],
+                "x-resource": "object"
+              },
+              "sessionId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 1000000.0
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "sessionId",
+              "revision"
+            ],
+            "additionalProperties": false,
+            "title": "Begin posing",
+            "x-features": [
+              "animationPosing.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "rotate"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "enum": [
+                  "maestro"
+                ],
+                "x-resource": "object"
+              },
+              "sessionId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "version": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 1000000.0
+              },
+              "joints": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "joint": {
+                      "type": "string",
+                      "enum": [
+                        "Hips",
+                        "Spine",
+                        "Chest",
+                        "Neck",
+                        "Head",
+                        "LeftUpperArm",
+                        "LeftLowerArm",
+                        "LeftHand",
+                        "RightUpperArm",
+                        "RightLowerArm",
+                        "RightHand",
+                        "LeftUpperLeg",
+                        "LeftLowerLeg",
+                        "LeftFoot",
+                        "RightUpperLeg",
+                        "RightLowerLeg",
+                        "RightFoot"
+                      ]
+                    },
+                    "rotation": {
+                      "type": "object",
+                      "properties": {
+                        "x": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "y": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "z": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "w": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        }
+                      },
+                      "required": [
+                        "x",
+                        "y",
+                        "z",
+                        "w"
+                      ],
+                      "additionalProperties": false,
+                      "format": "unitQuaternion"
+                    }
+                  },
+                  "required": [
+                    "joint",
+                    "rotation"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 1,
+                "maxItems": 8
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "sessionId",
+              "version",
+              "joints"
+            ],
+            "additionalProperties": false,
+            "title": "Adjust joints",
+            "x-features": [
+              "animationPosing.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "save"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "enum": [
+                  "maestro"
+                ],
+                "x-resource": "object"
+              },
+              "sessionId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "version": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 1000000.0
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "sessionId",
+              "version"
+            ],
+            "additionalProperties": false,
+            "title": "Save pose",
+            "x-features": [
+              "animationPosing.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "finish"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "enum": [
+                  "maestro"
+                ],
+                "x-resource": "object"
+              },
+              "sessionId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "version": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 1000000.0
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "sessionId",
+              "version"
+            ],
+            "additionalProperties": false,
+            "title": "Save and finish posing",
+            "x-features": [
+              "animationPosing.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "discard"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "enum": [
+                  "maestro"
+                ],
+                "x-resource": "object"
+              },
+              "sessionId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "version": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 1000000.0
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "sessionId",
+              "version"
+            ],
+            "additionalProperties": false,
+            "title": "Discard unsaved pose",
+            "x-features": [
+              "animationPosing.v1"
+            ]
+          }
+        ]
+      },
+      "duration": "instant",
+      "ownership": "authoringSession",
+      "channels": [],
+      "requirements": [
+        "authoring.session.current",
+        "pose.version.current",
+        "joint.unheld",
+        "pose.control.available"
+      ],
+      "description": "Share the same live Maestro pose as the physical joint handles. Inspect animation.posing first. start requires its idle sessionId and current Maestro revision. The start receipt completes immediately while the pose session owns Maestro independently; cancelling a completed receipt does not stop posing. rotate patches 1–8 distinct supported joints at the exact sessionId/version; rotations are normalized canonical local quaternions, never imported bone or world coordinates. It uses the physical limits relative to canonical rest: head 75 degrees, spine/chest 45, others 150. Read animation.pose.joint for the actual clamped result. Handle movement, saved edits and failed-save retention change the opaque pose version; inspect again before every mutation. Edits and reads refuse a held joint. rotate only changes the live preview; save commits one Undo and keeps posing, finish saves and ends it, discard abandons only the unsaved preview (previous handle releases/saves stay saved). Physical handle releases save automatically; physical Stop, focus/pause and selection changes attempt finish. Failed saves stop posing and retain the frozen pose in memory: save/finish retry only its original room and object revision; discard removes only that retained pose. No restart/replay after launch; process termination loses unsaved memory. Agent/program start and recovery cannot interrupt another live actor. During an active recording rotate remains available, but save/finish/discard require finishing the recording first; recording completion ends both authoring sessions. Temporary saved edits remain in the fork until Keep. No playback starts.",
+      "example": {
+        "operation": "start",
+        "target": "maestro",
+        "sessionId": "00000000000000000000000000000000",
+        "revision": 1
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "phase": {
+            "type": "string",
+            "enum": [
+              "posing",
+              "saved",
+              "discarded"
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 1000000.0
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 1000000.0
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "sessionId",
+          "phase",
+          "version",
+          "revision",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "model.library.inspect",
       "version": 1,
       "label": "Browse imported models",
@@ -5645,6 +5985,91 @@
       "description": "Native recorder identity and phase: idle issues the next start ID; recording samples a live take; unsaved retains a frozen failed take in memory. Duration is sampled seconds, not wall time. Idle has empty target and zero counts/revision. Read target's authored revision before starting. Finish/discard take the current exact ID; completed receipt cancellation is separate. Error is bounded status, not a recovery token. A new app/room instance never restores an active recording."
     },
     {
+      "id": "animation.posing",
+      "version": 1,
+      "type": {
+        "record": {
+          "sessionId": "text",
+          "phase": "text",
+          "version": "number",
+          "revision": "number",
+          "holding": "boolean",
+          "temporary": "boolean",
+          "joints": {
+            "list": "text"
+          },
+          "error": "text"
+        }
+      },
+      "label": "Current live pose session",
+      "description": "Shared physical/agent pose session: idle issues the next start identity (version 0); posing identifies the current preview and supported displayed joint channels; unsaved identifies a retained failed pose and its original object revision. Read this before each mutation; version is an opaque change counter and can skip. Joint holds prevent shared mutations/readback until released. Idle has no live joint values. Retained data is memory-only, cannot overwrite a changed room/object, and is lost on process termination."
+    },
+    {
+      "id": "animation.pose.joint",
+      "version": 1,
+      "type": {
+        "record": {
+          "x": "number",
+          "y": "number",
+          "z": "number",
+          "w": "number"
+        }
+      },
+      "label": "Live pose joint rotation",
+      "description": "Read one actual canonical local rotation from the exact live or retained pose session. Joint names come from animation.posing. Unavailable for idle/stale sessions or while a physical joint is held; never substitutes an automatic animation or saved pose. Physical handles and shared edits use the same canonical rig and limits. Reading makes no edits.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 1000000.0
+          },
+          "joint": {
+            "type": "string",
+            "enum": [
+              "Hips",
+              "Spine",
+              "Chest",
+              "Neck",
+              "Head",
+              "LeftUpperArm",
+              "LeftLowerArm",
+              "LeftHand",
+              "RightUpperArm",
+              "RightLowerArm",
+              "RightHand",
+              "LeftUpperLeg",
+              "LeftLowerLeg",
+              "LeftFoot",
+              "RightUpperLeg",
+              "RightLowerLeg",
+              "RightFoot"
+            ]
+          }
+        },
+        "required": [
+          "sessionId",
+          "version",
+          "joint"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "sessionId": "00000000000000000000000000000000",
+        "version": 1,
+        "joint": "Head"
+      },
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
       "id": "avatar.model",
       "version": 1,
       "type": {
@@ -6409,7 +6834,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "b8b7d5e94e43268da5772494273268e6a5df72f4256c591609ebfd1c1098ab62"
+      "sha256": "e3c637c3f0945d1a621dcf68cf1f157a79038411ed0001735a35289f9fdcd901"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -6465,11 +6890,23 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationWorkshop.cs",
-      "sha256": "49a06629db24b53b577c70a064de86e96722eb0186fcb03ee819bd0a8fdb618b"
+      "sha256": "bdcb62adbf594da7a82956dd1a24e958a892747427f63785b763640895213ed2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationPoseRetention.cs",
-      "sha256": "27ca880f445d771f153559a07da1d7de1e6297be92bc76fe223213440c7fb1a0"
+      "sha256": "be4c61d453fc35dc54f2e93d43679d00cb676bee01aefb0c4974a62494cbf0f0"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationPosing.cs",
+      "sha256": "247a26687004e7743cd42646488c06a991d8c496931d07354af7c512e8dd18ee"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
+      "sha256": "ee05f22687f309ba3fd53ce64ad4368780c9a92cb360fc26e35046dee4a5756c"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarPoseRig.cs",
+      "sha256": "58153e26da637c1e38795404cedbc400e277af5ff5f1173b5878f70ac6a60cbb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AvatarModelSelection.cs",
@@ -6496,6 +6933,10 @@
       "sha256": "08016146c4a69829095687637214119a83978e66ffab5b66571e0eb1e72afc1d"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationPosingCapability.cs",
+      "sha256": "b5c4e12d90b63009ba2a986e77aaba2c1ec236bfce1cfee509c5bc36461d44f6"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationRecordingCapability.cs",
       "sha256": "d43c0f21d8786000effde056bcebda1cecbc87577e8ebe45187da6654985f8af"
     },
@@ -6509,7 +6950,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "29554ee0460e980aebfc4da12562512fe85e308c82ae8a667c7bb95bfd500a19"
+      "sha256": "f93a3eb1b0084ffa993b3d2b353f9795b0f0c9f67f076cb4bafba3b779fcdae7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
