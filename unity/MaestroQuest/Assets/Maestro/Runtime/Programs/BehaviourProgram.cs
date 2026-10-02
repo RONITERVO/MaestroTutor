@@ -211,7 +211,7 @@ namespace Maestro.Quest.Programs
                             Need(node["version"]?.Type==JTokenType.Integer&&(double)node["version"]==definition.Version,"Unsupported event subscription version");
                             Need(definition.ValidArguments((int)node["version"],Object(node["arguments"]),out var eventError),eventError??"Invalid event arguments");
                             foreach(var binding in Object(node["bindings"]).Properties()) {
-                                var argumentType=definition.ArgumentType(binding.Name);Need(argumentType!=ProgramType.Void,"Unsupported event argument binding");
+                                var argumentType=definition.ArgumentType(binding.Name,Object(node["arguments"]));Need(argumentType!=ProgramType.Void,"Unsupported event argument binding");
                                 Need(Expression(binding.Value,function)==argumentType,"Event argument type differs");
                             }
                         } else Need(!node.ContainsKey("version")&&!node.ContainsKey("arguments")&&!node.ContainsKey("bindings"),"This event has no subscription arguments");

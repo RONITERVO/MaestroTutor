@@ -14,7 +14,7 @@ export function eventFieldType(id:string,field:string):BehaviourValueType|null {
 export function validateEventArguments(id:string,version:number,args:unknown):string|null {
  const definition=definitions.get(id);return definition?.input&&definition.version===version?validateCapabilityValue(args,definition.input):'Unknown event subscription version or arguments';
 }
-export function eventArgumentType(id:string,path:string):BehaviourValueType|null {
- const field=schemaField(definitions.get(id)?.input,path);if(field?.['x-static'])return null;
+export function eventArgumentType(id:string,path:string,args?:Record<string,unknown>):BehaviourValueType|null {
+ const field=schemaField(definitions.get(id)?.input,path,args);if(field?.['x-static'])return null;
  const type=field?.type;return type==='string'?'text':type==='integer'?'number':type==='number'||type==='boolean'?type:null;
 }

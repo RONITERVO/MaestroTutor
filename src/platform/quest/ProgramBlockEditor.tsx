@@ -104,6 +104,8 @@ export function ProgramBlockEditor({node,program,fn,objects,onChange,eventFields
     case 'awaitEvent': {
       const events=[...behaviourCatalog.events.map(e=>({name:e.id,type:'text' as ValueType,objectEvent:e.objectEvent})),...(program.events??[]).map(e=>({...e,objectEvent:false}))];
       const selected=events.find(e=>e.name===node.event),type=selected?.type??'text',definition=behaviourEvent(node.event);
+      const eventArgs=(args:Record<string,unknown>)=>onChange({...node,arguments:args,bindings:Object.fromEntries(Object.entries(node.bindings??{}).filter(([path])=>eventArgumentType(node.event,path,args)!==null))});
+      const eventInput=resolveCapabilitySchema(definition?.input,node.arguments);
       return <>
         <label>Event<select aria-label="Await event" value={node.event} onChange={e=>{
           const event=events.find(v=>v.name===e.target.value)!;
@@ -113,11 +115,12 @@ export function ProgramBlockEditor({node,program,fn,objects,onChange,eventFields
         }}>{events.map(e=><option key={e.name} value={e.name} disabled={!eventFieldsSupported&&behaviourEvent(e.name)?.features?.includes('eventFields.v1')===true||!eventSubscriptionsSupported&&Boolean(behaviourEvent(e.name)?.input)}>{e.name}</option>)}</select></label>
         {selected?.objectEvent&&<label>Event object<select aria-label="Event object" value={node.source} onChange={e=>onChange({...node,source:e.target.value})}><option value="">Any object</option>{objects.map(o=><option key={o.id} value={o.id}>{o.name??o.id}</option>)}</select></label>}
         {definition?.input&&<fieldset disabled={!eventSubscriptionsSupported}><legend>Event subscription</legend><p>Inputs are evaluated when the wait starts and stay fixed until it ends.</p>
-          {Object.entries(definition.input.properties??{}).map(([key,schema])=>{
-            const type=eventArgumentType(node.event,key),bound=node.bindings?.[key],label=schema.title??'Event '+key;
+          {definition.input.oneOf&&<CapabilityVariant schema={definition.input} value={node.arguments} objects={objects} onChange={value=>eventArgs(value as Record<string,unknown>)}/>}
+          {Object.entries(eventInput?.properties??{}).map(([key,schema])=>{
+            const type=eventArgumentType(node.event,key,node.arguments),bound=node.bindings?.[key],label=schema.title??'Event '+key;
             return <div key={key}>
               {type&&<label>{schema.title??key} input<select aria-label={label+' input mode'} value={bound?'expression':'literal'} onChange={e=>{const bindings={...node.bindings};if(e.target.value==='expression')bindings[key]={value:defaultValue(type)};else delete bindings[key];onChange({...node,bindings});}}><option value="literal">Value</option><option value="expression">Variable or calculation</option></select></label>}
-              {bound&&type?expr(label,bound,type,value=>onChange({...node,bindings:{...node.bindings,[key]:value}})):<CapabilityFields label={label} schema={schema} value={node.arguments?.[key]} objects={objects} onChange={value=>onChange({...node,arguments:{...node.arguments,[key]:value}})}/>}
+              {bound&&type?expr(label,bound,type,value=>onChange({...node,bindings:{...node.bindings,[key]:value}})):<CapabilityFields label={label} schema={schema} value={node.arguments?.[key]} objects={objects} onChange={value=>eventArgs({...node.arguments,[key]:value})}/>}
               {schema.description&&<small>{schema.description}</small>}
             </div>;
           })}

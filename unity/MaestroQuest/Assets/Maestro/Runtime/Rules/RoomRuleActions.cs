@@ -9,7 +9,7 @@ using Newtonsoft.Json.Linq;
 namespace Maestro.Quest.Rules
 {
     /// <summary>One lifecycle host for every native module. No capability IDs, enum dispatch or argument fields.</summary>
-    public sealed class RoomRuleActions : IRuleActions, IRuleCompletion, IRuleReadiness, IRuleInterruptionInfo, IRuleOwnershipSource, IProgramFacts, IProgramFactQueries, IProgramEventWorld, IProgramPhysicsWorld, IRuleResults
+    public sealed class RoomRuleActions : IRuleActions, IRuleCompletion, IRuleReadiness, IRuleInterruptionInfo, IRuleOwnershipSource, IProgramFacts, IProgramFactQueries, IProgramEventWorld, IProgramPhysicsWorld, IProgramClockWorld, IRuleResults
     {
         readonly CapabilityContext context;
         readonly Dictionary<string,CapabilityOperation> operations=new();
@@ -17,8 +17,9 @@ namespace Maestro.Quest.Rules
         readonly Dictionary<string,RoomOwnership.Lease> owned=new();
         readonly Dictionary<string,string> interrupted=new();
         public RoomOwnership Ownership {get;}
+        public IProgramClock Clock {get;private set;}=SystemProgramClock.Instance;
         readonly string domain;
-        public RoomRuleActions(RoomEditor editor,AnimationWorkshop workshop):this(new CapabilityContext(editor,workshop)){}
+        public RoomRuleActions(RoomEditor editor,AnimationWorkshop workshop,IProgramClock clock=null):this(new CapabilityContext(editor,workshop)){Clock=clock??SystemProgramClock.Instance;}
         internal static RoomRuleActions ForWorkspace(Maestro.Quest.Persistence.WorkspaceHost host)=>new(new CapabilityContext(host),"workspace");
         RoomRuleActions(CapabilityContext context,string domain=null){this.context=context;this.domain=domain;Ownership=domain=="workspace"?new RoomOwnership():context.Editor?context.Editor.Ownership:new RoomOwnership();}
         public static ImportedModel ClipModel(RoomItem item)=>AnimationTargets.ClipModel(item);

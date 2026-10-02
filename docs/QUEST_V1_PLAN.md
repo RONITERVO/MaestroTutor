@@ -12,8 +12,8 @@ posing now exposes start/rotate/save/finish/discard with native session IDs and
 pose versions, the same physical joint limits and imported retargeter, held-joint
 exclusion, failed-pose recovery and recording interoperation. Saved edits are
 durable outside temporary mode; temporary edits stay in the fork until Keep.
-No authoring operation starts playback. The catalog contains 58 actions, 10
-events and 48 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
+No authoring operation starts playback. The catalog contains 58 actions, 11
+events and 49 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
 Single-file GLB/VRM selection, preview and acceptance now share the physical
 import path with book fields and agent/program calls. See QUEST_MODEL_IMPORT.md.
 Animation collections now share native selection, versioned start/retry/tag controls,
@@ -51,7 +51,9 @@ QUEST_PARALLEL_PROGRAMS.md. Recipe objects now also play exact named rotation tr
 on independent part channels through animation.play; live part poses share the
 catalog. See QUEST_RECIPE_PART_PLAYBACK.md. Shared object.hold now lets these
 parts, Maestro hands and object roots carry and release created props using the
-existing collision and throw runtime; see QUEST_OBJECT_ATTACHMENTS.md. The PC checkpoint below is verified;
+existing collision and throw runtime; see QUEST_OBJECT_ATTACHMENTS.md. Calendar
+deadlines and weekly times now use shared event waits and clock readback; see
+QUEST_CALENDAR_SCHEDULES.md. The PC checkpoint below is verified;
 headset acceptance remains outstanding.
 The remaining runtime, provider, device and Store acceptance gates remain unfinished; the complete v1 goal remains active.
 
@@ -69,6 +71,35 @@ and tracked operation roots remain protected. Private recovery export remains
 separate; a full store with unreadable selection still requires recovery/repair.
 PR #248 records the current verified commit and package. Earlier entries
 below are historical evidence, not current test totals or release acceptance.
+
+PC calendar-scheduling increment (2026-10-02): clock.scheduled now waits for one
+explicit date/time or the next selected weekly occurrence through the shared
+native event subscription, typed blocks and agent program. clock.now reports
+calendar timestamps, local zone, UTC offset and weekday through shared facts.
+Offset/DST choices, missed-deadline reporting or failure and clock changes are
+explicit. Weekly waits do not collect a backlog. Stop, pause, focus loss and
+reload cancel execution; background alarms and durable resumption remain separate.
+See QUEST_CALENDAR_SCHEDULES.md.
+
+A real native saved program created a ball at the injected on-time occurrence,
+counted a later missed occurrence without creating another, and stayed stopped
+after pause. Chrome edited that exact program and displayed the final native
+observations; browser save acknowledgements were simulated. Calendar tests use
+an injected clock, not changes to the PC clock or multiweek device acceptance.
+
+Verification passed 415 EditMode and 374 PlayMode tests (three optional private
+model skips), all 1,703 web tests across 196 files and 61 Android tests. The final
+native capture and eight catalog observations were checked again in focused web
+tests and Chrome; screenshots inspected. TypeScript, ESLint, prompt/core boundaries,
+catalog drift, Android assembly/lint and the full build helper passed. All 209
+runtime / 105 test C# files, 32 fixtures plus metadata and 113 packaged web files
+match the tested inputs. The APK is ARM64-only with a verified v2 signature.
+Catalog: 58 actions, 11 events, 49 facts.
+APK: `D:\Projects\Builds\MaestroQuestVerify\Builds\Checkpoints\MaestroQuest-calendar-schedules-126F3BA1.apk`.
+SHA-256: `126F3BA1FF3A728D77CDF91CA30D646CEEDFEEAD7804EEC4BE56477DBFCF196B`.
+Development signing; not installed on Quest. Device timezone, lifecycle,
+readability and performance acceptance remain outstanding. No device, production
+or Store operation was performed. The complete v1 goal remains active.
 
 PC shared-object-attachment increment (2026-10-02): object.hold now carries a
 created prop at an exact recipe part, Maestro hand or object root. It shares the

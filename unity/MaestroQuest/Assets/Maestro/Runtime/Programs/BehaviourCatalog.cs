@@ -70,8 +70,8 @@ namespace Maestro.Quest.Programs
             public bool ValidArguments(int version,JObject arguments,out string error) {
                 error="Unknown event subscription version or arguments";return HasSubscription&&version==Version&&CapabilityArguments.Validate(arguments,input,out error,"event arguments");
             }
-            public ProgramType ArgumentType(string path) {
-                var field=CapabilitySchema.Field(input,path);if((bool?)field?["x-static"]==true)return ProgramType.Void;
+            public ProgramType ArgumentType(string path,JObject arguments=null) {
+                var field=CapabilitySchema.Field(input,path,arguments);if((bool?)field?["x-static"]==true)return ProgramType.Void;
                 return ((string)field?["type"]) switch {"string"=>ProgramType.Text,"number" or "integer"=>ProgramType.Number,"boolean"=>ProgramType.Boolean,_=>ProgramType.Void};
             }
             public bool TryWatch(IProgramEventWorld world,JObject arguments,float now,out IProgramEventWatch result,out string error) {
@@ -87,6 +87,7 @@ namespace Maestro.Quest.Programs
                     ["features"]=fields==null?new JArray("eventPrograms.v1"):new JArray("eventPrograms.v1","eventFields.v1")};
                 if(fields!=null)result["fields"]=Fields;
                 if(HasSubscription) {((JArray)result["features"]).Add("eventSubscriptions.v1");result["input"]=Input;result["example"]=example.DeepClone();}
+                if(input?["x-features"] is JArray features)foreach(var feature in features)((JArray)result["features"]).Add(feature.DeepClone());
                 return result;
             }
         }
@@ -138,6 +139,7 @@ namespace Maestro.Quest.Programs
         public static readonly IReadOnlyList<ActionDefinition> Actions=Array.AsReadOnly(CapabilityModules.All.Select(module=>new ActionDefinition(module)).ToArray());
         public static readonly IReadOnlyList<EventDefinition> Events=Array.AsReadOnly(new[] {
             PhysicsMotionSubscription.Definition(),
+            CalendarSubscription.Definition(),
             new EventDefinition("maestro.speaking.enter",RuleEventKind.Speaking,"Speaking","speaking"),
             new EventDefinition("maestro.listening.enter",RuleEventKind.Listening,"Listening","listening"),
             new EventDefinition("maestro.thinking.enter",RuleEventKind.Thinking,"Thinking","thinking"),
@@ -173,6 +175,7 @@ namespace Maestro.Quest.Programs
             WorkspaceReviewFacts.Status(),
                 WorkspacePreviousFacts.Previous(),
             WorkspaceRecoveryFacts.Status(),WorkspaceRecoveryFacts.Candidate(),WorkspaceRecoveryFacts.Preview(),
+            CalendarSubscription.Fact(),
             new FactDefinition("room.sessionId",ProgramType.Text,"Current room session","Current explicit temporary-room session ID, or empty when using the saved room. Reading it does not begin, keep or discard a room.",context=>context.RoomSessionId==null?null:new ProgramValue(context.RoomSessionId)),
             new FactDefinition("maestro.state",ProgramType.Text,"Maestro state","Current observed tutor state: speaking, listening, thinking or idle. Unavailable before a reliable activity snapshot, during audio suspension or when the room runtime is paused.",context=>context.Activity==null?null:new ProgramValue(context.Activity)),
             RoomEnvironmentCapability.Fact(),PhysicsSimulationCapability.Fact(),

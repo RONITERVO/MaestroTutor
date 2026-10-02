@@ -1,5 +1,9 @@
 # Event programs and session state
 
+Calendar deadlines and selected-weekday times now use the shared clock.scheduled
+subscription. See [calendar schedules](QUEST_CALENDAR_SCHEDULES.md) for explicit
+late delivery, DST and active-app lifecycle semantics.
+
 Parallel function calls now use the explicit `parallelVersion:1` extension; see
 [the current parallel contract](QUEST_PARALLEL_PROGRAMS.md). The dated entries below
 record earlier implementation stages.

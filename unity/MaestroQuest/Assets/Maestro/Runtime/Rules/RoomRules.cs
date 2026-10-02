@@ -27,11 +27,11 @@ namespace Maestro.Quest.Rules
         bool paused, focused = true;
         string shownError;
         public bool AnyButtonHeld => buttons.Values.Any(x => x && x.IsHeld);
-        public void Initialize(RuleWorkshop source, RoomEditor roomEditor, AnimationWorkshop animationWorkshop, NativeBookBrowser book, RoomInteraction interaction, BookControllerInput controllerInput, Func<int,Transform> controllerAnchors = null)
+        public void Initialize(RuleWorkshop source, RoomEditor roomEditor, AnimationWorkshop animationWorkshop, NativeBookBrowser book, RoomInteraction interaction, BookControllerInput controllerInput, Func<int,Transform> controllerAnchors = null, Programs.IProgramClock clock = null)
         {
             workshop = source; editor = roomEditor; animations = animationWorkshop; browser = book; room = interaction; input = controllerInput;
             anchors = controllerAnchors ?? (index => input ? input.ControllerAnchor(index) : null);
-            actions = new RoomRuleActions(editor,animations); Scheduler = new RuleScheduler(actions,new InvocationReceipts(editor.ReceiptDirectory)); workshop.Runtime = this;
+            actions = new RoomRuleActions(editor,animations,clock); Scheduler = new RuleScheduler(actions,new InvocationReceipts(editor.ReceiptDirectory)); workshop.Runtime = this;
             runtimeGate=editor.RuntimeGate;runtimeGate.Changed+=RefreshSuspension;RefreshSuspension();
             workshop.DocumentChanged += Reload;
             editor.Editing += StopAll; editor.ItemGrabbed += Grabbed; editor.ItemReleased += Released; editor.ItemTapped += Tapped; editor.ItemCollided += Collided;

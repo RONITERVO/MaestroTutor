@@ -363,3 +363,11 @@ it('authors a nested attachment choice and removes only bindings made incompatib
  h.click('Edit values carryProp');h.change('Attachment point','2');h.click('Update draft');node=JSON.parse(h.source()).functions[1].body[0];
  expect(node.arguments.holder.kind).toBe('object');expect(node.arguments.holder.part).toBeUndefined();expect(node.bindings['holder.part']).toBeUndefined();expect(node.bindings['holder.objectId']).toEqual({var:'holder'});expect(parseProgram(h.source()).error).toBeNull();
 });
+
+it('edits a weekly calendar wait and switches to an exact one-off without stale bindings',()=>{
+ const p=JSON.parse(readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-calendar.json','utf8')) as BehaviourProgram;
+ const h=harness(p);h.click('Edit values weekly');h.change('Hour source','literal');h.change('Hour value','17');h.click('Update draft');
+ let node=JSON.parse(h.source()).functions[0].body[0].body[0];expect(node.bindings.hour).toEqual({value:17});
+ h.click('Edit values weekly');h.change('Schedule','0');h.change('Date and time with UTC offset','2026-10-02T18:00:00Z');h.click('Update draft');
+ node=JSON.parse(h.source()).functions[0].body[0].body[0];expect(node.arguments.kind).toBe('once');expect(node.bindings.hour).toBeUndefined();expect(parseProgram(h.source()).error).toBeNull();
+});

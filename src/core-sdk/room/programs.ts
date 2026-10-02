@@ -102,7 +102,7 @@ function validateProgram(root:Record<string,unknown>):void {
       if(definition?.input) {
        need(typeof n.version==='number'&&Number.isInteger(n.version)&&n.version===definition.version,'Unsupported event subscription version');
        const error=validateEventArguments(eventName,n.version,obj(n.arguments));need(!error,error??'Invalid event arguments');
-       for(const [path,value] of Object.entries(obj(n.bindings))){const type=eventArgumentType(eventName,path);need(type,'Unsupported event argument binding');need(expr(value,f.types)===type,'Event argument type differs');}
+       for(const [path,value] of Object.entries(obj(n.bindings))){const type=eventArgumentType(eventName,path,obj(n.arguments));need(type,'Unsupported event argument binding');need(expr(value,f.types)===type,'Event argument type differs');}
       } else need(n.version===undefined&&n.arguments===undefined&&n.bindings===undefined,'This event has no subscription arguments');
       need(f.types.get(text(n.received))==='boolean','Event received needs a boolean local');need(f.types.get(text(n.value))===t,'Event value needs a matching local');need(n.received!==n.value,'Event destinations must differ');
       if(n.fields!==undefined){const assigned=new Set([n.received,n.value]);for(const [key,destination] of Object.entries(obj(n.fields))){const fieldType=eventFieldType(eventName,key);need(fieldType&&typeof destination==='string'&&f.types.get(destination)===fieldType&&!assigned.has(destination),'Invalid or duplicate event field destination');assigned.add(destination);}}
