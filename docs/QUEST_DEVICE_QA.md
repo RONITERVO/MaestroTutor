@@ -1580,3 +1580,15 @@ automatic commit. After separate commit/review it has only the included book and
 Maestro, default controls and no user programs or assets; inspect preservation of
 the prior data. Unreadable coordinator history still reports unavailable; its repair
 remains release work.
+
+
+## Full-app shared-client integration (2026-10-02)
+
+The required Editor room probe now exercises actual MaestroRoom startup and the
+same RoomAgentClient as the book: catalog discovery, one-off create with a durable
+receipt, paint, Undo paint, Undo creation and native diagnostics. This exposed and
+fixed complete-room feature-count and absent-memory serialization failures. See
+[probe contract](QUEST_NATIVE_ROOM_PROBE.md). The test uses an isolated workspace,
+no headset and no AI provider. Android WebView, input, room scan, provider and
+physical performance gates above remain required. Do not use this result to mark
+those gates complete.

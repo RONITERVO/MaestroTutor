@@ -16,6 +16,11 @@ namespace Maestro.Quest
     /// <summary>One book/browser owner and one tutor avatar in the user's room.</summary>
     public sealed class MaestroRoom : MonoBehaviour
     {
+#if UNITY_EDITOR
+        // The batch-only editor probe supplies a fresh directory before Awake.
+        // This seam and the file transport are absent from Android player builds.
+        internal string ProbeWorkspaceDirectory;
+#endif
         NativeBookBrowser browser;
         IllustratedBook book;
         Texture currentSurface;
@@ -93,8 +98,12 @@ namespace Maestro.Quest
             var workspace=gameObject.AddComponent<Maestro.Quest.Persistence.WorkspaceHost>();
             var includedAvatar=Maestro.Quest.Imports.BundledAvatar.FromApplication();
             var includedMotions=Maestro.Quest.Imports.BundledMotions.FromApplication();
-            workspace.Initialize(Application.persistentDataPath,room.transform,(session,directory,receipts,gate)=>session.Build(room,bookItem,browser,router,input,physics,navigation,scan,virtualView,
-                () => headTracking == null || (headTracking.ReadValue<int>() & 3) == 3,Application.persistentDataPath,directory,receipts,gate,includedAvatar,includedMotions),agent,includedAvatar,includedMotions);
+            string workspaceDirectory=Application.persistentDataPath;
+#if UNITY_EDITOR
+            if(!string.IsNullOrEmpty(ProbeWorkspaceDirectory))workspaceDirectory=ProbeWorkspaceDirectory;
+#endif
+            workspace.Initialize(workspaceDirectory,room.transform,(session,directory,receipts,gate)=>session.Build(room,bookItem,browser,router,input,physics,navigation,scan,virtualView,
+                () => headTracking == null || (headTracking.ReadValue<int>() & 3) == 3,workspaceDirectory,directory,receipts,gate,includedAvatar,includedMotions),agent,includedAvatar,includedMotions);
 
         }
 

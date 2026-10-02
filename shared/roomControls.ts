@@ -24,6 +24,9 @@ export function validRoomControl(c:Record<string,unknown>):boolean {
     default:return false;
   }
 }
+// Feature groups evolve independently of the number of catalog actions. Keep a
+// bounded envelope while allowing a full room with workspace, XR and import services.
+export const MAX_ROOM_CAPABILITIES=256;
 export function requireRoomCapabilities(commands:{action:string;rule?:unknown;execution?:unknown;catalog?:unknown}[],scene:{capabilities?:string[]}) {
   for(const command of commands) {
     const programs:BehaviourProgram[]=command.action==='rules'&&record(command.rule)&&Array.isArray(command.rule.edits)?command.rule.edits.flatMap(edit=>record(edit)&&record(edit.sequence)&&typeof edit.sequence.program==='string'?[JSON.parse(edit.sequence.program) as BehaviourProgram]:[]):[];

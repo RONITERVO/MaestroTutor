@@ -12964,7 +12964,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/MaestroRoom.cs",
-      "sha256": "86aa0141e355cc62e840690037c52fd69b6db7b0db78791bedff2daea7f02abb"
+      "sha256": "15c613bf217ab2683b79322145958cf47c1dc3872efe140b572e875eef9a54be"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -13001,6 +13001,14 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
       "sha256": "0543f10b2a50c804d408ca8e41b8669b56fc5c0986ae6e79e4da053063ed9001"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
+      "sha256": "1ab8ef8e3cc8d9da8ac39b5ae98961b850afe863ea196eda772644026d495392"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgent.cs",
+      "sha256": "eb1d6de64d226b606f3f103c9a11002e586eda15f4d38e1a2f531392e2296bfb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceRecoveryHold.cs",

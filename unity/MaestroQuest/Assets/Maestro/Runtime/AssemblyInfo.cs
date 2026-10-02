@@ -4,3 +4,4 @@ using System.Runtime.CompilerServices;
 [assembly:InternalsVisibleTo("Maestro.Quest.Tests")]
 [assembly:InternalsVisibleTo("Maestro.Quest.PlayMode.Tests")]
 [assembly:InternalsVisibleTo("Maestro.Quest.TestFixtures")]
+[assembly:InternalsVisibleTo("Maestro.Quest.Editor")]

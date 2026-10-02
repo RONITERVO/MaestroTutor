@@ -19,7 +19,10 @@ namespace Maestro.Quest.Creation
             json["execution"]=state.execution?.DeepClone()??JValue.CreateNull();
             if(state.motions==null)json["motions"]=JValue.CreateNull();
             if(state.rules==null)json["rules"]=JValue.CreateNull();
-            else if(state.rules.selected==null)json["rules"]["selected"]=JValue.CreateNull();
+            else {
+                if(state.rules.selected==null)json["rules"]["selected"]=JValue.CreateNull();
+                if(state.rules.memory==null)json["rules"]["memory"]=JValue.CreateNull();
+            }
             if(state.temporaryRoom==null)json.Remove("temporaryRoom");
             if(state.ownership==null)json["ownership"]=JValue.CreateNull();
             if(state.physics==null)json["physics"]=JValue.CreateNull();

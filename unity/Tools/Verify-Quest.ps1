@@ -171,3 +171,7 @@ if ($RenderPhysics) {
     Invoke-QuestEditor @('-quit','-executeMethod','Maestro.Quest.Editor.QuestArtPreview.RenderPhysics') 'physics-preview.log'
 }
 Write-Output "Unity checks passed: $($testReport.'test-run'.passed) EditMode and $($playReport.'test-run'.passed) PlayMode tests. Evidence: $logRoot"
+
+# The complete app can advertise combinations absent from small test fixtures.
+# Exercise its real room inbox with the same shared client used by the book.
+& (Join-Path $PSScriptRoot 'Run-QuestRoomProbe.ps1') -Editor $editorPath -BuildMirror $mirrorRoot

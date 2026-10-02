@@ -2,6 +2,21 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
+The October 2 notebook scope and current review assessment are recorded in
+[expandable world authoring](QUEST_WORLD_AUTHORING.md). Editable native recipes,
+reusable object components and the existing shared event-program runtime remain
+the direction. The default play kit, richer geometry, assemblies, surface paint,
+physical joints and approximate water/snow are acceptance work, not shipped claims.
+No generation credits were spent for this assessment.
+
+The real full-app Editor room now has an isolated development file transport for
+the exact shared book/agent client. The required native verification journey creates
+an object, paints it, undoes both edits and reads native diagnostics. It exposed and
+fixed a too-small client feature-inventory bound and JsonUtility expanding absent
+program memory into an invalid unscoped object. See QUEST_NATIVE_ROOM_PROBE.md.
+This verifies native command integration; provider, Android browser and headset
+acceptance remain separate gates.
+
 The native runtime now exposes bounded frame-interval, imported-model budget
 and current-room motion-cache facts through the shared catalog. Book, agent
 and stored programs use those same observations; no extra page controls or
@@ -51,7 +66,7 @@ pose versions, the same physical joint limits and imported retargeter, held-join
 exclusion, failed-pose recovery and recording interoperation. Saved edits are
 durable outside temporary mode; temporary edits stay in the fork until Keep.
 No authoring operation starts playback. The catalog contains 61 actions, 12
-events and 53 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
+events and 56 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
 Single-file GLB/VRM selection, preview and acceptance now share the physical
 import path with book fields and agent/program calls. See QUEST_MODEL_IMPORT.md.
 Animation collections now share native selection, versioned start/retry/tag controls,
@@ -1153,8 +1168,9 @@ hardware checks. A scaffold or editor demonstration does not complete the goal.
 
 - User connected and authorized Quest 3 for development. The development APK
   installs and launches; see QUEST_DEVICE_QA.md for evidence and remaining checks.
-- User confirmed there is no Meta developer-dashboard app yet. App identity and
-  store setup remain required external release gates.
+- The owner created Meta app 1763835394893209. Release package com.maestro.quest
+  is selected subject to availability; signing, dashboard configuration and store
+  setup remain required external release gates.
 - Meta application identity, signing configuration, organization access and
   production authentication/attestation must be validated before submission.
 - Unity 6000.3.24f1 and its Android build support are installed. Licensing works.
