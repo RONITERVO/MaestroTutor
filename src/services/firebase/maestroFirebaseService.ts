@@ -17,12 +17,16 @@
  */
 import { Capacitor } from '@capacitor/core';
 import type { FirebaseApp } from 'firebase/app';
+import type { AppCheck } from 'firebase/app-check';
+import { sessionActivity } from '../../platform/browser/sessionActivity';
+import { isNativeQuestBook } from '../../platform/quest/questIntegrityBridge';
 import type { Auth } from 'firebase/auth';
 import { MAESTRO_INTEGRATION_CONFIG, isFirebaseClientConfigured } from '../../core/config/integrations';
 import { ServiceNotConfiguredError } from '../shared/serviceErrors';
 
 let cachedFirebaseApp: FirebaseApp | null = null;
 let cachedFirebaseAuth: Auth | null = null;
+let questAppCheck: AppCheck | null = null;
 let appCheckInitializationPromise: Promise<boolean> | null = null;
 let hasInitializedAppCheck = false;
 let lastAppCheckFailure: string | null = null;
@@ -61,7 +65,15 @@ const initializeOptionalAppCheck = async (): Promise<boolean> => {
 
   appCheckInitializationPromise = (async () => {
     try {
-      await getFirebaseApp();
+      const app = await getFirebaseApp();
+      if (isNativeQuestBook()) {
+        const { acquireQuestAppCheckToken, questAttestationBaseUrl } = await import('./questAppCheck');
+        const base = questAttestationBaseUrl(MAESTRO_INTEGRATION_CONFIG.questAttestationUrl);
+        const { initializeAppCheck, CustomProvider } = await import('firebase/app-check');
+        questAppCheck = initializeAppCheck(app, { provider: new CustomProvider({ getToken: () => acquireQuestAppCheckToken(base) }), isTokenAutoRefreshEnabled: true });
+        hasInitializedAppCheck = true;
+        return true;
+      }
       const { FirebaseAppCheck } = await import('@capacitor-firebase/app-check');
 
       if (isNativeAppCheckPlatform) {
@@ -115,12 +127,28 @@ export const maestroFirebaseService = {
   },
 
   getAppCheckToken: async (forceRefresh = false): Promise<string | null> => {
+    if (isNativeQuestBook() && sessionActivity.status().suspended) {
+      lastAppCheckFailure = 'Quest verification was interrupted. Reopen the book and try again.';
+      return null;
+    }
     const isReady = await initializeOptionalAppCheck();
     if (!isReady) {
       lastAppCheckFailure = lastAppCheckFailure || 'App Check is not available in this build.';
       return null;
     }
 
+    if (isNativeQuestBook()) {
+      try {
+        const { getToken } = await import('firebase/app-check');
+        if (!questAppCheck) return null;
+        const result = await getToken(questAppCheck, forceRefresh);
+        lastAppCheckFailure = result.token ? null : 'Quest verification returned an empty token.';
+        return result.token || null;
+      } catch {
+        lastAppCheckFailure = 'Quest verification failed. Check your connection and try again.';
+        return null;
+      }
+    }
     const { FirebaseAppCheck } = await import('@capacitor-firebase/app-check');
     /*
      * Play Integrity's first attestation after a cold start regularly fails

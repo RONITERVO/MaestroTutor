@@ -17,7 +17,8 @@
     "UniGLTF.Utils",
     "VRM10",
     "UniHumanoid",
-    "Unity.Newtonsoft.Json"
+    "Unity.Newtonsoft.Json",
+    "Oculus.Platform"
   ],
   "autoReferenced": true
 }

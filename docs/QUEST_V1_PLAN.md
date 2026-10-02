@@ -2404,3 +2404,38 @@ Backend checkpoint validation: **58 Functions unit/CORS tests** pass, including
 existing billing/Live suites and new Quest transaction checks. TypeScript,
 focused lint and whitespace checks pass. Real attestation and minting remain
 unverified; the endpoint stays disabled pending configuration and device work.
+
+
+## Quest client attestation checkpoint (2026-10-02)
+
+The local book now uses Firebase's CustomProvider backed by Meta Platform SDK
+207.0.0. Startup initialization and entitlement precede proof generation; a
+release without valid configuration or entitlement exits. Development builds may
+run unconfigured but cannot attest as a Store release. The original phone/web
+providers remain unchanged. Embedded Google popup sign-in is refused on Quest
+until explicit browser account linking is implemented.
+
+The existing top-level book polling bridge carries session-bound requests and
+quoted native results. No native object is exposed to artifacts. Replacement,
+suspension, timeout and disposal reject stale callbacks and abort the server
+exchange. Native proofs are not part of saved room/agent observations. See
+[managed-access integration](QUEST_MANAGED_ACCESS.md) for public configuration and
+the remaining real-provider, account-link and release acceptance gates.
+
+The complete development packaging helper exited 0: **606 EditMode and 417
+PlayMode tests** passed, with three expected optional private-file skips; Android
+had **75 passes and two optional private-archive skips**. The local full web run
+passed **1,794 tests in 210 files**; one additional origin-isolation test passed
+separately afterwards. TypeScript, lint, catalog checks, production web build and
+Android lint passed. C# source/mirror hashes match **232 runtime, 132 test and 12
+editor files**. All 114 web files, the included avatar and 178 motion payloads match
+the packaged copies. Native integrity methods and the platform loader are present;
+permissions are unchanged, and the APK signature/ARM64/development manifest pass.
+
+Development APK: `MaestroQuest-integrity-client-386E2BF1.apk`, SHA-256
+`386E2BF176BCFC6757ACF30DABE60FD8E08EA3089C22BD9E5A3810297E8CDBBE`.
+It remains disabled/unconfigured for real attestation and was not installed.
+No dashboard app, production deployment, release signing or Store submission was
+performed. The owner has been asked for a Meta app ID and intended package name;
+secrets/signing keys must not be shared in chat. Account-link implementation can
+continue while that external setup is pending.

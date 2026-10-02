@@ -22,6 +22,7 @@ namespace Maestro.Quest.Book
         public string librarySession;
         public int libraryRevision;
         public LibraryBookRequest libraryRequest;
+        public QuestIntegrityRequest integrityRequest;
     }
 
     public sealed class NativeBookBrowser : FragmentCapture, IBookBrowser
@@ -41,6 +42,7 @@ namespace Maestro.Quest.Book
             if (IsReady) m_NativePlugin.Call("ClearError");
 #endif
         }
+        QuestIntegrityExchange integrity;
         long pointerDownTime;
         bool pointerHeld;
         bool suspended;
@@ -52,6 +54,7 @@ namespace Maestro.Quest.Book
 
         void Start()
         {
+            integrity=new QuestIntegrityExchange((nonce,complete)=>QuestPlatformAccess.Ensure().Integrity(nonce,complete));
             // CSS matches a 512px-wide phone page, with a sharper GPU texture.
             m_viewSize = new Vector2Int(1024, 768);
             m_texSize = new Vector2Int(2048, 1536);
@@ -92,6 +95,7 @@ namespace Maestro.Quest.Book
             string json = m_NativePlugin.Call<string>("ReadSnapshot");
             Error = m_NativePlugin.Call<string>("ReadError");
             ReadSnapshot(json);
+            integrity.Poll(Snapshot?.integrityRequest,Time.realtimeSinceStartupAsDouble,value=>m_NativePlugin.Call("PublishIntegrityResult",value));
             DeliverLibraryState(true,Snapshot,value=>m_NativePlugin.Call("PublishLibraryState",value));
             var link = m_NativePlugin.Call<string>("TakeExternalLink");
             if (Uri.TryCreate(link, UriKind.Absolute, out var uri) && uri.Scheme == "https") ExternalLinkRequested?.Invoke(link);
@@ -102,7 +106,7 @@ namespace Maestro.Quest.Book
         // activity even when the next page eventually sends identical JSON.
         void ReadSnapshot(string json)
         {
-            if (suspended || string.IsNullOrEmpty(json) || json.Length > 4096) { Snapshot=null; previousSnapshot=null; return; }
+            if (suspended || string.IsNullOrEmpty(json) || json.Length > 4096) { integrity?.Clear(); Snapshot=null; previousSnapshot=null; return; }
             if (json == previousSnapshot) return;
             try
             {
@@ -174,13 +178,14 @@ namespace Maestro.Quest.Book
         public void SetSuspended(bool value)
         {
             if (value && pointerHeld) Pointer(0, 0, BrowserPointerPhase.Cancel);
-            if (suspended != value) { Snapshot=null; previousSnapshot=null; }
+            if (suspended != value) { integrity?.Clear(); Snapshot=null; previousSnapshot=null; }
             suspended = value;
 #if UNITY_ANDROID && !UNITY_EDITOR
             if (IsReady && nativeSuspended != value) { m_NativePlugin.Call("SetSuspended", value); nativeSuspended = value; }
 #endif
         }
 
+        void OnDisable() { integrity?.Clear(); }
         void OnApplicationPause(bool paused) { applicationPaused = paused; SetSuspended(applicationPaused || !applicationFocused); }
         void OnApplicationFocus(bool focused) { applicationFocused = focused; SetSuspended(applicationPaused || !applicationFocused); }
     }

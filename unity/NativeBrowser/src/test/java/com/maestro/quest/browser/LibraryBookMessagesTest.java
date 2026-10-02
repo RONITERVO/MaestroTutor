@@ -9,6 +9,16 @@ import org.json.JSONObject;
 import static org.junit.Assert.*;
 @RunWith(RobolectricTestRunner.class) @Config(sdk=35)
 public class LibraryBookMessagesTest {
+    @Test public void integrityProofIsBoundedQuotedDataForOneSession() throws Exception {
+        JSONObject state=new JSONObject().put("version",1).put("session","a".repeat(32)).put("revision",1).put("token","h."+"a".repeat(32750)+".s");
+        String script=LibraryBookMessages.publishScript(state.toString(),"integrityResult");
+        assertNotNull(script);
+        String prefix="window.maestroBook && window.maestroBook.integrityResult && window.maestroBook.integrityResult(JSON.parse(";
+        assertTrue(script.startsWith(prefix));
+        assertEquals(state.toString(),new org.json.JSONTokener(script.substring(prefix.length(),script.length()-2)).nextValue());
+        assertNull(LibraryBookMessages.publishScript(state.put("token","x".repeat(37000)).toString(),"integrityResult"));
+        assertNull(LibraryBookMessages.publishScript(state.put("token","h.b.s").put("session","bad").toString(),"integrityResult"));
+    }
     @Test public void programInspectionAndTraceFitWithoutWideningTheLibrary() throws Exception {
         JSONObject state=new JSONObject().put("version",1).put("session","a".repeat(32)).put("revision",1).put("inspection","x".repeat(140000));
         assertNotNull(LibraryBookMessages.publishScript(state.toString(),"roomState"));

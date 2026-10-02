@@ -254,3 +254,13 @@ recipe. The recipe example includes the animated box robot, initially idle. The
 book and physical draft retain compatible values and result wiring when changing
 kind; Apply does not create an object. Old prototype creation IDs remain preserved
 as unavailable source. See [typed creation](../docs/QUEST_CREATION_VOCABULARY.md).
+
+
+Quest managed-access verification uses Meta Platform SDK **207.0.0** alongside the
+pinned Core/MRUK packages. `Resources/QuestPlatform.json` is disabled by default;
+no secret belongs in that asset. Release builds require a real app identity and
+successful entitlement check. The development build may run unconfigured but
+cannot attest itself as a Store release. See [managed-access integration](../docs/QUEST_MANAGED_ACCESS.md)
+for the shared Firebase path, cancellation contract and outstanding account-link
+and real-provider checks. Meta SDKs remain package dependencies governed by their
+upstream license; no copied SDK source is committed here.

@@ -1,6 +1,7 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
+import { isNativeQuestBook } from '../../platform/quest/questIntegrityBridge';
 import { Capacitor } from '@capacitor/core';
 // Loaded on demand alongside the Firebase SDK so BYOK-only sessions do not pay
 // the download/initialization cost for managed authentication.
@@ -52,6 +53,9 @@ export const firebaseAuthBridgeService = {
   isNativeAndroid,
 
   beginGoogleSignIn: async (): Promise<ManagedAuthIdentity> => {
+    if (isNativeQuestBook()) {
+      throw new ServiceNotConfiguredError('quest-account-link', 'Quest account linking is not configured in this build.');
+    }
     if (isNativeAndroid) {
       const { FirebaseAuthentication: nativeAuth } = await loadNativeAuth();
       const result = await nativeAuth.signInWithGoogle({

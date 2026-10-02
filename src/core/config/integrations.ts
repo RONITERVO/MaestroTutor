@@ -20,6 +20,7 @@ export const MAESTRO_INTEGRATION_CONFIG = {
   firebaseFunctionsRegion: import.meta.env.VITE_FIREBASE_FUNCTIONS_REGION?.trim() || '',
   firebaseAppCheckSiteKey: import.meta.env.VITE_FIREBASE_APPCHECK_SITE_KEY?.trim() || '',
   firebaseAppCheckDebugToken: import.meta.env.VITE_FIREBASE_APPCHECK_DEBUG_TOKEN?.trim() || '',
+  questAttestationUrl: import.meta.env.VITE_QUEST_ATTESTATION_URL?.trim() || '',
   backendBaseUrl: import.meta.env.VITE_BACKEND_BASE_URL?.trim() || '',
   googleWebClientId: import.meta.env.VITE_GOOGLE_WEB_CLIENT_ID?.trim() || '',
   googleServerClientId: import.meta.env.VITE_GOOGLE_SERVER_CLIENT_ID?.trim() || '',
