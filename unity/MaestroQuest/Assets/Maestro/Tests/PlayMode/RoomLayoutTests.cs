@@ -68,12 +68,15 @@ namespace Maestro.Quest.Tests
             for(int i=0;i<100;i++)yield return new WaitForFixedUpdate();
             Assert.That(editor.Find(ids[4]).transform.localPosition.y,Is.GreaterThan(.12f),"The initial top brick must settle on its stack");
             Assert.That(editor.CreatePrimitive(RoomObjectKind.Ball,"Knockdown ball",new Vector3(2,.16f,-.6f),.7f,Color.white,out var ballId,out var createError),Is.True,createError);
+            // Reset the projectile too: leaving it inside the rebuilding stack makes
+            // subsequent stability a different physical question than layout reset.
+            baseline.placements=baseline.placements.Append(ObjectPlacement.Capture(ballId,editor.Find(ballId).transform)).ToArray();
             yield return new WaitForFixedUpdate();var ballBody=editor.Find(ballId).GetComponent<Rigidbody>();ballBody.linearVelocity=Vector3.forward*3;
             for(int i=0;i<100;i++)yield return new WaitForFixedUpdate();
             Assert.That(ids.Any(id=>Vector3.Distance(editor.Find(id).transform.localPosition,baseline.placements.Single(p=>p.target==id).position)>.1f),Is.True,"A real ball contact must displace at least one brick");
             Assert.That(executor.Execute(LayoutRequest(baseline),out var error2,out _),Is.True,error2);
             foreach(var p in baseline.placements) {var item=editor.Find(p.target);Assert.That(Vector3.Distance(item.transform.localPosition,p.position),Is.LessThan(.001f));Assert.That(item.GetComponent<Rigidbody>().linearVelocity,Is.EqualTo(Vector3.zero));}
-            Assert.That(physics.Running,Is.True);for(int i=0;i<100;i++)yield return new WaitForFixedUpdate();Assert.That(editor.Find(ids[4]).transform.localPosition.y,Is.GreaterThan(.12f));
+            Assert.That(physics.Running,Is.True);for(int i=0;i<100;i++)yield return new WaitForFixedUpdate();Assert.That(editor.Find(ids[4]).transform.localPosition.y,Is.GreaterThan(.12f),"Rebuilt top brick: "+editor.Find(ids[4]).transform.localPosition+"; reset ball: "+editor.Find(ballId).transform.localPosition);
         }
     }
 }
