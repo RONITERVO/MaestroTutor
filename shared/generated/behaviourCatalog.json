@@ -8130,6 +8130,645 @@
       "description": "Remove a user-created object after saving the room. One Undo edit restores its saved geometry and animation data. The included book and Maestro cannot be deleted. Stop or receipt replay does not undo deletion; later actions targeting the removed ID fail."
     },
     {
+      "id": "object.collision.edit",
+      "version": 1,
+      "label": "Edit collision shapes",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 1000000.0
+          },
+          "collision": {
+            "type": "object",
+            "properties": {
+              "version": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 1.0
+              },
+              "shapes": {
+                "type": "array",
+                "items": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "pattern": "^[a-zA-Z0-9_]{1,32}$",
+                          "maxLength": 32
+                        },
+                        "shape": {
+                          "type": "string",
+                          "enum": [
+                            "box"
+                          ]
+                        },
+                        "position": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number",
+                              "minimum": -2.0,
+                              "maximum": 2.0
+                            },
+                            "y": {
+                              "type": "number",
+                              "minimum": -2.0,
+                              "maximum": 2.0
+                            },
+                            "z": {
+                              "type": "number",
+                              "minimum": -2.0,
+                              "maximum": 2.0
+                            }
+                          },
+                          "required": [
+                            "x",
+                            "y",
+                            "z"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "size": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number",
+                              "minimum": 0.005,
+                              "maximum": 2.0
+                            },
+                            "y": {
+                              "type": "number",
+                              "minimum": 0.005,
+                              "maximum": 2.0
+                            },
+                            "z": {
+                              "type": "number",
+                              "minimum": 0.005,
+                              "maximum": 2.0
+                            }
+                          },
+                          "required": [
+                            "x",
+                            "y",
+                            "z"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "rotation": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number",
+                              "minimum": -1.0,
+                              "maximum": 1.0
+                            },
+                            "y": {
+                              "type": "number",
+                              "minimum": -1.0,
+                              "maximum": 1.0
+                            },
+                            "z": {
+                              "type": "number",
+                              "minimum": -1.0,
+                              "maximum": 1.0
+                            },
+                            "w": {
+                              "type": "number",
+                              "minimum": -1.0,
+                              "maximum": 1.0
+                            }
+                          },
+                          "required": [
+                            "x",
+                            "y",
+                            "z",
+                            "w"
+                          ],
+                          "additionalProperties": false,
+                          "format": "unitQuaternion"
+                        },
+                        "segments": {
+                          "type": "integer",
+                          "minimum": 0.0,
+                          "maximum": 0.0
+                        },
+                        "innerRadius": {
+                          "type": "number",
+                          "minimum": 0.0,
+                          "maximum": 0.0
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "shape",
+                        "position",
+                        "size",
+                        "rotation"
+                      ],
+                      "additionalProperties": false,
+                      "title": "Box"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "pattern": "^[a-zA-Z0-9_]{1,32}$",
+                          "maxLength": 32
+                        },
+                        "shape": {
+                          "type": "string",
+                          "enum": [
+                            "sphere"
+                          ]
+                        },
+                        "position": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number",
+                              "minimum": -2.0,
+                              "maximum": 2.0
+                            },
+                            "y": {
+                              "type": "number",
+                              "minimum": -2.0,
+                              "maximum": 2.0
+                            },
+                            "z": {
+                              "type": "number",
+                              "minimum": -2.0,
+                              "maximum": 2.0
+                            }
+                          },
+                          "required": [
+                            "x",
+                            "y",
+                            "z"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "size": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number",
+                              "minimum": 0.005,
+                              "maximum": 2.0
+                            },
+                            "y": {
+                              "type": "number",
+                              "minimum": 0.005,
+                              "maximum": 2.0
+                            },
+                            "z": {
+                              "type": "number",
+                              "minimum": 0.005,
+                              "maximum": 2.0
+                            }
+                          },
+                          "required": [
+                            "x",
+                            "y",
+                            "z"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "rotation": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number",
+                              "minimum": -1.0,
+                              "maximum": 1.0
+                            },
+                            "y": {
+                              "type": "number",
+                              "minimum": -1.0,
+                              "maximum": 1.0
+                            },
+                            "z": {
+                              "type": "number",
+                              "minimum": -1.0,
+                              "maximum": 1.0
+                            },
+                            "w": {
+                              "type": "number",
+                              "minimum": -1.0,
+                              "maximum": 1.0
+                            }
+                          },
+                          "required": [
+                            "x",
+                            "y",
+                            "z",
+                            "w"
+                          ],
+                          "additionalProperties": false,
+                          "format": "unitQuaternion"
+                        },
+                        "segments": {
+                          "type": "integer",
+                          "minimum": 0.0,
+                          "maximum": 0.0
+                        },
+                        "innerRadius": {
+                          "type": "number",
+                          "minimum": 0.0,
+                          "maximum": 0.0
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "shape",
+                        "position",
+                        "size",
+                        "rotation"
+                      ],
+                      "additionalProperties": false,
+                      "title": "Sphere"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "pattern": "^[a-zA-Z0-9_]{1,32}$",
+                          "maxLength": 32
+                        },
+                        "shape": {
+                          "type": "string",
+                          "enum": [
+                            "cylinder"
+                          ]
+                        },
+                        "position": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number",
+                              "minimum": -2.0,
+                              "maximum": 2.0
+                            },
+                            "y": {
+                              "type": "number",
+                              "minimum": -2.0,
+                              "maximum": 2.0
+                            },
+                            "z": {
+                              "type": "number",
+                              "minimum": -2.0,
+                              "maximum": 2.0
+                            }
+                          },
+                          "required": [
+                            "x",
+                            "y",
+                            "z"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "size": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number",
+                              "minimum": 0.005,
+                              "maximum": 2.0
+                            },
+                            "y": {
+                              "type": "number",
+                              "minimum": 0.005,
+                              "maximum": 2.0
+                            },
+                            "z": {
+                              "type": "number",
+                              "minimum": 0.005,
+                              "maximum": 2.0
+                            }
+                          },
+                          "required": [
+                            "x",
+                            "y",
+                            "z"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "rotation": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number",
+                              "minimum": -1.0,
+                              "maximum": 1.0
+                            },
+                            "y": {
+                              "type": "number",
+                              "minimum": -1.0,
+                              "maximum": 1.0
+                            },
+                            "z": {
+                              "type": "number",
+                              "minimum": -1.0,
+                              "maximum": 1.0
+                            },
+                            "w": {
+                              "type": "number",
+                              "minimum": -1.0,
+                              "maximum": 1.0
+                            }
+                          },
+                          "required": [
+                            "x",
+                            "y",
+                            "z",
+                            "w"
+                          ],
+                          "additionalProperties": false,
+                          "format": "unitQuaternion"
+                        },
+                        "segments": {
+                          "type": "integer",
+                          "minimum": 8.0,
+                          "maximum": 24.0
+                        },
+                        "innerRadius": {
+                          "type": "number",
+                          "minimum": 0.0,
+                          "maximum": 0.0
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "shape",
+                        "position",
+                        "size",
+                        "rotation",
+                        "segments"
+                      ],
+                      "additionalProperties": false,
+                      "title": "Cylinder"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "pattern": "^[a-zA-Z0-9_]{1,32}$",
+                          "maxLength": 32
+                        },
+                        "shape": {
+                          "type": "string",
+                          "enum": [
+                            "ring"
+                          ]
+                        },
+                        "position": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number",
+                              "minimum": -2.0,
+                              "maximum": 2.0
+                            },
+                            "y": {
+                              "type": "number",
+                              "minimum": -2.0,
+                              "maximum": 2.0
+                            },
+                            "z": {
+                              "type": "number",
+                              "minimum": -2.0,
+                              "maximum": 2.0
+                            }
+                          },
+                          "required": [
+                            "x",
+                            "y",
+                            "z"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "size": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number",
+                              "minimum": 0.005,
+                              "maximum": 2.0
+                            },
+                            "y": {
+                              "type": "number",
+                              "minimum": 0.005,
+                              "maximum": 2.0
+                            },
+                            "z": {
+                              "type": "number",
+                              "minimum": 0.005,
+                              "maximum": 2.0
+                            }
+                          },
+                          "required": [
+                            "x",
+                            "y",
+                            "z"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "rotation": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number",
+                              "minimum": -1.0,
+                              "maximum": 1.0
+                            },
+                            "y": {
+                              "type": "number",
+                              "minimum": -1.0,
+                              "maximum": 1.0
+                            },
+                            "z": {
+                              "type": "number",
+                              "minimum": -1.0,
+                              "maximum": 1.0
+                            },
+                            "w": {
+                              "type": "number",
+                              "minimum": -1.0,
+                              "maximum": 1.0
+                            }
+                          },
+                          "required": [
+                            "x",
+                            "y",
+                            "z",
+                            "w"
+                          ],
+                          "additionalProperties": false,
+                          "format": "unitQuaternion"
+                        },
+                        "segments": {
+                          "type": "integer",
+                          "minimum": 8.0,
+                          "maximum": 24.0
+                        },
+                        "innerRadius": {
+                          "type": "number",
+                          "minimum": 0.05,
+                          "maximum": 0.45
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "shape",
+                        "position",
+                        "size",
+                        "rotation",
+                        "segments",
+                        "innerRadius"
+                      ],
+                      "additionalProperties": false,
+                      "title": "Ring"
+                    }
+                  ],
+                  "x-discriminators": [
+                    "shape"
+                  ]
+                },
+                "minItems": 0,
+                "maxItems": 16
+              }
+            },
+            "required": [
+              "version",
+              "shapes"
+            ],
+            "additionalProperties": false,
+            "format": "collisionRecipe",
+            "x-features": [
+              "collisionShapes.v1"
+            ],
+            "description": "Root-local proxies, independent of visuals. Sphere dimensions must match. Cylinder/ring axes are Y. Ring innerRadius is normalized to outer radius 0.5; wall thickness must be at least .005 local metres. Positions within 2m and total proxy extent within 3m. 64 pieces per recipe; a ring costs segments pieces, other shapes cost one."
+          }
+        },
+        "required": [
+          "target",
+          "revision",
+          "collision"
+        ],
+        "additionalProperties": false,
+        "x-current": {
+          "fact": "object.collision",
+          "version": 1,
+          "arguments": {
+            "target": "target"
+          },
+          "fields": {
+            "revision": [
+              "revision"
+            ]
+          },
+          "guards": [
+            "revision"
+          ]
+        }
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.creation",
+        "target.unheld",
+        "object.revision.current",
+        "authoring.inactive",
+        "storage.writable"
+      ],
+      "description": "Replace a creation's independent root-local collision recipe and select automatic collision mode. Works for recipe objects, drawings and imported models. Box, sphere, cylinder and ring shapes form one rigid body; their centres/dimensions are local metres and rotate with the whole object. Ring walls leave an open centre; combine with a cylinder floor for a cup. Collision shapes do not follow animated visual parts or change when visual geometry is edited: edit both explicitly. Empty shapes clears the recipe and restores the object's default automatic collider. Existing box/sphere overrides retain this recipe but temporarily bypass it. Read object.collision and every object.collision.shape before replacing anything unrequested. Up to 16 uniquely named shapes/64 convex pieces per object; the room reserves at most 512 pieces including stored inactive recipes. Saved/temporary edits, Undo, ownership and historical receipt replay use the normal shared path. Mass, physics mode, visuals and live pose are preserved. This neither starts physics nor makes a fluid container.",
+      "example": {
+        "target": "00000000000000000000000000000000",
+        "revision": 1,
+        "collision": {
+          "version": 1,
+          "shapes": [
+            {
+              "id": "Body",
+              "shape": "box",
+              "position": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "size": {
+                "x": 0.1,
+                "y": 0.1,
+                "z": 0.1
+              },
+              "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              }
+            }
+          ]
+        }
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 1000000.0
+          },
+          "shapes": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 16.0
+          },
+          "pieces": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 64.0
+          },
+          "customActive": {
+            "type": "boolean"
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "target",
+          "revision",
+          "shapes",
+          "pieces",
+          "customActive",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "object.physics.configure",
       "version": 1,
       "label": "Configure object physics",
@@ -11540,6 +12179,123 @@
       ]
     },
     {
+      "id": "object.collision",
+      "version": 1,
+      "type": {
+        "record": {
+          "target": "text",
+          "revision": "number",
+          "shapes": "number",
+          "pieces": "number",
+          "customActive": "boolean",
+          "temporary": "boolean"
+        }
+      },
+      "label": "Collision shape summary",
+      "description": "Exact saved/temporary collision recipe counts and revision. pieces is the reserved compound-piece budget, even while an explicit box/sphere override bypasses the recipe. customActive means automatic mode selects the recipe; this does not imply running physics or loaded imported geometry. Missing/built-in targets are unavailable.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1",
+        "collisionShapes.v1"
+      ]
+    },
+    {
+      "id": "object.collision.shape",
+      "version": 1,
+      "type": {
+        "record": {
+          "revision": "number",
+          "index": "number",
+          "total": "number",
+          "shape": {
+            "record": {
+              "id": "text",
+              "shape": "text",
+              "position": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number"
+                }
+              },
+              "size": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number"
+                }
+              },
+              "rotation": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number",
+                  "w": "number"
+                }
+              },
+              "segments": "number",
+              "innerRadius": "number"
+            }
+          }
+        }
+      },
+      "label": "Collision shape source",
+      "description": "One exact root-local proxy at a fixed revision and index. All saved shapes remain readable; stale revisions, missing targets and indexes at/after count are unavailable. Read object.collision first.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 1000000.0
+          },
+          "index": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 15.0
+          }
+        },
+        "required": [
+          "target",
+          "revision",
+          "index"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000",
+        "revision": 1,
+        "index": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "collisionShapes.v1"
+      ]
+    },
+    {
       "id": "object.recipe.pose",
       "version": 1,
       "type": {
@@ -13501,7 +14257,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "d64fdaa8b40aa960cb096f9e2fc2190f3734688f3d5f79542ea06f228a05f3e6"
+      "sha256": "26c31b2e40e8583e9592a2cdb6e6e7555271c9cf169bb924cc1d38810643cc92"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -13521,7 +14277,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "609b8e9911364bae89a7152dbce3ea92eafc80653942cb2b282f98c884320f4e"
+      "sha256": "9f6eb1f62f4f4a9dcebd165b3913b612df66c9300c4af317dcea3a8b68eeb424"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -13553,7 +14309,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "85a8f1ec4d9a56c4097b85564291fe0f63e19b5fc8cd0408f20142297f582605"
+      "sha256": "a3c95f1a067afe0fb8e16a45be36e0f37433ff1c1c519d02c2eb8b3f1f36273c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -13577,7 +14333,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "0b3fd8bfffed4cfe9f5a4336cfbd14a72e95c9d7133f62cda5ba5ee8657ff657"
+      "sha256": "a32712cd02752ac360368c126068aeeaac2a21a2cf1e10e76dc95357e5fd950c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
@@ -13716,6 +14472,18 @@
       "sha256": "9294b3a1d7e96d5582d2b18afdfc87075d871661d70420041b444e7fa3d19b92"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CollisionRecipe.cs",
+      "sha256": "3bf61c6b1e4858824ab65dbe6026542a52319041955f4d0eba6b2da949661e15"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CollisionGeometry.cs",
+      "sha256": "08fe8c9d3f819bd354824626f6e1be2c44c8fc2c0659ecea9cee97d991d0113a"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomCollisionEdits.cs",
+      "sha256": "449946bfc240d337d1428b1ffb4b9a02570b490c2df0af5a3951c8c1f09c1bc3"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeObject.cs",
       "sha256": "c78d62ddec6697c8b7e6423fdcfc8ca401df8be435d330b50e450b4f861045be"
     },
@@ -13765,7 +14533,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "964a37efcb76cc48c5ff29c786342853375e76dfd78819747f47eb627e154b84"
+      "sha256": "122f46870a1ea59f455b212fe62e2f908dcfc5dc78739b6822740d039db605fc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomToolTray.cs",
@@ -13785,7 +14553,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "1533dfac3590f835f68a48529c2e2abe99b172835a5f374e280ee0435c567bd2"
+      "sha256": "b1fbd2016bae91686e45bb4f0431df5f53bb5e15ed777abac7cdc22b15f00656"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedDrawing.cs",
@@ -13797,7 +14565,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedRoomObject.cs",
-      "sha256": "a1e1d03143f0ebbe8d3ac27728ffc248313f32bbaa8fb0c5087a86eb89a3f5a8"
+      "sha256": "bf17e0d159ffca911b78f10a2111e09f44fcbcbe0f58c5d81c93ae89557b3c89"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectSettings.cs",
@@ -13961,7 +14729,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "08c8b7e828a1a4de2512e602f08774ec1c2f931abcfe1a7b522f53b097796559"
+      "sha256": "8d41487cc68efb77dad7f13ad86b3684eed263f11266d194464ddcbc3752e337"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -13970,6 +14738,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityStepAdapter.cs",
       "sha256": "8f4844cf3b0e8205960515ddb500701dcbea69827d3c9390bd647933bd599d5c"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CollisionCapability.cs",
+      "sha256": "8d577fba954104ebf32d0200ffa779b4a6c3aaf7f0213482920345142d05fbfe"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ControllerConfigurationCapability.cs",

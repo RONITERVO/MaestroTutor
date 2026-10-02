@@ -7,8 +7,11 @@ and optional book workshop use the same create/edit capabilities; exact revision
 profile queries expose the source. Native geometry, saved edits, Undo, mesh disposal
 and admission limits are covered by native tests and the full-app journey. Cup,
 plate and pawn renders and the Chrome workshop replay were inspected. This is a
-geometry increment: assemblies still use the existing approximate box collider.
-Physical containers, compound proxies and the default play kit remain unfinished.
+geometry increment: assemblies use a box by default. Independent editable collision
+recipes now add box/sphere/cylinder/ring compounds with shared book/agent/program
+authoring, bounded cost and save/Undo. A native physics test exercises an open cup
+catching a ball and a compound cup landing on a floor. See QUEST_COLLISION_AUTHORING.md.
+Liquid containers, physical joints and the default play kit remain unfinished.
 See QUEST_RECIPE_AUTHORING.md and QUEST_NATIVE_ROOM_PROBE.md.
 
 The October 2 notebook scope and current review assessment are recorded in
@@ -74,8 +77,8 @@ posing now exposes start/rotate/save/finish/discard with native session IDs and
 pose versions, the same physical joint limits and imported retargeter, held-joint
 exclusion, failed-pose recovery and recording interoperation. Saved edits are
 durable outside temporary mode; temporary edits stay in the fork until Keep.
-No authoring operation starts playback. The catalog contains 61 actions, 12
-events and 56 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
+No authoring operation starts playback. The catalog contains 62 actions, 12
+events and 59 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
 Single-file GLB/VRM selection, preview and acceptance now share the physical
 import path with book fields and agent/program calls. See QUEST_MODEL_IMPORT.md.
 Animation collections now share native selection, versioned start/retry/tag controls,

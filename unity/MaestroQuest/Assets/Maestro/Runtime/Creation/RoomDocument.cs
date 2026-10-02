@@ -17,6 +17,7 @@ namespace Maestro.Quest.Creation
         public string id;
         public string name;
         public RoomRecipe recipe;
+        public CollisionRecipe collision;
         public RoomObjectKind kind;
         public Vector3 position;
         public Quaternion rotation = Quaternion.identity;
@@ -36,7 +37,7 @@ namespace Maestro.Quest.Creation
         public int walkClip;
         public string walkMotionId;
         public bool IsBuiltIn => kind == RoomObjectKind.Book || kind == RoomObjectKind.Maestro;
-        public RoomObjectData Copy() => new() { id = id, name = name, recipe = recipe?.Copy(), kind = kind, position = position, rotation = rotation, scale = scale, color = color, radius = radius, points = points == null ? null : (Vector3[])points.Clone(), joints = MotionFrame.CopyJoints(joints), motion = motion?.Copy(), modelHash = modelHash, physics = physics, mass = mass, collisionShape = collisionShape, followDistance = followDistance, walkSpeed = walkSpeed, walkClip = walkClip, walkMotionId = walkMotionId };
+        public RoomObjectData Copy() => new() { id = id, name = name, recipe = recipe?.Copy(), collision=collision?.Copy(), kind = kind, position = position, rotation = rotation, scale = scale, color = color, radius = radius, points = points == null ? null : (Vector3[])points.Clone(), joints = MotionFrame.CopyJoints(joints), motion = motion?.Copy(), modelHash = modelHash, physics = physics, mass = mass, collisionShape = collisionShape, followDistance = followDistance, walkSpeed = walkSpeed, walkClip = walkClip, walkMotionId = walkMotionId };
     }
 
     [Serializable]
@@ -79,6 +80,7 @@ namespace Maestro.Quest.Creation
                     return Fail("This room contains an invalid model reference.", out error);
                 if (!Enum.IsDefined(typeof(ItemPhysics),item.physics) || !Enum.IsDefined(typeof(ItemCollider),item.collisionShape) || !float.IsFinite(item.mass) || item.mass < .05f || item.mass > 20 || (item.IsBuiltIn && (item.physics != ItemPhysics.Fixed || item.collisionShape != ItemCollider.Automatic)))
                     return Fail("An object has invalid physics settings.",out error);
+                if(item.collision!=null&&(item.IsBuiltIn||!item.collision.Validate(out _)))return Fail("An object has invalid collision shapes.",out error);
                 if (item.IsBuiltIn)
                 {
                     if (item.id != (item.kind == RoomObjectKind.Book ? "book" : "maestro")) return Fail("The included book and Maestro identities are invalid.", out error);
@@ -106,6 +108,7 @@ namespace Maestro.Quest.Creation
             }
             if (builtIns != 2 || !ids.Contains("book") || !ids.Contains("maestro")) return Fail("The included book and Maestro must remain in the room.", out error);
             if(objects.Sum(item=>RecipeLathe.VertexCost(item.recipe))>RecipeLathe.MaximumRoomVertices)return Fail("Generated recipe geometry exceeds the room vertex budget.",out error);
+            if(objects.Sum(CollisionRecipe.ReservedPieces)>CollisionRecipe.MaximumRoomPieces)return Fail("This room has reached its collision-piece budget.",out error);
             if (partCount > 256) return Fail("Keep at most 256 recipe parts in this room.",out error);
             if (pointCount > MaximumTotalPoints) return Fail("This room has reached its drawing limit.", out error);
             if (frameCount > 1200 || jointCount > 6000) return Fail("This room has reached its animation limit.",out error);

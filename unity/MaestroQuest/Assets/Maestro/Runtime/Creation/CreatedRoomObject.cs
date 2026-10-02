@@ -18,6 +18,9 @@ namespace Maestro.Quest.Creation
         Color tint;
         Collider originalCollider, chosenCollider;
         ItemCollider collisionShape;
+        CollisionGeometry customGeometry;
+        string collisionEncoded;
+        public int CollisionPieces => GetComponent<RoomItem>()?.Grab.colliders.Count??0;
         Bounds geometryBounds;
         bool pendingCollider;
         public ImportedModel Model { get; private set; }
@@ -56,6 +59,7 @@ namespace Maestro.Quest.Creation
             collider.gameObject.layer = RoomPhysicsLayers.Item;
             if (data.kind == RoomObjectKind.ImportedModel) rigid.SetGeometryReady(false);
             if (data.kind == RoomObjectKind.ImportedModel && library != null) LoadModel(data.modelHash, library, collider);
+            ApplyCollision(data.collision);SetCollisionShape(data.collisionShape);
             return item;
         }
         public void ApplyRecipe(RoomRecipe value)
@@ -67,26 +71,36 @@ namespace Maestro.Quest.Creation
             bool selected=selection && selection.activeSelf; if(selection) { selection.SetActive(false); Destroy(selection); }
             BuildSelection(geometryBounds); SetSelected(selected); SetCollisionShape(collisionShape,true);
         }
+        public void ApplyCollision(CollisionRecipe source)
+        {
+            string encoded=source==null||source.shapes.Length==0?null:JsonUtility.ToJson(source);
+            if(encoded==collisionEncoded)return;
+            // Build a detached replacement before unregistering the previous handles.
+            var candidate=encoded==null?null:new CollisionGeometry(source,transform);
+            var old=customGeometry;customGeometry=candidate;collisionEncoded=encoded;
+            SetCollisionShape(collisionShape,true);old?.Dispose();
+        }
         public void SetCollisionShape(ItemCollider shape, bool rebuild = false)
         {
-            if (!rebuild && shape == collisionShape) return;
+            if (!rebuild && shape == collisionShape && !pendingCollider) return;
             var item = GetComponent<RoomItem>(); if (!item) return;
-            if (item.Grab.isSelected) { pendingCollider |= rebuild; return; }
-            pendingCollider = false;
-            collisionShape = shape;
-            item.Grab.enabled = false;
-            chosenCollider.enabled = false;
-            if (chosenCollider != originalCollider) Destroy(chosenCollider);
-            if (shape == ItemCollider.Automatic) chosenCollider = originalCollider;
-            else if (shape == ItemCollider.Sphere)
-            {
-                var sphere = gameObject.AddComponent<SphereCollider>(); sphere.center = geometryBounds.center;
-                sphere.radius = Mathf.Max(geometryBounds.extents.x,Mathf.Max(geometryBounds.extents.y,geometryBounds.extents.z)); chosenCollider = sphere;
+            collisionShape=shape;
+            if (item.Grab.isSelected) { pendingCollider=true; return; }
+            pendingCollider=false;item.Grab.enabled=false;
+            foreach(var old in item.Grab.colliders)if(old)old.enabled=false;
+            if(chosenCollider&&chosenCollider!=originalCollider)ArtResources.Release(chosenCollider);
+            chosenCollider=null;customGeometry?.SetActive(false);
+            Collider[] active;
+            if(shape==ItemCollider.Automatic&&customGeometry!=null){customGeometry.SetActive(true);active=customGeometry.Colliders;}
+            else {
+                if(shape==ItemCollider.Automatic)chosenCollider=originalCollider;
+                else if(shape==ItemCollider.Sphere){var sphere=gameObject.AddComponent<SphereCollider>();sphere.center=geometryBounds.center;sphere.radius=Mathf.Max(geometryBounds.extents.x,Mathf.Max(geometryBounds.extents.y,geometryBounds.extents.z));chosenCollider=sphere;}
+                else {var box=gameObject.AddComponent<BoxCollider>();box.center=geometryBounds.center;box.size=geometryBounds.size;chosenCollider=box;}
+                active=new[]{chosenCollider};
             }
-            else { var box = gameObject.AddComponent<BoxCollider>(); box.center = geometryBounds.center; box.size = geometryBounds.size; chosenCollider = box; }
-            chosenCollider.gameObject.layer = RoomPhysicsLayers.Item; chosenCollider.enabled = true;
-            chosenCollider.sharedMaterial = originalCollider.sharedMaterial;
-            item.Grab.colliders.Clear(); item.Grab.colliders.Add(chosenCollider); item.Grab.enabled = true;
+            foreach(var collider in active){collider.gameObject.layer=RoomPhysicsLayers.Item;collider.enabled=true;collider.sharedMaterial=originalCollider.sharedMaterial;}
+            item.Grab.colliders.Clear();item.Grab.colliders.AddRange(active);item.Grab.enabled=true;
+            var body=GetComponent<Rigidbody>();body.ResetCenterOfMass();body.ResetInertiaTensor();
         }
 
         async void LoadModel(string hash, ModelLibrary library, Collider collider)
@@ -120,7 +134,7 @@ namespace Maestro.Quest.Creation
             var outline = selection.GetComponent<PencilMarks>(); outline.SetPaths(paths,.001f); outline.SetColor(IllustratedMaterials.Ribbon);
             selection.SetActive(false);
         }
-        void OnDestroy() => ArtResources.Release(pigment);
+        void OnDestroy() {customGeometry?.Dispose();ArtResources.Release(pigment);}
         void LateUpdate() { if (pendingCollider && !GetComponent<RoomItem>().Grab.isSelected) SetCollisionShape(collisionShape,true); }
     }
 }

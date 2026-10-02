@@ -387,6 +387,7 @@ namespace Maestro.Quest.Creation
                 if(created || changed==null || changed.Contains(data.id)) {
                 item.GetComponent<CreatedRoomObject>()?.ApplyRecipe(data.recipe);
                 item.GetComponent<CreatedRoomObject>()?.ApplyDrawing(data);
+                item.GetComponent<CreatedRoomObject>()?.ApplyCollision(data.collision);
                 item.GetComponent<CreatedRoomObject>()?.SetCollisionShape(data.collisionShape);
                 item.GetComponent<RigidRoomItem>()?.Configure(PhysicsWorld,data.physics,data.mass);
                 item.GetComponent<MaestroAvatar>()?.SetSavedPose(data.joints);

@@ -58,8 +58,23 @@ try{
   if(!profile.catalog?.available||value?.segments!==32||Math.abs((value.points?.[1].x??0)-.48)>.00001)throw new Error('Native lathe readback differs from the edit.');
   await execute([{action:'undo'}]);const restored=await execute([{action:'inspect',target:cupId}]);
   if(restored.inspection?.recipe?.parts[0].segments!==24)throw new Error('Lathe Undo did not restore the profile.');
+  const collisionCases=JSON.parse(await readFile('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/collision-contract.json','utf8'));
+  const collisionCatalog=await execute([{action:'catalog',catalog:{operation:'search',query:'Edit collision shapes',offset:0}}]);
+  const collisionDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.collision.edit',version:1}}]);
+  const collisionCurrent=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.collision',version:1,arguments:{target:cupId}}}]);
+  const collided=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.collision.edit',version:1,arguments:{target:cupId,revision:restored.inspection!.objectRevision,collision:collisionCases[0].collision}}}}]);
+  const collisionRevision=collided.objects.find(object=>object.id===cupId)?.objectRevision;
+  const summary=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.collision',version:1,arguments:{target:cupId}}}]);
+  const summaryValue=summary.catalog?.value as {pieces?:number;shapes?:number;customActive?:boolean}|undefined;
+  if(summaryValue?.pieces!==13||summaryValue.shapes!==2||summaryValue.customActive!==true)throw new Error('Native compound collision summary differs from the edit.');
+  const wall=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.collision.shape',version:1,arguments:{target:cupId,revision:collisionRevision,index:1}}}]);
+  if((wall.catalog?.value as {shape?:{id?:string;shape?:string}})?.shape?.shape!=='ring')throw new Error('Native collision shape readback is missing the hollow wall.');
+  await execute([{action:'undo'}]);
+  const collisionRestored=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.collision',version:1,arguments:{target:cupId}}}]);
+  if((collisionRestored.catalog?.value as {shapes?:number})?.shapes!==0)throw new Error('Collision Undo did not restore the default proxy.');
+  await writeFile(join(directory,'collision-authoring.json'),JSON.stringify({boundary:'Real Unity native states; browser acknowledgements replayed separately. Not headset or provider proof.',before:restored,search:collisionCatalog,definition:collisionDefinition,current:collisionCurrent,after:collided,summary,wall},null,2));
   const removed=await execute([{action:'undo'}]);if(removed.objects.some(object=>object.id===cupId))throw new Error('Lathe Undo did not remove the created geometry.');
-  outcome={createdId:target,createReceipt:selected,paintVerified:true,undoPaintVerified:true,undoCreateVerified:true,diagnostics:diagnostic.catalog.value,lathe:{createReceipt:lathe.execution?.selected,profile:value,editAndUndoVerified:true},latheCycles:cycle+1};
+  outcome={createdId:target,createReceipt:selected,paintVerified:true,undoPaintVerified:true,undoCreateVerified:true,diagnostics:diagnostic.catalog.value,lathe:{createReceipt:lathe.execution?.selected,profile:value,editAndUndoVerified:true},collision:{summary:summaryValue,editAndUndoVerified:true},latheCycles:cycle+1};
   }
  }
  await writeFile(join(directory,'journey.json'),JSON.stringify({version:1,boundary:'Real Unity Editor app and shared room protocol; no Quest input, WebView, scan or Store proof',providerUsed:!!prompt,initial,observations,outcome},null,2));

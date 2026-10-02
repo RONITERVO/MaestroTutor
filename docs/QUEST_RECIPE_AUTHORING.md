@@ -48,7 +48,8 @@ remain authoritative; the existing shared value limits are unchanged.
 Successful patches persist before acknowledging completion, with one Undo, or
 stay in the temporary fork until Keep. Validation and write failures leave visible
 geometry and saved data unchanged. Held/owned/actively authored targets are refused.
-The saved patch refreshes geometry, selection bounds, tint and approximate collider.
+The saved patch refreshes geometry, selection bounds, tint and the default approximate
+collider. Explicit collision recipes stay unchanged; edit them separately.
 Recipe parts remain visual children of one grabbable rigid assembly; this does not
 add articulated part physics or cloth/hair interaction.
 
@@ -97,7 +98,8 @@ part, imported-model and drawing bounds. This is an admission bound, not proof o
 comfortable Quest performance at that maximum.
 
 This increment adds geometry. The assembly still uses its existing approximate
-rest-bounds collider: a visually hollow cup is not yet a physical container.
-Compound proxies, physical joints, fluids, extrusion/sweep and a curated default
+rest-bounds collider by default. An explicit [collision recipe](QUEST_COLLISION_AUTHORING.md)
+can provide a hollow interior for solid objects. Liquid/container behaviour is separate.
+Physical joints, fluids, extrusion/sweep and a curated default
 play kit remain implementation work. Real Quest input/readability/performance
 acceptance remains required.

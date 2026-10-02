@@ -38,6 +38,9 @@ namespace Maestro.Quest.Creation
                 // Unity serializes null nested classes as empty instances. Pre-recipe objects
                 // must keep loading; only an empty non-assembly recipe is absent.
                 if (item.kind != RoomObjectKind.Assembly && item.recipe != null && (item.recipe.parts?.Length ?? 0) == 0 && (item.recipe.tracks?.Length ?? 0) == 0) item.recipe=null;
+                // Only the known empty representation means no custom collider. Preserve
+                // future versions and malformed nonempty data for validation/recovery.
+                if (item.collision != null && item.collision.version is 0 or 1 && item.collision.shapes?.Length == 0) item.collision=null;
                 if (item.joints?.Length == 0) item.joints = null;
                 if (item.motion?.frames?.Length == 0) item.motion = null;
             }

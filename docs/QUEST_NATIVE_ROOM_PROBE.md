@@ -75,12 +75,16 @@ not test chat handoff, Live audio/video, account UI or subscription enforcement.
 
 ## Acceptance boundary
 
-Verified locally: 1,926 web tests, lint and TypeScript checks; 649 native EditMode
-and 422 PlayMode tests (three optional private-asset skips); real full-app
+Verified locally: 1,942 web tests, lint and TypeScript checks; 653 native EditMode
+and 425 PlayMode tests (three optional private-asset skips); real full-app
 create/paint/Undo/readback and lathe editing through the shared client. One initial
 client interruption was not reproduced in two standalone runs or a 16-cycle stress
 journey (118 observations); this is not a claim that all device timing issues are
-resolved. Set MAESTRO_ROOM_PROBE_REPEATS to 1–32 to repeat the lathe cycle (default 1).
+resolved. Set MAESTRO_ROOM_PROBE_REPEATS to 1–32 to repeat the geometry cycle (default 1).
+The cycle now also discovers and edits compound collision, reads its counts and
+wall shape, and undoes it before removing the visual object. collision-authoring.json
+retains native catalog states and the exact execution for the Chrome generated-form
+replay. That replay validates fields and call parity; it does not simulate PhysX.
 The Chrome profile-editor replay uses captured native states and compares the
 submitted call with the real native receipt. Its acknowledgement is simulated. APK and CI evidence for the
 final commit are recorded separately in the delivery record and PR.

@@ -36,7 +36,7 @@
 .program-branch {padding:8px 0 0 6px;}.program-branch>small {font-weight:700;}.program-block-if,.program-block-repeat,.program-block-switch {background:#f5e1b6;border-color:#c6a568;}.program-block-set {background:#f4dfcd;}.program-watch {padding:12px;border:1px solid #4d8f85;background:#e3eee7;border-radius:8px;margin:10px 0;}.program-watch p {margin:4px 0;overflow-wrap:anywhere;}.program-editor .rule-block-list {padding-left:7px;}.program-editor .rule-action-block {padding:10px;}.program-editor .rule-step-heading {overflow-wrap:anywhere;}
 
 .capability-browser label {display:flex;flex-direction:column;gap:6px;margin:12px 0;font-weight:600;}
-.capability-browser input,.capability-browser textarea {width:100%;box-sizing:border-box;min-height:44px;padding:10px;border:1px solid #bdaf95;border-radius:6px;background:#fffaf0;color:inherit;font:inherit;}
+.capability-browser input,.capability-browser textarea,.capability-browser select {width:100%;box-sizing:border-box;min-height:44px;padding:10px;border:1px solid #bdaf95;border-radius:6px;background:#fffaf0;color:inherit;font:inherit;}
 .capability-browser textarea {resize:vertical;font:14px/1.5 ui-monospace,monospace;}
 .capability-browser pre {font:13px/1.5 ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere;}
 .capability-browser details {margin:16px 0;}.capability-browser summary {min-height:44px;cursor:pointer;}
