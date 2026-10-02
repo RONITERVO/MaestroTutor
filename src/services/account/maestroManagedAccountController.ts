@@ -12,7 +12,7 @@ export const maestroCoreEventJournal = createCoreEventJournal();
 export const maestroManagedAccountController = createManagedAccountController({
   backend: maestroBackendService,
   identity: {
-    beginSignIn: () => googleAuthService.beginSignIn(),
+    beginSignIn: signal => googleAuthService.beginSignIn(signal),
     signOut: () => googleAuthService.signOutManagedSession(),
   },
   navigation: {

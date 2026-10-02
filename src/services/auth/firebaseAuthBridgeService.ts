@@ -21,6 +21,11 @@ export interface ManagedAuthIdentity {
   refreshToken: string | null;
   expiresAt: string | null;
   user: AppUser;
+  /** Quest handshake ownership; never part of persisted account data. */
+  signal?: AbortSignal;
+  assertCurrent?: () => void;
+  commit?: () => void;
+  rollback?: () => Promise<void>;
 }
 
 const isNativeAndroid = Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
@@ -52,9 +57,10 @@ const mapWebUser = (user: {
 export const firebaseAuthBridgeService = {
   isNativeAndroid,
 
-  beginGoogleSignIn: async (): Promise<ManagedAuthIdentity> => {
+  beginGoogleSignIn: async (signal?: AbortSignal): Promise<ManagedAuthIdentity> => {
     if (isNativeQuestBook()) {
-      throw new ServiceNotConfiguredError('quest-account-link', 'Quest account linking is not configured in this build.');
+      const { beginQuestIdentity } = await import('./questFirebaseIdentity');
+      return beginQuestIdentity(signal || new AbortController().signal);
     }
     if (isNativeAndroid) {
       const { FirebaseAuthentication: nativeAuth } = await loadNativeAuth();
@@ -116,17 +122,31 @@ export const firebaseAuthBridgeService = {
 
     if (!maestroFirebaseService.isConfigured()) return null;
     const auth = await maestroFirebaseService.getAuth();
+    if (isNativeQuestBook()) {
+      const { recoverQuestIdentity, isQuestIdentityPending } = await import('./questFirebaseIdentity');
+      if (isQuestIdentityPending()) throw new Error('Account sign-in is still in progress.');
+      await recoverQuestIdentity(auth);
+    }
     await auth.authStateReady();
-    if (!auth.currentUser) return null;
+    const user = auth.currentUser;
+    if (!user) return null;
+    const token = await user.getIdToken(forceRefresh);
+    if (auth.currentUser !== user) throw new Error('The signed-in account changed. Try again.');
+    if (isNativeQuestBook()) {
+      const { isQuestIdentityPending } = await import('./questFirebaseIdentity');
+      if (isQuestIdentityPending()) throw new Error('Account sign-in is still in progress.');
+    }
     return {
-      firebaseIdToken: await auth.currentUser.getIdToken(forceRefresh),
-      refreshToken: auth.currentUser.refreshToken,
-      expiresAt: null,
-      user: mapWebUser(auth.currentUser),
+      firebaseIdToken: token, refreshToken: user.refreshToken,
+      expiresAt: null, user: mapWebUser(user),
     };
   },
 
   signOut: async (): Promise<void> => {
+    if (isNativeQuestBook()) {
+      const { cancelQuestIdentity } = await import('./questFirebaseIdentity');
+      await cancelQuestIdentity();
+    }
     if (isNativeAndroid) {
       const { FirebaseAuthentication: nativeAuth } = await loadNativeAuth();
       await nativeAuth.signOut();

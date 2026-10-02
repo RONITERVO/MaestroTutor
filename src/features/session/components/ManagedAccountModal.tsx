@@ -12,6 +12,8 @@
  * the copy explaining them live here, one tap away.
  */
 import React, { useEffect, useRef } from 'react';
+import type { QuestPairingView } from '../../../services/auth/questPairingClient';
+import QuestAccountPairing from './QuestAccountPairing';
 import type { ManagedAccessSession } from '../../../core/contracts/backend';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 import { IconCreditCard, IconXMark } from '../../../shared/ui/Icons';
@@ -32,6 +34,8 @@ export const formatUsd = (value: number): string => (
 
 interface ManagedAccountModalProps {
   isOpen: boolean;
+  questPairing?: QuestPairingView;
+  onCancelQuestPairing?: () => void;
   session: ManagedAccessSession | null;
   statusMessage: string | null;
   errorMessage: string | null;
@@ -59,6 +63,8 @@ const PRIMARY_BUTTON_CLASS = 'bg-gate-btn-bg px-3 py-2 text-gate-btn-text hover:
 
 const ManagedAccountModal: React.FC<ManagedAccountModalProps> = ({
   isOpen,
+  questPairing,
+  onCancelQuestPairing,
   session,
   statusMessage,
   errorMessage,
@@ -162,7 +168,8 @@ const ManagedAccountModal: React.FC<ManagedAccountModalProps> = ({
         </header>
 
         <div className="space-y-3 overflow-y-auto p-4">
-          <p className="text-gate-muted-text">{t('managedAccess.description')}</p>
+          <p className="text-gate-muted-text">{t(questPairing ? 'questLink.description' : 'managedAccess.description')}</p>
+          {questPairing && onCancelQuestPairing && <QuestAccountPairing state={questPairing} onCancel={onCancelQuestPairing} />}
 
           <div className="grid gap-2 text-xs sm:text-sm">
             <div className="flex items-center justify-between gap-3">
@@ -231,9 +238,9 @@ const ManagedAccountModal: React.FC<ManagedAccountModalProps> = ({
           </div>
 
           <div className="space-y-1 text-xs text-gate-muted-text">
-            {!purchasingAvailable && <p>{t('managedAccess.androidOnly')}</p>}
+            {!purchasingAvailable && <p>{t(questPairing ? 'questLink.balanceHint' : 'managedAccess.androidOnly')}</p>}
             <p>{t('managedAccess.keepByok')}</p>
-            <p>{t('managedAccess.billingNote')}</p>
+            {!questPairing && <p>{t('managedAccess.billingNote')}</p>}
           </div>
 
           {isSignedIn && (

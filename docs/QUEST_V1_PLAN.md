@@ -2474,3 +2474,52 @@ focused tests** after adding two more invalid-registration cases. TypeScript,
 ESLint and production web compilation pass. CI verifies the final combined suite.
 No Unity C# or Android native code changed; the previous native APK remains the
 last packaged artifact and does not contain this checkpoint's web/config changes.
+
+
+## Quest account-link client checkpoint (2026-10-02)
+
+Implemented the browser approval page and pairing inside the existing account
+dialog. The user sees a five-minute code and fixed public URL, enters it in a
+real browser, verifies the displayed Google account and explicitly approves.
+The book retains the device secret privately, pauses polling when suspended and
+finishes on return with the existing Firebase UID and shared managed backend.
+No Google popup runs inside the book WebView. Native external navigation opens
+only the exact credential-free approval URL after a main-frame user gesture.
+
+Cancellation, closing the dialog, page replacement and expired codes prevent late
+sign-in. One transaction owns custom-token redemption, SDK persistence and the
+backend account/balance check. A pending marker and auth-state guard recover from
+process death or cancellation during non-abortable Firebase work. Strict session
+storage failures prevent commit or retain cleanup recovery; ordinary best-effort
+phone/browser storage behavior remains unchanged. Refreshing a token also verifies
+that its original account did not change in another browser tab.
+
+Quest keeps its balance and BYOK interface but omits checkout and the phone app's
+Stripe purchase note. The browser page refuses unconfigured/wrong-origin use;
+production endpoints and provider enablement remain disabled. Real Meta/Firebase
+acceptance, restart/sign-out, managed chat/Live/agent accounting, and physical
+browser return still require approved release configuration and headset testing.
+See [managed-access lifecycle](QUEST_MANAGED_ACCESS.md).
+
+The full shared web suite passes **1,864 tests in 218 files**. TypeScript,
+ESLint, core boundaries, prompt ownership and catalog-source checks pass. A real
+headless browser checked the production React components with a development-only
+synthetic adapter at 390×844 and 1024×1536: manual code entry, confirmation,
+synthetic sign-in/approval, cancellation and unconfigured production-page behavior
+pass with no page errors or external requests. The rendered screens were inspected.
+This does not claim a real provider login or physical headset acceptance.
+
+The final complete packaging helper exited 0 after the final SDK cancellation fix:
+**616 EditMode and 417 PlayMode tests** pass, with three optional private-file
+skips. Android has **75 passes and two optional private-archive skips**; lint
+passes. Source and mirror hashes match 233 runtime, 133 test and 12 editor C#
+files. All 121 bundled web files match, including the approval page and strict
+account persistence. The included avatar and all 178 motion payloads match their
+manifests. ARM64, native platform loader, permissions and APK v2 signature pass.
+
+Development checkpoint: `MaestroQuest-account-link-8F80D524.apk`, SHA-256
+`8F80D52472DC6FDA1BECE02A98123A2A1774A5CE863401E632DE2F0F1AB7B4AF`.
+It remains uninstalled, disabled for live managed access and development-signed.
+No production deployment, Meta dashboard action, Store upload or headset action
+was performed. Local evidence is in `.quest-evidence/quest-account-ui/`; the
+PR records the final committed-source CI result separately.

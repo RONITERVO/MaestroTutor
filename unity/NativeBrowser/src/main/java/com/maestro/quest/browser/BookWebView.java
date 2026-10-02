@@ -55,6 +55,7 @@ public final class BookWebView extends OffscreenBrowser {
     }
 
     private void resetRequests() {
+        externalLink = "";
         if (requests != null) requests.close();
         final WebView owner = web;
         resetExports();
@@ -159,7 +160,7 @@ public final class BookWebView extends OffscreenBrowser {
                 @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                     if (isAppOrigin(request.getUrl())) return false;
                     // No web-provided Android intents, file URLs or JS URLs are launched.
-                    if (request.isForMainFrame() && request.hasGesture() && "https".equals(request.getUrl().getScheme())) externalLink = request.getUrl().toString();
+                    if (!disposed && !suspended && view == web && request.isForMainFrame() && request.hasGesture() && "https".equals(request.getUrl().getScheme())) externalLink = request.getUrl().toString();
                     return true;
                 }
                 @Override public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError failure) { handler.cancel(); }
@@ -282,9 +283,11 @@ public final class BookWebView extends OffscreenBrowser {
 
     public void SetSuspended(boolean value) {
         snapshots.suspend(value); roomSnapshots.suspend(value);
+        if (value) externalLink = "";
         UnityPlayer.currentActivity.runOnUiThread(() -> {
             if (disposed) return;
             suspended = value;
+            if (value) externalLink = "";
             lifecycleEpoch++;
             lifecycleHandler.removeCallbacksAndMessages(null);
             if (value) { suspendWebView(); return; }

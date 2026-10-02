@@ -4,6 +4,7 @@ import { MAESTRO_INTEGRATION_CONFIG } from '../../core/config/integrations';
 import type {
   BackendGenerateContentResponse,
   ManagedBillingSummary,
+  ManagedSessionResponse,
 } from '../../core/contracts/backend';
 import type { EntitlementRecord } from '../../core/contracts/integrations';
 import {
@@ -14,7 +15,7 @@ import {
   loadManagedAccessSession,
   saveManagedAccessSession,
 } from '../../core/security/managedAccessSessionStorage';
-import { firebaseAuthBridgeService } from '../auth/firebaseAuthBridgeService';
+import { firebaseAuthBridgeService, type ManagedAuthIdentity } from '../auth/firebaseAuthBridgeService';
 import { maestroFirebaseService } from '../firebase/maestroFirebaseService';
 import { ServiceHttpError } from '../shared/serviceErrors';
 
@@ -107,3 +108,18 @@ export const readManagedGenerationStream = (
     billingSummary: result?.billingSummary || null,
   }),
 );
+
+/** Verify a just-approved identity before publishing it to the app's session UI. */
+export async function getManagedSessionForIdentity(identity: ManagedAuthIdentity): Promise<ManagedSessionResponse> {
+  const headers = async () => {
+    identity.assertCurrent?.();
+    const proof = await requireAppCheckHeader(); identity.assertCurrent?.();
+    return { Authorization: `Bearer ${identity.firebaseIdToken}`, ...proof };
+  };
+  const client = createManagedBackendClient({ baseUrl: MAESTRO_INTEGRATION_CONFIG.backendBaseUrl,
+    credentials: { getManagedHeaders: headers, getOptionalHeaders: headers }, session: { update: async () => {} } });
+  const response = await client.requestManagedJson<ManagedSessionResponse>('auth/session', { method: 'GET', signal: identity.signal });
+  identity.assertCurrent?.();
+  if (response.session.user.id !== identity.user.id) throw new Error('The signed-in account could not be confirmed.');
+  return response;
+}

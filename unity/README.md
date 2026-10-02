@@ -261,6 +261,7 @@ pinned Core/MRUK packages. `Resources/QuestPlatform.json` is disabled by default
 no secret belongs in that asset. Release builds require a real app identity and
 successful entitlement check. The development build may run unconfigured but
 cannot attest itself as a Store release. See [managed-access integration](../docs/QUEST_MANAGED_ACCESS.md)
-for the shared Firebase path, cancellation contract and outstanding account-link
-and real-provider checks. Meta SDKs remain package dependencies governed by their
+for the shared Firebase path, browser approval, book pairing/cancellation contract
+and outstanding real-provider and headset acceptance. The browser approval page
+and book client are implemented but remain disabled pending release setup. Meta SDKs remain package dependencies governed by their
 upstream license; no copied SDK source is committed here.

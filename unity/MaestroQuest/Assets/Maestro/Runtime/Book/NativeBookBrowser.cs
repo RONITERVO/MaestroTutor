@@ -98,7 +98,12 @@ namespace Maestro.Quest.Book
             integrity.Poll(Snapshot?.integrityRequest,Time.realtimeSinceStartupAsDouble,value=>m_NativePlugin.Call("PublishIntegrityResult",value));
             DeliverLibraryState(true,Snapshot,value=>m_NativePlugin.Call("PublishLibraryState",value));
             var link = m_NativePlugin.Call<string>("TakeExternalLink");
-            if (Uri.TryCreate(link, UriKind.Absolute, out var uri) && uri.Scheme == "https") ExternalLinkRequested?.Invoke(link);
+            try
+            {
+                if (!BookExternalLinks.TryOpen(link, Application.OpenURL)
+                    && Uri.TryCreate(link, UriKind.Absolute, out var uri) && uri.Scheme == "https") ExternalLinkRequested?.Invoke(link);
+            }
+            catch (Exception) { Error="Open chatwithmaestro.com/quest-link.html on your phone or computer to finish sign-in."; }
 #endif
         }
 

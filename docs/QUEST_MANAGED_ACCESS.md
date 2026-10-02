@@ -1,8 +1,10 @@
 # Quest managed access and release integration
 
-Status: attestation and account-link backend implemented, **disabled and not deployed**. This does
-not make Google sign-in or managed Gemini usable on Quest yet. No production
-credentials, Meta app, signing key or headset operation was created by this work.
+Status: attestation, account-link backend, browser approval and book sign-in client
+implemented, **disabled and not deployed**. Real Meta/Firebase verification and
+Quest acceptance remain open. No production credential, signing key, deployment
+or headset operation was created by this checkpoint; the owner supplied the
+public Meta app ID recorded below.
 
 ## Why there is platform work despite one Maestro account
 
@@ -10,8 +12,7 @@ The original phone app uses Capacitor Firebase Authentication and App Check.
 Quest's book is an Android WebView loading the original app from
 `https://appassets.androidplatform.net`, without Capacitor. Quest now selects a Firebase JS CustomProvider backed by native Meta verification.
 It never falls back to web reCAPTCHA, Play Integrity or debug tokens. Embedded
-Google popup sign-in is explicitly refused while browser account linking remains
-unfinished. The book keeps multiple windows disabled and main-frame
+Google popup sign-in is replaced by the browser account-link flow below. The book keeps multiple windows disabled and main-frame
 navigation restricted to its local origin.
 
 Google disallows OAuth authorization in embedded user agents. The account
@@ -121,10 +122,9 @@ against expiry. Existing phone and ordinary web providers are unchanged.
 
 ## Remaining implementation and acceptance
 
-1. Finish the browser approval page and book pairing UI/client, including lifecycle
-   cancellation and Firebase custom-token sign-in. The backend protocol below is
-   implemented but disabled; linking must not substitute for app integrity.
-2. Restore/sign out the same Maestro identity and verify ordinary managed chat,
+1. Configure and verify the disabled browser/book flow with real Meta and Firebase
+   providers. Linking must not substitute for app integrity.
+2. Verify restoring/signing out the same Maestro identity and ordinary managed chat,
    Live, app-owned agent handoff, cancellation and usage accounting on Quest.
 3. Verify provider responses, signing-certificate rotation, actual Firebase mint
    permissions, Store installation and tampered/expired/replayed proof rejection.
@@ -148,13 +148,63 @@ provider transport, disabled/failing services, HTTP boundaries and proxy trust.
 `npm --prefix functions run test:emulator` now additionally exercises real Firestore
 transactions for concurrent claims, replay, expiry and committed rate limits.
 Web tests cover the actual book request client and token exchange pipeline with
-synthetic provider replies, plus CustomProvider selection and the embedded OAuth
-guard. Unity tests cover initialization, entitlement, deadlines, callback ownership
+synthetic provider replies, CustomProvider selection, browser confirmation,
+account switching, cancellation, crash recovery and the unpublished account
+handshake. `node scripts/run-quest-account-ui.mjs` exercises the real React
+components through a development-only synthetic adapter at phone and book sizes;
+it fails on external network requests. It requires Vite on localhost:5182. Unity tests cover initialization, entitlement, deadlines, callback ownership
 and repeated polling. Android tests verify bounded, quoted result delivery.
 
 Provider/mint responses in local tests are synthetic. No real Meta/Firebase token
 exchange, browser linking or Quest acceptance is claimed.
 
+
+## Browser approval and book identity lifecycle
+
+The original account dialog now starts pairing on native Quest. It shows only the
+public code, a countdown and the fixed `https://chatwithmaestro.com/quest-link.html`
+address; the 256-bit device secret and tokens remain private to the request client.
+The native host opens that exact credential-free URL in the system browser only
+after a main-frame user gesture. Queries, fragments, other hosts and custom
+schemes cannot launch through this path. Phone/PC browsers can use the same page.
+The native queue is cleared on suspension/page replacement. WebView navigation,
+multiple-window restrictions and the original page surface remain unchanged.
+
+The standalone page uses the existing Google/Firebase browser identity and web
+App Check registration. It requires manually entering the book code, displays the
+account and requires explicit confirmation before approval. Codes in URLs never
+autofill or autoapprove. Editing the code or changing accounts clears confirmation.
+The approval checks the currently signed-in UID still matches the displayed
+account; only the verified bearer token, code and confirmation go to the server.
+An expired recent-login requirement offers Google sign-in again. Account restore
+and approval have bounded deadlines; late responses cannot update a closed page.
+
+The book polls every five seconds without overlapping requests. It pauses while
+suspended and resumes the same unexpired code after browser approval. A book
+replacement, Cancel or closing the account dialog cancels locally immediately and
+attempts one bounded server cancellation. Expiry is rechecked against wall time.
+Interrupted creation or redemption requires a fresh link; redemption is never
+retried because a lost response may already have consumed its one issuance.
+
+Firebase custom-token sign-in stays on the named Quest app in the original
+Firebase project. One attempt owns the complete transaction through persistence
+and the shared `/auth/session` handshake. Ordinary identity reads refuse an
+uncommitted user; the handshake sends the newly approved token directly and
+verifies the returned UID before publishing account/balance state. A non-secret
+pending marker, Firebase's blocking auth-state hook and rollback cover cancellation
+or process death during the SDK's non-abortable persistence window. On restart,
+a marker clears the incomplete SDK identity and cached managed session before
+restoration. Failed cleanup retains the marker and refuses successful sign-in.
+This is client crash/cancellation recovery, not revocation of the already issued
+Firebase custom token; the server issuance/lifetime distinction below still applies.
+
+Set both public build values intentionally: `VITE_QUEST_ACCOUNT_LINK_URL` points
+to the deployed function; `VITE_QUEST_ACCOUNT_LINK_VERIFY_URL` must match the
+server configuration and the native allowlisted public URL. The page also checks
+its exact top-level origin/path before offering approval. Endpoint fields stay
+blank until enablement; localhost fixtures cannot bypass production approval.
+Quest currently shows existing balance and BYOK, without a checkout button or
+Stripe purchase note. Phone and ordinary web payment/sign-in paths are retained.
 
 ## Account-link backend protocol
 
@@ -163,7 +213,7 @@ The separate `questAccountLink` function is disabled unless
 proxy CIDRs, distinct same-project `QUEST_FIREBASE_APP_ID` and
 `QUEST_WEB_FIREBASE_APP_ID`, and an HTTPS `QUEST_ACCOUNT_LINK_VERIFY_URL` whose
 path is `/quest-link.html`. These are configuration gates, not authorization to
-deploy. The frontend approval page and book pairing UI are still pending.
+deploy. The browser approval page and book pairing client use this same protocol.
 
 Every request requires App Check verification even when the ordinary managed
 API rollback setting disables enforcement. Creation, status, cancellation and

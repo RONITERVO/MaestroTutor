@@ -3,7 +3,7 @@
 import { beforeEach, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({ native: true, questAppId: '1:123:web:abcdef', existingApps: [] as { name: string; options: { appId: string; projectId: string } }[], createApp: vi.fn(() => ({ name: 'maestro-quest' })), url: 'https://server.example/questAttestation', suspended: false,
   initialize: vi.fn(() => ({ app: 'quest' })), getToken: vi.fn(async () => ({ token: 'firebase.quest.proof' })),
-  acquire: vi.fn(async () => ({ token: 'firebase.quest.proof', expireTimeMillis: 99 })), capacitor: vi.fn(), popup: vi.fn() }));
+  acquire: vi.fn(async () => ({ token: 'firebase.quest.proof', expireTimeMillis: 99 })), questSignIn: vi.fn(async () => { throw new Error('Account linking is not configured in this build.'); }), capacitor: vi.fn(), popup: vi.fn() }));
 vi.mock('@capacitor/core', () => ({ Capacitor: { isNativePlatform: () => false, getPlatform: () => 'web' } }));
 vi.mock('../../platform/quest/questIntegrityBridge', () => ({ isNativeQuestBook: () => mocks.native }));
 vi.mock('../../platform/browser/sessionActivity', () => ({ sessionActivity: { status: () => ({ suspended: mocks.suspended }) } }));
@@ -15,6 +15,7 @@ vi.mock('firebase/app', () => ({ getApps: () => mocks.existingApps, initializeAp
 vi.mock('firebase/app-check', () => ({ initializeAppCheck: mocks.initialize, getToken: mocks.getToken,
   CustomProvider: class { constructor(public options: unknown) {} }, ReCaptchaEnterpriseProvider: class {} }));
 vi.mock('firebase/auth', () => ({ signInWithPopup: mocks.popup }));
+vi.mock('../auth/questFirebaseIdentity', () => ({ beginQuestIdentity: mocks.questSignIn }));
 vi.mock('@capacitor-firebase/app-check', () => ({ FirebaseAppCheck: { initialize: mocks.capacitor, getToken: mocks.capacitor } }));
 vi.mock('./questAppCheck', () => ({ acquireQuestAppCheckToken: mocks.acquire, questAttestationBaseUrl: (value: string) => {
   if (!value) throw new Error('Managed Quest verification is not configured in this build.'); return value;
@@ -41,9 +42,10 @@ it('suspension denies even an already cached Firebase token', async () => {
   await service.getAppCheckToken(); mocks.suspended = true;
   expect(await service.getAppCheckToken()).toBeNull(); expect(mocks.getToken).toHaveBeenCalledTimes(1);
 });
-it('never starts embedded Google OAuth while Quest account linking remains unavailable', async () => {
+it('routes Quest sign-in to pairing without embedded Google OAuth', async () => {
   const { firebaseAuthBridgeService: auth } = await import('../auth/firebaseAuthBridgeService');
-  await expect(auth.beginGoogleSignIn()).rejects.toThrow('Quest account linking is not configured');
+  await expect(auth.beginGoogleSignIn()).rejects.toThrow('Account linking is not configured');
+  expect(mocks.questSignIn).toHaveBeenCalledTimes(1);
   expect(mocks.popup).not.toHaveBeenCalled();
 });
 

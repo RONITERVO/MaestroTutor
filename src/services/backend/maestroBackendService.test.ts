@@ -197,3 +197,39 @@ describe('App Check preflight', () => {
     expect(headers.get('Authorization')).toBe('Bearer token');
   });
 });
+
+
+describe('unpublished Quest identity handshake', () => {
+  const fetchMock = vi.fn();
+  const identity = { firebaseIdToken: 'approved-token', refreshToken: null, expiresAt: null, user: { ...managedSession.user, id: 'approved-user' } };
+  beforeEach(() => {
+    vi.clearAllMocks(); vi.resetModules(); vi.stubGlobal('fetch', fetchMock);
+    mocks.getAppCheckToken.mockResolvedValue('quest-proof');
+    mocks.loadManagedAccessSession.mockResolvedValue(managedSession);
+  });
+  afterEach(() => vi.unstubAllGlobals());
+  it('uses the approved identity, not a cached account, and leaves shared storage unpublished', async () => {
+    fetchMock.mockResolvedValue(new Response(JSON.stringify({ session: { ...managedSession, user: identity.user } })));
+    const { getManagedSessionForIdentity } = await import('./maestroBackendService');
+    const controller = new AbortController(); await getManagedSessionForIdentity({ ...identity, signal: controller.signal });
+    expect(fetchMock.mock.calls[0][0]).toBe('https://backend.example/auth/session');
+    const init = fetchMock.mock.calls[0][1];
+    expect(new Headers(init.headers).get('Authorization')).toBe('Bearer approved-token');
+    expect(new Headers(init.headers).get('X-Firebase-AppCheck')).toBe('quest-proof');
+    expect(init.signal.aborted).toBe(false); controller.abort(); expect(init.signal.aborted).toBe(true);
+    expect(mocks.getCurrentIdentity).not.toHaveBeenCalled(); expect(mocks.saveManagedAccessSession).not.toHaveBeenCalled();
+  });
+  it('rejects a different backend account', async () => {
+    fetchMock.mockResolvedValue(new Response(JSON.stringify({ session: managedSession })));
+    const { getManagedSessionForIdentity } = await import('./maestroBackendService');
+    await expect(getManagedSessionForIdentity(identity)).rejects.toThrow('could not be confirmed');
+    expect(mocks.saveManagedAccessSession).not.toHaveBeenCalled();
+  });
+  it('rechecks ownership after attestation before sending the approved credential', async () => {
+    let current = true;
+    mocks.getAppCheckToken.mockImplementationOnce(async () => { current = false; return 'proof'; });
+    const { getManagedSessionForIdentity } = await import('./maestroBackendService');
+    await expect(getManagedSessionForIdentity({ ...identity, assertCurrent: () => { if (!current) throw new DOMException('Cancelled', 'AbortError'); } })).rejects.toMatchObject({ name: 'AbortError' });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
