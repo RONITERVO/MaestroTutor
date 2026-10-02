@@ -867,3 +867,23 @@ it('shows the actual native save hold until workspace review has durably complet
  }
  act(()=>client.cancel());
 });
+
+import aimedThrow from '../../../test-fixtures/browser/aimedThrow.json';
+it('edits an aimed throw in the existing book form and shows the real native launched outcome',async()=>{
+ const client=new RoomAgentClient();let state={...aimedThrow.inspect,revision:1,ack:0} as unknown as RoomAgentState;
+ expect(client.receive(state)).toBe(true);const screen=render(<CapabilityBrowser client={client} onClose={()=>{}}/>);
+ const receive=async(catalog:CatalogView)=>{state={...state,revision:state.revision+1,ack:client.snapshot().request!.sequence,catalog};await act(async()=>{expect(client.receive(state)).toBe(true);});};
+ fireEvent.click(screen.getByRole('button',{name:/^Search$/}));await receive(catalogFixture(aimedThrow.search.catalog));
+ fireEvent.click(screen.getByRole('button',{name:/Aim and throw object/}));await receive(catalogFixture(aimedThrow.inspect.catalog));
+ expect(screen.getByLabelText('Action inputs destination position x')).toBeTruthy();
+ fireEvent.change(screen.getByLabelText('Action arguments'),{target:{value:JSON.stringify(aimedThrow.arguments)}});
+ fireEvent.click(screen.getByRole('button',{name:'Check availability'}));
+ expect(client.snapshot().request?.commands[0]).toEqual({action:'catalog',catalog:{operation:'check',call:{id:'object.physics.launch',version:1,arguments:aimedThrow.arguments}}});
+ state={...state,revision:state.revision+1,ack:client.snapshot().request!.sequence,catalog:catalogFixture(aimedThrow.ready.catalog)};
+ await act(async()=>{expect(client.receive(state)).toBe(true);});expect(screen.getByText(/Ready now/)).toBeTruthy();
+ fireEvent.click(screen.getByRole('button',{name:'Run action now'}));expect(client.snapshot().request?.commands[0].execution).toMatchObject({operation:'start',call:{id:'object.physics.launch',arguments:aimedThrow.arguments}});
+ state={...state,revision:state.revision+1,ack:client.snapshot().request!.sequence,execution:aimedThrow.launched.execution as unknown as RoomAgentState['execution']};
+ await act(async()=>{expect(client.receive(state)).toBe(true);});
+ expect(screen.getByLabelText('Selected action').textContent).toContain('launched');expect(screen.getByLabelText('Selected action').textContent).not.toContain('caught');
+ act(()=>client.cancel());
+});

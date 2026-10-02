@@ -8276,6 +8276,404 @@
       "description": "Clear linear and angular velocity once. This does not freeze or pin the object; gravity and collisions continue afterward."
     },
     {
+      "id": "object.physics.launch",
+      "version": 1,
+      "label": "Aim and throw object",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "destination": {
+            "type": "object",
+            "title": "Aim at",
+            "x-discriminators": [
+              "kind"
+            ],
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "position": {
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "type": "number",
+                        "minimum": -1000000.0,
+                        "maximum": 1000000.0
+                      },
+                      "y": {
+                        "type": "number",
+                        "minimum": -1000000.0,
+                        "maximum": 1000000.0
+                      },
+                      "z": {
+                        "type": "number",
+                        "minimum": -1000000.0,
+                        "maximum": 1000000.0
+                      }
+                    },
+                    "required": [
+                      "x",
+                      "y",
+                      "z"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "point"
+                    ],
+                    "x-static": true
+                  }
+                },
+                "required": [
+                  "position",
+                  "kind"
+                ],
+                "additionalProperties": false,
+                "title": "World point"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "anchor": {
+                    "type": "object",
+                    "title": "Attachment point",
+                    "x-discriminators": [
+                      "kind"
+                    ],
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "objectId": {
+                            "type": "string",
+                            "pattern": "^[a-fA-F0-9]{32}$",
+                            "maxLength": 32,
+                            "x-resource": "object"
+                          },
+                          "part": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9_]{1,32}$",
+                            "maxLength": 32
+                          },
+                          "revision": {
+                            "type": "integer",
+                            "minimum": 1.0,
+                            "maximum": 1000000.0
+                          },
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "recipePart"
+                            ],
+                            "x-static": true
+                          }
+                        },
+                        "required": [
+                          "objectId",
+                          "part",
+                          "revision",
+                          "kind"
+                        ],
+                        "additionalProperties": false,
+                        "title": "Recipe part"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "objectId": {
+                            "type": "string",
+                            "enum": [
+                              "maestro"
+                            ],
+                            "x-resource": "object"
+                          },
+                          "hand": {
+                            "type": "string",
+                            "enum": [
+                              "left",
+                              "right"
+                            ]
+                          },
+                          "avatarHash": {
+                            "type": "string",
+                            "pattern": "^(|[a-f0-9]{64})$",
+                            "maxLength": 64
+                          },
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "avatarHand"
+                            ],
+                            "x-static": true
+                          }
+                        },
+                        "required": [
+                          "objectId",
+                          "hand",
+                          "avatarHash",
+                          "kind"
+                        ],
+                        "additionalProperties": false,
+                        "title": "Maestro hand"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "objectId": {
+                            "type": "string",
+                            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+                            "maxLength": 32,
+                            "x-resource": "object"
+                          },
+                          "revision": {
+                            "type": "integer",
+                            "minimum": 1.0,
+                            "maximum": 1000000.0
+                          },
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "object"
+                            ],
+                            "x-static": true
+                          }
+                        },
+                        "required": [
+                          "objectId",
+                          "revision",
+                          "kind"
+                        ],
+                        "additionalProperties": false,
+                        "title": "Object root"
+                      }
+                    ]
+                  },
+                  "offset": {
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      },
+                      "y": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      },
+                      "z": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      }
+                    },
+                    "required": [
+                      "x",
+                      "y",
+                      "z"
+                    ],
+                    "additionalProperties": false,
+                    "format": "boundedOffset"
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "anchor"
+                    ],
+                    "x-static": true
+                  }
+                },
+                "required": [
+                  "anchor",
+                  "offset",
+                  "kind"
+                ],
+                "additionalProperties": false,
+                "title": "Attachment point"
+              }
+            ]
+          },
+          "seconds": {
+            "type": "number",
+            "minimum": 0.2,
+            "maximum": 2.0
+          },
+          "maxSpeed": {
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 8.0
+          }
+        },
+        "required": [
+          "target",
+          "destination",
+          "seconds",
+          "maxSpeed"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "objectLaunch.v1",
+          "actionResults.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.creationReady",
+        "target.unheld",
+        "authoring.inactive",
+        "physics.running",
+        "geometry.ready",
+        "trajectory.clear",
+        "viewer.available"
+      ],
+      "description": "Launch a solid/bouncy creation toward an explicit world point or the current pose of an exact object/recipe-part/Maestro-hand anchor. The destination is the desired collision-volume centre. Anchor offset uses holder-scale metres. Replaces velocity and clears spin through the same rigid body as controller throws; this does not animate an arm or catch an object. Flight time 0.2–2 seconds is rounded up to fixed physics steps, with requested maximum speed up to 8 m/s. A bounded free-flight estimate includes gravity and damping. Current room/object/controller colliders and the head clearance zone can refuse a throw. Non-sphere objects use a conservative enclosing sphere. Read object.physics.trajectory to preview; execution always recomputes current readiness and path. Preview is not a reservation or a promised landing: moving targets, new obstructions and collisions change the outcome. Completion means launched, never arrived/caught. Stop cannot retract launched motion; pause clears motion through room physics. The launch itself adds no saved edit or Undo. Normal room physics autosave still captures later positions; use a temporary room to keep those changes in its fork until Keep. No automatic resume or retry.",
+      "example": {
+        "target": "00000000000000000000000000000000",
+        "destination": {
+          "kind": "point",
+          "position": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        },
+        "seconds": 0.75,
+        "maxSpeed": 5
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32
+          },
+          "phase": {
+            "type": "string",
+            "enum": [
+              "launched"
+            ]
+          },
+          "origin": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": -1000000.0,
+                "maximum": 1000000.0
+              },
+              "y": {
+                "type": "number",
+                "minimum": -1000000.0,
+                "maximum": 1000000.0
+              },
+              "z": {
+                "type": "number",
+                "minimum": -1000000.0,
+                "maximum": 1000000.0
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "additionalProperties": false
+          },
+          "destination": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": -1000000.0,
+                "maximum": 1000000.0
+              },
+              "y": {
+                "type": "number",
+                "minimum": -1000000.0,
+                "maximum": 1000000.0
+              },
+              "z": {
+                "type": "number",
+                "minimum": -1000000.0,
+                "maximum": 1000000.0
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "additionalProperties": false
+          },
+          "velocity": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": -1000000.0,
+                "maximum": 1000000.0
+              },
+              "y": {
+                "type": "number",
+                "minimum": -1000000.0,
+                "maximum": 1000000.0
+              },
+              "z": {
+                "type": "number",
+                "minimum": -1000000.0,
+                "maximum": 1000000.0
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "additionalProperties": false
+          },
+          "seconds": {
+            "type": "number",
+            "minimum": 0.2,
+            "maximum": 2.05
+          },
+          "speed": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 8.0
+          },
+          "radius": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          }
+        },
+        "required": [
+          "target",
+          "phase",
+          "origin",
+          "destination",
+          "velocity",
+          "seconds",
+          "speed",
+          "radius"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "object.recording.throw",
       "version": 1,
       "label": "Throw recording",
@@ -9291,6 +9689,303 @@
       },
       "example": {
         "target": "book"
+      },
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
+      "id": "object.physics.trajectory",
+      "version": 1,
+      "type": {
+        "record": {
+          "ready": "boolean",
+          "reason": "text",
+          "origin": {
+            "record": {
+              "x": "number",
+              "y": "number",
+              "z": "number"
+            }
+          },
+          "destination": {
+            "record": {
+              "x": "number",
+              "y": "number",
+              "z": "number"
+            }
+          },
+          "velocity": {
+            "record": {
+              "x": "number",
+              "y": "number",
+              "z": "number"
+            }
+          },
+          "seconds": "number",
+          "speed": "number",
+          "radius": "number"
+        }
+      },
+      "label": "Preview aimed throw",
+      "description": "Read a fresh bounded estimate using the exact same arguments and collision checks as Aim and throw object. ready=false gives a reason; numerical fields are zero placeholders when not ready. This never launches, reserves or authorizes motion. Ready estimates are instantaneous snapshots, with no guarantee of arrival or a moving target remaining in place.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "destination": {
+            "type": "object",
+            "title": "Aim at",
+            "x-discriminators": [
+              "kind"
+            ],
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "position": {
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "type": "number",
+                        "minimum": -1000000.0,
+                        "maximum": 1000000.0
+                      },
+                      "y": {
+                        "type": "number",
+                        "minimum": -1000000.0,
+                        "maximum": 1000000.0
+                      },
+                      "z": {
+                        "type": "number",
+                        "minimum": -1000000.0,
+                        "maximum": 1000000.0
+                      }
+                    },
+                    "required": [
+                      "x",
+                      "y",
+                      "z"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "point"
+                    ],
+                    "x-static": true
+                  }
+                },
+                "required": [
+                  "position",
+                  "kind"
+                ],
+                "additionalProperties": false,
+                "title": "World point"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "anchor": {
+                    "type": "object",
+                    "title": "Attachment point",
+                    "x-discriminators": [
+                      "kind"
+                    ],
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "objectId": {
+                            "type": "string",
+                            "pattern": "^[a-fA-F0-9]{32}$",
+                            "maxLength": 32,
+                            "x-resource": "object"
+                          },
+                          "part": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9_]{1,32}$",
+                            "maxLength": 32
+                          },
+                          "revision": {
+                            "type": "integer",
+                            "minimum": 1.0,
+                            "maximum": 1000000.0
+                          },
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "recipePart"
+                            ],
+                            "x-static": true
+                          }
+                        },
+                        "required": [
+                          "objectId",
+                          "part",
+                          "revision",
+                          "kind"
+                        ],
+                        "additionalProperties": false,
+                        "title": "Recipe part"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "objectId": {
+                            "type": "string",
+                            "enum": [
+                              "maestro"
+                            ],
+                            "x-resource": "object"
+                          },
+                          "hand": {
+                            "type": "string",
+                            "enum": [
+                              "left",
+                              "right"
+                            ]
+                          },
+                          "avatarHash": {
+                            "type": "string",
+                            "pattern": "^(|[a-f0-9]{64})$",
+                            "maxLength": 64
+                          },
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "avatarHand"
+                            ],
+                            "x-static": true
+                          }
+                        },
+                        "required": [
+                          "objectId",
+                          "hand",
+                          "avatarHash",
+                          "kind"
+                        ],
+                        "additionalProperties": false,
+                        "title": "Maestro hand"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "objectId": {
+                            "type": "string",
+                            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+                            "maxLength": 32,
+                            "x-resource": "object"
+                          },
+                          "revision": {
+                            "type": "integer",
+                            "minimum": 1.0,
+                            "maximum": 1000000.0
+                          },
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "object"
+                            ],
+                            "x-static": true
+                          }
+                        },
+                        "required": [
+                          "objectId",
+                          "revision",
+                          "kind"
+                        ],
+                        "additionalProperties": false,
+                        "title": "Object root"
+                      }
+                    ]
+                  },
+                  "offset": {
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      },
+                      "y": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      },
+                      "z": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      }
+                    },
+                    "required": [
+                      "x",
+                      "y",
+                      "z"
+                    ],
+                    "additionalProperties": false,
+                    "format": "boundedOffset"
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "anchor"
+                    ],
+                    "x-static": true
+                  }
+                },
+                "required": [
+                  "anchor",
+                  "offset",
+                  "kind"
+                ],
+                "additionalProperties": false,
+                "title": "Attachment point"
+              }
+            ]
+          },
+          "seconds": {
+            "type": "number",
+            "minimum": 0.2,
+            "maximum": 2.0
+          },
+          "maxSpeed": {
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 8.0
+          }
+        },
+        "required": [
+          "target",
+          "destination",
+          "seconds",
+          "maxSpeed"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "objectLaunch.v1",
+          "actionResults.v1"
+        ]
+      },
+      "example": {
+        "target": "00000000000000000000000000000000",
+        "destination": {
+          "kind": "point",
+          "position": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        },
+        "seconds": 0.75,
+        "maxSpeed": 5
       },
       "features": [
         "factQueries.v1"
@@ -11379,7 +12074,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "64e7a9d361a90a0b8297272edf8374c8b0a91621c1849ff1cc18ce609f0b5d50"
+      "sha256": "bc3081d5a9f70fe980641db920b52804ae7e2bd37cb2c67c124ef91ccb5db748"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -11472,6 +12167,14 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/HeldRoomProp.cs",
       "sha256": "2f33c389d7068e60501279b49e76e5a50e6a6db582c87671315d7aa4aebaa314"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomBallistics.cs",
+      "sha256": "dde050796725fb17fc7e7ca5706025c4e2eba55f05e79fc0c3410e22053e8849"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.cs",
+      "sha256": "ab33aa78bd007c4f29ab5ce2515d27233d4006c5eb903969246cf9677af57a23"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomPropAnchor.cs",
@@ -11659,7 +12362,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "e6b3d51ca9a06d79aade46abc00defe659c6aa98d54df9cca7a35554f9965441"
+      "sha256": "664416d1e2d5f5b77bf27e63f36c8e4e3468a136caa3658a3aca36a255786b35"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -11704,6 +12407,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/HoldObjectCapability.cs",
       "sha256": "6653301800bc55304ea1b464b18363307c65e3821ef8a6be82bce031057a5850"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/LaunchObjectCapability.cs",
+      "sha256": "f1e705fd9bfc6dc72041eff724e9a5787a5bb0c3e912c977b73c5e9a3e9668c5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/LibraryAnimationCapability.cs",

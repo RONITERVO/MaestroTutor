@@ -12,8 +12,8 @@ posing now exposes start/rotate/save/finish/discard with native session IDs and
 pose versions, the same physical joint limits and imported retargeter, held-joint
 exclusion, failed-pose recovery and recording interoperation. Saved edits are
 durable outside temporary mode; temporary edits stay in the fork until Keep.
-No authoring operation starts playback. The catalog contains 58 actions, 11
-events and 49 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
+No authoring operation starts playback. The catalog contains 59 actions, 11
+events and 50 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
 Single-file GLB/VRM selection, preview and acceptance now share the physical
 import path with book fields and agent/program calls. See QUEST_MODEL_IMPORT.md.
 Animation collections now share native selection, versioned start/retry/tag controls,
@@ -56,6 +56,7 @@ deadlines and weekly times now use shared event waits and clock readback; see
 QUEST_CALENDAR_SCHEDULES.md. The PC checkpoint below is verified;
 headset acceptance remains outstanding.
 Completing workspace review now drains accepted room/behaviour saves in the background under the existing edit hold; see QUEST_ACCEPTED_SAVE.md.
+Aimed physical throws and read-only trajectory previews now use the same native catalog, generated book form and rigid-body physics; see QUEST_AIMED_THROWS.md.
 The remaining runtime, provider, device and Store acceptance gates remain unfinished; the complete v1 goal remains active.
 
 Current recovery implementation supports retained candidates, an external backup,
@@ -72,6 +73,36 @@ and tracked operation roots remain protected. Private recovery export remains
 separate; a full store with unreadable selection still requires recovery/repair.
 PR #248 records the current verified commit and package. Earlier entries
 below are historical evidence, not current test totals or release acceptance.
+
+PC aimed-throw increment (2026-10-02): `object.physics.launch` now sends a
+Solid/Bouncy creation toward an explicit world point or exact root/recipe-part/
+Maestro-hand anchor through the existing rigid body. `object.physics.trajectory`
+previews the same bounded fixed-step gravity/damping estimate and current collision
+checks. The generated book form, native programs and agent dispatch share one
+module. Fresh execution refuses changed anchors, blocked/out-of-room paths, the
+observed head clearance zone, excessive initial speed and unavailable physics.
+Completion means launched; physical contacts and later movement remain authoritative.
+Duplicate receipts cannot throw again. The launch adds no saved edit or Undo;
+normal physics autosave and temporary-room Keep boundaries remain. See
+QUEST_AIMED_THROWS.md. No IK catch, homing or promised arrival is implied.
+
+Six new PlayMode tests cover actual flight at desktop/72 Hz fixed steps, changed
+gravity, floor launch/bounce, fresh/stale anchors, wall/apex/head/bounds rejection,
+ownership, pause and duplicate request IDs. Testing the real catalog/scheduler
+preview exposed a missing-context fallback and verified its correction. Native
+captures also drive the bridge and book component tests.
+
+Verification passed 415 EditMode and 386 PlayMode tests (three optional private
+model skips), all 1,710 web tests across 197 files and 61 Android tests. The final
+51-test book/bridge run uses the packaging run's native captures. TypeScript,
+ESLint, prompt/core boundaries, catalog drift, Android assembly/lint and the full
+build helper passed. All 212 runtime / 107 test C# files, 32 native fixtures plus
+metadata and 113 packaged web files match the tested inputs. ARM64-only contents
+and v2 signature verified. Catalog now has 59 actions, 11 events and 50 facts.
+APK: `D:\Projects\Builds\MaestroQuestVerify\Builds\Checkpoints\MaestroQuest-aimed-throw-EC10AAC0.apk`.
+SHA-256: `EC10AAC01100736167245C019061AC7287510CC23DBB43A43C5FAC68CE39A1E1`.
+Development signing; not installed on Quest. Physical Quest timing/tracking/scan
+alignment/comfort and the remaining v1/provider/Store gates remain open.
 
 PC accepted-content save increment (2026-10-02): completing workspace review
 now sequences room and behaviour saves on background workers, then waits for both
