@@ -91,7 +91,7 @@ namespace Maestro.Quest.Tests
             string target=Path.Combine(editor.SaveDirectory,"room.v2.json"),backup=target+".test-retained";
             Assert.That(File.Exists(target),Is.True);File.Move(target,backup);Directory.CreateDirectory(target);
             try {
-                var actions=new RoomExecutions(editor,host);Assert.That(actions.Execute(MaintenanceStart(actions,"workspace.review.complete",ReviewArguments(id)),out _),Is.False);
+                ApproveReview(id);yield return FinishReview(id);
                 Assert.That((string)host.Review.Read(id)["phase"],Is.EqualTo("failed"));Assert.That(store.Load().Active.ReviewRequired,Is.True);Assert.That(editor.WriteGate.Frozen,Is.False);Assert.That(editor.Snapshot().objects.Single(x=>x.id==data.id).name,Is.EqualTo(data.name));Assert.That(editor.CanUndo,Is.True);
             }finally{Directory.Delete(target);File.Move(backup,target);}
             Assert.That(editor.TryFlush(out var error),Is.True,error);

@@ -16,7 +16,7 @@ namespace Maestro.Quest.Persistence
     internal sealed class WorkspaceReview
     {
         readonly WorkspaceHost host;readonly WorkspaceGenerationStore store;readonly string directory,path;
-        JObject record;string journalError;WorkspaceEditHold hold;WorkspaceSelection committed;
+        JObject record;string journalError;WorkspaceEditHold hold;WorkspaceAcceptedSave saves;WorkspaceSelection committed;
         Task<Outcome> pending;CancellationTokenSource cancellation;bool paused,focused=true,disposed,uncertain;
         internal Action<string> Fault;
         sealed class Outcome {internal JObject Record;internal WorkspaceSelection Committed;internal bool Uncertain;}
@@ -90,23 +90,41 @@ namespace Maestro.Quest.Persistence
         internal string Complete(JObject args){if(!CanComplete(args,out var error))throw new InvalidOperationException(error);record["phase"]="completing";record["status"]="Verifying the inspected contents before completing review";Start(true);return RequestId;}
         void Start(bool complete)
         {
-            var content=host.Current;
+            var content=host.Current;Task<WorkspaceArchiveReceipt> capture=null;
             try {
                 if(!WorkspaceEditHold.TryAcquire(content.Editor,content.Rules,content.Controls,out hold,out var error))throw new InvalidOperationException(error);
                 Save(record);Fault?.Invoke("review.beforeCapture");
                 // These two stores debounce accepted writes. Preferences/activities/libraries commit
                 // before accepting edits; their in-flight writers are excluded by the same hold.
-                if(complete&&(!content.Editor.TryFlush(out error)||!content.Rules.TryFlush(out error)))throw new IOException("Accepted workspace contents could not be saved.");
-                cancellation=new CancellationTokenSource();var token=cancellation.Token;var capture=WorkspaceArchiveCapture.Fingerprint(content.Editor,content.Rules,content.Controls,token);
-                var value=(JObject)record.DeepClone();var origin=host.Selection.Json();pending=Task.Run(()=>Finish(capture,value,origin,complete,token));
-            }catch {hold?.Dispose();hold=null;cancellation?.Dispose();cancellation=null;record["phase"]="failed";record["status"]="Review could not start. Accepted contents remain available and activity stays under review.";SaveStatus();throw;}
+                cancellation=new CancellationTokenSource();var token=cancellation.Token;
+                if(complete)saves=WorkspaceAcceptedSave.Start(hold,content.Editor,content.Rules);
+                Fault?.Invoke("review.savesStarted");
+                try{capture=WorkspaceArchiveCapture.Fingerprint(content.Editor,content.Rules,content.Controls,token);}
+                catch(Exception failure){capture=Task.FromException<WorkspaceArchiveReceipt>(failure);}
+                var value=(JObject)record.DeepClone();var origin=host.Selection.Json();
+                var saving=saves?.Completion??Task.CompletedTask;
+                pending=Task.Run(()=>Finish(capture,saving,value,origin,complete,token));
+            }catch {
+                if(saves!=null||capture!=null){pending=FailedStart(capture,saves?.Completion??Task.CompletedTask,(JObject)record.DeepClone());return;}
+                hold?.Dispose();hold=null;cancellation?.Dispose();cancellation=null;record["phase"]="failed";record["status"]="Review could not start. Accepted contents remain available and activity stays under review.";SaveStatus();throw;
+            }
+        }
+        async Task<Outcome> FailedStart(Task capture,Task saving,JObject value)
+        {
+            try{await Task.WhenAll(capture??Task.CompletedTask,saving).ConfigureAwait(false);}catch(Exception){}
+            value["phase"]="failed";value["status"]="Review could not start. Accepted writes have finished; contents remain under review.";
+            try{Save(value);}catch(Exception){}
+            return new Outcome {Record=value};
         }
         static JObject Summary(WorkspaceArchiveSummary summary)=>new JObject {["files"]=summary.Files,["models"]=summary.Models,["motions"]=summary.Motions,["modules"]=summary.Modules,["unavailablePrograms"]=summary.UnavailablePrograms,["missingModels"]=summary.MissingModels.Length,["missingMotions"]=summary.MissingMotions.Length,["missingControllerPrograms"]=summary.MissingControllerPrograms.Length};
-        async Task<Outcome> Finish(Task<WorkspaceArchiveReceipt> capture,JObject value,JObject origin,bool complete,CancellationToken token)
+        async Task<Outcome> Finish(Task<WorkspaceArchiveReceipt> capture,Task saving,JObject value,JObject origin,bool complete,CancellationToken token)
         {
             WorkspaceSelection selected=null;bool unknown=false;
             try {
-                var snapshot=await capture.ConfigureAwait(false);token.ThrowIfCancellationRequested();Fault?.Invoke("review.captured");token.ThrowIfCancellationRequested();
+                // Drain both jobs even on failure/cancellation. In particular a failed
+                // capture cannot release owners while accepted writes are still running.
+                await Task.WhenAll(capture,saving).ConfigureAwait(false);
+                var snapshot=capture.Result;token.ThrowIfCancellationRequested();Fault?.Invoke("review.captured");token.ThrowIfCancellationRequested();
                 if(!complete){value["manifestHash"]=snapshot.ManifestHash;value["summary"]=Summary(snapshot.Summary);value["phase"]="prepared";value["status"]="Inspect these exact contents and missing-reference counts before completing review.";}
                 else if(snapshot.ManifestHash!=(string)value["manifestHash"]){value["phase"]="stale";value["status"]="Accepted contents changed after inspection. Prepare and inspect a new review; activity remains held.";}
                 else {Fault?.Invoke("review.beforeCommit");token.ThrowIfCancellationRequested();selected=store.CompleteReview((string)value["requestId"],(string)value["generationId"],(string)value["manifestHash"],(string)value["revision"],snapshot.ManifestHash,token);}
@@ -144,7 +162,7 @@ namespace Maestro.Quest.Persistence
         {
             if(disposed)return;
             if(pending!=null&&pending.IsCompleted) {
-                var outcome=pending.GetAwaiter().GetResult();pending=null;record=outcome.Record;committed=outcome.Committed;uncertain=outcome.Uncertain;
+                var outcome=pending.GetAwaiter().GetResult();pending=null;saves?.Dispose();saves=null;record=outcome.Record;committed=outcome.Committed;uncertain=outcome.Uncertain;
                 if(committed==null&&(string)record["phase"]=="prepared"&&cancellation.IsCancellationRequested){record["phase"]="cancelled";record["status"]="Review inspection cancelled. Activity remains held.";}
                 cancellation.Dispose();cancellation=null;
                 if(committed==null){if(!uncertain){hold?.Dispose();hold=null;}SaveStatus();return;}
@@ -162,6 +180,6 @@ namespace Maestro.Quest.Persistence
         internal void Pause(bool value){paused=value;if(value)cancellation?.Cancel();}
         internal void Focus(bool value){focused=value;if(!value)cancellation?.Cancel();}
         internal void Disable()=>cancellation?.Cancel();
-        internal async Task Dispose(){disposed=true;cancellation?.Cancel();try{if(pending!=null)await pending;}catch(Exception){}finally{hold?.Dispose();hold=null;cancellation?.Dispose();cancellation=null;}}
+        internal async Task Dispose(){disposed=true;cancellation?.Cancel();try{if(pending!=null)await pending;}catch(Exception){}finally{saves?.Dispose();saves=null;hold?.Dispose();hold=null;cancellation?.Dispose();cancellation=null;}}
     }
 }

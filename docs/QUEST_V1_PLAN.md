@@ -55,6 +55,7 @@ existing collision and throw runtime; see QUEST_OBJECT_ATTACHMENTS.md. Calendar
 deadlines and weekly times now use shared event waits and clock readback; see
 QUEST_CALENDAR_SCHEDULES.md. The PC checkpoint below is verified;
 headset acceptance remains outstanding.
+Completing workspace review now drains accepted room/behaviour saves in the background under the existing edit hold; see QUEST_ACCEPTED_SAVE.md.
 The remaining runtime, provider, device and Store acceptance gates remain unfinished; the complete v1 goal remains active.
 
 Current recovery implementation supports retained candidates, an external backup,
@@ -71,6 +72,36 @@ and tracked operation roots remain protected. Private recovery export remains
 separate; a full store with unreadable selection still requires recovery/repair.
 PR #248 records the current verified commit and package. Earlier entries
 below are historical evidence, not current test totals or release acceptance.
+
+PC accepted-content save increment (2026-10-02): completing workspace review
+now sequences room and behaviour saves on background workers, then waits for both
+writes and the exact content fingerprint before applying approval. The existing
+edit/activity hold stays in place, while per-store save-dispatch leases prevent
+competing autosaves or lifecycle waits. Cancellation and save/capture failure
+drain every dispatched worker; retirement excludes a new owner until writing ends.
+An older failed snapshot cannot prevent saving the latest accepted data. Partial
+failure keeps live edits/Undo and the ordinary retry path, with review still held.
+No execution resumes. See QUEST_ACCEPTED_SAVE.md.
+
+Five new PlayMode regressions hold earlier writers while Unity frames advance,
+verify saved room/behaviour contents, exercise cancellation and one-sided failure,
+fail capture startup after dispatch, and reopen after retirement. These checks
+also found and fixed a final-save notification reaching a creation tray during
+teardown. The bridge and book components consume actual native completing/completed
+observations; completion is distinct from the initial request acknowledgement.
+
+Verification passed 415 EditMode and 379 PlayMode tests (three optional private
+model skips), all 1,705 web tests across 196 files and 61 Android tests. A final
+69-test book/bridge run checked the captures from the packaging run. TypeScript,
+ESLint, prompt/core boundaries, catalog drift, Android assembly/lint and the full
+build helper passed. All 210 runtime / 106 test C# files, 32 native fixtures plus
+metadata and 113 packaged web files match the tested inputs. ARM64-only contents
+and v2 signature verified. Catalog remains 58 actions, 11 events and 49 facts.
+APK: `D:\Projects\Builds\MaestroQuestVerify\Builds\Checkpoints\MaestroQuest-accepted-save-97B6A637.apk`.
+SHA-256: `97B6A637EF85779AB32B65834EE6E38C87F5A32CBEFFBBF737EB93D5BC055118`.
+Development signing; not installed on Quest. This proves PC ordering and lifecycle
+behavior, not a headset frame-time budget. Other synchronous edit/receipt paths
+and device/Store acceptance remain. The complete v1 goal remains active.
 
 PC calendar-scheduling increment (2026-10-02): clock.scheduled now waits for one
 explicit date/time or the next selected weekly occurrence through the shared

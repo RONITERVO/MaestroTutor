@@ -7,6 +7,7 @@ import exportReceipt from '../../../test-fixtures/browser/workspaceExportReceipt
 import nativeSelection from '../../../test-fixtures/browser/workspaceSelection.json';
 import nativeActivation from '../../../test-fixtures/browser/workspaceActivation.json';
 import nativeReview from '../../../test-fixtures/browser/workspaceReview.json';
+import nativeAcceptedSave from '../../../test-fixtures/browser/workspaceAcceptedSave.json';
 import nativePrevious from '../../../test-fixtures/browser/workspacePrevious.json';
 import nativeWorkspaceRecovery from '../../../test-fixtures/browser/workspaceRecovery.json';
 import nativeFreshRecovery from '../../../test-fixtures/browser/workspaceFreshRecovery.json';
@@ -846,4 +847,23 @@ it('retries a retained physical stroke through current native identity and shows
  await loadCurrentDraft(screen,receive,definition,nativeDrawingRecovery.before);expect((screen.getByLabelText('Action inputs sessionId') as HTMLInputElement).readOnly).toBe(true);
  fireEvent.click(screen.getByRole('button',{name:'Run action now'}));expect(client.snapshot().request?.commands).toEqual([{action:'execution',execution:{operation:'start',call:nativeDrawingRecovery.call,runId:view.selected.id}}]);
  await receive(undefined,false,{execution:view as RoomAgentState['execution']});expect(JSON.parse(screen.getByLabelText('Action result').textContent!)).toEqual(view.selected.output);act(()=>client.cancel());
+});
+
+it('shows the actual native save hold until workspace review has durably completed',async()=>{
+ const {client,screen,receive}=setup(true,['workspaceReview.v1']);
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));
+ fireEvent.change(screen.getByLabelText('Catalog category'),{target:{value:'facts'}});fireEvent.click(screen.getByRole('button',{name:'Search'}));
+ const fact=behaviourFact('workspace.review')!;
+ await receive({operation:'search',category:'facts',query:'',offset:0,total:1,pageSize:6,entries:[{id:fact.id,version:1,label:fact.label}],status:'Inspect review progress'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(fact.label)}));await receive({operation:'inspect',category:'facts',capability:fact.id,version:1,definition:fact,available:false,value:null,status:'Choose request'});
+ fireEvent.change(screen.getByLabelText('Fact inputs requestId'),{target:{value:nativeAcceptedSave.saving.requestId}});
+ for(const [value,phase] of [[nativeAcceptedSave.saving,'completing'],[nativeAcceptedSave.completed,'completed']] as const){
+  fireEvent.click(screen.getByRole('button',{name:'Read fact'}));
+  expect(client.snapshot().request?.commands[0]).toEqual({action:'catalog',catalog:{operation:'inspect',category:'facts',capability:fact.id,version:1,arguments:{requestId:value.requestId}}});
+  await receive({operation:'inspect',category:'facts',capability:fact.id,version:1,definition:fact,arguments:{requestId:value.requestId},available:true,value,status:'Available'});
+  expect(screen.getByLabelText('Current fact value').textContent).toContain(phase);
+  if(phase==='completing')expect(screen.getByLabelText('Current fact value').textContent).not.toContain(nativeAcceptedSave.completed.committedRevision);
+  else expect(screen.getByLabelText('Current fact value').textContent).toContain(nativeAcceptedSave.completed.committedRevision);
+ }
+ act(()=>client.cancel());
 });

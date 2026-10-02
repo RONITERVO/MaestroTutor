@@ -8,6 +8,7 @@ import {requireRoomCapabilities} from '../../../shared/roomControls';
 import nativeMaintenance from '../../../test-fixtures/browser/workspaceMaintenance.json';
 import nativeActivation from '../../../test-fixtures/browser/workspaceActivation.json';
 import nativeReview from '../../../test-fixtures/browser/workspaceReview.json';
+import nativeAcceptedSave from '../../../test-fixtures/browser/workspaceAcceptedSave.json';
 import nativePrevious from '../../../test-fixtures/browser/workspacePrevious.json';
 import nativeWorkspaceRecovery from '../../../test-fixtures/browser/workspaceRecovery.json';
 import nativeFreshRecovery from '../../../test-fixtures/browser/workspaceFreshRecovery.json';
@@ -349,4 +350,12 @@ it('accepts native disposal previews and receipts and requires the explicit disp
  for(const args of [{...call.arguments,confirmation:''},{...call.arguments,previewId:'changed'},{...call.arguments,generationId:'../room'},{...call.arguments,path:'/private/file'}])expect(validExecutionRequest({operation:'start',call:{...call,arguments:args}})).toBe(false);
  expect(nativeRemoval.remove.removed).toBe(true);expect(nativeRemoval.preview.fingerprint).toBe(nativeRemoval.remove.fingerprint);
  expect(nativeRemoval.restartedExecution.workspace.selected.id).toBe(nativeRemoval.removeExecution.workspace.selected.id);
+});
+
+it('distinguishes native review completion pending accepted saves from durable approval',()=>{
+ for(const value of [nativeAcceptedSave.saving,nativeAcceptedSave.completed])expect(validFactValue('workspace.review',value)).toBe(true);
+ expect(nativeAcceptedSave.saving).toMatchObject({phase:'completing',committedRevision:'',activityHeld:true});
+ expect(nativeAcceptedSave.completed).toMatchObject({requestId:nativeAcceptedSave.saving.requestId,phase:'completed',activityHeld:false,manifestHash:nativeAcceptedSave.saving.manifestHash});
+ expect(nativeAcceptedSave.completed.committedRevision).toMatch(/^[a-f0-9]{32}$/);
+ expect(nativeAcceptedSave.completed.committedRevision).not.toBe(nativeAcceptedSave.completed.workspace.revision);
 });

@@ -76,10 +76,15 @@ namespace Maestro.Quest.Creation
             return root.transform;
         }
 
+        void OnEnable()=>Refresh();
         void Refresh()
         {
+            // A final save may notify while the workspace hierarchy is closing.
+            if(!isActiveAndEnabled||!editor||!status||!pencilLabel||!eraseLabel||!pencilPaint)return;
+            var pencilAction=pencilLabel.GetComponentInParent<PhysicalRoomAction>();var eraseAction=eraseLabel.GetComponentInParent<PhysicalRoomAction>();
+            if(!pencilAction||!eraseAction)return;
             bool retained=editor.GetComponent<SpatialDrawing>()?.HasUnsavedStroke==true;pencilLabel.text=retained?"Retry stroke":"Draw";eraseLabel.text=retained?"Discard stroke":"Erase";
-            pencilLabel.GetComponentInParent<PhysicalRoomAction>().AccessibleName=pencilLabel.text;eraseLabel.GetComponentInParent<PhysicalRoomAction>().AccessibleName=eraseLabel.text;
+            pencilAction.AccessibleName=pencilLabel.text;eraseAction.AccessibleName=eraseLabel.text;
             status.text = (editor.TemporaryRoom?"TEMPORARY | ":"SAVED ROOM | ")+editor.Status;
             if (status.text.Length > 70) status.text = status.text.Substring(0,70) + "…";
             pencilPaint.color = retained ? IllustratedMaterials.Hex("D99B43") : editor.DrawingMode ? IllustratedMaterials.Hex("2B8D88") : IllustratedMaterials.Ribbon;

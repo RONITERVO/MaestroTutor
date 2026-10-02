@@ -289,6 +289,29 @@ namespace Maestro.Quest.Rules
             string previous=lastSaveError;lastSaveError=null;
             if(previous!=null && Status==previous)Say("Behaviours saved");
         }
+        // Called only under a workspace edit hold. The dispatch lease outlives the
+        // worker so Update/lifecycle callbacks cannot start another writer meanwhile.
+        internal IDisposable SaveAcceptedAsync(out Task<string> completion)
+        {
+            completion=Task.FromResult("Hold workspace edits before saving accepted contents.");
+            if(!editor.WriteGate.Frozen)return null;
+            var held=saveDispatch.TryFreeze(out var blocked);
+            if(held==null){completion=Task.FromResult(blocked);return null;}
+            try {
+                CompleteSave();
+                if(storage == null || storage.ReadOnly){completion=Task.FromResult("Behaviour storage is unavailable; original files are preserved.");return held;}
+                var previous=saveTask;
+                if(!dirty && previous==null){completion=Task.FromResult<string>(null);return held;}
+                var snapshot=document.Copy();
+                // A failed older snapshot must not prevent saving the latest accepted
+                // one. Sequence writers without waiting on the Unity owner thread.
+                completion=saveTask=Task.Run(async()=>{
+                    if(previous!=null)try{await previous.ConfigureAwait(false);}catch(Exception){}
+                    return SaveSnapshot(snapshot);
+                });
+                dirty=false;return held;
+            }catch(Exception){completion=Task.FromResult("Behaviour save could not begin; accepted edits remain unsaved.");return held;}
+        }
         internal bool TryFlush(out string error)
         {
             error=null;

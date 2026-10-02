@@ -1,13 +1,13 @@
 {
   "prepared": {
-    "requestId": "a82da06ea74a4b1f89c9d7a90431f989",
+    "requestId": "1d40e0cc7d4b4285a6889e1eb5688680",
     "phase": "prepared",
     "status": "Inspect these exact contents and missing-reference counts before completing review.",
     "workspace": {
-      "generationId": "e07a225ad63b48d095a875f78f783616",
-      "revision": "52c9d6565ef445f686b49e5adc3284d9"
+      "generationId": "ad5820299c2a4f4890aefb54b02268cb",
+      "revision": "1a8d9935c9a4471db2fcb3257f9bf06a"
     },
-    "manifestHash": "9f3c9a8a35180fbd86ce8ab0e2a9c468bd7f34e9096f0112a63ccd2cff90df5f",
+    "manifestHash": "d0a0ff29ca3a0b456f768267ac10a3ccfa1b8ed665d568c469fff54f7c65760b",
     "committedRevision": "",
     "summary": {
       "files": 5,
@@ -22,15 +22,15 @@
     "activityHeld": true
   },
   "completed": {
-    "requestId": "a82da06ea74a4b1f89c9d7a90431f989",
+    "requestId": "1d40e0cc7d4b4285a6889e1eb5688680",
     "phase": "completed",
     "status": "Review completed. Stopped programs and physics stay stopped; start desired activity explicitly.",
     "workspace": {
-      "generationId": "e07a225ad63b48d095a875f78f783616",
-      "revision": "52c9d6565ef445f686b49e5adc3284d9"
+      "generationId": "ad5820299c2a4f4890aefb54b02268cb",
+      "revision": "1a8d9935c9a4471db2fcb3257f9bf06a"
     },
-    "manifestHash": "9f3c9a8a35180fbd86ce8ab0e2a9c468bd7f34e9096f0112a63ccd2cff90df5f",
-    "committedRevision": "aebcfe7683f144cd98dee9df9a81c036",
+    "manifestHash": "d0a0ff29ca3a0b456f768267ac10a3ccfa1b8ed665d568c469fff54f7c65760b",
+    "committedRevision": "fe092a8cc07e45c8972a9b37b29de889",
     "summary": {
       "files": 5,
       "models": 0,
@@ -44,102 +44,102 @@
     "activityHeld": false
   },
   "current": {
-    "revision": "aebcfe7683f144cd98dee9df9a81c036",
-    "generationId": "e07a225ad63b48d095a875f78f783616",
+    "revision": "fe092a8cc07e45c8972a9b37b29de889",
+    "generationId": "ad5820299c2a4f4890aefb54b02268cb",
     "available": true,
     "reviewRequired": false,
     "changing": false,
-    "activationRequestId": "b02a1aebf2a64fd7a84eba44d9378904",
-    "reviewRequestId": "a82da06ea74a4b1f89c9d7a90431f989",
+    "activationRequestId": "ec335595d9f64664ab6ad06e95d1d1d6",
+    "reviewRequestId": "1d40e0cc7d4b4285a6889e1eb5688680",
     "error": ""
   },
   "execution": {
     "selected": null,
     "running": [],
     "outcomes": [],
-    "nextRunId": "1bcac4ea4c8a426a8d8676e5ddc72a83",
+    "nextRunId": "29b1be3ece7844c9a7d6a791af5b358e",
     "storageError": null,
     "recovery": null,
     "workspace": {
       "selected": {
-        "id": "4428033072924b2d84d26a97285ff58f",
+        "id": "40ff1f318dca41f48264a19c84ed1869",
         "capability": "workspace.review.complete",
         "version": 1,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "requestId": "a82da06ea74a4b1f89c9d7a90431f989"
+          "requestId": "1d40e0cc7d4b4285a6889e1eb5688680"
         },
         "call": {
           "id": "workspace.review.complete",
           "version": 1,
           "arguments": {
-            "requestId": "a82da06ea74a4b1f89c9d7a90431f989",
-            "manifestHash": "9f3c9a8a35180fbd86ce8ab0e2a9c468bd7f34e9096f0112a63ccd2cff90df5f",
-            "expectedRevision": "52c9d6565ef445f686b49e5adc3284d9"
+            "requestId": "1d40e0cc7d4b4285a6889e1eb5688680",
+            "manifestHash": "d0a0ff29ca3a0b456f768267ac10a3ccfa1b8ed665d568c469fff54f7c65760b",
+            "expectedRevision": "1a8d9935c9a4471db2fcb3257f9bf06a"
           }
         }
       },
       "running": [],
       "outcomes": [
         {
-          "id": "22aecb09d4844afd8f7d67e344a9bf72",
+          "id": "f41336ea9a5d4872a30a038bf86b17a8",
           "capability": "workspace.archive.select",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "requestId": "ec6c2188a2c843ecad3a22d5ce953240"
+            "requestId": "42def6025c6447149346ac1008869931"
           }
         },
         {
-          "id": "e77fd6b8956a49099062b87f09052ec6",
+          "id": "1552d1538cb944af9a28e00aba073f97",
           "capability": "workspace.archive.activate",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "requestId": "b02a1aebf2a64fd7a84eba44d9378904"
+            "requestId": "ec335595d9f64664ab6ad06e95d1d1d6"
           }
         },
         {
-          "id": "318defa2ef444826a7c5fe69e9d6a5a0",
+          "id": "f7abd4a3054f4898968bd8fd86e2670b",
           "capability": "workspace.review.prepare",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "requestId": "356e3bb44e1145fba7800b0e8d563b76"
+            "requestId": "49bd2f1061d14449b60acd95c203e6ad"
           }
         },
         {
-          "id": "0208751b3c1d46ee83a414d636572651",
+          "id": "1ed5e52de5464507a95e2a41c68953cf",
           "capability": "workspace.review.prepare",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "requestId": "a82da06ea74a4b1f89c9d7a90431f989"
+            "requestId": "1d40e0cc7d4b4285a6889e1eb5688680"
           }
         },
         {
-          "id": "4428033072924b2d84d26a97285ff58f",
+          "id": "40ff1f318dca41f48264a19c84ed1869",
           "capability": "workspace.review.complete",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "requestId": "a82da06ea74a4b1f89c9d7a90431f989"
+            "requestId": "1d40e0cc7d4b4285a6889e1eb5688680"
           }
         }
       ],
-      "nextRunId": "16d93809872c42ef817ce88c2ad0e771",
+      "nextRunId": "83f9aef3f1db4406ac7c0b934ac206f6",
       "storageError": null,
       "recovery": null
     }

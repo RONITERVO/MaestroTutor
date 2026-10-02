@@ -503,6 +503,30 @@ namespace Maestro.Quest.Creation
             string previous=lastSaveError;lastSaveError=null;
             if(previous!=null && Status==previous)SetStatus("Room saved");
         }
+        // Called only under a workspace edit hold. The dispatch lease outlives the
+        // worker so Update/lifecycle callbacks cannot start another writer meanwhile.
+        internal IDisposable SaveAcceptedAsync(out Task<string> completion)
+        {
+            completion=Task.FromResult("Hold workspace edits before saving accepted contents.");
+            if(!WriteGate.Frozen)return null;
+            var held=saveDispatch.TryFreeze(out var blocked);
+            if(held==null){completion=Task.FromResult(blocked);return null;}
+            try {
+                CompleteSave();
+                if(journal == null || storage == null || storage.ReadOnly){completion=Task.FromResult("Room storage is unavailable; original files are preserved.");return held;}
+                if(TemporaryRoom){completion=Task.FromResult("Keep or discard the temporary room before saving the ordinary workspace.");return held;}
+                var previous=saveTask;
+                if(!dirty && previous==null){completion=Task.FromResult<string>(null);return held;}
+                var snapshot=journal.Snapshot();
+                // A failed older snapshot must not prevent saving the latest accepted
+                // one. Sequence writers without waiting on the Unity owner thread.
+                completion=saveTask=Task.Run(async()=>{
+                    if(previous!=null)try{await previous.ConfigureAwait(false);}catch(Exception){}
+                    return SaveSnapshot(snapshot);
+                });
+                dirty=false;return held;
+            }catch(Exception){completion=Task.FromResult("Room save could not begin; accepted edits remain unsaved.");return held;}
+        }
         internal bool TryFlush(out string error)
         {
             error=null;
