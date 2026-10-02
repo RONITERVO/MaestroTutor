@@ -15,12 +15,12 @@ export type Expression={value:Value;type?:ValueType}|{var:string}|{state:string}
 export interface ProgramCall {module?:string;function:string;args:Expression[];result?:string}
 export type ProgramNode={id:string}&(
  {op:'awaitCondition';test:Expression;transition:'true'|'false'|'either';initial:'baseline'|'report';stableSeconds:Expression;timeout:Expression;received:string;value:string}|
- {op:'set'|'setState';variable:string;value:Expression}|{op:'forever';body:ProgramNode[]}|{op:'sleep';seconds:Expression}|{op:'awaitEvent';event:string;source:string;timeout:Expression;received:string;value:string;fields?:Record<string,string>;version?:number;arguments?:Record<string,unknown>;bindings?:Record<string,Expression>}|{op:'emitEvent';event:string;value:Expression}|{op:'if';test:Expression;then:ProgramNode[];else:ProgramNode[]}|
+ {op:'checkpoint'}|{op:'set'|'setState';variable:string;value:Expression}|{op:'forever';body:ProgramNode[]}|{op:'sleep';seconds:Expression}|{op:'awaitEvent';event:string;source:string;timeout:Expression;received:string;value:string;fields?:Record<string,string>;version?:number;arguments?:Record<string,unknown>;bindings?:Record<string,Expression>}|{op:'emitEvent';event:string;value:Expression}|{op:'if';test:Expression;then:ProgramNode[];else:ProgramNode[]}|
  {op:'repeat';count:Expression;body:ProgramNode[]}|{op:'switch';value:Expression;cases:{value:Value;body:ProgramNode[]}[];default:ProgramNode[]}|
  {op:'parallel';branches:ProgramCall[]}|{op:'call';module?:string;function:string;args:Expression[];result?:string}|{op:'return';value?:Expression}|
  {op:'invoke';capability:string;version:number;arguments:Record<string,unknown>;bindings:Record<string,Expression>;results?:Record<string,string>});
 export interface ProgramFunction {name:string;returns:ValueType|'void';parameters:{name:string;type:ValueType}[];locals:{name:string;initial:Value;type?:ValueType}[];body:ProgramNode[]}
-export interface BehaviourProgram {version:2|3;parallelVersion?:1;dataVersion?:1;moduleVersion?:1;imports?:ProgramImport[];entry:string;resources:string[];functions:ProgramFunction[];state?:{name:string;initial:Value;type?:ValueType}[];events?:{name:string;type:ScalarType}[]}
+export interface BehaviourProgram {version:2|3;parallelVersion?:1;memoryVersion?:1;dataVersion?:1;moduleVersion?:1;imports?:ProgramImport[];entry:string;resources:string[];functions:ProgramFunction[];state?:{name:string;initial:Value;type?:ValueType;memory?:string}[];events?:{name:string;type:ScalarType}[]}
 export const programFacts=behaviourFactTypes;
 const record=(v:unknown):v is Record<string,unknown>=>v!==null&&typeof v==='object'&&!Array.isArray(v);
 function need(condition:unknown,message:string):asserts condition {if(!condition)throw new Error(message);}
@@ -46,11 +46,11 @@ export function parseProgram(source:unknown):{program:BehaviourProgram|null;link
  catch(error){return {program:null,error:error instanceof Error?error.message:'Invalid program'};}
 }
 function validateProgram(root:Record<string,unknown>):void {
-  need(root.version===2||root.version===3,'Unsupported program version');keys(root,root.version===3?'version entry resources functions state events':'version entry resources functions','dataVersion parallelVersion');need(root.parallelVersion===undefined||root.version===3&&root.parallelVersion===1,'Unsupported parallel-program version');need(root.dataVersion===undefined||root.version===3&&root.dataVersion===1,'Unsupported structured-value version');
-  const state=new Map<string,ValueType>(),events=new Map<string,ScalarType>();
+  need(root.version===2||root.version===3,'Unsupported program version');keys(root,root.version===3?'version entry resources functions state events':'version entry resources functions','dataVersion parallelVersion memoryVersion');need(root.memoryVersion===undefined||root.version===3&&root.memoryVersion===1,'Unsupported remembered-value version');need(root.parallelVersion===undefined||root.version===3&&root.parallelVersion===1,'Unsupported parallel-program version');need(root.dataVersion===undefined||root.version===3&&root.dataVersion===1,'Unsupported structured-value version');
+  const state=new Map<string,ValueType>(),events=new Map<string,ScalarType>(),remembered=new Set<string>();
   const supported=(t:ValueType|'void')=>{need(root.version===3&&root.dataVersion===1||typeof t==='string','Structured values need version 3 and dataVersion 1');return t;};
   if(root.version===3){
-   for(const value of array(root.state,16)){const v=obj(value);keys(v,'name initial','type');need(compiledProgramName(v.name)&&!state.has(v.name as string),'Invalid or duplicate state name');need(v.type===undefined||root.dataVersion===1,'Explicit value types need dataVersion 1');const t=literal(v.initial,v.type);supported(t);state.set(v.name as string,t);}
+   for(const value of array(root.state,16)){const v=obj(value);keys(v,'name initial','type memory');if(v.memory!==undefined){need(root.memoryVersion===1&&name(v.name)&&typeof v.memory==='string'&&/^[a-f0-9]{32}$/.test(v.memory)&&!remembered.has(v.memory),'Remembered variables need memoryVersion 1 and distinct stable identities');remembered.add(v.memory as string);}need(compiledProgramName(v.name)&&!state.has(v.name as string),'Invalid or duplicate state name');need(v.type===undefined||root.dataVersion===1,'Explicit value types need dataVersion 1');const t=literal(v.initial,v.type);supported(t);state.set(v.name as string,t);}
    for(const value of array(root.events,16)){const v=obj(value);keys(v,'name type');const t=type(v.type);need(typeof v.name==='string'&&/^user\.[a-zA-Z0-9_]{1,32}$/.test(v.name)&&!events.has(v.name)&&t!=='void'&&typeof t==='string','Invalid or duplicate custom event');events.set(v.name,t as ScalarType);}
   }
   const resources=new Set<string>();for(const value of array(root.resources,16)){need(target(value)&&!resources.has(value as string),'Invalid or duplicate resource');resources.add(value as string);}
@@ -87,6 +87,7 @@ function validateProgram(root:Record<string,unknown>):void {
     const n=obj(value);need(compiledProgramName(n.id)&&!ids.has(n.id as string)&&ids.size<128,'Invalid, duplicate or excessive block identities');ids.add(n.id as string);
     const child=(key:string)=>body(array(n[key],128),f,depth+1),expect=(key:string,t:ValueType)=>need(sameDataType(expr(n[key],f.types),t),'Expression type differs from its use');
     switch(n.op) {
+     case 'checkpoint':keys(n,'id op');need(root.memoryVersion===1&&remembered.size>0,'Saving remembered values needs memoryVersion 1 and a remembered variable');break;
      case 'setState': {need(root.version===3,'State needs program version 3');keys(n,'id op variable value');const t=state.get(text(n.variable));need(t,'Unknown program state');expect('value',t);break;}
      case 'forever':need(root.version===3,'Events need program version 3');keys(n,'id op body');child('body');break;
      case 'sleep':need(root.version===3,'Timers need program version 3');keys(n,'id op seconds');expect('seconds','number');break;

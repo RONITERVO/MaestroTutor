@@ -18,6 +18,8 @@ namespace Maestro.Quest.Rules
         RoomEditor editor;
         RuleStorage storage;
         public ProgramModuleLibrary Modules {get;private set;}
+        internal ProgramMemoryStore Memory {get;private set;}
+        internal string MemoryBlocked=>editor.TemporaryRoom||editor.TemporarySavePending?"Keep or discard the temporary room before using remembered values":null;
         RuleDocument document = new();
         readonly List<RuleDocument> undo = new(), redo = new();
         int sequenceIndex = -1, stepIndex, bindingIndex = -1;
@@ -117,7 +119,7 @@ namespace Maestro.Quest.Rules
         }
         public void Initialize(RoomEditor source, string saveDirectory = null)
         {
-            editor = source; string directory=saveDirectory ?? source.SaveDirectory;storage = new RuleStorage(directory);Modules=new ProgramModuleLibrary(directory,source.WriteGate);
+            editor = source; string directory=saveDirectory ?? source.SaveDirectory;storage = new RuleStorage(directory);Modules=new ProgramModuleLibrary(directory,source.WriteGate);Memory=new ProgramMemoryStore(directory,source.WriteGate);
             document = storage.Load(out var message); sequenceIndex = document.sequences.Length > 0 ? 0 : -1;
             if (message != null) Status = message;
         }

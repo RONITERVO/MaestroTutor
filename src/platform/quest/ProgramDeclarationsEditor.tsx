@@ -4,12 +4,14 @@ import {defaultDataValue} from '../../../shared/programValues';
 import type {ValueType,ScalarType} from '../../core-sdk/room/programs';
 import {ProgramDataTypeEditor,ProgramDataValueEditor} from './ProgramDataEditor';
 import type {DeclarationDraft} from './programDeclarationEditing';
-export function ProgramDeclarationsEditor({value,onChange,structured}:{value:DeclarationDraft;onChange:(draft:DeclarationDraft)=>void;structured:boolean}) {
+export function ProgramDeclarationsEditor({value,onChange,structured,remembered=false}:{value:DeclarationDraft;onChange:(draft:DeclarationDraft)=>void;structured:boolean;remembered?:boolean}) {
  const fresh=(prefix:string,names:string[])=>{let i=1;while(names.includes(prefix+i))i++;return prefix+i;};
  return <div className="program-function-editor">
-  <fieldset><legend>Program state</legend><p>State is shared by this program's functions and stays between events until the run ends. Each new run starts with these values. Renames update this program's references; changing a type resets its initial value.</p>
+  <fieldset><legend>Program state</legend><p>State is shared by this program's functions and stays between events until the run ends. Per-run variables start with their initial values. Remembered variables load the last saved value on an explicit start and save only at a Save remembered values block. Renames update this program's references; changing a type resets its initial value.</p>
    {value.state.map((s,i)=><div key={i}>
     <label>State {i+1} name<input aria-label={'State '+(i+1)+' name'} value={s.name} maxLength={32} onChange={e=>onChange({...value,state:value.state.map((v,j)=>j===i?{...v,name:e.target.value}:v)})}/></label>
+    {(remembered||s.memory)&&<label>State {i+1} scope<select aria-label={'State '+(i+1)+' scope'} value={s.memory?'remembered':'run'} disabled={!remembered} onChange={e=>onChange({...value,state:value.state.map((v,j)=>j===i?{...v,memory:e.target.value==='remembered'?crypto.randomUUID().replace(/-/g,''):undefined}:v)})}><option value="run">Per run</option><option value="remembered">Remember between starts</option></select></label>}
+    {s.memory&&<p>Saved values survive renames and removed declarations. Inspect or reset them in Remembered values. A type change needs a reset or a new variable identity.</p>}
     <ProgramDataTypeEditor label={'State '+(i+1)+' type'} value={s.type} structured={structured} onChange={type=>onChange({...value,state:value.state.map((v,j)=>j===i?{...v,type:type as ValueType,initial:defaultDataValue(type as ValueType)}:v)})}/>
     <ProgramDataValueEditor label={'State '+(i+1)+' initial value'} type={s.type} value={s.initial} onChange={initial=>onChange({...value,state:value.state.map((v,j)=>j===i?{...v,initial}:v)})}/>
     <button onClick={()=>onChange({...value,state:value.state.filter((_,j)=>i!==j)})}>Remove state {i+1}</button>

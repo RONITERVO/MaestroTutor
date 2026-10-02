@@ -30,6 +30,7 @@ namespace Maestro.Quest.Programs
             new WorkspaceCompleteReviewCapability(),
             new WorkspaceCancelReviewCapability(),
             new WorkspaceRecoveryCapability("inspect"),new WorkspaceRecoveryCapability("select"),new WorkspaceRecoveryCapability("commit"),new WorkspaceRecoveryCapability("cancel"),
+            new ProgramMemoryCapability(),
             new PublishProgramModuleCapability(),
             new ImportProgramModuleCapability(),
             new RemoveProgramModuleCapability(),

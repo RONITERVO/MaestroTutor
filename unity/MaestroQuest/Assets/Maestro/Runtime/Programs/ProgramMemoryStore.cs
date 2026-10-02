@@ -9,7 +9,7 @@ using Maestro.Quest.Persistence;
 
 namespace Maestro.Quest.Programs
 {
-    /// <summary>Private workspace storage foundation. Not connected to runtime/archives yet.
+    /// <summary>Private workspace remembered values.
     /// Accepted writes drain off-thread even if a future caller stops waiting.</summary>
     internal sealed class ProgramMemoryStore
     {
@@ -51,7 +51,8 @@ namespace Maestro.Quest.Programs
             if(!ready)throw new InvalidOperationException("Program memory is loading.");
             if(unavailable!=null)throw new InvalidOperationException(unavailable);
         }
-        void CheckPaths()
+        void CheckPaths()=>CheckPaths(directory);
+        static void CheckPaths(string directory)
         {
             WorkspaceFileInventory.Parents(directory);
             if(WorkspaceFileInventory.Kind(directory)=="absent")return;
@@ -73,9 +74,10 @@ namespace Maestro.Quest.Programs
             while(offset<bytes.Length){int count=stream.Read(bytes,offset,bytes.Length-offset);if(count==0)throw new EndOfStreamException();offset+=count;}
             if(stream.ReadByte()!=-1)throw new IOException("Program memory changed while reading.");return ProgramMemoryDocument.Decode(bytes);
         }
-        ProgramMemoryDocument ReadCurrent()
+        ProgramMemoryDocument ReadCurrent()=>ReadSaved(directory);
+        internal static ProgramMemoryDocument ReadSaved(string directory)
         {
-            CheckPaths();string kind=WorkspaceFileInventory.Kind(path);
+            CheckPaths(directory);string path=Path.Combine(directory,FileName);string kind=WorkspaceFileInventory.Kind(path);
             if(kind=="file")return Read(path);
             if(kind!="absent")throw new InvalidDataException("Program memory is not a regular file.");
             if(Directory.Exists(directory)&&Directory.EnumerateFileSystemEntries(directory,"program-memory.v*").Any())
@@ -147,6 +149,16 @@ namespace Maestro.Quest.Programs
                 });
                 return pending;
             }
+        }
+        // Called by the existing background retained-save audit. Unknown or changing
+        // evidence protects referenced downloads; strings never grant object authority.
+        internal bool Retains(string id,out bool uncertain)
+        {
+            ProgramMemoryDocument before;lock(sync){before=document;uncertain=!ready||busy||unavailable!=null;}
+            bool retained=before?.Retains(id)==true;
+            try{CheckPaths();if(Directory.Exists(directory))foreach(string file in Directory.EnumerateFiles(directory,"program-memory.v*"))retained|=Read(file).Retains(id);}
+            catch(Exception){uncertain=true;}
+            lock(sync)uncertain|=busy||unavailable!=null||document!=before;return retained;
         }
         internal Task Drain(){lock(sync)return pending??Initialization;}
     }

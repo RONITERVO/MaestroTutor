@@ -22,11 +22,13 @@ namespace Maestro.Quest.Book
         {
             bool saved=editor.SavedMotion(id,out bool a,force); saved |= rules.SavedMotion(id,out bool b,force); saved |= editor.ActivityProfiles.SavedMotion(id,out bool c,force);
             bool modules=false,unknownModules=true;if(rules.Modules!=null)modules=rules.Modules.Retains(id,out unknownModules);
-            return new MotionRetention { Saved=saved||modules,Uncertain=a || b || c || unknownModules };
+            bool remembered=false,unknownMemory=true;if(rules.Memory!=null)remembered=rules.Memory.Retains(id,out unknownMemory);
+            return new MotionRetention { Saved=saved||modules||remembered,Uncertain=a || b || c || unknownModules || unknownMemory };
         }
         public static MotionUsageView Read(RoomEditor editor,RuleWorkshop rules,string id,int page=0,MotionRetention retained=null)
         {
             var uses=new List<string>();
+            if(rules.Memory?.Ready==true&&rules.Memory.Error==null&&rules.Memory.Snapshot().Retains(id))uses.Add("Remembered behaviour value");
             if (editor.UsesMotion(id)) uses.Add("Maestro walking");
             foreach (var sequence in rules.Snapshot().sequences)
             {

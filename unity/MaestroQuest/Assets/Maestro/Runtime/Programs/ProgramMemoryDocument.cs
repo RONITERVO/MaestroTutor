@@ -36,6 +36,8 @@ namespace Maestro.Quest.Programs
         }
         readonly IReadOnlyDictionary<string,IReadOnlyDictionary<string,Cell>> programs;
         readonly byte[] bytes;
+        readonly Dictionary<string,string> groupIdentities;
+        internal string GroupIdentity(string program)=>groupIdentities.TryGetValue(program,out var identity)?identity:"absent";
         internal string Revision {get;}
         internal string Identity {get;}
         internal IReadOnlyDictionary<string,IReadOnlyDictionary<string,Cell>> Programs=>programs;
@@ -47,7 +49,7 @@ namespace Maestro.Quest.Programs
         static string Text(JToken value)=>value?.Type==JTokenType.String?(string)value:throw Invalid("Expected memory text.");
         static string Identifier(JToken value,bool program=false){string result=Text(value);Need(program?ProgramId(result):Id(result),"Invalid memory identity.");return result;}
         static IEnumerable<JToken> Tokens(JToken value)=>value is JContainer container?container.DescendantsAndSelf():new[]{value};
-        static JToken TypeJson(ProgramDataType type)=>type.Kind switch {
+        internal static JToken TypeJson(ProgramDataType type)=>type.Kind switch {
             ProgramType.List=>new JObject {["list"]=TypeJson(type.Item)},
             ProgramType.Record=>new JObject {["record"]=new JObject(type.Fields.OrderBy(x=>x.Key,StringComparer.Ordinal).Select(x=>new JProperty(x.Key,TypeJson(x.Value))))},
             _=>new JValue(type.Kind.ToString().ToLowerInvariant())
@@ -62,6 +64,7 @@ namespace Maestro.Quest.Programs
             var json=new JObject {["version"]=1,["revision"]=revision,["programs"]=new JArray(programs.OrderBy(x=>x.Key,StringComparer.Ordinal).Select(p=>new JObject {
                 ["id"]=p.Key,["cells"]=new JArray(p.Value.OrderBy(x=>x.Key,StringComparer.Ordinal).Select(c=>new JObject {["id"]=c.Key,["name"]=c.Value.Name,["type"]=TypeJson(c.Value.Value.Type),["value"]=JToken.FromObject(c.Value.Value.Value)}))
             }))};
+            groupIdentities=((JArray)json["programs"]).ToDictionary(p=>(string)p["id"],p=>ProgramModules.Hash(p),StringComparer.Ordinal);
             bytes=Utf8.GetBytes(json.ToString(Formatting.None));Need(bytes.Length<=MaximumBytes,"Memory document exceeds its byte limit.");
             using var sha=SHA256.Create();Identity=BitConverter.ToString(sha.ComputeHash(bytes)).Replace("-","").ToLowerInvariant();
         }

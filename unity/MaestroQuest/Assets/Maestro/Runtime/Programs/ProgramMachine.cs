@@ -8,7 +8,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Maestro.Quest.Programs
 {
-    public enum ProgramYield { Action, Parallel, Yield, Waiting, Signal, Completed, Failed }
+    public enum ProgramYield { Action, Parallel, Yield, Waiting, Signal, Checkpoint, Completed, Failed }
     public sealed class ProgramWait {public string Event,Source;public float Seconds;public JObject Arguments;public Func<float,IProgramEventWatch> Condition;}
     public sealed class ProgramSignal {public string Event;public ProgramValue Value;}
     public interface IProgramFacts {bool TryRead(string name,out ProgramValue value);}
@@ -40,6 +40,9 @@ namespace Maestro.Quest.Programs
         public int Activations {get;private set;}
         public JObject LastOutput {get;private set;}
         public ProgramWait Wait {get;private set;}
+        public bool SavingMemory {get;private set;}
+        internal Dictionary<string,ProgramMemoryDocument.Cell> RememberedValues()=>program.Remembered.ToDictionary(x=>x.Value,x=>new ProgramMemoryDocument.Cell(x.Key,state[x.Key]));
+        internal void CompleteCheckpoint(){if(!SavingMemory)throw new InvalidOperationException("No memory checkpoint is pending");SavingMemory=false;}
         public ProgramSignal Signal {get;private set;}
         public IReadOnlyDictionary<string,ProgramValue> State=>new Dictionary<string,ProgramValue>(state);
         public string NodeId {get;private set;}
@@ -48,10 +51,13 @@ namespace Maestro.Quest.Programs
         public ProgramValue Result {get;private set;}
         public IReadOnlyDictionary<string,ProgramValue> Locals=>observed==null ? new Dictionary<string,ProgramValue>() : new Dictionary<string,ProgramValue>(observed.Values);
         public string Function=>observed?.Function.Name;
-        public ProgramMachine(BehaviourProgram program,IProgramFacts facts)
+        public ProgramMachine(BehaviourProgram program,IProgramFacts facts):this(program,facts,null){}
+        internal ProgramMachine(BehaviourProgram program,IProgramFacts facts,IReadOnlyDictionary<string,ProgramValue> remembered)
         {
             this.program=program??throw new ArgumentNullException(nameof(program));this.facts=facts;state=new(program.InitialState);creationBudget=new(){Root=this};
-            Call(program.Entry,Array.Empty<ProgramValue>(),null,null);
+            if(program.Remembered.Count>0&&remembered==null)throw new ProgramFault("Load remembered values through the workspace scheduler before starting");
+            if(remembered!=null)foreach(var pair in remembered){if(!program.Remembered.ContainsKey(pair.Key)||!state.TryGetValue(pair.Key,out var initial)||initial.Type!=pair.Value.Type)throw new ProgramFault("Remembered variable type differs from its declaration");state[pair.Key]=pair.Value;}
+            Call(program.Entry,Array.Empty<ProgramValue>(),null,null);if(remembered!=null)CheckMemory();
         }
         ProgramMachine(ProgramMachine parent,string function,ProgramValue[] arguments) {
             program=parent.program;facts=parent.facts;state=new(parent.state);creationBudget=parent.creationBudget;
@@ -92,7 +98,7 @@ namespace Maestro.Quest.Programs
         }
         public ProgramYield Advance(out CapabilityCall action,int budget=32)
         {
-            action=null;Signal=null;if(Branches!=null)return ProgramYield.Parallel;if(resultContract!=null)throw new InvalidOperationException("Complete the pending action result before advancing");if(Wait!=null)return ProgramYield.Waiting;if(terminal)return Error==null?ProgramYield.Completed:ProgramYield.Failed;
+            action=null;Signal=null;if(SavingMemory)return ProgramYield.Checkpoint;if(Branches!=null)return ProgramYield.Parallel;if(resultContract!=null)throw new InvalidOperationException("Complete the pending action result before advancing");if(Wait!=null)return ProgramYield.Waiting;if(terminal)return Error==null?ProgramYield.Completed:ProgramYield.Failed;
             if(budget<1||budget>256)throw new ArgumentOutOfRangeException(nameof(budget));
             try {
                 CheckMemory();int began=Instructions;
@@ -108,6 +114,9 @@ namespace Maestro.Quest.Programs
                     observed=frame.Scope;var node=(JObject)frame.Body[frame.Index++];NodeId=(string)node["id"];string op=(string)node["op"];
                     ProgramValue Eval(string key)=>Evaluate(node[key],frame.Scope);
                     switch(op) {
+                        case "checkpoint":
+                            if(creationBudget.Root!=this)throw new ProgramFault("Return branch values to the parent before saving remembered values");
+                            SavingMemory=true;return ProgramYield.Checkpoint;
                         case "setState":state[(string)node["variable"]]=Eval("value");break;
                         case "forever":frames.Push(new Frame {Body=(JArray)node["body"],Scope=frame.Scope,Forever=true});break;
                         case "sleep":

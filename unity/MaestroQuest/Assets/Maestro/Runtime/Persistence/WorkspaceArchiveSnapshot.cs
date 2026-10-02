@@ -58,6 +58,7 @@ namespace Maestro.Quest.Persistence
         internal static string HashName(string path)=>path.Substring(path.IndexOf('/')+1,64);
         static bool HasHash(string path,string prefix,string suffix)=>path.Length==prefix.Length+64+suffix.Length&&path.StartsWith(prefix,StringComparison.Ordinal)&&path.EndsWith(suffix,StringComparison.Ordinal)&&ModelLibrary.ValidHash(path.Substring(prefix.Length,64));
         internal static int Limit(string path)=>path switch {
+            ProgramMemoryStore.FileName=>ProgramMemoryDocument.MaximumBytes,
             "room.v2.json"=>4*1024*1024,"behaviours.v2.json"=>512*1024,"controls.v2.json"=>8192,
             "avatar-activities.v2.json"=>256*1024,"motions/motions.v2.json"=>16*1024*1024,
             _ when HasHash(path,"models/",".glb")=>ModelInspection.MaximumBytes,
@@ -89,6 +90,7 @@ namespace Maestro.Quest.Persistence
         {
             var assets=assetNames.ToHashSet(StringComparer.Ordinal);CheckNames(documents.Keys.Concat(assets));
             foreach(var pair in documents){if(pair.Value.Length<1||pair.Value.Length>Limit(pair.Key))throw new InvalidDataException("Workspace document exceeds its limit.");}
+            if(documents.TryGetValue(ProgramMemoryStore.FileName,out var memory))_=ProgramMemoryDocument.Decode(memory);
             var room=Document<RoomDocument>(documents,"room.v2.json","version","objects");RoomStorage.Normalize(room);
             if(!room.Validate(out var issue))throw new InvalidDataException(issue);
             var rules=Document<RuleDocument>(documents,"behaviours.v2.json","version","sequences","bindings","buttons");

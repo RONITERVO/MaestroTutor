@@ -45,6 +45,16 @@ namespace Maestro.Quest.Tests
         Dictionary<string,byte[]> Entries(byte[] archive){using var stream=new MemoryStream(archive);using var zip=new ZipArchive(stream,ZipArchiveMode.Read);return zip.Entries.ToDictionary(x=>x.FullName,x=>{using var output=new MemoryStream();using var input=x.Open();input.CopyTo(output);return output.ToArray();});}
         static byte[] Zip(IEnumerable<KeyValuePair<string,byte[]>> entries){using var output=new MemoryStream();using(var zip=new ZipArchive(output,ZipArchiveMode.Create,true)){foreach(var entry in entries){using var stream=zip.CreateEntry(entry.Key).Open();stream.Write(entry.Value,0,entry.Value.Length);}}return output.ToArray();}
         void NoStages()=>Assert.That(Directory.GetDirectories(directory,"workspace-import-*"),Is.Empty);
+        [Test] public void RememberedValuesChangeFingerprintRoundTripAndRejectDamage()
+        {
+            string program=new string('a',32),cell=new string('c',32);var baseline=WorkspaceArchive.Fingerprint(Snapshot()).ManifestHash;
+            var memory=ProgramMemoryDocument.Empty().WithValues(program,new Dictionary<string,ProgramMemoryDocument.Cell>{[cell]=new("count",new ProgramValue(7d))});
+            documents[ProgramMemoryStore.FileName]=memory.Encode();Assert.That(WorkspaceArchive.Fingerprint(Snapshot()).ManifestHash,Is.Not.EqualTo(baseline));
+            using(var input=new MemoryStream(Archive()))using(var staged=WorkspaceArchive.Stage(input,directory)){
+                var restored=ProgramMemoryDocument.Decode(File.ReadAllBytes(Path.Combine(staged.DirectoryPath,ProgramMemoryStore.FileName)));Assert.That(restored.Identity,Is.EqualTo(memory.Identity));
+            }
+            documents[ProgramMemoryStore.FileName]=Bytes("broken");Assert.That(()=>Snapshot(),Throws.Exception);documents.Remove(ProgramMemoryStore.FileName);Assert.That(WorkspaceArchive.Fingerprint(Snapshot()).ManifestHash,Is.EqualTo(baseline));
+        }
         [Test] public void ReviewFingerprintIsTheExactArchiveManifestWithoutWritingAZip()
         {
             var first=WorkspaceArchive.Fingerprint(Snapshot());using var zip=new MemoryStream();var exported=WorkspaceArchive.Write(zip,Snapshot());

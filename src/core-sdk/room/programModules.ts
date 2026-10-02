@@ -27,7 +27,7 @@ export function linkProgram(source:Record<string,unknown>,validate:(value:Record
     const imp=object(token);fields(imp,['alias','hash','module','signals']);need(plain(imp.alias)&&!imports.has(imp.alias),'Invalid or duplicate module alias');
     const m=object(imp.module);fields(m,['version','name','exports','program']);need(m.version===1&&typeof m.name==='string'&&m.name.trim().length>0&&m.name.length<=64&&!/[\u0000-\u001f\u007f-\u009f]/.test(m.name),'Invalid module definition');
     need(typeof imp.hash==='string'&&/^[a-f0-9]{64}$/.test(imp.hash)&&moduleHash(m)===imp.hash,'Module content does not match its pinned hash');
-    const child=object(m.program);need(child.version===3,'A module needs program version 3');
+    const child=object(m.program);need(child.version===3,'A module needs program version 3');need(child.memoryVersion===undefined,'Reusable modules return values to their caller; remembered variables belong to the caller');
     const exports=list(m.exports,16);need(exports.length>0&&exports.every(plain)&&new Set(exports).size===exports.length,'Invalid module exports');
     need(exports.every(n=>list(child.functions,16).some(f=>object(f).name===n)),'Export must name a local function');
     need(list(child.resources,16).every(r=>list(raw.resources,16).includes(r)),'Declare every imported module resource in its caller');

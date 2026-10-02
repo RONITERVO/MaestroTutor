@@ -42,6 +42,7 @@ namespace Maestro.Quest.Creation
             int count=0;
             bool Bounded(JToken token,int depth,JObject schema=null) {
                 schema=schema==null?null:CapabilitySchema.Resolve(schema,token);
+                if((string)schema?["format"]=="programMemoryValue")return Text(token,8192);
                 if((string)schema?["format"]=="programModule")return token is JObject module&&ProgramModuleLibrary.ValidRecord(module);
                 if(++count>4096||depth>12)return false;
                 if(token is JObject obj)return obj.Properties().All(p=>p.Name.Length<=80&&!p.Name.Any(char.IsControl)&&Bounded(p.Value,depth+1,schema?["properties"]?[p.Name] as JObject));

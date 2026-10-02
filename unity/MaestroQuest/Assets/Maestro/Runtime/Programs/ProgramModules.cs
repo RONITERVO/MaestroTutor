@@ -71,6 +71,7 @@ namespace Maestro.Quest.Programs
       var m=Obj(imp["module"]);Fields(m,"version","name","exports","program");string title=Text(m["name"]);Need(NumberIs(m["version"],1)&&!string.IsNullOrWhiteSpace(title.Replace("\uFEFF",""))&&title.Length<=64&&!title.Any(char.IsControl),"Invalid module definition");
       string hash=Text(imp["hash"]);Need(hash.Length==64&&hash.All(c=>c>='a'&&c<='f'||c>='0'&&c<='9')&&Hash(m)==hash,"Module content does not match its pinned hash");
       var child=Obj(m["program"]);Need(NumberIs(child["version"],3),"A module needs program version 3");
+      Need(!child.ContainsKey("memoryVersion"),"Reusable modules return values to their caller; remembered variables belong to the caller");
       var exports=List(m["exports"],16);Need(exports.Count>0&&exports.All(Plain)&&exports.Select(Text).Distinct().Count()==exports.Count,"Invalid module exports");
       Need(exports.All(n=>List(child["functions"],16).Any(f=>Text(Obj(f)["name"])==Text(n))),"Export must name a local function");
       Need(List(child["resources"],16).All(r=>List(raw["resources"],16).Any(v=>JToken.DeepEquals(r,v))),"Declare every imported module resource in its caller");

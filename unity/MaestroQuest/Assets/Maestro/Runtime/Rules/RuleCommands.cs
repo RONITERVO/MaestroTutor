@@ -32,6 +32,7 @@ namespace Maestro.Quest.Rules
         public string status,selectedError;
         public RuleSummary[] sequences;
         public RuleSequence selected;
+        public ProgramMemoryView memory;
         public RuleBinding[] bindings;
         public RuleButtonData[] buttons;
         public RuleRunView[] running;
@@ -46,7 +47,7 @@ namespace Maestro.Quest.Rules
             var bindings=selected==null ? Array.Empty<RuleBinding>() : document.bindings.Where(x=>x.sequenceId==selected.id).ToArray();
             int page=Mathf.Clamp(viewPage,0,Mathf.Max(0,(bindings.Length-1)/8));
             return new RuleView {
-                revision=Revision,canUndo=CanUndo,canRedo=CanRedo,readOnly=ReadOnly,status=Status,
+                memory=inspect?ObserveMemory():null,revision=Revision,canUndo=CanUndo,canRedo=CanRedo,readOnly=ReadOnly,status=Status,
                 sequences=document.sequences.Select(x=>new RuleSummary {id=x.id,name=x.name,steps=x.Compile(out _)?.NodeCount??0,repeat=x.repeat,program=true,error=document.ProgramError(x)}).ToArray(),
                 selected=selected,selectedError=selected==null?null:document.ProgramError(selected),bindings=bindings.Skip(page*8).Take(8).Select(x=>x.Copy()).ToArray(),bindingPage=page,bindingCount=bindings.Length,
                 buttons=selected==null ? Array.Empty<RuleButtonData>() : document.buttons.Where(x=>x.sequenceId==selected.id).Select(x=>x.Copy()).ToArray(),
@@ -57,8 +58,13 @@ namespace Maestro.Quest.Rules
         {
             created=Array.Empty<string>(); error="Invalid behaviour request";
             if(request==null)return false;
+            if(request.action=="memory"){
+                if(!string.IsNullOrEmpty(request.target)&&!Programs.ProgramMemoryDocument.ProgramId(request.target)||request.page<0||request.page>15){error="Choose a remembered behaviour and page";return false;}
+                memoryTarget=string.IsNullOrEmpty(request.target)?null:request.target;memoryPage=request.page;error="Remembered values inspected";Changed?.Invoke();return true;
+            }
             if(request.action=="inspect")
             {
+                memoryTarget=null;memoryPage=0;
                 if(!string.IsNullOrEmpty(request.target)) {
                     int at=Array.FindIndex(document.sequences,x=>x.id==request.target);
                     if(at<0) {error="That behaviour no longer exists";return false;}

@@ -1,129 +1,130 @@
 # Remembered values for behaviour programs
 
-Status: storage foundation, not an enabled app feature. Existing programs still
-initialize state on each start and keep it only for that run. No native capability,
-book control, language extension, automatic checkpoint or restart is advertised
-by this increment. Runtime, authoring and portable-workspace integration must land
-together before users can opt in. The complete Quest v1 goal remains active.
+Status: implemented in the shared native runtime and book editor, behind
+`rememberedVariables.v1`. This is a development feature, not Quest Store or
+headset acceptance. The complete Quest v1 goal remains active.
 
-## Intended execution contract
+## Authoring and execution
 
-Keep the existing per-run scope as the default. An explicitly remembered variable
-will have a stable declaration identity, separate from its human-readable name,
-and belong to its exact saved behaviour in the selected workspace. Renaming a
-variable must preserve its identity; copying a behaviour must not inherit another
-behaviour's memory. Changing a remembered variable's type needs a new identity or
-an explicit reset. There is no implicit conversion of old values.
+Per-run state remains the default. Version-3 programs can opt into
+`memoryVersion: 1` and give a root state declaration a stable `memory` identity:
 
-An explicit start will begin at the program entry with fresh locals and load the
-remembered values that match its declarations. A new run must wait for accepted memory writes to drain before loading values.
-A missing value uses the declared initial value. Unreadable or incompatible memory must be reported before any
-program effect, rather than silently treating it as a missing value.
+```json
+{"name":"count","initial":0,"memory":"cccccccccccccccccccccccccccccccc"}
+```
 
-Use an explicit checkpoint block to save changed remembered values together.
-Ordinary assignments stay in run memory until that checkpoint. The block waits
-for durable completion before later blocks can act. An unconfirmed checkpoint stops the run and requires inspection before retry;
-it does not undo earlier effects.
-Checkpoint IO completion must not renew the activation instruction budget; it is
-not an event/timer wake. A checkpoint saves values, not the instruction pointer,
-pending event, call stack,
-physics, animation position, object ownership or proof of an external action.
+The book's **State & signals** editor exposes **Per run** and **Remember between
+starts**. Source and blocks edit the same validated program. Renaming preserves
+its memory identity. Copying a behaviour gets a new behaviour ID and starts with
+its initial values. A type change requires explicitly resetting that cell or
+choosing a new identity; there is no implicit conversion.
 
-Stop and pause do not implicitly checkpoint or restart a program. A dispatched
-checkpoint may finish after Stop; later blocks must remain cancelled. Reload does
-not resume execution or replay missed events. Starting again is explicit and
-begins at entry using the last completed remembered values. Code that checkpoints
-a counter and then throws a ball does not gain an exactly-once transaction between
-those operations. Authors must not treat a remembered flag as a native action
-receipt or retry an uncertain effect merely because that flag is absent.
+An explicit start enters the program at its entry function, with fresh locals and
+matching saved values. A missing cell uses its initial value. Loading, pending,
+unavailable or mismatched memory rejects start before effects or cancellation of
+an existing run. Ordinary programs remain usable without memory. Stored object,
+model and motion IDs are passive values: they grant no resource authority.
 
-Parallel branches retain their existing private state snapshots. A successful
-join returns explicit values to the parent; the parent can then checkpoint them.
-The first integration should reject a checkpoint reached in a child branch before
-writing, rather than silently racing sibling writes or merging private state.
-Imported modules remain reusable code, not a new ambient memory namespace; their
-integration must make the caller's selected durable destinations explicit.
+`{id, op:"checkpoint"}` is the **Save remembered values** block. It saves all of
+this behaviour's declared remembered variables together and waits for confirmed
+publication before continuing. Assignments alone do not persist. The existing
+scheduler admits queued checkpoints in FIFO order, at most one per second across
+its runs, including no-op saves. A save completion does not renew the activation
+instruction budget. Writes to different behaviours merge against the latest
+whole-document revision while verifying the initiating run's own group identity.
 
-An explicit reset will use the same shared book/agent/native operation and fresh
-memory identity. It must cancel affected runs and queued starts before committing,
-leave behaviour definitions intact, and never start a program. A declaration edit,
-Undo or temporarily omitted variable must not silently delete remembered values.
-Orphaned values remain bounded and need a visible inspect/reset path.
+Parallel branches retain private state snapshots. A checkpoint reached in a
+branch fails before writing; return results, assign them in the parent and then
+checkpoint. Reusable modules cannot own remembered declarations. They take and
+return caller values; the caller owns persistence. There is one interpreter and
+one capability catalog, not a separate agent execution system.
 
-## Implemented storage boundary
+Stop, pause and reload do not implicitly save or resume execution. A queued save
+is cancelled by Stop. An already dispatched save can finish after Stop, and the
+outcome says so; later blocks stay cancelled. The next explicit start waits for
+accepted writes to drain. No instruction pointer, call stack, subscriptions,
+physics state, animation position or action receipts are persisted. Checkpointing
+a flag and throwing a ball are not an exactly-once transaction. Never repeat an
+uncertain native effect merely because a remembered flag is absent.
 
-`ProgramMemoryDocument` is an immutable, detached codec for passive typed values.
-It stores a random revision, exact behaviour IDs, exact variable IDs, display names,
-structural types and values. Numbers, booleans, text, lists and records reuse
-`ProgramDataType` and `ProgramValue`; empty lists keep their declared item type.
-There are no CLR types, scripts, paths, continuations or executable payloads.
+## Shared inspection and editing
 
-The current bounds are 64 retained behaviour groups, 512 total cells, 32 cells per
-group, 16 cells per atomic checkpoint and a 1 MiB document. Individual values retain
-the existing nesting/node/character bounds, and encoded type descriptions are also
-bounded. Retained entries beyond the current declaration list count toward capacity.
-The store rejects a full candidate instead of truncating it or deleting old cells.
-These storage limits do not enlarge the interpreter's live-memory or run budgets.
+The book's **Remembered values** panel and the agent use the same observation and
+native operation:
 
-Updates preserve other cells. Explicit reset can remove one cell or a behaviour's
-whole memory group. Every content change gets a new revision, including a reset
-back to an empty collection; this prevents an old request from becoming current
-again after a reset. Identical writes keep their revision but still validate the
-on-disk identity. Readers receive immutable values and detached JSON/byte copies.
-Nested asset-ID strings can be enumerated for future retained-reference checks;
-those values never grant authority to edit an object or play a removed asset.
+- `rules {action:"memory", target:programId, page:0}` returns the selected group,
+  exact memory revision, readiness/pending/busy status and four typed cells per
+  page. It includes saved values, unsaved declarations, and retained groups whose
+  behaviours were removed. Values/types are complete bounded JSON, not truncated
+  display strings. Native observations are covered by browser contract tests.
+- `program.memory.edit` sets one cell or resets one/all cells. It requires fresh
+  memory and rules revisions, a stopped target with no queued starts, and no
+  pending write. Reset-all uses an empty `variableId`. No operation starts a run.
+  Set uses the existing declaration type, or the stored type for an orphan cell.
+- Human drafts keep their original guards. Changes to the observed memory or
+  declarations disable the draft; the callback and native handler independently
+  reject stale submission. The book asks for explicit reset confirmation.
+- Edits, deletion and behaviour Undo never prune memory. Retained cells count
+  toward capacity and remain inspectable/resettable. Memory edits have no Undo.
 
-`ProgramMemoryStore` loads and writes off-thread under a workspace write lease.
-An accepted writer publishes its immutable in-memory snapshot only after flushing
-and atomically replacing the file. It then releases its lease itself, without
-needing a Unity Update/Poll callback. Workspace retirement waits for accepted IO;
-stopping an observer cannot abandon the writer. A per-file OS lease also excludes
-another store owner. No implicit retry or last-writer-wins merge is performed.
+The standard native action receipt reports set/reset completion. Stop cannot
+retract accepted IO. After a timeout or uncertain result, inspect memory and the
+receipt rather than replaying the request. An unconfirmed program checkpoint
+stops its run and leaves earlier effects intact.
 
-The caller supplies the observed revision. Before publication, the worker also
-compares the complete canonical disk identity with its original snapshot, catching
-out-of-owner edits even if they reused the revision. An out-of-date owner becomes
-unavailable until reopened. A failed write does not publish candidate values.
-Future callers must observe the result before reporting a completed checkpoint.
+Temporary rooms cannot start a remembered program, checkpoint or edit memory.
+Keep or discard the temporary room first. This avoids leaking temporary work into
+saved behaviour state; supporting isolated temporary memory forks is future work.
 
-The file is `program-memory.v1.json`. Replacement retains the previous valid copy
-as `.backup`. A corrupt primary never automatically rolls back to that older copy:
-such a rollback could repeat a logical action on the next explicit start. A missing
-primary with backup/pending evidence is also unavailable. Unknown/newer formats,
-unsafe paths and damaged retained backup files are preserved. A damaged backup
-blocks subsequent replacement without hiding an otherwise readable primary.
-Only the current writer's unpublished temporary file is cleaned up on its failure.
-Opening an empty store alone creates no files or directories.
+## Storage, portability and recovery
 
-## Integration required before release
+`ProgramMemoryDocument` stores exact behaviour and declaration IDs, names,
+structural types and values in `program-memory.v1.json`. There are no CLR types,
+executable payloads or external paths. Numbers, booleans, text, lists and records
+use the existing `ProgramDataType` / `ProgramValue` bounds; empty lists retain
+their declared item type. Limits are 64 behaviour groups, 512 cells overall,
+32 retained cells per group, 16 cells per checkpoint and a 1 MiB document.
+Existing live-memory, nesting and instruction limits remain unchanged.
 
-- Add a versioned, feature-gated language declaration/checkpoint contract, with
-  the same validator and stable identity editing in the book and agent views.
-- Load selected remembered values before a run's first effects; connect checkpoint
-  waits, cancellation, ownership, budgets and typed error observations to the one
-  existing interpreter and scheduler. No second agent or execution engine.
-- Provide shared inspection and explicit reset, including pending/failed results,
-  stale guards, unavailable-storage recovery and capacity management.
-- Include exact memory in archive capture, fingerprints, generations, temporary
-  workspace handling, external import validation and reviewed restore. All owners
-  must be quiescent or reject capture during an accepted write. Archives without
-  this optional document start with no remembered values; newer archives must
-  never silently drop it on export or downgrade.
-- Feed primary/backup/pending memory references into retained asset checks, and
-  preserve raw unavailable data during recovery. Runtime memory IDs do not make
-  old object/model/motion references automatically usable.
-- Add end-to-end save/start/checkpoint/Stop/reload/reset/backup tests through the
-  actual native executor, shared book controls and captured observations. Measure
-  write latency and enforce a checkpoint rate budget on Quest before release.
+The immutable store loads and writes off-thread under the workspace write gate.
+It validates exact revisions and the complete on-disk identity, flushes before
+atomic publication and keeps the preceding valid copy as `.backup`. Accepted
+writers release their leases without a Unity Update/Poll callback, so workspace
+retirement can drain them. Competing owners, full capacity, changed types,
+unsupported formats and unsafe paths fail without truncation or silent retries.
+Every content change, including reset, gets a fresh revision.
 
-No existing workspace owner constructs this store yet, so this commit cannot
-create a memory file that current workspace export would omit. The included
-EditMode tests exercise isolated temporary directories only. Native compilation
-and the ordinary EditMode/PlayMode suites remain the verification boundary for
-this increment; no headset installation or Store/provider acceptance is implied.
+A corrupt primary never automatically rolls back to a backup: that could repeat
+logical effects on a later start. A missing primary with retained backup/pending
+evidence is also unavailable. Damaged retained evidence is preserved. The app's
+workspace recovery or a reviewed verified workspace restore is the recovery
+path; a fresh workspace leaves the old generation retained. This increment does
+not add automatic per-file repair or raw-file recovery export.
 
-PC verification: the final Verify-Quest.ps1 process exited 0 with **455 EditMode
-and 401 PlayMode passes**, including **28 new memory tests** and only the three
-existing optional private-file skips. The catalog source/equality checks passed.
-All six new native source/metadata files matched the verified build mirror.
-No runtime owner, portable archive or installed APK was changed by this foundation.
+Live export/fingerprinting captures the accepted immutable memory at the same
+owner-thread boundary as room, rules and controls, and refuses pending or
+unavailable memory. Portable archives strictly validate and retain the optional
+memory document. Old archives without it start empty. Retained-generation export
+checks unknown formats and backup-only evidence instead of silently omitting
+memory. Import/activation keeps the existing workspace review gate; nothing runs
+merely because its values were restored.
+
+Motion retention audits include current, backup and pending memory references.
+Unknown/changing evidence protects downloads until resolved. Model payloads stay
+covered by the existing complete model-library archive capture. Memory IDs never
+make removed assets or objects usable automatically.
+
+## Verification and remaining release work
+
+Desktop checks cover explicit start/save/restart, per-run defaults, rename/copy,
+stale and failed writes, FIFO admission, Stop before/after dispatch, type changes,
+parallel rejection, budgets, passive references, shared edit receipts and portable
+archive round trips. The book is tested with captured native observations,
+including typed draft editing, stale guards and reset confirmation.
+
+The full development package verification and exact-commit CI are recorded in
+`QUEST_V1_PLAN.md`. Headset work remains on hold. Before release, measure storage
+latency and frame timing on Quest, verify long sessions and interruption/recovery
+on hardware, and review the one-second checkpoint admission rate for real usage.
+This does not add background execution while the app is suspended, automatically
+resume programs, or establish general exactly-once effects.

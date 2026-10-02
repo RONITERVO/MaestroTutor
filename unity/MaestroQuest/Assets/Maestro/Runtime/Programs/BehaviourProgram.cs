@@ -23,7 +23,8 @@ namespace Maestro.Quest.Programs
         public const int MaximumCharacters=24000,MaximumNodes=128,MaximumFunctions=16;
         public string Source {get;private set;}
         public int Version {get;private set;}
-        bool structured,parallel;
+        bool structured,parallel,memory;
+        internal readonly Dictionary<string,string> Remembered=new();
         internal readonly Dictionary<string,ProgramValue> InitialState=new();
         internal readonly Dictionary<string,ProgramType> CustomEvents=new();
         internal ProgramType EventType(string name) => CustomEvents.TryGetValue(name,out var type)?type:BehaviourCatalog.Event(name)!=null?ProgramType.Text:throw new ProgramFault("Unknown event");
@@ -112,11 +113,13 @@ namespace Maestro.Quest.Programs
         void ReadRoot(JObject root)
         {
             Need((root["version"]?.Type==JTokenType.Integer||root["version"]?.Type==JTokenType.Float)&&((double)root["version"]==2||(double)root["version"]==3),"Unsupported program version");
-            Version=(int)root["version"];Keys(root,Version==3?"version entry resources functions state events":"version entry resources functions","dataVersion parallelVersion");
+            Version=(int)root["version"];Keys(root,Version==3?"version entry resources functions state events":"version entry resources functions","dataVersion parallelVersion memoryVersion");
+            Need(!root.ContainsKey("memoryVersion")||Version==3&&(root["memoryVersion"]?.Type==JTokenType.Integer||root["memoryVersion"]?.Type==JTokenType.Float)&&(double)root["memoryVersion"]==1,"Unsupported remembered-value version");memory=root.ContainsKey("memoryVersion");
             Need(!root.ContainsKey("dataVersion")||Version==3&&(root["dataVersion"]?.Type==JTokenType.Integer||root["dataVersion"]?.Type==JTokenType.Float)&&(double)root["dataVersion"]==1,"Unsupported structured-value version");structured=root.ContainsKey("dataVersion");
             Need(!root.ContainsKey("parallelVersion")||Version==3&&(root["parallelVersion"]?.Type==JTokenType.Integer||root["parallelVersion"]?.Type==JTokenType.Float)&&(double)root["parallelVersion"]==1,"Unsupported parallel-program version");parallel=root.ContainsKey("parallelVersion");
             if(Version==3) {
-                foreach(var token in Array(root["state"],16)) {var item=Object(token);Keys(item,"name initial","type");string name=Text(item["name"]);Need(ProgramModules.CompiledName(name)&&InitialState.TryAdd(name,Literal(item["initial"],item["type"])),"Invalid or duplicate state name");}
+                foreach(var token in Array(root["state"],16)) {var item=Object(token);Keys(item,"name initial","type memory");string name=Text(item["name"]);Need(ProgramModules.CompiledName(name)&&InitialState.TryAdd(name,Literal(item["initial"],item["type"])),"Invalid or duplicate state name");
+                    if(item.ContainsKey("memory")){string id=Text(item["memory"]);Need(memory&&Name(name)&&ProgramMemoryDocument.Id(id)&&!Remembered.ContainsValue(id),"Remembered variables need memoryVersion 1 and distinct stable identities");Remembered.Add(name,id);}}
                 foreach(var token in Array(root["events"],16)) {var item=Object(token);Keys(item,"name type");string name=Text(item["name"]);var type=Type(Text(item["type"]));
                     Need(System.Text.RegularExpressions.Regex.IsMatch(name,@"^user\.[a-zA-Z0-9_]{1,32}$")&&type!=ProgramType.Void&&CustomEvents.TryAdd(name,type),"Invalid or duplicate custom event");}
             }
@@ -193,6 +196,7 @@ namespace Maestro.Quest.Programs
                 void Child(string key)=>Body(Array(node[key],MaximumNodes),function,depth+1);
                 void Expr(string key,ProgramDataType type)=>Need(Expression(node[key],function)==type,"Expression type differs from its use");
                 switch(op) {
+                    case "checkpoint":Keys(node,"id op");Need(memory&&Remembered.Count>0,"Saving remembered values needs memoryVersion 1 and a remembered variable");break;
                     case "setState":
                         Need(Version==3,"State needs program version 3");Keys(node,"id op variable value");Need(InitialState.TryGetValue(Text(node["variable"]),out var state),"Unknown program state");Expr("value",state.Type);break;
                     case "forever":Need(Version==3,"Events need program version 3");Keys(node,"id op body");Child("body");break;

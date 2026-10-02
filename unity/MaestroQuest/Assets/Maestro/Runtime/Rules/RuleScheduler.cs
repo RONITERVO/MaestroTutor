@@ -38,6 +38,7 @@ namespace Maestro.Quest.Rules
             public IProgramEventWatch Watch;public bool WatchPending;
             public bool Reactive=>Sequence.Compile(out _).Version==3;
             public ProgramMachine Machine;
+            public string MemoryIdentity;public System.Threading.Tasks.Task<ProgramMemoryStore.Result> MemoryWrite;
             public Run Parent;public Run[] Children;public string TerminalNode;
             public CapabilityCall Active;
             public RoomOwnership.Lease OwnershipLease;
@@ -67,8 +68,8 @@ namespace Maestro.Quest.Rules
         public bool ActionBusy(CapabilityCall call)=>call.RequiresQuietRoom?(running.Count>0||queued.Count>0):running.Any(run=>run.Active?.RequiresQuietRoom==true)||!Ownership.CanAcquire("catalog-check",RoomActorRole.Program,call.Claims,out _);
         public RoomOwnership Ownership {get;}
         public string LastError { get; private set; }
-        public RuleRunView[] ObserveRuns() => running.Where(x=>x.Invocation==null).Select(x=>new RuleRunView {id=x.Id,sequenceId=x.Sequence.id,parentRunId=x.Parent?.Id,preparing=x.Preparing,nodeId=x.Machine?.NodeId,functionName=x.Machine?.Function,status=x.Children!=null?"Waiting for parallel branches":x.Machine?.Wait!=null?x.Machine.Wait.Condition!=null?"Waiting for condition":x.Machine.Wait.Event==null?"Waiting for timer":"Waiting for "+x.Machine.Wait.Event:x.Computing?"Evaluating":x.Preparing?x.Active?.AwaitCompletion==true?"Waiting for action completion":"Loading":"Running",
-            waiting=x.Machine?.Wait!=null,waitEvent=x.Machine?.Wait?.Event,waitSeconds=x.Machine?.Wait!=null&&x.Machine.Wait.Seconds>0?Math.Max(0,x.Ends-lastNow):0,
+        public RuleRunView[] ObserveRuns() => running.Where(x=>x.Invocation==null).Select(x=>new RuleRunView {id=x.Id,sequenceId=x.Sequence.id,parentRunId=x.Parent?.Id,preparing=x.Preparing,nodeId=x.Machine?.NodeId,functionName=x.Machine?.Function,status=x.Machine?.SavingMemory==true?"Saving remembered values":x.Children!=null?"Waiting for parallel branches":x.Machine?.Wait!=null?x.Machine.Wait.Condition!=null?"Waiting for condition":x.Machine.Wait.Event==null?"Waiting for timer":"Waiting for "+x.Machine.Wait.Event:x.Computing?"Evaluating":x.Preparing?x.Active?.AwaitCompletion==true?"Waiting for action completion":"Loading":"Running",
+            waiting=x.Machine?.Wait!=null||x.Machine?.SavingMemory==true,waitEvent=x.Machine?.Wait?.Event,waitSeconds=x.Machine?.Wait!=null&&x.Machine.Wait.Seconds>0?Math.Max(0,x.Ends-lastNow):0,
             state=x.Machine?.State.Select(v=>new ProgramVariableView {name=v.Key,type=v.Value.Type.ToString().ToLowerInvariant(),value=v.Value.Display}).ToArray()??Array.Empty<ProgramVariableView>(),
             locals=x.Machine?.Locals.Select(v=>new ProgramVariableView {name=v.Key,type=v.Value.Type.ToString().ToLowerInvariant(),value=v.Value.Display}).ToArray()??Array.Empty<ProgramVariableView>()}).ToArray();
         public InvocationReceipts Receipts { get; }
@@ -125,6 +126,8 @@ namespace Maestro.Quest.Rules
             if (sequence == null) { LastError = "That action sequence no longer exists"; return false; }
             if (unavailable.TryGetValue(sequenceId,out var issue)){LastError=issue;return false;}
             if (!BindingStillValid(binding)) return false;
+            ProgramMachine machine;string memoryIdentity;
+            try{machine=CreateMachine(sequence,out memoryIdentity);}catch(Exception ex){LastError=ex.Message;return false;}
             var targets = (sequence.Compile(out _).Version==3?Array.Empty<string>():sequence.Targets()).ToHashSet();
             var conflicts = running.Where(x => x.Sequence.id == sequenceId || Conflicts(x,Whole(targets))).ToArray();
             if (conflicts.Length > 0 || !HasCapacity)
@@ -139,7 +142,7 @@ namespace Maestro.Quest.Rules
                 foreach (var run in conflicts) Stop(run,false);
             }
             var next = new Run { Id = Guid.NewGuid().ToString("N"), Sequence = sequence.Copy(), Binding = binding?.Copy(), Targets = targets, Claims=Whole(targets) };
-            next.Machine=new ProgramMachine(sequence.Compile(out _),this);
+            next.Machine=machine;next.MemoryIdentity=memoryIdentity;
             running.Add(next);if(!next.Reactive&&!Reserve(next,next.Claims))return false;return StartStep(next,now);
         }
         bool Reserve(Run run,BehaviourCatalog.Claim[] claims) {
@@ -154,6 +157,7 @@ namespace Maestro.Quest.Rules
             run.Computing=false;
             {
                 var yielded=run.Machine.Advance(out run.Active);
+                if(yielded==ProgramYield.Checkpoint)return QueueCheckpoint(run);
                 if(yielded==ProgramYield.Parallel)return StartParallel(run);
                 if(yielded==ProgramYield.Waiting)return WaitForEvent(run,now);
                 if(yielded==ProgramYield.Signal) {
@@ -164,7 +168,7 @@ namespace Maestro.Quest.Rules
                 if(yielded==ProgramYield.Yield) {run.Computing=true;return true;}
                 if(yielded==ProgramYield.Failed) {LastError=run.Machine.Error;Stop(run,false,"failed",LastError);return false;}
                 if(yielded==ProgramYield.Completed) {
-                    if(run.Sequence.repeat) {run.Machine=new ProgramMachine(run.Sequence.Compile(out _),this);run.Computing=true;}
+                    if(run.Sequence.repeat) {try{run.Machine=CreateMachine(run.Sequence,out run.MemoryIdentity);run.Computing=true;}catch(Exception ex){LastError=ex.Message;Stop(run,false,"failed",LastError);return false;}}
                     else Finish(run,"completed","Program completed");
                     return true;
                 }
@@ -218,6 +222,7 @@ namespace Maestro.Quest.Rules
             foreach (var run in running.ToArray())
             {
                 if(!running.Contains(run)||run.Children!=null)continue;
+                if(run.Machine.SavingMemory){PollCheckpoint(run);continue;}
                 if(run.Machine.Wait!=null) {
                     if(run.Machine.Wait.Seconds==0||now<run.Ends)continue;
                     Unsubscribe(run);run.Machine.Resume(false);run.EventDepth=0;StartStep(run,now);continue;
@@ -253,6 +258,7 @@ namespace Maestro.Quest.Rules
                 // At most one step per run per tick, even after a long frame.
                 StartStep(run,now);
             }
+            PumpCheckpoints(now);
             foreach (var pending in queued.ToArray())
             {
                 var sequence = document.sequences.FirstOrDefault(x => x.id == pending.SequenceId);
@@ -282,7 +288,7 @@ namespace Maestro.Quest.Rules
         void Finish(Run run,string phase,string status,bool joining=true) {
             if(!running.Contains(run))return;
             if(run.Invocation!=null) {if(phase=="completed")status="Action completed";else if(phase=="cancelled"&&status=="Behaviour stopped")status="Action cancelled";}
-            ReleaseClaims(run);Unsubscribe(run);running.Remove(run);
+            ReleaseClaims(run);Unsubscribe(run);running.Remove(run);checkpoints.Remove(run);
             // A child completing is not a completed behaviour. Keep the existing
             // outcome contract root-only so readers cannot mistake a branch for
             // the requested program's result while its parent is still waiting.
@@ -308,7 +314,7 @@ namespace Maestro.Quest.Rules
         void Stop(Run run,bool preservePlacement,string phase="cancelled",string status="Behaviour stopped") {
             if(!running.Contains(run))return;
             var root=Root(run);if(run!=root){root.TerminalNode=run.Machine?.NodeId;status="Branch "+run.Machine?.Function+": "+status;}var group=running.Where(candidate=>Root(candidate)==root).Reverse().ToArray();
-            var notice=(actions as IRuleInterruptionInfo)?.InterruptionStatus(run.Id);
+            var notice=run.MemoryWrite!=null?"Stopped waiting. An accepted memory save may still finish; inspect remembered values before starting again.":(actions as IRuleInterruptionInfo)?.InterruptionStatus(run.Id);
             if(!string.IsNullOrEmpty(notice))status=phase=="cancelled"?notice:status+". "+notice;
             Exception cleanupFailure=null;
             foreach(var member in group) {

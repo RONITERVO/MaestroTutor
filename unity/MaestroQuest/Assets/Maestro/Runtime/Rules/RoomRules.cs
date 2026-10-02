@@ -31,7 +31,7 @@ namespace Maestro.Quest.Rules
         {
             workshop = source; editor = roomEditor; animations = animationWorkshop; browser = book; room = interaction; input = controllerInput;
             anchors = controllerAnchors ?? (index => input ? input.ControllerAnchor(index) : null);
-            actions = new RoomRuleActions(editor,animations,clock); Scheduler = new RuleScheduler(actions,new InvocationReceipts(editor.ReceiptDirectory)); workshop.Runtime = this;
+            actions = new RoomRuleActions(editor,animations,clock); Scheduler = new RuleScheduler(actions,new InvocationReceipts(editor.ReceiptDirectory)); workshop.Runtime = this;Scheduler.ConfigureMemory(workshop.Memory,()=>workshop.MemoryBlocked);
             runtimeGate=editor.RuntimeGate;runtimeGate.Changed+=RefreshSuspension;RefreshSuspension();
             workshop.DocumentChanged += Reload;
             editor.Editing += StopAll; editor.ItemGrabbed += Grabbed; editor.ItemReleased += Released; editor.ItemTapped += Tapped; editor.ItemCollided += Collided;

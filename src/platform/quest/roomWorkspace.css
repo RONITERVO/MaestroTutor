@@ -58,3 +58,8 @@
 
 .capability-browser .rule-checkbox {flex-direction:row;align-items:center;gap:10px;min-height:44px;}
 .capability-browser .rule-checkbox input[type="checkbox"] {flex:0 0 22px;width:22px;height:22px;min-height:22px;margin:0;}
+
+.program-memory-panel > summary {min-height:44px;padding:10px 0;cursor:pointer;font-weight:700;}
+.program-memory-cell {padding:12px;margin:10px 0;border:1px solid #b6cabc;border-radius:8px;background:#edf2e8;}
+.program-memory-cell > button + button {margin-left:8px;}
+.program-memory-panel pre {white-space:pre-wrap;overflow-wrap:anywhere;max-height:200px;overflow-y:auto;font:14px/1.5 ui-monospace,monospace;margin:6px 0 10px;}

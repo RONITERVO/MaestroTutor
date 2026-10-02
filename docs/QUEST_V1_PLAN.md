@@ -2,6 +2,12 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
+Remembered behaviour variables now share the native interpreter, versioned syntax,
+book blocks, agent observations and `program.memory.edit` action. Explicit
+checkpoints, stopped-only set/reset and complete workspace archives replace the
+previous internal-only storage foundation; per-run state remains the default.
+See QUEST_PROGRAM_MEMORY.md for the execution, recovery and temporary-room limits.
+
 The chosen paid-plan Meshy export is now packaged as the offline default avatar,
 with exact saved identity, an explicit Walking clip and portable recovery/backup
 content. The older Meshy motion collection uses a different rig and stays out of
@@ -21,7 +27,7 @@ posing now exposes start/rotate/save/finish/discard with native session IDs and
 pose versions, the same physical joint limits and imported retargeter, held-joint
 exclusion, failed-pose recovery and recording interoperation. Saved edits are
 durable outside temporary mode; temporary edits stay in the fork until Keep.
-No authoring operation starts playback. The catalog contains 60 actions, 11
+No authoring operation starts playback. The catalog contains 61 actions, 11
 events and 53 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
 Single-file GLB/VRM selection, preview and acceptance now share the physical
 import path with book fields and agent/program calls. See QUEST_MODEL_IMPORT.md.
@@ -68,10 +74,11 @@ Completing workspace review now drains accepted room/behaviour saves in the back
 Aimed physical throws and read-only trajectory previews now use the same native catalog, generated book form and rigid-body physics; see QUEST_AIMED_THROWS.md.
 The remaining runtime, provider, device and Store acceptance gates remain unfinished; the complete v1 goal remains active.
 
-The next durable-program-state increment has a tested typed storage foundation and
-an explicit checkpoint/no-replay design in QUEST_PROGRAM_MEMORY.md. It is not
-connected to workspace owners or advertised to users yet; runtime, shared
-authoring, reset/recovery and complete archive integration remain required.
+Remembered program values now connect workspace ownership, explicit checkpoints,
+shared book/agent inspection and editing, retained-reference checks and complete
+archive integration. Per-run state remains the default; saved values never restore
+execution or start a behaviour. Temporary-room memory and physical Quest latency
+acceptance remain open. See QUEST_PROGRAM_MEMORY.md.
 
 Current recovery implementation supports retained candidates, an external backup,
 and an explicitly requested fresh workspace through the same shared book/agent
@@ -87,6 +94,35 @@ and tracked operation roots remain protected. Private recovery export remains
 separate; a full store with unreadable selection still requires recovery/repair.
 PR #248 records the current verified commit and package. Earlier entries
 below are historical evidence, not current test totals or release acceptance.
+
+PC remembered-values integration (2026-10-02): version-3 behaviours can opt into
+stable remembered declarations and explicit Save remembered values blocks. The
+native scheduler restores typed values only at an explicit start, waits for
+checkpoint publication, bounds checkpoint admission across runs, and cancels
+later blocks after Stop while accepted writes drain. Parallel branches return
+values to their parent before saving. Ordinary per-run state stays unchanged.
+Book blocks, agent queries and the shared `program.memory.edit` action inspect,
+set and explicitly reset the same values with stopped-target and stale-revision
+guards. Deleted declarations retain inspectable values until reset. Workspace
+archives and retained motion-reference checks include memory; no execution resumes
+from a backup. Temporary rooms reject memory work until kept or discarded.
+
+Verification: **470 Unity EditMode and 402 PlayMode tests passed**, with three
+optional private-file skips. **1,737 web tests in 202 files** and **76 Android
+tests** passed; TypeScript, lint, production build and catalog checks passed.
+Browser checks used actual native observations with the real React editor:
+typed drafts, reset cancellation and remembered declaration editing were readable
+on two 512-pixel pages with no horizontal overflow or browser errors. This is
+PC verification, not physical Quest acceptance.
+
+The full development APK helper exited **0**. All **223 runtime / 118 test / 11
+Editor C# files**, **35 native fixtures plus metadata**, the native AAR and **113
+packaged web files** matched the verified inputs. The exact included avatar and
+all **178 motion payloads**, ARM64-only libraries and v2 signature were checked.
+Checkpoint: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-program-memory-D199099E.apk`.
+SHA-256: `D199099E32F09783007EB4D4CE0BD34F4B1E4E43D4B3E47A87FDF218CA8644DA`.
+Development signing; **not installed on Quest**. Hardware save latency, interruption
+and long-session acceptance remain open. Exact-commit CI is linked in PR #248.
 
 PC aimed-throw increment (2026-10-02): `object.physics.launch` now sends a
 Solid/Bouncy creation toward an explicit world point or exact root/recipe-part/

@@ -1,3 +1,4 @@
+import nativeRemembered from './rememberedProgramState.json';
 import nativeRecipeEdit from './recipeAuthoring.json';
 import nativeDrawing from './drawingAuthoring.json';
 import nativeCopy from './objectCopy.json';
@@ -209,6 +210,7 @@ if(new URLSearchParams(location.search).has('creation')||recipeCreation||objectE
  state.execution=JSON.parse(JSON.stringify(objectEdits?objectEditResults.painted:recipeCreation?recipeCreationResult:creationResult));state.capabilities=[...state.capabilities??[],'eventPrograms.v1','actionResults.v1','recipeCreation.v1','objectEdits.v1','execution.v1','executionReceipts.v1'];
 }
 if(new URLSearchParams(location.search).has('unavailablePrograms'))state=JSON.parse(JSON.stringify(unavailableProgram));
+if(new URLSearchParams(location.search).has('memory')){state=JSON.parse(JSON.stringify(nativeRemembered.stopped));state.visible=true;state.workspaceView='rules';}
 const recovering=new URLSearchParams(location.search).has('recovery');if(recovering)state=JSON.parse(JSON.stringify(historyRecovery.error));
 state.capabilities=[...new Set([...state.capabilities??[],'catalog.v1'])];
 if(new URLSearchParams(location.search).has('modules'))state.capabilities.push('programModules.v1');

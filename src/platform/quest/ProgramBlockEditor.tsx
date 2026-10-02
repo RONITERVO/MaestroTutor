@@ -22,6 +22,7 @@ export function ProgramBlockEditor({node,program,fn,objects,onChange,eventFields
     {choices.filter(v=>sameDataType(v.type,type)).map(v=><option key={v.name} value={v.name}>{v.name}</option>)}
   </select></label>;
   switch(node.op) {
+    case 'checkpoint':return <p>Save all remembered variables together and wait for completion. Per-run values are unchanged. Only the parent run can save; return branch results before this block. Stop does not undo an accepted save.</p>;
     case 'invoke': {
       const definition=capabilityDefinition(node.capability)!;
       const input=capabilityInput(node.capability,node.arguments);

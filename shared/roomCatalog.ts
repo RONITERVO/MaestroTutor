@@ -26,6 +26,7 @@ export const boundedCapabilityCall=(v:unknown):v is CapabilityInvocation=>{
  let count=0;
  const bounded=(v:unknown,depth:number,schema?:CapabilitySchema):boolean=>{
   schema=resolveCapabilitySchema(schema,v);
+  if(schema?.format==='programMemoryValue')return text(v,8192);
   if(schema?.format==='programModule'){try{return validModuleRecord(v,moduleHash(v));}catch{return false;}}
   if(++count>4096||depth>12)return false;
   if(record(v))return Object.entries(v).every(([key,x])=>text(key,80)&&bounded(x,depth+1,schema?.properties?.[key]));

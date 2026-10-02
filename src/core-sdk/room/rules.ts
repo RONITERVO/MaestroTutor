@@ -1,3 +1,4 @@
+import {validProgramMemoryView,type ProgramMemoryView} from './programMemory';
 import {compiledProgramName} from './programModules';
 import {validDataObservation} from '../../../shared/programValues';
 // Copyright 2026 Roni Tervo
@@ -11,8 +12,8 @@ export interface RuleSequence {id:string;name:string;interruption:number;repeat:
 export interface RuleBinding {id:string;sequenceId:string;sourceId:string|null;trigger:number;condition:number;cooldown:number;enabled:boolean;stopOnExit:boolean}
 export interface RuleButton {id:string;sequenceId:string;mount:number;position:Vec3;rotation:Rotation}
 export interface RuleEdit {kind:'save'|'delete'|'bind'|'unbind'|'button'|'unbutton';reference?:string;target?:string;sequence?:RuleSequence;binding?:RuleBinding;mount?:number}
-export interface RuleRequest {action:'inspect'|'edit'|'play'|'stop'|'undo'|'redo'|'signal';eventName?:string;value?:number|boolean|string;revision?:number;target?:string;page?:number;edits?:RuleEdit[]}
-export interface RuleView {revision:number;canUndo:boolean;canRedo:boolean;readOnly:boolean;status:string;sequences:{id:string;name:string;steps:number;repeat:boolean;program?:boolean;error?:string|null}[];selected:RuleSequence|null;selectedError?:string|null;bindings:RuleBinding[];buttons:RuleButton[];bindingPage:number;bindingCount:number;running:RuleRun[];outcomes?:RuleOutcome[];queued:number;eventQueue?:number;eventsDropped?:number}
+export interface RuleRequest {action:'inspect'|'memory'|'edit'|'play'|'stop'|'undo'|'redo'|'signal';eventName?:string;value?:number|boolean|string;revision?:number;target?:string;page?:number;edits?:RuleEdit[]}
+export interface RuleView {memory?:ProgramMemoryView|null;revision:number;canUndo:boolean;canRedo:boolean;readOnly:boolean;status:string;sequences:{id:string;name:string;steps:number;repeat:boolean;program?:boolean;error?:string|null}[];selected:RuleSequence|null;selectedError?:string|null;bindings:RuleBinding[];buttons:RuleButton[];bindingPage:number;bindingCount:number;running:RuleRun[];outcomes?:RuleOutcome[];queued:number;eventQueue?:number;eventsDropped?:number}
 export interface RuleRun {id:string;parentRunId?:string|null;sequenceId:string;preparing:boolean;waiting?:boolean;waitEvent?:string|null;waitSeconds?:number;state?:{name:string;type:string;value:string}[];nodeId?:string|null;functionName?:string|null;status?:string;locals?:{name:string;type:string;value:string}[]}
 export interface RuleOutcome {id:string;sequenceId:string;phase:'completed'|'cancelled'|'failed';nodeId?:string|null;status:string}
 const record=(v:unknown):v is Record<string,unknown>=>v!==null&&typeof v==='object'&&!Array.isArray(v);
@@ -35,11 +36,11 @@ export function validSequence(v:unknown,draft=false):v is RuleSequence {
 const programIssue=(v:unknown)=>v==null||typeof v==='string'&&v.length<=2048;
 const validBinding=(v:unknown,draft=false):v is RuleBinding=>record(v)&&(guid(v.id)||draft&&v.id==='')&&(draft?ref(v.sequenceId):guid(v.sequenceId))&&int(v.trigger,0,6)&&int(v.condition,0,4)&&num(v.cooldown,.25,30)&&typeof v.enabled==='boolean'&&typeof v.stopOnExit==='boolean'&&(v.trigger<4||target(v.sourceId));
 export function validRuleRequest(v:unknown):v is RuleRequest {
- if(!record(v)||!['inspect','edit','play','stop','undo','redo','signal'].includes(v.action as string)||Object.keys(v).some(k=>!['action','revision','target','page','edits','eventName','value'].includes(k)))return false;
- if(!['inspect','stop'].includes(v.action as string)&&!int(v.revision,1,2147483647))return false;
+ if(!record(v)||!['inspect','memory','edit','play','stop','undo','redo','signal'].includes(v.action as string)||Object.keys(v).some(k=>!['action','revision','target','page','edits','eventName','value'].includes(k)))return false;
+ if(!['inspect','memory','stop'].includes(v.action as string)&&!int(v.revision,1,2147483647))return false;
  if(v.action==='signal')return Object.keys(v).length===4&&typeof v.eventName==='string'&&/^user\.[a-zA-Z0-9_]{1,32}$/.test(v.eventName)&&(typeof v.value==='boolean'||typeof v.value==='number'&&Number.isFinite(v.value)&&Math.abs(v.value)<=1000000||typeof v.value==='string'&&v.value.length<=128&&!/[\u0000-\u001f\u007f-\u009f]/.test(v.value));
  if(v.eventName!==undefined||v.value!==undefined)return false;
- if(v.action==='play'&&!guid(v.target)||v.target!==undefined&&!guid(v.target)||v.page!==undefined&&!int(v.page,0,15))return false;
+ if(v.action==='play'&&!guid(v.target)||v.target!==undefined&&!(v.action==='memory'&&typeof v.target==='string'?/^[a-fA-F0-9]{32}$/.test(v.target):guid(v.target))||v.page!==undefined&&!int(v.page,0,15))return false;
  if(v.action!=='edit')return v.edits===undefined;
  if(!Array.isArray(v.edits)||v.edits.length<1||v.edits.length>16)return false;
  return v.edits.every(e=>{
@@ -53,6 +54,7 @@ export function validRuleRequest(v:unknown):v is RuleRequest {
  });
 }
 export function validRuleView(v:unknown):v is RuleView {
+ if(record(v)&&v.memory!=null&&!validProgramMemoryView(v.memory))return false;
  if(!record(v)||!int(v.revision,1,2147483647)||!['canUndo','canRedo','readOnly'].every(k=>typeof v[k]==='boolean')||typeof v.status!=='string'||v.status.length>2048||!Array.isArray(v.sequences)||v.sequences.length>32||!int(v.bindingPage,0,15)||!int(v.bindingCount,0,128)||!int(v.queued,0,8))return false;
  if(v.sequences.some(s=>!record(s)||!guid(s.id)||!title(s.name)||!int(s.steps,s.program?0:1,s.program?128:16)||s.program!==undefined&&typeof s.program!=='boolean'||typeof s.repeat!=='boolean'||!programIssue(s.error))||!programIssue(v.selectedError))return false;
  if(v.selected!==null){

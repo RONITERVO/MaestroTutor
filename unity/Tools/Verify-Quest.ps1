@@ -107,6 +107,7 @@ Invoke-QuestEditor @('-runTests','-testPlatform','EditMode','-testResults', ('"'
 if ($testReport.'test-run'.result -ne 'Passed' -or [int]$testReport.'test-run'.passed -lt 151) { throw 'Unity test results did not satisfy the current development checks.' }
 $playResult = Join-Path $logRoot 'playmode-results.xml'
 $env:MAESTRO_PROGRAM_EVIDENCE = Join-Path $logRoot 'program-evidence'
+$env:MAESTRO_PROGRAM_MEMORY_EVIDENCE = Join-Path $logRoot 'program-memory-evidence'
 $env:MAESTRO_CATALOG_EVIDENCE = Join-Path $logRoot 'catalog-evidence'
 $env:MAESTRO_EXECUTION_EVIDENCE = Join-Path $logRoot 'execution-evidence'
 $env:MAESTRO_PHYSICS_ACTION_EVIDENCE = Join-Path $logRoot 'physics-action-evidence'

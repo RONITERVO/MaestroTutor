@@ -33,6 +33,7 @@ namespace Maestro.Quest.Persistence
             if(!editor||!rules||!controls||rules.Editor!=editor||controls.ArchiveEditor!=editor)error="Workspace controls are not ready.";
             else if(editor.TemporaryRoom||editor.TemporarySavePending)error="Keep or discard the temporary room before exporting the saved workspace.";
             else if(!editor.CanSaveRoom||rules.ReadOnly||editor.ActivityProfiles.ReadOnly||!controls.ArchiveReady)error="Resolve unavailable native storage before exporting a portable workspace.";
+            else if(rules.Memory==null||!rules.Memory.Ready||rules.Memory.Pending||rules.Memory.Error!=null)error="Wait for remembered values to load/save, or recover unavailable memory before exporting.";
             else {
                 rules.Modules.Poll();
                 if(!rules.Modules.Ready||rules.Modules.Pending||rules.Modules.Error!=null)error="Wait for the reusable library to finish loading or writing.";
@@ -58,7 +59,7 @@ namespace Maestro.Quest.Persistence
         {
             cancellation.ThrowIfCancellationRequested();
             if(!CanStart(editor,rules,controls,out var error))throw new InvalidOperationException(error);
-            var modules=rules.Modules.Search("");
+            var modules=rules.Modules.Search("");var memory=rules.Memory.Snapshot();
             if(!editor.Models.TryCaptureArchive(out var models))throw new InvalidOperationException("Wait for the model import to finish before exporting.");
             WorkspaceLibraryCapture motions=null;
             try {
@@ -69,6 +70,7 @@ namespace Maestro.Quest.Persistence
                     try {
                         cancellation.ThrowIfCancellationRequested();var documents=new Dictionary<string,byte[]>(StringComparer.Ordinal);var assets=new Dictionary<string,Func<Stream>>(StringComparer.Ordinal);
                         var utf8=new UTF8Encoding(false,true);byte[] Json(object value)=>utf8.GetBytes(JsonUtility.ToJson(value));
+                        documents.Add(ProgramMemoryStore.FileName,memory.Encode());
                         documents.Add("room.v2.json",Json(room));documents.Add("behaviours.v2.json",Json(behaviours));documents.Add("controls.v2.json",Json(preferences));documents.Add("avatar-activities.v2.json",Json(activities));
                         foreach(var pair in definitions)documents.Add(pair.Key,utf8.GetBytes(pair.Value.ToString(Formatting.None)));
                         models.Collect(documents,assets);heldMotions.Collect(documents,assets);return process(new WorkspaceArchiveSnapshot(documents,assets),cancellation);

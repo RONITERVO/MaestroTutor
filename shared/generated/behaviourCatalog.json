@@ -4998,6 +4998,142 @@
       }
     },
     {
+      "id": "program.memory.edit",
+      "version": 1,
+      "label": "Edit remembered values",
+      "input": {
+        "type": "object",
+        "title": "Memory edit",
+        "x-discriminators": [
+          "kind"
+        ],
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "set"
+                ]
+              },
+              "programId": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32
+              },
+              "variableId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "revision": {
+                "type": "string",
+                "pattern": "^(initial|[a-f0-9]{32})$",
+                "maxLength": 32
+              },
+              "rulesRevision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 1000000.0
+              },
+              "valueJson": {
+                "type": "string",
+                "maxLength": 8192,
+                "format": "programMemoryValue",
+                "x-static": true
+              }
+            },
+            "required": [
+              "kind",
+              "programId",
+              "variableId",
+              "revision",
+              "rulesRevision",
+              "valueJson"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "reset"
+                ]
+              },
+              "programId": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32
+              },
+              "variableId": {
+                "type": "string",
+                "pattern": "^(|[a-f0-9]{32})$",
+                "maxLength": 32
+              },
+              "revision": {
+                "type": "string",
+                "pattern": "^(initial|[a-f0-9]{32})$",
+                "maxLength": 32
+              },
+              "rulesRevision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 1000000.0
+              }
+            },
+            "required": [
+              "kind",
+              "programId",
+              "variableId",
+              "revision",
+              "rulesRevision"
+            ],
+            "additionalProperties": false
+          }
+        ],
+        "x-features": [
+          "rememberedVariables.v1"
+        ]
+      },
+      "duration": "completion",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [
+        "behaviour.stopped",
+        "programMemory.ready",
+        "storage.writable"
+      ],
+      "description": "Set one typed remembered variable or reset one/all cells of an exact saved behaviour. First inspect rules with action memory and target program ID; stop that behaviour and wait for accepted writes to drain. Pass fresh memory and rules revisions. variableId is empty only for reset-all. valueJson is one strict JSON value matching its saved/declaration type. Reset keeps definitions and never starts a run. Removed declarations/behaviours retain bounded values until explicitly reset. Temporary rooms cannot use remembered values. No Undo. A dispatched write can finish after Stop; inspect memory and its receipt before continuing after uncertainty.",
+      "example": {
+        "kind": "reset",
+        "programId": "00000000000000000000000000000000",
+        "variableId": "",
+        "revision": "initial",
+        "rulesRevision": 1
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "revision": {
+            "type": "string",
+            "pattern": "^(initial|[a-f0-9]{32})$",
+            "maxLength": 32
+          },
+          "changed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "revision",
+          "changed"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "program.module.publish",
       "version": 1,
       "label": "Save reusable module",
@@ -12430,11 +12566,47 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
-      "sha256": "c8f1aead3886ffbe8c2b2d351fb1096dfd18378c9bfa78f6299593a638fd0249"
+      "sha256": "6152f1238c1f763120951567b1af07bf9b81c982d9388ccf9dc71b8f2a828b80"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramMachine.cs",
-      "sha256": "2fdac5ef57dc53782ad00ae8dabd9474f20c1e52f3f66c84513a2fc5b5e72465"
+      "sha256": "db3b6825e5c5a563e2934db65f533af5d706ae686a98358282a2eaa6500a465e"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramMemoryDocument.cs",
+      "sha256": "e95134e46b2ee695c188406040b3af574ca37422afc4c1e4e891dd7ad0ae9b80"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramMemoryStore.cs",
+      "sha256": "683b32add28abb006d04610994f27710420946b48e6602f85707c2122b926b6e"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleMemory.cs",
+      "sha256": "7ca5e3dc7c96e29188f8519ade448bf72893dd079239b17769f0b54fa425ae33"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleMemoryView.cs",
+      "sha256": "5150676420289f554f54de8a2de8b628eb2c000cbb4f6ffd20cf3dca27890849"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomCapabilityCatalog.cs",
+      "sha256": "d7951c9e2969ee986f0137812070e085fe28df3849794729c050f78aac52c7c5"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveCapture.cs",
+      "sha256": "b29d48c438c190db53943878b42ac15965dd946c71470881783d3efa5497803b"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveSnapshot.cs",
+      "sha256": "f3f812bd8f68bc5c6cccbe03a79bba703c80d18631c84be172222e8de2fc2b1e"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.Retention.cs",
+      "sha256": "d45dbaced6fd966e84f90edc84d4bb5018ae2024eb930e934336227ba20e4ce2"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/MotionUsage.cs",
+      "sha256": "4503e598344a2fc26730b42f95df32c1d9cbe39b3e1c6c1428fae4c8e12bcb65"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramSubscriptions.cs",
@@ -12454,11 +12626,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RoomRules.cs",
-      "sha256": "9710583bdc8b2a441035e3385fb66bd666a0dc874b838354a5982d44f5e53781"
+      "sha256": "974ed5e8786899c2f0118be81bfb07ae3dab4cc833afe9e917528b660f3b7b83"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleWorkshop.cs",
-      "sha256": "9673d04c42e68be609b34baa9afcddf1888b5c278a39600234e31d9c03c624bb"
+      "sha256": "847aa3c5ecec46d6a93b7204787cd4352ebb86be52808a315f3a5580edb45a8b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceReview.cs",
@@ -12478,7 +12650,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramModules.cs",
-      "sha256": "78d5b9b597006417ecdff06f6701407e561849a03fc992882342f3d5710b56c6"
+      "sha256": "e51d5957c0e41785b239aab37be0fee30763e46cd5fed3915e13a8a172c4d3cd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramModuleLibrary.cs",
@@ -12490,7 +12662,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleScheduler.cs",
-      "sha256": "9c96323bd6bb6bf35295aedd40c244646c527a4a09723b6bee4af7a1fc18050f"
+      "sha256": "c26d7df68508df864f40bd35b3501b7c729a8a1cad0021b9f534f46258998404"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleEvents.cs",
@@ -12498,7 +12670,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleCommands.cs",
-      "sha256": "344cf9af9de3b137faeebb5b056f6d469b6232d466f09e53712d988634fb6690"
+      "sha256": "73ecc9b08ba4806588a89a8822a4640be89f7f175652cf78f703a203b66a20ba"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRecipe.cs",
@@ -12750,7 +12922,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "a5061b84e0e284965b5afd75f319c2a429f7028e0b8fa70f00d85d86e0a1f692"
+      "sha256": "08c8b7e828a1a4de2512e602f08774ec1c2f931abcfe1a7b522f53b097796559"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -12827,6 +12999,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsSimulationCapability.cs",
       "sha256": "ad4a77a798294faf02926da628a46ce0ad7bbaf8077e723e99bf176ac3974dc4"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ProgramMemoryCapability.cs",
+      "sha256": "ef947f13225b1372c40509811765d76e130aeaab1822b7206fc786d2f0e908e2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ProgramModuleCapabilities.cs",
