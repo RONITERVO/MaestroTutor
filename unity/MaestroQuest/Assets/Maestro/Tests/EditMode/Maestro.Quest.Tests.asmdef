@@ -4,7 +4,8 @@
   "references": [
     "Maestro.Quest",
     "Maestro.Quest.TestFixtures",
-    "TLab.Capture"
+    "TLab.Capture",
+    "Maestro.Quest.Editor"
   ],
   "includePlatforms": [
     "Editor"

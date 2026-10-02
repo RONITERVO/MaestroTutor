@@ -170,3 +170,8 @@ live-gateway/lib/
 
 # Python Quest audit cache
 /unity/Tools/__pycache__/
+
+# Local Quest release profile and signing material
+/unity/Release/*.local.json
+*.jks
+*.keystore

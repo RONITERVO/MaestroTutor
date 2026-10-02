@@ -64,7 +64,7 @@ function Invoke-QuestEditor([string[]]$Arguments, [string]$LogName, [string]$Res
     # KAT Gateway owns the machine's default ADB server. Unity's shutdown can
     # hang trying to stop it; give build children their own server endpoint.
     Stop-QuestBuildHelper
-    $process = Start-Process -FilePath $editorPath -ArgumentList $argumentsWithPaths -WindowStyle Hidden -PassThru -Environment @{ ADB_SERVER_SOCKET = 'tcp:localhost:5041' }
+    $process = Start-Process -FilePath $editorPath -ArgumentList $argumentsWithPaths -WindowStyle Hidden -PassThru -Environment @{ ADB_SERVER_SOCKET = 'tcp:localhost:5041'; MAESTRO_QUEST_RELEASE_PROFILE = ''; MAESTRO_QUEST_KEYSTORE = ''; MAESTRO_QUEST_KEY_ALIAS = ''; MAESTRO_QUEST_STORE_PASSWORD = ''; MAESTRO_QUEST_KEY_PASSWORD = '' }
     $deadline = [DateTime]::UtcNow.AddMinutes(20)
     $reportWrittenAt = $null
     $shutdownAt = $null

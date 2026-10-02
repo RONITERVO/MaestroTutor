@@ -6,11 +6,9 @@ param(
     [Parameter(Mandatory)][string]$BuildMirror,
     [Parameter(Mandatory)][string]$AndroidSdk,
     [Parameter(Mandatory)][string]$AndroidJdk,
-    [switch]$UpdateBehaviourCatalog,
-    [switch]$RenderImports,
-    [switch]$RenderRecipes,
-    [switch]$RenderRules
+    [Parameter(Mandatory)][string]$ReleaseProfile,
+    [switch]$PrepareOnly
 )
 $ErrorActionPreference = 'Stop'
-try { & (Join-Path $PSScriptRoot 'Build-QuestPackage.ps1') @PSBoundParameters -Channel Development; $global:LASTEXITCODE = 0 }
+try { & (Join-Path $PSScriptRoot 'Build-QuestPackage.ps1') @PSBoundParameters -Channel Release; $global:LASTEXITCODE = 0 }
 catch { $global:LASTEXITCODE = 1; throw }

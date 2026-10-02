@@ -2523,3 +2523,62 @@ It remains uninstalled, disabled for live managed access and development-signed.
 No production deployment, Meta dashboard action, Store upload or headset action
 was performed. Local evidence is in `.quest-evidence/quest-account-ui/`; the
 PR records the final committed-source CI result separately.
+
+
+## Quest release packaging checkpoint (2026-10-02)
+
+Added a separate release entry point sharing the tested development packaging
+pipeline. Its public profile pins package/version, Meta app ID, distinct
+same-project Firebase registrations, account-link/attestation endpoints and the
+intended signing certificate. Unknown/private/debug fields fail validation.
+Inherited web settings are cleared before compiling the profile-specific bundle;
+a receipt hashes the profile and all web files, checked again inside Unity.
+
+Release builds use an owned mirror, IL2CPP/ARM64 and a non-debuggable player with
+no development entitlement bypass. The Meta resource is enabled only in the
+mirror for packaging, then restored. Unity never receives release key paths,
+aliases or passwords. A separate signing step reads passwords by environment
+variable name, verifies the intended certificate and checks the final manifest.
+Missing signing inputs fail before starting Unity. See
+[release commands and profile](QUEST_RELEASE_BUILD.md).
+
+The complete preparation command exited 0 using the committed synthetic fixture,
+without a real release key or provider requests. **629 EditMode and 417 PlayMode
+tests** pass, with three optional private-file skips. Android has **75 passes and
+two optional private-archive skips**, and lint passes. The full web suite passes
+**1,885 tests in 219 files**; TypeScript and ESLint pass. Two source-scanning tests
+failed in the initial run during Android compilation, then passed individually
+and in the full four-worker rerun without changing production code or tests.
+
+Independent APK checks match 233 runtime, 134 test and 14 editor C# sources and
+38 fixture files to the mirror. All 122 packaged web files match, including the
+receipt covering 121 files. The avatar and all 178 motions match their manifests.
+The APK contains enabled Meta app ID `1763835394893209`, package
+`com.maestro.quest`, API 32/34, ARM64 and a valid development v2 signature; its
+manifest is non-debuggable. Source and restored mirror Meta resources remain
+disabled. Package availability and actual provider configuration are unverified.
+
+Preparation artifact: `MaestroQuest-intermediate-20261002-164909.apk`, SHA-256
+`0577EF304F73927E0E0809232B255C00D0BE76936238053E248C39484AF221A1`.
+It uses synthetic endpoints and a development certificate, **not** a release
+candidate. Actual release signing has not been exercised; no production deploy,
+Store upload, dashboard action or headset operation occurred. Local evidence is
+in `.quest-evidence/quest-release/`. Real configuration, signing, provider/device
+acceptance and Store work remain open.
+
+
+Development regression also completed with helper exit 0 after adding an
+explicit normal batch exit following a successful build report. The initial
+attempt built an APK but stalled on shutdown and was correctly rejected; its
+logs remain separate. Final checks again pass 629 EditMode, 417 PlayMode and 75
+Android tests, with the same optional skips. The development manifest restores
+`com.maestro.quest.development` and debuggable mode; all 121 web files and native
+content match. No release receipt or synthetic provider configuration remains
+in the development web bundle.
+
+Development checkpoint: `MaestroQuest-release-tools-6ED5F072.apk`, SHA-256
+`6ED5F072CFBC987AAAE0DEB9BF462B519DAF5E1BD4D2D4F8DF7A8406DD358943`.
+It is development-signed and uninstalled. The final full helper used the
+credential-scrubbing verification path and the explicit batch-exit fix. The
+release preparation artifact above predates that development-only exit change;
+its release builder and profile/content validation code are unchanged.

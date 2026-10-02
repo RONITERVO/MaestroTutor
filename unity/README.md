@@ -265,3 +265,11 @@ for the shared Firebase path, browser approval, book pairing/cancellation contra
 and outstanding real-provider and headset acceptance. The browser approval page
 and book client are implemented but remain disabled pending release setup. Meta SDKs remain package dependencies governed by their
 upstream license; no copied SDK source is committed here.
+
+
+Release packaging now has a separate public profile and `Build-QuestRelease.ps1`.
+It shares the development test/package path, supports preparation without release
+keys, and checks the bundled web inventory and final APK identity/signature. See
+[release packaging](../docs/QUEST_RELEASE_BUILD.md). Preparation is not Store
+acceptance; no release key, upload, production deployment or installation is
+authorized by running configuration checks.

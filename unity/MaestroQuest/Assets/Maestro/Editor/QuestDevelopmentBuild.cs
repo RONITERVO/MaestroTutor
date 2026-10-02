@@ -45,6 +45,9 @@ namespace Maestro.Quest.Editor
             }, true));
             if (summary.result != BuildResult.Succeeded) throw new InvalidOperationException("Quest development build failed: " + summary.result);
             Debug.Log("MAESTRO_DEVELOPMENT_APK " + output);
+            // Finish this batch explicitly after the successful report is saved.
+            // Automatic -quit can stall after a release/development target switch.
+            if (Application.isBatchMode) EditorApplication.Exit(0);
         }
 
         static string RequiredDirectory(string variable)
