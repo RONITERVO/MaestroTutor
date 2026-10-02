@@ -18,14 +18,16 @@ damaged or incompatible content leave the existing selection and display intact.
 Inspect `avatar.model` before selecting. Its fields distinguish the saved
 `selectedHash` from `displayedHash`, plus object revision, loading/ready/unavailable
 phase, bounded status, temporary-room state and loaded-rig posing support.
-`canPose` describes the loaded rig; it does not grant authoring ownership. Empty hash
-means included Maestro. A failed new selection preserves the old saved identity;
+`canPose` describes the loaded rig; it does not grant authoring ownership. Empty saved/displayed hash
+means the original sketch fallback; bundled avatars have exact hashes. A failed new selection preserves the old saved identity;
 its status explains the failure. If an already saved custom model becomes missing
 on a later launch, the existing restoration path can display included Maestro and
 the fact reports the saved/displayed mismatch.
 
 `avatar.model.select {target: "maestro", modelHash, revision}` requires the exact
-observed revision. Empty `modelHash` chooses included Maestro. It owns Maestro's
+observed revision. Empty `modelHash` chooses the current included Maestro, resolved once to the hash
+reported by `avatar.included`. The resolved identity is saved and returned; see
+QUEST_INCLUDED_AVATAR.md. It owns Maestro's
 whole target while preparing, and completes only after the prepared model is
 saved and displayed. Other actors must release Maestro first. Physical selection
 has trusted manual priority and can interrupt an existing actor; public arguments
@@ -43,7 +45,7 @@ After commit, Stop cannot undo it; use Undo or another explicit selection.
 
 Temporary-room selection changes only the fork until Keep. Saving retains the
 canonical pose and recorded motions. A changed model resets its embedded walking
-clip index; exact saved library walking/activity choices remain unchanged and can
+clip index (the bundled default uses its declared gait); exact saved library walking/activity choices remain unchanged and can
 be unavailable on an incompatible rig. They are never silently substituted.
 Selection does not request a clip or recording. Normal configured tutor activity
 may resume when the model becomes ready. Old receipts never replay a selection.

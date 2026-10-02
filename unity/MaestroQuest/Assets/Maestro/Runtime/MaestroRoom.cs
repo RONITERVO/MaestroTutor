@@ -90,8 +90,9 @@ namespace Maestro.Quest
             var virtualView=gameObject.AddComponent<VirtualRoomView>(); virtualView.Initialize(originObject.transform,camera,scan,physics);
             var agent=gameObject.AddComponent<RoomAgent>();agent.Initialize(null,browser);
             var workspace=gameObject.AddComponent<Maestro.Quest.Persistence.WorkspaceHost>();
+            var includedAvatar=Maestro.Quest.Imports.BundledAvatar.FromApplication();
             workspace.Initialize(Application.persistentDataPath,room.transform,(session,directory,receipts,gate)=>session.Build(room,bookItem,browser,router,input,physics,navigation,scan,virtualView,
-                () => headTracking == null || (headTracking.ReadValue<int>() & 3) == 3,Application.persistentDataPath,directory,receipts,gate),agent);
+                () => headTracking == null || (headTracking.ReadValue<int>() & 3) == 3,Application.persistentDataPath,directory,receipts,gate,includedAvatar),agent,includedAvatar);
 
         }
 

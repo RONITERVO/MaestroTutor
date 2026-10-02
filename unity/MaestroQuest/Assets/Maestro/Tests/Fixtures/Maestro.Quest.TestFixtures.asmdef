@@ -1,6 +1,8 @@
 {
   "name": "Maestro.Quest.TestFixtures",
-  "references": [],
+  "references": [
+    "Maestro.Quest"
+  ],
   "optionalUnityReferences": [
     "TestAssemblies"
   ],

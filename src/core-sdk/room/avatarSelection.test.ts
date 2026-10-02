@@ -27,3 +27,19 @@ it('requires the shared model feature, exact object revision and private content
  for(const args of [{...call.arguments,modelHash:'../model.glb'},{...call.arguments,modelHash:'https://example.com/model.glb'},{...call.arguments,target:'book'},{...call.arguments,revision:0},{...call.arguments,manual:true}])expect(validateCapabilityArguments(call.id,1,args)).not.toBeNull();
  expect(validateCapabilityArguments(call.id,1,{...call.arguments,modelHash:''})).toBeNull();expect(validateCapabilityArguments('model.library.inspect',1,{offset:33})).not.toBeNull();
 });
+
+import bundled from '../../../test-fixtures/browser/includedAvatar.json';
+it('keeps the current bundled default discoverable and saves its resolved exact identity through the same selection contract',()=>{
+ expect(validFactValue('avatar.included',bundled.included)).toBe(true);
+ expect(validFactValue('avatar.model',bundled.model)).toBe(true);
+ expect(validExecutionView(bundled.execution)).toBe(true);
+ const action=bundled.execution.selected;
+ expect(validateCapabilityArguments(action.call.id,1,action.call.arguments)).toBeNull();
+ expect(action.call.arguments.modelHash).toBe('');
+ expect(action.output.modelHash).toBe(bundled.included.modelHash);
+ expect(bundled.model.selectedHash).toBe(action.output.modelHash);
+ expect(bundled.model.displayedHash).toBe(action.output.modelHash);
+ expect(bundled.included.bundled).toBe(true);
+ expect(bundled.included.walkClipIndex).toBe(-1); // This native capture uses a synthetic model without a declared gait.
+ expect(validFactValue('avatar.included',{...bundled.included,walkClipIndex:'0'})).toBe(false);
+});

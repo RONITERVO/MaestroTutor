@@ -2,6 +2,12 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
+The chosen paid-plan Meshy export is now packaged as the offline default avatar,
+with exact saved identity, an explicit Walking clip and portable recovery/backup
+content. The older Meshy motion collection uses a different rig and stays out of
+the default library. Direct ZIP import and curated default motion packs remain
+unfinished; see QUEST_INCLUDED_AVATAR.md.
+
 Current animation authoring lets agent/program calls and optional typed book
 fields edit the same pose and keyframes as the physical tray. Exact object
 revisions prevent stale saved edits. Shared recording exposes start/save/discard
@@ -13,7 +19,7 @@ pose versions, the same physical joint limits and imported retargeter, held-join
 exclusion, failed-pose recovery and recording interoperation. Saved edits are
 durable outside temporary mode; temporary edits stay in the fork until Keep.
 No authoring operation starts playback. The catalog contains 59 actions, 11
-events and 50 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
+events and 51 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
 Single-file GLB/VRM selection, preview and acceptance now share the physical
 import path with book fields and agent/program calls. See QUEST_MODEL_IMPORT.md.
 Animation collections now share native selection, versioned start/retry/tag controls,
@@ -1879,3 +1885,46 @@ The ARM64 package and v2 signature verify. Development checkpoint
 `MaestroQuest-animation-authoring-E0821836.apk` has SHA-256
 `E08218360895D4BA978EDC3C099D3A0BB8D5DFA1DEBA234509D65E1BD08745AF`.
 It remains uninstalled, and PR #248 remains draft.
+
+
+## Included Meshy default checkpoint — 2026-10-02
+
+The user-selected paid-plan Azure Violet Doll now ships offline as one exact
+9,234,600-byte GLB, including its declared Walking clip. Its 68-joint skeleton
+uses the existing 17 canonical pose controls and preserves imported animation
+channels. New rooms and explicit Default selection resolve to the exact model
+hash; saved selections survive artwork updates. First-use library copies,
+retirement, portable recovery, selection/Undo and native fact/receipt readback
+share the existing storage and action paths. See QUEST_INCLUDED_AVATAR.md.
+
+Four new EditMode and four PlayMode cases cover package integrity, compressed
+APK reads, quota/retirement, portable recovery, actual model posing/walking,
+saved selections across updates, physical/agent selection, duplicate receipts,
+Undo and cancellation. **419 EditMode and 390 PlayMode passed**, with the three
+optional private-file tests skipped in the full package run. **1,713 web tests
+across 197 files**, the **52-test native-capture/book subset**, **61 Android tests**,
+Android assembly/lint, TypeScript, ESLint, production web build, catalog/core/
+prompt checks and the new CI asset-integrity check passed. The full build helper
+exited zero. All 213 runtime, 110 test and 11 Editor C# files, 33 native fixtures
+and their metadata, the native browser AAR and 113 packaged web files match the
+verified inputs. The exact avatar bytes, ARM64-only libraries and APK v2
+signature were checked in the built archive.
+
+Development checkpoint:
+`D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-included-avatar-80EE765A.apk`
+
+SHA-256:
+`80EE765AA961C6319345EF8B24B019CAF5A8028AD6C355F78674FF5E18F7F762`
+
+The three exports from the supplied ZIP independently passed the native motion
+extractor and reopened with stable IDs. All match the new rig. Their reusable
+motion payloads total 350,732 bytes versus 27,761,900 input bytes. The earlier
+`D:/MeshyAnimatedMaestro` collection uses the old rig and is not assigned to this
+avatar. Only Walking is packaged with the model at this checkpoint. Curated
+motion packs, direct user ZIP import, further current-rig exports and cross-rig
+motion retargeting remain separate work; no promise of automatic conversion.
+
+Desktop idle/greeting/pointing previews use the actual model, retargeter and
+materials. They do not prove device appearance or gesture comfort. This APK is
+not installed; no headset or production deployment took place. Remaining v1
+provider, storage, runtime, MR/performance/comfort and Store gates stay open.

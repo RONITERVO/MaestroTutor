@@ -32,11 +32,11 @@ namespace Maestro.Quest.Creation
             completion=null;if(!CanSelectMaestroModel(hash,revision,out error))return false;
             var write=WriteGate.TryWrite(out error);if(write==null)return false;
             var avatar=Find("maestro").GetComponent<MaestroAvatar>();string roomSession=TemporarySessionId;
-            var data=Read("maestro");hash=string.IsNullOrEmpty(hash)?null:hash;
-            if(data.modelHash!=hash)data.walkClip=0;data.modelHash=hash;
+            var data=Read("maestro");hash=string.IsNullOrEmpty(hash)?IncludedAvatar?.Hash:hash;
+            if(data.modelHash!=hash)data.walkClip=IncludedAvatar!=null&&IncludedAvatar.Hash==hash?IncludedAvatar.WalkClipIndex+1:0;data.modelHash=hash;
             bool CommitPrepared(){
                 if(!this||cancellation.IsCancellationRequested||RuntimeGate.Held||Ownership.Suspended||TemporarySessionId!=roomSession||ObjectRevision("maestro")!=revision||Find("maestro").Grab.isSelected){if(this)SetStatus("Maestro or the room changed while loading; selection was not saved");return false;}
-                bool saved=CommitPersisted(new[]{data},Array.Empty<string>(),hash==null?"Included Maestro selected":"Custom Maestro selected",false,out var reason);
+                bool saved=CommitPersisted(new[]{data},Array.Empty<string>(),hash==IncludedAvatar?.Hash?"Included Maestro selected":"Custom Maestro selected",false,out var reason);
                 if(!saved)SetStatus(reason);return saved;
             }
             try {completion=ReleaseModelWrite(avatar.SelectModel(hash,Models,CommitPrepared,cancellation),write);return true;}

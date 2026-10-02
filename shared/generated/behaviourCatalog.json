@@ -1977,7 +1977,7 @@
       "ownership": "none",
       "channels": [],
       "requirements": [],
-      "description": "Read a page of metadata from this workspace's private imported-model library (32 models/256 MB maximum). Results contain exact content hashes, safe display names and byte sizes, never external paths. Entries are sorted by hash and offsets are session snapshots, not stable indexes: inspect again after an import. Metadata is not proof of valid content, humanoid compatibility or permitted use; avatar.model.select verifies the chosen bytes and rig before saving. Empty modelHash on avatar.model.select chooses included Maestro. This does not open a file picker, download or import a file.",
+      "description": "Read a page of metadata from this workspace's private imported-model library (32 models/256 MB maximum). Results contain exact content hashes, safe display names and byte sizes, never external paths. Entries are sorted by hash and offsets are session snapshots, not stable indexes: inspect again after an import. Metadata is not proof of valid content, humanoid compatibility or permitted use; avatar.model.select verifies the chosen bytes and rig before saving. Empty modelHash on avatar.model.select chooses the current included Maestro; inspect avatar.included for its exact identity. The included avatar is copied into this same bounded library on first use and is portable in backups. This does not open a file picker, download or import a file.",
       "example": {
         "offset": 0
       },
@@ -2573,7 +2573,7 @@
         "model.humanoid",
         "storage.writable"
       ],
-      "description": "Choose included Maestro with empty modelHash, or an exact imported hash from model.library.inspect. Inspect avatar.model and supply its revision. Shares the physical Use Maestro/Default path: loads and validates a hidden humanoid first, then saves and applies it as one Undo; temporary rooms remain unsaved until Keep. The current model, saved pose and recorded motions survive preparation/save failure or cancellation before commit. Embedded walk index resets on model change; exact library motion/activity choices are retained and may be incompatible, never silently replaced. Other actions must release Maestro first. Stop while preparing prevents later commit; after a successful commit use Undo or explicit selection to revert. No file picker or downloaded code is used. Selection does not request a clip or recording; configured automatic tutor activity may resume when ready. Restart loads only the saved selection. Completion reports a ready selected model; avatar.model separates saved and displayed identities when an existing saved model later becomes unavailable.",
+      "description": "Choose the current included Maestro with empty modelHash (resolved once to the exact hash from avatar.included), or an exact imported hash from model.library.inspect. The resolved hash is saved and returned; app artwork updates never replace saved selections. Inspect avatar.model and supply its revision. Shares the physical Use Maestro/Default path: loads and validates a hidden humanoid first, then saves and applies it as one Undo; temporary rooms remain unsaved until Keep. The current model, saved pose and recorded motions survive preparation/save failure or cancellation before commit. Embedded walk index resets on model change (the bundled default uses its declared walk clip); exact library motion/activity choices are retained and may be incompatible, never silently replaced. Other actions must release Maestro first. Stop while preparing prevents later commit; after a successful commit use Undo or explicit selection to revert. No file picker or downloaded code is used. Selection does not request a clip or recording; configured automatic tutor activity may resume when ready. Restart loads only the saved selection. Completion reports a ready selected model; avatar.model separates saved and displayed identities when an existing saved model later becomes unavailable.",
       "example": {
         "target": "maestro",
         "modelHash": "",
@@ -11090,7 +11090,22 @@
         }
       },
       "label": "Current Maestro model",
-      "description": "Saved versus displayed model identity; empty hash denotes included Maestro. loading retains the previous display during preparation, ready means selected and displayed identities match, unavailable means a saved selection could not be displayed. A failed new selection leaves the previous saved identity; bounded status explains it. Read the revision before selecting. Poses use canonical joints across supported humanoids."
+      "description": "Saved versus displayed model identity; empty hash denotes the original sketch fallback, while a packaged included avatar has its exact model hash. Read avatar.included to identify the current bundled default. loading retains the previous display during preparation, ready means selected and displayed identities match, unavailable means a saved selection could not be displayed. A failed new selection leaves the previous saved identity; bounded status explains it. Read the revision before selecting. Poses use canonical joints across supported humanoids."
+    },
+    {
+      "id": "avatar.included",
+      "version": 1,
+      "type": {
+        "record": {
+          "modelHash": "text",
+          "name": "text",
+          "bundled": "boolean",
+          "attribution": "text",
+          "walkClipIndex": "number"
+        }
+      },
+      "label": "Included Maestro avatar",
+      "description": "Metadata for this app build's offline default. Selecting empty modelHash resolves to this exact identity and stores it. Existing room selections, backups and animation references keep their own exact hashes across app updates. bundled=false means the original sketch fallback (empty hash). Metadata is not evidence of a loaded model: inspect avatar.model after selection. walkClipIndex identifies the declared embedded walk (-1 means the canonical walk); new rooms and a changed selection to this default use it when walking is explicitly started. Embedded clips do not start on selection."
     },
     {
       "id": "model.import.selection",
@@ -12074,7 +12089,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "bc3081d5a9f70fe980641db920b52804ae7e2bd37cb2c67c124ef91ccb5db748"
+      "sha256": "99c86694b114f79b06e64d7913cc868e272b0f440e79d7a664e92c0497573642"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -12206,7 +12221,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "90fe99ab436125b38f79da9c4c7a353836b6d72097609db4ac1974586bb35d9c"
+      "sha256": "7f370f8be783290aac8eaaad367becea63f93ce50c7cf70e73c4f186995d4158"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomToolTray.cs",
@@ -12322,7 +12337,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AvatarModelSelection.cs",
-      "sha256": "d58e84f527ebfd1eb4e7dff56f0a8ffd849ec8078b28eb773d81b5360fd65f8f"
+      "sha256": "ccd5f31960951f14609fc1ea553dadbd9e0fe659473b7cb5bab20cf4ef155a63"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ModelLibrary.cs",
+      "sha256": "8feb8a2a99e6875ccea809ffa9b77cb674f06a30268b42b836f045489dc1fc61"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/BundledAvatar.cs",
+      "sha256": "763ce7823e8c1a29831752606e39bf6f046def3c5385ca79b0f8bcad8d015ffb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeTemplates.cs",
@@ -12354,7 +12377,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AvatarModelCapabilities.cs",
-      "sha256": "2bafa50679a117aca6b64e1d5d1c6550c27e616707195141ecf3855c8e0d6cab"
+      "sha256": "876e746cb903d0ae11b6a6dca42cc5d05157d5a40722c9ace3478a3eac4aec7a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModule.cs",

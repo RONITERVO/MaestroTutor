@@ -22,13 +22,30 @@ namespace Maestro.Quest.Imports
     public sealed class ModelLibrary
     {
         readonly string directory;
+        readonly BundledAvatar included;
         readonly SemaphoreSlim writes=new(1,1);
         readonly WorkspaceWriteGate workspaceWrites;
-        public ModelLibrary(string directory,WorkspaceWriteGate writeGate=null) { this.directory = Path.GetFullPath(directory);workspaceWrites=writeGate??new(); }
+        public ModelLibrary(string directory,WorkspaceWriteGate writeGate=null,BundledAvatar includedAvatar=null) { this.directory = Path.GetFullPath(directory);workspaceWrites=writeGate??new();included=includedAvatar; }
         public static bool ValidHash(string hash) => hash != null && hash.Length == 64 && hash.All(c => c >= '0' && c <= '9' || c >= 'a' && c <= 'f');
         public static string Hash(byte[] bytes) { using var sha = SHA256.Create(); return BitConverter.ToString(sha.ComputeHash(bytes)).Replace("-", "").ToLowerInvariant(); }
         public static ModelAsset Inspect(string name, byte[] bytes) => new() { Hash = Hash(bytes), Name = SafeName(name), Bytes = bytes, Inspection = ModelInspection.Inspect(bytes) };
-        public Task<ModelAsset> ReadAsync(string hash) => Task.Run(() =>
+        public Task<ModelAsset> ReadAsync(string hash)
+        {
+            if(included==null||hash!=included.Hash)return Task.Run(()=>ReadLocal(hash));
+            // Acquire before dispatch so export/replacement/retirement cannot miss an
+            // accepted first-use copy. Never repair a damaged local file implicitly.
+            var write=workspaceWrites.Write();
+            return Task.Run(async()=>{
+                try {
+                    await writes.WaitAsync().ConfigureAwait(false);
+                    try {
+                        if(File.Exists(Path.Combine(directory,hash+".glb")))return ReadLocal(hash);
+                        var asset=included.Read();SaveCore(asset);return asset;
+                    } finally {writes.Release();}
+                } finally {write.Dispose();}
+            });
+        }
+        ModelAsset ReadLocal(string hash)
         {
             if (!ValidHash(hash)) throw new ModelImportException("This room has an invalid model reference.");
             string path = Path.Combine(directory, hash + ".glb");
@@ -36,30 +53,33 @@ namespace Maestro.Quest.Imports
             byte[] bytes = ReadBounded(path); var asset = Inspect(hash, bytes);
             if (asset.Hash != hash) throw new ModelImportException("The saved model copy is damaged. Import the original file again.");
             return asset;
-        });
+        }
         public async Task SaveAsync(ModelAsset asset)
         {
             using var write=workspaceWrites.Write();
             await writes.WaitAsync().ConfigureAwait(false);
-            try { await Task.Run(() => {
-                // Revalidate at the persistence boundary; the caller cannot substitute a hash/path.
-                var check = Inspect(asset.Name, asset.Bytes); if (check.Hash != asset.Hash) throw new ModelImportException("The selected model changed during import.");
-                Directory.CreateDirectory(directory);
-                string path = Path.Combine(directory, check.Hash + ".glb");
-                bool exists = File.Exists(path);
-                bool intact = exists && new FileInfo(path).Length == asset.Bytes.Length && Hash(ReadBounded(path)) == check.Hash;
-                if (!intact)
-                {
-                    var files = new DirectoryInfo(directory).GetFiles("*.glb");
-                    if ((!exists && files.Length >= 32) || files.Sum(file => file.Length) - (exists ? new FileInfo(path).Length : 0) + asset.Bytes.Length > 256L * 1024 * 1024)
-                        throw new ModelImportException("The model library is full (32 files or 256 MB). Existing models remain available.");
-                    string temporary = path + ".part";
-                    try { File.WriteAllBytes(temporary, asset.Bytes); if (exists) File.Replace(temporary, path, null); else File.Move(temporary, path); }
-                    finally { if (File.Exists(temporary)) File.Delete(temporary); }
-                }
-                // Original metadata remains in the GLB. This readable sidecar is also useful for exports/support.
-                File.WriteAllText(Path.Combine(directory, check.Hash + ".txt"), check.Name + "\nSHA256: " + check.Hash + "\n\n" + check.Inspection.Attribution, Encoding.UTF8);
-            }).ConfigureAwait(false); } finally { writes.Release(); }
+            try {await Task.Run(()=>SaveCore(asset)).ConfigureAwait(false);} finally {writes.Release();}
+        }
+        void SaveCore(ModelAsset asset)
+        {
+            // Revalidate at the persistence boundary; the caller cannot substitute a hash/path.
+            var check = Inspect(asset.Name, asset.Bytes); if (check.Hash != asset.Hash) throw new ModelImportException("The selected model changed during import.");
+            Directory.CreateDirectory(directory);
+            string path = Path.Combine(directory, check.Hash + ".glb");
+            bool exists = File.Exists(path);
+            bool intact = exists && new FileInfo(path).Length == asset.Bytes.Length && Hash(ReadBounded(path)) == check.Hash;
+            if (!intact)
+            {
+                var files = new DirectoryInfo(directory).GetFiles("*.glb");
+                if ((!exists && files.Length >= 32) || files.Sum(file => file.Length) - (exists ? new FileInfo(path).Length : 0) + asset.Bytes.Length > 256L * 1024 * 1024)
+                    throw new ModelImportException("The model library is full (32 files or 256 MB). Existing models remain available.");
+                string temporary = path + ".part";
+                try { File.WriteAllBytes(temporary, asset.Bytes); if (exists) File.Replace(temporary, path, null); else File.Move(temporary, path); }
+                finally { if (File.Exists(temporary)) File.Delete(temporary); }
+            }
+            // Original metadata remains in the GLB; the sidecar also preserves package attribution.
+            string attribution=check.Inspection.Attribution+(included?.Hash==check.Hash?"\n\n"+included.Attribution:"");
+            File.WriteAllText(Path.Combine(directory, check.Hash + ".txt"), check.Name + "\nSHA256: " + check.Hash + "\n\n" + attribution, Encoding.UTF8);
         }
         public sealed class Entry { public string Hash,Name;public long Bytes; }
         // Metadata discovery only. Selection re-reads, hashes and loads the chosen

@@ -38,6 +38,11 @@ watercolor surfaces and spatial graphite geometry.
 
 ## Current assets and evidence
 
+The user-selected Meshy Azure Violet Doll is now the packaged default visual.
+See QUEST_INCLUDED_AVATAR.md for its exact source, rig and verification. The
+procedural FBX below remains the canonical gesture driver and fallback visual;
+its earlier study images do not depict the newly selected default.
+
 `unity/ArtSource/create_maestro.py` authors original full-body geometry, an
 18-bone rig and idle/listening/speaking/greeting/pointing clips. The FBX and its
 provenance live in the Unity Resources/Avatars directory. The generator's studio

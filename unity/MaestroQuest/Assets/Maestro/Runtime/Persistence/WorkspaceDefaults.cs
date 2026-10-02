@@ -19,16 +19,23 @@ namespace Maestro.Quest.Persistence
         internal static Quaternion BookRotation=>Quaternion.Euler(24,0,0);
         internal static Vector3 MaestroPosition=>new(-.78f,0,1.4f);
         internal static Quaternion MaestroRotation=>Quaternion.Euler(0,160,0);
-        internal static WorkspaceArchiveSnapshot Snapshot()
+        internal static WorkspaceArchiveSnapshot Snapshot(BundledAvatar includedAvatar=null)
         {
             byte[] Document(object value)=>new UTF8Encoding(false,true).GetBytes(JsonUtility.ToJson(value));
             var room=new RoomDocument {version=2,objects=new[]{
                 new RoomObjectData {id="book",kind=RoomObjectKind.Book,position=BookPosition,rotation=BookRotation},
-                new RoomObjectData {id="maestro",kind=RoomObjectKind.Maestro,position=MaestroPosition,rotation=MaestroRotation}}};
-            return new WorkspaceArchiveSnapshot(new Dictionary<string,byte[]> {
+                new RoomObjectData {id="maestro",kind=RoomObjectKind.Maestro,modelHash=includedAvatar?.Hash,walkClip=(includedAvatar?.WalkClipIndex??-1)+1,position=MaestroPosition,rotation=MaestroRotation}}};
+            var documents=new Dictionary<string,byte[]> {
                 ["room.v2.json"]=Document(room),["behaviours.v2.json"]=Document(new RuleDocument()),
                 ["controls.v2.json"]=Document(new ControllerPreferences()),["avatar-activities.v2.json"]=Document(new AvatarActivityDocument()),
-                ["motions/motions.v2.json"]=Document(new MotionCatalogue())},new Dictionary<string,Func<Stream>>());
+                ["motions/motions.v2.json"]=Document(new MotionCatalogue())};
+            var assets=new Dictionary<string,Func<Stream>>();
+            if(includedAvatar!=null){
+                var model=includedAvatar.Read();
+                assets.Add("models/"+model.Hash+".glb",()=>new MemoryStream(model.Bytes,false));
+                documents.Add("models/"+model.Hash+".txt",Encoding.UTF8.GetBytes(model.Name+"\nSHA256: "+model.Hash+"\n\n"+model.Inspection.Attribution+"\n\n"+includedAvatar.Attribution));
+            }
+            return new WorkspaceArchiveSnapshot(documents,assets);
         }
     }
 }

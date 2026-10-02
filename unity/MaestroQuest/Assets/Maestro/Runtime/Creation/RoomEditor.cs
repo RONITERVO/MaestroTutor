@@ -59,22 +59,24 @@ namespace Maestro.Quest.Creation
         public bool HistoricalMotion(string id) => journal.HistoricalMotionIds.Contains(id) || savedJournal?.HistoricalMotionIds.Contains(id)==true;
         public bool SavedMotion(string id,out bool uncertain,bool force=false) => storage.RetainsMotion(id,out uncertain,force);
         public ModelLibrary Models { get; private set; }
+        public BundledAvatar IncludedAvatar { get; private set; }
         public MotionLibrary Motions { get; private set; }
         public AvatarActivityProfiles ActivityProfiles { get; private set; }
         public RoomPhysicsWorld PhysicsWorld { get; private set; }
         public string SaveDirectory { get; private set; }
         public string ReceiptDirectory {get;private set;}
 
-        public void Initialize(RoomInteraction interaction, RoomItem book, RoomItem maestro, string saveDirectory = null, RoomPhysicsWorld physics = null, RoomRuntimeGate runtimeGate = null, string receiptDirectory = null)
+        public void Initialize(RoomInteraction interaction, RoomItem book, RoomItem maestro, string saveDirectory = null, RoomPhysicsWorld physics = null, RoomRuntimeGate runtimeGate = null, string receiptDirectory = null, BundledAvatar includedAvatar = null)
         {
             room = interaction; room.ConfigureWrites(WriteGate); RuntimeGate=runtimeGate??RuntimeGate;RuntimeGate.Changed+=RefreshOwnership;RefreshOwnership();
             PhysicsWorld = physics;PhysicsWorld?.ConfigureRuntime(RuntimeGate);
             AddIdentity("book", book); AddIdentity("maestro", maestro);
             var directory = saveDirectory ?? Path.Combine(Application.persistentDataPath, "room"); SaveDirectory=directory;ReceiptDirectory=receiptDirectory??directory;
-            storage = new RoomStorage(directory); Models = new ModelLibrary(Path.Combine(directory, "models"),WriteGate); Motions = new MotionLibrary(Path.Combine(directory,"motions"),WriteGate);
+            IncludedAvatar=includedAvatar;
+            storage = new RoomStorage(directory); Models = new ModelLibrary(Path.Combine(directory, "models"),WriteGate,includedAvatar); Motions = new MotionLibrary(Path.Combine(directory,"motions"),WriteGate);
             ActivityProfiles=new AvatarActivityProfiles(directory,WriteGate);
             var loaded = storage.Load(out var message);
-            journal = new RoomJournal(loaded ?? StarterDocument(book, maestro));
+            journal = new RoomJournal(loaded ?? StarterDocument(book, maestro, includedAvatar));
             maestro.GetComponent<MaestroAvatar>()?.ConfigureRuntime(RuntimeGate);
             maestro.GetComponent<MaestroAvatar>()?.ConfigureOwnership(Ownership,"maestro");
             Reconcile();
@@ -82,13 +84,13 @@ namespace Maestro.Quest.Creation
             if (message != null) SetStatus(message);
         }
 
-        static RoomDocument StarterDocument(RoomItem book, RoomItem maestro)
+        static RoomDocument StarterDocument(RoomItem book, RoomItem maestro, BundledAvatar includedAvatar)
         {
-            var items = new List<RoomObjectData> { Pose(new RoomObjectData { id = "book", kind = RoomObjectKind.Book }, book.transform), Pose(new RoomObjectData { id = "maestro", kind = RoomObjectKind.Maestro }, maestro.transform) };
+            var items = new List<RoomObjectData> { Pose(new RoomObjectData { id = "book", kind = RoomObjectKind.Book }, book.transform), Pose(new RoomObjectData { id = "maestro", kind = RoomObjectKind.Maestro, modelHash = includedAvatar?.Hash, walkClip = (includedAvatar?.WalkClipIndex??-1)+1 }, maestro.transform) };
             var kinds = new[] { RoomObjectKind.Block, RoomObjectKind.Ball, RoomObjectKind.Cylinder };
             var colors = new[] { IllustratedMaterials.Cover, IllustratedMaterials.Ribbon, IllustratedMaterials.Hex("2B8D88") };
             for (int i = 0; i < kinds.Length; i++) items.Add(new RoomObjectData { id = Guid.NewGuid().ToString("N"), kind = kinds[i], color = colors[i], position = new Vector3(.52f + i * .17f,1.45f,.8f) });
-            return new RoomDocument { version = 1, objects = items.ToArray() };
+            return new RoomDocument { version = 2, objects = items.ToArray() };
         }
 
         void AddIdentity(string id, RoomItem item)

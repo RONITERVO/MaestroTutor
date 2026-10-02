@@ -887,3 +887,27 @@ it('edits an aimed throw in the existing book form and shows the real native lau
  expect(screen.getByLabelText('Selected action').textContent).toContain('launched');expect(screen.getByLabelText('Selected action').textContent).not.toContain('caught');
  act(()=>client.cancel());
 });
+
+import bundledAvatar from '../../../test-fixtures/browser/includedAvatar.json';
+it('shows the offline included-avatar identity and the exact saved result of choosing Default',async()=>{
+ const {client,screen,receive}=setup(true,['avatarModels.v1','execution.v1','actionResults.v1']);
+ await receive(undefined,false,{execution:{...bundledAvatar.execution,selected:null,running:[],outcomes:[],nextRunId:bundledAvatar.execution.selected.id} as RoomAgentState['execution']});
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));
+ fireEvent.change(screen.getByLabelText('Catalog category'),{target:{value:'facts'}});fireEvent.click(screen.getByRole('button',{name:/^Search$/}));
+ const fact=behaviourFact('avatar.included')!;
+ await receive({operation:'search',category:'facts',query:'',offset:0,total:1,pageSize:6,entries:[{id:fact.id,version:1,label:fact.label}],status:'Included avatar'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(fact.label)}));
+ await receive({operation:'inspect',category:'facts',capability:fact.id,version:1,definition:fact,available:true,value:bundledAvatar.included,status:'Included model metadata'});
+ expect(screen.getByLabelText('Current fact value').textContent).toContain(bundledAvatar.included.modelHash);
+ fireEvent.change(screen.getByLabelText('Catalog category'),{target:{value:'actions'}});fireEvent.click(screen.getByRole('button',{name:/^Search$/}));
+ const definition=capabilityDefinition('avatar.model.select')!;
+ await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Default selection'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Model contract'});
+ fireEvent.click(screen.getByText('Edit action fields'));
+ fireEvent.change(screen.getByLabelText('Action inputs revision'),{target:{value:bundledAvatar.execution.selected.call.arguments.revision}});
+ expect((screen.getByLabelText('Action inputs modelHash') as HTMLInputElement).value).toBe('');
+ fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
+ expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:bundledAvatar.execution.selected.call,runId:bundledAvatar.execution.selected.id}});
+ await receive(undefined,false,{execution:bundledAvatar.execution as RoomAgentState['execution']});
+ expect(screen.getByLabelText('Action result').textContent).toContain(bundledAvatar.included.modelHash);act(()=>client.cancel());
+});

@@ -136,6 +136,7 @@ namespace Maestro.Quest.Editor
             }
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
             AssetDatabase.SaveAssets();
+            QuestIncludedAvatar.Validate();
             QuestBehaviourCatalog.Export();
             Debug.Log("MAESTRO_PROJECT_CONFIGURED");
         }

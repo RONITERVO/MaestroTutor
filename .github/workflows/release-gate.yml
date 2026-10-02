@@ -54,6 +54,8 @@ jobs:
 
       - name: Verify generated behaviour catalog sources
         run: npm run verify:behaviour-catalog
+      - name: Verify included Quest avatar integrity
+        run: npm run verify:quest-assets
       - name: Test app and shared core
         run: npm test
       - name: Lint app

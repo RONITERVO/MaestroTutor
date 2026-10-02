@@ -34,17 +34,18 @@ namespace Maestro.Quest.Persistence
         internal WorkspaceHistory History {get;private set;}
         internal WorkspaceRecovery Recovery {get;private set;}
         internal WorkspaceSelection Selection {get;private set;}
+        internal Imports.BundledAvatar IncludedAvatar {get;private set;}
         public WorkspaceContent Current {get;private set;}
         public bool Switching {get;private set;}
         public string Status {get;private set;}="Opening workspace";
         internal Task Retirement {get;private set;}=Task.CompletedTask;
         public bool ReviewRequired=>Selection?.Active.ReviewRequired==true;
         public event Action Changed;
-        internal void Initialize(string applicationData,Transform contentOrigin,Action<WorkspaceContent,string,string,RoomRuntimeGate> factory,RoomAgent connection=null)
+        internal void Initialize(string applicationData,Transform contentOrigin,Action<WorkspaceContent,string,string,RoomRuntimeGate> factory,RoomAgent connection=null,Imports.BundledAvatar includedAvatar=null)
         {
             if(initialized)throw new InvalidOperationException("Workspace host is already initialized.");
             if(!contentOrigin||factory==null)throw new ArgumentException("Workspace shell is unavailable.");
-            initialized=true;origin=contentOrigin;build=factory;agent=connection;store=new WorkspaceGenerationStore(applicationData);this.applicationData=applicationData;
+            IncludedAvatar=includedAvatar;initialized=true;origin=contentOrigin;build=factory;agent=connection;store=new WorkspaceGenerationStore(applicationData);this.applicationData=applicationData;
             TryInitializeServices();
         }
         void TryInitializeServices()
