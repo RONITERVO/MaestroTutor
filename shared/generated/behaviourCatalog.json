@@ -9365,6 +9365,29 @@
             "type": "number",
             "minimum": 0.05,
             "maximum": 1.0
+          },
+          "reach": {
+            "type": "object",
+            "properties": {
+              "radius": {
+                "type": "number",
+                "minimum": 0.02,
+                "maximum": 1.0
+              },
+              "physics": {
+                "type": "boolean",
+                "title": "Require freely simulating physics"
+              }
+            },
+            "required": [
+              "radius",
+              "physics"
+            ],
+            "additionalProperties": false,
+            "title": "Pickup reach check",
+            "x-features": [
+              "anchorZones.v1"
+            ]
           }
         },
         "required": [
@@ -9394,7 +9417,7 @@
         "authoring.inactive",
         "release.physicsReady"
       ],
-      "description": "Temporarily carry a loaded creation at an exact recipe part, Maestro hand or object-root anchor. Owns only the prop, so holder animation can run in parallel. Both object IDs must be authorized resources. holder.revision guards root/recipe admission; avatarHand requires the current avatarHash. Read object.anchor for the anchor pose and use an explicit offset (at most one root-scale metre) and unit rotation relative to it. Gripping either object, missing/replaced anchors, room pause and path obstruction stop the action. Self-attachment and nested held-object chains are refused. seconds is the bounded lifetime; return restores the initial prop pose on completion/cancellation, while drop/throw releases at seconds*releaseAt and leaves real physics running. Throw derives velocity from actual recent anchor motion, using the existing 15 m/s and 30 rad/s caps; a stationary anchor is not an aimed throw. Drop/throw needs solid/bouncy physics and aligned running room surfaces, with clearance from the holder on release. Stop or failure never intentionally releases an unreleased prop; grip takeover preserves its current placement. Released motion cannot be undone by cancellation. This is live motion, not a saved constraint or animation edit; no auto-restart. Use object.attachment and the native receipt for the actual outcome.",
+      "description": "Temporarily carry a loaded creation at an exact recipe part, Maestro hand or object-root anchor. Owns only the prop, so holder animation can run in parallel. Both object IDs must be authorized resources. holder.revision guards root/recipe admission; avatarHand requires the current avatarHash. Optional reach requires the prop origin to be within radius world metres of the fitted anchor on admission; physics=true additionally requires freely simulating solid/bouncy physics. It is rechecked immediately before pickup, so a prior zone event never permits catching a departed/held object. Omitted reach keeps the existing explicit remote-fit behavior. This does not add finger IK or swept catch detection. Read object.anchor for the anchor pose and use an explicit offset (at most one root-scale metre) and unit rotation relative to it. Gripping either object, missing/replaced anchors, room pause and path obstruction stop the action. Self-attachment and nested held-object chains are refused. seconds is the bounded lifetime; return restores the initial prop pose on completion/cancellation, while drop/throw releases at seconds*releaseAt and leaves real physics running. Throw derives velocity from actual recent anchor motion, using the existing 15 m/s and 30 rad/s caps; a stationary anchor is not an aimed throw. Drop/throw needs solid/bouncy physics and aligned running room surfaces, with clearance from the holder on release. Stop or failure never intentionally releases an unreleased prop; grip takeover preserves its current placement. Released motion cannot be undone by cancellation. This is live motion, not a saved constraint or animation edit; no auto-restart. Use object.attachment and the native receipt for the actual outcome.",
       "example": {
         "target": "00000000000000000000000000000000",
         "holder": {
@@ -9454,6 +9477,284 @@
     }
   ],
   "events": [
+    {
+      "id": "object.anchor.proximity.changed",
+      "version": 1,
+      "label": "Object entered or left an anchor zone",
+      "activity": null,
+      "objectEvent": false,
+      "valueType": "text",
+      "description": "Observe one explicit object's transform origin around a moving recipe part, Maestro hand or object-root anchor. offset uses holder-root-scale metres, matching object.hold; radius/hysteresis use world metres. Initial baseline suppresses the current side; report also reports it on the first sample. Enter at distance <= radius; exit at >= radius+hysteresis. At most 20 samples/second per wait; gaps over 0.2 seconds, rigid-body motion discontinuities and eligibility changes reset the baseline and reapply initial. physics=true requires a solid/bouncy target; held, carried, animation-owned or paused/unready physics emits nothing. Held anchors also suspend observation. Missing/replaced objects or sockets and invalid readings fail. The exact anchor revision/avatarHash is checked on admission; subsequent root/part motion is observed on those same instances. Value is the target ID; fields include holderId, part, inside, distance and the sampled zone centre x/y/z. This is sampled origin distance, not swept contact, mesh intersection, line of sight, navigation or a catch guarantee. Fast crossings can be missed. It does not own objects or authorize mutation. Before pickup use object.hold reach with a suitable radius to recheck current distance and eligibility; an old event never permits teleporting a departed object. Stop/pause/reload discard watches without replay.",
+      "features": [
+        "eventPrograms.v1",
+        "eventFields.v1",
+        "eventSubscriptions.v1",
+        "anchorZones.v1"
+      ],
+      "fields": {
+        "type": "object",
+        "properties": {
+          "holderId": {
+            "type": "string",
+            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+            "maxLength": 32
+          },
+          "part": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_]{0,32}$",
+            "maxLength": 32
+          },
+          "inside": {
+            "type": "boolean"
+          },
+          "distance": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1000000.0
+          },
+          "x": {
+            "type": "number",
+            "minimum": -1000000.0,
+            "maximum": 1000000.0
+          },
+          "y": {
+            "type": "number",
+            "minimum": -1000000.0,
+            "maximum": 1000000.0
+          },
+          "z": {
+            "type": "number",
+            "minimum": -1000000.0,
+            "maximum": 1000000.0
+          }
+        },
+        "required": [
+          "holderId",
+          "part",
+          "inside",
+          "distance",
+          "x",
+          "y",
+          "z"
+        ],
+        "additionalProperties": false
+      },
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "holder": {
+            "type": "object",
+            "title": "Attachment point",
+            "x-discriminators": [
+              "kind"
+            ],
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "objectId": {
+                    "type": "string",
+                    "pattern": "^[a-fA-F0-9]{32}$",
+                    "maxLength": 32,
+                    "x-resource": "object"
+                  },
+                  "part": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9_]{1,32}$",
+                    "maxLength": 32
+                  },
+                  "revision": {
+                    "type": "integer",
+                    "minimum": 1.0,
+                    "maximum": 1000000.0
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "recipePart"
+                    ],
+                    "x-static": true
+                  }
+                },
+                "required": [
+                  "objectId",
+                  "part",
+                  "revision",
+                  "kind"
+                ],
+                "additionalProperties": false,
+                "title": "Recipe part"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "objectId": {
+                    "type": "string",
+                    "enum": [
+                      "maestro"
+                    ],
+                    "x-resource": "object"
+                  },
+                  "hand": {
+                    "type": "string",
+                    "enum": [
+                      "left",
+                      "right"
+                    ]
+                  },
+                  "avatarHash": {
+                    "type": "string",
+                    "pattern": "^(|[a-f0-9]{64})$",
+                    "maxLength": 64
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "avatarHand"
+                    ],
+                    "x-static": true
+                  }
+                },
+                "required": [
+                  "objectId",
+                  "hand",
+                  "avatarHash",
+                  "kind"
+                ],
+                "additionalProperties": false,
+                "title": "Maestro hand"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "objectId": {
+                    "type": "string",
+                    "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+                    "maxLength": 32,
+                    "x-resource": "object"
+                  },
+                  "revision": {
+                    "type": "integer",
+                    "minimum": 1.0,
+                    "maximum": 1000000.0
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "object"
+                    ],
+                    "x-static": true
+                  }
+                },
+                "required": [
+                  "objectId",
+                  "revision",
+                  "kind"
+                ],
+                "additionalProperties": false,
+                "title": "Object root"
+              }
+            ]
+          },
+          "offset": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": -1.0,
+                "maximum": 1.0
+              },
+              "y": {
+                "type": "number",
+                "minimum": -1.0,
+                "maximum": 1.0
+              },
+              "z": {
+                "type": "number",
+                "minimum": -1.0,
+                "maximum": 1.0
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "additionalProperties": false,
+            "format": "boundedOffset"
+          },
+          "radius": {
+            "type": "number",
+            "minimum": 0.02,
+            "maximum": 10.0
+          },
+          "hysteresis": {
+            "type": "number",
+            "minimum": 0.005,
+            "maximum": 2.0
+          },
+          "transition": {
+            "type": "string",
+            "enum": [
+              "enter",
+              "exit",
+              "either"
+            ]
+          },
+          "initial": {
+            "type": "string",
+            "enum": [
+              "baseline",
+              "report"
+            ]
+          },
+          "physics": {
+            "type": "boolean",
+            "title": "Require freely simulating physics",
+            "description": "Only a free solid/bouncy target qualifies. Paused, held or animation-owned time resets the baseline."
+          }
+        },
+        "required": [
+          "target",
+          "holder",
+          "offset",
+          "radius",
+          "hysteresis",
+          "transition",
+          "initial",
+          "physics"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "anchorZones.v1"
+        ]
+      },
+      "example": {
+        "target": "00000000000000000000000000000000",
+        "holder": {
+          "kind": "avatarHand",
+          "objectId": "maestro",
+          "hand": "right",
+          "avatarHash": ""
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0.25
+        },
+        "radius": 0.15,
+        "hysteresis": 0.03,
+        "transition": "enter",
+        "initial": "baseline",
+        "physics": true
+      }
+    },
     {
       "id": "object.motion.changed",
       "version": 1,
@@ -12558,7 +12859,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "c68e864b872e967e42e1bfb7de4e1df47a9190505afbecb58d27eda7150ec3fd"
+      "sha256": "0794d0a017646703ce888754d386bc61449af3c89205b31ea715c8714c4b6965"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -12617,12 +12918,20 @@
       "sha256": "1958c8cbc6fcd40bbdde8bb69cd618a3c0bf405a203065cc2084b7bb7111c1a0"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/AnchorProximitySubscription.cs",
+      "sha256": "0d7aa30df2b44424668b85a591fb9db371c664ae00ea44c2d6ef37342a3fbc66"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomAnchorProbe.cs",
+      "sha256": "9ea0f817ae370727529db83270e48b887ed98159905f6c1ee8383f009c1c7ece"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CalendarSubscription.cs",
       "sha256": "13c75e60cd28071f5be4f2d0fc9d2bb5d05ff453fa0b8dfea4a770119f15fec9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RoomRuleActions.cs",
-      "sha256": "059ddb1de43e88cc0fab112c6f92ca8fb8149f399f650e3422b7a91b33d075c8"
+      "sha256": "f0391a64af119086c10981a0beb6ebaf9067d48287fd7e6edea1ccf9a848db85"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RoomRules.cs",
@@ -12966,7 +13275,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/HoldObjectCapability.cs",
-      "sha256": "6653301800bc55304ea1b464b18363307c65e3821ef8a6be82bce031057a5850"
+      "sha256": "23db0b75d200042df6c015edda6f0437a721ffa0194c00cbfa9590a97bdbd0d8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/IncludedMotionsCapability.cs",

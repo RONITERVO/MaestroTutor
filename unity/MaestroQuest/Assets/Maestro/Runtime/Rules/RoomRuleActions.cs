@@ -9,7 +9,7 @@ using Newtonsoft.Json.Linq;
 namespace Maestro.Quest.Rules
 {
     /// <summary>One lifecycle host for every native module. No capability IDs, enum dispatch or argument fields.</summary>
-    public sealed class RoomRuleActions : IRuleActions, IRuleCompletion, IRuleReadiness, IRuleInterruptionInfo, IRuleOwnershipSource, IProgramFacts, IProgramFactQueries, IProgramEventWorld, IProgramPhysicsWorld, IProgramClockWorld, IRuleResults
+    public sealed class RoomRuleActions : IRuleActions, IRuleCompletion, IRuleReadiness, IRuleInterruptionInfo, IRuleOwnershipSource, IProgramFacts, IProgramFactQueries, IProgramEventWorld, IProgramPhysicsWorld, IProgramClockWorld, IProgramAnchorWorld, IRuleResults
     {
         readonly CapabilityContext context;
         readonly Dictionary<string,CapabilityOperation> operations=new();
@@ -33,6 +33,7 @@ namespace Maestro.Quest.Rules
             var rigid=item.GetComponent<RigidRoomItem>();if(!rigid||!rigid.TryReadMotion(out bool available,out float speed,out float spin))return false;
             sample=new PhysicsMotionSample(rigid.GetInstanceID(),rigid.MotionRevision,available,speed,spin);return true;
         }
+        public IProgramAnchorProbe OpenAnchorProbe(string target,JObject holder,UnityEngine.Vector3 offset,bool requirePhysics)=>new RoomAnchorProbe(context.Editor,target,HoldObjectCapability.Anchor(holder),offset,requirePhysics);
         public bool TryRead(string name,out ProgramValue value)=>TryRead(name,1,null,out value);
         public bool TryRead(string name,int version,JObject arguments,out ProgramValue value) {
             value=default;var definition=BehaviourCatalog.Fact(name);if(definition==null||domain!=null&&definition.Domain!=domain||!context.Editor&&!context.Workspace)return false;

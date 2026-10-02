@@ -512,3 +512,52 @@ while another block plays. Explicit starts/bindings and loops compose continuing
 behaviour. Contact detection, spatial identity/anchors, reflex arbitration,
 background schedules and durable/resumable programs retain their separate release
 gates. Ordinary Stop and cancellation behavior is unchanged.
+
+
+## Moving anchor zones (2026-10-02)
+
+`anchorZones.v1` adds `object.anchor.proximity.changed` to the existing native
+subscription catalog. It observes an explicit object's transform origin around
+an exact recipe part, Maestro hand or object-root anchor. It does not create
+colliders or own the watched objects. Book controls and agent-authored programs
+use the same schema, including nested scalar expression bindings.
+
+The inputs are `target`, `holder`, `offset`, `radius`, `hysteresis`, `transition`,
+`initial` and `physics`. Holder uses the same discriminated anchor as
+`object.hold` and `object.anchor`; admission requires the current revision or
+avatar hash. Root/part motion follows the captured instances. Replacement or
+removal fails instead of silently following a different socket.
+
+Offset uses holder-root-scale metres; radius and hysteresis use world metres.
+The zone centre is socket position plus its rotated, scaled offset. Enter uses
+`distance <= radius`; exit uses `distance >= radius + hysteresis`. `baseline`
+suppresses the initial side, while `report` also delivers that side on the first
+sample. Select enter, exit or either. The primary value is the target ID; typed
+fields are `holderId`, `part`, `inside`, `distance` and centre `x/y/z`.
+
+Each active wait samples at most 20 times per second. The existing maximum of
+eight active runs also bounds watches. There is no catch-up. A gap over 0.2
+seconds, a rigid-body motion discontinuity or an eligibility interruption resets
+the baseline and reapplies the initial policy. Saving normal walking placement does
+not reset a hand-zone watch. `physics: true` requires a solid
+or bouncy target and emits nothing while the target is held, carried, animation
+owned or physics is paused/unready. A held anchor also suspends observation;
+an anchor must be available when the watch is created. `physics: false` permits
+observing nonphysical target movement. Stop, pause, edits and reload dispose
+watches without replaying events.
+
+This is sampled origin distance. It does not establish mesh contact, line of
+sight, navigation reachability or swept collision, and fast crossings can be
+missed. It grants no mutation authority. A program can wait for entry, then invoke
+`object.hold` with the same fitted anchor and optional `reach` guard. That action
+rechecks current distance and free-physics eligibility before pickup; an event
+from an earlier frame never licenses a remote catch. Both objects must still be
+declared resources and normal ownership, grip priority and obstruction checks
+apply. Animation on the holder can be composed in a parallel function.
+
+The shared fixture is `program-anchor-zone.json`. Native tests use a real flying
+rigid ball, a recipe hand and actual gravity/floor collision, plus stale pickup,
+paused physics, root/avatar anchors and socket replacement. This is a composable
+zone-and-pickup workflow, not autonomous reflex arbitration, finger IK or a promise
+that arbitrary fast throws will be caught. Quest timing and comfort remain release
+acceptance work.

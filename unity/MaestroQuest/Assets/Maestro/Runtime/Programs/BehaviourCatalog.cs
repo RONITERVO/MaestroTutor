@@ -138,6 +138,7 @@ namespace Maestro.Quest.Programs
         }
         public static readonly IReadOnlyList<ActionDefinition> Actions=Array.AsReadOnly(CapabilityModules.All.Select(module=>new ActionDefinition(module)).ToArray());
         public static readonly IReadOnlyList<EventDefinition> Events=Array.AsReadOnly(new[] {
+            AnchorProximitySubscription.Definition(),
             PhysicsMotionSubscription.Definition(),
             CalendarSubscription.Definition(),
             new EventDefinition("maestro.speaking.enter",RuleEventKind.Speaking,"Speaking","speaking"),

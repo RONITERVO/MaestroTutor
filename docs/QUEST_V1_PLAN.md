@@ -27,7 +27,7 @@ posing now exposes start/rotate/save/finish/discard with native session IDs and
 pose versions, the same physical joint limits and imported retargeter, held-joint
 exclusion, failed-pose recovery and recording interoperation. Saved edits are
 durable outside temporary mode; temporary edits stay in the fork until Keep.
-No authoring operation starts playback. The catalog contains 61 actions, 11
+No authoring operation starts playback. The catalog contains 61 actions, 12
 events and 53 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
 Single-file GLB/VRM selection, preview and acceptance now share the physical
 import path with book fields and agent/program calls. See QUEST_MODEL_IMPORT.md.
@@ -80,6 +80,15 @@ archive integration. Per-run state remains the default; saved values never resto
 execution or start a behaviour. Temporary-room memory and physical Quest latency
 acceptance remain open. See QUEST_PROGRAM_MEMORY.md.
 
+Moving anchor zones now share the catalog, native event waits, nested book inputs
+and agent authoring. Programs can observe a named recipe part, Maestro hand or
+object root and request a reach-checked pickup through existing `object.hold`.
+The pickup rechecks current distance and optional free-physics eligibility before
+changing ownership. Normal saved book/avatar travel does not reset observation;
+replaced sockets and rigid-body motion discontinuities remain guarded. These are
+bounded sampled origin-distance observations, not swept contact, automatic IK or
+promised catches. See QUEST_EVENT_PROGRAMS.md and QUEST_OBJECT_ATTACHMENTS.md.
+
 Current recovery implementation supports retained candidates, an external backup,
 and an explicitly requested fresh workspace through the same shared book/agent
 catalog. Original data stays preserved; preview, commit and content review remain
@@ -94,6 +103,32 @@ and tracked operation roots remain protected. Private recovery export remains
 separate; a full store with unreadable selection still requires recovery/repair.
 PR #248 records the current verified commit and package. Earlier entries
 below are historical evidence, not current test totals or release acceptance.
+
+PC moving-anchor zones (2026-10-02): programs can observe a moving recipe
+part, Maestro hand or object root and request an optional reach-checked pickup.
+The action rechecks distance and free-physics eligibility immediately before
+attachment. Native integration launches a ball into a recipe-hand zone, picks it
+up, drops it and verifies actual gravity/floor collision. Other cases cover
+stale reach, paused physics, exact socket replacement and normal saved avatar/book
+travel. The book and agent share nested typed inputs and the same native catalog.
+This is sampled proximity, not swept collision, automatic reaching or guaranteed
+fast-ball catching. Reflex arbitration, IK and headset timing remain unfinished.
+
+Verification: **478 Unity EditMode and 407 PlayMode tests passed**, with three
+optional private-file skips. **1,742 web tests in 204 files** and **76 Android
+tests** passed. The final native capture passed the five focused anchor contract/UI
+tests. TypeScript, lint, production build and catalog checks passed. Browser
+checks used native observations and the real React editor on two 512-pixel pages:
+nested event bindings and optional pickup reach were editable without horizontal
+overflow or browser errors. This is PC verification, not physical Quest acceptance.
+
+The full development APK helper exited **0**. All **225 runtime / 120 test / 11
+Editor C# files**, **36 native fixtures plus metadata**, the native AAR and **113
+packaged web files** matched the tested inputs. The exact included avatar, all
+**178 motion payloads**, ARM64-only libraries and v2 signature were checked.
+Checkpoint: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-anchor-zones-8D9C9925.apk`.
+SHA-256: `8D9C9925D7467D12BF5E1BB3D9A94BAF486FB697CEDBA2858DA630D2F83F3EF9`.
+Development signing; **not installed on Quest**. The device hold remains in force.
 
 PC remembered-values integration (2026-10-02): version-3 behaviours can opt into
 stable remembered declarations and explicit Save remembered values blocks. The

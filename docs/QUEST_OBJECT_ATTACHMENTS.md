@@ -17,6 +17,12 @@ second physics engine, provider tool, numeric action or saved constraint format.
 - `offset` is a vector of length at most one, in holder-root-scale metres.
   `rotation` is a unit quaternion relative to the anchor. `object.anchor`
   reports the exact live world pose and root scale for explicit fitting.
+- Optional `reach: {radius, physics}` rechecks the prop origin against the fitted
+  anchor immediately before pickup. Radius is 0.02–1 world metres; `physics: true`
+  also requires a freely simulating Solid/Bouncy prop. Out-of-reach or unavailable
+  pickup fails before changing ownership/placement. Omitted reach preserves the
+  existing explicit fitting operation. `anchorZones.v1` is required only when
+  reach is supplied. A zone event is observation, never a pickup reservation.
 - `seconds` bounds the operation to 0.1–30 seconds. `return` restores the
   original prop placement at completion or cancellation before release.
   `drop`/`throw` hands off to physics at seconds × releaseAt (0.05–1).
