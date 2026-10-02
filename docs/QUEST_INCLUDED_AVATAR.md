@@ -68,7 +68,8 @@ rig data, drops repeated meshes/textures, deduplicates exact motion payloads and
 keeps stable saved motion IDs. The current library allows 1,024 entries within
 128 MB; at most eight clips / 800,000 curve values reside in the playback cache.
 These are enforced budgets, not a promise that every set of 1,024 motions fits.
-Batch file selection processes up to 128 files sequentially; each source must
+Batch selection processes up to 128 individual files or one ZIP containing up to
+1,024 models sequentially (see QUEST_MOTION_BATCH_IMPORT.md); each source must
 fit 64 MB, each extracted motion 8 MB, and a source's extracted clips 32 MB.
 The real three-file ZIP audit extracted three compatible motions: 350,732 bytes
 from 27,761,900 source bytes, with one shared rig identity. This measurement is
@@ -76,7 +77,7 @@ for those files, not a fixed compression ratio for future collections.
 Ten-clip exports are convenient when within those limits. Do not rerig between
 exports intended for the same collection.
 
-**Remaining:** direct ZIP selection/extraction for users, curated offline default
+**Remaining:** ZIP member browsing for model preview, curated offline default
 motion packs with stable IDs and updates, real multi-clip exports from the new
 rig, content organization and Quest performance/comfort acceptance. Cross-rig
 retargeting of imported motions is not implemented; canonical gestures/poses

@@ -49,14 +49,14 @@ namespace Maestro.Quest.Imports
         {
             if(!CanSelect(true,out var error))throw new InvalidOperationException(error);
             BeginSession();picking=true;
-            try{picker.Start(sessionId);Say("Choose up to 128 animated GLB or VRM files");}
+            try{picker.Start(sessionId);Say("Choose one animation ZIP or up to 128 GLB / VRM files");}
             catch(Exception){FailSelection("The file chooser could not open. Resume Maestro and choose again.");}
             return sessionId;
         }
         bool Adopt(IMotionBatchSource source)
         {
             try{batch=new MotionBatch(editor.Motions,source);batch.Changed+=Refresh;selected=0;page=0;category=0;phase="ready";picking=false;Refresh();return true;}
-            catch(Exception){source?.Dispose();FailSelection("Choose between 1 and 128 readable animation files.");return false;}
+            catch(Exception){source?.Dispose();FailSelection("Choose between 1 and 1,024 readable animation files.");return false;}
         }
         void PollShared()
         {
@@ -65,9 +65,10 @@ namespace Maestro.Quest.Imports
             try{
                 var value=picker.Read(sessionId);if(value==null)return;
                 if(value.session!=sessionId){FailSelection("The file chooser returned a different batch identity");return;}
-                if(value.kind!="ready"||!string.IsNullOrEmpty(value.error)){FailSelection("File selection was cancelled or unavailable. Choose files again.");return;}
+                if(value.kind=="preparing"&&string.IsNullOrEmpty(value.error)){Say("Checking the selection; a ZIP is copied locally for its file list");return;}
+                if(value.kind!="ready"||!string.IsNullOrEmpty(value.error)){FailSelection(string.IsNullOrEmpty(value.error)?"File selection was cancelled or unavailable. Choose files again.":value.error);return;}
                 if(paused||!focused||editor.RuntimeGate.Held)return;
-                if(value.count<1||value.count>MotionBatch.MaximumFiles){FailSelection("Choose between 1 and 128 animation files.");return;}
+                if(value.count<1||value.count>MotionBatch.MaximumFiles){FailSelection("Choose between 1 and 1,024 animation files.");return;}
                 Adopt(picker.Source(value.count,sessionId));
             }catch(Exception){FailSelection("The selected files are unavailable. Choose local files again.");}
         }
@@ -108,7 +109,7 @@ namespace Maestro.Quest.Imports
             if(running==null&&batch?.Running!=true)return;
             stopRequested=true;phase="stopping";batch?.Stop();
         }
-        internal void ClearShared(){phase="cleared";ReleaseSession();Details="Animation collections\nChoose up to 128 GLB / VRM files.\nSaved motions remain in Library.";Say("Batch results cleared; original files and saved motions remain");}
+        internal void ClearShared(){phase="cleared";ReleaseSession();Details="Animation collections\nChoose one animation ZIP or GLB / VRM files.\nSaved motions remain in Library.";Say("Batch results cleared; original files and saved motions remain");}
         void CloseShared(){closing=true;stopRequested=true;batch?.Stop();if(running==null&&batch?.Running!=true){phase="cleared";ReleaseSession();}}
         void ReleaseSession()
         {
@@ -121,7 +122,7 @@ namespace Maestro.Quest.Imports
         internal JObject ObserveSession()=>new() {["requestId"]=sessionId,["version"]=version,["phase"]=phase,["category"]=batch?.Category??"",["error"]=Bounded(errorText),["counts"]=new JObject {["files"]=batch?.Count??0,["saved"]=batch?.Saved??0,["failed"]=batch?.Failed??0,["waiting"]=batch?.Pending??0}};
         internal JObject ObserveFile(string id,int index,int offset)
         {
-            if(id!=sessionId||batch==null||index<0||index>=batch.Count||offset<0||offset>31)return null;var item=batch.Results[index];
+            if(id!=sessionId||batch==null||index<0||index>=batch.Count||offset<0||offset>31)return null;var item=batch.Result(index);
             return new JObject {["requestId"]=sessionId,["index"]=index,["name"]=Bounded(item.Name),["state"]=item.State.ToString().ToLowerInvariant(),["error"]=Bounded(item.Error),["motionCount"]=item.MotionIds.Length,["motionOffset"]=offset,["motionIds"]=new JArray(item.MotionIds.Skip(offset).Take(ImportObservation.MotionPageSize))};
         }
         internal JObject Receipt()=>new() {["requestId"]=sessionId,["version"]=version,["phase"]=phase};
@@ -132,7 +133,7 @@ namespace Maestro.Quest.Imports
         public bool ReadyToStart=>AndroidMotionBatchSource.ReadyToStart;
         public void Start(string id)=>AndroidMotionBatchSource.Open(id);
         public AndroidMotionBatchSource.Selection Read(string id)=>AndroidMotionBatchSource.Poll(id);
-        public IMotionBatchSource Source(int count,string id)=>new AndroidMotionBatchSource(count,id);
+        public IMotionBatchSource Source(int count,string id)=>new AndroidMotionBatchSource(count,id,AndroidMotionBatchSource.Poll(id)?.names);
         public void Release(string id)=>AndroidMotionBatchSource.ClosePicker(id);
     }
 #endif

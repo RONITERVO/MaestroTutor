@@ -32,6 +32,6 @@ export function MotionLibraryManagement({ client, state, waiting }: { client: Li
     {confirm === 'forget' && <div role="group" aria-label="Confirm forgetting motion"><p>Forget the name, tags, source records and saved identity for “{selected.name}”? A later import creates a new motion. Your original source file is unchanged.</p>
       <div className="quest-library-actions"><button disabled={disabled || !state.canForgetMotion} onClick={() => { if (client.request('forgetMotion', { motionId: selected.id })) setConfirm(null); }}>Confirm forget details</button><button onClick={() => setConfirm(null)}>Keep details</button></div>
     </div>}
-    {selected.removed && <p>To restore: use Import on the physical tray, select the original GLB/VRM export, then Save motions. A changed animation is added separately so existing references are never redirected silently.</p>}
+    {selected.removed && <p>To restore: use Import on the physical tray, select the original GLB/VRM export, then Save motions; or use Animation batches with the original ZIP. A changed animation is added separately so existing references are never redirected silently.</p>}
   </details>;
 }

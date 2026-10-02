@@ -92,7 +92,7 @@ namespace Maestro.Quest.Tests
         [Test] public void SelectionLimitsAndCancelledRetryKeepPriorFailure() => Task.Run(async () =>
         {
             using var library=new MotionLibrary(directory);
-            using var empty=new Source(0); using var huge=new Source(129);
+            using var empty=new Source(0); using var huge=new Source(MotionBatch.MaximumFiles+1);
             Assert.Throws<ModelImportException>(() => new MotionBatch(library,empty)); Assert.Throws<ModelImportException>(() => new MotionBatch(library,huge));
             using var source=new Source(1); using var batch=new MotionBatch(library,source); bool retry=false;
             source.Read=(i,token) => { if (retry) { batch.Stop(); token.ThrowIfCancellationRequested(); } throw new ModelImportException("Export was incomplete."); };

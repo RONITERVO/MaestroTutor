@@ -108,10 +108,19 @@ namespace Maestro.Quest.Tests
             for(int offset=0;offset<32;offset+=8){var page=Fact("motion.import.batch.file",new JObject {["requestId"]=batches.SessionId,["index"]=0,["motionOffset"]=offset});Assert.That((int)page["motionCount"],Is.EqualTo(32));Assert.That((int)page["motionOffset"],Is.EqualTo(offset));Assert.That(((JArray)page["motionIds"]).Count,Is.EqualTo(8));ids.AddRange(page["motionIds"].Values<string>());}
             Assert.That(ids.Distinct().Count(),Is.EqualTo(32));Assert.That(ids.All(id=>editor.Motions.Inspect(id)!=null),Is.True);batches.Clear();
         }
+        [UnityTest] public IEnumerator ArchivePreparationSurvivesPauseAndAllMemberIndicesAreInspectable()
+        {
+            BatchRuntime();yield return BatchAction(BatchArgs("select"));batchChoice.Result=new AndroidMotionBatchSource.Selection {session=batches.SessionId,kind="preparing"};
+            yield return new WaitForSecondsRealtime(.15f);Assert.That((string)BatchFact()["phase"],Is.EqualTo("selecting"));Assert.That(editor.WriteGate.CanFreeze(out _),Is.False);
+            batches.SendMessage("OnApplicationPause",true);var source=new SelectedMotionSource(new byte[MotionBatch.MaximumFiles][]);batchChoice.Choose(source);
+            yield return new WaitForSecondsRealtime(.15f);Assert.That((string)BatchFact()["phase"],Is.EqualTo("selecting"));batches.SendMessage("OnApplicationPause",false);yield return BatchPhase("ready");
+            Assert.That((int)BatchFact()["counts"]["files"],Is.EqualTo(1024));Assert.That((string)BatchFile(1023)["name"],Is.EqualTo("Motion 1023.glb"));Assert.That((string)BatchFile(1023)["state"],Is.EqualTo("pending"));Assert.That(source.Reads.Sum(),Is.Zero);
+            yield return BatchAction(BatchArgs("clear"));Assert.That(source.Disposed,Is.True);Assert.That(editor.WriteGate.CanFreeze(out _),Is.True);
+        }
         [UnityTest] public IEnumerator ForgedBatchChoiceFailsWithoutOpeningSourcesAndFreesRoomBoundaries()
         {
             BatchRuntime();yield return BatchAction(BatchArgs("select"));batchChoice.Result=new AndroidMotionBatchSource.Selection {session=new string('f',32),kind="ready",count=1};yield return BatchPhase("failed");
-            Assert.That(editor.WriteGate.CanFreeze(out _),Is.True);Assert.That(batchChoice.Releases,Is.EqualTo(1));yield return BatchAction(BatchArgs("select"));batchChoice.Result=new AndroidMotionBatchSource.Selection {session=batches.SessionId,kind="ready",count=129};yield return BatchPhase("failed");Assert.That(batchChoice.Releases,Is.EqualTo(2));
+            Assert.That(editor.WriteGate.CanFreeze(out _),Is.True);Assert.That(batchChoice.Releases,Is.EqualTo(1));yield return BatchAction(BatchArgs("select"));batchChoice.Result=new AndroidMotionBatchSource.Selection {session=batches.SessionId,kind="ready",count=MotionBatch.MaximumFiles+1};yield return BatchPhase("failed");Assert.That(batchChoice.Releases,Is.EqualTo(2));
         }
     }
 }

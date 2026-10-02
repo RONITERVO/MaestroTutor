@@ -48,7 +48,7 @@ export function LibraryBookView({ client }: { client: LibraryBookClient }) {
           <span>{motion.favourite ? '★ ' : ''}{motion.name}</span>
           <small>{motion.duration.toFixed(2)} s{motion.removed ? ' · Download removed' : motion.downloaded === false ? ' · Missing download' : motion.archived ? ' · Archived' : ''}{motion.shortClip ? ' · Short export clip' : ''}{motion.compatible ? '' : ' · Different rig'}{motion.tags.length ? ` · ${motion.tags.join(', ')}` : ''}</small>
         </button>)}
-        {!state.entries.length && <p className="quest-library-empty">No matching animations. Try another search or turn off a filter. Use Import, then Save motions on the physical tray to add a GLB or VRM export.</p>}
+        {!state.entries.length && <p className="quest-library-empty">No matching animations. Try another search or turn off a filter. Use Import and Save motions for one GLB/VRM, or Animation batches for a ZIP collection.</p>}
       </div>
       <div className="quest-library-paging"><button disabled={waiting || state.offset === 0} onClick={() => filter({ offset: Math.max(0, state.offset - state.pageSize) })}>Previous</button>
         <span>{state.total ? `${state.offset + 1}–${Math.min(state.offset + state.pageSize, state.total)} of ${state.total}` : '0 results'}</span>

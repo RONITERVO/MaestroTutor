@@ -5,8 +5,9 @@ Status: active implementation. Nothing in this document claims store readiness.
 The chosen paid-plan Meshy export is now packaged as the offline default avatar,
 with exact saved identity, an explicit Walking clip and portable recovery/backup
 content. The older Meshy motion collection uses a different rig and stays out of
-the default library. Direct ZIP import and curated default motion packs remain
-unfinished; see QUEST_INCLUDED_AVATAR.md.
+the default library. Direct animation ZIP import now uses the existing shared
+batch controls. ZIP model preview and curated default motion packs remain
+unfinished; see QUEST_INCLUDED_AVATAR.md and QUEST_MOTION_BATCH_IMPORT.md.
 
 Current animation authoring lets agent/program calls and optional typed book
 fields edit the same pose and keyframes as the physical tray. Exact object
@@ -1928,3 +1929,46 @@ Desktop idle/greeting/pointing previews use the actual model, retargeter and
 materials. They do not prove device appearance or gesture comfort. This APK is
 not installed; no headset or production deployment took place. Remaining v1
 provider, storage, runtime, MR/performance/comfort and Store gates stay open.
+
+
+## 2026-10-02: shared animation ZIP collections
+
+The existing Animation batches tray, generated book controls and room agent can
+now select one animation ZIP. Native preparation copies at most 2 GiB and lists
+up to 1,024 GLB/VRM members; explicit Start unpacks and validates one model at a
+time. Exact motion IDs, rig checks, category editing, partial results, Stop,
+Retry and Clear continue through the same importer. No avatar replacement,
+model placement, behaviour assignment or playback is triggered by import.
+
+Archive metadata, expanded size, paths, member length and CRC are bounded and
+checked. Plain multi-selection remains available (up to 128 files). Temporary
+storage is the compressed ZIP plus one unpacked member, while the saved library
+keeps its existing 1,024-motion / 128 MiB budget. Reading one result no longer
+clones every batch result. See QUEST_MOTION_BATCH_IMPORT.md for the contract.
+
+Verification: 419 Unity EditMode and 391 PlayMode tests passed (three deliberately
+optional private-file checks skipped). All 71 Android tests passed in a separate
+run with the selected real Meshy ZIP; all three decoded model hashes matched.
+Synthetic cases cover 300-member extraction, the 1,024-member limit, malformed
+and oversized metadata, duplicate/unsafe paths, CRC/size corruption, cancellation
+and picker retirement. The shared book/agent subset passed 60 tests in three
+files. TypeScript, ESLint, generated catalog and included-asset checks passed.
+Native release assembly/lint and the full development build completed with
+exit code 0; lint has six existing warnings outside the changed import code.
+
+All 213 runtime, 110 test and 11 Editor C# files, 33 fixtures plus metadata,
+the native AAR and 113 packaged web files match the verified inputs. The ZIP
+importer is present in the APK's DEX; exact bundled avatar, ARM64 libraries and
+APK v2 signature are verified.
+
+Development checkpoint:
+`D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-motion-zip-633C2A46.apk`
+
+SHA-256:
+`633C2A468D4D6C04494F592DD62F4C9BC40831C77E48F0563F106AAA673C6ABE`
+
+The APK has not been installed. Headset picker/lifecycle, storage and performance
+acceptance remain open. ZIP member selection for **model preview**, curated
+current-rig default motion packs and cross-rig imported-motion retargeting are
+separate remaining work. The old-rig animation collection is unchanged and is
+not assigned to the new default. Other v1 release gates remain open.

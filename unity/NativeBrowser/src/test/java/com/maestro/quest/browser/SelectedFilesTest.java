@@ -58,6 +58,10 @@ public class SelectedFilesTest {
         assertThrows(SecurityException.class,() -> provider.openFile(Uri.parse("content://wrong-authority/"+uri.getLastPathSegment()),"r"));
         cache.close(); assertFalse(entry.file.exists()); assertFalse(SelectedFiles.ENTRIES.containsKey(uri.getLastPathSegment()));
     }
+    @Test public void cancellationBeforeProviderOpenDoesNotGrantAnyBytes() throws Exception {
+        int before=SelectedFiles.ENTRIES.size();assertThrows(InterruptedIOException.class,()->cache.copy(new Uri[]{SOURCE},()->true));assertEquals(before,SelectedFiles.ENTRIES.size());
+        assertEquals(1,cache.copy(new Uri[]{SOURCE}).length);
+    }
     @Test public void rejectsPrivateSchemesAndOwnProvidersInsteadOfReturningTheirUrisToWebView() {
         assertFalse(SelectedFiles.allowedUri(activity,Uri.parse("file:///data/private")));
         assertFalse(SelectedFiles.allowedUri(activity,Uri.parse("https://example.com/file")));

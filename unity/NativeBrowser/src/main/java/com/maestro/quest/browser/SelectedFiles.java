@@ -30,6 +30,7 @@ final class SelectedFiles implements AutoCloseable {
     private final Set<String> keys = new HashSet<>();
     private final long fileLimit, sessionLimit;
     private long used;
+    private java.util.function.BooleanSupplier stopped=()->false;
     private volatile boolean closed;
     private volatile InputStream reading;
     private volatile CancellationSignal cancellation;
@@ -56,7 +57,9 @@ final class SelectedFiles implements AutoCloseable {
         // A picker must never hand the web app its own settings, keys or database.
         return provider != null && provider.applicationInfo != null && provider.applicationInfo.uid != context.getApplicationInfo().uid;
     }
-    synchronized Uri[] copy(Uri[] sources) throws IOException {
+    synchronized Uri[] copy(Uri[] sources) throws IOException {return copy(sources,()->false);}
+    synchronized Uri[] copy(Uri[] sources,java.util.function.BooleanSupplier stopped) throws IOException {
+        this.stopped=stopped;
         if (closed || sources == null || sources.length == 0 || sources.length > MAX_FILES) throw new SelectionException("Choose between one and eight files");
         cancellation = new CancellationSignal();
         List<String> added = new ArrayList<>();
@@ -97,7 +100,28 @@ final class SelectedFiles implements AutoCloseable {
         } catch (IOException | RuntimeException failure) { for (String key : added) remove(key); throw failure; }
         finally { cancellation = null; }
     }
-    private void checkCancelled() throws IOException { if (closed || Thread.currentThread().isInterrupted()) throw new InterruptedIOException("File selection was cancelled"); }
+    /** Writes one ZIP member to an opaque owned path, with actual size and CRC checks. */
+    synchronized Uri copyStream(InputStream input,String name,long expectedBytes,long expectedCrc,java.util.function.BooleanSupplier cancelled) throws IOException {
+        String key=UUID.randomUUID().toString();File file=new File(directory,key);boolean accepted=false;
+        try(InputStream source=input) {
+            reading=source;checkCancelled();MotionArchive.check(cancelled);
+            if(keys.size()>=MAX_FILES||expectedBytes<0||expectedBytes>fileLimit||used+expectedBytes>sessionLimit)throw new SelectionException("The ZIP member exceeds the available file budget");
+            java.util.zip.CRC32 crc=new java.util.zip.CRC32();long bytes=0;
+            try(OutputStream output=new FileOutputStream(file)){
+                byte[] buffer=new byte[16384];int count;
+                while((count=source.read(buffer))!=-1){
+                    checkCancelled();MotionArchive.check(cancelled);bytes+=count;
+                    if(bytes>expectedBytes)throw new SelectionException("The ZIP member is larger than its declared size");
+                    crc.update(buffer,0,count);output.write(buffer,0,count);
+                }
+            }
+            checkCancelled();MotionArchive.check(cancelled);
+            if(bytes!=expectedBytes||crc.getValue()!=expectedCrc)throw new SelectionException("This ZIP member is damaged. Download the export again");
+            ENTRIES.put(key,new Entry(file,safeName(name),"model/gltf-binary"));keys.add(key);used+=bytes;accepted=true;
+            return new Uri.Builder().scheme("content").authority(context.getPackageName()+".maestro.selected").appendPath(key).build();
+        } finally {reading=null;if(!accepted)file.delete();}
+    }
+    private void checkCancelled() throws IOException { MotionArchive.check(stopped); if (closed || Thread.currentThread().isInterrupted()) throw new InterruptedIOException("File selection was cancelled"); }
     void cancelCopy() {
         final InputStream input = reading; final CancellationSignal signal = cancellation;
         if (input == null && signal == null) return;

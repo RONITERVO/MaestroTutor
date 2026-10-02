@@ -36,7 +36,15 @@ public class MotionBatchPickerTest {
         for (int i=1;i<values.length;i++) clip.addItem(new ClipData.Item(values[i]));
         Intent result=new Intent(); result.setClipData(clip); return result;
     }
-    JSONObject result() throws Exception { return new JSONObject(MotionBatchPicker.ReadResult(session)); }
+    JSONObject result() throws Exception {
+        long until=System.currentTimeMillis()+10000;
+        while(System.currentTimeMillis()<until){
+            shadowOf(Looper.getMainLooper()).idle();String value=MotionBatchPicker.ReadResult(session);
+            if(!value.isEmpty()){JSONObject result=new JSONObject(value);if(!result.optString("kind").equals("preparing"))return result;}
+            Thread.sleep(5);
+        }
+        throw new AssertionError("Selection did not finish");
+    }
     JSONObject copy(int index,int request) throws Exception {
         MotionBatchPicker.Copy(result().getString("session"),index,request); shadowOf(Looper.getMainLooper()).idle(); return waitFile(request);
     }
@@ -124,5 +132,33 @@ public class MotionBatchPickerTest {
         Intent text=new Intent(); text.setClipData(ClipData.newPlainText("text","not a file"));
         picker.onActivityResult(MotionBatchPicker.REQUEST,Activity.RESULT_OK,text);
         assertEquals("error",result().getString("kind")); assertEquals("",result().getString("path"));
+    }
+    @Test public void zipMembersAreListedThenCopiedOneAtATimeWithoutReopeningProvider() throws Exception {
+        MotionArchiveTest.writeZip(fixture.data,300,false);fixture.name="character-animations.zip";byte[] original=java.nio.file.Files.readAllBytes(fixture.data.toPath());
+        int before=SelectedFiles.ENTRIES.size();MotionBatchPicker picker=start();picker.onActivityResult(MotionBatchPicker.REQUEST,Activity.RESULT_OK,selection(SelectedFilesTest.SOURCE));
+        JSONObject ready=result();assertEquals("ready",ready.getString("kind"));assertEquals(300,ready.getInt("count"));assertEquals(300,ready.getJSONArray("names").length());
+        assertEquals("motion-0000.glb",ready.getJSONArray("names").getString(0));assertEquals(before+1,SelectedFiles.ENTRIES.size());
+        // The provider can disappear after selection: the exact archive is retained.
+        java.nio.file.Files.write(fixture.data.toPath(),new byte[0]);File first=new File(copy(0,1).getString("path"));assertTrue(first.exists());assertEquals(before+2,SelectedFiles.ENTRIES.size());
+        File last=new File(copy(299,2).getString("path"));assertTrue(last.exists());assertFalse(first.exists());assertEquals(32,last.length());
+        MotionBatchPicker.ReleaseFile(session,2);shadowOf(Looper.getMainLooper()).idle();removed(last);assertEquals(before+1,SelectedFiles.ENTRIES.size());
+        File retry=new File(copy(0,3).getString("path"));assertTrue(retry.exists());MotionBatchPicker.ReleaseSession(session);shadowOf(Looper.getMainLooper()).idle();removed(retry);
+        long until=System.currentTimeMillis()+3000;while(!MotionBatchPicker.ReadyToStart()&&System.currentTimeMillis()<until)Thread.sleep(5);assertEquals(before,SelectedFiles.ENTRIES.size());
+        java.nio.file.Files.write(fixture.data.toPath(),original);
+    }
+    @Test public void malformedZipOrMixedZipSelectionReturnsUsefulFailureAndNoCopies() throws Exception {
+        fixture.name="damaged.zip";int before=SelectedFiles.ENTRIES.size();MotionBatchPicker picker=start();picker.onActivityResult(MotionBatchPicker.REQUEST,Activity.RESULT_OK,selection(SelectedFilesTest.SOURCE));
+        assertEquals("error",result().getString("kind"));assertFalse(result().getString("error").isEmpty());assertEquals(before,SelectedFiles.ENTRIES.size());
+        MotionBatchPicker.ReleaseSession(session);shadowOf(Looper.getMainLooper()).idle();picker=start();picker.onActivityResult(MotionBatchPicker.REQUEST,Activity.RESULT_OK,selection(SelectedFilesTest.SOURCE,Uri.parse("content://maestro.fixture/other")));
+        assertTrue(result().getString("error").contains("by itself"));assertEquals(before,SelectedFiles.ENTRIES.size());
+    }
+    @Test public void releasingDuringPreparationCannotPublishLateReadyOrLeakTheArchive() throws Exception {
+        MotionArchiveTest.writeZip(fixture.data,2,false);fixture.name="motions.zip";int before=SelectedFiles.ENTRIES.size();MotionBatchPicker picker=start();
+        java.lang.reflect.Field field=MotionBatchPicker.class.getDeclaredField("worker");field.setAccessible(true);java.util.concurrent.ExecutorService worker=(java.util.concurrent.ExecutorService)field.get(picker);
+        java.util.concurrent.CountDownLatch entered=new java.util.concurrent.CountDownLatch(1),finish=new java.util.concurrent.CountDownLatch(1);
+        worker.execute(()->{entered.countDown();try{finish.await();}catch(InterruptedException ex){Thread.currentThread().interrupt();}});assertTrue(entered.await(3,java.util.concurrent.TimeUnit.SECONDS));
+        try{picker.onActivityResult(MotionBatchPicker.REQUEST,Activity.RESULT_OK,selection(SelectedFilesTest.SOURCE));assertEquals("preparing",new JSONObject(MotionBatchPicker.ReadResult(session)).getString("kind"));MotionBatchPicker.ReleaseSession(session);assertFalse(MotionBatchPicker.ReadyToStart());}finally{finish.countDown();}
+        long until=System.currentTimeMillis()+4000;while(!MotionBatchPicker.ReadyToStart()&&System.currentTimeMillis()<until){shadowOf(Looper.getMainLooper()).idle();Thread.sleep(5);}
+        assertTrue(MotionBatchPicker.ReadyToStart());assertEquals("",MotionBatchPicker.ReadResult(session));assertEquals(before,SelectedFiles.ENTRIES.size());
     }
 }

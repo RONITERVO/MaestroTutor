@@ -13,6 +13,7 @@ namespace Maestro.Quest.Imports
         {
             public string kind,path,name,error,session;
             public int count,index,request;
+            public string[] names;
         }
         const string Picker="com.maestro.quest.browser.MotionBatchPicker";
         bool disposed;
@@ -20,7 +21,7 @@ namespace Maestro.Quest.Imports
         readonly string session;
         readonly string[] names;
         public int Count { get; }
-        public AndroidMotionBatchSource(int count,string session) { Count=count; this.session=session; names=new string[count]; }
+        public AndroidMotionBatchSource(int count,string session,string[] labels=null) { Count=count; this.session=session; names=labels?.Length==count?(string[])labels.Clone():new string[count]; }
         public string Name(int index) => names[index];
         public static bool ReadyToStart {get{using var picker=new AndroidJavaClass(Picker);return picker.CallStatic<bool>("ReadyToStart");}}
         public static string Open(string id)

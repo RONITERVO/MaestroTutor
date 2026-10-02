@@ -35,7 +35,7 @@ namespace Maestro.Quest.Imports
     /// <summary>Sequential, restartable imports. Use on the Unity thread.</summary>
     public sealed class MotionBatch : IDisposable
     {
-        public const int MaximumFiles=128;
+        public const int MaximumFiles=1024;
         readonly MotionLibrary library;
         readonly IMotionBatchSource source;
         readonly MotionBatchResult[] results;
@@ -51,13 +51,15 @@ namespace Maestro.Quest.Imports
         public string Category => category;
         public string Status { get; private set; }
         public event Action Changed;
+        public int ActiveIndex => Array.FindIndex(results,x => x.State is MotionBatchState.Reading or MotionBatchState.Importing);
+        public MotionBatchResult Result(int index) => results[index].Copy();
         public MotionBatchResult[] Results => results.Select(x => x.Copy()).ToArray();
         public MotionBatch(MotionLibrary library,IMotionBatchSource source)
         {
             this.library=library ?? throw new ArgumentNullException(nameof(library));
             this.source=source ?? throw new ArgumentNullException(nameof(source));
-            if (source.Count < 1 || source.Count > MaximumFiles) throw new ModelImportException("Choose between 1 and 128 animation files.");
-            results=Enumerable.Range(0,source.Count).Select(i => new MotionBatchResult { Index=i,Name="Selected file "+(i+1) }).ToArray();
+            if (source.Count < 1 || source.Count > MaximumFiles) throw new ModelImportException("Choose between 1 and 1,024 animation files.");
+            results=Enumerable.Range(0,source.Count).Select(i => new MotionBatchResult { Index=i,Name=string.IsNullOrEmpty(source.Name(i))?"Selected file "+(i+1):ModelLibrary.SafeName(source.Name(i)) }).ToArray();
             Status="Selected "+Count+" files. Save batch confirms you may use them.";
         }
         public void SetCategory(string value)

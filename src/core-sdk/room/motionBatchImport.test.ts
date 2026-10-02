@@ -25,5 +25,6 @@ it('uses the shared capability feature, versioned controls and bounded per-file 
  expect(validateCapabilityArguments('motion.import.batch',1,{operation:'category',requestId:args.requestId,version:1,category:'dancing'})).toBeNull();
  expect(validateCapabilityArguments('motion.import.batch',1,{operation:'category',requestId:args.requestId,version:1,category:'bad\nname'})).not.toBeNull();
  const query={requestId:args.requestId,index:0,motionOffset:0};expect(validateFactArguments('motion.import.batch.file',1,query)).toBeNull();expect(validateFactArguments('motion.import.batch.file',1,{...query,motionOffset:32})).not.toBeNull();
+ expect(validateFactArguments('motion.import.batch.file',1,{...query,index:1023})).toBeNull();expect(validateFactArguments('motion.import.batch.file',1,{...query,index:1024})).not.toBeNull();
  expect(validFactValue('motion.import.batch.file',{...native.file,error:'x'.repeat(129)})).toBe(false);
 });
