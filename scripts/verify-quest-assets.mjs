@@ -32,8 +32,8 @@ const motionManifestBytes=await readFile(new URL('Maestro/Resources/Avatars/Incl
 assert.ok(motionManifestBytes.length<=4*1024*1024);
 const motions=JSON.parse(motionManifestBytes.toString('utf8'));
 const motionProvenance=JSON.parse(await readFile(new URL('Maestro/Resources/Avatars/IncludedMotions.provenance.json',root),'utf8'));
-assert.deepEqual(Object.keys(motions).sort(),['version','packId','revision','name','avatarHash','rigHash','catalogue'].sort());
-assert.equal(motions.version,1);assert.match(motions.packId,/^[a-z][a-z0-9.-]{0,79}$/);assert.ok(Number.isInteger(motions.revision)&&motions.revision>=1&&motions.revision<=1000000);
+assert.deepEqual(Object.keys(motions).sort(),['version','packId','revision','name','avatarHash','rigHash','catalogue','activities'].sort());
+assert.equal(motions.version,2);assert.match(motions.packId,/^[a-z][a-z0-9.-]{0,79}$/);assert.ok(Number.isInteger(motions.revision)&&motions.revision>=1&&motions.revision<=1000000);
 assert.equal(motions.avatarHash,manifest.sha256);assert.match(motions.rigHash,/^[a-f0-9]{64}$/);
 assert.equal(motionProvenance.manifestSha256,createHash('sha256').update(motionManifestBytes).digest('hex'));assert.equal(motionProvenance.avatarSha256,manifest.sha256);
 assert.equal(motionProvenance.packId,motions.packId);assert.equal(motionProvenance.revision,motions.revision);
@@ -57,3 +57,18 @@ for(const entry of catalogue.entries){
 const packaged=(await readdir(new URL('StreamingAssets/MaestroContent/Motions/',root))).filter(name=>!name.endsWith('.meta')).sort();assert.deepEqual(packaged,[...hashes].map(hash=>`${hash}.motion`).sort());
 assert.ok(motionBytes<=128*1024*1024);assert.equal(motionProvenance.uniqueMotions,ids.size);assert.equal(motionProvenance.motionBytes,motionBytes);assert.equal(motionProvenance.sourceFileCount,sources.size);
 console.log(`Included motions integrity verified: ${ids.size} immutable clips, ${motionBytes} bytes, exact default-avatar hierarchy and inverse binds. Unity separately verifies playback and package installation.`);
+
+assert.ok(Array.isArray(motions.activities)&&motions.activities.length<=4);
+const roles=new Set();
+for(const role of motions.activities){
+ assert.deepEqual(Object.keys(role).sort(),['role','choices'].sort());assert.ok(Number.isInteger(role.role)&&role.role>=0&&role.role<=3&&!roles.has(role.role));roles.add(role.role);
+ assert.ok(Array.isArray(role.choices)&&role.choices.length>=1&&role.choices.length<=4);const chosen=new Set();
+ for(const choice of role.choices){
+  assert.deepEqual(Object.keys(choice).sort(),['motionId','weight','speed','cooldown','loop'].sort());
+  assert.ok(ids.has(choice.motionId)&&!chosen.has(choice.motionId));chosen.add(choice.motionId);assert.ok(catalogue.entries.find(x=>x.id===choice.motionId).duration>=.1);
+  assert.ok(Number.isInteger(choice.weight)&&choice.weight>=1&&choice.weight<=10);assert.ok(Number.isFinite(choice.speed)&&choice.speed>=.25&&choice.speed<=2);
+  assert.ok(Number.isFinite(choice.cooldown)&&choice.cooldown>=0&&choice.cooldown<=60);assert.equal(typeof choice.loop,'boolean');
+ }
+}
+assert.deepEqual([...roles].sort(),[0,1,2,3]);
+console.log('Included tutor-state defaults verified: exact compatible IDs for four editable starting states.');

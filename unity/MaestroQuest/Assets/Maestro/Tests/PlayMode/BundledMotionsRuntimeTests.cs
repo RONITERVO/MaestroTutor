@@ -5,6 +5,8 @@ using System.Collections;
 using System.IO;
 using System.Linq;
 using Maestro.Quest.Imports;
+using Maestro.Quest.Avatar;
+using Maestro.Quest.Book;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
@@ -14,6 +16,33 @@ namespace Maestro.Quest.Tests
 {
     public sealed partial class BundledAvatarRuntimeTests
     {
+        IEnumerator StateMotion(string state,string[] choices) {
+            avatar.ObserveTutorState(new BookSnapshot {version=1,activity=state});float until=Time.realtimeSinceStartup+20;
+            while(!choices.Contains(avatar.ActivityMotionId)&&Time.realtimeSinceStartup<until)yield return null;
+            Assert.That(choices,Does.Contain(avatar.ActivityMotionId),avatar.ActivityMotionStatus);
+        }
+        [UnityTest]public IEnumerator ShippedStartingAssignmentsFollowTutorStatesAndClearSurvivesRestart()
+        {
+            var included=BundledAvatar.FromApplication();var pack=BundledMotions.FromApplication();Open(included,pack);yield return Loaded();
+            float until=Time.realtimeSinceStartup+30;while(!editor.Motions.IncludedInitialization.IsCompleted&&Time.realtimeSinceStartup<until)yield return null;
+            Assert.That(editor.Motions.IncludedInitialization.IsCompleted,Is.True);Assert.That(editor.Motions.Notice,Is.Null);
+            var profile=editor.ActivityProfiles.Find(included.Hash);Assert.That(profile.roles,Has.Length.EqualTo(4));Assert.That(avatar.ActivityMotionId,Is.Null,"Assignments alone are not a fresh tutor activity");
+            var origin=avatar.transform.position;
+            foreach(var role in profile.roles) {
+                var choices=role.choices.Select(x=>x.motionId).ToArray();yield return StateMotion(role.role.ToString().ToLowerInvariant(),choices);
+                Assert.That(avatar.transform.position,Is.EqualTo(origin));
+                Assert.That(editor.Motions.ResidentClipCount,Is.LessThanOrEqualTo(5),"The rest of the included library stays metadata-only");
+            }
+            avatar.ReducedMotion=true;yield return null;Assert.That(avatar.ActivityMotionId,Is.Null);avatar.ReducedMotion=false;
+            Assert.That(editor.ActivityProfiles.Remove(included.Hash,TutorMotionRole.Speaking,null,out var error),Is.True,error);yield return null;Assert.That(avatar.ActivityMotionId,Is.Null);
+            editor.SaveNow();UnityEngine.Object.Destroy(root);yield return null;Open(included,pack);yield return Loaded();
+            Assert.That(editor.ActivityProfiles.Find(included.Hash).roles.Any(x=>x.role==TutorMotionRole.Speaking),Is.False);avatar.ObserveTutorState(new BookSnapshot {version=1,activity="speaking"});yield return new WaitForSeconds(.3f);Assert.That(avatar.ActivityMotionId,Is.Null);
+        }
+        [UnityTest]public IEnumerator ExistingRoomWithoutProfilesDoesNotAcquireNewDefaults()
+        {
+            string saved=Path.Combine(directory,"saved");Directory.CreateDirectory(saved);File.WriteAllText(Path.Combine(saved,"existing-content.txt"),"Existing workspace");
+            var included=BundledAvatar.FromApplication();Open(included,BundledMotions.FromApplication());yield return Loaded();Assert.That(editor.ActivityProfiles.Find(included.Hash),Is.Null);Assert.That(File.Exists(Path.Combine(saved,"avatar-activities.v2.json")),Is.False);
+        }
         [UnityTest]public IEnumerator ExistingLibraryAddsIncludedMotionsThroughSharedActionWithoutReplacingAvatarOrStartingPlayback()
         {
             var model=ModelFixture.Mixamo();var included=BundledAvatarFixture.Write(Path.Combine(directory,"package"),model);var motions=BundledMotionsFixture.Write(Path.Combine(directory,"package"),model);

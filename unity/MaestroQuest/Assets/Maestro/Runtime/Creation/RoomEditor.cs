@@ -72,9 +72,10 @@ namespace Maestro.Quest.Creation
             PhysicsWorld = physics;PhysicsWorld?.ConfigureRuntime(RuntimeGate);
             AddIdentity("book", book); AddIdentity("maestro", maestro);
             var directory = saveDirectory ?? Path.Combine(Application.persistentDataPath, "room"); SaveDirectory=directory;ReceiptDirectory=receiptDirectory??directory;
+            bool fresh=!Directory.Exists(directory)||!Directory.EnumerateFileSystemEntries(directory).Any();
             IncludedAvatar=includedAvatar;
+            ActivityProfiles=new AvatarActivityProfiles(directory,WriteGate,fresh?includedMotions?.DefaultActivities(includedAvatar?.Hash):null);
             storage = new RoomStorage(directory); Models = new ModelLibrary(Path.Combine(directory, "models"),WriteGate,includedAvatar); Motions = new MotionLibrary(Path.Combine(directory,"motions"),WriteGate,includedMotions);
-            ActivityProfiles=new AvatarActivityProfiles(directory,WriteGate);
             var loaded = storage.Load(out var message);
             journal = new RoomJournal(loaded ?? StarterDocument(book, maestro, includedAvatar));
             maestro.GetComponent<MaestroAvatar>()?.ConfigureRuntime(RuntimeGate);

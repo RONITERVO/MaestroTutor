@@ -10,6 +10,7 @@ param(
     [switch]$RenderRules,
     [switch]$RenderImports,
     [switch]$RenderPhysics,
+    [string]$TutorMotionPreviewIds,
     [string]$ModelAuditDirectory,
     [string]$MotionAuditDirectory,
     [string]$ModelPreview,
@@ -158,6 +159,11 @@ if ($RenderArt) {
 if ($RenderRules) {
     $env:MAESTRO_ART_EVIDENCE = Join-Path $repoRoot '.quest-evidence/art'
     Invoke-QuestEditor @('-quit','-executeMethod','Maestro.Quest.Editor.QuestArtPreview.RenderRules') 'rule-preview.log'
+}
+if ($TutorMotionPreviewIds) {
+    $env:MAESTRO_ART_EVIDENCE = Join-Path $repoRoot ".quest-evidence/tutor-motions"
+    $env:MAESTRO_MOTION_PREVIEW_IDS = $TutorMotionPreviewIds
+    Invoke-QuestEditor @('-quit','-executeMethod','Maestro.Quest.Editor.QuestTutorMotionPreview.Render') 'tutor-motion-preview.log'
 }
 if ($RenderPhysics) {
     $env:MAESTRO_ART_EVIDENCE = Join-Path $repoRoot '.quest-evidence/art'

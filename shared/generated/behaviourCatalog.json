@@ -13111,7 +13111,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "b6b06ba302656d748a845969fd2bbd6eea6c119bfde66ce9046f470286cc93bd"
+      "sha256": "f3a3f57009d623a27d6b21ffc42ebf7beeac586865fde7efd18f8551aaa84a81"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomToolTray.cs",
@@ -13259,7 +13259,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/BundledMotions.cs",
-      "sha256": "3f2830d9baae58842c4978efc8db88c686b323102c061efac945abb18426f91b"
+      "sha256": "44b6cb8d389002332a554def348d774fcc97acdf2e0b067e63fb633519237530"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/MotionLibrary.cs",

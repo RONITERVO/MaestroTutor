@@ -9,7 +9,10 @@ textures (12,582,912 pixels total) and one Walking clip. The runtime maps the
 humanoid to the existing 17 canonical pose controls while imported clips retain
 their full skeleton channels. The repeated full-model copies are not also bundled. The separate included
 animation collection currently contains 178 unique motion payloads from the later
-180-export collection; it adds no duplicate avatar meshes or textures.
+180-export collection; it adds no duplicate avatar meshes or textures. Fresh rooms
+receive five editable tutor-state choices for idle, listening, thinking and speaking.
+See [tutor-state defaults](QUEST_AVATAR_ACTIVITIES.md#included-starting-assignments).
+Existing assignments and cleared roles are preserved.
 
 The project owner confirmed this model was generated under a **paid Meshy plan**
 on 2026-10-02 and supplied it as the included default. Source identity and this

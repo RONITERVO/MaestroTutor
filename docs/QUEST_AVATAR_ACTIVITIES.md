@@ -1,6 +1,6 @@
 # Per-avatar tutor-state motions
 
-Development implementation, updated 2026-09-27. This is presentation driven by the
+Development implementation, updated 2026-10-02. This is presentation driven by the
 existing web tutor state. It never starts another conversation, microphone,
 voice or paid session. Quest acceptance remains required; the headset is on
 charging hold and no installation is implied by desktop verification.
@@ -12,7 +12,7 @@ charging hold and no installation is implied by desktop verification.
 2. On the right page expand **Tutor-state motions**. Choose Idle, Listening,
    Thinking or Speaking. Set speed, selection weight, reuse gap and whether to
    loop, then **Assign to tutor state**. Up to four choices fit each state.
-3. Select an existing assigned motion to adjust it, or Remove it. **Use included
+3. Select an existing assigned motion to adjust it, or Remove it. **Use simple
    animation** clears that state. Undo/Redo affects only assignments for the
    currently loaded avatar, separately from room placement and rule history.
 4. Return to chat. The actual shared tutor activity chooses the assigned motion.
@@ -28,19 +28,55 @@ selection history are runtime state, not persisted scheduling. An interrupted
 manual takeover resets selection but does not replay a pending load.
 
 The editor supports 0.25–2x speed, weights 1–10 and 0–60-second reuse gaps. No
-selection is preassigned to private imported models. The included development
-character continues using its built-in animations. Walking has its separate
+selection is preassigned to private imported models. Fresh rooms with the included
+Meshy avatar receive the editable defaults below; existing rooms retain their
+assignments, including deliberately empty roles. Walking has its separate
 saved gait assignment; visual-rule sequences retain their existing triggers.
 Rules can also use recorded poses/movement through the authoring system. This
 editor currently assigns reusable imported library motions only.
+
+## Included starting assignments
+
+The version-2 included motion manifest records exact compatible motion IDs and
+settings. First use of an empty room saves these as an ordinary activity profile;
+fresh recovery packages the same profile. There is no hidden tag selection or
+second runtime. Once saved, later package updates cannot change these choices.
+An existing room without a profile also stays unchanged. Selecting the included
+avatar in an existing room does not reset assignments. Users can assign these
+same library motions through the existing book editor or ask Maestro to do so.
+
+| Tutor state | Starting motion | Playback |
+| --- | --- | --- |
+| Idle | `Idle_4` | 1×, loop |
+| Listening | `Listening_Gesture` | 1×, loop |
+| Thinking | `Idle_12` | 1×, loop; a quiet standing motion |
+| Speaking | `Talk_with_Hands_Open`, `Talk_with_Right_Hand_Open` | 1×, equal weights, nonlooping, 2-second per-choice reuse gap |
+
+These five motions were selected after native Unity renders of 16 candidates,
+nine samples per clip on the actual shipped avatar. Several other “Idle” clips
+contain large gestures and were deliberately excluded. Source endpoint checks
+found under 0.36 degrees rotation difference for the three looping choices;
+this is a seam check, not continuous headset comfort acceptance. The speaking
+gap applies to each choice; it does not require a silent interval between the
+two gestures. Defaults remain subject to device review and future art iteration.
+
+The seed is persisted before use. A saved empty profile, damaged/future data or
+pending evidence cannot be replaced by defaults. Automatic motions still require
+a fresh tutor snapshot and yield to the same manual owners and reduced-motion
+settings. No clip is compiled solely because it appears in a starting profile.
+
+`Verify-Quest.ps1 -TutorMotionPreviewIds <comma-separated exact IDs>` renders
+contact strips and a manifest-bound report under `.quest-evidence/tutor-motions`.
+The renderer uses the runtime clip compiler with a synchronous editor caller.
+It loads no private source collection, contacts no provider and accesses no headset.
 
 ## Use through Maestro chat
 
 An explicit request such as “use Friendly wave while you are speaking” can now
 be delegated through the original app-owned room agent. It searches the shared
 motion library and submits `avatarActivities.v1`; Unity does not own a second
-Gemini client. The agent can assign/update one choice, remove it, restore a role's
-included animation, or undo/redo assignment changes. It cannot import new files
+Gemini client. The agent can assign/update one choice, remove it, clear a role to its
+simple fallback animation, or undo/redo assignment changes. It cannot import new files
 through this operation or assign motions from an incompatible avatar rig.
 
 The standalone command is `{action:"avatarActivities",activities:{modelHash,
@@ -147,3 +183,13 @@ state transitions, authoring priority and missing-download rejection. App-owned
 provider journeys use a mock provider; they establish orchestration and rejection
 reporting, not real-provider acceptance. Latest artifact details are in
 QUEST_DEVICE_QA.md.
+
+The 2026-10-02 starting-default checkpoint passed 593 EditMode and 417 PlayMode
+checks (three expected private-file skips), plus 1,767 web tests. Fifteen new
+metadata/persistence cases cover exact IDs, invalid settings, copied values,
+cleared/saved choices, unfinished evidence and portable fresh recovery. Two
+new native journeys cover actual shipped-avatar state playback, reduced motion,
+clearing/restart and preserving an existing room without a profile. Native
+verification and the preview runner both exited successfully. TypeScript, lint,
+core boundaries, catalog provenance, asset integrity and production build passed.
+This source checkpoint has not been packaged or installed on Quest.

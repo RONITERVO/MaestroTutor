@@ -53,11 +53,19 @@ namespace Maestro.Quest.Avatar
         public string Notice { get; private set; }
         public event Action Changed;
         readonly Maestro.Quest.Persistence.WorkspaceWriteGate writes;
-        public AvatarActivityProfiles(string directory,Maestro.Quest.Persistence.WorkspaceWriteGate writeGate=null)
+        public AvatarActivityProfiles(string directory,Maestro.Quest.Persistence.WorkspaceWriteGate writeGate=null,AvatarActivityDocument initial=null)
         {
             writes=writeGate??new();
             file=new(directory,"avatar-activities",256*1024,x => x.Valid(),x => x.Copy(),null,x => x.version=2);
-            document=file.Load(out var message) ?? new AvatarActivityDocument(); Notice=message;
+            document=file.Load(out var message); Notice=message;
+            // Only the fresh-room caller supplies a seed. Never replace even an empty saved
+            // profile or treat pending/unreadable evidence as a new collection.
+            if(document==null&&!file.ReadOnly&&initial?.avatars.Length>0&&initial.Valid()&&
+                (!System.IO.Directory.Exists(directory)||!System.IO.Directory.EnumerateFileSystemEntries(directory,"avatar-activities.*").Any())) {
+                using var write=writes.Write();
+                if(file.Save(initial,out var error))document=initial.Copy();else Notice=error;
+            }
+            document??=new AvatarActivityDocument();
         }
         public AvatarActivityProfile Find(string model) => document.avatars.FirstOrDefault(x => x.modelHash == model)?.Copy();
         public AvatarActivityDocument Snapshot() => document.Copy();

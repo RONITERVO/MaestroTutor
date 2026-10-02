@@ -1,8 +1,8 @@
 {
   "version": 1,
   "packId": "maestro.azure-violet",
-  "revision": 1,
-  "manifestSha256": "33053e09a8f1f07dc7786e3618b51e076f0bc2bfdc6168b54b972f3bc1d73b79",
+  "revision": 2,
+  "manifestSha256": "479796ebee7036e11fa1ccc038f0b03b0a2487b297d3f97c4af85fcf48f5655d",
   "avatarSha256": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
   "sourceCollection": "maestro-new-animations",
   "sourceFileCount": 180,
@@ -913,5 +913,6 @@
       "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_ymca_dance.glb",
       "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
     }
-  ]
+  ],
+  "activityDefaultsReview": "Five exact clips sampled at nine phases on the included model in Unity. Quiet standing for idle/thinking, Listening_Gesture for listening, two open-hand gestures for speaking. These are editable first-room defaults. Continuous Quest comfort and timing acceptance remains pending."
 }

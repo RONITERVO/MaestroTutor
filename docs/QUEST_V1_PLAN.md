@@ -20,7 +20,11 @@ content. The older Meshy motion collection uses a different rig and stays out of
 the default library. Direct animation ZIP import now uses the existing shared
 batch controls. ZIP model search and preview also share physical/book/agent
 selection and explicit acceptance. The current-rig offline motion collection is
-packaged with shared installation, stable identities and portable recovery. Visual/semantic curation and motion-fidelity work remain unfinished;
+packaged with shared installation, stable identities and portable recovery. Fresh
+rooms now save five exact editable tutor-state choices, selected after native
+previews of 16 candidates. Existing assignments and cleared roles remain intact;
+see QUEST_AVATAR_ACTIVITIES.md. Broader visual/semantic curation, continuous
+playback comfort and motion-fidelity acceptance remain unfinished;
 see QUEST_INCLUDED_AVATAR.md, QUEST_MODEL_IMPORT.md and QUEST_MOTION_BATCH_IMPORT.md.
 
 Current animation authoring lets agent/program calls and optional typed book

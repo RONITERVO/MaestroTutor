@@ -13,10 +13,10 @@ namespace Maestro.Quest.Imports
     /// <summary>Creates only a clip. No model, renderer, texture or duplicate rig is instantiated.</summary>
     public static class MotionClipCompiler
     {
-        public static async Task<AnimationClip> CompileAsync(MotionPack pack,Func<bool> cancelled = null)
+        public static async Task<AnimationClip> CompileAsync(MotionPack pack,Func<bool> cancelled = null,IAwaitCaller awaitCaller = null)
         {
             var clip = new AnimationClip { name = "Library motion",legacy = true,wrapMode = WrapMode.Once };
-            var caller = new RuntimeOnlyAwaitCaller();
+            var caller = awaitCaller ?? new RuntimeOnlyAwaitCaller();
             try
             {
                 var root = pack.Document; var nodes = (JArray)root["nodes"];

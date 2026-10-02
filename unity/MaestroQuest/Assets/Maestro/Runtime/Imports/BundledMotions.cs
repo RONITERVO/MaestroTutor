@@ -5,6 +5,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using Maestro.Quest.Avatar;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
@@ -23,6 +24,8 @@ namespace Maestro.Quest.Imports
         public int Count=>catalogue.entries.Length;
         public long Bytes=>catalogue.entries.Sum(x=>(long)x.bytes);
         readonly MotionCatalogue catalogue;
+        readonly AvatarActivityDocument activities=new();
+        public AvatarActivityDocument DefaultActivities(string modelHash)=>modelHash==AvatarHash?activities.Copy():new AvatarActivityDocument();
         readonly Func<string,int,byte[]> read;
         internal MotionCatalogue Catalogue=>catalogue.Copy();
         internal BundledMotions(string json,Func<string,int,byte[]> reader)
@@ -30,8 +33,9 @@ namespace Maestro.Quest.Imports
             if(json==null||Encoding.UTF8.GetByteCount(json)>4*1024*1024)throw Invalid();
             using var input=new JsonTextReader(new StringReader(json)){MaxDepth=16,DateParseHandling=DateParseHandling.None};
             var value=JObject.Load(input,new JsonLoadSettings{DuplicatePropertyNameHandling=DuplicatePropertyNameHandling.Error});
-            var fields=new[]{"version","packId","revision","name","avatarHash","rigHash","catalogue"};
-            if(input.Read()||value.Count!=fields.Length||!fields.All(value.ContainsKey)||value["version"]?.Type!=JTokenType.Integer||(long)value["version"]!=1||
+            int version=value["version"]?.Type==JTokenType.Integer&&(long)value["version"] is >=1 and <=2?(int)value["version"]:0;
+            var fields=version==2?new[]{"version","packId","revision","name","avatarHash","rigHash","catalogue","activities"}:new[]{"version","packId","revision","name","avatarHash","rigHash","catalogue"};
+            if(input.Read()||value.Count!=fields.Length||!fields.All(value.ContainsKey)||version==0||
                 !Text(value["packId"],80)||!System.Text.RegularExpressions.Regex.IsMatch((string)value["packId"],"^[a-z][a-z0-9.-]*$")||!Text(value["name"],100)||
                 value["revision"]?.Type!=JTokenType.Integer||(long)value["revision"]<1||(long)value["revision"]>1000000||
                 value["avatarHash"]?.Type!=JTokenType.String||!ModelLibrary.ValidHash((string)value["avatarHash"])||
@@ -39,6 +43,22 @@ namespace Maestro.Quest.Imports
             catalogue=MotionLibrary.DecodeSnapshot(Encoding.UTF8.GetBytes(value["catalogue"].ToString(Formatting.None)));
             if(catalogue.entries.Length==0||catalogue.entries.Any(x=>x.rigHash!=(string)value["rigHash"]||x.archived||x.removed||x.favourite))throw Invalid();
             Hash=ModelLibrary.Hash(Encoding.UTF8.GetBytes(json));PackId=(string)value["packId"];Name=(string)value["name"];Revision=(int)value["revision"];AvatarHash=(string)value["avatarHash"];RigHash=(string)value["rigHash"];read=reader;
+            if(version==2)activities=ReadActivities(value["activities"]);
+        }
+        AvatarActivityDocument ReadActivities(JToken value)
+        {
+            bool Exact(JObject item,params string[] fields)=>item!=null&&item.Count==fields.Length&&fields.All(item.ContainsKey);
+            bool Number(JToken item)=>item?.Type is JTokenType.Integer or JTokenType.Float;
+            if(value is not JArray roles||roles.Count>4)throw Invalid();
+            foreach(var role in roles) {
+                if(role is not JObject group||!Exact(group,"role","choices")||group["role"]?.Type!=JTokenType.Integer||(long)group["role"] is <0 or >3||group["choices"] is not JArray choices||choices.Count is <1 or >4)throw Invalid();
+                foreach(var item in choices)if(item is not JObject choice||!Exact(choice,"motionId","weight","speed","cooldown","loop")||
+                    choice["motionId"]?.Type!=JTokenType.String||choice["weight"]?.Type!=JTokenType.Integer||(long)choice["weight"] is <1 or >10||!Number(choice["speed"])||!Number(choice["cooldown"])||choice["loop"]?.Type!=JTokenType.Boolean)throw Invalid();
+            }
+            var profile=new AvatarActivityProfile {modelHash=AvatarHash,rigHash=RigHash,roles=JsonUtility.FromJson<AvatarActivityProfile>(new JObject {["roles"]=roles.DeepClone()}.ToString()).roles};
+            var result=new AvatarActivityDocument {avatars=roles.Count==0?Array.Empty<AvatarActivityProfile>():new[]{profile}};
+            if(!result.Valid()||profile.roles.SelectMany(x=>x.choices).Any(x=>!catalogue.entries.Any(entry=>entry.id==x.motionId&&!entry.Short)))throw Invalid();
+            return result;
         }
         static bool Text(JToken value,int maximum)=>value?.Type==JTokenType.String&&!string.IsNullOrWhiteSpace((string)value)&&((string)value).Length<=maximum&&!((string)value).Any(c=>char.IsControl(c)||c is '<' or '>');
         static ModelImportException Invalid()=>new("The included animation package is invalid. Reinstall a verified app build.");
