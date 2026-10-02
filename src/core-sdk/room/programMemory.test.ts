@@ -32,16 +32,22 @@ it('requires the feature for both authoring and read-only memory queries',()=>{
 it('prevents reusable modules from silently acquiring a caller memory namespace',()=>{
  const module={version:1 as const,name:'Counter',exports:['main'],program:fixture()};const caller={...fixture(),moduleVersion:1,imports:[{alias:'counter',hash:moduleHash(module),module,signals:{}}]};expect(parseProgram(JSON.stringify(caller)).error).toContain('remembered');
 });
-const view=():ProgramMemoryView=>({ready:true,pending:false,busy:false,error:'',revision:'initial',programId:A,page:0,count:1,programs:[],cells:[{id:C,name:'items',typeJson:'{"list":"number"}',valueJson:'[]',saved:false,declared:true}]});
+const view=():ProgramMemoryView=>({ready:true,pending:false,busy:false,temporary:false,sessionId:'f'.repeat(32),error:'',revision:'initial',programId:A,page:0,count:1,programs:[],cells:[{id:C,name:'items',typeJson:'{"list":"number"}',valueJson:'[]',saved:false,declared:true}]});
 it('validates complete typed observations, including empty structured values, and rejects corrupt or oversized pages',()=>{
  expect(validProgramMemoryView(view())).toBe(true);for(const valueJson of ['[true]','{"a":1,"a":2}',JSON.stringify(Array(33).fill(1)),JSON.stringify('x'.repeat(129))]){const v=view();v.cells[0].valueJson=valueJson;expect(validProgramMemoryView(v)).toBe(false);}
  expect(validProgramMemoryView({...view(),cells:Array(5).fill(view().cells[0])})).toBe(false);expect(validProgramMemoryView({...view(),programs:[{id:A,name:'x',cells:33}]})).toBe(false);
 });
 it('allows bounded structured edit JSON without increasing generic argument string limits',()=>{
- const call={id:'program.memory.edit',version:1,arguments:{kind:'set',programId:A,variableId:C,revision:'initial',rulesRevision:1,valueJson:JSON.stringify(Array(32).fill(123456))}};
+ const call={id:'program.memory.edit',version:1,arguments:{kind:'set',sessionId:'f'.repeat(32),programId:A,variableId:C,revision:'initial',rulesRevision:1,valueJson:JSON.stringify(Array(32).fill(123456))}};
  expect(boundedCapabilityCall(call)).toBe(true);expect(boundedCapabilityCall({...call,arguments:{...call.arguments,valueJson:'x'.repeat(8193)}})).toBe(false);expect(boundedCapabilityCall({...call,arguments:{...call.arguments,programId:'x'.repeat(129)}})).toBe(false);
 });
 it('accepts actual native saved, running, stopped and reset observations',()=>{
  const evidence=JSON.parse(readFileSync('test-fixtures/browser/rememberedProgramState.json','utf8'));
  for(const [phase,state] of Object.entries(evidence))expect(validRuleView((state as {rules:unknown}).rules),phase).toBe(true);
+});
+
+it('validates memory scope together and gates scoped editing on native support',()=>{
+ expect(validProgramMemoryView({...view(),sessionId:undefined})).toBe(false);expect(validProgramMemoryView({...view(),temporary:undefined})).toBe(false);expect(validProgramMemoryView({...view(),sessionId:'../old'})).toBe(false);
+ const commands=[{action:'execution',execution:{operation:'start',call:{id:'program.memory.edit',version:1,arguments:{kind:'reset',sessionId:'f'.repeat(32),programId:A,variableId:'',revision:'initial',rulesRevision:1}}}}];
+ expect(()=>requireRoomCapabilities(commands,{capabilities:['execution.v1','rememberedVariables.v1']})).toThrow('temporaryMemory.v1');
 });

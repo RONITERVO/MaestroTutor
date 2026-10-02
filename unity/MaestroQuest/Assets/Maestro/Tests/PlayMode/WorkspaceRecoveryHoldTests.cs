@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Maestro.Quest.Creation;
 using Maestro.Quest.Persistence;
 using Maestro.Quest.Rules;
+using Maestro.Quest.Programs;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using UnityEngine;
@@ -69,9 +70,14 @@ namespace Maestro.Quest.Tests
         [UnityTest] public IEnumerator TemporaryForkAndSavedBaseRemainSeparateInRecoveryEvidence()
         {
             yield return ReadyForDamagedPreservation();var editor=host.Current.Editor;Assert.That(editor.BeginTemporaryRoom(out var error),Is.True,error);while(editor.TemporarySavePending)yield return null;AcceptedEdit("Temporary live robot");
+            var memory=host.Current.Rules.Memory;string program=new string('a',32),cell=new string('b',32);
+            var memoryWrite=memory.Write(memory.Snapshot().Revision,program,new System.Collections.Generic.Dictionary<string,ProgramMemoryDocument.Cell>{{cell,new("count",new ProgramValue(7))}});while(!memoryWrite.IsCompleted)yield return null;Assert.That(memoryWrite.Result.Error,Is.Null);
             Assert.That(WorkspaceRecoveryHold.TryAcquire(editor,host.Current.Rules,host.Current.Controls,out var hold,out error),Is.True,error);
             try {
                 var capture=hold.Capture(Path.Combine(directory,"recovery-evidence"));while(!capture.IsCompleted)yield return null;var result=capture.GetAwaiter().GetResult();var accepted=JObject.Parse(RecoveryText(result.Path,"accepted.json"));
+                Assert.That((int)accepted["version"],Is.EqualTo(2));Assert.That((bool)accepted["available"]["programMemory"],Is.True);
+                Assert.That(ProgramMemoryDocument.Decode(Encoding.UTF8.GetBytes(accepted["programMemory"].ToString())).Programs,Is.Empty);
+                Assert.That(ProgramMemoryDocument.Decode(Encoding.UTF8.GetBytes(accepted["temporaryMemory"].ToString())).Programs[program][cell].Value.Number,Is.EqualTo(7));
                 Assert.That(accepted["room"]["objects"].Any(x=>(string)x["name"]=="Saved original robot"),Is.True);Assert.That(accepted["temporaryRoom"]["objects"].Any(x=>(string)x["name"]=="Temporary live robot"),Is.True);Assert.That(RecoveryText(result.Path,"raw/room.v2.json"),Does.Not.Contain("Temporary live robot"));
             }finally{CloseRecovery(hold);}
             Assert.That(editor.TemporaryRoom,Is.True);Assert.That(editor.Snapshot().objects.Single(x=>!x.IsBuiltIn).name,Is.EqualTo("Temporary live robot"));

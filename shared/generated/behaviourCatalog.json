@@ -2912,7 +2912,7 @@
         "manual.released",
         "storage.writable"
       ],
-      "description": "Explicit room-wide temporary play. Begin captures the current base and makes later object edits temporary immediately; completion waits for its baseline write. Failed baseline saves keep the fork available for Keep or Discard. Keep saves one captured snapshot as one saved Undo and continues temporary play; later edits remain temporary. Discard returns to the latest kept base and pauses physics. Programs, imported files and chat are separate. Pass the exact observed room sessionId (or bind room.sessionId); Begin/Discard return the new identity. Begin/Discard require other runs and authoring to finish. A dispatched Keep can finish after Stop; inspect save status instead of replaying it. Ordinary creations remain saved outside this mode.",
+      "description": "Explicit room-wide temporary play. Begin captures the current base and makes later object edits and remembered values temporary immediately; completion waits for its baseline write. Failed baseline saves keep the fork available for Keep or Discard. Keep saves the captured room and remembered values together; the layout is one saved Undo, memory has no Undo and continues temporary play; later edits remain temporary. Discard returns room and remembered values to the latest confirmed kept base and pauses physics. Programs, imported files and chat are separate. Pass the exact observed room sessionId (or bind room.sessionId); Begin/Discard return the new identity. Begin/Discard require other runs and authoring to finish. A dispatched Keep can finish after Stop; inspect save status instead of replaying it. Ordinary creations remain saved outside this mode.",
       "example": {
         "operation": "begin",
         "sessionId": "00000000000000000000000000000000"
@@ -5017,6 +5017,11 @@
                   "set"
                 ]
               },
+              "sessionId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
               "programId": {
                 "type": "string",
                 "pattern": "^[a-fA-F0-9]{32}$",
@@ -5046,6 +5051,7 @@
             },
             "required": [
               "kind",
+              "sessionId",
               "programId",
               "variableId",
               "revision",
@@ -5062,6 +5068,11 @@
                 "enum": [
                   "reset"
                 ]
+              },
+              "sessionId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
               },
               "programId": {
                 "type": "string",
@@ -5086,6 +5097,7 @@
             },
             "required": [
               "kind",
+              "sessionId",
               "programId",
               "variableId",
               "revision",
@@ -5095,7 +5107,8 @@
           }
         ],
         "x-features": [
-          "rememberedVariables.v1"
+          "rememberedVariables.v1",
+          "temporaryMemory.v1"
         ]
       },
       "duration": "completion",
@@ -5104,11 +5117,13 @@
       "requirements": [
         "behaviour.stopped",
         "programMemory.ready",
-        "storage.writable"
+        "storage.writable",
+        "room.session.current"
       ],
-      "description": "Set one typed remembered variable or reset one/all cells of an exact saved behaviour. First inspect rules with action memory and target program ID; stop that behaviour and wait for accepted writes to drain. Pass fresh memory and rules revisions. variableId is empty only for reset-all. valueJson is one strict JSON value matching its saved/declaration type. Reset keeps definitions and never starts a run. Removed declarations/behaviours retain bounded values until explicitly reset. Temporary rooms cannot use remembered values. No Undo. A dispatched write can finish after Stop; inspect memory and its receipt before continuing after uncertainty.",
+      "description": "Set one typed remembered variable or reset one/all cells of an exact saved behaviour. First inspect rules with action memory and target program ID; stop that behaviour and wait for accepted writes to drain. Pass fresh memory and rules revisions and the observed memory sessionId. variableId is empty only for reset-all. valueJson is one strict JSON value matching its saved/declaration type. Reset keeps definitions and never starts a run. Removed declarations/behaviours retain bounded values until explicitly reset. In temporary rooms edits and checkpoints affect only temporary memory. Keep captures room and memory together; Discard restores their last confirmed saved pair. Room Undo never rewinds memory. No Undo. A dispatched write can finish after Stop; inspect memory and its receipt before continuing after uncertainty.",
       "example": {
         "kind": "reset",
+        "sessionId": "00000000000000000000000000000000",
         "programId": "00000000000000000000000000000000",
         "variableId": "",
         "revision": "initial",
@@ -12879,7 +12894,43 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramMemoryStore.cs",
-      "sha256": "683b32add28abb006d04610994f27710420946b48e6602f85707c2122b926b6e"
+      "sha256": "203916722143529b250c74e3e1536fbf5ed83c31a5ff957abc35f6e4b40288d1"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramMemoryTemporary.cs",
+      "sha256": "f2e3e453044aa7ad138a61f0dc87a2682ac9ff381604a01b82af4e2565b3c4de"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/TemporaryMemorySave.cs",
+      "sha256": "e416a2eec9fa2ce2819edb7c1550cb525ef45933619fa7b3081e6602fdefcbce"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.Temporary.cs",
+      "sha256": "6de6db228becce72dc3d68ea2b5695be6b2ad09780df698095d7a82aebbf9831"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
+      "sha256": "cc1f0a23f1f38bd70485ef487bfd8e1ed808818618e5771895fc12dd7709eea7"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceRecoveryHold.cs",
+      "sha256": "3ced32ab3e9a64b49ace154f0c8be150beb96475dd8752201b730b9d79da4d70"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceRecoveryEvidence.cs",
+      "sha256": "46259a3fdf3d822eb9b51368bc3356536f096da24c172af3b259a7155ca1b79b"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/VersionedRoomFile.cs",
+      "sha256": "9754a05b29094bc0579bb43977e2c21bd7eb3548414832b0d792bbb041aa0945"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
+      "sha256": "0b3fd8bfffed4cfe9f5a4336cfbd14a72e95c9d7133f62cda5ba5ee8657ff657"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
+      "sha256": "3d40bc689c895f3d0acbd13e7bead01c43739e2cca69771ff8dcf9b36e212383"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleMemory.cs",
@@ -12887,7 +12938,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleMemoryView.cs",
-      "sha256": "5150676420289f554f54de8a2de8b628eb2c000cbb4f6ffd20cf3dca27890849"
+      "sha256": "b22509f649317645f93797b2bdea088188cf889ef86d7dea9710d71cce6d4f80"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomCapabilityCatalog.cs",
@@ -12895,7 +12946,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveCapture.cs",
-      "sha256": "b29d48c438c190db53943878b42ac15965dd946c71470881783d3efa5497803b"
+      "sha256": "825f29713f19e04f555f5c0fad8915362ec9afb3d62d5c5ae732f9f7c91a51c3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveSnapshot.cs",
@@ -12939,7 +12990,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleWorkshop.cs",
-      "sha256": "847aa3c5ecec46d6a93b7204787cd4352ebb86be52808a315f3a5580edb45a8b"
+      "sha256": "e3a3caabdd09dc095c43d6d7250f8a5428b77dba7c40a52955e4d27e5463e7dc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceReview.cs",
@@ -13315,7 +13366,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ProgramMemoryCapability.cs",
-      "sha256": "ef947f13225b1372c40509811765d76e130aeaab1822b7206fc786d2f0e908e2"
+      "sha256": "911de487e41d9d9a09e5998857bfe165e626b2bb7ba336c91a89366ba9850ae5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ProgramModuleCapabilities.cs",
@@ -13351,7 +13402,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RoomSessionCapability.cs",
-      "sha256": "df429cf24f05441efb09ffdecd85d0fde27f59bddf4ae73e126cea2a4dc60379"
+      "sha256": "5a809c3ffcbd36910e36052558d4caf20328f51615816ebbaf4a4766bc60a6a0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RotateObjectCapability.cs",

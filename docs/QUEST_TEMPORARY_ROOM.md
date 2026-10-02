@@ -1,6 +1,6 @@
 # Temporary rooms and shared snapshot actions
 
-Development checkpoint, 2026-09-28. The book, solid 3D tool tray, original-app
+Development checkpoint, updated 2026-10-02. The book, solid 3D tool tray, original-app
 agent and saved programs now share `room.session` through the same native
 capability, scheduler and durable one-off receipt path. Ordinary creations remain
 saved normally. Temporary play requires an explicit room-wide request.
@@ -8,11 +8,11 @@ saved normally. Temporary play requires an explicit room-wide request.
 ## User workflow
 
 - **Begin temporary room** captures the current base and immediately opens one
-  shared live fork. The native tray labels this **Try room**. Its baseline write
+  shared live fork of room and remembered values. The native tray labels this **Try room**. Its baseline write
   runs off-thread, after any earlier autosave; Begin reports completion only after
   that write succeeds. New edits already stay temporary while it is starting.
   Other room actions and held items must finish first; a busy room is rejected.
-- **Save snapshot** captures the current fork and saves that exact snapshot on a
+- **Save snapshot** captures the current room and memory forks and saves that exact snapshot on a
   worker. The tray labels this **Keep snapshot**; its existing Save tool also uses
   this path inside temporary mode. Temporary play continues after saving.
 - **Discard unsaved & end** returns to the latest kept snapshot, or the captured
@@ -129,8 +129,9 @@ service deployment, Meta setup or store submission was performed.
 
 ## Paired room/memory publication foundation — 2026-10-02
 
-`RoomSnapshotTransaction` is an internal storage foundation, **not yet connected
-to live room or memory stores**. Temporary remembered values remain blocked.
+At the earlier foundation checkpoint, `RoomSnapshotTransaction` was **not yet
+connected to live room or memory stores** and temporary remembered values remained
+blocked. The live integration below supersedes that restriction.
 It prepares coordinated Keep saves without weakening the existing guard while
 only half the persistence path has been adapted.
 
@@ -158,7 +159,9 @@ snapshots, damaged/oversized/duplicate-key intents, future formats and unfinishe
 writes. These are fault-injected filesystem tests on Windows. They do not prove
 Quest power-loss durability or storage latency.
 
-Integration still required before enabling the user-facing feature:
+The foundation checkpoint tracked these integration requirements (implemented
+in the later live-integration section, except device profiling and recovery UX
+limitations described there):
 
 1. Route ordinary room/memory readers and writers through one serialized owner,
    recover an intent before either store loads, and handle contention as pending
@@ -184,3 +187,47 @@ Final local verification for this foundation: **529 EditMode and 410 PlayMode**
 tests passed, with the three expected optional private-file skips. The native
 verification helper exited 0. Source/mirror C# hashes match (227 runtime, 123 test
 and 11 editor files). The paired-save helper remains unconnected to live stores.
+
+
+## Live room and memory integration — 2026-10-02
+
+The real `RoomStorage` and `ProgramMemoryStore` now coordinate startup reads,
+ordinary saves, retention and archive inspection. Startup recovers the pair before
+loading either cache. Read-only maintenance creates no files and cannot recover an
+inactive room. Ordinary writers cannot overwrite an unresolved intent.
+
+Begin creates an immutable memory base and a separate live fork. The baseline and
+each Keep publish room and memory together on the worker. Checkpoints and manual
+memory edits update only the fork while temporary mode is active. Captures retain
+their exact referenced downloads; later edits cannot alter a dispatched snapshot.
+Discard restores both last-confirmed caches. Begin/Keep/Discard refuse a pending
+memory edit. Begin/Discard use the existing quiet-room scheduling contract.
+
+An interrupted prepared save rolls back both files; a committed save completes
+both. Keep acknowledges success only if the exact candidate pair is confirmed.
+A failure that leaves the previous pair intact can be retried explicitly. An
+outside change or unresolved recovery holds boundaries and remembered behaviours;
+it does not silently choose a discard base. Recovery preservation remains
+available and includes separately labelled saved and temporary room/memory data.
+Unavailable documents are labelled unavailable, and original raw files remain
+included in the bounded recovery artifact. Recovery export does not itself repair
+or activate those files.
+
+The book and agent see `rules.memory.temporary` and `sessionId`. `program.memory.edit`
+requires that exact scope plus memory/rules revisions. A draft from before Begin
+or Discard cannot apply to the new scope even if all values stayed the same.
+`temporaryMemory.v1` gates this contract. The shared schema feature scanner retains
+requirements on both a variant container and its chosen branch.
+
+Room Undo continues to affect layout only. Behaviour definitions, modules, chat,
+imports and preferences keep their existing stores; temporary memory does not
+make them transactional. No running program, animation, velocity or external
+action is replayed. Lifecycle flush finishes only an accepted paired save; it
+never saves later unkept memory. Workspace retirement waits for accepted writes.
+
+This remains desktop-verified development work. Quest power-loss behaviour, storage
+latency, user comfort and lifecycle acceptance still need device testing. No new
+APK or headset operation is included in this integration checkpoint.
+
+
+Final local verification for the live integration: **560 EditMode and 412 PlayMode** tests passed, with the three expected optional private-file skips; the native helper exited 0. All **1,764 web tests in 207 files**, TypeScript, lint, core boundaries, native-catalog provenance and production web build passed. C# source/mirror hashes match: **229 runtime, 126 test and 11 editor files**. The updated browser fixture comes from the native remembered-values journey. No APK or headset operation was performed.

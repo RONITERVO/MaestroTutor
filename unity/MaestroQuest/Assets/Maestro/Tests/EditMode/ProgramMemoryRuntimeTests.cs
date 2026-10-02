@@ -72,7 +72,7 @@ namespace Maestro.Quest.Tests
             ((JArray)source["functions"]).Add(new JObject{["name"]="child",["returns"]="void",["parameters"]=new JArray(),["locals"]=new JArray(),["body"]=new JArray(new JObject{["id"]="save",["op"]="checkpoint"})});var store=Open();var scheduler=Scheduler(store,Sequence(source:source));Assert.That(scheduler.Trigger(A,0),Is.True);scheduler.Tick(0);Assert.That(scheduler.RunningCount,Is.Zero);Assert.That(scheduler.LastError,Does.Contain("parent"));Assert.That(store.Snapshot().Programs,Is.Empty);
         }
         [Test]public void MemoryValueTransportHasItsOwnBoundWithoutEnlargingOtherActionStrings(){
-            var call=new JObject{["id"]="program.memory.edit",["version"]=1,["arguments"]=new JObject{["kind"]="set",["programId"]=A,["variableId"]=Cell,["revision"]="initial",["rulesRevision"]=1,["valueJson"]="["+string.Join(",",Enumerable.Repeat("123456",32))+"]"}};
+            var call=new JObject{["id"]="program.memory.edit",["version"]=1,["arguments"]=new JObject{["sessionId"]=new string('a',32),["kind"]="set",["programId"]=A,["variableId"]=Cell,["revision"]="initial",["rulesRevision"]=1,["valueJson"]="["+string.Join(",",Enumerable.Repeat("123456",32))+"]"}};
             Assert.That(Maestro.Quest.Creation.RoomCapabilityCatalog.ValidCall(call),Is.True);call["arguments"]["valueJson"]=new string('x',8193);Assert.That(Maestro.Quest.Creation.RoomCapabilityCatalog.ValidCall(call),Is.False);call["arguments"]["valueJson"]="1";call["arguments"]["programId"]=new string('x',129);Assert.That(Maestro.Quest.Creation.RoomCapabilityCatalog.ValidCall(call),Is.False);
             var source=Source();source["memoryVersion"]=new JValue(1d);Assert.That(BehaviourProgram.TryParse(source.ToString(),out _,out _),Is.True);
         }

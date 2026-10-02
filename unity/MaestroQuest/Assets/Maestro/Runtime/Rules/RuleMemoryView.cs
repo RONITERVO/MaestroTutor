@@ -11,7 +11,7 @@ namespace Maestro.Quest.Rules
     [Serializable] public sealed class ProgramMemoryCellView {public string id,name,typeJson,valueJson;public bool saved,declared;}
     [Serializable] public sealed class ProgramMemoryGroupView {public string id,name;public int cells;}
     [Serializable] public sealed class ProgramMemoryView {
-        public bool ready,pending,busy;public string error,revision,programId;public int page,count;
+        public bool ready,pending,busy,temporary;public string error,revision,programId,sessionId;public int page,count;
         public ProgramMemoryGroupView[] programs=Array.Empty<ProgramMemoryGroupView>();
         public ProgramMemoryCellView[] cells=Array.Empty<ProgramMemoryCellView>();
     }
@@ -22,7 +22,7 @@ namespace Maestro.Quest.Rules
         ProgramMemoryView ObserveMemory()
         {
             string target=memoryTarget??Selected?.id??"";
-            var view=new ProgramMemoryView {ready=Memory?.Ready==true,pending=Memory?.Pending==true,error=Memory?.Error??MemoryBlocked??"",revision="",programId=target,busy=Runtime?.Scheduler?.MemoryTargetBusy(target)==true};
+            var view=new ProgramMemoryView {sessionId=editor.TemporarySessionId,temporary=Memory?.Temporary==true,ready=Memory?.Ready==true,pending=Memory?.Pending==true,error=Memory?.Error??MemoryBlocked??"",revision="",programId=target,busy=Runtime?.Scheduler?.MemoryTargetBusy(target)==true};
             if(!view.ready||Memory.Error!=null)return view;
             var saved=Memory.Snapshot();view.revision=saved.Revision;
             view.programs=saved.Programs.OrderBy(x=>x.Key,StringComparer.Ordinal).Select(x=>new ProgramMemoryGroupView {id=x.Key,name=document.sequences.FirstOrDefault(s=>s.id==x.Key)?.name??"Removed behaviour",cells=x.Value.Count}).ToArray();

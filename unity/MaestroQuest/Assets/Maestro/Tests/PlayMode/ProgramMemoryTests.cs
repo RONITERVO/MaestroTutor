@@ -24,7 +24,7 @@ namespace Maestro.Quest.Tests
             Assert.That(executor.Execute(new RoomAgentRequest{version=2,commands=new[]{new RoomAgentCommand{action="rules",rule=new RuleRequest{action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit{kind="save",reference="remember",sequence=sequence}}}}}},out var error,out var ids),Is.True,error);string id=ids.Single();
             var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);var evidence=new JObject();
             void Capture(string phase){var state=observer.Observe();state.visible=true;state.workspaceView="rules";state.rules=workshop.Observe(true);evidence[phase]=JObject.Parse(RoomAgentWire.Serialize(state));}
-            JObject Args(string kind,string revision,string value="41")=>new(){["kind"]=kind,["programId"]=id,["variableId"]=new string('c',32),["revision"]=revision,["rulesRevision"]=workshop.Revision,["valueJson"]=value};
+            JObject Args(string kind,string revision,string value="41")=>new(){["sessionId"]=editor.TemporarySessionId,["kind"]=kind,["programId"]=id,["variableId"]=new string('c',32),["revision"]=revision,["rulesRevision"]=workshop.Revision,["valueJson"]=value};
             bool Edit(JObject args,out string run,out string issue)=>runtime.Scheduler.Invoke(new JObject{["id"]="program.memory.edit",["version"]=1,["arguments"]=args},Time.unscaledTime,out run,out issue);
             Capture("initial");var initialRevision=workshop.Memory.Snapshot().Revision;
             Assert.That(Edit(Args("set",initialRevision),out var run,out error),Is.True,error);

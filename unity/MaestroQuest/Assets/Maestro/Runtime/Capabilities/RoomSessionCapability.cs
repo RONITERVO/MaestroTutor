@@ -15,7 +15,7 @@ namespace Maestro.Quest.Programs
     {
         public override string Id=>"room.session";
         public override string Label=>"Temporary room";
-        public override string Description=>"Explicit room-wide temporary play. Begin captures the current base and makes later object edits temporary immediately; completion waits for its baseline write. Failed baseline saves keep the fork available for Keep or Discard. Keep saves one captured snapshot as one saved Undo and continues temporary play; later edits remain temporary. Discard returns to the latest kept base and pauses physics. Programs, imported files and chat are separate. Pass the exact observed room sessionId (or bind room.sessionId); Begin/Discard return the new identity. Begin/Discard require other runs and authoring to finish. A dispatched Keep can finish after Stop; inspect save status instead of replaying it. Ordinary creations remain saved outside this mode.";
+        public override string Description=>"Explicit room-wide temporary play. Begin captures the current base and makes later object edits and remembered values temporary immediately; completion waits for its baseline write. Failed baseline saves keep the fork available for Keep or Discard. Keep saves the captured room and remembered values together; the layout is one saved Undo, memory has no Undo and continues temporary play; later edits remain temporary. Discard returns room and remembered values to the latest confirmed kept base and pauses physics. Programs, imported files and chat are separate. Pass the exact observed room sessionId (or bind room.sessionId); Begin/Discard return the new identity. Begin/Discard require other runs and authoring to finish. A dispatched Keep can finish after Stop; inspect save status instead of replaying it. Ordinary creations remain saved outside this mode.";
         public override string Duration=>"completion";
         public override string Ownership=>"roomSession";
         public override bool RequiresQuietRoom(JObject args)=>(string)args["operation"]!="keep";
@@ -25,7 +25,7 @@ namespace Maestro.Quest.Programs
         public override JObject Example=>new() {["operation"]="begin",["sessionId"]=new string('0',32)};
         static bool Quiet(CapabilityContext context,out string error) {
             error=null;var editor=context.Editor;
-            if(!editor.CanChangeTemporaryBoundary(out error))return false;
+            if(!editor.CanChangeTemporaryBoundary(out error,changingMemory:true))return false;
             foreach(var data in editor.Snapshot().objects) {
                 var item=editor.Find(data.id);if(!item)continue;
                 var avatar=item.GetComponent<MaestroAvatar>();

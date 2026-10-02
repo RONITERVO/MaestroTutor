@@ -126,7 +126,7 @@ export function capabilityFeatures(id:string,args:Record<string,unknown>,binding
  const required=new Set<string>();
  const visit=(schema:CapabilitySchema|undefined,value:unknown)=>{
   if(!schema||value===undefined)return;const selected=resolveCapabilitySchema(schema,value);if(!selected)return;
-  for(const feature of selected['x-features']??[])required.add(feature);
+  for(const feature of [...schema['x-features']??[],...selected['x-features']??[]])required.add(feature);
   if(selected.type==='object'&&record(value))for(const [key,child] of Object.entries(selected.properties??{}))visit(child,value[key]);
   if(selected.type==='array'&&Array.isArray(value))for(const item of value)visit(selected.items,item);
  };

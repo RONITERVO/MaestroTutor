@@ -19,7 +19,7 @@ namespace Maestro.Quest.Rules
         RuleStorage storage;
         public ProgramModuleLibrary Modules {get;private set;}
         internal ProgramMemoryStore Memory {get;private set;}
-        internal string MemoryBlocked=>editor.TemporaryRoom||editor.TemporarySavePending?"Keep or discard the temporary room before using remembered values":null;
+        internal string MemoryBlocked=>editor.TemporaryStorageUncertain?"The paired room/memory save needs recovery":Memory!=null&&Memory.Temporary!=editor.TemporaryRoom?"Temporary room and remembered values are changing scope":null;
         RuleDocument document = new();
         readonly List<RuleDocument> undo = new(), redo = new();
         int sequenceIndex = -1, stepIndex, bindingIndex = -1;

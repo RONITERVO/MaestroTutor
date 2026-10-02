@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 using System;
 using System.IO;
+using System.Collections.Generic;
+using System.Threading;
 using System.Linq;
 using System.Text;
 using Maestro.Quest.Creation;
@@ -13,7 +15,7 @@ using UnityEngine;
 namespace Maestro.Quest.Persistence
 {
     /// <summary>Paired passive room/memory publication. Every participating reader/writer must
-    /// enter this coordinator before using either primary. Not yet connected to live stores.
+    /// enter this coordinator before using either primary.
     /// A durable prepared intent rolls back; a durable committed intent rolls forward.
     /// Recovery never executes actions, and unexpected file identities preserve all evidence.</summary>
     internal static class RoomSnapshotTransaction
@@ -88,26 +90,67 @@ namespace Maestro.Quest.Persistence
             while(offset<bytes.Length){int count=stream.Read(bytes,offset,bytes.Length-offset);if(count==0)throw new EndOfStreamException();offset+=count;}
             Need(stream.ReadByte()==-1,"Snapshot changed while reading.");return bytes;
         }
-        static void Paths(string root)
+        static void Paths(string root,bool strictDocuments=true)
         {
             WorkspaceFileInventory.Parents(root);
             if(WorkspaceFileInventory.Kind(root)=="absent")return;
+            if(strictDocuments){
             Need(!VersionedRoomFile<RoomDocument>.HasNewerFiles(root,"room",2),"A newer room format remains; preserve it before recovery.");
             Need(WorkspaceFileInventory.Kind(Path.Combine(root,"room.v2.json.pending"))=="absent","An unfinished room save remains; preserve it before recovery.");
             foreach(string path in Directory.EnumerateFileSystemEntries(root,"program-memory.v*").Take(3))
                 Need((Path.GetFileName(path)==ProgramMemoryStore.FileName||Path.GetFileName(path)==ProgramMemoryStore.FileName+".backup")&&WorkspaceFileInventory.Kind(path)=="file","Unrecognized or unfinished memory remains; preserve it before recovery.");
+            }
             // Unknown versions and orphan staging files are retained, never guessed into a commit.
             foreach(string path in Directory.EnumerateFileSystemEntries(root,"room-snapshot.v*").Take(2))
                 Need(Path.GetFileName(path)==FileName&&WorkspaceFileInventory.Kind(path)=="file","Unrecognized snapshot evidence; preserve it before recovery.");
             foreach(string name in Names.Append(FileName))
                 Need(!Directory.EnumerateFileSystemEntries(root,name+".snapshot.*").Any(),"Unfinished snapshot staging remains; preserve it before recovery.");
         }
-        static FileStream Own(string root)
+        static readonly object gateMapLock=new();
+        static readonly Dictionary<string,WeakReference<object>> gates=new(Path.DirectorySeparatorChar=='\\'?StringComparer.OrdinalIgnoreCase:StringComparer.Ordinal);
+        sealed class Owner:IDisposable
         {
-            Paths(root);Directory.CreateDirectory(root);Paths(root);
-            string path=Path.Combine(root,"room-snapshot.writer.lock");
-            Need(WorkspaceFileInventory.Kind(path)!="directory","Snapshot writer path is unavailable.");
-            return new FileStream(path,FileMode.OpenOrCreate,FileAccess.ReadWrite,FileShare.None);
+            object gate;readonly FileStream file;
+            internal Owner(object gate,FileStream file){this.gate=gate;this.file=file;}
+            public void Dispose(){var held=Interlocked.Exchange(ref gate,null);if(held==null)return;try{file?.Dispose();}finally{Monitor.Exit(held);}}
+        }
+        static IDisposable Own(string root,bool strictDocuments=true,bool wait=false,bool initialize=true)
+        {
+            object gate;
+            lock(gateMapLock){
+                if(!gates.TryGetValue(root,out var weak)||!weak.TryGetTarget(out gate)){
+                    if(gates.Count>=64)foreach(string key in gates.Where(x=>!x.Value.TryGetTarget(out _)).Select(x=>x.Key).ToArray())gates.Remove(key);
+                    gates[root]=new WeakReference<object>(gate=new object());
+                }
+            }
+            if(wait)Monitor.Enter(gate);else if(!Monitor.TryEnter(gate))throw new IOException("The room snapshot writer is busy.");
+            try {
+                Paths(root,strictDocuments);if(initialize){Directory.CreateDirectory(root);Paths(root,strictDocuments);}
+                string path=Path.Combine(root,"room-snapshot.writer.lock");
+                Need(WorkspaceFileInventory.Kind(path)!="directory","Snapshot writer path is unavailable.");
+                return new Owner(gate,initialize?new FileStream(path,FileMode.OpenOrCreate,FileAccess.ReadWrite,FileShare.None):WorkspaceFileInventory.Kind(path)=="file"?new FileStream(path,FileMode.Open,FileAccess.Read,FileShare.None):null);
+            }catch{Monitor.Exit(gate);throw;}
+        }
+        // Startup is the only ordinary path allowed to recover. Read-only inspection and
+        // ordinary saves must not replace caches or overwrite an unconfirmed paired save.
+        internal static IDisposable Enter(string directory,bool recover=false,bool wait=true,bool initialize=true)
+        {
+            string root=Root(directory);var owner=Own(root,strictDocuments:false,wait:wait,initialize:initialize);
+            try {
+                if(recover)RecoverOwned(root,null);
+                else Need(WorkspaceFileInventory.Kind(Path.Combine(root,FileName))=="absent","An interrupted room/memory snapshot needs recovery before using saved data.");
+                return owner;
+            }catch{owner.Dispose();throw;}
+        }
+        // Read-only maintenance must not initialize a lock file or recover an inactive room.
+        // Existing host path ownership excludes outside writers when no lock exists yet.
+        internal static IDisposable Inspect(string directory,bool wait=true)
+        {
+            string root=Root(directory);var owner=Own(root,strictDocuments:false,wait:wait,initialize:false);
+            try {
+                Need(WorkspaceFileInventory.Kind(Path.Combine(root,FileName))=="absent","An interrupted room/memory snapshot needs recovery before inspecting saved data.");
+                return owner;
+            }catch{owner.Dispose();throw;}
         }
         static Snapshot Current(string root)
         {
@@ -185,15 +228,17 @@ namespace Maestro.Quest.Persistence
             }
             CheckOwned(root,intent);File.Delete(Path.Combine(root,FileName));return new Recovery(intent.Id,committed);
         }
+        // Failure inspection preserves unrelated unfinished ordinary saves and never recovers.
+        internal static Snapshot InspectSnapshot(string directory){using var owner=Inspect(directory);return Current(Root(directory));}
         internal static Snapshot Capture(string directory)=>Capture(directory,out _);
-        internal static Snapshot Capture(string directory,out Recovery recovery,Action<string> fault=null)
+        internal static Snapshot Capture(string directory,out Recovery recovery,Action<string> fault=null,bool wait=false)
         {
-            string root=Root(directory);using var owner=Own(root);recovery=RecoverOwned(root,fault);return Current(root);
+            string root=Root(directory);using var owner=Own(root,wait:wait);recovery=RecoverOwned(root,fault);return Current(root);
         }
-        internal static string Publish(string directory,Snapshot expected,Snapshot candidate,Action<string> fault=null)
+        internal static string Publish(string directory,Snapshot expected,Snapshot candidate,Action<string> fault=null,bool wait=false)
         {
             Need(expected!=null&&candidate!=null,"Missing paired snapshot.");for(int i=0;i<2;i++)Validate(i,candidate.Read(i),true);
-            string root=Root(directory);using var owner=Own(root);RecoverOwned(root,null);
+            string root=Root(directory);using var owner=Own(root,wait:wait);RecoverOwned(root,null);
             var current=Current(root);Need(current.Identity==expected.Identity,"Saved room or memory changed; inspect before keeping this snapshot.");
             var intent=new Intent{Id=Guid.NewGuid().ToString("N"),Phase="prepared",Before=current,After=candidate,Backups=Names.Select((name,i)=>Fingerprint(Read(Path.Combine(root,name+".backup"),Limits[i]))).ToArray()};
             fault?.Invoke("before-journal");Paths(root);

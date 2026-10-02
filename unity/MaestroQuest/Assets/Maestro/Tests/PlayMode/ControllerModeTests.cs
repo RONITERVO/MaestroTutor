@@ -20,7 +20,7 @@ namespace Maestro.Quest.Tests
         MovementControls SharedModes(out VirtualRoomView view,out Transform origin)
         {
             Surface(new Vector3(0,-.1f,0),new Vector3(10,.2f,10));Tutor();Ready();
-            var workshop=root.AddComponent<RuleWorkshop>();workshop.Initialize(editor,directory);
+            var workshop=root.AddComponent<RuleWorkshop>();workshop.Initialize(editor,directory);Assert.That(workshop.Memory.Initialization.Wait(TimeSpan.FromSeconds(5)),Is.True,"Memory fixture did not load");Assert.That(workshop.Memory.Error,Is.Null);
             modeRules=root.AddComponent<RoomRules>();modeRules.Initialize(workshop,editor,authoring,null,room,null);
             var controls=Controls(out view,out origin,modeRules,workshop);modeActions=new RoomExecutions(editor);return controls;
         }

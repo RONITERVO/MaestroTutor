@@ -27,7 +27,7 @@ namespace Maestro.Quest.Tests
    var book=Item("book");var maestro=Item("maestro");editor=root.AddComponent<RoomEditor>();editor.Initialize(room,book,maestro,directory);
    var animations=root.AddComponent<AnimationWorkshop>();animations.Initialize(editor);var workshop=root.AddComponent<RuleWorkshop>();workshop.Initialize(editor,directory);
    runtime=root.AddComponent<RoomRules>();runtime.Initialize(workshop,editor,animations,null,room,null);
-   observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);executions=new RoomExecutions(editor);yield return null;
+   observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);executions=new RoomExecutions(editor);float memoryDeadline=Time.realtimeSinceStartup+5;while(!workshop.Memory.Ready&&Time.realtimeSinceStartup<memoryDeadline)yield return null;Assert.That(workshop.Memory.Ready,Is.True);Assert.That(workshop.Memory.Error,Is.Null);yield return null;
   }
   [UnityTearDown] public IEnumerator Cleanup(){if(root)UnityEngine.Object.Destroy(root);yield return null;if(Directory.Exists(directory))Directory.Delete(directory,true);}
   JObject Call(string operation,string session=null)=>new() {["id"]="room.session",["version"]=1,["arguments"]=new JObject {["operation"]=operation,["sessionId"]=session??editor.TemporarySessionId}};

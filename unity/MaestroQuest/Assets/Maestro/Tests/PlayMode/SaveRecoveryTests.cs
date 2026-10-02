@@ -43,6 +43,7 @@ namespace Maestro.Quest.Tests
             rules=root.AddComponent<RuleWorkshop>();rules.Initialize(editor,directory);rules.enabled=false;
             Assert.That(editor.CreatePrimitive(RoomObjectKind.Block,"Saved baseline",Vector3.up,1,Color.white,out id,out var error),Is.True,error);
             rules.NewSequence();Assert.That(rules.TryFlush(out error),Is.True,error);
+            float memoryDeadline=Time.realtimeSinceStartup+5;while(!rules.Memory.Ready&&Time.realtimeSinceStartup<memoryDeadline)yield return null;Assert.That(rules.Memory.Ready,Is.True);Assert.That(rules.Memory.Error,Is.Null);
             yield return null;
         }
         void Rename(string name)

@@ -53,5 +53,10 @@ namespace Maestro.Quest.Tests
             for(int i=0;i<=WorkspaceRecoveryEvidence.MaximumFiles;i++)File.WriteAllBytes(Path.Combine(source,i+".txt"),Array.Empty<byte>());
             Assert.Throws<InvalidDataException>(()=>WorkspaceRecoveryEvidence.Write(source,output,WorkspaceRecoveryEvidence.EncodeAccepted(Accepted())));Assert.That(Directory.GetFiles(source).Length,Is.EqualTo(WorkspaceRecoveryEvidence.MaximumFiles+1));Assert.That(Directory.GetFiles(output),Is.Empty);
         }
+        [Test] public void VersionTwoPreservesAndValidatesLabelledRememberedValues()
+        {
+            var value=Accepted();value["version"]=2;value["available"]["programMemory"]=true;value["programMemory"]=JObject.Parse(System.Text.Encoding.UTF8.GetString(Programs.ProgramMemoryDocument.Empty().Encode()));value["temporaryMemory"]=JValue.CreateNull();
+            Assert.DoesNotThrow(()=>WorkspaceRecoveryEvidence.EncodeAccepted(value));value["programMemory"]=JValue.CreateNull();Assert.Throws<InvalidDataException>(()=>WorkspaceRecoveryEvidence.EncodeAccepted(value));value["available"]["programMemory"]=false;Assert.DoesNotThrow(()=>WorkspaceRecoveryEvidence.EncodeAccepted(value));value["temporaryMemory"]=new JObject();Assert.Throws<InvalidDataException>(()=>WorkspaceRecoveryEvidence.EncodeAccepted(value));
+        }
     }
 }

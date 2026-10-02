@@ -2322,3 +2322,23 @@ Final local verification for this foundation: **529 EditMode and 410 PlayMode**
 tests passed, with the three expected optional private-file skips. The native
 verification helper exited 0. Source/mirror C# hashes match (227 runtime, 123 test
 and 11 editor files). The paired-save helper remains unconnected to live stores.
+
+
+## Temporary remembered values and coordinated live saves — 2026-10-02
+
+Connected the snapshot coordinator to real room/memory startup, ordinary writers,
+retention and archive inspection. Begin now forks remembered values, checkpoints
+and explicit edits stay temporary, and Keep publishes the captured room/memory
+pair together. Discard restores the last confirmed pair. Later edits remain
+separate; room Undo changes layout only. The same native capabilities serve the
+book, agent and saved programs with exact session and revision guards.
+
+Recovery preservation includes labelled saved/temporary memory as well as raw
+files. Competing memory owners, interrupted publication, stale drafts, asset
+retention and accepted-write draining are covered by regression tests. Unknown
+or changed evidence is preserved and can hold further boundaries. Desktop checks
+do not establish Quest latency or power-loss durability. No new APK, device
+operation, production deployment or Store submission is part of this checkpoint.
+
+
+Final local verification for the live integration: **560 EditMode and 412 PlayMode** tests passed, with the three expected optional private-file skips; the native helper exited 0. All **1,764 web tests in 207 files**, TypeScript, lint, core boundaries, native-catalog provenance and production web build passed. C# source/mirror hashes match: **229 runtime, 126 test and 11 editor files**. The updated browser fixture comes from the native remembered-values journey. No APK or headset operation was performed.

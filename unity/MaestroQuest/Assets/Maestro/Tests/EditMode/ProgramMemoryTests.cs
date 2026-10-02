@@ -189,10 +189,10 @@ namespace Maestro.Quest.Tests
             using var held=gate.TryFreeze(out _);Assert.That(held,Is.Not.Null);
             Assert.Throws<InvalidOperationException>(()=>store.Write(store.Snapshot().Revision,Program,Values()));Assert.Throws<InvalidOperationException>(()=>store.Reset(store.Snapshot().Revision,Other));Assert.That(File.ReadAllBytes(Primary),Is.EqualTo(bytes));
         }
-        [Test] public async Task TwoOwnersCannotOverwriteTheCheckpointBeingPublished()
+        [TestCase(false)][TestCase(true)] public async Task TwoOwnersCannotOverwriteTheCheckpointBeingPublished(bool trailingSeparator)
         {
             var first=Open();Write(first);using var entered=new ManualResetEventSlim();using var release=new ManualResetEventSlim();
-            first=Open(fault:stage=>{if(stage=="written"){entered.Set();if(!release.Wait(5000))throw new IOException("Test barrier expired");}});var second=Open();
+            first=Open(fault:stage=>{if(stage=="written"){entered.Set();if(!release.Wait(5000))throw new IOException("Test barrier expired");}});var second=new ProgramMemoryStore(directory+(trailingSeparator?Path.DirectorySeparatorChar.ToString():""),new());stores.Add(second);await second.Initialization;
             var task=first.Write(first.Snapshot().Revision,Program,Values(2));
             try{Assert.That(entered.Wait(5000),Is.True);var competing=await second.Write(second.Snapshot().Revision,Program,Values(3));Assert.That(competing.Error,Is.Not.Null);release.Set();Assert.That((await task).Error,Is.Null);Assert.That(Read(Open().Snapshot()),Is.EqualTo(2));}
             finally{release.Set();await task;}

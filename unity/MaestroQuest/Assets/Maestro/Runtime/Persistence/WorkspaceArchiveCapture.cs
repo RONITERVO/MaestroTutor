@@ -65,9 +65,11 @@ namespace Maestro.Quest.Persistence
             try {
                 if(!editor.Motions.TryCaptureArchive(out motions))throw new InvalidOperationException("Wait for motion import or maintenance before exporting.");
                 var room=editor.Snapshot();room.version=2;var behaviours=rules.Snapshot();var preferences=controls.Preferences;var activities=editor.ActivityProfiles.Snapshot();
+                string savedDirectory=editor.SaveDirectory;
                 var definitions=modules.ToDictionary(x=>"program-modules.v1/"+x.Hash+".json",x=>x.ReadDefinition(),StringComparer.Ordinal);var heldMotions=motions;
                 return Task.Run(()=>{
                     try {
+                        using(var pairOwner=RoomSnapshotTransaction.Inspect(savedDirectory)){cancellation.ThrowIfCancellationRequested();}
                         cancellation.ThrowIfCancellationRequested();var documents=new Dictionary<string,byte[]>(StringComparer.Ordinal);var assets=new Dictionary<string,Func<Stream>>(StringComparer.Ordinal);
                         var utf8=new UTF8Encoding(false,true);byte[] Json(object value)=>utf8.GetBytes(JsonUtility.ToJson(value));
                         documents.Add(ProgramMemoryStore.FileName,memory.Encode());

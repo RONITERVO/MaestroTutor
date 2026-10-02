@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Maestro.Quest.Creation;
 using Maestro.Quest.Interaction;
 using Maestro.Quest.Rules;
+using System.Text;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 namespace Maestro.Quest.Persistence
@@ -25,6 +26,7 @@ namespace Maestro.Quest.Persistence
         {
             error=null;
             if(!editor||!rules||!controls||rules.Editor!=editor||controls.ArchiveEditor!=editor){error="Workspace owners are not ready for recovery preservation.";return false;}
+            if(rules.Memory!=null&&(!rules.Memory.Ready||rules.Memory.Pending)){error="Wait for remembered values to finish loading or saving before preserving recovery data.";return false;}
             if(editor.TemporarySavePending){error="Wait for the dispatched temporary-room save before preserving recovery data.";return false;}
             if(!editor.WriteGate.CanFreeze(out error)||!editor.CanChangeTemporaryBoundary(out error))return false;
             if(rules.Runtime&&rules.Runtime.AnyButtonHeld){error="Release action buttons before preserving recovery data.";return false;}
@@ -45,9 +47,10 @@ namespace Maestro.Quest.Persistence
                 // No save is dispatched here. Read-only fallbacks are labelled, never treated as
                 // repaired originals. The temporary fork is kept separately from its saved base.
                 JToken Json(object value)=>JToken.Parse(JsonUtility.ToJson(value));
-                var accepted=new JObject {["version"]=1,["available"]=new JObject {["room"]=editor.CanSaveRoom,["behaviours"]=!rules.ReadOnly,["controls"]=controls.ArchiveReady,["activities"]=!editor.ActivityProfiles.ReadOnly},
+                JToken Memory(bool saved)=>rules.Memory?.RecoverySnapshot(saved) is Programs.ProgramMemoryDocument value?JObject.Parse(Encoding.UTF8.GetString(value.Encode())):JValue.CreateNull();
+                var accepted=new JObject {["version"]=2,["available"]=new JObject {["room"]=editor.CanSaveRoom,["behaviours"]=!rules.ReadOnly,["controls"]=controls.ArchiveReady,["activities"]=!editor.ActivityProfiles.ReadOnly,["programMemory"]=rules.Memory?.Ready==true&&rules.Memory.Error==null&&!editor.TemporaryStorageUncertain},
                     ["room"]=Json(editor.RecoverySavedSnapshot()),["behaviours"]=Json(rules.Snapshot()),["controls"]=Json(controls.Preferences),["activities"]=Json(editor.ActivityProfiles.Snapshot()),
-                    ["temporaryRoom"]=editor.TemporaryRoom?Json(editor.Snapshot()):JValue.CreateNull()};
+                    ["temporaryRoom"]=editor.TemporaryRoom?Json(editor.Snapshot()):JValue.CreateNull(),["programMemory"]=Memory(true),["temporaryMemory"]=editor.TemporaryRoom?Memory(false):JValue.CreateNull()};
                 var bytes=WorkspaceRecoveryEvidence.EncodeAccepted(accepted);
                 hold=new WorkspaceRecoveryHold(editor,activity,writes,roomSaves,ruleSaves,Task.WhenAll(Drain(roomPending),Drain(rulesPending)),bytes);
                 activity=writes=roomSaves=ruleSaves=null;return true;

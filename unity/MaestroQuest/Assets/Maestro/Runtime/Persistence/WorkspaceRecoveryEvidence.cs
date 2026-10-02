@@ -27,8 +27,18 @@ namespace Maestro.Quest.Persistence
         static readonly UTF8Encoding Utf8=new(false,true);
         internal static byte[] EncodeAccepted(JObject value)
         {
-            var keys=new[]{"version","available","room","behaviours","controls","activities","temporaryRoom"};var flags=new[]{"room","behaviours","controls","activities"};
-            if(value==null||value.Count!=keys.Length||!keys.All(value.ContainsKey)||value["version"]?.Type!=JTokenType.Integer||(int)value["version"]!=1||value["available"] is not JObject available||available.Count!=flags.Length||flags.Any(x=>available[x]?.Type!=JTokenType.Boolean)||flags.Any(x=>value[x] is not JObject)||value["temporaryRoom"]?.Type is not (JTokenType.Object or JTokenType.Null))throw new InvalidDataException("Invalid accepted recovery documents.");
+            bool memory=value?["version"]?.Type==JTokenType.Integer&&(int)value["version"]==2;
+            var documents=new[]{"room","behaviours","controls","activities"};
+            var keys=new[]{"version","available","room","behaviours","controls","activities","temporaryRoom"}.Concat(memory?new[]{"programMemory","temporaryMemory"}:Array.Empty<string>()).ToArray();
+            var flags=documents.Concat(memory?new[]{"programMemory"}:Array.Empty<string>()).ToArray();
+            if(value==null||value.Count!=keys.Length||!keys.All(value.ContainsKey)||value["version"]?.Type!=JTokenType.Integer||((int)value["version"]!=1&&!memory)||value["available"] is not JObject available||available.Count!=flags.Length||flags.Any(x=>available[x]?.Type!=JTokenType.Boolean)||documents.Any(x=>value[x] is not JObject)||value["temporaryRoom"]?.Type is not (JTokenType.Object or JTokenType.Null))throw new InvalidDataException("Invalid accepted recovery documents.");
+            if(memory){
+                foreach(string name in new[]{"programMemory","temporaryMemory"}){
+                    if(value[name]?.Type is not (JTokenType.Object or JTokenType.Null))throw new InvalidDataException("Invalid accepted memory document.");
+                    if(value[name].Type==JTokenType.Object)_=Programs.ProgramMemoryDocument.Decode(Utf8.GetBytes(value[name].ToString(Formatting.None)));
+                }
+                if((bool)available["programMemory"]&&value["programMemory"].Type!=JTokenType.Object||value["temporaryRoom"].Type==JTokenType.Null&&value["temporaryMemory"].Type!=JTokenType.Null)throw new InvalidDataException("Invalid accepted memory availability.");
+            }
             var bytes=Utf8.GetBytes(value.ToString(Formatting.None));if(bytes.Length>MaximumAcceptedBytes)throw new InvalidDataException("Accepted recovery documents exceed their limit.");return bytes;
         }
         static void PlainParents(string path)

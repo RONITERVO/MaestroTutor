@@ -4,9 +4,9 @@
     "revision": 1,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "1e65e59daa114c4095fc13f391992d07",
+    "session": "c17a978788ec457e91c476daf8e29019",
     "status": "Room actions ready",
-    "selectedId": "4692a07a6e244a198f5063a4df7fd06e",
+    "selectedId": "ee67c71945a3401a8ab1c2e73d4ee2d0",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -28,7 +28,7 @@
       "selectedError": "",
       "sequences": [
         {
-          "id": "16cae631329d44c68361e8c58df463c5",
+          "id": "15f4aaa77f084da9ad936e6f9034422d",
           "name": "Action 1",
           "error": "",
           "steps": 1,
@@ -36,7 +36,7 @@
           "program": true
         },
         {
-          "id": "ff14d238352748b2b36bf5f951900730",
+          "id": "ada4c2f3091440789a18f6044f337964",
           "name": "Remember my count",
           "error": "",
           "steps": 4,
@@ -45,7 +45,7 @@
         }
       ],
       "selected": {
-        "id": "ff14d238352748b2b36bf5f951900730",
+        "id": "ada4c2f3091440789a18f6044f337964",
         "name": "Remember my count",
         "interruption": 0,
         "repeat": false,
@@ -55,9 +55,11 @@
         "ready": true,
         "pending": false,
         "busy": false,
+        "temporary": false,
         "error": "",
         "revision": "initial",
-        "programId": "ff14d238352748b2b36bf5f951900730",
+        "programId": "ada4c2f3091440789a18f6044f337964",
+        "sessionId": "34ab5063438d48f9a0cb5a8708a94273",
         "page": 0,
         "count": 1,
         "programs": [],
@@ -95,6 +97,7 @@
       "conditionWaits.v1",
       "parallelPrograms.v1",
       "rememberedVariables.v1",
+      "temporaryMemory.v1",
       "structuredValues.v1",
       "programModules.v1",
       "moduleLibrary.v1",
@@ -109,6 +112,8 @@
       "recipeEdits.v1",
       "recipePartPlayback.v1",
       "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
       "objectLaunch.v1",
       "calendarSchedules.v1",
       "animationAuthoring.v1",
@@ -134,7 +139,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "9df5367c7ac74f30977c8865933ac95c",
+      "id": "34ab5063438d48f9a0cb5a8708a94273",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -176,74 +181,20 @@
     },
     "objects": [
       {
-        "id": "015011f2f6d547c3834c0b3a3c03fa41",
+        "id": "aba808e1acfb4acb98379cf8609a7b6d",
         "name": "Ball",
         "kind": "Ball",
         "objectRevision": 4,
         "position": {
-          "x": 0.6899999976158142,
+          "x": 0.68999999761581421,
           "y": 1.4500000476837158,
           "z": 0.800000011920929
         },
         "scale": 1.0,
         "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "3c1ac9ba4c21459aa814f5d9821b37bf",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "4692a07a6e244a198f5063a4df7fd06e",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 6,
-        "position": {
-          "x": 0.5199999809265137,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
+          "r": 0.76470589637756348,
+          "g": 0.60000002384185791,
+          "b": 0.31372550129890442,
           "a": 1.0
         },
         "animated": false,
@@ -271,6 +222,60 @@
           "r": 1.0,
           "g": 1.0,
           "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "e8fd022e304849beb5dbfe384f3781b6",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.86000001430511475,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.55294120311737061,
+          "b": 0.53333336114883423,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "ee67c71945a3401a8ab1c2e73d4ee2d0",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 6,
+        "position": {
+          "x": 0.51999998092651367,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
           "a": 1.0
         },
         "animated": false,
@@ -320,7 +325,7 @@
       "selected": null,
       "running": [],
       "outcomes": [],
-      "nextRunId": "cc905d247c7b405ba4aea9d4ecac2543",
+      "nextRunId": "6f6f3fdcd199419f89b58fc416e6706f",
       "storageError": null,
       "recovery": null
     }
@@ -330,9 +335,9 @@
     "revision": 2,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "1e65e59daa114c4095fc13f391992d07",
+    "session": "c17a978788ec457e91c476daf8e29019",
     "status": "Room actions ready",
-    "selectedId": "4692a07a6e244a198f5063a4df7fd06e",
+    "selectedId": "ee67c71945a3401a8ab1c2e73d4ee2d0",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -354,7 +359,7 @@
       "selectedError": "",
       "sequences": [
         {
-          "id": "16cae631329d44c68361e8c58df463c5",
+          "id": "15f4aaa77f084da9ad936e6f9034422d",
           "name": "Action 1",
           "error": "",
           "steps": 1,
@@ -362,7 +367,7 @@
           "program": true
         },
         {
-          "id": "ff14d238352748b2b36bf5f951900730",
+          "id": "ada4c2f3091440789a18f6044f337964",
           "name": "Remember my count",
           "error": "",
           "steps": 4,
@@ -371,7 +376,7 @@
         }
       ],
       "selected": {
-        "id": "ff14d238352748b2b36bf5f951900730",
+        "id": "ada4c2f3091440789a18f6044f337964",
         "name": "Remember my count",
         "interruption": 0,
         "repeat": false,
@@ -381,14 +386,16 @@
         "ready": true,
         "pending": false,
         "busy": false,
+        "temporary": false,
         "error": "",
-        "revision": "2ccfabd9fc184cba9627606c206ef9cb",
-        "programId": "ff14d238352748b2b36bf5f951900730",
+        "revision": "c7fdd87602884459b40a228fe49447ad",
+        "programId": "ada4c2f3091440789a18f6044f337964",
+        "sessionId": "34ab5063438d48f9a0cb5a8708a94273",
         "page": 0,
         "count": 1,
         "programs": [
           {
-            "id": "ff14d238352748b2b36bf5f951900730",
+            "id": "ada4c2f3091440789a18f6044f337964",
             "name": "Remember my count",
             "cells": 1
           }
@@ -427,6 +434,7 @@
       "conditionWaits.v1",
       "parallelPrograms.v1",
       "rememberedVariables.v1",
+      "temporaryMemory.v1",
       "structuredValues.v1",
       "programModules.v1",
       "moduleLibrary.v1",
@@ -441,6 +449,8 @@
       "recipeEdits.v1",
       "recipePartPlayback.v1",
       "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
       "objectLaunch.v1",
       "calendarSchedules.v1",
       "animationAuthoring.v1",
@@ -466,7 +476,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "9df5367c7ac74f30977c8865933ac95c",
+      "id": "34ab5063438d48f9a0cb5a8708a94273",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -508,74 +518,20 @@
     },
     "objects": [
       {
-        "id": "015011f2f6d547c3834c0b3a3c03fa41",
+        "id": "aba808e1acfb4acb98379cf8609a7b6d",
         "name": "Ball",
         "kind": "Ball",
         "objectRevision": 4,
         "position": {
-          "x": 0.6899999976158142,
+          "x": 0.68999999761581421,
           "y": 1.4500000476837158,
           "z": 0.800000011920929
         },
         "scale": 1.0,
         "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "3c1ac9ba4c21459aa814f5d9821b37bf",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "4692a07a6e244a198f5063a4df7fd06e",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 6,
-        "position": {
-          "x": 0.5199999809265137,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
+          "r": 0.76470589637756348,
+          "g": 0.60000002384185791,
+          "b": 0.31372550129890442,
           "a": 1.0
         },
         "animated": false,
@@ -603,6 +559,60 @@
           "r": 1.0,
           "g": 1.0,
           "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "e8fd022e304849beb5dbfe384f3781b6",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.86000001430511475,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.55294120311737061,
+          "b": 0.53333336114883423,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "ee67c71945a3401a8ab1c2e73d4ee2d0",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 6,
+        "position": {
+          "x": 0.51999998092651367,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
           "a": 1.0
         },
         "animated": false,
@@ -653,19 +663,19 @@
       "running": [],
       "outcomes": [
         {
-          "id": "cc905d247c7b405ba4aea9d4ecac2543",
+          "id": "6f6f3fdcd199419f89b58fc416e6706f",
           "capability": "program.memory.edit",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "revision": "2ccfabd9fc184cba9627606c206ef9cb",
+            "revision": "c7fdd87602884459b40a228fe49447ad",
             "changed": true
           }
         }
       ],
-      "nextRunId": "b011f8bb02d946d39c543ae9b2e94b8c",
+      "nextRunId": "1f91fb133b4d4ba5b8db7c00633f287f",
       "storageError": null,
       "recovery": null
     }
@@ -675,9 +685,9 @@
     "revision": 3,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "1e65e59daa114c4095fc13f391992d07",
+    "session": "c17a978788ec457e91c476daf8e29019",
     "status": "Room actions ready",
-    "selectedId": "4692a07a6e244a198f5063a4df7fd06e",
+    "selectedId": "ee67c71945a3401a8ab1c2e73d4ee2d0",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -699,7 +709,7 @@
       "selectedError": "",
       "sequences": [
         {
-          "id": "16cae631329d44c68361e8c58df463c5",
+          "id": "15f4aaa77f084da9ad936e6f9034422d",
           "name": "Action 1",
           "error": "",
           "steps": 1,
@@ -707,7 +717,7 @@
           "program": true
         },
         {
-          "id": "ff14d238352748b2b36bf5f951900730",
+          "id": "ada4c2f3091440789a18f6044f337964",
           "name": "Remember my count",
           "error": "",
           "steps": 4,
@@ -716,7 +726,7 @@
         }
       ],
       "selected": {
-        "id": "ff14d238352748b2b36bf5f951900730",
+        "id": "ada4c2f3091440789a18f6044f337964",
         "name": "Remember my count",
         "interruption": 0,
         "repeat": false,
@@ -726,14 +736,16 @@
         "ready": true,
         "pending": false,
         "busy": true,
+        "temporary": false,
         "error": "",
-        "revision": "5df99d11f1244345aba6cf943e2cdf70",
-        "programId": "ff14d238352748b2b36bf5f951900730",
+        "revision": "e64411a1d5b2400bbd655c5e218b87e8",
+        "programId": "ada4c2f3091440789a18f6044f337964",
+        "sessionId": "34ab5063438d48f9a0cb5a8708a94273",
         "page": 0,
         "count": 1,
         "programs": [
           {
-            "id": "ff14d238352748b2b36bf5f951900730",
+            "id": "ada4c2f3091440789a18f6044f337964",
             "name": "Remember my count",
             "cells": 1
           }
@@ -754,12 +766,12 @@
       "running": [
         {
           "parentRunId": "",
-          "id": "c4c150da578b47d696aa1876a16ee41b",
-          "sequenceId": "ff14d238352748b2b36bf5f951900730",
+          "id": "e4f33f6946b447eeb773e9bb8e47c5ac",
+          "sequenceId": "ada4c2f3091440789a18f6044f337964",
           "preparing": false,
           "waiting": true,
           "waitEvent": "",
-          "waitSeconds": 59.99217987060547,
+          "waitSeconds": 59.992919921875,
           "state": [
             {
               "name": "count",
@@ -798,6 +810,7 @@
       "conditionWaits.v1",
       "parallelPrograms.v1",
       "rememberedVariables.v1",
+      "temporaryMemory.v1",
       "structuredValues.v1",
       "programModules.v1",
       "moduleLibrary.v1",
@@ -812,6 +825,8 @@
       "recipeEdits.v1",
       "recipePartPlayback.v1",
       "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
       "objectLaunch.v1",
       "calendarSchedules.v1",
       "animationAuthoring.v1",
@@ -837,7 +852,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "9df5367c7ac74f30977c8865933ac95c",
+      "id": "34ab5063438d48f9a0cb5a8708a94273",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -879,74 +894,20 @@
     },
     "objects": [
       {
-        "id": "015011f2f6d547c3834c0b3a3c03fa41",
+        "id": "aba808e1acfb4acb98379cf8609a7b6d",
         "name": "Ball",
         "kind": "Ball",
         "objectRevision": 4,
         "position": {
-          "x": 0.6899999976158142,
+          "x": 0.68999999761581421,
           "y": 1.4500000476837158,
           "z": 0.800000011920929
         },
         "scale": 1.0,
         "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "3c1ac9ba4c21459aa814f5d9821b37bf",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "4692a07a6e244a198f5063a4df7fd06e",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 6,
-        "position": {
-          "x": 0.5199999809265137,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
+          "r": 0.76470589637756348,
+          "g": 0.60000002384185791,
+          "b": 0.31372550129890442,
           "a": 1.0
         },
         "animated": false,
@@ -974,6 +935,60 @@
           "r": 1.0,
           "g": 1.0,
           "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "e8fd022e304849beb5dbfe384f3781b6",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.86000001430511475,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.55294120311737061,
+          "b": 0.53333336114883423,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "ee67c71945a3401a8ab1c2e73d4ee2d0",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 6,
+        "position": {
+          "x": 0.51999998092651367,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
           "a": 1.0
         },
         "animated": false,
@@ -1024,19 +1039,19 @@
       "running": [],
       "outcomes": [
         {
-          "id": "cc905d247c7b405ba4aea9d4ecac2543",
+          "id": "6f6f3fdcd199419f89b58fc416e6706f",
           "capability": "program.memory.edit",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "revision": "2ccfabd9fc184cba9627606c206ef9cb",
+            "revision": "c7fdd87602884459b40a228fe49447ad",
             "changed": true
           }
         },
         {
-          "id": "b011f8bb02d946d39c543ae9b2e94b8c",
+          "id": "1f91fb133b4d4ba5b8db7c00633f287f",
           "capability": "program.memory.edit",
           "version": 1,
           "resources": [],
@@ -1044,7 +1059,7 @@
           "status": "Remembered values changed; inspect them before editing"
         }
       ],
-      "nextRunId": "e01e7b647b644001b0415e6abdf081ca",
+      "nextRunId": "aa9945aff925476f92772c62f9dd62d1",
       "storageError": null,
       "recovery": null
     }
@@ -1054,9 +1069,9 @@
     "revision": 4,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "1e65e59daa114c4095fc13f391992d07",
+    "session": "c17a978788ec457e91c476daf8e29019",
     "status": "Room actions ready",
-    "selectedId": "4692a07a6e244a198f5063a4df7fd06e",
+    "selectedId": "ee67c71945a3401a8ab1c2e73d4ee2d0",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -1078,7 +1093,7 @@
       "selectedError": "",
       "sequences": [
         {
-          "id": "16cae631329d44c68361e8c58df463c5",
+          "id": "15f4aaa77f084da9ad936e6f9034422d",
           "name": "Action 1",
           "error": "",
           "steps": 1,
@@ -1086,7 +1101,7 @@
           "program": true
         },
         {
-          "id": "ff14d238352748b2b36bf5f951900730",
+          "id": "ada4c2f3091440789a18f6044f337964",
           "name": "Remember my count",
           "error": "",
           "steps": 4,
@@ -1095,7 +1110,7 @@
         }
       ],
       "selected": {
-        "id": "ff14d238352748b2b36bf5f951900730",
+        "id": "ada4c2f3091440789a18f6044f337964",
         "name": "Remember my count",
         "interruption": 0,
         "repeat": false,
@@ -1105,14 +1120,16 @@
         "ready": true,
         "pending": false,
         "busy": false,
+        "temporary": false,
         "error": "",
-        "revision": "5df99d11f1244345aba6cf943e2cdf70",
-        "programId": "ff14d238352748b2b36bf5f951900730",
+        "revision": "e64411a1d5b2400bbd655c5e218b87e8",
+        "programId": "ada4c2f3091440789a18f6044f337964",
+        "sessionId": "34ab5063438d48f9a0cb5a8708a94273",
         "page": 0,
         "count": 1,
         "programs": [
           {
-            "id": "ff14d238352748b2b36bf5f951900730",
+            "id": "ada4c2f3091440789a18f6044f337964",
             "name": "Remember my count",
             "cells": 1
           }
@@ -1133,8 +1150,8 @@
       "running": [],
       "outcomes": [
         {
-          "id": "c4c150da578b47d696aa1876a16ee41b",
-          "sequenceId": "ff14d238352748b2b36bf5f951900730",
+          "id": "e4f33f6946b447eeb773e9bb8e47c5ac",
+          "sequenceId": "ada4c2f3091440789a18f6044f337964",
           "phase": "cancelled",
           "nodeId": "wait",
           "status": "Behaviour stopped"
@@ -1159,6 +1176,7 @@
       "conditionWaits.v1",
       "parallelPrograms.v1",
       "rememberedVariables.v1",
+      "temporaryMemory.v1",
       "structuredValues.v1",
       "programModules.v1",
       "moduleLibrary.v1",
@@ -1173,6 +1191,8 @@
       "recipeEdits.v1",
       "recipePartPlayback.v1",
       "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
       "objectLaunch.v1",
       "calendarSchedules.v1",
       "animationAuthoring.v1",
@@ -1198,7 +1218,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "9df5367c7ac74f30977c8865933ac95c",
+      "id": "34ab5063438d48f9a0cb5a8708a94273",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -1240,74 +1260,20 @@
     },
     "objects": [
       {
-        "id": "015011f2f6d547c3834c0b3a3c03fa41",
+        "id": "aba808e1acfb4acb98379cf8609a7b6d",
         "name": "Ball",
         "kind": "Ball",
         "objectRevision": 4,
         "position": {
-          "x": 0.6899999976158142,
+          "x": 0.68999999761581421,
           "y": 1.4500000476837158,
           "z": 0.800000011920929
         },
         "scale": 1.0,
         "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "3c1ac9ba4c21459aa814f5d9821b37bf",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "4692a07a6e244a198f5063a4df7fd06e",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 6,
-        "position": {
-          "x": 0.5199999809265137,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
+          "r": 0.76470589637756348,
+          "g": 0.60000002384185791,
+          "b": 0.31372550129890442,
           "a": 1.0
         },
         "animated": false,
@@ -1335,6 +1301,60 @@
           "r": 1.0,
           "g": 1.0,
           "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "e8fd022e304849beb5dbfe384f3781b6",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.86000001430511475,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.55294120311737061,
+          "b": 0.53333336114883423,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "ee67c71945a3401a8ab1c2e73d4ee2d0",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 6,
+        "position": {
+          "x": 0.51999998092651367,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
           "a": 1.0
         },
         "animated": false,
@@ -1385,19 +1405,19 @@
       "running": [],
       "outcomes": [
         {
-          "id": "cc905d247c7b405ba4aea9d4ecac2543",
+          "id": "6f6f3fdcd199419f89b58fc416e6706f",
           "capability": "program.memory.edit",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "revision": "2ccfabd9fc184cba9627606c206ef9cb",
+            "revision": "c7fdd87602884459b40a228fe49447ad",
             "changed": true
           }
         },
         {
-          "id": "b011f8bb02d946d39c543ae9b2e94b8c",
+          "id": "1f91fb133b4d4ba5b8db7c00633f287f",
           "capability": "program.memory.edit",
           "version": 1,
           "resources": [],
@@ -1405,7 +1425,7 @@
           "status": "Remembered values changed; inspect them before editing"
         },
         {
-          "id": "e01e7b647b644001b0415e6abdf081ca",
+          "id": "aa9945aff925476f92772c62f9dd62d1",
           "capability": "program.memory.edit",
           "version": 1,
           "resources": [],
@@ -1413,7 +1433,7 @@
           "status": "Stop this behaviour and its queued starts before editing remembered values"
         }
       ],
-      "nextRunId": "edf67757f1e849018a4cee49a5498461",
+      "nextRunId": "9f0f0c6181b9445eacc5b89c79d3a129",
       "storageError": null,
       "recovery": null
     }
@@ -1423,9 +1443,9 @@
     "revision": 5,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "1e65e59daa114c4095fc13f391992d07",
+    "session": "c17a978788ec457e91c476daf8e29019",
     "status": "Room actions ready",
-    "selectedId": "4692a07a6e244a198f5063a4df7fd06e",
+    "selectedId": "ee67c71945a3401a8ab1c2e73d4ee2d0",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -1447,7 +1467,7 @@
       "selectedError": "",
       "sequences": [
         {
-          "id": "16cae631329d44c68361e8c58df463c5",
+          "id": "15f4aaa77f084da9ad936e6f9034422d",
           "name": "Action 1",
           "error": "",
           "steps": 1,
@@ -1455,7 +1475,7 @@
           "program": true
         },
         {
-          "id": "ff14d238352748b2b36bf5f951900730",
+          "id": "ada4c2f3091440789a18f6044f337964",
           "name": "Remember my count",
           "error": "",
           "steps": 4,
@@ -1464,7 +1484,7 @@
         }
       ],
       "selected": {
-        "id": "ff14d238352748b2b36bf5f951900730",
+        "id": "ada4c2f3091440789a18f6044f337964",
         "name": "Remember my count",
         "interruption": 0,
         "repeat": false,
@@ -1474,9 +1494,11 @@
         "ready": true,
         "pending": false,
         "busy": false,
+        "temporary": false,
         "error": "",
-        "revision": "fe6523a5ae6b4c968b7199616a1804ba",
-        "programId": "ff14d238352748b2b36bf5f951900730",
+        "revision": "5bf8028ce30742fcabcb557ef1178828",
+        "programId": "ada4c2f3091440789a18f6044f337964",
+        "sessionId": "34ab5063438d48f9a0cb5a8708a94273",
         "page": 0,
         "count": 1,
         "programs": [],
@@ -1496,15 +1518,15 @@
       "running": [],
       "outcomes": [
         {
-          "id": "c4c150da578b47d696aa1876a16ee41b",
-          "sequenceId": "ff14d238352748b2b36bf5f951900730",
+          "id": "e4f33f6946b447eeb773e9bb8e47c5ac",
+          "sequenceId": "ada4c2f3091440789a18f6044f337964",
           "phase": "cancelled",
           "nodeId": "wait",
           "status": "Behaviour stopped"
         },
         {
-          "id": "9d4871aaec574bca9f9f08262ad9283c",
-          "sequenceId": "ff14d238352748b2b36bf5f951900730",
+          "id": "ebb75352dfcd4c53a67eba89a46e2021",
+          "sequenceId": "ada4c2f3091440789a18f6044f337964",
           "phase": "cancelled",
           "nodeId": "wait",
           "status": "Behaviour stopped"
@@ -1529,6 +1551,7 @@
       "conditionWaits.v1",
       "parallelPrograms.v1",
       "rememberedVariables.v1",
+      "temporaryMemory.v1",
       "structuredValues.v1",
       "programModules.v1",
       "moduleLibrary.v1",
@@ -1543,6 +1566,8 @@
       "recipeEdits.v1",
       "recipePartPlayback.v1",
       "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
       "objectLaunch.v1",
       "calendarSchedules.v1",
       "animationAuthoring.v1",
@@ -1570,7 +1595,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "9df5367c7ac74f30977c8865933ac95c",
+      "id": "34ab5063438d48f9a0cb5a8708a94273",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -1612,74 +1637,20 @@
     },
     "objects": [
       {
-        "id": "015011f2f6d547c3834c0b3a3c03fa41",
+        "id": "aba808e1acfb4acb98379cf8609a7b6d",
         "name": "Ball",
         "kind": "Ball",
         "objectRevision": 4,
         "position": {
-          "x": 0.6899999976158142,
+          "x": 0.68999999761581421,
           "y": 1.4500000476837158,
           "z": 0.800000011920929
         },
         "scale": 1.0,
         "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "3c1ac9ba4c21459aa814f5d9821b37bf",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "4692a07a6e244a198f5063a4df7fd06e",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 6,
-        "position": {
-          "x": 0.5199999809265137,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
+          "r": 0.76470589637756348,
+          "g": 0.60000002384185791,
+          "b": 0.31372550129890442,
           "a": 1.0
         },
         "animated": false,
@@ -1707,6 +1678,60 @@
           "r": 1.0,
           "g": 1.0,
           "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "e8fd022e304849beb5dbfe384f3781b6",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.86000001430511475,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.55294120311737061,
+          "b": 0.53333336114883423,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "ee67c71945a3401a8ab1c2e73d4ee2d0",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 6,
+        "position": {
+          "x": 0.51999998092651367,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
           "a": 1.0
         },
         "animated": false,
@@ -1757,19 +1782,19 @@
       "running": [],
       "outcomes": [
         {
-          "id": "cc905d247c7b405ba4aea9d4ecac2543",
+          "id": "6f6f3fdcd199419f89b58fc416e6706f",
           "capability": "program.memory.edit",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "revision": "2ccfabd9fc184cba9627606c206ef9cb",
+            "revision": "c7fdd87602884459b40a228fe49447ad",
             "changed": true
           }
         },
         {
-          "id": "b011f8bb02d946d39c543ae9b2e94b8c",
+          "id": "1f91fb133b4d4ba5b8db7c00633f287f",
           "capability": "program.memory.edit",
           "version": 1,
           "resources": [],
@@ -1777,7 +1802,7 @@
           "status": "Remembered values changed; inspect them before editing"
         },
         {
-          "id": "e01e7b647b644001b0415e6abdf081ca",
+          "id": "aa9945aff925476f92772c62f9dd62d1",
           "capability": "program.memory.edit",
           "version": 1,
           "resources": [],
@@ -1785,19 +1810,19 @@
           "status": "Stop this behaviour and its queued starts before editing remembered values"
         },
         {
-          "id": "edf67757f1e849018a4cee49a5498461",
+          "id": "9f0f0c6181b9445eacc5b89c79d3a129",
           "capability": "program.memory.edit",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "revision": "fe6523a5ae6b4c968b7199616a1804ba",
+            "revision": "5bf8028ce30742fcabcb557ef1178828",
             "changed": true
           }
         }
       ],
-      "nextRunId": "c51d74edbc8f4986b4158726e9bdd1fa",
+      "nextRunId": "55ab7ee59684481398f47148038a1125",
       "storageError": null,
       "recovery": null
     }

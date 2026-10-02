@@ -18,7 +18,7 @@ namespace Maestro.Quest.Tests
     public sealed partial class AnimationWorkshopTests
     {
         RoomExecutions authorActions;RoomRules authorRuntime;JObject authorState,authorRequest;
-        void AuthorRuntime(){var rules=root.AddComponent<RuleWorkshop>();rules.Initialize(editor,directory);authorRuntime=root.AddComponent<RoomRules>();authorRuntime.Initialize(rules,editor,workshop,null,root.GetComponent<RoomInteraction>(),null);authorActions=new RoomExecutions(editor);}
+        void AuthorRuntime(){var rules=root.AddComponent<RuleWorkshop>();rules.Initialize(editor,directory);Assert.That(rules.Memory.Initialization.Wait(TimeSpan.FromSeconds(5)),Is.True,"Memory fixture did not load");Assert.That(rules.Memory.Error,Is.Null);authorRuntime=root.AddComponent<RoomRules>();authorRuntime.Initialize(rules,editor,workshop,null,root.GetComponent<RoomInteraction>(),null);authorActions=new RoomExecutions(editor);}
         static JObject QuaternionJson(Quaternion q)=>new() {["x"]=q.x,["y"]=q.y,["z"]=q.z,["w"]=q.w};
         JObject FrameJson(string target,float time,JointPose[] joints=null)=>new() {["time"]=time,["position"]=JObject.FromObject(new {x=editor.Read(target).position.x,y=editor.Read(target).position.y,z=editor.Read(target).position.z}),["rotation"]=QuaternionJson(editor.Read(target).rotation),["scale"]=editor.Read(target).scale,["joints"]=joints==null?JValue.CreateNull():new JArray(joints.Select(j=>new JObject {["joint"]=j.joint.ToString(),["rotation"]=QuaternionJson(j.rotation)}))};
         JObject AuthorArgs(string operation,string target="maestro")=>new() {["operation"]=operation,["target"]=target,["revision"]=editor.ObjectRevision(target)};

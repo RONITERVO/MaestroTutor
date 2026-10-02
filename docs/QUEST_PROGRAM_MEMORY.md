@@ -1,7 +1,8 @@
 # Remembered values for behaviour programs
 
 Status: implemented in the shared native runtime and book editor, behind
-`rememberedVariables.v1`. This is a development feature, not Quest Store or
+`rememberedVariables.v1`; temporary forks and scoped editing additionally advertise
+`temporaryMemory.v1`. This is a development feature, not Quest Store or
 headset acceptance. The complete Quest v1 goal remains active.
 
 ## Authoring and execution
@@ -53,15 +54,15 @@ The book's **Remembered values** panel and the agent use the same observation an
 native operation:
 
 - `rules {action:"memory", target:programId, page:0}` returns the selected group,
-  exact memory revision, readiness/pending/busy status and four typed cells per
+  exact memory revision, room `sessionId`, `temporary` scope, readiness/pending/busy status and four typed cells per
   page. It includes saved values, unsaved declarations, and retained groups whose
   behaviours were removed. Values/types are complete bounded JSON, not truncated
   display strings. Native observations are covered by browser contract tests.
 - `program.memory.edit` sets one cell or resets one/all cells. It requires fresh
-  memory and rules revisions, a stopped target with no queued starts, and no
+  memory and rules revisions plus the observed room `sessionId`, a stopped target with no queued starts, and no
   pending write. Reset-all uses an empty `variableId`. No operation starts a run.
   Set uses the existing declaration type, or the stored type for an orphan cell.
-- Human drafts keep their original guards. Changes to the observed memory or
+- Human drafts keep their original guards. Changes to the observed memory, room session or
   declarations disable the draft; the callback and native handler independently
   reject stale submission. The book asks for explicit reset confirmation.
 - Edits, deletion and behaviour Undo never prune memory. Retained cells count
@@ -72,9 +73,19 @@ retract accepted IO. After a timeout or uncertain result, inspect memory and the
 receipt rather than replaying the request. An unconfirmed program checkpoint
 stops its run and leaves earlier effects intact.
 
-Temporary rooms cannot start a remembered program, checkpoint or edit memory.
-Keep or discard the temporary room first. This avoids leaking temporary work into
-saved behaviour state; supporting isolated temporary memory forks is future work.
+With `temporaryMemory.v1`, Begin forks remembered values alongside the room.
+Checkpoints and explicit set/reset update that in-memory fork without writing the
+saved memory file. Keep captures immutable room and memory documents together;
+later edits remain temporary. Discard restores the last confirmed pair and stops
+behaviour work through the shared room-session action. Room Undo changes layout
+only; it never rewinds memory. Pending memory writes must finish before a boundary.
+Begin and Discard rotate the room session guard even if values did not change.
+Older native observations stay readable in the book but cannot submit new scoped
+memory edits. Existing pre-release `program.memory.edit` invocations need an
+explicit current `sessionId` (or a `room.sessionId` binding); old invalid sources
+remain preserved for repair. Ordinary remembered programs using checkpoints do
+not need a new declaration format. Keep receipts reflect the actual paired publication and recovery.
+See QUEST_TEMPORARY_ROOM.md for interrupted-save semantics.
 
 ## Storage, portability and recovery
 
@@ -128,3 +139,19 @@ latency and frame timing on Quest, verify long sessions and interruption/recover
 on hardware, and review the one-second checkpoint admission rate for real usage.
 This does not add background execution while the app is suspended, automatically
 resume programs, or establish general exactly-once effects.
+
+
+## Coordinated publication — 2026-10-02
+
+Room and memory startup, ordinary writers and retained readers share the snapshot
+coordinator. Startup recovers a pending pair before either store loads. Ordinary
+writes and read-only exports never recover or overwrite an unresolved intent.
+Memory loading and retained inspection still create no directories or lock files.
+Competing cached memory owners fail promptly; ordinary room/memory operations
+serialize while an accepted writer finishes.
+
+Recovery evidence version 2 includes labelled saved and temporary memory caches,
+with availability flags distinct from raw on-disk evidence. In-flight Keep values,
+the saved base and the live fork retain their referenced models/motions. Workspace
+retirement waits for accepted publication. This does not persist interpreter
+state or make actions and memory checkpoints one transaction.

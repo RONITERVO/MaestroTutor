@@ -51,6 +51,7 @@ namespace Maestro.Quest.Tests
             for (int i = 0; i < System.Enum.GetValues(typeof(RuleActionKind)).Length && workshop.Selected.SimpleSteps()[0].action != RuleActionKind.RecordedAnimation; i++) workshop.CycleAction();
             Assert.That(workshop.Selected.SimpleSteps()[0].action,Is.EqualTo(RuleActionKind.RecordedAnimation));
             workshop.UseTarget(); sequenceId = workshop.Selected.id;
+            float memoryDeadline=Time.realtimeSinceStartup+5;while(!workshop.Memory.Ready&&Time.realtimeSinceStartup<memoryDeadline)yield return null;Assert.That(workshop.Memory.Ready,Is.True);Assert.That(workshop.Memory.Error,Is.Null);
             yield return null;
         }
 
