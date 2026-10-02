@@ -117,6 +117,10 @@ separate. Explicit recovery now reserves a 65th slot when all 64 ordinary slots
 are occupied; subsequent review enables confirmed cleanup without weakening
 selection protection. A full reserve still requires finishing/cancelling recovery
 or cleanup, and physical storage acceptance remains open.
+Retained-source recovery now captures current saved edits and remembered values
+through the same consistent boundary as retained export. Its preview has a new
+manifest; original source bytes stay preserved, and old runtimes are gated from
+promising the new behavior. See QUEST_NATIVE_ARCHIVES.md.
 PR #248 records the current verified commit and package. Earlier entries
 below are historical evidence, not current test totals or release acceptance.
 
@@ -2357,3 +2361,15 @@ content review, confirmed disposal, restart with 65 candidates and the bounded
 capacity error. Their actual inventory observations drive the web fixture.
 Source/mirror hashes match **229 runtime, 128 test and 11 editor C# files**.
 No APK build or headset operation was performed; these remain desktop checks.
+
+PC saved-content recovery verification (2026-10-02): **578 EditMode and 415
+PlayMode tests** passed, with three expected optional private-file skips; the native
+helper exited 0. All **1,767 web tests in 207 files**, TypeScript, ESLint, core
+boundaries, catalog provenance and production web build passed. Twelve new storage
+cases cover newer room/memory contents, excluded evidence, damaged/unfinished
+sources, cancellation, concurrent writers, proof validation and historical
+previews. The new shared native journey recovers later saved edits and a remembered
+value after preview restart, then completes review; actual observations drive the
+web contract fixture. Source/mirror hashes match **229 runtime, 130 test and 11
+editor C# files**. No APK build or headset operation was performed; physical
+storage latency, lifecycle and power-loss acceptance remain open.

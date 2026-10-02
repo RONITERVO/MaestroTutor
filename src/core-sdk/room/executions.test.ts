@@ -12,6 +12,7 @@ import nativeAcceptedSave from '../../../test-fixtures/browser/workspaceAccepted
 import nativePrevious from '../../../test-fixtures/browser/workspacePrevious.json';
 import nativeWorkspaceRecovery from '../../../test-fixtures/browser/workspaceRecovery.json';
 import nativeFreshRecovery from '../../../test-fixtures/browser/workspaceFreshRecovery.json';
+import nativeSavedRecovery from '../../../test-fixtures/browser/workspaceSavedRecovery.json';
 import nativeHistory from '../../../test-fixtures/browser/workspaceHistory.json';
 import nativeRetention from '../../../test-fixtures/browser/workspaceRetention.json';
 import nativeEvidence from '../../../test-fixtures/browser/workspaceEvidence.json';
@@ -258,7 +259,8 @@ it('distinguishes explicit fresh recovery from a retained or imported source and
   const call={id:'workspace.recovery.select',version:1,arguments:{...base,source}},execution={operation:'start',call};
   expect(validExecutionRequest(execution)).toBe(true);
   expect(()=>requireRoomCapabilities([{action:'execution',execution}],{capabilities:['execution.v1']})).toThrow('workspaceRecovery.v1');
-  expect(()=>requireRoomCapabilities([{action:'execution',execution}],{capabilities:['execution.v1','workspaceRecovery.v1']})).not.toThrow();
+  if(source.kind==='retained')expect(()=>requireRoomCapabilities([{action:'execution',execution}],{capabilities:['execution.v1','workspaceRecovery.v1']})).toThrow('workspaceSavedRecovery.v1');
+  expect(()=>requireRoomCapabilities([{action:'execution',execution}],{capabilities:['execution.v1','workspaceRecovery.v1','workspaceSavedRecovery.v1']})).not.toThrow();
  }
  for(const args of [{...base,source:{kind:'fresh',generationId:nativeFreshRecovery.preview.generationId}},{...base,source:{kind:'retained'}},{...base,generationId:nativeFreshRecovery.preview.generationId,manifestHash:nativeFreshRecovery.preview.manifestHash}])
   expect(validExecutionRequest({operation:'start',call:{id:'workspace.recovery.select',version:1,arguments:args}})).toBe(false);
@@ -358,4 +360,14 @@ it('distinguishes native review completion pending accepted saves from durable a
  expect(nativeAcceptedSave.completed).toMatchObject({requestId:nativeAcceptedSave.saving.requestId,phase:'completed',activityHeld:false,manifestHash:nativeAcceptedSave.saving.manifestHash});
  expect(nativeAcceptedSave.completed.committedRevision).toMatch(/^[a-f0-9]{32}$/);
  expect(nativeAcceptedSave.completed.committedRevision).not.toBe(nativeAcceptedSave.completed.workspace.revision);
+});
+
+it('reads a native current-saved recovery preview with a distinct manifest and remembered state',()=>{
+ expect(validFactValue('workspace.recovery.candidate',nativeSavedRecovery.candidate)).toBe(true);
+ expect(validFactValue('workspace.recovery.preview',nativeSavedRecovery.preview)).toBe(true);
+ expect(validFactValue('workspace.recovery',nativeSavedRecovery.completed)).toBe(true);
+ expect(validExecutionView(nativeSavedRecovery.opening)).toBe(true);
+ expect(nativeSavedRecovery.preview.source).toEqual({kind:'retained',generationId:nativeSavedRecovery.candidate.generationId});
+ expect(nativeSavedRecovery.preview.manifestHash).not.toBe(nativeSavedRecovery.candidate.manifestHash);
+ expect(nativeSavedRecovery.rememberedCount).toBe(23);expect(nativeSavedRecovery.reviewRequired).toBe(false);
 });

@@ -621,13 +621,14 @@ bytes remain distinct; each selection file is bounded to 64 KiB. A different
 workspace format or unsafe path is refused with its data preserved. Candidate
 availability describes metadata only, not verified content.
 
-Preparation fully verifies a chosen candidate and copies its manifest/documents/
-assets into a fresh generation. It preserves the exact original selection bytes,
-records their hashes and the source identity, and rechecks the observed origin.
-A required metadata marker prevents this preview from using ordinary activation.
-Previously active folders that no longer match their immutable manifest fail
-verification; recovery does not silently discard their later edits. No pointer or
-live content changes during inspection or preparation.
+Preparation identifies the chosen generation by its original manifest hash, then
+captures and verifies its current saved documents and assets into a fresh
+generation. Later saved edits are included, and the preview has its own manifest
+hash. The exact original selection bytes, source identity and source inventory
+fingerprint are preserved; the observed origin is checked again. A required
+metadata marker prevents ordinary activation. Damaged or unfinished saved content
+fails without restoring old/default files. No pointer or live content changes
+during inspection or preparation.
 
 Commit requires evidence already captured into this preview's private preservation
 directory by the native preservation boundary. It verifies that evidence's complete
@@ -954,9 +955,8 @@ enough slots for the requested operation: an ordinary import needs the count bel
 64, while activation may also need an accepted-state snapshot. No automatic
 cleanup, reset or effect replay is introduced. Disk exhaustion, uncertain history,
 corruption before reserve cleanup, raw evidence export and physical-device storage
-acceptance still need their appropriate recovery or release work. Retained-source
-recovery still verifies the original manifest; this change does not make newer
-edited content silently match that manifest.
+acceptance still need their appropriate recovery or release work. The later saved-content recovery implementation below captures current saved
+content with a new manifest; the reserve itself does not alter content.
 
 PC recovery-capacity verification (2026-10-02): **566 EditMode and 414 PlayMode**
 tests passed, with three expected optional private-file skips; the native helper
@@ -968,3 +968,52 @@ content review, confirmed disposal, restart with 65 candidates and the bounded
 capacity error. Their actual inventory observations drive the web fixture.
 Source/mirror hashes match **229 runtime, 128 test and 11 editor C# files**.
 No APK build or headset operation was performed; these remain desktop checks.
+
+## Recovering current saved contents
+
+Retained-source recovery and portable retained export now use the same saved
+capture boundary. The selected candidate's original manifest hash remains its
+identity check. Its current primary room, behaviour, control, activity, motion,
+module and remembered-value documents and eligible assets produce a new verified
+portable manifest. The preview and commit use that new hash, even when later
+saved edits make it differ from the original. No old manifest or backup is used
+to replace a damaged primary.
+
+Capture holds the existing room/memory coordinator through inventory, document
+validation and asset copying. Its read-only file lease allows inventory hashing
+and nested inspections while excluding exclusive writers and startup recovery.
+It creates no source lock or files when absent. The complete bounded source
+inventory must match after capture; concurrent changes to other saved content
+abort preparation. Unresolved paired-save intents, newer document versions,
+backup-only memory, missing required documents, invalid assets and unsafe paths
+remain explicit failures. Preparation cancellation/failure removes only its own
+private preview. The intermediate portable ZIP is streamed to the preview's
+private directory and removed after staging, avoiding an additional whole-archive
+memory buffer.
+
+The private version-2 recovery proof records original source manifest identity,
+source inventory fingerprint and count of nonportable files left in the source.
+The original documents, private history, backups and recovery evidence remain
+there. Historical version-1 previews remain inspectable without recapturing their
+source or replaying a commit. Later source edits do not change a completed preview:
+after restart and explicit commit, it still opens the contents the user inspected.
+Unsaved live edits are preserved by the existing commit hold, not silently folded
+into this saved-content preview. Content review and stopped effects remain required.
+
+The existing `workspace.recovery.select` retained variant requires native feature
+`workspaceSavedRecovery.v1`; older runtimes cannot accidentally promise this new
+capture behavior. Fresh recovery keeps its existing feature requirement. Book
+forms and agent calls use the same catalog contract; no provider or separate
+recovery tool path is added.
+
+PC saved-content recovery verification (2026-10-02): **578 EditMode and 415
+PlayMode tests** passed, with three expected optional private-file skips; the native
+helper exited 0. All **1,767 web tests in 207 files**, TypeScript, ESLint, core
+boundaries, catalog provenance and production web build passed. Twelve new storage
+cases cover newer room/memory contents, excluded evidence, damaged/unfinished
+sources, cancellation, concurrent writers, proof validation and historical
+previews. The new shared native journey recovers later saved edits and a remembered
+value after preview restart, then completes review; actual observations drive the
+web contract fixture. Source/mirror hashes match **229 runtime, 130 test and 11
+editor C# files**. No APK build or headset operation was performed; physical
+storage latency, lifecycle and power-loss acceptance remain open.

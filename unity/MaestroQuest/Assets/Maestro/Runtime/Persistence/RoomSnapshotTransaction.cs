@@ -114,7 +114,7 @@ namespace Maestro.Quest.Persistence
             internal Owner(object gate,FileStream file){this.gate=gate;this.file=file;}
             public void Dispose(){var held=Interlocked.Exchange(ref gate,null);if(held==null)return;try{file?.Dispose();}finally{Monitor.Exit(held);}}
         }
-        static IDisposable Own(string root,bool strictDocuments=true,bool wait=false,bool initialize=true)
+        static IDisposable Own(string root,bool strictDocuments=true,bool wait=false,bool initialize=true,bool sharedRead=false)
         {
             object gate;
             lock(gateMapLock){
@@ -128,7 +128,7 @@ namespace Maestro.Quest.Persistence
                 Paths(root,strictDocuments);if(initialize){Directory.CreateDirectory(root);Paths(root,strictDocuments);}
                 string path=Path.Combine(root,"room-snapshot.writer.lock");
                 Need(WorkspaceFileInventory.Kind(path)!="directory","Snapshot writer path is unavailable.");
-                return new Owner(gate,initialize?new FileStream(path,FileMode.OpenOrCreate,FileAccess.ReadWrite,FileShare.None):WorkspaceFileInventory.Kind(path)=="file"?new FileStream(path,FileMode.Open,FileAccess.Read,FileShare.None):null);
+                return new Owner(gate,initialize?new FileStream(path,FileMode.OpenOrCreate,FileAccess.ReadWrite,FileShare.None):WorkspaceFileInventory.Kind(path)=="file"?new FileStream(path,FileMode.Open,FileAccess.Read,sharedRead?FileShare.Read:FileShare.None):null);
             }catch{Monitor.Exit(gate);throw;}
         }
         // Startup is the only ordinary path allowed to recover. Read-only inspection and
@@ -144,9 +144,11 @@ namespace Maestro.Quest.Persistence
         }
         // Read-only maintenance must not initialize a lock file or recover an inactive room.
         // Existing host path ownership excludes outside writers when no lock exists yet.
+        // Read sharing permits inventory hashing and nested read-only checks while the
+        // existing file handle still excludes exclusive writers and startup recovery.
         internal static IDisposable Inspect(string directory,bool wait=true)
         {
-            string root=Root(directory);var owner=Own(root,strictDocuments:false,wait:wait,initialize:false);
+            string root=Root(directory);var owner=Own(root,strictDocuments:false,wait:wait,initialize:false,sharedRead:true);
             try {
                 Need(WorkspaceFileInventory.Kind(Path.Combine(root,FileName))=="absent","An interrupted room/memory snapshot needs recovery before inspecting saved data.");
                 return owner;

@@ -46,14 +46,13 @@ namespace Maestro.Quest.Persistence
         }
         const long MaximumRetainedBytes=WorkspaceArchive.MaximumArchiveBytes+32L*1024*1024;
         static string InventoryHash(JArray nodes)=>WorkspaceFileInventory.Hash(Encoding.UTF8.GetBytes(nodes.ToString(Formatting.None)));
-        // Inactive data has no live writers under the host's path lease. Read its actual saved
-        // documents, not its possibly obsolete original manifest. Never recover/default a bad file.
-        internal RetainedExport ExportRetained(string originHash,string id,string originalHash,string liveGeneration,string cache,CancellationToken token=default)
+        // Shared saved-content boundary. Holds the room/memory pair lease through asset
+        // capture and validates the complete source inventory afterward. Never initializes,
+        // repairs or substitutes missing/damaged primary files. Other changes fail closed.
+        T CaptureSaved<T>(string data,CancellationToken token,Func<WorkspaceArchiveSnapshot,string,int,T> capture)
         {
-            WorkspaceFileInventory.Parents(root);using var lease=Lease(initialize:false);token.ThrowIfCancellationRequested();ExpectedOrigin(ObserveOrigin(),originHash);var current=Load();
-            if(current.Active.Generation==id||liveGeneration==id)throw Invalid("Export the live workspace through its accepted owners instead.");
-            if(!ModelLibrary.ValidHash(originalHash)||(string)Metadata(id)["manifestHash"]!=originalHash)throw Invalid("Retained workspace identity changed. Inspect again.");
-            string data=Path.Combine(GenerationPath(id),"data");var inventory=RetainedInventory(data,token);string fingerprint=InventoryHash(inventory);
+            using var snapshotOwner=RoomSnapshotTransaction.Inspect(data);token.ThrowIfCancellationRequested();
+            var inventory=RetainedInventory(data,token);string fingerprint=InventoryHash(inventory);
             var files=inventory.OfType<JObject>().Where(n=>(string)n["kind"]=="file").ToDictionary(n=>(string)n["path"],StringComparer.Ordinal);
             var documents=new Dictionary<string,byte[]>(StringComparer.Ordinal);var assets=new Dictionary<string,Func<Stream>>(StringComparer.Ordinal);
             byte[] ReadDocument(string name){if(!files.ContainsKey(name))throw Invalid("A required retained document is missing.");var bytes=WorkspaceLibraryCapture.ReadDocument(Path.Combine(data,name.Replace('/',Path.DirectorySeparatorChar)),WorkspaceArchiveMetadata.Limit(name));if(WorkspaceFileInventory.Hash(bytes)!=(string)files[name]["sha256"])throw Invalid("Retained document changed during capture.");return bytes;}
@@ -75,17 +74,32 @@ namespace Maestro.Quest.Persistence
                 else documents.Add(name,ReadDocument(name));
             }
             var snapshot=new WorkspaceArchiveSnapshot(documents,assets);
+            var result=capture(snapshot,fingerprint,files.Count-documents.Count-assets.Count);
+            token.ThrowIfCancellationRequested();
+            if(InventoryHash(RetainedInventory(data,token))!=fingerprint)throw Invalid("Saved workspace changed during capture. Inspect it again.");
+            return result;
+        }
+        // Inactive data has no live writers under the host's path lease. Read its actual saved
+        // documents, not its possibly obsolete original manifest. Never recover/default a bad file.
+        internal RetainedExport ExportRetained(string originHash,string id,string originalHash,string liveGeneration,string cache,CancellationToken token=default)
+        {
+            WorkspaceFileInventory.Parents(root);using var lease=Lease(initialize:false);token.ThrowIfCancellationRequested();ExpectedOrigin(ObserveOrigin(),originHash);var current=Load();
+            if(current.Active.Generation==id||liveGeneration==id)throw Invalid("Export the live workspace through its accepted owners instead.");
+            if(!ModelLibrary.ValidHash(originalHash)||(string)Metadata(id)["manifestHash"]!=originalHash)throw Invalid("Retained workspace identity changed. Inspect again.");
             cache=Path.GetFullPath(cache);var comparison=Path.DirectorySeparatorChar=='\\'?StringComparison.OrdinalIgnoreCase:StringComparison.Ordinal;
             if(cache.Equals(appRoot,comparison)||cache.Equals(root,comparison)||cache.StartsWith(root+Path.DirectorySeparatorChar,comparison)||cache.Equals(Path.Combine(appRoot,"room"),comparison)||cache.StartsWith(Path.Combine(appRoot,"room")+Path.DirectorySeparatorChar,comparison))throw Invalid("Use a separate private export cache.");
-            WorkspaceFileInventory.Parents(cache);Directory.CreateDirectory(cache);WorkspaceFileInventory.Parents(cache);
-            var result=new RetainedExport {Path=Path.Combine(cache,"maestro-workspace-"+Guid.NewGuid().ToString("N")+".zip"),SourceFingerprint=fingerprint,ExcludedFiles=files.Count-documents.Count-assets.Count};
+            WorkspaceFileInventory.Parents(cache);
+            RetainedExport result=null;
             try {
-                using(var output=new FileStream(result.Path,FileMode.CreateNew,FileAccess.Write,FileShare.None)){result.Receipt=WorkspaceArchive.Write(output,snapshot,token);output.Flush(true);}
-                fault?.Invoke("retention.captured");token.ThrowIfCancellationRequested();
-                if(InventoryHash(RetainedInventory(data,token))!=fingerprint)throw Invalid("Retained workspace changed while exporting. Inspect again.");
+                CaptureSaved(Path.Combine(GenerationPath(id),"data"),token,(snapshot,fingerprint,excluded)=>{
+                    Directory.CreateDirectory(cache);WorkspaceFileInventory.Parents(cache);
+                    result=new RetainedExport {Path=Path.Combine(cache,"maestro-workspace-"+Guid.NewGuid().ToString("N")+".zip"),SourceFingerprint=fingerprint,ExcludedFiles=excluded};
+                    using(var output=new FileStream(result.Path,FileMode.CreateNew,FileAccess.Write,FileShare.None)){result.Receipt=WorkspaceArchive.Write(output,snapshot,token);output.Flush(true);}
+                    fault?.Invoke("retention.captured");return true;
+                });
                 ExpectedOrigin(ObserveOrigin(),originHash);if((string)Metadata(id)["manifestHash"]!=originalHash)throw Invalid("Retained workspace identity changed while exporting.");
                 var digest=DigestFile(result.Path,WorkspaceArchive.MaximumArchiveBytes,token);result.ArchiveHash=digest.Hash;result.Bytes=digest.Bytes;return result;
-            }catch{result.Dispose();throw;}
+            }catch{result?.Dispose();throw;}
         }
     }
 }

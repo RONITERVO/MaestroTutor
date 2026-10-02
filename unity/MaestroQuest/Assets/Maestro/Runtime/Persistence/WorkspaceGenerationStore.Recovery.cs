@@ -65,31 +65,51 @@ namespace Maestro.Quest.Persistence
             using var lease=Lease(initialize:false);cancellation.ThrowIfCancellationRequested();var origin=ObserveOrigin();ExpectedOrigin(origin,originHash);
             if(fresh==null&&(!ModelLibrary.ValidHash(hash)||(string)Metadata(sourceId)["manifestHash"]!=hash))throw Invalid("The recovery candidate identity changed. Inspect it again.");
             var protectedIds=GenerationIds();if(protectedIds.Length>=MaximumRetainedGenerations)throw Invalid(RecoveryCapacityError);
-            string id=Guid.NewGuid().ToString("N"),target=GenerationPath(id);bool created=false;
+            string id=Guid.NewGuid().ToString("N"),target=GenerationPath(id),originalHash=hash,sourceFingerprint="";int excludedFiles=0;bool created=false;
             try {
                 Directory.CreateDirectory(target);created=true;string data=Path.Combine(target,"data");byte[] manifest;WorkspaceArchiveReceipt receipt;
                 if(fresh!=null){
                     using var archive=new MemoryStream();WorkspaceArchive.Write(archive,fresh,cancellation);archive.Position=0;
                     using var staged=WorkspaceArchive.Stage(archive,staging,cancellation);Directory.Move(staged.DirectoryPath,data);receipt=staged.Receipt;manifest=staged.ManifestBytes;hash=receipt.ManifestHash;
                 }else{
-                    string source=GenerationPath(sourceId);manifest=Bytes(Path.Combine(source,"manifest.json"),WorkspaceArchive.MaximumManifestBytes);if(ModelLibrary.Hash(manifest)!=hash)throw Invalid("The recovery candidate manifest changed. Its files are preserved.");
-                    Directory.CreateDirectory(data);
-                    void Copy(string name,byte[] bytes){cancellation.ThrowIfCancellationRequested();string output=Path.GetFullPath(Path.Combine(data,name.Replace('/',Path.DirectorySeparatorChar)));if(!output.StartsWith(data+Path.DirectorySeparatorChar,StringComparison.Ordinal))throw Invalid("Unsafe recovery path.");Directory.CreateDirectory(Path.GetDirectoryName(output));WriteNew(output,bytes);}
-                    receipt=WorkspaceArchive.VerifyPreparedDirectory(Path.Combine(source,"data"),manifest,cancellation,Copy);
+                    string source=GenerationPath(sourceId);byte[] sourceManifest=Bytes(Path.Combine(source,"manifest.json"),WorkspaceArchive.MaximumManifestBytes);
+                    if(ModelLibrary.Hash(sourceManifest)!=originalHash)throw Invalid("The recovery candidate manifest changed. Its files are preserved.");
+                    // The original manifest identifies the selected generation. Current saved
+                    // documents/assets define its new preview, which has a separate manifest.
+                    byte[] capturedManifest=null;
+                    receipt=CaptureSaved(Path.Combine(source,"data"),cancellation,(snapshot,fingerprint,excluded)=>{
+                        sourceFingerprint=fingerprint;excludedFiles=excluded;
+                        string archivePath=Path.Combine(target,"saved-content.zip");
+                        try{
+                            using var archive=new FileStream(archivePath,FileMode.CreateNew,FileAccess.ReadWrite,FileShare.None);
+                            WorkspaceArchive.Write(archive,snapshot,cancellation);archive.Position=0;
+                            using var staged=WorkspaceArchive.Stage(archive,staging,cancellation);
+                            Directory.Move(staged.DirectoryPath,data);capturedManifest=staged.ManifestBytes;
+                            fault?.Invoke("damage.saved");return staged.Receipt;
+                        }finally{if(File.Exists(archivePath))File.Delete(archivePath);}
+                    });
+                    if((string)Metadata(sourceId)["manifestHash"]!=originalHash||ModelLibrary.Hash(Bytes(Path.Combine(source,"manifest.json"),WorkspaceArchive.MaximumManifestBytes))!=originalHash)throw Invalid("The recovery source identity changed during capture.");
+                    manifest=capturedManifest;hash=receipt.ManifestHash;
                 }
                 fault?.Invoke("damage.copied");cancellation.ThrowIfCancellationRequested();ExpectedOrigin(ObserveOrigin(),originHash);WriteNew(Path.Combine(target,"manifest.json"),manifest);
                 if(origin.Current!=null)WriteNew(Path.Combine(target,"origin-current.bin"),origin.Current);
                 if(origin.Previous!=null)WriteNew(Path.Combine(target,"origin-previous.bin"),origin.Previous);
-                var sourceChoice=fresh!=null?new JObject {["kind"]="fresh"}:new JObject {["kind"]="retained",["generationId"]=sourceId};
-                WriteNew(Path.Combine(target,DamageProof),Json(new JObject {["version"]=1,["originHash"]=originHash,["origin"]=origin.Json(),["source"]=sourceChoice,["manifestHash"]=hash,["protectedGenerations"]=new JArray(protectedIds)}));
+                var sourceChoice=fresh!=null?new JObject {["kind"]="fresh"}:new JObject {["kind"]="retained",["generationId"]=sourceId,["originalManifestHash"]=originalHash,["fingerprint"]=sourceFingerprint,["excludedFiles"]=excludedFiles};
+                WriteNew(Path.Combine(target,DamageProof),Json(new JObject {["version"]=2,["originHash"]=originHash,["origin"]=origin.Json(),["source"]=sourceChoice,["manifestHash"]=hash,["protectedGenerations"]=new JArray(protectedIds)}));
                 WriteNew(Path.Combine(target,"generation.v1.json"),Json(new JObject {["version"]=1,["id"]=id,["manifestHash"]=hash,["damagedRecovery"]=true}));
                 fault?.Invoke("damage.ready");cancellation.ThrowIfCancellationRequested();return new PreparedWorkspaceGeneration(id,receipt);
             }catch{if(created)DeleteOwned(target);throw;}
         }
-        static bool ValidRecoverySource(JObject source,JArray saved)
+        static bool ValidRecoverySource(JObject source,JArray saved,int version)
         {
             if(source==null)return false;
-            return (string)source["kind"]=="fresh"?Exact(source,"kind"):Exact(source,"kind","generationId")&&(string)source["kind"]=="retained"&&TextId(source["generationId"])&&saved.Any(x=>(string)x==(string)source["generationId"]);
+            if((string)source["kind"]=="fresh")return Exact(source,"kind");
+            bool shape=version==1?Exact(source,"kind","generationId"):
+                Exact(source,"kind","generationId","originalManifestHash","fingerprint","excludedFiles")&&
+                source["originalManifestHash"]?.Type==JTokenType.String&&ModelLibrary.ValidHash((string)source["originalManifestHash"])&&
+                source["fingerprint"]?.Type==JTokenType.String&&ModelLibrary.ValidHash((string)source["fingerprint"])&&
+                source["excludedFiles"]?.Type==JTokenType.Integer&&(long)source["excludedFiles"]>=0&&(long)source["excludedFiles"]<=4096;
+            return shape&&(string)source["kind"]=="retained"&&TextId(source["generationId"])&&saved.Any(x=>(string)x==(string)source["generationId"]);
         }
         static bool ValidOrigin(JObject origin)
         {
@@ -104,7 +124,7 @@ namespace Maestro.Quest.Persistence
         {
             var metadata=Metadata(id);if((bool?)metadata["damagedRecovery"]!=true)throw Invalid("This generation is not a damaged-workspace recovery preview.");
             string folder=GenerationPath(id);var proof=Read(Path.Combine(folder,DamageProof),16384);
-            if(!Exact(proof,"version","originHash","origin","source","manifestHash","protectedGenerations")||proof["version"]?.Type!=JTokenType.Integer||(int)proof["version"]!=1||proof["originHash"]?.Type!=JTokenType.String||!ModelLibrary.ValidHash((string)proof["originHash"])||!ValidOrigin(proof["origin"] as JObject)||proof["manifestHash"]?.Type!=JTokenType.String||(string)proof["manifestHash"]!=(string)metadata["manifestHash"]||proof["protectedGenerations"] is not JArray saved||saved.Count>=MaximumRetainedGenerations||saved.Any(x=>!TextId(x))||saved.Select(x=>(string)x).Distinct().Count()!=saved.Count||saved.Any(x=>(string)x==id)||!ValidRecoverySource(proof["source"] as JObject,saved))throw Invalid("Invalid damaged-workspace recovery identity.");
+            if(!Exact(proof,"version","originHash","origin","source","manifestHash","protectedGenerations")||proof["version"]?.Type!=JTokenType.Integer||((int)proof["version"]!=1&&(int)proof["version"]!=2)||proof["originHash"]?.Type!=JTokenType.String||!ModelLibrary.ValidHash((string)proof["originHash"])||!ValidOrigin(proof["origin"] as JObject)||proof["manifestHash"]?.Type!=JTokenType.String||(string)proof["manifestHash"]!=(string)metadata["manifestHash"]||proof["protectedGenerations"] is not JArray saved||saved.Count>=MaximumRetainedGenerations||saved.Any(x=>!TextId(x))||saved.Select(x=>(string)x).Distinct().Count()!=saved.Count||saved.Any(x=>(string)x==id)||!ValidRecoverySource(proof["source"] as JObject,saved,(int)proof["version"]))throw Invalid("Invalid damaged-workspace recovery identity.");
             var captured=new Origin(OriginFile(Path.Combine(folder,"origin-current.bin")),OriginFile(Path.Combine(folder,"origin-previous.bin")));
             if(captured.Hash!=(string)proof["originHash"]||!JToken.DeepEquals(captured.Json(),proof["origin"]))throw Invalid("Recovery selection evidence is missing or changed. Originals are preserved.");return proof;
         }

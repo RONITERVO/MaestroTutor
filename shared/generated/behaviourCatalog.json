@@ -4803,9 +4803,10 @@
             ],
             "additionalProperties": false,
             "x-features": [
-              "workspaceRecovery.v1"
+              "workspaceRecovery.v1",
+              "workspaceSavedRecovery.v1"
             ],
-            "title": "Retained or imported workspace"
+            "title": "Current saved workspace"
           },
           {
             "type": "object",
@@ -4861,7 +4862,7 @@
       "channels": [],
       "requirements": [],
       "domain": "workspace",
-      "description": "Choose a source for the latest inspected request using requestId and originHash. source.kind=retained requires the exact candidate generationId and manifestHash; a prepared external archive appears in this same candidate list. source.kind=fresh explicitly requests a new workspace with only the included book and Maestro, default controls and no user models, motions or programs. Native code verifies and copies its immutable content into a private preview and preserves both original selection files. Read workspace.recovery until prepared, then workspace.recovery.preview for its new generation/hash and missing-reference counts. Read the preview source to distinguish a fresh workspace from a retained candidate. The source choice only prepares a preview; commit is a separate explicit request. Later authored changes can make an old candidate unverifiable. An explicit recovery can use the single reserved slot when all 64 ordinary slots are occupied. It preserves existing generations; after recovery and content review, explicitly discard eligible old rooms to restore ordinary capacity. A second preview needs a free slot or cancellation of the unused preview. Selection never changes live content, starts activity or repairs original files.",
+      "description": "Choose a source for the latest inspected request using requestId and originHash. source.kind=retained requires the exact candidate generationId and manifestHash; a prepared external archive appears in this same candidate list. source.kind=fresh explicitly requests a new workspace with only the included book and Maestro, default controls and no user models, motions or programs. For a retained source, native code captures its current saved documents and assets, including edits since import, into a private preview with a new manifest identity. The candidate manifestHash identifies the original generation; it is not the new preview hash. The room/memory pair is held consistently during capture. Damaged, unfinished or changing saved content fails without substituting old/default files. Nonportable recovery/history files remain in the original. Both original selection files are preserved. Read workspace.recovery until prepared, then workspace.recovery.preview for its new generation/hash and missing-reference counts. Read the preview source to distinguish a fresh workspace from a retained candidate. The source choice only prepares a preview; commit is a separate explicit request. Edits after capture remain in the original; commit uses only the inspected preview. An explicit recovery can use the single reserved slot when all 64 ordinary slots are occupied. It preserves existing generations; after recovery and content review, explicitly discard eligible old rooms to restore ordinary capacity. A second preview needs a free slot or cancellation of the unused preview. Selection never changes live content, starts activity or repairs original files.",
       "example": {
         "requestId": "00000000000000000000000000000000",
         "originHash": "0000000000000000000000000000000000000000000000000000000000000000",
@@ -12910,7 +12911,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "cc1f0a23f1f38bd70485ef487bfd8e1ed808818618e5771895fc12dd7709eea7"
+      "sha256": "a7dc9f9aae731406e003c6fddacd27f83c24010ae28cace13afff2c8dd4a0c90"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceRecoveryHold.cs",
@@ -12930,7 +12931,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
-      "sha256": "3d40bc689c895f3d0acbd13e7bead01c43739e2cca69771ff8dcf9b36e212383"
+      "sha256": "81ffe64dddd37172947a75a6940923e9a3507ade755822c9a5275aa7763b43fb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleMemory.cs",
@@ -12954,7 +12955,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.Retention.cs",
-      "sha256": "d45dbaced6fd966e84f90edc84d4bb5018ae2024eb930e934336227ba20e4ce2"
+      "sha256": "0955d9677b748dd8f775216ac4584e8ac66d4282c669d020a628ae4837099b00"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.cs",
@@ -12962,7 +12963,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.Recovery.cs",
-      "sha256": "27c5a0abfb4da743770fbde01331f034bdd7dc08c36a19bed1d5e7f3d02cb0fb"
+      "sha256": "e4fac4bd0a87290c245fd3d293355334aedadefa301570b6707faf4eb4b05340"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.Removal.cs",
@@ -13462,7 +13463,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceRecoveryCapabilities.cs",
-      "sha256": "2439caa8a6f567c04074cbe509ffd5f0fd04cf2b8a8aef31a5e1c1495fb66b03"
+      "sha256": "eb2e28891e2b6add258e01bfd2d1840c0cbc4bb2fa6b6f0b1426d4e912b0c7e7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceRetentionCapabilities.cs",
