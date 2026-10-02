@@ -107,18 +107,21 @@ namespace Maestro.Quest.Programs
             public readonly int Version=1;
             public readonly ProgramDataType Type;
             readonly JObject input,example;
+            readonly string[] features;
             readonly Func<FactContext,JObject,ProgramValue?> read;
             public JObject Input=>input==null?null:(JObject)input.DeepClone();
             public bool Parameterized=>input!=null;
             public FactDefinition(string id,ProgramType type,string label,string description,Func<FactContext,ProgramValue?> read)
                 :this(id,type,label,description,null,null,(context,args)=>read(context)) {}
-            public FactDefinition(string id,ProgramDataType type,string label,string description,JObject input,JObject example,Func<FactContext,JObject,ProgramValue?> read,string domain="room")
-            {Id=id;Type=type;Label=label;Description=description;Domain=domain;this.input=input==null?null:(JObject)input.DeepClone();this.example=example==null?null:(JObject)example.DeepClone();this.read=read;}
+            public FactDefinition(string id,ProgramDataType type,string label,string description,JObject input,JObject example,Func<FactContext,JObject,ProgramValue?> read,string domain="room",string[] features=null)
+            {Id=id;Type=type;Label=label;Description=description;Domain=domain;this.input=input==null?null:(JObject)input.DeepClone();this.example=example==null?null:(JObject)example.DeepClone();this.read=read;this.features=features==null?Array.Empty<string>():(string[])features.Clone();}
             static JToken TypeJson(ProgramDataType type)=>type.Kind==ProgramType.Record?new JObject {["record"]=new JObject(type.Fields.Select(p=>new JProperty(p.Key,TypeJson(p.Value))))}:type.Kind==ProgramType.List?new JObject {["list"]=TypeJson(type.Item)}:new JValue(type.ToString().ToLowerInvariant());
             public JObject ToJson() {
                 var value=new JObject {["id"]=Id,["version"]=Version,["type"]=TypeJson(Type),["label"]=Label,["description"]=Description};
                 if(Domain!="room")value["domain"]=Domain;
-                if(input!=null){value["input"]=Input;value["example"]=example.DeepClone();value["features"]=new JArray("factQueries.v1");}return value;
+                if(input!=null){value["input"]=Input;value["example"]=example.DeepClone();}
+                var required=(input==null?Array.Empty<string>():new[]{"factQueries.v1"}).Concat(features).Distinct().ToArray();
+                if(required.Length>0)value["features"]=new JArray(required);return value;
             }
             public bool ValidArguments(int version,JObject arguments,out string error) {
                 error="Unknown fact version or arguments";return version==Version&&(input==null?arguments==null:arguments!=null&&CapabilityArguments.Validate(arguments,input,out error,"fact arguments"));
@@ -176,7 +179,7 @@ namespace Maestro.Quest.Programs
             WorkspaceReviewFacts.Status(),
                 WorkspacePreviousFacts.Previous(),
             WorkspaceRecoveryFacts.Status(),WorkspaceRecoveryFacts.Candidate(),WorkspaceRecoveryFacts.Preview(),
-            CalendarSubscription.Fact(),
+            CalendarSubscription.Fact(),RuntimeDiagnosticFacts.Frames(),RuntimeDiagnosticFacts.Models(),RuntimeDiagnosticFacts.Motions(),
             new FactDefinition("room.sessionId",ProgramType.Text,"Current room session","Current explicit temporary-room session ID, or empty when using the saved room. Reading it does not begin, keep or discard a room.",context=>context.RoomSessionId==null?null:new ProgramValue(context.RoomSessionId)),
             new FactDefinition("maestro.state",ProgramType.Text,"Maestro state","Current observed tutor state: speaking, listening, thinking or idle. Unavailable before a reliable activity snapshot, during audio suspension or when the room runtime is paused.",context=>context.Activity==null?null:new ProgramValue(context.Activity)),
             RoomEnvironmentCapability.Fact(),PhysicsSimulationCapability.Fact(),

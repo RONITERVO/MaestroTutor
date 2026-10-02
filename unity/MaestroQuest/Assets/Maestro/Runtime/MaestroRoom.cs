@@ -23,6 +23,7 @@ namespace Maestro.Quest
 
         void Awake()
         {
+            gameObject.AddComponent<Diagnostics.RuntimeDiagnostics>();
             var originObject = new GameObject("User origin");
             originObject.SetActive(false);
             originObject.transform.SetParent(transform, false);

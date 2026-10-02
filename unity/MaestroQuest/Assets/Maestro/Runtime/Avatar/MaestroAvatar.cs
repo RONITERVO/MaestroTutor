@@ -149,10 +149,10 @@ namespace Maestro.Quest.Avatar
         }
         async Task<bool> LoadModel(string hash,ModelLibrary library,int generation,string previous,Func<bool> commit,CancellationToken cancellation)
         {
-            GameObject candidateRoot=null;bool accepted=false;
+            GameObject candidateRoot=null;ImportedModel candidate=null;bool accepted=false;
             try
             {
-                ImportedModel candidate=null;HumanoidRetargeter retargeter=null;
+                HumanoidRetargeter retargeter=null;
                 if(hash.Length!=0){
                     var asset=await library.ReadAsync(hash);
                     cancellation.ThrowIfCancellationRequested();if(!this||disposed||generation!=modelGeneration)return false;
@@ -182,6 +182,7 @@ namespace Maestro.Quest.Avatar
             }
             finally
             {
+                if(!accepted)candidate?.Dispose();
                 if(candidateRoot)Destroy(candidateRoot);
                 if(this&&!disposed&&generation==modelGeneration){
                     if(commit!=null&&!accepted)requestedModel=previous;

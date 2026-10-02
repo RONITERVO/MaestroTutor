@@ -35,7 +35,7 @@ provider's audience conditions still require final review.
 | Quest account pairing | Hashed code/secret, times, state and approved Maestro UID. | Five-minute expiry/TTL; consume/cancel removes UID and secret hash. Account deletion removes outstanding approvals. |
 | Rate limits | Hashed ingress IP and, for approval, UID subjects. | Two-minute scheduled deletion; expiry enforced independently of asynchronous TTL. |
 
-Source owners: `src/core-sdk/agent`, `docs/QUEST_UNIFIED_AGENT.md`,
+Source owners: `src/core-sdk/room`, `docs/QUEST_UNIFIED_AGENT.md`,
 `docs/QUEST_ROOM_ENVIRONMENT.md`, `functions/src/questAttestationStore.ts`,
 `functions/src/questAccountLinkStore.ts`, `src/platform/quest` and
 `unity/NativeBrowser`. Existing managed billing/upload/report retention remains in

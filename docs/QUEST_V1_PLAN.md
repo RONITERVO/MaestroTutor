@@ -2,6 +2,19 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
+The native runtime now exposes bounded frame-interval, imported-model budget
+and current-room motion-cache facts through the shared catalog. Book, agent
+and stored programs use those same observations; no extra page controls or
+separate telemetry service is introduced. Lifecycle resets prevent background
+time becoming a frame stall. Counts describe resource reservations, not actual
+RAM/VRAM, and desktop measurements do not satisfy headset performance gates.
+See `QUEST_DEVICE_QA.md` for sampling semantics and device acceptance steps.
+
+Rejected or cancelled custom-avatar candidates now explicitly dispose their
+imported resources and release reservations, even when their Unity objects
+were never active. Repeated incompatible-avatar selections no longer consume
+the model budget. Disposal is idempotent and disposed instances cannot reload.
+
 Program compatibility checks now distinguish executable blocks/expressions from
 literal records. Book and agent requests share the same traversal as the module
 linker and editor; data fields named `op`, `fact`, `memoryVersion` or similar no

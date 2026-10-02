@@ -13,10 +13,13 @@ using UnityEngine;
 namespace Maestro.Quest.Imports
 {
     /// <summary>One owned imported instance. Playback never starts from a file or saved room.</summary>
-    public sealed class ImportedModel : MonoBehaviour
+    public sealed class ImportedModel : MonoBehaviour, IDisposable
     {
         static readonly SemaphoreSlim loadQueue = new(1, 1);
+        public const int MaximumLiveModels=6,MaximumLiveVertices=500000,MaximumLiveTexturePixels=64*1024*1024,MaximumLiveMorphVertices=8000000;
         static int liveVertices, livePixels, liveModels, liveMorphVertices;
+        // Reservations include previews and in-flight loads; these are source budgets, not measured RAM/VRAM.
+        public static (int Models,int Vertices,int TexturePixels,int MorphVertices) LiveBudget=>(liveModels,liveVertices,livePixels,liveMorphVertices);
         ModelInspection reservation;
         RuntimeGltfInstance instance;
         UnityEngine.Avatar generatedAvatar;
@@ -61,6 +64,7 @@ namespace Maestro.Quest.Imports
 
         public async Task LoadAsync(ModelAsset asset, IAwaitCaller awaitCaller = null)
         {
+            if (!this || destroyed) throw new ObjectDisposedException(nameof(ImportedModel));
             if (reservation != null) throw new InvalidOperationException("Model already loaded");
             await loadQueue.WaitAsync();
             RuntimeGltfInstance loaded = null;
@@ -73,7 +77,7 @@ namespace Maestro.Quest.Imports
                 try { MotionRigHash = awaitCaller is ImmediateCaller ? MotionPack.RigIdentity(asset.Bytes) : await Task.Run(() => MotionPack.RigIdentity(asset.Bytes)); }
                 catch (ModelImportException error) { MotionRigHash = null; MotionRigIssue = error.Message; }
                 if (!this || destroyed) return;
-                if (liveModels >= 6 || liveVertices + info.Vertices > 500000 || livePixels + info.TexturePixels > 64 * 1024 * 1024 || liveMorphVertices + info.MorphVertices > 8000000)
+                if (liveModels >= MaximumLiveModels || liveVertices + info.Vertices > MaximumLiveVertices || livePixels + info.TexturePixels > MaximumLiveTexturePixels || liveMorphVertices + info.MorphVertices > MaximumLiveMorphVertices)
                     throw new ModelImportException("This room has reached its model memory budget. Erase an imported object before adding another.");
                 reservation = info; liveModels++; liveVertices += info.Vertices; livePixels += info.TexturePixels; liveMorphVertices += info.MorphVertices;
                 awaitCaller ??= new RuntimeOnlyAwaitCaller();
@@ -84,7 +88,7 @@ namespace Maestro.Quest.Imports
                     loaded = avatar.GetComponent<RuntimeGltfInstance>();
                 }
                 else loaded = await GltfUtility.LoadBytesAsync("selected.glb", asset.Bytes, awaitCaller, new BuiltInGltfMaterialDescriptorGenerator());
-                if (!this || destroyed) { loaded.Dispose(); return; }
+                if (!this || destroyed) { loaded.Dispose(); ReleaseBudget(); return; }
                 instance = loaded;
                 if (!info.IsAvatar) { generatedAvatar = NamedHumanoid.TryCreate(instance,out var issue); HumanoidIssue = issue; }
                 animationPlayer = instance.GetComponent<Animation>();
@@ -153,6 +157,14 @@ namespace Maestro.Quest.Imports
         void OnApplicationPause(bool value) { if (value) Stop(); }
         void OnApplicationFocus(bool value) { if (!value) Stop(); }
         void OnDisable() => Stop();
-        void OnDestroy() { destroyed = true; ReleaseBudget(); if (instance) instance.Dispose(); ArtResources.Release(generatedAvatar); }
+        // Inactive avatar candidates may never receive Unity OnDestroy. Their
+        // owner must dispose explicitly when abandoning a prepared replacement.
+        public void Dispose()
+        {
+            if(destroyed)return;destroyed=true;ReleaseBudget();
+            if(instance)instance.Dispose();instance=null;animationPlayer=null;initialWeights.Clear();
+            ArtResources.Release(generatedAvatar);generatedAvatar=null;
+        }
+        void OnDestroy()=>Dispose();
     }
 }

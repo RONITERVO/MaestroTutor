@@ -336,14 +336,20 @@ namespace Maestro.Quest.Tests
 
         [UnityTest] public IEnumerator AvatarReplacementCancellationCannotInstallAnOlderSelection()
         {
+            var baseline=ImportedModel.LiveBudget;
             var avatar = root.AddComponent<MaestroAvatar>(); var library = new ModelLibrary(directory);
             var asset = ModelLibrary.Inspect("avatar.vrm",ModelFixture.Create(avatar:true)); var save = library.SaveAsync(asset); yield return new WaitUntil(() => save.IsCompleted);
             var pending = avatar.SetModel(asset.Hash,library); avatar.SetModel(null,library);
             yield return new WaitUntil(() => pending.IsCompleted); yield return null;
             Assert.That(avatar.ModelHash,Is.Empty); Assert.That(avatar.CustomModel,Is.Null); Assert.That(avatar.ModelBusy,Is.False);
             var plain = ModelLibrary.Inspect("object.glb",ModelFixture.Create()); save = library.SaveAsync(plain); yield return new WaitUntil(() => save.IsCompleted);
-            var rejected = avatar.SetModel(plain.Hash,library); yield return new WaitUntil(() => rejected.IsCompleted);
-            Assert.That(rejected.Result,Is.False); Assert.That(avatar.ModelHash,Is.Empty);
+            Assert.That(ImportedModel.LiveBudget,Is.EqualTo(baseline));
+            for(int i=0;i<ImportedModel.MaximumLiveModels+2;i++){
+                var rejected=avatar.SetModel(plain.Hash,library);yield return new WaitUntil(()=>rejected.IsCompleted);
+                Assert.That(rejected.Result,Is.False);Assert.That(avatar.ModelHash,Is.Empty);
+                Assert.That(ImportedModel.LiveBudget,Is.EqualTo(baseline),"A rejected never-active avatar must release its reservation immediately");
+                Assert.That(avatar.ModelStatus,Does.Not.Contain("memory budget"));
+            }
         }
         [UnityTest] public IEnumerator PreviewAcceptEraseUndoAndReloadKeepLocalModelAndNeverAutoplay()
         {

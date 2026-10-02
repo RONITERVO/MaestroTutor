@@ -12603,6 +12603,79 @@
       "description": "The current device clock: exact UTC and local ISO timestamps, runtime-reported local zone, UTC offset in minutes and local weekday (sun..sat). It can change with device clock/zone settings; it is not a monotonic timer, a trusted server time or permission to start a program. Calendar timestamps are text, avoiding numeric program range/precision loss."
     },
     {
+      "id": "runtime.frameIntervals",
+      "version": 1,
+      "type": {
+        "record": {
+          "active": "boolean",
+          "hasSamples": "boolean",
+          "samples": "number",
+          "seconds": "number",
+          "milliseconds": {
+            "record": {
+              "mean": "number",
+              "p95": "number",
+              "max": "number"
+            }
+          },
+          "capacityLimited": "boolean",
+          "ageSeconds": "number",
+          "editor": "boolean"
+        }
+      },
+      "label": "Unity frame intervals",
+      "description": "Local Unity Update intervals ending in the last 30 seconds, at most 4096 samples. Reads are cached for up to one second. seconds sums retained intervals (the oldest can start before the window); p95 uses nearest rank. ageSeconds is the last-sample age at the cached reading. No samples means zero placeholders, not healthy timing. Pause, focus loss, disable and invalid/backwards or over-1000-second clock gaps reset the window. capacityLimited reports discarded samples still inside the window. editor distinguishes desktop test evidence. These are not GPU times, compositor/display FPS, refresh rate, memory or a Store performance verdict. No automatic settings changes or persistence.",
+      "features": [
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
+      "id": "runtime.modelBudget",
+      "version": 1,
+      "type": {
+        "record": {
+          "reserved": {
+            "record": {
+              "models": "number",
+              "vertices": "number",
+              "textureMiPixels": "number",
+              "morphMillionVertices": "number"
+            }
+          },
+          "limits": {
+            "record": {
+              "models": "number",
+              "vertices": "number",
+              "textureMiPixels": "number",
+              "morphMillionVertices": "number"
+            }
+          }
+        }
+      },
+      "label": "Imported model budgets",
+      "description": "Process-wide model reservations including avatar, previews and in-flight imports, with enforced limits. Source vertices, decoded texture MiPixels (1048576 pixels), morph million-vertices (1000000) and instance counts are budgets, not measured RAM/VRAM. Does not include procedural objects, book textures, WebView or operating-system memory. Reading never loads, evicts or changes anything.",
+      "features": [
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
+      "id": "runtime.motionCache",
+      "version": 1,
+      "type": {
+        "record": {
+          "clips": "number",
+          "curveValues": "number",
+          "clipLimit": "number",
+          "curveValueLimit": "number"
+        }
+      },
+      "label": "Current room motion cache",
+      "description": "Current room library cache entries and declared curve values, including in-flight loads, with enforced limits. Excludes embedded model clips, other workspace generations, source files and actual native/GPU byte usage. Reading does not load or evict clips.",
+      "features": [
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
       "id": "room.sessionId",
       "version": 1,
       "type": "text",
@@ -12875,7 +12948,23 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "0794d0a017646703ce888754d386bc61449af3c89205b31ea715c8714c4b6965"
+      "sha256": "93404811378d2003727234983c73804e51e7882133c0357e1292d26023caf5fb"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
+      "sha256": "438ace8ce53989959686f196b43ec0b158be6217ad6a786085376050d17fabc0"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/RuntimeDiagnostics.cs",
+      "sha256": "c59c9df235a4fbf3a597b84a8afe966cc5e147cc84dbddbf5061d6b2981b530e"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedModel.cs",
+      "sha256": "1616ccb7f89d39e80b9be5849e5c22119683da9947ddbb185d27852fcbbb3d69"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/MaestroRoom.cs",
+      "sha256": "86aa0141e355cc62e840690037c52fd69b6db7b0db78791bedff2daea7f02abb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -12911,7 +13000,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "a7dc9f9aae731406e003c6fddacd27f83c24010ae28cace13afff2c8dd4a0c90"
+      "sha256": "0543f10b2a50c804d408ca8e41b8669b56fc5c0986ae6e79e4da053063ed9001"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceRecoveryHold.cs",
@@ -13159,7 +13248,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/MaestroAvatar.cs",
-      "sha256": "0c9ebd2bc86d35229b928564ab62845a64ff0c136be91c3a78729ac81f9f951a"
+      "sha256": "304b5f29176743f48ef581f5f5f81526628156f9b7c1ae042e4fb5f5451c3eff"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/HumanoidRetargeter.cs",
@@ -13428,6 +13517,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RotateObjectCapability.cs",
       "sha256": "e6bd4cc16afb0bdd1b8188e8a2baec2bd154880ac9c4f956b75c77fd201ae433"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RuntimeDiagnosticFacts.cs",
+      "sha256": "627c44fa4a267eebfafe2f82445c8cb01c32940805336dc776a94d9b439824b4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SpatialCapabilities.cs",

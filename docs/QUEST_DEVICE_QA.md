@@ -1,5 +1,52 @@
 # Quest 3 development verification — 2026-09-30
 
+
+## Local runtime diagnostics (device acceptance pending)
+
+The existing book capability catalog and delegated agent can inspect
+`runtime.frameIntervals`, `runtime.modelBudget` and `runtime.motionCache`.
+They are read-only facts under `runtimeDiagnostics.v1`; no extra book-page UI,
+separate AI client or automatic quality adjustment is added. Stored programs
+using these facts require that advertised native feature. An unavailable fact
+must remain unavailable rather than be interpreted as a zero measurement.
+
+`runtime.frameIntervals` contains Unity Update intervals ending in the last
+30 seconds, bounded to 4,096 samples. Mean, nearest-rank p95 and maximum are in
+milliseconds; `seconds` sums retained intervals, and the oldest interval may
+start before the window. `capacityLimited` reports recent dropped samples.
+`hasSamples=false` means the zero numbers are placeholders. `ageSeconds` is the
+age of the newest sample when the reading was cached (at most one second ago).
+`editor=true` marks desktop Unity evidence. Focus changes, pause, disable and
+invalid/backwards or over-1,000-second clock gaps clear the window. Sampling
+uses unscaled monotonic time, not animation/capture time. The fixed arrays use
+96 KiB; sampling allocates no per-frame objects. Sorting and JSON construction
+are cached for one second; reads return detached values.
+
+Model reservations include loaded and in-flight avatars, previews and imported
+objects across the process. Texture MiPixels and morph million-vertices are
+source-content budgets, not actual GPU/RAM bytes. Motion cache counts describe
+the active room library, including in-flight clips, and exclude embedded model
+animations and other workspace generations. Reads never load or evict content.
+
+When device work resumes, capture the same three facts after a quiet minute,
+while playing an included full-body motion, during physics/grabbing, and while
+recording an animation. Repeat with a model preview open and after closing it.
+Confirm reservation counts recover. Also try rejecting an incompatible avatar repeatedly; the
+model reservation must return to its baseline each time. Candidates are
+disposed explicitly because [Unity OnDestroy](https://docs.unity3d.com/6000.3/Documentation/ScriptReference/MonoBehaviour.OnDestroy.html)
+is not invoked for objects that were never active. Open a Quest system screen, return, and
+confirm the frame window starts fresh. Record APK hash, headset/OS, scene and
+content choices, plus actual headset refresh rate and Meta profiler evidence.
+These interval summaries do **not** measure GPU time, compositor/display FPS,
+WebView memory, total process memory, thermal stability or comfort, and cannot
+replace physical-device Store-performance acceptance. Do not apply arbitrary
+72-Hz thresholds without recording the active headset mode.
+
+The sampler neither saves nor uploads a history. Deliberately reading these
+facts through the agent makes the selected summaries normal task context in
+the original Maestro connection, like other catalog facts. There is no
+independent telemetry endpoint and no room geometry or device identifier.
+
 ## Adult audience / privacy links: headset acceptance pending
 
 1. Start a new book document. Confirm both pages show the audience/data notice,
