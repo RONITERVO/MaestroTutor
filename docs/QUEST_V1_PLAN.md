@@ -2302,3 +2302,23 @@ web fix. No new APK, headset install or production deployment was performed.
 Temporary-room remembered values remain explicitly blocked. Supporting them needs
 an isolated memory fork and coordinated room/memory publication so Keep cannot
 report success with mismatched saved state; this patch does not relax that guard.
+
+## Temporary-memory persistence foundation — 2026-10-02
+
+Added `RoomSnapshotTransaction` to support one coordinated saved room/memory
+pair. A durable prepared intent restores the old pair; a committed intent keeps
+the new pair. Exact primary/backup identities, bounded data, exclusive ownership
+and repeated recovery prevent the coordinator from choosing half a save or
+silently overwriting changed evidence. Thirty-eight focused native filesystem
+cases cover interruption, ownership, damaged evidence and format boundaries.
+
+This is an internal prerequisite, not enabled temporary memory. Live store,
+archive/retention, receipt, session-guard and book/agent integration remains open
+and is specified in QUEST_TEMPORARY_ROOM.md. The current temporary-memory guard
+stays in force. Device timing and power-loss verification remain release gates;
+no installed files or private source assets were modified.
+
+Final local verification for this foundation: **529 EditMode and 410 PlayMode**
+tests passed, with the three expected optional private-file skips. The native
+verification helper exited 0. Source/mirror C# hashes match (227 runtime, 123 test
+and 11 editor files). The paired-save helper remains unconnected to live stores.

@@ -126,3 +126,61 @@ budgets. This is a document snapshot mechanism, not a transaction over arbitrary
 physical effects. Headset layout, comfort, lifecycle/durability acceptance and a
 real-provider voice-to-session journey remain unverified. No installed data reset,
 service deployment, Meta setup or store submission was performed.
+
+## Paired room/memory publication foundation — 2026-10-02
+
+`RoomSnapshotTransaction` is an internal storage foundation, **not yet connected
+to live room or memory stores**. Temporary remembered values remain blocked.
+It prepares coordinated Keep saves without weakening the existing guard while
+only half the persistence path has been adapted.
+
+The coordinator captures detached, exact room/memory file identities and
+publishes a bounded pair under an exclusive filesystem owner. A flushed
+`room-snapshot.v1.json` intent records the before/after documents and fingerprints
+of the retained backups. Before its committed marker is published, recovery
+restores the complete previous pair; after that marker, recovery completes the
+new pair and retains the previous primaries as backups. Interrupted recovery can
+repeat. It does not restore running programs, replay actions or select documents
+by modification time.
+
+Every primary and backup is checked before further changes. An outside edit,
+changed intent, invalid/newer format, orphan primary backup or unfinished staging
+file is preserved and blocks this path. This includes unfinished writes from the
+current room/memory stores. A stale captured base cannot overwrite a later save.
+The intent is at most 16 MiB; its room documents are at most 4 MiB each and memory
+documents at most 1 MiB each. File contents and path ownership are checked before
+publication or recovery. Expensive encoding and I/O belong on the worker path.
+
+The 38 focused EditMode cases cover complete and first-ever saves, interrupted
+publication at nine boundaries, interrupted recovery, retained backups, outside
+changes before/during publication or recovery, concurrent readers, detached
+snapshots, damaged/oversized/duplicate-key intents, future formats and unfinished
+writes. These are fault-injected filesystem tests on Windows. They do not prove
+Quest power-loss durability or storage latency.
+
+Integration still required before enabling the user-facing feature:
+
+1. Route ordinary room/memory readers and writers through one serialized owner,
+   recover an intent before either store loads, and handle contention as pending
+   work. No old reader may observe primaries between the paired writes. Preserve
+   unsupported/staged evidence through the existing recovery UI before releasing
+   a storage hold.
+2. Fork remembered values at Begin. Checkpoints and direct memory edits then
+   update only that fork. Keep captures immutable room and memory together;
+   later edits remain temporary. Discard stops behaviour work and restores the
+   last successfully kept pair. In-flight writes must drain at boundaries.
+3. Connect exact session/revision guards, native receipts and memory observations
+   to both the book and agent. Define room Undo versus remembered-value semantics
+   explicitly; no silent memory rewind or resumed interpreter is implied.
+4. Include pending intent references in asset retention and hold archive/recovery
+   capture until publication resolves. Test real Begin/Keep/Discard programs,
+   lifecycle interruption, failure/retry and restart through native entry points,
+   then profile on Quest and build/install only when device work is authorized.
+
+The existing channel-wait APK predates this foundation. No new APK or headset
+operation is part of this checkpoint.
+
+Final local verification for this foundation: **529 EditMode and 410 PlayMode**
+tests passed, with the three expected optional private-file skips. The native
+verification helper exited 0. Source/mirror C# hashes match (227 runtime, 123 test
+and 11 editor files). The paired-save helper remains unconnected to live stores.
