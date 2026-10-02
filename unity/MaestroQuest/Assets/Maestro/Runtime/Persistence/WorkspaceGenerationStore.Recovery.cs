@@ -41,7 +41,7 @@ namespace Maestro.Quest.Persistence
         {
             if(!Directory.Exists(generations))return Array.Empty<string>();var ids=new List<string>();
             foreach(string path in Directory.EnumerateFileSystemEntries(generations)){
-                if(ids.Count>=MaximumGenerations)throw Invalid("Workspace retention is full or contains unexpected paths.");WorkspaceArchive.NoLink(path);
+                if(ids.Count>=MaximumRetainedGenerations)throw Invalid("Workspace retention is full or contains unexpected paths.");WorkspaceArchive.NoLink(path);
                 string id=Path.GetFileName(path);if(!Directory.Exists(path)||!Id(id))throw Invalid("An unrecognized retained workspace path needs inspection; its data is preserved.");ids.Add(id);
             }
             ids.Sort(StringComparer.Ordinal);return ids.ToArray();
@@ -64,7 +64,7 @@ namespace Maestro.Quest.Persistence
         {
             using var lease=Lease(initialize:false);cancellation.ThrowIfCancellationRequested();var origin=ObserveOrigin();ExpectedOrigin(origin,originHash);
             if(fresh==null&&(!ModelLibrary.ValidHash(hash)||(string)Metadata(sourceId)["manifestHash"]!=hash))throw Invalid("The recovery candidate identity changed. Inspect it again.");
-            var protectedIds=GenerationIds();if(protectedIds.Length>=MaximumGenerations)throw Invalid("Workspace retention is full. Preserve and review retained workspaces before recovery.");
+            var protectedIds=GenerationIds();if(protectedIds.Length>=MaximumRetainedGenerations)throw Invalid(RecoveryCapacityError);
             string id=Guid.NewGuid().ToString("N"),target=GenerationPath(id);bool created=false;
             try {
                 Directory.CreateDirectory(target);created=true;string data=Path.Combine(target,"data");byte[] manifest;WorkspaceArchiveReceipt receipt;
@@ -104,7 +104,7 @@ namespace Maestro.Quest.Persistence
         {
             var metadata=Metadata(id);if((bool?)metadata["damagedRecovery"]!=true)throw Invalid("This generation is not a damaged-workspace recovery preview.");
             string folder=GenerationPath(id);var proof=Read(Path.Combine(folder,DamageProof),16384);
-            if(!Exact(proof,"version","originHash","origin","source","manifestHash","protectedGenerations")||proof["version"]?.Type!=JTokenType.Integer||(int)proof["version"]!=1||proof["originHash"]?.Type!=JTokenType.String||!ModelLibrary.ValidHash((string)proof["originHash"])||!ValidOrigin(proof["origin"] as JObject)||proof["manifestHash"]?.Type!=JTokenType.String||(string)proof["manifestHash"]!=(string)metadata["manifestHash"]||proof["protectedGenerations"] is not JArray saved||saved.Count>=MaximumGenerations||saved.Any(x=>!TextId(x))||saved.Select(x=>(string)x).Distinct().Count()!=saved.Count||saved.Any(x=>(string)x==id)||!ValidRecoverySource(proof["source"] as JObject,saved))throw Invalid("Invalid damaged-workspace recovery identity.");
+            if(!Exact(proof,"version","originHash","origin","source","manifestHash","protectedGenerations")||proof["version"]?.Type!=JTokenType.Integer||(int)proof["version"]!=1||proof["originHash"]?.Type!=JTokenType.String||!ModelLibrary.ValidHash((string)proof["originHash"])||!ValidOrigin(proof["origin"] as JObject)||proof["manifestHash"]?.Type!=JTokenType.String||(string)proof["manifestHash"]!=(string)metadata["manifestHash"]||proof["protectedGenerations"] is not JArray saved||saved.Count>=MaximumRetainedGenerations||saved.Any(x=>!TextId(x))||saved.Select(x=>(string)x).Distinct().Count()!=saved.Count||saved.Any(x=>(string)x==id)||!ValidRecoverySource(proof["source"] as JObject,saved))throw Invalid("Invalid damaged-workspace recovery identity.");
             var captured=new Origin(OriginFile(Path.Combine(folder,"origin-current.bin")),OriginFile(Path.Combine(folder,"origin-previous.bin")));
             if(captured.Hash!=(string)proof["originHash"]||!JToken.DeepEquals(captured.Json(),proof["origin"]))throw Invalid("Recovery selection evidence is missing or changed. Originals are preserved.");return proof;
         }

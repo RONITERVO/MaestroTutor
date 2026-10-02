@@ -1,0 +1,28 @@
+{
+  "inventories": [
+    {
+      "inspectionId": "a98e15bba23e4a419fc91ca2c3a3d865",
+      "count": 65,
+      "selectionReadable": true
+    },
+    {
+      "inspectionId": "8d4e3fdf96a346979215995847ed30e6",
+      "count": 64,
+      "selectionReadable": true
+    }
+  ],
+  "completed": {
+    "requestId": "b2cc099dcd664e1fbe007cb0091005e5",
+    "phase": "review",
+    "status": "Recovered workspace opened. Complete content review before starting activity.",
+    "originHash": "f9eae93527707b3f287416cd5a8e24909d5d2686e7e855bf87cff6318bf0be75",
+    "candidateCount": 64,
+    "preview": {
+      "generationId": "481526b240a44a2d9b0bdaea41cc8d79",
+      "manifestHash": "375470175d2e9919116e018e83018362e2f78176ab9fc5eab343bd9645821c44"
+    },
+    "committedRevision": "81af86b893c444628562170bf233e130",
+    "evidenceHash": "00da1b67e98c9f77a7ec127fe0530993cbb59af73dfe2718f4e0cc098e11b197"
+  },
+  "reviewRequired": false
+}

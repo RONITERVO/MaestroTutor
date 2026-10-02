@@ -3508,7 +3508,7 @@
       "channels": [],
       "requirements": [],
       "domain": "workspace",
-      "description": "List up to 64 retained generations, without initializing or changing selection. Read workspace.retention.entry with the returned inspectionId and each index. Metadata availability is not content verification. Roles distinguish active, previous, pointer-backup, inactive or unknown; reservation describes stored activation/recovery dependencies, not deletion permission. A new inspection replaces this session inventory. No private paths or documents are exposed.",
+      "description": "List up to 65 retained generations (64 ordinary slots plus one reserved for explicit recovery), without initializing or changing selection. Read workspace.retention.entry with the returned inspectionId and each index. Metadata availability is not content verification. Roles distinguish active, previous, pointer-backup, inactive or unknown; reservation describes stored activation/recovery dependencies, not deletion permission. A new inspection replaces this session inventory. No private paths or documents are exposed.",
       "example": {},
       "output": {
         "type": "object",
@@ -3521,7 +3521,7 @@
           "count": {
             "type": "integer",
             "minimum": 0.0,
-            "maximum": 64.0
+            "maximum": 65.0
           },
           "selectionReadable": {
             "type": "boolean"
@@ -4861,7 +4861,7 @@
       "channels": [],
       "requirements": [],
       "domain": "workspace",
-      "description": "Choose a source for the latest inspected request using requestId and originHash. source.kind=retained requires the exact candidate generationId and manifestHash; a prepared external archive appears in this same candidate list. source.kind=fresh explicitly requests a new workspace with only the included book and Maestro, default controls and no user models, motions or programs. Native code verifies and copies its immutable content into a private preview and preserves both original selection files. Read workspace.recovery until prepared, then workspace.recovery.preview for its new generation/hash and missing-reference counts. Read the preview source to distinguish a fresh workspace from a retained candidate. The source choice only prepares a preview; commit is a separate explicit request. Later authored changes can make an old candidate unverifiable. Selection never changes live content, starts activity or repairs original files.",
+      "description": "Choose a source for the latest inspected request using requestId and originHash. source.kind=retained requires the exact candidate generationId and manifestHash; a prepared external archive appears in this same candidate list. source.kind=fresh explicitly requests a new workspace with only the included book and Maestro, default controls and no user models, motions or programs. Native code verifies and copies its immutable content into a private preview and preserves both original selection files. Read workspace.recovery until prepared, then workspace.recovery.preview for its new generation/hash and missing-reference counts. Read the preview source to distinguish a fresh workspace from a retained candidate. The source choice only prepares a preview; commit is a separate explicit request. Later authored changes can make an old candidate unverifiable. An explicit recovery can use the single reserved slot when all 64 ordinary slots are occupied. It preserves existing generations; after recovery and content review, explicitly discard eligible old rooms to restore ordinary capacity. A second preview needs a free slot or cancellation of the unused preview. Selection never changes live content, starts activity or repairs original files.",
       "example": {
         "requestId": "00000000000000000000000000000000",
         "originHash": "0000000000000000000000000000000000000000000000000000000000000000",
@@ -12099,7 +12099,7 @@
           "index": {
             "type": "integer",
             "minimum": 0.0,
-            "maximum": 63.0
+            "maximum": 64.0
           }
         },
         "required": [
@@ -12517,7 +12517,7 @@
           "index": {
             "type": "integer",
             "minimum": 0.0,
-            "maximum": 63.0
+            "maximum": 64.0
           }
         },
         "required": [
@@ -12955,6 +12955,26 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.Retention.cs",
       "sha256": "d45dbaced6fd966e84f90edc84d4bb5018ae2024eb930e934336227ba20e4ce2"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.cs",
+      "sha256": "a02c2eee074e0cd0cabafcca13c887820b54606c1fac7dac3194af3b8702f792"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.Recovery.cs",
+      "sha256": "27c5a0abfb4da743770fbde01331f034bdd7dc08c36a19bed1d5e7f3d02cb0fb"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.Removal.cs",
+      "sha256": "76b00280a038123c737f9e866d644c57650537a1f0375c14a04bfde78d125329"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceRecovery.cs",
+      "sha256": "b49a0c114dbb6b3f4fc6c769488bb2d05119da8f8b32a71a562b67034c8e808a"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceRetention.cs",
+      "sha256": "b2537f8ca75417b534612d159c88f388e905519a87b9c42c721c223b39590ca0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/MotionUsage.cs",
@@ -13442,11 +13462,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceRecoveryCapabilities.cs",
-      "sha256": "b1363e07932d4189e5854f7e087f6855cdbf51dafde12d2c97721e52f7200c00"
+      "sha256": "2439caa8a6f567c04074cbe509ffd5f0fd04cf2b8a8aef31a5e1c1495fb66b03"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceRetentionCapabilities.cs",
-      "sha256": "15f052ba4b25f3e555f0d4f8bc4c8f1f3802b7fb719ce1be5cd2de7672568aeb"
+      "sha256": "d184108e11a95b5709ab7886b53d578a0504f0dbb9b8facfad9e2e8ca16dad12"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceReviewCapabilities.cs",

@@ -1,6 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {expect,it} from 'vitest';
+import nativeCapacity from '../../../test-fixtures/browser/workspaceRecoveryCapacity.json';
 import {capabilityDefinition,validateCapabilityArguments,validateCapabilityOutput} from '../../../shared/capabilities';
 import {behaviourFact} from '../../../shared/behaviourCatalog';
 import {validFactValue,validateFactArguments} from '../../../shared/behaviourFacts';
@@ -23,4 +24,21 @@ it('reads a bounded preview through the ordinary fact vocabulary and refuses pri
  const value={requestId,phase:'prepared',name:'"'.repeat(96),error:'"'.repeat(96),generationId:'b'.repeat(32),manifestHash:'c'.repeat(64),summary};
  expect(validFactValue(id,value)).toBe(true);expect(validFactValue(id,{...value,path:'/cache/private'})).toBe(false);
  expect(validFactValue(id,{...value,summary:{...summary,files:1_000_001}})).toBe(false);
+});
+
+it('exposes the recovery reserve to shared inventory forms without allowing unbounded indexes',()=>{
+ for(const [id,key] of [['workspace.recovery.candidate','requestId'],['workspace.retention.entry','inspectionId']]){
+  expect(validateFactArguments(id,1,{[key]:requestId,index:64})).toBeNull();
+  for(const index of [-1,65,64.5])expect(validateFactArguments(id,1,{[key]:requestId,index})).not.toBeNull();
+ }
+ const inventory={inspectionId:requestId,selectionReadable:true,count:65};
+ expect(validateCapabilityOutput('workspace.retention.inspect',1,inventory)).toBeNull();
+ expect(validateCapabilityOutput('workspace.retention.inspect',1,{...inventory,count:66})).not.toBeNull();
+});
+
+it('reads native full-library recovery and cleanup observations through the same contract',()=>{
+ expect(nativeCapacity.inventories.map(item=>item.count)).toEqual([65,64]);
+ for(const item of nativeCapacity.inventories)expect(validateCapabilityOutput('workspace.retention.inspect',1,item)).toBeNull();
+ expect(validFactValue('workspace.recovery',nativeCapacity.completed)).toBe(true);
+ expect(nativeCapacity.completed.phase).toBe('review');expect(nativeCapacity.reviewRequired).toBe(false);
 });

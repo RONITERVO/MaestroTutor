@@ -868,8 +868,9 @@ that uses the existing chooser, preview, activation and content-review flow.
 This portable export is deliberately **not removal authority**: it omits private
 recovery evidence and execution history. A diagnostic history-evidence export
 is also insufficient to delete a retained room. Permanent generation disposal uses the separate confirmation flow below; complete
-raw recovery-evidence export remains separate release work. The 64-generation cap
-still applies, but inventory and export work when it is full. No retention slot is
+raw recovery-evidence export remains separate release work. The 64 ordinary-generation cap
+still applies, with one additional slot reserved for explicit recovery as described
+below. Inventory and export work across all 65 entries when it is full. No retention slot is
 required to export.
 
 `workspace.retention` reports the native execution run ID and session-local
@@ -925,5 +926,45 @@ conversation or pointer. Workers keep the path lease through host retirement;
 new owners wait until they drain. Success frees a generation slot even at the
 64-generation cap. This is deliberate whole-generation disposal, without Undo,
 not automatic quota eviction or proof that a portable export contains every file.
-A full store with unreadable selection may still need an external repair path;
-it does not relax dependency checks. No device files are removed by desktop tests.
+The recovery reserve below allows a full ordinary library with unreadable selection
+to recover before cleanup. Dependency checks remain strict. No device files are
+removed by desktop tests.
+
+## Recovery reserve at ordinary capacity
+
+Ordinary imports, previous-workspace copies and accepted-state snapshots remain
+limited to 64 retained generations. Explicit `workspace.recovery.select` may use
+one reserved slot, bringing the total to 65. This breaks the otherwise circular
+case where unreadable selection prevents cleanup and a full library prevents
+recovery. It does not delete old generations or guess which room was selected.
+Both retained-source and fresh-workspace recovery can use the reserve; an external
+archive import still requires ordinary capacity.
+
+Preparation records all existing generation identities and exact original pointer
+bytes before a separate commit. Cancelling an unused preview releases only that
+new preview. Preparation failures also remove only their own private copy. After
+commit, the user separately reviews the recovered content. Review writes a valid
+selection backup, enabling normal dependency checks for explicit disposal. The
+shared inventory supports all 65 entries, including zero-based index 64; the same
+limits apply to book forms, agent queries and persisted recovery candidates.
+
+At 65 entries there is no second reserve. Cancel an unused preview where possible,
+or finish recovery/review and explicitly discard eligible old generations. Free
+enough slots for the requested operation: an ordinary import needs the count below
+64, while activation may also need an accepted-state snapshot. No automatic
+cleanup, reset or effect replay is introduced. Disk exhaustion, uncertain history,
+corruption before reserve cleanup, raw evidence export and physical-device storage
+acceptance still need their appropriate recovery or release work. Retained-source
+recovery still verifies the original manifest; this change does not make newer
+edited content silently match that manifest.
+
+PC recovery-capacity verification (2026-10-02): **566 EditMode and 414 PlayMode**
+tests passed, with three expected optional private-file skips; the native helper
+exited 0. All **1,766 web tests in 207 files**, TypeScript, ESLint, core boundaries,
+catalog provenance and production web build passed. Six new storage cases cover
+retained/fresh recovery, cancellation, preparation faults, review/cleanup and
+unexpected overflow. Two shared native journeys cover full-library recovery,
+content review, confirmed disposal, restart with 65 candidates and the bounded
+capacity error. Their actual inventory observations drive the web fixture.
+Source/mirror hashes match **229 runtime, 128 test and 11 editor C# files**.
+No APK build or headset operation was performed; these remain desktop checks.

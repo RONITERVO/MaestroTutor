@@ -45,7 +45,11 @@ namespace Maestro.Quest.Persistence
     internal sealed partial class WorkspaceGenerationStore
     {
         const string Original="original",Initial="initial";
-        const int MaximumGenerations=64;
+        internal const int MaximumGenerations=64;
+        // One reserved slot lets explicit damaged-workspace recovery proceed when ordinary
+        // retention is full. Ordinary import/previous/accepted snapshots cannot consume it.
+        internal const int MaximumRetainedGenerations=MaximumGenerations+1;
+        internal const string RecoveryCapacityError="Recovery reserve is full. Finish/cancel recovery, then review and explicitly discard eligible old rooms before another preview.";
         readonly string appRoot,root,generations,staging,pointer;
         readonly Action<string> fault;
         static readonly UTF8Encoding Utf8=new(false,true);
@@ -125,7 +129,7 @@ namespace Maestro.Quest.Persistence
                 // not a fresh install; never silently reopen a different room.
                 bool reserved=false;
                 if(Directory.Exists(generations)){int count=0;foreach(string folder in Directory.EnumerateDirectories(generations)){
-                    if(++count>MaximumGenerations)throw Invalid("Unexpected workspace retention count.");WorkspaceArchive.NoLink(folder);
+                    if(++count>MaximumRetainedGenerations)throw Invalid("Unexpected workspace retention count.");WorkspaceArchive.NoLink(folder);
                     if(new[]{"activation.v1.json",DamageCommit}.Any(name=>File.Exists(Path.Combine(folder,name))||Directory.Exists(Path.Combine(folder,name))))reserved=true;
                 }}
                 if(File.Exists(pointer+".previous")||reserved)throw Invalid("Workspace selection is missing; explicit recovery is required.");
@@ -270,7 +274,7 @@ namespace Maestro.Quest.Persistence
         {
             int count=0;
             foreach(string folder in Directory.EnumerateDirectories(generations)) {
-                if(++count>MaximumGenerations)throw Invalid("Unexpected workspace retention count.");WorkspaceArchive.NoLink(folder);if(Path.GetFileName(folder)==except)continue;
+                if(++count>MaximumRetainedGenerations)throw Invalid("Unexpected workspace retention count.");WorkspaceArchive.NoLink(folder);if(Path.GetFileName(folder)==except)continue;
                 if(DamageReferences(folder,id))return true;
                 string path=Path.Combine(folder,"activation.v1.json");if(!File.Exists(path))continue;
                 var record=ActivationRecord(path);if((string)record["next"]["active"]["generation"]!=Path.GetFileName(folder))throw Invalid("Invalid activation reservation location.");

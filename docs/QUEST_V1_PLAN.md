@@ -83,8 +83,9 @@ The remaining runtime, provider, device and Store acceptance gates remain unfini
 Remembered program values now connect workspace ownership, explicit checkpoints,
 shared book/agent inspection and editing, retained-reference checks and complete
 archive integration. Per-run state remains the default; saved values never restore
-execution or start a behaviour. Temporary-room memory and physical Quest latency
-acceptance remain open. See QUEST_PROGRAM_MEMORY.md.
+execution or start a behaviour. Temporary rooms now fork remembered values with room layout and publish both
+through one recoverable save; physical Quest latency acceptance remains open.
+See QUEST_PROGRAM_MEMORY.md and QUEST_TEMPORARY_ROOM.md.
 
 Moving anchor zones now share the catalog, native event waits, nested book inputs
 and agent authoring. Programs can observe a named recipe part, Maestro hand or
@@ -112,7 +113,10 @@ portable content without opening them, including newer saved edits than their
 original import manifest. A separate whole-generation preview now supports
 confirmed permanent discard with optional backup. Current, previous, pointer-backup
 and tracked operation roots remain protected. Private recovery export remains
-separate; a full store with unreadable selection still requires recovery/repair.
+separate. Explicit recovery now reserves a 65th slot when all 64 ordinary slots
+are occupied; subsequent review enables confirmed cleanup without weakening
+selection protection. A full reserve still requires finishing/cancelling recovery
+or cleanup, and physical storage acceptance remains open.
 PR #248 records the current verified commit and package. Earlier entries
 below are historical evidence, not current test totals or release acceptance.
 
@@ -2342,3 +2346,14 @@ operation, production deployment or Store submission is part of this checkpoint.
 
 
 Final local verification for the live integration: **560 EditMode and 412 PlayMode** tests passed, with the three expected optional private-file skips; the native helper exited 0. All **1,764 web tests in 207 files**, TypeScript, lint, core boundaries, native-catalog provenance and production web build passed. C# source/mirror hashes match: **229 runtime, 126 test and 11 editor files**. The updated browser fixture comes from the native remembered-values journey. No APK or headset operation was performed.
+
+PC recovery-capacity verification (2026-10-02): **566 EditMode and 414 PlayMode**
+tests passed, with three expected optional private-file skips; the native helper
+exited 0. All **1,766 web tests in 207 files**, TypeScript, ESLint, core boundaries,
+catalog provenance and production web build passed. Six new storage cases cover
+retained/fresh recovery, cancellation, preparation faults, review/cleanup and
+unexpected overflow. Two shared native journeys cover full-library recovery,
+content review, confirmed disposal, restart with 65 candidates and the bounded
+capacity error. Their actual inventory observations drive the web fixture.
+Source/mirror hashes match **229 runtime, 128 test and 11 editor C# files**.
+No APK build or headset operation was performed; these remain desktop checks.
