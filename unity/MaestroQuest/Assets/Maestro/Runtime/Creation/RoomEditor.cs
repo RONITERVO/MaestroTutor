@@ -160,6 +160,7 @@ namespace Maestro.Quest.Creation
             if(!CanCreatePrimitive(out error))return false;
             if(recipe==null) {error="Provide a construction recipe";return false;}
             if(!recipe.Validate(out error))return false;
+            if(journal.Snapshot().objects.Sum(x=>RecipeLathe.VertexCost(x.recipe))+RecipeLathe.VertexCost(recipe)>RecipeLathe.MaximumRoomVertices){error="Generated recipe geometry exceeds the room vertex budget";return false;}
             if(journal.Snapshot().objects.Sum(x=>x.recipe?.parts.Length??0)+recipe.parts.Length>256) {error="Keep at most 256 recipe parts in this room";return false;}
             return true;
         }

@@ -64,3 +64,40 @@ Native tests exercise actual recipe meshes, playback, storage and Undo, includin
 full-capacity reads and failures. Browser replay checks real controls against
 captured native requests/results. Physical Quest frame time, readability and input
 comfort remain separate device checks.
+
+
+## Editable revolved profiles (2026-10-02)
+
+`latheGeometry.v1` extends the same version-1 recipe with shape `lathe`.
+A part has a closed `profile` of 3–16 `{x,y}` points and integer `segments` 8–48.
+Profile x is radius 0–0.5 and y is height -0.5–0.5; the part dimensions scale the
+result in X/Y/Z. The final edge closes implicitly; do not repeat the first point.
+Profiles must be simple, counter-clockwise and have nonzero area, without touching
+or crossed nonadjacent edges. Primitive parts omit these fields or use [] and 0.
+
+The compiled native mesh generator creates triangles, normals and UVs. It removes
+axis-degenerate triangles and closes the angular seam. Visual openings are retained;
+no external generation provider, downloaded code, OpenSCAD compiler or new mesh
+library is introduced. The part transform, tint, animation and saved-edit path
+remain shared. Replacing/deleting geometry releases the owned generated meshes.
+
+The optional book workshop offers the shape, a cross-section preview, profile-point
+fields and insertion/removal, and segment count. Invalid drafts are retained.
+Switching into lathe starts with a cup cross-section; clicking the already selected
+shape preserves the current profile. Generated capability forms and agents use
+object.create kind=recipe and object.recipe.edit. New geometry is feature-gated
+through nested catalog schemas for one-off actions and saved programs.
+
+`object.recipe.part` retains its base record. `object.recipe.profile` reads up to
+four exact points, segment count and conservative whole-recipe generated vertex
+cost at an exact object revision. Offset equal to count is empty; stale or missing
+parts are unavailable. The shared program value limits are unchanged. The room
+permits at most 262,144 generated lathe vertices in addition to the existing object,
+part, imported-model and drawing bounds. This is an admission bound, not proof of
+comfortable Quest performance at that maximum.
+
+This increment adds geometry. The assembly still uses its existing approximate
+rest-bounds collider: a visually hollow cup is not yet a physical container.
+Compound proxies, physical joints, fluids, extrusion/sweep and a curated default
+play kit remain implementation work. Real Quest input/readability/performance
+acceptance remains required.

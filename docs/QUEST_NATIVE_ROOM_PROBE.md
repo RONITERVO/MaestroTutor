@@ -34,9 +34,14 @@ pre-handshake observation from being accepted by a new connection.
 The default journey does not contact an AI provider. It discovers object.create,
 creates a real ball through the shared execution/receipt path, checks the returned
 object ID, paints it, verifies Undo restores its colour, verifies another Undo
-removes it, and reads native resource diagnostics. It retains initial state,
+removes it, and reads native resource diagnostics. It then creates a lathe cup,
+inspects its exact native recipe, edits its outline/subdivisions, reads paged profile
+facts, and verifies Undo of both editing and creation. It retains initial state,
 observations and outcomes in journey.json. verified.json requires both child
-processes and the native terminal receipt to report success. Failure stops only
+processes and the native terminal receipt to report success. An invalid observation
+is retained as rejected-state.json before cancellation, so a later native update
+cannot overwrite the diagnostic. The client reports the transport failure instead
+of hiding it behind request cancellation. Failure stops only
 the wrapper's owned Editor; it does not query or modify a headset.
 
 The first full-app run revealed two production contract defects:
@@ -70,9 +75,14 @@ not test chat handoff, Live audio/video, account UI or subscription enforcement.
 
 ## Acceptance boundary
 
-Verified locally: 1,908 web tests, lint and TypeScript checks; 646 native EditMode
-and 420 PlayMode tests (three optional private-asset skips); real full-app
-create/paint/Undo/readback through the shared client. APK and CI evidence for the
+Verified locally: 1,926 web tests, lint and TypeScript checks; 649 native EditMode
+and 422 PlayMode tests (three optional private-asset skips); real full-app
+create/paint/Undo/readback and lathe editing through the shared client. One initial
+client interruption was not reproduced in two standalone runs or a 16-cycle stress
+journey (118 observations); this is not a claim that all device timing issues are
+resolved. Set MAESTRO_ROOM_PROBE_REPEATS to 1–32 to repeat the lathe cycle (default 1).
+The Chrome profile-editor replay uses captured native states and compares the
+submitted call with the real native receipt. Its acknowledgement is simulated. APK and CI evidence for the
 final commit are recorded separately in the delivery record and PR.
 
 This is Editor integration, not proof of Android WebView texture/input, Quest

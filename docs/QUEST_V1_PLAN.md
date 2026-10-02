@@ -2,6 +2,15 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
+Editable lathe profiles now extend the existing recipe system. The agent, programs
+and optional book workshop use the same create/edit capabilities; exact revisioned
+profile queries expose the source. Native geometry, saved edits, Undo, mesh disposal
+and admission limits are covered by native tests and the full-app journey. Cup,
+plate and pawn renders and the Chrome workshop replay were inspected. This is a
+geometry increment: assemblies still use the existing approximate box collider.
+Physical containers, compound proxies and the default play kit remain unfinished.
+See QUEST_RECIPE_AUTHORING.md and QUEST_NATIVE_ROOM_PROBE.md.
+
 The October 2 notebook scope and current review assessment are recorded in
 [expandable world authoring](QUEST_WORLD_AUTHORING.md). Editable native recipes,
 reusable object components and the existing shared event-program runtime remain

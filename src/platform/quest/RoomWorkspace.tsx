@@ -3,7 +3,7 @@
 import {useEffect,useState,useSyncExternalStore} from 'react';
 import {RoomOwnershipDetails} from './RoomOwnershipDetails';
 import type {RoomAgentState,RoomCommand} from '../../core-sdk/room/roomAgent';
-import {copyRecipe,parseRecipe,rotateBy,type RoomRecipe,type Rotation} from '../../core-sdk/room/recipe';
+import {copyRecipe,parseRecipe,rotateBy,defaultLatheProfile,type RoomRecipe,type Rotation} from '../../core-sdk/room/recipe';
 import type {RoomAgentClient} from './roomAgentBridge';
 import './roomWorkspace.css';
 import {recipeEditCall} from '../../../shared/recipeEdits';
@@ -13,6 +13,8 @@ import {CapabilityBrowser,type CatalogInsert,type OpenCatalog} from './Capabilit
 type Draft={id:string;revision:number;recipe:RoomRecipe|null;source:RoomAgentState};
 const identity={x:0,y:0,z:0,w:1};
 const axes=['x','y','z'] as const;
+// Hide binary32 serialization noise without changing the stored native coordinate.
+const profileNumber=(n:number)=>{const short=Number(n.toPrecision(7));return Math.fround(n)===Math.fround(short)?short:n;};
 const colours=[{name:'Teal',r:.18,g:.65,b:.63,a:1},{name:'Purple',r:.47,g:.24,b:.66,a:1},{name:'Gold',r:.9,g:.65,b:.2,a:1},{name:'Coral',r:.9,g:.36,b:.3,a:1},{name:'Paper',r:.94,g:.91,b:.82,a:1}];
 const fromState=(state:RoomAgentState):Draft|null=>state.inspection?{id:state.inspection.id,revision:state.inspection.objectRevision,recipe:state.inspection.recipe?copyRecipe(state.inspection.recipe):null,source:state}:null;
 function TurnControls({label,rotation,onChange}:{label:string;rotation:Rotation;onChange:(value:Rotation)=>void}) {
@@ -78,7 +80,17 @@ function ObjectsWorkspace({client,onCatalog}:{client:RoomAgentClient;onCatalog:O
     <div className="room-workspace-tabs" role="tablist" aria-label="Edit view"><button role="tab" aria-selected={tab==='parts'} onClick={()=>setTab('parts')}>Parts</button><button role="tab" aria-selected={tab==='animation'} onClick={()=>setTab('animation')}>Animation</button></div>
     <fieldset disabled={blocked} className="room-edit-body"><legend>{part.id}</legend>
     {tab==='parts'?<>
-     <div className="room-shapes" aria-label="Part shape">{(['box','sphere','cylinder'] as const).map(shape=><button key={shape} aria-pressed={part.shape===shape} onClick={()=>change(value=>{value.parts.find(node=>node.id===part.id)!.shape=shape;})}>{shape}</button>)}</div>
+     <div className="room-shapes" aria-label="Part shape">{(['box','sphere','cylinder','lathe'] as const).map(shape=><button key={shape} disabled={shape==='lathe'&&!state.capabilities?.includes('latheGeometry.v1')} aria-pressed={part.shape===shape} onClick={()=>{if(part.shape!==shape)change(value=>{const node=value.parts.find(node=>node.id===part.id)!;node.shape=shape;node.profile=shape==='lathe'?defaultLatheProfile():[];node.segments=shape==='lathe'?24:0;});}}>{shape}</button>)}</div>
+     {part.shape==='lathe'&&<fieldset className="room-lathe-profile" aria-label="Lathe profile"><legend>Rotated profile</legend>
+      <p>Radius and height are scaled by this part’s dimensions. Keep a simple counter-clockwise outline. Openings are visual for now; objects cannot go inside them.</p>
+      <div className="room-lathe-preview"><svg role="img" aria-label="Lathe cross section" viewBox="-5 -5 120 210" style={{width:120,height:210,background:'#eee'}}><path d="M 0 0 V 200" stroke="#777"/><polygon points={(part.profile??[]).map(p=>`${p.x*200},${(0.5-p.y)*200}`).join(' ')} fill="#86caca" stroke="#174949" strokeWidth="1.5"/>{(part.profile??[]).map((p,i)=><text key={i} x={p.x*200+3} y={(0.5-p.y)*200+3} fontSize="8">{i+1}</text>)}</svg>
+      <label>Angular segments<input aria-label="Lathe segments" type="number" min={8} max={48} step={1} value={part.segments??24} onChange={e=>change(value=>{value.parts.find(node=>node.id===part.id)!.segments=Number(e.target.value);})}/></label></div>
+      {(part.profile??[]).map((point,index)=><div key={index} className="room-lathe-point">
+       <span>Point {index+1}</span>{(['x','y'] as const).map(axis=><label key={axis}>{axis==='x'?'Radius':'Height'}<input aria-label={`Profile point ${index+1} ${axis==='x'?'radius':'height'}`} type="number" min={axis==='x'?0:-.5} max={.5} step={.01} value={profileNumber(point[axis])} onChange={e=>change(value=>{value.parts.find(node=>node.id===part.id)!.profile![index][axis]=Number(e.target.value);})}/></label>)}
+       <button aria-label={`Insert after point ${index+1}`} disabled={(part.profile?.length??0)>=16} onClick={()=>change(value=>{const points=value.parts.find(node=>node.id===part.id)!.profile!,next=points[(index+1)%points.length];points.splice(index+1,0,{x:(point.x+next.x)/2,y:(point.y+next.y)/2});})}>Insert after</button>
+       <button aria-label={`Remove point ${index+1}`} disabled={(part.profile?.length??0)<=3} onClick={()=>change(value=>{value.parts.find(node=>node.id===part.id)!.profile!.splice(index,1);})}>Remove</button>
+      </div>)}
+     </fieldset>}
      <fieldset className="room-axis-controls"><legend>Position · metres from {part.parent||'object origin'}</legend>{axes.map(axis=><div key={axis}><span>{axis.toUpperCase()} {part.position[axis].toFixed(2)}</span><button aria-label={`Position ${axis} minus`} onClick={()=>change(value=>{value.parts.find(node=>node.id===part.id)!.position[axis]-=.01;})}>−.01</button><button aria-label={`Position ${axis} plus`} onClick={()=>change(value=>{value.parts.find(node=>node.id===part.id)!.position[axis]+=.01;})}>+.01</button></div>)}</fieldset>
      <fieldset className="room-axis-controls"><legend>Dimensions · metres</legend>{axes.map(axis=><div key={axis}><span>{axis.toUpperCase()} {part.size[axis].toFixed(2)}</span><button aria-label={`Size ${axis} minus`} onClick={()=>change(value=>{const node=value.parts.find(node=>node.id===part.id)!;node.size[axis]=Math.max(.005,node.size[axis]-.01);})}>−.01</button><button aria-label={`Size ${axis} plus`} onClick={()=>change(value=>{value.parts.find(node=>node.id===part.id)!.size[axis]+=.01;})}>+.01</button></div>)}</fieldset>
      <TurnControls label="Rest pose" rotation={part.rotation} onChange={rotation=>change(value=>{value.parts.find(node=>node.id===part.id)!.rotation=rotation;})}/>

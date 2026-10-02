@@ -49,6 +49,8 @@ namespace Maestro.Quest.Programs
                     if((string)schema["format"]=="roomRecipe") {
                         var recipe=JsonUtility.FromJson<RoomRecipe>(obj.ToString(Newtonsoft.Json.Formatting.None));
                         if(recipe==null||!recipe.Validate(out error)) {error??=path+" is an invalid construction recipe";return false;}
+                    } else if((string)schema["format"]=="lathePart") {
+                        if(!RecipeLathe.Valid(JsonUtility.FromJson<RecipePart>(obj.ToString(Newtonsoft.Json.Formatting.None)))){error=path+" needs a simple counter-clockwise lathe profile";return false;}
                     } else if(schema["format"]!=null) {
                         double norm=obj.Properties().Sum(p=>(double)p.Value*(double)p.Value);
                         if((string)schema["format"]=="boundedOffset" && norm>1 || (string)schema["format"]=="unitQuaternion" && Math.Abs(norm-1)>=.01) {error=path+" has an invalid length";return false;}

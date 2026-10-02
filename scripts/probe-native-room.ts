@@ -1,6 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
-import {writeFile} from 'node:fs/promises';
+import {readFile,writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {HeadlessRoomTransport} from '../src/headless/roomTransport';
 import {runRoomActionTask,type RoomCommand} from '../src/core-sdk/room/roomAgent';
@@ -42,8 +42,26 @@ try{
   if(undoCreate.objects.some(object=>object.id===target)||undoCreate.objects.length!==initial.objects.length)throw new Error('Native Undo did not remove the created object.');
   const diagnostic=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'runtime.modelBudget',version:1}}]);
   if(!diagnostic.catalog?.available)throw new Error('Native resource diagnostics are unavailable.');
-  outcome={createdId:target,createReceipt:selected,paintVerified:true,undoPaintVerified:true,undoCreateVerified:true,diagnostics:diagnostic.catalog.value};
+  const repeat=Number(process.env.MAESTRO_ROOM_PROBE_REPEATS??1);if(!Number.isInteger(repeat)||repeat<1||repeat>32)throw new Error('Probe repeats must be 1–32.');
+  for(let cycle=0;cycle<repeat;cycle++){
+  const cases=JSON.parse(await readFile('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/lathe-contract.json','utf8'));
+  const cup=cases[0].recipe;
+  const lathe=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'recipe',name:'Native profile cup',x:.2,y:1,z:.5,scale:1,recipe:cup}}}}]);
+  const cupId=lathe.execution?.selected?.output?.objectId;if(typeof cupId!=='string')throw new Error('Lathe creation did not return an object.');
+  const inspected=await execute([{action:'inspect',target:cupId}]);
+  if(inspected.inspection?.recipe?.parts[0].shape!=='lathe')throw new Error('The shared client cannot inspect the native lathe.');
+  const changed=structuredClone(inspected.inspection.recipe.parts[0]);changed.profile[1].x=.48;changed.segments=32;
+  const edited=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.recipe.edit',version:1,arguments:{target:cupId,revision:inspected.inspection.objectRevision,parts:[changed],removeParts:[],tracks:[],removeTracks:[],duration:cup.duration,loop:false}}}}]);
+  const revision=edited.objects.find(object=>object.id===cupId)?.objectRevision;
+  const profile=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.recipe.profile',version:1,arguments:{target:cupId,revision,part:'Body',offset:0}}}]);
+  const value=profile.catalog?.value as {segments?:number;points?:{x:number;y:number}[]}|undefined;
+  if(!profile.catalog?.available||value?.segments!==32||Math.abs((value.points?.[1].x??0)-.48)>.00001)throw new Error('Native lathe readback differs from the edit.');
+  await execute([{action:'undo'}]);const restored=await execute([{action:'inspect',target:cupId}]);
+  if(restored.inspection?.recipe?.parts[0].segments!==24)throw new Error('Lathe Undo did not restore the profile.');
+  const removed=await execute([{action:'undo'}]);if(removed.objects.some(object=>object.id===cupId))throw new Error('Lathe Undo did not remove the created geometry.');
+  outcome={createdId:target,createReceipt:selected,paintVerified:true,undoPaintVerified:true,undoCreateVerified:true,diagnostics:diagnostic.catalog.value,lathe:{createReceipt:lathe.execution?.selected,profile:value,editAndUndoVerified:true},latheCycles:cycle+1};
+  }
  }
  await writeFile(join(directory,'journey.json'),JSON.stringify({version:1,boundary:'Real Unity Editor app and shared room protocol; no Quest input, WebView, scan or Store proof',providerUsed:!!prompt,initial,observations,outcome},null,2));
  console.log(JSON.stringify({providerUsed:!!prompt,observations:observations.length,output:join(directory,'journey.json')}));
-}finally{await transport.close();}
+}catch(error){transport.checkHealth();throw error;}finally{await transport.close();}

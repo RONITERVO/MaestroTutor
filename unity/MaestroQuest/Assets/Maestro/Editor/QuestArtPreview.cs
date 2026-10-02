@@ -34,6 +34,17 @@ namespace Maestro.Quest.Editor
             foreach(var track in recipe.tracks) geometry.Part(track.part).localRotation=recipe.parts.Single(x=>x.id==track.part).rotation*recipe.Sample(track,.7f);
             Capture(camera,Path.Combine(output,"recipe-robot-wave.png"),1000,1100);
             UnityEngine.Object.DestroyImmediate(root);UnityEngine.Object.DestroyImmediate(camera.gameObject);
+            var lathe=JsonUtility.FromJson<RoomRecipe>(Newtonsoft.Json.Linq.JArray.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/lathe-contract.json")))[0]["recipe"].ToString());
+            root=new GameObject("Editable profiles");
+            var cup=new GameObject("Cup");cup.transform.SetParent(root.transform,false);cup.transform.localPosition=new Vector3(-.25f,0,0);cup.AddComponent<RecipeObject>().Apply(lathe);
+            var plate=lathe.Copy();plate.parts[0].size=new Vector3(.3f,.035f,.3f);plate.parts[0].color=new Color(.9f,.65f,.2f,1);
+            var plateObject=new GameObject("Plate");plateObject.transform.SetParent(root.transform,false);plateObject.transform.localPosition=new Vector3(0,-.08f,.04f);plateObject.AddComponent<RecipeObject>().Apply(plate);
+            var pawn=lathe.Copy();pawn.parts[0].color=new Color(.47f,.24f,.66f,1);pawn.parts[0].size=new Vector3(.13f,.25f,.13f);
+            pawn.parts[0].profile=new[]{new Vector2(0,-.5f),new Vector2(.5f,-.5f),new Vector2(.5f,-.4f),new Vector2(.32f,-.25f),new Vector2(.2f,.08f),new Vector2(.36f,.22f),new Vector2(.38f,.34f),new Vector2(.25f,.47f),new Vector2(0,.5f)};
+            var pawnObject=new GameObject("Pawn");pawnObject.transform.SetParent(root.transform,false);pawnObject.transform.localPosition=new Vector3(.24f,0,0);pawnObject.AddComponent<RecipeObject>().Apply(pawn);
+            camera=new GameObject("Profile camera",typeof(Camera)).GetComponent<Camera>();camera.clearFlags=CameraClearFlags.SolidColor;camera.backgroundColor=new Color(.944f,.929f,.887f,1);camera.orthographic=true;camera.orthographicSize=.3f;camera.nearClipPlane=.01f;camera.transform.position=new Vector3(.65f,.75f,1.5f);camera.transform.LookAt(Vector3.zero);
+            Capture(camera,Path.Combine(output,"recipe-lathe-examples.png"),1500,1000);
+            UnityEngine.Object.DestroyImmediate(root);UnityEngine.Object.DestroyImmediate(camera.gameObject);
             Debug.Log("MAESTRO_RECIPES_RENDERED");
         }
 

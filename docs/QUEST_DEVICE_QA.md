@@ -1,6 +1,20 @@
 # Quest 3 development verification — 2026-09-30
 
 
+
+## Editable profile geometry (2026-10-02; headset acceptance pending)
+
+Create a recipe cup through the shared catalog or delegated room agent. Inspect
+it in the optional book workshop; change a profile point and segment count, save,
+then Undo. Verify the original chat remains the normal book view. Try invalid
+crossed outlines and verify the draft remains editable without changing the room.
+Check openings, inside/outside shading, readback, gripping, restart/save and repeated
+create/delete resource recovery. Capture the current APK hash and frame/profiler
+measurements at normal and budget-heavy use. The 262,144 generated-vertex ceiling
+is an admission limit, not a measured comfortable Quest workload. Its current box
+collider does not preserve the visible hollow interior; do not claim cup/container
+physics from this geometry test. Desktop rendering and browser replay already pass.
+
 ## Local runtime diagnostics (device acceptance pending)
 
 The existing book capability catalog and delegated agent can inspect

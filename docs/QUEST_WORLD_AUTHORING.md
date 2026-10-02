@@ -31,7 +31,7 @@ require putting chat, assets, physics and all history in one enormous JSON file.
 
 ## What already exists
 
-The current catalog contains 61 actions, 12 events and 56 facts. It already has
+The current catalog contains 61 actions, 12 events and 57 facts. It already has
 native capability modules, generated forms, shared human/agent execution,
 revision checks, durable one-off receipts, contact/proximity/settling observations,
 structured program values, parallel branches, pinned reusable program modules,
@@ -41,7 +41,9 @@ QUEST_PROGRAM_MODULES, QUEST_PROGRAM_MEMORY, QUEST_ROOM_OWNERSHIP and
 QUEST_TEMPORARY_ROOM for actual limits and lifecycle rules.
 
 Physical drawing is a saved 3D stroke. Recipe construction currently accepts
-box/sphere/cylinder parts (at most 32) with parented rotations and bounded tracks.
+box/sphere/cylinder parts and editable lathe profiles (at most 32 parts) with
+parented rotations and bounded tracks. The lathe increment is described in
+[recipe authoring](QUEST_RECIPE_AUTHORING.md#editable-revolved-profiles-2026-10-02).
 Recipe parts are visual joints with an assembly proxy collider, not independent
 rigid bodies. Shared attachment and aimed throws exist; automatic IK catching,
 hit reactions, physical hinges/springs, generic paintable surfaces, structural

@@ -13,6 +13,7 @@ namespace Maestro.Quest.Creation
         readonly Dictionary<string,Transform> nodes = new();
         readonly Dictionary<string,Quaternion> rest = new();
         readonly List<Material> materials = new();
+        readonly List<Mesh> meshes = new();
         readonly List<Color> colors = new();
         GameObject geometry,highlight;
         string highlightedPart;
@@ -40,6 +41,7 @@ namespace Maestro.Quest.Creation
             CancelParts();suppressedParts.Clear();encoded = json; recipe = value.Copy(); time = 0; interrupted = runtimeGate?.Held==true; runtimeLoop=null;
             if (geometry) { geometry.SetActive(false); ArtResources.Release(geometry); }
             foreach (var material in materials) ArtResources.Release(material);
+            foreach (var mesh in meshes) ArtResources.Release(mesh);meshes.Clear();
             nodes.Clear(); rest.Clear(); materials.Clear(); colors.Clear();
             geometry = new GameObject("Recipe geometry"); geometry.transform.SetParent(transform,false);
             Bounds bounds = default; bool first = true;
@@ -48,10 +50,12 @@ namespace Maestro.Quest.Creation
                 var node = new GameObject(part.id).transform;
                 node.SetParent(string.IsNullOrEmpty(part.parent) ? geometry.transform : nodes[part.parent],false);
                 node.SetLocalPositionAndRotation(part.position,part.rotation); nodes.Add(part.id,node); rest.Add(part.id,part.rotation);
-                var shape = GameObject.CreatePrimitive(part.shape == "sphere" ? PrimitiveType.Sphere : part.shape == "cylinder" ? PrimitiveType.Cylinder : PrimitiveType.Cube);
+                GameObject shape;
+                if(part.shape=="lathe") {shape=new GameObject("Lathe",typeof(MeshFilter),typeof(MeshRenderer));var mesh=RecipeLathe.Build(part);meshes.Add(mesh);shape.GetComponent<MeshFilter>().sharedMesh=mesh;}
+                else shape=GameObject.CreatePrimitive(part.shape == "sphere" ? PrimitiveType.Sphere : part.shape == "cylinder" ? PrimitiveType.Cylinder : PrimitiveType.Cube);
                 shape.transform.SetParent(node,false); shape.transform.localScale = Vector3.Scale(part.size,part.shape == "cylinder" ? new Vector3(1,.5f,1) : Vector3.one);
                 // One stable proxy collider belongs to the complete grabbable assembly.
-                var collider = shape.GetComponent<Collider>(); collider.enabled = false; ArtResources.Release(collider);
+                var collider = shape.GetComponent<Collider>(); if(collider){collider.enabled = false; ArtResources.Release(collider);}
                 var material = IllustratedMaterials.Create(part.color); materials.Add(material); colors.Add(part.color); shape.GetComponent<Renderer>().sharedMaterial = material;
                 for (int i=0;i<8;i++)
                 {
@@ -87,6 +91,6 @@ namespace Maestro.Quest.Creation
         void OnApplicationPause(bool paused) { if (paused) Stop(); }
         void OnApplicationFocus(bool focused) { if (!focused) Stop(); }
         void OnDisable() {Stop();}
-        void OnDestroy() {CancelParts();if(runtimeGate!=null)runtimeGate.Changed-=RuntimeChanged; foreach (var material in materials) ArtResources.Release(material); }
+        void OnDestroy() {CancelParts();if(runtimeGate!=null)runtimeGate.Changed-=RuntimeChanged; foreach (var material in materials) ArtResources.Release(material);foreach(var mesh in meshes)ArtResources.Release(mesh); }
     }
 }

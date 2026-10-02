@@ -1,7 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {moduleHash,validModuleRecord} from './programModuleIdentity';
-import {parseRecipe} from './roomRecipe';
+import {parseRecipe,validLathePart} from './roomRecipe';
 import {behaviourCatalog,type BehaviourValueType} from './behaviourCatalog';
 export interface CurrentInputMapping {
  fact:string;version:number;arguments:Record<string,string>;fields:Record<string,string[]>;guards:string[];
@@ -12,7 +12,7 @@ export interface CapabilitySchema {
  oneOf?:CapabilitySchema[];'x-confirmation'?:string;'x-discriminators'?:string[];title?:string;description?:string;examples?:unknown[];'x-static'?:boolean;'x-channels'?:string[];'x-requirements'?:string[];'x-features'?:string[];
  items?:CapabilitySchema;minItems?:number;maxItems?:number;nullable?:boolean;
  properties?:Record<string,CapabilitySchema>;required?:string[];additionalProperties?:false;
- format?:'unitQuaternion'|'boundedOffset'|'roomRecipe'|'programModule'|'programMemoryValue';'x-resource'?:'object';'x-requires'?:Record<string,string>;
+ format?:'unitQuaternion'|'boundedOffset'|'roomRecipe'|'lathePart'|'programModule'|'programMemoryValue';'x-resource'?:'object';'x-requires'?:Record<string,string>;
  minimum?:number;maximum?:number;maxLength?:number;pattern?:string;enum?:string[];
 }
 export interface CapabilityDefinition {
@@ -59,6 +59,7 @@ function validate(value:unknown,schema:CapabilitySchema,path:string):string|null
     const error=validate(entry,properties[key],path+'.'+key);if(error)return error;
     if(Object.entries(properties[key]['x-requires']??{}).some(([field,expected])=>value[field]!==expected))return path+'.'+key+' has incompatible arguments';
    }
+   if(schema.format==='lathePart')return validLathePart(value)?null:path+' needs a simple counter-clockwise lathe profile';
    if(schema.format==='roomRecipe')return parseRecipe(value)?null:path+' is an invalid construction recipe';
    if(schema.format){const norm=Object.values(value).reduce<number>((sum,x)=>sum+Number(x)**2,0);
     if(schema.format==='boundedOffset'&&norm>1||schema.format==='unitQuaternion'&&Math.abs(norm-1)>=.01)return path+' has an invalid length';}

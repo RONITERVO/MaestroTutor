@@ -54,3 +54,18 @@ it('retains a recipe draft when the native action has no completed receipt',asyn
 it('does not fall back to a different recipe edit path when the native capability is unavailable',()=>{
  const client=new RoomAgentClient();client.receive(state({capabilities:[]}));const screen=render(<RoomWorkspace client={client}/>);fireEvent.click(screen.getByRole('button',{name:'Size x plus'}));fireEvent.click(screen.getByRole('button',{name:'Apply changes'}));expect(screen.getByRole('status').textContent).toContain('draft is kept');expect(client.snapshot().request).toBeNull();
 });
+
+it('edits a visible lathe profile through the same native patch and keeps invalid drafts',async()=>{
+ const client=new RoomAgentClient();client.receive(state({capabilities:[...state().capabilities!,'latheGeometry.v1']}));const screen=render(<RoomWorkspace client={client}/>);
+ fireEvent.click(screen.getByRole('button',{name:'lathe'}));expect(screen.getByRole('img',{name:'Lathe cross section'})).toBeTruthy();
+ fireEvent.change(screen.getByLabelText('Profile point 2 radius'),{target:{value:'-0.1'}});fireEvent.click(screen.getByRole('button',{name:'Apply changes'}));
+ expect(client.snapshot().request).toBeNull();expect(screen.getByRole('status').textContent).toContain('valid sizes');
+ fireEvent.change(screen.getByLabelText('Profile point 2 radius'),{target:{value:'0.48'}});fireEvent.change(screen.getByLabelText('Lathe segments'),{target:{value:'32'}});
+ fireEvent.click(screen.getByRole('button',{name:'lathe'}));expect((screen.getByLabelText('Profile point 2 radius') as HTMLInputElement).value).toBe('0.48');
+ fireEvent.click(screen.getByRole('button',{name:'Apply changes'}));const invocation=client.snapshot().request!.commands[0].execution!;if(invocation.operation!=='start')throw new Error('Expected shared patch');
+ const edited=(invocation.call.arguments.parts as NonNullable<ReturnType<typeof parseRecipe>>['parts'])[0];expect(edited).toMatchObject({shape:'lathe',segments:32});expect(edited.profile).toHaveLength(6);expect(edited.profile![1].x).toBe(.48);
+ await act(async()=>{client.receive(state({revision:2,ack:1}));});
+});
+it('does not offer new geometry to an older native room',()=>{
+ const client=new RoomAgentClient();client.receive(state());const screen=render(<RoomWorkspace client={client}/>);expect((screen.getByRole('button',{name:'lathe'}) as HTMLButtonElement).disabled).toBe(true);
+});

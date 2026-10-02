@@ -5522,155 +5522,379 @@
                   "parts": {
                     "type": "array",
                     "items": {
-                      "type": "object",
-                      "properties": {
-                        "id": {
-                          "type": "string",
-                          "pattern": "^[a-zA-Z0-9_]{1,32}$",
-                          "maxLength": 32
-                        },
-                        "parent": {
-                          "type": "string",
-                          "pattern": "^[a-zA-Z0-9_]{0,32}$",
-                          "maxLength": 32,
-                          "nullable": true
-                        },
-                        "shape": {
-                          "type": "string",
-                          "enum": [
-                            "box",
-                            "sphere",
-                            "cylinder"
-                          ]
-                        },
-                        "position": {
+                      "oneOf": [
+                        {
                           "type": "object",
                           "properties": {
-                            "x": {
-                              "type": "number",
-                              "minimum": -2.0,
-                              "maximum": 2.0
+                            "id": {
+                              "type": "string",
+                              "pattern": "^[a-zA-Z0-9_]{1,32}$",
+                              "maxLength": 32
                             },
-                            "y": {
-                              "type": "number",
-                              "minimum": -2.0,
-                              "maximum": 2.0
+                            "parent": {
+                              "type": "string",
+                              "pattern": "^[a-zA-Z0-9_]{0,32}$",
+                              "maxLength": 32,
+                              "nullable": true
                             },
-                            "z": {
-                              "type": "number",
-                              "minimum": -2.0,
-                              "maximum": 2.0
+                            "shape": {
+                              "type": "string",
+                              "enum": [
+                                "box",
+                                "sphere",
+                                "cylinder"
+                              ]
+                            },
+                            "position": {
+                              "type": "object",
+                              "properties": {
+                                "x": {
+                                  "type": "number",
+                                  "minimum": -2.0,
+                                  "maximum": 2.0
+                                },
+                                "y": {
+                                  "type": "number",
+                                  "minimum": -2.0,
+                                  "maximum": 2.0
+                                },
+                                "z": {
+                                  "type": "number",
+                                  "minimum": -2.0,
+                                  "maximum": 2.0
+                                }
+                              },
+                              "required": [
+                                "x",
+                                "y",
+                                "z"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "size": {
+                              "type": "object",
+                              "properties": {
+                                "x": {
+                                  "type": "number",
+                                  "minimum": 0.005,
+                                  "maximum": 2.0
+                                },
+                                "y": {
+                                  "type": "number",
+                                  "minimum": 0.005,
+                                  "maximum": 2.0
+                                },
+                                "z": {
+                                  "type": "number",
+                                  "minimum": 0.005,
+                                  "maximum": 2.0
+                                }
+                              },
+                              "required": [
+                                "x",
+                                "y",
+                                "z"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "rotation": {
+                              "type": "object",
+                              "properties": {
+                                "x": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                },
+                                "y": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                },
+                                "z": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                },
+                                "w": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                }
+                              },
+                              "required": [
+                                "x",
+                                "y",
+                                "z",
+                                "w"
+                              ],
+                              "additionalProperties": false,
+                              "format": "unitQuaternion"
+                            },
+                            "color": {
+                              "type": "object",
+                              "properties": {
+                                "r": {
+                                  "type": "number",
+                                  "minimum": 0.0,
+                                  "maximum": 1.0
+                                },
+                                "g": {
+                                  "type": "number",
+                                  "minimum": 0.0,
+                                  "maximum": 1.0
+                                },
+                                "b": {
+                                  "type": "number",
+                                  "minimum": 0.0,
+                                  "maximum": 1.0
+                                },
+                                "a": {
+                                  "type": "number",
+                                  "minimum": 1.0,
+                                  "maximum": 1.0
+                                }
+                              },
+                              "required": [
+                                "r",
+                                "g",
+                                "b",
+                                "a"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "profile": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "x": {
+                                    "type": "number",
+                                    "minimum": 0.0,
+                                    "maximum": 0.5
+                                  },
+                                  "y": {
+                                    "type": "number",
+                                    "minimum": -0.5,
+                                    "maximum": 0.5
+                                  }
+                                },
+                                "required": [
+                                  "x",
+                                  "y"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "minItems": 0,
+                              "maxItems": 0
+                            },
+                            "segments": {
+                              "type": "integer",
+                              "minimum": 0.0,
+                              "maximum": 0.0
                             }
                           },
                           "required": [
-                            "x",
-                            "y",
-                            "z"
+                            "id",
+                            "parent",
+                            "shape",
+                            "position",
+                            "size",
+                            "rotation",
+                            "color"
                           ],
                           "additionalProperties": false
                         },
-                        "size": {
+                        {
                           "type": "object",
                           "properties": {
-                            "x": {
-                              "type": "number",
-                              "minimum": 0.005,
-                              "maximum": 2.0
+                            "id": {
+                              "type": "string",
+                              "pattern": "^[a-zA-Z0-9_]{1,32}$",
+                              "maxLength": 32
                             },
-                            "y": {
-                              "type": "number",
-                              "minimum": 0.005,
-                              "maximum": 2.0
+                            "parent": {
+                              "type": "string",
+                              "pattern": "^[a-zA-Z0-9_]{0,32}$",
+                              "maxLength": 32,
+                              "nullable": true
                             },
-                            "z": {
-                              "type": "number",
-                              "minimum": 0.005,
-                              "maximum": 2.0
+                            "shape": {
+                              "type": "string",
+                              "enum": [
+                                "lathe"
+                              ]
+                            },
+                            "position": {
+                              "type": "object",
+                              "properties": {
+                                "x": {
+                                  "type": "number",
+                                  "minimum": -2.0,
+                                  "maximum": 2.0
+                                },
+                                "y": {
+                                  "type": "number",
+                                  "minimum": -2.0,
+                                  "maximum": 2.0
+                                },
+                                "z": {
+                                  "type": "number",
+                                  "minimum": -2.0,
+                                  "maximum": 2.0
+                                }
+                              },
+                              "required": [
+                                "x",
+                                "y",
+                                "z"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "size": {
+                              "type": "object",
+                              "properties": {
+                                "x": {
+                                  "type": "number",
+                                  "minimum": 0.005,
+                                  "maximum": 2.0
+                                },
+                                "y": {
+                                  "type": "number",
+                                  "minimum": 0.005,
+                                  "maximum": 2.0
+                                },
+                                "z": {
+                                  "type": "number",
+                                  "minimum": 0.005,
+                                  "maximum": 2.0
+                                }
+                              },
+                              "required": [
+                                "x",
+                                "y",
+                                "z"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "rotation": {
+                              "type": "object",
+                              "properties": {
+                                "x": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                },
+                                "y": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                },
+                                "z": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                },
+                                "w": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                }
+                              },
+                              "required": [
+                                "x",
+                                "y",
+                                "z",
+                                "w"
+                              ],
+                              "additionalProperties": false,
+                              "format": "unitQuaternion"
+                            },
+                            "color": {
+                              "type": "object",
+                              "properties": {
+                                "r": {
+                                  "type": "number",
+                                  "minimum": 0.0,
+                                  "maximum": 1.0
+                                },
+                                "g": {
+                                  "type": "number",
+                                  "minimum": 0.0,
+                                  "maximum": 1.0
+                                },
+                                "b": {
+                                  "type": "number",
+                                  "minimum": 0.0,
+                                  "maximum": 1.0
+                                },
+                                "a": {
+                                  "type": "number",
+                                  "minimum": 1.0,
+                                  "maximum": 1.0
+                                }
+                              },
+                              "required": [
+                                "r",
+                                "g",
+                                "b",
+                                "a"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "profile": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "x": {
+                                    "type": "number",
+                                    "minimum": 0.0,
+                                    "maximum": 0.5
+                                  },
+                                  "y": {
+                                    "type": "number",
+                                    "minimum": -0.5,
+                                    "maximum": 0.5
+                                  }
+                                },
+                                "required": [
+                                  "x",
+                                  "y"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "minItems": 3,
+                              "maxItems": 16
+                            },
+                            "segments": {
+                              "type": "integer",
+                              "minimum": 8.0,
+                              "maximum": 48.0
                             }
                           },
                           "required": [
-                            "x",
-                            "y",
-                            "z"
-                          ],
-                          "additionalProperties": false
-                        },
-                        "rotation": {
-                          "type": "object",
-                          "properties": {
-                            "x": {
-                              "type": "number",
-                              "minimum": -1.0,
-                              "maximum": 1.0
-                            },
-                            "y": {
-                              "type": "number",
-                              "minimum": -1.0,
-                              "maximum": 1.0
-                            },
-                            "z": {
-                              "type": "number",
-                              "minimum": -1.0,
-                              "maximum": 1.0
-                            },
-                            "w": {
-                              "type": "number",
-                              "minimum": -1.0,
-                              "maximum": 1.0
-                            }
-                          },
-                          "required": [
-                            "x",
-                            "y",
-                            "z",
-                            "w"
+                            "id",
+                            "parent",
+                            "shape",
+                            "position",
+                            "size",
+                            "rotation",
+                            "color",
+                            "profile",
+                            "segments"
                           ],
                           "additionalProperties": false,
-                          "format": "unitQuaternion"
-                        },
-                        "color": {
-                          "type": "object",
-                          "properties": {
-                            "r": {
-                              "type": "number",
-                              "minimum": 0.0,
-                              "maximum": 1.0
-                            },
-                            "g": {
-                              "type": "number",
-                              "minimum": 0.0,
-                              "maximum": 1.0
-                            },
-                            "b": {
-                              "type": "number",
-                              "minimum": 0.0,
-                              "maximum": 1.0
-                            },
-                            "a": {
-                              "type": "number",
-                              "minimum": 1.0,
-                              "maximum": 1.0
-                            }
-                          },
-                          "required": [
-                            "r",
-                            "g",
-                            "b",
-                            "a"
-                          ],
-                          "additionalProperties": false
+                          "format": "lathePart",
+                          "title": "Lathe",
+                          "description": "Rotate a simple counter-clockwise closed profile around Y. x is radius 0–0.5; y is height -0.5–0.5, scaled by part dimensions. 3–16 distinct points, 8–48 angular segments. No self intersections or touching edges. Geometry only: the assembly still uses an approximate box collider.",
+                          "x-features": [
+                            "latheGeometry.v1"
+                          ]
                         }
-                      },
-                      "required": [
-                        "id",
-                        "parent",
-                        "shape",
-                        "position",
-                        "size",
-                        "rotation",
-                        "color"
                       ],
-                      "additionalProperties": false
+                      "x-discriminators": [
+                        "shape"
+                      ]
                     },
                     "minItems": 1,
                     "maxItems": 32
@@ -5805,6 +6029,8 @@
                       "id": "Hips",
                       "parent": "",
                       "shape": "box",
+                      "profile": [],
+                      "segments": 0,
                       "position": {
                         "x": 0.0,
                         "y": 0.47999998927116394,
@@ -5832,6 +6058,8 @@
                       "id": "Spine",
                       "parent": "Hips",
                       "shape": "box",
+                      "profile": [],
+                      "segments": 0,
                       "position": {
                         "x": 0.0,
                         "y": 0.10999999940395355,
@@ -5859,6 +6087,8 @@
                       "id": "Chest",
                       "parent": "Spine",
                       "shape": "box",
+                      "profile": [],
+                      "segments": 0,
                       "position": {
                         "x": 0.0,
                         "y": 0.12999999523162842,
@@ -5886,6 +6116,8 @@
                       "id": "Neck",
                       "parent": "Chest",
                       "shape": "box",
+                      "profile": [],
+                      "segments": 0,
                       "position": {
                         "x": 0.0,
                         "y": 0.11999999731779099,
@@ -5913,6 +6145,8 @@
                       "id": "Head",
                       "parent": "Neck",
                       "shape": "box",
+                      "profile": [],
+                      "segments": 0,
                       "position": {
                         "x": 0.0,
                         "y": 0.14000000059604645,
@@ -5940,6 +6174,8 @@
                       "id": "LeftUpperArm",
                       "parent": "Chest",
                       "shape": "box",
+                      "profile": [],
+                      "segments": 0,
                       "position": {
                         "x": -0.2199999988079071,
                         "y": 0.0,
@@ -5967,6 +6203,8 @@
                       "id": "LeftLowerArm",
                       "parent": "LeftUpperArm",
                       "shape": "box",
+                      "profile": [],
+                      "segments": 0,
                       "position": {
                         "x": 0.0,
                         "y": -0.15999999642372131,
@@ -5994,6 +6232,8 @@
                       "id": "LeftHand",
                       "parent": "LeftLowerArm",
                       "shape": "box",
+                      "profile": [],
+                      "segments": 0,
                       "position": {
                         "x": 0.0,
                         "y": -0.11999999731779099,
@@ -6021,6 +6261,8 @@
                       "id": "LeftUpperLeg",
                       "parent": "Hips",
                       "shape": "box",
+                      "profile": [],
+                      "segments": 0,
                       "position": {
                         "x": -0.090000003576278687,
                         "y": -0.14000000059604645,
@@ -6048,6 +6290,8 @@
                       "id": "LeftLowerLeg",
                       "parent": "LeftUpperLeg",
                       "shape": "box",
+                      "profile": [],
+                      "segments": 0,
                       "position": {
                         "x": 0.0,
                         "y": -0.18000000715255737,
@@ -6075,6 +6319,8 @@
                       "id": "LeftFoot",
                       "parent": "LeftLowerLeg",
                       "shape": "box",
+                      "profile": [],
+                      "segments": 0,
                       "position": {
                         "x": 0.0,
                         "y": -0.10999999940395355,
@@ -6102,6 +6348,8 @@
                       "id": "LeftEye",
                       "parent": "Head",
                       "shape": "box",
+                      "profile": [],
+                      "segments": 0,
                       "position": {
                         "x": -0.054999999701976776,
                         "y": 0.02500000037252903,
@@ -6129,6 +6377,8 @@
                       "id": "RightUpperArm",
                       "parent": "Chest",
                       "shape": "box",
+                      "profile": [],
+                      "segments": 0,
                       "position": {
                         "x": 0.2199999988079071,
                         "y": 0.0,
@@ -6156,6 +6406,8 @@
                       "id": "RightLowerArm",
                       "parent": "RightUpperArm",
                       "shape": "box",
+                      "profile": [],
+                      "segments": 0,
                       "position": {
                         "x": 0.0,
                         "y": -0.15999999642372131,
@@ -6183,6 +6435,8 @@
                       "id": "RightHand",
                       "parent": "RightLowerArm",
                       "shape": "box",
+                      "profile": [],
+                      "segments": 0,
                       "position": {
                         "x": 0.0,
                         "y": -0.11999999731779099,
@@ -6210,6 +6464,8 @@
                       "id": "RightUpperLeg",
                       "parent": "Hips",
                       "shape": "box",
+                      "profile": [],
+                      "segments": 0,
                       "position": {
                         "x": 0.090000003576278687,
                         "y": -0.14000000059604645,
@@ -6237,6 +6493,8 @@
                       "id": "RightLowerLeg",
                       "parent": "RightUpperLeg",
                       "shape": "box",
+                      "profile": [],
+                      "segments": 0,
                       "position": {
                         "x": 0.0,
                         "y": -0.18000000715255737,
@@ -6264,6 +6522,8 @@
                       "id": "RightFoot",
                       "parent": "RightLowerLeg",
                       "shape": "box",
+                      "profile": [],
+                      "segments": 0,
                       "position": {
                         "x": 0.0,
                         "y": -0.10999999940395355,
@@ -6291,6 +6551,8 @@
                       "id": "RightEye",
                       "parent": "Head",
                       "shape": "box",
+                      "profile": [],
+                      "segments": 0,
                       "position": {
                         "x": 0.054999999701976776,
                         "y": 0.02500000037252903,
@@ -7057,155 +7319,379 @@
           "parts": {
             "type": "array",
             "items": {
-              "type": "object",
-              "properties": {
-                "id": {
-                  "type": "string",
-                  "pattern": "^[a-zA-Z0-9_]{1,32}$",
-                  "maxLength": 32
-                },
-                "parent": {
-                  "type": "string",
-                  "pattern": "^[a-zA-Z0-9_]{0,32}$",
-                  "maxLength": 32,
-                  "nullable": true
-                },
-                "shape": {
-                  "type": "string",
-                  "enum": [
-                    "box",
-                    "sphere",
-                    "cylinder"
-                  ]
-                },
-                "position": {
+              "oneOf": [
+                {
                   "type": "object",
                   "properties": {
-                    "x": {
-                      "type": "number",
-                      "minimum": -2.0,
-                      "maximum": 2.0
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9_]{1,32}$",
+                      "maxLength": 32
                     },
-                    "y": {
-                      "type": "number",
-                      "minimum": -2.0,
-                      "maximum": 2.0
+                    "parent": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9_]{0,32}$",
+                      "maxLength": 32,
+                      "nullable": true
                     },
-                    "z": {
-                      "type": "number",
-                      "minimum": -2.0,
-                      "maximum": 2.0
+                    "shape": {
+                      "type": "string",
+                      "enum": [
+                        "box",
+                        "sphere",
+                        "cylinder"
+                      ]
+                    },
+                    "position": {
+                      "type": "object",
+                      "properties": {
+                        "x": {
+                          "type": "number",
+                          "minimum": -2.0,
+                          "maximum": 2.0
+                        },
+                        "y": {
+                          "type": "number",
+                          "minimum": -2.0,
+                          "maximum": 2.0
+                        },
+                        "z": {
+                          "type": "number",
+                          "minimum": -2.0,
+                          "maximum": 2.0
+                        }
+                      },
+                      "required": [
+                        "x",
+                        "y",
+                        "z"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "size": {
+                      "type": "object",
+                      "properties": {
+                        "x": {
+                          "type": "number",
+                          "minimum": 0.005,
+                          "maximum": 2.0
+                        },
+                        "y": {
+                          "type": "number",
+                          "minimum": 0.005,
+                          "maximum": 2.0
+                        },
+                        "z": {
+                          "type": "number",
+                          "minimum": 0.005,
+                          "maximum": 2.0
+                        }
+                      },
+                      "required": [
+                        "x",
+                        "y",
+                        "z"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "rotation": {
+                      "type": "object",
+                      "properties": {
+                        "x": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "y": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "z": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "w": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        }
+                      },
+                      "required": [
+                        "x",
+                        "y",
+                        "z",
+                        "w"
+                      ],
+                      "additionalProperties": false,
+                      "format": "unitQuaternion"
+                    },
+                    "color": {
+                      "type": "object",
+                      "properties": {
+                        "r": {
+                          "type": "number",
+                          "minimum": 0.0,
+                          "maximum": 1.0
+                        },
+                        "g": {
+                          "type": "number",
+                          "minimum": 0.0,
+                          "maximum": 1.0
+                        },
+                        "b": {
+                          "type": "number",
+                          "minimum": 0.0,
+                          "maximum": 1.0
+                        },
+                        "a": {
+                          "type": "number",
+                          "minimum": 1.0,
+                          "maximum": 1.0
+                        }
+                      },
+                      "required": [
+                        "r",
+                        "g",
+                        "b",
+                        "a"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "profile": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number",
+                            "minimum": 0.0,
+                            "maximum": 0.5
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": -0.5,
+                            "maximum": 0.5
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "minItems": 0,
+                      "maxItems": 0
+                    },
+                    "segments": {
+                      "type": "integer",
+                      "minimum": 0.0,
+                      "maximum": 0.0
                     }
                   },
                   "required": [
-                    "x",
-                    "y",
-                    "z"
+                    "id",
+                    "parent",
+                    "shape",
+                    "position",
+                    "size",
+                    "rotation",
+                    "color"
                   ],
                   "additionalProperties": false
                 },
-                "size": {
+                {
                   "type": "object",
                   "properties": {
-                    "x": {
-                      "type": "number",
-                      "minimum": 0.005,
-                      "maximum": 2.0
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9_]{1,32}$",
+                      "maxLength": 32
                     },
-                    "y": {
-                      "type": "number",
-                      "minimum": 0.005,
-                      "maximum": 2.0
+                    "parent": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9_]{0,32}$",
+                      "maxLength": 32,
+                      "nullable": true
                     },
-                    "z": {
-                      "type": "number",
-                      "minimum": 0.005,
-                      "maximum": 2.0
+                    "shape": {
+                      "type": "string",
+                      "enum": [
+                        "lathe"
+                      ]
+                    },
+                    "position": {
+                      "type": "object",
+                      "properties": {
+                        "x": {
+                          "type": "number",
+                          "minimum": -2.0,
+                          "maximum": 2.0
+                        },
+                        "y": {
+                          "type": "number",
+                          "minimum": -2.0,
+                          "maximum": 2.0
+                        },
+                        "z": {
+                          "type": "number",
+                          "minimum": -2.0,
+                          "maximum": 2.0
+                        }
+                      },
+                      "required": [
+                        "x",
+                        "y",
+                        "z"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "size": {
+                      "type": "object",
+                      "properties": {
+                        "x": {
+                          "type": "number",
+                          "minimum": 0.005,
+                          "maximum": 2.0
+                        },
+                        "y": {
+                          "type": "number",
+                          "minimum": 0.005,
+                          "maximum": 2.0
+                        },
+                        "z": {
+                          "type": "number",
+                          "minimum": 0.005,
+                          "maximum": 2.0
+                        }
+                      },
+                      "required": [
+                        "x",
+                        "y",
+                        "z"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "rotation": {
+                      "type": "object",
+                      "properties": {
+                        "x": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "y": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "z": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "w": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        }
+                      },
+                      "required": [
+                        "x",
+                        "y",
+                        "z",
+                        "w"
+                      ],
+                      "additionalProperties": false,
+                      "format": "unitQuaternion"
+                    },
+                    "color": {
+                      "type": "object",
+                      "properties": {
+                        "r": {
+                          "type": "number",
+                          "minimum": 0.0,
+                          "maximum": 1.0
+                        },
+                        "g": {
+                          "type": "number",
+                          "minimum": 0.0,
+                          "maximum": 1.0
+                        },
+                        "b": {
+                          "type": "number",
+                          "minimum": 0.0,
+                          "maximum": 1.0
+                        },
+                        "a": {
+                          "type": "number",
+                          "minimum": 1.0,
+                          "maximum": 1.0
+                        }
+                      },
+                      "required": [
+                        "r",
+                        "g",
+                        "b",
+                        "a"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "profile": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number",
+                            "minimum": 0.0,
+                            "maximum": 0.5
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": -0.5,
+                            "maximum": 0.5
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "minItems": 3,
+                      "maxItems": 16
+                    },
+                    "segments": {
+                      "type": "integer",
+                      "minimum": 8.0,
+                      "maximum": 48.0
                     }
                   },
                   "required": [
-                    "x",
-                    "y",
-                    "z"
-                  ],
-                  "additionalProperties": false
-                },
-                "rotation": {
-                  "type": "object",
-                  "properties": {
-                    "x": {
-                      "type": "number",
-                      "minimum": -1.0,
-                      "maximum": 1.0
-                    },
-                    "y": {
-                      "type": "number",
-                      "minimum": -1.0,
-                      "maximum": 1.0
-                    },
-                    "z": {
-                      "type": "number",
-                      "minimum": -1.0,
-                      "maximum": 1.0
-                    },
-                    "w": {
-                      "type": "number",
-                      "minimum": -1.0,
-                      "maximum": 1.0
-                    }
-                  },
-                  "required": [
-                    "x",
-                    "y",
-                    "z",
-                    "w"
+                    "id",
+                    "parent",
+                    "shape",
+                    "position",
+                    "size",
+                    "rotation",
+                    "color",
+                    "profile",
+                    "segments"
                   ],
                   "additionalProperties": false,
-                  "format": "unitQuaternion"
-                },
-                "color": {
-                  "type": "object",
-                  "properties": {
-                    "r": {
-                      "type": "number",
-                      "minimum": 0.0,
-                      "maximum": 1.0
-                    },
-                    "g": {
-                      "type": "number",
-                      "minimum": 0.0,
-                      "maximum": 1.0
-                    },
-                    "b": {
-                      "type": "number",
-                      "minimum": 0.0,
-                      "maximum": 1.0
-                    },
-                    "a": {
-                      "type": "number",
-                      "minimum": 1.0,
-                      "maximum": 1.0
-                    }
-                  },
-                  "required": [
-                    "r",
-                    "g",
-                    "b",
-                    "a"
-                  ],
-                  "additionalProperties": false
+                  "format": "lathePart",
+                  "title": "Lathe",
+                  "description": "Rotate a simple counter-clockwise closed profile around Y. x is radius 0–0.5; y is height -0.5–0.5, scaled by part dimensions. 3–16 distinct points, 8–48 angular segments. No self intersections or touching edges. Geometry only: the assembly still uses an approximate box collider.",
+                  "x-features": [
+                    "latheGeometry.v1"
+                  ]
                 }
-              },
-              "required": [
-                "id",
-                "parent",
-                "shape",
-                "position",
-                "size",
-                "rotation",
-                "color"
               ],
-              "additionalProperties": false
+              "x-discriminators": [
+                "shape"
+              ]
             },
             "minItems": 0,
             "maxItems": 32
@@ -10878,7 +11364,7 @@
         }
       },
       "label": "Recipe part",
-      "description": "Read one exact saved part by index and revision. Root parent is empty text. Coordinates/dimensions are local metres; rotation is a unit quaternion. All 32 parts remain readable without simplification. Missing targets, stale revisions and later indexes are unavailable.",
+      "description": "Read one exact saved part by index and revision. Root parent is empty text. Coordinates/dimensions are local metres; rotation is a unit quaternion. All 32 base part records remain readable without simplification. For lathe geometry also read object.recipe.profile at the same revision; this base record omits profile and segments. Missing targets, stale revisions and later indexes are unavailable.",
       "input": {
         "type": "object",
         "properties": {
@@ -10984,6 +11470,73 @@
       },
       "features": [
         "factQueries.v1"
+      ]
+    },
+    {
+      "id": "object.recipe.profile",
+      "version": 1,
+      "type": {
+        "record": {
+          "revision": "number",
+          "part": "text",
+          "segments": "number",
+          "offset": "number",
+          "count": "number",
+          "vertices": "number",
+          "points": {
+            "list": {
+              "record": {
+                "x": "number",
+                "y": "number"
+              }
+            }
+          }
+        }
+      },
+      "label": "Lathe profile points",
+      "description": "Read up to four exact profile points for an existing lathe part at a fixed object revision. x is radius and y is height in normalized part coordinates. segments is the angular subdivision count. vertices is a conservative generated vertex cost for the whole recipe; the room limit is 262144. Offset equal to count returns an empty page. Missing/non-lathe parts, stale revisions and later offsets are unavailable. The profile is geometry, not a fluid container or a hollow collider.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 1000000.0
+          },
+          "part": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_]{1,32}$",
+            "maxLength": 32
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 16.0
+          }
+        },
+        "required": [
+          "target",
+          "revision",
+          "part",
+          "offset"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000",
+        "revision": 1,
+        "part": "Body",
+        "offset": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "latheGeometry.v1"
       ]
     },
     {
@@ -12948,7 +13501,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "93404811378d2003727234983c73804e51e7882133c0357e1292d26023caf5fb"
+      "sha256": "d64fdaa8b40aa960cb096f9e2fc2190f3734688f3d5f79542ea06f228a05f3e6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -12968,7 +13521,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "3b43f7f64289d1fd561f2d4b00b88a89337809308325a5cdf68996aab50b56a2"
+      "sha256": "609b8e9911364bae89a7152dbce3ea92eafc80653942cb2b282f98c884320f4e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -13000,7 +13553,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "0543f10b2a50c804d408ca8e41b8669b56fc5c0986ae6e79e4da053063ed9001"
+      "sha256": "85a8f1ec4d9a56c4097b85564291fe0f63e19b5fc8cd0408f20142297f582605"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -13156,11 +13709,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRecipe.cs",
-      "sha256": "401ad282a0054fac7142e1e3e593d6ce93e9db723efd6945f5eed3f2d594dff8"
+      "sha256": "9ec543c9a53bd1e87b2897d30bf5c6f4b3237b69a7ce1df0b0952fdc48ceba1e"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeLathe.cs",
+      "sha256": "9294b3a1d7e96d5582d2b18afdfc87075d871661d70420041b444e7fa3d19b92"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeObject.cs",
-      "sha256": "d2b5a0f78ceaebea7895b570a285aeee568c5993640ae742acada29faa9fd061"
+      "sha256": "c78d62ddec6697c8b7e6423fdcfc8ca401df8be435d330b50e450b4f861045be"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipePartPlayback.cs",
@@ -13208,7 +13765,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "f3a3f57009d623a27d6b21ffc42ebf7beeac586865fde7efd18f8551aaa84a81"
+      "sha256": "964a37efcb76cc48c5ff29c786342853375e76dfd78819747f47eb627e154b84"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomToolTray.cs",
@@ -13228,7 +13785,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "63b7859aad58529e3f1ebfca564054de8f3e8da247fde85ac147ed4d07a8281b"
+      "sha256": "1533dfac3590f835f68a48529c2e2abe99b172835a5f374e280ee0435c567bd2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedDrawing.cs",
@@ -13408,7 +13965,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
-      "sha256": "3a2ef10cc41fcf40614a3f43e9f275dff67bde265f2abc24bd2ff87a4544d8ec"
+      "sha256": "c48b663f2fb4d532d0ff971fae2cfccc74a3d0633bd8806d0f43becc921bf587"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityStepAdapter.cs",
@@ -13453,6 +14010,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/IncludedMotionsCapability.cs",
       "sha256": "ca8d281d811b711136f59e34bc815da3900aa2c0500b9f74894afb401c51938a"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/LatheProfileFact.cs",
+      "sha256": "3e63b0320debc46eb9d7a0d215386ff6845e5ef57b9e83e326cdc226199bc074"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/LaunchObjectCapability.cs",
@@ -13500,7 +14061,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RecipeEditFacts.cs",
-      "sha256": "a1fd8851d600e6330d877f7a027fa6eb8f0db8d2a9481ecaa151c5f9bb29b5c9"
+      "sha256": "26346b1e6871e3989a9edd534b5ccc732646a28a8313229982b7953550b2c269"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RecipePartAnimationCapability.cs",

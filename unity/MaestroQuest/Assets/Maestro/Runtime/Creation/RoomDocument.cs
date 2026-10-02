@@ -105,6 +105,7 @@ namespace Maestro.Quest.Creation
                 jointCount += item.motion?.frames.Sum(frame => frame.joints?.Length ?? 0) ?? 0;
             }
             if (builtIns != 2 || !ids.Contains("book") || !ids.Contains("maestro")) return Fail("The included book and Maestro must remain in the room.", out error);
+            if(objects.Sum(item=>RecipeLathe.VertexCost(item.recipe))>RecipeLathe.MaximumRoomVertices)return Fail("Generated recipe geometry exceeds the room vertex budget.",out error);
             if (partCount > 256) return Fail("Keep at most 256 recipe parts in this room.",out error);
             if (pointCount > MaximumTotalPoints) return Fail("This room has reached its drawing limit.", out error);
             if (frameCount > 1200 || jointCount > 6000) return Fail("This room has reached its animation limit.",out error);

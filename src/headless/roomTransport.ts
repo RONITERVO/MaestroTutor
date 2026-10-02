@@ -58,7 +58,11 @@ export class HeadlessRoomTransport {
     // Identical files are normal between native Updates. The shared client rejects stale revisions.
     if(envelope.clientId===this.client.snapshot().clientId){
      const previous=this.client.getSnapshot().state;
-     if(!this.client.receive(envelope.state)&&!(previous!==null&&previous.session===envelope.state.session&&typeof envelope.state.revision==='number'&&envelope.state.revision<=previous.revision))throw new Error('Native room state failed the shared client contract.');
+     if(!this.client.receive(envelope.state)&&!(previous!==null&&previous.session===envelope.state.session&&typeof envelope.state.revision==='number'&&envelope.state.revision<=previous.revision)){
+      // Keep the exact rejected observation: the Editor may publish a later valid state before shutdown.
+      await publishRoomProbeFile(join(this.directory,'rejected-state.json'),JSON.stringify(envelope));
+      throw new Error('Native room state failed the shared client contract. See rejected-state.json.');
+     }
     }
    }catch(error){if((error as NodeJS.ErrnoException).code!=='ENOENT')throw error;}
    try{const terminal=await this.read('terminal.json',4096);throw new Error('Native room probe stopped: '+JSON.stringify(terminal));}
@@ -66,7 +70,8 @@ export class HeadlessRoomTransport {
    await sleep(100);
   }}catch(error){this.failure=error instanceof Error?error:new Error(String(error));this.client.cancel();this.stopped=true;}
  }
- lease():RoomAgentLease{if(this.failure)throw this.failure;const lease=this.client.lease();if(!lease)throw new Error('The native room is unavailable or busy.');return lease;}
+ checkHealth(){if(this.failure)throw this.failure;}
+ lease():RoomAgentLease{this.checkHealth();const lease=this.client.lease();if(!lease)throw new Error('The native room is unavailable or busy.');return lease;}
  async close(stopNative=true){
   this.stopped=true;this.client.cancel();await this.pump;
   if(stopNative)await this.send('stop');

@@ -10,6 +10,8 @@ namespace Maestro.Quest.Creation
     [Serializable] public sealed class RecipePart
     {
         public string id, parent, shape = "box";
+        public Vector2[] profile = Array.Empty<Vector2>();
+        public int segments;
         public Vector3 position, size = Vector3.one * .1f;
         public Quaternion rotation = Quaternion.identity;
         public Color color = Color.white;
@@ -32,7 +34,7 @@ namespace Maestro.Quest.Creation
             var ids = new Dictionary<string,float>();
             foreach (var p in parts)
             {
-                if (p == null || !ValidId(p.id) || ids.ContainsKey(p.id) || (p.shape != "box" && p.shape != "sphere" && p.shape != "cylinder") ||
+                if (p == null || !ValidId(p.id) || ids.ContainsKey(p.id) || (p.shape != "box" && p.shape != "sphere" && p.shape != "cylinder" && p.shape != "lathe") || !RecipeLathe.Valid(p) ||
                     !MotionFrame.ValidRotation(p.rotation) || !Finite(p.position) || p.position.magnitude > 2 || !Finite(p.size) ||
                     p.size.x < .005f || p.size.y < .005f || p.size.z < .005f || p.size.x > 2 || p.size.y > 2 || p.size.z > 2 || !ValidColor(p.color)) return false;
                 float distance = 0;

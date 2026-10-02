@@ -40,6 +40,15 @@ namespace Maestro.Quest.Programs
             var part=Object(new JObject {["id"]=Text("^[a-zA-Z0-9_]{1,32}$",32),["parent"]=parent,["shape"]=Choice("box","sphere","cylinder"),
                 ["position"]=Triple(-2,2),["size"]=Triple(.005,2),["rotation"]=Vector(true),
                 ["color"]=Object(new JObject {["r"]=Number(0,1),["g"]=Number(0,1),["b"]=Number(0,1),["a"]=Number(1,1)})});
+            var profilePoint=Object(new JObject {["x"]=Number(0,.5),["y"]=Number(-.5,.5)});
+            var lathe=(JObject)part.DeepClone();lathe["properties"]["shape"]=Choice("lathe");
+            lathe["properties"]["profile"]=List(profilePoint,3,16);lathe["properties"]["segments"]=Number(8,48,true);
+            ((JArray)lathe["required"]).Add("profile");((JArray)lathe["required"]).Add("segments");lathe["format"]="lathePart";
+            lathe["title"]="Lathe";lathe["description"]="Rotate a simple counter-clockwise closed profile around Y. x is radius 0–0.5; y is height -0.5–0.5, scaled by part dimensions. 3–16 distinct points, 8–48 angular segments. No self intersections or touching edges. Geometry only: the assembly still uses an approximate box collider.";
+            lathe["x-features"]=new JArray("latheGeometry.v1");
+            part["properties"]["profile"]=List((JObject)profilePoint.DeepClone(),0,0);part["properties"]["segments"]=Number(0,0,true);
+            // Unity serializes empty arrays/default numbers for primitive parts. Old literal recipes may omit both.
+            part=new JObject {["oneOf"]=new JArray(part,lathe),["x-discriminators"]=new JArray("shape")};
             var key=Object(new JObject {["time"]=Number(0,30),["rotation"]=Vector(true)});
             var track=Object(new JObject {["part"]=Text("^[a-zA-Z0-9_]{1,32}$",32),["keys"]=List(key,2,16)});
             var recipe=Object(new JObject {["version"]=Number(1,1,true),["parts"]=List(part,1,32),["tracks"]=List(track,0,17),
