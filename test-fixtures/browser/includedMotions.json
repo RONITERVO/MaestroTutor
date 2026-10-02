@@ -1,0 +1,84 @@
+{
+  "before": {
+    "available": true,
+    "busy": false,
+    "status": "",
+    "package": {
+      "manifestHash": "6d90bd10bf6f1ba6228e82cebdae0f9e950a3fed916b4905fe698ec82bfaed24",
+      "packId": "test.motions",
+      "name": "Test animations",
+      "revision": 1,
+      "avatarHash": "7716642625ffe18842a6eb952b600ec8e5a821d9a0316f827214ca6c07e34356",
+      "rigHash": "85eaf6cf94b025e4e7a716f4e7b0cc10953cadad754400f83321e70f46b78125"
+    },
+    "counts": {
+      "motions": 1,
+      "kibibytes": 5.0,
+      "catalogued": 0,
+      "removed": 0
+    }
+  },
+  "after": {
+    "available": true,
+    "busy": false,
+    "status": "1 included motions added; 0 saved choices preserved",
+    "package": {
+      "manifestHash": "6d90bd10bf6f1ba6228e82cebdae0f9e950a3fed916b4905fe698ec82bfaed24",
+      "packId": "test.motions",
+      "name": "Test animations",
+      "revision": 1,
+      "avatarHash": "7716642625ffe18842a6eb952b600ec8e5a821d9a0316f827214ca6c07e34356",
+      "rigHash": "85eaf6cf94b025e4e7a716f4e7b0cc10953cadad754400f83321e70f46b78125"
+    },
+    "counts": {
+      "motions": 1,
+      "kibibytes": 5.0,
+      "catalogued": 1,
+      "removed": 0
+    }
+  },
+  "receipt": {
+    "selected": {
+      "id": "cf215c9f967b4ab8af806e3afd7171dd",
+      "capability": "motion.pack.install",
+      "version": 1,
+      "resources": [],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "manifestHash": "6d90bd10bf6f1ba6228e82cebdae0f9e950a3fed916b4905fe698ec82bfaed24",
+        "added": 1,
+        "preserved": 0,
+        "restored": 0
+      },
+      "call": {
+        "id": "motion.pack.install",
+        "version": 1,
+        "arguments": {
+          "operation": "add",
+          "manifestHash": "6d90bd10bf6f1ba6228e82cebdae0f9e950a3fed916b4905fe698ec82bfaed24"
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "cf215c9f967b4ab8af806e3afd7171dd",
+        "capability": "motion.pack.install",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "manifestHash": "6d90bd10bf6f1ba6228e82cebdae0f9e950a3fed916b4905fe698ec82bfaed24",
+          "added": 1,
+          "preserved": 0,
+          "restored": 0
+        }
+      }
+    ],
+    "nextRunId": "142a71688e7242faa3b3d4367f4aacc3",
+    "storageError": null,
+    "recovery": null
+  }
+}

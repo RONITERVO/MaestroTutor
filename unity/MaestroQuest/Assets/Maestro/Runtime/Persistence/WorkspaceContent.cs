@@ -21,7 +21,7 @@ namespace Maestro.Quest.Persistence
         public MovementControls Controls {get;private set;}
         internal void Build(RoomInteraction interaction,RoomItem bookOwner,NativeBookBrowser browser,BookPointerRouter pointer,BookControllerInput controller,
             RoomPhysicsWorld physics,RoomNavigation navigation,ScannedRoom scan,VirtualRoomView virtualView,Func<bool> headTracked,
-            string applicationData,string directory,string receiptDirectory,RoomRuntimeGate gate,BundledAvatar includedAvatar=null)
+            string applicationData,string directory,string receiptDirectory,RoomRuntimeGate gate,BundledAvatar includedAvatar=null,BundledMotions includedMotions=null)
         {
             room=interaction;bookItem=bookOwner;router=pointer;input=controller;var content=gameObject;
             var avatar = new GameObject("Full body Maestro");
@@ -32,7 +32,7 @@ namespace Maestro.Quest.Persistence
             var avatarHandle = avatar.AddComponent<CapsuleCollider>(); avatarHandle.center = new Vector3(0,.85f,0); avatarHandle.height = 1.7f; avatarHandle.radius = .25f;
             avatar.layer = RoomPhysicsLayers.Environment;
             var avatarItem = avatar.AddComponent<RoomItem>(); avatarItem.Configure(new Collider[] { avatarHandle }, .3f, 1.5f); room.Register(avatarItem);
-            Editor = content.AddComponent<RoomEditor>(); var editor=Editor; editor.Initialize(room,bookItem,avatarItem,directory,physics,gate,receiptDirectory,includedAvatar);
+            Editor = content.AddComponent<RoomEditor>(); var editor=Editor; editor.Initialize(room,bookItem,avatarItem,directory,physics,gate,receiptDirectory,includedAvatar,includedMotions);
             router.Editor = editor; input.Editor = editor;
             var drawing = content.AddComponent<SpatialDrawing>(); drawing.Editor = editor; input.Drawing = drawing;
             var tray = new GameObject("Creation tools"); tray.transform.SetParent(content.transform,false);

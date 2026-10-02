@@ -924,3 +924,16 @@ it('previews one ZIP member through the same versioned native choice as the phys
  fireEvent.click(screen.getByRole('button',{name:'Run action now'}));expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:receipt.selected.call,runId:receipt.selected.id}});
  await receive(undefined,false,{execution:receipt as RoomAgentState['execution']});expect(screen.getByLabelText('Action result').textContent).toContain('"destination": ""');expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
 });
+
+import nativeIncludedMotions from '../../../test-fixtures/browser/includedMotions.json';
+it('loads the included package identity and runs the same explicit installation as the app agent',async()=>{
+ const {client,screen,receive}=setup(true,['includedMotions.v1','execution.v1','actionResults.v1']);const receipt=nativeIncludedMotions.receipt,definition=capabilityDefinition('motion.pack.install')!;
+ await receive(undefined,false,{execution:{...receipt,selected:null,running:[],outcomes:[],nextRunId:receipt.selected.id} as RoomAgentState['execution']});
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:'Search'}));
+ await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Included animations'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Included animations'});fireEvent.click(screen.getByText('Edit action fields'));
+ expect((screen.getByRole('button',{name:'Run action now'}) as HTMLButtonElement).disabled).toBe(true);await loadCurrentDraft(screen,receive,definition,nativeIncludedMotions.before);
+ expect((screen.getByLabelText('Action inputs manifestHash') as HTMLInputElement).readOnly).toBe(true);expect(client.snapshot().request).toBeNull();
+ fireEvent.click(screen.getByRole('button',{name:'Run action now'}));expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:receipt.selected.call,runId:receipt.selected.id}});
+ await receive(undefined,false,{execution:receipt as RoomAgentState['execution']});expect(screen.getByLabelText('Action result').textContent).toContain('"added": 1');expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
+});

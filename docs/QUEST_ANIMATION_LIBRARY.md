@@ -4,8 +4,8 @@ Design and implementation record, 2026-09-26. Motion extraction, storage,
 manual previews, stable-ID rule actions, saved walking assignments and a
 searchable two-page library browser are implemented. Per-avatar Idle, Listening,
 Thinking and Speaking assignments are documented in QUEST_AVATAR_ACTIVITIES.md.
-Broader roles and physical-device library acceptance remain in progress. Quest 3 is charging; no new headset installation or acceptance is
-implied.
+Broader roles and physical-device library acceptance remain in progress. Device
+work remains on hold; no new headset installation or acceptance is implied.
 
 ## Keep collecting originals
 
@@ -30,7 +30,7 @@ performance. Unsupported compressed/sparse/external data is reported, not
 silently treated as compatible. The private report belongs in ignored evidence,
 not in release assets.
 
-The current 96-file snapshot totals 885,417,980 bytes (844.4 MiB): 18 travelling,
+The earlier old-rig 2026-09-26 snapshot totals 96 files / 885,417,980 bytes (844.4 MiB): 18 travelling,
 9 turning/contact-related, 69 mostly stationary. All use the same geometry.
 Three unique embedded textures total 7,773,153 bytes; unique animation accessor
 data totals 9,308,880 bytes (8.9 MiB). This last figure is raw shared curve data,
@@ -39,6 +39,80 @@ not a promised packaged or resident-memory size. There are 192 clips, including
 keep them available for explicit review rather than deleting them blindly.
 The collection is still growing; regenerate the report instead of hardcoding
 these counts.
+
+## Included offline collection (2026-10-02)
+
+The current avatar's supplied `maestro-new-animations` collection has 180 exports
+and 178 unique reusable motions. Every export passed native extraction and all
+match rig `6e6cd9efcc2ce2881098ecfc0aa4642b3f575630b85da412ad07120978e533a7`.
+The collection occupies 65,010,976 bytes after dropping repeated models/textures,
+versus 1,770,073,844 input bytes. Hip Hop Dance / Hip Hop Dance 1 and open door /
+open door 1 contain duplicate motion payloads; both source origins are retained.
+All 178 unique payloads keep 68 animated nodes and 136 channels each. The 17
+canonical posing handles are not an imported-animation joint limit. Imported
+skinned renderers explicitly retain four bone influences per vertex instead of
+inheriting the Android quality preset's two-influence limit. This is distinct
+from the number of animated bones. Quest performance still needs measurement.
+
+`Resources/Avatars/IncludedMotions.json` fixes the package identity, revision,
+exact avatar/rig, immutable motion IDs and original source hashes/clip indices.
+`StreamingAssets/MaestroContent/Motions/<hash>.motion` contains validated motion
+containers with no mesh or texture duplication. The extension avoids treating
+these internal containers as editor model assets. Provenance is adjacent to the
+manifest. User folder observations remain review notes outside execution metadata;
+they never automatically choose looping, locomotion or tutor-state triggers.
+
+A genuinely new readable motion library copies the package once in a worker,
+without compiling clips or starting playback. It consumes the normal library
+budget: 178 entries and approximately 62 MiB of the 128 MiB allowance. Packaged
+APK bytes and private portable-library copies are separate storage. The existing
+eight-clip / 800,000-value playback cache still loads clips only on demand.
+
+An existing catalogue never silently receives an updated collection. The shared
+`motion.pack.install` action accepts `operation: add` and the exact `manifestHash`
+from `motion.pack.included.package.manifestHash`. It adds missing content only.
+Matching hashes keep existing IDs, personal names, tags, favourites and archive /
+removed-download state, including earlier user imports with different IDs. A
+changed payload has a different identity and cannot redirect a saved program.
+The generated book form explicitly loads this identity from the package fact
+into a read-only field; users do not need to type a hash. The agent uses the same
+action and observed identity; there is no second installer. Existing per-motion library controls remain available.
+
+`operation: restore` additionally requires one exact saved `motionId` whose
+payload is in the current package. It restores that download, preserving its
+personal metadata and archive state. Restore does not replace a different rig or
+repair inconsistent catalogue metadata. Missing older package content still
+requires its original source. Merely adding a newer collection never restores
+an explicitly removed download or unhides an archived animation.
+
+Installation validates the complete candidate catalogue and storage budget before
+copying. It verifies one payload at a time and atomically publishes metadata only
+after all requested copies finish. There is no automatic eviction. Stop is checked
+between copies; a dispatched final save can finish. Verified but unreferenced
+copies may remain after cancellation/failure and are reused by a retry. Library
+writes hold workspace preservation and retirement until they drain. A package
+operation never changes the avatar, assigns a gait, changes loop settings or
+resumes/starts playback. Private library assets are immediate even in a temporary
+room; Keep applies to room edits, not these assets.
+
+Saved libraries and workspace archives include the exact materialized bytes and
+metadata, retaining choices even after a later app package changes. Explicit fresh
+recovery includes the same default motion collection in its verified portable
+snapshot, before normal review/activation. It does not depend on files in the
+user's original download folder.
+
+`motion.pack.included` separates package identity and counts from status. Its
+catalogued count is by exact content hash, includes archived/removed records and
+is not a claim that all local payloads are healthy; ordinary playback checks the
+bytes. Existing motion search returns the actual saved IDs.
+
+The native extractor and two representative clips' transform/baked-mesh comparison
+validate extraction fidelity. They do not certify every clip's semantics, looping,
+foot contact or headset comfort. The current Maestro retargeting path removes
+horizontal hip translation for navigation; active gaze/gesture layers can also
+alter the final pose. Original-motion playback and navigation-adjusted walking
+still need an explicit distinction. No default tutor-state assignments are inferred
+from filenames or the user's provisional movement categories.
 
 ## Asset architecture
 
@@ -322,8 +396,9 @@ relinking; blending beyond the canonical body state transitions; explicit travel
 removal, explicit assignment replacement and retained room/rule/profile references
 are implemented as described in QUEST_MOTION_MAINTENANCE.md. Profile import and long-session
 playback on Quest, including low storage, interruption and large collections.
-The user's final Meshy default is still in progress and private originals are
-not bundled into any build.
+The selected Meshy default and the current-rig extracted motion collection are
+now packaged as described above. The original full-model animation exports stay
+in the user's source folder; their repeated geometry/textures are not packaged.
 
 ## Automatic tutor-state assignments
 

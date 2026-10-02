@@ -7,8 +7,9 @@ is preserved unchanged, SHA-256
 It contains 68 skin joints, 15,283 vertices, 15,390 triangles, three embedded
 textures (12,582,912 pixels total) and one Walking clip. The runtime maps the
 humanoid to the existing 17 canonical pose controls while imported clips retain
-their full skeleton channels. Running and Air Squat copies in the supplied ZIP
-are not also bundled.
+their full skeleton channels. The repeated full-model copies are not also bundled. The separate included
+animation collection currently contains 178 unique motion payloads from the later
+180-export collection; it adds no duplicate avatar meshes or textures.
 
 The project owner confirmed this model was generated under a **paid Meshy plan**
 on 2026-10-02 and supplied it as the included default. Source identity and this
@@ -80,9 +81,14 @@ exports intended for the same collection.
 Model import now supports ZIP member search and explicit preview/acceptance;
 see QUEST_MODEL_IMPORT.md.
 
-**Remaining:** curated offline default
-motion packs with stable IDs and updates, real multi-clip exports from the new
-rig, content organization and Quest performance/comfort acceptance. Cross-rig
+The included motion manifest fixes exact content IDs, source identities and this
+rig. Fresh libraries install the collection once; existing libraries add missing
+content only through an explicit shared operation. Clips compile on demand. See
+QUEST_ANIMATION_LIBRARY.md for add/restore, storage and recovery behavior.
+
+**Remaining:** visual/semantic curation, default tutor-state assignments, original
+versus navigation-adjusted motion fidelity, real multi-clip exports from the new
+rig and Quest performance/comfort acceptance. Cross-rig
 retargeting of imported motions is not implemented; canonical gestures/poses
 already retarget through the existing humanoid path. Hundreds of old-rig motions
 are not automatically converted or relabelled as compatible.

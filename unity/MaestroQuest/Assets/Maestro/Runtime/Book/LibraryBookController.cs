@@ -218,7 +218,7 @@ namespace Maestro.Quest.Book
                 ruleId = sequence?.id,ruleName = sequence?.name,stepIndex = step,sourceIndex = sourceIndex,sourceCount = sources.Length,sourceName = source?.name,
                 attribution = terms.Substring(termsPage*TermsSize,Math.Min(TermsSize,terms.Length-termsPage*TermsSize)),termsPage = termsPage,termsPages = pages,
                 activityProfile = AvatarActivityActions.Observe(editor,selected?.id ?? ""),
-                status = editor.Motions.Notice ?? message
+                status = editor.Motions.InstallingIncluded ? editor.Motions.IncludedStatus : editor.Motions.Notice ?? message
             };
         }
         async Task CheckRetention(string id)

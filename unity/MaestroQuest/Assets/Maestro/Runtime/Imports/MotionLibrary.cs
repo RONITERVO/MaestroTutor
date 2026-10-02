@@ -45,7 +45,7 @@ namespace Maestro.Quest.Imports
         public MotionCatalogue Copy() => new() { version = version,entries = entries.Select(x => x.Copy()).ToArray(),sources = sources.Select(x => x.Copy()).ToArray() };
     }
     /// <summary>Private versioned catalogue and motion payloads; all Unity clip methods run on the main thread.</summary>
-    public sealed class MotionLibrary : IDisposable
+    public sealed partial class MotionLibrary : IDisposable
     {
         public const int MaximumEntries = 1024, MaximumResidentClips = 8, MaximumResidentCurveValues = 800000;
         public const long MaximumDiskBytes = 128L*1024*1024;
@@ -80,9 +80,9 @@ namespace Maestro.Quest.Imports
             public void Dispose() { if (value == null) return; value.Users = Math.Max(0,value.Users-1); value.Used = ++owner.clock; value = null; owner = null; }
         }
         readonly WorkspaceWriteGate workspaceWrites;
-        public MotionLibrary(string directory,WorkspaceWriteGate writeGate=null)
+        public MotionLibrary(string directory,WorkspaceWriteGate writeGate=null,BundledMotions includedMotions=null)
         {
-            workspaceWrites=writeGate??new();
+            workspaceWrites=writeGate??new();Included=includedMotions;
             this.directory = Path.GetFullPath(directory); primary = Path.Combine(this.directory,"motions.v2.json"); backup = primary+".backup";
             string source=File.Exists(primary) || File.Exists(backup) ? primary : Path.Combine(this.directory,"motions.v1.json");
             int expected=source == primary ? 2 : 1;
@@ -91,6 +91,7 @@ namespace Maestro.Quest.Imports
             if (TryRead(source+".backup",out catalogue,out _,expected)) { catalogue.version=2; Notice = "Recovered the motion library from its backup"; return; }
             if (File.Exists(source) || File.Exists(source+".backup")) { readOnly = true; Notice = "The motion catalogue is unreadable. Its files are retained for recovery; imports are paused."; }
             catalogue = new MotionCatalogue();
+            if(!readOnly&&Included!=null)IncludedInitialization=InitializeIncludedAsync();
         }
         internal bool TryCaptureArchive(out WorkspaceLibraryCapture capture)
         {

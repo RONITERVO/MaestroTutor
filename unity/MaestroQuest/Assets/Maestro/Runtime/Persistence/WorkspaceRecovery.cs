@@ -14,14 +14,14 @@ namespace Maestro.Quest.Persistence
     // Persistent shell operation. Opening receipts acknowledge requests, never a completed switch.
     internal sealed class WorkspaceRecovery
     {
-        readonly BundledAvatar includedAvatar;readonly WorkspaceHost host;readonly WorkspaceGenerationStore store;readonly string directory,path;
+        readonly BundledMotions includedMotions;readonly BundledAvatar includedAvatar;readonly WorkspaceHost host;readonly WorkspaceGenerationStore store;readonly string directory,path;
         JObject record;string historyError;Task<Outcome> pending;CancellationTokenSource cancellation;WorkspaceRecoveryHold hold;
         WorkspaceSelection committed;bool disposed,paused,focused=true,uncertain,opening,importBorrowed;
         internal Action<string> Fault;
         sealed class Outcome {internal JObject Record;internal WorkspaceSelection Committed;internal bool Uncertain,Saved=true;}
         internal WorkspaceRecovery(WorkspaceHost host,string applicationData)
         {
-            this.host=host;includedAvatar=host.IncludedAvatar;store=new WorkspaceGenerationStore(applicationData,point=>Fault?.Invoke(point));directory=Path.Combine(applicationData,"workspace-recovery.v1");path=Path.Combine(directory,"latest.json");
+            this.host=host;includedAvatar=host.IncludedAvatar;includedMotions=host.IncludedMotions;store=new WorkspaceGenerationStore(applicationData,point=>Fault?.Invoke(point));directory=Path.Combine(applicationData,"workspace-recovery.v1");path=Path.Combine(directory,"latest.json");
             try {
                 if(!Directory.Exists(directory)){if(File.Exists(directory))throw new IOException();return;}WorkspaceArchive.NoLink(directory);
                 if(!File.Exists(path)){if(Directory.Exists(path))throw new IOException();return;}WorkspaceArchive.NoLink(path);
@@ -99,7 +99,7 @@ namespace Maestro.Quest.Persistence
         void ReleaseImportedSource(){if(!importBorrowed)return;host.Import?.FinishRecovery();importBorrowed=false;}
         Outcome PrepareWorker(JObject value,string hash,CancellationToken token)
         {
-            try{var prepared=(string)value["sourceId"]==""?store.PrepareFreshRecovery((string)value["originHash"],token,includedAvatar):store.PrepareDamagedRecovery((string)value["originHash"],(string)value["sourceId"],hash,token);value["previewId"]=prepared.Id;value["manifestHash"]=prepared.Receipt.ManifestHash;value["summary"]=Summary(prepared.Receipt.Summary);Set(value,"prepared","Inspect verified contents and missing references before explicitly committing recovery.");}
+            try{var prepared=(string)value["sourceId"]==""?store.PrepareFreshRecovery((string)value["originHash"],token,includedAvatar,includedMotions):store.PrepareDamagedRecovery((string)value["originHash"],(string)value["sourceId"],hash,token);value["previewId"]=prepared.Id;value["manifestHash"]=prepared.Receipt.ManifestHash;value["summary"]=Summary(prepared.Receipt.Summary);Set(value,"prepared","Inspect verified contents and missing references before explicitly committing recovery.");}
             catch(Exception ex){Set(value,ex is OperationCanceledException?"cancelled":"failed","Candidate verification stopped. Original data is preserved; inspect another candidate if needed.");}
             return new Outcome {Record=value,Saved=SaveQuiet(value)};
         }

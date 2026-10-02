@@ -17,16 +17,16 @@ using UnityEngine.TestTools;
 using UnityEngine.XR.Interaction.Toolkit;
 namespace Maestro.Quest.Tests
 {
-    public sealed class BundledAvatarRuntimeTests
+    public sealed partial class BundledAvatarRuntimeTests
     {
         string directory;GameObject root;RoomEditor editor;MaestroAvatar avatar;RoomExecutions actions;AnimationWorkshop workshop;
         [SetUp]public void SetUp(){directory=Path.Combine(Path.GetTempPath(),"MaestroBundledRuntime-"+Guid.NewGuid().ToString("N"));}
-        void Open(BundledAvatar included)
+        void Open(BundledAvatar included,BundledMotions motions=null)
         {
             root=new GameObject("Included avatar room");root.AddComponent<XRInteractionManager>();var room=root.AddComponent<RoomInteraction>();
             RoomItem Item(string name){var go=new GameObject(name);go.transform.SetParent(root.transform,false);var collider=go.AddComponent<BoxCollider>();collider.size=Vector3.one*.1f;var item=go.AddComponent<RoomItem>();item.Configure(new Collider[]{collider});room.Register(item);return item;}
             var book=Item("book");var tutor=Item("maestro");avatar=tutor.gameObject.AddComponent<MaestroAvatar>();
-            editor=root.AddComponent<RoomEditor>();editor.Initialize(room,book,tutor,Path.Combine(directory,"saved"),includedAvatar:included);
+            editor=root.AddComponent<RoomEditor>();editor.Initialize(room,book,tutor,Path.Combine(directory,"saved"),includedAvatar:included,includedMotions:motions);
             workshop=root.AddComponent<AnimationWorkshop>();workshop.Initialize(editor);var rules=root.AddComponent<RuleWorkshop>();rules.Initialize(editor);root.AddComponent<RoomRules>().Initialize(rules,editor,workshop,null,room,null);actions=new RoomExecutions(editor);
         }
         IEnumerator Loaded(){float until=Time.realtimeSinceStartup+20;while(avatar.ModelBusy&&Time.realtimeSinceStartup<until)yield return null;Assert.That(avatar.ModelBusy,Is.False);Assert.That(avatar.ModelLoad.IsCompleted,Is.True);}

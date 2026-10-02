@@ -2598,6 +2598,146 @@
       }
     },
     {
+      "id": "motion.pack.install",
+      "version": 1,
+      "label": "Add included animations",
+      "input": {
+        "type": "object",
+        "x-discriminators": [
+          "operation"
+        ],
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "add"
+                ],
+                "x-static": true
+              },
+              "manifestHash": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$",
+                "maxLength": 64
+              }
+            },
+            "required": [
+              "operation",
+              "manifestHash"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "motion.pack.included",
+              "version": 1,
+              "arguments": {},
+              "fields": {
+                "manifestHash": [
+                  "package",
+                  "manifestHash"
+                ]
+              },
+              "guards": [
+                "manifestHash"
+              ]
+            },
+            "title": "Add missing included motions",
+            "x-features": [
+              "includedMotions.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "restore"
+                ],
+                "x-static": true
+              },
+              "manifestHash": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$",
+                "maxLength": 64
+              },
+              "motionId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              }
+            },
+            "required": [
+              "operation",
+              "manifestHash",
+              "motionId"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "motion.pack.included",
+              "version": 1,
+              "arguments": {},
+              "fields": {
+                "manifestHash": [
+                  "package",
+                  "manifestHash"
+                ]
+              },
+              "guards": [
+                "manifestHash"
+              ]
+            },
+            "title": "Restore one included download",
+            "x-features": [
+              "includedMotions.v1"
+            ]
+          }
+        ]
+      },
+      "duration": "completion",
+      "ownership": "motionLibraryWrite",
+      "channels": [],
+      "requirements": [],
+      "description": "Copy the exact offline animation package into the existing private library. Read motion.pack.included for package.manifestHash first. add only adds missing content; matching saved motions keep their existing IDs, names, tags, favourites and archived/removed choices. restore requires an exact existing motionId whose payload is in this package; it restores only that download and keeps its metadata and archive state. New content receives the package's stable IDs; a changed clip never replaces a saved one. First use of a new library adds the package automatically; app updates never silently install into existing libraries. Existing quotas apply without eviction. Payloads are verified one at a time, then one complete catalogue is published. Stop checks between copies; an accepted final save may finish, so inspect the library before retrying. Valid copied bytes can remain after interrupted work, with no new catalogue entries. This writes private assets immediately even in a temporary room; it never assigns a gait, changes the avatar, sets looping, resumes a program or starts playback. Programmed playback uses the existing exact motion IDs and rig checks.",
+      "example": {
+        "operation": "add",
+        "manifestHash": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "manifestHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "added": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 1024.0
+          },
+          "preserved": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 1024.0
+          },
+          "restored": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 1.0
+          }
+        },
+        "required": [
+          "manifestHash",
+          "added",
+          "preserved",
+          "restored"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "avatar.model.select",
       "version": 1,
       "label": "Choose Maestro avatar",
@@ -11340,6 +11480,37 @@
       "description": "Latest native batch identity, control version, phase and file counts. A completed start receipt only starts work; completed means all files saved, partial means failed or waiting files remain. Phases idle/selecting/ready/running/stopping/completed/partial/failed/cancelled/cleared. Read individual file results by zero-based index. Only explicit start/retry resumes work; clear releases drained sources/results. Read-only and bounded; restart retains libraries, not this session."
     },
     {
+      "id": "motion.pack.included",
+      "version": 1,
+      "type": {
+        "record": {
+          "available": "boolean",
+          "busy": "boolean",
+          "status": "text",
+          "package": {
+            "record": {
+              "manifestHash": "text",
+              "packId": "text",
+              "name": "text",
+              "revision": "number",
+              "avatarHash": "text",
+              "rigHash": "text"
+            }
+          },
+          "counts": {
+            "record": {
+              "motions": "number",
+              "kibibytes": "number",
+              "catalogued": "number",
+              "removed": "number"
+            }
+          }
+        }
+      },
+      "label": "Included animation package",
+      "description": "Read-only offline package identity and library metadata counts. catalogued includes archived/removed matches by exact payload hash, even when a user's earlier import has a different ID. removed counts explicit removed-download records; neither count certifies bytes. Use the existing motion search and detail facts for actual saved IDs and playback availability. Adding content preserves matching choices. Names/status are bounded; first-use copying never plays or assigns motions."
+    },
+    {
       "id": "motion.import.batch.file",
       "version": 1,
       "type": {
@@ -12221,7 +12392,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "2cace1b4a4ca8d41ab1f5fdae8451abd267ccc10931ab332e2815cd29c93a646"
+      "sha256": "c68e864b872e967e42e1bfb7de4e1df47a9190505afbecb58d27eda7150ec3fd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -12353,7 +12524,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "7f370f8be783290aac8eaaad367becea63f93ce50c7cf70e73c4f186995d4158"
+      "sha256": "b6b06ba302656d748a845969fd2bbd6eea6c119bfde66ce9046f470286cc93bd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomToolTray.cs",
@@ -12484,6 +12655,18 @@
       "sha256": "763ce7823e8c1a29831752606e39bf6f046def3c5385ca79b0f8bcad8d015ffb"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/BundledMotions.cs",
+      "sha256": "3f2830d9baae58842c4978efc8db88c686b323102c061efac945abb18426f91b"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/MotionLibrary.cs",
+      "sha256": "42a8cc72aededf5f9af871f7005053ccc80b207d2be54b5ae1b56ee3d3c9c9fa"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/MotionLibrary.Included.cs",
+      "sha256": "3e5bfd61098ded3c2044be23bc6b66666c2dd3e231b3aedd883d9811d17c3f0a"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeTemplates.cs",
       "sha256": "2f4156e6d20fa4a4b8ec15fafc9ff1604c1bf3f2df11824a7c9d420ba298255a"
     },
@@ -12521,7 +12704,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "664416d1e2d5f5b77bf27e63f36c8e4e3468a136caa3658a3aca36a255786b35"
+      "sha256": "a5061b84e0e284965b5afd75f319c2a429f7028e0b8fa70f00d85d86e0a1f692"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -12566,6 +12749,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/HoldObjectCapability.cs",
       "sha256": "6653301800bc55304ea1b464b18363307c65e3821ef8a6be82bce031057a5850"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/IncludedMotionsCapability.cs",
+      "sha256": "ca8d281d811b711136f59e34bc815da3900aa2c0500b9f74894afb401c51938a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/LaunchObjectCapability.cs",

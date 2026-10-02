@@ -34,6 +34,9 @@ namespace Maestro.Quest.Editor
                 if(included.WalkClipIndex>=0&&(included.WalkClipIndex>=model.ClipCount||model.ClipDuration(included.WalkClipIndex)<.1f))throw new BuildFailedException("The declared included walk clip is unavailable.");
                 if(!model.Ready||!model.IsHumanoid||rig.Capture().Length!=17||!ModelLibrary.ValidHash(model.MotionRigHash)||model.IsPlaying)
                     throw new BuildFailedException("Included avatar must support the canonical pose rig without starting playback.");
+                var motions=BundledMotions.FromApplication();
+                if(motions==null||motions.AvatarHash!=included.Hash||motions.RigHash!=model.MotionRigHash)throw new BuildFailedException("Included animations must match the exact shipped avatar and rig.");
+                motions.Verify();Debug.Log("MAESTRO_INCLUDED_MOTIONS_VERIFIED manifest="+motions.Hash+" motions="+motions.Count+" bytes="+motions.Bytes);
                 Debug.Log("MAESTRO_INCLUDED_AVATAR_VERIFIED sha256="+asset.Hash+" rig="+model.MotionRigHash+" vertices="+asset.Inspection.Vertices+" triangles="+asset.Inspection.Triangles+" pixels="+asset.Inspection.TexturePixels+" clips="+model.ClipCount);
             } finally {UnityEngine.Object.DestroyImmediate(root);}
         }

@@ -59,7 +59,7 @@ namespace Maestro.Quest.Persistence
             return new JObject {["originHash"]=origin.Hash,["selectionReadable"]=readable,["candidates"]=candidates};
         }
         internal PreparedWorkspaceGeneration PrepareDamagedRecovery(string originHash,string sourceId,string hash,CancellationToken cancellation=default)=>PrepareRecovery(originHash,sourceId,hash,null,cancellation);
-        internal PreparedWorkspaceGeneration PrepareFreshRecovery(string originHash,CancellationToken cancellation=default,BundledAvatar includedAvatar=null)=>PrepareRecovery(originHash,"","",WorkspaceDefaults.Snapshot(includedAvatar),cancellation);
+        internal PreparedWorkspaceGeneration PrepareFreshRecovery(string originHash,CancellationToken cancellation=default,BundledAvatar includedAvatar=null,BundledMotions includedMotions=null)=>PrepareRecovery(originHash,"","",WorkspaceDefaults.Snapshot(includedAvatar,includedMotions),cancellation);
         PreparedWorkspaceGeneration PrepareRecovery(string originHash,string sourceId,string hash,WorkspaceArchiveSnapshot fresh,CancellationToken cancellation)
         {
             using var lease=Lease(initialize:false);cancellation.ThrowIfCancellationRequested();var origin=ObserveOrigin();ExpectedOrigin(origin,originHash);

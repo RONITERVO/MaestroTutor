@@ -7,7 +7,8 @@ with exact saved identity, an explicit Walking clip and portable recovery/backup
 content. The older Meshy motion collection uses a different rig and stays out of
 the default library. Direct animation ZIP import now uses the existing shared
 batch controls. ZIP model search and preview also share physical/book/agent
-selection and explicit acceptance. Curated default motion packs remain unfinished;
+selection and explicit acceptance. The current-rig offline motion collection is
+packaged with shared installation, stable identities and portable recovery. Visual/semantic curation and motion-fidelity work remain unfinished;
 see QUEST_INCLUDED_AVATAR.md, QUEST_MODEL_IMPORT.md and QUEST_MOTION_BATCH_IMPORT.md.
 
 Current animation authoring lets agent/program calls and optional typed book
@@ -20,8 +21,8 @@ posing now exposes start/rotate/save/finish/discard with native session IDs and
 pose versions, the same physical joint limits and imported retargeter, held-joint
 exclusion, failed-pose recovery and recording interoperation. Saved edits are
 durable outside temporary mode; temporary edits stay in the fork until Keep.
-No authoring operation starts playback. The catalog contains 59 actions, 11
-events and 52 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
+No authoring operation starts playback. The catalog contains 60 actions, 11
+events and 53 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
 Single-file GLB/VRM selection, preview and acceptance now share the physical
 import path with book fields and agent/program calls. See QUEST_MODEL_IMPORT.md.
 Animation collections now share native selection, versioned start/retry/tag controls,
@@ -2014,3 +2015,56 @@ This APK has not been installed. Physical chooser/lifecycle, storage and Quest
 performance/comfort acceptance remain open. Curated current-rig motion packs,
 cross-rig imported-motion retargeting and the other v1 release gates remain
 unfinished. The older motion collection is unchanged.
+
+
+## 2026-10-02: included current-rig motion collection
+
+The default avatar now includes 178 unique reusable animations from the owner's
+180 current-rig exports: 65,010,976 bytes without repeated meshes or textures.
+Exact duplicate motions retain both source origins. Every payload keeps the
+source's 68 animated nodes and 136 channels. The 17 canonical posing handles do
+not cap imported-animation bones. Imported renderers now explicitly use four
+bone influences per vertex, instead of inheriting Android's two-influence preset.
+
+New private libraries install the offline collection once without compiling clips
+or starting playback. Existing libraries add missing content only through the
+shared motion.pack.install action. Book forms explicitly read its package guard;
+the app agent and programs use the same capability. Add preserves existing IDs,
+names, tags, favourites, archive and removed-download state. Restore targets one
+exact saved motion in the package. No operation assigns a gait, infers looping,
+changes Maestro or starts a behaviour. Source folder observations remain notes.
+
+The worker validates the complete catalogue and storage budget, verifies payloads
+sequentially and publishes metadata once. Cancellation cannot publish a partial
+collection; verified unreferenced copies can remain and are reused on retry.
+Accepted writes hold preservation/retirement until drained. Explicit fresh
+recovery and portable archives include the same materialized motion bytes/IDs.
+A failed first-use copy can be retried without leaving a stale failure notice.
+See QUEST_ANIMATION_LIBRARY.md for the storage and playback boundaries.
+
+Verification: 427 Unity EditMode and 396 PlayMode tests passed (three optional
+private-file skips). Native checks cover directory/compressed APK integrity,
+exact identity preservation, explicit restore, cancellation/retry, first-use
+leases, quota refusal, portable recovery, native receipts and actual shipped
+motion playback. All 76 Android tests passed, including the original Meshy ZIP
+and exact selected-model checks. The focused web subset passed 76 tests in four
+files, including native observations/receipts, bounded facts, current-value
+mappings and generated book controls. TypeScript, ESLint, catalog drift and
+included-asset integrity checks passed. Full development build exited 0.
+
+All 217 runtime, 114 test and 11 Editor C# files, 34 fixtures plus metadata,
+the native AAR and 113 packaged web files match the verified inputs. Exact
+avatar and all 178 motion payload hashes, ARM64-only libraries and APK v2
+signature are verified.
+
+Development checkpoint:
+`D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-included-motions-C8C9401F.apk`
+
+SHA-256:
+`C8C9401F195C6C2095D663B4F4BA10BFAA2737B15358C18EB189B6EB641E3D17`
+
+This APK has not been installed. Original versus navigation-adjusted hip travel,
+visual/semantic curation, default tutor-state assignments and Quest storage,
+performance, lifecycle and comfort acceptance remain open. These checks do not
+certify preview-equivalent final Maestro motion or Store readiness. No device or
+production deployment was performed; other v1 gates remain active.

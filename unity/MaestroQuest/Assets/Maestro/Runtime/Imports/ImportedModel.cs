@@ -89,7 +89,12 @@ namespace Maestro.Quest.Imports
                 if (!info.IsAvatar) { generatedAvatar = NamedHumanoid.TryCreate(instance,out var issue); HumanoidIssue = issue; }
                 animationPlayer = instance.GetComponent<Animation>();
                 if (animationPlayer) { animationPlayer.playAutomatically = false; animationPlayer.cullingType = AnimationCullingType.AlwaysAnimate; animationPlayer.Stop(); }
-                foreach (var skin in instance.SkinnedMeshRenderers) if (skin.sharedMesh) initialWeights[skin] = Enumerable.Range(0, skin.sharedMesh.blendShapeCount).Select(skin.GetBlendShapeWeight).ToArray();
+                foreach (var skin in instance.SkinnedMeshRenderers) {
+                    // These imported meshes retain four source weights per vertex, even
+                    // when Android's global quality profile would use only two.
+                    skin.quality = SkinQuality.Bone4;
+                    if (skin.sharedMesh) initialWeights[skin] = Enumerable.Range(0, skin.sharedMesh.blendShapeCount).Select(skin.GetBlendShapeWeight).ToArray();
+                }
                 foreach (var animator in instance.GetComponentsInChildren<Animator>()) animator.enabled = false;
                 if (instance.Renderers.Count == 0) throw new ModelImportException("This model has no supported visible mesh.");
                 var bounds = instance.Renderers[0].bounds; foreach (var renderer in instance.Renderers.Skip(1)) bounds.Encapsulate(renderer.bounds);
