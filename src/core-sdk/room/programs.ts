@@ -18,7 +18,7 @@ export type ProgramNode={id:string}&(
  {op:'checkpoint'}|{op:'set'|'setState';variable:string;value:Expression}|{op:'forever';body:ProgramNode[]}|{op:'sleep';seconds:Expression}|{op:'awaitEvent';event:string;source:string;timeout:Expression;received:string;value:string;fields?:Record<string,string>;version?:number;arguments?:Record<string,unknown>;bindings?:Record<string,Expression>}|{op:'emitEvent';event:string;value:Expression}|{op:'if';test:Expression;then:ProgramNode[];else:ProgramNode[]}|
  {op:'repeat';count:Expression;body:ProgramNode[]}|{op:'switch';value:Expression;cases:{value:Value;body:ProgramNode[]}[];default:ProgramNode[]}|
  {op:'parallel';branches:ProgramCall[]}|{op:'call';module?:string;function:string;args:Expression[];result?:string}|{op:'return';value?:Expression}|
- {op:'invoke';capability:string;version:number;arguments:Record<string,unknown>;bindings:Record<string,Expression>;results?:Record<string,string>});
+ {op:'invoke';capability:string;version:number;arguments:Record<string,unknown>;bindings:Record<string,Expression>;waitForChannels?:Expression;results?:Record<string,string>});
 export interface ProgramFunction {name:string;returns:ValueType|'void';parameters:{name:string;type:ValueType}[];locals:{name:string;initial:Value;type?:ValueType}[];body:ProgramNode[]}
 export interface BehaviourProgram {version:2|3;parallelVersion?:1;memoryVersion?:1;dataVersion?:1;moduleVersion?:1;imports?:ProgramImport[];entry:string;resources:string[];functions:ProgramFunction[];state?:{name:string;initial:Value;type?:ValueType;memory?:string}[];events?:{name:string;type:ScalarType}[]}
 export const programFacts=behaviourFactTypes;
@@ -122,7 +122,7 @@ function validateProgram(root:Record<string,unknown>):void {
      case 'call': {keys(n,'id op function args','result');const callee=functions.get(text(n.function));need(callee,'Unknown function');calls.get(f.source.name as string)!.add(n.function as string);const args=array(n.args,8),params=array(callee.source.parameters,8);need(args.length===params.length,'Wrong function argument count');args.forEach((a,i)=>need(sameDataType(expr(a,f.types),readDataType(obj(params[i]).type)),'Function argument type differs'));if(Object.prototype.hasOwnProperty.call(n,'result')){const t=f.types.get(text(n.result));need(t&&sameDataType(t,type(callee.source.returns)),'Invalid return destination');}break;}
      case 'return':keys(n,f.source.returns==='void'?'id op':'id op value');if(f.source.returns!=='void')expect('value',f.source.returns as ValueType);break;
      case 'invoke': {
-      keys(n,'id op capability version arguments bindings','results');const capability=text(n.capability),args=obj(n.arguments);
+      keys(n,'id op capability version arguments bindings','results waitForChannels');if(n.waitForChannels!==undefined){need(root.version===3,'Channel waiting needs program version 3');expect('waitForChannels','number');}const capability=text(n.capability),args=obj(n.arguments);
       need(typeof n.version==='number','Capability version must be numeric');
       const error=validateCapabilityArguments(capability,n.version,args);need(!error,error??'Invalid capability arguments');
       need(literalCapabilityResources(capability,args,obj(n.bindings),root.version as number).every(id=>resources.has(id)),'Declare every action resource');
@@ -155,7 +155,7 @@ export function simpleProgramSteps(source:string):RuleStep[]|null {
  try {
   const p=JSON.parse(source) as BehaviourProgram;
   if(p.version!==2||p.functions.length!==1)return null;const f=p.functions[0];
-  if(f.name!==p.entry||f.returns!=='void'||f.parameters.length||f.locals.length||f.body.some(n=>n.op!=='invoke'||Object.keys(n.bindings).length||n.results!==undefined))return null;
+  if(f.name!==p.entry||f.returns!=='void'||f.parameters.length||f.locals.length||f.body.some(n=>n.op!=='invoke'||Object.keys(n.bindings).length||n.results!==undefined||n.waitForChannels!==undefined))return null;
   return f.body.map(n=>{if(n.op!=='invoke')throw new Error('Expected action');return invocationStep({id:n.capability,version:n.version,arguments:n.arguments},n.id);});
  }catch{return null;}
 }

@@ -257,7 +257,8 @@ namespace Maestro.Quest.Programs
                     case "return":
                         Keys(node,function.Returns==ProgramType.Void?"id op":"id op value");if(function.Returns!=ProgramType.Void)Expr("value",function.Returns);break;
                     case "invoke":
-                        Keys(node,"id op capability version arguments bindings","results");
+                        Keys(node,"id op capability version arguments bindings","results waitForChannels");
+                        if(node.ContainsKey("waitForChannels")){Need(Version==3,"Channel waiting needs program version 3");Expr("waitForChannels",ProgramType.Number);}
                         string capability=Text(node["capability"]);Need((node["version"]?.Type==JTokenType.Integer||node["version"]?.Type==JTokenType.Float)&&(double)node["version"]==Math.Truncate((double)node["version"]),"Capability version must be an integer");
                         Need(BehaviourCatalog.TryCall(capability,(int)node["version"],Object(node["arguments"]),out var step,out var invocationError),invocationError??"Invalid capability arguments");
                         var contract=BehaviourCatalog.Action(capability);

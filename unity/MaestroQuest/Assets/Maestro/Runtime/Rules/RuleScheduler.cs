@@ -33,7 +33,8 @@ namespace Maestro.Quest.Rules
             public HashSet<string> Targets;
             public BehaviourCatalog.Claim[] Claims=Array.Empty<BehaviourCatalog.Claim>();
             public float Ends, Duration, PrepareDeadline;
-            public bool Preparing,Computing;
+            public bool Preparing,Computing,WaitingForChannels;
+            public float ChannelDeadline,ChannelPoll;public string ChannelStatus;
             public int EventDepth,WaitSerial,WatchSlot=-1;
             public IProgramEventWatch Watch;public bool WatchPending;
             public bool Reactive=>Sequence.Compile(out _).Version==3;
@@ -48,6 +49,7 @@ namespace Maestro.Quest.Rules
         readonly IRuleActions actions;
         readonly List<Run> running = new();
         readonly List<Pending> queued = new();
+        readonly List<Run> channelWaits = new();
         readonly Dictionary<string,float> firedAt = new();
         sealed class FinishedRun {public RuleOutcome Outcome;public Newtonsoft.Json.Linq.JObject Invocation,Output;public string[] Resources;}
         readonly Queue<FinishedRun> outcomes=new();
@@ -65,11 +67,11 @@ namespace Maestro.Quest.Rules
         public bool TargetsBusy(IEnumerable<string> targets) {var ids=targets.ToHashSet();return running.Any(x=>x.Targets.Overlaps(ids));}
         static BehaviourCatalog.Claim[] Whole(IEnumerable<string> targets)=>targets.Select(id=>new BehaviourCatalog.Claim(id,"wholeTarget")).ToArray();
         static bool Conflicts(Run run,IEnumerable<BehaviourCatalog.Claim> claims)=>claims.Any(claim=>run.Claims.Any(claim.Conflicts));
-        public bool ActionBusy(CapabilityCall call)=>call.RequiresQuietRoom?(running.Count>0||queued.Count>0):running.Any(run=>run.Active?.RequiresQuietRoom==true)||!Ownership.CanAcquire("catalog-check",RoomActorRole.Program,call.Claims,out _);
+        public bool ActionBusy(CapabilityCall call)=>call.RequiresQuietRoom?(running.Count>0||queued.Count>0):running.Any(run=>run.Active?.RequiresQuietRoom==true)||channelWaits.Any(run=>Overlap(run.Active.Claims,call.Claims))||!Ownership.CanAcquire("catalog-check",RoomActorRole.Program,call.Claims,out _);
         public RoomOwnership Ownership {get;}
         public string LastError { get; private set; }
-        public RuleRunView[] ObserveRuns() => running.Where(x=>x.Invocation==null).Select(x=>new RuleRunView {id=x.Id,sequenceId=x.Sequence.id,parentRunId=x.Parent?.Id,preparing=x.Preparing,nodeId=x.Machine?.NodeId,functionName=x.Machine?.Function,status=x.Machine?.SavingMemory==true?"Saving remembered values":x.Children!=null?"Waiting for parallel branches":x.Machine?.Wait!=null?x.Machine.Wait.Condition!=null?"Waiting for condition":x.Machine.Wait.Event==null?"Waiting for timer":"Waiting for "+x.Machine.Wait.Event:x.Computing?"Evaluating":x.Preparing?x.Active?.AwaitCompletion==true?"Waiting for action completion":"Loading":"Running",
-            waiting=x.Machine?.Wait!=null||x.Machine?.SavingMemory==true,waitEvent=x.Machine?.Wait?.Event,waitSeconds=x.Machine?.Wait!=null&&x.Machine.Wait.Seconds>0?Math.Max(0,x.Ends-lastNow):0,
+        public RuleRunView[] ObserveRuns() => running.Where(x=>x.Invocation==null).Select(x=>new RuleRunView {id=x.Id,sequenceId=x.Sequence.id,parentRunId=x.Parent?.Id,preparing=x.Preparing,nodeId=x.Machine?.NodeId,functionName=x.Machine?.Function,status=x.WaitingForChannels?x.ChannelStatus:x.Machine?.SavingMemory==true?"Saving remembered values":x.Children!=null?"Waiting for parallel branches":x.Machine?.Wait!=null?x.Machine.Wait.Condition!=null?"Waiting for condition":x.Machine.Wait.Event==null?"Waiting for timer":"Waiting for "+x.Machine.Wait.Event:x.Computing?"Evaluating":x.Preparing?x.Active?.AwaitCompletion==true?"Waiting for action completion":"Loading":"Running",
+            waiting=x.WaitingForChannels||x.Machine?.Wait!=null||x.Machine?.SavingMemory==true,waitEvent=x.Machine?.Wait?.Event,waitSeconds=x.WaitingForChannels?Math.Max(0,x.ChannelDeadline-lastNow):x.Machine?.Wait!=null&&x.Machine.Wait.Seconds>0?Math.Max(0,x.Ends-lastNow):0,
             state=x.Machine?.State.Select(v=>new ProgramVariableView {name=v.Key,type=v.Value.Type.ToString().ToLowerInvariant(),value=v.Value.Display}).ToArray()??Array.Empty<ProgramVariableView>(),
             locals=x.Machine?.Locals.Select(v=>new ProgramVariableView {name=v.Key,type=v.Value.Type.ToString().ToLowerInvariant(),value=v.Value.Display}).ToArray()??Array.Empty<ProgramVariableView>()}).ToArray();
         public InvocationReceipts Receipts { get; }
@@ -129,8 +131,10 @@ namespace Maestro.Quest.Rules
             ProgramMachine machine;string memoryIdentity;
             try{machine=CreateMachine(sequence,out memoryIdentity);}catch(Exception ex){LastError=ex.Message;return false;}
             var targets = (sequence.Compile(out _).Version==3?Array.Empty<string>():sequence.Targets()).ToHashSet();
+            bool earlierChannels=channelWaits.Any(wait=>wait.Sequence.id!=sequenceId&&Overlap(wait.Active.Claims,Whole(targets)));
+            if(earlierChannels&&sequence.interruption!=RuleInterruption.QueueLatest){LastError="An earlier program is waiting for a required channel";return false;}
             var conflicts = running.Where(x => x.Sequence.id == sequenceId || Conflicts(x,Whole(targets))).ToArray();
-            if (conflicts.Length > 0 || !HasCapacity)
+            if (conflicts.Length > 0 || !HasCapacity || earlierChannels)
             {
                 if (sequence.interruption == RuleInterruption.Ignore) { LastError = "An action already owns this target"; return false; }
                 if (sequence.interruption == RuleInterruption.QueueLatest || (conflicts.Length == 0 && !HasCapacity))
@@ -173,17 +177,23 @@ namespace Maestro.Quest.Rules
                     return true;
                 }
             }
+            return StartAction(run,now);
+        }
+        bool StartAction(Run run,float now) {
             if(run.Active.RequiresQuietRoom&&HasOtherWork(run.Id)||running.Any(x=>x!=run&&x.Active?.RequiresQuietRoom==true)) {
                 LastError="Stop other room actions before this room-wide action";Stop(run,false,"failed",LastError);return false;
             }
-            if(run.Reactive) {
-                var targets=run.Active.Resources.ToHashSet();
-                var claims=run.Active.Claims;
-                if(running.Any(x=>x!=run&&Conflicts(x,claims))) {LastError="An action already owns this target";Stop(run,false,"failed",LastError);return false;}
-                run.Targets=targets;run.Claims=claims;
+            var claims=run.Reactive?run.Active.Claims:run.Claims;
+            if(run.Reactive)run.Targets=run.Active.Resources.ToHashSet();
+            if(Ownership.Error!=null||Ownership.Suspended){LastError=Ownership.Error??"Room actions are paused";Stop(run,false,"failed",LastError);return false;}
+            if(!ChannelsAvailable(run,claims,out var channelError)){
+                if(run.Reactive&&run.Machine.ChannelWaitSeconds>0){WaitForChannels(run,now,channelError);return true;}
+                LastError=channelError;Stop(run,false,"failed",LastError);return false;
             }
             if(!actions.CanRun(run.Active,out var unavailable)) {LastError=unavailable;Stop(run,false,"failed",LastError);return false;}
+            run.Claims=claims;
             if(!Reserve(run,run.Claims))return false;
+            RemoveChannelWait(run);
             bool instant=run.Active.Instant,awaited=run.Active.AwaitCompletion;
             if (!actions.Start(run.Id,run.Active,out float seconds,out var error) || !float.IsFinite(seconds) || (instant||awaited?seconds!=0:seconds<.01f) || seconds > 30)
             { LastError = error ?? "This action has an invalid duration"; Stop(run,false,"failed",LastError); return false; }
@@ -222,6 +232,7 @@ namespace Maestro.Quest.Rules
             foreach (var run in running.ToArray())
             {
                 if(!running.Contains(run)||run.Children!=null)continue;
+                if(run.WaitingForChannels){PollChannelWait(run,now);continue;}
                 if(run.Machine.SavingMemory){PollCheckpoint(run);continue;}
                 if(run.Machine.Wait!=null) {
                     if(run.Machine.Wait.Seconds==0||now<run.Ends)continue;
@@ -264,7 +275,7 @@ namespace Maestro.Quest.Rules
                 var sequence = document.sequences.FirstOrDefault(x => x.id == pending.SequenceId);
                 if (sequence == null || !BindingStillValid(pending.Binding)) { queued.Remove(pending); continue; }
                 var targets = (sequence.Compile(out _).Version==3?Array.Empty<string>():sequence.Targets()).ToHashSet();
-                if (!HasCapacity || running.Any(x => x.Sequence.id == sequence.id || Conflicts(x,Whole(targets)))) continue;
+                if (!HasCapacity || running.Any(x => x.Sequence.id == sequence.id || Conflicts(x,Whole(targets))) || channelWaits.Any(wait=>Overlap(wait.Active.Claims,Whole(targets)))) continue;
                 queued.Remove(pending); Trigger(sequence.id,now,pending.Binding);
             }
         }
@@ -288,7 +299,7 @@ namespace Maestro.Quest.Rules
         void Finish(Run run,string phase,string status,bool joining=true) {
             if(!running.Contains(run))return;
             if(run.Invocation!=null) {if(phase=="completed")status="Action completed";else if(phase=="cancelled"&&status=="Behaviour stopped")status="Action cancelled";}
-            ReleaseClaims(run);Unsubscribe(run);running.Remove(run);checkpoints.Remove(run);
+            ReleaseClaims(run);Unsubscribe(run);RemoveChannelWait(run);running.Remove(run);checkpoints.Remove(run);
             // A child completing is not a completed behaviour. Keep the existing
             // outcome contract root-only so readers cannot mistake a branch for
             // the requested program's result while its parent is still waiting.

@@ -89,6 +89,12 @@ replaced sockets and rigid-body motion discontinuities remain guarded. These are
 bounded sampled origin-distance observations, not swept contact, automatic IK or
 promised catches. See QUEST_EVENT_PROGRAMS.md and QUEST_OBJECT_ATTACHMENTS.md.
 
+Version-3 action blocks can now explicitly wait for busy channels with a bounded
+timeout and ordered admission. Waiting owns no channels, keeps evaluated inputs
+fixed and rechecks native readiness before execution. Book fields, source and the
+agent share this option; Stop/grip/pause never replay cancelled work. See
+QUEST_CHANNEL_WAITS.md. Interrupted-action resume remains separate work.
+
 Current recovery implementation supports retained candidates, an external backup,
 and an explicitly requested fresh workspace through the same shared book/agent
 catalog. Original data stays preserved; preview, commit and content review remain
@@ -103,6 +109,35 @@ and tracked operation roots remain protected. Private recovery export remains
 separate; a full store with unreadable selection still requires recovery/repair.
 PR #248 records the current verified commit and package. Earlier entries
 below are historical evidence, not current test totals or release acceptance.
+
+PC explicit channel waiting (2026-10-02): version-3 invocation blocks can opt
+into a 0.1–30 second channel timeout. Waiting owns no channels and preserves the
+evaluated inputs; readiness, revision and pickup reach are checked again before
+any native start. Overlapping waits keep arrival order, including when older
+whole-object programs are triggered. A newer legacy restart cannot stop active
+work before being refused behind an earlier waiter. Disjoint work and native user
+priority remain independent. Stop, grip, edits and pause remove pending work
+without replay; started actions retain their existing interruption policy.
+
+Verification: **491 Unity EditMode and 410 PlayMode tests passed**, with three
+optional private-file skips. **1,749 web tests in 206 files** and **76 Android
+tests** passed. The final native capture passed all seven new web contract/editor
+checks. TypeScript, lint, production build and catalog checks passed. Native tests
+exercise real recipe-joint sequencing, XRI cancellation and current pickup reach,
+plus FIFO admission, atomic claims, timeout, legacy queues, parallel branches,
+module scope and instruction-budget exhaustion. The actual book editor and native
+waiting status were inspected on two 512-pixel browser pages without horizontal
+overflow or browser errors. This is PC evidence, not physical Quest acceptance.
+
+The full development APK helper exited **0**. All **226 runtime / 122 test / 11
+Editor C# files**, **37 native fixtures plus metadata**, the native AAR and **113
+packaged web files** matched the tested inputs. The exact included avatar, all
+**178 motion payloads**, ARM64-only libraries and v2 signature were checked.
+Checkpoint: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-channel-waits-C36651A8.apk`.
+SHA-256: `C36651A87114954083994053DC4A4AB1FA381D15F8C9E14E70E87D439C75EA73`.
+Development signing; **not installed on Quest**. Interrupted-action resume,
+autonomous reflex policy and remaining v1/provider/device/Store gates remain open.
+See QUEST_CHANNEL_WAITS.md.
 
 PC moving-anchor zones (2026-10-02): programs can observe a moving recipe
 part, Maestro hand or object root and request an optional reach-checked pickup.

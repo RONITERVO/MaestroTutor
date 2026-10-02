@@ -12867,11 +12867,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
-      "sha256": "6152f1238c1f763120951567b1af07bf9b81c982d9388ccf9dc71b8f2a828b80"
+      "sha256": "b9774612b7f5010a98840c9e4bb89788873577d36303e9cf909902c710081ea5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramMachine.cs",
-      "sha256": "db3b6825e5c5a563e2934db65f533af5d706ae686a98358282a2eaa6500a465e"
+      "sha256": "2f9b347670b9a3ce5951a0629238eec42777fc64db15d1395563c0a53bef1a32"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramMemoryDocument.cs",
@@ -12959,7 +12959,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramModules.cs",
-      "sha256": "e51d5957c0e41785b239aab37be0fee30763e46cd5fed3915e13a8a172c4d3cd"
+      "sha256": "d74ab39700144c23c7ee4a85d325eea78a1b8df990ee8b6d2c2a16b5148d778c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramModuleLibrary.cs",
@@ -12971,7 +12971,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleScheduler.cs",
-      "sha256": "c26d7df68508df864f40bd35b3501b7c729a8a1cad0021b9f534f46258998404"
+      "sha256": "61fbea6fd4518611f6cbb5fd1519044fec291a80cb9113a83aad3aa732b061ff"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleChannelWaits.cs",
+      "sha256": "2492c402f5933ca5bef87bc30753024a6a1b4d8b25ecd5bb0bffbb03a58e8fa7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleEvents.cs",

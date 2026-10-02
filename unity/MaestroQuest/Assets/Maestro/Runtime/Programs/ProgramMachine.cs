@@ -40,6 +40,7 @@ namespace Maestro.Quest.Programs
         public int Activations {get;private set;}
         public JObject LastOutput {get;private set;}
         public ProgramWait Wait {get;private set;}
+        public float ChannelWaitSeconds {get;private set;}
         public bool SavingMemory {get;private set;}
         internal Dictionary<string,ProgramMemoryDocument.Cell> RememberedValues()=>program.Remembered.ToDictionary(x=>x.Value,x=>new ProgramMemoryDocument.Cell(x.Key,state[x.Key]));
         internal void CompleteCheckpoint(){if(!SavingMemory)throw new InvalidOperationException("No memory checkpoint is pending");SavingMemory=false;}
@@ -156,6 +157,12 @@ namespace Maestro.Quest.Programs
                         case "call":Call((string)node["function"],((JArray)node["args"]).Select(x=>Evaluate(x,frame.Scope)).ToArray(),frame.Scope,(string)node["result"]);break;
                         case "return":Return(node.ContainsKey("value")?Eval("value"):default);break;
                         case "invoke":
+                            ChannelWaitSeconds=0;
+                            if(node.ContainsKey("waitForChannels")){
+                                double channelWait=Eval("waitForChannels").Number;
+                                if(!double.IsFinite(channelWait)||channelWait<.1||channelWait>30)throw new ProgramFault("Channel timeout must be 0.1 to 30 seconds");
+                                ChannelWaitSeconds=(float)channelWait;
+                            }
                             var arguments=(JObject)node["arguments"].DeepClone();
                             foreach(var binding in ((JObject)node["bindings"]).Properties())CapabilitySchema.Set(arguments,binding.Name,JToken.FromObject(Evaluate(binding.Value,frame.Scope).Value));
                             if(!BehaviourCatalog.TryCall((string)node["capability"],(int)node["version"],arguments,out action,out var error))throw new ProgramFault(error??"Invalid computed capability arguments");

@@ -1,3 +1,4 @@
+import nativeChannelWait from './channelWaitState.json';
 import nativeAnchorZone from './anchorZoneState.json';
 import nativeRemembered from './rememberedProgramState.json';
 import nativeRecipeEdit from './recipeAuthoring.json';
@@ -212,6 +213,7 @@ if(new URLSearchParams(location.search).has('creation')||recipeCreation||objectE
 }
 if(new URLSearchParams(location.search).has('unavailablePrograms'))state=JSON.parse(JSON.stringify(unavailableProgram));
 if(new URLSearchParams(location.search).has('memory')){state=JSON.parse(JSON.stringify(nativeRemembered.stopped));state.visible=true;state.workspaceView='rules';}
+if(new URLSearchParams(location.search).has('channelWait')) state=structuredClone(new URLSearchParams(location.search).has('waiting')?nativeChannelWait.waiting:nativeChannelWait.saved) as unknown as RoomAgentState;
 if(new URLSearchParams(location.search).has('anchorZone')) state=structuredClone(nativeAnchorZone.saved) as unknown as RoomAgentState;
 const recovering=new URLSearchParams(location.search).has('recovery');if(recovering)state=JSON.parse(JSON.stringify(historyRecovery.error));
 state.capabilities=[...new Set([...state.capabilities??[],'catalog.v1'])];

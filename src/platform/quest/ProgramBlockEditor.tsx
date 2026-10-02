@@ -10,8 +10,8 @@ import type {BehaviourProgram,Expression,ProgramFunction,ProgramNode,ValueType} 
 import {CapabilityFields,CapabilityVariant,initialCapabilityValue,type EditorObject} from './CapabilityFields';
 import {ProgramValueEditor,defaultValue,valueExpression,expressionType,roomValueSources,valueType,type ValueSource} from './ProgramValueEditor';
 
-export function ProgramBlockEditor({node,program,fn,objects,onChange,eventFieldsSupported=false,eventSubscriptionsSupported=false,factQueriesSupported=false}:{
-  eventFieldsSupported?:boolean;eventSubscriptionsSupported?:boolean;factQueriesSupported?:boolean;node:ProgramNode;program:BehaviourProgram;fn:ProgramFunction;objects:readonly EditorObject[];onChange:(node:ProgramNode)=>void;
+export function ProgramBlockEditor({node,program,fn,objects,onChange,eventFieldsSupported=false,eventSubscriptionsSupported=false,factQueriesSupported=false,channelWaitsSupported=false}:{
+  eventFieldsSupported?:boolean;eventSubscriptionsSupported?:boolean;factQueriesSupported?:boolean;channelWaitsSupported?:boolean;node:ProgramNode;program:BehaviourProgram;fn:ProgramFunction;objects:readonly EditorObject[];onChange:(node:ProgramNode)=>void;
 }) {
   const locals=[...fn.parameters,...fn.locals.map(v=>({name:v.name,type:valueType(v.initial,v.type)}))];
   const states=(program.state??[]).map(v=>({name:v.name,type:valueType(v.initial,v.type)}));
@@ -46,10 +46,15 @@ export function ProgramBlockEditor({node,program,fn,objects,onChange,eventFields
       return <div>
         <label>Action<select aria-label="Block action" value={node.capability} onChange={e=>{
           const next=capabilityDefinition(e.target.value)!;
-          onChange({id:node.id,op:'invoke',capability:next.id,version:next.version,arguments:next.example??initialCapabilityValue(next.input,objects) as Record<string,unknown>,bindings:{}});
+          onChange({id:node.id,op:'invoke',capability:next.id,version:next.version,arguments:next.example??initialCapabilityValue(next.input,objects) as Record<string,unknown>,bindings:{},...(node.waitForChannels?{waitForChannels:node.waitForChannels}:{})});
         }}>{behaviourCatalog.actions.map(action=><option key={action.id} value={action.id}>{action.label}</option>)}</select></label>
         <p className="room-workspace-intro">Changing the action replaces its inputs and result assignments. Editing a value keeps all other fields.</p>
         {definition.description&&<p>{definition.description}</p>}
+        {program.version===3&&(channelWaitsSupported||node.waitForChannels!==undefined)&&<fieldset disabled={!channelWaitsSupported}><legend>Busy channels</legend>
+          <label className="rule-checkbox"><input type="checkbox" aria-label="Wait for free channels" checked={node.waitForChannels!==undefined} onChange={e=>{const next={...node};if(e.target.checked)next.waitForChannels={value:5};else delete next.waitForChannels;onChange(next);}}/>Wait for free channels</label>
+          {node.waitForChannels&&expr('Channel timeout seconds',node.waitForChannels,'number',waitForChannels=>onChange({...node,waitForChannels}))}
+          <p>Wait up to 0.1–30 seconds before starting this action. Inputs stay fixed; readiness is checked again. Timeout, Stop or app pause ends the pending action. This does not resume interrupted actions.</p>
+        </fieldset>}
         {definition.input.oneOf&&<CapabilityVariant schema={definition.input} value={node.arguments} objects={objects} onChange={args=>{
           const bindings=Object.fromEntries(Object.entries(node.bindings).filter(([key])=>capabilityParameterType(node.capability,key,args)===capabilityParameterType(node.capability,key,node.arguments)&&capabilityParameterType(node.capability,key,args)!==null));
           onChange({...node,arguments:args,bindings});

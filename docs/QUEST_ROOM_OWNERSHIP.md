@@ -15,7 +15,7 @@ request; it never partially cancels other actors.
 | Grip | 40 | Stops conflicting movement/animation; preserves the grasped placement |
 | Direct control / authoring | 30 | Replaces conflicting lower roles and other direct controls after readiness checks |
 | Reflex | 20 | Reserved native role; no hit/catch reaction is implemented by this increment |
-| Program / one-off action | 10 | Replaces ambient work; equal program claims remain refused |
+| Program / one-off action | 10 | Replaces ambient work; equal program claims remain refused unless an action explicitly waits before starting |
 | Ambient tutor activity | 0 | Runs only when eligible and no stronger owner conflicts |
 
 Roles are assigned by native entry points, never by program JSON or an agent
@@ -34,6 +34,11 @@ Recording continues while either hand moves the object; other programs remain
 excluded. Playback cannot begin while a hand is driving it. The grip lease lasts
 until XRI releases the last hand. Joint handles remain part of their authoring
 session; they do not create independent competing body owners.
+
+Version-3 action blocks can now explicitly wait for busy channels without owning
+them. Overlapping waits use arrival order and bounded timeouts, then recheck
+readiness before starting. This is not interrupted-action resume. See
+[waiting for channels](QUEST_CHANNEL_WAITS.md).
 
 ## Interruption and lifecycle
 

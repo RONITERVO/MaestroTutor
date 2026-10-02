@@ -35,6 +35,7 @@ export function requireRoomCapabilities(commands:{action:string;rule?:unknown;ex
     if(value.op==='checkpoint'||value.memoryVersion!==undefined)features.add('rememberedVariables.v1');
     if(value.op==='parallel'||value.parallelVersion!==undefined)features.add('parallelPrograms.v1');
     if(value.op==='awaitCondition')features.add('conditionWaits.v1');
+    if(value.op==='invoke'&&value.waitForChannels!==undefined)features.add('channelWaits.v1');
     if(value.op==='awaitEvent'){
       if(value.fields!==undefined)features.add('eventFields.v1');
       for(const feature of behaviourEvent(String(value.event))?.features??[])features.add(feature);
