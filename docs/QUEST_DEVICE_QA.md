@@ -1,5 +1,23 @@
 # Quest 3 development verification — 2026-09-30
 
+## Adult audience / privacy links: headset acceptance pending
+
+1. Start a new book document. Confirm both pages show the audience/data notice,
+   no saved chat or active media is present, and Open stays disabled until the
+   unchecked 18+ checkbox is selected. Selecting it alone must not enter chat.
+2. Open Privacy and Gemini terms with controller and hand input. Return to the
+   book: no interrupted-session error, automatic entry, microphone or AI task.
+   Confirm both links reach the intended public policy; prepared policy changes
+   need separate deployment before release.
+3. Select Under 18 and verify chat remains inaccessible. Restart the book and
+   verify it asks again, including with existing chat/account data on the device.
+4. Confirm 18+ and press Open. Verify the familiar two-page chat, native tools,
+   account dialog and explicit audio-resume flow still work. Background/resume
+   must not create another confirmation inside the same live book document.
+5. Check both pages for readable text, working scroll/pinch and reachable controls.
+   Local browser tests are not proof of headset comfort or age verification.
+
+
 This is development evidence, not a release acceptance report.
 
 ## Book backup export: headset acceptance pending

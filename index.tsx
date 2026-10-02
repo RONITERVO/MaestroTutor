@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './src/app/App';
 import './src/app/index.css';
+import { QuestAudienceGate } from './src/platform/quest/QuestAudienceGate';
 import { QuestBookSurface } from './src/platform/quest/QuestBookSurface';
 import { sessionActivity } from './src/platform/browser/sessionActivity';
 
@@ -16,6 +17,6 @@ const bookSurface = new URLSearchParams(window.location.search).get('surface') =
 if (bookSurface) sessionActivity.requireResume();
 root.render(
   <React.StrictMode>
-    {bookSurface ? <QuestBookSurface><App /></QuestBookSurface> : <App />}
+    {bookSurface ? <QuestAudienceGate><QuestBookSurface><App /></QuestBookSurface></QuestAudienceGate> : <App />}
   </React.StrictMode>
 );

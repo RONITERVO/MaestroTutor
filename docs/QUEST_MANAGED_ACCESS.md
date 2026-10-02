@@ -270,7 +270,35 @@ rejection and the final release scope before submitting certifications.
 [Meta DUC guidance](https://developers.meta.com/vr/resources/publish-data-use/).
 
 Device Ban is a separately reviewed optional feature; our app never calls the
-ban APIs or retains attestation device identifiers. Requested audience/age category
-and the final purchase flow remain release decisions and could change the required
+ban APIs or retains attestation device identifiers. The final purchase flow and any future audience change could change the required
 features. Do not certify unimplemented data uses.
 [Meta attestation and Device Ban](https://developers.meta.com/vr/documentation/android-apps/ps-attestation-api/).
+
+
+## Quest v1 adult audience decision (2026-10-02)
+
+The owner chose **adults 18+ for Quest v1**. `QuestAudienceGate` blocks mounting
+both the functional book surface and the original App until an unchecked adult-confirmation
+checkbox and a separate Continue action are completed. Declining leaves chat
+inaccessible. A new book document asks again; no date of birth or persisted age
+record is collected. Ordinary phone/web entry is unchanged. Native manual room
+editing is separate; this is an AI/book gate, not verified-age enforcement across
+the whole platform. Existing room programs are not a separate Gemini client.
+
+[Gemini's current terms](https://ai.google.dev/gemini-api/terms) prohibit API clients
+directed toward or likely accessed by under-18s. A checkbox alone does not prove
+eligibility: adult positioning, distribution controls and final onboarding need
+release review. These terms also require Paid Services for clients made available
+in the EEA, Switzerland or UK. Validate the managed project and eligible BYOK
+configuration for launch; this UI does not verify billing status or location.
+
+Meta's `TEENS_AND_ADULTS` self-certification covers **13+**, not our stricter 18+
+audience. IARC content ratings are separate; do not misstate the content to obtain
+an 18 rating. Review the actual dashboard distribution controls and certify the
+truthful category before release. No Meta User Age Group API has been added or
+DUC submitted as part of this change.
+[Meta age-group guidance](https://developers.meta.com/vr/resources/age-groups/).
+
+See [Quest privacy data map](QUEST_PRIVACY.md) for actual retention and remaining
+release verification. Public policy changes are prepared in `public/privacy.html`;
+they have not been deployed by this checkpoint.

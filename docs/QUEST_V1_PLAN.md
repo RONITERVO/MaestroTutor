@@ -2582,3 +2582,45 @@ It is development-signed and uninstalled. The final full helper used the
 credential-scrubbing verification path and the explicit batch-exit fix. The
 release preparation artifact above predates that development-only exit change;
 its release builder and profile/content validation code are unchanged.
+
+
+## Quest adult audience and privacy checkpoint (2026-10-02)
+
+The owner chose adults 18+ for Quest v1. The book now requires an unchecked
+self-confirmation checkbox and a separate Open action before mounting the original
+chat, account, media and agent hooks. Under-18 decline keeps chat inaccessible;
+a fresh book document asks again without storing a birth date or age record.
+Phone and ordinary web entry are unchanged. A restricted welcome-screen bridge
+acknowledges native suspend/resume without enabling room, file or account actions,
+so reading a policy does not trip the WebView shutdown watchdog.
+
+The native browser now permits the exact public privacy and Gemini terms URLs,
+as well as the existing account-approval page, only after a top-level user
+gesture. Queries, fragments, foreign hosts and custom schemes remain rejected.
+The prepared public policy explains room/agent context, retained Live handoff
+media, local exports, scan/pose boundaries and Meta integrity/account-link data.
+See [privacy map](QUEST_PRIVACY.md) and [managed audience decision](QUEST_MANAGED_ACCESS.md).
+No policy deployment or dashboard certification is implied by these source edits.
+
+Updated the affected Transformers, ONNX, sharp, adm-zip and brace-expansion paths.
+The remaining root Firebase gRPC server advisories are documented as unreachable
+in the root App/Auth/App Check usage. CI permits only the exact reviewed advisory
+URLs and dependency edges until 2026-11-01; it rejects new findings and critical
+escalation. Functions and Live gateway keep independent audits. See
+[dependency review](QUEST_DEPENDENCY_REVIEW.md); ordinary root audit remains nonzero.
+
+Desktop validation: the full existing suite plus audience tests passes **1,890
+tests in 220 files**, with five additional audit-guard tests passing separately.
+TypeScript and ESLint pass. The production entry browser probe checks decline,
+reload, pause/return, prevented native commands, deliberate entry, unchanged phone
+entry and no AI/account request before confirmation. Browser captures cover
+1024x768 and 800x600 with scrolling and no horizontal clipping. The updated
+production q4 Whisper worker transcribed eight seconds of generated fixture audio
+with real WASM inference (2.1 seconds on this PC); this is not Quest performance
+evidence. Native packaging and exact-commit CI results are recorded in the PR and
+local `.quest-evidence/quest-privacy/` evidence when complete.
+
+Adult positioning/distribution, actual provider billing/region eligibility, public
+policy deployment, device acceptance, release signing and Store submission remain
+open. Self-confirmation is not verified age. Native manual room editing remains
+separate from the book/AI gate; no additional Gemini path was introduced.
