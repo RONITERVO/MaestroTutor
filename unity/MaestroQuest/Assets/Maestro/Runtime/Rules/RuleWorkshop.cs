@@ -299,7 +299,7 @@ namespace Maestro.Quest.Rules
             if(held==null){completion=Task.FromResult(blocked);return null;}
             try {
                 CompleteSave();
-                if(storage == null || storage.ReadOnly){completion=Task.FromResult("Behaviour storage is unavailable; original files are preserved.");return held;}
+                if(storage == null || storage.ReadOnly){completion=Maestro.Quest.Persistence.WorkspaceAcceptedSave.FailureAfter(saveTask,"Behaviour storage is unavailable; original files are preserved.");return held;}
                 var previous=saveTask;
                 if(!dirty && previous==null){completion=Task.FromResult<string>(null);return held;}
                 var snapshot=document.Copy();
@@ -310,7 +310,7 @@ namespace Maestro.Quest.Rules
                     return SaveSnapshot(snapshot);
                 });
                 dirty=false;return held;
-            }catch(Exception){completion=Task.FromResult("Behaviour save could not begin; accepted edits remain unsaved.");return held;}
+            }catch(Exception){completion=Maestro.Quest.Persistence.WorkspaceAcceptedSave.FailureAfter(saveTask,"Behaviour save could not begin; accepted edits remain unsaved.");return held;}
         }
         internal bool TryFlush(out string error)
         {

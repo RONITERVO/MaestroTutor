@@ -83,22 +83,23 @@ An older failed snapshot cannot prevent saving the latest accepted data. Partial
 failure keeps live edits/Undo and the ordinary retry path, with review still held.
 No execution resumes. See QUEST_ACCEPTED_SAVE.md.
 
-Five new PlayMode regressions hold earlier writers while Unity frames advance,
+Six new PlayMode regressions hold earlier writers while Unity frames advance,
 verify saved room/behaviour contents, exercise cancellation and one-sided failure,
-fail capture startup after dispatch, and reopen after retirement. These checks
+fail capture startup after dispatch, refuse read-only saves while an older writer
+is pending, and reopen after retirement. These checks
 also found and fixed a final-save notification reaching a creation tray during
 teardown. The bridge and book components consume actual native completing/completed
 observations; completion is distinct from the initial request acknowledgement.
 
-Verification passed 415 EditMode and 379 PlayMode tests (three optional private
+Verification passed 415 EditMode and 380 PlayMode tests (three optional private
 model skips), all 1,705 web tests across 196 files and 61 Android tests. A final
 69-test book/bridge run checked the captures from the packaging run. TypeScript,
 ESLint, prompt/core boundaries, catalog drift, Android assembly/lint and the full
 build helper passed. All 210 runtime / 106 test C# files, 32 native fixtures plus
 metadata and 113 packaged web files match the tested inputs. ARM64-only contents
 and v2 signature verified. Catalog remains 58 actions, 11 events and 49 facts.
-APK: `D:\Projects\Builds\MaestroQuestVerify\Builds\Checkpoints\MaestroQuest-accepted-save-97B6A637.apk`.
-SHA-256: `97B6A637EF85779AB32B65834EE6E38C87F5A32CBEFFBBF737EB93D5BC055118`.
+APK: `D:\Projects\Builds\MaestroQuestVerify\Builds\Checkpoints\MaestroQuest-accepted-save-3FBBAA41.apk`.
+SHA-256: `3FBBAA41D3687906DBB7F688B2EDA1414559A7779CA2FD9237D676FE6846578D`.
 Development signing; not installed on Quest. This proves PC ordering and lifecycle
 behavior, not a headset frame-time budget. Other synchronous edit/receipt paths
 and device/Store acceptance remain. The complete v1 goal remains active.

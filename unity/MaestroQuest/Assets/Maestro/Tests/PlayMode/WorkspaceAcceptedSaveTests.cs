@@ -103,6 +103,25 @@ namespace Maestro.Quest.Tests
             }finally{Directory.Delete(blocked);}
             Assert.That(editor.TryFlush(out var error),Is.True,error);
         }
+        [UnityTest] public IEnumerator ARefusedAcceptedSaveStillDrainsPreviouslyDispatchedWork()
+        {
+            yield return ReadyForReview();DisableAcceptedSaveUpdates();var editor=host.Current.Editor;
+            string id=BeginReview();yield return FinishReview(id);using var earlier=new DelayedAcceptedSave(editor);
+            host.Review.Fault=point=>{
+                if(point!="review.beforeCapture")return;
+                // A newer save discovered after preflight makes this store read-only.
+                // The earlier writer remains owned until it reports completion.
+                File.WriteAllText(Path.Combine(editor.SaveDirectory,"room.v3.json"),"{}");
+                var storage=(RoomStorage)typeof(RoomEditor).GetField("storage",BindingFlags.Instance|BindingFlags.NonPublic).GetValue(editor);
+                storage.Load(out _);Assert.That(storage.ReadOnly,Is.True);
+            };
+            ApproveReview(id);Assert.That(earlier.Released,Is.False);
+            for(int i=0;i<3;i++)yield return null;
+            Assert.That(editor.WriteGate.Frozen,Is.True);Assert.That(host.Review.WorkerPending,Is.True);
+            earlier.Release("Earlier writer detected unavailable storage");yield return FinishReview(id);
+            Assert.That((string)host.Review.Read(id)["phase"],Is.EqualTo("failed"));Assert.That(host.ReviewRequired,Is.True);Assert.That(editor.WriteGate.Frozen,Is.False);
+            Assert.That(File.ReadAllText(Path.Combine(editor.SaveDirectory,"room.v3.json")),Is.EqualTo("{}"));
+        }
         [UnityTest] public IEnumerator ClosingTheHostWaitsForAcceptedWritesBeforeAnotherOwnerOpensTheWorkspace()
         {
             yield return ReadyForReview();DisableAcceptedSaveUpdates();var editor=host.Current.Editor;var rules=host.Current.Rules;

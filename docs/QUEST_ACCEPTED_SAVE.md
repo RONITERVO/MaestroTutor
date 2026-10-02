@@ -35,7 +35,8 @@ No program, animation or physics run is resumed by successful review.
 Native tests delay already-dispatched writers while advancing Unity frames. They
 verify that completion returns before those writers finish, that the latest room
 and behaviour snapshots reach disk after older failures, and that cancellation or
-one failed worker cannot release another live worker. Additional tests cover a
+one failed worker cannot release another live worker. A store becoming read-only
+after preflight also drains its earlier writer before reporting failure. Additional tests cover a
 failure after save dispatch but before capture and reopening after owner retirement.
 Existing stale-content, commit-reconciliation and damaged-selection tests remain.
 

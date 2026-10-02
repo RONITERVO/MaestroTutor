@@ -30,6 +30,11 @@ namespace Maestro.Quest.Persistence
             }catch(Exception error){result.Completion=FailAfterDrain(room,behaviours,error);}
             return result;
         }
+        internal static async Task<string> FailureAfter(Task earlier,string error)
+        {
+            if(earlier!=null)try{await earlier.ConfigureAwait(false);}catch(Exception){}
+            return error;
+        }
         static async Task Finish(Task<string> room,Task<string> behaviours)
         {
             var errors=await Task.WhenAll(room,behaviours).ConfigureAwait(false);

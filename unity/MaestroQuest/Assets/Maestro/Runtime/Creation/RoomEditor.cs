@@ -513,8 +513,8 @@ namespace Maestro.Quest.Creation
             if(held==null){completion=Task.FromResult(blocked);return null;}
             try {
                 CompleteSave();
-                if(journal == null || storage == null || storage.ReadOnly){completion=Task.FromResult("Room storage is unavailable; original files are preserved.");return held;}
-                if(TemporaryRoom){completion=Task.FromResult("Keep or discard the temporary room before saving the ordinary workspace.");return held;}
+                if(journal == null || storage == null || storage.ReadOnly){completion=Persistence.WorkspaceAcceptedSave.FailureAfter(saveTask,"Room storage is unavailable; original files are preserved.");return held;}
+                if(TemporaryRoom){completion=Persistence.WorkspaceAcceptedSave.FailureAfter(saveTask,"Keep or discard the temporary room before saving the ordinary workspace.");return held;}
                 var previous=saveTask;
                 if(!dirty && previous==null){completion=Task.FromResult<string>(null);return held;}
                 var snapshot=journal.Snapshot();
@@ -525,7 +525,7 @@ namespace Maestro.Quest.Creation
                     return SaveSnapshot(snapshot);
                 });
                 dirty=false;return held;
-            }catch(Exception){completion=Task.FromResult("Room save could not begin; accepted edits remain unsaved.");return held;}
+            }catch(Exception){completion=Persistence.WorkspaceAcceptedSave.FailureAfter(saveTask,"Room save could not begin; accepted edits remain unsaved.");return held;}
         }
         internal bool TryFlush(out string error)
         {
