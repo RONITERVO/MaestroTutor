@@ -2136,3 +2136,24 @@ SHA-256:
 `9E30047753C3873F63A27B73FCD4B1C03AAE8221BF05BA16590370FBCC0ACC6F`
 
 Not installed; physical Quest acceptance remains open.
+
+
+## 2026-10-02: managed agent stream cancellation boundary
+
+Managed chat/agent generation now observes disconnects before awaited admission
+and between token-count operations. Cancellation before dispatch never starts
+provider generation and releases any completed credit reservation. Once sent,
+the existing usage-drain policy remains explicit: client write/end failures do
+not discard provider usage or refund completed work. Later stream chunks can no
+longer erase previously reported usage merely by omitting it.
+
+The current Google SDK does not promise service-side cancellation through
+AbortSignal. QUEST_UNIFIED_AGENT.md records that provider limitation, the chosen
+boundary and remaining real-provider acceptance. No second Unity provider or
+account path was introduced, and failed-provider refund policy is unchanged.
+
+Validation passed 57 provider/accounting emulator tests (eleven new cases), the
+billing and Live gateway emulator scripts, 25 Functions units and 60 focused
+web cancellation/handoff tests. Firestore transactions and one HTTP disconnect
+are real/local; the provider is simulated. No deployment or APK/device change was
+made. The last verified Quest package remains the 530261f authored-motion build.

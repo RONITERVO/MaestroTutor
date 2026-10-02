@@ -144,11 +144,14 @@ cancels retry backoff, and discards late text/thoughts/results even if the trans
 ignores cancellation. Cancellation while resolving the client cannot later send
 that task. Recorded room actions and receipts remain available after Stop.
 
-This is client-side cancellation, not a guarantee that provider billing stops.
-The managed backend currently drains an accepted provider stream after disconnect
-to obtain final usage and settle the reservation accurately. An explicit managed
-server cancellation/accounting policy remains release work. BYOK passes the abort
-signal to the SDK, but already processed usage is not refunded.
+This stops app work; it does not promise that provider generation or billing stops.
+Before managed provider dispatch, cancellation now halts admission and releases
+any completed credit reservation. After dispatch, the managed backend drains the
+accepted stream for usage even if the client disconnects or socket writes fail.
+BYOK passes the abort signal to the SDK. Google's current SDK explicitly describes
+AbortSignal as local cancellation rather than service cancellation, with applicable
+usage still charged: [GenerateContentConfig documentation](https://googleapis.github.io/js-genai/release_docs/interfaces/types.GenerateContentConfig.html).
+See the managed-stream checkpoint below for the verified boundary and limitations.
 
 ## Live/observer text-context handoff checkpoint (2026-09-26)
 
@@ -440,10 +443,11 @@ Remaining work:
    with the real provider and headset; current PC coverage uses simulated intent
    classifications and native effects. Validate database v11, full task backups
    and durable result reconciliation on Quest.
-3. Define explicit managed server cancellation with accurate partial-usage
-   settlement; client transport abort currently retains the existing server drain
-   policy. Strengthen access-change fencing across asynchronous credential refresh
-   and test actual managed billing on interrupted runs.
+3. Validate the managed admission-stop / accepted-stream-drain policy below with
+   the actual provider, including usage reporting and lifecycle interruption.
+   Do not promise service-side cancellation or exact usage after a failed provider
+   stream; that requires a provider-supported protocol and separate acceptance.
+   Strengthen access-change fencing across asynchronous credential refresh.
 4. Extend the shared capability catalogue to the remaining avatar/import/physics
    and animation-library actions; existing bounded room/rule coverage remains.
 5. Run real-provider request-versus-exercise acceptance, actual web/native bridge
@@ -472,3 +476,41 @@ See [the current contract and boundaries](QUEST_EVENT_PROGRAMS.md). Earlier note
 marking all event waits/timers pending describe prior checkpoints. Durable state,
 wall-clock scheduling, parallel branches, channel blending and full release
 acceptance remain open; no headset install or backend deployment is included.
+
+
+## Managed stream admission and delivery (2026-10-02)
+
+The original backend remains the sole managed generation owner for chat and room
+agents. Stop/network loss is observed before owned-file validation, between token
+count requests and after the credit reservation transaction. Cancellation before
+provider dispatch performs no generation; any completed reservation is released
+with an explicit admission-cancellation reason. Listeners are removed on every
+exit. A failed refund retains the existing expiry recovery path.
+
+Once the provider request has been dispatched, a closed response or failed socket
+write switches to usage-only draining. It does not replay generation or convert
+completed work into a provider failure/refund. Final response write/end failures
+also preserve completed settlement. The existing durable accounting record and
+retry/recovery path remain authoritative. Operator admission limits are unchanged.
+
+Reported usage fields are retained independently of the last output chunk. Later
+reported totals replace earlier values rather than being added; absent fields
+and trailing empty chunks do not erase prior usage. The final client response and
+billing calculation receive the same retained metadata. These fields describe
+request totals in the [Gemini usage reference](https://ai.google.dev/api/generate-content#UsageMetadata).
+This does not invent missing usage or change the existing failed-provider refund
+policy. An interrupted provider stream is not treated as complete usage evidence.
+
+Verification: all 57 managed-provider emulator tests passed, with real Firestore
+transactions and a simulated provider. Eleven new cases cover four admission
+boundaries, a real local HTTP disconnect, connected/disconnected trailing usage,
+provider-start disconnect and response write/end failures. The existing billing
+and Live gateway emulator scripts also passed. All 25 Functions unit tests and
+60 focused web cancellation/handoff tests in 3 files passed.
+The first emulator attempt required selecting the installed Java 21 runtime;
+Unity Android retains its separate Java 17 build configuration.
+
+No provider request, production deployment, APK rebuild or headset operation was
+performed for this backend increment. Real-provider accounting, Quest acceptance
+and the remaining v1 gates remain open. Development evidence is retained privately
+under `.quest-evidence/managed-stream-lifecycle`.

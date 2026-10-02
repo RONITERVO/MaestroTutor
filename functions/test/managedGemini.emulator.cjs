@@ -619,6 +619,128 @@ test('client disconnect still drains provider usage and settles, without writing
   assert.equal(usage[0].metadata.candidatesTokenCount, 10);
 });
 
+// Admission and delivery failures are distinct from provider completion.
+for (const phase of ['already closed', 'owned-file lookup', 'token count', 'credit reservation']) {
+  test(`stream cancelled during ${phase} never dispatches provider generation`, async () => {
+    const owner = await account(); const response = new StreamResponse();
+    const files = require('../lib/functions/src/managedGemini/fileLifecycle.js');
+    const owned = files.requireOwnedManagedContentFiles, reserve = billing.reserveManagedCredits;
+    const close = () => { response.destroyed = true; response.writable = false; response.emit('close'); };
+    handlers.countTokens = async () => { if (phase === 'token count') close(); return { totalTokens: 10 }; };
+    if (phase === 'already closed') close();
+    if (phase === 'owned-file lookup') files.requireOwnedManagedContentFiles = async (...args) => { await owned(...args); close(); };
+    if (phase === 'credit reservation') billing.reserveManagedCredits = async params => { const result = await reserve(params); close(); return result; };
+    try { await api.streamManagedContent({ ...generation(owner), response }); }
+    finally { files.requireOwnedManagedContentFiles = owned; billing.reserveManagedCredits = reserve; }
+    assert.equal(calls.filter(call => call.method === 'generateContentStream').length, 0);
+    assert.equal(calls.filter(call => call.method === 'countTokens').length, phase === 'credit reservation' ? 3 : phase === 'token count' ? 1 : 0);
+    assert.equal(response.chunks.length, 0);
+    assert.equal(response.listenerCount('close'), 0); assert.equal(response.listenerCount('error'), 0);
+    const saved = await reservations(owner.uid);
+    assert.equal(saved.length, phase === 'credit reservation' ? 1 : 0);
+    if (saved.length) { assert.equal(saved[0].status, 'released'); assert.equal(saved[0].metadata.releaseReason, 'client-disconnected-before-provider'); }
+    assert.equal((await summary(owner)).availableCredits, 1000); assert.equal((await summary(owner)).reservedCredits, 0);
+    assert.equal((await billing.listManagedUsageLedger(owner.uid, 100)).length, 0);
+  });
+}
+
+test('a real HTTP disconnect during admission cannot launch late generation', { timeout: 15000 }, async () => {
+  const http = require('node:http'); const owner = await account();
+  let entered, resume, completed; const counting = new Promise(resolve => { entered = resolve; });
+  const pending = new Promise(resolve => { resume = resolve; });
+  const done = new Promise((resolve, reject) => { completed = { resolve, reject }; });
+  handlers.countTokens = async () => { entered(); await pending; return { totalTokens: 10 }; };
+  let peerClosed; const closed = new Promise(resolve => { peerClosed = resolve; });
+  const server = http.createServer((_req, response) => {
+    response.once('close', peerClosed);
+    api.streamManagedContent({ ...generation(owner), response }).then(completed.resolve, completed.reject);
+  });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  const request = http.get({ host: '127.0.0.1', port: server.address().port });
+  request.on('error', () => {});
+  try {
+    const bound = async promise => {
+      let timer;
+      try { return await Promise.race([promise, new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('HTTP admission test timed out')), 5000); })]); }
+      finally { clearTimeout(timer); }
+    };
+    await bound(counting); request.destroy(); await bound(closed); resume(); await bound(done);
+    assert.deepEqual(calls.map(call => call.method), ['countTokens']);
+    assert.equal((await reservations(owner.uid)).length, 0); assert.equal((await summary(owner)).reservedCredits, 0);
+  } finally { resume(); request.destroy(); server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); }
+});
+
+for (const disconnected of [false, true]) test(`stream retains reported cumulative usage across trailing chunks (${disconnected ? 'disconnected' : 'connected'})`, async () => {
+  const owner = await account(); const response = new StreamResponse();
+  handlers.countTokens = async () => ({ totalTokens: 10 });
+  handlers.generateContentStream = async function* () {
+    yield { text: 'first', modelVersion: 'gemini-3.8-flash', usageMetadata: { promptTokenCount: 20, candidatesTokenCount: 1 } };
+    if (disconnected) { response.destroyed = true; response.emit('close'); }
+    yield { text: 'answer', usageMetadata: { candidatesTokenCount: 10, totalTokenCount: 30 } };
+    yield { usageMetadata: {} };
+    yield { candidates: [] };
+  };
+  await api.streamManagedContent({ ...generation(owner), response });
+  const usage = await billing.listManagedUsageLedger(owner.uid, 100); const saved = (await reservations(owner.uid))[0];
+  assert.equal(usage.length, 1); assert.equal(usage[0].metadata.promptTokenCount, 20); assert.equal(usage[0].metadata.candidatesTokenCount, 10);
+  assert.equal(usage[0].metadata.disconnectRecovered, disconnected); assert.equal(saved.status, 'settled');
+  const { usageMetadataToUsd, usdToCredits } = require('../lib/functions/src/pricing.js');
+  const expected = usageMetadataToUsd('gemini-3.8-flash', providerUsage, saved.operation, 0, 0, 'gemini-3.8-flash');
+  assert.equal(usage[0].billedUsd, expected); assert.equal(usage[0].billedCredits, usdToCredits(expected));
+  assert.equal((await summary(owner)).reservedCredits, 0);
+  if (!disconnected) assert.deepEqual(response.chunks.at(-1).result.usageMetadata, providerUsage);
+  else assert.equal(response.chunks.length, 1);
+});
+
+test('disconnect while the provider accepts a request still drains its eventual stream', async () => {
+  const owner = await account(); const response = new StreamResponse(); let drained = false;
+  handlers.countTokens = async () => ({ totalTokens: 10 });
+  handlers.generateContentStream = async () => {
+    response.destroyed = true; response.emit('close');
+    return (async function* () { yield { text: 'accepted before Stop', usageMetadata: providerUsage }; drained = true; })();
+  };
+  await api.streamManagedContent({ ...generation(owner), response });
+  assert.equal(drained, true); assert.equal(response.chunks.length, 0);
+  assert.equal(calls.filter(call => call.method === 'generateContentStream').length, 1);
+  assert.equal((await reservations(owner.uid))[0].status, 'settled');
+  assert.equal((await billing.listManagedUsageLedger(owner.uid, 100)).length, 1);
+  assert.equal((await summary(owner)).reservedCredits, 0);
+});
+
+for (const failure of ['final write', 'end']) test(`response ${failure} failure never refunds completed provider work`, async () => {
+  const owner = await account(); const response = new StreamResponse(); const write = response.write.bind(response);
+  response.write = value => {
+    if (failure === 'final write' && JSON.parse(value).type === 'final') throw new Error('final socket write failed');
+    return write(value);
+  };
+  if (failure === 'end') response.end = () => { throw new Error('socket shutdown failed'); };
+  handlers.countTokens = async () => ({ totalTokens: 10 });
+  handlers.generateContentStream = async function* () { yield { text: 'answer', usageMetadata: providerUsage }; };
+  await api.streamManagedContent({ ...generation(owner), response });
+  assert.equal((await reservations(owner.uid))[0].status, 'settled');
+  assert.equal((await billing.listManagedUsageLedger(owner.uid, 100)).length, 1);
+  assert.equal((await summary(owner)).reservedCredits, 0);
+  assert.ok(response.chunks.every(frame => frame.type !== 'error'));
+  assert.equal(response.listenerCount('close'), 0); assert.equal(response.listenerCount('error'), 0);
+});
+
+test('client write failure drains the provider and settles exact usage once', async () => {
+  const owner = await account(); const response = new StreamResponse(); let drained = false, writes = 0;
+  response.write = () => { writes++; throw new Error('socket write failed'); };
+  handlers.countTokens = async () => ({ totalTokens: 10 });
+  handlers.generateContentStream = async function* () {
+    yield { text: 'first' }; yield { text: 'last', usageMetadata: providerUsage }; drained = true;
+  };
+  await api.streamManagedContent({ ...generation(owner), response });
+  assert.equal(drained, true); assert.equal(writes, 1); assert.equal(response.writableEnded, false);
+  assert.equal(response.listenerCount('close'), 0); assert.equal(response.listenerCount('error'), 0);
+  assert.equal((await reservations(owner.uid))[0].status, 'settled');
+  const usage = await billing.listManagedUsageLedger(owner.uid, 100);
+  assert.equal(usage.length, 1); assert.equal(usage[0].metadata.disconnectRecovered, true);
+  assert.equal(usage[0].metadata.promptTokenCount, 20); assert.equal(usage[0].metadata.candidatesTokenCount, 10);
+  assert.equal((await summary(owner)).reservedCredits, 0);
+});
+
 test('stream failure after delivery emits an error and releases held credit', async () => {
   const owner = await account();
   const response = new StreamResponse();
