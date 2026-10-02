@@ -33,7 +33,7 @@ namespace Maestro.Quest.Editor
             Directory.CreateDirectory(Path.GetDirectoryName(output));
             var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions {
                 scenes = new[] { QuestProjectSetup.ScenePath }, locationPathName = output,
-                target = BuildTarget.Android, options = BuildOptions.Development
+                target = BuildTarget.Android, options = BuildOptions.Development | BuildOptions.CleanBuildCache
             });
             var summary = report.summary;
             File.WriteAllText(Path.ChangeExtension(output, ".build.json"), JsonUtility.ToJson(new Evidence {

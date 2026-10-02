@@ -69,7 +69,7 @@ namespace Maestro.Quest.Editor
                 var output=Environment.GetEnvironmentVariable("MAESTRO_QUEST_APK");
                 if(string.IsNullOrEmpty(output)||!Path.IsPathFullyQualified(output)||!output.EndsWith(".apk",StringComparison.OrdinalIgnoreCase))throw new BuildFailedException("Set the intermediate APK output path.");
                 Directory.CreateDirectory(Path.GetDirectoryName(output));
-                var report=BuildPipeline.BuildPlayer(new BuildPlayerOptions { scenes=new[]{QuestProjectSetup.ScenePath},locationPathName=output,target=BuildTarget.Android,options=BuildOptions.None });
+                var report=BuildPipeline.BuildPlayer(new BuildPlayerOptions { scenes=new[]{QuestProjectSetup.ScenePath},locationPathName=output,target=BuildTarget.Android,options=BuildOptions.CleanBuildCache });
                 if(report.summary.result!=BuildResult.Succeeded)throw new BuildFailedException("Quest release intermediate build failed.");
                 File.WriteAllText(Path.ChangeExtension(output,".build.json"),new JObject { ["result"]="Succeeded",["developmentOnly"]=false,["releaseSigned"]=false,["profileSha256"]=QuestReleaseInputs.Hash(File.ReadAllBytes(profilePath)),["package"]=profile["package"].DeepClone(),["versionCode"]=profile["versionCode"].DeepClone() }.ToString());
                 Debug.Log("MAESTRO_RELEASE_INTERMEDIATE_APK "+output);

@@ -103,3 +103,14 @@ original-browser approval, managed/BYOK parity, device behavior, frame rate,
 comfort, audience/privacy/payment configuration or Store compliance. Those remain
 separate gates in [the delivery record](QUEST_V1_PLAN.md). This checkpoint has not
 used a real release key or submitted a build.
+
+
+Packaged development and release builds pass `BuildOptions.CleanBuildCache` to
+Unity. Incremental Android APK generation retained large unused archive gaps in
+a tested development artifact (230.5 MiB on disk for 176.7 MiB of live entries).
+A clean build avoids carrying those stale packaging blocks into the distributable;
+Unity can still reuse imported assets and cached shaders. This trades some build
+time for predictable artifacts. Do not rewrite a signed APK with a generic ZIP
+utility: that would invalidate its signature/alignment. Check the fresh package's
+manifest, live file hashes, size and signature through the normal pipeline.
+[Unity clean builds](https://docs.unity3d.com/6000.3/Documentation/ScriptReference/BuildOptions.CleanBuildCache.html).

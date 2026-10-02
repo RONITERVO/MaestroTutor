@@ -103,7 +103,11 @@ namespace Maestro.Quest.Book
                 if (!BookExternalLinks.TryOpen(link, Application.OpenURL)
                     && Uri.TryCreate(link, UriKind.Absolute, out var uri) && uri.Scheme == "https") ExternalLinkRequested?.Invoke(link);
             }
-            catch (Exception) { Error="Open chatwithmaestro.com/quest-link.html on your phone or computer to finish sign-in."; }
+            catch (Exception) {
+                Error = link == BookExternalLinks.PrivacyUrl ? "Open chatwithmaestro.com/privacy.html on your phone or computer to read the privacy policy."
+                    : link == BookExternalLinks.GeminiTermsUrl ? "Open ai.google.dev/gemini-api/terms on your phone or computer to read the Gemini terms."
+                    : "Open chatwithmaestro.com/quest-link.html on your phone or computer to finish sign-in.";
+            }
 #endif
         }
 
