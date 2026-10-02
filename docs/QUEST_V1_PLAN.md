@@ -2,6 +2,12 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
+Program compatibility checks now distinguish executable blocks/expressions from
+literal records. Book and agent requests share the same traversal as the module
+linker and editor; data fields named `op`, `fact`, `memoryVersion` or similar no
+longer create false native-feature requirements. Real blocks in imports and
+schema-declared module payloads still require their advertised features.
+
 Remembered behaviour variables now share the native interpreter, versioned syntax,
 book blocks, agent observations and `program.memory.edit` action. Explicit
 checkpoints, stopped-only set/reset and complete workspace archives replace the
@@ -2268,3 +2274,31 @@ billing and Live gateway emulator scripts, 25 Functions units and 60 focused
 web cancellation/handoff tests. Firestore transactions and one HTTP disconnect
 are real/local; the provider is simulated. No deployment or APK/device change was
 made. The last verified Quest package remains the 530261f authored-motion build.
+
+## Program compatibility checkpoint — 2026-10-02
+
+The shared feature gate previously scanned every JSON object for code-shaped
+fields. Valid structured values could therefore fail before dispatch with an
+unrelated update requirement. Seven reproduced false rejections now pass. The
+shared syntax and existing typed node/expression traversal are also used by the
+feature gate, avoiding a separate recursive interpretation of arbitrary data.
+Each program source is parsed once for this check. Full command validation still
+runs first, and Unity remains the executor and final authority on readiness.
+
+Executable blocks, nested expression facts, imported programs and only
+schema-declared `programModule` payloads contribute feature requirements.
+Literal initial values, literal expression records and other native payloads
+remain data. Existing object-edit guards are preserved. Module storage does not
+start a program. The book bridge test verifies unchanged dispatch of valid data
+and rejection of a real unsupported block before any request is sent.
+
+Verification: **1,760 web tests in 207 files** pass, including 11 new compatibility
+and bridge regressions. TypeScript, lint, core boundaries, native-catalog source
+checks and production web build pass. This change affects shared web authoring
+validation only; no native runtime, model or storage format changed. The previous
+channel-wait APK remains the packaged native checkpoint and does not contain this
+web fix. No new APK, headset install or production deployment was performed.
+
+Temporary-room remembered values remain explicitly blocked. Supporting them needs
+an isolated memory fork and coordinated room/memory publication so Keep cannot
+report success with mismatched saved state; this patch does not relax that guard.

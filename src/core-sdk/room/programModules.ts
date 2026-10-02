@@ -2,10 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 import {moduleHash} from '../../../shared/programModuleIdentity';
 export {moduleHash} from '../../../shared/programModuleIdentity';
-import type {BehaviourProgram,ProgramFunction} from './programs';
+import type {BehaviourProgram,ProgramFunction,ProgramImport} from '../../../shared/programSyntax';
+export type {ProgramModule,ProgramImport} from '../../../shared/programSyntax';
 import {visitProgramNodes,visitNodeExpressions,programCalls} from './programTraversal';
-export interface ProgramModule {version:1;name:string;exports:string[];program:BehaviourProgram}
-export interface ProgramImport {alias:string;hash:string;module:ProgramModule;signals:Record<string,string>}
 const own=(v:object,k:PropertyKey)=>Object.prototype.hasOwnProperty.call(v,k);
 const need=(ok:unknown,message:string)=>{if(!ok)throw new Error(message);};
 const plain=(s:unknown):s is string=>typeof s==='string'&&/^[a-zA-Z0-9_]{1,32}$/.test(s);

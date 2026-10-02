@@ -1,4 +1,4 @@
-import {linkProgram,compiledProgramName,type ProgramImport} from './programModules';
+import {linkProgram,compiledProgramName} from './programModules';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {behaviourEvent,eventFieldType,validateEventArguments,eventArgumentType} from '../../../shared/behaviourEvents';
@@ -7,20 +7,11 @@ import {behaviourFactTypes,behaviourFact} from '../../../shared/behaviourCatalog
 import {validateFactArguments,factArgumentType} from '../../../shared/behaviourFacts';
 import {validateCapabilityArguments,capabilityParameterType,argumentValue,capabilityOutputType,literalCapabilityResources} from '../../../shared/capabilities';
 import {stepInvocation,invocationStep} from './capabilitySteps';
-import {checkedDataValue,readDataType,sameDataType,dataOperationType,type DataValue,type DataType,type ScalarType} from '../../../shared/programValues';
-export type Value=DataValue;
-export type ValueType=DataType;
-export type {ScalarType};
-export type Expression={value:Value;type?:ValueType}|{var:string}|{state:string}|{fact:string;version?:number;arguments?:Record<string,unknown>;bindings?:Record<string,Expression>}|{op:string;args:Expression[]};
-export interface ProgramCall {module?:string;function:string;args:Expression[];result?:string}
-export type ProgramNode={id:string}&(
- {op:'awaitCondition';test:Expression;transition:'true'|'false'|'either';initial:'baseline'|'report';stableSeconds:Expression;timeout:Expression;received:string;value:string}|
- {op:'checkpoint'}|{op:'set'|'setState';variable:string;value:Expression}|{op:'forever';body:ProgramNode[]}|{op:'sleep';seconds:Expression}|{op:'awaitEvent';event:string;source:string;timeout:Expression;received:string;value:string;fields?:Record<string,string>;version?:number;arguments?:Record<string,unknown>;bindings?:Record<string,Expression>}|{op:'emitEvent';event:string;value:Expression}|{op:'if';test:Expression;then:ProgramNode[];else:ProgramNode[]}|
- {op:'repeat';count:Expression;body:ProgramNode[]}|{op:'switch';value:Expression;cases:{value:Value;body:ProgramNode[]}[];default:ProgramNode[]}|
- {op:'parallel';branches:ProgramCall[]}|{op:'call';module?:string;function:string;args:Expression[];result?:string}|{op:'return';value?:Expression}|
- {op:'invoke';capability:string;version:number;arguments:Record<string,unknown>;bindings:Record<string,Expression>;waitForChannels?:Expression;results?:Record<string,string>});
-export interface ProgramFunction {name:string;returns:ValueType|'void';parameters:{name:string;type:ValueType}[];locals:{name:string;initial:Value;type?:ValueType}[];body:ProgramNode[]}
-export interface BehaviourProgram {version:2|3;parallelVersion?:1;memoryVersion?:1;dataVersion?:1;moduleVersion?:1;imports?:ProgramImport[];entry:string;resources:string[];functions:ProgramFunction[];state?:{name:string;initial:Value;type?:ValueType;memory?:string}[];events?:{name:string;type:ScalarType}[]}
+import {checkedDataValue,readDataType,sameDataType,dataOperationType} from '../../../shared/programValues';
+import type {ScalarType} from '../../../shared/programValues';
+import type {ValueType,Expression,ProgramNode,BehaviourProgram} from '../../../shared/programSyntax';
+export type {Value,ValueType,Expression,ProgramCall,ProgramNode,ProgramFunction,BehaviourProgram} from '../../../shared/programSyntax';
+export type {ScalarType} from '../../../shared/programValues';
 export const programFacts=behaviourFactTypes;
 const record=(v:unknown):v is Record<string,unknown>=>v!==null&&typeof v==='object'&&!Array.isArray(v);
 function need(condition:unknown,message:string):asserts condition {if(!condition)throw new Error(message);}

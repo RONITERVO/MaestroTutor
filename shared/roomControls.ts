@@ -5,9 +5,8 @@ export interface AvatarMovementSettings { distance:number; speed:number }
 export interface AvatarWalkObservation {source:'included'|'embedded'|'library';motionId:string;modelHash:string;clipIndex:number;name:string;available:boolean;status:string;playbackStatus:string}
 export interface PhysicsObservation { ready:boolean; running:boolean; status:string }
 export interface AvatarMovementObservation { active:boolean; mode:'look'|'follow'|'manual'|'stopped'; status:string; canLook:boolean; canFollow:boolean; lookReason:string; followReason:string; distance:number; speed:number }
-import {behaviourFact} from './behaviourCatalog';
-import {behaviourEvent} from './behaviourEvents';
-import {capabilityDefinition,capabilityFeatures,capabilityInput} from './capabilities';
+import {programFeatureRequirements,invocationFeatureRequirements} from './programFeatures';
+import type {BehaviourProgram} from './programSyntax';
 import {roomControlFields} from './prompts/roomcontrols';
 export {roomControlFields} from './prompts/roomcontrols';
 const record=(v:unknown):v is Record<string,unknown>=>v!==null&&typeof v==='object'&&!Array.isArray(v);
@@ -26,44 +25,31 @@ export function validRoomControl(c:Record<string,unknown>):boolean {
   }
 }
 export function requireRoomCapabilities(commands:{action:string;rule?:unknown;execution?:unknown;catalog?:unknown}[],scene:{capabilities?:string[]}) {
-  const hasResults=(value:unknown):boolean=>Array.isArray(value)?value.some(hasResults):record(value)?value.op==='invoke'&&(value.results!==undefined||Object.keys(capabilityDefinition(String(value.capability))?.output?.properties??{}).length>0)||Object.values(value).some(hasResults):false;
-  const hasRecipe=(value:unknown):boolean=>Array.isArray(value)?value.some(hasRecipe):record(value)?value.op==='invoke'&&record(value.arguments)&&capabilityInput(String(value.capability),value.arguments)?.['x-features']?.includes('recipeCreation.v1')===true||Object.values(value).some(hasRecipe):false;
-  const hasEdit=(value:unknown):boolean=>Array.isArray(value)?value.some(hasEdit):record(value)?value.op==='invoke'&&['object.position.set','object.scale.set','object.color.set','object.delete'].includes(String(value.capability))||Object.values(value).some(hasEdit):false;
-  const needs=(value:unknown,features:Set<string>)=>{
-    if(Array.isArray(value)){value.forEach(x=>needs(x,features));return;}
-    if(!record(value))return;
-    if(value.op==='checkpoint'||value.memoryVersion!==undefined)features.add('rememberedVariables.v1');
-    if(value.op==='parallel'||value.parallelVersion!==undefined)features.add('parallelPrograms.v1');
-    if(value.op==='awaitCondition')features.add('conditionWaits.v1');
-    if(value.op==='invoke'&&value.waitForChannels!==undefined)features.add('channelWaits.v1');
-    if(value.op==='awaitEvent'){
-      if(value.fields!==undefined)features.add('eventFields.v1');
-      for(const feature of behaviourEvent(String(value.event))?.features??[])features.add(feature);
-    }
-    if(typeof value.fact==='string')for(const feature of behaviourFact(value.fact)?.features??[])features.add(feature);
-    const capability=value.op==='invoke'?value.capability:value.id;
-    if(typeof capability==='string'&&record(value.arguments))for(const feature of capabilityFeatures(capability,value.arguments,record(value.bindings)?Object.keys(value.bindings):[]))features.add(feature);
-    Object.values(value).forEach(x=>needs(x,features));
-  };
   for(const command of commands) {
+    const programs:BehaviourProgram[]=command.action==='rules'&&record(command.rule)&&Array.isArray(command.rule.edits)?command.rule.edits.flatMap(edit=>record(edit)&&record(edit.sequence)&&typeof edit.sequence.program==='string'?[JSON.parse(edit.sequence.program) as BehaviourProgram]:[]):[];
+    const programFeatures=new Set(programs.flatMap(program=>[...programFeatureRequirements(program)]));
     if(command.action==='catalog'&&record(command.catalog)&&command.catalog.category==='modules'&&!scene.capabilities?.includes('moduleLibrary.v1'))throw new Error('Update the native app to browse reusable modules (moduleLibrary.v1).');
     if(command.action==='catalog'&&record(command.catalog)&&command.catalog.category!==undefined&&command.catalog.category!=='modules'&&!scene.capabilities?.includes('catalogVocabulary.v1'))throw new Error('Update the native app to discover events and facts (catalogVocabulary.v1).');
     if(command.action==='catalog'&&record(command.catalog)&&command.catalog.arguments!==undefined&&!scene.capabilities?.includes('factQueries.v1'))throw new Error('Update the native app to read parameterized facts (factQueries.v1).');
     if(command.action==='execution'&&record(command.execution)&&command.execution.operation==='recover'&&!scene.capabilities?.includes('actionRecovery.v1'))throw new Error('Update the native app to recover action history.');
-    if(command.action==='rules'&&record(command.rule)&&Array.isArray(command.rule.edits)&&command.rule.edits.some(e=>record(e)&&record(e.sequence)&&typeof e.sequence.program==='string'&&hasEdit(JSON.parse(e.sequence.program)))&&!scene.capabilities?.includes('objectEdits.v1'))
+    if(programFeatures.has('objectEdits.v1')&&!scene.capabilities?.includes('objectEdits.v1'))
       throw new Error('Update the native app to edit objects in programs.');
-    if(command.action==='rules'&&record(command.rule)&&Array.isArray(command.rule.edits)&&command.rule.edits.some(e=>record(e)&&record(e.sequence)&&typeof e.sequence.program==='string'&&hasRecipe(JSON.parse(e.sequence.program)))&&!scene.capabilities?.includes('recipeCreation.v1'))
+    if(programFeatures.has('recipeCreation.v1')&&!scene.capabilities?.includes('recipeCreation.v1'))
       throw new Error('Update the native app to create recipe objects in programs.');
-    if(command.action==='rules'&&record(command.rule)&&Array.isArray(command.rule.edits)&&command.rule.edits.some(e=>record(e)&&record(e.sequence)&&typeof e.sequence.program==='string'&&hasResults(JSON.parse(e.sequence.program)))&&!scene.capabilities?.includes('actionResults.v1'))
+    if(programFeatures.has('actionResults.v1')&&!scene.capabilities?.includes('actionResults.v1'))
       throw new Error('Update the native app to use action results and creation programs.');
     if((Object.prototype.hasOwnProperty.call(roomControlFields,command.action)||command.action==='catalog'||command.action==='execution'||command.action==='motions'||command.action==='avatarActivities')&&!scene.capabilities?.includes(command.action+'.v1'))
       throw new Error('This room does not support '+command.action+'. Update or connect a compatible native app.');
-    if(command.action==='rules'&&record(command.rule)&&(command.rule.action==='signal'||command.rule.action==='stop'&&typeof command.rule.target==='string'||Array.isArray(command.rule.edits)&&command.rule.edits.some(e=>record(e)&&record(e.sequence)&&typeof e.sequence.program==='string'&&JSON.parse(e.sequence.program).version===3))&&!scene.capabilities?.includes('eventPrograms.v1'))
+    if(command.action==='rules'&&record(command.rule)&&(command.rule.action==='signal'||command.rule.action==='stop'&&typeof command.rule.target==='string'||programs.some(program=>program.version===3))&&!scene.capabilities?.includes('eventPrograms.v1'))
       throw new Error('Update the native app to use event programs.');
-    if(command.action==='rules'&&record(command.rule)&&Array.isArray(command.rule.edits)&&command.rule.edits.some(e=>record(e)&&record(e.sequence)&&e.sequence.program)&&!scene.capabilities?.includes('behaviourPrograms.v3'))
+    if(programs.length>0&&!scene.capabilities?.includes('behaviourPrograms.v3'))
       throw new Error('This room does not support behaviour programs. Update or connect a compatible native app.');
-    const features=new Set<string>();needs(command.execution,features);if(command.action==='rules'&&record(command.rule)&&command.rule.action==='memory')features.add('rememberedVariables.v1');
-    if(command.action==='rules'&&record(command.rule)&&Array.isArray(command.rule.edits))for(const edit of command.rule.edits)if(record(edit)&&record(edit.sequence)&&typeof edit.sequence.program==='string'){const program=JSON.parse(edit.sequence.program);if(program.dataVersion!==undefined)features.add('structuredValues.v1');if(program.moduleVersion!==undefined)features.add('programModules.v1');needs(program,features);}
+    const features=new Set(programFeatures);
+    if(command.action==='rules'&&record(command.rule)&&command.rule.action==='memory')features.add('rememberedVariables.v1');
+    if(command.action==='execution'&&record(command.execution)&&command.execution.operation==='start'&&record(command.execution.call)){
+      const call=command.execution.call;
+      if(typeof call.id==='string'&&record(call.arguments))for(const feature of invocationFeatureRequirements(call.id,call.arguments))features.add(feature);
+    }
     for(const feature of features)if(!scene.capabilities?.includes(feature))throw new Error('This action requires '+feature+'. Update or connect a compatible native app.');
   }
 }
