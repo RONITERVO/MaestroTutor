@@ -1,17 +1,17 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import { beforeEach, expect, it, vi } from 'vitest';
-const mocks = vi.hoisted(() => ({ native: true, url: 'https://server.example/questAttestation', suspended: false,
+const mocks = vi.hoisted(() => ({ native: true, questAppId: '1:123:web:abcdef', existingApps: [] as { name: string; options: { appId: string; projectId: string } }[], createApp: vi.fn(() => ({ name: 'maestro-quest' })), url: 'https://server.example/questAttestation', suspended: false,
   initialize: vi.fn(() => ({ app: 'quest' })), getToken: vi.fn(async () => ({ token: 'firebase.quest.proof' })),
   acquire: vi.fn(async () => ({ token: 'firebase.quest.proof', expireTimeMillis: 99 })), capacitor: vi.fn(), popup: vi.fn() }));
 vi.mock('@capacitor/core', () => ({ Capacitor: { isNativePlatform: () => false, getPlatform: () => 'web' } }));
 vi.mock('../../platform/quest/questIntegrityBridge', () => ({ isNativeQuestBook: () => mocks.native }));
 vi.mock('../../platform/browser/sessionActivity', () => ({ sessionActivity: { status: () => ({ suspended: mocks.suspended }) } }));
 vi.mock('../../core/config/integrations', () => ({ isFirebaseClientConfigured: () => true, MAESTRO_INTEGRATION_CONFIG: {
-  firebaseApiKey: 'key', firebaseAppId: 'quest-app', firebaseAuthDomain: 'example.test', firebaseProjectId: 'project',
+  firebaseApiKey: 'key', get questFirebaseAppId() { return mocks.questAppId; }, firebaseAppId: '1:123:web:fedcba', firebaseAuthDomain: 'example.test', firebaseProjectId: 'project',
   get questAttestationUrl() { return mocks.url; }, firebaseAppCheckSiteKey: 'recaptcha-site', firebaseAppCheckDebugToken: 'must-not-enable-on-quest',
 } }));
-vi.mock('firebase/app', () => ({ getApps: () => [], initializeApp: () => ({ name: 'firebase-app' }) }));
+vi.mock('firebase/app', () => ({ getApps: () => mocks.existingApps, initializeApp: mocks.createApp }));
 vi.mock('firebase/app-check', () => ({ initializeAppCheck: mocks.initialize, getToken: mocks.getToken,
   CustomProvider: class { constructor(public options: unknown) {} }, ReCaptchaEnterpriseProvider: class {} }));
 vi.mock('firebase/auth', () => ({ signInWithPopup: mocks.popup }));
@@ -19,7 +19,7 @@ vi.mock('@capacitor-firebase/app-check', () => ({ FirebaseAppCheck: { initialize
 vi.mock('./questAppCheck', () => ({ acquireQuestAppCheckToken: mocks.acquire, questAttestationBaseUrl: (value: string) => {
   if (!value) throw new Error('Managed Quest verification is not configured in this build.'); return value;
 } }));
-beforeEach(() => { vi.resetModules(); vi.clearAllMocks(); mocks.native = true; mocks.suspended = false; mocks.url = 'https://server.example/questAttestation'; });
+beforeEach(() => { vi.resetModules(); vi.clearAllMocks(); mocks.native = true; mocks.questAppId = '1:123:web:abcdef'; mocks.existingApps = []; mocks.suspended = false; mocks.url = 'https://server.example/questAttestation'; });
 
 it('initializes only the Quest CustomProvider, with no debug token or reCAPTCHA fallback', async () => {
   const { maestroFirebaseService: service } = await import('./maestroFirebaseService');
@@ -45,4 +45,28 @@ it('never starts embedded Google OAuth while Quest account linking remains unava
   const { firebaseAuthBridgeService: auth } = await import('../auth/firebaseAuthBridgeService');
   await expect(auth.beginGoogleSignIn()).rejects.toThrow('Quest account linking is not configured');
   expect(mocks.popup).not.toHaveBeenCalled();
+});
+
+it('keeps the same Firebase project while using a distinct named Quest registration', async () => {
+  mocks.existingApps = [{ name: '[DEFAULT]', options: { appId: '1:123:web:fedcba', projectId: 'project' } }];
+  const { maestroFirebaseService: service } = await import('./maestroFirebaseService');
+  await service.getApp();
+  expect(mocks.createApp).toHaveBeenCalledWith(expect.objectContaining({ appId: '1:123:web:abcdef', projectId: 'project' }), 'maestro-quest');
+});
+it.each(['', '1:123:web:fedcba', '1:999:web:abcdef', 'malformed'])('rejects missing, shared or different-project Quest Firebase registration: %s', async value => {
+  mocks.questAppId = value;
+  const { maestroFirebaseService: service } = await import('./maestroFirebaseService');
+  await expect(service.getApp()).rejects.toThrow('separate Quest Firebase app ID');
+  expect(mocks.createApp).not.toHaveBeenCalled();
+});
+it('rejects an existing Quest app initialized against different registration or project', async () => {
+  mocks.existingApps = [{ name: 'maestro-quest', options: { appId: 'other', projectId: 'project' } }];
+  const { maestroFirebaseService: service } = await import('./maestroFirebaseService');
+  await expect(service.getApp()).rejects.toThrow('configuration changed');
+});
+it('ordinary browser keeps its original Firebase registration', async () => {
+  mocks.native = false;
+  const { maestroFirebaseService: service } = await import('./maestroFirebaseService');
+  await service.getApp();
+  expect(mocks.createApp).toHaveBeenCalledWith(expect.objectContaining({ appId: '1:123:web:fedcba' }));
 });

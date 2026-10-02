@@ -2439,3 +2439,38 @@ No dashboard app, production deployment, release signing or Store submission was
 performed. The owner has been asked for a Meta app ID and intended package name;
 secrets/signing keys must not be shared in chat. Account-link implementation can
 continue while that external setup is pending.
+
+
+## Quest account-link server checkpoint (2026-10-02)
+
+Implemented a disabled browser-to-book pairing backend on the original Firebase
+project. It verifies the distinct Quest/web App Check app IDs, requires a recent
+Google sign-in plus explicit browser approval, and issues one custom token per
+approval for the verified existing UID. Codes expire after five minutes; device
+secrets are never in the browser URL, and stored credentials are hashed. Atomic
+approval, redemption, cancellation and account-deletion guards keep races from
+reassigning an identity or issuing duplicate credentials. Bounded HTTP parsing,
+strict shapes and committed Firestore throttles fail closed.
+
+The shared client now selects a separate named Quest Firebase registration in the
+same project; phone/web initialization remains unchanged. Browser approval UI,
+book pairing lifecycle, custom-token sign-in and real-provider acceptance are
+still pending. The endpoint remains disabled and undeployed. See
+[managed-access protocol](QUEST_MANAGED_ACCESS.md).
+
+The owner supplied public Meta app ID `1763835394893209` and selected
+`com.maestro.quest` subject to Meta's package-availability validation. The native
+resource records that ID with `enabled: false`; development remains
+`com.maestro.quest.development`. No secret was requested/received, no dashboard
+features were requested, and no build was uploaded or installed. Current code
+uses local entitlement and attestation, with none of the optional Meta user-data
+APIs listed on DUC; final audience, privacy and purchase scope still need review.
+
+Local validation: **82 Functions unit/CORS tests** pass, including **24 new
+pairing cases**. The complete Firestore emulator suite exited 0; a subsequent
+focused run also verifies deleting an account removes pending Quest approvals.
+The full shared web suite passed **1,800 tests / 210 files**, followed by **31
+focused tests** after adding two more invalid-registration cases. TypeScript,
+ESLint and production web compilation pass. CI verifies the final combined suite.
+No Unity C# or Android native code changed; the previous native APK remains the
+last packaged artifact and does not contain this checkpoint's web/config changes.

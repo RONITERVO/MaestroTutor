@@ -393,3 +393,5 @@ export const reconcileManagedLiveGatewayBilling = onSchedule(
 
 // Quest bootstrap is separately configured; the managed API keeps its existing guards.
 export { questAttestation } from './questAttestationEndpoint';
+
+export { questAccountLink } from './questAccountLinkEndpoint';

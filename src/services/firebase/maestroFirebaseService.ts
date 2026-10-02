@@ -41,13 +41,21 @@ const buildFirebaseConfig = () => {
     );
   }
 
+  const questAppId = MAESTRO_INTEGRATION_CONFIG.questFirebaseAppId;
+  const appIdPattern = /^1:([0-9]+):(web|android):[a-f0-9]+$/;
+  if (isNativeQuestBook() && (!appIdPattern.test(questAppId || '')
+    || questAppId === MAESTRO_INTEGRATION_CONFIG.firebaseAppId
+    || questAppId.match(appIdPattern)?.[1] !== MAESTRO_INTEGRATION_CONFIG.firebaseAppId.match(appIdPattern)?.[1])) {
+    throw new ServiceNotConfiguredError('quest-firebase-app', 'A separate Quest Firebase app ID in the same project is required for managed access.');
+  }
+
   return {
     apiKey: MAESTRO_INTEGRATION_CONFIG.firebaseApiKey,
     authDomain: MAESTRO_INTEGRATION_CONFIG.firebaseAuthDomain,
     projectId: MAESTRO_INTEGRATION_CONFIG.firebaseProjectId,
     storageBucket: MAESTRO_INTEGRATION_CONFIG.firebaseStorageBucket || undefined,
     messagingSenderId: MAESTRO_INTEGRATION_CONFIG.firebaseMessagingSenderId || undefined,
-    appId: MAESTRO_INTEGRATION_CONFIG.firebaseAppId,
+    appId: isNativeQuestBook() ? questAppId : MAESTRO_INTEGRATION_CONFIG.firebaseAppId,
     measurementId: MAESTRO_INTEGRATION_CONFIG.firebaseMeasurementId || undefined,
   };
 };
@@ -55,7 +63,16 @@ const buildFirebaseConfig = () => {
 const getFirebaseApp = async (): Promise<FirebaseApp> => {
   if (cachedFirebaseApp) return cachedFirebaseApp;
   const { getApps, initializeApp } = await import('firebase/app');
-  cachedFirebaseApp = getApps()[0] || initializeApp(buildFirebaseConfig());
+  if (isNativeQuestBook()) {
+    const config = buildFirebaseConfig();
+    const existing = getApps().find(app => app.name === 'maestro-quest');
+    if (existing && (existing.options.appId !== config.appId || existing.options.projectId !== config.projectId)) {
+      throw new ServiceNotConfiguredError('quest-firebase-app', 'Quest Firebase configuration changed. Restart the app.');
+    }
+    cachedFirebaseApp = existing || initializeApp(config, 'maestro-quest');
+  } else {
+    cachedFirebaseApp = getApps()[0] || initializeApp(buildFirebaseConfig());
+  }
   return cachedFirebaseApp;
 };
 

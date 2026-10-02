@@ -818,6 +818,8 @@ test('account deletion can release pending settlement without recreating a charg
 
 test('account deletion completes with an expired pending settlement and is retryable', async () => {
   const owner = await account();
+  const pairingRef = data.questAccountLinksCollection().doc('pairing-' + owner.uid);
+  await pairingRef.set({ uid: owner.uid, state: 'approved', secretHash: 'temporary-hash' });
   const held = await billing.reserveManagedCredits({ ...owner, operation: 'test-completion', model: 'test', estimatedCredits: 5, estimatedUsd: 0.005 });
   await billing.recordPendingManagedSettlement({ uid: owner.uid, reservationId: held.reservationId, billedCredits: 2, billedUsd: 0.002, operation: 'test-completion', model: 'test' });
   await data.managedReservationRef(owner.uid, held.reservationId).update({ expiresAt: 0 });
@@ -831,6 +833,7 @@ test('account deletion completes with an expired pending settlement and is retry
   try {
     const { deleteManagedAccount } = require('../lib/functions/src/account.js');
     assert.equal((await deleteManagedAccount(owner)).ok, true);
+    assert.equal((await pairingRef.get()).exists, false, 'account deletion removes outstanding Quest approvals');
     assert.equal((await data.managedUserRef(owner.uid).get()).exists, false);
     assert.equal((await data.accountDeletionClaimRef(owner.uid).get()).exists, true);
     assert.equal((await data.managedAccountRef(owner.uid).get()).exists, false);

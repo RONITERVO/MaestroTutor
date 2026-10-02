@@ -1,6 +1,6 @@
 # Quest managed access and release integration
 
-Status: client/server attestation checkpoint, **disabled and not deployed**. This does
+Status: attestation and account-link backend implemented, **disabled and not deployed**. This does
 not make Google sign-in or managed Gemini usable on Quest yet. No production
 credentials, Meta app, signing key or headset operation was created by this work.
 
@@ -11,11 +11,11 @@ Quest's book is an Android WebView loading the original app from
 `https://appassets.androidplatform.net`, without Capacitor. Quest now selects a Firebase JS CustomProvider backed by native Meta verification.
 It never falls back to web reCAPTCHA, Play Integrity or debug tokens. Embedded
 Google popup sign-in is explicitly refused while browser account linking remains
-unimplemented. The book keeps multiple windows disabled and main-frame
+unfinished. The book keeps multiple windows disabled and main-frame
 navigation restricted to its local origin.
 
-Google disallows OAuth authorization in embedded user agents. The next account
-integration should use a real browser (on the headset or an existing phone/PC),
+Google disallows OAuth authorization in embedded user agents. The account
+integration uses a real browser (on the headset or an existing phone/PC),
 with a short-lived, explicit device-link approval. It must preserve the same
 Firebase user, managed account, ledger and Gemini provider. It must not loosen
 WebView navigation to host the Google login. [Google native-app OAuth guidance](https://developers.google.com/identity/protocols/oauth2/native-app).
@@ -98,10 +98,12 @@ offline entitlement behavior and failure presentation still need headset QA.
 [Meta entitlement guidance](https://developers.meta.com/vr/documentation/unity/ps-entitlement-check/).
 
 Public native settings are in `Assets/Maestro/Resources/QuestPlatform.json`:
-version 1, `enabled: false`, empty `appId` by default. Enabling requires the actual
-Meta app ID. The web build additionally needs `VITE_QUEST_ATTESTATION_URL` pointing
+version 1, `enabled: false`, owner-provided `appId: "1763835394893209"`.
+The owner selected `com.maestro.quest` for release, subject to Store availability;
+development remains `com.maestro.quest.development`. No dashboard changes or
+uploads were performed. The web build additionally needs `VITE_QUEST_ATTESTATION_URL` pointing
 to the separately deployed function. `QUEST_FIREBASE_APP_ID` must match the
-Firebase app ID embedded in that Quest build; its Firebase project must be the
+`VITE_QUEST_FIREBASE_APP_ID` embedded in that Quest build; its Firebase project must be the
 same account/backend project. No Meta app secret enters Unity or the web bundle.
 
 The top-level book snapshot carries only a session ID, request number and server
@@ -119,9 +121,9 @@ against expiry. Existing phone and ordinary web providers are unchanged.
 
 ## Remaining implementation and acceptance
 
-1. Implement explicit account-link approval through the existing web account,
-   protected by Firebase Auth and App Check, with expiry, cancellation and atomic
-   one-time redemption. Linking must not substitute for app integrity.
+1. Finish the browser approval page and book pairing UI/client, including lifecycle
+   cancellation and Firebase custom-token sign-in. The backend protocol below is
+   implemented but disabled; linking must not substitute for app integrity.
 2. Restore/sign out the same Maestro identity and verify ordinary managed chat,
    Live, app-owned agent handoff, cancellation and usage accounting on Quest.
 3. Verify provider responses, signing-certificate rotation, actual Firebase mint
@@ -152,3 +154,73 @@ and repeated polling. Android tests verify bounded, quoted result delivery.
 
 Provider/mint responses in local tests are synthetic. No real Meta/Firebase token
 exchange, browser linking or Quest acceptance is claimed.
+
+
+## Account-link backend protocol
+
+The separate `questAccountLink` function is disabled unless
+`QUEST_ACCOUNT_LINK_ENABLED=true`. It also requires enabled attestation, verified
+proxy CIDRs, distinct same-project `QUEST_FIREBASE_APP_ID` and
+`QUEST_WEB_FIREBASE_APP_ID`, and an HTTPS `QUEST_ACCOUNT_LINK_VERIFY_URL` whose
+path is `/quest-link.html`. These are configuration gates, not authorization to
+deploy. The frontend approval page and book pairing UI are still pending.
+
+Every request requires App Check verification even when the ordinary managed
+API rollback setting disables enforcement. Creation, status, cancellation and
+redemption accept only the dedicated Quest `appId`; approval accepts only the
+original web `appId`. The Quest registration must exclusively use the Meta custom
+provider, without reCAPTCHA, debug or Play Integrity providers. The book uses a
+named Firebase app and refuses a missing/shared registration; identity and ledgers
+stay in the original Firebase project.
+
+| POST route | Exact JSON body | Result and guard |
+| --- | --- | --- |
+| `/create` | `{}` | Ten-character code, 256-bit device secret, five-minute expiry, fixed verification URL, five-second recommended poll interval. |
+| `/status` | `code`, `deviceSecret` | Pending/approved and expiry only; no account identity or credential. |
+| `/approve` | `code`, `confirm: true` | Requires configured browser Origin and revoked-token-checked Firebase Google sign-in within five minutes. UID comes only from the verified token. |
+| `/redeem` | `code`, `deviceSecret` | Atomically consumes approval before minting a custom token for the existing UID. |
+| `/cancel` | `code`, `deviceSecret` | Invalidates pending/approved link and removes UID/secret hash. |
+
+The public code carries 50 random bits. The secret never belongs in the approval
+URL, browser page, agent observations, saved room state or logs. Firestore stores
+hashes of code and secret. Approval/claim transactions check account-deletion
+state; account deletion removes outstanding approvals. Consumed/cancelled rows
+retain only timestamps/state until TTL deletion. Expiry is checked independently
+of TTL cleanup. Browser approval cannot be overwritten by a competing account.
+
+Committed per-minute limits count malformed/authentication failures too: 12 per
+operation per ingress IP, 120 status polls, and six approvals per authenticated
+UID. IP and UID rate subjects are hashed. NAT users share IP limits. Storage
+failures deny access. Request bodies are capped at 2 KiB including Functions'
+preparsed buffers; provider/storage error details never reach HTTP responses.
+
+Only one custom token is **issued** per pairing approval; Firebase's custom token
+itself has its own one-hour validity. Signing/delivery failure requires a new
+pairing, with no cached credential or retry mint. The client must discard late
+results after cancel, sign-out or book replacement. Firebase IAM signing
+permissions and real custom-token sign-in still need acceptance testing.
+[Firebase custom-token authentication](https://firebase.google.com/docs/auth/admin/create-custom-tokens).
+
+## Meta dashboard / DUC scope recorded on 2026-10-02
+
+Owner-provided public Meta app ID: `1763835394893209`. App secret and `OC|...`
+credentials remain server-only and must not be pasted into chat or committed.
+The package `com.maestro.quest` is provisional until Meta validates availability;
+a visible Store title is independent of the Android identifier.
+[Meta package requirements](https://developers.meta.com/vr/resources/publish-mobile-manifest/).
+
+The implementation calls SDK initialization, local entitlement and integrity-token
+APIs. It does not request Meta User ID/profile, Meta Avatars, Meta subscriptions,
+platform rooms/friends or Meta VoIP. Our imported models, scanned rooms, Gemini
+speech and existing Maestro subscription do not themselves use those APIs.
+Based on this implementation and Meta's DUC table, none of those optional features
+should be requested solely to unblock the dashboard's User ID/federated-ID panel.
+This is the current integration assessment; verify against any actual provider
+rejection and the final release scope before submitting certifications.
+[Meta DUC guidance](https://developers.meta.com/vr/resources/publish-data-use/).
+
+Device Ban is a separately reviewed optional feature; our app never calls the
+ban APIs or retains attestation device identifiers. Requested audience/age category
+and the final purchase flow remain release decisions and could change the required
+features. Do not certify unimplemented data uses.
+[Meta attestation and Device Ban](https://developers.meta.com/vr/documentation/android-apps/ps-attestation-api/).
