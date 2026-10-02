@@ -2377,3 +2377,30 @@ value after preview restart, then completes review; actual observations drive th
 web contract fixture. Source/mirror hashes match **229 runtime, 130 test and 11
 editor C# files**. No APK build or headset operation was performed; physical
 storage latency, lifecycle and power-loss acceptance remain open.
+
+
+## Packaged activity defaults and managed-access audit (2026-10-02)
+
+Development source `27069e97c514e9b3afa61d619e2a6dee3d402041` is packaged as
+`MaestroQuest-tutor-defaults-E80D8EAD.apk`, SHA-256
+`E80D8EADFA9666CE323B7C56F4F2777D3DE07CCFDB07BF5E4B117C76D28ECFE4`.
+The complete packaging helper exited 0: 593 EditMode, 417 PlayMode, three expected
+private-file skips, and 76 Android bridge tests. All 113 web files, the included
+avatar and 178 exact motion payloads match source; ARM64, signature and manifest
+are verified. This is a development build and was not installed on a headset.
+
+The release audit found that Quest currently falls through to web popup sign-in
+and reCAPTCHA because its local book WebView is not Capacitor. These paths do not
+establish managed Quest access. A separately configured, disabled-by-default Meta
+attestation -> Firebase App Check backend is now implemented, with one-time
+challenges, strict release checks and transaction tests. Native attestation,
+shared-app provider integration and explicit browser account linking remain to be
+implemented and verified. The original account, ledger and Gemini provider stay
+authoritative. See [Quest managed access](QUEST_MANAGED_ACCESS.md) for the concrete
+boundary, configuration, evidence and open release gates.
+
+Backend checkpoint validation: **58 Functions unit/CORS tests** pass, including
+33 Quest cases. The complete Firestore emulator command exited 0, covering the
+existing billing/Live suites and new Quest transaction checks. TypeScript,
+focused lint and whitespace checks pass. Real attestation and minting remain
+unverified; the endpoint stays disabled pending configuration and device work.

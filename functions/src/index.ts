@@ -390,3 +390,6 @@ export const reconcileManagedLiveGatewayBilling = onSchedule(
     console.info('[live-gateway] Billing recovery completed.', result);
   },
 );
+
+// Quest bootstrap is separately configured; the managed API keeps its existing guards.
+export { questAttestation } from './questAttestationEndpoint';
