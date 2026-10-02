@@ -68,6 +68,11 @@ Completing workspace review now drains accepted room/behaviour saves in the back
 Aimed physical throws and read-only trajectory previews now use the same native catalog, generated book form and rigid-body physics; see QUEST_AIMED_THROWS.md.
 The remaining runtime, provider, device and Store acceptance gates remain unfinished; the complete v1 goal remains active.
 
+The next durable-program-state increment has a tested typed storage foundation and
+an explicit checkpoint/no-replay design in QUEST_PROGRAM_MEMORY.md. It is not
+connected to workspace owners or advertised to users yet; runtime, shared
+authoring, reset/recovery and complete archive integration remain required.
+
 Current recovery implementation supports retained candidates, an external backup,
 and an explicitly requested fresh workspace through the same shared book/agent
 catalog. Original data stays preserved; preview, commit and content review remain
