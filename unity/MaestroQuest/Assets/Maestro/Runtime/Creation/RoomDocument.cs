@@ -183,18 +183,37 @@ namespace Maestro.Quest.Creation
         }
         public RoomDocument Snapshot() => new() { version = 2, objects = items.Values.Select(item => item.Copy()).OrderBy(item => item.id, StringComparer.Ordinal).ToArray() };
 
-        public bool Apply(RoomObjectData[] replacements, string[] removals, out string error)
+        internal bool PlacementBaseline(RoomLayout layout,out RoomObjectData[] baseline,out string error)
+        {
+            baseline=null;if(!layout.Validate(out error))return false;
+            var snapshot=Snapshot();var values=snapshot.objects.ToDictionary(x=>x.id);
+            foreach(var p in layout.placements) {if(!values.TryGetValue(p.target,out var data)){error="A layout member was removed";return false;}p.Apply(data);}
+            if(!snapshot.Validate(out error))return false;
+            baseline=layout.placements.Select(p=>values[p.target]).ToArray();return true;
+        }
+        public bool Apply(RoomObjectData[] replacements, string[] removals, out string error, RoomLayout observedBefore=null)
         {
             var changedIds = replacements.Select(item => item.id).Concat(removals).ToHashSet();
             var candidate = new Dictionary<string, RoomObjectData>(items);
             foreach (var id in removals) candidate.Remove(id);
             foreach (var item in replacements) candidate[item.id] = item.Copy();
             if (!(new RoomDocument { version = 2, objects = candidate.Values.ToArray() }).Validate(out error)) return false;
+            var before=changedIds.Where(items.ContainsKey).Select(id=>items[id].Copy()).ToArray();
+            if(observedBefore!=null) {
+                if(!observedBefore.Validate(out error))return false;
+                if(removals.Length!=0||!changedIds.SetEquals(observedBefore.placements.Select(p=>p.target))){error="Layout baseline must match the edited members";return false;}
+                if(!PlacementBaseline(observedBefore,out before,out error))return false;
+            }
             var change = new Change {
-                Before = changedIds.Where(items.ContainsKey).Select(id => items[id].Copy()).ToArray(),
+                Before = before,
                 After = changedIds.Where(candidate.ContainsKey).Select(id => candidate[id].Copy()).ToArray()
             };
-            if (Equivalent(change.Before, change.After)) return true;
+            if (Equivalent(change.Before, change.After)) {
+                // A live layout may already match while its periodic saved pose lags.
+                // Accept that snapshot without an empty Undo entry or stale journal.
+                if(observedBefore!=null&&!Equivalent(changedIds.Where(items.ContainsKey).Select(id=>items[id]).ToArray(),change.After))Set(change.Before,change.After);
+                return true;
+            }
             Set(change.Before, change.After);
             undo.Add(change); if (undo.Count > 32) undo.RemoveAt(0); redo.Clear(); return true;
         }

@@ -89,7 +89,27 @@ try{
   if((templatePhysics.catalog?.value as {mode?:string})?.mode!=='solid')throw new Error('Template physics did not expand');
   const templateUndo=await execute([{action:'undo'}]);if(templateUndo.objects.some(object=>object.id===templateId))throw new Error('Single Undo did not remove the whole template');
   await writeFile(join(directory,'template-authoring.json'),JSON.stringify({boundary:'Real Unity native states; browser acknowledgements replayed separately. Not headset or provider proof.',before:templateBefore,search:templateSearch,definition:templateDefinition,after:templateAfter,read:templateRead,collision:templateCollision,physics:templatePhysics,undo:templateUndo},null,2));
-  outcome={template:{hash:templateArgs.templateHash,createReceipt:templateAfter.execution?.selected,componentsAndSingleUndoVerified:true},createdId:target,createReceipt:selected,paintVerified:true,undoPaintVerified:true,undoCreateVerified:true,diagnostics:diagnostic.catalog.value,lathe:{createReceipt:lathe.execution?.selected,profile:value,editAndUndoVerified:true},collision:{summary:summaryValue,editAndUndoVerified:true},latheCycles:cycle+1};
+  const brickSource=JSON.parse(await readFile('unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/brick.json','utf8'));
+  const {createHash}=await import('node:crypto');const brickHash=createHash('sha256').update(await readFile('unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/brick.json')).digest('hex');
+  const layoutIds:string[]=[];let layoutBefore=templateUndo;
+  for(let i=0;i<2;i++){
+   layoutBefore=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'template',templateHash:brickHash,name:brickSource.name+' '+(i+1),x:.4+i*.25,y:1.2,z:.7,scale:1}}}}]);
+   const id=layoutBefore.execution?.selected?.output?.objectId;if(typeof id!=='string')throw new Error('Layout member missing');layoutIds.push(id);
+  }
+  const placements=layoutIds.map((target,i)=>({target,position:{x:.3+i*.25,y:1,z:.8},rotation:{x:0,y:0,z:0,w:1},scale:1}));
+  const layoutSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Arrange or reset objects',offset:0}}]);
+  const layoutDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.layout.apply',version:1}}]);
+  const layoutAfter=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.layout.apply',version:1,arguments:{placements}}}}]);
+  if(layoutAfter.execution?.selected?.output?.count!==2)throw new Error('Layout did not complete both members');
+  const layoutFacts=[];for(const p of placements){
+   const fact=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.placement',version:1,arguments:{target:p.target}}}]);
+   const value=fact.catalog?.value as {position?:{x:number;y:number;z:number};scale?:number};
+   if(!value?.position||Math.abs(value.position.x-p.position.x)>.00001||Math.abs(value.position.y-p.position.y)>.00001||Math.abs(value.position.z-p.position.z)>.00001||value.scale!==1)throw new Error('Layout live readback differs');layoutFacts.push(fact);
+  }
+  const layoutUndo=await execute([{action:'undo'}]);for(let i=0;i<2;i++)if(Math.abs((layoutUndo.objects.find(o=>o.id===layoutIds[i])?.position.x??0)-(.4+i*.25))>.00001)throw new Error('Single Undo did not restore both layout members');
+  await writeFile(join(directory,'layout-authoring.json'),JSON.stringify({boundary:'Real Unity native states; browser acknowledgements replayed separately. Not headset or provider proof.',before:layoutBefore,search:layoutSearch,definition:layoutDefinition,after:layoutAfter,facts:layoutFacts,undo:layoutUndo},null,2));
+  await execute([{action:'undo'}]);await execute([{action:'undo'}]);
+  outcome={layout:{applyReceipt:layoutAfter.execution?.selected,liveReadAndSingleUndoVerified:true},template:{hash:templateArgs.templateHash,createReceipt:templateAfter.execution?.selected,componentsAndSingleUndoVerified:true},createdId:target,createReceipt:selected,paintVerified:true,undoPaintVerified:true,undoCreateVerified:true,diagnostics:diagnostic.catalog.value,lathe:{createReceipt:lathe.execution?.selected,profile:value,editAndUndoVerified:true},collision:{summary:summaryValue,editAndUndoVerified:true},latheCycles:cycle+1};
   }
  }
  await writeFile(join(directory,'journey.json'),JSON.stringify({version:1,boundary:'Real Unity Editor app and shared room protocol; no Quest input, WebView, scan or Store proof',providerUsed:!!prompt,initial,observations,outcome},null,2));

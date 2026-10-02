@@ -30,9 +30,11 @@ animation. Successful receipt replay cannot create it twice.
 | Box robot | Nineteen parented parts, two wave tracks, initially idle | Fixed whole-body proxy does not follow animated parts |
 
 The first set is deliberately smaller than the complete proposed play kit. Drawing
-surfaces, physical joints/fidgets, assemblies/snapping/reset, playable chess layout,
+surfaces, physical joints/fidgets, assemblies/snapping, a shipped chess layout,
 container transfer and snow remain separate increments in
-[world authoring](QUEST_WORLD_AUTHORING.md). This set does not fulfill those gates.
+[world authoring](QUEST_WORLD_AUTHORING.md). This set does not fulfill those gates. Existing pieces can now share a
+[layout reset](QUEST_LAYOUT_AUTHORING.md) with one Undo; this does not connect
+bricks or supply chess rules.
 
 ## Discovery, identity and ownership
 

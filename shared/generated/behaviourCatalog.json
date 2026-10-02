@@ -8617,6 +8617,160 @@
       "description": "Place an existing object at x/y/z in room metres, within 25 m of origin. Keeps rotation and scale. Saves before completion and adds one Undo edit. This is immediate placement: velocity resets, then normal gravity resumes. Other objects keep running."
     },
     {
+      "id": "object.layout.apply",
+      "version": 1,
+      "label": "Arrange or reset objects",
+      "input": {
+        "type": "object",
+        "properties": {
+          "placements": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "target": {
+                  "type": "string",
+                  "pattern": "^[a-fA-F0-9]{32}$",
+                  "maxLength": 32,
+                  "x-resource": "object"
+                },
+                "position": {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "number",
+                      "minimum": -25.0,
+                      "maximum": 25.0
+                    },
+                    "y": {
+                      "type": "number",
+                      "minimum": -25.0,
+                      "maximum": 25.0
+                    },
+                    "z": {
+                      "type": "number",
+                      "minimum": -25.0,
+                      "maximum": 25.0
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y",
+                    "z"
+                  ],
+                  "additionalProperties": false
+                },
+                "rotation": {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "number",
+                      "minimum": -1.0,
+                      "maximum": 1.0
+                    },
+                    "y": {
+                      "type": "number",
+                      "minimum": -1.0,
+                      "maximum": 1.0
+                    },
+                    "z": {
+                      "type": "number",
+                      "minimum": -1.0,
+                      "maximum": 1.0
+                    },
+                    "w": {
+                      "type": "number",
+                      "minimum": -1.0,
+                      "maximum": 1.0
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y",
+                    "z",
+                    "w"
+                  ],
+                  "additionalProperties": false,
+                  "format": "unitQuaternion"
+                },
+                "scale": {
+                  "type": "number",
+                  "minimum": 0.1,
+                  "maximum": 4.0
+                }
+              },
+              "required": [
+                "target",
+                "position",
+                "rotation",
+                "scale"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 16
+          }
+        },
+        "required": [
+          "placements"
+        ],
+        "additionalProperties": false,
+        "format": "objectLayout",
+        "x-features": [
+          "layoutEdits.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "storage.writable"
+      ],
+      "description": "Apply 1–16 explicit placements together: target ID, room-local position in metres, unit-quaternion rotation and uniform scale. Useful for arranging/resetting a castle or board. Read object.placement to capture each live baseline; save chosen values in a reusable program. All members must exist, be released and idle; a missing or conflicting member refuses the entire edit. Saves once with one Undo capturing all targets' actual pre-edit poses; temporary play stays in its fork. Resets member velocities, preserves geometry/settings/animations and leaves other objects running. Completion means placement was applied, not that the structure is stable. Does not create replacements, connect/snap parts, avoid overlaps, start physics or move the book/Maestro. These are room axes, not durable scanned-room anchors. Programs use explicit literal member IDs; one-off calls require the normal current object conditions. Receipt replay cannot apply it twice; Stop does not undo a completed edit.",
+      "example": {
+        "placements": [
+          {
+            "target": "00000000000000000000000000000000",
+            "position": {
+              "x": 0.3,
+              "y": 1,
+              "z": 0.6
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1
+          }
+        ]
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 16.0
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "count",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "object.rotation.set",
       "version": 1,
       "label": "Rotate object",
@@ -12170,6 +12324,57 @@
       ]
     },
     {
+      "id": "object.placement",
+      "version": 1,
+      "type": {
+        "record": {
+          "target": "text",
+          "revision": "number",
+          "position": {
+            "record": {
+              "x": "number",
+              "y": "number",
+              "z": "number"
+            }
+          },
+          "rotation": {
+            "record": {
+              "x": "number",
+              "y": "number",
+              "z": "number",
+              "w": "number"
+            }
+          },
+          "scale": "number",
+          "temporary": "boolean"
+        }
+      },
+      "label": "Live object placement",
+      "description": "Current room-local position, unit rotation and uniform scale of a creation, suitable for an explicit layout baseline. Includes the last authored revision, which does not identify every live physics frame. A read does not save or reserve the object. Unlike object.definition these are live values; unlike object.position these are room-local axes. Unavailable for missing/disabled targets, paused runtime or out-of-bounds poses. Do not treat room axes as durable scan anchors.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1",
+        "layoutEdits.v1"
+      ]
+    },
+    {
       "id": "creation.template",
       "version": 1,
       "type": {
@@ -14975,7 +15180,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "5c8db0a0f2b64fee7e4d34bd270b2154da09140a77d33449e85b0a0fa6d20d98"
+      "sha256": "f5116ccdfcf18bd566ffa86e8929332952251c1dfac7301bfb2290b059246763"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -14995,7 +15200,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "4c3d75501f0344875b301131f13b3879463299345663aeecb42b94a0693ef162"
+      "sha256": "10b6826f266a5a03831d4a3703e9c5c345e7e389227dd0b985a288c861695f3d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -15027,7 +15232,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "bf8c8b018a5325592d6f1bb9dce56b1d72c1531461c3954e1cc446f1836079d3"
+      "sha256": "5a4e499a031ba33296f9962ac9fe83ade640295233eee534779567fab4e16d4a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -15251,7 +15456,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "f0c989bf1e927ea6a40b53fbcf9c5cf9d608f8bdab3396b3f9b2cd4f42b38bfe"
+      "sha256": "6de4197cc72465bd049a96bccf82da4b3b4dfa0ce23533a72325f498408cb4d8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomToolTray.cs",
@@ -15271,7 +15476,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "b1fbd2016bae91686e45bb4f0431df5f53bb5e15ed777abac7cdc22b15f00656"
+      "sha256": "6b96543c4690be1160aa464e8c2f2ea8152dafb48f8f6f96912e05a2b89e1d73"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedDrawing.cs",
@@ -15418,6 +15623,10 @@
       "sha256": "409510ce0cadc96bcb226d1f5f29a19c9d25a125e0ec3f780ca3e2757c3e5f0c"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLayout.cs",
+      "sha256": "f95b1f0e772a782aeb44d885dda0ae6b6a835f3a80ab53c039cb2a379e0c0369"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/LegacyCapabilityAdapters.cs",
       "sha256": "f5e46d1a74dbc76d0bf10636ad0a0574b95a98c09f50b1daae1ec055c92601ce"
     },
@@ -15451,7 +15660,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "8d41487cc68efb77dad7f13ad86b3684eed263f11266d194464ddcbc3752e337"
+      "sha256": "7aad2d98b2d4a6a3d42c4e001df99c1a463906f5fbdb15ca70456ee241fea538"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -15516,6 +15725,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/LaunchObjectCapability.cs",
       "sha256": "f1e705fd9bfc6dc72041eff724e9a5787a5bb0c3e912c977b73c5e9a3e9668c5"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/LayoutCapability.cs",
+      "sha256": "3e0655362f616467af6577b3becb698c56422aefc8ca89bc5f9a6c7043fad450"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/LibraryAnimationCapability.cs",

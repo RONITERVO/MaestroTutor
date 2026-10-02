@@ -13,7 +13,7 @@ export interface CapabilitySchema {
  oneOf?:CapabilitySchema[];'x-confirmation'?:string;'x-discriminators'?:string[];title?:string;description?:string;examples?:unknown[];'x-static'?:boolean;'x-channels'?:string[];'x-requirements'?:string[];'x-features'?:string[];
  items?:CapabilitySchema;minItems?:number;maxItems?:number;nullable?:boolean;
  properties?:Record<string,CapabilitySchema>;required?:string[];additionalProperties?:false;
- format?:'unitQuaternion'|'boundedOffset'|'roomRecipe'|'lathePart'|'collisionRecipe'|'programModule'|'programMemoryValue';'x-resource'?:'object';'x-requires'?:Record<string,string>;
+ format?:'unitQuaternion'|'boundedOffset'|'roomRecipe'|'lathePart'|'collisionRecipe'|'programModule'|'programMemoryValue'|'objectLayout';'x-resource'?:'object';'x-requires'?:Record<string,string>;
  minimum?:number;maximum?:number;maxLength?:number;pattern?:string;enum?:string[];'x-enum-labels'?:Record<string,string>;'x-enum-images'?:Record<string,string>;
 }
 export interface CapabilityDefinition {
@@ -59,6 +59,10 @@ function validate(value:unknown,schema:CapabilitySchema,path:string):string|null
    for(const [key,entry] of Object.entries(value)){
     const error=validate(entry,properties[key],path+'.'+key);if(error)return error;
     if(Object.entries(properties[key]['x-requires']??{}).some(([field,expected])=>value[field]!==expected))return path+'.'+key+' has incompatible arguments';
+   }
+   if(schema.format==='objectLayout'){
+    const placements=value.placements as {target:string;position:{x:number;y:number;z:number}}[];
+    return new Set(placements.map(p=>p.target)).size===placements.length&&placements.every(p=>p.position.x**2+p.position.y**2+p.position.z**2<=625)?null:path+' needs distinct objects within 25 metres';
    }
    if(schema.format==='collisionRecipe')return validCollisionRecipe(value)?null:path+' needs bounded valid collision shapes';
    if(schema.format==='lathePart')return validLathePart(value)?null:path+' needs a simple counter-clockwise lathe profile';
