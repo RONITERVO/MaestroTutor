@@ -13,5 +13,6 @@ public final class ModelPicker {
     public static String Start(Activity activity,String requestId){return DocumentPicker.Start(activity,requestId,"model");}
     public static String Read(String requestId){return DocumentPicker.Read(requestId,"model");}
     public static void Release(String requestId){DocumentPicker.Release(requestId,"model");}
+    public static boolean SelectMember(String id,int index,int request){return DocumentPicker.SelectModelMember(id,index,request);}
     static Intent selectionIntent(){return DocumentPicker.selectionIntent();}
 }

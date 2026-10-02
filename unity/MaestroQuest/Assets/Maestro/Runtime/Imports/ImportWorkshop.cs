@@ -47,6 +47,7 @@ namespace Maestro.Quest.Imports
         AnimationWorkshop animationWorkshop;
         public void Pick()
         {
+            if(HasArchive){BrowseArchive();return;}
 #if UNITY_EDITOR
             if(!CanBeginSelection(false,out var error)){Say(error);return;}
             string path=UnityEditor.EditorUtility.OpenFilePanelWithFilters("Import a model you may use","",new[]{"GLB and VRM models","glb,vrm"});
@@ -80,10 +81,11 @@ namespace Maestro.Quest.Imports
         public async void Accept() => await AcceptAsync();
         public Task<bool> AcceptAsync()=>AcceptPreviewManually("object");
         public void Cancel() { if(!CanCancelSelection(selectionId,out var error)){Say(error);return;} CancelSelection(selectionId); }
-        void ClearPreview() { if (preview) { preview.gameObject.SetActive(false); Destroy(preview.gameObject); } preview = null; pending = null; FinishSelectionPreview(); Details = "Select Maestro or an imported object to play its clips.\nUse Maestro selects a compatible GLB or VRM humanoid."; Changed?.Invoke(); }
+        void ClearPreview(bool finishSelection=true) { if (preview) { preview.gameObject.SetActive(false); Destroy(preview.gameObject); } preview = null; pending = null; if(finishSelection)FinishSelectionPreview(); Details = "Select Maestro or an imported object to play its clips.\nUse Maestro selects a compatible GLB or VRM humanoid."; Changed?.Invoke(); }
         public async void UseMaestro() => await UseMaestroAsync();
         public async Task<bool> UseMaestroAsync()
         {
+            if(HasArchive&&!HasPreview){Say("Preview a ZIP model before using it as Maestro");return false;}
             if(HasPreview)return await AcceptPreviewManually("maestro");
             using var write=editor.WriteGate.TryWrite(out var blocked);if(write==null){Say(blocked);return false;}
             if (Busy || !maestro || maestro.ModelBusy) return false;
@@ -139,7 +141,7 @@ namespace Maestro.Quest.Imports
             if (libraryMode) { ShowLibraryDetails(); return; }
             if (!HasPreview) { var created = editor.Find(selected)?.GetComponent<CreatedRoomObject>(); Details = selected == "maestro" && maestro ? maestro.ModelStatus : created && created.Model ? created.ModelStatus : "Select Maestro or an imported object to play its clips."; Changed?.Invoke(); }
         }
-        public void NextDetails() { page++; ShowDetails(); }
+        public void NextDetails() { if(BrowsingArchive){ShowArchive();return;}page++; ShowDetails(); }
         void ShowDetails()
         {
             if (libraryMode) { ShowLibraryDetails(); return; }
@@ -193,6 +195,7 @@ namespace Maestro.Quest.Imports
         public async void SaveMotions() => await SaveMotionsAsync();
         public async Task<bool> SaveMotionsAsync()
         {
+            if(HasArchive&&!HasPreview){Say("Preview a ZIP model before saving its motions");return false;}
             if(HasPreview)return await AcceptPreviewManually("motions");
             using var write=editor.WriteGate.TryWrite(out var blocked);if(write==null){Say(blocked);return false;}
             if (Busy) return false; busy = true; Stop(); Say("Extracting motions without saving another model…");

@@ -51,14 +51,19 @@ namespace Maestro.Quest.Imports
         {
             var owner=workshop; var batch=owner.Batches;
             Action[] commands=batches ? new Action[] { batch.ChooseFiles,batch.Save,batch.StopBatch,batch.Save,batch.Retry,batch.PreviousResult,batch.NextResult,batch.MoreInfo,batch.NextCategory,owner.BrowseLibrary,batch.Clear,ToggleBatches } : new Action[] { owner.Pick,owner.Accept,owner.Cancel,owner.NextDetails,owner.NextClip,owner.Play,owner.StopPreview,owner.ToggleLoop,owner.UseMaestro,owner.DefaultMaestro,owner.SaveMotions,owner.BrowseLibrary };
-            var labels=batches ? BatchLabels : ModelLabels;
-            for (int i=0;i<buttons.Count;i++) { buttons[i].Command=commands[i]; buttons[i].AccessibleName=labels[i]; markings[i].text=labels[i]; }
+            var labels=(string[])(batches ? BatchLabels : ModelLabels).Clone();
+            if(!batches&&owner.HasArchive){
+                labels[0]="ZIP files";
+                if(!owner.HasPreview){labels[1]="Preview";commands[1]=owner.PreviewArchiveMember;labels[4]="Prev file";commands[4]=owner.PreviousArchiveMember;labels[5]="Next file";commands[5]=owner.NextArchiveMember;}
+            }
+            for (int i=0;i<buttons.Count;i++) { buttons[i].gameObject.SetActive(batches||!owner.HasArchive||owner.HasPreview||i<6); buttons[i].Command=commands[i]; buttons[i].AccessibleName=labels[i]; markings[i].text=labels[i]; }
         }
         void Refresh()
         {
+            BindButtons();
             details.text=batches ? workshop.Batches.Details : workshop.Details;
             status.text=string.Join("\n",ModelText.Wrap(batches ? workshop.Batches.Status : workshop.Status,65).Take(3));
-            footer.text=batches ? "Save batch / Resume / Retry confirms you may use these assets" : "Add / Use Maestro / Save motions confirms you may use this asset";
+            footer.text=!batches&&workshop.HasArchive&&!workshop.HasPreview ? "Preview checks one file; accepting comes afterward" : batches ? "Save batch / Resume / Retry confirms you may use these assets" : "Add / Use Maestro / Save motions confirms you may use this asset";
         }
         Material Paint(string color) { var value = IllustratedMaterials.Create(IllustratedMaterials.Hex(color)); materials.Add(value); return value; }
         static void Part(Transform parent, Vector3 position, Vector3 size, Material material)

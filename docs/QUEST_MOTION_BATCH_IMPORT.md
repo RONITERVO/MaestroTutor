@@ -62,9 +62,9 @@ separate from the library's existing 128 MiB / 1,024-motion budget. No automatic
 eviction occurs when that budget is reached. Several exports may add to the
 same library; they do not need to fit into one Meshy download.
 
-The batch is for **motion extraction**. Choosing the avatar itself still uses
-single-model preview and acceptance with a GLB/VRM. ZIP member browsing for model
-preview is separate remaining work. Imported motions never silently retarget an
+The batch is for **motion extraction**. The separate model import flow now also
+accepts a ZIP and lets the user/agent browse and preview one model before explicit
+avatar or object acceptance; see QUEST_MODEL_IMPORT.md. Imported motions never silently retarget an
 old rig to a changed character. Matching bone names alone are insufficient.
 
 Native/book/agent file facts cover indices 0–1,023 with bounded, per-file reads;

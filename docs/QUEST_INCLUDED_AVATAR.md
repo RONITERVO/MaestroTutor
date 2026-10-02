@@ -77,7 +77,10 @@ for those files, not a fixed compression ratio for future collections.
 Ten-clip exports are convenient when within those limits. Do not rerig between
 exports intended for the same collection.
 
-**Remaining:** ZIP member browsing for model preview, curated offline default
+Model import now supports ZIP member search and explicit preview/acceptance;
+see QUEST_MODEL_IMPORT.md.
+
+**Remaining:** curated offline default
 motion packs with stable IDs and updates, real multi-clip exports from the new
 rig, content organization and Quest performance/comfort acceptance. Cross-rig
 retargeting of imported motions is not implemented; canonical gestures/poses

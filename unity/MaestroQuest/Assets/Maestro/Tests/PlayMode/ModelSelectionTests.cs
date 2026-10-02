@@ -15,7 +15,7 @@ namespace Maestro.Quest.Tests
 {
     public sealed partial class AnimationWorkshopTests
     {
-        sealed class ModelChoice:IModelPicker
+        sealed class ModelChoice:IModelPicker,IModelArchivePicker
         {
             public string CacheRoot {get;}
             public bool ReadyToStart=>Result==null;
@@ -27,6 +27,9 @@ namespace Maestro.Quest.Tests
                 string folder=Path.Combine(CacheRoot,Guid.NewGuid().ToString("D"));Directory.CreateDirectory(folder);SelectedPath=Path.Combine(folder,Guid.NewGuid().ToString("D"));File.WriteAllBytes(SelectedPath,bytes);
                 Result["phase"]="selected";Result["path"]=SelectedPath;Result["name"]=name;
             }
+            public byte[][] ArchiveBytes;public int MemberChoices;public bool HoldMember;
+            public void ChooseArchive(params byte[][] files){ArchiveBytes=files;Result["phase"]="archive";Result["members"]=new JArray(files.Select((bytes,index)=>new JObject {["name"]="model-"+index+".glb",["bytes"]=bytes.Length}));}
+            public bool SelectMember(string id,int index,int request){if(Result==null||(string)Result["id"]!=id)return false;MemberChoices++;Result["memberRequest"]=request;Result["phase"]="copying";if(!HoldMember)Choose(ArchiveBytes[index],"model-"+index+".glb");return true;}
             public void Release(string id){if(Result==null||(string)Result["id"]!=id)return;Releases++;Result=null;if(SelectedPath!=null&&File.Exists(SelectedPath))File.Delete(SelectedPath);}
         }
         ImportWorkshop imports;ModelChoice modelChoice;

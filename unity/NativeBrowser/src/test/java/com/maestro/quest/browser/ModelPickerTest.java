@@ -102,4 +102,51 @@ public class ModelPickerTest {
         }finally{WorkspacePicker.Release(B);shadowOf(Looper.getMainLooper()).idle();}
     }
 
+    @Test public void zipListingRequiresExplicitMemberChoiceAndKeepsArchiveAcrossPreviews() throws Exception {
+        MotionArchiveTest.writeZip(fixture.data,3,false);fixture.name="my-avatar.zip";int before=SelectedFiles.ENTRIES.size();
+        DocumentPicker picker=start(A);picker.onActivityResult(ModelPicker.REQUEST,Activity.RESULT_OK,new Intent().setData(SelectedFilesTest.SOURCE));waitPhase("archive");
+        assertEquals(3,read(A).getJSONArray("members").length());assertEquals("",read(A).getString("path"));assertEquals(before+1,SelectedFiles.ENTRIES.size());
+        assertFalse(ModelPicker.SelectMember(B,0,1));assertFalse(ModelPicker.SelectMember(A,3,1));assertFalse(WorkspacePicker.ReadyToStart());
+        assertTrue(ModelPicker.SelectMember(A,2,2));waitPhase("selected");File first=new File(read(A).getString("path"));assertTrue(first.exists());assertEquals(2,read(A).getInt("memberRequest"));assertEquals(2,java.nio.file.Files.readAllBytes(first.toPath())[0]);
+        assertFalse(ModelPicker.SelectMember(A,0,2));assertTrue(first.exists());
+        java.nio.file.Files.write(fixture.data.toPath(),new byte[0]);assertTrue(ModelPicker.SelectMember(A,0,4));waitPhase("selected");File second=new File(read(A).getString("path"));assertFalse(first.exists());assertEquals(0,java.nio.file.Files.readAllBytes(second.toPath())[0]);assertEquals(before+2,SelectedFiles.ENTRIES.size());
+        picker.onDestroy();assertTrue(second.exists());assertEquals("selected",read(A).getString("phase"));ModelPicker.Release(A);
+        long until=System.currentTimeMillis()+3000;while(!ModelPicker.ReadyToStart()&&System.currentTimeMillis()<until)Thread.sleep(5);assertFalse(second.exists());assertEquals(before,SelectedFiles.ENTRIES.size());
+    }
+    @Test public void badMemberCanBeRetriedWithoutChangingOrGrantingAnotherFile() throws Exception {
+        MotionArchiveTest.writeZip(fixture.data,2,true);fixture.name="models.zip";byte[] bytes=java.nio.file.Files.readAllBytes(fixture.data.toPath());int central=MotionArchiveTest.central(bytes);bytes[central+16]^=1;java.nio.file.Files.write(fixture.data.toPath(),bytes);
+        int before=SelectedFiles.ENTRIES.size();DocumentPicker picker=start(A);picker.onActivityResult(ModelPicker.REQUEST,Activity.RESULT_OK,new Intent().setData(SelectedFilesTest.SOURCE));waitPhase("archive");
+        assertTrue(ModelPicker.SelectMember(A,0,1));waitPhase("memberFailed");assertEquals("",read(A).getString("path"));assertTrue(read(A).getString("error").contains("damaged"));
+        assertTrue(ModelPicker.SelectMember(A,1,2));waitPhase("selected");assertEquals(1,java.nio.file.Files.readAllBytes(new File(read(A).getString("path")).toPath())[0]);assertEquals(before+2,SelectedFiles.ENTRIES.size());
+    }
+    @Test public void releaseWhileMemberWaitsDrainsBeforeAllowingReplacement() throws Exception {
+        MotionArchiveTest.writeZip(fixture.data,1,false);fixture.name="models.zip";int before=SelectedFiles.ENTRIES.size();DocumentPicker picker=start(A);
+        picker.onActivityResult(ModelPicker.REQUEST,Activity.RESULT_OK,new Intent().setData(SelectedFilesTest.SOURCE));waitPhase("archive");
+        java.lang.reflect.Field field=DocumentPicker.class.getDeclaredField("worker");field.setAccessible(true);java.util.concurrent.ExecutorService worker=(java.util.concurrent.ExecutorService)field.get(picker);
+        java.util.concurrent.CountDownLatch entered=new java.util.concurrent.CountDownLatch(1),finish=new java.util.concurrent.CountDownLatch(1);
+        worker.execute(()->{entered.countDown();try{finish.await();}catch(InterruptedException ex){Thread.currentThread().interrupt();}});assertTrue(entered.await(3,java.util.concurrent.TimeUnit.SECONDS));
+        try{assertTrue(ModelPicker.SelectMember(A,0,1));ModelPicker.Release(A);assertFalse(ModelPicker.ReadyToStart());assertFalse(ModelPicker.SelectMember(A,0,2));}finally{finish.countDown();}
+        long until=System.currentTimeMillis()+3000;while(!ModelPicker.ReadyToStart()&&System.currentTimeMillis()<until)Thread.sleep(5);assertTrue(ModelPicker.ReadyToStart());assertEquals("",ModelPicker.Read(A));assertEquals(before,SelectedFiles.ENTRIES.size());
+    }
+    @Test public void timedOutMemberCannotFailTheNewerRetryWhenItsWorkerDrains() throws Exception {
+        MotionArchiveTest.writeZip(fixture.data,2,false);fixture.name="models.zip";DocumentPicker picker=start(A);
+        picker.onActivityResult(ModelPicker.REQUEST,Activity.RESULT_OK,new Intent().setData(SelectedFilesTest.SOURCE));waitPhase("archive");
+        java.lang.reflect.Field field=DocumentPicker.class.getDeclaredField("worker");field.setAccessible(true);java.util.concurrent.ExecutorService worker=(java.util.concurrent.ExecutorService)field.get(picker);
+        java.util.concurrent.CountDownLatch entered=new java.util.concurrent.CountDownLatch(1),finish=new java.util.concurrent.CountDownLatch(1);
+        worker.execute(()->{entered.countDown();try{finish.await();}catch(InterruptedException ex){Thread.currentThread().interrupt();}});assertTrue(entered.await(3,java.util.concurrent.TimeUnit.SECONDS));
+        try{
+            assertTrue(ModelPicker.SelectMember(A,0,1));shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMinutes(2));assertEquals("memberFailed",read(A).getString("phase"));
+            assertTrue(ModelPicker.SelectMember(A,1,2));
+        }finally{finish.countDown();}
+        waitPhase("selected");assertEquals(2,read(A).getInt("memberRequest"));assertEquals(1,java.nio.file.Files.readAllBytes(new File(read(A).getString("path")).toPath())[0]);
+    }
+    @Test public void explicitlySelectedPrivateZipMemberMatchesItsExpectedModelHash() throws Exception {
+        String source=System.getenv("MAESTRO_TEST_MOTION_ZIP"),wanted=System.getenv("MAESTRO_TEST_MODEL_MEMBER_NAME"),expected=System.getenv("MAESTRO_TEST_MODEL_MEMBER_HASH");
+        Assume.assumeTrue(source!=null&&wanted!=null&&expected!=null);java.nio.file.Files.copy(new File(source).toPath(),fixture.data.toPath(),java.nio.file.StandardCopyOption.REPLACE_EXISTING);fixture.name="selected-models.zip";
+        DocumentPicker picker=start(A);picker.onActivityResult(ModelPicker.REQUEST,Activity.RESULT_OK,new Intent().setData(SelectedFilesTest.SOURCE));waitPhase("archive");
+        org.json.JSONArray list=read(A).getJSONArray("members");int selected=-1;
+        for(int i=0;i<list.length();i++)if(list.getJSONObject(i).getString("name").contains(wanted)){assertEquals("Member name must identify exactly one model",-1,selected);selected=i;}
+        assertTrue(selected>=0);assertTrue(ModelPicker.SelectMember(A,selected,1));waitPhase("selected");
+        byte[] model=java.nio.file.Files.readAllBytes(new File(read(A).getString("path")).toPath());assertEquals(expected,java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(model)));
+    }
 }

@@ -30,6 +30,7 @@ final class MotionArchive implements AutoCloseable {
         } catch(IOException|RuntimeException ex) {zip.close();throw ex;}
     }
     int count(){return models.size();}
+    long bytes(int index){return models.get(index).getSize();}
     String name(int index){String value=models.get(index).getName();return SelectedFiles.safeName(value.substring(value.lastIndexOf('/')+1));}
     android.net.Uri copy(int index,SelectedFiles destination,BooleanSupplier cancelled) throws IOException {
         check(cancelled);ZipEntry member=models.get(index);

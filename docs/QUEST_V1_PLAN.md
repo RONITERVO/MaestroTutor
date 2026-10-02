@@ -6,8 +6,9 @@ The chosen paid-plan Meshy export is now packaged as the offline default avatar,
 with exact saved identity, an explicit Walking clip and portable recovery/backup
 content. The older Meshy motion collection uses a different rig and stays out of
 the default library. Direct animation ZIP import now uses the existing shared
-batch controls. ZIP model preview and curated default motion packs remain
-unfinished; see QUEST_INCLUDED_AVATAR.md and QUEST_MOTION_BATCH_IMPORT.md.
+batch controls. ZIP model search and preview also share physical/book/agent
+selection and explicit acceptance. Curated default motion packs remain unfinished;
+see QUEST_INCLUDED_AVATAR.md, QUEST_MODEL_IMPORT.md and QUEST_MOTION_BATCH_IMPORT.md.
 
 Current animation authoring lets agent/program calls and optional typed book
 fields edit the same pose and keyframes as the physical tray. Exact object
@@ -20,7 +21,7 @@ pose versions, the same physical joint limits and imported retargeter, held-join
 exclusion, failed-pose recovery and recording interoperation. Saved edits are
 durable outside temporary mode; temporary edits stay in the fork until Keep.
 No authoring operation starts playback. The catalog contains 59 actions, 11
-events and 51 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
+events and 52 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
 Single-file GLB/VRM selection, preview and acceptance now share the physical
 import path with book fields and agent/program calls. See QUEST_MODEL_IMPORT.md.
 Animation collections now share native selection, versioned start/retry/tag controls,
@@ -1972,3 +1973,44 @@ acceptance remain open. ZIP member selection for **model preview**, curated
 current-rig default motion packs and cross-rig imported-motion retargeting are
 separate remaining work. The old-rig animation collection is unchanged and is
 not assigned to the new default. Other v1 release gates remain open.
+
+
+## 2026-10-02: ZIP model selection and preview
+
+Users can now choose a GLB/VRM member from the same bounded ZIP source used by
+animation collections. Selection privately copies and lists the ZIP without
+choosing a model. Physical Prev/Next file and Preview, generated book forms and
+the room agent share versioned selection. Search returns three indexed entries
+per page; the worst escaped-name case fits the existing program-value budget.
+Explicit acceptance is still required for an object, Maestro, library model or
+embedded motions. A failed member keeps the archive available for another try.
+
+Back-to-files removes only the preview. Cancellation releases private copies and
+the workspace lease, and newer requests reject stale choices and late failures.
+A timeout/retry regression ensures an old native worker cannot fail a newer
+member request. See QUEST_MODEL_IMPORT.md for limits and lifecycle details.
+
+Verification: 419 Unity EditMode and 394 PlayMode tests passed (three optional
+private-file checks skipped). All 76 Android tests passed, including extracting
+all three original Meshy ZIP members and choosing its exact Walking model through
+the Android model picker. The physical/native journey covers failed preview,
+stale versions, explicit avatar acceptance, Undo, pause and cancellation. The
+shared web subset passed 56 tests in four files; TypeScript, ESLint, catalog drift
+and included-asset integrity checks passed. Native release assembly/lint and the
+complete development build exited 0; six existing native lint warnings remain.
+
+All 214 runtime, 111 test and 11 Editor C# files, 33 fixtures plus metadata,
+the native AAR and 113 packaged web files match the verified inputs. Both ZIP
+import paths are present in the APK DEX. Exact default avatar bytes, ARM64-only
+libraries and APK v2 signature are verified.
+
+Development checkpoint:
+`D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-model-zip-8ED11511.apk`
+
+SHA-256:
+`8ED11511C2F8F6E4E096EEA4B51855F177AD5F2D5C3537C24D4268CE15146E90`
+
+This APK has not been installed. Physical chooser/lifecycle, storage and Quest
+performance/comfort acceptance remain open. Curated current-rig motion packs,
+cross-rig imported-motion retargeting and the other v1 release gates remain
+unfinished. The older motion collection is unchanged.

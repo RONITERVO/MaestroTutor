@@ -56,7 +56,7 @@ namespace Maestro.Quest.Imports
         {
             if(!CanBeginSelection(true,out var error))throw new InvalidOperationException(error);
             BeginSelectionOwner();picking=true;
-            try{modelPicker.Start(selectionId);Say("Choose one GLB or VRM file in the document picker");}
+            try{modelPicker.Start(selectionId);Say("Choose a GLB, VRM or ZIP in the document picker");}
             catch(Exception){SelectionFailed("The document picker could not open. Resume Maestro and try again.");ReleaseSelectionPicker(selectionId);EndSelectionOwner();}
             return selectionId;
         }
@@ -70,7 +70,10 @@ namespace Maestro.Quest.Imports
                 string phase=(string)result["phase"];
                 if(phase is "opening" or "selecting" or "copying"){selectionPhase=phase=="opening"?"selecting":phase;return;}
                 if(phase=="cancelled"){CancelSelection(selectionId);return;}
-                if(phase=="failed"){SelectionFailed("The selected model could not be copied. Choose a local GLB or VRM of 64 MB or less.");ReleaseSelectionPicker(selectionId);EndSelectionOwner();return;}
+                if(phase=="failed"){SelectionFailed(Bounded((string)result["error"]??"The selected model could not be copied. Choose a local GLB, VRM or ZIP."));ReleaseSelectionPicker(selectionId);EndSelectionOwner();return;}
+                if(phase=="archive"){if(selectionPaused||!selectionFocused)return;AdoptArchive(result);return;}
+                if(HasArchive&&phase=="memberFailed"){ArchiveMemberFailed((string)result["error"]??"This ZIP model could not be read. Choose another file.");return;}
+                if(HasArchive&&(int?)result["memberRequest"]!=archiveVersion)throw new ModelImportException("The selected ZIP member changed");
                 if(phase!="selected")throw new ModelImportException("The model chooser returned an invalid state");
                 if(selectionPaused||!selectionFocused)return;
                 string path=SelectedPath((string)result["path"],modelPicker.CacheRoot),name=ModelLibrary.SafeName((string)result["name"]);
@@ -94,12 +97,13 @@ namespace Maestro.Quest.Imports
                 if(!HasPreview)throw new ModelImportException("The model preview did not finish loading");
                 selectionInfo["humanoid"]=preview.IsHumanoid;selectionPhase="preview";
             }catch(OperationCanceledException){selectionPhase="cancelled";ClearPreview();Say("Import cancelled — no model was added");}
-            catch(Exception ex){SelectionFailed(ex is ModelImportException?ex.Message:"The model could not be imported. Try a self-contained GLB or VRM.");ClearPreview();}
+            catch(Exception ex){SelectionFailed(ex is ModelImportException?ex.Message:"The model could not be imported. Try a self-contained GLB or VRM.");ClearPreview(!archivePickerOwned);}
             finally{
                 // The selected bytes belong to the worker until reading/loading drains.
-                if(releasePicker)ReleaseSelectionPicker(id);
+                if(releasePicker&&!archivePickerOwned)ReleaseSelectionPicker(id);
                 preparingSelection=false;busy=false;
-                if(disposed||selectionPhase!="preview")EndSelectionOwner();
+                if(archivePickerOwned&&!disposed&&selectionPhase=="failed")ArchiveMemberFailed(selectionError);
+                if(disposed||selectionPhase is not ("preview" or "archive"))EndSelectionOwner();
             }
         }
         internal bool CanCancelSelection(string id,out string error)
@@ -121,7 +125,7 @@ namespace Maestro.Quest.Imports
             if(selectionPhase=="preview")selectionPhase="consumed";
             if(!preparingSelection)EndSelectionOwner();
         }
-        void EndSelectionOwner(){picking=false;selectionWrite?.Dispose();selectionWrite=null;selectionCancel?.Dispose();selectionCancel=null;}
+        void EndSelectionOwner(){ReleaseArchive();picking=false;selectionWrite?.Dispose();selectionWrite=null;selectionCancel?.Dispose();selectionCancel=null;}
         void ReleaseSelectionPicker(string id){try{modelPicker?.Release(id);}catch(Exception){selectionError="The selected file is still closing. Resume Maestro before choosing another.";}}
         void CloseSelection()
         {
@@ -145,13 +149,14 @@ namespace Maestro.Quest.Imports
         }
     }
 #if UNITY_ANDROID && !UNITY_EDITOR
-    internal sealed class AndroidModelPicker:IModelPicker
+    internal sealed class AndroidModelPicker:IModelPicker,IModelArchivePicker
     {
         public string CacheRoot {get;}
         public bool ReadyToStart {get{using var picker=new AndroidJavaClass("com.maestro.quest.browser.ModelPicker");return picker.CallStatic<bool>("ReadyToStart");}}
         public AndroidModelPicker(){using var player=new AndroidJavaClass("com.unity3d.player.UnityPlayer");using var activity=player.GetStatic<AndroidJavaObject>("currentActivity");using var picker=new AndroidJavaClass("com.maestro.quest.browser.ModelPicker");CacheRoot=picker.CallStatic<string>("CacheRoot",activity);}
         public void Start(string id){using var player=new AndroidJavaClass("com.unity3d.player.UnityPlayer");using var activity=player.GetStatic<AndroidJavaObject>("currentActivity");using var picker=new AndroidJavaClass("com.maestro.quest.browser.ModelPicker");picker.CallStatic<string>("Start",activity,id);}
         public JObject Read(string id){using var picker=new AndroidJavaClass("com.maestro.quest.browser.ModelPicker");string value=picker.CallStatic<string>("Read",id);return string.IsNullOrEmpty(value)?null:JObject.Parse(value);}
+        public bool SelectMember(string id,int index,int request){using var picker=new AndroidJavaClass("com.maestro.quest.browser.ModelPicker");return picker.CallStatic<bool>("SelectMember",id,index,request);}
         public void Release(string id){using var picker=new AndroidJavaClass("com.maestro.quest.browser.ModelPicker");picker.CallStatic("Release",id);}
     }
 #endif
