@@ -15,6 +15,8 @@ namespace Maestro.Quest.Programs
         public static Vector3 Position(JObject arguments)=>new((float)arguments["x"],(float)arguments["y"],(float)arguments["z"]);
         public static Color Color(JObject arguments)=>new((float)arguments["red"],(float)arguments["green"],(float)arguments["blue"],1);
         public static RoomRecipe Recipe(JObject arguments)=>JsonUtility.FromJson<RoomRecipe>(arguments["recipe"].ToString());
+        public static CollisionRecipe Collision(JObject arguments)=>arguments["collision"] is JObject value?JsonUtility.FromJson<CollisionRecipe>(value.ToString()):null;
+        public static ObjectPhysicsSettings Physics(JObject arguments)=>arguments["physics"] is JObject value?JsonUtility.FromJson<ObjectPhysicsSettings>(value.ToString()):null;
         public static JObject RobotExample() {var recipe=RecipeTemplates.BoxRobot(true);recipe.playing=false;return JObject.Parse(JsonUtility.ToJson(recipe));}
     }
     internal sealed class WaitCapability : CapabilityModule
@@ -56,19 +58,23 @@ namespace Maestro.Quest.Programs
     {
         public override string Id=>"object.create.recipe";
         public override string Label=>"Create recipe object";
-        public override string Description=>"Create editable geometry and optional animation tracks from a bounded recipe. Returns objectId after saving; one room Undo edit. Set recipe.playing=false to create it idle and use animation.play with source.kind recipe on the returned ID for program-controlled playback. Setting playing=true explicitly starts the saved recipe animation. Geometry uses metres in room axes; scale is 0.1–4. The new assembly uses fixed physics.";
+        public override string Description=>"Create editable geometry and optional animation tracks from a bounded recipe. Returns objectId after saving; one room Undo edit. Set recipe.playing=false to create it idle and use animation.play with source.kind recipe on the returned ID for program-controlled playback. Setting playing=true explicitly starts the saved recipe animation. Geometry uses metres in room axes; scale is 0.1–4. Optional collision and physics components are validated and saved with the geometry as one creation/Undo. Omitted physics keeps the existing fixed default. Collision proxies stay root-local and do not follow animated parts; creating a dynamic object does not start room physics.";
         public override string Duration=>"instant";
         public override IReadOnlyList<string> Requirements=>new[] {"room.capacity","storage.writable","recipe.valid"};
-        public override JObject InputSchema=>Object(new JObject {["name"]=Text("^.{0,80}$",80),["x"]=Number(-25,25),["y"]=Number(-25,25),["z"]=Number(-25,25),["scale"]=Number(.1,4),["recipe"]=RecipeSchema()});
+        public override JObject InputSchema {get {
+            var collision=CollisionCapability.RecipeSchema();((JArray)collision["x-features"]).Add("creationComponents.v1");
+            var physics=PhysicsSettingsCapability.SettingsSchema();physics["x-features"]=new JArray("creationComponents.v1");
+            return Object(new JObject {["name"]=Text("^.{0,80}$",80),["x"]=Number(-25,25),["y"]=Number(-25,25),["z"]=Number(-25,25),["scale"]=Number(.1,4),["recipe"]=RecipeSchema(),["collision"]=collision,["physics"]=physics},"collision","physics");
+        }}
         public override JObject OutputSchema=>Object(new JObject {["objectId"]=Resource(Text("^[a-f0-9]{32}$",32))});
         public override JObject Example=>new JObject {["name"]="Box robot",["x"]=.3f,["y"]=1.3f,["z"]=.65f,["scale"]=1,["recipe"]=ObjectCapabilityData.RobotExample()};
         public override bool Validate(JObject arguments,out string error) {
             error="Position must be within 25 metres of the room origin";if(ObjectCapabilityData.Position(arguments).sqrMagnitude>625)return false;
             error=null;return true;
         }
-        public override bool CanRun(CapabilityContext context,JObject arguments,out string error)=>context.Editor.CanCreateRecipe(ObjectCapabilityData.Recipe(arguments),out error);
+        public override bool CanRun(CapabilityContext context,JObject arguments,out string error)=>context.Editor.CanCreateRecipe(ObjectCapabilityData.Recipe(arguments),ObjectCapabilityData.Collision(arguments),ObjectCapabilityData.Physics(arguments),out error);
         public override bool Start(CapabilityContext context,string runId,JObject arguments,out CapabilityOperation operation,out string error) {
-            operation=null;if(!context.Editor.CreateRecipe((string)arguments["name"],ObjectCapabilityData.Position(arguments),(float)arguments["scale"],ObjectCapabilityData.Recipe(arguments),out var id,out error))return false;
+            operation=null;if(!context.Editor.CreateRecipe((string)arguments["name"],ObjectCapabilityData.Position(arguments),(float)arguments["scale"],ObjectCapabilityData.Recipe(arguments),ObjectCapabilityData.Collision(arguments),ObjectCapabilityData.Physics(arguments),out var id,out error))return false;
             operation=new CompletedCapability(new JObject {["objectId"]=id});return true;
         }
     }

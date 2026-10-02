@@ -26,7 +26,7 @@ namespace Maestro.Quest.Tests
             var definition=BehaviourCatalog.Action("object.create");var shape=definition.InputSchema;
             foreach(var variant in (JArray)shape["oneOf"]) {
                 var example=(JObject)variant["examples"][0];Assert.That(BehaviourCatalog.TryCall(definition.Id,1,example,out var call,out var error),Is.True,error);
-                if((string)example["kind"]=="copy"||(string)example["kind"]=="drawing"){Assert.That(call.TryStep(out _,out _),Is.False,"Copy needs no numeric action adapter");continue;}
+                if((string)example["kind"]=="copy"||(string)example["kind"]=="drawing"||(string)example["kind"]=="template"){Assert.That(call.TryStep(out _,out _),Is.False,"Copy needs no numeric action adapter");continue;}
                 Assert.That(call.TryStep(out var step,out error),Is.True,error);
                 Assert.That(LegacyCapabilityAdapters.TryCall(step,out var restored,out error),Is.True,error);// Numeric JSON integer/float representation changes through Unity's legacy float fields.
                 JObject Numbers(JObject value) {var copy=(JObject)value.DeepClone();foreach(var number in copy.Descendants().OfType<JValue>().Where(v=>v.Type==JTokenType.Integer||v.Type==JTokenType.Float).ToArray())number.Replace(new JValue(number.Value<double>()));return copy;}
@@ -35,7 +35,7 @@ namespace Maestro.Quest.Tests
             }
             Assert.That((string)definition.InputSchema["oneOf"][0]["examples"][0]["kind"],Is.EqualTo("primitive"));
             var catalog=new Maestro.Quest.Creation.RoomCapabilityCatalog(null);
-            foreach(string query in new[]{"shape","recipe","storage.writable"}) {
+            foreach(string query in new[]{"shape","recipe","storage.writable","cup","domino"}) {
                 bool found=false;int offset=0,total;
                 do{Assert.That(catalog.Execute(new JObject {["operation"]="search",["query"]=query,["offset"]=offset},out _),Is.True);var page=catalog.Observe();found|=page["entries"].Any(x=>(string)x["id"]==definition.Id);total=(int)page["total"];offset+=(int)page["pageSize"];}while(offset<total);
                 Assert.That(found,Is.True,query);

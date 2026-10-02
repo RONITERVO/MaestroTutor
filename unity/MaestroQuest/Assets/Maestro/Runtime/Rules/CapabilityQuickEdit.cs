@@ -56,6 +56,7 @@ namespace Maestro.Quest.Rules
                     string id=(string)field.Value;var item=editor.Read(id);
                     value=item==null?"Missing object":(string.IsNullOrEmpty(item.name)?item.kind.ToString():item.name)+(item.IsBuiltIn?"":" · "+id.Substring(0,4));
                 }
+                if(field!=null&&!Bound(field)&&field.Value?.Type==JTokenType.String&&field.Schema["x-enum-labels"]?[(string)field.Value]?.Type==JTokenType.String)value=(string)field.Schema["x-enum-labels"][(string)field.Value];
                 value=Short(value,28);
                 return Short(sequence.name,24)+" · Block "+(nodeIndex+1)+"/"+nodes.Count+" · "+Short(Definition?.Label,30)+
                     "\n"+(field==null?"":(fieldIndex+1)+"/"+fields.Count+" "+Short(field.Path,32)+": "+value)+

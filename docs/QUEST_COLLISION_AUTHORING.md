@@ -40,8 +40,9 @@ An edit does not start physics, change the material, or configure liquid capacit
 Shapes rotate/move/scale with the whole object. They do **not** follow animated
 visual parts, infer hollowness from imported meshes, or resize automatically when
 visual recipes change. Physical hinges, articulated members and fluid transfers
-are separate components. Create geometry then configure collision as two edits;
-atomic default-template creation is later work.
+are separate components. Existing objects use a separate collision edit. New recipe objects can include
+geometry, collision and physics atomically; bundled defaults use that same path.
+See [starter objects](QUEST_CREATION_TEMPLATES.md).
 
 Held/owned targets and active animation-authoring sessions refuse edits. Accepted
 changes share save-before-apply, temporary-room behaviour, Undo/Redo, copying and

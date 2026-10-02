@@ -72,3 +72,19 @@ for(const role of motions.activities){
 }
 assert.deepEqual([...roles].sort(),[0,1,2,3]);
 console.log('Included tutor-state defaults verified: exact compatible IDs for four editable starting states.');
+
+const templateRoot=new URL('Maestro/Resources/Creation/Templates/',root);
+const templateFiles=(await readdir(templateRoot)).filter(name=>name.endsWith('.json')).sort();
+const shared=JSON.parse(await readFile(new URL('../shared/generated/behaviourCatalog.json',import.meta.url),'utf8'));
+const templateKind=shared.actions.find(action=>action.id==='object.create').input.oneOf.find(branch=>branch.examples[0].kind==='template');
+const choice=templateKind.properties.templateHash,templateHashes=[];
+for(const file of templateFiles){
+ const bytes=await readFile(new URL(file,templateRoot)),entry=JSON.parse(bytes.toString('utf8')),hash=createHash('sha256').update(bytes).digest('hex');
+ assert.equal(bytes.includes(13),false,'Template bytes must use LF');assert.equal(entry.format,'maestro-creation-template');assert.equal(entry.version,1);assert.equal(entry.id+'.json',file);
+ assert.equal(choice['x-enum-labels'][hash],entry.name);assert.equal(choice['x-enum-images'][hash],`quest/templates/${hash}.png`);
+ const preview=await readFile(new URL(`../public/quest/templates/${hash}.png`,import.meta.url));assert.equal(preview.subarray(0,8).toString('hex'),'89504e470d0a1a0a');assert.equal(preview.readUInt32BE(16),512);assert.equal(preview.readUInt32BE(20),512);
+ templateHashes.push(hash);
+}
+assert.deepEqual([...choice.enum].sort(),templateHashes.sort());
+assert.deepEqual((await readdir(new URL('../public/quest/templates/',import.meta.url))).sort(),templateHashes.map(hash=>hash+'.png').sort());
+console.log(`Starter templates verified: ${templateFiles.length} exact bundled definitions and Unity previews. Native tests cover component validity and physics.`);

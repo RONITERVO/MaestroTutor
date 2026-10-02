@@ -25,10 +25,11 @@ namespace Maestro.Quest.Programs
     }
     internal sealed class PhysicsSettingsCapability:SpatialSettingsCapability
     {
+        internal static JObject SettingsSchema()=>Object(new JObject {["mode"]=Choice("fixed","solid","bouncy"),["shape"]=Choice("automatic","box","sphere"),["mass"]=Number(.05,20)});
         public override string Id=>"object.physics.configure";
         public override string Label=>"Configure object physics";
         public override string Description=>"Set a creation's fixed/solid/bouncy mode, collision shape and mass in kilograms through the physical physics tools' save path. Read object.physics.settings. Supply all three preferences and preserve any the user did not request. Book and Maestro are excluded. Live position is retained; changed collision geometry and body configuration can affect current simulation. Other objects are not paused."+SaveRules;
-        public override JObject InputSchema {get{var fields=Fields(Resource(Text("^[a-fA-F0-9]{32}$",32)));fields["mode"]=Choice("fixed","solid","bouncy");fields["shape"]=Choice("automatic","box","sphere");fields["mass"]=Number(.05,20);return CurrentInputs(Featured(Object(fields)),"object.physics.settings","revision",new JObject {["target"]="target"},"mode","shape","mass");}}
+        public override JObject InputSchema {get{var fields=Fields(Resource(Text("^[a-fA-F0-9]{32}$",32)));foreach(var field in ((JObject)SettingsSchema()["properties"]).Properties())fields[field.Name]=field.Value.DeepClone();return CurrentInputs(Featured(Object(fields)),"object.physics.settings","revision",new JObject {["target"]="target"},"mode","shape","mass");}}
         public override JObject Example=>new() {["target"]=new string('0',32),["revision"]=1,["mode"]="bouncy",["shape"]="sphere",["mass"]=.5};
         static ObjectPhysicsSettings Settings(JObject args)=>new() {mode=(string)args["mode"],shape=(string)args["shape"],mass=(float)args["mass"]};
         protected override bool Ready(RoomEditor editor,JObject args,out string error)=>editor.CanConfigurePhysics((string)args["target"],(int)args["revision"],Settings(args),out error);

@@ -1,0 +1,244 @@
+{
+  "format": "maestro-creation-template",
+  "version": 1,
+  "id": "domino",
+  "name": "Domino",
+  "description": "Upright two-three domino. Copy, place and topple it using ordinary physics.",
+  "tags": [
+    "game",
+    "stacking"
+  ],
+  "author": "Roni Tervo / Maestro",
+  "license": "Apache-2.0",
+  "definition": {
+    "version": 1,
+    "recipe": {
+      "version": 1,
+      "parts": [
+        {
+          "id": "Body",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.08,
+            "y": 0.16,
+            "z": 0.022
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0,
+            "z": 0.0,
+            "w": 1.0
+          },
+          "parent": null,
+          "color": {
+            "r": 0.91,
+            "g": 0.88,
+            "b": 0.76,
+            "a": 1
+          }
+        },
+        {
+          "id": "Divider",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.074,
+            "y": 0.005,
+            "z": 0.024
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0,
+            "z": 0.0,
+            "w": 1.0
+          },
+          "parent": null,
+          "color": {
+            "r": 0.08,
+            "g": 0.08,
+            "b": 0.12,
+            "a": 1
+          }
+        },
+        {
+          "id": "Dot0",
+          "shape": "sphere",
+          "position": {
+            "x": -0.02,
+            "y": 0.055,
+            "z": 0.013
+          },
+          "size": {
+            "x": 0.014,
+            "y": 0.014,
+            "z": 0.006
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0,
+            "z": 0.0,
+            "w": 1.0
+          },
+          "parent": null,
+          "color": {
+            "r": 0.08,
+            "g": 0.08,
+            "b": 0.12,
+            "a": 1
+          }
+        },
+        {
+          "id": "Dot1",
+          "shape": "sphere",
+          "position": {
+            "x": 0.02,
+            "y": 0.025,
+            "z": 0.013
+          },
+          "size": {
+            "x": 0.014,
+            "y": 0.014,
+            "z": 0.006
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0,
+            "z": 0.0,
+            "w": 1.0
+          },
+          "parent": null,
+          "color": {
+            "r": 0.08,
+            "g": 0.08,
+            "b": 0.12,
+            "a": 1
+          }
+        },
+        {
+          "id": "Dot2",
+          "shape": "sphere",
+          "position": {
+            "x": -0.02,
+            "y": -0.025,
+            "z": 0.013
+          },
+          "size": {
+            "x": 0.014,
+            "y": 0.014,
+            "z": 0.006
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0,
+            "z": 0.0,
+            "w": 1.0
+          },
+          "parent": null,
+          "color": {
+            "r": 0.08,
+            "g": 0.08,
+            "b": 0.12,
+            "a": 1
+          }
+        },
+        {
+          "id": "Dot3",
+          "shape": "sphere",
+          "position": {
+            "x": 0,
+            "y": -0.04,
+            "z": 0.013
+          },
+          "size": {
+            "x": 0.014,
+            "y": 0.014,
+            "z": 0.006
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0,
+            "z": 0.0,
+            "w": 1.0
+          },
+          "parent": null,
+          "color": {
+            "r": 0.08,
+            "g": 0.08,
+            "b": 0.12,
+            "a": 1
+          }
+        },
+        {
+          "id": "Dot4",
+          "shape": "sphere",
+          "position": {
+            "x": 0.02,
+            "y": -0.055,
+            "z": 0.013
+          },
+          "size": {
+            "x": 0.014,
+            "y": 0.014,
+            "z": 0.006
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0,
+            "z": 0.0,
+            "w": 1.0
+          },
+          "parent": null,
+          "color": {
+            "r": 0.08,
+            "g": 0.08,
+            "b": 0.12,
+            "a": 1
+          }
+        }
+      ],
+      "tracks": [],
+      "duration": 2,
+      "playing": false,
+      "loop": true
+    },
+    "collision": {
+      "version": 1,
+      "shapes": [
+        {
+          "id": "Body",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.08,
+            "y": 0.16,
+            "z": 0.028
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0,
+            "z": 0.0,
+            "w": 1.0
+          }
+        }
+      ]
+    },
+    "physics": {
+      "mode": "solid",
+      "shape": "automatic",
+      "mass": 0.1
+    }
+  }
+}

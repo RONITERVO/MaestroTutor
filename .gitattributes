@@ -2,3 +2,6 @@
 unity/MaestroQuest/Assets/Maestro/Resources/Avatars/IncludedMotions.json text eol=lf
 # Native motion containers are binary GLB payloads with an internal extension.
 unity/MaestroQuest/Assets/StreamingAssets/MaestroContent/Motions/*.motion binary
+
+# Creation choices pin the exact UTF-8 template bytes.
+unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/*.json text eol=lf

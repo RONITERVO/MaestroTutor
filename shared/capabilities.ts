@@ -14,7 +14,7 @@ export interface CapabilitySchema {
  items?:CapabilitySchema;minItems?:number;maxItems?:number;nullable?:boolean;
  properties?:Record<string,CapabilitySchema>;required?:string[];additionalProperties?:false;
  format?:'unitQuaternion'|'boundedOffset'|'roomRecipe'|'lathePart'|'collisionRecipe'|'programModule'|'programMemoryValue';'x-resource'?:'object';'x-requires'?:Record<string,string>;
- minimum?:number;maximum?:number;maxLength?:number;pattern?:string;enum?:string[];
+ minimum?:number;maximum?:number;maxLength?:number;pattern?:string;enum?:string[];'x-enum-labels'?:Record<string,string>;'x-enum-images'?:Record<string,string>;
 }
 export interface CapabilityDefinition {
  id:string;version:number;label:string;description?:string;input:CapabilitySchema;output?:CapabilitySchema;example?:Record<string,unknown>;

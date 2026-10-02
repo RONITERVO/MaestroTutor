@@ -31,7 +31,7 @@ require putting chat, assets, physics and all history in one enormous JSON file.
 
 ## What already exists
 
-The current catalog contains 62 actions, 12 events and 59 facts. It already has
+The current catalog contains 62 actions, 12 events and 60 facts. It already has
 native capability modules, generated forms, shared human/agent execution,
 revision checks, durable one-off receipts, contact/proximity/settling observations,
 structured program values, parallel branches, pinned reusable program modules,
@@ -109,7 +109,12 @@ These describe capabilities; choosing the bounded recipe architecture is our des
 | Cup, drink, bucket | Logical container volume/capacity, fill surface, bounded pour transfer and visual stream/splash | Pouring transfers conserved quantity between compatible containers; particles are presentation, not thousands of rigid bodies. Arbitrary imported bowls require a configured container shape. |
 | Snow patch, snowball, shallow water area | Bounded surface field/deformation plus effects; explicit scoop/pack/transfer operations | Finger/object marks on a patch, limited piles/balls and bucket interaction. Room-wide water/snow is an optional visual volume; full granular/fluid simulation is outside initial v1 scope. |
 
-The first shipped play kit should demonstrate each accepted reusable component,
+The first nine recipe templates now cover tableware, a domino, loose stacking
+bricks, a pawn, a ball and a simple animated robot. They share atomic geometry,
+collision and physics creation; see [starter objects](QUEST_CREATION_TEMPLATES.md).
+Assemblies, paintable surfaces, physical joints and liquids/snow remain unfinished.
+
+The complete shipped play kit should demonstrate each accepted reusable component,
 not maximize asset count. Every template needs editable source/configuration,
 provenance, thumbnail, readable description, physical settings, cost estimate and
 an executable acceptance scenario. Shared style materials apply to procedural

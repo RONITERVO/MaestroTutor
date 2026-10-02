@@ -83,10 +83,12 @@ export function CapabilityFields({schema,value,onChange,label,objects,depth=0,lo
   const stringValue=typeof value==='string'?value:'';
   let options=schema.enum;
   if(schema['x-resource']==='object') options=objects.filter(o=>(!schema.pattern||new RegExp(schema.pattern).test(o.id))&&(!schema.enum||schema.enum.includes(o.id))).map(o=>o.id);
+  const preview=schema['x-enum-images']?.[stringValue];
+  const previewUrl=preview&&/^quest\/templates\/[a-f0-9]{64}\.png$/.test(preview)?import.meta.env.BASE_URL+preview:null;
   if(options) return <label>{label}<select aria-label={label} value={stringValue} onChange={e=>onChange(e.target.value)}>
     {!options.includes(stringValue)&&<option value={stringValue}>{stringValue||'Choose an object'}</option>}
-    {options.map(option=><option key={option} value={option}>{schema['x-resource']==='object'?objects.find(o=>o.id===option)?.name??option:option}</option>)}
-  </select>{optionalNull}</label>;
+    {options.map(option=><option key={option} value={option}>{schema['x-resource']==='object'?objects.find(o=>o.id===option)?.name??option:schema['x-enum-labels']?.[option]??option}</option>)}
+  </select>{previewUrl&&<img className="maestro-capability-choice-preview" src={previewUrl} alt={(schema['x-enum-labels']?.[stringValue]??'Selected option')+' preview'}/>} {optionalNull}</label>;
   if(schema.type==='boolean') return <label>{label}<select aria-label={label} value={String(value===true)} onChange={e=>onChange(e.target.value==='true')}><option value="false">No</option><option value="true">Yes</option></select>{optionalNull}</label>;
   return <label>{label}<input aria-label={label} type={schema.type==='string'?'text':'number'} value={typeof value==='number'||typeof value==='string'?value:''}
     min={schema.minimum} max={schema.maximum} step={schema.type==='integer'?1:'any'} maxLength={schema.maxLength}

@@ -121,6 +121,7 @@ namespace Maestro.Quest.Programs
         public static bool TryStep(RuleActionKind kind,JObject arguments,out RuleStep step,out string error)
         {
             step=null;error=null;if(!BehaviourCatalog.HasAction(kind) || !Validate(arguments,Schema(kind),out error)) {error??="Unknown capability";return false;}
+            if(arguments["collision"]!=null||arguments["physics"]!=null){error="Use capability blocks to preserve creation components";return false;}
             var result=new RuleStep {action=kind,targetId=(string)arguments["target"]??"maestro",seconds=(float?)arguments["seconds"]??0,
                 loop=(bool?)arguments["loop"]??false,clipModelHash=(string)arguments["modelHash"],clipIndex=(int?)arguments["clipIndex"]??0,motionId=(string)arguments["motionId"]};
             if(kind==RuleActionKind.MoveObject)result.editPosition=new Vector3((float)arguments["x"],(float)arguments["y"],(float)arguments["z"]);

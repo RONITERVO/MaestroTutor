@@ -156,18 +156,24 @@ namespace Maestro.Quest.Creation
                 physics=kind==RoomObjectKind.Ball?ItemPhysics.Bouncy:ItemPhysics.Solid};
             return CommitCreatedObject(item,out id,out error);
         }
-        public bool CanCreateRecipe(RoomRecipe recipe,out string error) {
+        public bool CanCreateRecipe(RoomRecipe recipe,out string error)=>CanCreateRecipe(recipe,null,null,out error);
+        public bool CanCreateRecipe(RoomRecipe recipe,CollisionRecipe collision,ObjectPhysicsSettings physics,out string error) {
             if(!CanCreatePrimitive(out error))return false;
             if(recipe==null) {error="Provide a construction recipe";return false;}
             if(!recipe.Validate(out error))return false;
+            if(collision!=null&&!collision.Validate(out error))return false;
+            if(physics!=null&&!RoomControls.ValidPhysics(physics)){error="Provide valid fixed/solid/bouncy physics, collision mode and mass";return false;}
+            if(journal.Snapshot().objects.Sum(CollisionRecipe.ReservedPieces)+Math.Max(1,collision?.Pieces??0)>CollisionRecipe.MaximumRoomPieces){error="Collision shapes exceed the room piece budget";return false;}
             if(journal.Snapshot().objects.Sum(x=>RecipeLathe.VertexCost(x.recipe))+RecipeLathe.VertexCost(recipe)>RecipeLathe.MaximumRoomVertices){error="Generated recipe geometry exceeds the room vertex budget";return false;}
             if(journal.Snapshot().objects.Sum(x=>x.recipe?.parts.Length??0)+recipe.parts.Length>256) {error="Keep at most 256 recipe parts in this room";return false;}
             return true;
         }
-        public bool CreateRecipe(string name,Vector3 position,float scale,RoomRecipe recipe,out string id,out string error) {
-            id=null;if(!CanCreateRecipe(recipe,out error))return false;
+        public bool CreateRecipe(string name,Vector3 position,float scale,RoomRecipe recipe,out string id,out string error)=>CreateRecipe(name,position,scale,recipe,null,null,out id,out error);
+        public bool CreateRecipe(string name,Vector3 position,float scale,RoomRecipe recipe,CollisionRecipe collision,ObjectPhysicsSettings physics,out string id,out string error) {
+            id=null;if(!CanCreateRecipe(recipe,collision,physics,out error))return false;
             var item=new RoomObjectData {id=Guid.NewGuid().ToString("N"),name=name,kind=RoomObjectKind.Assembly,position=position,scale=scale,
-                color=Color.white,physics=ItemPhysics.Fixed,recipe=recipe.Copy()};
+                color=Color.white,physics=ItemPhysics.Fixed,recipe=recipe.Copy(),collision=collision?.shapes.Length>0?collision.Copy():null};
+            if(physics!=null&&!RoomControls.SetPhysics(item,physics,out error))return false;
             return CommitCreatedObject(item,out id,out error);
         }
         bool CommitCreatedObject(RoomObjectData item,out string id,out string error) {

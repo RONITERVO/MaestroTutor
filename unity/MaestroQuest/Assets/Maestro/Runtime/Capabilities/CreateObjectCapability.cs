@@ -23,12 +23,12 @@ namespace Maestro.Quest.Programs
                 }
             }
         }
-        internal static readonly Kind[] Kinds={new("primitive",new CreatePrimitiveCapability()),new("recipe",new CreateRecipeCapability(),"recipeCreation.v1"),new("copy",new CopyObjectCapability(),"objectCopy.v1"),new("drawing",new CreateDrawingCapability(),"drawingEdits.v1")};
+        internal static readonly Kind[] Kinds={new("primitive",new CreatePrimitiveCapability()),new("recipe",new CreateRecipeCapability(),"recipeCreation.v1"),new("copy",new CopyObjectCapability(),"objectCopy.v1"),new("drawing",new CreateDrawingCapability(),"drawingEdits.v1"),new("template",new CreateTemplateCapability(),Creation.CreationTemplates.Feature)};
         internal override IEnumerable<CapabilityStepAdapter> StepAdapters=>Kinds.Where(k=>k.Name=="primitive"||k.Name=="recipe").Select(k=>k.Adapter);
         Kind Selected(JObject args)=>Kinds.Single(k=>k.Adapter.Matches(args));
         public override string Id=>"object.create";
         public override string Label=>"Create object";
-        public override string Description=>"Choose a creation kind: a physical shape, an editable recipe with optional animation tracks, a copy of an existing creation, or an editable pencil stroke. Inspect the selected kind's example, fields and requirements. All kinds return the exact new objectId. Outside temporary play it is saved with one Undo; inside temporary play it stays unsaved until room.session keep completes. Stop leaves created objects in the room. Imported models still use the existing asset import workflow.";
+        public override string Description=>"Choose a creation kind: a physical shape, an editable recipe with optional animation tracks, a copy of an existing creation, an editable pencil stroke, or a bundled starter template. Inspect the selected kind's example, fields and requirements. All kinds return the exact new objectId. Outside temporary play it is saved with one Undo; inside temporary play it stays unsaved until room.session keep completes. Stop leaves created objects in the room. Imported models still use the existing asset import workflow.";
         public override string Duration=>"instant";
         public override string Ownership=>"kindChannels";
         public override IReadOnlyList<string> Channels=>Kinds.SelectMany(k=>k.Provider.Channels).Distinct().ToArray();

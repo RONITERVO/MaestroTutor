@@ -5995,6 +5995,557 @@
                 "additionalProperties": false,
                 "format": "roomRecipe"
               },
+              "collision": {
+                "type": "object",
+                "properties": {
+                  "version": {
+                    "type": "integer",
+                    "minimum": 1.0,
+                    "maximum": 1.0
+                  },
+                  "shapes": {
+                    "type": "array",
+                    "items": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "pattern": "^[a-zA-Z0-9_]{1,32}$",
+                              "maxLength": 32
+                            },
+                            "shape": {
+                              "type": "string",
+                              "enum": [
+                                "box"
+                              ]
+                            },
+                            "position": {
+                              "type": "object",
+                              "properties": {
+                                "x": {
+                                  "type": "number",
+                                  "minimum": -2.0,
+                                  "maximum": 2.0
+                                },
+                                "y": {
+                                  "type": "number",
+                                  "minimum": -2.0,
+                                  "maximum": 2.0
+                                },
+                                "z": {
+                                  "type": "number",
+                                  "minimum": -2.0,
+                                  "maximum": 2.0
+                                }
+                              },
+                              "required": [
+                                "x",
+                                "y",
+                                "z"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "size": {
+                              "type": "object",
+                              "properties": {
+                                "x": {
+                                  "type": "number",
+                                  "minimum": 0.005,
+                                  "maximum": 2.0
+                                },
+                                "y": {
+                                  "type": "number",
+                                  "minimum": 0.005,
+                                  "maximum": 2.0
+                                },
+                                "z": {
+                                  "type": "number",
+                                  "minimum": 0.005,
+                                  "maximum": 2.0
+                                }
+                              },
+                              "required": [
+                                "x",
+                                "y",
+                                "z"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "rotation": {
+                              "type": "object",
+                              "properties": {
+                                "x": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                },
+                                "y": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                },
+                                "z": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                },
+                                "w": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                }
+                              },
+                              "required": [
+                                "x",
+                                "y",
+                                "z",
+                                "w"
+                              ],
+                              "additionalProperties": false,
+                              "format": "unitQuaternion"
+                            },
+                            "segments": {
+                              "type": "integer",
+                              "minimum": 0.0,
+                              "maximum": 0.0
+                            },
+                            "innerRadius": {
+                              "type": "number",
+                              "minimum": 0.0,
+                              "maximum": 0.0
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "shape",
+                            "position",
+                            "size",
+                            "rotation"
+                          ],
+                          "additionalProperties": false,
+                          "title": "Box"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "pattern": "^[a-zA-Z0-9_]{1,32}$",
+                              "maxLength": 32
+                            },
+                            "shape": {
+                              "type": "string",
+                              "enum": [
+                                "sphere"
+                              ]
+                            },
+                            "position": {
+                              "type": "object",
+                              "properties": {
+                                "x": {
+                                  "type": "number",
+                                  "minimum": -2.0,
+                                  "maximum": 2.0
+                                },
+                                "y": {
+                                  "type": "number",
+                                  "minimum": -2.0,
+                                  "maximum": 2.0
+                                },
+                                "z": {
+                                  "type": "number",
+                                  "minimum": -2.0,
+                                  "maximum": 2.0
+                                }
+                              },
+                              "required": [
+                                "x",
+                                "y",
+                                "z"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "size": {
+                              "type": "object",
+                              "properties": {
+                                "x": {
+                                  "type": "number",
+                                  "minimum": 0.005,
+                                  "maximum": 2.0
+                                },
+                                "y": {
+                                  "type": "number",
+                                  "minimum": 0.005,
+                                  "maximum": 2.0
+                                },
+                                "z": {
+                                  "type": "number",
+                                  "minimum": 0.005,
+                                  "maximum": 2.0
+                                }
+                              },
+                              "required": [
+                                "x",
+                                "y",
+                                "z"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "rotation": {
+                              "type": "object",
+                              "properties": {
+                                "x": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                },
+                                "y": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                },
+                                "z": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                },
+                                "w": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                }
+                              },
+                              "required": [
+                                "x",
+                                "y",
+                                "z",
+                                "w"
+                              ],
+                              "additionalProperties": false,
+                              "format": "unitQuaternion"
+                            },
+                            "segments": {
+                              "type": "integer",
+                              "minimum": 0.0,
+                              "maximum": 0.0
+                            },
+                            "innerRadius": {
+                              "type": "number",
+                              "minimum": 0.0,
+                              "maximum": 0.0
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "shape",
+                            "position",
+                            "size",
+                            "rotation"
+                          ],
+                          "additionalProperties": false,
+                          "title": "Sphere"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "pattern": "^[a-zA-Z0-9_]{1,32}$",
+                              "maxLength": 32
+                            },
+                            "shape": {
+                              "type": "string",
+                              "enum": [
+                                "cylinder"
+                              ]
+                            },
+                            "position": {
+                              "type": "object",
+                              "properties": {
+                                "x": {
+                                  "type": "number",
+                                  "minimum": -2.0,
+                                  "maximum": 2.0
+                                },
+                                "y": {
+                                  "type": "number",
+                                  "minimum": -2.0,
+                                  "maximum": 2.0
+                                },
+                                "z": {
+                                  "type": "number",
+                                  "minimum": -2.0,
+                                  "maximum": 2.0
+                                }
+                              },
+                              "required": [
+                                "x",
+                                "y",
+                                "z"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "size": {
+                              "type": "object",
+                              "properties": {
+                                "x": {
+                                  "type": "number",
+                                  "minimum": 0.005,
+                                  "maximum": 2.0
+                                },
+                                "y": {
+                                  "type": "number",
+                                  "minimum": 0.005,
+                                  "maximum": 2.0
+                                },
+                                "z": {
+                                  "type": "number",
+                                  "minimum": 0.005,
+                                  "maximum": 2.0
+                                }
+                              },
+                              "required": [
+                                "x",
+                                "y",
+                                "z"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "rotation": {
+                              "type": "object",
+                              "properties": {
+                                "x": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                },
+                                "y": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                },
+                                "z": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                },
+                                "w": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                }
+                              },
+                              "required": [
+                                "x",
+                                "y",
+                                "z",
+                                "w"
+                              ],
+                              "additionalProperties": false,
+                              "format": "unitQuaternion"
+                            },
+                            "segments": {
+                              "type": "integer",
+                              "minimum": 8.0,
+                              "maximum": 24.0
+                            },
+                            "innerRadius": {
+                              "type": "number",
+                              "minimum": 0.0,
+                              "maximum": 0.0
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "shape",
+                            "position",
+                            "size",
+                            "rotation",
+                            "segments"
+                          ],
+                          "additionalProperties": false,
+                          "title": "Cylinder"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "pattern": "^[a-zA-Z0-9_]{1,32}$",
+                              "maxLength": 32
+                            },
+                            "shape": {
+                              "type": "string",
+                              "enum": [
+                                "ring"
+                              ]
+                            },
+                            "position": {
+                              "type": "object",
+                              "properties": {
+                                "x": {
+                                  "type": "number",
+                                  "minimum": -2.0,
+                                  "maximum": 2.0
+                                },
+                                "y": {
+                                  "type": "number",
+                                  "minimum": -2.0,
+                                  "maximum": 2.0
+                                },
+                                "z": {
+                                  "type": "number",
+                                  "minimum": -2.0,
+                                  "maximum": 2.0
+                                }
+                              },
+                              "required": [
+                                "x",
+                                "y",
+                                "z"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "size": {
+                              "type": "object",
+                              "properties": {
+                                "x": {
+                                  "type": "number",
+                                  "minimum": 0.005,
+                                  "maximum": 2.0
+                                },
+                                "y": {
+                                  "type": "number",
+                                  "minimum": 0.005,
+                                  "maximum": 2.0
+                                },
+                                "z": {
+                                  "type": "number",
+                                  "minimum": 0.005,
+                                  "maximum": 2.0
+                                }
+                              },
+                              "required": [
+                                "x",
+                                "y",
+                                "z"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "rotation": {
+                              "type": "object",
+                              "properties": {
+                                "x": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                },
+                                "y": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                },
+                                "z": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                },
+                                "w": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                }
+                              },
+                              "required": [
+                                "x",
+                                "y",
+                                "z",
+                                "w"
+                              ],
+                              "additionalProperties": false,
+                              "format": "unitQuaternion"
+                            },
+                            "segments": {
+                              "type": "integer",
+                              "minimum": 8.0,
+                              "maximum": 24.0
+                            },
+                            "innerRadius": {
+                              "type": "number",
+                              "minimum": 0.05,
+                              "maximum": 0.45
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "shape",
+                            "position",
+                            "size",
+                            "rotation",
+                            "segments",
+                            "innerRadius"
+                          ],
+                          "additionalProperties": false,
+                          "title": "Ring"
+                        }
+                      ],
+                      "x-discriminators": [
+                        "shape"
+                      ]
+                    },
+                    "minItems": 0,
+                    "maxItems": 16
+                  }
+                },
+                "required": [
+                  "version",
+                  "shapes"
+                ],
+                "additionalProperties": false,
+                "format": "collisionRecipe",
+                "x-features": [
+                  "collisionShapes.v1",
+                  "creationComponents.v1"
+                ],
+                "description": "Root-local proxies, independent of visuals. Sphere dimensions must match. Cylinder/ring axes are Y. Ring innerRadius is normalized to outer radius 0.5; wall thickness must be at least .005 local metres. Positions within 2m and total proxy extent within 3m. 64 pieces per recipe; a ring costs segments pieces, other shapes cost one."
+              },
+              "physics": {
+                "type": "object",
+                "properties": {
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "fixed",
+                      "solid",
+                      "bouncy"
+                    ]
+                  },
+                  "shape": {
+                    "type": "string",
+                    "enum": [
+                      "automatic",
+                      "box",
+                      "sphere"
+                    ]
+                  },
+                  "mass": {
+                    "type": "number",
+                    "minimum": 0.05,
+                    "maximum": 20.0
+                  }
+                },
+                "required": [
+                  "mode",
+                  "shape",
+                  "mass"
+                ],
+                "additionalProperties": false,
+                "x-features": [
+                  "creationComponents.v1"
+                ]
+              },
               "kind": {
                 "type": "string",
                 "enum": [
@@ -6014,7 +6565,7 @@
             ],
             "additionalProperties": false,
             "title": "Create recipe object",
-            "description": "Create editable geometry and optional animation tracks from a bounded recipe. Returns objectId after saving; one room Undo edit. Set recipe.playing=false to create it idle and use animation.play with source.kind recipe on the returned ID for program-controlled playback. Setting playing=true explicitly starts the saved recipe animation. Geometry uses metres in room axes; scale is 0.1–4. The new assembly uses fixed physics.",
+            "description": "Create editable geometry and optional animation tracks from a bounded recipe. Returns objectId after saving; one room Undo edit. Set recipe.playing=false to create it idle and use animation.play with source.kind recipe on the returned ID for program-controlled playback. Setting playing=true explicitly starts the saved recipe animation. Geometry uses metres in room axes; scale is 0.1–4. Optional collision and physics components are validated and saved with the geometry as one creation/Undo. Omitted physics keeps the existing fixed default. Collision proxies stay root-local and do not follow animated parts; creating a dynamic object does not start room physics.",
             "examples": [
               {
                 "name": "Box robot",
@@ -6946,6 +7497,112 @@
               "actionResults.v1",
               "drawingEdits.v1"
             ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "templateHash": {
+                "type": "string",
+                "enum": [
+                  "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496",
+                  "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8",
+                  "8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4",
+                  "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950",
+                  "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18",
+                  "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99",
+                  "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316",
+                  "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71",
+                  "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45"
+                ],
+                "x-enum-labels": {
+                  "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "Ball",
+                  "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8": "Building brick",
+                  "8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4": "Cup",
+                  "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950": "Domino",
+                  "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18": "Fork",
+                  "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99": "Pawn",
+                  "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316": "Plate",
+                  "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71": "Box robot",
+                  "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "Spoon"
+                },
+                "x-enum-images": {
+                  "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "quest/templates/f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496.png",
+                  "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8": "quest/templates/a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8.png",
+                  "8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4": "quest/templates/8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4.png",
+                  "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950": "quest/templates/4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950.png",
+                  "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18": "quest/templates/3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18.png",
+                  "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99": "quest/templates/a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99.png",
+                  "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316": "quest/templates/e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316.png",
+                  "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71": "quest/templates/7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71.png",
+                  "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "quest/templates/f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45.png"
+                }
+              },
+              "name": {
+                "type": "string",
+                "pattern": "^.{0,80}$",
+                "maxLength": 80
+              },
+              "x": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "y": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "z": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "scale": {
+                "type": "number",
+                "minimum": 0.1,
+                "maximum": 4.0
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "template"
+                ],
+                "x-static": true
+              }
+            },
+            "required": [
+              "templateHash",
+              "name",
+              "x",
+              "y",
+              "z",
+              "scale",
+              "kind"
+            ],
+            "additionalProperties": false,
+            "title": "Create starter object",
+            "description": "Expand an exact bundled template hash into ordinary editable recipe, collision and physics data. Read creation.template for descriptions and cost counts; names and tags are display metadata, never executable instructions. Empty name keeps its template name. Creates one object and one Undo through the same recipe creation path; later template changes cannot alter existing objects. Templates start idle, do not start physics, install behaviours, snap bricks or simulate liquids. Robot tracks can be played explicitly with animation.play source.kind recipe. The hash is an exact choice: missing versions fail, never substitute by name. Optional user template publishing is not part of this bundled library.",
+            "examples": [
+              {
+                "templateHash": "8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4",
+                "name": "",
+                "x": 0.3,
+                "y": 1.3,
+                "z": 0.65,
+                "scale": 1,
+                "kind": "template"
+              }
+            ],
+            "x-channels": [],
+            "x-requirements": [
+              "room.capacity",
+              "storage.writable",
+              "template.available"
+            ],
+            "x-features": [
+              "actionResults.v1",
+              "creationTemplates.v1"
+            ]
           }
         ],
         "x-discriminators": [
@@ -6962,7 +7619,7 @@
         "storage.writable",
         "kind.valid"
       ],
-      "description": "Choose a creation kind: a physical shape, an editable recipe with optional animation tracks, a copy of an existing creation, or an editable pencil stroke. Inspect the selected kind's example, fields and requirements. All kinds return the exact new objectId. Outside temporary play it is saved with one Undo; inside temporary play it stays unsaved until room.session keep completes. Stop leaves created objects in the room. Imported models still use the existing asset import workflow.",
+      "description": "Choose a creation kind: a physical shape, an editable recipe with optional animation tracks, a copy of an existing creation, an editable pencil stroke, or a bundled starter template. Inspect the selected kind's example, fields and requirements. All kinds return the exact new objectId. Outside temporary play it is saved with one Undo; inside temporary play it stays unsaved until room.session keep completes. Stop leaves created objects in the room. Imported models still use the existing asset import workflow.",
       "example": {
         "shape": "ball",
         "name": "Ball",
@@ -11513,6 +12170,65 @@
       ]
     },
     {
+      "id": "creation.template",
+      "version": 1,
+      "type": {
+        "record": {
+          "index": "number",
+          "total": "number",
+          "hash": "text",
+          "id": "text",
+          "name": "text",
+          "details": {
+            "record": {
+              "description": "text",
+              "tags": "text",
+              "author": "text",
+              "license": "text"
+            }
+          },
+          "cost": {
+            "record": {
+              "parts": "number",
+              "tracks": "number",
+              "generatedVertices": "number",
+              "collisionPieces": "number"
+            }
+          },
+          "physics": {
+            "record": {
+              "mode": "text",
+              "shape": "text",
+              "mass": "number"
+            }
+          }
+        }
+      },
+      "label": "Starter object template",
+      "description": "One bundled editable template, by zero-based index. Read 0 then advance until total; later indexes are unavailable. Use the exact hash with object.create kind template. generatedVertices counts custom lathe vertices, not built-in primitive meshes; parts and collisionPieces are separate costs, not a Quest performance guarantee. Reading neither creates an object nor starts physics. Definitions are bundled offline; created objects expose their full editable source through the object recipe/collision/settings facts.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 31.0
+          }
+        },
+        "required": [
+          "index"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "index": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "creationTemplates.v1"
+      ]
+    },
+    {
       "id": "object.physics.trajectory",
       "version": 1,
       "type": {
@@ -14219,7 +14935,9 @@
             "y": "y",
             "z": "z",
             "scale": "scale",
-            "recipe": "recipe"
+            "recipe": "recipe",
+            "collision": "collision",
+            "physics": "physics"
           }
         }
       ],
@@ -14257,7 +14975,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "26c31b2e40e8583e9592a2cdb6e6e7555271c9cf169bb924cc1d38810643cc92"
+      "sha256": "5c8db0a0f2b64fee7e4d34bd270b2154da09140a77d33449e85b0a0fa6d20d98"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -14277,7 +14995,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "9f6eb1f62f4f4a9dcebd165b3913b612df66c9300c4af317dcea3a8b68eeb424"
+      "sha256": "4c3d75501f0344875b301131f13b3879463299345663aeecb42b94a0693ef162"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -14309,7 +15027,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "a3c95f1a067afe0fb8e16a45be36e0f37433ff1c1c519d02c2eb8b3f1f36273c"
+      "sha256": "bf8c8b018a5325592d6f1bb9dce56b1d72c1531461c3954e1cc446f1836079d3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -14533,7 +15251,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "122f46870a1ea59f455b212fe62e2f908dcfc5dc78739b6822740d039db605fc"
+      "sha256": "f0c989bf1e927ea6a40b53fbcf9c5cf9d608f8bdab3396b3f9b2cd4f42b38bfe"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomToolTray.cs",
@@ -14693,7 +15411,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeTemplates.cs",
-      "sha256": "2f4156e6d20fa4a4b8ec15fafc9ff1604c1bf3f2df11824a7c9d420ba298255a"
+      "sha256": "8dc7f6e3e992f1454c0632d3a38fd0677e7ec55b573e01d60bb2b00c60bac391"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationTemplates.cs",
+      "sha256": "409510ce0cadc96bcb226d1f5f29a19c9d25a125e0ec3f780ca3e2757c3e5f0c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/LegacyCapabilityAdapters.cs",
@@ -14757,7 +15479,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreateObjectCapability.cs",
-      "sha256": "5b01c8bf89d70329120d1a207d4a127179e13c3b2108079941aa5666559fc262"
+      "sha256": "f1c3c9a9e601803f6cc5762fca5dd259ba9fa24477f889441e12e30a837e4e4d"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreateTemplateCapability.cs",
+      "sha256": "99efdb063b6d0a2f1275cda0f55c71aed81c984a3f4d5da2157e5b96e8365346"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingCapabilities.cs",
@@ -14809,7 +15535,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectCapabilities.cs",
-      "sha256": "b799cda29b567b47230fcb7a340281b9f27def17bc8c9e457c6b32ca9db821fe"
+      "sha256": "188869e2efc3729667ac375b7fc77059468fc70bdbaf0d53a311f211f04284aa"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsSimulationCapability.cs",
@@ -14869,7 +15595,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SpatialSettingsCapabilities.cs",
-      "sha256": "faebc69594b6d79f929bdb18f43264f98c749124d86df11c7f2268e910315eb5"
+      "sha256": "1c95c8472e61047dd72ebd2f41ba6849cfdb7e6f167555a1e37fa515a6d5e692"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SurfacePlacementCapability.cs",
@@ -14910,6 +15636,42 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceSelectionCapabilities.cs",
       "sha256": "1a8f9aa19660de404afba49f8a7b4f794c9d26af31a0cd5dcc5b0f7c995639b0"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/ball.json",
+      "sha256": "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/brick.json",
+      "sha256": "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/cup.json",
+      "sha256": "8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/domino.json",
+      "sha256": "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/fork.json",
+      "sha256": "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/pawn.json",
+      "sha256": "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/plate.json",
+      "sha256": "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/robot.json",
+      "sha256": "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/spoon.json",
+      "sha256": "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45"
     }
   ]
 }
