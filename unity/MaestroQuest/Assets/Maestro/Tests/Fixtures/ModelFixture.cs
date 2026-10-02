@@ -85,6 +85,16 @@ namespace Maestro.Quest.Tests
             for (int i = 0; i < names.Length; i++) root["nodes"][i+1]["name"] = "mixamorig:"+names[i];
             edit?.Invoke(root);
         },avatar:true,skinAllBones:true);
+        public static byte[] HipTravel(float end=1)
+        {
+            var original=Mixamo();int jsonLength=BitConverter.ToInt32(original,12);var root=JObject.Parse(Encoding.UTF8.GetString(original,20,jsonLength));
+            using var binary=new MemoryStream();using var writer=new BinaryWriter(binary);writer.Write(original,28+jsonLength,(int)root["buffers"][0]["byteLength"]);int offset=(int)binary.Position;
+            foreach(float value in new[]{0f,1f,0f,end,1f,0f})writer.Write(value);
+            var views=(JArray)root["bufferViews"];views.Add(new JObject {["buffer"]=0,["byteOffset"]=offset,["byteLength"]=24});
+            var accessors=(JArray)root["accessors"];accessors.Add(new JObject {["bufferView"]=views.Count-1,["componentType"]=5126,["count"]=2,["type"]="VEC3"});
+            root["animations"]=new JArray(new JObject {["name"]="Authored travel",["samplers"]=new JArray(new JObject {["input"]=2,["output"]=accessors.Count-1}),["channels"]=new JArray(new JObject {["sampler"]=0,["target"]=new JObject {["node"]=1,["path"]="translation"}})});
+            root["buffers"][0]["byteLength"]=(int)binary.Length;return Pack(root,binary.ToArray());
+        }
         public static byte[] TranslationMotion(string interpolation, float end = 1)
         {
             var original = Create(); int jsonLength = BitConverter.ToInt32(original,12);

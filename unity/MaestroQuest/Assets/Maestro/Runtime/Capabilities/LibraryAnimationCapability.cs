@@ -17,10 +17,10 @@ namespace Maestro.Quest.Programs
         public override IReadOnlyList<string> Requirements=>new[] {"target.exists","target.unheld","authoring.inactive","model.loaded","motion.available","rig.compatible"};
         public override JObject InputSchema=>Object(new JObject {
             ["target"]=AnimationTargets.TargetSchema(),["seconds"]=Number(0,30),["loop"]=new JObject {["type"]="boolean"},
-            ["motionId"]=Text("^(|[a-fA-F0-9]{32})$",32),["prop"]=AnimationTargets.PropSchema()
-        },"prop");
+            ["motionId"]=Text("^(|[a-fA-F0-9]{32})$",32),["prop"]=AnimationTargets.PropSchema(),["movement"]=AnimationTargets.MovementSchema()
+        },"prop","movement");
         public override bool CanRun(CapabilityContext context,JObject arguments,out string error) {
-            if(!base.CanRun(context,arguments,out error))return false;
+            if(!base.CanRun(context,arguments,out error)||!AnimationTargets.MovementReady(context,arguments,out error))return false;
             var model=AnimationTargets.ClipModel(context.Editor.Find((string)arguments["target"]));
             var motion=context.Editor.Motions.Find((string)arguments["motionId"]);
             if(motion==null) {error="This saved motion is missing; choose one using Motion";return false;}
@@ -33,13 +33,16 @@ namespace Maestro.Quest.Programs
             var value=new LibraryOperation(context,arguments);operation=value;return value.Begin((string)arguments["motionId"],(bool)arguments["loop"],out error);
         }
         sealed class LibraryOperation : FullBodyOperation {
+            readonly bool authored;
             ImportedModel model;
             MotionLibrary.Lease motion;
             Task preparation;
             string rigHash,modelHash,loadError;
             bool started,loop;
             float began;
-            public LibraryOperation(CapabilityContext context,JObject arguments):base(context,arguments) {}
+            public LibraryOperation(CapabilityContext context,JObject arguments):base(context,arguments) {authored=(string)arguments["movement"]=="authored";}
+            protected override bool RetainPlacement=>authored;
+            public override bool Complete(out string error){if(authored&&Avatar&&!Avatar.FinishImportedAt(Duration,out error))return false;return base.Complete(out error);}
             public bool Begin(string motionId,bool loop,out string error) {
                 if(!Acquire(out error))return false;this.loop=loop;
                 model=AnimationTargets.ClipModel(Target);rigHash=model.MotionRigHash;modelHash=Context.Editor.Read(TargetId).modelHash;
@@ -57,7 +60,7 @@ namespace Maestro.Quest.Programs
             }
             public override RuleActionState State(out string error) {
                 if(base.State(out error)==RuleActionState.Failed)return RuleActionState.Failed;
-                if(started)return RuleActionState.Ready;
+                if(started){if(authored&&Avatar&&Avatar.ImportedPlaybackError!=null){error=Avatar.ImportedPlaybackError;return RuleActionState.Failed;}return RuleActionState.Ready;}
                 if(!preparation.IsCompleted)return RuleActionState.Preparing;
                 if(loadError!=null) {error=loadError;return RuleActionState.Failed;}
                 var current=Context.Editor?Context.Editor.Find(TargetId):null;
@@ -66,7 +69,8 @@ namespace Maestro.Quest.Programs
                     Avatar&&Avatar.ModelBusy||motion==null||motion.RigHash!=model.MotionRigHash)
                 {error="The motion target changed while loading; choose it again";return RuleActionState.Failed;}
                 if(Avatar) {
-                    if(!Avatar.PlayLibraryMotion(motion,loop)) {error="This motion no longer matches Maestro";return RuleActionState.Failed;}
+                    if(authored&&!Avatar.CanPlayAuthored(out error))return RuleActionState.Failed;
+                    if(!Avatar.PlayLibraryMotion(motion,loop,authored)) {error=Avatar.ImportedPlaybackError??"This motion no longer matches Maestro";return RuleActionState.Failed;}
                     motion=null; // Ownership transfers only after successful playback.
                 } else if(!model.SampleMotion(motion,0,loop)) {error="This saved motion cannot play on this object";return RuleActionState.Failed;}
                 began=Time.unscaledTime;started=true;

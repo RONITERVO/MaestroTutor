@@ -37,6 +37,10 @@ namespace Maestro.Quest.Avatar
         float importedTime, importedSpeed = 1;
         bool importedLoop;
         MotionLibrary.Lease libraryMotion;
+        AvatarAuthoredTravel authoredTravel;
+        public string ImportedPlaybackError {get;private set;}
+        public string ImportedMovement=>authoredTravel!=null?"authored":"inPlace";
+        public bool CanPlayAuthored(out string error){error="Authored travel needs the room movement service";var spatial=GetComponent<AvatarSpatialMotion>();return spatial&&spatial.CanBeginAuthored(out error);}
         AvatarWalkMotion walkMotion;
         AvatarGestureLayer gestureLayer;
         public bool UpperBodyOwnedBy(string owner) => gestureLayer?.Owner == owner;
@@ -254,30 +258,49 @@ namespace Maestro.Quest.Avatar
         public void SetWalkClip(int index) { walkClip = index; walkMotion?.Configure(null,null); }
         public void SetWalkReference(int index,string id,MotionLibrary library) { walkClip = index; walkMotion?.Configure(library,id); }
         public void SetImportedPlaybackRate(float rate) { if (float.IsFinite(rate)) importedSpeed = Mathf.Clamp(rate,.25f,2); }
-        public bool PlayImportedClip(int index, bool loop)
+        public bool PlayImportedClip(int index, bool loop,bool authored=false)
         {
             if (runtimeGate?.Held==true||ModelBusy || !custom || index < 0 || index >= custom.ClipCount || custom.ClipDuration(index) <= 0) return false;
-            StopImportedClip(); custom.Stop();
+            if(authored&&!CanPlayAuthored(out _))return false;
+            StopImportedClip(); custom.Stop();ImportedPlaybackError=null;
             importedClip = index; importedLoop = loop; importedTime = 0; importedSpeed = 1;
             PoseRig.SetManual(true); activity = "imported";
-            custom.SampleClip(index,0,loop); PoseRig.CaptureImportedPose(); return true;
+            return BeginImportedSample(authored);
         }
         // Ownership of the lease transfers only on success; Stop always releases it.
-        public bool PlayLibraryMotion(MotionLibrary.Lease motion,bool loop)
+        public bool PlayLibraryMotion(MotionLibrary.Lease motion,bool loop,bool authored=false)
         {
-            activityMotion?.Cancel(); return StartLibraryMotion(motion,loop,false);
+            activityMotion?.Cancel(); return StartLibraryMotion(motion,loop,false,authored);
         }
         internal bool PlayActivityMotion(MotionLibrary.Lease motion,bool loop)
         {
             if(runtimeGate?.Held==true)return false;BeginActivityBlend(); return StartLibraryMotion(motion,loop,true);
         }
-        bool StartLibraryMotion(MotionLibrary.Lease motion,bool loop,bool ambient)
+        bool StartLibraryMotion(MotionLibrary.Lease motion,bool loop,bool ambient,bool authored=false)
         {
             if (runtimeGate?.Held==true||ModelBusy || !custom || motion == null || !motion.Clip || motion.RigHash != custom.MotionRigHash) return false;
-            StopClip(); custom.Stop(); libraryMotion = motion; activityPlayback=ambient; importedLoop = loop; importedTime = 0; importedSpeed = 1;
+            if(authored&&!CanPlayAuthored(out _))return false;
+            StopClip(); custom.Stop();ImportedPlaybackError=null; libraryMotion = motion; activityPlayback=ambient; importedLoop = loop; importedTime = 0; importedSpeed = 1;
             PoseRig.SetManual(true); activity = "imported";
-            custom.SampleMotion(motion,0,loop); PoseRig.CaptureImportedPose(); return true;
+            if(BeginImportedSample(authored))return true;
+            // A failed start leaves disposal to the caller.
+            libraryMotion=null;return false;
         }
+        bool BeginImportedSample(bool authored)
+        {
+            if(authored)authoredTravel=new AvatarAuthoredTravel(this,custom,GetComponent<AvatarSpatialMotion>(),SampleRawImported,ImportedDuration,importedLoop);
+            if(SampleImportedAt(0))return true;
+            authoredTravel?.End();authoredTravel=null;custom.Stop();importedClip=-1;return false;
+        }
+        bool SampleRawImported(float time)=>libraryMotion!=null?custom.SampleMotion(libraryMotion,time,false):custom.SampleClip(importedClip,time,false);
+        internal bool SampleImportedAt(float time)
+        {
+            if(!IsImportedClipPlaying||!custom||!float.IsFinite(time)||time<0)return false;
+            if(authoredTravel!=null){if(authoredTravel.Sample(time))return true;ImportedPlaybackError=authoredTravel.Error;return false;}
+            if(!SampleRawImported(importedLoop?time%ImportedDuration:Mathf.Min(time,ImportedDuration)))return false;
+            PoseRig.CaptureImportedPose();return true;
+        }
+        internal bool FinishImportedAt(float time,out string error){if(authoredTravel!=null&&ImportedPlaybackError==null)SampleImportedAt(time);error=ImportedPlaybackError;return error==null;}
         float ImportedDuration => libraryMotion != null ? (libraryMotion.Clip ? libraryMotion.Clip.length : 0) : custom.ClipDuration(importedClip);
         public void StopImportedClip() { activityMotion?.Cancel(); activityBlend=null; StopClip(); }
         internal void StopActivityMotion(bool blend)
@@ -301,6 +324,7 @@ namespace Maestro.Quest.Avatar
         }
         void StopClip()
         {
+            authoredTravel?.End();authoredTravel=null;
             activityPlayback=false;
             if (!IsImportedClipPlaying) return;
             libraryMotion?.Dispose(); libraryMotion = null;
@@ -312,9 +336,13 @@ namespace Maestro.Quest.Avatar
             if(runtimeGate?.Held==true)return;
             if (!IsImportedClipPlaying || !custom) BlendActivity();
             else {
+                if(ImportedPlaybackError!=null)return;
                 importedTime += Mathf.Min(Time.deltaTime,.05f)*importedSpeed;
-                if (ImportedDuration <= 0 || !importedLoop && importedTime >= ImportedDuration) { if (activityPlayback) BeginActivityBlend(); StopClip(); }
-                else if (libraryMotion != null ? custom.SampleMotion(libraryMotion,importedTime,importedLoop) : custom.SampleClip(importedClip,importedTime,importedLoop)) PoseRig.CaptureImportedPose();
+                if(ImportedDuration<=0)StopClip();
+                else {
+                    bool sampled=SampleImportedAt(importedTime);
+                    if(sampled&&!importedLoop&&importedTime>=ImportedDuration){if(activityPlayback)BeginActivityBlend();StopClip();}
+                }
                 if (activityPlayback) BlendActivity();
             }
             gestureLayer?.Apply(Time.deltaTime,ReducedMotion);

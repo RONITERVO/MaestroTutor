@@ -828,6 +828,20 @@
                     "target": "maestro"
                   }
                 },
+                "movement": {
+                  "type": "string",
+                  "enum": [
+                    "inPlace",
+                    "authored"
+                  ],
+                  "x-requires": {
+                    "target": "maestro"
+                  },
+                  "x-features": [
+                    "authoredMotion.v1"
+                  ],
+                  "description": "inPlace keeps navigation-adjusted horizontal hips. authored transfers the complete sampled body's planar displacement through scanned-floor and swept body-proxy checks; it stops at obstacles, personal space or lost alignment. Only Maestro supports authored travel. No loop or intent is inferred."
+                },
                 "source": {
                   "type": "object",
                   "properties": {
@@ -1009,6 +1023,20 @@
                   "x-requires": {
                     "target": "maestro"
                   }
+                },
+                "movement": {
+                  "type": "string",
+                  "enum": [
+                    "inPlace",
+                    "authored"
+                  ],
+                  "x-requires": {
+                    "target": "maestro"
+                  },
+                  "x-features": [
+                    "authoredMotion.v1"
+                  ],
+                  "description": "inPlace keeps navigation-adjusted horizontal hips. authored transfers the complete sampled body's planar displacement through scanned-floor and swept body-proxy checks; it stops at obstacles, personal space or lost alignment. Only Maestro supports authored travel. No loop or intent is inferred."
                 },
                 "source": {
                   "type": "object",
@@ -1209,7 +1237,7 @@
           "authoring.inactive",
           "source.ready"
         ],
-        "description": "Choose a typed source and channel. Library and embedded sources keep exact motion/model identities. Only built-in gestures currently support upperBody; wholeTarget owns the complete object. For recipePart choose source.part, an exact saved track ID. Different local part rotations compose, including parent/child parts; the same part conflicts. Playback starts that track at zero, seconds=0 uses its saved duration, and loop repeats it. Stop/completion holds the last pose and suppresses autoplay for that track until explicit whole-recipe Restart. Other tracks continue. Root physics and the stable whole-object collider remain unchanged; parts are visual joints, not independent rigid bodies. Read object.recipe.pose for live local/world pose. Playback never changes saved keys. Inspect the selected variant's prerequisites; no automatic source substitution.",
+        "description": "Choose a typed source and channel. Library and embedded sources keep exact motion/model identities. Only built-in gestures currently support upperBody; wholeTarget owns the complete object. For recipePart choose source.part, an exact saved track ID. Different local part rotations compose, including parent/child parts; the same part conflicts. Playback starts that track at zero, seconds=0 uses its saved duration, and loop repeats it. Stop/completion holds the last pose and suppresses autoplay for that track until explicit whole-recipe Restart. Other tracks continue. Root physics and the stable whole-object collider remain unchanged; parts are visual joints, not independent rigid bodies. Read object.recipe.pose for live local/world pose. Playback never changes saved keys. For Maestro library/embedded clips, optional movement=authored preserves sampled planar body travel through the scanned room, including loop displacement; omitted/inPlace retains navigation-adjusted hips. Authored travel requires running aligned room physics, level connected floor and clear swept body space. It stops on obstacles, proximity to the user, placement changes or lost readiness, retaining the last accepted placement. Body-proxy checks do not certify individual limb/prop contacts or foot planting. Existing activity/walk assignments remain inPlace. Inspect the selected variant's prerequisites; no automatic source substitution.",
         "example": {
           "target": "maestro",
           "seconds": 2,

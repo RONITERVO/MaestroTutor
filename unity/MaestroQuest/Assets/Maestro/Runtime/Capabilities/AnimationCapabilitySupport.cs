@@ -17,6 +17,8 @@ namespace Maestro.Quest.Programs
         public static ImportedModel ClipModel(RoomItem item)=>!item?null:item.GetComponent<MaestroAvatar>()?.CustomModel??item.GetComponent<CreatedRoomObject>()?.Model;
         public static JObject TargetSchema()=>Resource(Text("^(maestro|book|[a-fA-F0-9]{32})$",32));
         public static JObject AvatarSchema()=>Resource(Choice("maestro"));
+        public static JObject MovementSchema(){var value=Choice("inPlace","authored");value["x-requires"]=new JObject {["target"]="maestro"};value["x-features"]=new JArray("authoredMotion.v1");value["description"]="inPlace keeps navigation-adjusted horizontal hips. authored transfers the complete sampled body's planar displacement through scanned-floor and swept body-proxy checks; it stops at obstacles, personal space or lost alignment. Only Maestro supports authored travel. No loop or intent is inferred.";return value;}
+        public static bool MovementReady(CapabilityContext context,JObject args,out string error){error=null;if((string)args["movement"]!="authored")return true;var avatar=context.Editor.Find((string)args["target"])?.GetComponent<MaestroAvatar>();if(!avatar){error="Authored travel needs Maestro";return false;}return avatar.CanPlayAuthored(out error);}
         public static JObject PropSchema() {var value=Prop();value["x-requires"]=new JObject {["target"]="maestro"};return value;}
         public static PropAttachment Attachment(JObject arguments) {
             if(arguments["prop"] is not JObject prop)return null;
@@ -88,6 +90,7 @@ namespace Maestro.Quest.Programs
             error=null;if(prop) {prop.Finish();error=prop.Error;}return error==null;
         }
         protected virtual void ReleasePlayback() {}
+        protected virtual bool RetainPlacement=>false;
         public sealed override void Stop(bool preservePlacement) {
             if(Stopped)return;Stopped=true;
             try {
@@ -97,7 +100,7 @@ namespace Maestro.Quest.Programs
             } finally {
                 if(acquired) {
                     if(Avatar)Avatar.SetEditing(false);
-                    if(!preservePlacement&&Context.Editor&&Context.Editor.Find(TargetId)==Target)Context.Editor.RestorePose(TargetId);
+                    if(!preservePlacement&&!RetainPlacement&&Context.Editor&&Context.Editor.Find(TargetId)==Target)Context.Editor.RestorePose(TargetId);
                     if(targetRigid)targetRigid.SetAnimationOwner(this,false);
                 }
             }

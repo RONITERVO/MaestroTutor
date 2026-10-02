@@ -392,7 +392,7 @@ generation or upload private models as part of this work.
 Embedded-model preview, persisted walk selection and ImportedClip visual rules
 remain available alongside the new reusable-motion foundation above. The large
 library is not complete: add broader roles and explicit embedded-clip
-relinking; blending beyond the canonical body state transitions; explicit travel/contact policies; bulk-pack management and deeper recovery tools. Archive, protected local-download
+relinking; blending beyond the canonical body state transitions; broader travel/contact policies beyond explicit authored playback; bulk-pack management and deeper recovery tools. Archive, protected local-download
 removal, explicit assignment replacement and retained room/rule/profile references
 are implemented as described in QUEST_MOTION_MAINTENANCE.md. Profile import and long-session
 playback on Quest, including low storage, interruption and large collections.
@@ -406,7 +406,7 @@ The book now assigns up to four saved motions per Idle, Listening, Thinking and
 Speaking state for each custom avatar, with weights, speed, looping, reuse gaps
 and separate assignment Undo/Redo. See QUEST_AVATAR_ACTIVITIES.md for actual
 ownership, persistence and blending limits. Walking remains a separate gait;
-more roles, motion packs, contact/travel policy and Quest profiling remain open.
+more roles, optional motion packs, contact solving and Quest profiling remain open.
 
 ## Archive, reference inspection and local storage
 
@@ -416,3 +416,37 @@ retained saves and active leases; exact reimport restores the same identity.
 Optional confirmed forgetting of an unused removed entry reclaims metadata
 capacity. See QUEST_MOTION_MAINTENANCE.md for user controls, migrations, recovery
 limits and the hardware acceptance still required.
+
+
+## Explicit authored travel (2026-10-02)
+
+The shared `animation.play` capability accepts optional `movement` for Maestro's
+embedded and library sources. Omitted or `inPlace` retains navigation-adjusted
+horizontal hips. Explicit `authored` samples every imported node and transfers
+the body's planar displacement into Maestro's room placement. A compensating
+model-container offset preserves the source's visible pose, including unmapped
+joints and deformed mesh. Looping carries the clip's end-to-start displacement
+forward. This does not infer semantic root motion, loop quality or intent.
+
+The generated book form, app agent and programs use this same argument. Calls
+that include it require `authoredMotion.v1`; older calls remain compatible. The
+old simple-step editor cannot represent this policy and refuses conversion
+instead of silently dropping it. Existing saved gait and tutor-state assignments
+keep their prior behavior.
+
+Authored travel requires a loaded avatar, running room physics, tracking and
+clear connected level scanned floor. Each accepted movement checks the scanned
+floor, a swept body capsule and personal clearance. Jump height increases the
+capsule clearance; this is not per-limb contact, foot planting or carried-prop
+collision solving. Blocking, tracking loss, pause or external placement changes
+stop the action. Stop/completion retains the last accepted room position and
+returns the model container to its normal local placement. It does not teleport
+back to the start. Miniature and stationary use remain available in small rooms.
+
+Desktop verification compares one actual shipped spin/jump at five times with
+direct source sampling after canonical pose application: all node positions and
+rotations match within tolerance, and maximum deformed-vertex difference is
+0.00000122 metres. Synthetic checks cover loop carry, unchanged stationary
+playback, wall refusal, tracking/physics loss and shared-action cleanup. This is
+sampled desktop evidence, not visual acceptance of every clip or physical Quest
+performance/comfort acceptance.

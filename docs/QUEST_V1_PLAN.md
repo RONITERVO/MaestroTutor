@@ -2068,3 +2068,53 @@ visual/semantic curation, default tutor-state assignments and Quest storage,
 performance, lifecycle and comfort acceptance remain open. These checks do not
 certify preview-equivalent final Maestro motion or Store readiness. No device or
 production deployment was performed; other v1 gates remain active.
+
+
+## 2026-10-02: explicit authored animation travel
+
+Embedded and reusable library motions now have an optional `movement` argument
+on the existing `animation.play` capability. `authored` preserves the complete
+sampled imported pose while transferring planar body displacement to Maestro's
+room placement, including accumulated loop travel. Omitted/`inPlace` keeps the
+existing navigation-adjusted behavior. Saved gait and tutor-state assignments
+are unchanged; no source-filename classification is treated as movement policy.
+
+Generated book fields, programs and agent calls share this contract. Optional
+argument feature requirements include expression bindings, and legacy simple
+steps refuse conversions that would drop the explicit policy. The capability
+catalog's source fingerprint now also covers the avatar playback, retargeting
+and spatial-motion implementations. The browser inspection fixture's action
+definition was refreshed directly from successful native capture.
+
+Authored movement requires running room physics and clear connected level
+scanned floor. Swept body checks, personal clearance, tracking, pause and
+placement changes constrain each step. Stop/failure keeps the last accepted
+room position. This protects a body proxy, not every animated extremity, and
+does not add foot planting, cross-rig retargeting or physical cloth/hair.
+
+Desktop Unity verification passed 427 EditMode and 400 PlayMode tests, with
+three deliberately optional private-file skips. New checks include loop carry,
+wall refusal, tracking/physics loss, shared-action cleanup and source-equivalent
+joints/deformed mesh after canonical pose application. The actual shipped
+360_Power_Spin_Jump differed by at most 0.00000122 metres over five sampled times.
+All-clip visual curation and physical Quest motion/comfort checks remain open.
+
+The focused web subset passed 142 tests in four files. All 1,725 web tests in
+200 files passed; TypeScript, ESLint, catalog source checks and included-asset
+integrity checks passed. No hardware acceptance is implied.
+
+Full development build exited 0. All 76 Android tests passed, including the real
+Meshy ZIP. Verified inputs match all 218 runtime, 115 test and 11 Editor C# files,
+34 fixtures plus metadata, the native AAR and 113 packaged web files. The exact
+avatar, all 178 motion payload hashes, ARM64-only libraries and APK v2 signature
+were checked.
+
+Development checkpoint:
+`D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-authored-motion-D75ADB53.apk`
+
+SHA-256:
+`D75ADB53594BDBA4BDD9A0ACE12DE16AA2C9DE2C251E75E02E8DEE90A74A3009`
+
+This APK has not been installed. Device work remains on hold. The other v1
+release gates, including full motion curation and physical Quest acceptance,
+remain active.

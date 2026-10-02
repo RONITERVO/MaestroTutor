@@ -937,3 +937,19 @@ it('loads the included package identity and runs the same explicit installation 
  fireEvent.click(screen.getByRole('button',{name:'Run action now'}));expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:receipt.selected.call,runId:receipt.selected.id}});
  await receive(undefined,false,{execution:receipt as RoomAgentState['execution']});expect(screen.getByLabelText('Action result').textContent).toContain('"added": 1');expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
 });
+
+it('offers authored travel in the generated book form and sends the exact shared animation action',async()=>{
+ const {client,screen,receive}=setup(false,['execution.v1','authoredMotion.v1']);
+ const definition=capabilityDefinition('animation.play')!;
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:/^Search$/}));
+ await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Animation search'});
+ fireEvent.click(screen.getByRole('button',{name:/Play animation/}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Animation definition'});
+ const args={source:{kind:'embedded',modelHash:'a'.repeat(64),clipIndex:0},target:'maestro',channel:'wholeTarget',seconds:2,loop:false};
+ fireEvent.change(screen.getByLabelText('Action arguments'),{target:{value:JSON.stringify(args)}});fireEvent.click(screen.getByText('Edit action fields'));
+ expect(screen.queryByLabelText('Action inputs movement')).toBeNull();
+ fireEvent.click(screen.getByLabelText('Include Action inputs movement'));fireEvent.change(screen.getByLabelText('Action inputs movement'),{target:{value:'authored'}});
+ expect(JSON.parse((screen.getByLabelText('Action arguments') as HTMLTextAreaElement).value)).toEqual({...args,movement:'authored'});
+ fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
+ expect(client.snapshot().request?.commands[0]).toMatchObject({action:'execution',execution:{operation:'start',call:{id:'animation.play',version:1,arguments:{...args,movement:'authored'}}}});
+ act(()=>client.cancel());
+});

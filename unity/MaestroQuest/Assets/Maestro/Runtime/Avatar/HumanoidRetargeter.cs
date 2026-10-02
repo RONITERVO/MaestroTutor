@@ -19,6 +19,7 @@ namespace Maestro.Quest.Avatar
         Transform frame;
         Vector3 hipsPosition;
         float heightRatio;
+        public Vector3 ImportedHipOffset=>frame.InverseTransformPoint(Bone(PoseJoint.Hips).position)-hipsPosition;
         public Transform Bone(PoseJoint joint) => joints.TryGetValue(joint,out var entry) ? entry.Target : null;
 
         public void Initialize(AvatarPoseRig canonical, Animator humanoid)

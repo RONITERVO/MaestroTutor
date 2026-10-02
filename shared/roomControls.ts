@@ -7,7 +7,7 @@ export interface PhysicsObservation { ready:boolean; running:boolean; status:str
 export interface AvatarMovementObservation { active:boolean; mode:'look'|'follow'|'manual'|'stopped'; status:string; canLook:boolean; canFollow:boolean; lookReason:string; followReason:string; distance:number; speed:number }
 import {behaviourFact} from './behaviourCatalog';
 import {behaviourEvent} from './behaviourEvents';
-import {capabilityDefinition,capabilityInput} from './capabilities';
+import {capabilityDefinition,capabilityFeatures,capabilityInput} from './capabilities';
 import {roomControlFields} from './prompts/roomcontrols';
 export {roomControlFields} from './prompts/roomcontrols';
 const record=(v:unknown):v is Record<string,unknown>=>v!==null&&typeof v==='object'&&!Array.isArray(v);
@@ -40,7 +40,7 @@ export function requireRoomCapabilities(commands:{action:string;rule?:unknown;ex
     }
     if(typeof value.fact==='string')for(const feature of behaviourFact(value.fact)?.features??[])features.add(feature);
     const capability=value.op==='invoke'?value.capability:value.id;
-    if(typeof capability==='string'&&record(value.arguments))for(const feature of capabilityInput(capability,value.arguments)?.['x-features']??[])features.add(feature);
+    if(typeof capability==='string'&&record(value.arguments))for(const feature of capabilityFeatures(capability,value.arguments,record(value.bindings)?Object.keys(value.bindings):[]))features.add(feature);
     Object.values(value).forEach(x=>needs(x,features));
   };
   for(const command of commands) {

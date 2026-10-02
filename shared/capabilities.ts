@@ -120,3 +120,17 @@ export function capabilityResources(id:string,args:Record<string,unknown>):strin
   if(record(value))for(const [key,entry] of Object.entries(value))visit(entry,schema.properties?.[key]);
  };visit(args,definitions.get(id)?.input);return [...result];
 }
+
+/** Feature requirements may also belong to optional arguments, so older calls stay usable. */
+export function capabilityFeatures(id:string,args:Record<string,unknown>,bindings:string[]=[]):string[] {
+ const required=new Set<string>();
+ const visit=(schema:CapabilitySchema|undefined,value:unknown)=>{
+  if(!schema||value===undefined)return;const selected=resolveCapabilitySchema(schema,value);if(!selected)return;
+  for(const feature of selected['x-features']??[])required.add(feature);
+  if(selected.type==='object'&&record(value))for(const [key,child] of Object.entries(selected.properties??{}))visit(child,value[key]);
+  if(selected.type==='array'&&Array.isArray(value))for(const item of value)visit(selected.items,item);
+ };
+ const input=capabilityDefinition(id)?.input;visit(input,args);
+ for(const path of bindings){const parts=path.split('.');for(let i=1;i<=parts.length;i++)for(const feature of schemaField(input,parts.slice(0,i).join('.'),args)?.['x-features']??[])required.add(feature);}
+ return [...required];
+}

@@ -43,7 +43,7 @@ namespace Maestro.Quest.Programs
         }
         public static bool TryStep(this CapabilityCall call,out RuleStep step,out string error) {
             step=null;error="Use the book's capability blocks for this action";
-            var args=call.Arguments;var adapter=call.Definition.Module.StepAdapters.SingleOrDefault(a=>a.Matches(args));
+            var args=call.Arguments;if(args.ContainsKey("movement"))return false;var adapter=call.Definition.Module.StepAdapters.SingleOrDefault(a=>a.Matches(args));
             var kind=Kind(adapter?.Provider.Id??call.Definition.Id);
             if(!kind.HasValue||!CapabilityArguments.TryStep(kind.Value,adapter==null?args:adapter.Native(args),out step,out error))return false;
             step.id=call.NodeId;return true;

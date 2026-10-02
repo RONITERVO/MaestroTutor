@@ -171,10 +171,38 @@ namespace Maestro.Quest.Avatar
             avatar.SpatialWalk(dt > 0 ? moved/dt : 0);
             if (Time.unscaledTime >= nextRemember) { nextRemember=Time.unscaledTime+1; editor.RememberPlacement("maestro"); }
         }
-        bool ClearStep(Vector3 next, out string blocked)
+        internal bool CanBeginAuthored(out string error)
+        {
+            error="Room navigation is unavailable";if(!editor||!navigation)return false;
+            if(!CanBegin(AvatarSpatialMode.Manual,out error))return false;
+            float scale=transform.lossyScale.y;
+            if(!navigation||!navigation.Prepare(.25f*scale,1.7f*scale,out error)){error??="Room navigation is unavailable";return false;}
+            if(!navigation.Sample(transform.position,.08f,out _)){error="Place Maestro on the scanned floor before authored travel";return false;}
+            return true;
+        }
+        internal bool CanContinueAuthored(out string error)
+        {
+            error=null;
+            if(!CanBegin(AvatarSpatialMode.Manual,out error))return false;
+            if(!navigation||!navigation.Ready){error="Authored motion stopped — check room alignment and Start physics again";return false;}
+            return true;
+        }
+        internal bool TryAuthoredStep(Vector3 next,float extraHeight,out string error)
+        {
+            error="Authored motion stopped at the edge of clear, level scanned floor";
+            if(!float.IsFinite(next.sqrMagnitude)||!navigation.DirectStep(transform.position,next,out var floor)||Mathf.Abs(floor.y-next.y)>.03f)return false;
+            // Respect the user's space along the whole step, including a clip with discontinuous keys.
+            var from=Vector3.ProjectOnPlane(transform.position-room.Viewer.position,Vector3.up);var to=Vector3.ProjectOnPlane(next-room.Viewer.position,Vector3.up);var step=to-from;
+            float closest=(from+step*(step.sqrMagnitude<.000001f?0:Mathf.Clamp01(-Vector3.Dot(from,step)/step.sqrMagnitude))).magnitude;
+            float clearance=Mathf.Max(.6f,.35f*transform.lossyScale.y);
+            if(closest<clearance&&!(to.magnitude>=from.magnitude&&closest>=from.magnitude-.001f)){error="Authored motion stopped to keep clear of you";return false;}
+            return ClearStep(next,out error,extraHeight);
+        }
+        internal void RememberAuthoredPlacement(){if(editor)editor.RememberPlacement("maestro");}
+        bool ClearStep(Vector3 next, out string blocked,float extraHeight=0)
         {
             blocked = "Path crowded — try Size or reposition Maestro";
-            float scale = transform.lossyScale.y, r = .25f*scale, h = 1.7f*scale;
+            float scale = transform.lossyScale.y, r = .25f*scale, h = 1.7f*scale+extraHeight;
             var bottom = transform.position + Vector3.up*(r+.035f); var top = transform.position + Vector3.up*(h-r);
             var step = next-transform.position;
             int mask = (1<<RoomPhysicsLayers.Scanned) | (1<<RoomPhysicsLayers.Item) | (1<<RoomPhysicsLayers.Environment);
@@ -190,7 +218,7 @@ namespace Maestro.Quest.Avatar
         {
             string obstacle = collider.gameObject.layer == RoomPhysicsLayers.Scanned ? "scanned room surface" :
                 collider.GetComponentInParent<CreatedRoomObject>() ? "room object" :
-                collider.transform.IsChildOf(editor.Find("book").transform) ? "book" : "obstacle";
+                editor.Find("book")&&collider.transform.IsChildOf(editor.Find("book").transform) ? "book" : "obstacle";
             return "Path blocked by " + obstacle + " — try Size or reposition Maestro";
         }
         void LateUpdate()
