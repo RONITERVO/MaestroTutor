@@ -208,11 +208,19 @@ namespace Maestro.Quest.Avatar
             int mask = (1<<RoomPhysicsLayers.Scanned) | (1<<RoomPhysicsLayers.Item) | (1<<RoomPhysicsLayers.Environment);
             int count = Physics.CapsuleCastNonAlloc(bottom,top,r,step.normalized,hits,step.magnitude+.01f,mask,QueryTriggerInteraction.Ignore);
             if (count == hits.Length) return false;
-            for (int i=0;i<count;i++) if (!hits[i].collider.transform.IsChildOf(transform)) { blocked = Blocker(hits[i].collider); return false; }
+            for (int i=0;i<count;i++) if (BodyObstacle(hits[i].collider)) { blocked = Blocker(hits[i].collider); return false; }
             count = Physics.OverlapCapsuleNonAlloc(bottom+step,top+step,r,overlaps,mask,QueryTriggerInteraction.Ignore);
             if (count == overlaps.Length) return false;
-            for (int i=0;i<count;i++) if (!overlaps[i].transform.IsChildOf(transform)) { blocked = Blocker(overlaps[i]); return false; }
+            for (int i=0;i<count;i++) if (BodyObstacle(overlaps[i])) { blocked = Blocker(overlaps[i]); return false; }
             return true;
+        }
+        bool BodyObstacle(Collider collider)
+        {
+            if(collider.transform.IsChildOf(transform))return false;
+            // Carried props have their own swept trajectory checks. Their colliders
+            // return to ordinary obstacles immediately on release or ownership change.
+            var prop=collider.GetComponentInParent<HeldRoomProp>();
+            return !prop||!prop.Holding||prop.HolderId!="maestro";
         }
         string Blocker(Collider collider)
         {

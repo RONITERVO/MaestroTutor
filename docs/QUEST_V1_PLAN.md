@@ -2118,3 +2118,21 @@ SHA-256:
 This APK has not been installed. Device work remains on hold. The other v1
 release gates, including full motion curation and physical Quest acceptance,
 remain active.
+
+
+### Carried-prop follow-up
+
+The body sweep now excludes props actively held by Maestro. Their independent
+swept trajectory/release checks remain active, and released props immediately
+become ordinary body obstacles again. A native regression verifies both states.
+All 427 EditMode and 401 PlayMode tests passed (three optional skips), together
+with 76 Android tests. The rebuilt package exited 0 and passed the same complete
+source, content, ARM64 and v2-signature checks above.
+
+Updated development checkpoint:
+`D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-authored-motion-9E300477.apk`
+
+SHA-256:
+`9E30047753C3873F63A27B73FCD4B1C03AAE8221BF05BA16590370FBCC0ACC6F`
+
+Not installed; physical Quest acceptance remains open.

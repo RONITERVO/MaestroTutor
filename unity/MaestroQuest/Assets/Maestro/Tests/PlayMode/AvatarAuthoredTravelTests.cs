@@ -39,6 +39,19 @@ namespace Maestro.Quest.Tests
             avatar.StopImportedClip();UnityEngine.Object.Destroy(wall);yield return null;world.PausePhysics();Assert.That(avatar.PlayImportedClip(0,true,true),Is.False);Assert.That(avatar.transform.position,Is.EqualTo(accepted));
             world.StartPhysics();Assert.That(avatar.PlayImportedClip(0,true,true),Is.True);tracked=false;Assert.That(avatar.SampleImportedAt(.3f),Is.False);Assert.That(avatar.transform.position,Is.EqualTo(accepted));avatar.StopImportedClip();tracked=true;
         }
+        [UnityTest]public IEnumerator AuthoredTravelExcludesItsOwnCarriedPropButTreatsTheReleasedPropAsAnObstacle()
+        {
+            TravelStage();yield return LoadTravelAvatar(ModelFixture.HipTravel());
+            var centre=avatar.transform.position+Vector3.up*.8f;
+            Assert.That(editor.CreatePrimitive(RoomObjectKind.Ball,"Carried ball",centre,.12f,Color.white,out var id,out var error),Is.True,error);
+            var hand=avatar.PoseRig.Bone(PoseJoint.RightHand);
+            var attachment=new PropAttachment(id,avatar.ModelHash,PropHand.Right,PropRelease.Return,Quaternion.Inverse(hand.rotation)*(centre-hand.position),Quaternion.identity,1);
+            var prop=HeldRoomProp.Begin(editor,attachment,5,out error);Assert.That(prop,Is.Not.Null,error);
+            Assert.That(avatar.PlayImportedClip(0,true,true),Is.True,avatar.ImportedPlaybackError);
+            Assert.That(avatar.SampleImportedAt(.01f),Is.True,avatar.ImportedPlaybackError);var accepted=avatar.transform.position;
+            prop.End(true);Physics.SyncTransforms();
+            Assert.That(avatar.SampleImportedAt(.02f),Is.False);Assert.That(avatar.ImportedPlaybackError,Does.Contain("room object"));Assert.That(avatar.transform.position,Is.EqualTo(accepted));avatar.StopImportedClip();
+        }
         [UnityTest]public IEnumerator ShippedAuthoredMotionMatchesAllSourceJointsAndDeformedVerticesAtTheRoomPlacement()
         {
             TravelStage();var asset=BundledAvatar.FromApplication().Read();yield return LoadTravelAvatar(asset.Bytes);var pack=BundledMotions.FromApplication();

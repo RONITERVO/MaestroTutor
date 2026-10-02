@@ -437,8 +437,10 @@ keep their prior behavior.
 Authored travel requires a loaded avatar, running room physics, tracking and
 clear connected level scanned floor. Each accepted movement checks the scanned
 floor, a swept body capsule and personal clearance. Jump height increases the
-capsule clearance; this is not per-limb contact, foot planting or carried-prop
-collision solving. Blocking, tracking loss, pause or external placement changes
+capsule clearance; this is not per-limb contact or foot planting. Attached props
+retain their independent swept trajectory/release checks. The body check excludes
+a prop held by Maestro, and treats it as an obstacle again immediately on release.
+Blocking, tracking loss, pause or external placement changes
 stop the action. Stop/completion retains the last accepted room position and
 returns the model container to its normal local placement. It does not teleport
 back to the start. Miniature and stationary use remain available in small rooms.
