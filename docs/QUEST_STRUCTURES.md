@@ -54,11 +54,11 @@ There is no structure-specific transition subscription in this increment.
 
 The shared [capture/reset program](../unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-structure-reset.json)
 uses ordinary capability results to carry the new structure ID/revision into a
-reset. Member IDs remain explicit program resources. Arrays remain literal in
-this program format: a batch creation's returned list cannot yet be assigned to a
-whole action-array argument. The room agent can read the returned IDs and save a
-structure in its next action. Persistent membership does not imply a change to
-that input-binding boundary.
+reset. That simple example uses explicit member IDs and literal lists. Programs
+with `structuredInputs.v1` can also build typed member lists from creation results
+and bind them to whole action inputs; the build/capture/reset example below uses
+that path. Both forms validate every member and its edit authority before acting.
+Reading a saved membership list does not grant authority over its objects.
 
 ## Persistence and compatibility
 
