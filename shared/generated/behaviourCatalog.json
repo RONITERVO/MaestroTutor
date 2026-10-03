@@ -5349,7 +5349,7 @@
         "moduleLibrary.ready",
         "storage.writable"
       ],
-      "description": "Remove the exact content ID from the reusable module library. Saved behaviours keep their embedded copies and continue unchanged. This deletes the library copy, including a damaged entry. There is no library Undo. Completion waits for the write; Stop cannot retract a dispatched removal. Inspect the exact ID/receipt after uncertainty; do not replay.",
+      "description": "Remove the exact content ID from the reusable module library. Saved behaviours keep their embedded copies and continue unchanged. This deletes the private library copy, including a damaged entry. Included modules cannot be removed; deleting a private duplicate reveals the included definition. There is no library Undo. Completion waits for the write; Stop cannot retract a dispatched removal. Inspect the exact ID/receipt after uncertainty; do not replay.",
       "example": {
         "hash": "0000000000000000000000000000000000000000000000000000000000000000"
       },
@@ -17365,11 +17365,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomCapabilityCatalog.cs",
-      "sha256": "560687e1fab7cd48e2c84554075e29f9f4c93b003dc50327857fa616b78fc773"
+      "sha256": "226852531983b0ecaf80cd35bfd15d8a01818a4c529fd33012c7a27d877176db"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveCapture.cs",
-      "sha256": "16e4ea536028f49b430b0f344afd1c1786868b4adebac75c656095c6c12b59b3"
+      "sha256": "57801d6b4169126576531adbb587c0a3e9220168d658e6f84b06c80ac3928bf4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveSnapshot.cs",
@@ -17433,7 +17433,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleWorkshop.cs",
-      "sha256": "e3a3caabdd09dc095c43d6d7250f8a5428b77dba7c40a52955e4d27e5463e7dc"
+      "sha256": "7cfc82a9e07eb6a0ea5c369a728ab96593589bb2ea698db0512f02ed1b2a7472"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceReview.cs",
@@ -17457,7 +17457,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramModuleLibrary.cs",
-      "sha256": "8c4679608cd348523b58c379f19d54afed4cc7913b7642cd4856572d37cba153"
+      "sha256": "dda990b7017a0bf451fb076359ee92650fb82f4cc4c176071bcf71808a4abf38"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleDocument.cs",
@@ -17869,7 +17869,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ProgramModuleCapabilities.cs",
-      "sha256": "9376da00962491773dd542820b3da42344929fdebe80fcbd9209060d39b69a45"
+      "sha256": "5026803612a525d6068135fcb7d023d76cc7294b29a783c208bbc77b207ff133"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RecipeAnimationCapability.cs",
@@ -18002,6 +18002,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/spoon.json",
       "sha256": "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Resources/Programs/Modules/StructureWatch.json",
+      "sha256": "a3d41e342ab857d496bcc0c703a8e4c71e6c2b680f982190ca87457833db33e2"
     }
   ]
 }

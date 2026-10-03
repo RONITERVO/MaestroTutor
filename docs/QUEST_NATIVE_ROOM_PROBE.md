@@ -108,3 +108,15 @@ Storage writes are a separate boundary: a failed room save is still a failed
 action. Native storage diagnostics record the failed stage and error code without
 private file paths or document contents; the probe must not reinterpret that
 failure as a transient transport read.
+
+## Included structure watcher (2026-10-03)
+
+The default journey now inspects the shipped **Structure state waits** module and
+compares its exact definition with the shared `program-structure-watch.json`
+fixture. It supplies the newly created structure's observed ID/revision, saves
+without starting, explicitly starts, displaces a member, observes one transition,
+resets and rearms, then stops and deletes the probe behaviour. Move/reset Undo
+restores the earlier test's history. `program-structure-watch.json` in the evidence
+directory retains module, source and every relevant native state. This journey
+uses an explicit move; the separate PlayMode test covers an actual ball collision.
+Neither route automatically resumes a cancelled run or calls an AI provider.

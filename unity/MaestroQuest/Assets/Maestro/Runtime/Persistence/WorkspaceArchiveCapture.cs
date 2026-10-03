@@ -59,7 +59,9 @@ namespace Maestro.Quest.Persistence
         {
             cancellation.ThrowIfCancellationRequested();
             if(!CanStart(editor,rules,controls,out var error))throw new InvalidOperationException(error);
-            var modules=rules.Modules.Search("");var memory=rules.Memory.Snapshot();
+            // Included defaults ship with the app; pinned imports already embed their source.
+            // Preserve only private library files, keeping the portable 256-file bound.
+            var modules=rules.Modules.Search("").Where(e=>!e.Included).ToArray();var memory=rules.Memory.Snapshot();
             if(!editor.Models.TryCaptureArchive(out var models))throw new InvalidOperationException("Wait for the model import to finish before exporting.");
             WorkspaceLibraryCapture motions=null;
             try {

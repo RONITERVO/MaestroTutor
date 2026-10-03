@@ -151,13 +151,50 @@ try{
   if(!compositionGroup)throw new Error('Composed structure was not saved');
   const compositionState=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'structure.state',version:1,arguments:{id:compositionGroup.id}}}]);
   if((compositionState.catalog?.value as {displaced?:number})?.displaced!==0)throw new Error('Composed reset did not recover its baseline');
+  const watcher=JSON.parse(await readFile('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-structure-watch.json','utf8'));
+  const moduleHash=watcher.imports[0].hash;
+  const includedModule=await execute([{action:'catalog',catalog:{operation:'inspect',category:'modules',capability:moduleHash,version:1}}]);
+  const moduleView=includedModule.catalog;
+  if(moduleView?.operation!=='inspect'||moduleView.category!=='modules'||!moduleView.included||JSON.stringify(moduleView.definition)!==JSON.stringify(watcher.imports[0].module))throw new Error('Included native module differs from the shared fixture');
+  const watchedRevision=(compositionState.catalog?.value as {revision:number}).revision;
+  watcher.state.find((v:{name:string})=>v.name==='structureId').initial=compositionGroup.id;
+  watcher.state.find((v:{name:string})=>v.name==='revision').initial=watchedRevision;
+  const watcherSaved=await execute([{action:'rules',rule:{action:'edit',revision:lease.state().rules!.revision,edits:[{kind:'save',reference:'watcher',sequence:{id:'',name:'Native structure watch probe',interruption:0,repeat:false,program:JSON.stringify(watcher)}}]}}]);
+  const watcherId=watcherSaved.rules?.sequences.find(s=>s.name==='Native structure watch probe')?.id;
+  if(!watcherId||watcherSaved.rules!.running.some(r=>r.sequenceId===watcherId))throw new Error('Saving the watcher must not start it');
+  await execute([{action:'rules',rule:{action:'play',revision:watcherSaved.rules!.revision,target:watcherId}}]);
+  const waitForWatch=async(phase:string,cycles:number)=>{
+   const deadline=Date.now()+15000;let last;
+   do {
+    last=await execute([{action:'rules',rule:{action:'inspect',target:watcherId}}]);
+    const run=last.rules?.running.find(r=>r.sequenceId===watcherId);
+    if(run?.state?.some(v=>v.name==='phase'&&v.value===phase)&&run.state.some(v=>v.name==='cycles'&&v.value===String(cycles)))return last;
+    if(last.rules?.outcomes?.some(o=>o.sequenceId===watcherId))throw new Error('Watcher ended unexpectedly: '+JSON.stringify(last.rules.outcomes));
+    await new Promise(r=>setTimeout(r,100));
+   }while(Date.now()<deadline);
+   throw new Error('Watcher did not reach '+phase+': '+JSON.stringify(last?.rules?.running));
+  };
+  const watcherArmed=await waitForWatch('waitingForDisturbance',0);
+  const slot=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'structure.slot',version:1,arguments:{id:compositionGroup.id,index:0}}}]);
+  const slotValue=slot.catalog?.value as {target:string;position:{x:number;y:number;z:number}};
+  const watcherMembers=compositionAfter.objects.filter(o=>!compositionBefore.objects.some(before=>before.id===o.id)).map(o=>o.id);
+  if(!slotValue?.target||watcherMembers.length!==6||!watcherMembers.includes(slotValue.target))throw new Error('Watcher member identities unavailable');
+  await execute([{action:'execution',execution:{operation:'start',call:{id:'object.position.set',version:1,arguments:{target:slotValue.target,x:slotValue.position.x+.3,y:slotValue.position.y,z:slotValue.position.z}}}}]);
+  const watcherDisturbed=await waitForWatch('waitingForRebuild',1);
+  await execute([{action:'execution',execution:{operation:'start',call:{id:'structure.reset',version:1,arguments:{id:compositionGroup.id,revision:watchedRevision,members:watcherMembers}}}}]);
+  const watcherRebuilt=await waitForWatch('waitingForDisturbance',1);
+  const watcherStopped=await execute([{action:'rules',rule:{action:'stop',target:watcherId}}]);
+  if(watcherStopped.rules?.running.some(r=>r.sequenceId===watcherId))throw new Error('Watcher did not stop');
+  await execute([{action:'rules',rule:{action:'edit',revision:lease.state().rules!.revision,edits:[{kind:'delete',target:watcherId}]}}]);
+  await execute([{action:'undo'}]);await execute([{action:'undo'}]);
+  await writeFile(join(directory,'program-structure-watch.json'),JSON.stringify({boundary:'Real Unity runtime and shared transport. Movement is an explicit edit here; ball physics is covered separately in PlayMode. No headset or provider proof.',source:watcher,module:includedModule,saved:watcherSaved,armed:watcherArmed,disturbed:watcherDisturbed,rebuilt:watcherRebuilt,stopped:watcherStopped},null,2));
   await execute([{action:'undo'}]);
   const compositionUndo=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'structure.state',version:1,arguments:{id:compositionGroup.id}}}]);
   if((compositionUndo.catalog?.value as {displaced?:number})?.displaced!==1)throw new Error('Composed reset Undo did not restore the displaced piece');
   await execute([{action:'undo'}]);await execute([{action:'undo'}]);await execute([{action:'undo'}]);
   await execute([{action:'rules',rule:{action:'edit',revision:lease.state().rules!.revision,edits:[{kind:'delete',target:compositionId}]}}]);
   await writeFile(join(directory,'program-composition.json'),JSON.stringify({boundary:'Real Unity runtime and shared transport; no headset or provider proof.',source:JSON.parse(compositionSource),saved:compositionSaved,after:compositionAfter,group:compositionGroup,state:compositionState,undo:compositionUndo,outcome:compositionOutcome},null,2));
-  outcome={composition:{program:compositionId,outcome:compositionOutcome,buildCaptureMoveResetAndUndoVerified:true},structures:{captureReceipt:structureAfter.execution?.selected,liveDisplacementResetAndUndoVerified:true},batch:{createReceipt:batchAfter.execution?.selected,identitiesAndSingleUndoVerified:true},layout:{applyReceipt:layoutAfter.execution?.selected,liveReadAndSingleUndoVerified:true},template:{hash:templateArgs.templateHash,createReceipt:templateAfter.execution?.selected,componentsAndSingleUndoVerified:true},createdId:target,createReceipt:selected,paintVerified:true,undoPaintVerified:true,undoCreateVerified:true,diagnostics:diagnostic.catalog.value,lathe:{createReceipt:lathe.execution?.selected,profile:value,editAndUndoVerified:true},collision:{summary:summaryValue,editAndUndoVerified:true},latheCycles:cycle+1};
+  outcome={watch:{moduleHash,program:watcherId,includedSourceAndNativeRearmVerified:true},composition:{program:compositionId,outcome:compositionOutcome,buildCaptureMoveResetAndUndoVerified:true},structures:{captureReceipt:structureAfter.execution?.selected,liveDisplacementResetAndUndoVerified:true},batch:{createReceipt:batchAfter.execution?.selected,identitiesAndSingleUndoVerified:true},layout:{applyReceipt:layoutAfter.execution?.selected,liveReadAndSingleUndoVerified:true},template:{hash:templateArgs.templateHash,createReceipt:templateAfter.execution?.selected,componentsAndSingleUndoVerified:true},createdId:target,createReceipt:selected,paintVerified:true,undoPaintVerified:true,undoCreateVerified:true,diagnostics:diagnostic.catalog.value,lathe:{createReceipt:lathe.execution?.selected,profile:value,editAndUndoVerified:true},collision:{summary:summaryValue,editAndUndoVerified:true},latheCycles:cycle+1};
   }
  }
  await writeFile(join(directory,'journey.json'),JSON.stringify({version:1,boundary:'Real Unity Editor app and shared room protocol; no Quest input, WebView, scan or Store proof',providerUsed:!!prompt,initial,observations,outcome},null,2));

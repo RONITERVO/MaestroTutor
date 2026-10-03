@@ -94,8 +94,8 @@ namespace Maestro.Quest.Creation
                 common["entries"]=new JArray(entries.Skip(offset).Take(PageSize).Select(e=>new JObject {["id"]=e.Hash,["version"]=1,["label"]=e.Name}));common["status"]=notice??"Found "+entries.Length+" reusable modules. Search does not publish, import or run anything.";
             }else {
                 string hash=(string)request["capability"];var entry=(int)request["version"]==1?library?.Inspect(hash):null;
-                common["capability"]=hash;common["version"]=request["version"].DeepClone();common["definition"]=entry?.ReadDefinition()??(JToken)JValue.CreateNull();
-                common["status"]=notice??entry?.Error??(entry==null?"Unknown module content ID or unsupported version":"Pinned module definition. Importing changes a draft; applying never starts it.");
+                common["capability"]=hash;common["version"]=request["version"].DeepClone();common["definition"]=entry?.ReadDefinition()??(JToken)JValue.CreateNull();common["included"]=entry?.Included==true;
+                common["status"]=notice??entry?.Error??(entry==null?"Unknown module content ID or unsupported version":entry.Included?"Included module. Copy/edit its source to remix; pinned imports keep this exact definition. Nothing starts automatically.":"Pinned module definition. Importing changes a draft; applying never starts it.");
             }
             return Cache(common);
         }

@@ -119,7 +119,7 @@ namespace Maestro.Quest.Rules
         }
         public void Initialize(RoomEditor source, string saveDirectory = null)
         {
-            editor = source; string directory=saveDirectory ?? source.SaveDirectory;storage = new RuleStorage(directory);Modules=new ProgramModuleLibrary(directory,source.WriteGate);Memory=new ProgramMemoryStore(directory,source.WriteGate);
+            editor = source; string directory=saveDirectory ?? source.SaveDirectory;storage = new RuleStorage(directory);Modules=new ProgramModuleLibrary(directory,source.WriteGate,ProgramModuleLibrary.IncludedFromApplication());Memory=new ProgramMemoryStore(directory,source.WriteGate);
             document = storage.Load(out var message); sequenceIndex = document.sequences.Length > 0 ? 0 : -1;
             if (message != null) Status = message;
         }

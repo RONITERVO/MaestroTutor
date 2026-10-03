@@ -46,6 +46,16 @@ namespace Maestro.Quest.Tests
             var restored=new RoomStorage(staged.DirectoryPath).Load(out var loadError);Assert.That(restored,Is.Not.Null,loadError);
             Assert.That(restored.structures.Single().slots.Single().placement.target,Is.EqualTo(new string('a',32)));Assert.That(restored.Validate(out var error),Is.True,error);
         }
+        [Test] public void IncludedModuleCopiesAndEmbeddedWatcherSurviveWithoutAnyInstalledDefaults()
+        {
+            var module=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Resources/Programs/Modules/StructureWatch.json")));string hash=ProgramModules.Hash(module);
+            documents["program-modules.v1/"+hash+".json"]=Bytes(module.ToString(Formatting.None));
+            string source=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-structure-watch.json"))).ToString(Formatting.None);
+            documents["behaviours.v2.json"]=Document(new RuleDocument {sequences=new[]{new RuleSequence {id=new string('b',32),name="Portable watcher",program=source}}});
+            using var input=new MemoryStream(Archive());using var staged=WorkspaceArchive.Stage(input,directory);
+            var library=new ProgramModuleLibrary(staged.DirectoryPath);library.Flush();Assert.That(library.Inspect(hash).Included,Is.False);Assert.That(JToken.DeepEquals(library.Inspect(hash).ReadDefinition(),module),Is.True);
+            var rules=new RuleStorage(staged.DirectoryPath).Load(out var error);Assert.That(rules,Is.Not.Null,error);Assert.That(rules.sequences.Single().program,Is.EqualTo(source));Assert.That(rules.sequences.Single().Compile(out error),Is.Not.Null,error);
+        }
         [TearDown] public void Cleanup(){if(Directory.Exists(directory))Directory.Delete(directory,true);}
         WorkspaceArchiveSnapshot Snapshot()=>new(documents,payloads.ToDictionary(x=>x.Key,x=>(Func<Stream>)(()=>new MemoryStream(x.Value,false))));
         byte[] Archive(){using var stream=new MemoryStream();WorkspaceArchive.Write(stream,Snapshot());return stream.ToArray();}

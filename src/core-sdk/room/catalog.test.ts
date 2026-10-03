@@ -112,3 +112,11 @@ it('correlates bounded fact arguments and validates structured available values'
  const command=parseRoomCommands({commands:[{action:'catalog',catalog:query}]});expect(()=>requireRoomCapabilities(command,{capabilities:['catalog.v1','catalogVocabulary.v1']})).toThrow('factQueries.v1');
  expect(()=>requireRoomCapabilities(command,{capabilities:['catalog.v1','catalogVocabulary.v1','factQueries.v1']})).not.toThrow();
 });
+
+it('accepts included module provenance only for a readable definition and bounds the combined library',()=>{
+ expect(validCatalogView({...nativeModules.inspected,included:true})).toBe(true);
+ expect(validCatalogView({...nativeModules.inspected,included:'yes'})).toBe(false);
+ expect(validCatalogView({...nativeModules.removed,included:true})).toBe(false);
+ const empty={operation:'search',category:'modules',query:'',offset:0,pageSize:6,total:272,entries:[],revision:1,ready:true,pending:false,status:'Ready'};
+ expect(validCatalogView(empty)).toBe(true);expect(validCatalogView({...empty,total:273})).toBe(false);
+});

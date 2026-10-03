@@ -193,3 +193,64 @@ PC tests cover file validation/round-trip, native receipt replay, storage/reload
 no automatic execution, file-close acknowledgement and explicit UI dispatch.
 Browser native responses/export acknowledgements are simulated; headset picker,
 Downloads and flash durability still require device acceptance.
+
+
+## Included modules (2026-10-03)
+
+The native library now exposes up to 16 shipped definitions alongside up to 256
+private files. Both the book and agent use the same module search/inspection.
+Inspection marks a shipped entry with `included: true`. Included entries require
+no first-use file writes, are not removable, and can be exported or copied into
+an editable draft. A private file of the same hash takes precedence, including a
+damaged copy: it remains visible and removable, and removing it reveals the
+included definition. Loading or inspecting a module never starts it. Explicit file import/publication
+writes a durable private copy even when the same content is currently included;
+a future app update cannot remove that user-saved library entry.
+
+Imports embed the complete definition under its exact content hash. Updating the
+app's examples does not upgrade existing imports or create a dependency on future
+bundled files. Portable archives include private library files and saved programs
+with their embedded imports; unused included defaults are supplied by the app and
+do not consume the archive's 256-module-file limit. Editing a copy creates a different hash. The book offers both a
+pinned import and **Replace draft with editable copy**; the latter replaces only
+the draft and retains the existing explicit grant for additional object resources.
+Apply and Start are separate. The agent can inspect the same definition and use
+its program as an ordinary saved draft. No new agent execution route is added.
+
+The first included example is **Structure state waits**, exporting
+`waitForState(structureId, expectedRevision, disturbed, threshold, stableSeconds,
+timeout)`. It is ordinary version-3 source, with no object claims or mutations.
+Its standalone entry is empty; call its exported function from a behaviour.
+
+- `disturbed=true` waits for displaced + missing members to reach `threshold`
+  (1–16). `disturbed=false` waits for both counts to be zero.
+- Both states require `available=true` and no held members. The wait uses the
+  supplied stable period and the existing report-initial-condition policy.
+- Return values are `matched`, `definitionChanged`, `timeout`, or
+  `invalidThreshold`. Check the result before acting. Missing/forgotten definitions
+  or invalid timing inputs fail through the existing interpreter.
+- Definition revision changes wake the wait after its stable period and return
+  `definitionChanged`; they are not interpreted as another physical disturbance.
+  A gap resets stable time. Stop/pause/reload cancel without automatic resumption.
+- `matched` means a sampled condition qualified. It does not attribute movement
+  to a ball, prove support/stability, or promise that the condition still holds
+  when a later action begins. Read current facts and use normal action guards.
+
+The shared `program-structure-watch.json` example waits for restoration, arms for
+one disturbance, emits `user.structureDisturbed` with its count, and then rearms
+only after restoration. A changed definition ends the example and emits
+`user.structureWatchStopped` with the returned reason. Missing pieces count as a
+disturbance; reconstruction does not silently respawn them. Keep the projectile
+outside the observed structure, even when a separate reset group includes it.
+Users can connect their own reactions and reset policies with ordinary blocks.
+
+Verification for the included example covers pinned identity in both validators,
+read-only first use, durable explicit copies, damaged private duplicates, portable
+workspace restoration without installed defaults, held/unavailable conditions,
+timeouts, revision changes and cancellation. PlayMode throws a rigid ball at a
+six-piece structure, observes one disturbance, resets and rearms, then stops on a
+changed definition. Chrome copies the captured native module into editable blocks
+and displays the captured live states; catalog acknowledgements in that replay
+are simulated. The full-app native transport also runs the exact pinned watcher
+through save/start/move/reset/rearm/stop. No provider call or headset acceptance
+is implied by these checks.

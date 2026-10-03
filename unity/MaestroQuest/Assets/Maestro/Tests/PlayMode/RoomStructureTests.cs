@@ -93,14 +93,31 @@ namespace Maestro.Quest.Tests
             baseline.placements=baseline.placements.Append(ObjectPlacement.Capture(ballId,editor.Find(ballId).transform)).ToArray();
             var save=StructureSaveCall(baseline.placements.Select(p=>p.target).ToArray());var source=(JObject)save["arguments"]["source"];source["kind"]="definition";source.Remove("members");source["slots"]=new JArray(baseline.placements.Select((p,i)=>new JObject {["slot"]="piece_"+i,["placement"]=JObject.Parse(JsonUtility.ToJson(p))}));
             Assert.That(executor.Execute(StructureRequest(save),out var groupError,out _),Is.True,groupError);string group=(string)executor.Executions.Observe()["selected"]["output"]["structureId"];int groupRevision=editor.StructureRevision(group);
-            yield return new WaitForFixedUpdate();var ballBody=editor.Find(ballId).GetComponent<Rigidbody>();ballBody.linearVelocity=Vector3.forward*3;
+            // Observe only the castle. The projectile is part of reset, not part of
+            // the collapse predicate: moving the ball alone must not count as a hit.
+            string watched=SaveGroup(executor,ids);var program=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-structure-watch.json")));
+            program["state"][0]["initial"]=watched;program["state"][1]["initial"]=editor.StructureRevision(watched);
+            Assert.That(executor.Execute(new RoomAgentRequest {version=2,commands=new[]{new RoomAgentCommand {action="rules",rule=new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="save",reference="watchCastle",sequence=new RuleSequence {id="",name="Watch castle and rearm",program=program.ToString(Newtonsoft.Json.Formatting.None)}}}}}}},out var watchError,out var saved),Is.True,watchError);
+            string watcher=saved.Single();var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);workshop.Modules.Flush();string moduleHash=(string)program["imports"][0]["hash"];
+            void Capture(string phase){string output=Environment.GetEnvironmentVariable("MAESTRO_STRUCTURE_WATCH_EVIDENCE");if(string.IsNullOrEmpty(output))return;Directory.CreateDirectory(output);var state=observer.Observe();state.visible=true;state.workspaceView="rules";state.rules=workshop.Observe(true);state.catalog=executor.Catalog.Observe();File.WriteAllText(Path.Combine(output,phase+".json"),RoomAgentWire.Serialize(state));}
+            Assert.That(executor.Catalog.Execute(new JObject {["operation"]="search",["category"]="modules",["query"]="Structure state waits",["offset"]=0},out _),Is.True);Capture("library");
+            Assert.That(executor.Catalog.Execute(new JObject {["operation"]="inspect",["category"]="modules",["capability"]=moduleHash,["version"]=1},out _),Is.True);Assert.That((bool)executor.Catalog.Observe()["included"],Is.True);Capture("saved");Assert.That(runtime.Scheduler.RunningCount,Is.Zero,"Saving an example must not run it");
+            Assert.That(runtime.Trigger(watcher),Is.True,runtime.Scheduler.LastError);yield return new WaitForSeconds(.5f);
+            string WatchValue(string name)=>runtime.Scheduler.ObserveRuns().Single(r=>r.sequenceId==watcher).state.Single(v=>v.name==name).value;
+            Assert.That(WatchValue("phase"),Is.EqualTo("waitingForDisturbance"));Assert.That(runtime.Scheduler.TargetsBusy(ids),Is.False);Capture("armed");
+            yield return new WaitForFixedUpdate();var ballBody=editor.Find(ballId).GetComponent<Rigidbody>();ballBody.position=root.transform.TransformPoint(baseline.placements.Last().position);ballBody.angularVelocity=Vector3.zero;ballBody.linearVelocity=Vector3.forward*3;
             for(int i=0;i<100;i++)yield return new WaitForFixedUpdate();
             Assert.That(ids.Any(id=>Vector3.Distance(editor.Find(id).transform.localPosition,baseline.placements.Single(p=>p.target==id).position)>.1f),Is.True,"A real ball contact must displace at least one brick");
             Assert.That(editor.ObserveStructure(editor.ReadStructure(group)).Displaced,Is.GreaterThan(0));
+            Assert.That(WatchValue("cycles"),Is.EqualTo("1"),runtime.Scheduler.LastError);Assert.That(WatchValue("phase"),Is.EqualTo("waitingForRebuild"));Capture("disturbed");
             Assert.That(executor.Execute(StructureRequest(StructureResetCall(group,groupRevision,baseline.placements.Select(p=>p.target).ToArray())),out var error2,out _),Is.True,error2);
             Assert.That(editor.ObserveStructure(editor.ReadStructure(group)).Displaced,Is.EqualTo(0));
             foreach(var p in baseline.placements) {var item=editor.Find(p.target);Assert.That(Vector3.Distance(item.transform.localPosition,p.position),Is.LessThan(.001f));Assert.That(item.GetComponent<Rigidbody>().linearVelocity,Is.EqualTo(Vector3.zero));}
             Assert.That(physics.Running,Is.True);for(int i=0;i<100;i++)yield return new WaitForFixedUpdate();Assert.That(editor.Find(ids[4]).transform.localPosition.y,Is.GreaterThan(.12f),"Rebuilt top brick: "+editor.Find(ids[4]).transform.localPosition+"; reset ball: "+editor.Find(ballId).transform.localPosition);
+            Assert.That(WatchValue("phase"),Is.EqualTo("waitingForDisturbance"));Assert.That(WatchValue("cycles"),Is.EqualTo("1"));Capture("rebuilt");
+            var changed=editor.ReadStructure(watched);changed.name="Changed definition";Assert.That(editor.SaveStructure(changed,editor.StructureRevision(watched),out var changedError),Is.True,changedError);yield return new WaitForSeconds(.5f);
+            Assert.That(runtime.Scheduler.RunningCount,Is.Zero);Assert.That(runtime.Scheduler.Outcomes.Last().nodeId,Is.EqualTo("stop_disturbed"));Capture("changed");
+
         }
     }
 }

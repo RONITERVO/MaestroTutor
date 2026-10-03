@@ -12,7 +12,7 @@ type LibraryState={revision:number;ready:boolean;pending:boolean};
 type Inspection={operation:'inspect';capability:string;version:number};
 export type CatalogView=(
  {operation:'search';query:string;offset:number;pageSize:number;total:number;entries:{id:string;version:number;label:string}[];category?:CatalogCategory;revision?:number;ready?:boolean;pending?:boolean}|
- Inspection&({category?:'actions';definition:CapabilityDefinition|null}|{category:'events';definition:BehaviourEventDefinition|null}|{category:'facts';definition:BehaviourFactDefinition|null;available:boolean;value:DataValue|null;arguments?:Record<string,unknown>}|{category:'modules';definition:ModuleRecord|null}&LibraryState)|
+ Inspection&({category?:'actions';definition:CapabilityDefinition|null}|{category:'events';definition:BehaviourEventDefinition|null}|{category:'facts';definition:BehaviourFactDefinition|null;available:boolean;value:DataValue|null;arguments?:Record<string,unknown>}|{category:'modules';definition:ModuleRecord|null;included?:boolean}&LibraryState)|
  {operation:'check';call:CapabilityInvocation;valid:boolean;available:boolean;occupied:boolean;resources:string[]}
 )&{status:string};
 const record=(v:unknown):v is Record<string,unknown>=>v!==null&&typeof v==='object'&&!Array.isArray(v);
@@ -53,8 +53,8 @@ export function validCatalogView(v:unknown):v is CatalogView {
  if(v.category==='modules'){
   if(!integer(v.revision,1)||typeof v.ready!=='boolean'||typeof v.pending!=='boolean')return false;
   const meta=['revision','ready','pending'];
-  if(v.operation==='search')return queryKeys(v,['operation','query','offset','pageSize','total','entries','status',...meta])&&text(v.query,80)&&integer(v.offset)&&integer(v.total)&&v.total<=256&&v.pageSize===6&&Array.isArray(v.entries)&&v.entries.length<=6&&v.entries.every(x=>record(x)&&exact(x,['id','version','label'])&&moduleId(x.id)&&x.version===1&&text(x.label,128))&&new Set(v.entries.map(x=>x.id)).size===v.entries.length&&v.offset+v.entries.length<=v.total;
-  return v.operation==='inspect'&&queryKeys(v,['operation','capability','version','definition','status',...meta])&&moduleId(v.capability)&&integer(v.version,1)&&(v.definition===null||v.ready&&v.version===1&&validModuleRecord(v.definition,v.capability as string));
+  if(v.operation==='search')return queryKeys(v,['operation','query','offset','pageSize','total','entries','status',...meta])&&text(v.query,80)&&integer(v.offset)&&integer(v.total)&&v.total<=272&&v.pageSize===6&&Array.isArray(v.entries)&&v.entries.length<=6&&v.entries.every(x=>record(x)&&exact(x,['id','version','label'])&&moduleId(x.id)&&x.version===1&&text(x.label,128))&&new Set(v.entries.map(x=>x.id)).size===v.entries.length&&v.offset+v.entries.length<=v.total;
+  return v.operation==='inspect'&&queryKeys(v,['operation','capability','version','definition','status',...meta,...('included' in v?['included']:[])])&&(!('included' in v)||typeof v.included==='boolean'&&(!v.included||v.definition!==null))&&moduleId(v.capability)&&integer(v.version,1)&&(v.definition===null||v.ready&&v.version===1&&validModuleRecord(v.definition,v.capability as string));
  }
  if(v.operation==='search')return queryKeys(v,['operation','query','offset','pageSize','total','entries','status'])&&text(v.query,80)&&integer(v.offset)&&integer(v.total)&&v.pageSize===6&&Array.isArray(v.entries)&&v.entries.length<=6&&v.entries.every(x=>record(x)&&exact(x,['id','version','label'])&&id(x.id)&&integer(x.version,1)&&text(x.label,128))&&new Set(v.entries.map(x=>x.id)).size===v.entries.length&&v.offset+v.entries.length<=v.total;
  if(v.operation==='inspect'){

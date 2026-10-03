@@ -56,13 +56,13 @@ namespace Maestro.Quest.Programs
  {
   public override string Id=>"program.module.remove";
   public override string Label=>"Remove library module";
-  public override string Description=>"Remove the exact content ID from the reusable module library. Saved behaviours keep their embedded copies and continue unchanged. This deletes the library copy, including a damaged entry. There is no library Undo. Completion waits for the write; Stop cannot retract a dispatched removal. Inspect the exact ID/receipt after uncertainty; do not replay.";
+  public override string Description=>"Remove the exact content ID from the reusable module library. Saved behaviours keep their embedded copies and continue unchanged. This deletes the private library copy, including a damaged entry. Included modules cannot be removed; deleting a private duplicate reveals the included definition. There is no library Undo. Completion waits for the write; Stop cannot retract a dispatched removal. Inspect the exact ID/receipt after uncertainty; do not replay.";
   public override string Duration=>"completion";
   public override IReadOnlyList<string> Requirements=>new[]{"moduleLibrary.ready","storage.writable"};
   public override JObject InputSchema {get {var s=Object(new JObject {["hash"]=Text("^[a-f0-9]{64}$",64)});s["x-features"]=new JArray("moduleLibrary.v1");return s;}}
   public override JObject OutputSchema=>ModuleWrite.ResultSchema;
   public override JObject Example=>new() {["hash"]=new string('0',64)};
-  public override bool CanRun(CapabilityContext context,JObject args,out string error){var library=context.Editor?context.Editor.GetComponent<RuleWorkshop>()?.Modules:null;error="Behaviour library is not ready";return library!=null&&library.CanWrite(out error);}
+  public override bool CanRun(CapabilityContext context,JObject args,out string error){var library=context.Editor?context.Editor.GetComponent<RuleWorkshop>()?.Modules:null;error="Behaviour library is not ready";return library!=null&&library.CanRemove((string)args["hash"],out error);}
   public override bool Start(CapabilityContext context,string runId,JObject args,out CapabilityOperation operation,out string error){
    operation=null;if(!CanRun(context,args,out error))return false;var library=context.Editor.GetComponent<RuleWorkshop>().Modules;
    try{operation=new ModuleWrite(library,library.Remove((string)args["hash"]));return true;}catch(Exception ex){error=ex.Message;return false;}

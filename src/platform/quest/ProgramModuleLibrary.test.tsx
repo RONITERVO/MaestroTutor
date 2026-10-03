@@ -79,3 +79,11 @@ it('keeps the module preview open when the parent rejects a repeat-changing edit
  fireEvent.click(screen.getByLabelText('Allow additional module objects'));fireEvent.click(screen.getByRole('button',{name:'Add pinned import to draft'}));
  expect(onChange).toHaveBeenCalledOnce();expect(onClose).not.toHaveBeenCalled();expect(screen.getByRole('status').textContent).toContain('Convert sequence Repeat');
 });
+
+it('copies an included definition into an editable draft without saving, starting, or silently granting objects',async()=>{
+ const {client,screen,receive,onChange,onClose}=setup();fireEvent.click(screen.getByRole('button',{name:'Search modules'}));
+ await receive({operation:'search',category:'modules',query:'',offset:0,pageSize:6,total:1,entries:[{id:hash,version:1,label:module.name}],revision:1,ready:true,pending:false,status:'Found'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(module.name)}));await receive({operation:'inspect',category:'modules',capability:hash,version:1,definition:module,included:true,revision:1,ready:true,pending:false,status:'Included'});
+ expect(screen.queryByRole('button',{name:'Remove this library copy'})).toBeNull();fireEvent.click(screen.getByRole('button',{name:'Replace draft with editable copy'}));expect(onChange).not.toHaveBeenCalled();
+ fireEvent.click(screen.getByLabelText('Allow additional module objects'));fireEvent.click(screen.getByRole('button',{name:'Replace draft with editable copy'}));expect(JSON.parse(onChange.mock.calls[0][0])).toEqual(module.program);expect(onClose).toHaveBeenCalledOnce();expect(client.snapshot().request).toBeNull();
+});

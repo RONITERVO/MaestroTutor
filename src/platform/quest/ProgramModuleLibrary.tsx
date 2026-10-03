@@ -50,10 +50,11 @@ export function ProgramModuleLibrary({client,sequence,rulesRevision,dirty,disabl
  const execute=async(call:CapabilityInvocation)=>{
   setError('');try{const result=await client.request([{action:'execution',execution:{operation:'start',call}}],state??undefined);if(!result.ok)setError(result.status);else setRunId(result.execution?.selected?.id??null);}catch(e){setError((e instanceof Error?e.message:'Library write could not be confirmed.')+' Inspect action history before retrying.');}
  };
+ const copyToDraft=()=>{if(!program||!module)return;try{if(stale)throw new Error('The behaviour changed. Close and reopen the library.');if(additional.length&&!grant)throw new Error('Allow the additional module objects before copying.');const source=JSON.stringify(module.program);if(!parseProgram(source).program)throw new Error('This module cannot be used as a standalone behaviour.');const rejected=onChange(source);if(rejected)throw new Error(rejected);onClose();}catch(e){setError(e instanceof Error?e.message:'Module copy failed.');}};
  const insert=()=>{if(!program||!module||!inspection)return;try{if(stale)throw new Error('The behaviour changed. Close and reopen the library.');const updated=editProgramImport(program,inspection.capability,module,{alias,replace:replace||undefined,grantResources:grant,signals:Object.fromEntries(events.map(e=>[e.name,signalTarget(e.name)]))});const rejected=onChange(JSON.stringify(updated));if(rejected)throw new Error(rejected);onClose();}catch(e){setError(e instanceof Error?e.message:'Module import failed.');}};
  return <section aria-label="Reusable module library" className="program-editor">
   <div className="room-workspace-actions"><h3>Reusable modules</h3><button disabled={pending||fileBusy} onClick={onClose}>Back to program</button></div>
-  <p>Save a reusable definition, then choose the exact version for a behaviour. Library edits never upgrade existing imports.</p>
+  <p>Included examples and your reusable definitions share this library. Choose an exact version for a behaviour. Library edits never upgrade existing imports.</p>
   <div role="status" className={error?'room-message room-message-warning':'room-message'}>{error||native?.status||'Search to read the library. Publishing and removal are separate actions.'}</div>
   {selected&&<div className="room-message" aria-label="Library action result"><strong>{selected.phase}</strong><p>{selected.status}</p>{selected.output&&<pre>{JSON.stringify(selected.output,null,2)}</pre>}<button disabled={pending} onClick={()=>void client.request([{action:'execution',execution:{operation:'inspect',runId:selected.id}}]).catch(e=>setError(String(e)))}>Inspect library action</button></div>}
   {fileStatus&&<p role="status">{fileStatus}</p>}
@@ -88,9 +89,10 @@ export function ProgramModuleLibrary({client,sequence,rulesRevision,dirty,disabl
     {required.length>0&&<p>Required objects: {required.map(id=>state?.objects.find(o=>o.id===id)?.name??'Unavailable '+id).join(', ')}</p>}
     {additional.length>0&&<label className="rule-checkbox"><input type="checkbox" aria-label="Allow additional module objects" checked={grant} onChange={e=>setGrant(e.target.checked)}/>Add these {additional.length} objects to this behaviour’s declared access</label>}
     <button onClick={insert}>{replace?'Replace pinned import in draft':'Add pinned import to draft'}</button><p>This updates the draft only. Apply saves it and cancels an old run; Start is separate.</p>
+    <button onClick={copyToDraft}>Replace draft with editable copy</button><p>The copy replaces this unsaved draft. Its functions and conditions can be edited in the book. Apply and Start remain separate.</p>
     <details><summary>Exact module definition</summary><pre>{JSON.stringify(module,null,2)}</pre></details>
    </fieldset>}
-   <details><summary>Remove library copy</summary><p>Existing behaviours keep their embedded copies. The library copy is deleted without Undo.</p><button disabled={disabled||busy||Boolean(runPending)||!inspection.ready} onClick={()=>void execute({id:'program.module.remove',version:1,arguments:{hash:inspection.capability}})}>Remove this library copy</button></details>
+   {inspection.included?<p>Included example. Edit a copy of its source to create your own version.</p>:<details><summary>Remove library copy</summary><p>Existing behaviours keep their embedded copies. The library copy is deleted without Undo.</p><button disabled={disabled||busy||Boolean(runPending)||!inspection.ready} onClick={()=>void execute({id:'program.module.remove',version:1,arguments:{hash:inspection.capability}})}>Remove this library copy</button></details>}
   </section>}
  </section>;
 }

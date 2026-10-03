@@ -52,6 +52,10 @@ blueprint libraries and liquids/snow are not completed by those features. Persis
 create a small build, capture it, displace pieces and reset them; see
 [structures](QUEST_STRUCTURES.md). The current
 16-creations-per-run budget cannot be described as arbitrary castle construction.
+The included Structure state waits module now expresses knocked-down/rebuilt
+thresholds using the existing condition interpreter and exact pinned source,
+shared by library inspection, editable drafts and agent-created programs; see
+[included modules](QUEST_PROGRAM_MODULES.md#included-modules-2026-10-03).
 
 ## Geometry implementation
 

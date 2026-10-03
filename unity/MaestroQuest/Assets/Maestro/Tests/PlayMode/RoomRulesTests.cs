@@ -631,7 +631,7 @@ namespace Maestro.Quest.Tests
             Assert.That(Call("program.module.publish",args,out error),Is.False,"Stale saved revision cannot publish a different source");
             args["rulesRevision"]=workshop.Revision;Assert.That(Call("program.module.publish",args,out error),Is.True,error);
             for(int i=0;i<120&&(string)executor.Executions.Observe()["selected"]?["phase"]!="completed";i++)yield return null;
-            receipt=executor.Executions.Observe()["selected"];Assert.That((string)receipt["phase"],Is.EqualTo("completed"));string second=(string)receipt["output"]["hash"];Assert.That(second,Is.Not.EqualTo(hash));Assert.That(workshop.Modules.Count,Is.EqualTo(2));
+            receipt=executor.Executions.Observe()["selected"];Assert.That((string)receipt["phase"],Is.EqualTo("completed"));string second=(string)receipt["output"]["hash"];Assert.That(second,Is.Not.EqualTo(hash));Assert.That(workshop.Modules.Search("").Count(e=>!e.Included),Is.EqualTo(2));
             var caller=JObject.Parse(@"{'version':3,'moduleVersion':1,'dataVersion':1,'entry':'main','resources':[],'state':[],'events':[{'name':'user.request','type':'number'},{'name':'user.total','type':'number'}],'functions':[{'name':'main','returns':'void','parameters':[],'locals':[],'body':[{'id':'first','op':'call','module':'counter','function':'remember','args':[{'value':2}]},{'id':'second','op':'call','module':'counter','function':'remember','args':[{'value':4}]},{'id':'wait','op':'sleep','seconds':{'value':30}}]}]}");
             caller["imports"]=new JArray(new JObject {["alias"]="counter",["hash"]=hash,["module"]=module.DeepClone(),["signals"]=new JObject {["user.add"]="user.request",["user.stored"]="user.total"}});
             Assert.That(Rule(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="save",reference="caller",sequence=new RuleSequence {id="",name="Use pinned counter",program=caller.ToString()}}}},out error),Is.True,error);
@@ -664,12 +664,12 @@ namespace Maestro.Quest.Tests
             Assert.That(executor.Execute(request,out var error,out _),Is.True,error);
             for(int i=0;i<180&&(string)runtime.Scheduler.Invocation(id)["phase"]!="completed";i++)yield return null;
             Assert.That((string)runtime.Scheduler.Invocation(id)["phase"],Is.EqualTo("completed"));Assert.That((string)runtime.Scheduler.Invocation(id)["output"]["hash"],Is.EqualTo(hash));
-            Assert.That(workshop.Modules.Count,Is.EqualTo(1));Assert.That(runtime.Scheduler.ObserveRuns(),Is.Empty,"Import is storage, not execution of its entry function");
+            Assert.That(workshop.Modules.Search("").Count(e=>!e.Included),Is.EqualTo(1));Assert.That(runtime.Scheduler.ObserveRuns(),Is.Empty,"Import is storage, not execution of its entry function");
             string evidence=Environment.GetEnvironmentVariable("MAESTRO_MODULE_FILE_EVIDENCE");
             if(!string.IsNullOrEmpty(evidence)){Directory.CreateDirectory(evidence);File.WriteAllText(Path.Combine(evidence,"module-file.json"),new JObject {["format"]="maestro-program-module",["version"]=1,["hash"]=hash,["definition"]=workshop.Modules.Inspect(hash).ReadDefinition()}.ToString());File.WriteAllText(Path.Combine(evidence,"receipt.json"),runtime.Scheduler.Invocation(id).ToString());}
             int revision=workshop.Modules.Revision;Assert.That(executor.Execute(request,out error,out _),Is.True,error);Assert.That(workshop.Modules.Revision,Is.EqualTo(revision),"Same receipt does not replay the import");
             request.commands[0].execution["runId"]=runtime.Scheduler.Receipts.NextId;request.commands[0].execution["call"]["arguments"]["hash"]=new string('0',64);
-            Assert.That(executor.Execute(request,out error,out _),Is.False);StringAssert.Contains("identity",error);Assert.That(workshop.Modules.Count,Is.EqualTo(1));
+            Assert.That(executor.Execute(request,out error,out _),Is.False);StringAssert.Contains("identity",error);Assert.That(workshop.Modules.Search("").Count(e=>!e.Included),Is.EqualTo(1));
             var reloaded=new Maestro.Quest.Programs.ProgramModuleLibrary(directory);reloaded.Flush();Assert.That(JToken.DeepEquals(reloaded.Inspect(hash).ReadDefinition(),module),Is.True);
             var author=(JObject)module["program"].DeepClone();author["functions"][0]["body"]=new JArray(new JObject {["id"]="import_file",["op"]="invoke",["capability"]="program.module.import",["version"]=1,["arguments"]=new JObject {["hash"]=hash,["definition"]=module.DeepClone()},["bindings"]=new JObject()});
             var sequence=workshop.Selected;sequence.program=author.ToString();

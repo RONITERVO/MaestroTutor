@@ -50,7 +50,8 @@ distinct from unavailable transforms. A hand-held piece can be intentionally
 displaced. These facts do not prove which collision caused movement, detect mesh
 or cloth deformation, or assert that a structure is physically stable. Programs
 combine the facts with their chosen thresholds, timers and contact observations.
-There is no structure-specific transition subscription in this increment.
+The included Structure state waits module composes the existing condition block
+with these facts; see [included modules](QUEST_PROGRAM_MODULES.md#included-modules-2026-10-03). It uses no separate structure event implementation.
 
 The shared [capture/reset program](../unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-structure-reset.json)
 uses ordinary capability results to carry the new structure ID/revision into a

@@ -13,28 +13,30 @@ namespace Maestro.Quest.Programs
  /// <summary>Immutable content-addressed definitions. File IO/validation run off-thread; Poll commits observations on the owner thread.</summary>
  public sealed class ProgramModuleLibrary
  {
-  public const int MaximumEntries=256,MaximumBytes=96000;
+  public const int MaximumEntries=256,MaximumIncluded=16,MaximumBytes=96000;
   public sealed class Entry {
-   public string Hash {get;internal set;} public string Name {get;internal set;} public string Error {get;internal set;} internal JObject Definition;internal HashSet<string> References=new();
+   public string Hash {get;internal set;} public string Name {get;internal set;} public string Error {get;internal set;} public bool Included {get;internal set;} internal JObject Definition;internal HashSet<string> References=new();
    public JObject ReadDefinition()=>Definition==null?null:(JObject)Definition.DeepClone();
   }
   public sealed class Write {
    internal Task<Result> Task;internal IDisposable Lease;public string Hash,Error;public bool Pending=true,Changed;public int Revision;
   }
   internal sealed class Result {public Entry Entry;public bool Removed,Changed;public string Error;}
-  sealed class Loaded {public Dictionary<string,Entry> Entries=new();public string Error;public bool Overflow;}
+  sealed class Loaded {public Dictionary<string,Entry> Entries=new(),Included=new();public string Error;public bool Overflow;}
   readonly object gate=new();
-  readonly string directory;readonly Task<Loaded> loading;
-  Dictionary<string,Entry> entries=new();Write write;bool overflow;
+  readonly string directory;readonly string[] includedSources;readonly Task<Loaded> loading;
+  Dictionary<string,Entry> entries=new(),included=new();Write write;bool overflow;
   public bool Ready {get;private set;}
   public string Error {get;private set;}
   public int Revision {get;private set;}=1;
   public bool Pending=>write?.Pending==true;
-  public int Count=>entries.Count;
+  public int Count=>entries.Keys.Union(included.Keys).Count();
+  IEnumerable<Entry> VisibleEntries()=>entries.Values.Concat(included.Values.Where(e=>!entries.ContainsKey(e.Hash)));
+  public static string[] IncludedFromApplication()=>UnityEngine.Resources.LoadAll<UnityEngine.TextAsset>("Programs/Modules").OrderBy(a=>a.name,StringComparer.Ordinal).Select(a=>a.text).ToArray();
   public static bool ValidHash(string value)=>value!=null&&value.Length==64&&value.All(c=>c>='a'&&c<='f'||c>='0'&&c<='9');
   readonly Maestro.Quest.Persistence.WorkspaceWriteGate workspaceWrites;
-  public ProgramModuleLibrary(string parent,Maestro.Quest.Persistence.WorkspaceWriteGate writeGate=null){
-   workspaceWrites=writeGate??new();
+  public ProgramModuleLibrary(string parent,Maestro.Quest.Persistence.WorkspaceWriteGate writeGate=null,IEnumerable<string> includedDefinitions=null){
+   workspaceWrites=writeGate??new();includedSources=(includedDefinitions??Array.Empty<string>()).Take(MaximumIncluded+1).ToArray();
    directory=Path.Combine(Path.GetFullPath(parent),"program-modules.v1");
    // Build the static vocabulary on the Unity owner thread before pure validation on the worker.
    _=BehaviourCatalog.Actions.Count;loading=Task.Run(Load);
@@ -84,7 +86,13 @@ namespace Maestro.Quest.Programs
   }
   static string Read(string path){var file=new FileInfo(path);if(!file.Exists||file.Length>MaximumBytes)throw new IOException("Missing or oversized module file");return File.ReadAllText(path,new UTF8Encoding(false,true));}
   Loaded Load(){
-   var result=new Loaded();try {
+   var result=new Loaded();
+   if(includedSources.Length>MaximumIncluded)result.Error="Included module limit exceeded.";
+   foreach(string source in includedSources.Take(MaximumIncluded))try {
+    if(source==null||Encoding.UTF8.GetByteCount(source)>MaximumBytes)throw new InvalidDataException("Included module exceeds its byte limit");
+    var definition=ReadObject(source);string hash=ProgramModules.Hash(definition);var entry=Decode(hash,source);entry.Included=true;result.Included[hash]=entry;
+   }catch(Exception){result.Error="An included module is unavailable; existing saved imports remain unchanged.";}
+   try {
     if(!Directory.Exists(directory))return result;
     var paths=Directory.EnumerateFiles(directory,"*.json").Take(MaximumEntries+1).OrderBy(x=>x,StringComparer.Ordinal).ToArray();result.Overflow=paths.Length>MaximumEntries;
     foreach(string path in paths.Take(MaximumEntries)){
@@ -97,17 +105,17 @@ namespace Maestro.Quest.Programs
    return result;
   }
   public void Poll(){lock(gate){
-   if(!Ready&&loading.IsCompleted){var loaded=loading.GetAwaiter().GetResult();entries=loaded.Entries;Error=loaded.Error;overflow=loaded.Overflow;Ready=true;}
+   if(!Ready&&loading.IsCompleted){var loaded=loading.GetAwaiter().GetResult();entries=loaded.Entries;included=loaded.Included;Error=loaded.Error;overflow=loaded.Overflow;Ready=true;}
    if(write?.Pending!=true||!write.Task.IsCompleted)return;
    var result=write.Task.GetAwaiter().GetResult();write.Error=result.Error;write.Changed=result.Changed;
    if(result.Error==null){if(result.Removed)entries.Remove(write.Hash);else entries[write.Hash]=result.Entry;if(result.Changed)Revision++;}
    write.Revision=Revision;write.Pending=false;write.Lease?.Dispose();write.Lease=null;
   }}
   public void Flush(){loading.GetAwaiter().GetResult();if(write?.Pending==true)write.Task.GetAwaiter().GetResult();Poll();}
-  public Entry[] Search(string query){Poll();lock(gate){var terms=query.Trim().Split(' ',StringSplitOptions.RemoveEmptyEntries);return entries.Values.Where(e=>terms.All(t=>(e.Name+" "+e.Hash+" "+string.Join(" ",e.Definition?["exports"]?.Values<string>()??Array.Empty<string>())).IndexOf(t,StringComparison.OrdinalIgnoreCase)>=0)).OrderBy(e=>e.Name,StringComparer.Ordinal).ThenBy(e=>e.Hash,StringComparer.Ordinal).ToArray();}}
-  public Entry Inspect(string hash){Poll();lock(gate)return entries.TryGetValue(hash,out var entry)?entry:null;}
+  public Entry[] Search(string query){Poll();lock(gate){var terms=query.Trim().Split(' ',StringSplitOptions.RemoveEmptyEntries);return VisibleEntries().Where(e=>terms.All(t=>(e.Name+" "+e.Hash+" "+string.Join(" ",e.Definition?["exports"]?.Values<string>()??Array.Empty<string>())).IndexOf(t,StringComparison.OrdinalIgnoreCase)>=0)).OrderBy(e=>e.Name,StringComparer.Ordinal).ThenBy(e=>e.Hash,StringComparer.Ordinal).ToArray();}}
+  public Entry Inspect(string hash){Poll();lock(gate)return entries.TryGetValue(hash,out var entry)?entry:included.TryGetValue(hash,out entry)?entry:null;}
   // Called by the existing off-thread retained-save audit. It never commits owner-thread state.
-  public bool Retains(string id,out bool uncertain){var loaded=loading.GetAwaiter().GetResult();lock(gate){var current=Ready?entries:loaded.Entries;uncertain=Pending||(Ready?Error:loaded.Error)!=null||current.Values.Any(e=>e.Error!=null);return current.Values.Any(e=>e.References.Contains(id));}}
+  public bool Retains(string id,out bool uncertain){var loaded=loading.GetAwaiter().GetResult();lock(gate){var current=(Ready?entries:loaded.Entries).Values.Concat((Ready?included:loaded.Included).Values);uncertain=Pending||(Ready?Error:loaded.Error)!=null||current.Any(e=>e.Error!=null);return current.Any(e=>e.References.Contains(id));}}
   public bool CanWrite(out string error){Poll();error=workspaceWrites.Frozen?Maestro.Quest.Persistence.WorkspaceWriteGate.FrozenReason:!Ready?"Module library is loading":Pending?"Wait for the dispatched library write":Revision>=1000000?"Reopen the room before changing the library":null;return error==null;}
   public bool CanPublish(JObject module,out string error){lock(gate){
    if(!CanWrite(out error))return false;string hash=ProgramModules.Hash(module);
@@ -127,8 +135,12 @@ namespace Maestro.Quest.Programs
     }catch(Exception ex){return new Result {Error=ex.Message};}finally{if(temporary!=null)try{File.Delete(temporary);}catch(Exception){}}
    });return write;
   }}
+  public bool CanRemove(string hash,out string error){lock(gate){
+   if(!CanWrite(out error))return false;
+   if(Inspect(hash)?.Included==true){error="Included modules cannot be removed. Copy and edit their source to make your own version.";return false;}return true;
+  }}
   public Write Remove(string hash){lock(gate){
-   if(!ValidHash(hash))throw new ProgramFault("Invalid module identity");if(!CanWrite(out var error))throw new ProgramFault(error);
+   if(!ValidHash(hash))throw new ProgramFault("Invalid module identity");if(!CanRemove(hash,out var error))throw new ProgramFault(error);
    write=new Write {Hash=hash,Lease=workspaceWrites.Write()};write.Task=Task.Run(()=>{try{string path=Path.Combine(directory,hash+".json");bool present=File.Exists(path);File.Delete(path);return new Result {Removed=true,Changed=present};}catch(Exception ex){return new Result {Error=ex.Message};}});return write;
   }}
  }

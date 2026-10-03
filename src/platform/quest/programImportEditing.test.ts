@@ -43,5 +43,5 @@ it('checks library wire identity separately from action catalog IDs and rejects 
  expect(validCatalogView({...view,definition:{...m,name:'Wrong pin'}})).toBe(false);
  expect(validCatalogView({...view,definition:null,status:'Unavailable'})).toBe(true);
  const page={operation:'search',category:'modules',query:'',offset:0,pageSize:6,total:1,entries:[{id:hash,version:1,label:m.name}],revision:2,ready:true,pending:false,status:'Read'};
- expect(validCatalogView(page)).toBe(true);expect(validCatalogView({...page,total:257})).toBe(false);expect(validCatalogView({...page,entries:[...page.entries,...page.entries]})).toBe(false);
+ expect(validCatalogView(page)).toBe(true);expect(validCatalogView({...page,total:273})).toBe(false);expect(validCatalogView({...page,entries:[...page.entries,...page.entries]})).toBe(false);
 });

@@ -192,7 +192,7 @@ namespace Maestro.Quest.Persistence
         static string SafeText(string value,int maximum)
         {value=new string((value??"").Where(c=>!char.IsControl(c)).Select(c=>char.IsSurrogate(c)||c=='\u2028'||c=='\u2029'?'_':c).Take(maximum).ToArray());return value;}
         static string PreparationError(Exception issue)
-        {return issue is InvalidDataException?SafeText(issue.Message,256):"The archive could not be prepared. Current room data is unchanged; check the file and available storage.";}
+        {if(issue!=null)Debug.LogWarning($"Maestro workspace preparation failed ({issue.GetType().Name}, 0x{issue.HResult:X8})");return issue is InvalidDataException?SafeText(issue.Message,256):"The archive could not be prepared. Current room data is unchanged; check the file and available storage.";}
         static string PrivateCopy(string path,string root)
         {
             if(string.IsNullOrEmpty(path)||string.IsNullOrEmpty(root)||!Path.IsPathRooted(path))throw new InvalidDataException("No private archive copy was selected.");
