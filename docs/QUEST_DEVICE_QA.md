@@ -2,6 +2,20 @@
 
 
 
+## Physical drawing obstruction (headset acceptance pending)
+
+With a chalkboard patch enabled, place a solid object between the surface pencil
+ray and the board. Trigger and pinch must not begin a stroke through it. Move the
+blocker into an active stroke: the valid partial stroke should save once, and Undo
+should remove it. Erase ink must leave covered strokes intact. Move the blocker
+away and check drawing/erasing work again. Repeat with held Chalk and an active
+scanned wall, including a board just beyond the wall. Recall/retrieving tools beyond
+scanned walls must still work. Explicit ink edits in the optional book workshop or
+by Maestro should remain possible. Check moved/scaled boards and repeated strokes
+while sampling actual headset frame time; desktop tests do not establish comfort.
+The contact query uses physical proxies, so a coarse collider may cover a visible
+opening. It ignores the receiving object's and held tool's own proxies.
+
 ## Editable profile geometry (headset acceptance pending)
 
 Create a recipe cup through the shared catalog or delegated room agent. Inspect

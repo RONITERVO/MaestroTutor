@@ -2,6 +2,12 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
+Physical surface drawing now checks solid obstructions in the shared contact path
+for trigger/pinch, erasing and held drawing tips. Scanned walls block ink without
+changing tool recovery through walls. Logical ink editing remains available to
+users, programs and the agent. The bounded query and real-physics tests are
+specified in QUEST_SURFACE_DRAWING.md; device acceptance remains pending.
+
 Editable lathe profiles now extend the existing recipe system. The agent, programs
 and optional book workshop use the same create/edit capabilities; exact revisioned
 profile queries expose the source. Native geometry, saved edits, Undo, mesh disposal
@@ -84,8 +90,9 @@ posing now exposes start/rotate/save/finish/discard with native session IDs and
 pose versions, the same physical joint limits and imported retargeter, held-joint
 exclusion, failed-pose recovery and recording interoperation. Saved edits are
 durable outside temporary mode; temporary edits stay in the fork until Keep.
-No authoring operation starts playback. The catalog contains 62 actions, 12
-events and 59 facts. See QUEST_ANIMATION_AUTHORING.md and QUEST_AVATAR_SELECTION.md.
+No authoring operation starts playback. The current catalog inventory is generated
+in `shared/generated/behaviourCatalog.json`. See QUEST_ANIMATION_AUTHORING.md and
+QUEST_AVATAR_SELECTION.md.
 Single-file GLB/VRM selection, preview and acceptance now share the physical
 import path with book fields and agent/program calls. See QUEST_MODEL_IMPORT.md.
 Animation collections now share native selection, versioned start/retry/tag controls,

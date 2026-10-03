@@ -25719,8 +25719,12 @@
       "sha256": "14893472cab212ce19d40683af394fb8d076e3eac96f6f64ec238f7dc01cc2b0"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/DrawingSurfaceOcclusion.cs",
+      "sha256": "a4154ab4ff7ba09f684a459a2891346db019ad60c091427568a7770aaf768967"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSurfaceEdits.cs",
-      "sha256": "204b4e7fbf6a51a8eb167136f2150a5447ecc8566fc88cf9fa7a3c764fd78876"
+      "sha256": "789d1a39686802f41d3cb6acaee6fc6c268dd7a2f2c3b976ad24a28d6eea108c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRecipeEdits.cs",
@@ -25736,7 +25740,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SpatialDrawing.cs",
-      "sha256": "03f661e7b473fc39593f0eb2d1c6aa0f7940e6ebc02bb1f3404f0ad6e52c1027"
+      "sha256": "bf50fdba3f6418f9ba12e8230e1cd2dea9ba1f7b68794b6ef98e8e67ecf5b16c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedRoomObject.cs",

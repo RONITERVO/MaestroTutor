@@ -62,15 +62,21 @@ namespace Maestro.Quest.Creation
             if(!Ownership.TryAcquire("surface-eraser", "Your surface eraser",RoomActorRole.Control,new[]{new Maestro.Quest.Programs.BehaviourCatalog.Claim(target,"wholeTarget")},null,out var lease,out var error,preservePlacement:true)){SetStatus(error);return;}
             using(lease){if(!EditSurface(target,ObjectRevision(target),new JObject {["operation"]="removeStroke",["surface"]=surface,["stroke"]=stroke},out _,out error))SetStatus(error);}
         }
+        readonly DrawingSurfaceOcclusion drawingOcclusion=new();
         internal bool FindDrawingSurface(Ray ray,float maximum,out string target,out string surface,out Vector3 point,out float distance,float? radius=null,string exclude=null)
         {
             target=surface=null;point=default;distance=maximum;
+            if(!float.IsFinite(maximum)||maximum<0||!float.IsFinite(ray.origin.sqrMagnitude)||!float.IsFinite(ray.direction.sqrMagnitude)||ray.direction.sqrMagnitude<.00001f)return false;
+            ray.direction=ray.direction.normalized;
             foreach(var pair in objects) {
                 if(pair.Key==exclude)continue;
                 var view=pair.Value.GetComponent<DrawingSurfaceView>();
                 if(view&&view.Hit(ray,distance,out var hit,out var local,out float near,radius??DrawingRadius)){target=pair.Key;surface=hit;point=local;distance=near;}
             }
-            return target!=null;
+            if(target==null)return false;
+            var tool=string.IsNullOrEmpty(exclude)?null:Find(exclude);
+            if(drawingOcclusion.Clear(ray,distance,objects[target].transform,tool?tool.transform:null))return true;
+            target=surface=null;point=default;distance=maximum;return false;
         }
     }
 }

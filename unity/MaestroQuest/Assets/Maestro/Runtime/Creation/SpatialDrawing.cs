@@ -73,7 +73,11 @@ namespace Maestro.Quest.Creation
             if(points.Count<2||Time.unscaledTime<nextPreview)return;nextPreview=Time.unscaledTime+1f/30;
             preview.SetPaths(new[]{PreviewPoints()},radius);preview.SetColor(color);
         }
-        public Vector3 PointerPoint(Ray ray)=>Editor&&Editor.DrawingOnSurfaces&&Editor.FindDrawingSurface(ray,.25f,out _,out _,out _,out var distance)?ray.GetPoint(distance):ray.GetPoint(.12f);
+        public Vector3 PointerPoint(Ray ray)
+        {
+            ray.direction=ray.direction.normalized;
+            return Editor&&Editor.DrawingOnSurfaces&&Editor.FindDrawingSurface(ray,.25f,out _,out _,out _,out var distance)?ray.GetPoint(distance):ray.GetPoint(.12f);
+        }
         Vector3[] PreviewPoints()=>attached?points.Select(p=>p-Vector3.forward*radius).ToArray():points.Select(preview.transform.InverseTransformPoint).ToArray();
         public void End(int id)=>End(id,true);
         void End(int id,bool save)

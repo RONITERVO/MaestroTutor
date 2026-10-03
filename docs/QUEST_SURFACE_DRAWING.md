@@ -56,8 +56,8 @@ retry or discard. Moving the object while a draft is retained keeps its local in
 ## Persistence and boundaries
 
 Ink is part of copied objects, room Undo, temporary snapshots and portable
-workspaces. Current room files are `room.v8.json`, paired snapshot intents are
-`room-snapshot.v7.json`, and portable archive manifests are version 7. Clean older
+workspaces. Current room files are `room.v10.json`, paired snapshot intents are
+`room-snapshot.v9.json`, and portable archive manifests are version 9. Clean older
 room documents can load through the existing versioned reader; older originals
 remain. Prior in-flight snapshot journals and prior archives are preserved and
 refused instead of being reinterpreted. This is pre-release format work under the
@@ -66,8 +66,12 @@ owner's reset permission; it does not authorize breaking future released saves.
 This increment is explicitly planar. It does not project paint onto arbitrary
 curved meshes, animated skin, scanned real-world walls or clothing; drawing tips do not follow imported bones. Created/imported roots and recipe parts
 can be configured as drawing tools as described below. Configured planes can be
-positioned independently of the visual/collision mesh. The current patch hit test
-selects the nearest eligible plane, not a complete visual-occlusion query.
+positioned independently of the visual/collision mesh. Physical drawing selects the nearest eligible plane and checks the path against
+solid collision proxies, including scanned-room colliders. This is not a pixel-level
+visibility test; a coarse proxy can block a visible opening. The receiving object
+and held drawing tool ignore their own proxies because configured planes and tips
+can sit inside those approximate bounds. Controller colliders and trigger volumes
+do not block drawing. Other solid objects do.
 Physical Quest comfort/readability and maximum-load performance remain device
 acceptance gates. Native and browser checks are documented with their evidence
 when the increment is packaged.
@@ -102,3 +106,26 @@ This does not add a brush-fluid simulator, curved-mesh painting or automatic rob
 handwriting planning. An agent can author exact ink directly with surface edits,
 or use existing hold/movement/animation capabilities with a configured tool.
 Physical contact and maximum-load performance still require Quest acceptance.
+
+## Physical obstruction (2026-10-04)
+
+Trigger/pinch surface capture, surface erasing and held drawing tips share the
+same obstruction query. A solid object between the ray origin and receiving plane
+prevents contact. Starting inside another solid also prevents contact. Introducing
+an obstacle during a stroke closes the valid partial stroke through the normal
+save/Undo path; it does not join ink across the hidden area. A blocked eraser leaves
+ink unchanged. Explicit source edits by the agent, programs or book workshop remain
+available independently of physical visibility.
+
+The query synchronizes moved colliders and uses fixed 64-entry overlap and hit
+buffers, with a conservative miss if a buffer fills. Forward and reverse casts
+handle either side of a one-sided scanned mesh without modifying global physics
+settings. A 0.1 mm endpoint tolerance avoids treating a coplanar receiving wall as
+an obstruction. This checks the centre contact ray, not the full width of a brush.
+The global tool-selection mask still ignores scanned walls so users can recover
+trays beyond them; only physical drawing uses this solid-obstruction policy.
+
+Seven PlayMode scenarios exercise real physics queries, partial-stroke saving,
+eraser protection, explicit source edits, moved/disabled colliders, both wall sides,
+held chalk, saturated buffers and transformed surfaces. Device latency, contact
+comfort and maximum-load performance remain pending headset acceptance.
