@@ -91,7 +91,7 @@ namespace Maestro.Quest.Rules
                     string staging=RecoveryMarker+".writing";
                     if(File.Exists(staging)){Ordinary(staging);File.Delete(staging);}
                     Durable(staging,Encoding.UTF8.GetBytes(plan.ToString(Newtonsoft.Json.Formatting.None)));
-                    if(File.Exists(RecoveryMarker))File.Replace(staging,RecoveryMarker,null);else File.Move(staging,RecoveryMarker);
+                    if(File.Exists(RecoveryMarker))Maestro.Quest.Persistence.FilePublication.Replace(staging,RecoveryMarker,null);else File.Move(staging,RecoveryMarker);
                 }
                 Directory.CreateDirectory(archive);Ordinary(archives);Ordinary(archive);
                 var names=((JArray)plan["files"]).Values<string>().ToArray();
@@ -129,7 +129,7 @@ namespace Maestro.Quest.Rules
                 string fresh=Path.Combine(archive,"fresh.json");
                 if(File.Exists(fresh)){Ordinary(fresh);File.Delete(fresh);}
                 Durable(fresh,Encoding.UTF8.GetBytes(FreshJournal));
-                if(File.Exists(path))File.Replace(fresh,path,null);else File.Move(fresh,path);
+                if(File.Exists(path))Maestro.Quest.Persistence.FilePublication.Replace(fresh,path,null);else File.Move(fresh,path);
                 File.Delete(RecoveryMarker);
                 entries.Clear();next=Guid.NewGuid().ToString("N");Error=null;lastRecoveredId=id;recoveryId=null;
                 status="Action history recovered. Previous evidence was archived; no old actions were replayed.";return true;

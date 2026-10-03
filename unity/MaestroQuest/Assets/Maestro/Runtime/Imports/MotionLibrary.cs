@@ -353,7 +353,7 @@ namespace Maestro.Quest.Imports
             try
             {
                 using (var stream = new FileStream(pending,FileMode.Create,FileAccess.Write,FileShare.None)) { stream.Write(bytes,0,bytes.Length); stream.Flush(true); }
-                if (File.Exists(path)) File.Replace(pending,path,null); else File.Move(pending,path);
+                if (File.Exists(path)) Maestro.Quest.Persistence.FilePublication.Replace(pending,path,null); else File.Move(pending,path);
             }
             finally { if (File.Exists(pending)) File.Delete(pending); }
         }

@@ -107,7 +107,10 @@ cover both a temporary Windows `EBUSY` read and an exhausted retry budget.
 Storage writes are a separate boundary: a failed room save is still a failed
 action. Native storage diagnostics record the failed stage and error code without
 private file paths or document contents; the probe must not reinterpret that
-failure as a transient transport read.
+failure as a transient transport read. Native file publication separately handles
+bounded, known Windows replacement refusals before exposing a save result; see
+[action recovery](QUEST_ACTION_RECOVERY.md). The transport still never resends a
+mutation in response to a storage failure.
 
 ## Included structure watcher (2026-10-03)
 

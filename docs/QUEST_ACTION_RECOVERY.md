@@ -117,3 +117,35 @@ behaviours and no replay. Human and agent use the same validated request, and
 actual native observations feed web tests. Recovery does not override the
 original-app rule prohibiting new mutations while continuing an unconfirmed
 earlier task; it does not authorize repeating that task under a fresh ID.
+
+
+## Bounded file publication on Windows (2026-10-03)
+
+`FilePublication.Replace` is shared by native room/rule/receipt, program-memory,
+model/motion and workspace-journal replacement writes. The original writer still
+owns staging, flushing, validation, backup choice, locking and recovery. The helper
+retries only the same already-staged `File.Replace` call, up to four attempts with
+20/40/80 ms waits. This policy is compiled only for Windows Editor/standalone;
+Android and other platforms keep one attempt with no retry delay.
+
+Only Windows HRESULTs `0x80070020` (sharing), `0x80070021` (lock) and `0x80070497`
+(cannot remove replaced file) qualify, and both filenames must still exist.
+[Microsoft's replacement contract](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-replacefilew)
+leaves those filenames in place. Partial-rename errors 1176/1177, permissions,
+full disks and unknown failures are not retried. It never deletes the destination,
+restages data, substitutes a copy, or converts an exception into success. A later
+attempt must actually return successfully. Recovered attempts log only their count;
+exhausted failures flow through the original writer's preserved-evidence behavior.
+
+This is inside a single save attempt, before an action can start. It does not retry
+an action, issue a new action ID, clear receipts or resume interrupted activity.
+Fault tests verify exactly one effect after a recovered reservation and zero effects
+after exhaustion or reopening. Native Windows tests also hold actual reader handles
+on each publication file and release them only after the first OS refusal, then
+verify new/backup bytes. Unknown and partially completed outcomes remain failures.
+
+The observed desktop incident retained the old journal and a staged `preparing`
+entry; its publication HRESULT was 1175. This narrows the failure stage but does
+not identify which reader or external process blocked removal. The mitigation is
+not evidence of Android storage/power-loss durability or that every save failure
+has been resolved. Full-app stress and Quest acceptance remain distinct evidence.

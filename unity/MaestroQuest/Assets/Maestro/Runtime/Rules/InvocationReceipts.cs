@@ -16,12 +16,15 @@ namespace Maestro.Quest.Rules
     public sealed partial class InvocationReceipts
     {
         readonly string path;
+        readonly Action<string,string,string> publish;
         readonly List<JObject> entries=new();
         string next=Guid.NewGuid().ToString("N");
         public string Error { get; private set; }
         public string NextId=>Error==null?next:null;
-        public InvocationReceipts(string directory)
+        public InvocationReceipts(string directory):this(directory,Maestro.Quest.Persistence.FilePublication.Replace) {}
+        internal InvocationReceipts(string directory,Action<string,string,string> publish)
         {
+            this.publish=publish??throw new ArgumentNullException(nameof(publish));
             path=Path.Combine(directory,"action-receipts.v1.json");
             try {
                 if(File.Exists(RecoveryMarker))throw new InvalidDataException("Interrupted receipt recovery");
@@ -74,7 +77,7 @@ namespace Maestro.Quest.Rules
                 string pending=path+".pending";
                 using(var stream=new FileStream(pending,FileMode.Create,FileAccess.Write,FileShare.None)) {stream.Write(bytes,0,bytes.Length);stream.Flush(true);}
                 phase="publish";
-                if(File.Exists(path))File.Replace(pending,path,null);else File.Move(pending,path);
+                if(File.Exists(path))publish(pending,path,null);else File.Move(pending,path);
                 return true;
             } catch(Exception ex) when(StorageFailure(ex)) {
                 UnityEngine.Debug.LogWarning($"Maestro action receipt save failed during {phase} ({ex.GetType().Name}, 0x{ex.HResult:X8})");

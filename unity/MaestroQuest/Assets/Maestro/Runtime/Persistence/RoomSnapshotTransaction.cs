@@ -200,7 +200,7 @@ namespace Maestro.Quest.Persistence
                 using(var file=new FileStream(staged,FileMode.CreateNew,FileAccess.Write,FileShare.None)){file.Write(bytes,0,bytes.Length);file.Flush(true);}
                 WorkspaceFileInventory.Parents(root);string kind=WorkspaceFileInventory.Kind(target);
                 Need(kind!="directory","Snapshot target changed.");
-                if(kind=="file")File.Replace(staged,target,null);else File.Move(staged,target);
+                if(kind=="file")Maestro.Quest.Persistence.FilePublication.Replace(staged,target,null);else File.Move(staged,target);
             }finally{if(WorkspaceFileInventory.Kind(staged)=="file")File.Delete(staged);}
         }
         static void CheckOwned(string root,Intent intent)

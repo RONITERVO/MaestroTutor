@@ -52,7 +52,7 @@ namespace Maestro.Quest.Persistence
         {
             if(!Valid(value))throw new InvalidDataException("Invalid review record.");Directory.CreateDirectory(directory);WorkspaceArchive.NoLink(directory);if(File.Exists(path))WorkspaceArchive.NoLink(path);
             string next=path+"."+Guid.NewGuid().ToString("N")+".pending";
-            try {var bytes=new UTF8Encoding(false,true).GetBytes(value.ToString(Formatting.None));using(var file=new FileStream(next,FileMode.CreateNew,FileAccess.Write,FileShare.None)){file.Write(bytes,0,bytes.Length);file.Flush(true);}if(File.Exists(path))File.Replace(next,path,null);else File.Move(next,path);}
+            try {var bytes=new UTF8Encoding(false,true).GetBytes(value.ToString(Formatting.None));using(var file=new FileStream(next,FileMode.CreateNew,FileAccess.Write,FileShare.None)){file.Write(bytes,0,bytes.Length);file.Flush(true);}if(File.Exists(path))Maestro.Quest.Persistence.FilePublication.Replace(next,path,null);else File.Move(next,path);}
             finally{if(File.Exists(next))File.Delete(next);}
         }
         void SaveStatus(){try{Save(record);}catch(Exception){journalError="Review status could not be saved. Inspect the current workspace before another review.";}}

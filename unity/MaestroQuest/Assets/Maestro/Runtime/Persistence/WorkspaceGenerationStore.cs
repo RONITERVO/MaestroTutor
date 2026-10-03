@@ -220,7 +220,7 @@ namespace Maestro.Quest.Persistence
             string pending=pointer+"."+Guid.NewGuid().ToString("N")+".pending";
             try {
                 WriteNew(pending,Json(next.Json()));fault?.Invoke("pointer.beforeCommit");
-                if(File.Exists(pointer)){WorkspaceArchive.NoLink(pointer);if(File.Exists(pointer+".previous"))WorkspaceArchive.NoLink(pointer+".previous");File.Replace(pending,pointer,pointer+".previous");}
+                if(File.Exists(pointer)){WorkspaceArchive.NoLink(pointer);if(File.Exists(pointer+".previous"))WorkspaceArchive.NoLink(pointer+".previous");Maestro.Quest.Persistence.FilePublication.Replace(pending,pointer,pointer+".previous");}
                 else File.Move(pending,pointer);
                 fault?.Invoke("pointer.afterCommit");
             }finally{if(File.Exists(pending))File.Delete(pending);}
@@ -306,7 +306,7 @@ namespace Maestro.Quest.Persistence
                 var proof=new JObject {["version"]=1,["reviewId"]=reviewId,["manifestHash"]=inspectedHash,["origin"]=current.Json(),["next"]=next.Json()};
                 string pending=path+"."+Guid.NewGuid().ToString("N")+".pending";
                 try {
-                    WriteNew(pending,Json(proof));if(File.Exists(path)){WorkspaceArchive.NoLink(path);if(File.Exists(path+".previous"))WorkspaceArchive.NoLink(path+".previous");File.Replace(pending,path,path+".previous");}else File.Move(pending,path);
+                    WriteNew(pending,Json(proof));if(File.Exists(path)){WorkspaceArchive.NoLink(path);if(File.Exists(path+".previous"))WorkspaceArchive.NoLink(path+".previous");Maestro.Quest.Persistence.FilePublication.Replace(pending,path,path+".previous");}else File.Move(pending,path);
                 }finally{if(File.Exists(pending))File.Delete(pending);}
                 fault?.Invoke("review.reserved");
             }

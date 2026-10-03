@@ -74,7 +74,7 @@ namespace Maestro.Quest.Imports
                 if ((!exists && files.Length >= 32) || files.Sum(file => file.Length) - (exists ? new FileInfo(path).Length : 0) + asset.Bytes.Length > 256L * 1024 * 1024)
                     throw new ModelImportException("The model library is full (32 files or 256 MB). Existing models remain available.");
                 string temporary = path + ".part";
-                try { File.WriteAllBytes(temporary, asset.Bytes); if (exists) File.Replace(temporary, path, null); else File.Move(temporary, path); }
+                try { File.WriteAllBytes(temporary, asset.Bytes); if (exists) Maestro.Quest.Persistence.FilePublication.Replace(temporary, path, null); else File.Move(temporary, path); }
                 finally { if (File.Exists(temporary)) File.Delete(temporary); }
             }
             // Original metadata remains in the GLB; the sidecar also preserves package attribution.

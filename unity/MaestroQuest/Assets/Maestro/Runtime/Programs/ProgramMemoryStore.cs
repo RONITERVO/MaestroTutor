@@ -146,7 +146,7 @@ namespace Maestro.Quest.Programs
                                     if(File.Exists(path+".backup")||Directory.EnumerateFiles(directory,FileName+".pending.*").Any(p=>p!=temporary))throw new IOException("Retained program memory appeared during the write.");
                                 }else Match();
                                 fault?.Invoke("before-publish");
-                                if(File.Exists(path))File.Replace(temporary,path,path+".backup");else File.Move(temporary,path);
+                                if(File.Exists(path))Maestro.Quest.Persistence.FilePublication.Replace(temporary,path,path+".backup");else File.Move(temporary,path);
                                 changed=true;
                             }finally{try{if(File.Exists(temporary))File.Delete(temporary);}catch(IOException){}catch(UnauthorizedAccessException){}}
                         }

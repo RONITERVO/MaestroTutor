@@ -2704,3 +2704,14 @@ special fidget execution path, provider call or automatic physics start is added
 See [batch creation](QUEST_BATCH_CREATION.md) for bounds. Quest interaction and
 performance acceptance remain pending, as do snapping, broader mechanisms,
 container effects and release gates.
+
+
+### Shared file-publication reliability increment (2026-10-03)
+
+Native replacement writes now share bounded Windows-only handling for three known
+pre-publication IO refusals. Staging, flushing, backups, ownership and recovery
+remain with each store. Unknown/partial-rename/permission/full-disk errors still
+fail explicitly. Receipt reservation must publish before any effect starts; no
+runtime action or uncertain effect is retried. See [action recovery](QUEST_ACTION_RECOVERY.md).
+This addresses the observed transient publication class without claiming its
+external cause or closing device storage, abrupt-power-loss or frame-time gates.

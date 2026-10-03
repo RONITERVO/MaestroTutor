@@ -55,7 +55,7 @@ namespace Maestro.Quest.Persistence
             Directory.CreateDirectory(directory);WorkspaceArchive.NoLink(directory);if(File.Exists(journal))WorkspaceArchive.NoLink(journal);
             string next=journal+"."+Guid.NewGuid().ToString("N")+".pending";
             try {var bytes=new UTF8Encoding(false,true).GetBytes(value.ToString(Formatting.None));using(var file=new FileStream(next,FileMode.CreateNew,FileAccess.Write,FileShare.None)){file.Write(bytes,0,bytes.Length);file.Flush(true);}
-                if(File.Exists(journal))File.Replace(next,journal,null);else File.Move(next,journal);
+                if(File.Exists(journal))Maestro.Quest.Persistence.FilePublication.Replace(next,journal,null);else File.Move(next,journal);
             }finally{if(File.Exists(next))File.Delete(next);}
         }
         void SaveStatus(){try{Save(record);}catch(Exception){journalError="The latest activation status could not be saved. Inspect the current workspace before another activation.";}}

@@ -153,7 +153,7 @@ namespace Maestro.Quest.Creation
                 if (File.Exists(primary))
                 {
                     phase="backup";File.Copy(primary,Read(primary,version,out _,out _) ? primary+".backup" : primary+".unreadable",true);
-                    phase="publish";File.Replace(pending,primary,null);
+                    phase="publish";Maestro.Quest.Persistence.FilePublication.Replace(pending,primary,null);
                 }
                 else {phase="publish";File.Move(pending,primary);}
                 error = null; return true;
