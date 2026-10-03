@@ -413,9 +413,9 @@
     "revision": 370,
     "sceneRevision": 67,
     "ack": 153,
-    "session": "de08e8644b3f492a9731154287511a83",
+    "session": "254da86dd38c4418989b5095ad99c3d1",
     "status": "Behaviour edit applied. Undo restores this batch.",
-    "selectedId": "83139bbe2ba84b14867bdb97b543eddf",
+    "selectedId": "5d275d2f63ed4c979d7a32a901774b7b",
     "ok": true,
     "canUndo": false,
     "canRedo": true,
@@ -423,12 +423,12 @@
     "visible": false,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "0a6b796bd2a847898986318cf3480805",
+      "stateId": "1f0c95c70f684175be2ed8293db77111",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "0a6b796bd2a847898986318cf3480805",
+      "stateId": "1f0c95c70f684175be2ed8293db77111",
       "error": "",
       "visible": false,
       "holding": false
@@ -456,7 +456,7 @@
         "error": "",
         "revision": "initial",
         "programId": "",
-        "sessionId": "0f942b38c193461baeb0086648cb4ed4",
+        "sessionId": "35b262db631248219611b8bec82de171",
         "page": 0,
         "count": 0,
         "programs": [],
@@ -467,15 +467,15 @@
       "running": [],
       "outcomes": [
         {
-          "id": "ce2fc02aa48e45dcbb8117cd86806217",
-          "sequenceId": "54c773bdbaec4500ac3afaab61d610a3",
+          "id": "3e507488a22745bc9d965fc2d5810c0b",
+          "sequenceId": "72cef02001fc4910beb99a62d7aab3ef",
           "phase": "completed",
           "nodeId": "reset",
           "status": "Program completed"
         },
         {
-          "id": "47908b0e0bb040d28d3edf9132b54863",
-          "sequenceId": "d5c628cb61be403bab6b03578f297533",
+          "id": "c493f4c0e28f46e18c50d89529be32b0",
+          "sequenceId": "f8e534f40c4941b2867e5e3a276038d9",
           "phase": "cancelled",
           "nodeId": "structure.watch",
           "status": "Behaviour stopped"
@@ -522,6 +522,7 @@
       "constructionSelection.v1",
       "groupTransforms.v1",
       "constructionManipulation.v1",
+      "constructionSnapping.v1",
       "objectEdits.v1",
       "objectCopy.v1",
       "drawingEdits.v1",
@@ -580,7 +581,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "0f942b38c193461baeb0086648cb4ed4",
+      "id": "35b262db631248219611b8bec82de171",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -703,64 +704,10 @@
     },
     "objects": [
       {
-        "id": "6ff67e0b6e5e48268fa7410c73c89354",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 71,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "a728dfb90e0a484fbbcc6e8ff40f4348",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 70,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "be6b8ba955cd484184d99a84cea99503",
+        "id": "98c07ab4f1384fd687fef3a5925dadd6",
         "name": "Block",
         "kind": "Block",
-        "objectRevision": 3,
+        "objectRevision": 71,
         "position": {
           "x": 0.5199999809265137,
           "y": 1.4500000476837158,
@@ -798,6 +745,60 @@
           "r": 1,
           "g": 1,
           "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "c626eec0da2f4d55aef64912e136de5b",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 70,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "cbc7b7d47c444b6eafebc818f16656cf",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
           "a": 1
         },
         "animated": false,
@@ -888,23 +889,23 @@
       "status": "Fact value is currently unavailable; do not treat it as false or zero.",
       "category": "facts",
       "arguments": {
-        "id": "bb8e3de2a573483ba802037134393910"
+        "id": "e8601f575dda4f54bec6157db15dd02d"
       },
       "available": false,
       "value": null
     },
     "execution": {
       "selected": {
-        "id": "0250c586b4d44d3fb6380f3ef5c03eaf",
+        "id": "24345327d49641898d32db2588d07d9d",
         "capability": "structure.reset",
         "version": 1,
         "resources": [
-          "0f6918ca2e724428b62a47c9346a7620",
-          "6aafeab13f464f5592d834af95471f1b",
-          "a524dfc58d6d43d4af655627db0f7e11",
-          "a7611d06a71746ee9e4482a1b0ed14de",
-          "b693ec594d63427c83db35cc7efd6f68",
-          "bad95a57614c49b38d517afd3ae22316"
+          "09481f38f13e45a99d00e1cd0fddd11e",
+          "1c9d92a99abb4d4f89997bedc8486562",
+          "84f3ac1d537b4db4b59f58ccfa683e96",
+          "ac74e0cc47be4f4a969c6c23c5c072cb",
+          "b75ffd233620431c89f7144239429383",
+          "beba8d69a27c49f1bfd30e5b167182fb"
         ],
         "phase": "completed",
         "status": "Action completed",
@@ -916,15 +917,15 @@
           "id": "structure.reset",
           "version": 1,
           "arguments": {
-            "id": "bb8e3de2a573483ba802037134393910",
+            "id": "e8601f575dda4f54bec6157db15dd02d",
             "revision": 78,
             "members": [
-              "0f6918ca2e724428b62a47c9346a7620",
-              "6aafeab13f464f5592d834af95471f1b",
-              "a524dfc58d6d43d4af655627db0f7e11",
-              "a7611d06a71746ee9e4482a1b0ed14de",
-              "b693ec594d63427c83db35cc7efd6f68",
-              "bad95a57614c49b38d517afd3ae22316"
+              "09481f38f13e45a99d00e1cd0fddd11e",
+              "1c9d92a99abb4d4f89997bedc8486562",
+              "84f3ac1d537b4db4b59f58ccfa683e96",
+              "ac74e0cc47be4f4a969c6c23c5c072cb",
+              "b75ffd233620431c89f7144239429383",
+              "beba8d69a27c49f1bfd30e5b167182fb"
             ]
           }
         }
@@ -932,40 +933,40 @@
       "running": [],
       "outcomes": [
         {
-          "id": "8118c21ff4804bae84021b3956394386",
+          "id": "8b7bedbe29924adf8b0950cf70866130",
           "capability": "object.connection.edit",
           "version": 1,
           "resources": [
-            "84f60f62f0db479491da8edb1b3b874d",
-            "6f75a279d5534c1ca7782ef4cec47039"
+            "9c4b09dc77724e878387320ea8bfbfcb",
+            "09ccd35f15e049b0a15a4c4a6ea25552"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "b2b3198f657e42ba8ea74b2dcbf5f8e9",
+          "id": "3e95f3361b734105a22e8dc940bae2fc",
           "capability": "object.connection.edit",
           "version": 1,
           "resources": [
-            "84f60f62f0db479491da8edb1b3b874d",
-            "6f75a279d5534c1ca7782ef4cec47039"
+            "9c4b09dc77724e878387320ea8bfbfcb",
+            "09ccd35f15e049b0a15a4c4a6ea25552"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "b4e7c6017e6a472eb7658d1e31ddc3c2",
+          "id": "db7a39aa4254409598db0b77fc2fb446",
           "capability": "object.connection.edit",
           "version": 1,
           "resources": [
-            "84f60f62f0db479491da8edb1b3b874d",
-            "6f75a279d5534c1ca7782ef4cec47039"
+            "9c4b09dc77724e878387320ea8bfbfcb",
+            "09ccd35f15e049b0a15a4c4a6ea25552"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "ec8899332ed648aa906d53b2ba0b3e29",
+          "id": "64fc85bb2ecd483192575dca3ffd7aab",
           "capability": "object.batch.create",
           "version": 1,
           "resources": [],
@@ -973,8 +974,8 @@
           "status": "Action completed",
           "output": {
             "objectIds": [
-              "edf11f28a43a4adfbd1300adad0306e9",
-              "78b849c3f151431da5c03ab113b0e6a7"
+              "ff0e1f14b7ed4471a7ec100ff1355c21",
+              "6266fffda51a4049bf4a92fc2a2c41ca"
             ],
             "slots": [
               "mount",
@@ -984,54 +985,54 @@
           }
         },
         {
-          "id": "34e31fb7674242ae91372ef930c2c944",
+          "id": "90649451d78647a1bd7b4cd1597cffe1",
           "capability": "object.connection.edit",
           "version": 1,
           "resources": [
-            "78b849c3f151431da5c03ab113b0e6a7",
-            "edf11f28a43a4adfbd1300adad0306e9"
+            "6266fffda51a4049bf4a92fc2a2c41ca",
+            "ff0e1f14b7ed4471a7ec100ff1355c21"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "931da4a8fc4548bd91dfd549f6713f35",
+          "id": "2c93c69ce39c46148da326595d079758",
           "capability": "object.connection.edit",
           "version": 1,
           "resources": [
-            "78b849c3f151431da5c03ab113b0e6a7",
-            "edf11f28a43a4adfbd1300adad0306e9"
+            "6266fffda51a4049bf4a92fc2a2c41ca",
+            "ff0e1f14b7ed4471a7ec100ff1355c21"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "92c89b944dad43fd9062fcd18486bb20",
+          "id": "d4e8d75fcd164813b57d64638f0ebf02",
           "capability": "object.snapPoint.edit",
           "version": 1,
           "resources": [
-            "84f60f62f0db479491da8edb1b3b874d"
+            "9c4b09dc77724e878387320ea8bfbfcb"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "646c175187e64c4097c7c36ada3b45cf",
+          "id": "e0356357edc04c9abee71be6c8b9b84c",
           "capability": "object.snapPoint.edit",
           "version": 1,
           "resources": [
-            "6f75a279d5534c1ca7782ef4cec47039"
+            "09ccd35f15e049b0a15a4c4a6ea25552"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "b74812121e3b4f26b7f37777e5530d55",
+          "id": "b53a6de258144cb8a29f4d6837f32078",
           "capability": "object.layout.snap",
           "version": 1,
           "resources": [
-            "84f60f62f0db479491da8edb1b3b874d",
-            "6f75a279d5534c1ca7782ef4cec47039"
+            "9c4b09dc77724e878387320ea8bfbfcb",
+            "09ccd35f15e049b0a15a4c4a6ea25552"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -1042,12 +1043,12 @@
           }
         },
         {
-          "id": "d47a04d064274ef1b4813068d7fc2edf",
+          "id": "0996315b3ddb4b7eb08f87f1d13ea49f",
           "capability": "object.layout.apply",
           "version": 1,
           "resources": [
-            "84f60f62f0db479491da8edb1b3b874d",
-            "6f75a279d5534c1ca7782ef4cec47039"
+            "9c4b09dc77724e878387320ea8bfbfcb",
+            "09ccd35f15e049b0a15a4c4a6ea25552"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -1057,7 +1058,7 @@
           }
         },
         {
-          "id": "74698fa078144992855f7f72f6b15af9",
+          "id": "c38a9357b3314b998fa14568e0021b08",
           "capability": "object.batch.create",
           "version": 1,
           "resources": [],
@@ -1065,12 +1066,12 @@
           "status": "Action completed",
           "output": {
             "objectIds": [
-              "a3da6a730b2846618f58ce3205e328b5",
-              "7c61b3150f484675bfa64fb87e5a9f8e",
-              "2c2c2a2038e54b0393ea278f5c5c4aba",
-              "d08084c03f8f47e3b0459023e3fe42b9",
-              "e3c37c732894449b80486860c4ee8bdb",
-              "a858976b487e401f9d21240ec981e49d"
+              "2ac112927a8642e581839510fb13181a",
+              "f0b074eb884943a19ba68120801fc8cc",
+              "c05d048073c34efbbe9939217013d206",
+              "b6769b70d9ca4f5faa05c302bfd7e73b",
+              "480e8c69a32f414a82d7e82d5de852a7",
+              "d994188f687c4c71b20a0951bb399d58"
             ],
             "slots": [
               "brick_1",
@@ -1084,38 +1085,38 @@
           }
         },
         {
-          "id": "f7645f5facbf425aa06212003276e3b9",
+          "id": "afa0bc47c1794c1abb5c48c903835b4b",
           "capability": "structure.save",
           "version": 1,
           "resources": [
-            "6ff67e0b6e5e48268fa7410c73c89354",
-            "a728dfb90e0a484fbbcc6e8ff40f4348"
+            "98c07ab4f1384fd687fef3a5925dadd6",
+            "c626eec0da2f4d55aef64912e136de5b"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "structureId": "d5e2c2e90a1f40138c1a197ec3b53b75",
+            "structureId": "423464b8bb594f4d98bee4f91001e862",
             "revision": 65,
             "temporary": false
           }
         },
         {
-          "id": "c081b68578b440df98e4747cfd065128",
+          "id": "f4e4e839f4ea46249deae731ecc5b9bc",
           "capability": "object.position.set",
           "version": 1,
           "resources": [
-            "6ff67e0b6e5e48268fa7410c73c89354"
+            "98c07ab4f1384fd687fef3a5925dadd6"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "0f25062b3b3446b7817ca44316a22f88",
+          "id": "6da18820003342f2b1dc0d7c0faf3b9e",
           "capability": "structure.reset",
           "version": 1,
           "resources": [
-            "6ff67e0b6e5e48268fa7410c73c89354",
-            "a728dfb90e0a484fbbcc6e8ff40f4348"
+            "98c07ab4f1384fd687fef3a5925dadd6",
+            "c626eec0da2f4d55aef64912e136de5b"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -1125,26 +1126,26 @@
           }
         },
         {
-          "id": "c24916b9b6e1451aae8696c46ac9e9e2",
+          "id": "320bb72e7a65444cae9b635e8e5e7859",
           "capability": "object.position.set",
           "version": 1,
           "resources": [
-            "6aafeab13f464f5592d834af95471f1b"
+            "09481f38f13e45a99d00e1cd0fddd11e"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "0250c586b4d44d3fb6380f3ef5c03eaf",
+          "id": "24345327d49641898d32db2588d07d9d",
           "capability": "structure.reset",
           "version": 1,
           "resources": [
-            "0f6918ca2e724428b62a47c9346a7620",
-            "6aafeab13f464f5592d834af95471f1b",
-            "a524dfc58d6d43d4af655627db0f7e11",
-            "a7611d06a71746ee9e4482a1b0ed14de",
-            "b693ec594d63427c83db35cc7efd6f68",
-            "bad95a57614c49b38d517afd3ae22316"
+            "09481f38f13e45a99d00e1cd0fddd11e",
+            "1c9d92a99abb4d4f89997bedc8486562",
+            "84f3ac1d537b4db4b59f58ccfa683e96",
+            "ac74e0cc47be4f4a969c6c23c5c072cb",
+            "b75ffd233620431c89f7144239429383",
+            "beba8d69a27c49f1bfd30e5b167182fb"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -1154,14 +1155,14 @@
           }
         }
       ],
-      "nextRunId": "7f3727745ad14adfaca4c0d14ac79261",
+      "nextRunId": "ce39d0137203433abaec7f07fa9674b0",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "699ff2e6448a4575ad417ab8475d8bb3",
+        "nextRunId": "4b766e74d5e24bf99a9874fa1d1880f1",
         "storageError": null,
         "recovery": null
       }
@@ -1172,9 +1173,9 @@
     "revision": 372,
     "sceneRevision": 67,
     "ack": 154,
-    "session": "de08e8644b3f492a9731154287511a83",
+    "session": "254da86dd38c4418989b5095ad99c3d1",
     "status": "Found 6 actions. Search does not run or enable anything.",
-    "selectedId": "83139bbe2ba84b14867bdb97b543eddf",
+    "selectedId": "5d275d2f63ed4c979d7a32a901774b7b",
     "ok": true,
     "canUndo": false,
     "canRedo": true,
@@ -1182,12 +1183,12 @@
     "visible": false,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "0a6b796bd2a847898986318cf3480805",
+      "stateId": "1f0c95c70f684175be2ed8293db77111",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "0a6b796bd2a847898986318cf3480805",
+      "stateId": "1f0c95c70f684175be2ed8293db77111",
       "error": "",
       "visible": false,
       "holding": false
@@ -1215,7 +1216,7 @@
         "error": "",
         "revision": "initial",
         "programId": "",
-        "sessionId": "0f942b38c193461baeb0086648cb4ed4",
+        "sessionId": "35b262db631248219611b8bec82de171",
         "page": 0,
         "count": 0,
         "programs": [],
@@ -1226,15 +1227,15 @@
       "running": [],
       "outcomes": [
         {
-          "id": "ce2fc02aa48e45dcbb8117cd86806217",
-          "sequenceId": "54c773bdbaec4500ac3afaab61d610a3",
+          "id": "3e507488a22745bc9d965fc2d5810c0b",
+          "sequenceId": "72cef02001fc4910beb99a62d7aab3ef",
           "phase": "completed",
           "nodeId": "reset",
           "status": "Program completed"
         },
         {
-          "id": "47908b0e0bb040d28d3edf9132b54863",
-          "sequenceId": "d5c628cb61be403bab6b03578f297533",
+          "id": "c493f4c0e28f46e18c50d89529be32b0",
+          "sequenceId": "f8e534f40c4941b2867e5e3a276038d9",
           "phase": "cancelled",
           "nodeId": "structure.watch",
           "status": "Behaviour stopped"
@@ -1281,6 +1282,7 @@
       "constructionSelection.v1",
       "groupTransforms.v1",
       "constructionManipulation.v1",
+      "constructionSnapping.v1",
       "objectEdits.v1",
       "objectCopy.v1",
       "drawingEdits.v1",
@@ -1339,7 +1341,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "0f942b38c193461baeb0086648cb4ed4",
+      "id": "35b262db631248219611b8bec82de171",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -1462,64 +1464,10 @@
     },
     "objects": [
       {
-        "id": "6ff67e0b6e5e48268fa7410c73c89354",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 71,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "a728dfb90e0a484fbbcc6e8ff40f4348",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 70,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "be6b8ba955cd484184d99a84cea99503",
+        "id": "98c07ab4f1384fd687fef3a5925dadd6",
         "name": "Block",
         "kind": "Block",
-        "objectRevision": 3,
+        "objectRevision": 71,
         "position": {
           "x": 0.5199999809265137,
           "y": 1.4500000476837158,
@@ -1557,6 +1505,60 @@
           "r": 1,
           "g": 1,
           "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "c626eec0da2f4d55aef64912e136de5b",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 70,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "cbc7b7d47c444b6eafebc818f16656cf",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
           "a": 1
         },
         "animated": false,
@@ -1643,16 +1645,16 @@
     },
     "execution": {
       "selected": {
-        "id": "0250c586b4d44d3fb6380f3ef5c03eaf",
+        "id": "24345327d49641898d32db2588d07d9d",
         "capability": "structure.reset",
         "version": 1,
         "resources": [
-          "0f6918ca2e724428b62a47c9346a7620",
-          "6aafeab13f464f5592d834af95471f1b",
-          "a524dfc58d6d43d4af655627db0f7e11",
-          "a7611d06a71746ee9e4482a1b0ed14de",
-          "b693ec594d63427c83db35cc7efd6f68",
-          "bad95a57614c49b38d517afd3ae22316"
+          "09481f38f13e45a99d00e1cd0fddd11e",
+          "1c9d92a99abb4d4f89997bedc8486562",
+          "84f3ac1d537b4db4b59f58ccfa683e96",
+          "ac74e0cc47be4f4a969c6c23c5c072cb",
+          "b75ffd233620431c89f7144239429383",
+          "beba8d69a27c49f1bfd30e5b167182fb"
         ],
         "phase": "completed",
         "status": "Action completed",
@@ -1664,15 +1666,15 @@
           "id": "structure.reset",
           "version": 1,
           "arguments": {
-            "id": "bb8e3de2a573483ba802037134393910",
+            "id": "e8601f575dda4f54bec6157db15dd02d",
             "revision": 78,
             "members": [
-              "0f6918ca2e724428b62a47c9346a7620",
-              "6aafeab13f464f5592d834af95471f1b",
-              "a524dfc58d6d43d4af655627db0f7e11",
-              "a7611d06a71746ee9e4482a1b0ed14de",
-              "b693ec594d63427c83db35cc7efd6f68",
-              "bad95a57614c49b38d517afd3ae22316"
+              "09481f38f13e45a99d00e1cd0fddd11e",
+              "1c9d92a99abb4d4f89997bedc8486562",
+              "84f3ac1d537b4db4b59f58ccfa683e96",
+              "ac74e0cc47be4f4a969c6c23c5c072cb",
+              "b75ffd233620431c89f7144239429383",
+              "beba8d69a27c49f1bfd30e5b167182fb"
             ]
           }
         }
@@ -1680,40 +1682,40 @@
       "running": [],
       "outcomes": [
         {
-          "id": "8118c21ff4804bae84021b3956394386",
+          "id": "8b7bedbe29924adf8b0950cf70866130",
           "capability": "object.connection.edit",
           "version": 1,
           "resources": [
-            "84f60f62f0db479491da8edb1b3b874d",
-            "6f75a279d5534c1ca7782ef4cec47039"
+            "9c4b09dc77724e878387320ea8bfbfcb",
+            "09ccd35f15e049b0a15a4c4a6ea25552"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "b2b3198f657e42ba8ea74b2dcbf5f8e9",
+          "id": "3e95f3361b734105a22e8dc940bae2fc",
           "capability": "object.connection.edit",
           "version": 1,
           "resources": [
-            "84f60f62f0db479491da8edb1b3b874d",
-            "6f75a279d5534c1ca7782ef4cec47039"
+            "9c4b09dc77724e878387320ea8bfbfcb",
+            "09ccd35f15e049b0a15a4c4a6ea25552"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "b4e7c6017e6a472eb7658d1e31ddc3c2",
+          "id": "db7a39aa4254409598db0b77fc2fb446",
           "capability": "object.connection.edit",
           "version": 1,
           "resources": [
-            "84f60f62f0db479491da8edb1b3b874d",
-            "6f75a279d5534c1ca7782ef4cec47039"
+            "9c4b09dc77724e878387320ea8bfbfcb",
+            "09ccd35f15e049b0a15a4c4a6ea25552"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "ec8899332ed648aa906d53b2ba0b3e29",
+          "id": "64fc85bb2ecd483192575dca3ffd7aab",
           "capability": "object.batch.create",
           "version": 1,
           "resources": [],
@@ -1721,8 +1723,8 @@
           "status": "Action completed",
           "output": {
             "objectIds": [
-              "edf11f28a43a4adfbd1300adad0306e9",
-              "78b849c3f151431da5c03ab113b0e6a7"
+              "ff0e1f14b7ed4471a7ec100ff1355c21",
+              "6266fffda51a4049bf4a92fc2a2c41ca"
             ],
             "slots": [
               "mount",
@@ -1732,54 +1734,54 @@
           }
         },
         {
-          "id": "34e31fb7674242ae91372ef930c2c944",
+          "id": "90649451d78647a1bd7b4cd1597cffe1",
           "capability": "object.connection.edit",
           "version": 1,
           "resources": [
-            "78b849c3f151431da5c03ab113b0e6a7",
-            "edf11f28a43a4adfbd1300adad0306e9"
+            "6266fffda51a4049bf4a92fc2a2c41ca",
+            "ff0e1f14b7ed4471a7ec100ff1355c21"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "931da4a8fc4548bd91dfd549f6713f35",
+          "id": "2c93c69ce39c46148da326595d079758",
           "capability": "object.connection.edit",
           "version": 1,
           "resources": [
-            "78b849c3f151431da5c03ab113b0e6a7",
-            "edf11f28a43a4adfbd1300adad0306e9"
+            "6266fffda51a4049bf4a92fc2a2c41ca",
+            "ff0e1f14b7ed4471a7ec100ff1355c21"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "92c89b944dad43fd9062fcd18486bb20",
+          "id": "d4e8d75fcd164813b57d64638f0ebf02",
           "capability": "object.snapPoint.edit",
           "version": 1,
           "resources": [
-            "84f60f62f0db479491da8edb1b3b874d"
+            "9c4b09dc77724e878387320ea8bfbfcb"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "646c175187e64c4097c7c36ada3b45cf",
+          "id": "e0356357edc04c9abee71be6c8b9b84c",
           "capability": "object.snapPoint.edit",
           "version": 1,
           "resources": [
-            "6f75a279d5534c1ca7782ef4cec47039"
+            "09ccd35f15e049b0a15a4c4a6ea25552"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "b74812121e3b4f26b7f37777e5530d55",
+          "id": "b53a6de258144cb8a29f4d6837f32078",
           "capability": "object.layout.snap",
           "version": 1,
           "resources": [
-            "84f60f62f0db479491da8edb1b3b874d",
-            "6f75a279d5534c1ca7782ef4cec47039"
+            "9c4b09dc77724e878387320ea8bfbfcb",
+            "09ccd35f15e049b0a15a4c4a6ea25552"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -1790,12 +1792,12 @@
           }
         },
         {
-          "id": "d47a04d064274ef1b4813068d7fc2edf",
+          "id": "0996315b3ddb4b7eb08f87f1d13ea49f",
           "capability": "object.layout.apply",
           "version": 1,
           "resources": [
-            "84f60f62f0db479491da8edb1b3b874d",
-            "6f75a279d5534c1ca7782ef4cec47039"
+            "9c4b09dc77724e878387320ea8bfbfcb",
+            "09ccd35f15e049b0a15a4c4a6ea25552"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -1805,7 +1807,7 @@
           }
         },
         {
-          "id": "74698fa078144992855f7f72f6b15af9",
+          "id": "c38a9357b3314b998fa14568e0021b08",
           "capability": "object.batch.create",
           "version": 1,
           "resources": [],
@@ -1813,12 +1815,12 @@
           "status": "Action completed",
           "output": {
             "objectIds": [
-              "a3da6a730b2846618f58ce3205e328b5",
-              "7c61b3150f484675bfa64fb87e5a9f8e",
-              "2c2c2a2038e54b0393ea278f5c5c4aba",
-              "d08084c03f8f47e3b0459023e3fe42b9",
-              "e3c37c732894449b80486860c4ee8bdb",
-              "a858976b487e401f9d21240ec981e49d"
+              "2ac112927a8642e581839510fb13181a",
+              "f0b074eb884943a19ba68120801fc8cc",
+              "c05d048073c34efbbe9939217013d206",
+              "b6769b70d9ca4f5faa05c302bfd7e73b",
+              "480e8c69a32f414a82d7e82d5de852a7",
+              "d994188f687c4c71b20a0951bb399d58"
             ],
             "slots": [
               "brick_1",
@@ -1832,38 +1834,38 @@
           }
         },
         {
-          "id": "f7645f5facbf425aa06212003276e3b9",
+          "id": "afa0bc47c1794c1abb5c48c903835b4b",
           "capability": "structure.save",
           "version": 1,
           "resources": [
-            "6ff67e0b6e5e48268fa7410c73c89354",
-            "a728dfb90e0a484fbbcc6e8ff40f4348"
+            "98c07ab4f1384fd687fef3a5925dadd6",
+            "c626eec0da2f4d55aef64912e136de5b"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "structureId": "d5e2c2e90a1f40138c1a197ec3b53b75",
+            "structureId": "423464b8bb594f4d98bee4f91001e862",
             "revision": 65,
             "temporary": false
           }
         },
         {
-          "id": "c081b68578b440df98e4747cfd065128",
+          "id": "f4e4e839f4ea46249deae731ecc5b9bc",
           "capability": "object.position.set",
           "version": 1,
           "resources": [
-            "6ff67e0b6e5e48268fa7410c73c89354"
+            "98c07ab4f1384fd687fef3a5925dadd6"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "0f25062b3b3446b7817ca44316a22f88",
+          "id": "6da18820003342f2b1dc0d7c0faf3b9e",
           "capability": "structure.reset",
           "version": 1,
           "resources": [
-            "6ff67e0b6e5e48268fa7410c73c89354",
-            "a728dfb90e0a484fbbcc6e8ff40f4348"
+            "98c07ab4f1384fd687fef3a5925dadd6",
+            "c626eec0da2f4d55aef64912e136de5b"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -1873,26 +1875,26 @@
           }
         },
         {
-          "id": "c24916b9b6e1451aae8696c46ac9e9e2",
+          "id": "320bb72e7a65444cae9b635e8e5e7859",
           "capability": "object.position.set",
           "version": 1,
           "resources": [
-            "6aafeab13f464f5592d834af95471f1b"
+            "09481f38f13e45a99d00e1cd0fddd11e"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "0250c586b4d44d3fb6380f3ef5c03eaf",
+          "id": "24345327d49641898d32db2588d07d9d",
           "capability": "structure.reset",
           "version": 1,
           "resources": [
-            "0f6918ca2e724428b62a47c9346a7620",
-            "6aafeab13f464f5592d834af95471f1b",
-            "a524dfc58d6d43d4af655627db0f7e11",
-            "a7611d06a71746ee9e4482a1b0ed14de",
-            "b693ec594d63427c83db35cc7efd6f68",
-            "bad95a57614c49b38d517afd3ae22316"
+            "09481f38f13e45a99d00e1cd0fddd11e",
+            "1c9d92a99abb4d4f89997bedc8486562",
+            "84f3ac1d537b4db4b59f58ccfa683e96",
+            "ac74e0cc47be4f4a969c6c23c5c072cb",
+            "b75ffd233620431c89f7144239429383",
+            "beba8d69a27c49f1bfd30e5b167182fb"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -1902,14 +1904,14 @@
           }
         }
       ],
-      "nextRunId": "7f3727745ad14adfaca4c0d14ac79261",
+      "nextRunId": "ce39d0137203433abaec7f07fa9674b0",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "699ff2e6448a4575ad417ab8475d8bb3",
+        "nextRunId": "4b766e74d5e24bf99a9874fa1d1880f1",
         "storageError": null,
         "recovery": null
       }
@@ -1920,9 +1922,9 @@
     "revision": 374,
     "sceneRevision": 67,
     "ack": 155,
-    "session": "de08e8644b3f492a9731154287511a83",
+    "session": "254da86dd38c4418989b5095ad99c3d1",
     "status": "Action definition. Check concrete arguments before running it.",
-    "selectedId": "83139bbe2ba84b14867bdb97b543eddf",
+    "selectedId": "5d275d2f63ed4c979d7a32a901774b7b",
     "ok": true,
     "canUndo": false,
     "canRedo": true,
@@ -1930,12 +1932,12 @@
     "visible": false,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "0a6b796bd2a847898986318cf3480805",
+      "stateId": "1f0c95c70f684175be2ed8293db77111",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "0a6b796bd2a847898986318cf3480805",
+      "stateId": "1f0c95c70f684175be2ed8293db77111",
       "error": "",
       "visible": false,
       "holding": false
@@ -1963,7 +1965,7 @@
         "error": "",
         "revision": "initial",
         "programId": "",
-        "sessionId": "0f942b38c193461baeb0086648cb4ed4",
+        "sessionId": "35b262db631248219611b8bec82de171",
         "page": 0,
         "count": 0,
         "programs": [],
@@ -1974,15 +1976,15 @@
       "running": [],
       "outcomes": [
         {
-          "id": "ce2fc02aa48e45dcbb8117cd86806217",
-          "sequenceId": "54c773bdbaec4500ac3afaab61d610a3",
+          "id": "3e507488a22745bc9d965fc2d5810c0b",
+          "sequenceId": "72cef02001fc4910beb99a62d7aab3ef",
           "phase": "completed",
           "nodeId": "reset",
           "status": "Program completed"
         },
         {
-          "id": "47908b0e0bb040d28d3edf9132b54863",
-          "sequenceId": "d5c628cb61be403bab6b03578f297533",
+          "id": "c493f4c0e28f46e18c50d89529be32b0",
+          "sequenceId": "f8e534f40c4941b2867e5e3a276038d9",
           "phase": "cancelled",
           "nodeId": "structure.watch",
           "status": "Behaviour stopped"
@@ -2029,6 +2031,7 @@
       "constructionSelection.v1",
       "groupTransforms.v1",
       "constructionManipulation.v1",
+      "constructionSnapping.v1",
       "objectEdits.v1",
       "objectCopy.v1",
       "drawingEdits.v1",
@@ -2087,7 +2090,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "0f942b38c193461baeb0086648cb4ed4",
+      "id": "35b262db631248219611b8bec82de171",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -2210,64 +2213,10 @@
     },
     "objects": [
       {
-        "id": "6ff67e0b6e5e48268fa7410c73c89354",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 71,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "a728dfb90e0a484fbbcc6e8ff40f4348",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 70,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "be6b8ba955cd484184d99a84cea99503",
+        "id": "98c07ab4f1384fd687fef3a5925dadd6",
         "name": "Block",
         "kind": "Block",
-        "objectRevision": 3,
+        "objectRevision": 71,
         "position": {
           "x": 0.5199999809265137,
           "y": 1.4500000476837158,
@@ -2305,6 +2254,60 @@
           "r": 1,
           "g": 1,
           "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "c626eec0da2f4d55aef64912e136de5b",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 70,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "cbc7b7d47c444b6eafebc818f16656cf",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
           "a": 1
         },
         "animated": false,
@@ -6319,16 +6322,16 @@
     },
     "execution": {
       "selected": {
-        "id": "0250c586b4d44d3fb6380f3ef5c03eaf",
+        "id": "24345327d49641898d32db2588d07d9d",
         "capability": "structure.reset",
         "version": 1,
         "resources": [
-          "0f6918ca2e724428b62a47c9346a7620",
-          "6aafeab13f464f5592d834af95471f1b",
-          "a524dfc58d6d43d4af655627db0f7e11",
-          "a7611d06a71746ee9e4482a1b0ed14de",
-          "b693ec594d63427c83db35cc7efd6f68",
-          "bad95a57614c49b38d517afd3ae22316"
+          "09481f38f13e45a99d00e1cd0fddd11e",
+          "1c9d92a99abb4d4f89997bedc8486562",
+          "84f3ac1d537b4db4b59f58ccfa683e96",
+          "ac74e0cc47be4f4a969c6c23c5c072cb",
+          "b75ffd233620431c89f7144239429383",
+          "beba8d69a27c49f1bfd30e5b167182fb"
         ],
         "phase": "completed",
         "status": "Action completed",
@@ -6340,15 +6343,15 @@
           "id": "structure.reset",
           "version": 1,
           "arguments": {
-            "id": "bb8e3de2a573483ba802037134393910",
+            "id": "e8601f575dda4f54bec6157db15dd02d",
             "revision": 78,
             "members": [
-              "0f6918ca2e724428b62a47c9346a7620",
-              "6aafeab13f464f5592d834af95471f1b",
-              "a524dfc58d6d43d4af655627db0f7e11",
-              "a7611d06a71746ee9e4482a1b0ed14de",
-              "b693ec594d63427c83db35cc7efd6f68",
-              "bad95a57614c49b38d517afd3ae22316"
+              "09481f38f13e45a99d00e1cd0fddd11e",
+              "1c9d92a99abb4d4f89997bedc8486562",
+              "84f3ac1d537b4db4b59f58ccfa683e96",
+              "ac74e0cc47be4f4a969c6c23c5c072cb",
+              "b75ffd233620431c89f7144239429383",
+              "beba8d69a27c49f1bfd30e5b167182fb"
             ]
           }
         }
@@ -6356,40 +6359,40 @@
       "running": [],
       "outcomes": [
         {
-          "id": "8118c21ff4804bae84021b3956394386",
+          "id": "8b7bedbe29924adf8b0950cf70866130",
           "capability": "object.connection.edit",
           "version": 1,
           "resources": [
-            "84f60f62f0db479491da8edb1b3b874d",
-            "6f75a279d5534c1ca7782ef4cec47039"
+            "9c4b09dc77724e878387320ea8bfbfcb",
+            "09ccd35f15e049b0a15a4c4a6ea25552"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "b2b3198f657e42ba8ea74b2dcbf5f8e9",
+          "id": "3e95f3361b734105a22e8dc940bae2fc",
           "capability": "object.connection.edit",
           "version": 1,
           "resources": [
-            "84f60f62f0db479491da8edb1b3b874d",
-            "6f75a279d5534c1ca7782ef4cec47039"
+            "9c4b09dc77724e878387320ea8bfbfcb",
+            "09ccd35f15e049b0a15a4c4a6ea25552"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "b4e7c6017e6a472eb7658d1e31ddc3c2",
+          "id": "db7a39aa4254409598db0b77fc2fb446",
           "capability": "object.connection.edit",
           "version": 1,
           "resources": [
-            "84f60f62f0db479491da8edb1b3b874d",
-            "6f75a279d5534c1ca7782ef4cec47039"
+            "9c4b09dc77724e878387320ea8bfbfcb",
+            "09ccd35f15e049b0a15a4c4a6ea25552"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "ec8899332ed648aa906d53b2ba0b3e29",
+          "id": "64fc85bb2ecd483192575dca3ffd7aab",
           "capability": "object.batch.create",
           "version": 1,
           "resources": [],
@@ -6397,8 +6400,8 @@
           "status": "Action completed",
           "output": {
             "objectIds": [
-              "edf11f28a43a4adfbd1300adad0306e9",
-              "78b849c3f151431da5c03ab113b0e6a7"
+              "ff0e1f14b7ed4471a7ec100ff1355c21",
+              "6266fffda51a4049bf4a92fc2a2c41ca"
             ],
             "slots": [
               "mount",
@@ -6408,54 +6411,54 @@
           }
         },
         {
-          "id": "34e31fb7674242ae91372ef930c2c944",
+          "id": "90649451d78647a1bd7b4cd1597cffe1",
           "capability": "object.connection.edit",
           "version": 1,
           "resources": [
-            "78b849c3f151431da5c03ab113b0e6a7",
-            "edf11f28a43a4adfbd1300adad0306e9"
+            "6266fffda51a4049bf4a92fc2a2c41ca",
+            "ff0e1f14b7ed4471a7ec100ff1355c21"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "931da4a8fc4548bd91dfd549f6713f35",
+          "id": "2c93c69ce39c46148da326595d079758",
           "capability": "object.connection.edit",
           "version": 1,
           "resources": [
-            "78b849c3f151431da5c03ab113b0e6a7",
-            "edf11f28a43a4adfbd1300adad0306e9"
+            "6266fffda51a4049bf4a92fc2a2c41ca",
+            "ff0e1f14b7ed4471a7ec100ff1355c21"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "92c89b944dad43fd9062fcd18486bb20",
+          "id": "d4e8d75fcd164813b57d64638f0ebf02",
           "capability": "object.snapPoint.edit",
           "version": 1,
           "resources": [
-            "84f60f62f0db479491da8edb1b3b874d"
+            "9c4b09dc77724e878387320ea8bfbfcb"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "646c175187e64c4097c7c36ada3b45cf",
+          "id": "e0356357edc04c9abee71be6c8b9b84c",
           "capability": "object.snapPoint.edit",
           "version": 1,
           "resources": [
-            "6f75a279d5534c1ca7782ef4cec47039"
+            "09ccd35f15e049b0a15a4c4a6ea25552"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "b74812121e3b4f26b7f37777e5530d55",
+          "id": "b53a6de258144cb8a29f4d6837f32078",
           "capability": "object.layout.snap",
           "version": 1,
           "resources": [
-            "84f60f62f0db479491da8edb1b3b874d",
-            "6f75a279d5534c1ca7782ef4cec47039"
+            "9c4b09dc77724e878387320ea8bfbfcb",
+            "09ccd35f15e049b0a15a4c4a6ea25552"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -6466,12 +6469,12 @@
           }
         },
         {
-          "id": "d47a04d064274ef1b4813068d7fc2edf",
+          "id": "0996315b3ddb4b7eb08f87f1d13ea49f",
           "capability": "object.layout.apply",
           "version": 1,
           "resources": [
-            "84f60f62f0db479491da8edb1b3b874d",
-            "6f75a279d5534c1ca7782ef4cec47039"
+            "9c4b09dc77724e878387320ea8bfbfcb",
+            "09ccd35f15e049b0a15a4c4a6ea25552"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -6481,7 +6484,7 @@
           }
         },
         {
-          "id": "74698fa078144992855f7f72f6b15af9",
+          "id": "c38a9357b3314b998fa14568e0021b08",
           "capability": "object.batch.create",
           "version": 1,
           "resources": [],
@@ -6489,12 +6492,12 @@
           "status": "Action completed",
           "output": {
             "objectIds": [
-              "a3da6a730b2846618f58ce3205e328b5",
-              "7c61b3150f484675bfa64fb87e5a9f8e",
-              "2c2c2a2038e54b0393ea278f5c5c4aba",
-              "d08084c03f8f47e3b0459023e3fe42b9",
-              "e3c37c732894449b80486860c4ee8bdb",
-              "a858976b487e401f9d21240ec981e49d"
+              "2ac112927a8642e581839510fb13181a",
+              "f0b074eb884943a19ba68120801fc8cc",
+              "c05d048073c34efbbe9939217013d206",
+              "b6769b70d9ca4f5faa05c302bfd7e73b",
+              "480e8c69a32f414a82d7e82d5de852a7",
+              "d994188f687c4c71b20a0951bb399d58"
             ],
             "slots": [
               "brick_1",
@@ -6508,38 +6511,38 @@
           }
         },
         {
-          "id": "f7645f5facbf425aa06212003276e3b9",
+          "id": "afa0bc47c1794c1abb5c48c903835b4b",
           "capability": "structure.save",
           "version": 1,
           "resources": [
-            "6ff67e0b6e5e48268fa7410c73c89354",
-            "a728dfb90e0a484fbbcc6e8ff40f4348"
+            "98c07ab4f1384fd687fef3a5925dadd6",
+            "c626eec0da2f4d55aef64912e136de5b"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "structureId": "d5e2c2e90a1f40138c1a197ec3b53b75",
+            "structureId": "423464b8bb594f4d98bee4f91001e862",
             "revision": 65,
             "temporary": false
           }
         },
         {
-          "id": "c081b68578b440df98e4747cfd065128",
+          "id": "f4e4e839f4ea46249deae731ecc5b9bc",
           "capability": "object.position.set",
           "version": 1,
           "resources": [
-            "6ff67e0b6e5e48268fa7410c73c89354"
+            "98c07ab4f1384fd687fef3a5925dadd6"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "0f25062b3b3446b7817ca44316a22f88",
+          "id": "6da18820003342f2b1dc0d7c0faf3b9e",
           "capability": "structure.reset",
           "version": 1,
           "resources": [
-            "6ff67e0b6e5e48268fa7410c73c89354",
-            "a728dfb90e0a484fbbcc6e8ff40f4348"
+            "98c07ab4f1384fd687fef3a5925dadd6",
+            "c626eec0da2f4d55aef64912e136de5b"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -6549,26 +6552,26 @@
           }
         },
         {
-          "id": "c24916b9b6e1451aae8696c46ac9e9e2",
+          "id": "320bb72e7a65444cae9b635e8e5e7859",
           "capability": "object.position.set",
           "version": 1,
           "resources": [
-            "6aafeab13f464f5592d834af95471f1b"
+            "09481f38f13e45a99d00e1cd0fddd11e"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "0250c586b4d44d3fb6380f3ef5c03eaf",
+          "id": "24345327d49641898d32db2588d07d9d",
           "capability": "structure.reset",
           "version": 1,
           "resources": [
-            "0f6918ca2e724428b62a47c9346a7620",
-            "6aafeab13f464f5592d834af95471f1b",
-            "a524dfc58d6d43d4af655627db0f7e11",
-            "a7611d06a71746ee9e4482a1b0ed14de",
-            "b693ec594d63427c83db35cc7efd6f68",
-            "bad95a57614c49b38d517afd3ae22316"
+            "09481f38f13e45a99d00e1cd0fddd11e",
+            "1c9d92a99abb4d4f89997bedc8486562",
+            "84f3ac1d537b4db4b59f58ccfa683e96",
+            "ac74e0cc47be4f4a969c6c23c5c072cb",
+            "b75ffd233620431c89f7144239429383",
+            "beba8d69a27c49f1bfd30e5b167182fb"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -6578,14 +6581,14 @@
           }
         }
       ],
-      "nextRunId": "7f3727745ad14adfaca4c0d14ac79261",
+      "nextRunId": "ce39d0137203433abaec7f07fa9674b0",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "699ff2e6448a4575ad417ab8475d8bb3",
+        "nextRunId": "4b766e74d5e24bf99a9874fa1d1880f1",
         "storageError": null,
         "recovery": null
       }
@@ -6596,9 +6599,9 @@
     "revision": 377,
     "sceneRevision": 68,
     "ack": 156,
-    "session": "de08e8644b3f492a9731154287511a83",
+    "session": "254da86dd38c4418989b5095ad99c3d1",
     "status": "Action completed",
-    "selectedId": "83139bbe2ba84b14867bdb97b543eddf",
+    "selectedId": "5d275d2f63ed4c979d7a32a901774b7b",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -6606,12 +6609,12 @@
     "visible": false,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "0a6b796bd2a847898986318cf3480805",
+      "stateId": "1f0c95c70f684175be2ed8293db77111",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "0a6b796bd2a847898986318cf3480805",
+      "stateId": "1f0c95c70f684175be2ed8293db77111",
       "error": "",
       "visible": false,
       "holding": false
@@ -6639,7 +6642,7 @@
         "error": "",
         "revision": "initial",
         "programId": "",
-        "sessionId": "0f942b38c193461baeb0086648cb4ed4",
+        "sessionId": "35b262db631248219611b8bec82de171",
         "page": 0,
         "count": 0,
         "programs": [],
@@ -6650,15 +6653,15 @@
       "running": [],
       "outcomes": [
         {
-          "id": "ce2fc02aa48e45dcbb8117cd86806217",
-          "sequenceId": "54c773bdbaec4500ac3afaab61d610a3",
+          "id": "3e507488a22745bc9d965fc2d5810c0b",
+          "sequenceId": "72cef02001fc4910beb99a62d7aab3ef",
           "phase": "completed",
           "nodeId": "reset",
           "status": "Program completed"
         },
         {
-          "id": "47908b0e0bb040d28d3edf9132b54863",
-          "sequenceId": "d5c628cb61be403bab6b03578f297533",
+          "id": "c493f4c0e28f46e18c50d89529be32b0",
+          "sequenceId": "f8e534f40c4941b2867e5e3a276038d9",
           "phase": "cancelled",
           "nodeId": "structure.watch",
           "status": "Behaviour stopped"
@@ -6705,6 +6708,7 @@
       "constructionSelection.v1",
       "groupTransforms.v1",
       "constructionManipulation.v1",
+      "constructionSnapping.v1",
       "objectEdits.v1",
       "objectCopy.v1",
       "drawingEdits.v1",
@@ -6763,7 +6767,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "0f942b38c193461baeb0086648cb4ed4",
+      "id": "35b262db631248219611b8bec82de171",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -6886,142 +6890,7 @@
     },
     "objects": [
       {
-        "id": "6ff67e0b6e5e48268fa7410c73c89354",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 71,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "a728dfb90e0a484fbbcc6e8ff40f4348",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 70,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "be6b8ba955cd484184d99a84cea99503",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 3,
-        "position": {
-          "x": 0.5199999809265137,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "book",
-        "name": "Book",
-        "kind": "Book",
-        "objectRevision": 1,
-        "position": {
-          "x": 0,
-          "y": 1.159999966621399,
-          "z": 0.6499999761581421
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "d40ffef9295a4a9d8192a9c2c1a1b993",
-        "name": "Spring lever",
-        "kind": "Assembly",
-        "objectRevision": 108,
-        "position": {
-          "x": 0.4000000059604645,
-          "y": 1,
-          "z": 0.699999988079071
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "solid",
-          "shape": "automatic",
-          "mass": 0.15000000596046448
-        },
-        "movement": null
-      },
-      {
-        "id": "eed6255de30a43e18009309d4173ada1",
+        "id": "69e9556e87204c99aa24dc4902e5362e",
         "name": "Lever mount",
         "kind": "Assembly",
         "objectRevision": 107,
@@ -7048,6 +6917,141 @@
         "movement": null
       },
       {
+        "id": "98c07ab4f1384fd687fef3a5925dadd6",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 71,
+        "position": {
+          "x": 0.5199999809265137,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0,
+          "y": 1.159999966621399,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "c626eec0da2f4d55aef64912e136de5b",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 70,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "cb97163d4eb04ef998c879ae64a84bb7",
+        "name": "Spring lever",
+        "kind": "Assembly",
+        "objectRevision": 108,
+        "position": {
+          "x": 0.4000000059604645,
+          "y": 1,
+          "z": 0.699999988079071
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.15000000596046448
+        },
+        "movement": null
+      },
+      {
+        "id": "cbc7b7d47c444b6eafebc818f16656cf",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
         "id": "maestro",
         "name": "Maestro",
         "kind": "Maestro",
@@ -11049,7 +11053,7 @@
     },
     "execution": {
       "selected": {
-        "id": "7f3727745ad14adfaca4c0d14ac79261",
+        "id": "ce39d0137203433abaec7f07fa9674b0",
         "capability": "object.batch.create",
         "version": 1,
         "resources": [],
@@ -11057,8 +11061,8 @@
         "status": "Action completed",
         "output": {
           "objectIds": [
-            "eed6255de30a43e18009309d4173ada1",
-            "d40ffef9295a4a9d8192a9c2c1a1b993"
+            "69e9556e87204c99aa24dc4902e5362e",
+            "cb97163d4eb04ef998c879ae64a84bb7"
           ],
           "slots": [
             "mount",
@@ -11482,29 +11486,29 @@
       "running": [],
       "outcomes": [
         {
-          "id": "b2b3198f657e42ba8ea74b2dcbf5f8e9",
+          "id": "3e95f3361b734105a22e8dc940bae2fc",
           "capability": "object.connection.edit",
           "version": 1,
           "resources": [
-            "84f60f62f0db479491da8edb1b3b874d",
-            "6f75a279d5534c1ca7782ef4cec47039"
+            "9c4b09dc77724e878387320ea8bfbfcb",
+            "09ccd35f15e049b0a15a4c4a6ea25552"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "b4e7c6017e6a472eb7658d1e31ddc3c2",
+          "id": "db7a39aa4254409598db0b77fc2fb446",
           "capability": "object.connection.edit",
           "version": 1,
           "resources": [
-            "84f60f62f0db479491da8edb1b3b874d",
-            "6f75a279d5534c1ca7782ef4cec47039"
+            "9c4b09dc77724e878387320ea8bfbfcb",
+            "09ccd35f15e049b0a15a4c4a6ea25552"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "ec8899332ed648aa906d53b2ba0b3e29",
+          "id": "64fc85bb2ecd483192575dca3ffd7aab",
           "capability": "object.batch.create",
           "version": 1,
           "resources": [],
@@ -11512,8 +11516,8 @@
           "status": "Action completed",
           "output": {
             "objectIds": [
-              "edf11f28a43a4adfbd1300adad0306e9",
-              "78b849c3f151431da5c03ab113b0e6a7"
+              "ff0e1f14b7ed4471a7ec100ff1355c21",
+              "6266fffda51a4049bf4a92fc2a2c41ca"
             ],
             "slots": [
               "mount",
@@ -11523,54 +11527,54 @@
           }
         },
         {
-          "id": "34e31fb7674242ae91372ef930c2c944",
+          "id": "90649451d78647a1bd7b4cd1597cffe1",
           "capability": "object.connection.edit",
           "version": 1,
           "resources": [
-            "78b849c3f151431da5c03ab113b0e6a7",
-            "edf11f28a43a4adfbd1300adad0306e9"
+            "6266fffda51a4049bf4a92fc2a2c41ca",
+            "ff0e1f14b7ed4471a7ec100ff1355c21"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "931da4a8fc4548bd91dfd549f6713f35",
+          "id": "2c93c69ce39c46148da326595d079758",
           "capability": "object.connection.edit",
           "version": 1,
           "resources": [
-            "78b849c3f151431da5c03ab113b0e6a7",
-            "edf11f28a43a4adfbd1300adad0306e9"
+            "6266fffda51a4049bf4a92fc2a2c41ca",
+            "ff0e1f14b7ed4471a7ec100ff1355c21"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "92c89b944dad43fd9062fcd18486bb20",
+          "id": "d4e8d75fcd164813b57d64638f0ebf02",
           "capability": "object.snapPoint.edit",
           "version": 1,
           "resources": [
-            "84f60f62f0db479491da8edb1b3b874d"
+            "9c4b09dc77724e878387320ea8bfbfcb"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "646c175187e64c4097c7c36ada3b45cf",
+          "id": "e0356357edc04c9abee71be6c8b9b84c",
           "capability": "object.snapPoint.edit",
           "version": 1,
           "resources": [
-            "6f75a279d5534c1ca7782ef4cec47039"
+            "09ccd35f15e049b0a15a4c4a6ea25552"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "b74812121e3b4f26b7f37777e5530d55",
+          "id": "b53a6de258144cb8a29f4d6837f32078",
           "capability": "object.layout.snap",
           "version": 1,
           "resources": [
-            "84f60f62f0db479491da8edb1b3b874d",
-            "6f75a279d5534c1ca7782ef4cec47039"
+            "9c4b09dc77724e878387320ea8bfbfcb",
+            "09ccd35f15e049b0a15a4c4a6ea25552"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -11581,12 +11585,12 @@
           }
         },
         {
-          "id": "d47a04d064274ef1b4813068d7fc2edf",
+          "id": "0996315b3ddb4b7eb08f87f1d13ea49f",
           "capability": "object.layout.apply",
           "version": 1,
           "resources": [
-            "84f60f62f0db479491da8edb1b3b874d",
-            "6f75a279d5534c1ca7782ef4cec47039"
+            "9c4b09dc77724e878387320ea8bfbfcb",
+            "09ccd35f15e049b0a15a4c4a6ea25552"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -11596,7 +11600,7 @@
           }
         },
         {
-          "id": "74698fa078144992855f7f72f6b15af9",
+          "id": "c38a9357b3314b998fa14568e0021b08",
           "capability": "object.batch.create",
           "version": 1,
           "resources": [],
@@ -11604,12 +11608,12 @@
           "status": "Action completed",
           "output": {
             "objectIds": [
-              "a3da6a730b2846618f58ce3205e328b5",
-              "7c61b3150f484675bfa64fb87e5a9f8e",
-              "2c2c2a2038e54b0393ea278f5c5c4aba",
-              "d08084c03f8f47e3b0459023e3fe42b9",
-              "e3c37c732894449b80486860c4ee8bdb",
-              "a858976b487e401f9d21240ec981e49d"
+              "2ac112927a8642e581839510fb13181a",
+              "f0b074eb884943a19ba68120801fc8cc",
+              "c05d048073c34efbbe9939217013d206",
+              "b6769b70d9ca4f5faa05c302bfd7e73b",
+              "480e8c69a32f414a82d7e82d5de852a7",
+              "d994188f687c4c71b20a0951bb399d58"
             ],
             "slots": [
               "brick_1",
@@ -11623,38 +11627,38 @@
           }
         },
         {
-          "id": "f7645f5facbf425aa06212003276e3b9",
+          "id": "afa0bc47c1794c1abb5c48c903835b4b",
           "capability": "structure.save",
           "version": 1,
           "resources": [
-            "6ff67e0b6e5e48268fa7410c73c89354",
-            "a728dfb90e0a484fbbcc6e8ff40f4348"
+            "98c07ab4f1384fd687fef3a5925dadd6",
+            "c626eec0da2f4d55aef64912e136de5b"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "structureId": "d5e2c2e90a1f40138c1a197ec3b53b75",
+            "structureId": "423464b8bb594f4d98bee4f91001e862",
             "revision": 65,
             "temporary": false
           }
         },
         {
-          "id": "c081b68578b440df98e4747cfd065128",
+          "id": "f4e4e839f4ea46249deae731ecc5b9bc",
           "capability": "object.position.set",
           "version": 1,
           "resources": [
-            "6ff67e0b6e5e48268fa7410c73c89354"
+            "98c07ab4f1384fd687fef3a5925dadd6"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "0f25062b3b3446b7817ca44316a22f88",
+          "id": "6da18820003342f2b1dc0d7c0faf3b9e",
           "capability": "structure.reset",
           "version": 1,
           "resources": [
-            "6ff67e0b6e5e48268fa7410c73c89354",
-            "a728dfb90e0a484fbbcc6e8ff40f4348"
+            "98c07ab4f1384fd687fef3a5925dadd6",
+            "c626eec0da2f4d55aef64912e136de5b"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -11664,26 +11668,26 @@
           }
         },
         {
-          "id": "c24916b9b6e1451aae8696c46ac9e9e2",
+          "id": "320bb72e7a65444cae9b635e8e5e7859",
           "capability": "object.position.set",
           "version": 1,
           "resources": [
-            "6aafeab13f464f5592d834af95471f1b"
+            "09481f38f13e45a99d00e1cd0fddd11e"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "0250c586b4d44d3fb6380f3ef5c03eaf",
+          "id": "24345327d49641898d32db2588d07d9d",
           "capability": "structure.reset",
           "version": 1,
           "resources": [
-            "0f6918ca2e724428b62a47c9346a7620",
-            "6aafeab13f464f5592d834af95471f1b",
-            "a524dfc58d6d43d4af655627db0f7e11",
-            "a7611d06a71746ee9e4482a1b0ed14de",
-            "b693ec594d63427c83db35cc7efd6f68",
-            "bad95a57614c49b38d517afd3ae22316"
+            "09481f38f13e45a99d00e1cd0fddd11e",
+            "1c9d92a99abb4d4f89997bedc8486562",
+            "84f3ac1d537b4db4b59f58ccfa683e96",
+            "ac74e0cc47be4f4a969c6c23c5c072cb",
+            "b75ffd233620431c89f7144239429383",
+            "beba8d69a27c49f1bfd30e5b167182fb"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -11693,7 +11697,7 @@
           }
         },
         {
-          "id": "7f3727745ad14adfaca4c0d14ac79261",
+          "id": "ce39d0137203433abaec7f07fa9674b0",
           "capability": "object.batch.create",
           "version": 1,
           "resources": [],
@@ -11701,8 +11705,8 @@
           "status": "Action completed",
           "output": {
             "objectIds": [
-              "eed6255de30a43e18009309d4173ada1",
-              "d40ffef9295a4a9d8192a9c2c1a1b993"
+              "69e9556e87204c99aa24dc4902e5362e",
+              "cb97163d4eb04ef998c879ae64a84bb7"
             ],
             "slots": [
               "mount",
@@ -11712,14 +11716,14 @@
           }
         }
       ],
-      "nextRunId": "12eed1a4eebf4b34a4c1e94a1976776d",
+      "nextRunId": "aee6901f6c8c4e20a22f9a69d0c0577c",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "699ff2e6448a4575ad417ab8475d8bb3",
+        "nextRunId": "4b766e74d5e24bf99a9874fa1d1880f1",
         "storageError": null,
         "recovery": null
       }
@@ -11730,9 +11734,9 @@
     "revision": 379,
     "sceneRevision": 68,
     "ack": 157,
-    "session": "de08e8644b3f492a9731154287511a83",
+    "session": "254da86dd38c4418989b5095ad99c3d1",
     "status": "Current fact value. Reading does not change the room.",
-    "selectedId": "83139bbe2ba84b14867bdb97b543eddf",
+    "selectedId": "5d275d2f63ed4c979d7a32a901774b7b",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -11740,12 +11744,12 @@
     "visible": false,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "0a6b796bd2a847898986318cf3480805",
+      "stateId": "1f0c95c70f684175be2ed8293db77111",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "0a6b796bd2a847898986318cf3480805",
+      "stateId": "1f0c95c70f684175be2ed8293db77111",
       "error": "",
       "visible": false,
       "holding": false
@@ -11773,7 +11777,7 @@
         "error": "",
         "revision": "initial",
         "programId": "",
-        "sessionId": "0f942b38c193461baeb0086648cb4ed4",
+        "sessionId": "35b262db631248219611b8bec82de171",
         "page": 0,
         "count": 0,
         "programs": [],
@@ -11784,15 +11788,15 @@
       "running": [],
       "outcomes": [
         {
-          "id": "ce2fc02aa48e45dcbb8117cd86806217",
-          "sequenceId": "54c773bdbaec4500ac3afaab61d610a3",
+          "id": "3e507488a22745bc9d965fc2d5810c0b",
+          "sequenceId": "72cef02001fc4910beb99a62d7aab3ef",
           "phase": "completed",
           "nodeId": "reset",
           "status": "Program completed"
         },
         {
-          "id": "47908b0e0bb040d28d3edf9132b54863",
-          "sequenceId": "d5c628cb61be403bab6b03578f297533",
+          "id": "c493f4c0e28f46e18c50d89529be32b0",
+          "sequenceId": "f8e534f40c4941b2867e5e3a276038d9",
           "phase": "cancelled",
           "nodeId": "structure.watch",
           "status": "Behaviour stopped"
@@ -11839,6 +11843,7 @@
       "constructionSelection.v1",
       "groupTransforms.v1",
       "constructionManipulation.v1",
+      "constructionSnapping.v1",
       "objectEdits.v1",
       "objectCopy.v1",
       "drawingEdits.v1",
@@ -11897,7 +11902,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "0f942b38c193461baeb0086648cb4ed4",
+      "id": "35b262db631248219611b8bec82de171",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -12020,20 +12025,20 @@
     },
     "objects": [
       {
-        "id": "6ff67e0b6e5e48268fa7410c73c89354",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 71,
+        "id": "69e9556e87204c99aa24dc4902e5362e",
+        "name": "Lever mount",
+        "kind": "Assembly",
+        "objectRevision": 107,
         "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
+          "x": 0.4000000059604645,
+          "y": 1,
+          "z": 0.699999988079071
         },
         "scale": 1,
         "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
+          "r": 1,
+          "g": 1,
+          "b": 1,
           "a": 1
         },
         "animated": false,
@@ -12042,42 +12047,15 @@
         "physics": {
           "mode": "fixed",
           "shape": "automatic",
-          "mass": 0.5
+          "mass": 1
         },
         "movement": null
       },
       {
-        "id": "a728dfb90e0a484fbbcc6e8ff40f4348",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 70,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "be6b8ba955cd484184d99a84cea99503",
+        "id": "98c07ab4f1384fd687fef3a5925dadd6",
         "name": "Block",
         "kind": "Block",
-        "objectRevision": 3,
+        "objectRevision": 71,
         "position": {
           "x": 0.5199999809265137,
           "y": 1.4500000476837158,
@@ -12128,7 +12106,34 @@
         "movement": null
       },
       {
-        "id": "d40ffef9295a4a9d8192a9c2c1a1b993",
+        "id": "c626eec0da2f4d55aef64912e136de5b",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 70,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "cb97163d4eb04ef998c879ae64a84bb7",
         "name": "Spring lever",
         "kind": "Assembly",
         "objectRevision": 108,
@@ -12155,20 +12160,20 @@
         "movement": null
       },
       {
-        "id": "eed6255de30a43e18009309d4173ada1",
-        "name": "Lever mount",
-        "kind": "Assembly",
-        "objectRevision": 107,
+        "id": "cbc7b7d47c444b6eafebc818f16656cf",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
         "position": {
-          "x": 0.4000000059604645,
-          "y": 1,
-          "z": 0.699999988079071
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
         },
         "scale": 1,
         "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
           "a": 1
         },
         "animated": false,
@@ -12177,7 +12182,7 @@
         "physics": {
           "mode": "fixed",
           "shape": "automatic",
-          "mass": 1
+          "mass": 0.5
         },
         "movement": null
       },
@@ -12263,13 +12268,13 @@
       "status": "Current fact value. Reading does not change the room.",
       "category": "facts",
       "arguments": {
-        "target": "d40ffef9295a4a9d8192a9c2c1a1b993"
+        "target": "cb97163d4eb04ef998c879ae64a84bb7"
       },
       "available": true,
       "value": {
         "revision": 108,
         "configured": true,
-        "connected": "eed6255de30a43e18009309d4173ada1",
+        "connected": "69e9556e87204c99aa24dc4902e5362e",
         "definition": {
           "enabled": true,
           "kind": "hinge",
@@ -12280,7 +12285,7 @@
     },
     "execution": {
       "selected": {
-        "id": "7f3727745ad14adfaca4c0d14ac79261",
+        "id": "ce39d0137203433abaec7f07fa9674b0",
         "capability": "object.batch.create",
         "version": 1,
         "resources": [],
@@ -12288,8 +12293,8 @@
         "status": "Action completed",
         "output": {
           "objectIds": [
-            "eed6255de30a43e18009309d4173ada1",
-            "d40ffef9295a4a9d8192a9c2c1a1b993"
+            "69e9556e87204c99aa24dc4902e5362e",
+            "cb97163d4eb04ef998c879ae64a84bb7"
           ],
           "slots": [
             "mount",
@@ -12713,29 +12718,29 @@
       "running": [],
       "outcomes": [
         {
-          "id": "b2b3198f657e42ba8ea74b2dcbf5f8e9",
+          "id": "3e95f3361b734105a22e8dc940bae2fc",
           "capability": "object.connection.edit",
           "version": 1,
           "resources": [
-            "84f60f62f0db479491da8edb1b3b874d",
-            "6f75a279d5534c1ca7782ef4cec47039"
+            "9c4b09dc77724e878387320ea8bfbfcb",
+            "09ccd35f15e049b0a15a4c4a6ea25552"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "b4e7c6017e6a472eb7658d1e31ddc3c2",
+          "id": "db7a39aa4254409598db0b77fc2fb446",
           "capability": "object.connection.edit",
           "version": 1,
           "resources": [
-            "84f60f62f0db479491da8edb1b3b874d",
-            "6f75a279d5534c1ca7782ef4cec47039"
+            "9c4b09dc77724e878387320ea8bfbfcb",
+            "09ccd35f15e049b0a15a4c4a6ea25552"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "ec8899332ed648aa906d53b2ba0b3e29",
+          "id": "64fc85bb2ecd483192575dca3ffd7aab",
           "capability": "object.batch.create",
           "version": 1,
           "resources": [],
@@ -12743,8 +12748,8 @@
           "status": "Action completed",
           "output": {
             "objectIds": [
-              "edf11f28a43a4adfbd1300adad0306e9",
-              "78b849c3f151431da5c03ab113b0e6a7"
+              "ff0e1f14b7ed4471a7ec100ff1355c21",
+              "6266fffda51a4049bf4a92fc2a2c41ca"
             ],
             "slots": [
               "mount",
@@ -12754,54 +12759,54 @@
           }
         },
         {
-          "id": "34e31fb7674242ae91372ef930c2c944",
+          "id": "90649451d78647a1bd7b4cd1597cffe1",
           "capability": "object.connection.edit",
           "version": 1,
           "resources": [
-            "78b849c3f151431da5c03ab113b0e6a7",
-            "edf11f28a43a4adfbd1300adad0306e9"
+            "6266fffda51a4049bf4a92fc2a2c41ca",
+            "ff0e1f14b7ed4471a7ec100ff1355c21"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "931da4a8fc4548bd91dfd549f6713f35",
+          "id": "2c93c69ce39c46148da326595d079758",
           "capability": "object.connection.edit",
           "version": 1,
           "resources": [
-            "78b849c3f151431da5c03ab113b0e6a7",
-            "edf11f28a43a4adfbd1300adad0306e9"
+            "6266fffda51a4049bf4a92fc2a2c41ca",
+            "ff0e1f14b7ed4471a7ec100ff1355c21"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "92c89b944dad43fd9062fcd18486bb20",
+          "id": "d4e8d75fcd164813b57d64638f0ebf02",
           "capability": "object.snapPoint.edit",
           "version": 1,
           "resources": [
-            "84f60f62f0db479491da8edb1b3b874d"
+            "9c4b09dc77724e878387320ea8bfbfcb"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "646c175187e64c4097c7c36ada3b45cf",
+          "id": "e0356357edc04c9abee71be6c8b9b84c",
           "capability": "object.snapPoint.edit",
           "version": 1,
           "resources": [
-            "6f75a279d5534c1ca7782ef4cec47039"
+            "09ccd35f15e049b0a15a4c4a6ea25552"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "b74812121e3b4f26b7f37777e5530d55",
+          "id": "b53a6de258144cb8a29f4d6837f32078",
           "capability": "object.layout.snap",
           "version": 1,
           "resources": [
-            "84f60f62f0db479491da8edb1b3b874d",
-            "6f75a279d5534c1ca7782ef4cec47039"
+            "9c4b09dc77724e878387320ea8bfbfcb",
+            "09ccd35f15e049b0a15a4c4a6ea25552"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -12812,12 +12817,12 @@
           }
         },
         {
-          "id": "d47a04d064274ef1b4813068d7fc2edf",
+          "id": "0996315b3ddb4b7eb08f87f1d13ea49f",
           "capability": "object.layout.apply",
           "version": 1,
           "resources": [
-            "84f60f62f0db479491da8edb1b3b874d",
-            "6f75a279d5534c1ca7782ef4cec47039"
+            "9c4b09dc77724e878387320ea8bfbfcb",
+            "09ccd35f15e049b0a15a4c4a6ea25552"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -12827,7 +12832,7 @@
           }
         },
         {
-          "id": "74698fa078144992855f7f72f6b15af9",
+          "id": "c38a9357b3314b998fa14568e0021b08",
           "capability": "object.batch.create",
           "version": 1,
           "resources": [],
@@ -12835,12 +12840,12 @@
           "status": "Action completed",
           "output": {
             "objectIds": [
-              "a3da6a730b2846618f58ce3205e328b5",
-              "7c61b3150f484675bfa64fb87e5a9f8e",
-              "2c2c2a2038e54b0393ea278f5c5c4aba",
-              "d08084c03f8f47e3b0459023e3fe42b9",
-              "e3c37c732894449b80486860c4ee8bdb",
-              "a858976b487e401f9d21240ec981e49d"
+              "2ac112927a8642e581839510fb13181a",
+              "f0b074eb884943a19ba68120801fc8cc",
+              "c05d048073c34efbbe9939217013d206",
+              "b6769b70d9ca4f5faa05c302bfd7e73b",
+              "480e8c69a32f414a82d7e82d5de852a7",
+              "d994188f687c4c71b20a0951bb399d58"
             ],
             "slots": [
               "brick_1",
@@ -12854,38 +12859,38 @@
           }
         },
         {
-          "id": "f7645f5facbf425aa06212003276e3b9",
+          "id": "afa0bc47c1794c1abb5c48c903835b4b",
           "capability": "structure.save",
           "version": 1,
           "resources": [
-            "6ff67e0b6e5e48268fa7410c73c89354",
-            "a728dfb90e0a484fbbcc6e8ff40f4348"
+            "98c07ab4f1384fd687fef3a5925dadd6",
+            "c626eec0da2f4d55aef64912e136de5b"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "structureId": "d5e2c2e90a1f40138c1a197ec3b53b75",
+            "structureId": "423464b8bb594f4d98bee4f91001e862",
             "revision": 65,
             "temporary": false
           }
         },
         {
-          "id": "c081b68578b440df98e4747cfd065128",
+          "id": "f4e4e839f4ea46249deae731ecc5b9bc",
           "capability": "object.position.set",
           "version": 1,
           "resources": [
-            "6ff67e0b6e5e48268fa7410c73c89354"
+            "98c07ab4f1384fd687fef3a5925dadd6"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "0f25062b3b3446b7817ca44316a22f88",
+          "id": "6da18820003342f2b1dc0d7c0faf3b9e",
           "capability": "structure.reset",
           "version": 1,
           "resources": [
-            "6ff67e0b6e5e48268fa7410c73c89354",
-            "a728dfb90e0a484fbbcc6e8ff40f4348"
+            "98c07ab4f1384fd687fef3a5925dadd6",
+            "c626eec0da2f4d55aef64912e136de5b"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -12895,26 +12900,26 @@
           }
         },
         {
-          "id": "c24916b9b6e1451aae8696c46ac9e9e2",
+          "id": "320bb72e7a65444cae9b635e8e5e7859",
           "capability": "object.position.set",
           "version": 1,
           "resources": [
-            "6aafeab13f464f5592d834af95471f1b"
+            "09481f38f13e45a99d00e1cd0fddd11e"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "0250c586b4d44d3fb6380f3ef5c03eaf",
+          "id": "24345327d49641898d32db2588d07d9d",
           "capability": "structure.reset",
           "version": 1,
           "resources": [
-            "0f6918ca2e724428b62a47c9346a7620",
-            "6aafeab13f464f5592d834af95471f1b",
-            "a524dfc58d6d43d4af655627db0f7e11",
-            "a7611d06a71746ee9e4482a1b0ed14de",
-            "b693ec594d63427c83db35cc7efd6f68",
-            "bad95a57614c49b38d517afd3ae22316"
+            "09481f38f13e45a99d00e1cd0fddd11e",
+            "1c9d92a99abb4d4f89997bedc8486562",
+            "84f3ac1d537b4db4b59f58ccfa683e96",
+            "ac74e0cc47be4f4a969c6c23c5c072cb",
+            "b75ffd233620431c89f7144239429383",
+            "beba8d69a27c49f1bfd30e5b167182fb"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -12924,7 +12929,7 @@
           }
         },
         {
-          "id": "7f3727745ad14adfaca4c0d14ac79261",
+          "id": "ce39d0137203433abaec7f07fa9674b0",
           "capability": "object.batch.create",
           "version": 1,
           "resources": [],
@@ -12932,8 +12937,8 @@
           "status": "Action completed",
           "output": {
             "objectIds": [
-              "eed6255de30a43e18009309d4173ada1",
-              "d40ffef9295a4a9d8192a9c2c1a1b993"
+              "69e9556e87204c99aa24dc4902e5362e",
+              "cb97163d4eb04ef998c879ae64a84bb7"
             ],
             "slots": [
               "mount",
@@ -12943,14 +12948,14 @@
           }
         }
       ],
-      "nextRunId": "12eed1a4eebf4b34a4c1e94a1976776d",
+      "nextRunId": "aee6901f6c8c4e20a22f9a69d0c0577c",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "699ff2e6448a4575ad417ab8475d8bb3",
+        "nextRunId": "4b766e74d5e24bf99a9874fa1d1880f1",
         "storageError": null,
         "recovery": null
       }
@@ -12961,9 +12966,9 @@
     "revision": 381,
     "sceneRevision": 69,
     "ack": 158,
-    "session": "de08e8644b3f492a9731154287511a83",
+    "session": "254da86dd38c4418989b5095ad99c3d1",
     "status": "Undone",
-    "selectedId": "83139bbe2ba84b14867bdb97b543eddf",
+    "selectedId": "5d275d2f63ed4c979d7a32a901774b7b",
     "ok": true,
     "canUndo": false,
     "canRedo": true,
@@ -12971,12 +12976,12 @@
     "visible": false,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "0a6b796bd2a847898986318cf3480805",
+      "stateId": "1f0c95c70f684175be2ed8293db77111",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "0a6b796bd2a847898986318cf3480805",
+      "stateId": "1f0c95c70f684175be2ed8293db77111",
       "error": "",
       "visible": false,
       "holding": false
@@ -13004,7 +13009,7 @@
         "error": "",
         "revision": "initial",
         "programId": "",
-        "sessionId": "0f942b38c193461baeb0086648cb4ed4",
+        "sessionId": "35b262db631248219611b8bec82de171",
         "page": 0,
         "count": 0,
         "programs": [],
@@ -13015,15 +13020,15 @@
       "running": [],
       "outcomes": [
         {
-          "id": "ce2fc02aa48e45dcbb8117cd86806217",
-          "sequenceId": "54c773bdbaec4500ac3afaab61d610a3",
+          "id": "3e507488a22745bc9d965fc2d5810c0b",
+          "sequenceId": "72cef02001fc4910beb99a62d7aab3ef",
           "phase": "completed",
           "nodeId": "reset",
           "status": "Program completed"
         },
         {
-          "id": "47908b0e0bb040d28d3edf9132b54863",
-          "sequenceId": "d5c628cb61be403bab6b03578f297533",
+          "id": "c493f4c0e28f46e18c50d89529be32b0",
+          "sequenceId": "f8e534f40c4941b2867e5e3a276038d9",
           "phase": "cancelled",
           "nodeId": "structure.watch",
           "status": "Behaviour stopped"
@@ -13070,6 +13075,7 @@
       "constructionSelection.v1",
       "groupTransforms.v1",
       "constructionManipulation.v1",
+      "constructionSnapping.v1",
       "objectEdits.v1",
       "objectCopy.v1",
       "drawingEdits.v1",
@@ -13128,7 +13134,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "0f942b38c193461baeb0086648cb4ed4",
+      "id": "35b262db631248219611b8bec82de171",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -13251,64 +13257,10 @@
     },
     "objects": [
       {
-        "id": "6ff67e0b6e5e48268fa7410c73c89354",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 71,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "a728dfb90e0a484fbbcc6e8ff40f4348",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 70,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "be6b8ba955cd484184d99a84cea99503",
+        "id": "98c07ab4f1384fd687fef3a5925dadd6",
         "name": "Block",
         "kind": "Block",
-        "objectRevision": 3,
+        "objectRevision": 71,
         "position": {
           "x": 0.5199999809265137,
           "y": 1.4500000476837158,
@@ -13346,6 +13298,60 @@
           "r": 1,
           "g": 1,
           "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "c626eec0da2f4d55aef64912e136de5b",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 70,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "cbc7b7d47c444b6eafebc818f16656cf",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
           "a": 1
         },
         "animated": false,
@@ -13440,14 +13446,14 @@
       "status": "Fact value is currently unavailable; do not treat it as false or zero.",
       "category": "facts",
       "arguments": {
-        "target": "d40ffef9295a4a9d8192a9c2c1a1b993"
+        "target": "cb97163d4eb04ef998c879ae64a84bb7"
       },
       "available": false,
       "value": null
     },
     "execution": {
       "selected": {
-        "id": "7f3727745ad14adfaca4c0d14ac79261",
+        "id": "ce39d0137203433abaec7f07fa9674b0",
         "capability": "object.batch.create",
         "version": 1,
         "resources": [],
@@ -13455,8 +13461,8 @@
         "status": "Action completed",
         "output": {
           "objectIds": [
-            "eed6255de30a43e18009309d4173ada1",
-            "d40ffef9295a4a9d8192a9c2c1a1b993"
+            "69e9556e87204c99aa24dc4902e5362e",
+            "cb97163d4eb04ef998c879ae64a84bb7"
           ],
           "slots": [
             "mount",
@@ -13880,29 +13886,29 @@
       "running": [],
       "outcomes": [
         {
-          "id": "b2b3198f657e42ba8ea74b2dcbf5f8e9",
+          "id": "3e95f3361b734105a22e8dc940bae2fc",
           "capability": "object.connection.edit",
           "version": 1,
           "resources": [
-            "84f60f62f0db479491da8edb1b3b874d",
-            "6f75a279d5534c1ca7782ef4cec47039"
+            "9c4b09dc77724e878387320ea8bfbfcb",
+            "09ccd35f15e049b0a15a4c4a6ea25552"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "b4e7c6017e6a472eb7658d1e31ddc3c2",
+          "id": "db7a39aa4254409598db0b77fc2fb446",
           "capability": "object.connection.edit",
           "version": 1,
           "resources": [
-            "84f60f62f0db479491da8edb1b3b874d",
-            "6f75a279d5534c1ca7782ef4cec47039"
+            "9c4b09dc77724e878387320ea8bfbfcb",
+            "09ccd35f15e049b0a15a4c4a6ea25552"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "ec8899332ed648aa906d53b2ba0b3e29",
+          "id": "64fc85bb2ecd483192575dca3ffd7aab",
           "capability": "object.batch.create",
           "version": 1,
           "resources": [],
@@ -13910,8 +13916,8 @@
           "status": "Action completed",
           "output": {
             "objectIds": [
-              "edf11f28a43a4adfbd1300adad0306e9",
-              "78b849c3f151431da5c03ab113b0e6a7"
+              "ff0e1f14b7ed4471a7ec100ff1355c21",
+              "6266fffda51a4049bf4a92fc2a2c41ca"
             ],
             "slots": [
               "mount",
@@ -13921,54 +13927,54 @@
           }
         },
         {
-          "id": "34e31fb7674242ae91372ef930c2c944",
+          "id": "90649451d78647a1bd7b4cd1597cffe1",
           "capability": "object.connection.edit",
           "version": 1,
           "resources": [
-            "78b849c3f151431da5c03ab113b0e6a7",
-            "edf11f28a43a4adfbd1300adad0306e9"
+            "6266fffda51a4049bf4a92fc2a2c41ca",
+            "ff0e1f14b7ed4471a7ec100ff1355c21"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "931da4a8fc4548bd91dfd549f6713f35",
+          "id": "2c93c69ce39c46148da326595d079758",
           "capability": "object.connection.edit",
           "version": 1,
           "resources": [
-            "78b849c3f151431da5c03ab113b0e6a7",
-            "edf11f28a43a4adfbd1300adad0306e9"
+            "6266fffda51a4049bf4a92fc2a2c41ca",
+            "ff0e1f14b7ed4471a7ec100ff1355c21"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "92c89b944dad43fd9062fcd18486bb20",
+          "id": "d4e8d75fcd164813b57d64638f0ebf02",
           "capability": "object.snapPoint.edit",
           "version": 1,
           "resources": [
-            "84f60f62f0db479491da8edb1b3b874d"
+            "9c4b09dc77724e878387320ea8bfbfcb"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "646c175187e64c4097c7c36ada3b45cf",
+          "id": "e0356357edc04c9abee71be6c8b9b84c",
           "capability": "object.snapPoint.edit",
           "version": 1,
           "resources": [
-            "6f75a279d5534c1ca7782ef4cec47039"
+            "09ccd35f15e049b0a15a4c4a6ea25552"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "b74812121e3b4f26b7f37777e5530d55",
+          "id": "b53a6de258144cb8a29f4d6837f32078",
           "capability": "object.layout.snap",
           "version": 1,
           "resources": [
-            "84f60f62f0db479491da8edb1b3b874d",
-            "6f75a279d5534c1ca7782ef4cec47039"
+            "9c4b09dc77724e878387320ea8bfbfcb",
+            "09ccd35f15e049b0a15a4c4a6ea25552"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -13979,12 +13985,12 @@
           }
         },
         {
-          "id": "d47a04d064274ef1b4813068d7fc2edf",
+          "id": "0996315b3ddb4b7eb08f87f1d13ea49f",
           "capability": "object.layout.apply",
           "version": 1,
           "resources": [
-            "84f60f62f0db479491da8edb1b3b874d",
-            "6f75a279d5534c1ca7782ef4cec47039"
+            "9c4b09dc77724e878387320ea8bfbfcb",
+            "09ccd35f15e049b0a15a4c4a6ea25552"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -13994,7 +14000,7 @@
           }
         },
         {
-          "id": "74698fa078144992855f7f72f6b15af9",
+          "id": "c38a9357b3314b998fa14568e0021b08",
           "capability": "object.batch.create",
           "version": 1,
           "resources": [],
@@ -14002,12 +14008,12 @@
           "status": "Action completed",
           "output": {
             "objectIds": [
-              "a3da6a730b2846618f58ce3205e328b5",
-              "7c61b3150f484675bfa64fb87e5a9f8e",
-              "2c2c2a2038e54b0393ea278f5c5c4aba",
-              "d08084c03f8f47e3b0459023e3fe42b9",
-              "e3c37c732894449b80486860c4ee8bdb",
-              "a858976b487e401f9d21240ec981e49d"
+              "2ac112927a8642e581839510fb13181a",
+              "f0b074eb884943a19ba68120801fc8cc",
+              "c05d048073c34efbbe9939217013d206",
+              "b6769b70d9ca4f5faa05c302bfd7e73b",
+              "480e8c69a32f414a82d7e82d5de852a7",
+              "d994188f687c4c71b20a0951bb399d58"
             ],
             "slots": [
               "brick_1",
@@ -14021,38 +14027,38 @@
           }
         },
         {
-          "id": "f7645f5facbf425aa06212003276e3b9",
+          "id": "afa0bc47c1794c1abb5c48c903835b4b",
           "capability": "structure.save",
           "version": 1,
           "resources": [
-            "6ff67e0b6e5e48268fa7410c73c89354",
-            "a728dfb90e0a484fbbcc6e8ff40f4348"
+            "98c07ab4f1384fd687fef3a5925dadd6",
+            "c626eec0da2f4d55aef64912e136de5b"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "structureId": "d5e2c2e90a1f40138c1a197ec3b53b75",
+            "structureId": "423464b8bb594f4d98bee4f91001e862",
             "revision": 65,
             "temporary": false
           }
         },
         {
-          "id": "c081b68578b440df98e4747cfd065128",
+          "id": "f4e4e839f4ea46249deae731ecc5b9bc",
           "capability": "object.position.set",
           "version": 1,
           "resources": [
-            "6ff67e0b6e5e48268fa7410c73c89354"
+            "98c07ab4f1384fd687fef3a5925dadd6"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "0f25062b3b3446b7817ca44316a22f88",
+          "id": "6da18820003342f2b1dc0d7c0faf3b9e",
           "capability": "structure.reset",
           "version": 1,
           "resources": [
-            "6ff67e0b6e5e48268fa7410c73c89354",
-            "a728dfb90e0a484fbbcc6e8ff40f4348"
+            "98c07ab4f1384fd687fef3a5925dadd6",
+            "c626eec0da2f4d55aef64912e136de5b"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -14062,26 +14068,26 @@
           }
         },
         {
-          "id": "c24916b9b6e1451aae8696c46ac9e9e2",
+          "id": "320bb72e7a65444cae9b635e8e5e7859",
           "capability": "object.position.set",
           "version": 1,
           "resources": [
-            "6aafeab13f464f5592d834af95471f1b"
+            "09481f38f13e45a99d00e1cd0fddd11e"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "0250c586b4d44d3fb6380f3ef5c03eaf",
+          "id": "24345327d49641898d32db2588d07d9d",
           "capability": "structure.reset",
           "version": 1,
           "resources": [
-            "0f6918ca2e724428b62a47c9346a7620",
-            "6aafeab13f464f5592d834af95471f1b",
-            "a524dfc58d6d43d4af655627db0f7e11",
-            "a7611d06a71746ee9e4482a1b0ed14de",
-            "b693ec594d63427c83db35cc7efd6f68",
-            "bad95a57614c49b38d517afd3ae22316"
+            "09481f38f13e45a99d00e1cd0fddd11e",
+            "1c9d92a99abb4d4f89997bedc8486562",
+            "84f3ac1d537b4db4b59f58ccfa683e96",
+            "ac74e0cc47be4f4a969c6c23c5c072cb",
+            "b75ffd233620431c89f7144239429383",
+            "beba8d69a27c49f1bfd30e5b167182fb"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -14091,7 +14097,7 @@
           }
         },
         {
-          "id": "7f3727745ad14adfaca4c0d14ac79261",
+          "id": "ce39d0137203433abaec7f07fa9674b0",
           "capability": "object.batch.create",
           "version": 1,
           "resources": [],
@@ -14099,8 +14105,8 @@
           "status": "Action completed",
           "output": {
             "objectIds": [
-              "eed6255de30a43e18009309d4173ada1",
-              "d40ffef9295a4a9d8192a9c2c1a1b993"
+              "69e9556e87204c99aa24dc4902e5362e",
+              "cb97163d4eb04ef998c879ae64a84bb7"
             ],
             "slots": [
               "mount",
@@ -14110,14 +14116,14 @@
           }
         }
       ],
-      "nextRunId": "12eed1a4eebf4b34a4c1e94a1976776d",
+      "nextRunId": "aee6901f6c8c4e20a22f9a69d0c0577c",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "699ff2e6448a4575ad417ab8475d8bb3",
+        "nextRunId": "4b766e74d5e24bf99a9874fa1d1880f1",
         "storageError": null,
         "recovery": null
       }

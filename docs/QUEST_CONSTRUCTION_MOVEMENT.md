@@ -71,3 +71,12 @@ hides the native handle, reads its fact, transforms the included lever's two
 members and verifies one Undo. The browser replay checks the real book controls
 and generated transform form against those exact native calls and receipts.
 These are desktop checks, not Quest performance or headset acceptance.
+
+## Optional point snapping
+
+The handle can now preview matching points in Off, Place or Join mode through
+`room.selection.snapSettings`. This includes two-hand scaling and any selected
+member's point. Release uses `object.layout.snap` when a valid point is previewed;
+otherwise it keeps the existing group transform path. See
+[shared snap points](QUEST_SNAP_POINTS.md) for matching rules, settings, the exact
+preview fact and failure/cancellation semantics. Ordinary item grips are unchanged.

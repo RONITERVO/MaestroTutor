@@ -29,18 +29,18 @@ namespace Maestro.Quest.Creation {
         public TransformMember[] members;
         public string point,mode="place";
         public SnapDestination destination;
-        public float turn,breakForce,breakTorque;
+        public float turn,breakForce,breakTorque;public float scale=1;
         public bool Validate(out string error){
             error="Choose 1–15 distinct moving creations, a source point on the first, and a different destination with current revisions";
-            if(members==null||members.Length>15||!new RoomGroupTransform{members=members}.Validate(out _)||!RoomSnapPoint.Identifier(point)||destination==null||!RoomSnapPoint.Identifier(destination.point)||!new RoomGroupTransform{members=new[]{new TransformMember{target=destination.target,revision=destination.revision}}}.Validate(out _)||members.Any(m=>m.target==destination.target)||mode is not ("place" or "join")||!float.IsFinite(turn)||turn<-180||turn>180||!float.IsFinite(breakForce)||breakForce<0||breakForce>10000||!float.IsFinite(breakTorque)||breakTorque<0||breakTorque>10000)return false;
+            if(!float.IsFinite(scale)||scale<.1f||scale>4||members==null||members.Length>15||!new RoomGroupTransform{members=members}.Validate(out _)||!RoomSnapPoint.Identifier(point)||destination==null||!RoomSnapPoint.Identifier(destination.point)||!new RoomGroupTransform{members=new[]{new TransformMember{target=destination.target,revision=destination.revision}}}.Validate(out _)||members.Any(m=>m.target==destination.target)||mode is not ("place" or "join")||!float.IsFinite(turn)||turn<-180||turn>180||!float.IsFinite(breakForce)||breakForce<0||breakForce>10000||!float.IsFinite(breakTorque)||breakTorque<0||breakTorque>10000)return false;
             error=null;return true;
         }
         // Room-local inputs and results; no Transform mutation or coordinate-space guessing.
-        internal RoomGroupTransform Projection(RoomLayout source,RoomSnapPoint from,RoomObjectData other,RoomSnapPoint to){
+        internal RoomGroupTransform Projection(RoomLayout source,RoomSnapPoint from,RoomObjectData other,RoomSnapPoint to,RoomGroupTransform result=null){
             var pivot=source.placements[0];
             var orientation=(other.rotation*to.frame.rotation*Quaternion.AngleAxis(turn,Vector3.up)*Quaternion.Inverse(from.frame.rotation)).normalized;
-            var position=other.position+other.rotation*(to.frame.position*other.scale)-orientation*(from.frame.position*pivot.scale);
-            return new RoomGroupTransform{members=members,position=position,rotation=orientation,scale=1};
+            var position=other.position+other.rotation*(to.frame.position*other.scale)-orientation*(from.frame.position*pivot.scale*scale);
+            result??=new RoomGroupTransform();result.members=members;result.position=position;result.rotation=orientation;result.scale=scale;return result;
         }
     }
 }

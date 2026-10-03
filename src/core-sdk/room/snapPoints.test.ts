@@ -8,7 +8,8 @@ describe('shared snap-point contracts',()=>{
  for(const row of cases)it(row.name,()=>{expect(validateCapabilityArguments(row.capability,1,row.arguments)===null).toBe(row.valid);});
  it('requires native snap support and physical connection support only for joining',()=>{
   for(const row of cases.filter(r=>r.valid)){
-   const features=capabilityFeatures(row.capability,row.arguments);expect(features).toContain('snapPoints.v1');
+   const features=capabilityFeatures(row.capability,row.arguments);expect(features).toContain(row.capability==='room.selection.snapSettings'?'constructionSnapping.v1':'snapPoints.v1');
+   if('scale' in row.arguments)expect(features).toContain('constructionSnapping.v1');
    if(row.capability==='object.layout.snap')expect(features.includes('physicalConnections.v1')).toBe(row.arguments.mode==='join');
   }
  });

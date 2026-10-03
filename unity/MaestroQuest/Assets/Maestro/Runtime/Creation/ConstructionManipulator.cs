@@ -36,6 +36,8 @@ namespace Maestro.Quest.Creation {
         RoomEditor editor;RoomInteraction room;Material material;TextMesh label;string selectionId;string[] ids=Array.Empty<string>();
         RoomLayout before,preview;RoomGroupTransform request;RoomOwnership.Lease owner;bool busy;readonly Vector3 offset=new(0,.24f,0);
         Vector3 lastPosition,lastScale;Quaternion lastRotation;
+        ConstructionSnapPreview snapping;GameObject snapMarker;
+        internal RoomSnapPlacement SnapPreview=>snapping?.Request;
         public RoomItem Handle {get;private set;}
         public bool Visible {get;private set;}
         public bool Holding=>before!=null;
@@ -52,7 +54,9 @@ namespace Maestro.Quest.Creation {
             var text=new GameObject("Handle marking",typeof(TextMesh));text.transform.SetParent(root.transform,false);text.transform.localPosition=new Vector3(0,.1f,0);label=text.GetComponent<TextMesh>();label.font=Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");label.fontSize=48;label.characterSize=.006f;label.anchor=TextAnchor.MiddleCenter;label.alignment=TextAlignment.Center;label.text="Move pieces\nGrip · two hands resize";label.color=IllustratedMaterials.TextColor(IllustratedMaterials.Ink);text.GetComponent<MeshRenderer>().sharedMaterial=IllustratedMaterials.TextMaterial(label.font);
             Handle=root.AddComponent<RoomItem>();Handle.Configure(new[]{collider},.1f,4);var resizing=root.GetComponent<XRGeneralGrabTransformer>();resizing.scaleMultiplier=1;resizing.thresholdMoveRatioForScale=.02f;Handle.ConfigureWrites(editor.WriteGate);Handle.Grab.selectFilters.Add(this);Handle.Grab.firstSelectEntered.AddListener(Grab);Handle.Grab.lastSelectExited.AddListener(Release);room.Register(Handle);
             editor.Changed+=Changed;editor.Editing+=Close;editor.RuntimeGate.Changed+=GateChanged;if(editor.PhysicsWorld)editor.PhysicsWorld.Changed+=GateChanged;
-            root.SetActive(false);
+            snapMarker=new GameObject("Compatible snap point");snapMarker.transform.SetParent(transform,false);
+            foreach(var axis in new[]{Vector3.right,Vector3.up,Vector3.forward}){var mark=GameObject.CreatePrimitive(PrimitiveType.Cube);mark.transform.SetParent(snapMarker.transform,false);mark.transform.localScale=Vector3.one*.005f+axis*.025f;mark.GetComponent<Renderer>().sharedMaterial=material;mark.GetComponent<Collider>().enabled=false;ArtResources.Release(mark.GetComponent<Collider>());}
+            snapMarker.SetActive(false);root.SetActive(false);
         }
         internal void Show(string stateId,string[] members){selectionId=stateId;ids=(string[])members.Clone();Error="";Visible=true;Handle.gameObject.SetActive(true);Follow();}
         void Report(string error){Error=(error??"");if(Error.Length>240)Error=Error.Substring(0,240);editor?.ReportStatus(Error);}
@@ -60,7 +64,7 @@ namespace Maestro.Quest.Creation {
         void Changed(){
             if(busy||!Visible)return;var selection=editor.ObserveConstructionSelection();
             if(selection.stateId!=selectionId||selection.collecting||editor.DrawingMode||editor.DrawingInProgress||ids.Any(id=>!editor.Find(id))||Holding&&request.members.Any(m=>editor.ObjectRevision(m.target)!=m.revision)){Close();return;}
-            Follow();
+            if(Holding)snapping?.Refresh();Follow();
         }
         void GateChanged(){if(editor.RuntimeGate.Held||editor.Ownership.Suspended||editor.WriteGate.Frozen||editor.PhysicsWorld&&editor.PhysicsWorld.Running)Close();}
         void Grab(SelectEnterEventArgs args){
@@ -72,6 +76,7 @@ namespace Maestro.Quest.Creation {
             busy=true;
             try{
                 before=source;preview=new RoomLayout {placements=source.placements.Select(p=>new ObjectPlacement {target=p.target}).ToArray()};
+                snapping=new ConstructionSnapPreview(editor,members,source,editor.ObserveConstructionSnapping());
                 request=new RoomGroupTransform {members=members,position=source.placements[0].position,rotation=source.placements[0].rotation,scale=1};
                 lastPosition=Handle.transform.localPosition;lastRotation=Handle.transform.localRotation;lastScale=Handle.transform.localScale;
                 foreach(var id in ids){var item=editor.Find(id);item.GetComponent<RigidRoomItem>()?.SetAnimationOwner(this,true);item.Grab.enabled=false;}
@@ -85,19 +90,24 @@ namespace Maestro.Quest.Creation {
             request.rotation=Handle.transform.localRotation.normalized;request.scale=Handle.transform.localScale.x;request.position=Handle.transform.localPosition-request.rotation*(offset*request.scale);
             if(!request.Project(before,preview,out error)){Handle.transform.SetLocalPositionAndRotation(lastPosition,lastRotation);Handle.transform.localScale=lastScale;return false;}
             foreach(var p in preview.placements){var item=editor.Find(p.target);if(!item){error="A construction member is unavailable";return false;}}
-            foreach(var p in preview.placements){var item=editor.Find(p.target);item.transform.SetLocalPositionAndRotation(p.position,p.rotation);item.transform.localScale=Vector3.one*p.scale;item.GetComponent<RigidRoomItem>()?.Teleported();}
+            var result=snapping.Update(preview,request.scale)?snapping.Layout:preview;
+            snapMarker.SetActive(snapping.Request!=null);
+            if(snapping.Request!=null){snapMarker.transform.localPosition=snapping.Marker;label.text=snapping.Marking;}else label.text="Release to place\nTwo hands resize";
+            foreach(var p in result.placements){var item=editor.Find(p.target);item.transform.SetLocalPositionAndRotation(p.position,p.rotation);item.transform.localScale=Vector3.one*p.scale;item.GetComponent<RigidRoomItem>()?.Teleported();}
             lastPosition=Handle.transform.localPosition;lastRotation=Handle.transform.localRotation;lastScale=Handle.transform.localScale;error=null;return true;
         }
         void LateUpdate(){if(!Visible||busy)return;if(editor.RuntimeGate.Held||editor.Ownership.Suspended||editor.WriteGate.Frozen||editor.PhysicsWorld&&editor.PhysicsWorld.Running){Close();return;}if(Holding){if(owner?.Held!=true){Close();return;}Preview(out _);}else Follow();}
         void End(bool commit,bool close){
             if(busy)return;busy=true;string status=null;bool failed=false;
             try{
+                var seenSnap=snapping?.Request;string seenSource=seenSnap?.members[0].target,seenPoint=seenSnap?.point,seenTarget=seenSnap?.destination.target,seenDestinationPoint=seenSnap?.destination.point;int seenRevision=seenSnap?.destination.revision??0;
                 bool valid=Holding;if(commit&&valid){valid=Preview(out status);if(!valid)valid=Preview(out status);if(!valid)failed=true;}
-                var proposed=request;
+                var proposed=request;var proposedSnap=snapping?.Request;
+                if(commit&&valid&&seenSnap!=null&&(proposedSnap==null||proposedSnap.members[0].target!=seenSource||proposedSnap.point!=seenPoint||proposedSnap.destination.target!=seenTarget||proposedSnap.destination.point!=seenDestinationPoint||proposedSnap.destination.revision!=seenRevision)){valid=false;failed=true;status="Snap target changed before release; all pieces restored";}
                 if(before!=null)foreach(var p in before.placements){var item=editor.Find(p.target);if(item&&editor.ObjectRevision(p.target)==request.members.First(m=>m.target==p.target).revision){item.transform.SetLocalPositionAndRotation(p.position,p.rotation);item.transform.localScale=Vector3.one*p.scale;item.GetComponent<RigidRoomItem>()?.Teleported();}}
                 foreach(string id in ids){var item=editor.Find(id);if(item){item.GetComponent<RigidRoomItem>()?.SetAnimationOwner(this,false);item.Grab.enabled=true;}}
-                before=null;preview=null;request=null;owner?.Dispose();owner=null;
-                if(commit&&valid){if(!GroupTransformCapability.RunManual(editor,proposed,out status)){failed=true;status="Move not saved; all pieces restored. "+status;}else Error="";}
+                before=null;preview=null;request=null;snapping=null;if(snapMarker)snapMarker.SetActive(false);owner?.Dispose();owner=null;
+                if(commit&&valid){bool saved=proposedSnap!=null?SnapConstructionCapability.RunManual(editor,proposedSnap,out status):GroupTransformCapability.RunManual(editor,proposed,out status);if(!saved){failed=true;status="Move not saved; all pieces restored. "+status;}else Error="";}
                 if(close){Visible=false;if(Handle)Handle.gameObject.SetActive(false);}
                 if(label)label.text="Move pieces\nGrip · two hands resize";
             }finally{busy=false;}
@@ -106,6 +116,6 @@ namespace Maestro.Quest.Creation {
         }
         public void Close(){if(busy)return;if(Holding)End(false,true);else{Visible=false;if(Handle)Handle.gameObject.SetActive(false);}}
         void OnDisable()=>Close();
-        void OnDestroy(){Close();if(editor){editor.Changed-=Changed;editor.Editing-=Close;editor.RuntimeGate.Changed-=GateChanged;if(editor.PhysicsWorld)editor.PhysicsWorld.Changed-=GateChanged;}if(room&&Handle)room.Unregister(Handle);if(Handle)ArtResources.Release(Handle.gameObject);if(material)ArtResources.Release(material);}
+        void OnDestroy(){Close();if(editor){editor.Changed-=Changed;editor.Editing-=Close;editor.RuntimeGate.Changed-=GateChanged;if(editor.PhysicsWorld)editor.PhysicsWorld.Changed-=GateChanged;}if(room&&Handle)room.Unregister(Handle);if(Handle)ArtResources.Release(Handle.gameObject);if(snapMarker)ArtResources.Release(snapMarker);if(material)ArtResources.Release(material);}
     }
 }

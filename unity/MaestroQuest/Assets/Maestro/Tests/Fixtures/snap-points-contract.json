@@ -362,5 +362,123 @@
       "turn": 90
     },
     "valid": false
+  },
+  {
+    "name": "scaled snap 1.5",
+    "capability": "object.layout.snap",
+    "arguments": {
+      "mode": "place",
+      "members": [
+        {
+          "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision": 1
+        }
+      ],
+      "point": "Bottom",
+      "destination": {
+        "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "revision": 2,
+        "point": "Top"
+      },
+      "turn": 90,
+      "scale": 1.5
+    },
+    "valid": true
+  },
+  {
+    "name": "scaled snap 0",
+    "capability": "object.layout.snap",
+    "arguments": {
+      "mode": "place",
+      "members": [
+        {
+          "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision": 1
+        }
+      ],
+      "point": "Bottom",
+      "destination": {
+        "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "revision": 2,
+        "point": "Top"
+      },
+      "turn": 90,
+      "scale": 0
+    },
+    "valid": false
+  },
+  {
+    "name": "scaled snap 4.1",
+    "capability": "object.layout.snap",
+    "arguments": {
+      "mode": "place",
+      "members": [
+        {
+          "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision": 1
+        }
+      ],
+      "point": "Bottom",
+      "destination": {
+        "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "revision": 2,
+        "point": "Top"
+      },
+      "turn": 90,
+      "scale": 4.1
+    },
+    "valid": false
+  },
+  {
+    "name": "valid grip settings",
+    "capability": "room.selection.snapSettings",
+    "arguments": {
+      "stateId": "00000000000000000000000000000000",
+      "mode": "place",
+      "distance": 0.08,
+      "turnStep": 90,
+      "breakForce": 45,
+      "breakTorque": 3
+    },
+    "valid": true
+  },
+  {
+    "name": "unknown grip mode",
+    "capability": "room.selection.snapSettings",
+    "arguments": {
+      "stateId": "00000000000000000000000000000000",
+      "mode": "weld",
+      "distance": 0.08,
+      "turnStep": 90,
+      "breakForce": 45,
+      "breakTorque": 3
+    },
+    "valid": false
+  },
+  {
+    "name": "snap radius limit",
+    "capability": "room.selection.snapSettings",
+    "arguments": {
+      "stateId": "00000000000000000000000000000000",
+      "mode": "place",
+      "distance": 0.3,
+      "turnStep": 90,
+      "breakForce": 45,
+      "breakTorque": 3
+    },
+    "valid": false
+  },
+  {
+    "name": "snap free rotation",
+    "capability": "room.selection.snapSettings",
+    "arguments": {
+      "stateId": "00000000000000000000000000000000",
+      "mode": "place",
+      "distance": 0.08,
+      "turnStep": 0,
+      "breakForce": 45,
+      "breakTorque": 3
+    },
+    "valid": true
   }
 ]

@@ -12426,6 +12426,14 @@
                 "type": "number",
                 "minimum": -180.0,
                 "maximum": 180.0
+              },
+              "scale": {
+                "type": "number",
+                "minimum": 0.1,
+                "maximum": 4.0,
+                "x-features": [
+                  "constructionSnapping.v1"
+                ]
               }
             },
             "required": [
@@ -12545,6 +12553,14 @@
                 "minimum": -180.0,
                 "maximum": 180.0
               },
+              "scale": {
+                "type": "number",
+                "minimum": 0.1,
+                "maximum": 4.0,
+                "x-features": [
+                  "constructionSnapping.v1"
+                ]
+              },
               "breakForce": {
                 "type": "number",
                 "minimum": 0.0,
@@ -12588,7 +12604,7 @@
         "authoring.inactive",
         "storage.writable"
       ],
-      "description": "Align the chosen point of the FIRST moving member with an exact destination point of the same family. Both local frames coincide, with turn in degrees about destination +Y. Move 1–15 distinct idle creations as one rigid arrangement, without resizing; include every connected member. The destination must be outside that list. Use current revisions for all members and destination. Pause physics and stop member/destination playback, grips and authoring. place only changes poses; join also adds an ordinary fixed connection from the first member to the destination, using explicit break limits (zero means unbreakable). The first member must then use solid/bouncy physics and have no outgoing connection; never silently replace an existing link. One save/Undo includes the live destination pose and the whole moving arrangement. Failed admission/save changes nothing. Temporary edits stay in the fork; Stop does not undo completed edits. Snap points do not enforce occupancy, collision-free placement, nearest-point selection or chess rules. Subsequent point edits do not alter the accepted connection frames. Book controls, user programs and the agent call this same operation.",
+      "description": "Align the chosen point of the FIRST moving member with an exact destination point of the same family. Both local frames coincide, with turn in degrees about destination +Y. Move 1–15 distinct idle creations as one rigid arrangement, with optional relative scale (omitted means 1); include every connected member. The destination must be outside that list. Use current revisions for all members and destination. Pause physics and stop member/destination playback, grips and authoring. place only changes poses; join also adds an ordinary fixed connection from the first member to the destination, using explicit break limits (zero means unbreakable). The first member must then use solid/bouncy physics and have no outgoing connection; never silently replace an existing link. One save/Undo includes the live destination pose and the whole moving arrangement. Failed admission/save changes nothing. Temporary edits stay in the fork; Stop does not undo completed edits. Snap points do not enforce occupancy, collision-free placement, nearest-point selection or chess rules. Subsequent point edits do not alter the accepted connection frames. Book controls, user programs and the agent call this same operation.",
       "example": {
         "mode": "place",
         "members": [
@@ -15791,7 +15807,7 @@
         "room.physics.paused",
         "construction.released"
       ],
-      "description": "Show or hide a solid grab handle for the current ordered construction selection. Pass room.selection stateId and its exact member IDs. Showing requires 1–16 idle pieces, physics paused, drawing tools away and collection finished. It does not move/save anything or own objects until the handle is gripped. Grip moves/rotates the group; two hands resize it. Release applies the shared object.layout.transform action with one save/Undo. Invalid transforms stay at the last valid preview. Failed save restores all starting poses and records failure; the user can try the move again. Pausing, recall, drawing, changed selection/members or interrupted grips cancel a preview and close the handle without saving it. Direct member grips are unavailable during a group drag; release the handle first. Hiding refuses a held handle. Saved structure baselines, geometry and animations are unchanged. This is an arrangement tool, not a physical weld or socket snap. A completed show receipt cannot be cancelled to hide it: call this action with visible=false.",
+      "description": "Show or hide a solid grab handle for the current ordered construction selection. Pass room.selection stateId and its exact member IDs. Showing requires 1–16 idle pieces, physics paused, drawing tools away and collection finished. It does not move/save anything or own objects until the handle is gripped. Grip moves/rotates the group; two hands resize it. Release applies the shared object.layout.transform or configured object.layout.snap action with one save/Undo. Invalid transforms stay at the last valid preview. Failed save restores all starting poses and records failure; the user can try the move again. Pausing, recall, drawing, changed selection/members or interrupted grips cancel a preview and close the handle without saving it. Direct member grips are unavailable during a group drag; release the handle first. Hiding refuses a held handle. Saved structure baselines, geometry and animations are unchanged. Snapping starts off; room.selection.snapSettings configures compatible point previews and optional physical joining. A completed show receipt cannot be cancelled to hide it: call this action with visible=false.",
       "example": {
         "stateId": "00000000000000000000000000000000",
         "members": [
@@ -15824,6 +15840,152 @@
           "visible",
           "holding",
           "error"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "room.selection.snapSettings",
+      "version": 1,
+      "label": "Configure construction grip snapping",
+      "input": {
+        "type": "object",
+        "properties": {
+          "stateId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "off",
+              "place",
+              "join"
+            ]
+          },
+          "distance": {
+            "type": "number",
+            "minimum": 0.01,
+            "maximum": 0.25
+          },
+          "turnStep": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 180.0
+          },
+          "breakForce": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 10000.0
+          },
+          "breakTorque": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 10000.0
+          }
+        },
+        "required": [
+          "stateId",
+          "mode",
+          "distance",
+          "turnStep",
+          "breakForce",
+          "breakTorque"
+        ],
+        "additionalProperties": false,
+        "x-current": {
+          "fact": "room.selection.snapping",
+          "version": 1,
+          "arguments": {},
+          "fields": {
+            "stateId": [
+              "stateId"
+            ],
+            "mode": [
+              "mode"
+            ],
+            "distance": [
+              "distance"
+            ],
+            "turnStep": [
+              "turnStep"
+            ],
+            "breakForce": [
+              "breakForce"
+            ],
+            "breakTorque": [
+              "breakTorque"
+            ]
+          },
+          "guards": [
+            "stateId"
+          ]
+        },
+        "x-features": [
+          "constructionSnapping.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [
+        "construction.released",
+        "room.interaction.active"
+      ],
+      "description": "Choose off, place or join for the solid construction handle. Session-only settings apply to later grips. Read this action's current settings first; held handles refuse changes. Place aligns loose pieces; join adds a fixed physical connection with explicit break limits (zero unbreakable). With 1–15 selected pieces, all compatible point pairs are considered, closest first with stable ID tie-breaking; join only uses a solid/bouncy source without an outgoing connection. distance is room-local metres (0.01–0.25). Matching permits at most 30 degrees of tilt; turnStep rounds twist about the destination +Y, with zero preserving free twist. Two-hand resizing works with snapping. A solid marker and handle text show the preview; pulling away removes it. Release calls ordinary object.layout.snap with exact point IDs/revisions and one Undo. Invalidated targets or failed saves restore the whole original arrangement. No occupancy or overlap guarantee, no scan snapping and no direct-item grip interception. Physics must be paused to use the handle. Off preserves normal group movement. These settings do not save a room edit; they reset when the workspace is reopened.",
+      "example": {
+        "stateId": "00000000000000000000000000000000",
+        "mode": "place",
+        "distance": 0.08,
+        "turnStep": 90,
+        "breakForce": 45,
+        "breakTorque": 3
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "stateId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "off",
+              "place",
+              "join"
+            ]
+          },
+          "distance": {
+            "type": "number",
+            "minimum": 0.01,
+            "maximum": 0.25
+          },
+          "turnStep": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 180.0
+          },
+          "breakForce": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 10000.0
+          },
+          "breakTorque": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 10000.0
+          }
+        },
+        "required": [
+          "stateId",
+          "mode",
+          "distance",
+          "turnStep",
+          "breakForce",
+          "breakTorque"
         ],
         "additionalProperties": false
       }
@@ -19937,6 +20099,46 @@
       ]
     },
     {
+      "id": "room.selection.snapping",
+      "version": 1,
+      "type": {
+        "record": {
+          "stateId": "text",
+          "mode": "text",
+          "distance": "number",
+          "turnStep": "number",
+          "breakForce": "number",
+          "breakTorque": "number"
+        }
+      },
+      "label": "Construction grip snapping settings",
+      "description": "Session-local configuration for later construction-handle grips. Reading does not enable snapping. Use stateId to guard a configuration change.",
+      "features": [
+        "constructionSnapping.v1"
+      ]
+    },
+    {
+      "id": "room.selection.snapPreview",
+      "version": 1,
+      "type": {
+        "record": {
+          "active": "boolean",
+          "mode": "text",
+          "source": "text",
+          "point": "text",
+          "destination": "text",
+          "destinationPoint": "text",
+          "turn": "number",
+          "scale": "number"
+        }
+      },
+      "label": "Current grip snap preview",
+      "description": "Exact point IDs and transform of the visible transient preview. Empty IDs/active=false mean no compatible preview. No saved edit until release succeeds.",
+      "features": [
+        "constructionSnapping.v1"
+      ]
+    },
+    {
       "id": "structure.list",
       "version": 1,
       "type": {
@@ -23632,7 +23834,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "9e48364ad1d0abacf3aee1a8976585e4d0e5b2a5fd763b70159d94fb772e02ba"
+      "sha256": "929af12ba849402e2660930ac7a127d05dc1ca13ba819dda74b6d8526bde92b4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -23684,7 +23886,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "0f4d97457c1988397b3c9056ce16efd5d26067ff6f3a67458144614d601e1ca4"
+      "sha256": "6b0db0fc1fcf587298c9f10fa4687bf48482cb301860c1d00b17a22c0121a0c3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -23944,11 +24146,27 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSnapPoint.cs",
-      "sha256": "488b01d44238fef8568927a9d3e8c86bee3fc37860b088fd503a43f47b924f80"
+      "sha256": "58da81dbf26d64289bf757e63d58e845480257dc6eee00d5e1bb5241830b9483"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSnapEdits.cs",
       "sha256": "e15a5ab9cd0952c6046210a7b968b3d21efa06463d9261d26eaa2561981d3bf8"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ConstructionSnapping.cs",
+      "sha256": "58e6ec2bda5e967a3a43b0d80ce51d11669b536356dc23d5318542e7eeb208a9"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ConstructionManipulator.cs",
+      "sha256": "c3253602bf353965f5fb9d7a843b3bb5edba80bd25925f5637cacf7d12a4029b"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ConstructionSelection.cs",
+      "sha256": "7ca8263e654b058f77b8e226e26d682e23f692083ac262f6296e991e45117842"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomGroupTransform.cs",
+      "sha256": "b8be140e223cebd8c78bed9509a938a7289a131ad87f01e6d7670eefa20ca422"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomConnectionEdits.cs",
@@ -24180,7 +24398,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "455591d112d3285a58b96adf550b23be15a166e4fdb047328acd97e33fb4d2d7"
+      "sha256": "6b0ea92265b8499ad97be754b2ddaa2b7669ee04930b99d743d622d705879807"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -24204,11 +24422,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ConstructionManipulationCapability.cs",
-      "sha256": "f6359abdb94e13351a941584fd27f9a022fce6e88606354103d7fb395fe91a27"
+      "sha256": "0d766891ed5897695374d60239970e5c2d923b64f5a5e6e0981d96f2399f0012"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ConstructionSelectionCapability.cs",
       "sha256": "4e2336703679d85ec96608f58676f550efaab42a9025a52b8a938e24e402a301"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ConstructionSnappingCapability.cs",
+      "sha256": "1798d20937e2ef892dfb56255d669ab290ceb11a19dee6990a040c352ae96eaa"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ControllerConfigurationCapability.cs",
@@ -24364,7 +24586,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SnapConstructionCapability.cs",
-      "sha256": "8f6fe0baa5bb460caf48888ff7637dc3243fad8666487f6910d55e1a8da4774d"
+      "sha256": "c3ef0970e52090312293bca825036900b3154f72799ba7789f8c5241502fe6f8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SnapPointCapability.cs",

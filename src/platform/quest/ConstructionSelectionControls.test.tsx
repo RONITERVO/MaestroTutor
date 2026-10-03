@@ -46,3 +46,12 @@ it('shows the solid move handle through the shared action and disables edits dur
  await receive({constructionManipulation:output,execution:{nextRunId:'1'.repeat(32),running:[],outcomes:[summary],selected:{...summary,call:request.call},storageError:null}});expect(screen.getByRole('button',{name:'Hide move handle'})).toBeTruthy();
  await receive({constructionManipulation:{...output,holding:true}});expect((screen.getByRole('button',{name:'Hide move handle'}) as HTMLButtonElement).disabled).toBe(true);expect((screen.getByRole('button',{name:'Clear pieces'}) as HTMLButtonElement).disabled).toBe(true);expect(screen.getByText('Arranging pieces. Release the handle to save one edit.')).toBeTruthy();client.cancel();
 });
+
+it('opens shared grip snapping settings for review without executing or guessing current settings',async()=>{
+ const {client,screen,receive}=setup();await receive({capabilities:[...native.capabilities,'constructionSelection.v1','constructionSnapping.v1']});
+ fireEvent.click(screen.getByRole('button',{name:'Review grip snapping'}));
+ await waitFor(()=>expect(client.snapshot().request?.commands[0]).toEqual({action:'catalog',catalog:{operation:'inspect',capability:'room.selection.snapSettings',version:1}}));
+ const definition=capabilityDefinition('room.selection.snapSettings')!;await receive({catalog:{operation:'inspect',capability:definition.id,version:1,definition,status:'Snapping settings ready'}});
+ expect(screen.getByRole('button',{name:'Run action now'})).toBeTruthy();expect((screen.getByRole('button',{name:'Run action now'}) as HTMLButtonElement).disabled).toBe(true);
+ expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
+});

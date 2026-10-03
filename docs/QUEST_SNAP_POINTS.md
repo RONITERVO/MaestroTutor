@@ -4,8 +4,8 @@ Snap points are saved root-local frames on ordinary created objects, including
 imports. The agent, programs and generated book controls use the same definitions
 and actions. The included building brick has editable `Top` and `Bottom` points
 in family `Brick`; its visual geometry and simple collision proxy are unchanged.
-This is explicit snapping through the shared action. Automatic proximity previews
-and snapping during a physical grip remain future work.
+Explicit placement and optional proximity previews on the construction move handle
+use the same saved definitions and atomic action.
 
 ## Definitions and inspection
 
@@ -36,7 +36,8 @@ stacks upright and a 90-degree turn rotates the upper brick on that plane.
 member's `point`, `destination: {target, revision, point}`, `turn` (-180 to 180
 degrees) and mode `place` or `join`. Join additionally takes breakForce and
 breakTorque (0–10000; zero means unbreakable). It translates/rotates 1–15 members
-as one arrangement without resizing them. The destination is a separate creation;
+as one arrangement. Optional `scale` multiplies member sizes and offsets; omitted
+means 1. A scaled call requires `constructionSnapping.v1`. The destination is a separate creation;
 all sixteen possible affected objects must have current revisions. Include the
 complete connected construction in the moving list, as for group movement.
 
@@ -66,6 +67,49 @@ rules, infer a destination or merge meshes. Pieces can later be moved by ordinar
 interaction or physics. A rule can observe placements/structure baselines to track
 board state; a reliable occupied-slot game needs an explicit rule policy.
 
+## Physical construction grips
+
+`room.selection.snapSettings` configures the construction handle through the same
+catalog/form/agent path. Read `room.selection.snapping` to obtain current `stateId`, `mode`,
+`distance`, `turnStep`, `breakForce` and `breakTorque`. A stale state ID or held
+handle refuses configuration. Settings are session-local, create no room Undo and
+reset when the workspace is reopened. They start **off**. The book's construction
+section offers **Review grip snapping**, which opens the ordinary generated form;
+loading current values and running it remain explicit.
+
+Place previews alignment without a connection. Join previews a fixed connection
+with the selected breaking limits. Zero force/torque means unbreakable. Use 1–15
+moving pieces; a 16-piece selection can still move normally but has no spare slot
+for a snap destination. Points on every moving piece are considered; join only
+considers solid/bouncy pieces without outgoing connections. The selected point's
+owner becomes the action pivot without changing the user's selection order.
+
+Matching uses exact families, nearest point distance and stable object/point ID
+ordering for ties. Distance is in room-local metres, bounded to 0.01–0.25 (default
+0.08). Frames must be within 30 degrees of matching +Y. Twist around that axis is
+rounded to `turnStep` degrees (default 90); zero preserves free twist. Changing the
+step permits other construction styles without a brick-specific mechanic.
+
+The construction itself previews the snapped pose, including two-hand resizing.
+A small solid cross marks the mating point and the handle says **Release to snap**
+or **Release to join** with the point names. Pull away to return to free placement.
+`room.selection.snapPreview` exposes the exact visible source/destination IDs,
+point IDs, turn and scale to programs and Maestro. No compatible preview means
+`active=false` and empty IDs; reading never moves anything.
+
+Release restores starting poses, relinquishes grip ownership, then runs ordinary
+`object.layout.snap` with exact IDs, current revisions and the relative scale.
+One save/Undo covers the whole result. A target that becomes held, unavailable or
+changes identity/revision at release cancels the snap and restores the moving
+pieces; it does not silently become a loose placement. Save failure also restores
+all moving pieces. Pause, recall and teardown cancel without saving. Destination
+objects are not reserved during the preview, so another hand can pick one up.
+
+This applies to the explicit construction handle, including a single selected
+piece. Ordinary direct object grips keep their existing physics/throw semantics.
+There is no occupied-socket reservation, collision-free guarantee or scan snap.
+Quest latency, reach and comfort need device acceptance.
+
 ## Persistence and reusable constructions
 
 Copies, prototypes, template creation, captured modules and portable workspaces
@@ -87,7 +131,8 @@ The shared fixture covers valid configure/remove/place/join and invalid identity
 frame, membership, revision and bounds. EditMode covers copied data, per-object and
 room budgets, old/future versions, prototypes, template points and room-space math.
 PlayMode exercises rotated/scaled destinations, complete connected groups, actual
-fixed joints under impulse, capture with fresh IDs, stale/missing/family failures,
+fixed joints under impulse, actual XR grip snapping/resizing, pull-away, destination
+grab invalidation, setting guards, capture with fresh IDs, stale/missing/family failures,
 failed-save rollback, current grip ownership, physics gating and temporary Undo.
 
 The native full-app journey records point edits, paging, exact snap/join, connection
@@ -96,3 +141,7 @@ through the production generated form, requires both current revisions, rejects
 an invalid turn and matches the exact native call and receipt. Desktop checks do
 not establish Quest readability, reach, comfort or performance; device acceptance
 remains pending while the headset hold is active.
+
+The grip-settings journey additionally records the full native app configuration,
+guard renewal, idle-preview fact and reset. Chrome matches that exact call and
+receipt, requires current settings and rejects an excessive radius.

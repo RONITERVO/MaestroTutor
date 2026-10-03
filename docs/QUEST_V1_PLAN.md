@@ -2731,3 +2731,17 @@ public prototype schema, generated forms and the existing module library serve
 both the user and agent. See [batch creation](QUEST_BATCH_CREATION.md) for exact
 boundaries and model portability. This extends the authoring foundation; it does
 not close Quest interaction/performance, snapping, effects or release gates.
+
+
+### Construction point and grip snapping increment (2026-10-03)
+
+Saved, editable root-local snap points now survive templates, copies and reusable
+construction capture. `object.layout.snap` places or joins a complete selection
+through one shared saved edit/Undo, including relative scaling. Session-local
+`room.selection.snapSettings` enables the physical construction handle's nearest
+compatible point preview. Generated book controls and Maestro use that same
+catalog; an explicit fact exposes the current grip preview. Ordinary item grips
+keep their existing throw semantics. See [snap points](QUEST_SNAP_POINTS.md) for
+matching, cancellation, breaking limits and the absent occupancy/overlap policy.
+This advances the construction kit; it does not complete bounded water/snow,
+remaining default assets, Quest acceptance or the account/Store release gates.

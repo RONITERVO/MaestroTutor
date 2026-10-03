@@ -61,12 +61,12 @@ namespace Maestro.Quest.Tests {
             left.selectInput.manualPerformed=false;left.selectInput.manualValue=0;manager.SelectExit((IXRSelectInteractor)left,tool.Handle.Grab);Assert.That(tool.Holding,Is.True);Assert.That(editor.Read(a).scale,Is.EqualTo(1));
             right.selectInput.manualPerformed=false;right.selectInput.manualValue=0;manager.SelectExit((IXRSelectInteractor)right,tool.Handle.Grab);Assert.That(tool.Holding,Is.False);Assert.That(editor.Read(a).scale,Is.GreaterThan(1.2f));editor.Undo();Assert.That(editor.Read(a).scale,Is.EqualTo(1));Assert.That(editor.Read(b).scale,Is.EqualTo(1));
         }
-        void CaptureConstructionHandle(ConstructionManipulator tool){
+        void CaptureConstructionHandle(ConstructionManipulator tool,string filename="construction-handle.png"){
             string output=Environment.GetEnvironmentVariable("MAESTRO_GROUP_EVIDENCE");if(string.IsNullOrEmpty(output))return;Directory.CreateDirectory(output);
             var view=new GameObject("Construction evidence",typeof(Camera));var camera=view.GetComponent<Camera>();camera.clearFlags=CameraClearFlags.SolidColor;camera.backgroundColor=new Color(.88f,.91f,.92f);camera.nearClipPlane=.01f;camera.farClipPlane=10;camera.fieldOfView=42;
             var focus=tool.Handle.transform.position+new Vector3(.1f,-.1f,0);view.transform.position=focus+new Vector3(.45f,.3f,-1.2f);view.transform.LookAt(focus);
             var render=new RenderTexture(1200,900,24);var pixels=new Texture2D(1200,900,TextureFormat.RGB24,false);var previous=RenderTexture.active;
-            try{camera.targetTexture=render;camera.Render();RenderTexture.active=render;pixels.ReadPixels(new Rect(0,0,1200,900),0,0);pixels.Apply();File.WriteAllBytes(Path.Combine(output,"construction-handle.png"),pixels.EncodeToPNG());}
+            try{camera.targetTexture=render;camera.Render();RenderTexture.active=render;pixels.ReadPixels(new Rect(0,0,1200,900),0,0);pixels.Apply();File.WriteAllBytes(Path.Combine(output,filename),pixels.EncodeToPNG());}
             finally{RenderTexture.active=previous;camera.targetTexture=null;render.Release();UnityEngine.Object.Destroy(render);UnityEngine.Object.Destroy(pixels);UnityEngine.Object.Destroy(view);}
         }
         [UnityTest] public IEnumerator StartingPhysicsCancelsHeldGroupBeforeSimulation(){

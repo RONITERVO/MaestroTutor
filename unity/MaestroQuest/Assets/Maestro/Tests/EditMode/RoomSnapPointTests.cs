@@ -46,6 +46,23 @@ namespace Maestro.Quest.Tests {
             Assert.That(Vector3.Distance(projection.position+projection.rotation*(from.frame.position*2),expected),Is.LessThan(.00001f));
             Assert.That(Quaternion.Angle(projection.rotation,other.rotation*Quaternion.Euler(0,90,0)),Is.LessThan(.01f));Assert.That(projection.scale,Is.EqualTo(1));
         }
+        [Test] public void ProximityUsesMatchingFamilyBoundedDistanceAndFrameTiltWithFreeOrSteppedTwist(){
+            var moving=new ObjectPlacement{position=new Vector3(0,.1f,0),rotation=Quaternion.Euler(0,73,0)};
+            var from=Point("Bottom");from.frame.position=Vector3.down*.05f;var to=Point();var destination=new RoomObjectData{rotation=Quaternion.identity};
+            Assert.That(ConstructionSnapMath.Match(moving,from,destination,to,.08f,90,out var distance,out var turn),Is.True);Assert.That(distance,Is.EqualTo(0).Within(.00001));Assert.That(turn,Is.EqualTo(90).Within(.001));
+            Assert.That(ConstructionSnapMath.Match(moving,from,destination,to,.08f,0,out _,out turn),Is.True);Assert.That(turn,Is.EqualTo(73).Within(.001));
+            moving.position.x=.081f;Assert.That(ConstructionSnapMath.Match(moving,from,destination,to,.08f,90,out _,out _),Is.False);
+            moving.position.x=0;moving.rotation=Quaternion.Euler(31,0,0);Assert.That(ConstructionSnapMath.Match(moving,from,destination,to,.08f,90,out _,out _),Is.False);
+            moving.rotation=Quaternion.identity;to.family="Other";Assert.That(ConstructionSnapMath.Match(moving,from,destination,to,.08f,90,out _,out _),Is.False);
+        }
+        [Test] public void ScaledSnapKeepsPointAndAllRelativePiecePlacementsAligned(){
+            var first=new string('a',32);var second=new string('c',32);var request=new RoomSnapPlacement{members=new[]{new TransformMember{target=first,revision=1},new TransformMember{target=second,revision=1}},point="Bottom",destination=new SnapDestination{target=new string('b',32),revision=1,point="Top"},scale=2};
+            var source=new RoomLayout{placements=new[]{new ObjectPlacement{target=first,position=Vector3.one},new ObjectPlacement{target=second,position=Vector3.one+Vector3.right*.2f}}};var result=new RoomLayout{placements=new[]{new ObjectPlacement{target=first},new ObjectPlacement{target=second}}};
+            var from=Point("Bottom");from.frame.position=Vector3.down*.05f;var to=Point();var other=new RoomObjectData{position=new Vector3(2,1,0),rotation=Quaternion.Euler(0,90,0)};
+            Assert.That(request.Projection(source,from,other,to).Project(source,result,out var error),Is.True,error);
+            Assert.That(Vector3.Distance(result.placements[0].position+result.placements[0].rotation*(from.frame.position*2),other.position+Vector3.up*.05f),Is.LessThan(.00001f));
+            Assert.That(Vector3.Distance(result.placements[1].position-result.placements[0].position,new Vector3(0,0,-.4f)),Is.LessThan(.00001f));Assert.That(result.placements[1].scale,Is.EqualTo(2));
+        }
         [Test] public void PrototypeAndBundledBrickRetainEditablePoints(){
             var data=Room().objects[2];var prototype=CreationPrototype.Capture(data);var wire=CreationPrototypeSchema.Encode(prototype);Assert.That(CapabilityArguments.Validate(wire,CreationPrototypeSchema.Schema(),out var error),Is.True,error);
             var decoded=CreationPrototype.Read(wire);Assert.That(decoded.Validate(out error),Is.True,error);var clone=decoded.Instantiate("Copy",Vector3.one,Quaternion.identity,1);clone.snapPoints[0].frame.position=Vector3.zero;Assert.That(data.snapPoints[0].frame.position.y,Is.EqualTo(.05f));

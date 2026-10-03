@@ -428,6 +428,20 @@ try{
   outcome={constructionMovement:{sharedHandleTransformAndOneUndoVerified:true},constructionSelection:{sharedStateFactLocateCaptureAndPruneVerified:true},currentMembers:{visibleReadsAndIndexedGuardsVerified:true,program:currentCaptureId},constructionCapture:{hash:capturedHash,survivedOriginalRemovalAndInternalHingeAndUndoVerified:true},connectedBlueprint:{identitiesInternalHingeAndSingleUndoVerified:true},leverModule:{hash:leverHash,program:leverId,includedSourceAndNativeCreationVerified:true},drawingTip:{tipHash,configurationReadbackAndUndoVerified:true},surface:{chalkHash,stroke,toolAndInkReadEraseUndoVerified:true},watch:{moduleHash,program:watcherId,includedSourceAndNativeRearmVerified:true},composition:{program:compositionId,outcome:compositionOutcome,buildCaptureMoveResetAndUndoVerified:true},structures:{captureReceipt:structureAfter.execution?.selected,liveDisplacementResetAndUndoVerified:true},batch:{createReceipt:batchAfter.execution?.selected,identitiesAndSingleUndoVerified:true},layout:{applyReceipt:layoutAfter.execution?.selected,liveReadAndSingleUndoVerified:true},template:{hash:templateArgs.templateHash,createReceipt:templateAfter.execution?.selected,componentsAndSingleUndoVerified:true},createdId:target,createReceipt:selected,paintVerified:true,undoPaintVerified:true,undoCreateVerified:true,diagnostics:diagnostic.catalog.value,lathe:{createReceipt:lathe.execution?.selected,profile:value,editAndUndoVerified:true},collision:{summary:summaryValue,editAndUndoVerified:true},latheCycles:cycle+1};
   }
  }
+ const gripBefore=lease.state();
+ const gripSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Configure construction grip snapping',offset:0}}]);
+ const gripDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'room.selection.snapSettings',version:1}}]);
+ const gripRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'room.selection.snapping',version:1}}]);
+ const gripSettings=gripRead.catalog?.value as Record<string,unknown>;
+ if(gripSettings.mode!=='off')throw new Error('Fresh room must start with grip snapping disabled');
+ const gripArguments={...gripSettings,mode:'join',distance:.06,turnStep:90,breakForce:45,breakTorque:3};
+ const gripAfter=await execute([{action:'execution',execution:{operation:'start',call:{id:'room.selection.snapSettings',version:1,arguments:gripArguments}}}]);
+ if(gripAfter.execution?.selected?.phase!=='completed'||gripAfter.execution.selected.output?.mode!=='join'||gripAfter.execution.selected.output?.stateId===gripSettings.stateId)throw new Error('Grip snapping configuration did not advance its guard');
+ const gripPreview=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'room.selection.snapPreview',version:1}}]);
+ if((gripPreview.catalog?.value as {active:boolean}).active)throw new Error('Unheld handle reported a snap preview');
+ const gripReset=await execute([{action:'execution',execution:{operation:'start',call:{id:'room.selection.snapSettings',version:1,arguments:{...gripAfter.execution.selected.output,mode:'off'}}}}]);
+ if(gripReset.execution?.selected?.phase!=='completed')throw new Error('Could not return grip snapping to off');
+ await writeFile(join(directory,'grip-snapping.json'),JSON.stringify({boundary:'Real Unity shared configuration and preview facts. Actual grip matching, save, cancellation and Undo are tested separately in PlayMode; no headset proof.',before:gripBefore,search:gripSearch,definition:gripDefinition,read:gripRead,arguments:gripArguments,after:gripAfter,preview:gripPreview,reset:gripReset},null,2));
  await writeFile(join(directory,'journey.json'),JSON.stringify({version:1,boundary:'Real Unity Editor app and shared room protocol; no Quest input, WebView, scan or Store proof',providerUsed:!!prompt,initial,observations,outcome},null,2));
  console.log(JSON.stringify({providerUsed:!!prompt,observations:observations.length,output:join(directory,'journey.json')}));
 }catch(error){transport.checkHealth();throw error;}finally{await transport.close();}
