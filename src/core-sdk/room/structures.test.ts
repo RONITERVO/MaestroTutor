@@ -22,3 +22,8 @@ it('requires explicit member resources for reset while forgetting edits metadata
  const p=source(),reset=p.functions[0].body[1];expect(capabilityResources('structure.reset',reset.arguments)).toEqual(p.resources);
  const forget={id:'c'.repeat(32),revision:1};expect(validateCapabilityArguments('structure.forget',1,forget)).toBeNull();expect(capabilityResources('structure.forget',forget)).toEqual([]);
 });
+
+it('carries exact high native revisions while rejecting overflow and fractional preconditions',()=>{
+ const args=source().functions[0].body[1].arguments;args.revision=2147483647;expect(validateCapabilityArguments('structure.reset',1,args)).toBeNull();
+ args.revision++;expect(validateCapabilityArguments('structure.reset',1,args)).not.toBeNull();args.revision=1000001.5;expect(validateCapabilityArguments('structure.reset',1,args)).not.toBeNull();
+});

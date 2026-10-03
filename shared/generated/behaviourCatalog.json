@@ -1000,7 +1000,7 @@
               "revision": {
                 "type": "integer",
                 "minimum": 1.0,
-                "maximum": 1000000.0
+                "maximum": 2147483647.0
               },
               "replace": {
                 "type": "boolean"
@@ -1196,7 +1196,7 @@
               "revision": {
                 "type": "integer",
                 "minimum": 1.0,
-                "maximum": 1000000.0
+                "maximum": 2147483647.0
               },
               "times": {
                 "type": "array",
@@ -1240,7 +1240,7 @@
               "revision": {
                 "type": "integer",
                 "minimum": 1.0,
-                "maximum": 1000000.0
+                "maximum": 2147483647.0
               },
               "duration": {
                 "type": "number",
@@ -1282,7 +1282,7 @@
               "revision": {
                 "type": "integer",
                 "minimum": 1.0,
-                "maximum": 1000000.0
+                "maximum": 2147483647.0
               },
               "joints": {
                 "type": "array",
@@ -1387,7 +1387,7 @@
               "revision": {
                 "type": "integer",
                 "minimum": 1.0,
-                "maximum": 1000000.0
+                "maximum": 2147483647.0
               }
             },
             "required": [
@@ -1433,7 +1433,7 @@
           "revision": {
             "type": "integer",
             "minimum": 1.0,
-            "maximum": 1000000.0
+            "maximum": 2147483647.0
           },
           "frames": {
             "type": "integer",
@@ -1498,7 +1498,7 @@
               "revision": {
                 "type": "integer",
                 "minimum": 1.0,
-                "maximum": 1000000.0
+                "maximum": 2147483647.0
               }
             },
             "required": [
@@ -1622,7 +1622,7 @@
           "revision": {
             "type": "integer",
             "minimum": 0.0,
-            "maximum": 1000000.0
+            "maximum": 2147483647.0
           },
           "temporary": {
             "type": "boolean"
@@ -1676,7 +1676,7 @@
               "revision": {
                 "type": "integer",
                 "minimum": 1.0,
-                "maximum": 1000000.0
+                "maximum": 2147483647.0
               }
             },
             "required": [
@@ -1964,7 +1964,7 @@
           "revision": {
             "type": "integer",
             "minimum": 1.0,
-            "maximum": 1000000.0
+            "maximum": 2147483647.0
           },
           "temporary": {
             "type": "boolean"
@@ -2253,7 +2253,7 @@
               "revision": {
                 "type": "integer",
                 "minimum": 1.0,
-                "maximum": 1000000.0
+                "maximum": 2147483647.0
               }
             },
             "required": [
@@ -2365,7 +2365,7 @@
           "revision": {
             "type": "integer",
             "minimum": 0.0,
-            "maximum": 1000000.0
+            "maximum": 2147483647.0
           },
           "temporary": {
             "type": "boolean"
@@ -2787,7 +2787,7 @@
           "revision": {
             "type": "integer",
             "minimum": 1.0,
-            "maximum": 1000000.0
+            "maximum": 2147483647.0
           }
         },
         "required": [
@@ -2836,7 +2836,7 @@
           "revision": {
             "type": "integer",
             "minimum": 1.0,
-            "maximum": 1000000.0
+            "maximum": 2147483647.0
           },
           "temporary": {
             "type": "boolean"
@@ -5041,7 +5041,7 @@
               "rulesRevision": {
                 "type": "integer",
                 "minimum": 1.0,
-                "maximum": 1000000.0
+                "maximum": 2147483647.0
               },
               "valueJson": {
                 "type": "string",
@@ -5093,7 +5093,7 @@
               "rulesRevision": {
                 "type": "integer",
                 "minimum": 1.0,
-                "maximum": 1000000.0
+                "maximum": 2147483647.0
               }
             },
             "required": [
@@ -5164,7 +5164,7 @@
           "rulesRevision": {
             "type": "integer",
             "minimum": 1.0,
-            "maximum": 1000000.0
+            "maximum": 2147483647.0
           },
           "name": {
             "type": "string",
@@ -7269,7 +7269,7 @@
               "revision": {
                 "type": "integer",
                 "minimum": 1.0,
-                "maximum": 1000000.0
+                "maximum": 2147483647.0
               },
               "name": {
                 "type": "string",
@@ -9171,7 +9171,7 @@
               "revision": {
                 "type": "integer",
                 "minimum": 1.0,
-                "maximum": 1000000.0
+                "maximum": 2147483647.0
               },
               "index": {
                 "type": "integer",
@@ -9264,7 +9264,7 @@
               "revision": {
                 "type": "integer",
                 "minimum": 1.0,
-                "maximum": 1000000.0
+                "maximum": 2147483647.0
               },
               "radius": {
                 "type": "number",
@@ -9332,7 +9332,7 @@
           "revision": {
             "type": "integer",
             "minimum": 1.0,
-            "maximum": 1000000.0
+            "maximum": 2147483647.0
           },
           "points": {
             "type": "integer",
@@ -9464,7 +9464,7 @@
           "revision": {
             "type": "integer",
             "minimum": 1.0,
-            "maximum": 1000000.0
+            "maximum": 2147483647.0
           },
           "parts": {
             "type": "array",
@@ -10019,7 +10019,7 @@
           "revision": {
             "type": "integer",
             "minimum": 1.0,
-            "maximum": 1000000.0
+            "maximum": 2147483647.0
           },
           "parts": {
             "type": "integer",
@@ -10278,7 +10278,7 @@
           "revision": {
             "type": "integer",
             "minimum": 0.0,
-            "maximum": 1000000.0
+            "maximum": 2147483647.0
           },
           "source": {
             "type": "object",
@@ -10554,7 +10554,7 @@
           "revision": {
             "type": "integer",
             "minimum": 1.0,
-            "maximum": 1000000.0
+            "maximum": 2147483647.0
           },
           "temporary": {
             "type": "boolean"
@@ -10583,7 +10583,7 @@
           "revision": {
             "type": "integer",
             "minimum": 1.0,
-            "maximum": 1000000.0
+            "maximum": 2147483647.0
           },
           "members": {
             "type": "array",
@@ -10661,7 +10661,7 @@
           "revision": {
             "type": "integer",
             "minimum": 1.0,
-            "maximum": 1000000.0
+            "maximum": 2147483647.0
           }
         },
         "required": [
@@ -10869,7 +10869,7 @@
           "revision": {
             "type": "integer",
             "minimum": 1.0,
-            "maximum": 1000000.0
+            "maximum": 2147483647.0
           },
           "collision": {
             "type": "object",
@@ -11462,7 +11462,7 @@
           "revision": {
             "type": "integer",
             "minimum": 1.0,
-            "maximum": 1000000.0
+            "maximum": 2147483647.0
           },
           "shapes": {
             "type": "integer",
@@ -11508,7 +11508,7 @@
           "revision": {
             "type": "integer",
             "minimum": 1.0,
-            "maximum": 1000000.0
+            "maximum": 2147483647.0
           },
           "mode": {
             "type": "string",
@@ -11600,7 +11600,7 @@
           "revision": {
             "type": "integer",
             "minimum": 1.0,
-            "maximum": 1000000.0
+            "maximum": 2147483647.0
           },
           "temporary": {
             "type": "boolean"
@@ -11631,7 +11631,7 @@
           "revision": {
             "type": "integer",
             "minimum": 1.0,
-            "maximum": 1000000.0
+            "maximum": 2147483647.0
           },
           "distance": {
             "type": "number",
@@ -11705,7 +11705,7 @@
           "revision": {
             "type": "integer",
             "minimum": 1.0,
-            "maximum": 1000000.0
+            "maximum": 2147483647.0
           },
           "temporary": {
             "type": "boolean"
@@ -11743,7 +11743,7 @@
               "revision": {
                 "type": "integer",
                 "minimum": 1.0,
-                "maximum": 1000000.0
+                "maximum": 2147483647.0
               },
               "source": {
                 "type": "string",
@@ -11790,7 +11790,7 @@
               "revision": {
                 "type": "integer",
                 "minimum": 1.0,
-                "maximum": 1000000.0
+                "maximum": 2147483647.0
               },
               "source": {
                 "type": "string",
@@ -11843,7 +11843,7 @@
               "revision": {
                 "type": "integer",
                 "minimum": 1.0,
-                "maximum": 1000000.0
+                "maximum": 2147483647.0
               },
               "source": {
                 "type": "string",
@@ -11921,7 +11921,7 @@
           "revision": {
             "type": "integer",
             "minimum": 1.0,
-            "maximum": 1000000.0
+            "maximum": 2147483647.0
           },
           "temporary": {
             "type": "boolean"
@@ -12014,7 +12014,7 @@
           "revision": {
             "type": "integer",
             "minimum": 1.0,
-            "maximum": 1000000.0
+            "maximum": 2147483647.0
           },
           "position": {
             "type": "object",
@@ -12607,7 +12607,7 @@
                           "revision": {
                             "type": "integer",
                             "minimum": 1.0,
-                            "maximum": 1000000.0
+                            "maximum": 2147483647.0
                           },
                           "kind": {
                             "type": "string",
@@ -12677,7 +12677,7 @@
                           "revision": {
                             "type": "integer",
                             "minimum": 1.0,
-                            "maximum": 1000000.0
+                            "maximum": 2147483647.0
                           },
                           "kind": {
                             "type": "string",
@@ -13063,7 +13063,7 @@
                   "revision": {
                     "type": "integer",
                     "minimum": 1.0,
-                    "maximum": 1000000.0
+                    "maximum": 2147483647.0
                   },
                   "kind": {
                     "type": "string",
@@ -13133,7 +13133,7 @@
                   "revision": {
                     "type": "integer",
                     "minimum": 1.0,
-                    "maximum": 1000000.0
+                    "maximum": 2147483647.0
                   },
                   "kind": {
                     "type": "string",
@@ -13437,7 +13437,7 @@
                   "revision": {
                     "type": "integer",
                     "minimum": 1.0,
-                    "maximum": 1000000.0
+                    "maximum": 2147483647.0
                   },
                   "kind": {
                     "type": "string",
@@ -13507,7 +13507,7 @@
                   "revision": {
                     "type": "integer",
                     "minimum": 1.0,
-                    "maximum": 1000000.0
+                    "maximum": 2147483647.0
                   },
                   "kind": {
                     "type": "string",
@@ -14648,7 +14648,7 @@
                           "revision": {
                             "type": "integer",
                             "minimum": 1.0,
-                            "maximum": 1000000.0
+                            "maximum": 2147483647.0
                           },
                           "kind": {
                             "type": "string",
@@ -14718,7 +14718,7 @@
                           "revision": {
                             "type": "integer",
                             "minimum": 1.0,
-                            "maximum": 1000000.0
+                            "maximum": 2147483647.0
                           },
                           "kind": {
                             "type": "string",
@@ -14891,7 +14891,7 @@
           "revision": {
             "type": "integer",
             "minimum": 1.0,
-            "maximum": 1000000.0
+            "maximum": 2147483647.0
           },
           "offset": {
             "type": "integer",
@@ -15030,7 +15030,7 @@
           "revision": {
             "type": "integer",
             "minimum": 1.0,
-            "maximum": 1000000.0
+            "maximum": 2147483647.0
           },
           "index": {
             "type": "integer",
@@ -15094,7 +15094,7 @@
           "revision": {
             "type": "integer",
             "minimum": 1.0,
-            "maximum": 1000000.0
+            "maximum": 2147483647.0
           },
           "index": {
             "type": "integer",
@@ -15160,7 +15160,7 @@
           "revision": {
             "type": "integer",
             "minimum": 1.0,
-            "maximum": 1000000.0
+            "maximum": 2147483647.0
           },
           "part": {
             "type": "string",
@@ -15284,7 +15284,7 @@
           "revision": {
             "type": "integer",
             "minimum": 1.0,
-            "maximum": 1000000.0
+            "maximum": 2147483647.0
           },
           "index": {
             "type": "integer",
@@ -15445,7 +15445,7 @@
                   "revision": {
                     "type": "integer",
                     "minimum": 1.0,
-                    "maximum": 1000000.0
+                    "maximum": 2147483647.0
                   },
                   "kind": {
                     "type": "string",
@@ -15515,7 +15515,7 @@
                   "revision": {
                     "type": "integer",
                     "minimum": 1.0,
-                    "maximum": 1000000.0
+                    "maximum": 2147483647.0
                   },
                   "kind": {
                     "type": "string",
@@ -15890,7 +15890,7 @@
           "revision": {
             "type": "integer",
             "minimum": 1.0,
-            "maximum": 1000000.0
+            "maximum": 2147483647.0
           },
           "index": {
             "type": "integer",
@@ -15939,7 +15939,7 @@
           "revision": {
             "type": "integer",
             "minimum": 1.0,
-            "maximum": 1000000.0
+            "maximum": 2147483647.0
           },
           "index": {
             "type": "integer",
@@ -17293,15 +17293,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "26a54c56b9303ec7ba3456fdd7ea4839a8e1d60d31c752e002348966cb9ac9bc"
+      "sha256": "ebacd3339fba6627f352d7502e559d451aba234d51779284793295899c739fea"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
-      "sha256": "2818d6d739fe008b9993391816823dc387b28883b2f52eabec9aa79d5199a26a"
+      "sha256": "43f9fac6efc6ded39a996cfbbe895c3e9db94b574cf099ffccc81e3b5ee62ee9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramMachine.cs",
-      "sha256": "b8f5f5c0d0917167485bea696fa31c5e34de595a67f825e20d33cd982b5d82dc"
+      "sha256": "2ec99eeb5d6f22fd85823ccb32e9fbf33f677ea03755332e04e4f03f06aece9e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramMemoryDocument.cs",
@@ -17325,7 +17325,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "9e4bebb8b6d5cd5113db9a0b38c5b473c1631e7ef8cad1168441c692d2518322"
+      "sha256": "9ec81e4e45b14a6271f0c35378504d1f2b605a380872f32c4de9a9bb5f60a7fd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -17365,7 +17365,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomCapabilityCatalog.cs",
-      "sha256": "d7951c9e2969ee986f0137812070e085fe28df3849794729c050f78aac52c7c5"
+      "sha256": "560687e1fab7cd48e2c84554075e29f9f4c93b003dc50327857fa616b78fc773"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveCapture.cs",
@@ -17449,7 +17449,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramData.cs",
-      "sha256": "63f6e6c6e6268dd1ebd9bd552aa333b1f05a094ecf53352fb9a42c8248e3e11d"
+      "sha256": "1081fa67705c26b43bb1bbb5381550493b0bdf130051c55fd1d782561be3844d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramModules.cs",
@@ -17473,7 +17473,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleEvents.cs",
-      "sha256": "de1ff160a991b36938e39eabc5112834dd1f0a5c05e44729f4e37d0838a3cbe8"
+      "sha256": "5e22e83811a2259354f546122985515561ee49b792a7b63309738eaedb7c4eac"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleCommands.cs",
@@ -17737,7 +17737,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationAuthoringCapability.cs",
-      "sha256": "821c0cb0c9a8eeb33efd4c0c005c571cbed334c76522853bb48f2b3c589c6339"
+      "sha256": "4ac07724d368f0fbfdb981617583e2da403aedcd528b23ff858f964fa0f3396d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationCapabilitySupport.cs",
@@ -17749,15 +17749,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationPosingCapability.cs",
-      "sha256": "b5c4e12d90b63009ba2a986e77aaba2c1ec236bfce1cfee509c5bc36461d44f6"
+      "sha256": "3cd499d6a634ed737f664a2ddff5111e0ac843da5c30d64845d466bad74dc798"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationRecordingCapability.cs",
-      "sha256": "d43c0f21d8786000effde056bcebda1cecbc87577e8ebe45187da6654985f8af"
+      "sha256": "b84498a5ad2416832510318b67f24af74b6c2bf77e62803ddf08198d1b5a6b3a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AvatarModelCapabilities.cs",
-      "sha256": "876e746cb903d0ae11b6a6dca42cc5d05157d5a40722c9ace3478a3eac4aec7a"
+      "sha256": "1b739e5c0a9253946f12e61c835e8746b34e2522f64b663e2ae4f61ca33b3899"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/BatchCreationCapability.cs",
@@ -17773,7 +17773,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
-      "sha256": "bbf3b07846fd2cdaabe343c16b6e928206170f78b5d6cd63a47ae7129bb40c33"
+      "sha256": "58785ba287a6246a4d8a49a1ea38f8d3157bbc864a76a9c1f32ca0d72706a6bc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityStepAdapter.cs",
@@ -17781,7 +17781,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CollisionCapability.cs",
-      "sha256": "8d577fba954104ebf32d0200ffa779b4a6c3aaf7f0213482920345142d05fbfe"
+      "sha256": "79b43625d16854fdf0ca4245657eb28a9c8cd7ed41fd46f5379349fcc870dc69"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ControllerConfigurationCapability.cs",
@@ -17793,7 +17793,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CopyObjectCapability.cs",
-      "sha256": "92ded20a9931e7cca2180d2cbb7c072c6a02619cd6543a94893d2e923adbf5ee"
+      "sha256": "8a96e75ace5e5b2dab3b3958d78176334f6fe1691943686da0988e868613a290"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreateObjectCapability.cs",
@@ -17805,7 +17805,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingCapabilities.cs",
-      "sha256": "65ccebab86d4597633403e1ecccc3bef44704952a981294acd26cdbee2e4e063"
+      "sha256": "b49b748338ff9d390a469455f9b287edf0a8d1ca50ea4149edff8e5d94ba9e81"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingResolveCapability.cs",
@@ -17821,7 +17821,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/HoldObjectCapability.cs",
-      "sha256": "23db0b75d200042df6c015edda6f0437a721ffa0194c00cbfa9590a97bdbd0d8"
+      "sha256": "95c929c659c286f94aa7a8c5836115a4145a53f0bf55b81d09d72e2cc7e81630"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/IncludedMotionsCapability.cs",
@@ -17829,7 +17829,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/LatheProfileFact.cs",
-      "sha256": "3e63b0320debc46eb9d7a0d215386ff6845e5ef57b9e83e326cdc226199bc074"
+      "sha256": "d8ddcdf65f862430b589ae8bf0c8bbee4856f2b535aadef50b4342f837193869"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/LaunchObjectCapability.cs",
@@ -17845,7 +17845,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ModelImportCapability.cs",
-      "sha256": "7124a6629cf7494d21c14b788cfee7eb44427c19b58e2c452c71325d954de5e4"
+      "sha256": "502d067ce9f3357487b82d3815d8af2a77162b54e14e1bc868e9848c11f2ab26"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/MotionBatchCapability.cs",
@@ -17865,11 +17865,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ProgramMemoryCapability.cs",
-      "sha256": "911de487e41d9d9a09e5998857bfe165e626b2bb7ba336c91a89366ba9850ae5"
+      "sha256": "2bdfb36fcc7f788528dda4908460ee736230cf55198a3b5c8b6a46311a3cfe0f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ProgramModuleCapabilities.cs",
-      "sha256": "a064d8f69eaa59d263a6619fd9b7b9089e992a615e4005b166d023556be5e3d3"
+      "sha256": "9376da00962491773dd542820b3da42344929fdebe80fcbd9209060d39b69a45"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RecipeAnimationCapability.cs",
@@ -17877,11 +17877,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RecipeEditCapability.cs",
-      "sha256": "59ca6fb0ce86b10ee93697287b6aabdc2cd8a1f9912e0e7952263eefd3601c75"
+      "sha256": "fbbb239a3131bc579df9d5f9b840f83ab49a72787f55e036d90aed8539e2b706"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RecipeEditFacts.cs",
-      "sha256": "26346b1e6871e3989a9edd534b5ccc732646a28a8313229982b7953550b2c269"
+      "sha256": "960bca4e3af043ae70c8b9311d6087aa6fa7319912fce43edc26e5df73366ae0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RecipePartAnimationCapability.cs",
@@ -17917,11 +17917,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SpatialSettingsCapabilities.cs",
-      "sha256": "82ce0766868b99ec580c4a13dbc6410bd9bf599bb275c03e74a4018355ac6a23"
+      "sha256": "175d45f2dda24eab8ae0a7c33f008a37117a7ad748e6c1221d3ffad51a0e82d1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/StructureCapabilities.cs",
-      "sha256": "88b8fe6ae3039ebaaee21ec740f1b95230035bdb98b146a4afd1c3ca1443a215"
+      "sha256": "27bc70e2baeca2a036ea7f9dac800368f50e5883ba9cf73db87d38c6ed661c9c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/StructureFacts.cs",
@@ -17929,7 +17929,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SurfacePlacementCapability.cs",
-      "sha256": "97bd59f67d31a6e83ce507691b4341be245d82724751e23b245fe311f633902e"
+      "sha256": "74617d67aa6dbe9a95fb4b49b68220a92f0910b12bf0a2920066c57bbefbd0d8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceActivationCapabilities.cs",

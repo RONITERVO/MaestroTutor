@@ -137,7 +137,27 @@ try{
   const structureUndo=await execute([{action:'undo'}]);if(Math.abs((structureUndo.objects.find(o=>o.id===member.id)?.position.x??0)-member.position.x-.4)>.00001)throw new Error('Structure Undo lost the displaced pose');
   await execute([{action:'undo'}]);await execute([{action:'undo'}]);
   await writeFile(join(directory,'structure-authoring.json'),JSON.stringify({boundary:'Real Unity native states; browser acknowledgements replayed separately. Not headset or provider proof.',before:structureBefore,search:structureSearch,definition:structureDefinition,after:structureAfter,initial:structureInitial,displaced:structureDisplaced,reset:structureReset,restored:structureRestored,undo:structureUndo},null,2));
-  outcome={structures:{captureReceipt:structureAfter.execution?.selected,liveDisplacementResetAndUndoVerified:true},batch:{createReceipt:batchAfter.execution?.selected,identitiesAndSingleUndoVerified:true},layout:{applyReceipt:layoutAfter.execution?.selected,liveReadAndSingleUndoVerified:true},template:{hash:templateArgs.templateHash,createReceipt:templateAfter.execution?.selected,componentsAndSingleUndoVerified:true},createdId:target,createReceipt:selected,paintVerified:true,undoPaintVerified:true,undoCreateVerified:true,diagnostics:diagnostic.catalog.value,lathe:{createReceipt:lathe.execution?.selected,profile:value,editAndUndoVerified:true},collision:{summary:summaryValue,editAndUndoVerified:true},latheCycles:cycle+1};
+  const compositionSource=await readFile('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-build-structure.json','utf8');
+  const compositionBefore=await execute([{action:'rules',rule:{action:'inspect'}}]);
+  const compositionSaved=await execute([{action:'rules',rule:{action:'edit',revision:compositionBefore.rules!.revision,edits:[{kind:'save',reference:'composition',sequence:{id:'',name:'Native build/reset probe',interruption:0,repeat:false,program:compositionSource}}]}}]);
+  const compositionId=compositionSaved.rules?.sequences.find(s=>s.name==='Native build/reset probe')?.id;if(!compositionId)throw new Error('Composed program was not saved');
+  let compositionAfter=await execute([{action:'rules',rule:{action:'play',revision:compositionSaved.rules!.revision,target:compositionId}}]);
+  const compositionDeadline=Date.now()+15000;
+  while(!compositionAfter.rules?.outcomes?.some(o=>o.sequenceId===compositionId)&&Date.now()<compositionDeadline){await new Promise(r=>setTimeout(r,100));compositionAfter=await execute([{action:'rules',rule:{action:'inspect',target:compositionId}}]);}
+  const compositionOutcome=compositionAfter.rules?.outcomes?.find(o=>o.sequenceId===compositionId);
+  if(compositionOutcome?.phase!=='completed'||compositionAfter.objects.length!==compositionBefore.objects.length+6)throw new Error('Composed build/reset failed: '+JSON.stringify(compositionOutcome));
+  const compositionList=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'structure.list',version:1,arguments:{offset:0}}}]);
+  const compositionGroup=(compositionList.catalog?.value as {entries?:{id:string;name:string;count:number}[]})?.entries?.find(e=>e.name==='Castle'&&e.count===6);
+  if(!compositionGroup)throw new Error('Composed structure was not saved');
+  const compositionState=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'structure.state',version:1,arguments:{id:compositionGroup.id}}}]);
+  if((compositionState.catalog?.value as {displaced?:number})?.displaced!==0)throw new Error('Composed reset did not recover its baseline');
+  await execute([{action:'undo'}]);
+  const compositionUndo=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'structure.state',version:1,arguments:{id:compositionGroup.id}}}]);
+  if((compositionUndo.catalog?.value as {displaced?:number})?.displaced!==1)throw new Error('Composed reset Undo did not restore the displaced piece');
+  await execute([{action:'undo'}]);await execute([{action:'undo'}]);await execute([{action:'undo'}]);
+  await execute([{action:'rules',rule:{action:'edit',revision:lease.state().rules!.revision,edits:[{kind:'delete',target:compositionId}]}}]);
+  await writeFile(join(directory,'program-composition.json'),JSON.stringify({boundary:'Real Unity runtime and shared transport; no headset or provider proof.',source:JSON.parse(compositionSource),saved:compositionSaved,after:compositionAfter,group:compositionGroup,state:compositionState,undo:compositionUndo,outcome:compositionOutcome},null,2));
+  outcome={composition:{program:compositionId,outcome:compositionOutcome,buildCaptureMoveResetAndUndoVerified:true},structures:{captureReceipt:structureAfter.execution?.selected,liveDisplacementResetAndUndoVerified:true},batch:{createReceipt:batchAfter.execution?.selected,identitiesAndSingleUndoVerified:true},layout:{applyReceipt:layoutAfter.execution?.selected,liveReadAndSingleUndoVerified:true},template:{hash:templateArgs.templateHash,createReceipt:templateAfter.execution?.selected,componentsAndSingleUndoVerified:true},createdId:target,createReceipt:selected,paintVerified:true,undoPaintVerified:true,undoCreateVerified:true,diagnostics:diagnostic.catalog.value,lathe:{createReceipt:lathe.execution?.selected,profile:value,editAndUndoVerified:true},collision:{summary:summaryValue,editAndUndoVerified:true},latheCycles:cycle+1};
   }
  }
  await writeFile(join(directory,'journey.json'),JSON.stringify({version:1,boundary:'Real Unity Editor app and shared room protocol; no Quest input, WebView, scan or Store proof',providerUsed:!!prompt,initial,observations,outcome},null,2));

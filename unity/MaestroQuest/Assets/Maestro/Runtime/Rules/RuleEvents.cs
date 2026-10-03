@@ -21,7 +21,7 @@ namespace Maestro.Quest.Rules
         public int EventQueueCount=>eventQueue.Count;
         public int EventsDropped {get;private set;}
         static bool ValidValue(ProgramValue value)=>value.Type==ProgramType.Boolean ||
-            value.Type==ProgramType.Number&&double.IsFinite(value.Number)&&Math.Abs(value.Number)<=1000000 ||
+            value.Type==ProgramType.Number&&ProgramValue.ValidNumber(value.Number) ||
             value.Type==ProgramType.Text&&value.Text!=null&&value.Text.Length<=128&&!value.Text.Any(char.IsControl);
         public static bool ValidEventValue(JToken token) {
             if(token==null || token.Type!=JTokenType.Boolean&&token.Type!=JTokenType.String&&token.Type!=JTokenType.Integer&&token.Type!=JTokenType.Float)return false;

@@ -1,5 +1,9 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+// Numeric magnitude does not bound execution cost. Keep exact integers through the
+// JS/double safe range; action schemas still impose their own physical limits.
+export const MAX_PROGRAM_NUMBER=Number.MAX_SAFE_INTEGER;
+export const validProgramNumber=(value:unknown):value is number=>typeof value==='number'&&Number.isFinite(value)&&Math.abs(value)<=MAX_PROGRAM_NUMBER;
 export type ScalarType='number'|'boolean'|'text';
 export type DataType=ScalarType|{list:DataType}|{record:Record<string,DataType>};
 export type DataValue=number|boolean|string|DataValue[]|{[key:string]:DataValue};
@@ -25,7 +29,7 @@ export function checkedDataValue(value:unknown,declared?:unknown):DataType {
  const type=declared===undefined?inferDataType(value):readDataType(declared);let nodes=0;
  const check=(v:unknown,t:DataType,depth:number)=>{
   need(depth<=4&&++nodes<=128,'Value nesting or node limit exceeded');
-  if(typeof t==='string'){need(t==='number'?typeof v==='number'&&Number.isFinite(v)&&Math.abs(v)<=1000000:t==='boolean'?typeof v==='boolean':typeof v==='string'&&v.length<=128&&!/[\u0000-\u001f\u007f-\u009f]/.test(v),'Expected bounded number, boolean or text');return;}
+  if(typeof t==='string'){need(t==='number'?validProgramNumber(v):t==='boolean'?typeof v==='boolean':typeof v==='string'&&v.length<=128&&!/[\u0000-\u001f\u007f-\u009f]/.test(v),'Expected bounded number, boolean or text');return;}
   if('list' in t){need(Array.isArray(v)&&v.length<=32,'Expected a list of at most 32 items');(v as unknown[]).forEach(item=>check(item,t.list,depth+1));return;}
   need(object(v)&&Object.keys(v).length===Object.keys(t.record).length&&Object.keys(t.record).every(k=>Object.prototype.hasOwnProperty.call(v,k)),'Record fields differ from its type');
   Object.entries(t.record).forEach(([k,t])=>check((v as Record<string,unknown>)[k],t,depth+1));

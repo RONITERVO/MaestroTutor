@@ -10,8 +10,8 @@ import type {BehaviourProgram,Expression,ProgramFunction,ProgramNode,ValueType} 
 import {CapabilityFields,CapabilityVariant,initialCapabilityValue,type EditorObject} from './CapabilityFields';
 import {ProgramValueEditor,defaultValue,valueExpression,expressionType,roomValueSources,valueType,type ValueSource} from './ProgramValueEditor';
 
-export function ProgramBlockEditor({node,program,fn,objects,onChange,eventFieldsSupported=false,eventSubscriptionsSupported=false,factQueriesSupported=false,channelWaitsSupported=false}:{
-  eventFieldsSupported?:boolean;eventSubscriptionsSupported?:boolean;factQueriesSupported?:boolean;channelWaitsSupported?:boolean;node:ProgramNode;program:BehaviourProgram;fn:ProgramFunction;objects:readonly EditorObject[];onChange:(node:ProgramNode)=>void;
+export function ProgramBlockEditor({node,program,fn,objects,onChange,eventFieldsSupported=false,eventSubscriptionsSupported=false,factQueriesSupported=false,channelWaitsSupported=false,structuredInputsSupported=false}:{
+  eventFieldsSupported?:boolean;eventSubscriptionsSupported?:boolean;factQueriesSupported?:boolean;channelWaitsSupported?:boolean;structuredInputsSupported?:boolean;node:ProgramNode;program:BehaviourProgram;fn:ProgramFunction;objects:readonly EditorObject[];onChange:(node:ProgramNode)=>void;
 }) {
   const locals=[...fn.parameters,...fn.locals.map(v=>({name:v.name,type:valueType(v.initial,v.type)}))];
   const states=(program.state??[]).map(v=>({name:v.name,type:valueType(v.initial,v.type)}));
@@ -28,12 +28,14 @@ export function ProgramBlockEditor({node,program,fn,objects,onChange,eventFields
       const input=capabilityInput(node.capability,node.arguments);
       const field=(path:string,schema:CapabilitySchema,value:unknown,present:boolean,required:boolean,change:(value:unknown,remove?:boolean)=>void):ReactNode=>{
         if(schema.oneOf){const selected=resolveCapabilitySchema(schema,value);return <div key={path}><CapabilityVariant schema={schema} value={value} objects={objects} onChange={next=>change(next)}/>{selected&&field(path,selected,value,present,required,change)}</div>;}
-        const type=capabilityParameterType(node.capability,path,node.arguments),bound=node.bindings[path];
+        const candidate=capabilityParameterType(node.capability,path,node.arguments),bound=node.bindings[path];
+        const type=candidate&&(typeof candidate==='string'||program.version===3&&program.dataVersion===1&&(structuredInputsSupported||bound))?candidate:null;
+        const supported=typeof type==='string'||structuredInputsSupported;
         return <div key={path}>
           {!required&&<label className="rule-checkbox"><input type="checkbox" aria-label={'Include '+path} checked={present} onChange={e=>change(e.target.checked?initialCapabilityValue(schema,objects):undefined,!e.target.checked)}/>Include {path}</label>}
           {(required||present)&&<>
-            {type&&<label>{path} input<select aria-label={path+' input mode'} value={bound?'expression':'literal'} onChange={e=>{
-              const bindings={...node.bindings},args=JSON.parse(JSON.stringify(node.arguments)) as Record<string,unknown>;if(e.target.value==='expression'){bindings[path]={value:defaultValue(type)};if(schema['x-resource']==='object'&&!value){const parts=path.split('.');let parent=args;for(const key of parts.slice(0,-1))parent=parent[key] as Record<string,unknown>;parent[parts[parts.length-1]]='0'.repeat(32);}}else delete bindings[path];onChange({...node,arguments:args,bindings});
+            {type&&<label>{path} input<select disabled={!supported} aria-label={path+' input mode'} value={bound?'expression':'literal'} onChange={e=>{
+              const bindings={...node.bindings},args=JSON.parse(JSON.stringify(node.arguments)) as Record<string,unknown>;if(e.target.value==='expression'){for(const key of Object.keys(bindings))if(key.startsWith(path+'.')||path.startsWith(key+'.'))delete bindings[key];bindings[path]=valueExpression(type);if(schema['x-resource']==='object'&&!value){const parts=path.split('.');let parent=args;for(const key of parts.slice(0,-1))parent=parent[key] as Record<string,unknown>;parent[parts[parts.length-1]]='0'.repeat(32);}}else delete bindings[path];onChange({...node,arguments:args,bindings});
             }}><option value="literal">Value</option><option value="expression">Variable or calculation</option></select></label>}
             {bound&&type?expr(path,bound,type,value=>onChange({...node,bindings:{...node.bindings,[path]:value}})):
               schema.type==='object'?<fieldset><legend>{path}</legend>{Object.entries(schema.properties??{}).map(([key,child])=>{
@@ -56,7 +58,7 @@ export function ProgramBlockEditor({node,program,fn,objects,onChange,eventFields
           <p>Wait up to 0.1–30 seconds before starting this action. Inputs stay fixed; readiness is checked again. Timeout, Stop or app pause ends the pending action. This does not resume interrupted actions.</p>
         </fieldset>}
         {definition.input.oneOf&&<CapabilityVariant schema={definition.input} value={node.arguments} objects={objects} onChange={args=>{
-          const bindings=Object.fromEntries(Object.entries(node.bindings).filter(([key])=>capabilityParameterType(node.capability,key,args)===capabilityParameterType(node.capability,key,node.arguments)&&capabilityParameterType(node.capability,key,args)!==null));
+          const bindings=Object.fromEntries(Object.entries(node.bindings).filter(([key])=>{const next=capabilityParameterType(node.capability,key,args),previous=capabilityParameterType(node.capability,key,node.arguments);return next&&previous&&sameDataType(next,previous);}));
           onChange({...node,arguments:args,bindings});
         }}/>}
         {Object.entries(input?.properties??{}).map(([key,schema])=>field(key,schema,node.arguments[key],Object.prototype.hasOwnProperty.call(node.arguments,key),input?.required?.includes(key)??false,(value,remove)=>{
@@ -119,7 +121,7 @@ export function ProgramBlockEditor({node,program,fn,objects,onChange,eventFields
         return <div key={path}>
           {type&&<label>{label} input<select aria-label={label+' input mode'} value={bound?'expression':'literal'} onChange={e=>{
             const bindings={...node.bindings},args=JSON.parse(JSON.stringify(node.arguments)) as Record<string,unknown>;
-            if(e.target.value==='expression'){bindings[path]={value:defaultValue(type)};if(schema['x-resource']==='object'&&!value){const parts=path.split('.');let parent=args;for(const key of parts.slice(0,-1))parent=parent[key] as Record<string,unknown>;parent[parts[parts.length-1]]='0'.repeat(32);}}else delete bindings[path];
+            if(e.target.value==='expression'){for(const key of Object.keys(bindings))if(key.startsWith(path+'.')||path.startsWith(key+'.'))delete bindings[key];bindings[path]=valueExpression(type);if(schema['x-resource']==='object'&&!value){const parts=path.split('.');let parent=args;for(const key of parts.slice(0,-1))parent=parent[key] as Record<string,unknown>;parent[parts[parts.length-1]]='0'.repeat(32);}}else delete bindings[path];
             onChange({...node,arguments:args,bindings});
           }}><option value="literal">Value</option><option value="expression">Variable or calculation</option></select></label>}
           {bound&&type?expr(label,bound,type,next=>onChange({...node,bindings:{...node.bindings,[path]:next}})):

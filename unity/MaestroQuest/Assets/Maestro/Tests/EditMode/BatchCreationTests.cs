@@ -38,7 +38,7 @@ namespace Maestro.Quest.Tests
             source["functions"][0]["locals"]=new JArray(new JObject { ["name"]="entries",["initial"]=new JArray(),["type"]=entryType});
             source["functions"][0]["body"]=new JArray(new JObject { ["id"]="read",["op"]="invoke",["capability"]="model.library.inspect",["version"]=1,["arguments"]=new JObject { ["offset"]=0},["bindings"]=new JObject(),["results"]=new JObject { ["entries"]="entries"}});
             var machine=Machine(source);machine.Advance(out _);
-            var tooLarge=new JObject { ["total"]=1,["offset"]=0,["entries"]=new JArray(new JObject { ["modelHash"]=new string('a',64),["name"]="Model",["bytes"]=2000000})};
+            var tooLarge=new JObject { ["total"]=8,["offset"]=0,["entries"]=new JArray(Enumerable.Range(0,8).Select(i=>new JObject { ["modelHash"]=new string('a',64),["name"]=new string('n',120),["bytes"]=2000000}))};
             Assert.That(machine.CompleteAction(tooLarge,out _),Is.False);Assert.That(((JArray)machine.Locals["entries"].Value).Count,Is.EqualTo(0));
             Assert.That(machine.CompleteAction(new JObject { ["total"]=0,["offset"]=0,["entries"]=new JArray()},out var error),Is.True,error);Assert.That(machine.Advance(out _),Is.EqualTo(ProgramYield.Completed));
         }

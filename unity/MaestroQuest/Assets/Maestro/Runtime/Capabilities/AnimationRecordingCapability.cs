@@ -20,10 +20,10 @@ namespace Maestro.Quest.Programs
             foreach(var p in fields.Properties())props[p.Name]=p.Value.DeepClone();var schema=Object(props);schema["title"]=title;schema["x-features"]=new JArray("animationRecording.v1");return schema;
         }
         public override JObject InputSchema=>new() {["type"]="object",["title"]="Recording operation",["x-discriminators"]=new JArray("operation"),["oneOf"]=new JArray(
-            Variant("start","Start a take",new JObject {["target"]=AnimationAuthoringCapability.Target(),["revision"]=Number(1,1000000,true)}),
+            Variant("start","Start a take",new JObject {["target"]=AnimationAuthoringCapability.Target(),["revision"]=Revision()}),
             Variant("finish","Save this take",new JObject {["target"]=AnimationAuthoringCapability.Target()}),
             Variant("discard","Discard this take",new JObject()))};
-        public override JObject OutputSchema=>Object(new JObject {["sessionId"]=Text("^[a-f0-9]{32}$",32),["target"]=Text("^(maestro|book|[a-fA-F0-9]{32})$",32),["phase"]=Choice("recording","saved","discarded"),["frames"]=Number(1,301,true),["duration"]=Number(0,30),["revision"]=Number(0,1000000,true),["temporary"]=new JObject {["type"]="boolean"}});
+        public override JObject OutputSchema=>Object(new JObject {["sessionId"]=Text("^[a-f0-9]{32}$",32),["target"]=Text("^(maestro|book|[a-fA-F0-9]{32})$",32),["phase"]=Choice("recording","saved","discarded"),["frames"]=Number(1,301,true),["duration"]=Number(0,30),["revision"]=Revision(true),["temporary"]=new JObject {["type"]="boolean"}});
         public override JObject Example=>new() {["operation"]="start",["sessionId"]=new string('0',32),["target"]="maestro",["revision"]=1};
         public override bool CanRun(CapabilityContext context,JObject args,out string error)
         {

@@ -20,9 +20,9 @@ namespace Maestro.Quest.Programs
         // A bound resource placeholder is not an authorization. Computed IDs are
         // checked against declarations or native-created results at execution time.
         public static string[] LiteralResources(JObject arguments,JObject schema,JObject bindings,int version) {
-            var literal=(JObject)arguments.DeepClone();schema=CapabilitySchema.Resolve(schema,arguments);
+            var literal=(JObject)arguments.DeepClone();
             if(version==3)foreach(var field in bindings.Properties())
-                if((string)CapabilitySchema.Field(schema,field.Name,arguments)?["x-resource"]=="object")CapabilitySchema.Remove(literal,field.Name);
+                if(CapabilitySchema.BindingType(schema,field.Name,arguments)!=null)CapabilitySchema.Remove(literal,field.Name);
             return Resources(literal,schema);
         }
         public static bool Validate(JToken value,JObject schema,out string error,string path="arguments")

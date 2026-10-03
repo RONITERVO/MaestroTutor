@@ -17,7 +17,6 @@ namespace Maestro.Quest.Programs
         protected static JObject IdSchema(bool optional=false)=>Text(optional?"^(|[a-f0-9]{32})$":"^[a-f0-9]{32}$",32);
         internal static JObject Member()=>Resource(Text("^[a-fA-F0-9]{32}$",32));
         protected static JObject Featured(JObject schema){schema["x-features"]=new JArray(Feature);return schema;}
-        protected static int Revision(JObject args)=>(int)args["revision"];
         protected static JObject Receipt(RoomEditor editor,string id)=>new() {["structureId"]=id,["revision"]=editor.StructureRevision(id),["temporary"]=editor.TemporaryRoom};
         protected static bool Targets(CapabilityContext context,JObject args,JObject schema,out string error){
             error=null;foreach(string id in CapabilityArguments.Resources(args,schema))if(!context.Target(new JObject {["target"]=id},out _,out error))return false;return true;
@@ -36,9 +35,9 @@ namespace Maestro.Quest.Programs
             var capture=Object(captureFields);capture["title"]="Capture current arrangement";capture["format"]="structureSource";capture["properties"]["kind"]["x-static"]=true;
             var definitionFields=SourceFields();definitionFields["kind"]=Choice("definition");definitionFields["slots"]=List(Object(new JObject {["slot"]=Text("^[a-zA-Z][a-zA-Z0-9_]{0,23}$",24),["placement"]=Object(new JObject {["target"]=Member(),["position"]=LayoutCapability.PositionSchema(),["rotation"]=Vector(true),["scale"]=Number(.1,4)})}),1,16);
             var definition=Object(definitionFields);definition["title"]="Edit baseline and membership";definition["format"]="structureSource";definition["properties"]["kind"]["x-static"]=true;
-            return Featured(Object(new JObject {["id"]=IdSchema(true),["revision"]=Number(0,1000000,true),["source"]=new JObject {["type"]="object",["oneOf"]=new JArray(capture,definition),["x-discriminators"]=new JArray("kind")}}));
+            return Featured(Object(new JObject {["id"]=IdSchema(true),["revision"]=Revision(true),["source"]=new JObject {["type"]="object",["oneOf"]=new JArray(capture,definition),["x-discriminators"]=new JArray("kind")}}));
         }}
-        public override JObject OutputSchema=>Object(new JObject {["structureId"]=IdSchema(),["revision"]=Number(1,1000000,true),["temporary"]=new JObject {["type"]="boolean"}});
+        public override JObject OutputSchema=>Object(new JObject {["structureId"]=IdSchema(),["revision"]=Revision(),["temporary"]=new JObject {["type"]="boolean"}});
         public override JObject Example=>new() {["id"]="",["revision"]=0,["source"]=new JObject {["kind"]="capture",["name"]="Castle",["positionTolerance"]=.05,["rotationTolerance"]=15,["scaleTolerance"]=.05,["members"]=new JArray(new JObject {["slot"]="brick_1",["target"]=new string('0',32)})}};
         internal static bool ValidSource(JObject source,out string error){
             error="Use distinct slot keys and object IDs with valid baseline poses";
@@ -70,7 +69,7 @@ namespace Maestro.Quest.Programs
         public override IReadOnlyList<string> Channels=>new[]{"wholeTarget"};
         public override IReadOnlyList<string> Requirements=>new[]{"structure.revision.current","target.exists","target.unheld","authoring.inactive","storage.writable"};
         public override string Description=>"Reset every piece to a saved structure baseline with one save and one live-pose Undo. Supply the exact structure ID/revision and all member IDs as an explicit ownership/authorization guard; their order is unimportant. Any missing, held, authored or conflicting member refuses the entire reset. Reset zeroes member velocities but preserves current geometry, paint, collision and animation definitions; it neither starts physics nor guarantees stability. Definitions remain unchanged. Missing pieces are never recreated or substituted: explicitly replace/remove the slot with structure.save, then retry. Temporary edits stay in the fork; completed receipt replay cannot reset twice.";
-        public override JObject InputSchema=>Featured(Object(new JObject {["id"]=IdSchema(),["revision"]=Number(1,1000000,true),["members"]=List(Member(),1,16)}));
+        public override JObject InputSchema=>Featured(Object(new JObject {["id"]=IdSchema(),["revision"]=Revision(),["members"]=List(Member(),1,16)}));
         public override JObject OutputSchema=>Object(new JObject {["count"]=Number(1,16,true),["temporary"]=new JObject {["type"]="boolean"}});
         public override JObject Example=>new() {["id"]=new string('1',32),["revision"]=1,["members"]=new JArray(new string('0',32))};
         public override BehaviourCatalog.Claim[] Claims(JObject args)=>((JArray)args["members"]).Values<string>().Select(id=>new BehaviourCatalog.Claim(id,"wholeTarget")).ToArray();
@@ -85,7 +84,7 @@ namespace Maestro.Quest.Programs
         public override string Id=>"structure.forget";
         public override string Label=>"Forget a structure";
         public override string Description=>"Remove only the exact structure's saved membership and baseline after checking its current revision. Objects remain unchanged. One save/Undo; temporary edits stay in the fork. Programs using this structure will report it missing until an explicit definition is restored. No deleted object is recreated.";
-        public override JObject InputSchema=>Featured(Object(new JObject {["id"]=IdSchema(),["revision"]=Number(1,1000000,true)}));
+        public override JObject InputSchema=>Featured(Object(new JObject {["id"]=IdSchema(),["revision"]=Revision()}));
         public override JObject Example=>new() {["id"]=new string('1',32),["revision"]=1};
         public override bool CanRun(CapabilityContext context,JObject args,out string error)=>context.Editor.CanForgetStructure((string)args["id"],(int)args["revision"],out error);
         public override bool Start(CapabilityContext context,string runId,JObject args,out CapabilityOperation operation,out string error){operation=null;if(!context.Editor.ForgetStructure((string)args["id"],(int)args["revision"],out error))return false;operation=new CompletedCapability();return true;}

@@ -27,6 +27,9 @@ namespace Maestro.Quest.Programs
         public static void Remove(JObject value,string path) {
             var keys=path.Split('.');for(int i=0;i<keys.Length-1;i++) {value=value[keys[i]] as JObject;if(value==null)return;}value.Remove(keys[^1]);
         }
+        // Session-scoped native revision counters are signed 32-bit integers.
+        // Do not confuse their range with geometry, value-size or instruction budgets.
+        public static JObject Revision(bool allowZero=false)=>Number(allowZero?0:1,int.MaxValue,true);
         public static JObject Number(double min,double max,bool integer=false)=>new() {["type"]=integer?"integer":"number",["minimum"]=min,["maximum"]=max};
         public static JObject Text(string pattern,int max=128)=>new() {["type"]="string",["pattern"]=pattern,["maxLength"]=max};
         public static JObject Choice(params string[] values)=>new() {["type"]="string",["enum"]=new JArray(values)};
@@ -81,6 +84,24 @@ namespace Maestro.Quest.Programs
                 }
             }
             try{return ProgramDataType.Read(Shape(schema,0));}catch(ProgramFault){return null;}
+        }
+        public static ProgramDataType InputType(JObject schema) {
+            bool Mutable(JObject field)=>field!=null&&(bool?)field["x-static"]!=true&&field["oneOf"]==null&&(bool?)field["nullable"]!=true&&(string)field["format"]!="programModule"&&
+                ((string)field["type"]=="array"?Mutable(field["items"] as JObject):(string)field["type"]!="object"||field["properties"] is JObject fields&&fields.Properties().All(p=>Mutable(p.Value as JObject)));
+            return Mutable(schema)?OutputType(schema):null;
+        }
+        public static ProgramDataType BindingType(JObject schema,string path,JObject arguments) {
+            JToken value=arguments;
+            foreach(string key in path.Split('.')) {
+                if((bool?)schema?["x-static"]==true)return null;
+                if(schema?["x-discriminators"] is JArray selectors&&selectors.Any(x=>(string)x==key))return null;
+                schema=Resolve(schema,value)?["properties"]?[key] as JObject;value=(value as JObject)?[key];
+            }
+            return InputType(schema);
+        }
+        public static bool SeparateBindings(JObject bindings) {
+            var names=bindings.Properties().Select(p=>p.Name).ToArray();
+            return !names.Any(path=>names.Any(parent=>path.StartsWith(parent+".",System.StringComparison.Ordinal)));
         }
         public static JObject Resource(JObject schema) {schema["x-resource"]="object";return schema;}
         public static JObject Prop()=>Object(new JObject {

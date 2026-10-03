@@ -273,6 +273,7 @@ namespace Maestro.Quest.Programs
                                 Need(outputType!=null&&function.Types.TryGetValue(destination,out var localType)&&localType==outputType&&assigned.Add(destination),"Invalid or duplicate action result destination");
                             }
                         }
+                        Need(CapabilitySchema.SeparateBindings(Object(node["bindings"])),"A value and its child fields cannot both be bound");
                         foreach(var binding in Object(node["bindings"]).Properties()) {
                             Need(CapabilitySchema.Value(node["arguments"],binding.Name)!=null,"A bound argument needs a literal placeholder");
                             var expected=BindingType(capability,binding.Name,Object(node["arguments"]));Need(Expression(binding.Value,function)==expected,"Native argument type differs");
@@ -289,11 +290,10 @@ namespace Maestro.Quest.Programs
                 if(op=="switch"&&Returns((JArray)item["default"])&&((JArray)item["cases"]).All(x=>Returns((JArray)x["body"])))return true;
             }return false;
         }
-        internal static ProgramType BindingType(string capability,string name,JObject arguments)
+        internal static ProgramDataType BindingType(string capability,string name,JObject arguments)
         {
-            var schema=CapabilitySchema.Field(CapabilitySchema.Resolve(BehaviourCatalog.Action(capability)?.InputSchema,arguments),name,arguments);
-            Need((bool?)schema?["x-static"]!=true,"Variant selectors must stay literal");
-            return (string)(schema?["type"]) switch {"string"=>ProgramType.Text,"number" or "integer"=>ProgramType.Number,"boolean"=>ProgramType.Boolean,_=>throw new ProgramFault("Unsupported capability argument binding")};
+            var type=CapabilitySchema.BindingType(BehaviourCatalog.Action(capability)?.InputSchema,name,arguments);
+            Need(type!=null,"Unsupported capability argument binding; selectors must stay literal");return type;
         }
     }
 }

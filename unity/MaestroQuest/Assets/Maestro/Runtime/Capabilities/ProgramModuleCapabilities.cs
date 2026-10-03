@@ -15,7 +15,7 @@ namespace Maestro.Quest.Programs
   public override string Description=>"Publish a snapshot of an existing saved behaviour as an immutable reusable module. Pass the exact rules revision and sequence ID, a name, and its exported local function names. Unity validates importability and returns the real SHA256 content ID. Version-2 source is normalized to version 3 without editing its behaviour. Identical content is deduplicated. Nothing starts, and existing imports keep their pins. Completion waits for the file write; Stop cannot undo an already dispatched write. Inspect library/receipt instead of retrying an uncertain result.";
   public override string Duration=>"completion";
   public override IReadOnlyList<string> Requirements=>new[]{"behaviour.current","moduleLibrary.ready","storage.writable"};
-  public override JObject InputSchema {get {var s=Object(new JObject {["sequenceId"]=Text("^[a-f0-9]{32}$",32),["rulesRevision"]=Number(1,1000000,true),["name"]=Text("^.{1,64}$",64),["exports"]=List(Text("^[a-zA-Z0-9_]{1,32}$",32),1,16)});s["x-features"]=new JArray("moduleLibrary.v1");return s;}}
+  public override JObject InputSchema {get {var s=Object(new JObject {["sequenceId"]=Text("^[a-f0-9]{32}$",32),["rulesRevision"]=Revision(),["name"]=Text("^.{1,64}$",64),["exports"]=List(Text("^[a-zA-Z0-9_]{1,32}$",32),1,16)});s["x-features"]=new JArray("moduleLibrary.v1");return s;}}
   public override JObject OutputSchema=>ModuleWrite.ResultSchema;
   public override JObject Example=>new() {["sequenceId"]=new string('0',32),["rulesRevision"]=1,["name"]="My module",["exports"]=new JArray("main")};
   static bool Prepare(CapabilityContext context,JObject args,out ProgramModuleLibrary library,out JObject module,out string error){

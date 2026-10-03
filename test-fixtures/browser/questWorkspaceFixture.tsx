@@ -33,6 +33,7 @@ import nativeSpatial from './spatialSettings.json';
 import nativeMotionBatch from './motionBatchImport.json';
 import nativeAvatar from './avatarSelection.json';
 import nativeEvents from './eventProgramStates.json';
+import compositionProgram from '../../unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-build-structure.json';
 import creationProgram from '../../unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-create.json';
 import creationResult from './creationResult.json';
 import visualProgram from '../../unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-visual.json';
@@ -201,16 +202,19 @@ const disposal=new URLSearchParams(location.search).has('disposal');
 if(disposal){state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';state.execution=JSON.parse(JSON.stringify(nativeRemoval.previewExecution));state.execution!.workspace!.nextRunId=nativeRemoval.removeExecution.workspace.selected.id;state.capabilities=[...state.capabilities??[],'workspaceRetention.v1','workspaceDisposal.v1','execution.v1','executionReceipts.v1','actionResults.v1'];}
 const visualBlocks=new URLSearchParams(location.search).has('visualBlocks');
 const objectEdits=new URLSearchParams(location.search).has('objectEdits');
+const composition=new URLSearchParams(location.search).has('composition');
 const recipeCreation=new URLSearchParams(location.search).has('recipeCreation');
-if(new URLSearchParams(location.search).has('creation')||recipeCreation||objectEdits||visualBlocks){
+if(new URLSearchParams(location.search).has('creation')||recipeCreation||objectEdits||visualBlocks||composition){
  state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';
- const program=visualBlocks?{...visualProgram,resources:[],functions:[{...visualProgram.functions[0],body:[]}]}:objectEdits?objectEditProgram:recipeCreation?recipeCreationProgram:creationProgram;
- const name=visualBlocks?'Speaking greeting':objectEdits?'Make a red ball':recipeCreation?'Create waving robot':'Create and push';
+ const compositionDraft=structuredClone(compositionProgram);compositionDraft.functions[0].body[2].arguments!.source!.name='Untitled structure';
+ const program=composition?compositionDraft:visualBlocks?{...visualProgram,resources:[],functions:[{...visualProgram.functions[0],body:[]}]}:objectEdits?objectEditProgram:recipeCreation?recipeCreationProgram:creationProgram;
+ const name=composition?'Build and restore castle':visualBlocks?'Speaking greeting':objectEdits?'Make a red ball':recipeCreation?'Create waving robot':'Create and push';
  state.rules!.selected!.program=JSON.stringify(program);state.rules!.selected!.name=name;
  state.rules!.sequences=state.rules!.sequences.map(x=>x.id===state.rules!.selected!.id?{...x,name,steps:program.functions[0].body.length,program:true}:x);
  state.rules!.running=[];state.rules!.outcomes=[];state.rules!.bindings=[];state.rules!.bindingCount=0;state.rules!.buttons=[];
  state.execution=JSON.parse(JSON.stringify(objectEdits?objectEditResults.painted:recipeCreation?recipeCreationResult:creationResult));state.capabilities=[...state.capabilities??[],'eventPrograms.v1','actionResults.v1','recipeCreation.v1','objectEdits.v1','execution.v1','executionReceipts.v1'];
 }
+if(composition)state.capabilities=[...state.capabilities??[],'batchCreation.v1','structures.v1','structuredValues.v1','structuredResults.v1','structuredInputs.v1'];
 if(new URLSearchParams(location.search).has('unavailablePrograms'))state=JSON.parse(JSON.stringify(unavailableProgram));
 if(new URLSearchParams(location.search).has('memory')){state=JSON.parse(JSON.stringify(nativeRemembered.stopped));state.visible=true;state.workspaceView='rules';}
 if(new URLSearchParams(location.search).has('channelWait')) state=structuredClone(new URLSearchParams(location.search).has('waiting')?nativeChannelWait.waiting:nativeChannelWait.saved) as unknown as RoomAgentState;

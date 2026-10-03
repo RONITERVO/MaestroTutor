@@ -41,7 +41,7 @@ it('rejects malformed public calls and keeps returned schemas detached',()=>{
  expect(capabilityParameterType('animation.play','source.gesture',{source:{kind:'gesture'},channel:'wholeTarget'})).toBe('text');
  expect(capabilityParameterType('animation.play','source.clipIndex',{source:{kind:'embedded'},channel:'wholeTarget'})).toBe('number');
  expect(capabilityParameterType('time.wait','target')).toBeNull();
- expect(capabilityParameterType('animation.play','prop',{source:{kind:'gesture'},channel:'wholeTarget'})).toBeNull();
+ expect(capabilityParameterType('animation.play','prop',{source:{kind:'gesture'},channel:'wholeTarget'})).toMatchObject({record:{objectId:'text',hand:'text',offset:{record:{x:'number',y:'number',z:'number'}}}});
 });
 it('retains prop arguments and validates declared vector constraints without using the simple editor adapter',()=>{
  const step={...newRuleStep(1),propId:'a'.repeat(32),propAvatarHash:'b'.repeat(64),propHand:0,propRelease:2,

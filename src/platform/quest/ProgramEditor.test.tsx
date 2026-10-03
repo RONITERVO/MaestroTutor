@@ -14,7 +14,7 @@ it('lets a human wire a native creation result into the next action without writ
  if(first.op!=='invoke'||second.op!=='invoke')throw new Error('Expected calls');
  delete first.results;second.bindings={};initial.resources=[String(second.arguments.target)];
  initial.functions[0].locals=[];let source=JSON.stringify(initial);
- function Harness(){const [value,setValue]=useState(source);return <ProgramEditor source={value} targets={[]} eventsSupported eventFieldsSupported eventSubscriptionsSupported factQueriesSupported conditionWaitsSupported parallelSupported resultsSupported structuredSupported onEditingChange={()=>{}} onChange={next=>{source=next;setValue(next);}}/>;}
+ function Harness(){const [value,setValue]=useState(source);return <ProgramEditor source={value} targets={[]} eventsSupported eventFieldsSupported eventSubscriptionsSupported factQueriesSupported conditionWaitsSupported parallelSupported resultsSupported structuredSupported structuredInputsSupported onEditingChange={()=>{}} onChange={next=>{source=next;setValue(next);}}/>;}
  const screen=render(<Harness/>);
  fireEvent.click(screen.getByLabelText('create new variable for objectId'));
  fireEvent.change(screen.getByLabelText('push argument target variable'),{target:{value:'objectId'}});
@@ -32,7 +32,7 @@ const empty:BehaviourProgram={version:2,entry:'main',resources:[],functions:[{na
 function harness(initial=empty,objects=[{id:'maestro',name:'Maestro'},{id:'book',name:'Book'}]) {
  let source=JSON.stringify(initial);
  const onChange=vi.fn();
- function Harness(){const [value,setValue]=useState(source);return <ProgramEditor source={value} targets={objects} eventsSupported eventFieldsSupported eventSubscriptionsSupported factQueriesSupported conditionWaitsSupported parallelSupported resultsSupported structuredSupported onEditingChange={()=>{}} onChange={next=>{source=next;setValue(next);onChange(next);}}/>;}
+ function Harness(){const [value,setValue]=useState(source);return <ProgramEditor source={value} targets={objects} eventsSupported eventFieldsSupported eventSubscriptionsSupported factQueriesSupported conditionWaitsSupported parallelSupported resultsSupported structuredSupported structuredInputsSupported onEditingChange={()=>{}} onChange={next=>{source=next;setValue(next);onChange(next);}}/>;}
  const screen=render(<Harness/>);
  const change=(label:string,value:string)=>fireEvent.change(screen.getByLabelText(label),{target:{value}});
  const click=(name:string)=>fireEvent.click(screen.getByRole('button',{name}));
@@ -378,4 +378,14 @@ it('creates typed list variables for a structure result in the same visual progr
  const h=harness(initial);fireEvent.click(h.screen.getByLabelText('create new variable for objectIds'));
  const parsed=parseProgram(h.source());expect(parsed.error).toBeNull();expect(parsed.program?.dataVersion).toBe(1);expect(parsed.program?.functions[0].locals).toContainEqual({name:'objectIds',type:{list:'text'},initial:[]});expect(parsed.program?.functions[0].body[0]).toMatchObject({results:{objectIds:'objectIds'}});
  expect((h.screen.getByLabelText('create result objectIds') as HTMLSelectElement).value).toBe('objectIds');
+});
+
+it('binds a whole structure member list through the human editor and preserves the same program source',()=>{
+ const initial=JSON.parse(readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-build-structure.json','utf8')) as BehaviourProgram;
+ const capture=initial.functions[0].body[2];if(capture.op!=='invoke')throw new Error('Expected capture');
+ const h=harness(initial,[]);
+ h.click('Edit values capture');h.change('source.members input mode','literal');h.change('source.members input mode','expression');h.change('source.members source','var:members');h.click('Update draft');
+ const result=parseProgram(h.source());expect(result.error).toBeNull();expect(result.program?.resources).toEqual([]);
+ expect(result.program?.functions[0].body[2]).toMatchObject({bindings:{'source.members':{var:'members'}}});
+ expect(h.screen.getByLabelText('capture argument source.members variable')).toHaveProperty('value','members');
 });

@@ -270,7 +270,7 @@ namespace Maestro.Quest.Programs
             if(op=="gt")return new ProgramValue(a.Number>b.Number);if(op=="ge")return new ProgramValue(a.Number>=b.Number);
             if((op=="div"||op=="mod")&&b.Number==0)throw new ProgramFault("Division by zero");
             double result=op switch {"add"=>a.Number+b.Number,"sub"=>a.Number-b.Number,"mul"=>a.Number*b.Number,"div"=>a.Number/b.Number,_=>a.Number%b.Number};
-            if(!double.IsFinite(result)||Math.Abs(result)>1000000)throw new ProgramFault("Arithmetic result exceeds its limit");return new ProgramValue(result);
+            if(!ProgramValue.ValidNumber(result))throw new ProgramFault("Arithmetic result exceeds its limit");return new ProgramValue(result);
         }
     }
 }

@@ -11,6 +11,17 @@ namespace Maestro.Quest.Tests
 {
  public sealed class ProgramDataTests
  {
+  [Test] public void LargeExactNumbersSurviveValuesAndArithmeticButUnsafeMagnitudeFailsBeforeAssignment(){
+   foreach(double number in new[]{1000001d,int.MaxValue,ProgramValue.MaximumNumber,-ProgramValue.MaximumNumber}){
+    Assert.That(ProgramValue.Literal(new JValue(number)).Number,Is.EqualTo(number));
+    Assert.That((double)((JObject)ProgramValue.Literal(new JObject {["revision"]=number}).Value)["revision"],Is.EqualTo(number));
+   }
+   foreach(double number in new[]{ProgramValue.MaximumNumber+1,-ProgramValue.MaximumNumber-1,double.PositiveInfinity,double.NaN})Assert.Throws<ProgramFault>(()=>ProgramValue.Literal(new JValue(number)));
+   var source=JObject.Parse(Fixture("program-structure-reset"));source["resources"]=new JArray();source["functions"][0]["locals"]=new JArray(new JObject {["name"]="revision",["initial"]=int.MaxValue-1});
+   source["functions"][0]["body"]=JArray.Parse("[{\"id\":\"advance\",\"op\":\"set\",\"variable\":\"revision\",\"value\":{\"op\":\"add\",\"args\":[{\"var\":\"revision\"},{\"value\":1}]}}]");
+   var machine=Machine(source);Assert.That(machine.Advance(out _),Is.EqualTo(ProgramYield.Completed),machine.Error);Assert.That(machine.Locals["revision"].Number,Is.EqualTo((double)int.MaxValue));
+   source["functions"][0]["locals"][0]["initial"]=ProgramValue.MaximumNumber;machine=Machine(source);Assert.That(machine.Advance(out _),Is.EqualTo(ProgramYield.Failed));Assert.That(machine.Locals["revision"].Number,Is.EqualTo(ProgramValue.MaximumNumber));
+  }
   [Test] public void ScalarReadbackKeepsClrTypesAndStructuredValuesStayDetached(){
    Assert.That(new ProgramValue("ball").Value,Is.TypeOf<string>().And.EqualTo("ball"));
    Assert.That(new ProgramValue(false).Value,Is.TypeOf<bool>().And.EqualTo(false));

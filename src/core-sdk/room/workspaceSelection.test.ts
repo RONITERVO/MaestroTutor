@@ -23,7 +23,7 @@ it('reads a bounded preview through the ordinary fact vocabulary and refuses pri
  const summary={files:1400,models:32,motions:1024,modules:256,unavailablePrograms:32,missingModels:32,missingMotions:1024,missingControllerPrograms:4};
  const value={requestId,phase:'prepared',name:'"'.repeat(96),error:'"'.repeat(96),generationId:'b'.repeat(32),manifestHash:'c'.repeat(64),summary};
  expect(validFactValue(id,value)).toBe(true);expect(validFactValue(id,{...value,path:'/cache/private'})).toBe(false);
- expect(validFactValue(id,{...value,summary:{...summary,files:1_000_001}})).toBe(false);
+ expect(validFactValue(id,{...value,summary:{...summary,files:Number.MAX_SAFE_INTEGER+1}})).toBe(false);
 });
 
 it('exposes the recovery reserve to shared inventory forms without allowing unbounded indexes',()=>{

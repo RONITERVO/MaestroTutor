@@ -52,14 +52,27 @@ value, but edits produce a new one and API-returned JSON is detached. Mutating a
 copy does not change its source. Assign the new value explicitly with `set` or
 `setState`. A runtime limit failure does not roll back earlier assignments or effects.
 
-Native action and event inputs still bind scalar fields. Use `at` and `field` to
-project them from a collection. Lists are not new native bulk-action APIs. An ID
+Native event and fact inputs bind scalar fields; use `at` and `field` to project
+them from a collection. With `structuredInputs.v1`, action inputs can also bind a
+whole fixed-shape list or record. The program must use `version:3,dataVersion:1`.
+The type comes from the capability input schema, and the complete computed call
+is validated again before claiming resources or starting an effect. Keep a
+schema-valid literal placeholder; it grants no authority when replaced.
+
+A value and its descendant fields cannot both be bound. Static selectors, variant
+unions, nullable shapes, records with optional fields and array-index paths remain
+literal. Whole nested arrays and records must fit the existing value budgets.
+Bindings add no new bulk operation; only capabilities that already accept lists
+can receive them. An ID
 inside a record grants no authority: effects still require a declared existing
 resource or the exact ID returned by this run's native creation action. The existing
 limit of 16 creations per run remains. Observed IDs alone do not become editable.
 
 ## Bounds and observations
 
+- Numbers and arithmetic must be finite, with magnitude at most 9,007,199,254,740,991.
+  This carries exact 32-bit native revisions without the former artificial million
+  cutoff. Native action schemas still enforce their physical and integer bounds.
 - At most 32 items per list, 8 fields per record, nesting depth 4 and 128 nodes per value.
 - Each value has a 1,024-character cost limit. JSON punctuation/escaped text count;
   every number costs 30 characters and every boolean 5, giving the same conservative
@@ -113,3 +126,20 @@ Android bridge tests and successful development ARM64 packaging.
 Headset readability, hand/controller editing, sustained performance and real-provider
 creation/editing journeys remain unverified. Device work is on hold. Nothing was
 installed, deployed or submitted to the store for this increment.
+
+## Shared action inputs and exact revision values (2026-10-03)
+
+The book, agent validator and Unity compiler now derive fixed input types from the
+same capability schemas. An independently recorded Chrome edit saves the exact
+build/capture/move/reset fixture exercised by native tests; its acknowledgement is
+simulated, while the separate native app probe executes the same source through
+ordinary room transport. Saving still does not start actions.
+
+Native tests also carry revisions close to the 32-bit maximum through facts,
+program locals, action results and reset calls, and reject stale revisions.
+Structured argument tests reject undeclared member IDs, empty/duplicate lists,
+parent/child binding overlap and static selectors before an effect can start.
+The editor only offers structured bindings when the connected runtime advertises
+the feature and the program opts into structured data. The 32-bit revision clock
+itself is unchanged; this removes the lower shared numeric cutoff, not its eventual
+integer-exhaustion boundary.

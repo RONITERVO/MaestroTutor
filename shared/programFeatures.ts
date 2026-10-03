@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import {behaviourFact} from './behaviourCatalog';
 import {behaviourEvent} from './behaviourEvents';
-import {capabilityDefinition,capabilityOutputType,capabilityFeatures,capabilityInput,resolveCapabilitySchema,type CapabilitySchema} from './capabilities';
+import {capabilityParameterType,capabilityDefinition,capabilityOutputType,capabilityFeatures,capabilityInput,resolveCapabilitySchema,type CapabilitySchema} from './capabilities';
 import type {BehaviourProgram} from './programSyntax';
 import {visitProgramNodes,visitNodeExpressions} from './programTraversal';
 const record=(v:unknown):v is Record<string,unknown>=>v!==null&&typeof v==='object'&&!Array.isArray(v);
@@ -40,6 +40,7 @@ export function programFeatureRequirements(program:BehaviourProgram):Set<string>
      if(node.fields!==undefined)features.add('eventFields.v1');
      add(behaviourEvent(node.event)?.features??[]);break;
     case 'invoke':
+     if(Object.keys(node.bindings).some(key=>{const type=capabilityParameterType(node.capability,key,node.arguments);return type&&typeof type==='object';}))features.add('structuredInputs.v1');
      // These original program edits predate catalog feature annotations.
      if(['object.position.set','object.scale.set','object.color.set','object.delete'].includes(node.capability))features.add('objectEdits.v1');
      add(invocationFeatureRequirements(node.capability,node.arguments,Object.keys(node.bindings)));

@@ -3,7 +3,7 @@
 import {readFileSync} from 'node:fs';
 import {expect,it} from 'vitest';
 import {parseProgram} from './programs';
-import {checkedDataValue,readDataType,sameDataType,validDataObservation,dataValueCost} from '../../../shared/programValues';
+import {MAX_PROGRAM_NUMBER,validProgramNumber,checkedDataValue,readDataType,sameDataType,validDataObservation,dataValueCost} from '../../../shared/programValues';
 import {requireRoomCapabilities} from '../../../shared/roomControls';
 import {validRuleView} from './rules';
 const fixture=(name:string)=>readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/'+name+'.json','utf8');
@@ -38,4 +38,13 @@ it('validates observed compound values and keeps full numeric lists within the s
  expect(validDataObservation('not json','list')).toBe(false);expect(validDataObservation('{}','list')).toBe(false);
  expect(validDataObservation(JSON.stringify(Array.from({length:33},()=>0)),'list')).toBe(false);
  expect(validDataObservation('{"bad":1e999}','record')).toBe(false);
+});
+
+it('preserves large exact revision values through literals, records and observations',()=>{
+ for(const value of [1000001,2147483647,MAX_PROGRAM_NUMBER,-MAX_PROGRAM_NUMBER]){
+  expect(validProgramNumber(value)).toBe(true);expect(checkedDataValue(value)).toBe('number');
+  expect(checkedDataValue({revision:value})).toEqual({record:{revision:'number'}});
+  expect(validDataObservation(JSON.stringify({revision:value}),'record')).toBe(true);
+ }
+ for(const value of [MAX_PROGRAM_NUMBER+1,-MAX_PROGRAM_NUMBER-1,Infinity,NaN])expect(()=>checkedDataValue(value)).toThrow();
 });

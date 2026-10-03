@@ -23,12 +23,12 @@ namespace Maestro.Quest.Programs
             foreach(var property in fields.Properties())props[property.Name]=property.Value.DeepClone();var schema=Object(props);schema["title"]=title;schema["x-features"]=new JArray("animationPosing.v1");return schema;
         }
         public override JObject InputSchema=>new() {["type"]="object",["title"]="Pose operation",["x-discriminators"]=new JArray("operation"),["oneOf"]=new JArray(
-            Variant("start","Begin posing",new JObject {["revision"]=Number(1,1000000,true)}),
+            Variant("start","Begin posing",new JObject {["revision"]=Revision()}),
             Variant("rotate","Adjust joints",new JObject {["version"]=Number(1,1000000,true),["joints"]=List(AnimationAuthoringCapability.JointSchema(),1,8)}),
             Variant("save","Save pose",new JObject {["version"]=Number(1,1000000,true)}),
             Variant("finish","Save and finish posing",new JObject {["version"]=Number(1,1000000,true)}),
             Variant("discard","Discard unsaved pose",new JObject {["version"]=Number(1,1000000,true)}))};
-        public override JObject OutputSchema=>Object(new JObject {["sessionId"]=Text("^[a-f0-9]{32}$",32),["phase"]=Choice("posing","saved","discarded"),["version"]=Number(1,1000000,true),["revision"]=Number(1,1000000,true),["temporary"]=new JObject {["type"]="boolean"}});
+        public override JObject OutputSchema=>Object(new JObject {["sessionId"]=Text("^[a-f0-9]{32}$",32),["phase"]=Choice("posing","saved","discarded"),["version"]=Number(1,1000000,true),["revision"]=Revision(),["temporary"]=new JObject {["type"]="boolean"}});
         public override JObject Example=>new() {["operation"]="start",["target"]="maestro",["sessionId"]=new string('0',32),["revision"]=1};
         public override bool Validate(JObject args,out string error)
         {

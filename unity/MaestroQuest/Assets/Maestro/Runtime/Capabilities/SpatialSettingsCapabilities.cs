@@ -16,8 +16,8 @@ namespace Maestro.Quest.Programs
         protected abstract bool Ready(RoomEditor editor,JObject args,out string error);
         protected abstract bool Save(RoomEditor editor,JObject args,out string error);
         internal static JObject Featured(JObject schema){schema["x-features"]=new JArray("spatialSettings.v1");return schema;}
-        protected static JObject Fields(JObject target)=>new() {["target"]=target,["revision"]=Number(1,1000000,true)};
-        public override JObject OutputSchema=>Object(new JObject {["target"]=Resource(Text("^(maestro|[a-fA-F0-9]{32})$",32)),["revision"]=Number(1,1000000,true),["temporary"]=new JObject {["type"]="boolean"}});
+        protected static JObject Fields(JObject target)=>new() {["target"]=target,["revision"]=Revision()};
+        public override JObject OutputSchema=>Object(new JObject {["target"]=Resource(Text("^(maestro|[a-fA-F0-9]{32})$",32)),["revision"]=Revision(),["temporary"]=new JObject {["type"]="boolean"}});
         public override bool CanRun(CapabilityContext context,JObject args,out string error)=>context.Target(args,out _,out error)&&Ready(context.Editor,args,out error);
         public override bool Start(CapabilityContext context,string runId,JObject args,out CapabilityOperation operation,out string error){
             operation=null;if(!CanRun(context,args,out error)||!Save(context.Editor,args,out error))return false;

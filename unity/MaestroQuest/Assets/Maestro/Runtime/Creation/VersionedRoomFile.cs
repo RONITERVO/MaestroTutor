@@ -143,7 +143,7 @@ namespace Maestro.Quest.Creation
             if (value == null || !validate(value)) { error = "Invalid "+label+" data"; return false; }
             var candidate = copy(value); upgrade(candidate);
             if (!validate(candidate)) { error = "Invalid "+label+" data"; return false; }
-            string pending = primary+".pending";
+            string pending = primary+".pending", phase="stage";
             try
             {
                 byte[] bytes = new UTF8Encoding(false).GetBytes(JsonUtility.ToJson(candidate));
@@ -152,13 +152,18 @@ namespace Maestro.Quest.Creation
                 using (var stream = new FileStream(pending,FileMode.Create,FileAccess.Write,FileShare.None)) { stream.Write(bytes,0,bytes.Length); stream.Flush(true); }
                 if (File.Exists(primary))
                 {
-                    File.Copy(primary,Read(primary,version,out _,out _) ? primary+".backup" : primary+".unreadable",true);
-                    File.Replace(pending,primary,null);
+                    phase="backup";File.Copy(primary,Read(primary,version,out _,out _) ? primary+".backup" : primary+".unreadable",true);
+                    phase="publish";File.Replace(pending,primary,null);
                 }
-                else File.Move(pending,primary);
+                else {phase="publish";File.Move(pending,primary);}
                 error = null; return true;
             }
-            catch (Exception e) when (e is IOException || e is UnauthorizedAccessException || e is NotSupportedException) { error = "Could not save "+label+"; the previous save is retained. Check available storage and try again."; return false; }
+            catch (Exception e) when (e is IOException || e is UnauthorizedAccessException || e is NotSupportedException) {
+                // Diagnostic codes identify sharing/permission/disk failures without
+                // exposing private paths or document contents in device logs.
+                Debug.LogWarning($"Maestro {label} save failed during {phase} ({e.GetType().Name}, 0x{e.HResult:X8})");
+                error = "Could not save "+label+"; the previous save is retained. Check available storage and try again."; return false;
+            }
             finally { try { if (File.Exists(pending)) File.Delete(pending); } catch (IOException) { } catch (UnauthorizedAccessException) { } }
         }
     }

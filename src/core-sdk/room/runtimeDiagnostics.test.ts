@@ -22,7 +22,7 @@ it('accepts actual native observations with an explicit empty window and measure
 });
 it('rejects malformed or unbounded observations instead of silently accepting extra telemetry',()=>{
  expect(validFactValue('runtime.frameIntervals',{...native.frames,deviceSerial:'private'})).toBe(false);
- expect(validFactValue('runtime.frameIntervals',{...native.frames,samples:1000001})).toBe(false);
+ expect(validFactValue('runtime.frameIntervals',{...native.frames,samples:Number.MAX_SAFE_INTEGER+1})).toBe(false);
  expect(validFactValue('runtime.frameIntervals',{...native.frames,milliseconds:{mean:NaN,p95:10,max:20}})).toBe(false);
  expect(validFactValue('runtime.modelBudget',{...native.models,reserved:{...native.models.reserved,textureMiPixels:'unknown'}})).toBe(false);
 });

@@ -22,9 +22,9 @@ namespace Maestro.Quest.Programs
         {
             JObject Variant(string kind,string label,JObject fields){fields["kind"]=Choice(kind);fields["kind"]["x-static"]=true;var s=Object(fields);s["title"]=label;return s;}
             return new JObject{["type"]="object",["title"]="Attachment point",["x-discriminators"]=new JArray("kind"),["oneOf"]=new JArray(
-                Variant("recipePart","Recipe part",new JObject{["objectId"]=RecipeEditCapability.Target(),["part"]=RecipePartAnimationCapability.PartId(),["revision"]=Number(1,1000000,true)}),
+                Variant("recipePart","Recipe part",new JObject{["objectId"]=RecipeEditCapability.Target(),["part"]=RecipePartAnimationCapability.PartId(),["revision"]=Revision()}),
                 Variant("avatarHand","Maestro hand",new JObject{["objectId"]=AnimationTargets.AvatarSchema(),["hand"]=Choice("left","right"),["avatarHash"]=Text("^(|[a-f0-9]{64})$",64)}),
-                Variant("object","Object root",new JObject{["objectId"]=AnimationTargets.TargetSchema(),["revision"]=Number(1,1000000,true)}))};
+                Variant("object","Object root",new JObject{["objectId"]=AnimationTargets.TargetSchema(),["revision"]=Revision()}))};
         }
         static JObject ReachSchema(){var s=Object(new JObject {["radius"]=Number(.02,1),["physics"]=new JObject {["type"]="boolean",["title"]="Require freely simulating physics"}});s["title"]="Pickup reach check";s["x-features"]=new JArray("anchorZones.v1");return s;}
         public override JObject InputSchema{get{var s=Object(new JObject{["target"]=RecipeEditCapability.Target(),["holder"]=AnchorSchema(),["offset"]=Vector(),["rotation"]=Vector(true),["seconds"]=Number(.1,30),["release"]=Choice("return","drop","throw"),["releaseAt"]=Number(.05,1),["reach"]=ReachSchema()},"reach");s["x-features"]=new JArray("objectAttachments.v1","actionResults.v1");return s;}}

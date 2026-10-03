@@ -60,6 +60,8 @@ namespace Maestro.Quest.Programs
     /// <summary>Detached immutable values. Only explicitly copied JSON crosses an API boundary.</summary>
     public readonly struct ProgramValue
     {
+        public const double MaximumNumber=9007199254740991d;
+        public static bool ValidNumber(double value)=>double.IsFinite(value)&&Math.Abs(value)<=MaximumNumber;
         readonly ProgramDataType shape;readonly JToken data;
         public ProgramDataType Type=>shape??(ProgramDataType)ProgramType.Void;
         public readonly double Number;public readonly bool Boolean;public readonly string Text;
@@ -75,7 +77,7 @@ namespace Maestro.Quest.Programs
             var type=declared??ProgramDataType.Infer(value);int nodes=0;
             void Check(JToken v,ProgramDataType t,int depth){
                 ProgramDataType.Need(depth<=4&&++nodes<=128,"Value nesting or node limit exceeded");
-                if(t.Kind==ProgramType.Number){ProgramDataType.Need((v?.Type==JTokenType.Integer||v?.Type==JTokenType.Float)&&double.IsFinite((double)v)&&Math.Abs((double)v)<=1000000,"Number exceeds its limit");return;}
+                if(t.Kind==ProgramType.Number){ProgramDataType.Need((v?.Type==JTokenType.Integer||v?.Type==JTokenType.Float)&&ValidNumber((double)v),"Number exceeds its limit");return;}
                 if(t.Kind==ProgramType.Boolean){ProgramDataType.Need(v?.Type==JTokenType.Boolean,"Expected a boolean");return;}
                 if(t.Kind==ProgramType.Text){ProgramDataType.Need(v?.Type==JTokenType.String&&((string)v).Length<=128&&!((string)v).Any(char.IsControl),"Text exceeds its limit");return;}
                 if(t.Kind==ProgramType.List){ProgramDataType.Need(v is JArray list&&list.Count<=32,"Expected a list of at most 32 items");foreach(var item in (JArray)v)Check(item,t.Item,depth+1);return;}

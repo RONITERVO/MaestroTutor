@@ -25,7 +25,7 @@ namespace Maestro.Quest.Programs
         internal static JObject FrameSchema()=>Object(new JObject {["time"]=Number(0,30),["position"]=Object(new JObject {["x"]=Number(-25,25),["y"]=Number(-25,25),["z"]=Number(-25,25)}),["rotation"]=Vector(true),["scale"]=Number(.1,4),["joints"]=JointsSchema()});
         static JObject Variant(string operation,string label,JObject fields,params string[] optional)
         {
-            var props=new JObject {["operation"]=Choice(operation),["target"]=operation=="pose"?Resource(Choice("maestro")):Target(),["revision"]=Number(1,1000000,true)};props["operation"]["x-static"]=true;
+            var props=new JObject {["operation"]=Choice(operation),["target"]=operation=="pose"?Resource(Choice("maestro")):Target(),["revision"]=Revision()};props["operation"]["x-static"]=true;
             foreach(var property in fields.Properties())props[property.Name]=property.Value.DeepClone();var value=Object(props,optional);value["title"]=label;value["x-features"]=new JArray("animationAuthoring.v1");return value;
         }
         public override JObject InputSchema=>new() {["type"]="object",["title"]="Animation edit",["x-discriminators"]=new JArray("operation"),["oneOf"]=new JArray(
@@ -34,7 +34,7 @@ namespace Maestro.Quest.Programs
             Variant("settings","Timing and looping",new JObject {["duration"]=Number(.1,30),["loop"]=new JObject {["type"]="boolean"}},"duration","loop"),
             Variant("pose","Saved Maestro pose",new JObject {["joints"]=JointsSchema()}),
             Variant("clear","Clear recorded motion",new JObject()))};
-        public override JObject OutputSchema=>Object(new JObject {["target"]=Text("^(maestro|book|[a-fA-F0-9]{32})$",32),["revision"]=Number(1,1000000,true),["frames"]=Number(0,301,true),["duration"]=Number(0,30),["loop"]=new JObject {["type"]="boolean"},["poseSaved"]=new JObject {["type"]="boolean"}});
+        public override JObject OutputSchema=>Object(new JObject {["target"]=Text("^(maestro|book|[a-fA-F0-9]{32})$",32),["revision"]=Revision(),["frames"]=Number(0,301,true),["duration"]=Number(0,30),["loop"]=new JObject {["type"]="boolean"},["poseSaved"]=new JObject {["type"]="boolean"}});
         public override JObject Example=>new() {["operation"]="settings",["target"]="maestro",["revision"]=1,["loop"]=true};
         internal static Quaternion Rotation(JToken value)=>new((float)value["x"],(float)value["y"],(float)value["z"],(float)value["w"]);
         internal static JointPose[] Joints(JToken value)=>value.Type==JTokenType.Null?null:((JArray)value).Select(x=>new JointPose {joint=Enum.Parse<PoseJoint>((string)x["joint"]),rotation=Rotation(x["rotation"])}).ToArray();
@@ -84,7 +84,7 @@ namespace Maestro.Quest.Programs
     }
     internal static class AnimationAuthoringFacts
     {
-        static JObject TargetRevision()=>new() {["target"]=AnimationAuthoringCapability.Target(),["revision"]=Number(1,1000000,true)};
+        static JObject TargetRevision()=>new() {["target"]=AnimationAuthoringCapability.Target(),["revision"]=Revision()};
         static bool Current(BehaviourCatalog.FactContext context,JObject args,out RoomObjectData data)
         {
             data=null;var editor=context.Editor;string id=(string)args["target"];

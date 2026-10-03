@@ -19,7 +19,7 @@ namespace Maestro.Quest.Programs
         public override string Duration=>"completion";
         public override IReadOnlyList<string> Requirements=>new[]{"behaviour.stopped","programMemory.ready","storage.writable","room.session.current"};
         public override JObject InputSchema {get{
-            JObject Branch(string kind){var fields=new JObject { ["kind"]=Choice(kind),["sessionId"]=Text("^[a-f0-9]{32}$",32),["programId"]=Text("^[a-fA-F0-9]{32}$",32),["variableId"]=Text(kind=="set"?"^[a-f0-9]{32}$":"^(|[a-f0-9]{32})$",32),["revision"]=Text("^(initial|[a-f0-9]{32})$",32),["rulesRevision"]=Number(1,1000000,true)};
+            JObject Branch(string kind){var fields=new JObject { ["kind"]=Choice(kind),["sessionId"]=Text("^[a-f0-9]{32}$",32),["programId"]=Text("^[a-fA-F0-9]{32}$",32),["variableId"]=Text(kind=="set"?"^[a-f0-9]{32}$":"^(|[a-f0-9]{32})$",32),["revision"]=Text("^(initial|[a-f0-9]{32})$",32),["rulesRevision"]=Revision()};
                 if(kind=="set")fields["valueJson"]=new JObject { ["type"]="string",["maxLength"]=8192,["format"]="programMemoryValue",["x-static"]=true };return Object(fields);}
             return new JObject {["type"]="object",["title"]="Memory edit",["x-discriminators"]=new JArray("kind"),["oneOf"]=new JArray(Branch("set"),Branch("reset")),["x-features"]=new JArray("rememberedVariables.v1","temporaryMemory.v1")};
         }}

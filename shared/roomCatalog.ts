@@ -5,7 +5,7 @@ import {capabilityDefinition,resolveCapabilitySchema,type CapabilitySchema,type 
 import {behaviourEvent,type BehaviourEventDefinition} from './behaviourEvents';
 import {behaviourFact,type BehaviourFactDefinition} from './behaviourCatalog';
 import {validFactValue,validateFactArguments} from './behaviourFacts';
-import type {DataValue} from './programValues';
+import {validProgramNumber,type DataValue} from './programValues';
 export type CatalogCategory='actions'|'events'|'facts'|'modules';
 export type CatalogRequest={operation:'search';query:string;offset:number;category?:CatalogCategory}|{operation:'inspect';capability:string;version:number;category?:CatalogCategory;arguments?:Record<string,unknown>}|{operation:'check';call:CapabilityInvocation};
 type LibraryState={revision:number;ready:boolean;pending:boolean};
@@ -31,7 +31,7 @@ export const boundedCapabilityCall=(v:unknown):v is CapabilityInvocation=>{
   if(++count>4096||depth>12)return false;
   if(record(v))return Object.entries(v).every(([key,x])=>text(key,80)&&bounded(x,depth+1,schema?.properties?.[key]));
   if(Array.isArray(v))return v.length<=64&&v.every(x=>bounded(x,depth+1,schema?.items));
-  return v===null||typeof v==='boolean'||typeof v==='number'&&Number.isFinite(v)&&Math.abs(v)<=1000000||text(v,128);
+  return v===null||typeof v==='boolean'||validProgramNumber(v)||text(v,128);
  };return bounded(v.arguments,0,capabilityDefinition(v.id as string)?.input);
 };
 const queryKeys=(v:Record<string,unknown>,keys:string[])=>Object.prototype.hasOwnProperty.call(v,'category')?

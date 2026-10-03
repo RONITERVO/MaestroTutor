@@ -34,7 +34,7 @@ require putting chat, assets, physics and all history in one enormous JSON file.
 The current catalog contains 67 actions, 12 events and 65 facts. It already has
 native capability modules, generated forms, shared human/agent execution,
 revision checks, durable one-off receipts, contact/proximity/settling observations,
-structured program values, parallel branches, pinned reusable program modules,
+structured program values and action inputs/results, parallel branches, pinned reusable program modules,
 remembered values, priority ownership and explicit temporary-room snapshots.
 See QUEST_CAPABILITY_MODULES, QUEST_EVENT_PROGRAMS, QUEST_PROGRAM_DATA,
 QUEST_PROGRAM_MODULES, QUEST_PROGRAM_MEMORY, QUEST_ROOM_OWNERSHIP and
@@ -48,7 +48,9 @@ Recipe parts are visual joints, not independent rigid bodies. The object can now
 use an editable compound collision recipe; see
 [collision authoring](QUEST_COLLISION_AUTHORING.md). Shared attachment and aimed throws exist; automatic IK catching,
 hit reactions, physical hinges/springs, generic paintable surfaces, structural
-blueprint libraries and liquids/snow are not completed by those features. The current
+blueprint libraries and liquids/snow are not completed by those features. Persistent structure baselines and typed member-list bindings now let one program
+create a small build, capture it, displace pieces and reset them; see
+[structures](QUEST_STRUCTURES.md). The current
 16-creations-per-run budget cannot be described as arbitrary castle construction.
 
 ## Geometry implementation

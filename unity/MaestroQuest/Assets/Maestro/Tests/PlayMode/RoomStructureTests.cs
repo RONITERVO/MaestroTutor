@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Maestro.Quest.Creation;
 using Maestro.Quest.Interaction;
 using Maestro.Quest.Programs;
@@ -24,6 +25,35 @@ namespace Maestro.Quest.Tests
             return request;
         }
         string SaveGroup(RoomAgentExecutor executor,params string[] ids){Assert.That(executor.Execute(StructureRequest(StructureSaveCall(ids)),out var error,out _),Is.True,error);return (string)executor.Executions.Observe()["selected"]["output"]["structureId"];}
+        [UnityTest] public IEnumerator HighJournalRevisionsRoundTripThroughNativeFactsProgramBindingsAndReset()
+        {
+            string a=LayoutObject(new Vector3(2,1,0)),b=LayoutObject(new Vector3(2.25f,1,0));
+            var journal=(RoomJournal)typeof(RoomEditor).GetField("journal",BindingFlags.Instance|BindingFlags.NonPublic).GetValue(editor);
+            var clock=typeof(RoomJournal).GetField("clock",BindingFlags.Instance|BindingFlags.NonPublic).GetValue(journal);
+            clock.GetType().GetField("Next").SetValue(clock,int.MaxValue-1000);
+            editor.Find(a).transform.localPosition+=Vector3.right*.2f;editor.RememberPlacement(a);int revision=editor.ObjectRevision(a);Assert.That(revision,Is.GreaterThan(1000000));
+            var actions=new RoomRuleActions(editor,animations);Assert.That(actions.TryRead("object.definition",1,new JObject {["target"]=a},out var before),Is.True);Assert.That((int)((JObject)before.Value)["revision"],Is.EqualTo(revision));
+            var source=File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-structure-reset.json")).Replace(new string('a',32),a).Replace(new string('b',32),b);
+            Assert.That(workshop.Execute(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="save",reference="high",sequence=new RuleSequence {id="",name="High revision structure",program=source}}}},out var error,out var sequences),Is.True,error);
+            Assert.That(runtime.Trigger(sequences.Single()),Is.True,runtime.Scheduler.LastError);for(int i=0;i<30&&runtime.Scheduler.RunningCount>0;i++){runtime.Scheduler.Tick(Time.unscaledTime);yield return null;}
+            Assert.That(runtime.Scheduler.Outcomes.Last().phase,Is.EqualTo("completed"),runtime.Scheduler.LastError);var definition=editor.Structures().Single();int groupRevision=editor.StructureRevision(definition.id);Assert.That(groupRevision,Is.GreaterThan(1000000));
+            Assert.That(actions.TryRead("structure.definition",1,new JObject {["id"]=definition.id},out var fact),Is.True);Assert.That((int)((JObject)fact.Value)["revision"],Is.EqualTo(groupRevision));
+            var executor=new RoomAgentExecutor(editor);editor.Find(a).transform.localPosition+=Vector3.right;
+            Assert.That(executor.Execute(StructureRequest(StructureResetCall(definition.id,groupRevision,a,b)),out error,out _),Is.True,error);Assert.That(editor.ObserveStructure(definition).Displaced,Is.Zero);
+            Assert.That(executor.Execute(StructureRequest(StructureResetCall(definition.id,groupRevision-1,a,b)),out error,out _),Is.False,"Large stale revisions must still fail");
+        }
+        [UnityTest] public IEnumerator OneProgramBuildsCapturesDisplacesAndResetsItsOwnPiecesWithTemporaryDiscard() {
+            var before=editor.Snapshot().objects.Select(o=>o.id).ToHashSet();Assert.That(editor.BeginTemporaryRoom(out var error),Is.True,error);
+            float end=Time.realtimeSinceStartup+5;while(editor.TemporarySavePending&&Time.realtimeSinceStartup<end)yield return null;Assert.That(editor.TemporarySavePending,Is.False);
+            var source=File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-build-structure.json"));
+            Assert.That(workshop.Execute(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="save",reference="built",sequence=new RuleSequence {id="",name="Build and restore castle",program=source}}}},out error,out var ids),Is.True,error);
+            Assert.That(runtime.Trigger(ids.Single()),Is.True,runtime.Scheduler.LastError);for(int i=0;i<50&&runtime.Scheduler.RunningCount>0;i++){runtime.Scheduler.Tick(Time.unscaledTime);yield return null;}
+            Assert.That(runtime.Scheduler.Outcomes.Last().phase,Is.EqualTo("completed"),runtime.Scheduler.LastError);var group=editor.Structures().Single();Assert.That(group.slots.Length,Is.EqualTo(6));Assert.That(editor.ObserveStructure(group).Displaced,Is.Zero);
+            Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(before.Count+6));Assert.That(group.slots.All(slot=>!before.Contains(slot.placement.target)),Is.True);
+            editor.Undo();Assert.That(editor.ObserveStructure(group).Displaced,Is.EqualTo(1),"Undo the final reset must recover the program's displaced member");
+            Assert.That(new RoomStorage(directory).Load(out _).objects.Length,Is.EqualTo(before.Count));Assert.That(editor.DiscardTemporaryRoom(out error),Is.True,error);
+            Assert.That(editor.Structures(),Is.Empty);Assert.That(editor.Snapshot().objects.Select(o=>o.id),Is.EquivalentTo(before));
+        }
         [UnityTest] public IEnumerator SharedStructureCaptureObservesDisplacementAndResetUsesLivePoseUndo()
         {
             string a=LayoutObject(new Vector3(2,1,0)),b=LayoutObject(new Vector3(2.25f,1,0));var executor=new RoomAgentExecutor(editor);string id=SaveGroup(executor,a,b);int revision=editor.StructureRevision(id);

@@ -71,13 +71,14 @@ completion validates every bound value against its destination type before
 changing locals or granting returned object IDs, including empty lists whose type
 cannot be inferred from their contents. Existing scalar results remain compatible.
 
-Input arrays remain literal in this increment. A later atomic reset of newly
-created pieces can be authored using their returned IDs and
-[shared layouts](QUEST_LAYOUT_AUTHORING.md). A single saved creation program does
-not yet construct a dynamic layout argument from a result list. [Persistent structures](QUEST_STRUCTURES.md) now provide explicit capture,
-membership, baseline reset, missing-member refusal and aggregate displacement
-facts. Saving one after a batch is a separate action. Snapping, dynamic action-array
-bindings and a dedicated blueprint library remain further work.
+With `structuredInputs.v1`, fixed-shape input lists/records can be computed from
+those results. The [build/capture/reset fixture](../unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-build-structure.json)
+creates six pieces, builds named member records, saves a persistent structure,
+moves one piece and resets them all in one scheduled program. Each action retains
+its own validation, ownership and Undo semantics. The same variable bindings are
+editable in the book. See [persistent structures](QUEST_STRUCTURES.md) and
+[typed values](QUEST_PROGRAM_DATA.md) for bounds and authority rules. Snapping and
+a dedicated blueprint library remain further work.
 
 ## Evidence boundary
 

@@ -86,3 +86,18 @@ The accompanying storage regression also verifies that a background library
 reference scan cannot race an atomic file replacement.
 These are development checks; Quest interaction, performance and scan alignment
 remain separate release gates.
+
+## Programs that create their own members
+
+The [build/capture/reset fixture](../unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-build-structure.json)
+creates six independently editable bricks, combines the returned slot names and
+object IDs into typed member records, captures their baseline, moves one piece and
+resets all six. It uses `structuredInputs.v1` to bind `source.members` and reset
+`members`. Creation results grant permission only for the actual returned objects;
+a guessed ID, duplicate slot/member or empty computed list fails before the action
+starts. A later failure leaves earlier completed actions in place.
+
+The book editor can connect the same list/record variables without editing JSON.
+All existing value-size and creation budgets apply; large placement records may
+reach their value budget before the 16-member structure limit. Temporary play and
+Discard also cover structures created by these programs.

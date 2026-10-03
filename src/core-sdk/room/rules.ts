@@ -23,6 +23,7 @@ const guid=(v:unknown)=>typeof v==='string'&&/^[a-f0-9]{32}$/.test(v);
 const ref=(v:unknown)=>typeof v==='string'&&/^[a-zA-Z0-9_]{1,32}$/.test(v);
 const target=(v:unknown)=>v==='maestro'||v==='book'||guid(v);
 const title=(v:unknown)=>typeof v==='string'&&v.trim().length>0&&v.length<=32&&!/[\u0000-\u001f]/.test(v);
+import {validProgramNumber} from '../../../shared/programValues';
 import {capabilityDefinition} from '../../../shared/capabilities';
 import {invocationStep} from './capabilitySteps';
 export const newRuleStep=(action=2):RuleStep=>action===13?invocationStep({id:'object.create',version:1,arguments:capabilityDefinition('object.create')!.input.oneOf!.find(branch=>branch.properties?.kind.enum?.includes('recipe'))!.examples![0] as Record<string,unknown>},crypto.randomUUID().replace(/-/g,'')):({id:crypto.randomUUID().replace(/-/g,''),action,targetId:'maestro',gesture:0,seconds:[10,11,12,14,15,16,17].includes(action)?0:action===2?1:2.5,loop:false,...(action===14?{editPosition:{x:0,y:0,z:0}}:{}),...(action===15?{editScale:1}:{}),...(action===16?{editColor:{red:1,green:1,blue:1}}:{}),...(action===12?{creation:{shape:'ball',name:'Ball',x:.3,y:1.3,z:.65,scale:1,red:.2,green:.6,blue:.9}}:{}),...(action===10?{impulse:{x:0,y:.6,z:0}}:{})});
@@ -38,7 +39,7 @@ const validBinding=(v:unknown,draft=false):v is RuleBinding=>record(v)&&(guid(v.
 export function validRuleRequest(v:unknown):v is RuleRequest {
  if(!record(v)||!['inspect','memory','edit','play','stop','undo','redo','signal'].includes(v.action as string)||Object.keys(v).some(k=>!['action','revision','target','page','edits','eventName','value'].includes(k)))return false;
  if(!['inspect','memory','stop'].includes(v.action as string)&&!int(v.revision,1,2147483647))return false;
- if(v.action==='signal')return Object.keys(v).length===4&&typeof v.eventName==='string'&&/^user\.[a-zA-Z0-9_]{1,32}$/.test(v.eventName)&&(typeof v.value==='boolean'||typeof v.value==='number'&&Number.isFinite(v.value)&&Math.abs(v.value)<=1000000||typeof v.value==='string'&&v.value.length<=128&&!/[\u0000-\u001f\u007f-\u009f]/.test(v.value));
+ if(v.action==='signal')return Object.keys(v).length===4&&typeof v.eventName==='string'&&/^user\.[a-zA-Z0-9_]{1,32}$/.test(v.eventName)&&(typeof v.value==='boolean'||validProgramNumber(v.value)||typeof v.value==='string'&&v.value.length<=128&&!/[\u0000-\u001f\u007f-\u009f]/.test(v.value));
  if(v.eventName!==undefined||v.value!==undefined)return false;
  if(v.action==='play'&&!guid(v.target)||v.target!==undefined&&!(v.action==='memory'&&typeof v.target==='string'?/^[a-fA-F0-9]{32}$/.test(v.target):guid(v.target))||v.page!==undefined&&!int(v.page,0,15))return false;
  if(v.action!=='edit')return v.edits===undefined;

@@ -1,0 +1,393 @@
+{
+  "version": 3,
+  "dataVersion": 1,
+  "entry": "main",
+  "resources": [],
+  "state": [],
+  "events": [],
+  "functions": [
+    {
+      "name": "main",
+      "returns": "void",
+      "parameters": [],
+      "locals": [
+        {
+          "name": "pieces",
+          "type": {
+            "list": "text"
+          },
+          "initial": []
+        },
+        {
+          "name": "slots",
+          "type": {
+            "list": "text"
+          },
+          "initial": []
+        },
+        {
+          "name": "index",
+          "initial": 0
+        },
+        {
+          "name": "members",
+          "type": {
+            "list": {
+              "record": {
+                "slot": "text",
+                "target": "text"
+              }
+            }
+          },
+          "initial": []
+        },
+        {
+          "name": "member",
+          "type": {
+            "record": {
+              "slot": "text",
+              "target": "text"
+            }
+          },
+          "initial": {
+            "slot": "",
+            "target": ""
+          }
+        },
+        {
+          "name": "structure",
+          "initial": ""
+        },
+        {
+          "name": "revision",
+          "initial": 0
+        }
+      ],
+      "body": [
+        {
+          "id": "create",
+          "op": "invoke",
+          "capability": "object.batch.create",
+          "version": 1,
+          "arguments": {
+            "blueprint": {
+              "version": 1,
+              "pieces": [
+                {
+                  "slot": "brick_1",
+                  "name": "Castle brick 1",
+                  "position": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": 1,
+                  "source": {
+                    "kind": "template",
+                    "templateHash": "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8"
+                  }
+                },
+                {
+                  "slot": "brick_2",
+                  "name": "Castle brick 2",
+                  "position": {
+                    "x": 0.25,
+                    "y": 0.0,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": 1,
+                  "source": {
+                    "kind": "template",
+                    "templateHash": "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8"
+                  }
+                },
+                {
+                  "slot": "brick_3",
+                  "name": "Castle brick 3",
+                  "position": {
+                    "x": 0.0,
+                    "y": 0.08,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": 1,
+                  "source": {
+                    "kind": "template",
+                    "templateHash": "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8"
+                  }
+                },
+                {
+                  "slot": "brick_4",
+                  "name": "Castle brick 4",
+                  "position": {
+                    "x": 0.25,
+                    "y": 0.08,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": 1,
+                  "source": {
+                    "kind": "template",
+                    "templateHash": "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8"
+                  }
+                },
+                {
+                  "slot": "brick_5",
+                  "name": "Castle brick 5",
+                  "position": {
+                    "x": 0.0,
+                    "y": 0.16,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": 1,
+                  "source": {
+                    "kind": "template",
+                    "templateHash": "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8"
+                  }
+                },
+                {
+                  "slot": "brick_6",
+                  "name": "Castle brick 6",
+                  "position": {
+                    "x": 0.25,
+                    "y": 0.16,
+                    "z": 0
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "scale": 1,
+                  "source": {
+                    "kind": "template",
+                    "templateHash": "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8"
+                  }
+                }
+              ]
+            },
+            "position": {
+              "x": 0.3,
+              "y": 1,
+              "z": 0.7
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1
+          },
+          "bindings": {},
+          "results": {
+            "objectIds": "pieces",
+            "slots": "slots"
+          }
+        },
+        {
+          "id": "collect",
+          "op": "repeat",
+          "count": {
+            "op": "length",
+            "args": [
+              {
+                "var": "pieces"
+              }
+            ]
+          },
+          "body": [
+            {
+              "id": "member",
+              "op": "set",
+              "variable": "member",
+              "value": {
+                "op": "withField",
+                "args": [
+                  {
+                    "op": "withField",
+                    "args": [
+                      {
+                        "var": "member"
+                      },
+                      {
+                        "value": "slot"
+                      },
+                      {
+                        "op": "at",
+                        "args": [
+                          {
+                            "var": "slots"
+                          },
+                          {
+                            "var": "index"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "value": "target"
+                  },
+                  {
+                    "op": "at",
+                    "args": [
+                      {
+                        "var": "pieces"
+                      },
+                      {
+                        "var": "index"
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "append",
+              "op": "set",
+              "variable": "members",
+              "value": {
+                "op": "append",
+                "args": [
+                  {
+                    "var": "members"
+                  },
+                  {
+                    "var": "member"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "next",
+              "op": "set",
+              "variable": "index",
+              "value": {
+                "op": "add",
+                "args": [
+                  {
+                    "var": "index"
+                  },
+                  {
+                    "value": 1
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "capture",
+          "op": "invoke",
+          "capability": "structure.save",
+          "version": 1,
+          "arguments": {
+            "id": "",
+            "revision": 0,
+            "source": {
+              "kind": "capture",
+              "name": "Castle",
+              "positionTolerance": 0.05,
+              "rotationTolerance": 15,
+              "scaleTolerance": 0.05,
+              "members": [
+                {
+                  "slot": "placeholder",
+                  "target": "00000000000000000000000000000000"
+                }
+              ]
+            }
+          },
+          "bindings": {
+            "source.members": {
+              "var": "members"
+            }
+          },
+          "results": {
+            "structureId": "structure",
+            "revision": "revision"
+          }
+        },
+        {
+          "id": "displace",
+          "op": "invoke",
+          "capability": "object.position.set",
+          "version": 1,
+          "arguments": {
+            "target": "00000000000000000000000000000000",
+            "x": 1,
+            "y": 1,
+            "z": 0.7
+          },
+          "bindings": {
+            "target": {
+              "op": "at",
+              "args": [
+                {
+                  "var": "pieces"
+                },
+                {
+                  "value": 0
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": "reset",
+          "op": "invoke",
+          "capability": "structure.reset",
+          "version": 1,
+          "arguments": {
+            "id": "cccccccccccccccccccccccccccccccc",
+            "revision": 1,
+            "members": [
+              "00000000000000000000000000000000"
+            ]
+          },
+          "bindings": {
+            "id": {
+              "var": "structure"
+            },
+            "revision": {
+              "var": "revision"
+            },
+            "members": {
+              "var": "pieces"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

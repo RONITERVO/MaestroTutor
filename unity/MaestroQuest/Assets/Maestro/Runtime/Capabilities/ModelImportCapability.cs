@@ -22,14 +22,14 @@ namespace Maestro.Quest.Programs
         static JObject ChoiceVariant(string operation,string title,string destination=null)
         {
             var fields=operation=="select"?new JObject():Request();fields["operation"]=Choice(operation);fields["operation"]["x-static"]=true;
-            if(destination!=null){fields["modelHash"]=Text("^[a-f0-9]{64}$",64);if(destination=="maestro"){fields["target"]=Resource(Choice("maestro"));fields["revision"]=Number(1,1000000,true);}}
+            if(destination!=null){fields["modelHash"]=Text("^[a-f0-9]{64}$",64);if(destination=="maestro"){fields["target"]=Resource(Choice("maestro"));fields["revision"]=Revision();}}
             if(operation is "member" or "files")fields["version"]=Number(1,1000000,true);
             if(operation=="member")fields["index"]=Number(0,MotionBatch.MaximumFiles-1,true);
             var schema=Object(fields);schema["title"]=title;schema["x-features"]=operation is "member" or "files"?new JArray("modelImport.v1","modelArchiveImport.v1"):new JArray("modelImport.v1");return schema;
         }
         public override JObject InputSchema=>new() {["type"]="object",["title"]="Import operation",["x-discriminators"]=new JArray("operation"),["oneOf"]=new JArray(
             ChoiceVariant("select","Choose a file"),ChoiceVariant("member","Preview a ZIP model"),ChoiceVariant("files","Browse ZIP files"),ChoiceVariant("cancel","Cancel selection or preview"),ChoiceVariant("object","Add model object","object"),ChoiceVariant("maestro","Use as Maestro","maestro"),ChoiceVariant("library","Save to model library","library"),ChoiceVariant("motions","Save embedded animations","motions"))};
-        static JObject AcceptedSchema()=>Object(new JObject {["destination"]=Choice("","object","maestro","library","motions"),["objectId"]=Resource(Text("^(|maestro|[a-f0-9]{32})$",32)),["revision"]=Number(0,1000000,true),["temporary"]=new JObject {["type"]="boolean"},["motionIds"]=List(Text("^[a-f0-9]{32}$",32),0,32)});
+        static JObject AcceptedSchema()=>Object(new JObject {["destination"]=Choice("","object","maestro","library","motions"),["objectId"]=Resource(Text("^(|maestro|[a-f0-9]{32})$",32)),["revision"]=Revision(true),["temporary"]=new JObject {["type"]="boolean"},["motionIds"]=List(Text("^[a-f0-9]{32}$",32),0,32)});
         public override JObject OutputSchema {get{var fields=(JObject)AcceptedSchema()["properties"];fields["requestId"]=Text("^[a-f0-9]{32}$",32);fields["modelHash"]=Text("^([a-f0-9]{64})?$",64);return Object(fields);}}
         public override JObject Example=>new() {["operation"]="select"};
         static ImportWorkshop Owner(CapabilityContext context)=>context.Editor?context.Editor.GetComponent<ImportWorkshop>():null;

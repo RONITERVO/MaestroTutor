@@ -5,7 +5,7 @@ import {readDataType,type DataType} from './programValues';
 import {validCollisionRecipe} from './collisionRecipe';
 import {moduleHash,validModuleRecord} from './programModuleIdentity';
 import {parseRecipe,validLathePart} from './roomRecipe';
-import {behaviourCatalog,type BehaviourValueType} from './behaviourCatalog';
+import {behaviourCatalog} from './behaviourCatalog';
 export interface CurrentInputMapping {
  fact:string;version:number;arguments:Record<string,string>;fields:Record<string,string[]>;guards:string[];
 }
@@ -43,8 +43,8 @@ export function capabilityInput(id:string,args:Record<string,unknown>):Capabilit
 export function capabilityBindingFields(id:string,args:Record<string,unknown>):Record<string,CapabilitySchema> {
  const result:Record<string,CapabilitySchema>={};
  const visit=(schema:CapabilitySchema|undefined,path:string)=>{schema=resolveCapabilitySchema(schema,path?argumentValue(args,path):args);if(!schema||schema['x-static'])return;
+  if(path&&capabilityParameterType(id,path,args))result[path]=schema;
   if(schema.type==='object')for(const [key,field] of Object.entries(schema.properties??{}))visit(field,path?path+'.'+key:key);
-  else if(schema.type!=='array')result[path]=schema;
  };visit(capabilityInput(id,args),'');return result;
 }
 export function validateCapabilityValue(value:unknown,schema:CapabilitySchema):string|null {return validate(value,schema,'value');}
@@ -107,8 +107,10 @@ export function validateCapabilityOutput(id:string,version:number,output:unknown
  return validate(output,definition.output,'result');
 }
 export function capabilityOutputType(id:string,key:string):DataType|null {
- const schema=definitions.get(id)?.output?.properties;
- if(!schema||!own(schema,key))return null;
+ const fields=definitions.get(id)?.output?.properties;
+ return fields&&own(fields,key)?capabilityValueType(fields[key]):null;
+}
+function capabilityValueType(schema:CapabilitySchema|undefined):DataType|null {
  const shape=(field:CapabilitySchema|undefined,depth:number):DataType=>{
   if(!field||depth>4||field.oneOf||field.nullable)throw new Error('No fixed output type');
   if(field.type==='string')return 'text';if(field.type==='number'||field.type==='integer')return 'number';if(field.type==='boolean')return 'boolean';
@@ -116,20 +118,28 @@ export function capabilityOutputType(id:string,key:string):DataType|null {
   if(!field.properties||field.required?.length!==Object.keys(field.properties).length)throw new Error('Optional record fields are not program values');
   return {record:Object.fromEntries(Object.entries(field.properties).map(([k,v])=>[k,shape(v,depth+1)]))};
  };
- try{return readDataType(shape(schema[key],0));}catch{return null;}
+ try{return readDataType(shape(schema,0));}catch{return null;}
 }
 export function literalCapabilityResources(id:string,args:Record<string,unknown>,bindings:Record<string,unknown>,version:number):string[] {
- const literal=clone(args),schema=capabilityInput(id,args);
- if(version===3)for(const key of Object.keys(bindings))if(schemaField(schema,key,args)?.['x-resource']==='object'){
+ const literal=clone(args);
+ if(version===3)for(const key of Object.keys(bindings))if(capabilityParameterType(id,key,args)!==null){
   const parts=key.split('.'),parent=parts.length===1?literal:argumentValue(literal,parts.slice(0,-1).join('.'));
   if(record(parent))delete parent[parts[parts.length-1]];
  }
  return capabilityResources(id,literal);
 }
-export function capabilityParameterType(id:string,parameter:string,args:Record<string,unknown>={}):BehaviourValueType|null {
- const schema=schemaField(capabilityInput(id,args),parameter,args);
- if(!schema||schema['x-static'])return null;
- const type=schema.type;return type==='string'?'text':type==='integer'?'number':type==='number'||type==='boolean'?type:null;
+export function separateCapabilityBindings(bindings:Record<string,unknown>):boolean {
+ const names=Object.keys(bindings);return names.every(name=>!names.some(parent=>name.startsWith(parent+'.')));
+}
+export function capabilityParameterType(id:string,parameter:string,args:Record<string,unknown>={}):DataType|null {
+ let schema=definitions.get(id)?.input,value:unknown=args;
+ for(const key of parameter.split('.')) {
+  if(schema?.['x-static']||schema?.['x-discriminators']?.includes(key))return null;
+  schema=resolveCapabilitySchema(schema,value)?.properties?.[key];value=record(value)?value[key]:undefined;
+ }
+ const mutable=(field:CapabilitySchema|undefined):boolean=>!!field&&!field['x-static']&&!field.oneOf&&!field.nullable&&field.format!=='programModule'&&
+  (field.type==='array'?mutable(field.items):field.type!=='object'||Object.values(field.properties??{}).every(mutable));
+ return mutable(schema)?capabilityValueType(schema):null;
 }
 
 /** Schema-declared object references used for ownership and optimistic revisions. */
