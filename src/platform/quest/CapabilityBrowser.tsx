@@ -11,15 +11,15 @@ import type {CatalogCategory,CatalogRequest,CatalogView} from '../../../shared/r
 import type {ProgramCapabilityInputs} from '../../core-sdk/room/programCapabilityEditing';
 import type {RoomAgentClient} from './roomAgentBridge';
 export type CatalogInsert=(call:CapabilityInvocation,inputs?:ProgramCapabilityInputs)=>string|null;
-export type OpenCatalog=(insert?:CatalogInsert)=>void;
+export type OpenCatalog=(insert?:CatalogInsert,initialCall?:CapabilityInvocation)=>void;
 /** Optional expert authoring on the book; queries use the same native path as the agent. */
-export function CapabilityBrowser({client,onClose,onInsert}:{client:RoomAgentClient;onClose:()=>void;onInsert?:CatalogInsert}) {
+export function CapabilityBrowser({client,onClose,onInsert,initialCall}:{client:RoomAgentClient;onClose:()=>void;onInsert?:CatalogInsert;initialCall?:CapabilityInvocation}) {
  const {state,pending}=useSyncExternalStore(client.subscribe,client.getSnapshot);
  const [category,setCategory]=useState<CatalogCategory>('actions');
  const [query,setQuery]=useState(''),[page,setPage]=useState<Extract<CatalogView,{operation:'search'}>|null>(null);
  const [inspection,setInspection]=useState<Extract<CatalogView,{operation:'inspect'}>|null>(null),[args,writeArgs]=useState('{}'),[error,setError]=useState('');
  const [checked,setChecked]=useState(''),[recoveryNotice,setRecoveryNotice]=useState(''),[confirming,setConfirming]=useState('');
- const draftEpoch=useRef(0),alive=useRef(true);
+ const draftEpoch=useRef(0),alive=useRef(true),seeded=useRef(false);
  const [loaded,setLoaded]=useState(''),[acceptedSnapshot,setAcceptedSnapshot]=useState(''),[loading,setLoading]=useState(false);
  const busy=pending||loading;
  const [programInputs,setProgramInputs]=useState<'snapshot'|'current'>('current');
@@ -38,11 +38,12 @@ export function CapabilityBrowser({client,onClose,onInsert}:{client:RoomAgentCli
  };
  const scope=category==='actions'?{}:{category};
  const search=async(offset=0)=>{setInspection(null);const result=await send({operation:'search',...scope,query:offset?page?.query??query:query,offset});if(result?.operation==='search'&&(result.category??'actions')===category)setPage(result);};
- const inspect=async(id:string,version:number,argumentsValue?:Record<string,unknown>)=>{const result=await send({operation:'inspect',...scope,capability:id,version,...(argumentsValue?{arguments:argumentsValue}:{})});if(result?.operation==='inspect'&&(result.category??'actions')===category&&result.capability===id&&result.version===version){
+ const inspect=async(id:string,version:number,argumentsValue?:Record<string,unknown>,seed?:Record<string,unknown>)=>{const result=await send({operation:'inspect',...scope,capability:id,version,...(argumentsValue?{arguments:argumentsValue}:{})});if(result?.operation==='inspect'&&(result.category??'actions')===category&&result.capability===id&&result.version===version){
   setInspection(result);setCurrentChoices({});setLoadedInputs(null);setProgramInputs('current');setAcceptedSnapshot('');setChecked('');setConfirming('');if(!result.definition)setError(result.status);
   else if(result.category==='facts'&&result.definition.input)setArgs(JSON.stringify(result.arguments??result.definition.example??{},null,2));
-  else if(result.category!=='events'&&result.category!=='facts'&&result.category!=='modules')setArgs(JSON.stringify(result.definition.example??initialCapabilityValue(result.definition.input,state?.objects??[]),null,2));
+  else if(result.category!=='events'&&result.category!=='facts'&&result.category!=='modules')setArgs(JSON.stringify(seed??result.definition.example??initialCapabilityValue(result.definition.input,state?.objects??[]),null,2));
  }};
+ useEffect(()=>{if(initialCall&&!seeded.current){seeded.current=true;void inspect(initialCall.id,initialCall.version,undefined,initialCall.arguments);}},[initialCall]);
  const definition=inspection&&inspection.category!=='events'&&inspection.category!=='facts'&&inspection.category!=='modules'?inspection.definition:null;
  const currentFact=state?.catalog?.operation==='inspect'&&state.catalog.category==='facts'&&inspection?.category==='facts'&&state.catalog.capability===inspection.capability&&state.catalog.version===inspection.version&&JSON.stringify(state.catalog.arguments)===JSON.stringify(inspection.arguments)?state.catalog:null;
  let factArgs:Record<string,unknown>|undefined,factError='';if(inspection?.category==='facts'&&inspection.definition?.input)try{factArgs=JSON.parse(args);factError=validateFactArguments(inspection.capability,inspection.version,factArgs)??'';}catch{factError='Enter valid fact arguments.';}

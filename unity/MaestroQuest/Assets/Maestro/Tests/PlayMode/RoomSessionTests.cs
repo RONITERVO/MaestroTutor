@@ -154,8 +154,8 @@ namespace Maestro.Quest.Tests
   [UnityTest] public IEnumerator SolidTrayButtonsUseTheSameSessionCapabilityAndReceiptHistory(){
    var tray=new GameObject("Creation tools");tray.transform.SetParent(root.transform,false);tray.transform.localPosition=new Vector3(2,0,1);tray.AddComponent<RoomToolTray>().Build(editor,room);
    var router=root.AddComponent<BookPointerRouter>();router.Editor=editor;yield return null;Physics.SyncTransforms();
-   void Click(float x){var ray=new Ray(new Vector3(x,-.235f,0),Vector3.forward);Assert.That(router.Begin(0,ray),Is.True);router.End(0,ray);}
-   Click(1.8f);Assert.That(editor.TemporaryRoom,Is.True);yield return Finish();
+   void Click(RoomTool kind){var button=tray.GetComponentsInChildren<PhysicalRoomAction>().Single(x=>x.Tool==kind);var ray=new Ray(button.transform.position-Vector3.forward,Vector3.forward);Assert.That(router.Begin(0,ray),Is.True);router.End(0,ray);}
+   Click(RoomTool.BeginTemporary);Assert.That(editor.TemporaryRoom,Is.True);yield return Finish();
    var evidence=Environment.GetEnvironmentVariable("MAESTRO_SESSION_EVIDENCE");
    if(!string.IsNullOrEmpty(evidence)) {
     Directory.CreateDirectory(evidence);var cameraRoot=new GameObject("Session controls camera");cameraRoot.transform.SetParent(root.transform,false);
@@ -165,8 +165,8 @@ namespace Maestro.Quest.Tests
     try {camera.targetTexture=render;camera.Render();RenderTexture.active=render;pixels.ReadPixels(new Rect(0,0,1200,1100),0,0);pixels.Apply();File.WriteAllBytes(Path.Combine(evidence,"room-tools.png"),pixels.EncodeToPNG());}
     finally {RenderTexture.active=previous;camera.targetTexture=null;render.Release();UnityEngine.Object.Destroy(render);UnityEngine.Object.Destroy(pixels);UnityEngine.Object.Destroy(cameraRoot);}
    }
-   Create("Physical keep");Click(2);yield return Finish();
-   Assert.That(editor.TemporarySaveRevision,Is.EqualTo(1));Click(2.2f);Assert.That(editor.TemporaryRoom,Is.False);
+   Create("Physical keep");Click(RoomTool.KeepTemporary);yield return Finish();
+   Assert.That(editor.TemporarySaveRevision,Is.EqualTo(1));Click(RoomTool.DiscardTemporary);Assert.That(editor.TemporaryRoom,Is.False);
    Assert.That(runtime.Scheduler.ObserveInvocations(null)["outcomes"].Count(x=>(string)x["capability"]=="room.session"),Is.EqualTo(3));
   }
  }

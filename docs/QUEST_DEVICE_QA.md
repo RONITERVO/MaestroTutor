@@ -1663,3 +1663,22 @@ reload at a nonzero angle and test temporary-room discard. Edit the copy's geome
 and spring settings through the ordinary source/forms. Check paused-room behavior,
 scan collisions and native frame timing with multiple instances. Desktop PhysX and
 native transport checks do not close these headset gates.
+
+
+## Shared construction selection (headset acceptance pending)
+
+On the movable creation tray choose **Collect pieces**. Point and tap/pinch two
+creations with identical names, remove one, add it again and choose **Finish**.
+Confirm outlines follow membership, the count is readable, and the objects' ordinary
+item-tapped behaviours do not run during collection. Grip should still move one
+piece. In the optional book workshop, confirm the same ordered members and distinct
+labels, use **Locate**, reorder the origin and open **Review reusable construction**.
+Opening the draft must not save anything; load current values and explicitly run.
+Instantiate the published module and check placement, internal hinges and Undo.
+
+Start collecting, then choose a drawing tool or open a Quest system screen. Picking
+must end while existing members remain selected. Delete a member, Undo, and verify
+it does not silently become selected again. Start/end a temporary room and change
+workspace to check selection clears. Record the APK hash, input mode, button reach,
+outline visibility and normal/busy-room frame measurements. Group grabbing and
+socket snapping are separate unfinished features.

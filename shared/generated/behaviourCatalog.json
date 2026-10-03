@@ -13715,6 +13715,101 @@
       }
     },
     {
+      "id": "room.selection.set",
+      "version": 1,
+      "label": "Choose construction pieces",
+      "input": {
+        "type": "object",
+        "properties": {
+          "stateId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-fA-F0-9]{32}$",
+              "maxLength": 32,
+              "x-resource": "object"
+            },
+            "minItems": 0,
+            "maxItems": 16
+          },
+          "collecting": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "stateId",
+          "members",
+          "collecting"
+        ],
+        "additionalProperties": false,
+        "x-current": {
+          "fact": "room.selection",
+          "version": 1,
+          "arguments": {},
+          "fields": {
+            "stateId": [
+              "stateId"
+            ]
+          },
+          "guards": [
+            "stateId"
+          ]
+        },
+        "format": "constructionSelection",
+        "x-features": [
+          "constructionSelection.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [
+        "selection.state.current",
+        "members.exist",
+        "room.interaction.ready"
+      ],
+      "description": "Replace the shared transient construction selection with 0–16 distinct creation IDs in explicit order. Read room.selection first and pass its exact stateId. collecting=true makes controller/hand taps add or remove pieces and suppresses their ordinary item-tapped behaviours until finished; grips still move objects. Put drawing tools away first. Selected pieces are outlined; the first member is the origin when preparing a reusable construction. This does not move objects, save geometry, authorize later edits or capture a module. Use program.module.captureConstruction with explicit current member revisions when ready. Changed membership/order/mode gets a fresh identity. Deleted pieces are removed, Undo does not silently select them again, temporary-room boundaries and workspace reload clear the selection, and application/runtime suspension ends picking. Selection has no saved-room Undo and is not restored after reload. Finishing picking retains members; an empty list clears them. Book and Maestro cannot be members. Stop cannot undo a completed selection change.",
+      "example": {
+        "stateId": "00000000000000000000000000000000",
+        "members": [],
+        "collecting": true
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "stateId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$",
+              "maxLength": 32
+            },
+            "minItems": 0,
+            "maxItems": 16
+          },
+          "collecting": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "stateId",
+          "members",
+          "collecting"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "structure.save",
       "version": 1,
       "label": "Save a structure",
@@ -17739,6 +17834,24 @@
       ]
     },
     {
+      "id": "room.selection",
+      "version": 1,
+      "type": {
+        "record": {
+          "stateId": "text",
+          "members": {
+            "list": "text"
+          },
+          "collecting": "boolean"
+        }
+      },
+      "label": "Construction selection",
+      "description": "Current shared ordered construction members and physical picking mode. Transient view state, not saved structure membership, a revision reservation or permission to edit. Read current object.definition revisions before capture.",
+      "features": [
+        "constructionSelection.v1"
+      ]
+    },
+    {
       "id": "structure.list",
       "version": 1,
       "type": {
@@ -21210,7 +21323,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "e1db6427127e79ab1a9ee33dfd1a0347d7c889049f8ef213f18ec30556f68e7d"
+      "sha256": "be3c0d33061d88fb657f75bbc0df2bf8403cd99828e1feac893eb2ca032b8a6c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -21230,7 +21343,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "04d470c4c3fb12716832e76fb41615120f356dba7ef979515479278c4945c2e5"
+      "sha256": "7acf8ec1690c74be47d4d3f0d4b867ab0a637830c351461604c9bbb397a7f05a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -21258,11 +21371,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.Temporary.cs",
-      "sha256": "6de6db228becce72dc3d68ea2b5695be6b2ad09780df698095d7a82aebbf9831"
+      "sha256": "1f88dd95ac82ad68c9ee3ac5a980ec4c914fe8655a70bb6b92cae08a045de0ff"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "da64f544f40053b68ebab8d9d196711bf14c3ce893dd3b83fbc457b608d2c01d"
+      "sha256": "bd6673c1f71b521f7d7c18d1afc2cd86e65fd5c694f7dc75d158e87c570c0fd1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -21270,7 +21383,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgent.cs",
-      "sha256": "eb1d6de64d226b606f3f103c9a11002e586eda15f4d38e1a2f531392e2296bfb"
+      "sha256": "7b057c3c8fd3382189042fdfa4e3c600776efe2ed73bd4963bf941a42efed7f0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceRecoveryHold.cs",
@@ -21486,15 +21599,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "00f14c16b0c1aa7eb4b7587cb054eb6a6623b15873aa47683e7c704000cbafd6"
+      "sha256": "0dc64e3d6523f95e5d0bbd4bb27990bddc2fcf0b1562a6a025d93dc7c7fd0e83"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomToolTray.cs",
-      "sha256": "8d7de60e88ab6008186b6e23df8dfb1f367a9d26690a8e743d3389a8ff1d6296"
+      "sha256": "7b54de74d9b571fc91aa68fa5729c5736630430f4e3e8907cfa6c83facc60e7e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PhysicalRoomAction.cs",
-      "sha256": "302f776bbfd311acc05238fd0b9e9e14d0b53d0e89c568a1a00b91e2f82f42ea"
+      "sha256": "989e6cfbe01432e14a6a350b341803c844d301b3850cf8e3fdfc0f18df56f4d4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/BookControllerInput.cs",
@@ -21562,7 +21675,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedRoomObject.cs",
-      "sha256": "bf17e0d159ffca911b78f10a2111e09f44fcbcbe0f58c5d81c93ae89557b3c89"
+      "sha256": "e57c1b886084d7d7907beb7c62a581773167e2fafd5732ef75e481c7dd0920fb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectSettings.cs",
@@ -21750,7 +21863,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "4ed8d7e4d29ae2e3b11be66526531ff1fa99f2f482d7331ea90b11a4a67db170"
+      "sha256": "f332ecb53ebb8ebea25ae111ee861e4104cd242a7b9f60367114c2c98d14960b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -21767,6 +21880,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CollisionCapability.cs",
       "sha256": "79b43625d16854fdf0ca4245657eb28a9c8cd7ed41fd46f5379349fcc870dc69"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ConstructionSelectionCapability.cs",
+      "sha256": "4e2336703679d85ec96608f58676f550efaab42a9025a52b8a938e24e402a301"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ControllerConfigurationCapability.cs",

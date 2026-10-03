@@ -13,7 +13,7 @@ namespace Maestro.Quest.Creation
         readonly List<Material> materials = new();
         RoomEditor editor;
         RoomInteraction room;
-        TextMesh status,pencilLabel,eraseLabel;
+        TextMesh status,pencilLabel,eraseLabel,selectionLabel;
         Material pencilPaint,surfacePaint;
         public void Build(RoomEditor editor, RoomInteraction room)
         {
@@ -59,11 +59,12 @@ namespace Maestro.Quest.Creation
                     if (bottom[i] == RoomTool.Save || bottom[i] == RoomTool.Recall) Part(tool,PrimitiveType.Cube,new Vector3(0,0,-.016f),new Vector3(.027f,.024f,.006f),paper);
                 }
             }
-            var sessionTools=new[]{RoomTool.BeginTemporary,RoomTool.KeepTemporary,RoomTool.DiscardTemporary};
-            var sessionLabels=new[]{"Try room","Keep snapshot","End / discard"};
+            var sessionTools=new[]{RoomTool.BeginTemporary,RoomTool.KeepTemporary,RoomTool.DiscardTemporary,RoomTool.CollectPieces};
+            var sessionLabels=new[]{"Try room","Keep snapshot","End / discard","Collect pieces"};
             for(int i=0;i<sessionTools.Length;i++) {
-                var tool=Tool(sessionTools[i],new Vector3(-.2f+i*.2f,-.235f,-.035f),sessionLabels[i]);
+                var tool=Tool(sessionTools[i],new Vector3(-.27f+i*.18f,-.235f,-.035f),sessionLabels[i]);
                 Part(tool,PrimitiveType.Cube,Vector3.zero,new Vector3(.055f,.033f,.028f),teal);
+                if(sessionTools[i]==RoomTool.CollectPieces){selectionLabel=tool.GetComponentInChildren<TextMesh>();Part(tool,PrimitiveType.Cube,new Vector3(.016f,.013f,-.014f),Vector3.one*.025f,paper);}
             }
             status = Label(transform,new Vector3(0,-.32f,-.020f),"",.0048f);
             editor.Changed += Refresh; Refresh();
@@ -85,6 +86,7 @@ namespace Maestro.Quest.Creation
             if(!isActiveAndEnabled||!editor||!status||!pencilLabel||!eraseLabel||!pencilPaint)return;
             var pencilAction=pencilLabel.GetComponentInParent<PhysicalRoomAction>();var eraseAction=eraseLabel.GetComponentInParent<PhysicalRoomAction>();
             if(!pencilAction||!eraseAction)return;
+            if(selectionLabel){var selection=editor.ObserveConstructionSelection();selectionLabel.text=selection.collecting?$"Finish ({selection.members.Length})":"Collect pieces";selectionLabel.GetComponentInParent<PhysicalRoomAction>().AccessibleName=selectionLabel.text;}
             bool retained=editor.GetComponent<SpatialDrawing>()?.HasUnsavedStroke==true;pencilLabel.text=retained?"Retry stroke":"Draw";eraseLabel.text=retained?"Discard stroke":editor.DrawingOnSurfaces?"Erase ink":"Erase";
             if(surfacePaint)surfacePaint.color=editor.DrawingMode&&editor.DrawingOnSurfaces?IllustratedMaterials.Hex("2B8D88"):IllustratedMaterials.Paper;
             pencilAction.AccessibleName=pencilLabel.text;eraseAction.AccessibleName=eraseLabel.text;

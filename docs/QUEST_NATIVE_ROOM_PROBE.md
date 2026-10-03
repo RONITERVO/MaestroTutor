@@ -136,3 +136,20 @@ library module. `construction-capture.json` retains the request, catalog definit
 receipt, module and before/after states. This checks the real transport/runtime;
 PlayMode separately checks model-dependency failure/cancellation and stale capture.
 It does not assert headset, provider or frame-time acceptance.
+
+
+## Shared construction selection (2026-10-03)
+
+The lever journey first selects its two native pieces through `room.selection.set`,
+compares `room.selection` with the inline observation, and locates a member using
+ordinary inspection. The same shared helper used by the book prepares the capture
+arguments; independently queried object revisions must match. Removing the originals
+must prune the selection and invalidate its old state ID. `construction-selection.json`
+retains those real native states.
+
+`probe-construction-selection-authoring.mjs` drives the optional book workshop in
+Chrome against that recorded evidence: select named members, Locate,
+review the seeded capture, load current guards, reject invalid input and explicitly
+run. It compares both selection calls and capture with their exact native receipts.
+This replay acknowledges recorded results; it is not another physics implementation
+and does not establish physical controller, hand, reach or performance acceptance.

@@ -47,7 +47,7 @@ namespace Maestro.Quest.Creation
         public event Action<string> ItemReleased, ItemTapped;
         public event Action<string,string,string,Vector3,float> ItemCollided;
         public string Identity(RoomItem item) => item && identities.TryGetValue(item,out var id) ? id : null;
-        public void Tapped(RoomItem item) { var id = Identity(item); if (id != null) ItemTapped?.Invoke(id); }
+        public void Tapped(RoomItem item) { if(ConstructionTap(item))return;var id = Identity(item); if (id != null) ItemTapped?.Invoke(id); }
         public int Revision { get; private set; } = 1;
         public Vector3 CreationPosition => SpawnPosition();
         internal Transform Viewer=>room?room.Viewer:null;
@@ -291,6 +291,7 @@ namespace Maestro.Quest.Creation
         internal bool ConfigureDrawing(string mode,Color color,float radius,out string error) {
             if(!CanConfigureDrawing(out error))return false;
             if(!new[]{"off","space","surface","surfaceErase"}.Contains(mode)||!float.IsFinite(radius)||radius<.001f||radius>.02f||new[]{color.r,color.g,color.b}.Any(n=>!float.IsFinite(n)||n<0||n>1)){error="Choose a supported pencil mode, colour and thickness";return false;}
+            if(mode!="off")SuspendConstructionPicking();
             DrawingMode=mode!="off";DrawingOnSurfaces=mode=="surface"||mode=="surfaceErase";SurfaceErasing=mode=="surfaceErase";DrawingRadius=radius;Paint=new Color(color.r,color.g,color.b,1);
             SetStatus(mode=="off"?"Pencil put away":mode=="surfaceErase"?"Surface eraser: tap a stroke to remove it":mode=="surface"?"Surface pencil: draw on an enabled patch within 25 cm":"Space pencil: hold trigger or pinch to draw");return true;
         }
@@ -439,7 +440,8 @@ namespace Maestro.Quest.Creation
 
         void UpdateSelection()
         {
-            foreach (var pair in objects) { var created = pair.Value.GetComponent<CreatedRoomObject>(); if (created) created.SetSelected(pair.Key == selected); }
+            ReconcileConstructionSelection();
+            foreach (var pair in objects) { var created = pair.Value.GetComponent<CreatedRoomObject>(); if (created) created.SetSelection(pair.Key == selected,constructionMembers.Contains(pair.Key)); }
             Changed?.Invoke();
         }
         void BeforeRestore() { Editing?.Invoke(); applying = true; }
@@ -586,6 +588,7 @@ namespace Maestro.Quest.Creation
         void SetStatus(string value) { Status = value; Changed?.Invoke(); }
         void RefreshOwnership() {
             Ownership.Suspend(ownershipPaused||!ownershipFocused||RuntimeGate.Held);
+            if(Ownership.Suspended)SuspendConstructionPicking();
             if(!Ownership.Suspended)foreach(var item in objects.Values)if(item&&item.Grab.isSelected)OwnHeld(item);
         }
         void OnApplicationPause(bool paused) { ownershipPaused=paused;RefreshOwnership();if (paused) Flush(); }

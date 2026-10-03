@@ -31,7 +31,7 @@ require putting chat, assets, physics and all history in one enormous JSON file.
 
 ## What already exists
 
-The current catalog contains 71 actions, 12 events and 74 facts. It already has
+The checked-in generated capability catalog is the current vocabulary authority. It includes
 native capability modules, generated forms, shared human/agent execution,
 revision checks, durable one-off receipts, contact/proximity/settling observations,
 structured program values and action inputs/results, parallel branches, pinned reusable program modules,
@@ -47,8 +47,8 @@ parented rotations and bounded tracks. The lathe increment is described in
 Recipe parts are visual joints, not independent rigid bodies. The object can now
 use an editable compound collision recipe; see
 [collision authoring](QUEST_COLLISION_AUTHORING.md). Shared attachment and aimed throws exist; automatic IK catching,
-hit reactions, curved/deforming paintable surfaces, structural
-blueprint libraries and liquids/snow are not completed by those features. Persistent structure baselines and typed member-list bindings now let one program
+hit reactions, socket snapping, curved/deforming paintable surfaces and
+liquids/snow are not completed by those features. Persistent structure baselines and typed member-list bindings now let one program
 create a small build, capture it, displace pieces and reset them; see
 [structures](QUEST_STRUCTURES.md). The current
 16-creations-per-run budget cannot be described as arbitrary castle construction.
@@ -123,8 +123,12 @@ A shared [layout operation](QUEST_LAYOUT_AUTHORING.md) now arranges/resets up to
 now instantiates template/inline-recipe blueprints through ordinary programs and
 returns typed lists of piece IDs. [Persistent structures](QUEST_STRUCTURES.md) now
 retain named slots, baselines and missing members, with shared capture/reset and
-live displacement facts. A dedicated blueprint library, snapping,
-curved/deforming painting, physical joints and liquids/snow remain unfinished.
+live displacement facts. Construction capture now publishes ordinary editable
+constructor modules with fresh member identities and internal hinges; see
+[creation and capture](QUEST_BATCH_CREATION.md). Shared transient selection lets
+users and Maestro collect, highlight and order pieces through the same state; see
+[construction selection](QUEST_CONSTRUCTION_SELECTION.md). Socket snapping,
+curved/deforming painting, sliders and liquids/snow remain unfinished.
 [Planar surface drawing](QUEST_SURFACE_DRAWING.md) adds reusable explicit patches,
 shared ink editing/readback, a physical surface pencil/eraser, and configurable
 held drawing tips on ordinary created/imported objects.

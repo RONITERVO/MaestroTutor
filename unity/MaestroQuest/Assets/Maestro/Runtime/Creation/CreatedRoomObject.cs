@@ -15,6 +15,8 @@ namespace Maestro.Quest.Creation
         RecipeObject recipe;
         PencilMarks drawing;
         GameObject selection;
+        bool primarySelected,constructionSelected;
+        internal bool ConstructionMarked=>constructionSelected&&selection&&selection.activeSelf;
         Color tint;
         Collider originalCollider, chosenCollider;
         ItemCollider collisionShape;
@@ -122,7 +124,8 @@ namespace Maestro.Quest.Creation
             catch (System.Exception error) { if (this) ModelStatus = error is ModelImportException ? error.Message : "This model could not be loaded. Import a compatible GLB or VRM again."; }
         }
         public void ApplyColor(Color color) { tint = color; if(recipe) recipe.Tint(color); if (pigment) pigment.color = color; if (drawing) drawing.SetColor(color); if (Model && Model.Ready) Model.Instance.GetComponent<PencilModelStyle>()?.Tint(color); }
-        public void SetSelected(bool value) { if (selection) selection.SetActive(value); }
+        public void SetSelection(bool primary,bool member){primarySelected=primary;constructionSelected=member;SetSelected(primary||member);}
+        public void SetSelected(bool value) { if (selection) {selection.SetActive(value);selection.GetComponent<PencilMarks>().SetColor(constructionSelected&&!primarySelected?IllustratedMaterials.Hex("2B8D88"):IllustratedMaterials.Ribbon);} }
 
         void BuildSelection(Bounds bounds)
         {

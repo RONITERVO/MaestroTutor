@@ -1,3 +1,6 @@
+import {ConstructionSelectionControls} from './ConstructionSelectionControls';
+import {roomObjectLabel} from '../../../shared/roomSelection';
+import type {CapabilityInvocation} from '../../../shared/capabilities';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {useEffect,useState,useSyncExternalStore} from 'react';
@@ -23,10 +26,10 @@ function TurnControls({label,rotation,onChange}:{label:string;rotation:Rotation;
 /** An optional projection of the native document, never an independent scene copy. */
 export function RoomWorkspace({client}:{client:RoomAgentClient}) {
  const {state}=useSyncExternalStore(client.subscribe,client.getSnapshot);
- const [catalog,setCatalog]=useState<{insert?:CatalogInsert}|null>(null);
+ const [catalog,setCatalog]=useState<{insert?:CatalogInsert;initialCall?:CapabilityInvocation}|null>(null);
  useEffect(()=>{setCatalog(null);},[state?.session,state?.visible]);
- const openCatalog:OpenCatalog=insert=>setCatalog({insert});
- return <><div hidden={Boolean(catalog)||state?.workspaceView==='rules'}><ObjectsWorkspace client={client} onCatalog={openCatalog}/></div><div hidden={Boolean(catalog)||state?.workspaceView!=='rules'}><RuleWorkspace client={client} onCatalog={openCatalog}/></div>{catalog&&state?.visible&&<CapabilityBrowser key={state.session} client={client} onClose={()=>setCatalog(null)} onInsert={catalog.insert}/>}</>;
+ const openCatalog:OpenCatalog=(insert,initialCall)=>setCatalog({insert,initialCall});
+ return <><div hidden={Boolean(catalog)||state?.workspaceView==='rules'}><ObjectsWorkspace client={client} onCatalog={openCatalog}/></div><div hidden={Boolean(catalog)||state?.workspaceView!=='rules'}><RuleWorkspace client={client} onCatalog={openCatalog}/></div>{catalog&&state?.visible&&<CapabilityBrowser key={state.session} client={client} onClose={()=>setCatalog(null)} onInsert={catalog.insert} initialCall={catalog.initialCall}/>}</>;
 }
 function ObjectsWorkspace({client,onCatalog}:{client:RoomAgentClient;onCatalog:OpenCatalog}) {
  const {state,pending}=useSyncExternalStore(client.subscribe,client.getSnapshot);
@@ -65,7 +68,8 @@ function ObjectsWorkspace({client,onCatalog}:{client:RoomAgentClient;onCatalog:O
    <div className="room-workspace-actions"><button disabled={pending||!state.capabilities?.includes('catalog.v1')} onClick={()=>onCatalog()}>Action catalog</button>{state.rules&&<button disabled={pending||dirty} onClick={()=>void send([{action:'rules',rule:{action:'inspect'}}])}>Behaviours</button>}<button disabled={pending||dirty} onClick={()=>void create()}>+ Box robot</button><button disabled={pending||dirty||!state.canUndo} onClick={()=>void send([{action:'undo'}])}>Undo</button><button disabled={pending||dirty||!state.canRedo} onClick={()=>void send([{action:'redo'}])}>Redo</button></div>
    <TemporaryRoomControls client={client} disabled={dirty}/>
    <RoomOwnershipDetails state={state}/>
-   <div className="room-object-list" aria-label="Objects">{state.objects.map(object=><button key={object.id} disabled={pending} aria-pressed={draft?.id===object.id} onClick={()=>void select(object.id)}><span>{object.kind==='Assembly'?'◇':object.kind==='Maestro'?'♙':object.kind==='Book'?'▤':'○'} {object.name}</span><small>{object.kind}{object.animated?' · Playing':''}</small></button>)}</div>
+   <ConstructionSelectionControls key={state.session} client={client} disabled={dirty} onCapture={call=>onCatalog(undefined,call)}/>
+   <div className="room-object-list" aria-label="Objects">{state.objects.map(object=><button key={object.id} disabled={pending} aria-pressed={draft?.id===object.id} onClick={()=>void select(object.id)}><span>{object.kind==='Assembly'?'◇':object.kind==='Maestro'?'♙':object.kind==='Book'?'▤':'○'} {roomObjectLabel(object,state.objects)}</span><small>{object.kind}{object.animated?' · Playing':''}</small></button>)}</div>
    {recipe&&<div className="room-parts-list" aria-label="Parts"><h2>Parts & joints <small>{recipe.parts.length}</small></h2>{recipe.parts.map(node=><button key={node.id} disabled={pending} aria-pressed={part?.id===node.id} onClick={()=>{setPartId(node.id);setKeyIndex(0);void send([{action:'inspect',target:draft!.id,partId:node.id}]);}}><span>{node.id}</span><small>{node.parent?`↳ ${node.parent}`:'Root part'} · {node.shape}</small></button>)}</div>}
   </section>
   <section className="room-workspace-page room-inspector" aria-label="Object editor">
