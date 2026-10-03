@@ -47,7 +47,7 @@ parented rotations and bounded tracks. The lathe increment is described in
 Recipe parts are visual joints, not independent rigid bodies. The object can now
 use an editable compound collision recipe; see
 [collision authoring](QUEST_COLLISION_AUTHORING.md). Shared attachment and aimed throws exist; automatic IK catching,
-hit reactions, socket snapping, curved/deforming paintable surfaces and
+hit reactions, automatic physical snap previews, curved/deforming paintable surfaces and
 liquids/snow are not completed by those features. Persistent structure baselines and typed member-list bindings now let one program
 create a small build, capture it, displace pieces and reset them; see
 [structures](QUEST_STRUCTURES.md). The current
@@ -129,8 +129,9 @@ constructor modules with fresh member identities and internal physical connectio
 users and Maestro collect, highlight and order pieces through the same state; see
 [construction selection](QUEST_CONSTRUCTION_SELECTION.md). A solid shared
 [construction handle](QUEST_CONSTRUCTION_MOVEMENT.md) now arranges those pieces
-with one save/Undo while physics is paused. Socket snapping,
-curved/deforming painting and liquids/snow remain unfinished. Bounded sliders and an editable spring-button example now extend the shared connections.
+with one save/Undo while physics is paused. [Saved snap points](QUEST_SNAP_POINTS.md)
+now align complete constructions and optionally join them through one shared edit.
+Automatic physical snap previews, curved/deforming painting and liquids/snow remain unfinished. Bounded sliders and an editable spring-button example now extend the shared connections.
 [Planar surface drawing](QUEST_SURFACE_DRAWING.md) adds reusable explicit patches,
 shared ink editing/readback, a physical surface pencil/eraser, and configurable
 held drawing tips on ordinary created/imported objects.
@@ -235,6 +236,6 @@ component: rotating hinges, rigid joins, bounded sliders, optional break limits,
 a typed break event. Book controls, user programs and the agent share the same
 catalog contract. See [physical connections](QUEST_PHYSICAL_CONNECTIONS.md) for
 current IDs, save-format boundaries, repair semantics, budgets and verification.
-Connected version-3 blueprints and construction capture preserve both kinds with
+Connected version-3 blueprints and construction capture preserve all three kinds with
 fresh member identities. The included spring button uses ordinary recipes and condition waits. No automatic snapping, liquid simulation or
 Quest performance guarantee is implied.

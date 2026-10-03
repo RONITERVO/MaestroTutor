@@ -20,7 +20,7 @@ namespace Maestro.Quest.Programs
             var fields=(JObject)new CreateRecipeCapability().InputSchema["properties"];
             var tip=(JObject)DrawingTipCapability.DefinitionSchema()["properties"];tip["version"]=Number(1,1,true);
             var common=new JObject {["version"]=Number(1,1,true),["color"]=Color(),["physics"]=fields["physics"].DeepClone(),
-                ["collision"]=fields["collision"].DeepClone(),["surfaces"]=List(Surface(),0,4),["drawingTips"]=List(Object(tip),0,1),
+                ["collision"]=fields["collision"].DeepClone(),["surfaces"]=List(Surface(),0,4),["drawingTips"]=List(Object(tip),0,1),["snapPoints"]=List(SnapPointCapability.SavedSchema(),0,64),
                 ["motion"]=Object(new JObject {["loop"]=new JObject {["type"]="boolean"},["frames"]=List(Object(new JObject {
                     ["time"]=Number(0,30),["position"]=Point(500.001),["rotation"]=Vector(true),["scale"]=Number(.024999,40.00001)}),1,301)})};
             var variants=new JArray();
@@ -32,7 +32,7 @@ namespace Maestro.Quest.Programs
                 var variant=Object(p);variant["title"]=kind;variants.Add(variant);
             }
             common["geometry"]=new JObject {["type"]="object",["oneOf"]=variants,["x-discriminators"]=new JArray("kind")};
-            var schema=Object(common,"collision","motion");schema["format"]="creationPrototype";schema["x-features"]=new JArray(Feature);return schema;
+            var schema=Object(common,"collision","motion","snapPoints");schema["format"]="creationPrototype";schema["x-features"]=new JArray(Feature);return schema;
         }
         // JsonUtility emits all default fields, including fields belonging to other variants.
         // Public source includes only fields belonging to its explicit kind.
@@ -44,6 +44,7 @@ namespace Maestro.Quest.Programs
                 if(include)geometry[key]=value[key].DeepClone();value.Remove(key);
             }
             value["geometry"]=geometry;
+            if((prototype.snapPoints?.Length??0)==0)value.Remove("snapPoints");
             if(prototype.collision==null)value.Remove("collision");if(prototype.motion==null)value.Remove("motion");
             return value;
         }

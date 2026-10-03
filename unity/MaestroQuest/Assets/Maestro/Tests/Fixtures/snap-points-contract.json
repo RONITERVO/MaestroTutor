@@ -1,0 +1,366 @@
+[
+  {
+    "name": "configure local point",
+    "capability": "object.snapPoint.edit",
+    "arguments": {
+      "operation": "configure",
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "point": "Top",
+      "definition": {
+        "name": "Top face",
+        "family": "Brick",
+        "frame": {
+          "position": {
+            "x": 0,
+            "y": 0.05,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "reject long diagonal frame",
+    "capability": "object.snapPoint.edit",
+    "arguments": {
+      "operation": "configure",
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "point": "Top",
+      "definition": {
+        "name": "Top face",
+        "family": "Brick",
+        "frame": {
+          "position": {
+            "x": 8,
+            "y": 8,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "reject blank display name",
+    "capability": "object.snapPoint.edit",
+    "arguments": {
+      "operation": "configure",
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "point": "Top",
+      "definition": {
+        "name": "   ",
+        "family": "Brick",
+        "frame": {
+          "position": {
+            "x": 0,
+            "y": 0.05,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "family is stable identifier",
+    "capability": "object.snapPoint.edit",
+    "arguments": {
+      "operation": "configure",
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "point": "Top",
+      "definition": {
+        "name": "Top face",
+        "family": "brick family",
+        "frame": {
+          "position": {
+            "x": 0,
+            "y": 0.05,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "normalized frame",
+    "capability": "object.snapPoint.edit",
+    "arguments": {
+      "operation": "configure",
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "point": "Top",
+      "definition": {
+        "name": "Top face",
+        "family": "Brick",
+        "frame": {
+          "position": {
+            "x": 0,
+            "y": 0.05,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 0.5
+          }
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "remove exact point",
+    "capability": "object.snapPoint.edit",
+    "arguments": {
+      "operation": "remove",
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "point": "Top"
+    },
+    "valid": true
+  },
+  {
+    "name": "place explicit point",
+    "capability": "object.layout.snap",
+    "arguments": {
+      "mode": "place",
+      "members": [
+        {
+          "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision": 1
+        }
+      ],
+      "point": "Bottom",
+      "destination": {
+        "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "revision": 2,
+        "point": "Top"
+      },
+      "turn": 90
+    },
+    "valid": true
+  },
+  {
+    "name": "join with break limits",
+    "capability": "object.layout.snap",
+    "arguments": {
+      "mode": "join",
+      "members": [
+        {
+          "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision": 1
+        }
+      ],
+      "point": "Bottom",
+      "destination": {
+        "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "revision": 2,
+        "point": "Top"
+      },
+      "turn": 90,
+      "breakForce": 50,
+      "breakTorque": 3
+    },
+    "valid": true
+  },
+  {
+    "name": "distinct source members",
+    "capability": "object.layout.snap",
+    "arguments": {
+      "mode": "place",
+      "members": [
+        {
+          "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision": 1
+        },
+        {
+          "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision": 1
+        }
+      ],
+      "point": "Bottom",
+      "destination": {
+        "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "revision": 2,
+        "point": "Top"
+      },
+      "turn": 90
+    },
+    "valid": false
+  },
+  {
+    "name": "destination outside sources",
+    "capability": "object.layout.snap",
+    "arguments": {
+      "mode": "place",
+      "members": [
+        {
+          "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision": 1
+        }
+      ],
+      "point": "Bottom",
+      "destination": {
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 2,
+        "point": "Top"
+      },
+      "turn": 90
+    },
+    "valid": false
+  },
+  {
+    "name": "bounded turn",
+    "capability": "object.layout.snap",
+    "arguments": {
+      "mode": "place",
+      "members": [
+        {
+          "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision": 1
+        }
+      ],
+      "point": "Bottom",
+      "destination": {
+        "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "revision": 2,
+        "point": "Top"
+      },
+      "turn": 181
+    },
+    "valid": false
+  },
+  {
+    "name": "15 moving members plus destination",
+    "capability": "object.layout.snap",
+    "arguments": {
+      "mode": "place",
+      "members": [
+        {
+          "target": "00000000000000000000000000000000",
+          "revision": 1
+        },
+        {
+          "target": "00000000000000000000000000000001",
+          "revision": 1
+        },
+        {
+          "target": "00000000000000000000000000000002",
+          "revision": 1
+        },
+        {
+          "target": "00000000000000000000000000000003",
+          "revision": 1
+        },
+        {
+          "target": "00000000000000000000000000000004",
+          "revision": 1
+        },
+        {
+          "target": "00000000000000000000000000000005",
+          "revision": 1
+        },
+        {
+          "target": "00000000000000000000000000000006",
+          "revision": 1
+        },
+        {
+          "target": "00000000000000000000000000000007",
+          "revision": 1
+        },
+        {
+          "target": "00000000000000000000000000000008",
+          "revision": 1
+        },
+        {
+          "target": "00000000000000000000000000000009",
+          "revision": 1
+        },
+        {
+          "target": "0000000000000000000000000000000a",
+          "revision": 1
+        },
+        {
+          "target": "0000000000000000000000000000000b",
+          "revision": 1
+        },
+        {
+          "target": "0000000000000000000000000000000c",
+          "revision": 1
+        },
+        {
+          "target": "0000000000000000000000000000000d",
+          "revision": 1
+        },
+        {
+          "target": "0000000000000000000000000000000e",
+          "revision": 1
+        },
+        {
+          "target": "0000000000000000000000000000000f",
+          "revision": 1
+        }
+      ],
+      "point": "Bottom",
+      "destination": {
+        "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "revision": 2,
+        "point": "Top"
+      },
+      "turn": 90
+    },
+    "valid": false
+  },
+  {
+    "name": "fresh destination revision",
+    "capability": "object.layout.snap",
+    "arguments": {
+      "mode": "place",
+      "members": [
+        {
+          "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision": 1
+        }
+      ],
+      "point": "Bottom",
+      "destination": {
+        "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "revision": 0,
+        "point": "Top"
+      },
+      "turn": 90
+    },
+    "valid": false
+  }
+]

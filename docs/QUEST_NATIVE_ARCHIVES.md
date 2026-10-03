@@ -80,7 +80,7 @@ interpreted as v6; see [surface persistence](QUEST_SURFACE_DRAWING.md#persistenc
 
 Required documents:
 
-- `room.v7.json`
+- `room.v8.json`
 - `behaviours.v2.json`
 - `controls.v2.json`
 - `avatar-activities.v2.json`

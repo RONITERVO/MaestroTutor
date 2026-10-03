@@ -7621,7 +7621,7 @@
                 "type": "string",
                 "enum": [
                   "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496",
-                  "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8",
+                  "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33",
                   "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab",
                   "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac",
                   "8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4",
@@ -7634,7 +7634,7 @@
                 ],
                 "x-enum-labels": {
                   "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "Ball",
-                  "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8": "Building brick",
+                  "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33": "Building brick",
                   "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab": "Chalk",
                   "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "Chalkboard",
                   "8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4": "Cup",
@@ -7647,7 +7647,7 @@
                 },
                 "x-enum-images": {
                   "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "quest/templates/f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496.png",
-                  "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8": "quest/templates/a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8.png",
+                  "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33": "quest/templates/5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33.png",
                   "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab": "quest/templates/4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab.png",
                   "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "quest/templates/5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac.png",
                   "8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4": "quest/templates/8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4.png",
@@ -7703,7 +7703,7 @@
             ],
             "additionalProperties": false,
             "title": "Create starter object",
-            "description": "Expand an exact bundled template hash into ordinary editable recipe, collision, physics and optional flat drawing-surface and drawing-tip data. Read creation.template for descriptions and cost counts; names and tags are display metadata, never executable instructions. Empty name keeps its template name. Creates one object and one Undo through the same recipe creation path; later template changes cannot alter existing objects. Templates start idle, do not start physics, install behaviours, snap bricks or simulate liquids. Robot tracks can be played explicitly with animation.play source.kind recipe. The hash is an exact choice: missing versions fail, never substitute by name. Optional user template publishing is not part of this bundled library.",
+            "description": "Expand an exact bundled template hash into ordinary editable recipe, collision, physics and optional flat drawing-surface, drawing-tip and snap-point data. Read creation.template for descriptions and cost counts; names and tags are display metadata, never executable instructions. Empty name keeps its template name. Creates one object and one Undo through the same recipe creation path; later template changes cannot alter existing objects. Templates start idle, do not start physics, install behaviours, snap bricks or simulate liquids. Robot tracks can be played explicitly with animation.play source.kind recipe. The hash is an exact choice: missing versions fail, never substitute by name. Optional user template publishing is not part of this bundled library.",
             "examples": [
               {
                 "templateHash": "8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4",
@@ -7882,7 +7882,7 @@
                               "type": "string",
                               "enum": [
                                 "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496",
-                                "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8",
+                                "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33",
                                 "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab",
                                 "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac",
                                 "8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4",
@@ -7895,7 +7895,7 @@
                               ],
                               "x-enum-labels": {
                                 "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "Ball",
-                                "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8": "Building brick",
+                                "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33": "Building brick",
                                 "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab": "Chalk",
                                 "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "Chalkboard",
                                 "8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4": "Cup",
@@ -7908,7 +7908,7 @@
                               },
                               "x-enum-images": {
                                 "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "quest/templates/f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496.png",
-                                "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8": "quest/templates/a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8.png",
+                                "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33": "quest/templates/5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33.png",
                                 "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab": "quest/templates/4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab.png",
                                 "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "quest/templates/5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac.png",
                                 "8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4": "quest/templates/8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4.png",
@@ -9910,6 +9910,117 @@
                                   "minItems": 0,
                                   "maxItems": 1
                                 },
+                                "snapPoints": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "name": {
+                                        "type": "string",
+                                        "pattern": "^.*\\S.*$",
+                                        "maxLength": 64
+                                      },
+                                      "family": {
+                                        "type": "string",
+                                        "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+                                        "maxLength": 32
+                                      },
+                                      "frame": {
+                                        "type": "object",
+                                        "properties": {
+                                          "position": {
+                                            "type": "object",
+                                            "properties": {
+                                              "x": {
+                                                "type": "number",
+                                                "minimum": -10.0,
+                                                "maximum": 10.0
+                                              },
+                                              "y": {
+                                                "type": "number",
+                                                "minimum": -10.0,
+                                                "maximum": 10.0
+                                              },
+                                              "z": {
+                                                "type": "number",
+                                                "minimum": -10.0,
+                                                "maximum": 10.0
+                                              }
+                                            },
+                                            "required": [
+                                              "x",
+                                              "y",
+                                              "z"
+                                            ],
+                                            "additionalProperties": false
+                                          },
+                                          "rotation": {
+                                            "type": "object",
+                                            "properties": {
+                                              "x": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              },
+                                              "y": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              },
+                                              "z": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              },
+                                              "w": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              }
+                                            },
+                                            "required": [
+                                              "x",
+                                              "y",
+                                              "z",
+                                              "w"
+                                            ],
+                                            "additionalProperties": false,
+                                            "format": "unitQuaternion"
+                                          }
+                                        },
+                                        "required": [
+                                          "position",
+                                          "rotation"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      "id": {
+                                        "type": "string",
+                                        "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+                                        "maxLength": 32
+                                      },
+                                      "version": {
+                                        "type": "integer",
+                                        "minimum": 1.0,
+                                        "maximum": 1.0
+                                      }
+                                    },
+                                    "required": [
+                                      "name",
+                                      "family",
+                                      "frame",
+                                      "id",
+                                      "version"
+                                    ],
+                                    "additionalProperties": false,
+                                    "format": "snapPointDefinition",
+                                    "x-features": [
+                                      "snapPoints.v1"
+                                    ]
+                                  },
+                                  "minItems": 0,
+                                  "maxItems": 64
+                                },
                                 "motion": {
                                   "type": "object",
                                   "properties": {
@@ -11467,7 +11578,7 @@
               "scale": 1,
               "source": {
                 "kind": "template",
-                "templateHash": "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8"
+                "templateHash": "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33"
               }
             },
             {
@@ -11487,7 +11598,7 @@
               "scale": 1,
               "source": {
                 "kind": "template",
-                "templateHash": "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8"
+                "templateHash": "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33"
               }
             },
             {
@@ -11507,7 +11618,7 @@
               "scale": 1,
               "source": {
                 "kind": "template",
-                "templateHash": "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8"
+                "templateHash": "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33"
               }
             },
             {
@@ -11527,7 +11638,7 @@
               "scale": 1,
               "source": {
                 "kind": "template",
-                "templateHash": "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8"
+                "templateHash": "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33"
               }
             },
             {
@@ -11547,7 +11658,7 @@
               "scale": 1,
               "source": {
                 "kind": "template",
-                "templateHash": "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8"
+                "templateHash": "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33"
               }
             },
             {
@@ -11567,7 +11678,7 @@
               "scale": 1,
               "source": {
                 "kind": "template",
-                "templateHash": "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8"
+                "templateHash": "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33"
               }
             }
           ]
@@ -11951,6 +12062,570 @@
           "radius": 0.0030000000260770321,
           "enabled": true
         }
+      }
+    },
+    {
+      "id": "object.snapPoint.edit",
+      "version": 1,
+      "label": "Edit a snap point",
+      "input": {
+        "type": "object",
+        "x-discriminators": [
+          "operation"
+        ],
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "configure"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              },
+              "point": {
+                "type": "string",
+                "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+                "maxLength": 32
+              },
+              "definition": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "pattern": "^.*\\S.*$",
+                    "maxLength": 64
+                  },
+                  "family": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+                    "maxLength": 32
+                  },
+                  "frame": {
+                    "type": "object",
+                    "properties": {
+                      "position": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number",
+                            "minimum": -10.0,
+                            "maximum": 10.0
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": -10.0,
+                            "maximum": 10.0
+                          },
+                          "z": {
+                            "type": "number",
+                            "minimum": -10.0,
+                            "maximum": 10.0
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y",
+                          "z"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "rotation": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number",
+                            "minimum": -1.0,
+                            "maximum": 1.0
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": -1.0,
+                            "maximum": 1.0
+                          },
+                          "z": {
+                            "type": "number",
+                            "minimum": -1.0,
+                            "maximum": 1.0
+                          },
+                          "w": {
+                            "type": "number",
+                            "minimum": -1.0,
+                            "maximum": 1.0
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y",
+                          "z",
+                          "w"
+                        ],
+                        "additionalProperties": false,
+                        "format": "unitQuaternion"
+                      }
+                    },
+                    "required": [
+                      "position",
+                      "rotation"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "name",
+                  "family",
+                  "frame"
+                ],
+                "additionalProperties": false,
+                "format": "snapPointDefinition"
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "revision",
+              "point",
+              "definition"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "object.snapPoint",
+              "version": 1,
+              "arguments": {
+                "target": "target",
+                "point": "point"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
+            "title": "configure",
+            "x-features": [
+              "snapPoints.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "remove"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              },
+              "point": {
+                "type": "string",
+                "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+                "maxLength": 32
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "revision",
+              "point"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "object.snapPoint",
+              "version": 1,
+              "arguments": {
+                "target": "target",
+                "point": "point"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
+            "title": "remove",
+            "x-features": [
+              "snapPoints.v1"
+            ]
+          }
+        ]
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.created",
+        "target.unheld",
+        "source.revision.current",
+        "storage.writable"
+      ],
+      "description": "Configure or remove one stable named alignment point on a created object's root, including an import. Points with the same exact family may be aligned by object.layout.snap. Frames coincide: their +Y axes and forward directions match, with optional turn about the destination frame +Y. These are coordinate frames, not outward face normals. Coordinates use object-local metres and scale with the object. At most 64 per object and 256 per room. Names are display text; IDs and family are exact, case-sensitive identifiers. Points survive copy, capture, Undo and workspace export. Editing a point never moves objects or changes a previously accepted physical connection. No occupancy lock, collision check, automatic nearest-point selection or attachment to animated parts is implied.",
+      "example": {
+        "operation": "configure",
+        "target": "00000000000000000000000000000000",
+        "revision": 1,
+        "point": "Top",
+        "definition": {
+          "name": "Top",
+          "family": "Brick",
+          "frame": {
+            "position": {
+              "x": 0.0,
+              "y": 0.041999999433755875,
+              "z": 0.0
+            },
+            "rotation": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0,
+              "w": 1.0
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "object.layout.snap",
+      "version": 1,
+      "label": "Snap a construction to a point",
+      "input": {
+        "type": "object",
+        "x-discriminators": [
+          "mode"
+        ],
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "mode": {
+                "type": "string",
+                "enum": [
+                  "place"
+                ],
+                "x-static": true
+              },
+              "members": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "target": {
+                      "type": "string",
+                      "pattern": "^[a-fA-F0-9]{32}$",
+                      "maxLength": 32,
+                      "x-resource": "object"
+                    },
+                    "revision": {
+                      "type": "integer",
+                      "minimum": 1.0,
+                      "maximum": 2147483647.0
+                    }
+                  },
+                  "required": [
+                    "target",
+                    "revision"
+                  ],
+                  "additionalProperties": false,
+                  "x-current": {
+                    "fact": "object.placement",
+                    "version": 1,
+                    "arguments": {
+                      "target": "target"
+                    },
+                    "fields": {
+                      "revision": [
+                        "revision"
+                      ]
+                    },
+                    "guards": [
+                      "revision"
+                    ]
+                  }
+                },
+                "minItems": 1,
+                "maxItems": 15
+              },
+              "point": {
+                "type": "string",
+                "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+                "maxLength": 32
+              },
+              "destination": {
+                "type": "object",
+                "properties": {
+                  "target": {
+                    "type": "string",
+                    "pattern": "^[a-fA-F0-9]{32}$",
+                    "maxLength": 32,
+                    "x-resource": "object"
+                  },
+                  "revision": {
+                    "type": "integer",
+                    "minimum": 1.0,
+                    "maximum": 2147483647.0
+                  },
+                  "point": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+                    "maxLength": 32
+                  }
+                },
+                "required": [
+                  "target",
+                  "revision",
+                  "point"
+                ],
+                "additionalProperties": false,
+                "x-current": {
+                  "fact": "object.placement",
+                  "version": 1,
+                  "arguments": {
+                    "target": "target"
+                  },
+                  "fields": {
+                    "revision": [
+                      "revision"
+                    ]
+                  },
+                  "guards": [
+                    "revision"
+                  ]
+                }
+              },
+              "turn": {
+                "type": "number",
+                "minimum": -180.0,
+                "maximum": 180.0
+              }
+            },
+            "required": [
+              "mode",
+              "members",
+              "point",
+              "destination",
+              "turn"
+            ],
+            "additionalProperties": false,
+            "title": "Place at point",
+            "format": "snapPlacement",
+            "x-features": [
+              "snapPoints.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "mode": {
+                "type": "string",
+                "enum": [
+                  "join"
+                ],
+                "x-static": true
+              },
+              "members": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "target": {
+                      "type": "string",
+                      "pattern": "^[a-fA-F0-9]{32}$",
+                      "maxLength": 32,
+                      "x-resource": "object"
+                    },
+                    "revision": {
+                      "type": "integer",
+                      "minimum": 1.0,
+                      "maximum": 2147483647.0
+                    }
+                  },
+                  "required": [
+                    "target",
+                    "revision"
+                  ],
+                  "additionalProperties": false,
+                  "x-current": {
+                    "fact": "object.placement",
+                    "version": 1,
+                    "arguments": {
+                      "target": "target"
+                    },
+                    "fields": {
+                      "revision": [
+                        "revision"
+                      ]
+                    },
+                    "guards": [
+                      "revision"
+                    ]
+                  }
+                },
+                "minItems": 1,
+                "maxItems": 15
+              },
+              "point": {
+                "type": "string",
+                "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+                "maxLength": 32
+              },
+              "destination": {
+                "type": "object",
+                "properties": {
+                  "target": {
+                    "type": "string",
+                    "pattern": "^[a-fA-F0-9]{32}$",
+                    "maxLength": 32,
+                    "x-resource": "object"
+                  },
+                  "revision": {
+                    "type": "integer",
+                    "minimum": 1.0,
+                    "maximum": 2147483647.0
+                  },
+                  "point": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+                    "maxLength": 32
+                  }
+                },
+                "required": [
+                  "target",
+                  "revision",
+                  "point"
+                ],
+                "additionalProperties": false,
+                "x-current": {
+                  "fact": "object.placement",
+                  "version": 1,
+                  "arguments": {
+                    "target": "target"
+                  },
+                  "fields": {
+                    "revision": [
+                      "revision"
+                    ]
+                  },
+                  "guards": [
+                    "revision"
+                  ]
+                }
+              },
+              "turn": {
+                "type": "number",
+                "minimum": -180.0,
+                "maximum": 180.0
+              },
+              "breakForce": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 10000.0
+              },
+              "breakTorque": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 10000.0
+              }
+            },
+            "required": [
+              "mode",
+              "members",
+              "point",
+              "destination",
+              "turn",
+              "breakForce",
+              "breakTorque"
+            ],
+            "additionalProperties": false,
+            "title": "Place and join",
+            "format": "snapPlacement",
+            "x-features": [
+              "snapPoints.v1",
+              "physicalConnections.v1"
+            ]
+          }
+        ]
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "source.revision.current",
+        "room.physics.paused",
+        "authoring.inactive",
+        "storage.writable"
+      ],
+      "description": "Align the chosen point of the FIRST moving member with an exact destination point of the same family. Both local frames coincide, with turn in degrees about destination +Y. Move 1–15 distinct idle creations as one rigid arrangement, without resizing; include every connected member. The destination must be outside that list. Use current revisions for all members and destination. Pause physics and stop member/destination playback, grips and authoring. place only changes poses; join also adds an ordinary fixed connection from the first member to the destination, using explicit break limits (zero means unbreakable). The first member must then use solid/bouncy physics and have no outgoing connection; never silently replace an existing link. One save/Undo includes the live destination pose and the whole moving arrangement. Failed admission/save changes nothing. Temporary edits stay in the fork; Stop does not undo completed edits. Snap points do not enforce occupancy, collision-free placement, nearest-point selection or chess rules. Subsequent point edits do not alter the accepted connection frames. Book controls, user programs and the agent call this same operation.",
+      "example": {
+        "mode": "place",
+        "members": [
+          {
+            "target": "00000000000000000000000000000000",
+            "revision": 1
+          }
+        ],
+        "point": "Bottom",
+        "destination": {
+          "target": "11111111111111111111111111111111",
+          "revision": 1,
+          "point": "Top"
+        },
+        "turn": 0
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 15.0
+          },
+          "joined": {
+            "type": "boolean"
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "count",
+          "joined",
+          "temporary"
+        ],
+        "additionalProperties": false
       }
     },
     {
@@ -19880,6 +20555,117 @@
       ]
     },
     {
+      "id": "object.snapPoint",
+      "version": 1,
+      "type": {
+        "record": {
+          "revision": "number",
+          "configured": "boolean",
+          "definition": {
+            "record": {
+              "name": "text",
+              "family": "text",
+              "frame": {
+                "record": {
+                  "position": {
+                    "record": {
+                      "x": "number",
+                      "y": "number",
+                      "z": "number"
+                    }
+                  },
+                  "rotation": {
+                    "record": {
+                      "x": "number",
+                      "y": "number",
+                      "z": "number",
+                      "w": "number"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "label": "Saved snap point",
+      "description": "One root-local alignment frame and its current object revision. Missing points return configured=false with inert defaults so a new point can be configured. Read object.placement separately for its object's live room-local pose. There is no snap occupancy state; ordinary placement or physics can move pieces afterwards.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "point": {
+            "type": "string",
+            "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "target",
+          "point"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000",
+        "point": "Top"
+      },
+      "features": [
+        "factQueries.v1",
+        "snapPoints.v1"
+      ]
+    },
+    {
+      "id": "object.snapPoints",
+      "version": 1,
+      "type": {
+        "record": {
+          "revision": "number",
+          "offset": "number",
+          "total": "number",
+          "ids": {
+            "list": "text"
+          }
+        }
+      },
+      "label": "Object snap points",
+      "description": "Read stable point IDs eight at a time, with total and current revision. Start offset 0 and advance by eight; an offset past the end returns an empty page. Read each definition with object.snapPoint. Reading does not reserve a slot or move anything.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 63.0
+          }
+        },
+        "required": [
+          "target",
+          "offset"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000",
+        "offset": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "snapPoints.v1"
+      ]
+    },
+    {
       "id": "object.connection",
       "version": 1,
       "type": {
@@ -22846,7 +23632,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "ae384ab3f1da3318df2125699258758d647a3c3b55eef3984f6c3f00934d01b6"
+      "sha256": "9e48364ad1d0abacf3aee1a8976585e4d0e5b2a5fd763b70159d94fb772e02ba"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -22866,7 +23652,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "2691191bda9101a229ccf2c6e57fe38d6d535203d6be9e4974a3b06bfbffec31"
+      "sha256": "c0f402aa61cbf541fedd5aa92c9444425c59067319993816237b2b333d063bc3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -22898,7 +23684,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "0eedd6a24a25e190ceebb22dba8ab15f13646d7d5543890d06845343514e584d"
+      "sha256": "0f4d97457c1988397b3c9056ce16efd5d26067ff6f3a67458144614d601e1ca4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -22922,11 +23708,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "b5da23162c98495cea0669886795f3a07fdd60b1c3b70500e3cf66ee4b03823c"
+      "sha256": "b9bea6142787ad1a1481af4b28973c8a418c1ff0d54df892438128ac84d05795"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
-      "sha256": "b1e54c179b13c08c866e8c7bae7a01cf43c7fe7f1016bf3d583e3180d7d889b3"
+      "sha256": "eb82f7e36f0a7689d342e6dd384735932879332592a0529fc488be748e78de1c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleMemory.cs",
@@ -22942,11 +23728,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveCapture.cs",
-      "sha256": "96d99a5b9c18f25cfcd91864a1792d1b9096206ea0de8b5636c74b7a0ec6a40c"
+      "sha256": "b551fdb093c2979e612d7b5103d7d4766abd4ceca4a433bed8b6c6fadebc2310"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveSnapshot.cs",
-      "sha256": "a7aa625177e40f2c201e2eeed99db48b7e301e1fc1217eed8b2f5f2e54e47b10"
+      "sha256": "a1702942cd453658262e8d7e7ba82520571517f6f63d2e41c70dddfe7347ba8c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.Retention.cs",
@@ -23122,7 +23908,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "b104ed5028423b2f1c9f6f9f115aab3fefcd47fa39d62ffa30289810d5f96728"
+      "sha256": "315642c63c4c0a4aee9721bec71c69232ff7469720c5ae36f84bbf20a019be23"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomToolTray.cs",
@@ -23157,6 +23943,14 @@
       "sha256": "52bb0671db4b3853be04cf787b2331e6be559047c1e266c7dcfc8a440590083d"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSnapPoint.cs",
+      "sha256": "488b01d44238fef8568927a9d3e8c86bee3fc37860b088fd503a43f47b924f80"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSnapEdits.cs",
+      "sha256": "e15a5ab9cd0952c6046210a7b968b3d21efa06463d9261d26eaa2561981d3bf8"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomConnectionEdits.cs",
       "sha256": "602b64f946c39d84e642851f2f4f70bc0de467b8dd2ce7d62f08a9122fc289b5"
     },
@@ -23186,7 +23980,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "1270be5ce167b46f45cfad308fd642b859e61009e567d2d1ad41faee390caea4"
+      "sha256": "ba6e144e40af1ce8aae0bc9a547adb0f5a4a3bc492d774418abfe85fedce30de"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedDrawing.cs",
@@ -23330,7 +24124,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationTemplates.cs",
-      "sha256": "7f52aeb10dc31062dc828593576eb43d1852deb9f8aae4520ddccbc9b44fb84a"
+      "sha256": "2711b0b520b87218c3bd199d15ed47e40391ab4d8d6cec8dc0b6926adf45f0f0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLayout.cs",
@@ -23338,7 +24132,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationBatch.cs",
-      "sha256": "91d1e6fe5270b72c8d3f6d9ba988752f84578699151cdd1156b86bf7f257179e"
+      "sha256": "70f827abc767e47b11f532202c69bbab4218263a83b2129552c210e2c5dc16b6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructure.cs",
@@ -23386,7 +24180,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "83aa318e0a56e5ca1944edc149ab4767895921f09c6addc0620995cd5a380abf"
+      "sha256": "455591d112d3285a58b96adf550b23be15a166e4fdb047328acd97e33fb4d2d7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -23434,11 +24228,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreateTemplateCapability.cs",
-      "sha256": "9c0946c3438a623d626da7567b44757d922b1d31672b92617ee298cd9c703920"
+      "sha256": "8cf6feb4f24130269df260a64102422027a034acf5e5e4365fd8738e92f68ac5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreationPrototypeSchema.cs",
-      "sha256": "9797502f04f5c829486c214fcbe0b2295f7ad383a6b709fe853a05ab6f1816f2"
+      "sha256": "bb4ad4e7927197b60c92c8b5774fa70cc041d15d9b8114e08125fadcc9e734b9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingCapabilities.cs",
@@ -23569,6 +24363,14 @@
       "sha256": "627c44fa4a267eebfafe2f82445c8cb01c32940805336dc776a94d9b439824b4"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SnapConstructionCapability.cs",
+      "sha256": "8f6fe0baa5bb460caf48888ff7637dc3243fad8666487f6910d55e1a8da4774d"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SnapPointCapability.cs",
+      "sha256": "ab7713de986dd651707dd6b12370eb171c132e5ae2593a517598cdc3b96119d8"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SpatialCapabilities.cs",
       "sha256": "a0c4af9d75687aacf1179d4abb3fa8aa20b6767430e8e79a4c08af293da3d428"
     },
@@ -23630,7 +24432,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/brick.json",
-      "sha256": "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8"
+      "sha256": "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/chalk.json",

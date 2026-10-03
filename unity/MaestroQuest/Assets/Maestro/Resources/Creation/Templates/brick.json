@@ -3,7 +3,7 @@
   "version": 1,
   "id": "brick",
   "name": "Building brick",
-  "description": "Loose stacking brick. Its simple collision covers the studs; snapping and interlocking are not configured.",
+  "description": "Editable stacking brick with Top and Bottom snap points. Place loosely or explicitly join compatible points.",
   "tags": [
     "building",
     "stacking"
@@ -185,6 +185,46 @@
       "mode": "solid",
       "shape": "automatic",
       "mass": 0.15
-    }
+    },
+    "snapPoints": [
+      {
+        "version": 1,
+        "id": "Top",
+        "name": "Top",
+        "family": "Brick",
+        "frame": {
+          "position": {
+            "x": 0,
+            "y": 0.042,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "Bottom",
+        "name": "Bottom",
+        "family": "Brick",
+        "frame": {
+          "position": {
+            "x": 0,
+            "y": -0.03,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      }
+    ]
   }
 }

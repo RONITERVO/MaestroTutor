@@ -4,7 +4,8 @@
 blueprint. Version 1 keeps pieces independent; version 3 adds physical connections with
 `connectedBlueprints.v2` and `physicalConnections.v1`. The optional book form, source/blocks
 and room agent use the same contract. This does not create a persistent assembly
-entity, a separate blueprint library or snap sockets.
+entity or separate blueprint library. Optional [snap-point data](QUEST_SNAP_POINTS.md)
+is retained by templates and captured prototypes.
 
 ## Definition and placement
 

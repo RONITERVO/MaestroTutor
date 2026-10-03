@@ -42,7 +42,7 @@ namespace Maestro.Quest.Creation
                 if(!item.isActiveAndEnabled||!item.Grab||!item.Grab.enabled||item.GetComponent<RigidRoomItem>()?.GeometryReady==false||Read(m.target).recipe?.playing==true||GetComponent<AnimationWorkshop>()?.ControlsTarget(m.target)==true){error="Release members and stop their animation authoring/playback first";return false;}
                 poses[i]=ObjectPlacement.Capture(m.target,item.transform);
             }
-            if(Snapshot().objects.Any(o=>(o.connections??Array.Empty<RoomConnection>()).Any(h=>selected.Contains(o.id)!=selected.Contains(h.connected)))){error="Include both ends of every connected hinge before moving a construction";return false;}
+            if(Snapshot().objects.Any(o=>(o.connections??Array.Empty<RoomConnection>()).Any(h=>selected.Contains(o.id)!=selected.Contains(h.connected)))){error="Include both ends of every physical connection before moving a construction";return false;}
             before=new RoomLayout {placements=poses};return before.Validate(out error);
         }
         internal bool PrepareGroupTransform(RoomGroupTransform request,out RoomLayout layout,out string error){

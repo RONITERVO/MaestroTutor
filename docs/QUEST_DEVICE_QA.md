@@ -1725,3 +1725,15 @@ available before advertising finger pressing. Move/rotate/resize the complete
 construction, pause/resume, recenter and reopen the room. Verify resting position,
 readable book controls and frame-time traces. No installation or headset test has
 been performed for this increment while the device hold remains active.
+
+### Explicit snap points — pending Quest 3
+
+Create two building bricks. With physics paused, use the book action “Snap a
+construction to a point”: first brick Bottom to second brick Top, first Place at
+point, then Place and join with explicit break limits. Load both current revisions.
+Verify upright/quarter-turn placement, a single Undo, scale differences and a
+rotated destination. In join mode, start physics and grip/throw the construction.
+Capture and recreate it, retaining editable points and fresh object IDs. Try a
+mismatched family, a held member and a missing point; none may partly move/save.
+This flow does not yet offer automatic near-point grip previews. Check readability
+and controller/hand comfort before advertising headset acceptance.

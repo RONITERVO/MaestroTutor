@@ -203,6 +203,35 @@ try{
   if(typeof sliderUndo.catalog?.value!=='number'||Math.abs(sliderUndo.catalog.value)>.0001)throw new Error('Slider Undo did not restore its live travel');
   await execute([{action:'undo'}]);const buttonRemoved=await execute([{action:'undo'}]);if(buttonIds.some(id=>buttonRemoved.objects.some(o=>o.id===id)))throw new Error('Button construction was not one Undo');
   await writeFile(join(directory,'slider-authoring.json'),JSON.stringify({boundary:'Real Unity native slider configure/linear alignment/readback/Undo. Physical pressing and program response tested in PlayMode; no headset or provider proof.',before:sliderBefore,search:sliderSearch,definition:sliderDefinition,current:sliderCurrent,after:sliderAfter,tuning:sliderTuning,aligned:sliderAligned,read:sliderRead,undo:sliderUndo,removed:buttonRemoved},null,2));
+  const snapFrames={position:{x:0,y:.05,z:0},rotation:{x:0,y:0,z:0,w:1}};
+  const snapEdited=[];
+  for(const [i,target] of layoutIds.entries()){
+   const point=i===0?'Bottom':'Top';
+   const current=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.snapPoint',version:1,arguments:{target,point}}}]);
+   const definition={name:point,family:'ProbeBrick',frame:{...snapFrames,position:{x:0,y:i===0?-.05:.05,z:0}}};
+   snapEdited.push(await execute([{action:'execution',execution:{operation:'start',call:{id:'object.snapPoint.edit',version:1,arguments:{operation:'configure',target,revision:(current.catalog?.value as {revision:number}).revision,point,definition}}}}]));
+  }
+  const snapList=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.snapPoints',version:1,arguments:{target:layoutIds[0],offset:0}}}]);
+  if(!(snapList.catalog?.value as {ids:string[]}).ids.includes('Bottom'))throw new Error('Saved snap-point ID missing');
+  const snapBefore=structuredClone(lease.state());
+  const snapSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Snap a construction to a point',offset:0}}]);
+  const snapDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.layout.snap',version:1}}]);
+  const snapFacts=[];
+  for(const target of layoutIds)snapFacts.push(await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.placement',version:1,arguments:{target}}}]));
+  const snapArgs={mode:'join',members:[{target:layoutIds[0],revision:(snapFacts[0].catalog?.value as {revision:number}).revision}],point:'Bottom',destination:{target:layoutIds[1],revision:(snapFacts[1].catalog?.value as {revision:number}).revision,point:'Top'},turn:90,breakForce:45,breakTorque:3};
+  const snapAfter=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.layout.snap',version:1,arguments:snapArgs}}}]);
+  if(snapAfter.execution?.selected?.output?.joined!==true)throw new Error('Snapping did not complete the requested fixed join');
+  const snapRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.connection',version:1,arguments:{target:layoutIds[0]}}}]);
+  const snapConnection=snapRead.catalog?.value as {configured:boolean;connected:string;definition:{kind:string;breakForce:number}};
+  if(!snapConnection.configured||snapConnection.connected!==layoutIds[1]||snapConnection.definition.kind!=='fixed'||snapConnection.definition.breakForce!==45)throw new Error('Snap join differs from its accepted definition');
+  const snapMoved=snapAfter.objects.find(o=>o.id===layoutIds[0])!,snapTarget=snapAfter.objects.find(o=>o.id===layoutIds[1])!;
+  if(Math.abs(snapMoved.position.x-snapTarget.position.x)>.0001||Math.abs(snapMoved.position.z-snapTarget.position.z)>.0001||Math.abs(snapMoved.position.y-snapTarget.position.y-.05*(snapMoved.scale+snapTarget.scale))>.0001)throw new Error('Snapped frames do not coincide');
+  const snapUndo=await execute([{action:'undo'}]);
+  for(const target of layoutIds){const original=snapBefore.objects.find(o=>o.id===target)!,restored=snapUndo.objects.find(o=>o.id===target)!;if(JSON.stringify(original.position)!==JSON.stringify(restored.position)||JSON.stringify(original.rotation)!==JSON.stringify(restored.rotation))throw new Error('Snap Undo did not restore the complete live arrangement');}
+  const snapUndone=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.connection',version:1,arguments:{target:layoutIds[0]}}}]);
+  if((snapUndone.catalog?.value as {configured:boolean}).configured)throw new Error('Snap Undo left its new join');
+  await execute([{action:'undo'}]);await execute([{action:'undo'}]);
+  await writeFile(join(directory,'snap-authoring.json'),JSON.stringify({boundary:'Real Unity root-local snap-point edits, exact construction snap/join, readback and atomic Undo. Headset snapping comfort and automatic physical previews are not covered.',before:snapBefore,search:snapSearch,definition:snapDefinition,facts:snapFacts,edited:snapEdited,list:snapList,after:snapAfter,read:snapRead,undo:snapUndo,undone:snapUndone},null,2));
   const placements=layoutIds.map((target,i)=>({target,position:{x:.3+i*.25,y:1,z:.8},rotation:{x:0,y:0,z:0,w:1},scale:1}));
   const layoutSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Arrange or reset objects',offset:0}}]);
   const layoutDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.layout.apply',version:1}}]);

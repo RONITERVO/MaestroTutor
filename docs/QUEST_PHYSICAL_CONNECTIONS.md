@@ -133,8 +133,9 @@ Quest 3 acceptance and performance remain pending.
 
 ## Development save boundary and verification
 
-Current room files are `room.v7.json`, paired intents `room-snapshot.v6.json` and
-portable archive manifests version 6. Earlier connected v6 rooms, older in-flight
+Current room files are `room.v8.json`, paired intents `room-snapshot.v7.json` and
+portable archive manifests version 7; [snap-point persistence](QUEST_SNAP_POINTS.md)
+explains the latest boundary. Earlier connected v6 rooms, older in-flight
 intents and old archives remain preserved/refused for recovery. No device data is
 wiped. Clean older room formats supported by RoomDocument still validate; unknown
 component versions cannot load as empty connections. This prerelease boundary
@@ -145,5 +146,5 @@ break and typed event delivery, pause/rearm, save failure, exact revisions, one
 Undo, capture with fresh identities, and old-format preservation. The full Editor
 app journey and generated Chrome controls exercise matching calls and receipts.
 These are separate from Quest acceptance. See [device QA](QUEST_DEVICE_QA.md).
-Socket snapping, sliding joints, cyclic mechanisms, mesh welding, soft bodies,
+Automatic grip snap previews, cyclic mechanisms, mesh welding, soft bodies,
 cloth/hair and liquids are not implemented by this increment.

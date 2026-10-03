@@ -181,3 +181,14 @@ runs before movement in the probe so each browser replay uses a contiguous serie
 of native action identities, without inventing intermediate receipts.
 
 The slider journey creates the included spring-button blueprint, configures its spring target, reads saved tuning, explicitly aligns at a linear distance, verifies travel and Undo, then removes the construction with one Undo. `slider-authoring.json` feeds the generated Chrome form replay (`scripts/probe-slider-authoring.mjs`). Physical pressing and the shared program response are tested separately in Unity PlayMode; no headset/provider claim follows from these checks.
+
+## Explicit snap-point journey (2026-10-03)
+
+The app configures root-local points on two existing objects, reads their IDs and
+current placements, and executes `object.layout.snap` with a quarter-turn and an
+explicit fixed join. It checks aligned origins, exact connection identity/break
+limits and complete-pose plus connection restoration with one Undo. Point edits
+are then undone separately. `snap-authoring.json` feeds the production generated
+book form replay in `scripts/probe-snap-authoring.mjs`. Both revisions are required;
+invalid turns are refused and the accepted call and receipt match native evidence.
+Physical proximity previews and headset acceptance remain separate future checks.

@@ -3,8 +3,9 @@
 The optional book workshop, solid creation-tray **Move pieces** button and agent
 use the same native construction selection and capability catalog. This increment
 adds arrangement of 1–16 creations with one save and one Undo. Ordinary grips
-continue to move individual objects. Socket snapping and physical welding remain
-separate future work; a moved stack can still fall apart when physics resumes.
+continue to move individual objects. Explicit [snap placement and fixed joining](QUEST_SNAP_POINTS.md) use a separate
+shared action; the physical handle does not yet search for nearby snap points.
+A loosely moved stack can still fall apart when physics resumes.
 
 ## Direct manipulation
 

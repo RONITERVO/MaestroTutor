@@ -8,7 +8,7 @@ interface Frame {time:number;position:V;rotation:Q;scale:number}
 interface Surface {id:string;part:string;position:V;width:number;height:number;strokes:{id:string;radius:number;points:V[]}[]}
 export interface CreationPrototype {
  geometry:{kind:string;recipe?:{playing:boolean;parts:{id:string}[]};points?:V[];radius?:number};
- surfaces:Surface[];drawingTips:{part:string;position:V}[];motion?:{loop:boolean;frames:Frame[]};
+ snapPoints?:{id:string;frame:{position:V}}[];surfaces:Surface[];drawingTips:{part:string;position:V}[];motion?:{loop:boolean;frames:Frame[]};
 }
 const hasLength=(p:V[])=>p.some(v=>(v.x-p[0].x)**2+(v.y-p[0].y)**2+(v.z-p[0].z)**2>.000001);
 export function validCreationPrototypeGeometry(value:Record<string,unknown>):boolean {
@@ -24,6 +24,7 @@ export function validCreationPrototypeGeometry(value:Record<string,unknown>):boo
    if(!hasLength(ink.points)||ink.points.some(v=>length2(v)>100||Math.abs(v.z)>.000001||Math.abs(v.x)+ink.radius>s.width*.5+.000001||Math.abs(v.y)+ink.radius>s.height*.5+.000001))return false;
   }
  }
+ if(p.snapPoints&&(new Set(p.snapPoints.map(s=>s.id)).size!==p.snapPoints.length||p.snapPoints.some(s=>length2(s.frame.position)>100)))return false;
  if(points>32768||p.drawingTips.some(t=>!part(t.part)||length2(t.position)>100))return false;
  if(p.motion?.frames.some((f,i)=>i===0?f.time!==0||length2(f.position)>250001:f.time<=p.motion!.frames[i-1].time||length2(f.position)>250001))return false;
  return true;

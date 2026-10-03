@@ -160,13 +160,15 @@ namespace Maestro.Quest.Creation
             return CommitCreatedObject(item,out id,out error);
         }
         public bool CanCreateRecipe(RoomRecipe recipe,out string error)=>CanCreateRecipe(recipe,null,null,out error);
-        public bool CanCreateRecipe(RoomRecipe recipe,CollisionRecipe collision,ObjectPhysicsSettings physics,out string error,DrawingSurface[] surfaces=null,DrawingTip[] drawingTips=null) {
+        public bool CanCreateRecipe(RoomRecipe recipe,CollisionRecipe collision,ObjectPhysicsSettings physics,out string error,DrawingSurface[] surfaces=null,DrawingTip[] drawingTips=null,RoomSnapPoint[] snapPoints=null) {
             if(!CanCreatePrimitive(out error))return false;
             if(recipe==null) {error="Provide a construction recipe";return false;}
             if(!recipe.Validate(out error))return false;
             if(!DrawingSurface.ValidateCollection(new RoomObjectData {kind=RoomObjectKind.Assembly,recipe=recipe,surfaces=surfaces},out error))return false;
             if(Snapshot().objects.Sum(x=>x.surfaces?.Length??0)+(surfaces?.Length??0)>DrawingSurface.MaximumRoomSurfaces){error="This room has reached its drawing-surface limit";return false;}
             if(!DrawingTip.ValidateCollection(new RoomObjectData {kind=RoomObjectKind.Assembly,recipe=recipe,drawingTips=drawingTips},out error))return false;
+            if(!RoomSnapPoint.ValidateCollection(new RoomObjectData{kind=RoomObjectKind.Assembly,snapPoints=snapPoints},out error))return false;
+            if(Snapshot().objects.Sum(x=>x.snapPoints?.Length??0)+(snapPoints?.Length??0)>RoomSnapPoint.MaximumPerRoom){error="This room has reached its snap-point limit";return false;}
             if(collision!=null&&!collision.Validate(out error))return false;
             if(physics!=null&&!RoomControls.ValidPhysics(physics)){error="Provide valid fixed/solid/bouncy physics, collision mode and mass";return false;}
             if(journal.Snapshot().objects.Sum(CollisionRecipe.ReservedPieces)+Math.Max(1,collision?.Pieces??0)>CollisionRecipe.MaximumRoomPieces){error="Collision shapes exceed the room piece budget";return false;}
@@ -175,9 +177,9 @@ namespace Maestro.Quest.Creation
             return true;
         }
         public bool CreateRecipe(string name,Vector3 position,float scale,RoomRecipe recipe,out string id,out string error)=>CreateRecipe(name,position,scale,recipe,null,null,out id,out error);
-        public bool CreateRecipe(string name,Vector3 position,float scale,RoomRecipe recipe,CollisionRecipe collision,ObjectPhysicsSettings physics,out string id,out string error,DrawingSurface[] surfaces=null,DrawingTip[] drawingTips=null) {
-            id=null;if(!CanCreateRecipe(recipe,collision,physics,out error,surfaces,drawingTips))return false;
-            if(!PrepareRecipeObject(name,position,scale,recipe,collision,physics,out var item,out error,surfaces,drawingTips))return false;
+        public bool CreateRecipe(string name,Vector3 position,float scale,RoomRecipe recipe,CollisionRecipe collision,ObjectPhysicsSettings physics,out string id,out string error,DrawingSurface[] surfaces=null,DrawingTip[] drawingTips=null,RoomSnapPoint[] snapPoints=null) {
+            id=null;if(!CanCreateRecipe(recipe,collision,physics,out error,surfaces,drawingTips,snapPoints))return false;
+            if(!PrepareRecipeObject(name,position,scale,recipe,collision,physics,out var item,out error,surfaces,drawingTips,snapPoints))return false;
             return CommitCreatedObject(item,out id,out error);
         }
         bool CommitCreatedObject(RoomObjectData item,out string id,out string error) {

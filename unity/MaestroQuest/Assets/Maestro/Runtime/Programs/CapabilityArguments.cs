@@ -51,6 +51,10 @@ namespace Maestro.Quest.Programs
                         if(recipe==null||!recipe.Validate(out error)) {error??=path+" is an invalid construction recipe";return false;}
                     } else if((string)schema["format"]=="groupTransform") {
                         if(!JsonUtility.FromJson<RoomGroupTransform>(obj.ToString()).Validate(out error))return false;
+                    } else if((string)schema["format"]=="snapPointDefinition") {
+                        var point=JsonUtility.FromJson<RoomSnapPoint>(obj.ToString());if(!obj.ContainsKey("id"))point.id="Point";if(!point.Validate(out error))return false;
+                    } else if((string)schema["format"]=="snapPlacement") {
+                        if(!JsonUtility.FromJson<RoomSnapPlacement>(obj.ToString()).Validate(out error))return false;
                     } else if((string)schema["format"]=="constructionSelection") {
                         var members=((JArray)obj["members"]).Values<string>().ToArray();if(members.Distinct().Count()!=members.Length){error=path+" needs distinct construction pieces";return false;}
                     } else if((string)schema["format"]=="structureSource") {

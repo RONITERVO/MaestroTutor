@@ -137,7 +137,7 @@ only half the persistence path has been adapted.
 
 The coordinator captures detached, exact room/memory file identities and
 publishes a bounded pair under an exclusive filesystem owner. A flushed
-`room-snapshot.v6.json` intent records the before/after documents and fingerprints
+`room-snapshot.v7.json` intent records the before/after documents and fingerprints
 of the retained backups. The current intent contains v3 room definitions, including
 structures; unknown or old in-flight intents remain preserved for explicit recovery.
 Before its committed marker is published, recovery

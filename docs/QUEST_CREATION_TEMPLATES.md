@@ -24,7 +24,7 @@ animation. Successful receipt replay cannot create it twice.
 | Spoon | Open scoop, handle and compound collision | Small rigid objects only |
 | Fork | Handle, crossbar and four solid prongs | Simple rigid cutlery |
 | Domino | Upright two-three piece and one simple proxy | Copy/place/topple; no domino game rules |
-| Building brick | Body and four visible studs, single bounded proxy | Loose stacking; studs do not interlock or snap |
+| Building brick | Body and four visible studs, single bounded proxy | Loose stacking plus editable Top/Bottom snap points; explicit place/join, no automatic stud interlocking |
 | Pawn | Lathe chess pawn with conservative cylinder collision | Editable/copyable piece; no chessboard or legal-move engine |
 | Ball | Sphere with bouncy physics | Existing throw/roll/contact capabilities |
 | Held chalk | Ordinary editable recipe and configurable drawing tip | Flat configured patches; no arbitrary curved/deforming paint |
@@ -32,7 +32,7 @@ animation. Successful receipt replay cannot create it twice.
 | Box robot | Nineteen parented parts, two wave tracks, initially idle | Fixed whole-body proxy does not follow animated parts |
 
 The first set is deliberately smaller than the complete proposed play kit. Curved
-painting, further fidgets, socket snapping, a shipped chess layout,
+painting, further fidgets, automatic grip snap previews, a shipped chess layout,
 container transfer and snow remain separate increments in
 [world authoring](QUEST_WORLD_AUTHORING.md). This set does not fulfill those gates. Existing pieces can now share a
 [layout reset](QUEST_LAYOUT_AUTHORING.md) with one Undo; this does not connect

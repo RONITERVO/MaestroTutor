@@ -14,8 +14,10 @@ catching a ball and a compound cup landing on a floor. See QUEST_COLLISION_AUTHO
 Physical connections now share hinge/fixed/slider definitions, break limits, native facts
 and a typed break event; see QUEST_PHYSICAL_CONNECTIONS.md. Connected blueprints
 and construction capture preserve all three kinds. An editable spring-button module
-uses ordinary recipes and condition waits for press/release. Liquid containers,
-socket snapping and the full default play kit remain unfinished.
+uses ordinary recipes and condition waits for press/release. Saved snap points now
+support explicit construction placement or fixed joining with shared current
+revisions and one Undo; see QUEST_SNAP_POINTS.md. Liquid containers, physical
+proximity snap previews and the full default play kit remain unfinished.
 See QUEST_RECIPE_AUTHORING.md and QUEST_NATIVE_ROOM_PROBE.md.
 
 The October 2 notebook scope and current review assessment are recorded in
