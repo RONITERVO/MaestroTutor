@@ -23,7 +23,7 @@ namespace Maestro.Quest.Tests
             var part=Cup().parts[0];var mesh=RecipeLathe.Build(part);
             try{
                 var v=mesh.vertices;var n=mesh.normals;var t=mesh.triangles;
-                Assert.That(v.Length,Is.LessThanOrEqualTo(RecipeLathe.VertexCost(Cup())));Assert.That(v.Length,Is.GreaterThan(0));
+                Assert.That(v.Length,Is.LessThanOrEqualTo(RecipeGeometry.VertexCost(Cup())));Assert.That(v.Length,Is.GreaterThan(0));
                 Assert.That(mesh.uv.Length,Is.EqualTo(v.Length));Assert.That(n.All(x=>RoomRecipe.Finite(x)&&Mathf.Abs(x.magnitude-1)<.001f),Is.True);
                 for(int i=0;i<t.Length;i+=3){var normal=Vector3.Cross(v[t[i+1]]-v[t[i]],v[t[i+2]]-v[t[i]]);Assert.That(normal.sqrMagnitude,Is.GreaterThan(1e-12));Assert.That(Vector3.Dot(normal,n[t[i]]+n[t[i+1]]+n[t[i+2]]),Is.GreaterThan(0));
                     if(new[]{v[t[i]].y,v[t[i+1]].y,v[t[i+2]].y}.All(y=>y>.49f))Assert.That(new[]{v[t[i]],v[t[i+1]],v[t[i+2]]}.All(p=>new Vector2(p.x,p.z).magnitude>.39f),Is.True,"No cap may fill the cup mouth");}

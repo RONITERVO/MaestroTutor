@@ -51,7 +51,7 @@ namespace Maestro.Quest.Creation
                 node.SetParent(string.IsNullOrEmpty(part.parent) ? geometry.transform : nodes[part.parent],false);
                 node.SetLocalPositionAndRotation(part.position,part.rotation); nodes.Add(part.id,node); rest.Add(part.id,part.rotation);
                 GameObject shape;
-                if(part.shape=="lathe") {shape=new GameObject("Lathe",typeof(MeshFilter),typeof(MeshRenderer));var mesh=RecipeLathe.Build(part);meshes.Add(mesh);shape.GetComponent<MeshFilter>().sharedMesh=mesh;}
+                if(RecipeGeometry.Custom(part.shape)) {shape=new GameObject(part.shape,typeof(MeshFilter),typeof(MeshRenderer));var mesh=RecipeGeometry.Build(part);meshes.Add(mesh);shape.GetComponent<MeshFilter>().sharedMesh=mesh;}
                 else shape=GameObject.CreatePrimitive(part.shape == "sphere" ? PrimitiveType.Sphere : part.shape == "cylinder" ? PrimitiveType.Cylinder : PrimitiveType.Cube);
                 shape.transform.SetParent(node,false); shape.transform.localScale = Vector3.Scale(part.size,part.shape == "cylinder" ? new Vector3(1,.5f,1) : Vector3.one);
                 // One stable proxy collider belongs to the complete grabbable assembly.

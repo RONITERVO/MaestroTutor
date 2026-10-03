@@ -2774,3 +2774,18 @@ whole episode. The generated catalog adds `object.container.live` and
 per-toy tool is needed. Two-handed grips, typed event delivery, publication/Undo,
 collision blocking, overflow and failure recovery are desktop acceptance cases.
 Quest pouring comfort and performance remain open. See [containers](QUEST_CONTAINERS.md).
+
+
+### Editable outline extrusion (2026-10-03)
+
+Native closed-outline extrusion extends the existing recipe evaluator and shared
+part schema. Concave, bounded XY profiles become solid geometry with explicit
+thickness, caps, normals and UVs. The book editor, agent/program calls and paged
+profile reads share exact saved source. Invalid topology is refused before mesh
+allocation; saved edits/Undo, temporary forks and generated-vertex admission keep
+the existing lifecycle. Room v10, snapshot intent v9 and archive v9 protect new
+geometry on downgrade. See [recipe authoring](QUEST_RECIPE_AUTHORING.md).
+
+This does not finish sweep/CSG, the full play kit, persistent water/snow or the
+hardware, provider and Store acceptance gates. No headset or paid generation is
+used by this increment.

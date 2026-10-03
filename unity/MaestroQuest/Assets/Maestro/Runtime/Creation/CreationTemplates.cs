@@ -43,7 +43,7 @@ namespace Maestro.Quest.Creation
             }
             public JObject Summary(int index,int total)=>new() {
                 ["index"]=index,["total"]=total,["hash"]=Hash,["id"]=Id,["name"]=Name,["details"]=new JObject {["description"]=source["description"].DeepClone(),["tags"]=string.Join(", ",((JArray)source["tags"]).Values<string>()),["author"]=source["author"].DeepClone(),["license"]=source["license"].DeepClone()},
-                ["cost"]=new JObject {["parts"]=Recipe.parts.Length,["tracks"]=Recipe.tracks.Length,["generatedVertices"]=RecipeLathe.VertexCost(Recipe),["collisionPieces"]=Math.Max(1,Collision.Pieces)},["physics"]=source["definition"]["physics"].DeepClone()
+                ["cost"]=new JObject {["parts"]=Recipe.parts.Length,["tracks"]=Recipe.tracks.Length,["generatedVertices"]=RecipeGeometry.VertexCost(Recipe),["collisionPieces"]=Math.Max(1,Collision.Pieces)},["physics"]=source["definition"]["physics"].DeepClone()
             };
         }
         static IReadOnlyList<Entry> entries;

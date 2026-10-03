@@ -176,7 +176,7 @@ namespace Maestro.Quest.Creation
             if(collision!=null&&!collision.Validate(out error))return false;
             if(physics!=null&&!RoomControls.ValidPhysics(physics)){error="Provide valid fixed/solid/bouncy physics, collision mode and mass";return false;}
             if(journal.Snapshot().objects.Sum(CollisionRecipe.ReservedPieces)+Math.Max(1,collision?.Pieces??0)>CollisionRecipe.MaximumRoomPieces){error="Collision shapes exceed the room piece budget";return false;}
-            if(journal.Snapshot().objects.Sum(x=>RecipeLathe.VertexCost(x.recipe))+RecipeLathe.VertexCost(recipe)>RecipeLathe.MaximumRoomVertices){error="Generated recipe geometry exceeds the room vertex budget";return false;}
+            if(journal.Snapshot().objects.Sum(x=>RecipeGeometry.VertexCost(x.recipe))+RecipeGeometry.VertexCost(recipe)>RecipeGeometry.MaximumRoomVertices){error="Generated recipe geometry exceeds the room vertex budget";return false;}
             if(journal.Snapshot().objects.Sum(x=>x.recipe?.parts.Length??0)+recipe.parts.Length>256) {error="Keep at most 256 recipe parts in this room";return false;}
             return true;
         }

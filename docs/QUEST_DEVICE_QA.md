@@ -2,7 +2,7 @@
 
 
 
-## Editable profile geometry (2026-10-02; headset acceptance pending)
+## Editable profile geometry (headset acceptance pending)
 
 Create a recipe cup through the shared catalog or delegated room agent. Inspect
 it in the optional book workshop; change a profile point and segment count, save,
@@ -11,9 +11,20 @@ crossed outlines and verify the draft remains editable without changing the room
 Check openings, inside/outside shading, readback, gripping, restart/save and repeated
 create/delete resource recovery. Capture the current APK hash and frame/profiler
 measurements at normal and budget-heavy use. The 262,144 generated-vertex ceiling
-is an admission limit, not a measured comfortable Quest workload. Its current box
-collider does not preserve the visible hollow interior; do not claim cup/container
-physics from this geometry test. Desktop rendering and browser replay already pass.
+is an admission limit, not a measured comfortable Quest workload. The default
+bounds collider does not preserve the visible hollow interior; an explicit proxy
+and container component are tested separately. Do not claim container physics
+from this geometry test. Desktop lathe rendering and browser replay already pass.
+
+Also create an Extrude part with the default L outline. Change its depth, move a
+numbered XY point, insert a point along a straight edge, and remove it. Verify the
+visible notch from both sides, readable point labels and retained invalid drafts.
+Apply an edit, Undo, close/reopen the room and repeat in a temporary room followed
+by Discard. Ask Maestro for the same outline edit and compare the accepted source.
+Use explicit compound collision shapes if the notch must admit another object;
+the default bounds proxy does not promise visual-shape collision. Record normal
+and high-profile-count frame measurements without treating the admission limit
+as an acceptable performance target. Desktop extrusion tests are not device proof.
 
 ## Local runtime diagnostics (device acceptance pending)
 

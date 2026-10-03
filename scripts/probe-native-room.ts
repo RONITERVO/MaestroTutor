@@ -78,6 +78,18 @@ try{
   if((collisionRestored.catalog?.value as {shapes?:number})?.shapes!==0)throw new Error('Collision Undo did not restore the default proxy.');
   await writeFile(join(directory,'collision-authoring.json'),JSON.stringify({boundary:'Real Unity native states; browser acknowledgements replayed separately. Not headset or provider proof.',before:restored,search:collisionCatalog,definition:collisionDefinition,current:collisionCurrent,after:collided,summary,wall},null,2));
   const removed=await execute([{action:'undo'}]);if(removed.objects.some(object=>object.id===cupId))throw new Error('Lathe Undo did not remove the created geometry.');
+  const extrusionCases=JSON.parse(await readFile('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/extrusion-contract.json','utf8'));
+  const extrusionRecipe=extrusionCases[0].recipe;
+  const extrusionCreated=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'recipe',name:'Editable bracket',x:.2,y:1,z:.5,scale:1,recipe:extrusionRecipe}}}}]);
+  const extrusionId=extrusionCreated.execution?.selected?.output?.objectId;if(typeof extrusionId!=='string')throw new Error('Extrusion creation did not return an object');
+  const extrusionBefore=await execute([{action:'inspect',target:extrusionId}]);if(extrusionBefore.inspection?.recipe?.parts[0].shape!=='extrude')throw new Error('Native extrusion source is not inspectable');
+  const extrusionPart=structuredClone(extrusionBefore.inspection.recipe.parts[0]);extrusionPart.profile![3].x=0;
+  const extrusionAfter=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.recipe.edit',version:1,arguments:{target:extrusionId,revision:extrusionBefore.inspection.objectRevision,parts:[extrusionPart],removeParts:[],tracks:[],removeTracks:[],duration:2,loop:false}}}}]);
+  const extrusionRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.recipe.profile',version:1,arguments:{target:extrusionId,revision:extrusionAfter.objects.find(o=>o.id===extrusionId)!.objectRevision,part:'Outline',offset:0}}}]);
+  const extrusionValue=extrusionRead.catalog?.value as {segments:number;points:{x:number;y:number}[]};if(extrusionValue?.segments!==0||extrusionValue.points[3].x!==0)throw new Error('Extrusion profile readback differs from edit');
+  const extrusionUndo=await execute([{action:'undo'}]);const extrusionRestored=await execute([{action:'inspect',target:extrusionId}]);if(Math.abs((extrusionRestored.inspection?.recipe?.parts[0].profile?.[3].x??0)+.1)>.00001)throw new Error('Extrusion Undo did not restore source');
+  await writeFile(join(directory,'extrusion-authoring.json'),JSON.stringify({boundary:'Real full-app native recipe creation, editing, profile readback and Undo. Browser replays these exact acknowledgements; no headset performance proof.',before:extrusionBefore,after:extrusionAfter,read:extrusionRead,undo:extrusionUndo,restored:extrusionRestored},null,2));
+  await execute([{action:'undo'}]);
   const templateBefore=structuredClone(lease.state());
   const templateSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'object.create',offset:0}}]);
   const templateDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.create',version:1}}]);

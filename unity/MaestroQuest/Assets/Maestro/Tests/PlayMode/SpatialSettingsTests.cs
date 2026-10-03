@@ -78,7 +78,7 @@ namespace Maestro.Quest.Tests
         {
             SharedModes(out _,out _);string target=editor.Snapshot().objects.First(x=>x.kind==RoomObjectKind.Block).id;
             var stale=SettingsRequest("avatar.movement.configure",SpatialArgs());editor.SetAvatarMovement(2,.4f);Assert.That(modeActions.Execute(stale,out var error),Is.False);StringAssert.Contains("changed",error);
-            world.PausePhysics();editor.SaveNow();var before=SettingsFact("object.physics.settings",target);string file=Path.Combine(directory,"room.v9.json"),original=File.ReadAllText(file),pending=file+".pending";Directory.CreateDirectory(pending);
+            world.PausePhysics();editor.SaveNow();var before=SettingsFact("object.physics.settings",target);string file=Path.Combine(directory,"room.v10.json"),original=File.ReadAllText(file),pending=file+".pending";Directory.CreateDirectory(pending);
             try{
                 Assert.That(modeActions.Execute(SettingsRequest("object.physics.configure",PhysicsArgs(target)),out _),Is.False);yield return null;
                 Assert.That((string)modeActions.Observe()["selected"]["phase"],Is.EqualTo("failed"));Assert.That(modeActions.Observe()["selected"]["output"],Is.Null);Assert.That(JToken.DeepEquals(before,SettingsFact("object.physics.settings",target)),Is.True);

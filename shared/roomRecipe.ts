@@ -3,7 +3,7 @@
 export interface Vec3 {x:number;y:number;z:number}
 export interface Rotation extends Vec3 {w:number}
 export interface Pigment {r:number;g:number;b:number;a:number}
-export interface RecipePart {id:string;parent:string|null;shape:'box'|'sphere'|'cylinder'|'lathe';profile?:{x:number;y:number}[];segments?:number;position:Vec3;rotation:Rotation;size:Vec3;color:Pigment}
+export interface RecipePart {id:string;parent:string|null;shape:'box'|'sphere'|'cylinder'|'lathe'|'extrude';profile?:{x:number;y:number}[];segments?:number;position:Vec3;rotation:Rotation;size:Vec3;color:Pigment}
 export interface RecipeTrack {part:string;keys:{time:number;rotation:Rotation}[]}
 export interface RoomRecipe {version:1;parts:RecipePart[];tracks:RecipeTrack[];duration:number;playing:boolean;loop:boolean}
 const record=(v:unknown):v is Record<string,unknown>=>v!==null && typeof v==='object' && !Array.isArray(v);
@@ -17,7 +17,10 @@ export function validLathePart(part:Record<string,unknown>):boolean {
  const p=part.profile;
  if(part.shape!=='lathe')return (p===undefined||p===null||Array.isArray(p)&&p.length===0)&&(part.segments===undefined||part.segments===0);
  if(!Array.isArray(p)||p.length<3||p.length>16||!Number.isInteger(part.segments)||Number(part.segments)<8||Number(part.segments)>48)return false;
- if(!p.every(a=>record(a)&&finite(a.x)&&finite(a.y)&&a.x>=0&&a.x<=.5&&a.y>=-.5&&a.y<=.5))return false;
+ return validOutline(p,0);
+}
+function validOutline(p:unknown[],minimumX:number):boolean {
+ if(!p.every(a=>record(a)&&finite(a.x)&&finite(a.y)&&a.x>=minimumX&&a.x<=.5&&a.y>=-.5&&a.y<=.5))return false;
  const points=p as {x:number;y:number}[],e=1e-8;
  const cross=(a:typeof points[0],b:typeof a,c:typeof a)=>(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
  const on=(a:typeof points[0],b:typeof a,c:typeof a)=>c.x>=Math.min(a.x,b.x)-e&&c.x<=Math.max(a.x,b.x)+e&&c.y>=Math.min(a.y,b.y)-e&&c.y<=Math.max(a.y,b.y)+e;
@@ -32,12 +35,31 @@ export function validLathePart(part:Record<string,unknown>):boolean {
  }
  return area>=.0002;
 }
+/** Same bounded ear clipping as the native evaluator, used only to validate source. */
+export function validExtrudedPart(part:Record<string,unknown>):boolean {
+ if(part.shape!=='extrude'||part.segments!==undefined&&part.segments!==0||!Array.isArray(part.profile)||part.profile.length<3||part.profile.length>32)return false;
+ const p=part.profile.map(v=>record(v)&&finite(v.x)&&finite(v.y)?{x:Math.fround(v.x),y:Math.fround(v.y)}:v);
+ if(!validOutline(p,-.5))return false;
+ const points=p as {x:number;y:number}[],polygon=points.map((_,i)=>i),epsilon=1e-8;
+ const cross=(a:number,b:number,c:number)=>Math.fround(points[b].x-points[a].x)*Math.fround(points[c].y-points[a].y)-Math.fround(points[b].y-points[a].y)*Math.fround(points[c].x-points[a].x);
+ for(let i=polygon.length-1;i>=0&&polygon.length>3;i--)if(Math.abs(cross(polygon[(i+polygon.length-1)%polygon.length],polygon[i],polygon[(i+1)%polygon.length]))<=epsilon)polygon.splice(i,1);
+ while(polygon.length>3){let found=false;
+  for(let i=0;i<polygon.length;i++){
+   const a=polygon[(i+polygon.length-1)%polygon.length],b=polygon[i],c=polygon[(i+1)%polygon.length];if(cross(a,b,c)<=epsilon)continue;
+   if(polygon.some(p=>p!==a&&p!==b&&p!==c&&cross(a,b,p)>=-epsilon&&cross(b,c,p)>=-epsilon&&cross(c,a,p)>=-epsilon))continue;
+   polygon.splice(i,1);found=true;break;
+  }
+  if(!found)return false;
+ }
+ return cross(polygon[0],polygon[1],polygon[2])>epsilon;
+}
+export const defaultExtrusionProfile=()=>[{x:-.5,y:-.5},{x:.5,y:-.5},{x:.5,y:-.1},{x:-.1,y:-.1},{x:-.1,y:.5},{x:-.5,y:.5}];
 export const defaultLatheProfile=()=>[{x:0,y:-.5},{x:.5,y:-.5},{x:.5,y:.5},{x:.4,y:.5},{x:.4,y:-.4},{x:0,y:-.4}];
 export function parseRecipe(v:unknown):RoomRecipe|null {
  if(!record(v)||v.version!==1||!Array.isArray(v.parts)||v.parts.length<1||v.parts.length>32||!Array.isArray(v.tracks)||v.tracks.length>17||!finite(v.duration)||v.duration<.1||v.duration>30||typeof v.playing!=='boolean'||typeof v.loop!=='boolean')return null;
  const ids=new Map<string,number>();
  for(const p of v.parts) {
-  if(!record(p)||!id(p.id)||ids.has(p.id)||!['box','sphere','cylinder','lathe'].includes(p.shape as string)||!validLathePart(p)||!validVector(p.position)||!validVector(p.size)||!validRotation(p.rotation)||!validPigment(p.color)||![p.size.x,p.size.y,p.size.z].every(n=>n>=.005&&n<=2))return null;
+  if(!record(p)||!id(p.id)||ids.has(p.id)||!['box','sphere','cylinder','lathe','extrude'].includes(p.shape as string)||!(p.shape==='extrude'?validExtrudedPart(p):validLathePart(p))||!validVector(p.position)||!validVector(p.size)||!validRotation(p.rotation)||!validPigment(p.color)||![p.size.x,p.size.y,p.size.z].every(n=>n>=.005&&n<=2))return null;
   if(p.parent!==null&&p.parent!==''&&(typeof p.parent!=='string'||!ids.has(p.parent)))return null;
   const length=Math.hypot(p.position.x,p.position.y,p.position.z),reach=(ids.get(p.parent as string)??0)+length;
   if(length>2||reach+Math.hypot(p.size.x,p.size.y,p.size.z)/2>3)return null;ids.set(p.id,reach);

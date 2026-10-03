@@ -67,5 +67,15 @@ it('edits a visible lathe profile through the same native patch and keeps invali
  await act(async()=>{client.receive(state({revision:2,ack:1}));});
 });
 it('does not offer new geometry to an older native room',()=>{
- const client=new RoomAgentClient();client.receive(state());const screen=render(<RoomWorkspace client={client}/>);expect((screen.getByRole('button',{name:'lathe'}) as HTMLButtonElement).disabled).toBe(true);
+ const client=new RoomAgentClient();client.receive(state());const screen=render(<RoomWorkspace client={client}/>);expect((screen.getByRole('button',{name:'lathe'}) as HTMLButtonElement).disabled).toBe(true);expect((screen.getByRole('button',{name:'extrude'}) as HTMLButtonElement).disabled).toBe(true);
+});
+
+it('edits concave extrusion source in the same workspace and retains invalid drafts',async()=>{
+ const client=new RoomAgentClient();client.receive(state({capabilities:[...state().capabilities!,'extrusionGeometry.v1']}));const screen=render(<RoomWorkspace client={client}/>);
+ fireEvent.click(screen.getByRole('button',{name:'extrude'}));expect(screen.getByRole('img',{name:'Extrusion cross section'})).toBeTruthy();expect(screen.queryByLabelText('Lathe segments')).toBeNull();
+ fireEvent.change(screen.getByLabelText('Profile point 4 x'),{target:{value:'-0.6'}});fireEvent.click(screen.getByRole('button',{name:'Apply changes'}));expect(client.snapshot().request).toBeNull();
+ fireEvent.change(screen.getByLabelText('Profile point 4 x'),{target:{value:'0'}});fireEvent.click(screen.getByRole('button',{name:'Insert after point 1'}));fireEvent.click(screen.getByRole('button',{name:'Apply changes'}));
+ const invocation=client.snapshot().request!.commands[0].execution!;if(invocation.operation!=='start')throw new Error('Expected shared patch');
+ const part=(invocation.call.arguments.parts as NonNullable<ReturnType<typeof parseRecipe>>['parts'])[0];expect(part.shape).toBe('extrude');expect(part.profile).toHaveLength(7);expect(part.segments).toBe(0);
+ await act(async()=>{client.receive(state({revision:2,ack:1}));});
 });

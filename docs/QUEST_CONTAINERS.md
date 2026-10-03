@@ -51,9 +51,9 @@ Temporary changes stay temporary until accepted. Workspace export/import and
 backup operate on the same room data. Unfinished episodes and their events never replay after reload. Pouring can
 resume from accepted contents and current placement after physics is started.
 
-Room format 9 protects new components from an older client dropping them. Clean
-room formats 1–5, 7 and 8 still load; version 6 remains unsupported. Snapshot intent
-format 8 and archive manifest 8 carry room.v9.json. Unknown component versions
+Room format 10 now protects extrusion as well as saved components from older
+readers. Clean room formats 1–5 and 7–9 still load; version 6 remains unsupported.
+Snapshot intent format 9 and archive manifest 9 carry room.v10.json. Unknown component versions
 preserve the original saved file and use the existing recovery path. No migration
 of uncertain old transaction evidence and no automatic data reset is added.
 

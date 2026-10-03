@@ -62,7 +62,9 @@ namespace Maestro.Quest.Programs
             lathe["x-features"]=new JArray("latheGeometry.v1");
             part["properties"]["profile"]=List((JObject)profilePoint.DeepClone(),0,0);part["properties"]["segments"]=Number(0,0,true);
             // Unity serializes empty arrays/default numbers for primitive parts. Old literal recipes may omit both.
-            part=new JObject {["oneOf"]=new JArray(part,lathe),["x-discriminators"]=new JArray("shape")};
+            var extrude=(JObject)lathe.DeepClone();extrude["properties"]["shape"]=Choice("extrude");extrude["properties"]["profile"]=List(Object(new JObject {["x"]=Number(-.5,.5),["y"]=Number(-.5,.5)}),3,32);extrude["properties"]["segments"]=Number(0,0,true);
+            extrude["required"].First(x=>(string)x=="segments").Remove();extrude["format"]="extrusionPart";extrude["title"]="Extruded outline";extrude["description"]="Extrude a simple counter-clockwise XY outline along Z. 3–32 points in -0.5–0.5, scaled by part.size; size.z is thickness. Close implicitly, without repeated endpoint, holes, touching or crossing edges. Concave outlines and collinear edge points are supported. segments is omitted or zero. Collision remains an independent explicit proxy.";extrude["x-features"]=new JArray(Maestro.Quest.Creation.RecipeExtrusion.Feature);
+            part=new JObject {["oneOf"]=new JArray(part,lathe,extrude),["x-discriminators"]=new JArray("shape")};
             var key=Object(new JObject {["time"]=Number(0,30),["rotation"]=Vector(true)});
             var track=Object(new JObject {["part"]=Text("^[a-zA-Z0-9_]{1,32}$",32),["keys"]=List(key,2,16)});
             var recipe=Object(new JObject {["version"]=Number(1,1,true),["parts"]=List(part,1,32),["tracks"]=List(track,0,17),

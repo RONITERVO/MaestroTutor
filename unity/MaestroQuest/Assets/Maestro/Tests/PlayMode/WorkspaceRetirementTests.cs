@@ -53,7 +53,7 @@ namespace Maestro.Quest.Tests
         [UnityTest] public IEnumerator DisabledRecoveredReplacementKeepsSaveDispatchPausedThroughDestruction()=>RecoverOwners(true);
         IEnumerator RecoverOwners(bool disable)
         {
-            yield return ReadyForDamagedPreservation(true);var old=host.Current;var editor=old.Editor;var candidate=store.Previous();string originalDirectory=editor.SaveDirectory;byte[] originalRoom=File.ReadAllBytes(Path.Combine(originalDirectory,"room.v9.json"));AcceptedEdit("Live edit kept in recovery evidence");
+            yield return ReadyForDamagedPreservation(true);var old=host.Current;var editor=old.Editor;var candidate=store.Previous();string originalDirectory=editor.SaveDirectory;byte[] originalRoom=File.ReadAllBytes(Path.Combine(originalDirectory,"room.v10.json"));AcceptedEdit("Live edit kept in recovery evidence");
             string origin=(string)store.InspectRecovery()["originHash"];var preview=store.PrepareDamagedRecovery(origin,candidate.Generation,candidate.ManifestHash);Assert.That(WorkspaceRecoveryHold.TryAcquire(editor,old.Rules,old.Controls,out var hold,out var error),Is.True,error);
             try {
                 var capture=hold.Capture(store.RecoveryEvidenceDirectory(preview.Id,preview.Receipt.ManifestHash,origin));while(!capture.IsCompleted)yield return null;var evidence=capture.GetAwaiter().GetResult();
@@ -61,7 +61,7 @@ namespace Maestro.Quest.Tests
                 if(disable){root.SetActive(false);root.SetActive(true);}
                 for(int i=0;i<120&&(host.Switching||!host.Current);i++)yield return null;
                 Assert.That(host.Current,Is.Not.Null,host.Status);Assert.That(host.Current,Is.Not.SameAs(old));Assert.That(host.Selection.Revision,Is.EqualTo(selected.Revision));Assert.That(host.Current.Editor.RuntimeGate.Held,Is.True);Assert.That(host.Current.Rules.ReadOnly,Is.False);
-                Assert.That(File.ReadAllBytes(Path.Combine(originalDirectory,"room.v9.json")),Is.EqualTo(originalRoom));Assert.That(File.ReadAllText(Path.Combine(originalDirectory,"behaviours.v2.json")),Is.EqualTo("{unreadable original"));Assert.That(RecoveryText(evidence.Path,"accepted.json"),Does.Contain("Live edit kept in recovery evidence"));Assert.That(physics.Running,Is.False);Assert.That(host.Current.Editor.Snapshot().objects.Single(x=>!x.IsBuiltIn).name,Is.EqualTo("Retained robot"));
+                Assert.That(File.ReadAllBytes(Path.Combine(originalDirectory,"room.v10.json")),Is.EqualTo(originalRoom));Assert.That(File.ReadAllText(Path.Combine(originalDirectory,"behaviours.v2.json")),Is.EqualTo("{unreadable original"));Assert.That(RecoveryText(evidence.Path,"accepted.json"),Does.Contain("Live edit kept in recovery evidence"));Assert.That(physics.Running,Is.False);Assert.That(host.Current.Editor.Snapshot().objects.Single(x=>!x.IsBuiltIn).name,Is.EqualTo("Retained robot"));
             }finally{if(hold!=null)CloseRecovery(hold);}
         }
     }

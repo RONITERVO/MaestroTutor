@@ -93,13 +93,54 @@ through nested catalog schemas for one-off actions and saved programs.
 four exact points, segment count and conservative whole-recipe generated vertex
 cost at an exact object revision. Offset equal to count is empty; stale or missing
 parts are unavailable. The shared program value limits are unchanged. The room
-permits at most 262,144 generated lathe vertices in addition to the existing object,
+permits at most 262,144 generated lathe/extrusion vertices in addition to the existing object,
 part, imported-model and drawing bounds. This is an admission bound, not proof of
 comfortable Quest performance at that maximum.
 
 This increment adds geometry. The assembly still uses its existing approximate
 rest-bounds collider by default. An explicit [collision recipe](QUEST_COLLISION_AUTHORING.md)
 can provide a hollow interior for solid objects. Liquid/container behaviour is separate.
-Physical joints, fluids, extrusion/sweep and a curated default
-play kit remain implementation work. Real Quest input/readability/performance
+Physical connections, bounded container pouring, outline extrusion and an initial
+editable play kit now share this authoring system. Sweeps, general CSG and
+persistent water/snow remain open. Real Quest input/readability/performance
 acceptance remains required.
+
+
+## Editable outline extrusion (2026-10-03)
+
+`extrusionGeometry.v1` adds `shape: "extrude"` to the same recipe-part schema.
+The implicit closed `profile` contains 3–32 normalized XY points in [-0.5, 0.5],
+in counter-clockwise order; `size.x/y` scale the outline and `size.z` sets thickness.
+Concave outlines and collinear edge points are supported. Do not repeat the first
+point at the end. Holes, crossings, touching edges, zero-area polygons, short
+edges and nonzero `segments` are refused before allocating a Unity mesh. Segments
+may be omitted or zero. The minimum edge length is 0.001 normalized units and
+minimum signed doubled area is 0.0002. This is a bounded polygon operation,
+not arbitrary mesh input, executable code or general CSG.
+
+The native evaluator triangulates caps with bounded ear clipping and gives caps
+and walls separate normals/UVs. Straight-edge insertions stay in the saved outline
+and wall mesh; cap triangles omit redundant collinear points. Each part reserves
+six vertices per profile point, at most 192. Lathe and extrusion costs share the
+existing 262,144 generated-vertex room limit and 256-part limit. Built-in primitive
+meshes remain separate from that generated-vertex accounting. These are admission
+limits, not a headset frame-time measurement.
+
+Users select Extrude in the existing part editor and edit numbered XY points,
+including insertion/removal. Maestro and programs use the same `object.create`
+recipe variant and `object.recipe.edit` patch. `object.recipe.profile` now pages
+lathe and extrusion outlines with exact object revisions; extrusion has segments
+zero. `object.recipe.part` supplies shape, dimensions and placement. Accepted edits,
+failed writes, Undo, copied/prototype source and temporary-room discard use the
+ordinary recipe lifecycle. Replaced meshes are released.
+
+Collision stays an explicitly configured proxy. A concave visual notch does not
+silently produce a concave dynamic collider; compose appropriate bounded collision
+shapes when it matters for play. This also avoids giving every decorative outline
+its own expensive collider. Extrusion does not add skinning or deformable physics.
+
+Room format 10 prevents an older reader from treating new geometry as corruption
+and falling back to an earlier room backup. Clean room versions 1–5 and 7–9 still
+load, preserving their original files; version 6 and uncertain old transactions
+remain unsupported. Paired snapshot intent and workspace archive formats are 9.
+Device handling/readability and sustained performance still require Quest testing.
