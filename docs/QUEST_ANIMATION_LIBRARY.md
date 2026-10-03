@@ -272,14 +272,12 @@ The ID persists through undo, restart and compatible avatar replacement; an
 incompatible replacement retains the preference but uses the included gait.
 This is not calibrated foot planting, blended gait transitions or authored travel.
 
-Room saves use `room.v2.json`; rules now use `rules.v3.json` after the
-avatar-held prop update (QUEST_AVATAR_PROPS.md). Valid v1 rooms and v1/v2 rules
-load and upgrade in memory, retaining objects, recordings, raw clip selections,
-sequences and controller buttons. First write uses the current format; older
-original files remain unchanged. Once a current file exists, corruption cannot
-silently load a stale older collection. Valid current backups recover damaged
-saves. Unknown newer versions remain read-only even with an older valid backup.
-Invalid unrecoverable saves are preserved and saving is disabled. Existing
+Current room saves use `room.v3.json`, including persistent structures. Clean v1/v2
+rooms upgrade in memory; their original files remain unchanged. Behaviour storage
+now uses `behaviours.v2.json`; the development reset and per-program validation
+rules are documented in QUEST_EVENT_PROGRAMS.md. Current backups can recover a
+damaged room, while unknown future room/structure formats preserve the primary
+and refuse edits. See QUEST_STRUCTURES.md for snapshot/archive compatibility. Existing
 embedded-clip references keep their exact model hash and index; they are not
 silently converted to a guessed library ID.
 

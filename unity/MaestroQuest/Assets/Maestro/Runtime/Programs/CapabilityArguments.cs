@@ -49,6 +49,8 @@ namespace Maestro.Quest.Programs
                     if((string)schema["format"]=="roomRecipe") {
                         var recipe=JsonUtility.FromJson<RoomRecipe>(obj.ToString(Newtonsoft.Json.Formatting.None));
                         if(recipe==null||!recipe.Validate(out error)) {error??=path+" is an invalid construction recipe";return false;}
+                    } else if((string)schema["format"]=="structureSource") {
+                        if(!StructureSaveCapability.ValidSource(obj,out error))return false;
                     } else if((string)schema["format"]=="creationBatch") {
                         if(!JsonUtility.FromJson<CreationBatch>(obj.ToString()).Prepare(out _,out error))return false;
                     } else if((string)schema["format"]=="objectLayout") {

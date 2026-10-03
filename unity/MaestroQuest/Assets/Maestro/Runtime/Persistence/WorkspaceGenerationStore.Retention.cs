@@ -58,7 +58,7 @@ namespace Maestro.Quest.Persistence
             byte[] ReadDocument(string name){if(!files.ContainsKey(name))throw Invalid("A required retained document is missing.");var bytes=WorkspaceLibraryCapture.ReadDocument(Path.Combine(data,name.Replace('/',Path.DirectorySeparatorChar)),WorkspaceArchiveMetadata.Limit(name));if(WorkspaceFileInventory.Hash(bytes)!=(string)files[name]["sha256"])throw Invalid("Retained document changed during capture.");return bytes;}
             foreach(string name in WorkspaceArchiveMetadata.Required){
                 string source=Path.Combine(data,name.Replace('/',Path.DirectorySeparatorChar)),file=Path.GetFileName(source),stem=file.Substring(0,file.LastIndexOf(".v",StringComparison.Ordinal));
-                if(VersionedRoomFile<RoomDocument>.HasNewerFiles(Path.GetDirectoryName(source),stem,2))throw Invalid("Retained content needs a newer app version; original files remain preserved.");
+                if(VersionedRoomFile<RoomDocument>.HasNewerFiles(Path.GetDirectoryName(source),stem,WorkspaceArchiveMetadata.DocumentVersion(name)))throw Invalid("Retained content needs a newer app version; original files remain preserved.");
                 documents.Add(name,ReadDocument(name));
             }
             // Optional memory is validated even when absent, so unknown formats or

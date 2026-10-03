@@ -48,7 +48,8 @@ namespace Maestro.Quest.Persistence
     }
     internal sealed class WorkspaceArchiveMetadata
     {
-        internal static readonly string[] Required={"room.v2.json","behaviours.v2.json","controls.v2.json","avatar-activities.v2.json","motions/motions.v2.json"};
+        internal static int DocumentVersion(string path)=>path==RoomStorage.FileName?RoomDocument.CurrentVersion:2;
+        internal static readonly string[] Required={"room.v3.json","behaviours.v2.json","controls.v2.json","avatar-activities.v2.json","motions/motions.v2.json"};
         internal readonly Dictionary<string,MotionEntry> Motions=new(StringComparer.Ordinal);
         internal WorkspaceArchiveSummary Summary;
         static readonly UTF8Encoding Utf8=new(false,true);
@@ -59,7 +60,7 @@ namespace Maestro.Quest.Persistence
         static bool HasHash(string path,string prefix,string suffix)=>path.Length==prefix.Length+64+suffix.Length&&path.StartsWith(prefix,StringComparison.Ordinal)&&path.EndsWith(suffix,StringComparison.Ordinal)&&ModelLibrary.ValidHash(path.Substring(prefix.Length,64));
         internal static int Limit(string path)=>path switch {
             ProgramMemoryStore.FileName=>ProgramMemoryDocument.MaximumBytes,
-            "room.v2.json"=>4*1024*1024,"behaviours.v2.json"=>512*1024,"controls.v2.json"=>8192,
+            "room.v3.json"=>4*1024*1024,"behaviours.v2.json"=>512*1024,"controls.v2.json"=>8192,
             "avatar-activities.v2.json"=>256*1024,"motions/motions.v2.json"=>16*1024*1024,
             _ when HasHash(path,"models/",".glb")=>ModelInspection.MaximumBytes,
             _ when HasHash(path,"models/",".txt")=>128*1024,
@@ -83,7 +84,7 @@ namespace Maestro.Quest.Persistence
         static T Document<T>(Dictionary<string,byte[]> documents,string path,params string[] fields)
         {
             var bytes=documents[path];var json=Json(bytes,Limit(path));
-            if(json.Count!=fields.Length||fields.Any(x=>!json.ContainsKey(x))||json["version"]?.Type!=JTokenType.Integer||(int)json["version"]!=2)throw new InvalidDataException("Unsupported workspace document: "+path);
+            if(json.Count!=fields.Length||fields.Any(x=>!json.ContainsKey(x))||json["version"]?.Type!=JTokenType.Integer||(int)json["version"]!=DocumentVersion(path))throw new InvalidDataException("Unsupported workspace document: "+path);
             return JsonUtility.FromJson<T>(Utf8.GetString(bytes));
         }
         internal static WorkspaceArchiveMetadata Read(Dictionary<string,byte[]> documents,IEnumerable<string> assetNames)
@@ -91,7 +92,7 @@ namespace Maestro.Quest.Persistence
             var assets=assetNames.ToHashSet(StringComparer.Ordinal);CheckNames(documents.Keys.Concat(assets));
             foreach(var pair in documents){if(pair.Value.Length<1||pair.Value.Length>Limit(pair.Key))throw new InvalidDataException("Workspace document exceeds its limit.");}
             if(documents.TryGetValue(ProgramMemoryStore.FileName,out var memory))_=ProgramMemoryDocument.Decode(memory);
-            var room=Document<RoomDocument>(documents,"room.v2.json","version","objects");RoomStorage.Normalize(room);
+            var room=Document<RoomDocument>(documents,"room.v3.json","version","objects","structures");RoomStorage.Normalize(room);
             if(!room.Validate(out var issue))throw new InvalidDataException(issue);
             var rules=Document<RuleDocument>(documents,"behaviours.v2.json","version","sequences","bindings","buttons");
             var ruleJson=Json(documents["behaviours.v2.json"],Limit("behaviours.v2.json"));

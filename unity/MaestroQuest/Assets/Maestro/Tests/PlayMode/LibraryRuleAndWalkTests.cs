@@ -330,6 +330,7 @@ namespace Maestro.Quest.Tests
             LibraryBookRequest Request(string action,string model=null) => new() { version=1,session=book.State.session,sequence=++sequence,action=action,profileRevision=editor.ActivityProfiles.Revision,modelHash=model ?? avatar.ModelHash,role=3,motionId=greeting.id,weight=2,speed=1,cooldown=2 };
             avatar.ObserveTutorState(new BookSnapshot { version=1,activity="speaking" });
             var work=book.HandleAsync(Request("roleAssign")); yield return Until(() => work.IsCompleted); yield return null;
+            Assert.That(book.State.activityProfile.roles[3].choices.Length,Is.EqualTo(1),book.State.status);
             Assert.That(book.State.activityProfile.roles[3].choices.Single().motionId,Is.EqualTo(greeting.id)); Assert.That(avatar.ActivityMotionId,Is.Null,"Library browsing suppresses automatic state playback");
             work=book.HandleAsync(Request("roleClear",new string('a',64))); yield return Until(() => work.IsCompleted); Assert.That(book.State.status,Does.Contain("changed")); Assert.That(book.State.activityProfile.roles[3].choices.Length,Is.EqualTo(1));
             work=book.HandleAsync(Request("roleRemove")); yield return Until(() => work.IsCompleted); Assert.That(book.State.activityProfile.roles[3].choices,Is.Empty);
@@ -518,7 +519,7 @@ namespace Maestro.Quest.Tests
             editor.Undo(); yield return Until(() => !avatar.ModelBusy); Assert.That(editor.Read("maestro").walkMotionId,Is.EqualTo(gait.id));
             editor.Undo(); Assert.That(editor.Read("maestro").walkMotionId,Is.Null.Or.Empty); editor.Redo();
             editor.SaveNow(); editor.SendMessage("OnApplicationPause",true);
-            var saved = new RoomStorage(directory).Load(out var error); Assert.That(error,Is.Null); Assert.That(saved.version,Is.EqualTo(2)); Assert.That(saved.objects.Single(x => x.id == "maestro").walkMotionId,Is.EqualTo(gait.id));
+            var saved = new RoomStorage(directory).Load(out var error); Assert.That(error,Is.Null); Assert.That(saved.version,Is.EqualTo(RoomDocument.CurrentVersion)); Assert.That(saved.objects.Single(x => x.id == "maestro").walkMotionId,Is.EqualTo(gait.id));
             editor.SendMessage("OnApplicationPause",false);
             var add = editor.Motions.ImportAsync("unavailable.glb",Clip(13,"Lower leg")); yield return Until(() => add.IsCompleted); Assert.That(add.Exception,Is.Null); var missing = add.Result.Single();
             Assert.That(editor.SetAvatarWalkMotion(missing.id),Is.True); File.Delete(Path.Combine(directory,"motions",missing.hash+".motion.glb"));

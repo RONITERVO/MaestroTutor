@@ -74,9 +74,10 @@ cannot be inferred from their contents. Existing scalar results remain compatibl
 Input arrays remain literal in this increment. A later atomic reset of newly
 created pieces can be authored using their returned IDs and
 [shared layouts](QUEST_LAYOUT_AUTHORING.md). A single saved creation program does
-not yet construct a dynamic layout argument from a result list. Persistent assembly
-membership, convenient capture, missing-member policy, snapping and displacement
-observations remain required work for the complete structure system.
+not yet construct a dynamic layout argument from a result list. [Persistent structures](QUEST_STRUCTURES.md) now provide explicit capture,
+membership, baseline reset, missing-member refusal and aggregate displacement
+facts. Saving one after a batch is a separate action. Snapping, dynamic action-array
+bindings and a dedicated blueprint library remain further work.
 
 ## Evidence boundary
 

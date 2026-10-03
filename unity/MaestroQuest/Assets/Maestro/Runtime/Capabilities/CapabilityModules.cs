@@ -35,7 +35,7 @@ namespace Maestro.Quest.Programs
             new ImportProgramModuleCapability(),
             new RemoveProgramModuleCapability(),
             new CreateObjectCapability(),new BatchCreationCapability(),new DrawingEditCapability(),new DrawingResolveCapability(),new RecipeEditCapability(),
-            new MoveObjectCapability(),new LayoutCapability(),
+            new MoveObjectCapability(),new LayoutCapability(),new StructureSaveCapability(),new StructureResetCapability(),new StructureForgetCapability(),
             new RotateObjectCapability(),
             new ResizeObjectCapability(),
             new PaintObjectCapability(),

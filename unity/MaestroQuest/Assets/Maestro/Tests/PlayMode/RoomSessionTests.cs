@@ -51,7 +51,7 @@ namespace Maestro.Quest.Tests
     Assert.That(editor.ObserveTemporaryRoom().phase,Is.EqualTo("starting"));
     Assert.That(editor.CreatePrimitive(RoomObjectKind.Block,"While starting",Vector3.up,1,Color.white,out id,out var error),Is.True,error);
     int frame=Time.frameCount;yield return null;yield return null;Assert.That(Time.frameCount,Is.GreaterThan(frame));
-    Assert.That(editor.TemporarySavePending,Is.True);Assert.That(File.Exists(Path.Combine(directory,"room.v2.json")),Is.False);
+    Assert.That(editor.TemporarySavePending,Is.True);Assert.That(File.Exists(Path.Combine(directory,"room.v3.json")),Is.False);
     Assert.That(runtime.Scheduler.CancelInvocation(run,out error),Is.True,error);
     Assert.That((string)runtime.Scheduler.Invocation(run)["status"],Does.Contain("temporary mode"));
     Assert.That(editor.DiscardTemporaryRoom(out _),Is.False,"Cannot retract a dispatched baseline write");
@@ -78,7 +78,7 @@ namespace Maestro.Quest.Tests
    Assert.That(editor.Read(id).position,Is.EqualTo(Vector3.up*3));
   }
   [UnityTest] public IEnumerator FailedBaselineHasFailedReceiptAndCanBeKeptWithoutRecreatingItsEdits() {
-   var blocked=Path.Combine(directory,"room.v2.json.pending");Directory.CreateDirectory(blocked);
+   var blocked=Path.Combine(directory,"room.v3.json.pending");Directory.CreateDirectory(blocked);
    var request=Request(Call("begin"));executions.Execute(request,out _);yield return Finish();
    Assert.That((string)runtime.Scheduler.Invocation((string)request["runId"])["phase"],Is.EqualTo("failed"));
    Assert.That(editor.TemporaryRoom,Is.True);var id=Create("Preserve after failure");Evidence("failed-start");
@@ -135,7 +135,7 @@ namespace Maestro.Quest.Tests
    runtime.Scheduler.CancelInvocation(other,out _);Start("discard");yield return null;
   }
   [UnityTest] public IEnumerator ActualWriterFailureHasFailedReceiptAndKeepsTemporaryEditsForAnExplicitRetry(){
-   Start("begin");yield return Finish();var id=Create("Retry once");var blocked=Path.Combine(directory,"room.v2.json.pending");Directory.CreateDirectory(blocked);
+   Start("begin");yield return Finish();var id=Create("Retry once");var blocked=Path.Combine(directory,"room.v3.json.pending");Directory.CreateDirectory(blocked);
    var request=Request(Call("keep"));executions.Execute(request,out _);yield return Finish();
    Assert.That((string)runtime.Scheduler.Invocation((string)request["runId"])["phase"],Is.EqualTo("failed"));Assert.That(editor.Find(id),Is.Not.Null);Evidence("failed-save");
    Directory.Delete(blocked);Start("keep");yield return Finish();Assert.That(Saved().objects.Count(x=>x.id==id),Is.EqualTo(1));

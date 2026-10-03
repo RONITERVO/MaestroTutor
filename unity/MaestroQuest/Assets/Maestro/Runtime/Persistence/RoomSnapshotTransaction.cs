@@ -20,9 +20,9 @@ namespace Maestro.Quest.Persistence
     /// Recovery never executes actions, and unexpected file identities preserve all evidence.</summary>
     internal static class RoomSnapshotTransaction
     {
-        internal const string FileName="room-snapshot.v1.json";
+        internal const string FileName="room-snapshot.v2.json";
         internal const int RoomLimit=4*1024*1024,JournalLimit=16*1024*1024;
-        static readonly string[] Names={"room.v2.json",ProgramMemoryStore.FileName};
+        static readonly string[] Names={"room.v3.json",ProgramMemoryStore.FileName};
         static readonly int[] Limits={RoomLimit,ProgramMemoryDocument.MaximumBytes};
         static readonly UTF8Encoding Utf8=new(false,true);
         internal sealed class Snapshot
@@ -63,14 +63,14 @@ namespace Maestro.Quest.Persistence
             Need(bytes.Length>0&&bytes.Length<=Limits[index],"Snapshot document exceeds its limit.");
             if(index==1){_=ProgramMemoryDocument.Decode(bytes);return;}
             var json=Json(bytes,48);
-            Need(Exact(json,"version","objects")&&json["version"]?.Type==JTokenType.Integer&&(int)json["version"]==2,"Unsupported room snapshot.");
+            Need(Exact(json,"version","objects","structures")&&json["version"]?.Type==JTokenType.Integer&&(int)json["version"]==RoomDocument.CurrentVersion,"Unsupported room snapshot.");
             var room=JsonUtility.FromJson<RoomDocument>(Utf8.GetString(bytes));Need(room!=null,"Missing room snapshot.");RoomStorage.Normalize(room);
             Need(room.Validate(out _),"Invalid room snapshot.");
         }
         internal static Snapshot FromDocuments(RoomDocument room,ProgramMemoryDocument memory)
         {
             Need(room!=null&&memory!=null,"Missing snapshot documents.");
-            var copy=room.Copy();copy.version=2;
+            var copy=room.Copy();copy.version=RoomDocument.CurrentVersion;
             var files=new[]{Utf8.GetBytes(JsonUtility.ToJson(copy)),memory.Encode()};
             for(int i=0;i<2;i++)Validate(i,files[i],true);return new Snapshot(files);
         }
@@ -95,8 +95,8 @@ namespace Maestro.Quest.Persistence
             WorkspaceFileInventory.Parents(root);
             if(WorkspaceFileInventory.Kind(root)=="absent")return;
             if(strictDocuments){
-            Need(!VersionedRoomFile<RoomDocument>.HasNewerFiles(root,"room",2),"A newer room format remains; preserve it before recovery.");
-            Need(WorkspaceFileInventory.Kind(Path.Combine(root,"room.v2.json.pending"))=="absent","An unfinished room save remains; preserve it before recovery.");
+            Need(!VersionedRoomFile<RoomDocument>.HasNewerFiles(root,"room",RoomDocument.CurrentVersion),"A newer room format remains; preserve it before recovery.");
+            Need(WorkspaceFileInventory.Kind(Path.Combine(root,"room.v3.json.pending"))=="absent","An unfinished room save remains; preserve it before recovery.");
             foreach(string path in Directory.EnumerateFileSystemEntries(root,"program-memory.v*").Take(3))
                 Need((Path.GetFileName(path)==ProgramMemoryStore.FileName||Path.GetFileName(path)==ProgramMemoryStore.FileName+".backup")&&WorkspaceFileInventory.Kind(path)=="file","Unrecognized or unfinished memory remains; preserve it before recovery.");
             }
@@ -166,13 +166,13 @@ namespace Maestro.Quest.Persistence
         static byte[] Encode(Intent intent)
         {
             JArray Files(Snapshot value)=>new(Enumerable.Range(0,2).Select(i=>value.Read(i) is byte[] b?(JToken)new JValue(Convert.ToBase64String(b)):JValue.CreateNull()));
-            var bytes=Utf8.GetBytes(new JObject{["version"]=1,["id"]=intent.Id,["phase"]=intent.Phase,["before"]=Files(intent.Before),["after"]=Files(intent.After),["backups"]=new JArray(intent.Backups)}.ToString(Formatting.None));
+            var bytes=Utf8.GetBytes(new JObject{["version"]=2,["id"]=intent.Id,["phase"]=intent.Phase,["before"]=Files(intent.Before),["after"]=Files(intent.After),["backups"]=new JArray(intent.Backups)}.ToString(Formatting.None));
             Need(bytes.Length<=JournalLimit,"Snapshot intent exceeds its limit.");intent.Wire=bytes;return bytes;
         }
         static Intent Decode(byte[] bytes)
         {
             var root=Json(bytes,4);
-            Need(Exact(root,"version","id","phase","before","after","backups")&&root["version"]?.Type==JTokenType.Integer&&(int)root["version"]==1,"Unsupported snapshot intent.");
+            Need(Exact(root,"version","id","phase","before","after","backups")&&root["version"]?.Type==JTokenType.Integer&&(int)root["version"]==2,"Unsupported snapshot intent.");
             Need(root["id"]?.Type==JTokenType.String&&ProgramMemoryDocument.Id((string)root["id"]),"Invalid snapshot identity.");
             Need(root["phase"]?.Type==JTokenType.String&&((string)root["phase"]=="prepared"||(string)root["phase"]=="committed"),"Invalid snapshot phase.");
             Snapshot Files(string key,bool required){

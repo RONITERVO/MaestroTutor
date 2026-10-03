@@ -64,7 +64,7 @@ namespace Maestro.Quest.Persistence
             WorkspaceLibraryCapture motions=null;
             try {
                 if(!editor.Motions.TryCaptureArchive(out motions))throw new InvalidOperationException("Wait for motion import or maintenance before exporting.");
-                var room=editor.Snapshot();room.version=2;var behaviours=rules.Snapshot();var preferences=controls.Preferences;var activities=editor.ActivityProfiles.Snapshot();
+                var room=editor.Snapshot();room.version=RoomDocument.CurrentVersion;var behaviours=rules.Snapshot();var preferences=controls.Preferences;var activities=editor.ActivityProfiles.Snapshot();
                 string savedDirectory=editor.SaveDirectory;
                 var definitions=modules.ToDictionary(x=>"program-modules.v1/"+x.Hash+".json",x=>x.ReadDefinition(),StringComparer.Ordinal);var heldMotions=motions;
                 return Task.Run(()=>{
@@ -73,7 +73,7 @@ namespace Maestro.Quest.Persistence
                         cancellation.ThrowIfCancellationRequested();var documents=new Dictionary<string,byte[]>(StringComparer.Ordinal);var assets=new Dictionary<string,Func<Stream>>(StringComparer.Ordinal);
                         var utf8=new UTF8Encoding(false,true);byte[] Json(object value)=>utf8.GetBytes(JsonUtility.ToJson(value));
                         documents.Add(ProgramMemoryStore.FileName,memory.Encode());
-                        documents.Add("room.v2.json",Json(room));documents.Add("behaviours.v2.json",Json(behaviours));documents.Add("controls.v2.json",Json(preferences));documents.Add("avatar-activities.v2.json",Json(activities));
+                        documents.Add("room.v3.json",Json(room));documents.Add("behaviours.v2.json",Json(behaviours));documents.Add("controls.v2.json",Json(preferences));documents.Add("avatar-activities.v2.json",Json(activities));
                         foreach(var pair in definitions)documents.Add(pair.Key,utf8.GetBytes(pair.Value.ToString(Formatting.None)));
                         models.Collect(documents,assets);heldMotions.Collect(documents,assets);return process(new WorkspaceArchiveSnapshot(documents,assets),cancellation);
                     }finally{heldMotions.Dispose();models.Dispose();}

@@ -31,7 +31,7 @@ require putting chat, assets, physics and all history in one enormous JSON file.
 
 ## What already exists
 
-The current catalog contains 64 actions, 12 events and 61 facts. It already has
+The current catalog contains 67 actions, 12 events and 65 facts. It already has
 native capability modules, generated forms, shared human/agent execution,
 revision checks, durable one-off receipts, contact/proximity/settling observations,
 structured program values, parallel branches, pinned reusable program modules,
@@ -48,7 +48,7 @@ Recipe parts are visual joints, not independent rigid bodies. The object can now
 use an editable compound collision recipe; see
 [collision authoring](QUEST_COLLISION_AUTHORING.md). Shared attachment and aimed throws exist; automatic IK catching,
 hit reactions, physical hinges/springs, generic paintable surfaces, structural
-blueprints and liquids/snow are not completed by those features. The current
+blueprint libraries and liquids/snow are not completed by those features. The current
 16-creations-per-run budget cannot be described as arbitrary castle construction.
 
 ## Geometry implementation
@@ -115,8 +115,9 @@ collision and physics creation; see [starter objects](QUEST_CREATION_TEMPLATES.m
 A shared [layout operation](QUEST_LAYOUT_AUTHORING.md) now arranges/resets up to
 16 existing pieces atomically with live-pose Undo. [Atomic structure creation](QUEST_BATCH_CREATION.md)
 now instantiates template/inline-recipe blueprints through ordinary programs and
-returns typed lists of piece IDs. Persistent assembly membership, a dedicated
-blueprint library, snapping,
+returns typed lists of piece IDs. [Persistent structures](QUEST_STRUCTURES.md) now
+retain named slots, baselines and missing members, with shared capture/reset and
+live displacement facts. A dedicated blueprint library, snapping,
 paintable surfaces, physical joints and liquids/snow remain unfinished.
 
 The complete shipped play kit should demonstrate each accepted reusable component,

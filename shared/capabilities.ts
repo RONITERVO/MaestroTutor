@@ -15,7 +15,7 @@ export interface CapabilitySchema {
  oneOf?:CapabilitySchema[];'x-confirmation'?:string;'x-discriminators'?:string[];title?:string;description?:string;examples?:unknown[];'x-static'?:boolean;'x-channels'?:string[];'x-requirements'?:string[];'x-features'?:string[];
  items?:CapabilitySchema;minItems?:number;maxItems?:number;nullable?:boolean;
  properties?:Record<string,CapabilitySchema>;required?:string[];additionalProperties?:false;
- format?:'unitQuaternion'|'boundedOffset'|'roomRecipe'|'lathePart'|'collisionRecipe'|'programModule'|'programMemoryValue'|'objectLayout'|'creationBatch';'x-resource'?:'object';'x-requires'?:Record<string,string>;
+ format?:'unitQuaternion'|'boundedOffset'|'roomRecipe'|'lathePart'|'collisionRecipe'|'programModule'|'programMemoryValue'|'objectLayout'|'creationBatch'|'structureSource';'x-resource'?:'object';'x-requires'?:Record<string,string>;
  minimum?:number;maximum?:number;maxLength?:number;pattern?:string;enum?:string[];'x-enum-labels'?:Record<string,string>;'x-enum-images'?:Record<string,string>;
 }
 export interface CapabilityDefinition {
@@ -61,6 +61,10 @@ function validate(value:unknown,schema:CapabilitySchema,path:string):string|null
    for(const [key,entry] of Object.entries(value)){
     const error=validate(entry,properties[key],path+'.'+key);if(error)return error;
     if(Object.entries(properties[key]['x-requires']??{}).some(([field,expected])=>value[field]!==expected))return path+'.'+key+' has incompatible arguments';
+   }
+   if(schema.format==='structureSource'){
+    const entries=(value.kind==='capture'?value.members:value.slots) as {slot:string;target?:string;placement?:{target:string;position:{x:number;y:number;z:number}}}[];
+    return new Set(entries.map(x=>x.slot)).size===entries.length&&new Set(entries.map(x=>x.target??x.placement!.target)).size===entries.length&&entries.every(x=>!x.placement||x.placement.position.x**2+x.placement.position.y**2+x.placement.position.z**2<=625)?null:path+' needs distinct slots and valid baseline placements';
    }
    if(schema.format==='creationBatch')return validCreationBatchGeometry(value)?null:path+' needs distinct idle pieces with valid transformed placements';
    if(schema.format==='objectLayout'){

@@ -43,11 +43,13 @@ namespace Maestro.Quest.Creation
     [Serializable]
     public sealed class RoomDocument
     {
+        public const int CurrentVersion=3;
         public const int MaximumObjects = 64;
         public const int MaximumStrokePoints = 2048;
         public const int MaximumTotalPoints = 32768;
         public int version;
         public RoomObjectData[] objects = Array.Empty<RoomObjectData>();
+        public RoomStructure[] structures = Array.Empty<RoomStructure>();
 
         public static (float minimum, float maximum) ScaleLimits(RoomObjectKind kind) => kind switch {
             RoomObjectKind.Book => (.65f, 1.8f), RoomObjectKind.Maestro => (.3f, 1.5f), _ => (.1f, 4f)
@@ -56,7 +58,7 @@ namespace Maestro.Quest.Creation
         public bool Validate(out string error)
         {
             error = null;
-            if (version != 1 && version != 2 || objects == null || objects.Length < 2 || objects.Length > MaximumObjects + 2)
+            if (version != 1 && version != 2 && version != CurrentVersion || objects == null || objects.Length < 2 || objects.Length > MaximumObjects + 2)
                 return Fail("This room file has an unsupported version or object count.", out error);
             var ids = new HashSet<string>(); int partCount = 0; int pointCount = 0, builtIns = 0, frameCount = 0, jointCount = 0;
             foreach (var item in objects)
@@ -113,7 +115,8 @@ namespace Maestro.Quest.Creation
             if (pointCount > MaximumTotalPoints) return Fail("This room has reached its drawing limit.", out error);
             if (frameCount > 1200 || jointCount > 6000) return Fail("This room has reached its animation limit.",out error);
             if (objects.Count(item => item.kind == RoomObjectKind.ImportedModel) > 4) return Fail("Keep at most four imported models in this room.", out error);
-            return true;
+            if(version<CurrentVersion && (structures?.Length??0)>0)return Fail("Structures require the current room format.",out error);
+            return RoomStructure.ValidateCollection(structures??(version<CurrentVersion?Array.Empty<RoomStructure>():null),ids,out error);
         }
 
         internal static bool ValidateDrawing(Vector3[] points,float radius,out string error)
@@ -127,13 +130,13 @@ namespace Maestro.Quest.Creation
         static bool Unit(float value) => float.IsFinite(value) && value >= 0 && value <= 1;
         static bool Finite(Vector3 value) => float.IsFinite(value.x) && float.IsFinite(value.y) && float.IsFinite(value.z);
         static bool Fail(string message, out string error) { error = message; return false; }
-        public RoomDocument Copy() => new() { version = version, objects = objects.Select(item => item.Copy()).ToArray() };
+        public RoomDocument Copy() => new() { version = version, objects = objects.Select(item => item.Copy()).ToArray(), structures = structures?.Select(item=>item.Copy()).ToArray()??Array.Empty<RoomStructure>() };
     }
 
     /// <summary>Bounded object deltas preserve drawings without retaining whole scene copies.</summary>
-    public sealed class RoomJournal
+    public sealed partial class RoomJournal
     {
-        sealed class Change { public RoomObjectData[] Before, After; }
+        sealed class Change { public RoomObjectData[] Before, After; public RoomStructure[] BeforeStructures,AfterStructures; }
         readonly List<Change> undo = new(), redo = new();
         readonly Dictionary<string, RoomObjectData> items = new();
         readonly Dictionary<string,int> revisions = new();
@@ -150,12 +153,15 @@ namespace Maestro.Quest.Creation
         {
             if (!document.Validate(out var error)) throw new ArgumentException(error, nameof(document));
             foreach (var item in document.objects) { items.Add(item.id, item.Copy()); revisions[item.id]=clock.Next++; }
+            SetStructures(Array.Empty<RoomStructure>(),document.structures??Array.Empty<RoomStructure>());
         }
         RoomJournal(RoomJournal source)
         {
             clock=source.clock;
             foreach(var pair in source.items) items.Add(pair.Key,pair.Value.Copy());
             foreach(var pair in source.revisions) revisions.Add(pair.Key,pair.Value);
+            foreach(var pair in source.structures)structures.Add(pair.Key,pair.Value.Copy());
+            foreach(var pair in source.structureRevisions)structureRevisions.Add(pair.Key,pair.Value);
         }
         // A temporary room has its own local Undo history; the saved history
         // remains untouched until a successfully written snapshot is accepted.
@@ -166,12 +172,15 @@ namespace Maestro.Quest.Creation
             if(!document.Validate(out error))return false;
             var ids=document.objects.Select(x=>x.id).ToHashSet();
             var replacements=document.objects.Where(x=>!items.TryGetValue(x.id,out var before)||!Equivalent(new[]{before},new[]{x})).ToArray();
-            return Apply(replacements,items.Keys.Where(id=>!ids.Contains(id)).ToArray(),out error);
+            var groupIds=(document.structures??Array.Empty<RoomStructure>()).Select(x=>x.id).ToHashSet();
+            var edits=new StructureEdits {Replacements=(document.structures??Array.Empty<RoomStructure>()).Where(x=>!structures.TryGetValue(x.id,out var before)||!EquivalentStructures(new[]{before},new[]{x})).ToArray(),Removals=structures.Keys.Where(id=>!groupIds.Contains(id)).ToArray()};
+            return Apply(replacements,items.Keys.Where(id=>!ids.Contains(id)).ToArray(),out error,structureEdits:edits);
         }
         public void InvalidateChangedObservations(RoomJournal other)
         {
             foreach(var id in items.Keys)
                 if(ObjectRevision(id)!=other.ObjectRevision(id))revisions[id]=clock.Next++;
+            foreach(var id in structures.Keys)if(StructureRevision(id)!=other.StructureRevision(id))structureRevisions[id]=clock.Next++;
         }
         public RoomObjectData Read(string id) => id != null && items.TryGetValue(id, out var value) ? value.Copy() : null;
         // Physics updates persisted placement without filling Undo with every simulation step.
@@ -181,7 +190,7 @@ namespace Maestro.Quest.Creation
             if ((data.position-position).sqrMagnitude < .000001f && Quaternion.Angle(data.rotation,rotation) < .1f) return false;
             data.position = position; data.rotation = rotation; revisions[id]=clock.Next++; return true;
         }
-        public RoomDocument Snapshot() => new() { version = 2, objects = items.Values.Select(item => item.Copy()).OrderBy(item => item.id, StringComparer.Ordinal).ToArray() };
+        public RoomDocument Snapshot() => new() { version = RoomDocument.CurrentVersion, objects = items.Values.Select(item => item.Copy()).OrderBy(item => item.id, StringComparer.Ordinal).ToArray(), structures = StructureSnapshot() };
 
         internal bool PlacementBaseline(RoomLayout layout,out RoomObjectData[] baseline,out string error)
         {
@@ -191,13 +200,16 @@ namespace Maestro.Quest.Creation
             if(!snapshot.Validate(out error))return false;
             baseline=layout.placements.Select(p=>values[p.target]).ToArray();return true;
         }
-        public bool Apply(RoomObjectData[] replacements, string[] removals, out string error, RoomLayout observedBefore=null)
+        public bool Apply(RoomObjectData[] replacements, string[] removals, out string error, RoomLayout observedBefore=null, StructureEdits structureEdits=null)
         {
+            if(structureEdits!=null&&!structureEdits.Validate(out error))return false;
             var changedIds = replacements.Select(item => item.id).Concat(removals).ToHashSet();
             var candidate = new Dictionary<string, RoomObjectData>(items);
             foreach (var id in removals) candidate.Remove(id);
             foreach (var item in replacements) candidate[item.id] = item.Copy();
-            if (!(new RoomDocument { version = 2, objects = candidate.Values.ToArray() }).Validate(out error)) return false;
+            var groups=structureEdits?.Apply(StructureSnapshot())??StructureSnapshot();
+            if (!(new RoomDocument { version = RoomDocument.CurrentVersion, objects = candidate.Values.ToArray(), structures=groups }).Validate(out error)) return false;
+            var groupIds=(structureEdits?.Replacements.Select(x=>x.id)??Array.Empty<string>()).Concat(structureEdits?.Removals??Array.Empty<string>()).ToHashSet();
             var before=changedIds.Where(items.ContainsKey).Select(id=>items[id].Copy()).ToArray();
             if(observedBefore!=null) {
                 if(!observedBefore.Validate(out error))return false;
@@ -206,15 +218,17 @@ namespace Maestro.Quest.Creation
             }
             var change = new Change {
                 Before = before,
-                After = changedIds.Where(candidate.ContainsKey).Select(id => candidate[id].Copy()).ToArray()
+                After = changedIds.Where(candidate.ContainsKey).Select(id => candidate[id].Copy()).ToArray(),
+                BeforeStructures=groupIds.Where(structures.ContainsKey).Select(id=>structures[id].Copy()).ToArray(),
+                AfterStructures=groups.Where(x=>groupIds.Contains(x.id)).Select(x=>x.Copy()).ToArray()
             };
-            if (Equivalent(change.Before, change.After)) {
+            if (Equivalent(change.Before, change.After)&&EquivalentStructures(change.BeforeStructures,change.AfterStructures)) {
                 // A live layout may already match while its periodic saved pose lags.
                 // Accept that snapshot without an empty Undo entry or stale journal.
                 if(observedBefore!=null&&!Equivalent(changedIds.Where(items.ContainsKey).Select(id=>items[id]).ToArray(),change.After))Set(change.Before,change.After);
                 return true;
             }
-            Set(change.Before, change.After);
+            Set(change.Before, change.After);SetStructures(change.BeforeStructures,change.AfterStructures);
             undo.Add(change); if (undo.Count > 32) undo.RemoveAt(0); redo.Clear(); return true;
         }
 
@@ -222,13 +236,13 @@ namespace Maestro.Quest.Creation
         {
             if (!CanUndo) return false;
             var change = undo[undo.Count - 1]; undo.RemoveAt(undo.Count - 1);
-            Set(change.After, change.Before); redo.Add(change); return true;
+            Set(change.After, change.Before);SetStructures(change.AfterStructures,change.BeforeStructures); redo.Add(change); return true;
         }
         public bool Redo()
         {
             if (!CanRedo) return false;
             var change = redo[redo.Count - 1]; redo.RemoveAt(redo.Count - 1);
-            Set(change.Before, change.After); undo.Add(change); return true;
+            Set(change.Before, change.After);SetStructures(change.BeforeStructures,change.AfterStructures); undo.Add(change); return true;
         }
         void Set(RoomObjectData[] before, RoomObjectData[] after)
         {

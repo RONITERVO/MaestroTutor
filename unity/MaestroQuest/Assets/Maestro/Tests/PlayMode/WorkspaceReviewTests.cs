@@ -88,7 +88,7 @@ namespace Maestro.Quest.Tests
         [UnityTest] public IEnumerator FailedAcceptedSavePreventsReviewApprovalAndPreservesTheLiveEdit()
         {
             yield return ReadyForReview();string id=BeginReview();yield return FinishReview(id);var editor=host.Current.Editor;Assert.That(editor.TryFlush(out var beforeError),Is.True,beforeError);var data=AcceptedEdit("Save failure cannot approve older disk contents");
-            string target=Path.Combine(editor.SaveDirectory,"room.v2.json"),backup=target+".test-retained";
+            string target=Path.Combine(editor.SaveDirectory,"room.v3.json"),backup=target+".test-retained";
             Assert.That(File.Exists(target),Is.True);File.Move(target,backup);Directory.CreateDirectory(target);
             try {
                 ApproveReview(id);yield return FinishReview(id);

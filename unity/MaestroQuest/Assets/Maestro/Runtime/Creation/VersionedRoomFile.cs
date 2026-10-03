@@ -130,6 +130,13 @@ namespace Maestro.Quest.Creation
         }
         public bool Save(T value,out string error)
         {
+            // Library usage scans read primary, backup and staging files on a worker.
+            // Serialize publication with those reads: Windows cannot rename a file
+            // while the same store's retention reader still holds it open.
+            lock(retainedGate)return SaveExclusive(value,out error);
+        }
+        bool SaveExclusive(T value,out string error)
+        {
             error = "Saved "+label+" is unavailable for editing; its original files are preserved";
             if (ReadOnly || HasNewerFiles(directory,stem,version)) { ReadOnly=true; return false; }
             Read(primary,version,out _,out bool newer); if (newer) { ReadOnly = true; return false; }

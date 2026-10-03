@@ -10264,6 +10264,426 @@
       }
     },
     {
+      "id": "structure.save",
+      "version": 1,
+      "label": "Save a structure",
+      "input": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^(|[a-f0-9]{32})$",
+            "maxLength": 32
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 1000000.0
+          },
+          "source": {
+            "type": "object",
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "pattern": "^.{0,80}$",
+                    "maxLength": 80
+                  },
+                  "positionTolerance": {
+                    "type": "number",
+                    "minimum": 0.005,
+                    "maximum": 1.0
+                  },
+                  "rotationTolerance": {
+                    "type": "number",
+                    "minimum": 0.5,
+                    "maximum": 90.0
+                  },
+                  "scaleTolerance": {
+                    "type": "number",
+                    "minimum": 0.005,
+                    "maximum": 1.0
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "capture"
+                    ],
+                    "x-static": true
+                  },
+                  "members": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "slot": {
+                          "type": "string",
+                          "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,23}$",
+                          "maxLength": 24
+                        },
+                        "target": {
+                          "type": "string",
+                          "pattern": "^[a-fA-F0-9]{32}$",
+                          "maxLength": 32,
+                          "x-resource": "object"
+                        }
+                      },
+                      "required": [
+                        "slot",
+                        "target"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "minItems": 1,
+                    "maxItems": 16
+                  }
+                },
+                "required": [
+                  "name",
+                  "positionTolerance",
+                  "rotationTolerance",
+                  "scaleTolerance",
+                  "kind",
+                  "members"
+                ],
+                "additionalProperties": false,
+                "title": "Capture current arrangement",
+                "format": "structureSource"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "pattern": "^.{0,80}$",
+                    "maxLength": 80
+                  },
+                  "positionTolerance": {
+                    "type": "number",
+                    "minimum": 0.005,
+                    "maximum": 1.0
+                  },
+                  "rotationTolerance": {
+                    "type": "number",
+                    "minimum": 0.5,
+                    "maximum": 90.0
+                  },
+                  "scaleTolerance": {
+                    "type": "number",
+                    "minimum": 0.005,
+                    "maximum": 1.0
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "definition"
+                    ],
+                    "x-static": true
+                  },
+                  "slots": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "slot": {
+                          "type": "string",
+                          "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,23}$",
+                          "maxLength": 24
+                        },
+                        "placement": {
+                          "type": "object",
+                          "properties": {
+                            "target": {
+                              "type": "string",
+                              "pattern": "^[a-fA-F0-9]{32}$",
+                              "maxLength": 32,
+                              "x-resource": "object"
+                            },
+                            "position": {
+                              "type": "object",
+                              "properties": {
+                                "x": {
+                                  "type": "number",
+                                  "minimum": -25.0,
+                                  "maximum": 25.0
+                                },
+                                "y": {
+                                  "type": "number",
+                                  "minimum": -25.0,
+                                  "maximum": 25.0
+                                },
+                                "z": {
+                                  "type": "number",
+                                  "minimum": -25.0,
+                                  "maximum": 25.0
+                                }
+                              },
+                              "required": [
+                                "x",
+                                "y",
+                                "z"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "rotation": {
+                              "type": "object",
+                              "properties": {
+                                "x": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                },
+                                "y": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                },
+                                "z": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                },
+                                "w": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                }
+                              },
+                              "required": [
+                                "x",
+                                "y",
+                                "z",
+                                "w"
+                              ],
+                              "additionalProperties": false,
+                              "format": "unitQuaternion"
+                            },
+                            "scale": {
+                              "type": "number",
+                              "minimum": 0.1,
+                              "maximum": 4.0
+                            }
+                          },
+                          "required": [
+                            "target",
+                            "position",
+                            "rotation",
+                            "scale"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "slot",
+                        "placement"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "minItems": 1,
+                    "maxItems": 16
+                  }
+                },
+                "required": [
+                  "name",
+                  "positionTolerance",
+                  "rotationTolerance",
+                  "scaleTolerance",
+                  "kind",
+                  "slots"
+                ],
+                "additionalProperties": false,
+                "title": "Edit baseline and membership",
+                "format": "structureSource"
+              }
+            ],
+            "x-discriminators": [
+              "kind"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "revision",
+          "source"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "structures.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "structure.revision.current",
+        "storage.writable"
+      ],
+      "description": "Save a persistent named structure of 1–16 independent user-created pieces. Use an empty id and revision 0 to create; otherwise use the exact structure ID and latest revision. source.kind=capture records all named members' current room-local poses together; definition supplies explicit baseline slots and tolerances. Saving changes membership/baselines only and never moves objects. Members must be distinct, released, available and not being authored. A piece can belong to more than one structure; each has its own explicit baseline. Saves once with one Undo, including temporary-room semantics. Slots retain exact object IDs after deletion; reset refuses any missing member. To replace a member, explicitly save its slot with the replacement ID and intended baseline. Names never identify objects. This does not snap/connect parts, recreate deleted objects or attach structures to the room scan. Forget removes only metadata. Saved programs keep exact structure/member IDs and can read structure.state before choosing a reaction.",
+      "example": {
+        "id": "",
+        "revision": 0,
+        "source": {
+          "kind": "capture",
+          "name": "Castle",
+          "positionTolerance": 0.05,
+          "rotationTolerance": 15,
+          "scaleTolerance": 0.05,
+          "members": [
+            {
+              "slot": "brick_1",
+              "target": "00000000000000000000000000000000"
+            }
+          ]
+        }
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "structureId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 1000000.0
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "structureId",
+          "revision",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "structure.reset",
+      "version": 1,
+      "label": "Reset a structure",
+      "input": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 1000000.0
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-fA-F0-9]{32}$",
+              "maxLength": 32,
+              "x-resource": "object"
+            },
+            "minItems": 1,
+            "maxItems": 16
+          }
+        },
+        "required": [
+          "id",
+          "revision",
+          "members"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "structures.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "structure.revision.current",
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "storage.writable"
+      ],
+      "description": "Reset every piece to a saved structure baseline with one save and one live-pose Undo. Supply the exact structure ID/revision and all member IDs as an explicit ownership/authorization guard; their order is unimportant. Any missing, held, authored or conflicting member refuses the entire reset. Reset zeroes member velocities but preserves current geometry, paint, collision and animation definitions; it neither starts physics nor guarantees stability. Definitions remain unchanged. Missing pieces are never recreated or substituted: explicitly replace/remove the slot with structure.save, then retry. Temporary edits stay in the fork; completed receipt replay cannot reset twice.",
+      "example": {
+        "id": "11111111111111111111111111111111",
+        "revision": 1,
+        "members": [
+          "00000000000000000000000000000000"
+        ]
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 16.0
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "count",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "structure.forget",
+      "version": 1,
+      "label": "Forget a structure",
+      "input": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 1000000.0
+          }
+        },
+        "required": [
+          "id",
+          "revision"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "structures.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [],
+      "description": "Remove only the exact structure's saved membership and baseline after checking its current revision. Objects remain unchanged. One save/Undo; temporary edits stay in the fork. Programs using this structure will report it missing until an explicit definition is restored. No deleted object is recreated.",
+      "example": {
+        "id": "11111111111111111111111111111111",
+        "revision": 1
+      }
+    },
+    {
       "id": "object.rotation.set",
       "version": 1,
       "label": "Rotate object",
@@ -13868,6 +14288,186 @@
       ]
     },
     {
+      "id": "structure.list",
+      "version": 1,
+      "type": {
+        "record": {
+          "total": "number",
+          "next": "number",
+          "entries": {
+            "list": {
+              "record": {
+                "id": "text",
+                "name": "text",
+                "revision": "number",
+                "count": "number"
+              }
+            }
+          }
+        }
+      },
+      "label": "Saved structures",
+      "description": "List up to four saved structure definitions in stable ID order. next is the next offset or -1. Metadata survives missing pieces and comes from the temporary fork when active. Reading does not authorize editing members. Use exact IDs/revisions, never names; structure.definition and structure.slot expose the saved baseline.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 16.0
+          }
+        },
+        "required": [
+          "offset"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "offset": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "structures.v1"
+      ]
+    },
+    {
+      "id": "structure.definition",
+      "version": 1,
+      "type": {
+        "record": {
+          "id": "text",
+          "name": "text",
+          "revision": "number",
+          "positionTolerance": "number",
+          "rotationTolerance": "number",
+          "scaleTolerance": "number",
+          "count": "number",
+          "temporary": "boolean"
+        }
+      },
+      "label": "Structure definition",
+      "description": "Saved structure metadata and revision. Position tolerance is room-local metres, rotation tolerance is degrees, scale tolerance is an absolute uniform-scale difference. Each slot keeps an exact object ID even after deletion. Use structure.slot by index for its saved room-local pose. Changes to a member's live pose do not change this definition revision. Definitions do not contain geometry, replacements or scan anchors.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "id": "11111111111111111111111111111111"
+      },
+      "features": [
+        "factQueries.v1",
+        "structures.v1"
+      ]
+    },
+    {
+      "id": "structure.slot",
+      "version": 1,
+      "type": {
+        "record": {
+          "id": "text",
+          "revision": "number",
+          "index": "number",
+          "slot": "text",
+          "target": "text",
+          "position": {
+            "record": {
+              "x": "number",
+              "y": "number",
+              "z": "number"
+            }
+          },
+          "rotation": {
+            "record": {
+              "x": "number",
+              "y": "number",
+              "z": "number",
+              "w": "number"
+            }
+          },
+          "scale": "number"
+        }
+      },
+      "label": "Structure slot baseline",
+      "description": "One saved slot by zero-based index. target remains the exact member ID when that object is missing. Position/rotation/scale are the baseline in room-local axes, not the live transform. Read object.placement for a present member's current pose. This read does not authorize editing the returned target.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "index": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 15.0
+          }
+        },
+        "required": [
+          "id",
+          "index"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "id": "11111111111111111111111111111111",
+        "index": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "structures.v1"
+      ]
+    },
+    {
+      "id": "structure.state",
+      "version": 1,
+      "type": {
+        "record": {
+          "id": "text",
+          "revision": "number",
+          "total": "number",
+          "present": "number",
+          "displaced": "number",
+          "missing": "number",
+          "held": "number",
+          "available": "boolean"
+        }
+      },
+      "label": "Live structure state",
+      "description": "Compare every live member's room-local origin, rotation and uniform scale with the saved baseline tolerances. displaced counts present pieces outside any tolerance; missing counts deleted members; held counts direct grips. available=false when runtime is paused or any present transform is unavailable/invalid; do not interpret partial counts as a complete outcome then. A grip may intentionally displace a piece. This is a sampled pose comparison, not proof of stability, contact cause, visible deformation or collapse. Programs choose thresholds and settling delays; use contact observations separately when explaining likely causes.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "id": "11111111111111111111111111111111"
+      },
+      "features": [
+        "factQueries.v1",
+        "structures.v1"
+      ]
+    },
+    {
       "id": "creation.template",
       "version": 1,
       "type": {
@@ -16673,7 +17273,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "f5116ccdfcf18bd566ffa86e8929332952251c1dfac7301bfb2290b059246763"
+      "sha256": "1709bdf26133847df5009c9c640911d7396f467caca0fbbbecca968060190614"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -16693,7 +17293,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "34f57b3cc21edad3e8fc6f1722cc2951fa976586e5b755ae7557e3608189f71c"
+      "sha256": "26a54c56b9303ec7ba3456fdd7ea4839a8e1d60d31c752e002348966cb9ac9bc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -16725,7 +17325,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "39294157f4a5dcb5163e14c886637ea841c225848de55e85301b636ee5a460c1"
+      "sha256": "9e4bebb8b6d5cd5113db9a0b38c5b473c1631e7ef8cad1168441c692d2518322"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -16745,15 +17345,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/VersionedRoomFile.cs",
-      "sha256": "9754a05b29094bc0579bb43977e2c21bd7eb3548414832b0d792bbb041aa0945"
+      "sha256": "3fdd921d009fcb5e9d809458b971b0a0d73bf43d7bca096630a13e427aa4cc5b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "a32712cd02752ac360368c126068aeeaac2a21a2cf1e10e76dc95357e5fd950c"
+      "sha256": "4c872cdd4464e5d791b209950f7005e159d1d83b01ec1d5b3ab288a96ae4d4d7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
-      "sha256": "81ffe64dddd37172947a75a6940923e9a3507ade755822c9a5275aa7763b43fb"
+      "sha256": "8e415e6575f38b12e88361a96b998a8b5b6ca055f6f6f04efd6926c0ed879dde"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleMemory.cs",
@@ -16769,15 +17369,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveCapture.cs",
-      "sha256": "825f29713f19e04f555f5c0fad8915362ec9afb3d62d5c5ae732f9f7c91a51c3"
+      "sha256": "16e4ea536028f49b430b0f344afd1c1786868b4adebac75c656095c6c12b59b3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveSnapshot.cs",
-      "sha256": "f3f812bd8f68bc5c6cccbe03a79bba703c80d18631c84be172222e8de2fc2b1e"
+      "sha256": "e14a2eb5b5a7f58858f4544cdd758cabccd698323e44ad1872e36f57af9bbd4b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.Retention.cs",
-      "sha256": "0955d9677b748dd8f775216ac4584e8ac66d4282c669d020a628ae4837099b00"
+      "sha256": "3381a4a0d950a6f2145f648dd37e6ea7d7423b68cf807221d541e3f80a3df90c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.cs",
@@ -16949,7 +17549,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "1ec5f9c5e85a638ac57561a68be86c8dbe3d204a3ba9433da09f2ea5d8aac754"
+      "sha256": "ab671d504c5767fb0a961b1b794bda2a46d0e91a255ccfbbf169bdda5d6e14ef"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomToolTray.cs",
@@ -16969,7 +17569,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "6b96543c4690be1160aa464e8c2f2ea8152dafb48f8f6f96912e05a2b89e1d73"
+      "sha256": "145bde30e5708bf7a1707db464ca741d90c0018b04528f7f588fcf49d6384b7d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedDrawing.cs",
@@ -17124,6 +17724,14 @@
       "sha256": "ee65a5f161529a0cb9764892cdcec1c2799a5ae9337887299665537b8a5a28ac"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructure.cs",
+      "sha256": "ff976d11a0075bd130899592fd139c393dbacf50ab5afa6403fb4d1e1d9db9d2"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructureEdits.cs",
+      "sha256": "64bbc13c0a54cd3fcdb6afcf1bf0e3462b1cacad6f70f4cd4bbc99cd50bd9290"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/LegacyCapabilityAdapters.cs",
       "sha256": "f5e46d1a74dbc76d0bf10636ad0a0574b95a98c09f50b1daae1ec055c92601ce"
     },
@@ -17161,7 +17769,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "cdbd8100ee3e01d8f61bd902cabec209c6e2c5adaca6807915e4a4f088e344be"
+      "sha256": "03706ee4514ebe989cbd609e4c40e2129d5cb92c77a015c3497dd47711af0b84"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -17310,6 +17918,14 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SpatialSettingsCapabilities.cs",
       "sha256": "82ce0766868b99ec580c4a13dbc6410bd9bf599bb275c03e74a4018355ac6a23"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/StructureCapabilities.cs",
+      "sha256": "88b8fe6ae3039ebaaee21ec740f1b95230035bdb98b146a4afd1c3ca1443a215"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/StructureFacts.cs",
+      "sha256": "b2a61e73b66f6b7934568e1776f343d17b617071598ae5eb400ed161098254f7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SurfacePlacementCapability.cs",
