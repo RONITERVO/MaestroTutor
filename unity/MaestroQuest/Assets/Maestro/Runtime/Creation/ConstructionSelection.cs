@@ -17,6 +17,7 @@ namespace Maestro.Quest.Creation
         public bool CanSetConstructionSelection(string stateId,string[] members,bool collecting,out string error) {
             error=null;
             if(RuntimeGate.Held||Ownership.Suspended||WriteGate.Frozen){error="Room interaction is paused";return false;}
+            if(GetComponent<ConstructionManipulator>()?.Holding==true){error="Release the construction handle before changing its selection";return false;}
             if(stateId!=constructionSelectionId){error="Construction selection changed; read it again";return false;}
             if(members==null||members.Length>16||members.Distinct().Count()!=members.Length){error="Choose at most 16 distinct creations";return false;}
             foreach(string id in members)if(string.IsNullOrEmpty(id)||journal?.Read(id)?.IsBuiltIn!=false||!Find(id)||!Find(id).isActiveAndEnabled){error="Choose existing creations, without the book or Maestro";return false;}

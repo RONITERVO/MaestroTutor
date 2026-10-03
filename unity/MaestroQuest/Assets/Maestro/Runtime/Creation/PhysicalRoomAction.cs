@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Maestro.Quest.Creation
 {
-    public enum RoomTool { Block, Ball, Cylinder, Pencil, Paint, Duplicate, Erase, Undo, Redo, Save, Recall, BeginTemporary, KeepTemporary, DiscardTemporary, SurfacePencil, CollectPieces }
+    public enum RoomTool { Block, Ball, Cylinder, Pencil, Paint, Duplicate, Erase, Undo, Redo, Save, Recall, BeginTemporary, KeepTemporary, DiscardTemporary, SurfacePencil, CollectPieces, MovePieces }
     public sealed class PhysicalRoomAction : PhysicalAction
     {
         public RoomEditor Editor;
@@ -33,6 +33,7 @@ namespace Maestro.Quest.Creation
                 case RoomTool.KeepTemporary: RunSession("keep");break;
                 case RoomTool.DiscardTemporary: RunSession("discard");break;
                 case RoomTool.CollectPieces: var selection=Editor.ObserveConstructionSelection();Maestro.Quest.Programs.ConstructionSelectionCapability.RunManual(Editor,selection.members,!selection.collecting,out var selectionStatus);Editor.ReportStatus(selectionStatus);break;
+                case RoomTool.MovePieces: Maestro.Quest.Programs.ConstructionManipulationCapability.RunManual(Editor,!Editor.ObserveConstructionManipulation().visible,out var moveStatus);Editor.ReportStatus(moveStatus);break;
                 case RoomTool.Recall: Room.RestoreInFrontOfViewer(); break;
             }
         }

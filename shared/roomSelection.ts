@@ -23,3 +23,13 @@ export function constructionCaptureCall(selection:ConstructionSelection,objects:
  const members=selection.members.map((target,i)=>{const revision=objects.find(o=>o.id===target)?.objectRevision;if(!Number.isInteger(revision)||revision!<1||revision!>2147483647)throw new Error('Read the current object revisions before capturing.');return {target,revision,slot:'piece_'+(i+1)};});
  return {id:'program.module.captureConstruction',version:1,arguments:{name:'My construction',members}};
 }
+
+export interface ConstructionManipulation {stateId:string;visible:boolean;holding:boolean;error:string}
+export function validConstructionManipulation(value:unknown,selection?:ConstructionSelection|null):value is ConstructionManipulation {
+ if(!value||typeof value!=='object'||Array.isArray(value))return false;const v=value as Record<string,unknown>;
+ return Object.keys(v).sort().join(',')==='error,holding,stateId,visible'&&id(v.stateId)&&typeof v.visible==='boolean'&&typeof v.holding==='boolean'&&(!v.holding||v.visible)&&typeof v.error==='string'&&v.error.length<=240&&(!selection||v.stateId===selection.stateId&&(!v.visible||selection.members.length>0&&!selection.collecting));
+}
+export function constructionManipulationCall(selection:ConstructionSelection,visible:boolean):CapabilityInvocation {
+ if(!validConstructionSelection(selection)||visible&&(!selection.members.length||selection.collecting))throw new Error('Finish collecting and choose construction pieces first.');
+ return {id:'room.selection.manipulate',version:1,arguments:{stateId:selection.stateId,members:[...selection.members],visible}};
+}

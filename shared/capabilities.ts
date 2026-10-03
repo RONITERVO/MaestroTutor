@@ -17,7 +17,7 @@ export interface CapabilitySchema {
  oneOf?:CapabilitySchema[];'x-confirmation'?:string;'x-discriminators'?:string[];title?:string;description?:string;examples?:unknown[];'x-static'?:boolean;'x-channels'?:string[];'x-requirements'?:string[];'x-features'?:string[];
  items?:CapabilitySchema;minItems?:number;maxItems?:number;nullable?:boolean;
  properties?:Record<string,CapabilitySchema>;required?:string[];additionalProperties?:false;
- format?:'unitQuaternion'|'boundedOffset'|'roomRecipe'|'lathePart'|'collisionRecipe'|'programModule'|'programMemoryValue'|'objectLayout'|'creationBatch'|'creationPrototype'|'structureSource'|'hingeConfiguration'|'constructionSelection';'x-resource'?:'object';'x-requires'?:Record<string,string>;
+ format?:'unitQuaternion'|'boundedOffset'|'roomRecipe'|'lathePart'|'collisionRecipe'|'programModule'|'programMemoryValue'|'objectLayout'|'creationBatch'|'creationPrototype'|'structureSource'|'hingeConfiguration'|'constructionSelection'|'groupTransform';'x-resource'?:'object';'x-requires'?:Record<string,string>;
  minimum?:number;maximum?:number;maxLength?:number;pattern?:string;enum?:string[];'x-enum-labels'?:Record<string,string>;'x-enum-images'?:Record<string,string>;
 }
 export interface CapabilityDefinition {
@@ -77,6 +77,7 @@ function validate(value:unknown,schema:CapabilitySchema,path:string):string|null
     const error=validate(entry,properties[key],path+'.'+key);if(error)return error;
     if(Object.entries(properties[key]['x-requires']??{}).some(([field,expected])=>value[field]!==expected))return path+'.'+key+' has incompatible arguments';
    }
+   if(schema.format==='groupTransform'){const members=value.members as {target:string}[],p=value.position as {x:number;y:number;z:number};return new Set(members.map(m=>m.target)).size===members.length&&p.x*p.x+p.y*p.y+p.z*p.z<=625?null:path+' needs distinct members and an origin within 25 metres';}
    if(schema.format==='constructionSelection'){const members=value.members as string[];return new Set(members).size===members.length?null:path+' needs distinct construction pieces';}
    if(schema.format==='structureSource'){
     const entries=(value.kind==='capture'?value.members:value.slots) as {slot:string;target?:string;placement?:{target:string;position:{x:number;y:number;z:number}}}[];

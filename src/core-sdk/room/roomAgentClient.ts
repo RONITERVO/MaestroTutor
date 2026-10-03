@@ -1,6 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
-import {validConstructionSelection} from '../../../shared/roomSelection';
+import {validConstructionSelection,validConstructionManipulation} from '../../../shared/roomSelection';
 import {validRoomOwnership} from '../../../shared/roomOwnership';
 import {validTemporaryRoom} from '../../../shared/roomSession';
 import {capabilityResources} from '../../../shared/capabilities';
@@ -36,6 +36,7 @@ export class RoomAgentClient {
     if(input.objects.some(o=>!record(o) || typeof o.id!=='string' || !/^(book|maestro|[a-f0-9]{32})$/.test(o.id) || typeof o.name!=='string' || o.name.length>80 || typeof o.kind!=='string' || !vector(o.position) || typeof o.scale!=='number' || !Number.isFinite(o.scale) || !validPigment(o.color) || typeof o.animated!=='boolean' || o.objectRevision!==undefined&&!integer(o.objectRevision,1))) return false;
     if(input.capabilities!==undefined&&(!Array.isArray(input.capabilities)||input.capabilities.length>MAX_ROOM_CAPABILITIES||!input.capabilities.every(c=>typeof c==='string'&&/^[a-zA-Z][a-zA-Z0-9.]{0,63}$/.test(c))||new Set(input.capabilities).size!==input.capabilities.length))return false;
     if(input.constructionSelection!==undefined&&input.constructionSelection!==null&&!validConstructionSelection(input.constructionSelection,input.objects as RoomAgentState['objects'])||Array.isArray(input.capabilities)&&input.capabilities.includes('constructionSelection.v1')&&!validConstructionSelection(input.constructionSelection,input.objects as RoomAgentState['objects']))return false;
+    if(input.constructionManipulation!==undefined&&input.constructionManipulation!==null&&!validConstructionManipulation(input.constructionManipulation,input.constructionSelection as RoomAgentState['constructionSelection'])||Array.isArray(input.capabilities)&&input.capabilities.includes('constructionManipulation.v1')&&(!validConstructionSelection(input.constructionSelection,input.objects as RoomAgentState['objects'])||!validConstructionManipulation(input.constructionManipulation,input.constructionSelection)))return false;
     if(input.temporaryRoom!==undefined&&!validTemporaryRoom(input.temporaryRoom)||Array.isArray(input.capabilities)&&input.capabilities.includes('temporaryRoom.v1')&&!validTemporaryRoom(input.temporaryRoom))return false;
     if(input.ownership!==undefined&&input.ownership!==null&&!validRoomOwnership(input.ownership)||Array.isArray(input.capabilities)&&input.capabilities.includes('roomOwnership.v1')&&!validRoomOwnership(input.ownership))return false;
     if(input.physics!==undefined&&input.physics!==null&&(!validPhysicsObservation(input.physics)||input.physics.running!==input.physicsRunning))return false;

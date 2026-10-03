@@ -1,7 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {expect,it} from 'vitest';
-import {constructionCaptureCall,constructionSelectionCall,roomObjectLabel,validConstructionSelection} from '../../../shared/roomSelection';
+import {constructionCaptureCall,constructionSelectionCall,constructionManipulationCall,validConstructionManipulation,roomObjectLabel,validConstructionSelection} from '../../../shared/roomSelection';
 import {capabilityDefinition,capabilityResources,validateCapabilityArguments,validateCapabilityOutput} from '../../../shared/capabilities';
 import {currentInputRequest} from '../../../shared/currentCapabilityInputs';
 import {RoomAgentClient} from './roomAgentClient';
@@ -29,4 +29,17 @@ it('requires native selection evidence when advertised and shares it with the de
  const client=new RoomAgentClient();expect(client.receive(base)).toBe(true);expect(JSON.parse(buildRoomAgentPrompt('Save these pieces',base,[])).scene.constructionSelection).toEqual(selection);
  for(const bad of [undefined,null,{...selection,members:['f'.repeat(32)]},{...selection,stateId:'bad'}])expect(new RoomAgentClient().receive({...base,constructionSelection:bad})).toBe(false);
  expect(new RoomAgentClient().receive({...base,capabilities:native.capabilities,constructionSelection:undefined})).toBe(true);client.cancel();
+});
+
+it('shares move-handle state and rejects inconsistent advertised observations',()=>{
+ const value={stateId:selection.stateId,visible:true,holding:false,error:''};expect(validConstructionManipulation(value,selection)).toBe(true);
+ for(const bad of [{...value,holding:true,visible:false},{...value,stateId:'e'.repeat(32)},{...value,error:'x'.repeat(241)},{...value,extra:true}])expect(validConstructionManipulation(bad,selection)).toBe(false);
+ expect(validConstructionManipulation(value,{...selection,collecting:true})).toBe(false);expect(validConstructionManipulation(value,{...selection,members:[]})).toBe(false);
+ const call=constructionManipulationCall(selection,true);expect(validateCapabilityArguments(call.id,1,call.arguments)).toBeNull();expect(capabilityResources(call.id,call.arguments)).toEqual(selection.members);expect(validateCapabilityOutput(call.id,1,value)).toBeNull();expect(()=>constructionManipulationCall({...selection,collecting:true},true)).toThrow();
+ const state={...structuredClone(native),constructionSelection:selection,constructionManipulation:value,objects:objects.map(o=>({...native.objects[0],...o})),capabilities:[...native.capabilities,'constructionSelection.v1','constructionManipulation.v1']};expect(new RoomAgentClient().receive(state)).toBe(true);
+ for(const manipulation of [null,undefined,{...value,stateId:'f'.repeat(32)}])expect(new RoomAgentClient().receive({...state,constructionManipulation:manipulation})).toBe(false);
+});
+it('validates group transforms consistently without assuming final native poses are available',()=>{
+ const definition=capabilityDefinition('object.layout.transform')!,args={...definition.example!,members:objects.map(o=>({target:o.id,revision:o.objectRevision}))};expect(validateCapabilityArguments(definition.id,1,args)).toBeNull();expect(capabilityResources(definition.id,args)).toEqual(selection.members);
+ expect(validateCapabilityArguments(definition.id,1,{...args,members:[args.members[0],args.members[0]]})).toContain('distinct');expect(validateCapabilityArguments(definition.id,1,{...args,position:{x:20,y:20,z:0}})).not.toBeNull();expect(validateCapabilityArguments(definition.id,1,{...args,scale:0})).not.toBeNull();
 });

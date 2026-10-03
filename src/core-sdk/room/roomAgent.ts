@@ -1,6 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
-import type {ConstructionSelection} from '../../../shared/roomSelection';
+import type {ConstructionSelection,ConstructionManipulation} from '../../../shared/roomSelection';
 import type {RoomOwnershipView} from '../../../shared/roomOwnership';
 import type {TemporaryRoomView} from '../../../shared/roomSession';
 import {identifyExecution,validExecutionRequest,type ExecutionRequest,type ExecutionView} from '../../../shared/roomExecutions';
@@ -31,7 +31,7 @@ export interface RoomAgentState {
   ownership?:RoomOwnershipView|null; temporaryRoom?:TemporaryRoomView; capabilities?:string[]; physics?:PhysicsObservation|null; avatar?:AvatarMovementObservation|null; walk?:AvatarWalkObservation|null;
   execution?:ExecutionView|null; catalog?:CatalogView|null; activityProfile?:ActivityProfile|null; workspaceView?:'objects'|'rules'; rules?:RuleView|null; motions?:MotionSearchView|null;
   visible?: boolean; inspection?: {id:string;partId?:string|null;objectRevision:number;recipe:RoomRecipe|null}|null;
-  selectedId?: string | null; constructionSelection?:ConstructionSelection|null;
+  selectedId?: string | null; constructionSelection?:ConstructionSelection|null; constructionManipulation?:ConstructionManipulation|null;
   objects: { physics?:ObjectPhysicsSettings; movement?:AvatarMovementSettings|null; held?:boolean; simulating?:boolean; objectRevision?:number; id: string; name: string; kind: string; position: {x:number;y:number;z:number}; scale:number; color: {r:number;g:number;b:number;a:number}; animated:boolean }[];
 }
 export interface RoomAgentLease {

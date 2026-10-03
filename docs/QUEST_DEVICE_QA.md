@@ -1682,3 +1682,19 @@ it does not silently become selected again. Start/end a temporary room and chang
 workspace to check selection clears. Record the APK hash, input mode, button reach,
 outline visibility and normal/busy-room frame measurements. Group grabbing and
 socket snapping are separate unfinished features.
+
+## Construction movement (headset acceptance pending)
+
+With physics paused, collect two or more creations, finish collecting and choose
+**Move pieces** on the creation tray or **Move together in room** in the book.
+Grip the solid cross, move and rotate it, then use two grips to resize the whole
+arrangement. One released grip must keep the preview; the last release must save.
+Undo once should restore every member. Check both controllers and hand tracking,
+including readability and reach when the first selected piece is small or low.
+
+While holding, member grips and book selection edits must be unavailable. Recall,
+opening a system screen, starting physics or beginning drawing must cancel the
+preview and restore all starting poses without adding Undo. Test two hinged pieces
+together; moving only one must explain that both ends are required. This is an
+arrangement handle, not a physical weld: after placement the pieces retain their
+ordinary physics. Test save failure/space limits separately from physical comfort.

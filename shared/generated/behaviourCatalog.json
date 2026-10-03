@@ -13715,6 +13715,184 @@
       }
     },
     {
+      "id": "object.layout.transform",
+      "version": 1,
+      "label": "Move, turn or resize a construction",
+      "input": {
+        "type": "object",
+        "properties": {
+          "members": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "target": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{32}$",
+                  "maxLength": 32,
+                  "x-resource": "object"
+                },
+                "revision": {
+                  "type": "integer",
+                  "minimum": 1.0,
+                  "maximum": 2147483647.0
+                }
+              },
+              "required": [
+                "target",
+                "revision"
+              ],
+              "additionalProperties": false,
+              "x-current": {
+                "fact": "object.placement",
+                "version": 1,
+                "arguments": {
+                  "target": "target"
+                },
+                "fields": {
+                  "revision": [
+                    "revision"
+                  ]
+                },
+                "guards": [
+                  "revision"
+                ]
+              }
+            },
+            "minItems": 1,
+            "maxItems": 16
+          },
+          "position": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "y": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "z": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "additionalProperties": false
+          },
+          "rotation": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": -1.0,
+                "maximum": 1.0
+              },
+              "y": {
+                "type": "number",
+                "minimum": -1.0,
+                "maximum": 1.0
+              },
+              "z": {
+                "type": "number",
+                "minimum": -1.0,
+                "maximum": 1.0
+              },
+              "w": {
+                "type": "number",
+                "minimum": -1.0,
+                "maximum": 1.0
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z",
+              "w"
+            ],
+            "additionalProperties": false,
+            "format": "unitQuaternion"
+          },
+          "scale": {
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 4.0
+          }
+        },
+        "required": [
+          "members",
+          "position",
+          "rotation",
+          "scale"
+        ],
+        "additionalProperties": false,
+        "format": "groupTransform",
+        "x-features": [
+          "groupTransforms.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "source.revision.current",
+        "room.physics.paused",
+        "authoring.inactive",
+        "storage.writable"
+      ],
+      "description": "Transform 1–16 idle creations as one arrangement with one save/Undo. The first member's CURRENT live pose is the pivot. position is its desired room-local origin; rotation is its desired absolute unit quaternion; scale multiplies every member's current scale and its distance from the pivot. A factor of 1 preserves size. Supply current revisions and include both ends of all hinges. Pause physics, drawings, playback and authoring and release members first. Every final piece must remain within 25 metres and scale 0.1–4; otherwise nothing changes. Does not alter geometry, recorded animations, hinge frames or saved structure baselines. It does not connect pieces, prevent overlaps or snap to the scan. The physical construction handle uses this same projection and action on release. Failed admission/save leaves the complete original arrangement; replay cannot move it twice. Stop cannot undo a completed transform. Temporary edits stay in their room fork.",
+      "example": {
+        "members": [
+          {
+            "target": "00000000000000000000000000000000",
+            "revision": 1
+          }
+        ],
+        "position": {
+          "x": 0,
+          "y": 1,
+          "z": 0.7
+        },
+        "rotation": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "scale": 1
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 16.0
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "count",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "room.selection.set",
       "version": 1,
       "label": "Choose construction pieces",
@@ -13805,6 +13983,102 @@
           "stateId",
           "members",
           "collecting"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "room.selection.manipulate",
+      "version": 1,
+      "label": "Show or hide the construction move handle",
+      "input": {
+        "type": "object",
+        "properties": {
+          "stateId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$",
+              "maxLength": 32,
+              "x-resource": "object"
+            },
+            "minItems": 0,
+            "maxItems": 16
+          },
+          "visible": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "stateId",
+          "members",
+          "visible"
+        ],
+        "additionalProperties": false,
+        "x-current": {
+          "fact": "room.selection",
+          "version": 1,
+          "arguments": {},
+          "fields": {
+            "stateId": [
+              "stateId"
+            ]
+          },
+          "guards": [
+            "stateId"
+          ]
+        },
+        "format": "constructionSelection",
+        "x-features": [
+          "constructionManipulation.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [
+        "selection.state.current",
+        "room.physics.paused",
+        "construction.released"
+      ],
+      "description": "Show or hide a solid grab handle for the current ordered construction selection. Pass room.selection stateId and its exact member IDs. Showing requires 1–16 idle pieces, physics paused, drawing tools away and collection finished. It does not move/save anything or own objects until the handle is gripped. Grip moves/rotates the group; two hands resize it. Release applies the shared object.layout.transform action with one save/Undo. Invalid transforms stay at the last valid preview. Failed save restores all starting poses and records failure; the user can try the move again. Pausing, recall, drawing, changed selection/members or interrupted grips cancel a preview and close the handle without saving it. Direct member grips are unavailable during a group drag; release the handle first. Hiding refuses a held handle. Saved structure baselines, geometry and animations are unchanged. This is an arrangement tool, not a physical weld or socket snap. A completed show receipt cannot be cancelled to hide it: call this action with visible=false.",
+      "example": {
+        "stateId": "00000000000000000000000000000000",
+        "members": [
+          "11111111111111111111111111111111"
+        ],
+        "visible": true
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "stateId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "visible": {
+            "type": "boolean"
+          },
+          "holding": {
+            "type": "boolean"
+          },
+          "error": {
+            "type": "string",
+            "pattern": "^.{0,240}$",
+            "maxLength": 240
+          }
+        },
+        "required": [
+          "stateId",
+          "visible",
+          "holding",
+          "error"
         ],
         "additionalProperties": false
       }
@@ -17852,6 +18126,23 @@
       ]
     },
     {
+      "id": "room.selection.manipulation",
+      "version": 1,
+      "type": {
+        "record": {
+          "stateId": "text",
+          "visible": "boolean",
+          "holding": "boolean",
+          "error": "text"
+        }
+      },
+      "label": "Construction move handle",
+      "description": "Current solid handle visibility, grip and last failure. Preview poses are live object placements; none are saved until release completes its transform action. Reading does not show or move the handle.",
+      "features": [
+        "constructionManipulation.v1"
+      ]
+    },
+    {
       "id": "structure.list",
       "version": 1,
       "type": {
@@ -21323,7 +21614,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "be3c0d33061d88fb657f75bbc0df2bf8403cd99828e1feac893eb2ca032b8a6c"
+      "sha256": "db280a5b405754d2b90c34e5a34657aab54d6f3dbb05b7d33072fd795cae7d4c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -21343,7 +21634,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "7acf8ec1690c74be47d4d3f0d4b867ab0a637830c351461604c9bbb397a7f05a"
+      "sha256": "3a3336a149b9a091c69121c404bd47119de8050772e8302590806baf1d3f965e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -21375,7 +21666,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "bd6673c1f71b521f7d7c18d1afc2cd86e65fd5c694f7dc75d158e87c570c0fd1"
+      "sha256": "866e19f8f1641dd6738e06f2c1ac30f9013127163c5be337463f3c35cac2bada"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -21383,7 +21674,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgent.cs",
-      "sha256": "7b057c3c8fd3382189042fdfa4e3c600776efe2ed73bd4963bf941a42efed7f0"
+      "sha256": "4621d2b6953fa571748d2139647a27ab46bffb0f6638a572052aba82ec027d10"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceRecoveryHold.cs",
@@ -21603,11 +21894,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomToolTray.cs",
-      "sha256": "7b54de74d9b571fc91aa68fa5729c5736630430f4e3e8907cfa6c83facc60e7e"
+      "sha256": "4639f2318431ce5f58907115fe627626fdd3f331740278148572b0614b30ccc1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PhysicalRoomAction.cs",
-      "sha256": "989e6cfbe01432e14a6a350b341803c844d301b3850cf8e3fdfc0f18df56f4d4"
+      "sha256": "34ca74889194a71bc5541f63e0914dba364eac1c08438f0b76a27aab48ee3382"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/BookControllerInput.cs",
@@ -21863,7 +22154,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "f332ecb53ebb8ebea25ae111ee861e4104cd242a7b9f60367114c2c98d14960b"
+      "sha256": "e1313d57eae4bff1ab185ac47492d8e00abeaf07ba9180d210b4ff67ad6c0311"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -21880,6 +22171,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CollisionCapability.cs",
       "sha256": "79b43625d16854fdf0ca4245657eb28a9c8cd7ed41fd46f5379349fcc870dc69"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ConstructionManipulationCapability.cs",
+      "sha256": "f6359abdb94e13351a941584fd27f9a022fce6e88606354103d7fb395fe91a27"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ConstructionSelectionCapability.cs",
@@ -21940,6 +22235,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/GestureCapabilities.cs",
       "sha256": "84d2aad5dba840bd58229547c45e12a2028b1253ee3192c8fcd69cb283a7db6a"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/GroupTransformCapability.cs",
+      "sha256": "6cd8d0bcdf5faf67e7e392441bb587ad31c04a276cf089857ef637394b5fe41f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/HingeCapability.cs",

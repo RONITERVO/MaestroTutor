@@ -37,3 +37,12 @@ it('keeps native selection authoritative when a change fails and clears only thr
  fireEvent.click(screen.getByLabelText('Include Brick · bbbbbbbb'));await receive({ok:false,status:'Construction selection changed; read it again'});expect(screen.getByRole('alert').textContent).toContain('changed');expect((screen.getByLabelText('Include Brick · bbbbbbbb') as HTMLInputElement).checked).toBe(false);
  fireEvent.click(screen.getByRole('button',{name:'Clear pieces'}));expect(client.snapshot().request?.commands[0].execution).toMatchObject({call:{arguments:{stateId:'f'.repeat(32),members:[],collecting:false}}});await acknowledge({stateId:'1'.repeat(32),members:[],collecting:false});act(()=>client.cancel());
 });
+
+it('shows the solid move handle through the shared action and disables edits during a grip',async()=>{
+ const {client,screen,receive,objects}=setup();const selection={stateId:'c'.repeat(32),members:objects.map(o=>o.id),collecting:false};
+ await receive({constructionSelection:selection,constructionManipulation:{stateId:selection.stateId,visible:false,holding:false,error:''},capabilities:[...native.capabilities,'constructionSelection.v1','constructionManipulation.v1','constructionCapture.v1']});
+ fireEvent.click(screen.getByRole('button',{name:'Move together in room'}));const request=client.snapshot().request!.commands[0].execution!;expect(request).toMatchObject({operation:'start',call:{id:'room.selection.manipulate',arguments:{stateId:selection.stateId,members:selection.members,visible:true}}});
+ if(request.operation!=='start')throw Error('Expected native invocation');const output={stateId:selection.stateId,visible:true,holding:false,error:''},summary={id:request.runId!,capability:request.call.id,version:1,resources:selection.members,phase:'completed' as const,status:'Handle ready',output};
+ await receive({constructionManipulation:output,execution:{nextRunId:'1'.repeat(32),running:[],outcomes:[summary],selected:{...summary,call:request.call},storageError:null}});expect(screen.getByRole('button',{name:'Hide move handle'})).toBeTruthy();
+ await receive({constructionManipulation:{...output,holding:true}});expect((screen.getByRole('button',{name:'Hide move handle'}) as HTMLButtonElement).disabled).toBe(true);expect((screen.getByRole('button',{name:'Clear pieces'}) as HTMLButtonElement).disabled).toBe(true);expect(screen.getByText('Arranging pieces. Release the handle to save one edit.')).toBeTruthy();client.cancel();
+});

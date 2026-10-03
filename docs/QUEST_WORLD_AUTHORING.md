@@ -127,7 +127,9 @@ live displacement facts. Construction capture now publishes ordinary editable
 constructor modules with fresh member identities and internal hinges; see
 [creation and capture](QUEST_BATCH_CREATION.md). Shared transient selection lets
 users and Maestro collect, highlight and order pieces through the same state; see
-[construction selection](QUEST_CONSTRUCTION_SELECTION.md). Socket snapping,
+[construction selection](QUEST_CONSTRUCTION_SELECTION.md). A solid shared
+[construction handle](QUEST_CONSTRUCTION_MOVEMENT.md) now arranges those pieces
+with one save/Undo while physics is paused. Socket snapping,
 curved/deforming painting, sliders and liquids/snow remain unfinished.
 [Planar surface drawing](QUEST_SURFACE_DRAWING.md) adds reusable explicit patches,
 shared ink editing/readback, a physical surface pencil/eraser, and configurable

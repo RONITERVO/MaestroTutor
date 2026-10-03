@@ -153,3 +153,13 @@ review the seeded capture, load current guards, reject invalid input and explici
 run. It compares both selection calls and capture with their exact native receipts.
 This replay acknowledges recorded results; it is not another physics implementation
 and does not establish physical controller, hand, reach or performance acceptance.
+
+## Shared construction movement (2026-10-03)
+
+Before capturing the selected lever, the journey shows its native construction
+handle, compares `room.selection.manipulation` with the inline state and reads
+both current placement facts. It calls `object.layout.transform` to move, turn and
+resize the complete hinge assembly, verifies both results, restores both with one
+Undo, then hides the handle. `construction-movement.json` retains these actual
+observations and the exact action arguments. Physical grip ownership, two-hand
+resizing and interruption are separately tested through Unity XR PlayMode.

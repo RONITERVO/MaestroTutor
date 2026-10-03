@@ -37,6 +37,8 @@ saved structure, blueprint or persistent room component. Use the existing
 structure and module capabilities for those purposes. Selection remains visible
 in the delegated agent's ordinary room context, with no second agent scene.
 
-The implementation does not yet provide socket snapping, group grabbing or
-automatic safe placement. Collected pieces remain independent physical objects.
-Those features must use the same objects, physics and durable edit transactions.
+The solid construction handle now moves, turns and resizes selected pieces with
+one save/Undo; see [construction movement](QUEST_CONSTRUCTION_MOVEMENT.md). It
+requires paused physics and finished collection. Socket snapping and automatic
+safe placement remain unimplemented. Collected pieces remain independent
+physical objects after placement.
