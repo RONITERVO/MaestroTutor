@@ -2875,6 +2875,148 @@
       "requirements": []
     },
     {
+      "id": "room.view.capture",
+      "version": 1,
+      "label": "Capture virtual room view",
+      "input": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false,
+        "x-features": [
+          "roomViewCapture.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [
+        "room.active",
+        "viewer.available",
+        "workspace.available"
+      ],
+      "description": "Capture a single 512×384 virtual-only image from the current viewer pose, with a 60 degree vertical field of view. Includes Maestro and user-created room objects with their current appearance and pose. Excludes the book, private page/chat content, tool trays, scanned geometry and real camera/passthrough imagery. Neutral background; this is not a complete headset screenshot or proof of visibility against real walls. Pixels are separate from the metadata result and recurring room observations. The user and the delegated task can inspect the same exact hash-identified image. Capture does not move anything, save the room, create an object, or upload an image by itself. At most once per second; the native image expires after two minutes or session/lifecycle change. A retained receipt does not recreate an expired image. Desktop capture does not prove headset performance.",
+      "example": {},
+      "output": {
+        "type": "object",
+        "properties": {
+          "captureId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "mimeType": {
+            "type": "string",
+            "enum": [
+              "image/jpeg"
+            ]
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 512.0,
+            "maximum": 512.0
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 384.0,
+            "maximum": 384.0
+          },
+          "capturedAt": {
+            "type": "string",
+            "pattern": "^[0-9TZ:.-]{20,32}$",
+            "maxLength": 32
+          },
+          "sceneRevision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "verticalFov": {
+            "type": "number",
+            "minimum": 60.0,
+            "maximum": 60.0
+          },
+          "position": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": -1000000.0,
+                "maximum": 1000000.0
+              },
+              "y": {
+                "type": "number",
+                "minimum": -1000000.0,
+                "maximum": 1000000.0
+              },
+              "z": {
+                "type": "number",
+                "minimum": -1000000.0,
+                "maximum": 1000000.0
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "additionalProperties": false
+          },
+          "rotation": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": -1.0,
+                "maximum": 1.0
+              },
+              "y": {
+                "type": "number",
+                "minimum": -1.0,
+                "maximum": 1.0
+              },
+              "z": {
+                "type": "number",
+                "minimum": -1.0,
+                "maximum": 1.0
+              },
+              "w": {
+                "type": "number",
+                "minimum": -1.0,
+                "maximum": 1.0
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z",
+              "w"
+            ],
+            "additionalProperties": false,
+            "format": "unitQuaternion"
+          }
+        },
+        "required": [
+          "captureId",
+          "sha256",
+          "mimeType",
+          "width",
+          "height",
+          "capturedAt",
+          "sceneRevision",
+          "verticalFov",
+          "position",
+          "rotation"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "room.session",
       "version": 1,
       "label": "Temporary room",
@@ -26709,15 +26851,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "112b5c135f4e6c5c3251915c75a345871e4f22665baca1285c39e41eb8147f1c"
+      "sha256": "948661f413a730674864b4a2b643d4fc8cf7185595994ce028fffde011672f35"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
-      "sha256": "1ab8ef8e3cc8d9da8ac39b5ae98961b850afe863ea196eda772644026d495392"
+      "sha256": "be432f7995d91a403513adf8a0b5f06a7aad8300dd0d743eb95e2cb43bb33830"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgent.cs",
-      "sha256": "4621d2b6953fa571748d2139647a27ab46bffb0f6638a572052aba82ec027d10"
+      "sha256": "8d4f9a61ee36400ffd758d2045ab5f23e4b23471768a935f0c66eff65231e1f0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceRecoveryHold.cs",
@@ -26813,7 +26955,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RoomRules.cs",
-      "sha256": "0127f1b41b794c743c1adede9da2b507a2ce6d1c1fcfc130185345e39bbf9703"
+      "sha256": "5f06fb719a6872e4a06048f9f28ea1696ed043f185891275194d825516154f7f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleWorkshop.cs",
@@ -26888,6 +27030,10 @@
       "sha256": "57992b0fb6f119c3b8fdcda99d34b484356c3d2982070326c0fee9c4a5c24403"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomViewCapture.cs",
+      "sha256": "1a6093e6f18c1ad57d190773f94026e82941926c1fbe2631efe0774dcb312973"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CollisionRecipe.cs",
       "sha256": "3bf61c6b1e4858824ab65dbe6026542a52319041955f4d0eba6b2da949661e15"
     },
@@ -26949,7 +27095,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "870dd4c17ad34d8ec7cde55217d8deb496ab5228b2196e9ac6b8b1221c66ee92"
+      "sha256": "3357886d55327bf5aa8339f4b4114cf72102851ba329633f0332bb6b72986172"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomToolTray.cs",
@@ -27265,7 +27411,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "70d2e95974a9854005fbf98b7a10b5cd80653b447efcb1cde8e9464a932194a4"
+      "sha256": "bff467762fa7265a718b7adc3a4418553b3da6049b06e9a8644ec69985621da2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -27450,6 +27596,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RoomSessionCapability.cs",
       "sha256": "5a809c3ffcbd36910e36052558d4caf20328f51615816ebbaf4a4766bc60a6a0"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RoomViewCapability.cs",
+      "sha256": "0339a050811b571fb76d0b4f4c741497642007fb3d92f5f6f36f7beae2a1335f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RotateObjectCapability.cs",

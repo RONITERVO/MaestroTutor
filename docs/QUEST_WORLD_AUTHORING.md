@@ -160,7 +160,9 @@ frame. Physically catching a ball needs a native timed reach/catch capability;
 an LLM watching occasional images cannot substitute for that control loop.
 
 Use structured native facts for virtual objects and optional rendered snapshots
-for appearance. Real-world camera understanding is a separate permissioned input
+for appearance. The shared [virtual-room capture](QUEST_ROOM_VIEW.md) capability now
+returns native pixels to the user and an explicitly capturing task; device
+performance and live-provider interpretation are still unverified. Real-world camera understanding is a separate permissioned input
 path. Passthrough display and an MRUK room scan do not mean Gemini sees the room.
 Meta's camera API supplies physical camera frames; those alone do not include
 Unity-rendered virtual pieces. The app currently has no Quest passthrough-camera

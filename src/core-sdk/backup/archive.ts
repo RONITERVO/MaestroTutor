@@ -1,5 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {validateInlineImages} from '../../../shared/inlineImages';
+import {validRoomCaptureImage} from '../../../shared/roomViewCapture';
 import type { ChatMessage, ChatMeta } from '../../core/types';
 import type { RoomTaskRecord } from '../room/roomTaskHandoff';
 import { validateLiveInputMedia } from '../media/liveInputContext';
@@ -32,6 +34,7 @@ export function validateArchivedRoomTask(value: unknown): ArchivedRoomTask {
   text(handoff.nativeSession); text(handoff.accessScope); text(input.prompt); text(input.model); text(input.systemInstruction); text(input.nativeLanguageCode);
   if (!Array.isArray(input.history) || !['working','replying','completed','limited','stopped','interrupted','failed'].includes(record.phase)) invalid();
   text(record.note); integer(record.startedAt); integer(record.updatedAt);
+  if(record.snapshots!==undefined&&(!Array.isArray(record.snapshots)||record.snapshots.length>6||!record.snapshots.every(validRoomCaptureImage)))invalid();
   if (!Array.isArray(record.operations) || record.operations.length > 1024) invalid();
   for (const item of record.operations) {
     const operation = object(item); integer(operation.sceneRevision);
@@ -61,6 +64,7 @@ export function validateArchivedRoomTask(value: unknown): ArchivedRoomTask {
     if (!Array.isArray(parsed.translations)) invalid();
     for (const pair of parsed.translations) { text(object(pair).target); text(object(pair).native); }
   }
+  if (input.currentImages !== undefined) { try { validateInlineImages(input.currentImages); } catch { invalid(); } }
   if (input.liveInputMedia !== undefined) {
     const media = object(input.liveInputMedia);
     if (media.complete === true) { try { validateLiveInputMedia(media as any); } catch { invalid(); } }

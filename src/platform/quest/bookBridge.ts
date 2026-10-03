@@ -27,7 +27,7 @@ export interface BookSnapshot {
 
 declare global {
   interface Window {
-    maestroBook?: Readonly<{ integrityResult: (input: unknown) => boolean; snapshot: () => BookSnapshot; roomSnapshot: () => ReturnType<RoomAgentClient['snapshot']>; roomState: (input: unknown) => boolean; command: (input: unknown) => boolean; lifecycle: (suspended: boolean) => void; lifecycleState: () => ReturnType<typeof sessionActivity.status>; takeFileSelection: () => boolean; fileExportPoll: () => unknown; fileExportResult: (value:unknown) => boolean; libraryState: (input: unknown) => boolean }>;
+    maestroBook?: Readonly<{ integrityResult: (input: unknown) => boolean; snapshot: () => BookSnapshot; roomSnapshot: () => ReturnType<RoomAgentClient['snapshot']>; roomState: (input: unknown) => boolean; roomCapture: (input:unknown)=>boolean; command: (input: unknown) => boolean; lifecycle: (suspended: boolean) => void; lifecycleState: () => ReturnType<typeof sessionActivity.status>; takeFileSelection: () => boolean; fileExportPoll: () => unknown; fileExportResult: (value:unknown) => boolean; libraryState: (input: unknown) => boolean }>;
   }
 }
 
@@ -39,7 +39,7 @@ export function installBookBridge(target: Window, readSnapshot: () => BookSnapsh
   const fileExport = createBookFileExport(target);
   const unregisterRoom = registerRoomAgent(room);
   const bridge = Object.freeze({
-    roomSnapshot: room.snapshot, roomState: room.receive,
+    roomSnapshot: room.snapshot, roomState: room.receive, roomCapture: room.receiveCapture,
     snapshot: () => ({ ...readSnapshot(), ...library?.snapshot(), ...(integrity.snapshot() ? { integrityRequest: integrity.snapshot() } : {}) }),
     integrityResult: integrity.receive,
     libraryState: (input: unknown) => library?.receive(input) ?? false,

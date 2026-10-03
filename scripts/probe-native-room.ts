@@ -40,6 +40,16 @@ try{
   if(!original||created.objects.length!==initial.objects.length+1)throw new Error('The object was not created in the real room.');
   const painted=await execute([{action:'paint',target,color:{r:1,g:0,b:0,a:1}}]);
   if(painted.objects.find(object=>object.id===target)?.color.r!==1)throw new Error('Native paint did not apply.');
+  const viewSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Capture virtual room',offset:0}}]);
+  const viewDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'room.view.capture',version:1}}]);
+  const viewBefore=structuredClone(lease.state());
+  const viewAfter=await execute([{action:'execution',execution:{operation:'start',call:{id:'room.view.capture',version:1,arguments:{}}}}]);
+  const viewId=viewAfter.execution?.selected?.output?.captureId;
+  if(typeof viewId!=='string'||viewAfter.execution?.selected?.phase!=='completed')throw new Error('Native virtual view capture did not complete');
+  const viewImage=await lease.capture!(viewId);
+  if(viewImage.capture.sha256!==viewAfter.execution.selected.output?.sha256||viewAfter.sceneRevision!==viewBefore.sceneRevision)throw new Error('Virtual view image differs from its receipt or mutated the room');
+  await writeFile(join(directory,'virtual-room.jpg'),Buffer.from(viewImage.data,'base64'));
+  await writeFile(join(directory,'view-capture.json'),JSON.stringify({boundary:'Real full-app Unity camera, shared action/receipt and separate image transport. No live provider or Quest frame-time proof.',before:viewBefore,search:viewSearch,definition:viewDefinition,after:viewAfter,payload:{version:1,revision:1,session:viewAfter.session,...viewImage},ack:transport.client.snapshot().captureAck},null,2));
   const undoPaint=await execute([{action:'undo'}]);
   if(JSON.stringify(undoPaint.objects.find(object=>object.id===target)?.color)!==JSON.stringify(original.color))throw new Error('Native Undo did not restore the previous paint.');
   const undoCreate=await execute([{action:'undo'}]);

@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {validRoomCaptureMetadata,validRoomCaptureImage,sameRoomCapture,type RoomCaptureImage} from '../../../shared/roomViewCapture';
 import {validConstructionSelection,validConstructionManipulation} from '../../../shared/roomSelection';
 import {validRoomOwnership} from '../../../shared/roomOwnership';
 import {validTemporaryRoom} from '../../../shared/roomSession';
@@ -25,6 +26,13 @@ export class RoomAgentClient {
   subscribe=(listener:()=>void)=>{this.listeners.add(listener);return()=>{this.listeners.delete(listener);};};
   getSnapshot=()=>this.view;
   private publish(){this.view={state:this.value,pending:Boolean(this.pending)};for(const listener of this.listeners)listener();}
+  private captures=new Map<string,RoomCaptureImage>();
+  private captureAck:string|undefined;
+  receiveCapture=(input:unknown):boolean=>{
+    if(!record(input)||input.version!==1||input.revision!==1||input.session!==this.value?.session||!this.value?.capture||!record(input.capture)||input.capture.captureId!==this.value.capture.captureId||input.capture.sha256!==this.value.capture.sha256||JSON.stringify(input).length>140000||!validRoomCaptureImage(input)||!sameRoomCapture(input.capture,this.value.capture))return false;
+    const frame=structuredClone({capture:input.capture,data:input.data});this.captures.set(frame.capture.captureId,frame);while(this.captures.size>6)this.captures.delete(this.captures.keys().next().value!);this.captureAck=frame.capture.captureId;this.publish();return true;
+  };
+  captureImage=(id:string)=>{const image=this.captures.get(id);return image?structuredClone(image):null;};
   private generation=0;
   private sequence=0;
   private pending?:{request:{version:1|2;session:string;sequence:number;sceneRevision:number;commands:RoomCommand[];conditions:{id:string;revision:number}[]};resolve:(value:RoomAgentState)=>void;reject:(error:Error)=>void;timer:ReturnType<typeof setTimeout>;detachAbort:()=>void};
@@ -54,6 +62,7 @@ export class RoomAgentClient {
     const inspection=input.inspection;
     if(inspection!==undefined && inspection!==null && (!record(inspection)||typeof inspection.id!=='string'||!input.objects.some(o=>o.id===inspection.id)||!integer(inspection.objectRevision,1)||inspection.recipe!==null&&!parseRecipe(inspection.recipe)))return false;
     if(record(inspection)&&inspection.partId!==undefined&&inspection.partId!==null&&inspection.partId!==''&&(typeof inspection.partId!=='string'||!/^[a-zA-Z0-9_]{1,32}$/.test(inspection.partId)))return false;
+    if(input.capture!==undefined&&input.capture!==null&&!validRoomCaptureMetadata(input.capture))return false;
     const next=input as unknown as RoomAgentState;
     if(this.rejectedSessions.has(next.session))return false;
     if(this.value?.session===next.session && next.revision<=this.value.revision) return false;
@@ -66,6 +75,7 @@ export class RoomAgentClient {
   private reset(rotate:boolean) {
     if(this.value){this.rejectedSessions.add(this.value.session);while(this.rejectedSessions.size>16)this.rejectedSessions.delete(this.rejectedSessions.values().next().value!);}
     if(rotate)this.clientId=crypto.randomUUID().replace(/-/g,'');
+    this.captures.clear();this.captureAck=undefined;
     this.generation++;
     if(this.pending) {clearTimeout(this.pending.timer);this.pending.detachAbort();this.pending.reject(new DOMException('Room request interrupted; inspect the room before retrying.','AbortError'));this.pending=undefined;}
     this.value=null;this.publish();
@@ -74,12 +84,18 @@ export class RoomAgentClient {
     const lease=this.lease();if(!lease)return Promise.reject(new Error('The room is disconnected or another action is pending.'));
     const scene=expected??lease.state();if(scene.session!==lease.state().session)return Promise.reject(new Error('The room session changed. Reload the latest object before editing.'));return lease.execute(commands,scene.sceneRevision,scene.objects);
   }
-  snapshot=() => ({clientId:this.clientId,session:this.value?.session??'',request:this.pending?.request??null});
+  snapshot=() => ({clientId:this.clientId,session:this.value?.session??'',...(this.captureAck?{captureAck:this.captureAck}:{}),request:this.pending?.request??null});
   lease(allowPendingObservation=false):RoomAgentLease|null {
     if(!this.value || Date.now()-this.lastSeen>3000 || (this.pending && !allowPendingObservation)) return null;
     const generation=this.generation,session=this.value.session;
     const valid=() => generation===this.generation && this.value?.session===session && Date.now()-this.lastSeen<=3000;
-    return {valid,state:()=>{if(!valid()) throw new Error('Room session unavailable');return this.value!;},execute:(commands,expectedRevision,expectedObjects,signal)=>{
+    return {valid,capture:(id,signal)=>new Promise<RoomCaptureImage>((resolve,reject)=>{
+      let timer:ReturnType<typeof setTimeout>|undefined;let unsubscribe=()=>{};
+      const finish=(image:RoomCaptureImage|null,error?:Error)=>{if(timer)clearTimeout(timer);unsubscribe();signal?.removeEventListener('abort',aborted);if(image)resolve(image);else reject(error??new Error('The virtual room snapshot is unavailable. Capture a fresh view.'));};
+      const aborted=()=>finish(null,new DOMException('Room snapshot interrupted.','AbortError'));
+      const check=()=>{if(signal?.aborted||!valid()){aborted();return;}const image=this.captureImage(id);if(image)finish(image);};
+      unsubscribe=this.subscribe(check);timer=setTimeout(()=>finish(null),5000);signal?.addEventListener('abort',aborted,{once:true});check();
+    }),state:()=>{if(!valid()) throw new Error('Room session unavailable');return this.value!;},execute:(commands,expectedRevision,expectedObjects,signal)=>{
       if(signal?.aborted)return Promise.reject(new DOMException('Room request cancelled before dispatch.','AbortError'));
       if(!valid() || this.pending || this.sequence>=2147483647) return Promise.reject(new Error('Room session unavailable or busy'));
       parseRoomCommands({commands});requireRoomCapabilities(commands,this.value!);

@@ -1,5 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {roomCaptureImages} from '../../../shared/prompts/room';
+import {validRoomCaptureImage,validRoomCaptureMetadata,sameRoomCapture,type RoomCaptureImage,type RoomCaptureMetadata} from '../../../shared/roomViewCapture';
 import type {ConstructionSelection,ConstructionManipulation} from '../../../shared/roomSelection';
 import type {RoomOwnershipView} from '../../../shared/roomOwnership';
 import type {TemporaryRoomView} from '../../../shared/roomSession';
@@ -26,6 +28,7 @@ export interface RoomCommand {
   scale?: number; color?: { r: number; g: number; b: number; a: number }; recipe?: unknown;
 }
 export interface RoomAgentState {
+  capture?:RoomCaptureMetadata|null;
   version: 1; session: string; revision: number; sceneRevision: number; ack: number;
   ok: boolean; status: string; created: string[]; canUndo: boolean; canRedo: boolean; physicsRunning: boolean;
   ownership?:RoomOwnershipView|null; temporaryRoom?:TemporaryRoomView; capabilities?:string[]; physics?:PhysicsObservation|null; avatar?:AvatarMovementObservation|null; walk?:AvatarWalkObservation|null;
@@ -37,6 +40,7 @@ export interface RoomAgentState {
 export interface RoomAgentLease {
   state(): RoomAgentState;
   valid(): boolean;
+  capture?(id:string,signal?:AbortSignal):Promise<RoomCaptureImage>;
   execute(commands: RoomCommand[], expectedRevision: number, expectedObjects?: RoomAgentState['objects'], signal?: AbortSignal): Promise<RoomAgentState>;
 }
 const record = (v: unknown): v is Record<string, unknown> => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -73,7 +77,7 @@ export function parseRoomCommands(input: unknown): RoomCommand[] {
   return input.commands as unknown as RoomCommand[];
 }
 
-export const isRoomQuery=(command:RoomCommand)=>['inspect','motions','catalog'].includes(command.action)||command.action==='execution'&&command.execution?.operation==='inspect'||command.action==='rules'&&['inspect','memory'].includes(command.rule?.action??'');
+export const isRoomQuery=(command:RoomCommand)=>['inspect','motions','catalog'].includes(command.action)||command.action==='execution'&&(command.execution?.operation==='inspect'||command.execution?.operation==='start'&&command.execution.call.id==='room.view.capture')||command.action==='rules'&&['inspect','memory'].includes(command.rule?.action??'');
 export interface RoomTaskControl {
   relatedTask?: RelatedRoomTask;
   isCurrent?:()=>boolean;
@@ -82,18 +86,19 @@ export interface RoomTaskControl {
   signal?:AbortSignal;
   /** Called with each actual native acknowledgement, before the next model call. */
   onReceipt?:(receipt:RoomAgentState)=>void|Promise<void>;
+  onSnapshot?:(image:RoomCaptureImage)=>void|Promise<void>;
 }
-export interface RoomTaskResult {receipts:RoomAgentState[];scene:RoomAgentState;budgetExhausted:boolean;relatedTask?:RelatedRoomTask;needsReview?:boolean}
+export interface RoomTaskResult {snapshots?:RoomCaptureImage[];receipts:RoomAgentState[];scene:RoomAgentState;budgetExhausted:boolean;relatedTask?:RelatedRoomTask;needsReview?:boolean}
 const copy=<T>(value:T):T=>JSON.parse(JSON.stringify(value));
 
 /** A bounded tool task owned by the original Maestro app. The caller supplies
  * its existing Gemini access route and conversation lifetime; Unity never owns
  * a provider client. The result can be presented even if narration later fails. */
-export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'prompt'|'history'|'timeoutMs'> & Partial<Pick<TutorTextTurnInput,'systemInstruction'|'currentFileParts'|'nativeLanguageCode'|'liveInputMedia'>>,
+export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'prompt'|'history'|'timeoutMs'> & Partial<Pick<TutorTextTurnInput,'systemInstruction'|'currentFileParts'|'nativeLanguageCode'|'liveInputMedia'|'currentImages'>>,
   options:TutorTextTurnOptions,lease:RoomAgentLease,
   onUsage:(response:Awaited<ReturnType<typeof generateGeminiResponse>>)=>void,control:RoomTaskControl={}
 ):Promise<RoomTaskResult> {
-  const receipts:RoomAgentState[]=[];
+  const receipts:RoomAgentState[]=[],snapshots:RoomCaptureImage[]=[];
   const active=()=>{if(control.signal?.aborted||control.isCurrent?.()===false||!lease.valid())throw new DOMException('The room request was interrupted. No further actions will run.','AbortError');};
   let queries=0,actions=0;
   for(let step=0;step<9;step++) {
@@ -101,16 +106,17 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
     const scene=copy(lease.state());
     const response=await generateGeminiResponse(input.model,buildRoomAgentPrompt(input.prompt,scene,receipts,{systemInstruction:input.systemInstruction,nativeLanguageCode:input.nativeLanguageCode,relatedTask:control.relatedTask}),input.history,{
       ...pickGeminiClientSource(options),systemInstruction:ROOM_AGENT_INSTRUCTION,currentFileParts:input.currentFileParts,
+      currentImages:[...(input.currentImages??[]),...roomCaptureImages(snapshots)],
       ...(input.liveInputMedia ? {liveInputMedia:input.liveInputMedia} : {}),
       configOverrides:{responseMimeType:'application/json',responseJsonSchema:ROOM_AGENT_SCHEMA},
       timeoutMs:input.timeoutMs,signal:control.signal,lifecycleHooks:{onProgress:options.lifecycleHooks?.onProgress},
     });
     onUsage(response);active();
     let commands=parseRoomCommands(JSON.parse(response.text||'{}'));
-    if(!commands.length)return {receipts,scene:copy(lease.state()),budgetExhausted:false,relatedTask:control.relatedTask,needsReview:!!control.relatedTask?.unconfirmed};
+    if(!commands.length)return {...(snapshots.length?{snapshots}:{}),receipts,scene:copy(lease.state()),budgetExhausted:false,relatedTask:control.relatedTask,needsReview:!!control.relatedTask?.unconfirmed};
     // An unconfirmed earlier action is evidence of uncertainty, never permission to retry it.
     if (control.relatedTask?.unconfirmed && commands.some(command => !isRoomQuery(command)))
-      return { receipts, scene: copy(lease.state()), budgetExhausted: false, relatedTask: control.relatedTask, needsReview: true };
+      return { ...(snapshots.length?{snapshots}:{}), receipts, scene: copy(lease.state()), budgetExhausted: false, relatedTask: control.relatedTask, needsReview: true };
     requireRoomCapabilities(commands,scene);
     if(scene.capabilities?.includes('executionReceipts.v1'))commands=commands.map(c=>c.action==='execution'&&c.execution?{...c,execution:identifyExecution(c.execution,scene.execution)}:c);
     await control.beforeDispatch?.(commands,scene);active();
@@ -123,9 +129,17 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
     // checking the turn fence; never relabel a completed edit as rolled back.
     await control.onReceipt?.(copy(receipt));
     active();
+    const captureCall=commands.length===1&&commands[0].action==='execution'&&commands[0].execution?.operation==='start'&&commands[0].execution.call.id==='room.view.capture'?commands[0].execution:null;
+    const completed=receipt.execution?.selected;
+    if(captureCall&&receipt.ok&&completed&&completed.id===captureCall.runId&&completed.phase==='completed'&&typeof completed.output?.captureId==='string'){
+      if(!lease.capture)throw new Error('The room snapshot image channel is unavailable.');
+      const image=await lease.capture(completed.output.captureId,control.signal);active();
+      if(!validRoomCaptureMetadata(completed.output)||!validRoomCaptureImage(image)||!sameRoomCapture(image.capture,completed.output))throw new Error('The room snapshot does not match its completed capture receipt.');
+      snapshots.push(image);await control.onSnapshot?.(copy(image));active();
+    }
     if(queries>=6||actions>=3)break;
   }
-  active();return {receipts,scene:copy(lease.state()),budgetExhausted:true,relatedTask:control.relatedTask};
+  active();return {...(snapshots.length?{snapshots}:{}),receipts,scene:copy(lease.state()),budgetExhausted:true,relatedTask:control.relatedTask};
 }
 
 /** Compatibility wrapper until room tasks enter the common tool dispatcher. */
@@ -133,5 +147,5 @@ export async function runRoomTutorTurn(input:TutorTextTurnInput,options:TutorTex
   onUsage:(response:Awaited<ReturnType<typeof generateGeminiResponse>>)=>void,isCurrent:()=>boolean=()=>true) {
   const task=await runRoomActionTask(input,options,lease,onUsage,{isCurrent});
   if(!isCurrent()||!lease.valid())throw new DOMException('The room request was interrupted. No further actions will run.','AbortError');
-  return runTutorTextTurn({...input,systemInstruction:input.systemInstruction+'\n\n'+buildRoomResultInstruction(task.receipts,task.scene)},options);
+  return runTutorTextTurn({...input,currentImages:[...(input.currentImages??[]),...roomCaptureImages(task.snapshots)],systemInstruction:input.systemInstruction+'\n\n'+buildRoomResultInstruction(task.receipts,task.scene)},options);
 }

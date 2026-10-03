@@ -71,6 +71,7 @@ namespace Maestro.Quest.Editor
                     agent.Receive(request["snapshot"].ToString(Newtonsoft.Json.Formatting.None));
                     clientId=(string)request["snapshot"]["clientId"];
                 }
+                if(agent?.CapturePayload is JObject capture)Publish("capture.json",capture);
                 if(agent)Publish("state.json",new JObject {["version"]=1,["id"]=id,["clientId"]=clientId,["state"]=JObject.Parse(RoomAgentWire.Serialize(agent.Observe()))});
             }catch(InvalidDataException e){Fail(e);}
             catch(IOException){ /* Atomic replacement can briefly contend on Windows. The bounded client times out. */ }

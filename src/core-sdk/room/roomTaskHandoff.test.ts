@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import { describe, expect, it, vi } from 'vitest';
 import { RoomTaskHandoff, type RoomHandoff, type RoomTaskRecord, type RoomTaskPorts } from './roomTaskHandoff';
+import captured from '../../../test-fixtures/browser/roomCapture.json';
+import type {RoomCaptureImage} from '../../../shared/roomViewCapture';
 import { runRoomActionTask, type RoomAgentState } from './roomAgent';
 
 const scene: RoomAgentState = { version: 1, session: 'native-one', revision: 1, sceneRevision: 1, ack: 0,
@@ -230,4 +232,22 @@ it('reports an established stop even when its final narration fails', async () =
   const result = await followup(h, 'stop', true)();
   expect(result.phase).toBe('failed'); expect(result.note).toContain('earlier task is no longer running');
   expect(result.relatedTask?.phase).toBe('completed'); expect(h.execute).toHaveBeenCalledOnce();
+});
+
+it.each(['success','lost-access','save-failure'] as const)('keeps captured image evidence tied to its task: %s',async mode=>{
+ const h=harness(),image={capture:captured.capture,data:captured.data} as RoomCaptureImage;
+ vi.mocked(h.ports.run).mockImplementation(async(_input,_lease,control)=>{
+  await control.beforeDispatch!([{action:'workspace',visible:true}],scene);
+  await control.onReceipt!({...scene,ack:1});
+  if(mode==='lost-access')h.valid.mockResolvedValue(false);
+  if(mode==='save-failure')vi.mocked(h.ports.store.save).mockImplementation(async record=>{if(record.snapshots?.length)throw new Error('Disk full');h.saved.set(record.id,structuredClone(record));});
+  await control.onSnapshot!(image);
+  expect(h.saved.get('task-1')?.snapshots).toEqual([image]);
+  return {receipts:[scene],scene,budgetExhausted:false,snapshots:[image]};
+ });
+ const result=await h.manager.start('a1');
+ expect(result.phase).toBe(mode==='success'?'completed':mode==='lost-access'?'stopped':'failed');
+ expect(h.ports.reply).toHaveBeenCalledTimes(mode==='success'?1:0);
+ if(mode==='lost-access')expect(h.saved.get('task-1')?.snapshots).toBeUndefined();
+ if(mode==='save-failure')expect(h.changed).toHaveBeenLastCalledWith(expect.objectContaining({snapshots:[image]}));
 });

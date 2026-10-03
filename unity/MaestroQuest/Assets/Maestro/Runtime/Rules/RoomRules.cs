@@ -26,6 +26,7 @@ namespace Maestro.Quest.Rules
         public RuleScheduler Scheduler { get; private set; }
         bool paused, focused = true;
         string shownError;
+        internal IEnumerable<Renderer> ViewButtonRenderers=>buttons.Values.Where(button=>button).SelectMany(button=>button.GetComponentsInChildren<Renderer>()).Where(renderer=>renderer&&renderer.enabled&&renderer.gameObject.activeInHierarchy);
         public bool AnyButtonHeld => buttons.Values.Any(x => x && x.IsHeld);
         public void Initialize(RuleWorkshop source, RoomEditor roomEditor, AnimationWorkshop animationWorkshop, NativeBookBrowser book, RoomInteraction interaction, BookControllerInput controllerInput, Func<int,Transform> controllerAnchors = null, Programs.IProgramClock clock = null)
         {

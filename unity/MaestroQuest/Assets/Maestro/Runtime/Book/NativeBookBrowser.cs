@@ -162,6 +162,14 @@ namespace Maestro.Quest.Book
 #endif
         }
 
+        public void PublishRoomCapture(string json)
+        {
+            if(!IsReady||suspended||string.IsNullOrEmpty(json)||json.Length>140000)return;
+#if UNITY_ANDROID && !UNITY_EDITOR
+            m_NativePlugin.Call("PublishRoomCapture",json);
+#endif
+        }
+
         public void PublishLibraryState(string json)
         {
             if (string.IsNullOrEmpty(json) || json.Length > 32768) return;

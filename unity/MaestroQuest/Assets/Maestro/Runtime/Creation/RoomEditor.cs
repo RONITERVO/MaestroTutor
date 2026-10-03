@@ -598,7 +598,7 @@ namespace Maestro.Quest.Creation
         void SetStatus(string value) { Status = value; Changed?.Invoke(); }
         void RefreshOwnership() {
             Ownership.Suspend(ownershipPaused||!ownershipFocused||RuntimeGate.Held);
-            if(Ownership.Suspended)SuspendConstructionPicking();
+            if(Ownership.Suspended){SuspendConstructionPicking();ClearViewCapture();}
             if(!Ownership.Suspended)foreach(var item in objects.Values)if(item&&item.Grab.isSelected)OwnHeld(item);
         }
         void OnApplicationPause(bool paused) { ownershipPaused=paused;RefreshOwnership();if (paused) Flush(); }
@@ -606,7 +606,7 @@ namespace Maestro.Quest.Creation
         void OnApplicationQuit() => Flush();
         void OnDestroy()
         {
-            FinishLiquidPour(out _);
+            ClearViewCapture();FinishLiquidPour(out _);
             RuntimeGate.Changed-=RefreshOwnership;Ownership.Suspend(true);Flush(); Motions?.Dispose();
             if (room) { room.Restoring -= BeforeRestore; room.Restored -= AfterRestore; }
             foreach (var item in objects.Values) if (item) { item.GrabStarted -= GrabStarted; item.GrabFinished -= GrabFinished;var rigid=item.GetComponent<RigidRoomItem>();if(rigid)rigid.ContactStarted-=ContactStarted; }

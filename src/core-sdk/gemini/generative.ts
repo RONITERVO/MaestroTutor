@@ -1,3 +1,4 @@
+import {validateInlineImages,type InlineImage} from '../../../shared/inlineImages';
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
@@ -50,6 +51,7 @@ export type GenerateGeminiResponseOptions = GeminiClientSource & {
   systemInstruction?: string;
   currentFileParts?: Array<{ fileUri: string; mimeType: string }>;
   liveInputMedia?: LiveInputMedia;
+  currentImages?:InlineImage[];
   useGoogleSearch?: boolean;
   configOverrides?: any;
   timeoutMs?: number;
@@ -410,6 +412,8 @@ export const generateGeminiResponse = async (
   checkCancellation(options.signal);
   if (options.liveInputMedia) validateLiveInputMedia(options.liveInputMedia);
   const liveInputMedia = options.liveInputMedia ? structuredClone(options.liveInputMedia) : undefined;
+  if(options.currentImages)validateInlineImages(options.currentImages);
+  const currentImages=options.currentImages?structuredClone(options.currentImages):undefined;
   const ai = options.aiClient || await withCancellation(() => options.resolveAiClient!(), options.signal);
   checkCancellation(options.signal);
   const rawContents: any[] = [];
@@ -465,6 +469,7 @@ export const generateGeminiResponse = async (
       { inlineData: { mimeType: frame.mimeType, data: frame.data } },
     ));
   }
+  for(const image of currentImages??[])currentParts.push({text:image.label},{inlineData:{mimeType:image.mimeType,data:image.data}});
   rawContents.push({ role: 'user', parts: currentParts });
   // Collapse only for this request. We do not mutate the source history because
   // the UI/persistence layer still needs the original message granularity.

@@ -1,3 +1,4 @@
+import type {InlineImage} from '../../../shared/inlineImages';
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 
@@ -20,6 +21,7 @@ export interface TutorTextTurnInput {
   systemInstruction: string;
   currentFileParts?: Array<{ fileUri: string; mimeType: string }>;
   liveInputMedia?: LiveInputMedia;
+  currentImages?:InlineImage[];
   useGoogleSearch?: boolean;
   configOverrides?: unknown;
   timeoutMs?: number;
@@ -68,6 +70,7 @@ export const runTutorTextTurn = async (
       {
         systemInstruction: input.systemInstruction,
         currentFileParts: input.currentFileParts,
+        currentImages:input.currentImages,
         ...(input.liveInputMedia ? { liveInputMedia: input.liveInputMedia } : {}),
         useGoogleSearch: input.useGoogleSearch,
         configOverrides: input.configOverrides,

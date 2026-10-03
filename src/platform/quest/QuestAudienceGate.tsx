@@ -24,7 +24,7 @@ export function QuestAudienceGate({ children }: React.PropsWithChildren) {
       lifecycle: (suspended: boolean) => { if (typeof suspended === 'boolean') sessionActivity.setSuspended(suspended); },
       lifecycleState: () => sessionActivity.status(),
       roomSnapshot: () => ({ clientId: '', session: '', request: null }),
-      command: refuse, integrityResult: refuse, roomState: refuse, libraryState: refuse,
+      command: refuse, integrityResult: refuse, roomState: refuse, roomCapture: refuse, libraryState: refuse,
       takeFileSelection: refuse, fileExportPoll: () => null, fileExportResult: refuse,
     });
     window.maestroBook = bridge;

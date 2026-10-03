@@ -72,6 +72,11 @@ export class HeadlessRoomTransport {
      }
     }
    }catch(error){if((error as NodeJS.ErrnoException).code!=='ENOENT')throw error;}
+   // Pixels use the same separate bounded channel as the Android book. A stale
+   // file is normal after native acknowledgement; the shared client binds it to
+   // the current session and current capture metadata before accepting it.
+   try{const capture=await this.read('capture.json',140000);this.client.receiveCapture(capture);}
+   catch(error){if((error as NodeJS.ErrnoException).code!=='ENOENT')throw error;}
    try{const terminal=await this.read('terminal.json',4096);throw new Error('Native room probe stopped: '+JSON.stringify(terminal));}
    catch(error){if((error as NodeJS.ErrnoException).code!=='ENOENT')throw error;}
    await sleep(100);

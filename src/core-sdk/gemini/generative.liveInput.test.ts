@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { generateGeminiResponse } from './generative';
 import { createManagedGeminiClient } from '../managedGeminiClient';
 import { LiveInputContext, missingLiveInput } from '../media/liveInputContext';
+import nativeCapture from '../../../test-fixtures/browser/roomCapture.json';
 import { debugLogService } from '../diagnostics';
 
 describe('shared provider original Live media', () => {
@@ -45,4 +46,26 @@ it('pins validated media across asynchronous credential resolution', async () =>
   resolve({ models: { generateContentStream: send } }); await result;
   expect(JSON.stringify(send.mock.calls[0][0])).toContain(original);
   expect(JSON.stringify(send.mock.calls[0][0])).not.toContain('REPLACED');
+});
+
+it.each(['byok','managed'])('shares virtual image input through %s and keeps pixel bytes out of diagnostics',async mode=>{
+ const log=vi.spyOn(debugLogService,'logRequest');
+ const send=vi.fn(async(_request:any)=>(async function*(){yield{text:'Ready'};})());
+ const aiClient=mode==='managed'?createManagedGeminiClient({generateContentStream:send} as any):{models:{generateContentStream:send}} as any;
+ try {
+  await generateGeminiResponse('capture-test','Inspect this view.',[],{aiClient,currentImages:[{mimeType:'image/jpeg',data:nativeCapture.data,label:'Captured virtual objects'}]});
+  expect(send.mock.calls[0][0].contents.flatMap((c:any)=>c.parts).filter((p:any)=>p.inlineData)).toEqual([{inlineData:{mimeType:'image/jpeg',data:nativeCapture.data}}]);
+  expect(JSON.stringify(log.mock.calls)).not.toContain(nativeCapture.data);expect(JSON.stringify(log.mock.calls)).toContain('[REDACTED]');
+ } finally {log.mockRestore();}
+});
+it('refuses malformed inline images before credentials and pins pixels before asynchronous client resolution',async()=>{
+ const resolveAiClient=vi.fn();
+ await expect(generateGeminiResponse('capture-test','Inspect.',[],{resolveAiClient,currentImages:[{mimeType:'image/jpeg',data:'not JPEG',label:'View'}]})).rejects.toThrow('image');
+ expect(resolveAiClient).not.toHaveBeenCalled();
+ let release!:(client:any)=>void;const client=new Promise<any>(resolve=>{release=resolve;});
+ const send=vi.fn(async(_request:any)=>(async function*(){yield{text:'Ready'};})());
+ const image={mimeType:'image/jpeg' as const,data:nativeCapture.data,label:'View'};
+ const response=generateGeminiResponse('capture-test','Inspect.',[],{resolveAiClient:()=>client,currentImages:[image]});
+ image.data='replaced';release({models:{generateContentStream:send}});await response;
+ expect(JSON.stringify(send.mock.calls[0][0])).toContain(nativeCapture.data);expect(JSON.stringify(send.mock.calls[0][0])).not.toContain('replaced');
 });

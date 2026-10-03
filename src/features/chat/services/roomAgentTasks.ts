@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {roomCaptureImages} from '../../../../shared/prompts/room';
 import { parseRoomTaskDirective, type RoomTaskDirective, type RoomTaskTarget } from '../../../core-sdk/room/taskSteering';
 import { missingLiveInput, validateLiveInputMedia, type LiveInputMedia } from '../../../core-sdk/media/liveInputContext';
 import type { TutorTextTurnInput } from '../../../core-sdk/chat/tutorTextTurn';
@@ -51,6 +52,7 @@ export const roomAgentTasks = new RoomTaskHandoff({
   run: (input, lease, control) => runRoomActionTask(input, browserClientSource(), lease, response => usage(response, input.model), control),
   reply: async (input, result, signal) => {
     const turn = await runTutorTextTurn({ ...input,
+      currentImages:[...(input.currentImages??[]),...roomCaptureImages(result.snapshots)],
       systemInstruction: input.systemInstruction + '\n\n' + buildRoomResultInstruction(result.receipts, result.scene) + buildRoomTaskReplyInstruction(result.budgetExhausted)
         + (result.relatedTask ? buildRoomTaskOutcomeInstruction(result.relatedTask, result.needsReview) : ''),
       configOverrides: { maxOutputTokens: 2048 },

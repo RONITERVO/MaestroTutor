@@ -265,6 +265,14 @@ public final class BookWebView extends OffscreenBrowser {
         });
     }
 
+    public void PublishRoomCapture(String json) {
+        String script = LibraryBookMessages.publishScript(json, "roomCapture");
+        if (script == null) return;
+        UnityPlayer.currentActivity.runOnUiThread(() -> {
+            if (!disposed && !suspended && web != null && isAppOrigin(Uri.parse(web.getUrl() == null ? "" : web.getUrl()))) web.evaluateJavascript(script, null);
+        });
+    }
+
     public void PublishIntegrityResult(String json) {
         String script = LibraryBookMessages.publishScript(json, "integrityResult");
         if (script == null) return;

@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import type {RoomCaptureImage} from '../../../shared/roomViewCapture';
 import { parseRoomTaskDirective, relatedRoomTask, RoomTaskSteeringError, type RoomTaskDirective, type RoomTaskTarget, type RelatedRoomTask } from './taskSteering';
 import { LiveInputContextError, validateLiveInputMedia } from '../media/liveInputContext';
 import type { TutorTextTurnInput, TutorTextTurnResult } from '../chat/tutorTextTurn';
@@ -19,6 +20,7 @@ export interface RoomHandoff {
 }
 export interface RoomTaskRecord {
   version: 1;
+  snapshots?:RoomCaptureImage[];
   /** Restored evidence is never writable by a previously running task. */
   readOnly?: true;
   directive?: RoomTaskDirective;
@@ -154,6 +156,9 @@ export class RoomTaskHandoff {
           // The write must commit before the native bridge sees this operation.
           await publish();
           await check();
+        },
+        onSnapshot: async image=>{
+          await check();record.snapshots??=[];if(record.snapshots.length>=6)throw new Error('Room snapshot limit reached.');record.snapshots.push(clone(image));await publish();
         },
         onReceipt: async receipt => {
           const pending = record.operations[record.operations.length - 1];

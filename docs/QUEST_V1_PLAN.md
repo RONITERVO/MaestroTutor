@@ -2811,3 +2811,14 @@ See QUEST_RECIPE_AUTHORING.md for exact bounds and frame conventions.
 This advances handles, bent rods and user-authored parts. General CSG, curved
 surface painting, persistent water/snow, the remaining play kit and all unverified
 headset/provider/account/Store release gates remain open.
+
+
+### Shared virtual-room view (2026-10-04)
+
+`room.view.capture` supplies a bounded native JPEG through a separate acknowledged
+image channel. The optional catalog and app-owned agent inspect the same pixels;
+agent-captured images are retained in task details and validated on backup import.
+No Gemini client, camera permission or physical-camera integration is added to
+Unity. Native facts and receipts still determine exact state and outcomes.
+See [virtual-room view](QUEST_ROOM_VIEW.md) for scope, retention and limits.
+Quest render/readback performance and live-provider interpretation remain open.

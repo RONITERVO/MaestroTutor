@@ -1,7 +1,8 @@
-import {dataTypeLabel} from '../../../shared/programValues';
-import {validateFactArguments} from '../../../shared/behaviourFacts';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {RoomCapturePreview} from '../../shared/components/RoomCapturePreview';
+import {dataTypeLabel} from '../../../shared/programValues';
+import {validateFactArguments} from '../../../shared/behaviourFacts';
 import {useEffect,useRef,useState,useSyncExternalStore} from 'react';
 import {currentInputLocations,currentInputFields,currentInputRequest,applyCurrentInputSnapshots,currentInputsIdentity,currentInputFieldLabel,type CurrentInputLocation} from '../../../shared/currentCapabilityInputs';
 import {capabilityDefinition,validateCapabilityArguments,resolveCapabilitySchema,argumentValue,type CapabilityInvocation} from '../../../shared/capabilities';
@@ -94,6 +95,7 @@ export function CapabilityBrowser({client,onClose,onInsert,initialCall}:{client:
  const observation=state?.catalog;
  const check=checked===key&&key&&observation?.operation==='check'&&JSON.stringify(observation.call)===key?observation:null;
  const supported=state?.capabilities?.includes('catalog.v1')===true;
+ const viewImage=state?.capture?client.captureImage(state.capture.captureId):null;
  const execution=executionForCapability(definition?.id,state?.execution);
  return <div className="room-workspace capability-browser" aria-label="Action catalog">
   <section className="room-workspace-page room-hierarchy" aria-label="Find an action">
@@ -154,6 +156,7 @@ export function CapabilityBrowser({client,onClose,onInsert,initialCall}:{client:
     <p className="room-workspace-intro">{definition.domain==='workspace'?'Workspace maintenance runs once and cannot be added to a room behaviour.':onInsert?'Adding a block changes your draft. Apply it in the workshop when ready.':'Choose a behaviour in the workshop to add an action block.'} Availability can change before execution.</p>
     <details><summary>Argument reference</summary><p>Duration: {definition.duration}. Uses: {(resolveCapabilitySchema(definition.input,call?.arguments)?.['x-channels']??definition.channels).join(', ')||'no animation channel'}.</p><p>Needs: {(resolveCapabilitySchema(definition.input,call?.arguments)?.['x-requirements']??definition.requirements).join(', ')||'no additional requirements'}.</p><pre>{JSON.stringify(definition.input,null,2)}</pre></details>
    </>}
+   {definition?.id==='room.view.capture'&&state?.capture&&(viewImage?<RoomCapturePreview image={viewImage}/>:<p>Snapshot pixels are loading or are no longer available. Capture again if needed.</p>)}
    {category==='actions'&&state?.execution&&<>
     <ExecutionHistory view={state.execution} pending={busy} execute={execute} recoverable={state.capabilities?.includes('actionRecovery.v1')===true}/>
     {state.execution.workspace&&<ExecutionHistory workspace view={state.execution.workspace} pending={busy} execute={execute} recoverable={state.capabilities?.includes('actionRecovery.v1')===true}/>}

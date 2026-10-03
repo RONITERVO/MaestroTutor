@@ -1791,3 +1791,17 @@ room discard and the existing runtime's pour-event wait.
 Profile two-hand/controller tracking, stream readability and sustained frame time
 with the maximum 16 configured containers. Desktop conservation/collision checks
 do not satisfy this device gate. No device installation or test is claimed here.
+
+
+## Virtual-room snapshots
+
+On the candidate build, frame the default avatar and a newly created colored
+object, ask Maestro to inspect their appearance, and compare Task details with
+the native view. Verify page/chat and tool trays are absent and the real room is
+not represented. Move/animate the avatar and repeat; check current pose, correct
+textures, orientation and framing. Test manual catalog capture without a task:
+no provider request should occur. Verify Stop, suspend/resume and reconnect do
+not upload stale frames or retake an expired receipt. Profile CPU/GPU frame cost,
+readback/encoding stalls, memory and thermal behavior on Quest 3. Also test the
+shared image request through the actual managed and BYOK provider routes; mocked
+provider transport is not model-interpretation acceptance.

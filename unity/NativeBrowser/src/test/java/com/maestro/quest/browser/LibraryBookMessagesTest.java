@@ -33,6 +33,18 @@ public class LibraryBookMessagesTest {
         assertEquals(json,new org.json.JSONTokener(script.substring(prefix.length(),script.length()-2)).nextValue());
         assertNull(LibraryBookMessages.publishScript(json,"eval"));
     }
+    @Test public void roomCaptureUsesItsOwnBoundAndQuotesPixelsAndMetadataAsData() throws Exception {
+        JSONObject state=new JSONObject().put("version",1).put("session","a".repeat(32)).put("revision",1)
+            .put("data","a".repeat(131072)).put("caption","');window.injected=true;//");
+        String script=LibraryBookMessages.publishScript(state.toString(),"roomCapture");
+        String prefix="window.maestroBook && window.maestroBook.roomCapture && window.maestroBook.roomCapture(JSON.parse(";
+        assertNotNull(script);assertTrue(script.startsWith(prefix));
+        assertEquals(state.toString(),new org.json.JSONTokener(script.substring(prefix.length(),script.length()-2)).nextValue());
+        assertNull(LibraryBookMessages.publishScript(state.toString(),"libraryState"));
+        assertNull(LibraryBookMessages.publishScript(state.put("data","a".repeat(140000)).toString(),"roomCapture"));
+        assertNull(LibraryBookMessages.publishScript(state.put("data","abc").put("session","wrong").toString(),"roomCapture"));
+        assertNull(LibraryBookMessages.publishScript(state.put("session","a".repeat(32)).put("revision",0).toString(),"roomCapture"));
+    }
     @Test public void quotesAttributionAsDataAndRejectsInvalidOrExcessiveState() throws Exception {
         JSONObject state = new JSONObject().put("version",1).put("session","a".repeat(32)).put("revision",1).put("attribution","'); alert('source'); //\n\\");
         String script = LibraryBookMessages.publishScript(state.toString());

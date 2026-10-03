@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {RoomCapturePreview} from '../../../shared/components/RoomCapturePreview';
 import { useEffect, useState } from 'react';
 import type { ChatMessage } from '../../../core/types';
 import type { RoomTaskRecord } from '../../../core-sdk/room/roomTaskHandoff';
@@ -38,6 +39,7 @@ export function AgentTaskStatus({ task, controls = roomAgentTasks }: {
         {record.relatedTask && <p>Earlier task: {record.relatedTask.phase}. {record.relatedTask.unconfirmed
           ? 'An earlier action is unconfirmed; further edits need a new specific request.'
           : 'Recorded effects remain; this request does not replay earlier commands.'}</p>}
+        {record.snapshots?.map(image=><RoomCapturePreview key={image.capture.captureId} image={image}/>)}
         <p>Recorded action batches: {record.operations.length}.</p>
         <ol className="list-decimal pl-5">{record.operations.map((operation, index) => <li key={index} className="my-1">
           {operation.commands.map(command => command.action).join(', ')}: {operation.receipt
