@@ -4,6 +4,7 @@ import {readFileSync} from 'node:fs';
 import {expect,it} from 'vitest';
 import {insertProgramCapability} from './programCapabilityEditing';
 import {parseProgram,type BehaviourProgram} from './programs';
+import {programFeatureRequirements} from '../../../shared/programFeatures';
 import {requireRoomCapabilities} from '../../../shared/roomControls';
 import {capabilityDefinition} from '../../../shared/capabilities';
 const source=JSON.stringify({version:2,entry:'main',resources:[],functions:[{name:'main',returns:'void',parameters:[],locals:[],body:[]}]});
@@ -33,4 +34,18 @@ it('keeps exact parameterized fact targets and needs the same native structured 
  const commands=[{action:'rules',rule:{action:'edit',revision:1,edits:[{kind:'save',sequence:{program:JSON.stringify(result)}}]}}];
  expect(()=>requireRoomCapabilities(commands,{capabilities:['behaviourPrograms.v3','eventPrograms.v1','objectEdits.v1','actionResults.v1','spatialSettings.v1','structuredValues.v1']})).toThrow('factQueries.v1');
  expect(()=>requireRoomCapabilities(commands,{capabilities:['behaviourPrograms.v3','eventPrograms.v1','objectEdits.v1','actionResults.v1','spatialSettings.v1','structuredValues.v1','factQueries.v1']})).not.toThrow();
+});
+
+const captureCall={id:'program.module.captureConstruction',version:1,arguments:{name:'Captured pieces',members:[{target:'a'.repeat(32),revision:1,slot:'first'},{target:'b'.repeat(32),revision:2,slot:'second'}]}};
+it('generates visible per-member reads and indexed scalar guards without enlarging program values',()=>{
+ const fields=['members.0.revision','members.1.revision'],result=insertProgramCapability(source,captureCall,{kind:'current',fields});
+ const fixture=JSON.parse(readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/current-members-program.json','utf8'));expect(result).toEqual(fixture);
+ expect(result.functions[0].body).toHaveLength(3);expect(result.functions[0].locals).toHaveLength(2);expect(result.resources).toEqual(captureCall.arguments.members.map(m=>m.target));
+ const features=[...programFeatureRequirements(result),'behaviourPrograms.v3','eventPrograms.v1'];expect(features).toContain('indexedInputs.v1');
+ const commands=[{action:'rules',rule:{action:'edit',revision:1,edits:[{kind:'save',sequence:{program:JSON.stringify(result)}}]}}];
+ expect(()=>requireRoomCapabilities(commands,{capabilities:features.filter(f=>f!=='indexedInputs.v1')})).toThrow('indexedInputs.v1');expect(()=>requireRoomCapabilities(commands,{capabilities:features})).not.toThrow();
+ expect(()=>insertProgramCapability(source,captureCall,{kind:'current',fields:fields.slice(0,1)})).toThrow('guards');
+ const large={...captureCall,arguments:{...captureCall.arguments,members:Array.from({length:16},(_,i)=>({target:(i+1).toString(16).padStart(32,'0'),revision:1,slot:'part_'+i}))}},all=large.arguments.members.map((_,i)=>`members.${i}.revision`);
+ expect(insertProgramCapability(source,large,{kind:'current',fields:all}).functions[0].locals).toHaveLength(16);
+ const occupied=JSON.parse(source);occupied.functions[0].locals=[{name:'occupied',initial:0}];const before=JSON.stringify(occupied);expect(()=>insertProgramCapability(before,large,{kind:'current',fields:all})).toThrow();expect(JSON.stringify(occupied)).toBe(before);
 });

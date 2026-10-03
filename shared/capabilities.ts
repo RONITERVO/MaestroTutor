@@ -32,10 +32,22 @@ const record=(value:unknown):value is Record<string,unknown>=>value!==null&&type
 const own=(value:object,key:string)=>Object.prototype.hasOwnProperty.call(value,key);
 export function capabilityDefinition(id:string):CapabilityDefinition|null {const value=definitions.get(id);return value?clone(value):null;}
 /** Resolve literal variant selectors without treating readiness as validation. */
-export function schemaField(schema:CapabilitySchema|undefined,path:string,value?:unknown):CapabilitySchema|undefined {
- for(const key of path.split('.')){schema=resolveCapabilitySchema(schema,value);schema=schema?.properties&&own(schema.properties,key)?schema.properties[key]:undefined;value=record(value)&&own(value,key)?value[key]:undefined;}return schema;
+/** Indexes address existing literal array entries; they never resize an argument. */
+function argumentIndex(value:unknown,key:string):number|null {
+ if(!Array.isArray(value)||!/^(0|[1-9][0-9]{0,3})$/.test(key))return null;
+ const index=Number(key);return index<value.length?index:null;
 }
-export function argumentValue(value:unknown,path:string):unknown {for(const key of path.split('.'))value=record(value)?value[key]:undefined;return value;}
+function argumentChild(value:unknown,key:string):unknown {
+ const index=argumentIndex(value,key);return index!==null?(value as unknown[])[index]:record(value)&&own(value,key)?value[key]:undefined;
+}
+export function schemaField(schema:CapabilitySchema|undefined,path:string,value?:unknown):CapabilitySchema|undefined {
+ for(const key of path.split('.')){
+  schema=resolveCapabilitySchema(schema,value);
+  schema=schema?.type==='array'?(argumentIndex(value,key)!==null?schema.items:undefined):schema?.properties&&own(schema.properties,key)?schema.properties[key]:undefined;
+  value=argumentChild(value,key);
+ }return schema;
+}
+export function argumentValue(value:unknown,path:string):unknown {for(const key of path.split('.'))value=argumentChild(value,key);return value;}
 export function resolveCapabilitySchema(schema:CapabilitySchema|undefined,value:unknown):CapabilitySchema|undefined {
  if(!schema?.oneOf)return schema;
  const matches=schema.oneOf.filter(branch=>(schema['x-discriminators']??[]).every(path=>schemaField(branch,path)?.enum?.includes(argumentValue(value,path) as string)));
@@ -47,6 +59,7 @@ export function capabilityBindingFields(id:string,args:Record<string,unknown>):R
  const visit=(schema:CapabilitySchema|undefined,path:string)=>{schema=resolveCapabilitySchema(schema,path?argumentValue(args,path):args);if(!schema||schema['x-static'])return;
   if(path&&capabilityParameterType(id,path,args))result[path]=schema;
   if(schema.type==='object')for(const [key,field] of Object.entries(schema.properties??{}))visit(field,path?path+'.'+key:key);
+  const value=path?argumentValue(args,path):args;if(schema.type==='array'&&Array.isArray(value))value.forEach((_,i)=>visit(schema.items,path+'.'+i));
  };visit(capabilityInput(id,args),'');return result;
 }
 export function validateCapabilityValue(value:unknown,schema:CapabilitySchema):string|null {return validate(value,schema,'value');}
@@ -128,7 +141,8 @@ export function literalCapabilityResources(id:string,args:Record<string,unknown>
  const literal=clone(args);
  if(version===3)for(const key of Object.keys(bindings))if(capabilityParameterType(id,key,args)!==null){
   const parts=key.split('.'),parent=parts.length===1?literal:argumentValue(literal,parts.slice(0,-1).join('.'));
-  if(record(parent))delete parent[parts[parts.length-1]];
+  const last=parts[parts.length-1],index=argumentIndex(parent,last);
+  if(index!==null)(parent as unknown[])[index]=null;else if(record(parent))delete parent[last];
  }
  return capabilityResources(id,literal);
 }
@@ -139,7 +153,8 @@ export function capabilityParameterType(id:string,parameter:string,args:Record<s
  let schema=definitions.get(id)?.input,value:unknown=args;
  for(const key of parameter.split('.')) {
   if(schema?.['x-static']||schema?.['x-discriminators']?.includes(key))return null;
-  schema=resolveCapabilitySchema(schema,value)?.properties?.[key];value=record(value)?value[key]:undefined;
+  const selected=resolveCapabilitySchema(schema,value);
+  schema=selected?.type==='array'?(argumentIndex(value,key)!==null?selected.items:undefined):selected?.properties?.[key];value=argumentChild(value,key);
  }
  const mutable=(field:CapabilitySchema|undefined):boolean=>!!field&&!field['x-static']&&!field.oneOf&&!field.nullable&&field.format!=='programModule'&&
   (field.type==='array'?mutable(field.items):field.type!=='object'||Object.values(field.properties??{}).every(mutable));
@@ -159,6 +174,7 @@ export function capabilityResources(id:string,args:Record<string,unknown>):strin
 /** Feature requirements may also belong to optional arguments, so older calls stay usable. */
 export function capabilityFeatures(id:string,args:Record<string,unknown>,bindings:string[]=[]):string[] {
  const required=new Set<string>();
+ if(bindings.some(path=>path.split('.').some(part=>/^(0|[1-9][0-9]*)$/.test(part))))required.add('indexedInputs.v1');
  const visit=(schema:CapabilitySchema|undefined,value:unknown)=>{
   if(!schema||value===undefined)return;const selected=resolveCapabilitySchema(schema,value);if(!selected)return;
   for(const feature of [...schema['x-features']??[],...selected['x-features']??[]])required.add(feature);

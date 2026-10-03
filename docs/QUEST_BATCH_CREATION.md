@@ -163,3 +163,10 @@ Native support is advertised as `creationPrototypes.v1` and
 `constructionCapture.v1`. The existing schema-generated forms, module inspection,
 source/blocks editor and agent catalog expose the same definitions. Prototype
 geometry and transformed-motion boundaries have shared native/web fixtures.
+
+The generated capture form can select members by their room names, then **Load
+current values** for all members together. Revision fields are read-only in the
+form; advanced source can provide an explicit snapshot. Adding capture to a
+behaviour produces visible per-member reads with indexed revision bindings,
+using the shared current-input metadata and normal program limits. It does not
+save a separate capture-only workflow or refresh stale revisions automatically.

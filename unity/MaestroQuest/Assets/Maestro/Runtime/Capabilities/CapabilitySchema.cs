@@ -16,16 +16,27 @@ namespace Maestro.Quest.Programs
                 return actual?.Type==JTokenType.String&&field?["enum"] is JArray choices&&choices.Any(x=>JToken.DeepEquals(x,actual));
             })).Take(2).ToArray();return matches.Length==1?matches[0]:null;
         }
-        public static JToken Value(JToken value,string path) {foreach(var key in path.Split('.'))value=(value as JObject)?[key];return value;}
+        static bool Index(JToken value,string key,out int index) {
+            index=-1;return value is JArray array&&System.Text.RegularExpressions.Regex.IsMatch(key,"\\A(0|[1-9][0-9]{0,3})\\z")&&int.TryParse(key,out index)&&index<array.Count;
+        }
+        static JToken Child(JToken value,string key)=>Index(value,key,out int index)?value[index]:(value as JObject)?[key];
+        public static JToken Value(JToken value,string path) {foreach(var key in path.Split('.'))value=Child(value,key);return value;}
         public static JObject Field(JObject schema,string path,JToken value=null) {
-            foreach(var key in path.Split('.')){schema=Resolve(schema,value)?["properties"]?[key] as JObject;value=(value as JObject)?[key];}return schema;
+            foreach(var key in path.Split('.')){
+                schema=Resolve(schema,value);
+                schema=(string)schema?["type"]=="array"?(Index(value,key,out _)?schema["items"] as JObject:null):schema?["properties"]?[key] as JObject;
+                value=Child(value,key);
+            }return schema;
         }
         public static void Set(JObject value,string path,JToken next) {
-            var keys=path.Split('.');for(int i=0;i<keys.Length-1;i++)value=value[keys[i]] as JObject??throw new ProgramFault("Unknown argument path");
-            if(!value.ContainsKey(keys[^1]))throw new ProgramFault("Unknown argument path");value[keys[^1]]=next;
+            var keys=path.Split('.');JToken parent=value;for(int i=0;i<keys.Length-1;i++)parent=Child(parent,keys[i])??throw new ProgramFault("Unknown argument path");
+            if(Index(parent,keys[^1],out int index)){parent[index]=next;return;}
+            if(parent is not JObject obj||!obj.ContainsKey(keys[^1]))throw new ProgramFault("Unknown argument path");obj[keys[^1]]=next;
         }
         public static void Remove(JObject value,string path) {
-            var keys=path.Split('.');for(int i=0;i<keys.Length-1;i++) {value=value[keys[i]] as JObject;if(value==null)return;}value.Remove(keys[^1]);
+            var keys=path.Split('.');JToken parent=value;for(int i=0;i<keys.Length-1;i++){parent=Child(parent,keys[i]);if(parent==null)return;}
+            // A resource placeholder is erased without shifting the indexes of its siblings.
+            if(Index(parent,keys[^1],out int index))parent[index]=JValue.CreateNull();else (parent as JObject)?.Remove(keys[^1]);
         }
         // Session-scoped native revision counters are signed 32-bit integers.
         // Do not confuse their range with geometry, value-size or instruction budgets.
@@ -95,7 +106,8 @@ namespace Maestro.Quest.Programs
             foreach(string key in path.Split('.')) {
                 if((bool?)schema?["x-static"]==true)return null;
                 if(schema?["x-discriminators"] is JArray selectors&&selectors.Any(x=>(string)x==key))return null;
-                schema=Resolve(schema,value)?["properties"]?[key] as JObject;value=(value as JObject)?[key];
+                var selected=Resolve(schema,value);
+                schema=(string)selected?["type"]=="array"?(Index(value,key,out _)?selected["items"] as JObject:null):selected?["properties"]?[key] as JObject;value=Child(value,key);
             }
             return InputType(schema);
         }

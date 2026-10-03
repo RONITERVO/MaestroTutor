@@ -65,3 +65,50 @@ export function currentInputIdentity(schema:CapabilitySchema,value:unknown,sessi
  const mapping=currentInputMapping(schema,value);if(!mapping)return '';
  return JSON.stringify([session,currentInputRequest(schema,value),mapping.guards.map(key=>(value as Record<string,unknown>)[key]),(schema['x-discriminators']??[]).map(path=>argumentValue(value,path))]);
 }
+
+
+export interface CurrentInputLocation {
+ /** Existing literal argument path. Numeric entries are stable array indexes for this draft. */
+ path:(string|number)[];schema:CapabilitySchema;value:unknown;mapping:CurrentInputMapping;selection:unknown[];
+}
+/** Discover native annotations in the selected variants and present literal members. */
+export function currentInputLocations(schema:CapabilitySchema,value:unknown):CurrentInputLocation[] {
+ const result:CurrentInputLocation[]=[],hasMapping=new WeakMap<CapabilitySchema,boolean>();
+ const contains=(s:CapabilitySchema):boolean=>{
+  const known=hasMapping.get(s);if(known!==undefined)return known;
+  const yes=!!s['x-current']||(s.oneOf??[]).some(contains)||Object.values(s.properties??{}).some(contains)||!!s.items&&contains(s.items);hasMapping.set(s,yes);return yes;
+ };
+ const visit=(s:CapabilitySchema,v:unknown,path:(string|number)[],ancestors:unknown[])=>{
+  if(!contains(s))return;need(path.length<=12,'Current-input nesting exceeds 12');
+  const selected=resolveCapabilitySchema(s,v);if(!selected)return;
+  const selection=s.oneOf?[...ancestors,[path,(s['x-discriminators']??[]).map(p=>argumentValue(v,p))]]:ancestors;
+  const mapping=currentInputMapping(s,v);
+  if(mapping){need(result.length<32,'Read at most 32 current-input snapshots per action');result.push({path,schema:s,value:v,mapping,selection});}
+  if(selected.type==='object'&&record(v))for(const [key,child] of Object.entries(selected.properties??{}))if(own(v,key))visit(child,v[key],[...path,key],selection);
+  if(selected.type==='array'&&Array.isArray(v)&&selected.items){need(v.length<=(selected.maxItems??0),'Current-input list exceeds its contract');v.forEach((entry,i)=>visit(selected.items!,entry,[...path,i],selection));}
+ };
+ visit(schema,value,[],[]);return result;
+}
+export function currentInputFieldPath(location:CurrentInputLocation,key:string):string {return [...location.path,key].join('.');}
+export function currentInputFieldLabel(path:string):string {return path.split('.').map(p=>/^(0|[1-9][0-9]*)$/.test(p)?String(Number(p)+1):p).join(' ');}
+export function currentInputFields(schema:CapabilitySchema,value:unknown):{path:string;guard:boolean;location:CurrentInputLocation;field:string}[] {
+ return currentInputLocations(schema,value).flatMap(location=>Object.keys(location.mapping.fields).map(field=>({path:currentInputFieldPath(location,field),guard:location.mapping.guards.includes(field),location,field})));
+}
+/** One reviewed draft identity, including membership/order and each member's guards. */
+export function currentInputsIdentity(schema:CapabilitySchema,value:unknown,session:string):string {
+ const locations=currentInputLocations(schema,value);if(!locations.length)return '';
+ return JSON.stringify(locations.map(l=>[l.path,l.selection,currentInputIdentity(l.schema,l.value,session)]));
+}
+/** Validate every response before copying any value. Reads never refresh at execution time. */
+export function applyCurrentInputSnapshots(schema:CapabilitySchema,value:unknown,views:CatalogView[]):Record<string,unknown> {
+ const locations=currentInputLocations(schema,value);need(record(value)&&locations.length>0&&locations.length===views.length,'Current-input responses do not match this draft');
+ const replacements=locations.map((l,i)=>({path:l.path,value:applyCurrentInputs(l.schema,l.value,views[i])}));
+ const next=structuredClone(value) as Record<string,unknown>;
+ // Mappings replace their own scalar fields only, preserving nested replacements and edited preferences.
+ for(let i=0;i<replacements.length;i++){
+  let target:unknown=next;for(const part of replacements[i].path)target=typeof part==='number'&&Array.isArray(target)?target[part]:record(target)?target[part]:undefined;
+  need(record(target),'Current-input location is no longer present');
+  for(const key of Object.keys(locations[i].mapping.fields))(target as Record<string,unknown>)[key]=replacements[i].value[key];
+ }
+ return next;
+}

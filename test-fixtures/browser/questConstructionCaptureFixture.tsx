@@ -8,7 +8,7 @@ import {CapabilityBrowser} from '../../src/platform/quest/CapabilityBrowser';
 import '../../src/app/index.css';
 import '../../src/platform/quest/roomWorkspace.css';
 if(!import.meta.env.DEV)throw new Error('Development fixture only');
-const native=await (await fetch('./constructionCaptureAuthoring.json')).json() as Record<string,RoomAgentState>;
+const native=await (await fetch('./constructionCaptureAuthoring.json')).json() as {before:RoomAgentState;search:RoomAgentState;definition:RoomAgentState;captured:RoomAgentState;facts:RoomAgentState[]};
 const client=new RoomAgentClient(),requests:unknown[]=[];
 let state=structuredClone(native.before);state.visible=true;let revision=state.revision;
 if(!client.receive(state))throw new Error('Invalid captured native construction capture state');
@@ -16,12 +16,15 @@ Object.assign(window,{maestroConstructionCaptureRequests:requests,maestroConstru
 setInterval(()=>{
  const request=client.snapshot().request;
  if(request&&request.sequence>state.ack){
-  requests.push(structuredClone(request));const command=request.commands[0];let key:string;
-  if(command.action==='catalog'&&command.catalog?.operation==='search')key='search';
-  else if(command.action==='catalog'&&command.catalog?.operation==='inspect')key=command.catalog.category==='facts'?'current':'definition';
-  else if(command.action==='execution'&&command.execution?.operation==='start'&&command.execution.call.id==='program.module.captureConstruction')key='captured';
+  requests.push(structuredClone(request));const command=request.commands[0];let replay:RoomAgentState|undefined;
+  if(command.action==='catalog'&&command.catalog?.operation==='search')replay=native.search;
+  else if(command.action==='catalog'&&command.catalog?.operation==='inspect'){
+   const query=command.catalog;replay=query.category==='facts'?native.facts.find(f=>f.catalog?.operation==='inspect'&&f.catalog.category==='facts'&&f.catalog.capability===query.capability&&JSON.stringify(f.catalog.arguments)===JSON.stringify(query.arguments)):native.definition;
+  }
+  else if(command.action==='execution'&&command.execution?.operation==='start'&&command.execution.call.id==='program.module.captureConstruction')replay=native.captured;
   else throw new Error('Unexpected construction capture replay command');
-  state=structuredClone(native[key]);state.visible=true;state.ack=request.sequence;
+  if(!replay)throw new Error('No exact native fact response for these inputs');
+  state=structuredClone(replay);state.visible=true;state.ack=request.sequence;
  }
  state={...state,revision:++revision};if(!client.receive(state))throw new Error('Rejected native construction capture replay state');
 },200);

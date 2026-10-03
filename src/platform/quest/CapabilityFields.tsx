@@ -54,7 +54,7 @@ export function CapabilityFields({schema,value,onChange,label,objects,depth=0,lo
 }) {
   if(readOnly)return <label>{label}<input aria-label={label} readOnly value={typeof value==='string'||typeof value==='number'?value:''}/><small>Filled by Load current values. Advanced arguments allow an explicit snapshot.</small></label>;
   if(schema.format==='programModule')return <ModuleDefinitionField value={value} onChange={onChange} label={label}/>;
-  if(schema.oneOf){const selected=resolveCapabilitySchema(schema,value);return <><CapabilityVariant schema={schema} value={value} onChange={onChange} objects={objects} label={schema.title??label+' variant'}/>{selected&&<CapabilityFields schema={selected} value={value} onChange={onChange} objects={objects} label={label} depth={depth}/>}</>;}
+  if(schema.oneOf){const selected=resolveCapabilitySchema(schema,value);return <><CapabilityVariant schema={schema} value={value} onChange={onChange} objects={objects} label={schema.title??label+' variant'}/>{selected&&<CapabilityFields schema={selected} value={value} onChange={onChange} objects={objects} label={label} depth={depth} locked={locked}/>}</>;}
   if(depth>12) return <p>Use the source editor for this deeply nested value.</p>;
   if(schema.nullable && value===null) return <div><span>{label}: none</span><button onClick={()=>onChange(initialCapabilityValue(schema,objects))}>Set {label}</button></div>;
   const optionalNull=schema.nullable&&<button onClick={()=>onChange(null)}>Clear {label}</button>;
@@ -66,7 +66,7 @@ export function CapabilityFields({schema,value,onChange,label,objects,depth=0,lo
         {!required&&<label className="rule-checkbox"><input type="checkbox" aria-label={'Include '+name} checked={present} onChange={e=>{
           const next={...fields};if(e.target.checked)next[key]=initialCapabilityValue(child,objects);else delete next[key];onChange(next);
         }}/>Include {key}</label>}
-        {(required||present)&&<CapabilityFields readOnly={locked?.includes(key)} schema={child} value={fields[key]} label={name} objects={objects} depth={depth+1} onChange={next=>onChange({...fields,[key]:next})}/>}
+        {(required||present)&&<CapabilityFields readOnly={locked?.includes(key)} locked={locked?.filter(p=>p.startsWith(key+'.')).map(p=>p.slice(key.length+1))} schema={child} value={fields[key]} label={name} objects={objects} depth={depth+1} onChange={next=>onChange({...fields,[key]:next})}/>}
       </div>;
     })}{optionalNull}</fieldset>;
   }
@@ -74,7 +74,7 @@ export function CapabilityFields({schema,value,onChange,label,objects,depth=0,lo
     const values=Array.isArray(value)?value:[];
     return <details className="program-value-array"><summary>{label} · {values.length} entries</summary>
       {values.map((entry,index)=><fieldset key={index}><legend>{label} {index+1}</legend>
-        <CapabilityFields schema={schema.items!} value={entry} label={label+' '+(index+1)} objects={objects} depth={depth+1} onChange={next=>onChange(values.map((v,i)=>i===index?next:v))}/>
+        <CapabilityFields schema={schema.items!} locked={locked?.filter(p=>p.startsWith(index+'.')).map(p=>p.slice(String(index).length+1))} value={entry} label={label+' '+(index+1)} objects={objects} depth={depth+1} onChange={next=>onChange(values.map((v,i)=>i===index?next:v))}/>
         <button disabled={values.length<=(schema.minItems??0)} onClick={()=>onChange(values.filter((_,i)=>i!==index))}>Remove {label} {index+1}</button>
       </fieldset>)}
       <button disabled={values.length>=(schema.maxItems??64)} onClick={()=>onChange([...values,initialCapabilityValue(schema.items!,objects)])}>Add {label} entry</button>{optionalNull}

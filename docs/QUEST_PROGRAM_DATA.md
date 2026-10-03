@@ -143,3 +143,28 @@ The editor only offers structured bindings when the connected runtime advertises
 the feature and the program opts into structured data. The 32-bit revision clock
 itself is unchanged; this removes the lower shared numeric cutoff, not its eventual
 integer-exhaustion boundary.
+
+### Current inputs inside records and lists
+
+Current-input annotations also apply inside present records and literal array
+members. The book loads each fact in order and validates all responses before
+changing the draft. Missing facts, changed query targets, changed membership or
+order, altered guards and session changes cannot silently reuse a reviewed
+snapshot. Ordinary preferences and member slot names remain editable.
+
+For a reusable behaviour, the editor creates an ordinary visible Read block and
+local per mapped record, followed by the action. Construction capture, for example,
+binds `members.0.revision` and `members.1.revision` to two `object.definition`
+reads. This requires `indexedInputs.v1`; literal one-off calls remain available
+without it. Existing program limits still apply, including 16 locals per function
+and 1,024 bytes per value. Sixteen member reads fit an otherwise empty function;
+adding them to a function without enough local capacity fails without changing
+its draft. No new bulk value or hidden executor bypasses those limits.
+
+Indexed bindings use canonical, existing literal indexes only. They cannot resize
+lists, bind a discriminator/static field, overlap parent/child bindings or grant
+authority through a replaced literal object ID. Computed arguments undergo the
+same final validation and object authorization before execution. A missing read
+or stale action stops the run rather than retrying. The UI's sequential reads are
+not an atomic room transaction: the native action still checks every revision at
+commit, so concurrent edits can cause an explicit stale-edit failure.

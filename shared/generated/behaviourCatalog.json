@@ -21262,7 +21262,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "5f6e20553db27bc4108f93ce31a94c12d12fbf4df7b831bc2cec65cde7dec6fe"
+      "sha256": "da64f544f40053b68ebab8d9d196711bf14c3ce893dd3b83fbc457b608d2c01d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -21754,7 +21754,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
-      "sha256": "58785ba287a6246a4d8a49a1ea38f8d3157bbc864a76a9c1f32ca0d72706a6bc"
+      "sha256": "e348c431bbc0812513b3ae8380bf5c1cb675b58e6238e727830c2a9a782a43f7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityStepAdapter.cs",

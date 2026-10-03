@@ -25,7 +25,7 @@ it('uses fixed record types and prevents ambiguous parent and child bindings',()
 });
 it('keeps static selectors, variable-shaped values and array indexes out of bindings',()=>{
  const program=source(),capture=program.functions[0].body[2];
- for(const path of ['source','source.kind','source.members.0.target'])expect(capabilityParameterType(capture.capability,path,capture.arguments)).toBeNull();
+ for(const path of ['source','source.kind'])expect(capabilityParameterType(capture.capability,path,capture.arguments)).toBeNull();
  program.functions[0].locals[3].type={list:'text'};expect(parseProgram(JSON.stringify(program)).error).toContain('type');
  delete program.dataVersion;expect(parseProgram(JSON.stringify(program)).error).not.toBeNull();
 });
@@ -34,4 +34,14 @@ it('revalidates complete computed lists rather than granting their shape permiss
  args.source.members=[{slot:'left',target:'a'.repeat(32)},{slot:'right',target:'b'.repeat(32)}];expect(validateCapabilityArguments(call.capability,1,args)).toBeNull();
  args.source.members[1].target=args.source.members[0].target;expect(validateCapabilityArguments(call.capability,1,args)).not.toBeNull();
  args.source.members=[];expect(validateCapabilityArguments(call.capability,1,args)).not.toBeNull();
+});
+
+it('binds only existing canonical list indexes and retains unbound sibling authority',()=>{
+ const args={name:'Parts',members:[{target:'a'.repeat(32),revision:1,slot:'first'},{target:'b'.repeat(32),revision:2,slot:'second'}]},id='program.module.captureConstruction';
+ expect(capabilityParameterType(id,'members.0.target',args)).toBe('text');expect(capabilityParameterType(id,'members.1.revision',args)).toBe('number');expect(capabilityBindingFields(id,args)).toHaveProperty('members.1.revision');
+ for(const path of ['members.01.target','members.-1.target','members.2.target','members.0.unknown','members.1e0.target','members.0.target.x'])expect(capabilityParameterType(id,path,args)).toBeNull();
+ expect(literalCapabilityResources(id,args,{'members.0.target':{value:'c'.repeat(32)}},3)).toEqual(['b'.repeat(32)]);
+ expect(literalCapabilityResources(id,args,{'members.0':{}},3)).toEqual(['b'.repeat(32)]);expect(args.members[1].target).toBe('b'.repeat(32));
+ expect(separateCapabilityBindings({'members.0':{},'members.0.target':{}})).toBe(false);expect(separateCapabilityBindings({'members.0.target':{},'members.1.target':{}})).toBe(true);
+ const recipe=source().functions[0].body[0].arguments;expect(capabilityParameterType('object.batch.create','batch.pieces.0.source.kind',recipe)).toBeNull();
 });

@@ -953,3 +953,34 @@ it('offers authored travel in the generated book form and sends the exact shared
  expect(client.snapshot().request?.commands[0]).toMatchObject({action:'execution',execution:{operation:'start',call:{id:'animation.play',version:1,arguments:{...args,movement:'authored'}}}});
  act(()=>client.cancel());
 });
+
+async function captureDraft(extraFeatures:string[]=[]){
+ const setupResult=setup(true,['constructionCapture.v1','moduleLibrary.v1','creationPrototypes.v1','structuredValues.v1','actionResults.v1','execution.v1',...extraFeatures]),{client,screen,receive,state}=setupResult;
+ const definition=capabilityDefinition('program.module.captureConstruction')!,members=[{target:'a'.repeat(32),revision:1,slot:'first'},{target:'b'.repeat(32),revision:2,slot:'second'}];
+ await receive(undefined,false,{objects:[...state.objects,...members.map((m,i)=>({...state.objects[0],id:m.target,kind:'Block',name:'Piece '+i}))]});
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:'Search'}));
+ await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Found'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Capture'});
+ fireEvent.change(screen.getByLabelText('Action arguments'),{target:{value:JSON.stringify({name:'Pieces',members})}});fireEvent.click(screen.getByText('Edit action fields'));
+ const args=()=>JSON.parse((screen.getByLabelText('Action arguments') as HTMLTextAreaElement).value);
+ const fact=(i:number):CatalogView=>({operation:'inspect',category:'facts',capability:'object.definition',version:1,definition:behaviourFact('object.definition')!,arguments:{target:members[i].target},available:true,status:'Available',value:{target:members[i].target,revision:100+i,kind:'block',name:'Piece',position:{x:0,y:0,z:0},rotation:{x:0,y:0,z:0,w:1},scale:1,content:{points:0,parts:0,frames:0,modelHash:'',recipePlaying:false}}});
+ const expectQuery=(i:number)=>expect(client.snapshot().request?.commands[0]).toEqual({action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.definition',version:1,arguments:{target:members[i].target}}});
+ return {...setupResult,args,fact,expectQuery,members};
+}
+it('loads nested member guards atomically, preserves slots, and inserts visible indexed read blocks',async()=>{
+ const {client,screen,receive,args,fact,expectQuery,members}=await captureDraft(['indexedInputs.v1']);
+ expect((screen.getByLabelText('Action inputs members 1 revision') as HTMLInputElement).readOnly).toBe(true);expect((screen.getByLabelText('Action inputs members 2 revision') as HTMLInputElement).readOnly).toBe(true);
+ fireEvent.click(screen.getByRole('button',{name:'Load current values'}));expectQuery(0);await receive(fact(0));expectQuery(1);expect(args().members).toEqual(members);
+ expect((screen.getByRole('button',{name:'Run action now'}) as HTMLButtonElement).disabled).toBe(true);await receive(fact(1));expect(args().members.map((m:{revision:number})=>m.revision)).toEqual([100,101]);
+ fireEvent.change(screen.getByLabelText('Action inputs members 1 slot'),{target:{value:'renamed'}});expect((screen.getByRole('button',{name:'Run action now'}) as HTMLButtonElement).disabled).toBe(false);
+ fireEvent.click(screen.getByRole('button',{name:'Add read and action to draft'}));expect(client.snapshot().request).toBeNull();fireEvent.click(screen.getByRole('button',{name:'Apply changes'}));
+ expect(client.snapshot().request,screen.container.textContent??'').not.toBeNull();const saved=JSON.parse(client.snapshot().request!.commands[0].rule!.edits![0].sequence!.program),nodes=saved.functions[0].body;
+ expect(nodes[0]).toMatchObject({op:'set',value:{fact:'object.definition',arguments:{target:members[0].target}}});expect(nodes[1]).toMatchObject({op:'set',value:{fact:'object.definition',arguments:{target:members[1].target}}});expect(Object.keys(nodes[2].bindings)).toEqual(['members.0.revision','members.1.revision']);expect(nodes[2].arguments.members[0].slot).toBe('renamed');await receive();act(()=>client.cancel());
+});
+it('does not partially fill a failed multi-object read or accept its late result after a changed draft',async()=>{
+ const {client,screen,receive,args,fact,expectQuery,members}=await captureDraft();const before=args();
+ expect((screen.getByLabelText('Behaviour input timing') as HTMLSelectElement).value).toBe('snapshot');
+ fireEvent.click(screen.getByRole('button',{name:'Load current values'}));await receive(fact(0));expectQuery(1);await receive({...fact(1),available:false,value:null,status:'Second piece unavailable'} as CatalogView);expect(args()).toEqual(before);expect(screen.getByText('Second piece unavailable')).toBeTruthy();
+ fireEvent.click(screen.getByRole('button',{name:'Load current values'}));await receive(fact(0));expectQuery(1);const changed={...before,members:[...members].reverse()};fireEvent.change(screen.getByLabelText('Action arguments'),{target:{value:JSON.stringify(changed)}});await receive(fact(1));expect(args()).toEqual(changed);expect(client.snapshot().request).toBeNull();
+ fireEvent.change(screen.getByLabelText('Action inputs members 1 target'),{target:{value:members[0].target}});expect((screen.getByRole('button',{name:'Run action now'}) as HTMLButtonElement).disabled).toBe(true);act(()=>client.cancel());
+});

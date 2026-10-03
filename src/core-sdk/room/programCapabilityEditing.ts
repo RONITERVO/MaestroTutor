@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import {behaviourFact} from '../../../shared/behaviourCatalog';
 import {capabilityDefinition,capabilityResources,validateCapabilityArguments,type CapabilityInvocation} from '../../../shared/capabilities';
-import {currentInputMapping,currentInputRequest} from '../../../shared/currentCapabilityInputs';
+import {currentInputLocations,currentInputFields,currentInputFieldPath,currentInputRequest} from '../../../shared/currentCapabilityInputs';
 import {defaultDataValue} from '../../../shared/programValues';
 import {parseProgram,type BehaviourProgram,type Expression,type ProgramNode} from './programs';
 import {visitProgramNodes} from './programTraversal';
@@ -20,16 +20,20 @@ export function insertProgramCapability(source:string,call:CapabilityInvocation,
  const invoke:Extract<ProgramNode,{op:'invoke'}>={id:fresh('action_',ids),op:'invoke',capability:call.id,version:call.version,arguments:structuredClone(call.arguments),bindings:{}};
  const nodes:ProgramNode[]=[];
  if(inputs.kind==='current'){
-  const mapping=currentInputMapping(definition.input,call.arguments);if(!mapping)throw new Error('This action has no current-input mapping.');
-  if(!Array.isArray(inputs.fields)||new Set(inputs.fields).size!==inputs.fields.length||inputs.fields.some(key=>!Object.prototype.hasOwnProperty.call(mapping.fields,key))||mapping.guards.some(key=>!inputs.fields.includes(key)))throw new Error('Choose known current fields and keep all concurrency guards current.');
-  const query=currentInputRequest(definition.input,call.arguments);if(query.operation!=='inspect')throw new Error('Expected a fact query.');
-  const fact=behaviourFact(query.capability)!;
-  const local=fresh('current_',new Set([...entry.locals,...entry.parameters].map(value=>value.name)));
-  program.version=3;program.dataVersion=1;program.state??=[];program.events??=[];
-  entry.locals.push({name:local,type:fact.type,initial:defaultDataValue(fact.type)});
-  const read:Expression=query.arguments?{fact:fact.id,version:query.version,arguments:structuredClone(query.arguments),bindings:{}}:{fact:fact.id};
-  nodes.push({id:fresh('read_current_',ids),op:'set',variable:local,value:read});
-  for(const key of inputs.fields){let value:Expression={var:local};for(const field of mapping.fields[key])value={op:'field',args:[value,{value:field}]};invoke.bindings[key]=value;}
+  const locations=currentInputLocations(definition.input,call.arguments),fields=currentInputFields(definition.input,call.arguments);
+  if(!locations.length)throw new Error('This action has no current-input mapping.');
+  if(!Array.isArray(inputs.fields)||new Set(inputs.fields).size!==inputs.fields.length||inputs.fields.some(path=>!fields.some(f=>f.path===path))||fields.some(f=>f.guard&&!inputs.fields.includes(f.path)))throw new Error('Choose known current fields and keep all concurrency guards current.');
+  for(const location of locations){
+   const chosen=Object.keys(location.mapping.fields).filter(key=>inputs.fields.includes(currentInputFieldPath(location,key)));if(!chosen.length)continue;
+   const query=currentInputRequest(location.schema,location.value);if(query.operation!=='inspect')throw new Error('Expected a fact query.');
+   const fact=behaviourFact(query.capability)!;
+   const local=fresh('current_',new Set([...entry.locals,...entry.parameters].map(value=>value.name)));
+   program.version=3;program.dataVersion=1;program.state??=[];program.events??=[];
+   entry.locals.push({name:local,type:fact.type,initial:defaultDataValue(fact.type)});
+   const read:Expression=query.arguments?{fact:fact.id,version:query.version,arguments:structuredClone(query.arguments),bindings:{}}:{fact:fact.id};
+   nodes.push({id:fresh('read_current_',ids),op:'set',variable:local,value:read});
+   for(const key of chosen){let value:Expression={var:local};for(const field of location.mapping.fields[key])value={op:'field',args:[value,{value:field}]};invoke.bindings[currentInputFieldPath(location,key)]=value;}
+  }
  }
  nodes.push(invoke);entry.body.unshift(...nodes);
  program.resources=[...new Set([...program.resources,...capabilityResources(call.id,call.arguments)])];

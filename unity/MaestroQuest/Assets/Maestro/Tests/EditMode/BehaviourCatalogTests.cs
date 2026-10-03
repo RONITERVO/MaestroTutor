@@ -62,7 +62,7 @@ namespace Maestro.Quest.Tests
         [Test] public void CurrentInputMappingsReferenceRegisteredFactFieldsAndActionGuards()
         {
             int count=0;
-            foreach(var action in BehaviourCatalog.Actions)foreach(var schema in action.InputSchema["oneOf"] as JArray??new JArray(action.InputSchema)){
+            foreach(var action in BehaviourCatalog.Actions)foreach(var schema in action.InputSchema.DescendantsAndSelf().OfType<JObject>()){
                 if(schema["x-current"] is not JObject mapping)continue;count++;
                 var fact=BehaviourCatalog.Fact((string)mapping["fact"]);Assert.That(fact,Is.Not.Null,action.Id);
                 Assert.That((int)mapping["version"],Is.EqualTo(fact.Version));
@@ -82,7 +82,7 @@ namespace Maestro.Quest.Tests
                 }
                 foreach(var guard in (JArray)mapping["guards"])Assert.That(mapping["fields"][(string)guard],Is.Not.Null);
             }
-            Assert.That(count,Is.EqualTo(36));
+            Assert.That(count,Is.EqualTo(37));
         }
         sealed class ChangingCurrentInputs:IProgramFacts
         {
@@ -101,6 +101,37 @@ namespace Maestro.Quest.Tests
             Assert.That(action.Definition.Id,Is.EqualTo("avatar.movement.configure"));Assert.That((int)action.Arguments["revision"],Is.EqualTo(101));
             Assert.That((double)action.Arguments["distance"],Is.EqualTo(1.8).Within(.0001));Assert.That((double)action.Arguments["speed"],Is.EqualTo(.9));
             var unavailable=new ProgramMachine(program,null);Assert.That(unavailable.Advance(out var missing,256),Is.EqualTo(ProgramYield.Failed));Assert.That(missing,Is.Null);Assert.That(unavailable.Error,Does.Contain("fact unavailable"));
+        }
+        sealed class MemberFacts:IProgramFacts,IProgramFactQueries {
+            public int Reads;public bool MissingSecond;
+            public bool TryRead(string name,out ProgramValue value){value=default;return false;}
+            public bool TryRead(string name,int version,JObject args,out ProgramValue value){
+                Reads++;Assert.That(name,Is.EqualTo("object.definition"));Assert.That(version,Is.EqualTo(1));
+                Assert.That((string)args["target"],Is.EqualTo(new string(Reads==1?'a':'b',32)));
+                var record=JObject.Parse("{\"target\":\"\",\"revision\":1,\"kind\":\"block\",\"name\":\"Part\",\"position\":{\"x\":0,\"y\":0,\"z\":0},\"rotation\":{\"x\":0,\"y\":0,\"z\":0,\"w\":1},\"scale\":1,\"content\":{\"points\":0,\"parts\":0,\"frames\":0,\"modelHash\":\"\",\"recipePlaying\":false}}");
+                record["target"]=args["target"].DeepClone();record["revision"]=100+Reads;value=ProgramValue.Literal(record,BehaviourCatalog.Fact(name).Type);return !MissingSecond||Reads!=2;
+            }
+        }
+        [TestCase(false)] [TestCase(true)]
+        public void BookGeneratedMemberReadsBindCurrentGuardsOrFailBeforeAnyAction(bool missing) {
+            var source=File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/current-members-program.json"));
+            Assert.That(BehaviourProgram.TryParse(source,out var program,out var error),Is.True,error);var facts=new MemberFacts {MissingSecond=missing};var machine=new ProgramMachine(program,facts);
+            Assert.That(machine.Advance(out var action,256),Is.EqualTo(missing?ProgramYield.Failed:ProgramYield.Action),machine.Error);Assert.That(facts.Reads,Is.EqualTo(2));
+            if(missing){Assert.That(action,Is.Null);Assert.That(machine.Error,Does.Contain("fact unavailable"));return;}
+            Assert.That((int)action.Arguments["members"][0]["revision"],Is.EqualTo(101));Assert.That((int)action.Arguments["members"][1]["revision"],Is.EqualTo(102));
+            Assert.That(action.Resources,Is.EquivalentTo(new[]{new string('a',32),new string('b',32)}));Assert.That((int)JObject.Parse(source)["functions"][0]["body"][2]["arguments"]["members"][0]["revision"],Is.EqualTo(1));
+        }
+        [Test] public void IndexedBindingsRejectInvalidPathsAndDoNotShiftOrAuthorizeOtherMembers() {
+            var source=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/current-members-program.json")));
+            var action=(JObject)source["functions"][0]["body"][2];var args=(JObject)action["arguments"];var schema=BehaviourCatalog.Action((string)action["capability"]).InputSchema;
+            foreach(string path in new[]{"members.01.target","members.-1.target","members.2.target","members.0.unknown","members.1e0.target","members.0.target.x"})Assert.That(CapabilitySchema.BindingType(schema,path,args),Is.Null,path);
+            var copy=(JObject)args.DeepClone();CapabilitySchema.Remove(copy,"members.0");Assert.That(copy["members"].Count(),Is.EqualTo(2));Assert.That((string)copy["members"][1]["target"],Is.EqualTo(new string('b',32)));
+            Assert.Throws<ProgramFault>(()=>CapabilitySchema.Set(copy,"members.2.revision",new JValue(2)));
+            // A bound literal placeholder does not grant authority to its computed replacement.
+            action["bindings"]["members.0.target"]=new JObject {["value"]=new string('c',32)};
+            Assert.That(BehaviourProgram.TryParse(source.ToString(),out var program,out var error),Is.True,error);var machine=new ProgramMachine(program,new MemberFacts());
+            Assert.That(machine.Advance(out var call,256),Is.EqualTo(ProgramYield.Failed));Assert.That(call,Is.Null);Assert.That(machine.Error,Does.Contain("declared or created"));
+            action["bindings"]["members.0"]=new JObject {["value"]=args["members"][0].DeepClone()};Assert.That(BehaviourProgram.TryParse(source.ToString(),out _,out _),Is.False);
         }
         [Test] public void EveryExistingAdapterHasExactlyOneStableRegistration()
         {

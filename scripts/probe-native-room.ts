@@ -5,6 +5,7 @@ import {join} from 'node:path';
 import {HeadlessRoomTransport} from '../src/headless/roomTransport';
 import {runRoomActionTask,type RoomCommand} from '../src/core-sdk/room/roomAgent';
 import {createHeadlessClient} from '../src/headless/client';
+import {insertProgramCapability} from '../src/core-sdk/room/programCapabilityEditing';
 import {getGeminiModels} from '../src/core-sdk/modelRegistry';
 const directory=process.argv[2];if(!directory)throw new Error('Supply the explicitly started native probe directory.');
 const prompt=process.env.MAESTRO_ROOM_PROBE_PROMPT;
@@ -285,10 +286,10 @@ try{
   const leverFacts=[];for(const id of leverMembers){const read=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.hinge',version:1,arguments:{target:id}}}]);leverFacts.push(read);}
   const leverOwners=leverFacts.filter(f=>(f.catalog?.value as {configured:boolean}).configured);
   if(leverOwners.length!==1||!leverMembers.includes((leverOwners[0].catalog?.value as {connected:string}).connected))throw new Error('Program-created hinge does not connect the new members');
-  const captureMembers=[];
+  const captureMembers=[],captureFacts=[];
   for(let i=0;i<leverMembers.length;i++){
    const fact=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.definition',version:1,arguments:{target:leverMembers[i]}}}]);
-   captureMembers.push({target:leverMembers[i],slot:'part_'+i,revision:(fact.catalog?.value as {revision:number}).revision});
+   captureFacts.push(fact);captureMembers.push({target:leverMembers[i],slot:'part_'+i,revision:(fact.catalog?.value as {revision:number}).revision});
   }
   const captureArguments={name:'Native captured lever',members:captureMembers};
   const captureSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Save construction',offset:0}}]);
@@ -301,6 +302,15 @@ try{
   const capturedRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'modules',capability:capturedHash,version:1}}]);
   const capturedModule=capturedRead.catalog?.definition as {program:{functions:{name:string;body:{arguments:Record<string,unknown>}[]}[]}};
   if(!capturedModule||leverMembers.some(id=>JSON.stringify(capturedModule).includes(id)))throw new Error('Captured source retained original object identities');
+  const currentCaptureSource=insertProgramCapability(JSON.stringify({version:2,entry:'main',resources:[],functions:[{name:'main',returns:'void',parameters:[],locals:[],body:[]}]}),{id:'program.module.captureConstruction',version:1,arguments:{...captureArguments,members:captureMembers.map(m=>({...m,revision:1}))}},{kind:'current',fields:captureMembers.map((_,i)=>`members.${i}.revision`)});
+  const currentCaptureSaved=await execute([{action:'rules',rule:{action:'edit',revision:lease.state().rules!.revision,edits:[{kind:'save',reference:'capture_current',sequence:{id:'',name:'Native current capture probe',interruption:0,repeat:false,program:JSON.stringify(currentCaptureSource)}}]}}]);
+  const currentCaptureId=currentCaptureSaved.rules?.sequences.find(s=>s.name==='Native current capture probe')?.id;if(!currentCaptureId)throw new Error('Current-member capture caller was not saved');
+  let currentCaptureAfter=await execute([{action:'rules',rule:{action:'play',revision:currentCaptureSaved.rules!.revision,target:currentCaptureId}}]);
+  const currentCaptureDeadline=Date.now()+15000;
+  while(!currentCaptureAfter.rules?.outcomes?.some(o=>o.sequenceId===currentCaptureId)&&Date.now()<currentCaptureDeadline){await new Promise(r=>setTimeout(r,100));currentCaptureAfter=await execute([{action:'rules',rule:{action:'inspect',target:currentCaptureId}}]);}
+  const currentCaptureOutcome=currentCaptureAfter.rules?.outcomes?.find(o=>o.sequenceId===currentCaptureId);
+  if(currentCaptureOutcome?.phase!=='completed')throw new Error('Visible current-member reads did not complete native capture: '+JSON.stringify(currentCaptureOutcome));
+  await writeFile(join(directory,'current-members-program.json'),JSON.stringify({source:currentCaptureSource,saved:currentCaptureSaved,after:currentCaptureAfter,outcome:currentCaptureOutcome,hash:capturedHash,placeholderRevisions:captureMembers.map(()=>1),actualRevisions:captureMembers.map(m=>m.revision)},null,2));
   const leverUndo=await execute([{action:'undo'}]);if(leverMembers.some(id=>leverUndo.objects.some(o=>o.id===id)))throw new Error('Program-created lever was not one Undo');
   const rebuiltArgs=structuredClone(capturedModule.program.functions.find(f=>f.name==='create')!.body[0].arguments);
   const rebuilt=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.batch.create',version:1,arguments:rebuiltArgs}}}]);
@@ -310,13 +320,13 @@ try{
   const rebuiltOwner=rebuiltHinges.find(r=>(r.catalog?.value as {configured:boolean}).configured);
   if(!rebuiltOwner||!rebuiltIds.includes((rebuiltOwner.catalog?.value as {connected:string}).connected))throw new Error('Rebuilt hinge did not bind its fresh members');
   const rebuiltUndo=await execute([{action:'undo'}]);if(rebuiltIds.some(id=>rebuiltUndo.objects.some(o=>o.id===id)))throw new Error('Captured construction did not keep one Undo');
-  await writeFile(join(directory,'construction-capture.json'),JSON.stringify({boundary:'Real Unity shared transport and module library; no headset or provider proof.',arguments:captureArguments,before:leverAfter,search:captureSearch,definition:captureDefinition,captured:captureAfter,module:capturedRead,originalsRemoved:leverUndo,rebuilt,hinges:rebuiltHinges,undo:rebuiltUndo},null,2));
+  await writeFile(join(directory,'construction-capture.json'),JSON.stringify({boundary:'Real Unity shared transport and module library; no headset or provider proof.',arguments:captureArguments,facts:captureFacts,before:leverAfter,search:captureSearch,definition:captureDefinition,captured:captureAfter,module:capturedRead,originalsRemoved:leverUndo,rebuilt,hinges:rebuiltHinges,undo:rebuiltUndo},null,2));
   let captureRemoved=await execute([{action:'execution',execution:{operation:'start',call:{id:'program.module.remove',version:1,arguments:{hash:capturedHash}}}}]);
   const removeDeadline=Date.now()+15000;while(captureRemoved.execution?.selected?.phase!=='completed'&&Date.now()<removeDeadline){await new Promise(r=>setTimeout(r,100));captureRemoved=await execute([{action:'execution',execution:{operation:'inspect',runId:captureRemoved.execution!.selected!.id}}]);}
   if(captureRemoved.execution?.selected?.phase!=='completed')throw new Error('Captured probe module was not cleaned up');
-  await execute([{action:'rules',rule:{action:'edit',revision:lease.state().rules!.revision,edits:[{kind:'delete',target:leverId}]}}]);
+  await execute([{action:'rules',rule:{action:'edit',revision:lease.state().rules!.revision,edits:[{kind:'delete',target:leverId},{kind:'delete',target:currentCaptureId}]}}]);
   await writeFile(join(directory,'program-spring-lever.json'),JSON.stringify({boundary:'Real Unity runtime and shared transport. Physics tested in PlayMode; no headset or provider proof.',source:leverSource,module:leverModule,saved:leverSaved,after:leverAfter,facts:leverFacts,undo:leverUndo,outcome:leverOutcome},null,2));
-  outcome={constructionCapture:{hash:capturedHash,survivedOriginalRemovalAndInternalHingeAndUndoVerified:true},connectedBlueprint:{identitiesInternalHingeAndSingleUndoVerified:true},leverModule:{hash:leverHash,program:leverId,includedSourceAndNativeCreationVerified:true},drawingTip:{tipHash,configurationReadbackAndUndoVerified:true},surface:{chalkHash,stroke,toolAndInkReadEraseUndoVerified:true},watch:{moduleHash,program:watcherId,includedSourceAndNativeRearmVerified:true},composition:{program:compositionId,outcome:compositionOutcome,buildCaptureMoveResetAndUndoVerified:true},structures:{captureReceipt:structureAfter.execution?.selected,liveDisplacementResetAndUndoVerified:true},batch:{createReceipt:batchAfter.execution?.selected,identitiesAndSingleUndoVerified:true},layout:{applyReceipt:layoutAfter.execution?.selected,liveReadAndSingleUndoVerified:true},template:{hash:templateArgs.templateHash,createReceipt:templateAfter.execution?.selected,componentsAndSingleUndoVerified:true},createdId:target,createReceipt:selected,paintVerified:true,undoPaintVerified:true,undoCreateVerified:true,diagnostics:diagnostic.catalog.value,lathe:{createReceipt:lathe.execution?.selected,profile:value,editAndUndoVerified:true},collision:{summary:summaryValue,editAndUndoVerified:true},latheCycles:cycle+1};
+  outcome={currentMembers:{visibleReadsAndIndexedGuardsVerified:true,program:currentCaptureId},constructionCapture:{hash:capturedHash,survivedOriginalRemovalAndInternalHingeAndUndoVerified:true},connectedBlueprint:{identitiesInternalHingeAndSingleUndoVerified:true},leverModule:{hash:leverHash,program:leverId,includedSourceAndNativeCreationVerified:true},drawingTip:{tipHash,configurationReadbackAndUndoVerified:true},surface:{chalkHash,stroke,toolAndInkReadEraseUndoVerified:true},watch:{moduleHash,program:watcherId,includedSourceAndNativeRearmVerified:true},composition:{program:compositionId,outcome:compositionOutcome,buildCaptureMoveResetAndUndoVerified:true},structures:{captureReceipt:structureAfter.execution?.selected,liveDisplacementResetAndUndoVerified:true},batch:{createReceipt:batchAfter.execution?.selected,identitiesAndSingleUndoVerified:true},layout:{applyReceipt:layoutAfter.execution?.selected,liveReadAndSingleUndoVerified:true},template:{hash:templateArgs.templateHash,createReceipt:templateAfter.execution?.selected,componentsAndSingleUndoVerified:true},createdId:target,createReceipt:selected,paintVerified:true,undoPaintVerified:true,undoCreateVerified:true,diagnostics:diagnostic.catalog.value,lathe:{createReceipt:lathe.execution?.selected,profile:value,editAndUndoVerified:true},collision:{summary:summaryValue,editAndUndoVerified:true},latheCycles:cycle+1};
   }
  }
  await writeFile(join(directory,'journey.json'),JSON.stringify({version:1,boundary:'Real Unity Editor app and shared room protocol; no Quest input, WebView, scan or Store proof',providerUsed:!!prompt,initial,observations,outcome},null,2));

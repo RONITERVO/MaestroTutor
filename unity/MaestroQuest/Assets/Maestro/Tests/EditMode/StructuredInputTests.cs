@@ -40,7 +40,7 @@ namespace Maestro.Quest.Tests
             Assert.That(BehaviourProgram.TryParse(source.ToString(),out _,out var error),Is.True,error);
             bindings["position.x"]=new JObject {["value"]=1};Assert.That(BehaviourProgram.TryParse(source.ToString(),out _,out _),Is.False);
             var capture=(JObject)source["functions"][0]["body"][2];var schema=BehaviourCatalog.Action("structure.save").InputSchema;var args=(JObject)capture["arguments"];
-            Assert.That(CapabilitySchema.BindingType(schema,"source.kind",args),Is.Null);Assert.That(CapabilitySchema.BindingType(schema,"source",args),Is.Null);Assert.That(CapabilitySchema.BindingType(schema,"source.members.0.target",args),Is.Null);
+            Assert.That(CapabilitySchema.BindingType(schema,"source.kind",args),Is.Null);Assert.That(CapabilitySchema.BindingType(schema,"source",args),Is.Null);Assert.That(CapabilitySchema.BindingType(schema,"source.members.0.target",args),Is.Not.Null);
             Assert.That(CapabilitySchema.SeparateBindings(JObject.Parse("{\"value\":{},\"value-other\":{},\"value.x\":{}}")),Is.False);
         }
     }
