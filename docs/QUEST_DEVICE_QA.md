@@ -40,6 +40,14 @@ the default bounds proxy does not promise visual-shape collision. Record normal
 and high-profile-count frame measurements without treating the admission limit
 as an acceptable performance target. Desktop extrusion tests are not device proof.
 
+For Sweep, edit a handle's section and numbered 3D path. Check both projected path
+views and the actual object from several angles. Change a path Z coordinate,
+insert/remove points, Apply, Undo and reload. A reversal, folded tight bend or
+out-of-bounds result must retain the draft without replacing the accepted mesh.
+Compare the agent's path readback with the editor. Repeat with a concave section,
+a long 16-point path and separately configured collision proxies. Record actual
+Quest frame cost during creation/editing; the vertex ceiling is not a comfort claim.
+
 ## Local runtime diagnostics (device acceptance pending)
 
 The existing book capability catalog and delegated agent can inspect

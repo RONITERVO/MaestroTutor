@@ -6,7 +6,7 @@ import {validCreationBatchGeometry} from './creationBatch';
 import {readDataType,type DataType} from './programValues';
 import {validCollisionRecipe} from './collisionRecipe';
 import {moduleHash,validModuleRecord} from './programModuleIdentity';
-import {parseRecipe,validLathePart,validExtrudedPart} from './roomRecipe';
+import {parseRecipe,validLathePart,validExtrudedPart,validSweptPart} from './roomRecipe';
 import {behaviourCatalog} from './behaviourCatalog';
 export interface CurrentInputMapping {
  fact:string;version:number;arguments:Record<string,string>;fields:Record<string,string[]>;guards:string[];
@@ -17,7 +17,7 @@ export interface CapabilitySchema {
  oneOf?:CapabilitySchema[];'x-confirmation'?:string;'x-discriminators'?:string[];title?:string;description?:string;examples?:unknown[];'x-static'?:boolean;'x-channels'?:string[];'x-requirements'?:string[];'x-features'?:string[];
  items?:CapabilitySchema;minItems?:number;maxItems?:number;nullable?:boolean;
  properties?:Record<string,CapabilitySchema>;required?:string[];additionalProperties?:false;
- format?:'unitQuaternion'|'boundedOffset'|'roomRecipe'|'lathePart'|'extrusionPart'|'collisionRecipe'|'programModule'|'programMemoryValue'|'objectLayout'|'creationBatch'|'creationPrototype'|'structureSource'|'connectionConfiguration'|'constructionSelection'|'groupTransform'|'snapPointDefinition'|'snapPlacement'|'containerDefinition'|'containerTransfer';'x-resource'?:'object';'x-requires'?:Record<string,string>;
+ format?:'unitQuaternion'|'boundedOffset'|'roomRecipe'|'lathePart'|'extrusionPart'|'sweepPart'|'collisionRecipe'|'programModule'|'programMemoryValue'|'objectLayout'|'creationBatch'|'creationPrototype'|'structureSource'|'connectionConfiguration'|'constructionSelection'|'groupTransform'|'snapPointDefinition'|'snapPlacement'|'containerDefinition'|'containerTransfer';'x-resource'?:'object';'x-requires'?:Record<string,string>;
  minimum?:number;maximum?:number;maxLength?:number;pattern?:string;enum?:string[];'x-enum-labels'?:Record<string,string>;'x-enum-images'?:Record<string,string>;
 }
 export interface CapabilityDefinition {
@@ -96,6 +96,7 @@ function validate(value:unknown,schema:CapabilitySchema,path:string):string|null
    }
    if(schema.format==='collisionRecipe')return validCollisionRecipe(value)?null:path+' needs bounded valid collision shapes';
    if(schema.format==='lathePart')return validLathePart(value)?null:path+' needs a simple counter-clockwise lathe profile';
+   if(schema.format==='sweepPart')return validSweptPart(value)?null:path+' needs an open sweep path with a simple profile and no folded sides';
    if(schema.format==='extrusionPart')return validExtrudedPart(value)?null:path+' needs a simple counter-clockwise extrusion outline';
    if(schema.format==='roomRecipe')return parseRecipe(value)?null:path+' is an invalid construction recipe';
    if(schema.format){const norm=Object.values(value).reduce<number>((sum,x)=>sum+Number(x)**2,0);

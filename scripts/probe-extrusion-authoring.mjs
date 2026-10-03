@@ -17,7 +17,7 @@ try{
  await page.goto(base+'/test-fixtures/browser/quest-extrusion.html',{waitUntil:'domcontentloaded',timeout:60000});
  await page.getByRole('img',{name:'Extrusion cross section'}).waitFor();
  await page.getByLabel('Profile point 4 x').fill('-0.6');await page.getByRole('button',{name:'Apply changes',exact:true}).click();
- await page.getByText('This recipe needs valid sizes, joints and animation keys before it can be applied.').waitFor();
+ await page.getByText('This recipe needs valid sizes, profiles, paths, joints and animation keys before it can be applied.').waitFor();
  assert.equal(await page.getByLabel('Profile point 4 x').inputValue(),'-0.6');
  assert.equal(await page.evaluate(()=>window.maestroExtrusionRequests.length),0);
  await page.getByLabel('Profile point 4 x').fill('0');

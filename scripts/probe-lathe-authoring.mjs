@@ -17,7 +17,7 @@ try{
  await page.goto(base+'/test-fixtures/browser/quest-lathe.html',{waitUntil:'domcontentloaded',timeout:60000});
  await page.getByRole('img',{name:'Lathe cross section'}).waitFor();
  await page.getByLabel('Profile point 2 radius').fill('-0.1');await page.getByRole('button',{name:'Apply changes',exact:true}).click();
- await page.getByText('This recipe needs valid sizes, joints and animation keys before it can be applied.').waitFor();
+ await page.getByText('This recipe needs valid sizes, profiles, paths, joints and animation keys before it can be applied.').waitFor();
  assert.equal(await page.getByLabel('Profile point 2 radius').inputValue(),'-0.1');
  assert.equal(await page.evaluate(()=>window.maestroLatheRequests.length),0);
  await page.getByLabel('Profile point 2 radius').fill('0.48');await page.getByLabel('Lathe segments').fill('32');

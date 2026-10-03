@@ -48,7 +48,7 @@ namespace Maestro.Quest.Creation
     [Serializable]
     public sealed class RoomDocument
     {
-        public const int CurrentVersion=10;
+        public const int CurrentVersion=11;
         public const int MaximumObjects = 64;
         public const int MaximumStrokePoints = 2048;
         public const int MaximumTotalPoints = 32768;
@@ -63,7 +63,7 @@ namespace Maestro.Quest.Creation
         public bool Validate(out string error)
         {
             error = null;
-            if (version != 1 && version != 2 && version != 3 && version != 4 && version != 5 && version != 7 && version != 8 && version != 9 && version != CurrentVersion || objects == null || objects.Length < 2 || objects.Length > MaximumObjects + 2)
+            if (version != 1 && version != 2 && version != 3 && version != 4 && version != 5 && version != 7 && version != 8 && version != 9 && version != 10 && version != CurrentVersion || objects == null || objects.Length < 2 || objects.Length > MaximumObjects + 2)
                 return Fail("This room file has an unsupported version or object count.", out error);
             var ids = new HashSet<string>(); int partCount = 0; int pointCount = 0, builtIns = 0, frameCount = 0, jointCount = 0;
             foreach (var item in objects)
@@ -72,6 +72,7 @@ namespace Maestro.Quest.Creation
                     return Fail("This room contains invalid or duplicate objects.", out error);
                 if (item.name != null && (item.name.Length > 80 || item.name.Any(char.IsControl))) return Fail("Object names must be at most 80 readable characters.",out error);
                 if (item.kind == RoomObjectKind.Assembly ? item.recipe == null || !item.recipe.Validate(out _) : item.recipe != null) return Fail("An object has an invalid construction recipe.",out error);
+                if(version<11&&item.recipe?.parts.Any(p=>p.shape=="sweep")==true)return Fail("Sweeps require the current room format.",out error);
                 if(version<10&&item.recipe?.parts.Any(p=>p.shape=="extrude")==true)return Fail("Extrusion requires the current room format.",out error);
                 partCount += item.recipe?.parts.Length ?? 0;
                 if(version<4&&(item.surfaces?.Length??0)>0)return Fail("Drawing surfaces require the current room format.",out error);

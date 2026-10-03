@@ -48,7 +48,10 @@ namespace Maestro.Quest.Tests
             source["functions"][0]["locals"][0]["name"]="robot";source["functions"][0]["body"][0]["results"]["objectId"]="robot";
             var play=source["functions"][0]["body"][1];play["id"]="animate";play["capability"]="animation.play";play["bindings"]["target"]["var"]="robot";
             play["arguments"]=new JObject {["target"]=new string('0',32),["seconds"]=.6,["loop"]=true,["source"]=new JObject {["kind"]="recipe"},["channel"]="wholeTarget"};
-            Assert.That(BehaviourProgram.TryParse(source.ToString(),out var program,out var error),Is.True,error);
+            // Exercise the compact wire document; indented JSON adds size per optional recipe field.
+            string wire=source.ToString(Newtonsoft.Json.Formatting.None);
+            Assert.That(wire.Length,Is.LessThanOrEqualTo(BehaviourProgram.MaximumCharacters));
+            Assert.That(BehaviourProgram.TryParse(wire,out var program,out var error),Is.True,error);
             var machine=new ProgramMachine(program,null);
             Assert.That(machine.Advance(out var create),Is.EqualTo(ProgramYield.Action));Assert.That(EditorStep(create).creationRecipe.tracks.Length,Is.EqualTo(2));
             string id=Guid.NewGuid().ToString("N");Assert.That(machine.CompleteAction(new JObject {["objectId"]=id},out error),Is.True,error);

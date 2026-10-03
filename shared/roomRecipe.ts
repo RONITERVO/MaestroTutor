@@ -3,7 +3,7 @@
 export interface Vec3 {x:number;y:number;z:number}
 export interface Rotation extends Vec3 {w:number}
 export interface Pigment {r:number;g:number;b:number;a:number}
-export interface RecipePart {id:string;parent:string|null;shape:'box'|'sphere'|'cylinder'|'lathe'|'extrude';profile?:{x:number;y:number}[];segments?:number;position:Vec3;rotation:Rotation;size:Vec3;color:Pigment}
+export interface RecipePart {id:string;parent:string|null;shape:'box'|'sphere'|'cylinder'|'lathe'|'extrude'|'sweep';path?:Vec3[];profile?:{x:number;y:number}[];segments?:number;position:Vec3;rotation:Rotation;size:Vec3;color:Pigment}
 export interface RecipeTrack {part:string;keys:{time:number;rotation:Rotation}[]}
 export interface RoomRecipe {version:1;parts:RecipePart[];tracks:RecipeTrack[];duration:number;playing:boolean;loop:boolean}
 const record=(v:unknown):v is Record<string,unknown>=>v!==null && typeof v==='object' && !Array.isArray(v);
@@ -53,13 +53,57 @@ export function validExtrudedPart(part:Record<string,unknown>):boolean {
  }
  return cross(polygon[0],polygon[1],polygon[2])>epsilon;
 }
+/** Mirrors native source admission; Unity owns the generated mesh and live world. */
+function validSweepPath(profile:{x:number;y:number}[],path:Vec3[]):boolean {
+const add=(a:Vec3,b:Vec3):Vec3=>({x:a.x+b.x,y:a.y+b.y,z:a.z+b.z});
+const sub=(a:Vec3,b:Vec3):Vec3=>({x:a.x-b.x,y:a.y-b.y,z:a.z-b.z});
+const scale=(a:Vec3,n:number):Vec3=>({x:a.x*n,y:a.y*n,z:a.z*n});
+const dot=(a:Vec3,b:Vec3)=>a.x*b.x+a.y*b.y+a.z*b.z;
+const cross=(a:Vec3,b:Vec3):Vec3=>({x:a.y*b.z-a.z*b.y,y:a.z*b.x-a.x*b.z,z:a.x*b.y-a.y*b.x});
+const norm=(a:Vec3)=>scale(a,1/Math.hypot(a.x,a.y,a.z));
+
+ if(path.length<2||path.length>16||path.some(p=>[p.x,p.y,p.z].some(n=>!Number.isFinite(n)||Math.abs(n)>.5)))return false;
+ if(dot(sub(path[0],path[path.length-1]),sub(path[0],path[path.length-1]))<.000001)return false;
+ const directions:Vec3[]=[];
+ for(let i=1;i<path.length;i++){
+  const delta=sub(path[i],path[i-1]);if(dot(delta,delta)<.000001)return false;directions.push(norm(delta));
+  if(i>1&&dot(directions[i-2],directions[i-1])<-.95)return false;
+ }
+ const tangents:Vec3[]=[],right:Vec3[]=[],up:Vec3[]=[],rings:Vec3[][]=[];
+ for(let i=0;i<path.length;i++){
+  const tangent=i===0?directions[0]:i===path.length-1?directions[directions.length-1]:norm(add(directions[i-1],directions[i]));tangents.push(tangent);
+  if(i===0)right.push(norm(cross(Math.abs(tangent.y)>.99?{x:0,y:0,z:1}:{x:0,y:1,z:0},tangent)));
+  else {
+   const axis=cross(tangents[i-1],tangent),prior=right[i-1];
+   const transported=add(add(prior,cross(axis,prior)),scale(cross(axis,cross(axis,prior)),1/(1+dot(tangents[i-1],tangent))));
+   right.push(norm(sub(transported,scale(tangent,dot(transported,tangent)))));
+  }
+  up.push(cross(tangent,right[i]));const ring=profile.map(p=>add(path[i],add(scale(right[i],p.x),scale(up[i],p.y))));
+  if(ring.some(p=>[p.x,p.y,p.z].some(n=>!Number.isFinite(n)||Math.abs(n)>.50001)))return false;rings.push(ring);
+ }
+ for(let i=0;i<path.length-1;i++)for(let j=0;j<profile.length;j++){
+  const next=(j+1)%profile.length,edge={x:profile[next].x-profile[j].x,y:profile[next].y-profile[j].y};
+  const outside=sub(scale(add(right[i],right[i+1]),edge.y),scale(add(up[i],up[i+1]),edge.x));
+  const a=rings[i][j],b=rings[i][next],c=rings[i+1][next],d=rings[i+1][j];
+  if(dot(cross(sub(b,a),sub(c,a)),outside)<=1e-10||dot(cross(sub(c,a),sub(d,a)),outside)<=1e-10)return false;
+ }
+ return true;
+}
+
+export function validSweptPart(part:Record<string,unknown>):boolean {
+ if(part.shape!=='sweep'||!validExtrudedPart({...part,shape:'extrude'})||!Array.isArray(part.path)||!part.path.every(validVector))return false;
+ const profile=(part.profile as {x:number;y:number}[]).map(p=>({x:Math.fround(p.x),y:Math.fround(p.y)}));
+ const path=part.path.map(p=>({x:Math.fround(p.x),y:Math.fround(p.y),z:Math.fround(p.z)}));return validSweepPath(profile,path);
+}
+export const defaultSweepProfile=()=>Array.from({length:8},(_,i)=>({x:Math.round(Math.cos(i*Math.PI/4)*.04*1e8)/1e8,y:Math.round(Math.sin(i*Math.PI/4)*.04*1e8)/1e8}));
+export const defaultSweepPath=()=>[{x:-.3,y:-.3,z:0},{x:-.3,y:.15,z:0},{x:-.2,y:.3,z:0},{x:.2,y:.3,z:0},{x:.3,y:.15,z:0},{x:.3,y:-.3,z:0}];
 export const defaultExtrusionProfile=()=>[{x:-.5,y:-.5},{x:.5,y:-.5},{x:.5,y:-.1},{x:-.1,y:-.1},{x:-.1,y:.5},{x:-.5,y:.5}];
 export const defaultLatheProfile=()=>[{x:0,y:-.5},{x:.5,y:-.5},{x:.5,y:.5},{x:.4,y:.5},{x:.4,y:-.4},{x:0,y:-.4}];
 export function parseRecipe(v:unknown):RoomRecipe|null {
  if(!record(v)||v.version!==1||!Array.isArray(v.parts)||v.parts.length<1||v.parts.length>32||!Array.isArray(v.tracks)||v.tracks.length>17||!finite(v.duration)||v.duration<.1||v.duration>30||typeof v.playing!=='boolean'||typeof v.loop!=='boolean')return null;
  const ids=new Map<string,number>();
  for(const p of v.parts) {
-  if(!record(p)||!id(p.id)||ids.has(p.id)||!['box','sphere','cylinder','lathe','extrude'].includes(p.shape as string)||!(p.shape==='extrude'?validExtrudedPart(p):validLathePart(p))||!validVector(p.position)||!validVector(p.size)||!validRotation(p.rotation)||!validPigment(p.color)||![p.size.x,p.size.y,p.size.z].every(n=>n>=.005&&n<=2))return null;
+  if(!record(p)||!id(p.id)||ids.has(p.id)||!['box','sphere','cylinder','lathe','extrude','sweep'].includes(p.shape as string)||!(p.shape==='sweep'?validSweptPart(p):(p.path===undefined||p.path===null||Array.isArray(p.path)&&p.path.length===0)&&(p.shape==='extrude'?validExtrudedPart(p):validLathePart(p)))||!validVector(p.position)||!validVector(p.size)||!validRotation(p.rotation)||!validPigment(p.color)||![p.size.x,p.size.y,p.size.z].every(n=>n>=.005&&n<=2))return null;
   if(p.parent!==null&&p.parent!==''&&(typeof p.parent!=='string'||!ids.has(p.parent)))return null;
   const length=Math.hypot(p.position.x,p.position.y,p.position.z),reach=(ids.get(p.parent as string)??0)+length;
   if(length>2||reach+Math.hypot(p.size.x,p.size.y,p.size.z)/2>3)return null;ids.set(p.id,reach);

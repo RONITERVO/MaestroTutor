@@ -93,7 +93,7 @@ through nested catalog schemas for one-off actions and saved programs.
 four exact points, segment count and conservative whole-recipe generated vertex
 cost at an exact object revision. Offset equal to count is empty; stale or missing
 parts are unavailable. The shared program value limits are unchanged. The room
-permits at most 262,144 generated lathe/extrusion vertices in addition to the existing object,
+permits at most 262,144 generated lathe/extrusion/sweep vertices in addition to the existing object,
 part, imported-model and drawing bounds. This is an admission bound, not proof of
 comfortable Quest performance at that maximum.
 
@@ -101,8 +101,8 @@ This increment adds geometry. The assembly still uses its existing approximate
 rest-bounds collider by default. An explicit [collision recipe](QUEST_COLLISION_AUTHORING.md)
 can provide a hollow interior for solid objects. Liquid/container behaviour is separate.
 Physical connections, bounded container pouring, outline extrusion and an initial
-editable play kit now share this authoring system. Sweeps, general CSG and
-persistent water/snow remain open. Real Quest input/readability/performance
+editable play kit now share this authoring system. General CSG and persistent water/snow remain open. Sweeps now share the recipe
+source and editor, as described below. Real Quest input/readability/performance
 acceptance remains required.
 
 
@@ -144,3 +144,61 @@ and falling back to an earlier room backup. Clean room versions 1–5 and 7–9 
 load, preserving their original files; version 6 and uncertain old transactions
 remain unsupported. Paired snapshot intent and workspace archive formats are 9.
 Device handling/readability and sustained performance still require Quest testing.
+
+
+## Editable profile sweeps (2026-10-04)
+
+`sweepGeometry.v1` extends the existing recipe part with `shape: "sweep"`, a
+closed counter-clockwise `profile` of 3–32 XY points and an open `path` of 2–16
+XYZ points. Segments are omitted or zero. Non-sweep parts omit path or use [].
+The profile and path use normalized coordinates; the generated result must fit
+[-0.5, 0.5] on every axis before `part.size` scales the complete shape. This retains
+the existing part/assembly spatial bounds. A 0.00001 numerical tolerance applies
+to generated bounds. Source points still have the exact normalized range.
+
+The native generator transports the cross-section along the path. The initial
+frame uses Y as up, or Z when the first tangent is almost vertical (absolute Y
+above 0.99). Profile X follows the frame's right direction and profile Y follows
+its up direction. Interior tangents bisect adjacent unit segment directions;
+subsequent frames parallel transport the previous right vector. Sections can be
+concave and contain collinear points. Ear-clipped end caps and side triangles
+have separate normals and normalized UVs. Editing the profile rotates or changes
+the section independently of the object's placement and rest rotation.
+
+Paths are sampled polylines, not automatic spline fits. Repeated/too-close points
+(less than 0.001 apart), coincident first/last points and near reversals (adjacent
+unit directions with dot product below -0.95) are refused. Thick sections that
+invert either side triangle at a bend are refused, as are invalid section outlines
+or out-of-bounds generated points. Rejection preserves the accepted geometry and
+editable draft. The generator does not perform Boolean union/removal of distant
+self-overlaps; avoid intersecting the swept body when that visual result matters.
+Collision remains the separately authored physical proxy, not an automatic
+concave dynamic collider or a fluid/cloth simulator.
+
+Each part reserves `profileCount * (2 + 4 * (pathCount - 1))` vertices, at most
+1,984. Sweeps share the 262,144 generated-vertex room budget and ordinary object
+and part limits. These admission limits are not a measured Quest comfort budget.
+Generated meshes are owned caches, released when replaced or removed; saved
+profiles and paths remain the editable authority.
+
+Users choose Sweep in the existing part editor, inspect the cross-section and
+XY/XZ path views, and edit/insert/remove numbered points. Selecting the same shape
+preserves the draft. `object.create` and `object.recipe.edit` remain the only
+creation/edit paths for the user, agent and stored programs. `object.recipe.path`
+reads four exact XYZ points per page, including revision, part, offset and count;
+`object.recipe.profile` provides the section at that same revision. End offsets
+return empty pages; later offsets, stale revisions and non-sweep parts are
+unavailable. No additional per-object agent tool or provider is introduced.
+
+Room format 11, paired snapshot intent 10 and portable archive manifest 10 protect
+new geometry from older-reader fallback. Clean earlier supported room files,
+including version 10, remain preserved when read. Uncertain old transactions and
+old archives remain explicit recovery boundaries. The pre-release reset permission
+does not change the future compatibility promise for released saved worlds.
+
+Shared admission cases and native tests cover straight and non-planar paths,
+concave sections, winding/caps, finite normals/UVs, generated budgets, create/edit,
+exact readback, save/Undo, mesh disposal, failed publication and temporary discard.
+The real full-app journey captures native requests/results for the book editor's
+browser replay. Desktop verification is separate from headset readability,
+physical handling and sustained performance acceptance.

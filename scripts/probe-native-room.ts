@@ -90,6 +90,17 @@ try{
   const extrusionUndo=await execute([{action:'undo'}]);const extrusionRestored=await execute([{action:'inspect',target:extrusionId}]);if(Math.abs((extrusionRestored.inspection?.recipe?.parts[0].profile?.[3].x??0)+.1)>.00001)throw new Error('Extrusion Undo did not restore source');
   await writeFile(join(directory,'extrusion-authoring.json'),JSON.stringify({boundary:'Real full-app native recipe creation, editing, profile readback and Undo. Browser replays these exact acknowledgements; no headset performance proof.',before:extrusionBefore,after:extrusionAfter,read:extrusionRead,undo:extrusionUndo,restored:extrusionRestored},null,2));
   await execute([{action:'undo'}]);
+  const sweepCases=JSON.parse(await readFile('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/sweep-contract.json','utf8'));
+  const sweepCreated=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'recipe',name:'Editable handle',x:.2,y:1,z:.5,scale:1,recipe:sweepCases[0].recipe}}}}]);
+  const sweepId=sweepCreated.execution?.selected?.output?.objectId;if(typeof sweepId!=='string')throw new Error('Sweep creation did not return an object');
+  const sweepBefore=await execute([{action:'inspect',target:sweepId}]);if(sweepBefore.inspection?.recipe?.parts[0].shape!=='sweep')throw new Error('Native sweep source is not inspectable');
+  const sweepPart=structuredClone(sweepBefore.inspection.recipe.parts[0]);sweepPart.path![2].z=.05;
+  const sweepAfter=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.recipe.edit',version:1,arguments:{target:sweepId,revision:sweepBefore.inspection.objectRevision,parts:[sweepPart],removeParts:[],tracks:[],removeTracks:[],duration:2,loop:false}}}}]);
+  const sweepRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.recipe.path',version:1,arguments:{target:sweepId,revision:sweepAfter.objects.find(o=>o.id===sweepId)!.objectRevision,part:'Handle',offset:0}}}]);
+  const sweepValue=sweepRead.catalog?.value as {count:number;points:{x:number;y:number;z:number}[]};if(sweepValue?.count!==6||Math.abs(sweepValue.points[2].z-.05)>.00001)throw new Error('Sweep path readback differs from edit');
+  const sweepUndo=await execute([{action:'undo'}]);const sweepRestored=await execute([{action:'inspect',target:sweepId}]);if(sweepRestored.inspection?.recipe?.parts[0].path?.[2].z!==0)throw new Error('Sweep Undo did not restore source');
+  await writeFile(join(directory,'sweep-authoring.json'),JSON.stringify({boundary:'Real full-app native recipe creation, editing, path readback and Undo. Browser replays these exact acknowledgements; no headset performance proof.',before:sweepBefore,after:sweepAfter,read:sweepRead,undo:sweepUndo,restored:sweepRestored},null,2));
+  await execute([{action:'undo'}]);
   const templateBefore=structuredClone(lease.state());
   const templateSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'object.create',offset:0}}]);
   const templateDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.create',version:1}}]);

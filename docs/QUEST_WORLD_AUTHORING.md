@@ -41,7 +41,7 @@ QUEST_PROGRAM_MODULES, QUEST_PROGRAM_MEMORY, QUEST_ROOM_OWNERSHIP and
 QUEST_TEMPORARY_ROOM for actual limits and lifecycle rules.
 
 Physical drawing is a saved 3D stroke. Recipe construction currently accepts
-box/sphere/cylinder parts, editable lathe profiles and closed-outline extrusions (at most 32 parts) with
+box/sphere/cylinder parts, editable lathe profiles, closed-outline extrusions and profile sweeps (at most 32 parts) with
 parented rotations and bounded tracks. The lathe increment is described in
 [recipe authoring](QUEST_RECIPE_AUTHORING.md#editable-revolved-profiles-2026-10-02).
 Recipe parts are visual joints, not independent rigid bodies. The object can now
@@ -272,4 +272,15 @@ The existing part editor, create/edit actions, paged profile facts, collision
 configuration and saved/temporary lifecycle remain the only authoring paths.
 See [recipe authoring](QUEST_RECIPE_AUTHORING.md#editable-outline-extrusion-2026-10-03)
 for bounds, format protection and the separate collision/performance requirements.
-Sweep, CSG, curved paint, persistent water/snow and device acceptance remain open.
+CSG, curved paint, persistent water/snow and device acceptance remain open.
+
+
+### Profile sweeps (2026-10-04)
+
+Sweeps now extend the same recipe evaluator, part editor and shared actions. An
+editable closed section follows a bounded open 3D path, covering handles, bent
+rods and similar parts without external generation. Exact section/path facts,
+source validation, generated-vertex budgets, saving, Undo and temporary rooms
+remain shared. See [recipe authoring](QUEST_RECIPE_AUTHORING.md#editable-profile-sweeps-2026-10-04).
+This does not add automatic Boolean cleanup, matching collision generation or
+closed spline loops. Physical proxies and headset acceptance remain explicit.

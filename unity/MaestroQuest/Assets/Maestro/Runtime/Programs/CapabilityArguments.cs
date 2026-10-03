@@ -72,6 +72,8 @@ namespace Maestro.Quest.Programs
                         if(!JsonUtility.FromJson<RoomLayout>(obj.ToString()).Validate(out error))return false;
                     } else if((string)schema["format"]=="lathePart") {
                         if(!RecipeLathe.Valid(JsonUtility.FromJson<RecipePart>(obj.ToString(Newtonsoft.Json.Formatting.None)))){error=path+" needs a simple counter-clockwise lathe profile";return false;}
+                    } else if((string)schema["format"]=="sweepPart") {
+                        if(!RecipeSweep.Valid(JsonUtility.FromJson<RecipePart>(obj.ToString(Newtonsoft.Json.Formatting.None)))){error=path+" needs an open sweep path with a simple profile and no folded sides";return false;}
                     } else if((string)schema["format"]=="extrusionPart") {
                         if(!RecipeExtrusion.Valid(JsonUtility.FromJson<RecipePart>(obj.ToString(Newtonsoft.Json.Formatting.None)))){error=path+" needs a simple counter-clockwise extrusion outline";return false;}
                     } else if((string)schema["format"]=="creationPrototype") {

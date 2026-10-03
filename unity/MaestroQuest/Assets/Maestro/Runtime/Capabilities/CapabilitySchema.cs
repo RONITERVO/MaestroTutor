@@ -54,6 +54,7 @@ namespace Maestro.Quest.Programs
             var part=Object(new JObject {["id"]=Text("^[a-zA-Z0-9_]{1,32}$",32),["parent"]=parent,["shape"]=Choice("box","sphere","cylinder"),
                 ["position"]=Triple(-2,2),["size"]=Triple(.005,2),["rotation"]=Vector(true),
                 ["color"]=Object(new JObject {["r"]=Number(0,1),["g"]=Number(0,1),["b"]=Number(0,1),["a"]=Number(1,1)})});
+            part["properties"]["path"]=List(Triple(-.5,.5),0,0);
             var profilePoint=Object(new JObject {["x"]=Number(0,.5),["y"]=Number(-.5,.5)});
             var lathe=(JObject)part.DeepClone();lathe["properties"]["shape"]=Choice("lathe");
             lathe["properties"]["profile"]=List(profilePoint,3,16);lathe["properties"]["segments"]=Number(8,48,true);
@@ -64,7 +65,9 @@ namespace Maestro.Quest.Programs
             // Unity serializes empty arrays/default numbers for primitive parts. Old literal recipes may omit both.
             var extrude=(JObject)lathe.DeepClone();extrude["properties"]["shape"]=Choice("extrude");extrude["properties"]["profile"]=List(Object(new JObject {["x"]=Number(-.5,.5),["y"]=Number(-.5,.5)}),3,32);extrude["properties"]["segments"]=Number(0,0,true);
             extrude["required"].First(x=>(string)x=="segments").Remove();extrude["format"]="extrusionPart";extrude["title"]="Extruded outline";extrude["description"]="Extrude a simple counter-clockwise XY outline along Z. 3–32 points in -0.5–0.5, scaled by part.size; size.z is thickness. Close implicitly, without repeated endpoint, holes, touching or crossing edges. Concave outlines and collinear edge points are supported. segments is omitted or zero. Collision remains an independent explicit proxy.";extrude["x-features"]=new JArray(Maestro.Quest.Creation.RecipeExtrusion.Feature);
-            part=new JObject {["oneOf"]=new JArray(part,lathe,extrude),["x-discriminators"]=new JArray("shape")};
+            var sweep=(JObject)extrude.DeepClone();sweep["properties"]["shape"]=Choice("sweep");sweep["properties"]["path"]=List(Triple(-.5,.5),2,16);((JArray)sweep["required"]).Add("path");
+            sweep["format"]="sweepPart";sweep["title"]="Swept profile";sweep["description"]="Carry a simple counter-clockwise profile (3–32 XY points) along an open 2–16 point XYZ polyline. Coordinates and generated geometry must fit -0.5–0.5 before part.size scaling. Segments are omitted or zero. Frames start with Y as up (Z near a vertical start) and parallel transport; path endpoints are capped. Avoid reversals and thickness that folds sides at a tight bend. This is visual geometry, without automatic Boolean self-overlap removal or matching collision shapes.";sweep["x-features"]=new JArray(Maestro.Quest.Creation.RecipeSweep.Feature);
+            part=new JObject {["oneOf"]=new JArray(part,lathe,extrude,sweep),["x-discriminators"]=new JArray("shape")};
             var key=Object(new JObject {["time"]=Number(0,30),["rotation"]=Vector(true)});
             var track=Object(new JObject {["part"]=Text("^[a-zA-Z0-9_]{1,32}$",32),["keys"]=List(key,2,16)});
             var recipe=Object(new JObject {["version"]=Number(1,1,true),["parts"]=List(part,1,32),["tracks"]=List(track,0,17),

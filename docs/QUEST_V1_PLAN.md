@@ -2796,3 +2796,18 @@ geometry on downgrade. See [recipe authoring](QUEST_RECIPE_AUTHORING.md).
 This does not finish sweep/CSG, the full play kit, persistent water/snow or the
 hardware, provider and Store acceptance gates. No headset or paid generation is
 used by this increment.
+
+
+### Editable profile sweep increment (2026-10-04)
+
+The existing native recipe evaluator now transports a closed editable profile
+along a bounded open 3D path. Shared creation/editing, profile/path queries, book
+point controls and user/agent source remain one system. Admission rejects invalid
+outlines, reversals, folded sides and generated bounds overflow; saved edits,
+Undo, temporary rooms and generated-mesh disposal retain their existing semantics.
+Room format 11 and snapshot/archive formats 10 protect new geometry on downgrade.
+See QUEST_RECIPE_AUTHORING.md for exact bounds and frame conventions.
+
+This advances handles, bent rods and user-authored parts. General CSG, curved
+surface painting, persistent water/snow, the remaining play kit and all unverified
+headset/provider/account/Store release gates remain open.

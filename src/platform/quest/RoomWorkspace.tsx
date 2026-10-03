@@ -1,3 +1,4 @@
+import {SweepPathEditor} from './SweepPathEditor';
 import {ConstructionSelectionControls} from './ConstructionSelectionControls';
 import {roomObjectLabel} from '../../../shared/roomSelection';
 import type {CapabilityInvocation} from '../../../shared/capabilities';
@@ -6,7 +7,7 @@ import type {CapabilityInvocation} from '../../../shared/capabilities';
 import {useEffect,useState,useSyncExternalStore} from 'react';
 import {RoomOwnershipDetails} from './RoomOwnershipDetails';
 import type {RoomAgentState,RoomCommand} from '../../core-sdk/room/roomAgent';
-import {copyRecipe,parseRecipe,rotateBy,defaultLatheProfile,defaultExtrusionProfile,type RoomRecipe,type Rotation} from '../../core-sdk/room/recipe';
+import {copyRecipe,parseRecipe,rotateBy,defaultLatheProfile,defaultExtrusionProfile,defaultSweepProfile,defaultSweepPath,type RoomRecipe,type Rotation} from '../../core-sdk/room/recipe';
 import type {RoomAgentClient} from './roomAgentBridge';
 import './roomWorkspace.css';
 import {recipeEditCall} from '../../../shared/recipeEdits';
@@ -41,6 +42,9 @@ function ObjectsWorkspace({client,onCatalog}:{client:RoomAgentClient;onCatalog:O
  if(!state?.visible)return null;
  const item=state.objects.find(value=>value.id===draft?.id),recipe=draft?.recipe;
  const part=recipe?.parts.find(value=>value.id===partId)??recipe?.parts[0];
+ const sweepZoom=90/Math.max(.005,...(part?.profile??[]).flatMap(p=>[Math.abs(p.x),Math.abs(p.y)]));
+ const profileX=(x:number)=>part?.shape==='sweep'?100+x*sweepZoom:(x+(part?.shape==='extrude'?.5:0))*200;
+ const profileY=(y:number)=>part?.shape==='sweep'?100-y*sweepZoom:(.5-y)*200;
  const track=recipe?.tracks.find(value=>value.part===part?.id),key=track?.keys[Math.min(keyIndex,track.keys.length-1)];
  const stale=Boolean(draft&&(draft.source.session!==state.session||!item||item.objectRevision!==draft.revision)),blocked=pending||stale;
  const send=async(commands:RoomCommand[],expected?:RoomAgentState)=>{
@@ -50,7 +54,7 @@ function ObjectsWorkspace({client,onCatalog}:{client:RoomAgentClient;onCatalog:O
  const change=(edit:(value:RoomRecipe)=>void)=>{if(!draft?.recipe)return;const value=copyRecipe(draft.recipe);edit(value);setDraft({...draft,recipe:value});setDirty(true);setError('');};
  const select=async(id:string)=>{if(dirty){setError('Apply or discard your draft before choosing another object.');return;}await send([{action:'inspect',target:id}]);};
  const save=async()=>{
-  if(!draft?.recipe||!parseRecipe(draft.recipe)){setError('This recipe needs valid sizes, joints and animation keys before it can be applied.');return;}
+  if(!draft?.recipe||!parseRecipe(draft.recipe)){setError('This recipe needs valid sizes, profiles, paths, joints and animation keys before it can be applied.');return;}
   const runId=state.execution?.nextRunId;
   if(!state.capabilities?.includes('recipeEdits.v1')||!runId){setError('This room cannot accept shared recipe edits yet. Your draft is kept.');return;}
   try {
@@ -84,10 +88,10 @@ function ObjectsWorkspace({client,onCatalog}:{client:RoomAgentClient;onCatalog:O
     <div className="room-workspace-tabs" role="tablist" aria-label="Edit view"><button role="tab" aria-selected={tab==='parts'} onClick={()=>setTab('parts')}>Parts</button><button role="tab" aria-selected={tab==='animation'} onClick={()=>setTab('animation')}>Animation</button></div>
     <fieldset disabled={blocked} className="room-edit-body"><legend>{part.id}</legend>
     {tab==='parts'?<>
-     <div className="room-shapes" aria-label="Part shape">{(['box','sphere','cylinder','lathe','extrude'] as const).map(shape=><button key={shape} disabled={shape==='lathe'&&!state.capabilities?.includes('latheGeometry.v1')||shape==='extrude'&&!state.capabilities?.includes('extrusionGeometry.v1')} aria-pressed={part.shape===shape} onClick={()=>{if(part.shape!==shape)change(value=>{const node=value.parts.find(node=>node.id===part.id)!;node.shape=shape;node.profile=shape==='lathe'?defaultLatheProfile():shape==='extrude'?defaultExtrusionProfile():[];node.segments=shape==='lathe'?24:0;});}}>{shape}</button>)}</div>
-     {(part.shape==='lathe'||part.shape==='extrude')&&<fieldset className="room-lathe-profile" aria-label={part.shape==='lathe'?'Lathe profile':'Extrusion outline'}><legend>{part.shape==='lathe'?'Rotated profile':'Extruded outline'}</legend>
-      <p>{part.shape==='lathe'?'Radius and height are scaled by this part’s dimensions.':'X and Y are scaled by this part’s dimensions; Z is thickness.'} Keep a simple counter-clockwise outline. Collision uses the object’s separately configured shapes.</p>
-      <div className="room-lathe-preview"><svg role="img" aria-label={part.shape==='lathe'?'Lathe cross section':'Extrusion cross section'} viewBox={part.shape==='lathe'?'-5 -5 120 210':'-20 -20 240 240'} style={{width:part.shape==='lathe'?120:240,height:part.shape==='lathe'?210:240,background:'#eee'}}>{part.shape==='lathe'&&<path d="M 0 0 V 200" stroke="#777"/>}<polygon points={(part.profile??[]).map(p=>`${(p.x+(part.shape==='extrude'?.5:0))*200},${(0.5-p.y)*200}`).join(' ')} fill="#86caca" stroke="#174949" strokeWidth="1.5"/>{(part.profile??[]).map((p,i)=><text key={i} x={(p.x+(part.shape==='extrude'?.5:0))*200+3} y={(0.5-p.y)*200+3} fontSize={part.shape==='lathe'?8:12}>{i+1}</text>)}</svg>
+     <div className="room-shapes" aria-label="Part shape">{(['box','sphere','cylinder','lathe','extrude','sweep'] as const).map(shape=><button key={shape} disabled={shape==='lathe'&&!state.capabilities?.includes('latheGeometry.v1')||shape==='extrude'&&!state.capabilities?.includes('extrusionGeometry.v1')||shape==='sweep'&&!state.capabilities?.includes('sweepGeometry.v1')} aria-pressed={part.shape===shape} onClick={()=>{if(part.shape!==shape)change(value=>{const node=value.parts.find(node=>node.id===part.id)!;node.shape=shape;node.profile=shape==='lathe'?defaultLatheProfile():shape==='extrude'?defaultExtrusionProfile():shape==='sweep'?defaultSweepProfile():[];node.path=shape==='sweep'?defaultSweepPath():[];node.segments=shape==='lathe'?24:0;});}}>{shape}</button>)}</div>
+     {(part.shape==='lathe'||part.shape==='extrude'||part.shape==='sweep')&&<fieldset className="room-lathe-profile" aria-label={part.shape==='lathe'?'Lathe profile':part.shape==='sweep'?'Sweep profile':'Extrusion outline'}><legend>{part.shape==='lathe'?'Rotated profile':part.shape==='sweep'?'Swept cross-section':'Extruded outline'}</legend>
+      <p>{part.shape==='lathe'?'Radius and height are scaled by this part’s dimensions.':part.shape==='sweep'?'This section follows the path below; part dimensions scale the whole shape.':'X and Y are scaled by this part’s dimensions; Z is thickness.'} Keep a simple counter-clockwise outline. Collision uses the object’s separately configured shapes.</p>
+      <div className="room-lathe-preview"><svg role="img" aria-label={part.shape==='lathe'?'Lathe cross section':part.shape==='sweep'?'Sweep cross section':'Extrusion cross section'} viewBox={part.shape==='lathe'?'-5 -5 120 210':'-20 -20 240 240'} style={{width:part.shape==='lathe'?120:240,height:part.shape==='lathe'?210:240,background:'#eee'}}>{part.shape==='lathe'&&<path d="M 0 0 V 200" stroke="#777"/>}<polygon points={(part.profile??[]).map(p=>`${profileX(p.x)},${profileY(p.y)}`).join(' ')} fill="#86caca" stroke="#174949" strokeWidth="1.5"/>{(part.profile??[]).map((p,i)=><text key={i} x={profileX(p.x)+3} y={profileY(p.y)+3} fontSize={part.shape==='lathe'?8:12}>{i+1}</text>)}</svg>
       {part.shape==='lathe'&&<label>Angular segments<input aria-label="Lathe segments" type="number" min={8} max={48} step={1} value={part.segments??24} onChange={e=>change(value=>{value.parts.find(node=>node.id===part.id)!.segments=Number(e.target.value);})}/></label>}</div>
       {(part.profile??[]).map((point,index)=><div key={index} className="room-lathe-point">
        <span>Point {index+1}</span>{(['x','y'] as const).map(axis=>{const label=part.shape==='lathe'?(axis==='x'?'radius':'height'):axis;return <label key={axis}>{label}<input aria-label={`Profile point ${index+1} ${label}`} type="number" min={part.shape==='lathe'&&axis==='x'?0:-.5} max={.5} step={.01} value={profileNumber(point[axis])} onChange={e=>change(value=>{value.parts.find(node=>node.id===part.id)!.profile![index][axis]=Number(e.target.value);})}/></label>;})}
@@ -95,6 +99,7 @@ function ObjectsWorkspace({client,onCatalog}:{client:RoomAgentClient;onCatalog:O
        <button aria-label={`Remove point ${index+1}`} disabled={(part.profile?.length??0)<=3} onClick={()=>change(value=>{value.parts.find(node=>node.id===part.id)!.profile!.splice(index,1);})}>Remove</button>
       </div>)}
      </fieldset>}
+     {part.shape==='sweep'&&<SweepPathEditor path={part.path??[]} onChange={path=>change(value=>{value.parts.find(node=>node.id===part.id)!.path=path;})}/>}
      <fieldset className="room-axis-controls"><legend>Position · metres from {part.parent||'object origin'}</legend>{axes.map(axis=><div key={axis}><span>{axis.toUpperCase()} {part.position[axis].toFixed(2)}</span><button aria-label={`Position ${axis} minus`} onClick={()=>change(value=>{value.parts.find(node=>node.id===part.id)!.position[axis]-=.01;})}>−.01</button><button aria-label={`Position ${axis} plus`} onClick={()=>change(value=>{value.parts.find(node=>node.id===part.id)!.position[axis]+=.01;})}>+.01</button></div>)}</fieldset>
      <fieldset className="room-axis-controls"><legend>Dimensions · metres</legend>{axes.map(axis=><div key={axis}><span>{axis.toUpperCase()} {part.size[axis].toFixed(2)}</span><button aria-label={`Size ${axis} minus`} onClick={()=>change(value=>{const node=value.parts.find(node=>node.id===part.id)!;node.size[axis]=Math.max(.005,node.size[axis]-.01);})}>−.01</button><button aria-label={`Size ${axis} plus`} onClick={()=>change(value=>{value.parts.find(node=>node.id===part.id)!.size[axis]+=.01;})}>+.01</button></div>)}</fieldset>
      <TurnControls label="Rest pose" rotation={part.rotation} onChange={rotation=>change(value=>{value.parts.find(node=>node.id===part.id)!.rotation=rotation;})}/>

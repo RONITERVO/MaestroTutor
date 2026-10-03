@@ -67,7 +67,7 @@ it('edits a visible lathe profile through the same native patch and keeps invali
  await act(async()=>{client.receive(state({revision:2,ack:1}));});
 });
 it('does not offer new geometry to an older native room',()=>{
- const client=new RoomAgentClient();client.receive(state());const screen=render(<RoomWorkspace client={client}/>);expect((screen.getByRole('button',{name:'lathe'}) as HTMLButtonElement).disabled).toBe(true);expect((screen.getByRole('button',{name:'extrude'}) as HTMLButtonElement).disabled).toBe(true);
+ const client=new RoomAgentClient();client.receive(state());const screen=render(<RoomWorkspace client={client}/>);expect((screen.getByRole('button',{name:'lathe'}) as HTMLButtonElement).disabled).toBe(true);expect((screen.getByRole('button',{name:'extrude'}) as HTMLButtonElement).disabled).toBe(true);expect((screen.getByRole('button',{name:'sweep'}) as HTMLButtonElement).disabled).toBe(true);
 });
 
 it('edits concave extrusion source in the same workspace and retains invalid drafts',async()=>{
@@ -77,5 +77,15 @@ it('edits concave extrusion source in the same workspace and retains invalid dra
  fireEvent.change(screen.getByLabelText('Profile point 4 x'),{target:{value:'0'}});fireEvent.click(screen.getByRole('button',{name:'Insert after point 1'}));fireEvent.click(screen.getByRole('button',{name:'Apply changes'}));
  const invocation=client.snapshot().request!.commands[0].execution!;if(invocation.operation!=='start')throw new Error('Expected shared patch');
  const part=(invocation.call.arguments.parts as NonNullable<ReturnType<typeof parseRecipe>>['parts'])[0];expect(part.shape).toBe('extrude');expect(part.profile).toHaveLength(7);expect(part.segments).toBe(0);
+ await act(async()=>{client.receive(state({revision:2,ack:1}));});
+});
+
+it('edits swept profiles and paths through one shared patch without resetting a selected shape',async()=>{
+ const client=new RoomAgentClient();client.receive(state({capabilities:[...state().capabilities!,'sweepGeometry.v1']}));const screen=render(<RoomWorkspace client={client}/>);
+ fireEvent.click(screen.getByRole('button',{name:'sweep'}));expect(screen.getByRole('img',{name:'Sweep cross section'})).toBeTruthy();expect(screen.getByRole('img',{name:'Sweep path X Y'})).toBeTruthy();expect(screen.getByRole('img',{name:'Sweep path X Z'})).toBeTruthy();
+ fireEvent.change(screen.getByLabelText('Path point 3 z'),{target:{value:'.6'}});fireEvent.click(screen.getByRole('button',{name:'Apply changes'}));expect(client.snapshot().request).toBeNull();
+ fireEvent.change(screen.getByLabelText('Path point 3 z'),{target:{value:'.05'}});fireEvent.click(screen.getByRole('button',{name:'Insert after path point 1'}));expect(screen.getByLabelText('Path point 7 z')).toBeTruthy();fireEvent.click(screen.getByRole('button',{name:'Remove path point 2'}));
+ fireEvent.click(screen.getByRole('button',{name:'sweep'}));expect((screen.getByLabelText('Path point 3 z') as HTMLInputElement).value).toBe('0.05');fireEvent.click(screen.getByRole('button',{name:'Apply changes'}));
+ const invocation=client.snapshot().request!.commands[0].execution!;if(invocation.operation!=='start')throw new Error('Expected shared patch');const part=(invocation.call.arguments.parts as NonNullable<ReturnType<typeof parseRecipe>>['parts'])[0];expect(part.shape).toBe('sweep');expect(part.path).toHaveLength(6);expect(part.path![2].z).toBe(.05);expect(part.profile).toHaveLength(8);
  await act(async()=>{client.receive(state({revision:2,ack:1}));});
 });

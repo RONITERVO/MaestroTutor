@@ -10,7 +10,7 @@ namespace Maestro.Quest.Creation {
         public const string Feature="extrusionGeometry.v1";
         public static bool Valid(RecipePart part)=>part!=null&&part.shape=="extrude"&&part.segments==0&&RecipeOutline.Valid(part.profile,-.5f,32)&&Triangulate(part.profile)!=null;
         static double Cross(Vector2 a,Vector2 b,Vector2 c)=>(double)(b.x-a.x)*(c.y-a.y)-(double)(b.y-a.y)*(c.x-a.x);
-        static List<int> Triangulate(Vector2[] points){
+        internal static List<int> Triangulate(Vector2[] points){
             const double epsilon=1e-8;var polygon=Enumerable.Range(0,points.Length).ToList();var triangles=new List<int>((points.Length-2)*3);
             // Inserted points on straight edges remain in saved source/walls; caps do not emit zero-area triangles.
             for(int i=polygon.Count-1;i>=0&&polygon.Count>3;i--)if(Math.Abs(Cross(points[polygon[(i+polygon.Count-1)%polygon.Count]],points[polygon[i]],points[polygon[(i+1)%polygon.Count]]))<=epsilon)polygon.RemoveAt(i);

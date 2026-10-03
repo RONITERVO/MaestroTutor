@@ -5778,6 +5778,37 @@
                               ],
                               "additionalProperties": false
                             },
+                            "path": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "x": {
+                                    "type": "number",
+                                    "minimum": -0.5,
+                                    "maximum": 0.5
+                                  },
+                                  "y": {
+                                    "type": "number",
+                                    "minimum": -0.5,
+                                    "maximum": 0.5
+                                  },
+                                  "z": {
+                                    "type": "number",
+                                    "minimum": -0.5,
+                                    "maximum": 0.5
+                                  }
+                                },
+                                "required": [
+                                  "x",
+                                  "y",
+                                  "z"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "minItems": 0,
+                              "maxItems": 0
+                            },
                             "profile": {
                               "type": "array",
                               "items": {
@@ -5956,6 +5987,37 @@
                                 "a"
                               ],
                               "additionalProperties": false
+                            },
+                            "path": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "x": {
+                                    "type": "number",
+                                    "minimum": -0.5,
+                                    "maximum": 0.5
+                                  },
+                                  "y": {
+                                    "type": "number",
+                                    "minimum": -0.5,
+                                    "maximum": 0.5
+                                  },
+                                  "z": {
+                                    "type": "number",
+                                    "minimum": -0.5,
+                                    "maximum": 0.5
+                                  }
+                                },
+                                "required": [
+                                  "x",
+                                  "y",
+                                  "z"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "minItems": 0,
+                              "maxItems": 0
                             },
                             "profile": {
                               "type": "array",
@@ -6144,6 +6206,37 @@
                               ],
                               "additionalProperties": false
                             },
+                            "path": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "x": {
+                                    "type": "number",
+                                    "minimum": -0.5,
+                                    "maximum": 0.5
+                                  },
+                                  "y": {
+                                    "type": "number",
+                                    "minimum": -0.5,
+                                    "maximum": 0.5
+                                  },
+                                  "z": {
+                                    "type": "number",
+                                    "minimum": -0.5,
+                                    "maximum": 0.5
+                                  }
+                                },
+                                "required": [
+                                  "x",
+                                  "y",
+                                  "z"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "minItems": 0,
+                              "maxItems": 0
+                            },
                             "profile": {
                               "type": "array",
                               "items": {
@@ -6191,6 +6284,224 @@
                           "description": "Extrude a simple counter-clockwise XY outline along Z. 3–32 points in -0.5–0.5, scaled by part.size; size.z is thickness. Close implicitly, without repeated endpoint, holes, touching or crossing edges. Concave outlines and collinear edge points are supported. segments is omitted or zero. Collision remains an independent explicit proxy.",
                           "x-features": [
                             "extrusionGeometry.v1"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "pattern": "^[a-zA-Z0-9_]{1,32}$",
+                              "maxLength": 32
+                            },
+                            "parent": {
+                              "type": "string",
+                              "pattern": "^[a-zA-Z0-9_]{0,32}$",
+                              "maxLength": 32,
+                              "nullable": true
+                            },
+                            "shape": {
+                              "type": "string",
+                              "enum": [
+                                "sweep"
+                              ]
+                            },
+                            "position": {
+                              "type": "object",
+                              "properties": {
+                                "x": {
+                                  "type": "number",
+                                  "minimum": -2.0,
+                                  "maximum": 2.0
+                                },
+                                "y": {
+                                  "type": "number",
+                                  "minimum": -2.0,
+                                  "maximum": 2.0
+                                },
+                                "z": {
+                                  "type": "number",
+                                  "minimum": -2.0,
+                                  "maximum": 2.0
+                                }
+                              },
+                              "required": [
+                                "x",
+                                "y",
+                                "z"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "size": {
+                              "type": "object",
+                              "properties": {
+                                "x": {
+                                  "type": "number",
+                                  "minimum": 0.005,
+                                  "maximum": 2.0
+                                },
+                                "y": {
+                                  "type": "number",
+                                  "minimum": 0.005,
+                                  "maximum": 2.0
+                                },
+                                "z": {
+                                  "type": "number",
+                                  "minimum": 0.005,
+                                  "maximum": 2.0
+                                }
+                              },
+                              "required": [
+                                "x",
+                                "y",
+                                "z"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "rotation": {
+                              "type": "object",
+                              "properties": {
+                                "x": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                },
+                                "y": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                },
+                                "z": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                },
+                                "w": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                }
+                              },
+                              "required": [
+                                "x",
+                                "y",
+                                "z",
+                                "w"
+                              ],
+                              "additionalProperties": false,
+                              "format": "unitQuaternion"
+                            },
+                            "color": {
+                              "type": "object",
+                              "properties": {
+                                "r": {
+                                  "type": "number",
+                                  "minimum": 0.0,
+                                  "maximum": 1.0
+                                },
+                                "g": {
+                                  "type": "number",
+                                  "minimum": 0.0,
+                                  "maximum": 1.0
+                                },
+                                "b": {
+                                  "type": "number",
+                                  "minimum": 0.0,
+                                  "maximum": 1.0
+                                },
+                                "a": {
+                                  "type": "number",
+                                  "minimum": 1.0,
+                                  "maximum": 1.0
+                                }
+                              },
+                              "required": [
+                                "r",
+                                "g",
+                                "b",
+                                "a"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "path": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "x": {
+                                    "type": "number",
+                                    "minimum": -0.5,
+                                    "maximum": 0.5
+                                  },
+                                  "y": {
+                                    "type": "number",
+                                    "minimum": -0.5,
+                                    "maximum": 0.5
+                                  },
+                                  "z": {
+                                    "type": "number",
+                                    "minimum": -0.5,
+                                    "maximum": 0.5
+                                  }
+                                },
+                                "required": [
+                                  "x",
+                                  "y",
+                                  "z"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "minItems": 2,
+                              "maxItems": 16
+                            },
+                            "profile": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "x": {
+                                    "type": "number",
+                                    "minimum": -0.5,
+                                    "maximum": 0.5
+                                  },
+                                  "y": {
+                                    "type": "number",
+                                    "minimum": -0.5,
+                                    "maximum": 0.5
+                                  }
+                                },
+                                "required": [
+                                  "x",
+                                  "y"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "minItems": 3,
+                              "maxItems": 32
+                            },
+                            "segments": {
+                              "type": "integer",
+                              "minimum": 0.0,
+                              "maximum": 0.0
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "parent",
+                            "shape",
+                            "position",
+                            "size",
+                            "rotation",
+                            "color",
+                            "profile",
+                            "path"
+                          ],
+                          "additionalProperties": false,
+                          "format": "sweepPart",
+                          "title": "Swept profile",
+                          "description": "Carry a simple counter-clockwise profile (3–32 XY points) along an open 2–16 point XYZ polyline. Coordinates and generated geometry must fit -0.5–0.5 before part.size scaling. Segments are omitted or zero. Frames start with Y as up (Z near a vertical start) and parallel transport; path endpoints are capped. Avoid reversals and thickness that folds sides at a tight bend. This is visual geometry, without automatic Boolean self-overlap removal or matching collision shapes.",
+                          "x-features": [
+                            "sweepGeometry.v1"
                           ]
                         }
                       ],
@@ -6883,6 +7194,7 @@
                       "parent": "",
                       "shape": "box",
                       "profile": [],
+                      "path": [],
                       "segments": 0,
                       "position": {
                         "x": 0.0,
@@ -6912,6 +7224,7 @@
                       "parent": "Hips",
                       "shape": "box",
                       "profile": [],
+                      "path": [],
                       "segments": 0,
                       "position": {
                         "x": 0.0,
@@ -6941,6 +7254,7 @@
                       "parent": "Spine",
                       "shape": "box",
                       "profile": [],
+                      "path": [],
                       "segments": 0,
                       "position": {
                         "x": 0.0,
@@ -6970,6 +7284,7 @@
                       "parent": "Chest",
                       "shape": "box",
                       "profile": [],
+                      "path": [],
                       "segments": 0,
                       "position": {
                         "x": 0.0,
@@ -6999,6 +7314,7 @@
                       "parent": "Neck",
                       "shape": "box",
                       "profile": [],
+                      "path": [],
                       "segments": 0,
                       "position": {
                         "x": 0.0,
@@ -7028,6 +7344,7 @@
                       "parent": "Chest",
                       "shape": "box",
                       "profile": [],
+                      "path": [],
                       "segments": 0,
                       "position": {
                         "x": -0.2199999988079071,
@@ -7057,6 +7374,7 @@
                       "parent": "LeftUpperArm",
                       "shape": "box",
                       "profile": [],
+                      "path": [],
                       "segments": 0,
                       "position": {
                         "x": 0.0,
@@ -7086,6 +7404,7 @@
                       "parent": "LeftLowerArm",
                       "shape": "box",
                       "profile": [],
+                      "path": [],
                       "segments": 0,
                       "position": {
                         "x": 0.0,
@@ -7115,6 +7434,7 @@
                       "parent": "Hips",
                       "shape": "box",
                       "profile": [],
+                      "path": [],
                       "segments": 0,
                       "position": {
                         "x": -0.090000003576278687,
@@ -7144,6 +7464,7 @@
                       "parent": "LeftUpperLeg",
                       "shape": "box",
                       "profile": [],
+                      "path": [],
                       "segments": 0,
                       "position": {
                         "x": 0.0,
@@ -7173,6 +7494,7 @@
                       "parent": "LeftLowerLeg",
                       "shape": "box",
                       "profile": [],
+                      "path": [],
                       "segments": 0,
                       "position": {
                         "x": 0.0,
@@ -7202,6 +7524,7 @@
                       "parent": "Head",
                       "shape": "box",
                       "profile": [],
+                      "path": [],
                       "segments": 0,
                       "position": {
                         "x": -0.054999999701976776,
@@ -7231,6 +7554,7 @@
                       "parent": "Chest",
                       "shape": "box",
                       "profile": [],
+                      "path": [],
                       "segments": 0,
                       "position": {
                         "x": 0.2199999988079071,
@@ -7260,6 +7584,7 @@
                       "parent": "RightUpperArm",
                       "shape": "box",
                       "profile": [],
+                      "path": [],
                       "segments": 0,
                       "position": {
                         "x": 0.0,
@@ -7289,6 +7614,7 @@
                       "parent": "RightLowerArm",
                       "shape": "box",
                       "profile": [],
+                      "path": [],
                       "segments": 0,
                       "position": {
                         "x": 0.0,
@@ -7318,6 +7644,7 @@
                       "parent": "Hips",
                       "shape": "box",
                       "profile": [],
+                      "path": [],
                       "segments": 0,
                       "position": {
                         "x": 0.090000003576278687,
@@ -7347,6 +7674,7 @@
                       "parent": "RightUpperLeg",
                       "shape": "box",
                       "profile": [],
+                      "path": [],
                       "segments": 0,
                       "position": {
                         "x": 0.0,
@@ -7376,6 +7704,7 @@
                       "parent": "RightLowerLeg",
                       "shape": "box",
                       "profile": [],
+                      "path": [],
                       "segments": 0,
                       "position": {
                         "x": 0.0,
@@ -7405,6 +7734,7 @@
                       "parent": "Head",
                       "shape": "box",
                       "profile": [],
+                      "path": [],
                       "segments": 0,
                       "position": {
                         "x": 0.054999999701976776,
@@ -8275,6 +8605,37 @@
                                             ],
                                             "additionalProperties": false
                                           },
+                                          "path": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "object",
+                                              "properties": {
+                                                "x": {
+                                                  "type": "number",
+                                                  "minimum": -0.5,
+                                                  "maximum": 0.5
+                                                },
+                                                "y": {
+                                                  "type": "number",
+                                                  "minimum": -0.5,
+                                                  "maximum": 0.5
+                                                },
+                                                "z": {
+                                                  "type": "number",
+                                                  "minimum": -0.5,
+                                                  "maximum": 0.5
+                                                }
+                                              },
+                                              "required": [
+                                                "x",
+                                                "y",
+                                                "z"
+                                              ],
+                                              "additionalProperties": false
+                                            },
+                                            "minItems": 0,
+                                            "maxItems": 0
+                                          },
                                           "profile": {
                                             "type": "array",
                                             "items": {
@@ -8453,6 +8814,37 @@
                                               "a"
                                             ],
                                             "additionalProperties": false
+                                          },
+                                          "path": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "object",
+                                              "properties": {
+                                                "x": {
+                                                  "type": "number",
+                                                  "minimum": -0.5,
+                                                  "maximum": 0.5
+                                                },
+                                                "y": {
+                                                  "type": "number",
+                                                  "minimum": -0.5,
+                                                  "maximum": 0.5
+                                                },
+                                                "z": {
+                                                  "type": "number",
+                                                  "minimum": -0.5,
+                                                  "maximum": 0.5
+                                                }
+                                              },
+                                              "required": [
+                                                "x",
+                                                "y",
+                                                "z"
+                                              ],
+                                              "additionalProperties": false
+                                            },
+                                            "minItems": 0,
+                                            "maxItems": 0
                                           },
                                           "profile": {
                                             "type": "array",
@@ -8641,6 +9033,37 @@
                                             ],
                                             "additionalProperties": false
                                           },
+                                          "path": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "object",
+                                              "properties": {
+                                                "x": {
+                                                  "type": "number",
+                                                  "minimum": -0.5,
+                                                  "maximum": 0.5
+                                                },
+                                                "y": {
+                                                  "type": "number",
+                                                  "minimum": -0.5,
+                                                  "maximum": 0.5
+                                                },
+                                                "z": {
+                                                  "type": "number",
+                                                  "minimum": -0.5,
+                                                  "maximum": 0.5
+                                                }
+                                              },
+                                              "required": [
+                                                "x",
+                                                "y",
+                                                "z"
+                                              ],
+                                              "additionalProperties": false
+                                            },
+                                            "minItems": 0,
+                                            "maxItems": 0
+                                          },
                                           "profile": {
                                             "type": "array",
                                             "items": {
@@ -8688,6 +9111,224 @@
                                         "description": "Extrude a simple counter-clockwise XY outline along Z. 3–32 points in -0.5–0.5, scaled by part.size; size.z is thickness. Close implicitly, without repeated endpoint, holes, touching or crossing edges. Concave outlines and collinear edge points are supported. segments is omitted or zero. Collision remains an independent explicit proxy.",
                                         "x-features": [
                                           "extrusionGeometry.v1"
+                                        ]
+                                      },
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "id": {
+                                            "type": "string",
+                                            "pattern": "^[a-zA-Z0-9_]{1,32}$",
+                                            "maxLength": 32
+                                          },
+                                          "parent": {
+                                            "type": "string",
+                                            "pattern": "^[a-zA-Z0-9_]{0,32}$",
+                                            "maxLength": 32,
+                                            "nullable": true
+                                          },
+                                          "shape": {
+                                            "type": "string",
+                                            "enum": [
+                                              "sweep"
+                                            ]
+                                          },
+                                          "position": {
+                                            "type": "object",
+                                            "properties": {
+                                              "x": {
+                                                "type": "number",
+                                                "minimum": -2.0,
+                                                "maximum": 2.0
+                                              },
+                                              "y": {
+                                                "type": "number",
+                                                "minimum": -2.0,
+                                                "maximum": 2.0
+                                              },
+                                              "z": {
+                                                "type": "number",
+                                                "minimum": -2.0,
+                                                "maximum": 2.0
+                                              }
+                                            },
+                                            "required": [
+                                              "x",
+                                              "y",
+                                              "z"
+                                            ],
+                                            "additionalProperties": false
+                                          },
+                                          "size": {
+                                            "type": "object",
+                                            "properties": {
+                                              "x": {
+                                                "type": "number",
+                                                "minimum": 0.005,
+                                                "maximum": 2.0
+                                              },
+                                              "y": {
+                                                "type": "number",
+                                                "minimum": 0.005,
+                                                "maximum": 2.0
+                                              },
+                                              "z": {
+                                                "type": "number",
+                                                "minimum": 0.005,
+                                                "maximum": 2.0
+                                              }
+                                            },
+                                            "required": [
+                                              "x",
+                                              "y",
+                                              "z"
+                                            ],
+                                            "additionalProperties": false
+                                          },
+                                          "rotation": {
+                                            "type": "object",
+                                            "properties": {
+                                              "x": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              },
+                                              "y": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              },
+                                              "z": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              },
+                                              "w": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              }
+                                            },
+                                            "required": [
+                                              "x",
+                                              "y",
+                                              "z",
+                                              "w"
+                                            ],
+                                            "additionalProperties": false,
+                                            "format": "unitQuaternion"
+                                          },
+                                          "color": {
+                                            "type": "object",
+                                            "properties": {
+                                              "r": {
+                                                "type": "number",
+                                                "minimum": 0.0,
+                                                "maximum": 1.0
+                                              },
+                                              "g": {
+                                                "type": "number",
+                                                "minimum": 0.0,
+                                                "maximum": 1.0
+                                              },
+                                              "b": {
+                                                "type": "number",
+                                                "minimum": 0.0,
+                                                "maximum": 1.0
+                                              },
+                                              "a": {
+                                                "type": "number",
+                                                "minimum": 1.0,
+                                                "maximum": 1.0
+                                              }
+                                            },
+                                            "required": [
+                                              "r",
+                                              "g",
+                                              "b",
+                                              "a"
+                                            ],
+                                            "additionalProperties": false
+                                          },
+                                          "path": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "object",
+                                              "properties": {
+                                                "x": {
+                                                  "type": "number",
+                                                  "minimum": -0.5,
+                                                  "maximum": 0.5
+                                                },
+                                                "y": {
+                                                  "type": "number",
+                                                  "minimum": -0.5,
+                                                  "maximum": 0.5
+                                                },
+                                                "z": {
+                                                  "type": "number",
+                                                  "minimum": -0.5,
+                                                  "maximum": 0.5
+                                                }
+                                              },
+                                              "required": [
+                                                "x",
+                                                "y",
+                                                "z"
+                                              ],
+                                              "additionalProperties": false
+                                            },
+                                            "minItems": 2,
+                                            "maxItems": 16
+                                          },
+                                          "profile": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "object",
+                                              "properties": {
+                                                "x": {
+                                                  "type": "number",
+                                                  "minimum": -0.5,
+                                                  "maximum": 0.5
+                                                },
+                                                "y": {
+                                                  "type": "number",
+                                                  "minimum": -0.5,
+                                                  "maximum": 0.5
+                                                }
+                                              },
+                                              "required": [
+                                                "x",
+                                                "y"
+                                              ],
+                                              "additionalProperties": false
+                                            },
+                                            "minItems": 3,
+                                            "maxItems": 32
+                                          },
+                                          "segments": {
+                                            "type": "integer",
+                                            "minimum": 0.0,
+                                            "maximum": 0.0
+                                          }
+                                        },
+                                        "required": [
+                                          "id",
+                                          "parent",
+                                          "shape",
+                                          "position",
+                                          "size",
+                                          "rotation",
+                                          "color",
+                                          "profile",
+                                          "path"
+                                        ],
+                                        "additionalProperties": false,
+                                        "format": "sweepPart",
+                                        "title": "Swept profile",
+                                        "description": "Carry a simple counter-clockwise profile (3–32 XY points) along an open 2–16 point XYZ polyline. Coordinates and generated geometry must fit -0.5–0.5 before part.size scaling. Segments are omitted or zero. Frames start with Y as up (Z near a vertical start) and parallel transport; path endpoints are capped. Avoid reversals and thickness that folds sides at a tight bend. This is visual geometry, without automatic Boolean self-overlap removal or matching collision shapes.",
+                                        "x-features": [
+                                          "sweepGeometry.v1"
                                         ]
                                       }
                                     ],
@@ -10886,6 +11527,37 @@
                                                         ],
                                                         "additionalProperties": false
                                                       },
+                                                      "path": {
+                                                        "type": "array",
+                                                        "items": {
+                                                          "type": "object",
+                                                          "properties": {
+                                                            "x": {
+                                                              "type": "number",
+                                                              "minimum": -0.5,
+                                                              "maximum": 0.5
+                                                            },
+                                                            "y": {
+                                                              "type": "number",
+                                                              "minimum": -0.5,
+                                                              "maximum": 0.5
+                                                            },
+                                                            "z": {
+                                                              "type": "number",
+                                                              "minimum": -0.5,
+                                                              "maximum": 0.5
+                                                            }
+                                                          },
+                                                          "required": [
+                                                            "x",
+                                                            "y",
+                                                            "z"
+                                                          ],
+                                                          "additionalProperties": false
+                                                        },
+                                                        "minItems": 0,
+                                                        "maxItems": 0
+                                                      },
                                                       "profile": {
                                                         "type": "array",
                                                         "items": {
@@ -11064,6 +11736,37 @@
                                                           "a"
                                                         ],
                                                         "additionalProperties": false
+                                                      },
+                                                      "path": {
+                                                        "type": "array",
+                                                        "items": {
+                                                          "type": "object",
+                                                          "properties": {
+                                                            "x": {
+                                                              "type": "number",
+                                                              "minimum": -0.5,
+                                                              "maximum": 0.5
+                                                            },
+                                                            "y": {
+                                                              "type": "number",
+                                                              "minimum": -0.5,
+                                                              "maximum": 0.5
+                                                            },
+                                                            "z": {
+                                                              "type": "number",
+                                                              "minimum": -0.5,
+                                                              "maximum": 0.5
+                                                            }
+                                                          },
+                                                          "required": [
+                                                            "x",
+                                                            "y",
+                                                            "z"
+                                                          ],
+                                                          "additionalProperties": false
+                                                        },
+                                                        "minItems": 0,
+                                                        "maxItems": 0
                                                       },
                                                       "profile": {
                                                         "type": "array",
@@ -11252,6 +11955,37 @@
                                                         ],
                                                         "additionalProperties": false
                                                       },
+                                                      "path": {
+                                                        "type": "array",
+                                                        "items": {
+                                                          "type": "object",
+                                                          "properties": {
+                                                            "x": {
+                                                              "type": "number",
+                                                              "minimum": -0.5,
+                                                              "maximum": 0.5
+                                                            },
+                                                            "y": {
+                                                              "type": "number",
+                                                              "minimum": -0.5,
+                                                              "maximum": 0.5
+                                                            },
+                                                            "z": {
+                                                              "type": "number",
+                                                              "minimum": -0.5,
+                                                              "maximum": 0.5
+                                                            }
+                                                          },
+                                                          "required": [
+                                                            "x",
+                                                            "y",
+                                                            "z"
+                                                          ],
+                                                          "additionalProperties": false
+                                                        },
+                                                        "minItems": 0,
+                                                        "maxItems": 0
+                                                      },
                                                       "profile": {
                                                         "type": "array",
                                                         "items": {
@@ -11299,6 +12033,224 @@
                                                     "description": "Extrude a simple counter-clockwise XY outline along Z. 3–32 points in -0.5–0.5, scaled by part.size; size.z is thickness. Close implicitly, without repeated endpoint, holes, touching or crossing edges. Concave outlines and collinear edge points are supported. segments is omitted or zero. Collision remains an independent explicit proxy.",
                                                     "x-features": [
                                                       "extrusionGeometry.v1"
+                                                    ]
+                                                  },
+                                                  {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "id": {
+                                                        "type": "string",
+                                                        "pattern": "^[a-zA-Z0-9_]{1,32}$",
+                                                        "maxLength": 32
+                                                      },
+                                                      "parent": {
+                                                        "type": "string",
+                                                        "pattern": "^[a-zA-Z0-9_]{0,32}$",
+                                                        "maxLength": 32,
+                                                        "nullable": true
+                                                      },
+                                                      "shape": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                          "sweep"
+                                                        ]
+                                                      },
+                                                      "position": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                          "x": {
+                                                            "type": "number",
+                                                            "minimum": -2.0,
+                                                            "maximum": 2.0
+                                                          },
+                                                          "y": {
+                                                            "type": "number",
+                                                            "minimum": -2.0,
+                                                            "maximum": 2.0
+                                                          },
+                                                          "z": {
+                                                            "type": "number",
+                                                            "minimum": -2.0,
+                                                            "maximum": 2.0
+                                                          }
+                                                        },
+                                                        "required": [
+                                                          "x",
+                                                          "y",
+                                                          "z"
+                                                        ],
+                                                        "additionalProperties": false
+                                                      },
+                                                      "size": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                          "x": {
+                                                            "type": "number",
+                                                            "minimum": 0.005,
+                                                            "maximum": 2.0
+                                                          },
+                                                          "y": {
+                                                            "type": "number",
+                                                            "minimum": 0.005,
+                                                            "maximum": 2.0
+                                                          },
+                                                          "z": {
+                                                            "type": "number",
+                                                            "minimum": 0.005,
+                                                            "maximum": 2.0
+                                                          }
+                                                        },
+                                                        "required": [
+                                                          "x",
+                                                          "y",
+                                                          "z"
+                                                        ],
+                                                        "additionalProperties": false
+                                                      },
+                                                      "rotation": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                          "x": {
+                                                            "type": "number",
+                                                            "minimum": -1.0,
+                                                            "maximum": 1.0
+                                                          },
+                                                          "y": {
+                                                            "type": "number",
+                                                            "minimum": -1.0,
+                                                            "maximum": 1.0
+                                                          },
+                                                          "z": {
+                                                            "type": "number",
+                                                            "minimum": -1.0,
+                                                            "maximum": 1.0
+                                                          },
+                                                          "w": {
+                                                            "type": "number",
+                                                            "minimum": -1.0,
+                                                            "maximum": 1.0
+                                                          }
+                                                        },
+                                                        "required": [
+                                                          "x",
+                                                          "y",
+                                                          "z",
+                                                          "w"
+                                                        ],
+                                                        "additionalProperties": false,
+                                                        "format": "unitQuaternion"
+                                                      },
+                                                      "color": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                          "r": {
+                                                            "type": "number",
+                                                            "minimum": 0.0,
+                                                            "maximum": 1.0
+                                                          },
+                                                          "g": {
+                                                            "type": "number",
+                                                            "minimum": 0.0,
+                                                            "maximum": 1.0
+                                                          },
+                                                          "b": {
+                                                            "type": "number",
+                                                            "minimum": 0.0,
+                                                            "maximum": 1.0
+                                                          },
+                                                          "a": {
+                                                            "type": "number",
+                                                            "minimum": 1.0,
+                                                            "maximum": 1.0
+                                                          }
+                                                        },
+                                                        "required": [
+                                                          "r",
+                                                          "g",
+                                                          "b",
+                                                          "a"
+                                                        ],
+                                                        "additionalProperties": false
+                                                      },
+                                                      "path": {
+                                                        "type": "array",
+                                                        "items": {
+                                                          "type": "object",
+                                                          "properties": {
+                                                            "x": {
+                                                              "type": "number",
+                                                              "minimum": -0.5,
+                                                              "maximum": 0.5
+                                                            },
+                                                            "y": {
+                                                              "type": "number",
+                                                              "minimum": -0.5,
+                                                              "maximum": 0.5
+                                                            },
+                                                            "z": {
+                                                              "type": "number",
+                                                              "minimum": -0.5,
+                                                              "maximum": 0.5
+                                                            }
+                                                          },
+                                                          "required": [
+                                                            "x",
+                                                            "y",
+                                                            "z"
+                                                          ],
+                                                          "additionalProperties": false
+                                                        },
+                                                        "minItems": 2,
+                                                        "maxItems": 16
+                                                      },
+                                                      "profile": {
+                                                        "type": "array",
+                                                        "items": {
+                                                          "type": "object",
+                                                          "properties": {
+                                                            "x": {
+                                                              "type": "number",
+                                                              "minimum": -0.5,
+                                                              "maximum": 0.5
+                                                            },
+                                                            "y": {
+                                                              "type": "number",
+                                                              "minimum": -0.5,
+                                                              "maximum": 0.5
+                                                            }
+                                                          },
+                                                          "required": [
+                                                            "x",
+                                                            "y"
+                                                          ],
+                                                          "additionalProperties": false
+                                                        },
+                                                        "minItems": 3,
+                                                        "maxItems": 32
+                                                      },
+                                                      "segments": {
+                                                        "type": "integer",
+                                                        "minimum": 0.0,
+                                                        "maximum": 0.0
+                                                      }
+                                                    },
+                                                    "required": [
+                                                      "id",
+                                                      "parent",
+                                                      "shape",
+                                                      "position",
+                                                      "size",
+                                                      "rotation",
+                                                      "color",
+                                                      "profile",
+                                                      "path"
+                                                    ],
+                                                    "additionalProperties": false,
+                                                    "format": "sweepPart",
+                                                    "title": "Swept profile",
+                                                    "description": "Carry a simple counter-clockwise profile (3–32 XY points) along an open 2–16 point XYZ polyline. Coordinates and generated geometry must fit -0.5–0.5 before part.size scaling. Segments are omitted or zero. Frames start with Y as up (Z near a vertical start) and parallel transport; path endpoints are capped. Avoid reversals and thickness that folds sides at a tight bend. This is visual geometry, without automatic Boolean self-overlap removal or matching collision shapes.",
+                                                    "x-features": [
+                                                      "sweepGeometry.v1"
                                                     ]
                                                   }
                                                 ],
@@ -15964,6 +16916,37 @@
                       ],
                       "additionalProperties": false
                     },
+                    "path": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number",
+                            "minimum": -0.5,
+                            "maximum": 0.5
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": -0.5,
+                            "maximum": 0.5
+                          },
+                          "z": {
+                            "type": "number",
+                            "minimum": -0.5,
+                            "maximum": 0.5
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y",
+                          "z"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "minItems": 0,
+                      "maxItems": 0
+                    },
                     "profile": {
                       "type": "array",
                       "items": {
@@ -16142,6 +17125,37 @@
                         "a"
                       ],
                       "additionalProperties": false
+                    },
+                    "path": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number",
+                            "minimum": -0.5,
+                            "maximum": 0.5
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": -0.5,
+                            "maximum": 0.5
+                          },
+                          "z": {
+                            "type": "number",
+                            "minimum": -0.5,
+                            "maximum": 0.5
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y",
+                          "z"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "minItems": 0,
+                      "maxItems": 0
                     },
                     "profile": {
                       "type": "array",
@@ -16330,6 +17344,37 @@
                       ],
                       "additionalProperties": false
                     },
+                    "path": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number",
+                            "minimum": -0.5,
+                            "maximum": 0.5
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": -0.5,
+                            "maximum": 0.5
+                          },
+                          "z": {
+                            "type": "number",
+                            "minimum": -0.5,
+                            "maximum": 0.5
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y",
+                          "z"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "minItems": 0,
+                      "maxItems": 0
+                    },
                     "profile": {
                       "type": "array",
                       "items": {
@@ -16377,6 +17422,224 @@
                   "description": "Extrude a simple counter-clockwise XY outline along Z. 3–32 points in -0.5–0.5, scaled by part.size; size.z is thickness. Close implicitly, without repeated endpoint, holes, touching or crossing edges. Concave outlines and collinear edge points are supported. segments is omitted or zero. Collision remains an independent explicit proxy.",
                   "x-features": [
                     "extrusionGeometry.v1"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9_]{1,32}$",
+                      "maxLength": 32
+                    },
+                    "parent": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9_]{0,32}$",
+                      "maxLength": 32,
+                      "nullable": true
+                    },
+                    "shape": {
+                      "type": "string",
+                      "enum": [
+                        "sweep"
+                      ]
+                    },
+                    "position": {
+                      "type": "object",
+                      "properties": {
+                        "x": {
+                          "type": "number",
+                          "minimum": -2.0,
+                          "maximum": 2.0
+                        },
+                        "y": {
+                          "type": "number",
+                          "minimum": -2.0,
+                          "maximum": 2.0
+                        },
+                        "z": {
+                          "type": "number",
+                          "minimum": -2.0,
+                          "maximum": 2.0
+                        }
+                      },
+                      "required": [
+                        "x",
+                        "y",
+                        "z"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "size": {
+                      "type": "object",
+                      "properties": {
+                        "x": {
+                          "type": "number",
+                          "minimum": 0.005,
+                          "maximum": 2.0
+                        },
+                        "y": {
+                          "type": "number",
+                          "minimum": 0.005,
+                          "maximum": 2.0
+                        },
+                        "z": {
+                          "type": "number",
+                          "minimum": 0.005,
+                          "maximum": 2.0
+                        }
+                      },
+                      "required": [
+                        "x",
+                        "y",
+                        "z"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "rotation": {
+                      "type": "object",
+                      "properties": {
+                        "x": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "y": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "z": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "w": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        }
+                      },
+                      "required": [
+                        "x",
+                        "y",
+                        "z",
+                        "w"
+                      ],
+                      "additionalProperties": false,
+                      "format": "unitQuaternion"
+                    },
+                    "color": {
+                      "type": "object",
+                      "properties": {
+                        "r": {
+                          "type": "number",
+                          "minimum": 0.0,
+                          "maximum": 1.0
+                        },
+                        "g": {
+                          "type": "number",
+                          "minimum": 0.0,
+                          "maximum": 1.0
+                        },
+                        "b": {
+                          "type": "number",
+                          "minimum": 0.0,
+                          "maximum": 1.0
+                        },
+                        "a": {
+                          "type": "number",
+                          "minimum": 1.0,
+                          "maximum": 1.0
+                        }
+                      },
+                      "required": [
+                        "r",
+                        "g",
+                        "b",
+                        "a"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "path": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number",
+                            "minimum": -0.5,
+                            "maximum": 0.5
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": -0.5,
+                            "maximum": 0.5
+                          },
+                          "z": {
+                            "type": "number",
+                            "minimum": -0.5,
+                            "maximum": 0.5
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y",
+                          "z"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "minItems": 2,
+                      "maxItems": 16
+                    },
+                    "profile": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number",
+                            "minimum": -0.5,
+                            "maximum": 0.5
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": -0.5,
+                            "maximum": 0.5
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "minItems": 3,
+                      "maxItems": 32
+                    },
+                    "segments": {
+                      "type": "integer",
+                      "minimum": 0.0,
+                      "maximum": 0.0
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "parent",
+                    "shape",
+                    "position",
+                    "size",
+                    "rotation",
+                    "color",
+                    "profile",
+                    "path"
+                  ],
+                  "additionalProperties": false,
+                  "format": "sweepPart",
+                  "title": "Swept profile",
+                  "description": "Carry a simple counter-clockwise profile (3–32 XY points) along an open 2–16 point XYZ polyline. Coordinates and generated geometry must fit -0.5–0.5 before part.size scaling. Segments are omitted or zero. Frames start with Y as up (Z near a vertical start) and parallel transport; path endpoints are capped. Avoid reversals and thickness that folds sides at a tight bend. This is visual geometry, without automatic Boolean self-overlap removal or matching collision shapes.",
+                  "x-features": [
+                    "sweepGeometry.v1"
                   ]
                 }
               ],
@@ -21733,7 +22996,7 @@
         }
       },
       "label": "Starter object template",
-      "description": "One bundled editable template, by zero-based index. Read 0 then advance until total; later indexes are unavailable. Use the exact hash with object.create kind template. generatedVertices counts custom lathe/extrusion vertices, not built-in primitive meshes; parts and collisionPieces are separate costs, not a Quest performance guarantee. Reading neither creates an object nor starts physics. Definitions are bundled offline; created objects expose their full editable source through the object recipe/collision/settings facts.",
+      "description": "One bundled editable template, by zero-based index. Read 0 then advance until total; later indexes are unavailable. Use the exact hash with object.create kind template. generatedVertices counts custom lathe/extrusion/sweep vertices, not built-in primitive meshes; parts and collisionPieces are separate costs, not a Quest performance guarantee. Reading neither creates an object nor starts physics. Definitions are bundled offline; created objects expose their full editable source through the object recipe/collision/settings facts.",
       "input": {
         "type": "object",
         "properties": {
@@ -23072,7 +24335,7 @@
         }
       },
       "label": "Recipe part",
-      "description": "Read one exact saved part by index and revision. Root parent is empty text. Coordinates/dimensions are local metres; rotation is a unit quaternion. All 32 base part records remain readable without simplification. For lathe or extruded geometry also read object.recipe.profile at the same revision; this base record omits profile and segments. Missing targets, stale revisions and later indexes are unavailable.",
+      "description": "Read one exact saved part by index and revision. Root parent is empty text. Coordinates/dimensions are local metres; rotation is a unit quaternion. All 32 base part records remain readable without simplification. For lathe, extrusion or sweep geometry also read object.recipe.profile; sweeps additionally use object.recipe.path, all at the same revision. This base record omits profile, segments and path. Missing targets, stale revisions and later indexes are unavailable.",
       "input": {
         "type": "object",
         "properties": {
@@ -23202,7 +24465,7 @@
         }
       },
       "label": "Recipe profile points",
-      "description": "Read up to four exact profile points for an existing lathe or extrude part at a fixed object revision. For lathe, x is radius, y is height and segments is the angular subdivision count. For extrude, x/y are the normalized XY outline and segments is zero; thickness is part.size.z. vertices is a conservative generated vertex cost for the whole recipe; the room limit is 262144. Offset equal to count returns an empty page. Missing/non-profile parts, stale revisions and later offsets are unavailable. The profile is geometry, not a fluid container or a hollow collider.",
+      "description": "Read up to four exact profile points for an existing lathe, extrude or sweep part at a fixed object revision. For lathe, x is radius, y is height and segments is the angular subdivision count. For extrude, x/y are the normalized XY outline and segments is zero; thickness is part.size.z. For sweep, the XY section follows object.recipe.path and segments is zero. vertices is a conservative generated vertex cost for the whole recipe; the room limit is 262144. Offset equal to count returns an empty page. Missing/non-profile parts, stale revisions and later offsets are unavailable. The profile is geometry, not a fluid container or a hollow collider.",
       "input": {
         "type": "object",
         "properties": {
@@ -23245,6 +24508,72 @@
       "features": [
         "factQueries.v1",
         "latheGeometry.v1"
+      ]
+    },
+    {
+      "id": "object.recipe.path",
+      "version": 1,
+      "type": {
+        "record": {
+          "revision": "number",
+          "part": "text",
+          "offset": "number",
+          "count": "number",
+          "points": {
+            "list": {
+              "record": {
+                "x": "number",
+                "y": "number",
+                "z": "number"
+              }
+            }
+          }
+        }
+      },
+      "label": "Recipe sweep path",
+      "description": "Read up to four exact normalized XYZ path points at a fixed object revision. Read object.recipe.profile for the closed cross-section. Dimensions and placement come from object.recipe.part. Offset equal to count returns an empty page; stale, missing, non-sweep and later offsets are unavailable. This reads saved geometry and does not move an object.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "part": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_]{1,32}$",
+            "maxLength": 32
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 16.0
+          }
+        },
+        "required": [
+          "target",
+          "revision",
+          "part",
+          "offset"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000",
+        "revision": 1,
+        "part": "Body",
+        "offset": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "sweepGeometry.v1"
       ]
     },
     {
@@ -25328,7 +26657,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "e55cdb6f811c6bdf4d43ba53455088c77ec1e3d86838987e61c221a4a7c270e8"
+      "sha256": "22d592f8c1e69f893a82302bbd93b891208460a9224fbc57ce39e75d996e515c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -25348,7 +26677,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "0ea158b34b4496539888e3eeeed4f3b9be48c81675048f6b12391b082f691340"
+      "sha256": "6bde0198a0e0feb77cd5275b97ad95e2df257eae1ba3efaeb3b145adf275767b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -25380,7 +26709,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "93a66f7dfb3360c96889df7944f9535e8464b2c0693439f334ae33886da4e9fe"
+      "sha256": "112b5c135f4e6c5c3251915c75a345871e4f22665baca1285c39e41eb8147f1c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -25404,11 +26733,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "8d7371779f38ff184e616af1bbe090a94d0dc0a43ff5299ccb88d74e8179b8dd"
+      "sha256": "ffcf511ff918d04cef560e27f583565f975bfd6005c64b2284a6528bf074c9da"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
-      "sha256": "b093bbd427aede16dffea24889fcb7324f2c674ac3d23352ac9572d605ea1402"
+      "sha256": "648f1f1955f6bc6f331930c0ca57532161d8c2add65cefd0a9621a8ac987e4f1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleMemory.cs",
@@ -25424,11 +26753,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveCapture.cs",
-      "sha256": "6b779695f47d692ff99cd1ac68b766eea27ac1763c44b11a97195d5ec2188f75"
+      "sha256": "2e2defba8f0094fa3e744f46fab2d7d83d721ca7023a61e89e95aad32fdebe0b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveSnapshot.cs",
-      "sha256": "3b00b45b2e4dfe59a6c9cef411dc6df2c2e03d538d8e994b4a9fc9aebf09b503"
+      "sha256": "733869bc8116238f4db10e6a38be31d865e7018c3a90d5b2f9508129c1212e96"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.Retention.cs",
@@ -25536,7 +26865,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRecipe.cs",
-      "sha256": "9c77a73e4965d85798119d4c4e4fbbcc0f153eae6276ca10a4efafce7e09981b"
+      "sha256": "d8ef912ce38d5ee8688a858f7a33c32e0c8a2e27cd155e2164d9f6465d7f60b2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeLathe.cs",
@@ -25544,7 +26873,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeGeometry.cs",
-      "sha256": "637fad53f533a9e6c2e7563b8ec4672f630671969e7a86cfca10d0777565c4ca"
+      "sha256": "ca2f25f1fb0551feb3472979063a7f4957f25a077acb72e695a43c961d457a0f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeOutline.cs",
@@ -25552,7 +26881,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeExtrusion.cs",
-      "sha256": "391ecac058624b088ac59110a458998778b97734b1d98460aaa8bc7c35e73ddb"
+      "sha256": "932b4baff59844723e769d28a856eb1bbac62a6259a91ac6339c5a6a6158a6f2"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeSweep.cs",
+      "sha256": "57992b0fb6f119c3b8fdcda99d34b484356c3d2982070326c0fee9c4a5c24403"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CollisionRecipe.cs",
@@ -25732,7 +27065,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "f81f9672059763e882715ac4b44b7b2636fd5a8c09de4764e86f37a7d0bb544a"
+      "sha256": "7fa04953f4d75a527a5bd22f79573ea61f88f0baebf6098dec4818c6bee82853"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedDrawing.cs",
@@ -25936,7 +27269,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
-      "sha256": "536a59a4da1e0350db77581ceac7f68d77cc741d3e8541165ef2390f4b0c7299"
+      "sha256": "2801ab2417cf4dd926577030c41af75b3dbd0ceae0055e87082b773f72fb2637"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityStepAdapter.cs",
@@ -25992,7 +27325,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreateTemplateCapability.cs",
-      "sha256": "05a56481b94c7efd3692c733d05705faaa8e12b2ecc7569bb5b98dfb8b553a25"
+      "sha256": "ce50c60f294216ca6155527252eca7599e1210ddca51a43110355c2b5a498b12"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreationPrototypeSchema.cs",
@@ -26044,7 +27377,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/LatheProfileFact.cs",
-      "sha256": "f6f8ae6198a20585db232d3d662e23c62e88c7584cd3c62f39d368dfb8afc423"
+      "sha256": "398a7bb55685ba28fe568132c1152803911afa835a3a2554481183f2c6653162"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/LaunchObjectCapability.cs",
@@ -26096,7 +27429,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RecipeEditFacts.cs",
-      "sha256": "ac402ab3fa52bc49d84b780c2c0e9229fbf0f495a2d5bc72f8b50669a66882ba"
+      "sha256": "725d667330467915766be7a366c5cfaee754a5db1e0e780fb8dc7f21a32c716c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RecipePartAnimationCapability.cs",
@@ -26153,6 +27486,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SurfacePlacementCapability.cs",
       "sha256": "74617d67aa6dbe9a95fb4b49b68220a92f0910b12bf0a2920066c57bbefbd0d8"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SweepPathFact.cs",
+      "sha256": "2273d55676c79b88c916496fd18cc082456c8177a11d71b1096974d2883df829"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceActivationCapabilities.cs",
