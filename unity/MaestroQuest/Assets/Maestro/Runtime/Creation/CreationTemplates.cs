@@ -29,6 +29,7 @@ namespace Maestro.Quest.Creation
                 foreach(var surface in result)surface.strokes=Array.Empty<SurfaceStroke>();
                 return result;
             }}
+            public DrawingTip[] DrawingTips=>source["definition"]["drawingTips"] is JArray tips?JsonUtility.FromJson<RoomObjectData>(new JObject {["drawingTips"]=tips.DeepClone()}.ToString()).drawingTips:Array.Empty<DrawingTip>();
             public CollisionRecipe Collision=>JsonUtility.FromJson<CollisionRecipe>(source["definition"]["collision"].ToString());
             public ObjectPhysicsSettings Physics=>JsonUtility.FromJson<ObjectPhysicsSettings>(source["definition"]["physics"].ToString());
             internal Entry(byte[] bytes) {
@@ -55,10 +56,11 @@ namespace Maestro.Quest.Creation
         public static Entry Find(string hash)=>All.FirstOrDefault(entry=>entry.Hash==hash);
         // Explicit complete schemas prevent JsonUtility from silently discarding mistyped fields.
         static JObject SurfaceSchema(){var s=DrawingSurfaceCapability.DefinitionSchema();((JObject)s["properties"])["id"]=Text("^[a-zA-Z][a-zA-Z0-9_]{0,31}$",32);((JObject)s["properties"])["version"]=Number(1,1,true);((JArray)s["required"]).Add("id");((JArray)s["required"]).Add("version");return s;}
+        static JObject TipSchema(){var s=DrawingTipCapability.DefinitionSchema();((JObject)s["properties"])["version"]=Number(1,1,true);((JArray)s["required"]).Add("version");return s;}
         internal static JObject Schema()=>Object(new JObject {
             ["format"]=Choice("maestro-creation-template"),["version"]=Number(1,1,true),["id"]=Text("^[a-z][a-z0-9-]{0,31}$",32),["name"]=Text("^.{1,80}$",80),
             ["description"]=Text("^.{1,128}$",128),["tags"]=List(Text("^[a-z][a-z0-9-]{0,23}$",24),1,8),["author"]=Text("^.{1,80}$",80),["license"]=Text("^.{1,64}$",64),
-            ["definition"]=Object(new JObject {["version"]=Number(1,1,true),["recipe"]=RecipeSchema(),["collision"]=CollisionCapability.RecipeSchema(),["physics"]=PhysicsSettingsCapability.SettingsSchema(),["surfaces"]=List(SurfaceSchema(),0,4)},"surfaces")
+            ["definition"]=Object(new JObject {["version"]=Number(1,1,true),["recipe"]=RecipeSchema(),["collision"]=CollisionCapability.RecipeSchema(),["physics"]=PhysicsSettingsCapability.SettingsSchema(),["surfaces"]=List(SurfaceSchema(),0,4),["drawingTips"]=List(TipSchema(),0,1)},"surfaces","drawingTips")
         });
     }
 }

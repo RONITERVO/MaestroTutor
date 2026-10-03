@@ -1626,3 +1626,14 @@ on hold; these checks are not reported as completed:
   default avatar and its animations active. Admission limits alone are not a
   performance pass. Check ray behaviour around foreground/occluding objects;
   this increment uses explicit patch intersections, not full mesh projection.
+
+### Held drawing tips — pending Quest acceptance
+
+Create Chalk and Chalkboard from the shared catalog. Grip chalk with a controller,
+then with hand tracking; draw a line, lift, release, Undo and Redo. Move the board:
+ink must follow it. Change the tip colour/width in the book and verify the tray's
+pencil preferences stay unchanged. Test imported-root/recipe-part tips, different
+scales, simultaneous tools, interrupted tracking, room pause and failed-save
+retry/discard. A loose/resting chalk must not draw. Maestro-held chalk must respect
+human surface ownership. Measure frame time with active tools and full ink budgets.
+Desktop tests and browser replay do not close this device gate.

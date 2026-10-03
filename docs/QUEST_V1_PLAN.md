@@ -2677,3 +2677,15 @@ archives carry the same data. See [surface drawing](QUEST_SURFACE_DRAWING.md) fo
 bounds and persistence versions. This does not complete arbitrary mesh painting,
 user-configured drawing-tip objects, scanned-wall overlays, fidgets or liquids.
 Quest acceptance is pending; no device changes are part of desktop verification.
+
+### Configurable drawing-tip increment (2026-10-03)
+
+`drawingTips.v1` adds a saved tip to any created/imported object root or stable
+recipe part. The eleventh starter, Chalk, is ordinary editable component data.
+Held tips use the shared surface capture and ownership path; ink settings remain
+independent of tray preferences. One capture per room, separation after blocking,
+explicit failed-save retry, Undo and temporary-room behavior are covered by native
+tests. The shared catalog provides revision-bound editing and exact readback.
+See [surface drawing](QUEST_SURFACE_DRAWING.md) for limits and current save formats.
+Physical contact comfort, tracking loss and maximum-load Quest performance remain
+unverified; no headset installation is part of this desktop checkpoint.

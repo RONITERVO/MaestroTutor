@@ -89,3 +89,9 @@ build.
 The chalkboard expands optional drawing-surface configuration alongside geometry,
 collision and physics. Its blank patch is detached editable data; shared
 [surface actions](QUEST_SURFACE_DRAWING.md) edit it and inspect saved ink.
+
+The **Chalk** starter adds a single editable drawing tip to an ordinary cylinder
+recipe. Hold its forward end against an enabled drawing patch, then lift to finish
+a stroke. The ink settings can be changed through `object.drawingTip.edit`; the
+same component works on other created/imported roots and named recipe parts.
+See [drawing tools](QUEST_SURFACE_DRAWING.md#configurable-held-drawing-objects-2026-10-03).

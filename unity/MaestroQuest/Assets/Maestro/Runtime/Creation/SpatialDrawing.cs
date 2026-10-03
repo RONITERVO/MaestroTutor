@@ -19,7 +19,9 @@ namespace Maestro.Quest.Creation
         IDisposable write;
         PencilMarks preview;
         Color color;
-        float nextPreview,radius;
+        float nextPreview,radius,contactDistance;
+        string toolTarget;
+        RoomActorRole captureRole=RoomActorRole.Control;
         RoomObjectData retained;
         string roomSession,errorText="",surfaceTarget,surfaceId,surfaceBefore;
         RoomOwnership.Lease surfaceOwner;
@@ -31,16 +33,30 @@ namespace Maestro.Quest.Creation
         public void Begin(int id,Ray ray)
         {
             if(!Editor||!Editor.DrawingMode||IsDrawing)return;
+            BeginCapture(id,ray,Editor.Paint,Editor.DrawingRadius,Editor.DrawingOnSurfaces,Editor.SurfaceErasing,.25f,null,RoomActorRole.Control);
+        }
+        internal bool IsToolDrawing(string target)=>IsDrawing&&toolTarget==target;
+        internal void BeginTool(string target,Ray ray,Color ink,float size,RoomActorRole role)
+        {
+            if(!Editor||IsDrawing)return;
+            BeginCapture(-2,ray,ink,size,true,false,.02f,target,role);
+        }
+        internal void MoveTool(string target,Ray ray){if(IsToolDrawing(target))Move(-2,ray);}
+        internal void InterruptTool(string target){if(IsToolDrawing(target))End(-2,false);}
+        internal void EndTool(string target){if(IsToolDrawing(target))End(-2);}
+        void BeginCapture(int id,Ray ray,Color ink,float size,bool surfaceMode,bool erase,float maximum,string tool,RoomActorRole role)
+        {
+            if(Editor.Ownership.Suspended||Editor.WriteGate.Frozen)return;
             if(HasUnsavedStroke){Editor.ReportStatus("Save or discard the retained stroke first");return;}
             write=Editor.WriteGate.TryWrite(out var blocked);if(write==null){Editor.ReportStatus(blocked);return;}
-            SessionId=Guid.NewGuid().ToString("N");roomSession=Editor.TemporarySessionId;owner=id;color=Editor.Paint;radius=Editor.DrawingRadius;points.Clear();nextPreview=0;errorText="";
-            Vector3 initialPoint=default;attached=Editor.DrawingOnSurfaces&&Editor.FindDrawingSurface(ray,.25f,out surfaceTarget,out surfaceId,out initialPoint,out _);
-            if(Editor.DrawingOnSurfaces&&!attached){Editor.ReportStatus("Point at an enabled drawing patch within 25 cm");Clear();return;}
+            SessionId=Guid.NewGuid().ToString("N");roomSession=Editor.TemporarySessionId;owner=id;color=ink;radius=size;contactDistance=maximum;toolTarget=tool;captureRole=role;points.Clear();nextPreview=0;errorText="";
+            Vector3 initialPoint=default;attached=surfaceMode&&Editor.FindDrawingSurface(ray,maximum,out surfaceTarget,out surfaceId,out initialPoint,out _,radius,toolTarget);
+            if(surfaceMode&&!attached){Editor.ReportStatus("Point at an enabled drawing patch within 25 cm");Clear();return;}
             if(attached) {
                 if(!Editor.CanEditObject(surfaceTarget,true,out var error)){Editor.ReportStatus(error);Clear();return;}
-                if(Editor.SurfaceErasing){Editor.EraseSurfaceAt(surfaceTarget,surfaceId,initialPoint);Clear();return;}
+                if(erase){Editor.EraseSurfaceAt(surfaceTarget,surfaceId,initialPoint);Clear();return;}
                 surfaceBefore=JsonUtility.ToJson(Editor.Read(surfaceTarget).surfaces.First(s=>s.id==surfaceId));
-                if(!Editor.Ownership.TryAcquire("surface-pencil:"+SessionId,"Your surface pencil",RoomActorRole.Control,new[]{new BehaviourCatalog.Claim(surfaceTarget,"wholeTarget")},_=>End(id,false),out surfaceOwner,out error,preservePlacement:true)){Editor.ReportStatus(error);Clear();return;}
+                if(!Editor.Ownership.TryAcquire("surface-pencil:"+SessionId,toolTarget==null?"Your surface pencil":"Held drawing tool",captureRole,new[]{new BehaviourCatalog.Claim(surfaceTarget,"wholeTarget")},_=>End(id,false),out surfaceOwner,out error,preservePlacement:true)){Editor.ReportStatus(error);Clear();return;}
             }
             var go=new GameObject("Pencil stroke in progress");go.transform.SetParent(transform,false);preview=go.AddComponent<PencilMarks>();if(attached)go.transform.SetParent(Editor.Find(surfaceTarget).GetComponent<DrawingSurfaceView>().Surface(surfaceId),false);Move(id,ray);
         }
@@ -48,7 +64,7 @@ namespace Maestro.Quest.Creation
         {
             if(owner!=id)return;var point=ray.GetPoint(.12f);
             if(attached) {
-                if(!Editor.FindDrawingSurface(ray,.25f,out var target,out var surface,out point,out _)||target!=surfaceTarget||surface!=surfaceId){End(id);return;}
+                if(!Editor.FindDrawingSurface(ray,contactDistance,out var target,out var surface,out point,out _,radius,toolTarget)||target!=surfaceTarget||surface!=surfaceId){End(id);return;}
             }
             if(!float.IsFinite(point.x)||!float.IsFinite(point.y)||!float.IsFinite(point.z)){End(id);return;}
             if(points.Count>0&&Vector3.Distance(points[^1],point)<.005f)return;
@@ -77,7 +93,7 @@ namespace Maestro.Quest.Creation
             if(attached) {
                 var now=Editor.Read(surfaceTarget)?.surfaces?.FirstOrDefault(s=>s.id==surfaceId);
                 if(now==null||JsonUtility.ToJson(now)!=surfaceBefore){error="The surface changed; discard this retained stroke instead of applying it to a different patch";return false;}
-                if(!Editor.Ownership.CanAcquire("surface-pencil:"+SessionId,RoomActorRole.Control,new[]{new BehaviourCatalog.Claim(surfaceTarget,"wholeTarget")},out error))return false;
+                if(!Editor.Ownership.CanAcquire("surface-pencil:"+SessionId,captureRole,new[]{new BehaviourCatalog.Claim(surfaceTarget,"wholeTarget")},out error))return false;
                 return Editor.PrepareSurfaceEdit(surfaceTarget,Editor.ObjectRevision(surfaceTarget),SurfaceArguments(),out _,out _,out error);
             }
             return Editor.CanCreateDrawing(retained.points,retained.radius,out error);
@@ -98,14 +114,14 @@ namespace Maestro.Quest.Creation
             if(attached) {
                 // Retrying after a grab/pause must reclaim ownership, not merely check
                 // that a takeover would be allowed while another program keeps running.
-                if(surfaceOwner?.Held!=true&&!Editor.Ownership.TryAcquire("surface-pencil:"+SessionId,"Your surface pencil",RoomActorRole.Control,new[]{new BehaviourCatalog.Claim(surfaceTarget,"wholeTarget")},_=>{},out surfaceOwner,out error,preservePlacement:true))return false;
+                if(surfaceOwner?.Held!=true&&!Editor.Ownership.TryAcquire("surface-pencil:"+SessionId,toolTarget==null?"Your surface pencil":"Held drawing tool",captureRole,new[]{new BehaviourCatalog.Claim(surfaceTarget,"wholeTarget")},_=>{},out surfaceOwner,out error,preservePlacement:true))return false;
                 // A displaced owner's cleanup may change the patch. Recheck afterward.
                 if(!CanResolve(SessionId,false,out error))return false;
                 return Editor.EditSurface(surfaceTarget,Editor.ObjectRevision(surfaceTarget),SurfaceArguments(),out _,out error);
             }
             return Editor.CreateDrawing("",retained.position,1,retained.color,retained.radius,retained.points,out id,out error);
         }
-        void Clear(){surfaceOwner?.Dispose();surfaceOwner=null;attached=false;surfaceTarget=surfaceId=surfaceBefore=null;retained=null;points.Clear();owner=-1;errorText="";SessionId=Guid.NewGuid().ToString("N");if(preview)Destroy(preview.gameObject);preview=null;write?.Dispose();write=null;}
+        void Clear(){surfaceOwner?.Dispose();surfaceOwner=null;attached=false;surfaceTarget=surfaceId=surfaceBefore=toolTarget=null;retained=null;points.Clear();owner=-1;errorText="";SessionId=Guid.NewGuid().ToString("N");if(preview)Destroy(preview.gameObject);preview=null;write?.Dispose();write=null;}
         public void Cancel(int id)=>End(id);
         void OnApplicationPause(bool paused){if(paused&&IsDrawing)End(owner);}
         void OnApplicationFocus(bool focused){if(!focused&&IsDrawing)End(owner);}

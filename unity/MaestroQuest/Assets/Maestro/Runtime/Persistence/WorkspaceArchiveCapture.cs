@@ -75,7 +75,7 @@ namespace Maestro.Quest.Persistence
                         cancellation.ThrowIfCancellationRequested();var documents=new Dictionary<string,byte[]>(StringComparer.Ordinal);var assets=new Dictionary<string,Func<Stream>>(StringComparer.Ordinal);
                         var utf8=new UTF8Encoding(false,true);byte[] Json(object value)=>utf8.GetBytes(JsonUtility.ToJson(value));
                         documents.Add(ProgramMemoryStore.FileName,memory.Encode());
-                        documents.Add("room.v4.json",Json(room));documents.Add("behaviours.v2.json",Json(behaviours));documents.Add("controls.v2.json",Json(preferences));documents.Add("avatar-activities.v2.json",Json(activities));
+                        documents.Add("room.v5.json",Json(room));documents.Add("behaviours.v2.json",Json(behaviours));documents.Add("controls.v2.json",Json(preferences));documents.Add("avatar-activities.v2.json",Json(activities));
                         foreach(var pair in definitions)documents.Add(pair.Key,utf8.GetBytes(pair.Value.ToString(Formatting.None)));
                         models.Collect(documents,assets);heldMotions.Collect(documents,assets);return process(new WorkspaceArchiveSnapshot(documents,assets),cancellation);
                     }finally{heldMotions.Dispose();models.Dispose();}

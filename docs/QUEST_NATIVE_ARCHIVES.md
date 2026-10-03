@@ -70,7 +70,7 @@ of a completed export; crash cleanup and power-loss acceptance remain work.
 ## Version 3 format
 
 The ZIP includes `manifest.json` with exactly `format`, `version` and `entries`.
-The format is `maestro-native-workspace`, version is `3`, and every entry has exact
+The format is `maestro-native-workspace`, version is `4`, and every entry has exact
 `path`, `bytes` and lowercase SHA-256. Hashes detect mismatched content; they do not
 authenticate the author. The manifest hash identifies the inspected inventory.
 
@@ -80,7 +80,7 @@ v3; see [surface persistence](QUEST_SURFACE_DRAWING.md#persistence-and-boundarie
 
 Required documents:
 
-- `room.v4.json`
+- `room.v5.json`
 - `behaviours.v2.json`
 - `controls.v2.json`
 - `avatar-activities.v2.json`

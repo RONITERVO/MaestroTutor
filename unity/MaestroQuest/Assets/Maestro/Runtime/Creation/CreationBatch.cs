@@ -70,7 +70,7 @@ namespace Maestro.Quest.Creation
                 var p=position+rotation.normalized*(piece.position*scale);float size=scale*piece.scale;
                 if(!float.IsFinite(p.sqrMagnitude)||p.sqrMagnitude>625||size<.1f||size>4){error="Every transformed piece must stay within room placement and scale limits";return false;}
                 if(!RoomEditor.PrepareRecipeObject(string.IsNullOrEmpty(piece.name)?defaultName:piece.name,p,size,recipe,collision,physics,out var data,out error))return false;
-                if(piece.source.kind=="template")data.surfaces=CreationTemplates.Find(piece.source.templateHash).Surfaces;
+                if(piece.source.kind=="template"){var template=CreationTemplates.Find(piece.source.templateHash);data.surfaces=template.Surfaces;data.drawingTips=template.DrawingTips;}
                 data.rotation=(rotation.normalized*piece.rotation.normalized).normalized;values.Add(data);
             }
             objects=values.ToArray();error=null;return true;
@@ -79,12 +79,12 @@ namespace Maestro.Quest.Creation
     public sealed partial class RoomEditor
     {
         // Both single-object and multi-object creation expand into the same components.
-        internal static bool PrepareRecipeObject(string name,Vector3 position,float scale,RoomRecipe recipe,CollisionRecipe collision,ObjectPhysicsSettings physics,out RoomObjectData item,out string error,DrawingSurface[] surfaces=null) {
+        internal static bool PrepareRecipeObject(string name,Vector3 position,float scale,RoomRecipe recipe,CollisionRecipe collision,ObjectPhysicsSettings physics,out RoomObjectData item,out string error,DrawingSurface[] surfaces=null,DrawingTip[] drawingTips=null) {
             item=null;error="Provide a valid construction recipe";if(recipe==null||!recipe.Validate(out error))return false;
             if(collision!=null&&!collision.Validate(out error))return false;
-            var data=new RoomObjectData {id=Guid.NewGuid().ToString("N"),name=name,kind=RoomObjectKind.Assembly,position=position,scale=scale,color=Color.white,physics=ItemPhysics.Fixed,recipe=recipe.Copy(),surfaces=surfaces?.Select(s=>s.Copy()).ToArray()??Array.Empty<DrawingSurface>(),collision=collision?.shapes.Length>0?collision.Copy():null};
+            var data=new RoomObjectData {id=Guid.NewGuid().ToString("N"),name=name,kind=RoomObjectKind.Assembly,position=position,scale=scale,color=Color.white,physics=ItemPhysics.Fixed,recipe=recipe.Copy(),drawingTips=drawingTips?.Select(t=>t.Copy()).ToArray()??Array.Empty<DrawingTip>(),surfaces=surfaces?.Select(s=>s.Copy()).ToArray()??Array.Empty<DrawingSurface>(),collision=collision?.shapes.Length>0?collision.Copy():null};
             if(physics!=null&&!RoomControls.SetPhysics(data,physics,out error))return false;
-            if(!DrawingSurface.ValidateCollection(data,out error))return false;item=data;error=null;return true;
+            if(!DrawingSurface.ValidateCollection(data,out error)||!DrawingTip.ValidateCollection(data,out error))return false;item=data;error=null;return true;
         }
         bool PrepareCreationBatch(CreationBatch batch,out RoomObjectData[] objects,out string error) {
             objects=null;error="Provide a creation batch";if(batch==null||!CanCreatePrimitive(out error)||!batch.Prepare(out objects,out error))return false;

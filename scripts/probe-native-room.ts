@@ -118,6 +118,23 @@ try{
   await execute([{action:'undo'}]);await execute([{action:'undo'}]);
   await execute([{action:'execution',execution:{operation:'start',call:{id:'drawing.tool.set',version:1,arguments:{mode:'off',red:1,green:1,blue:1,radius:.003}}}}]);
   await writeFile(join(directory,'surface-authoring.json'),JSON.stringify({boundary:'Real Unity native states and shared transport; browser acknowledgements replayed separately. No headset or provider proof.',before:chalkCreated,tool:chalkTool,toolRead:chalkToolRead,search:surfaceSearch,definition:surfaceDefinition,current:surfaceCurrent,after:surfaceAfter,read:inkRead,erased,erasedRead,undo:surfaceUndo},null,2));
+  const tipHash=createHash('sha256').update(await readFile('unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/chalk.json')).digest('hex');
+  const tipCreated=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'template',templateHash:tipHash,name:'',x:.4,y:1,z:.6,scale:1}}}}]);
+  const tipId=tipCreated.execution?.selected?.output?.objectId;if(typeof tipId!=='string')throw new Error('Chalk template did not create a tool');
+  const tipSearch=await execute([{action:'catalog',catalog:{operation:'search',query:"Configure an object's drawing tip",offset:0}}]);
+  const tipDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.drawingTip.edit',version:1}}]);
+  const tipCurrent=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.drawingTip',version:1,arguments:{target:tipId}}}]);
+  const tipValue=tipCurrent.catalog?.value as {configured:boolean;revision:number;definition:{part:string;enabled:boolean;color:{r:number;g:number;b:number;a:number}}};
+  if(!tipValue?.configured||tipValue.definition.part!=='Chalk')throw new Error('Chalk component missing');
+  const tipArgs={operation:'configure',target:tipId,revision:tipValue.revision,definition:{...tipValue.definition,color:{r:.1,g:.5,b:.9,a:1}}};
+  const tipEdited=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.drawingTip.edit',version:1,arguments:tipArgs}}}]);
+  const tipRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.drawingTip',version:1,arguments:{target:tipId}}}]);
+  const tipAfter=tipRead.catalog?.value as typeof tipValue;if(Math.abs(tipAfter?.definition.color.b-.9)>.00001)throw new Error('Shared drawing-tip ink edit failed');
+  await execute([{action:'undo'}]);
+  const tipUndo=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.drawingTip',version:1,arguments:{target:tipId}}}]);
+  if((tipUndo.catalog?.value as typeof tipValue)?.definition.color.b!==1)throw new Error('Drawing-tip Undo failed');
+  await execute([{action:'undo'}]);
+  await writeFile(join(directory,'drawing-tip-authoring.json'),JSON.stringify({boundary:'Real Unity native configuration/readback/Undo; physical grip tested separately. No headset or provider proof.',before:tipCreated,search:tipSearch,definition:tipDefinition,current:tipCurrent,after:tipEdited,read:tipRead,undo:tipUndo},null,2));
   const layoutIds:string[]=[];let layoutBefore=templateUndo;
   for(let i=0;i<2;i++){
    layoutBefore=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'template',templateHash:brickHash,name:brickSource.name+' '+(i+1),x:.4+i*.25,y:1.2,z:.7,scale:1}}}}]);
@@ -221,7 +238,7 @@ try{
   await execute([{action:'undo'}]);await execute([{action:'undo'}]);await execute([{action:'undo'}]);
   await execute([{action:'rules',rule:{action:'edit',revision:lease.state().rules!.revision,edits:[{kind:'delete',target:compositionId}]}}]);
   await writeFile(join(directory,'program-composition.json'),JSON.stringify({boundary:'Real Unity runtime and shared transport; no headset or provider proof.',source:JSON.parse(compositionSource),saved:compositionSaved,after:compositionAfter,group:compositionGroup,state:compositionState,undo:compositionUndo,outcome:compositionOutcome},null,2));
-  outcome={surface:{chalkHash,stroke,toolAndInkReadEraseUndoVerified:true},watch:{moduleHash,program:watcherId,includedSourceAndNativeRearmVerified:true},composition:{program:compositionId,outcome:compositionOutcome,buildCaptureMoveResetAndUndoVerified:true},structures:{captureReceipt:structureAfter.execution?.selected,liveDisplacementResetAndUndoVerified:true},batch:{createReceipt:batchAfter.execution?.selected,identitiesAndSingleUndoVerified:true},layout:{applyReceipt:layoutAfter.execution?.selected,liveReadAndSingleUndoVerified:true},template:{hash:templateArgs.templateHash,createReceipt:templateAfter.execution?.selected,componentsAndSingleUndoVerified:true},createdId:target,createReceipt:selected,paintVerified:true,undoPaintVerified:true,undoCreateVerified:true,diagnostics:diagnostic.catalog.value,lathe:{createReceipt:lathe.execution?.selected,profile:value,editAndUndoVerified:true},collision:{summary:summaryValue,editAndUndoVerified:true},latheCycles:cycle+1};
+  outcome={drawingTip:{tipHash,configurationReadbackAndUndoVerified:true},surface:{chalkHash,stroke,toolAndInkReadEraseUndoVerified:true},watch:{moduleHash,program:watcherId,includedSourceAndNativeRearmVerified:true},composition:{program:compositionId,outcome:compositionOutcome,buildCaptureMoveResetAndUndoVerified:true},structures:{captureReceipt:structureAfter.execution?.selected,liveDisplacementResetAndUndoVerified:true},batch:{createReceipt:batchAfter.execution?.selected,identitiesAndSingleUndoVerified:true},layout:{applyReceipt:layoutAfter.execution?.selected,liveReadAndSingleUndoVerified:true},template:{hash:templateArgs.templateHash,createReceipt:templateAfter.execution?.selected,componentsAndSingleUndoVerified:true},createdId:target,createReceipt:selected,paintVerified:true,undoPaintVerified:true,undoCreateVerified:true,diagnostics:diagnostic.catalog.value,lathe:{createReceipt:lathe.execution?.selected,profile:value,editAndUndoVerified:true},collision:{summary:summaryValue,editAndUndoVerified:true},latheCycles:cycle+1};
   }
  }
  await writeFile(join(directory,'journey.json'),JSON.stringify({version:1,boundary:'Real Unity Editor app and shared room protocol; no Quest input, WebView, scan or Store proof',providerUsed:!!prompt,initial,observations,outcome},null,2));

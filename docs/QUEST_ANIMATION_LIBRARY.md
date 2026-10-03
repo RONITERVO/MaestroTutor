@@ -272,7 +272,7 @@ The ID persists through undo, restart and compatible avatar replacement; an
 incompatible replacement retains the preference but uses the included gait.
 This is not calibrated foot planting, blended gait transitions or authored travel.
 
-Current room saves use `room.v4.json`, including persistent structures and attached ink. Clean v1/v2
+Current room saves use `room.v5.json`, including persistent structures and attached ink. Clean v1/v2
 rooms upgrade in memory; their original files remain unchanged. Behaviour storage
 now uses `behaviours.v2.json`; the development reset and per-program validation
 rules are documented in QUEST_EVENT_PROGRAMS.md. Current backups can recover a

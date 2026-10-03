@@ -13,10 +13,11 @@ namespace Maestro.Quest.Tests
     public sealed class CreationTemplateTests
     {
         [Test] public void EveryBundledTemplatePinsItsBytesAndExpandsToValidDetachedComponents() {
-            Assert.That(CreationTemplates.All.Count,Is.EqualTo(10));
+            Assert.That(CreationTemplates.All.Count,Is.EqualTo(11));
             foreach(var entry in CreationTemplates.All) {
                 var bytes=File.ReadAllBytes(Path.Combine(Application.dataPath,"Maestro/Resources/Creation/Templates",entry.Id+".json"));Assert.That(entry.Hash,Is.EqualTo(ModelLibrary.Hash(bytes)));
                 var recipe=entry.Recipe;Assert.That(recipe.Validate(out var error),Is.True,error);Assert.That(entry.Collision.Validate(out error),Is.True,error);Assert.That(RoomControls.ValidPhysics(entry.Physics),Is.True);Assert.That(recipe.playing,Is.False);
+                Assert.That(DrawingTip.ValidateCollection(new RoomObjectData {kind=RoomObjectKind.Assembly,recipe=entry.Recipe,drawingTips=entry.DrawingTips},out error),Is.True,error);
                 var surfaces=entry.Surfaces;Assert.That(DrawingSurface.ValidateCollection(new RoomObjectData {kind=RoomObjectKind.Assembly,recipe=entry.Recipe,surfaces=surfaces},out error),Is.True,error);
                 if(entry.Id=="chalkboard"){Assert.That(surfaces.Single().part,Is.EqualTo("Board"));surfaces[0].width=.02f;Assert.That(entry.Surfaces[0].width,Is.GreaterThan(1));}
                 recipe.parts[0].id="changed";entry.Source["name"]="changed";entry.Collision.shapes[0].id="changed";entry.Physics.mass=99;

@@ -7506,6 +7506,7 @@
                 "enum": [
                   "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496",
                   "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8",
+                  "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab",
                   "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac",
                   "8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4",
                   "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950",
@@ -7518,6 +7519,7 @@
                 "x-enum-labels": {
                   "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "Ball",
                   "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8": "Building brick",
+                  "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab": "Chalk",
                   "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "Chalkboard",
                   "8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4": "Cup",
                   "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950": "Domino",
@@ -7530,6 +7532,7 @@
                 "x-enum-images": {
                   "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "quest/templates/f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496.png",
                   "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8": "quest/templates/a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8.png",
+                  "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab": "quest/templates/4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab.png",
                   "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "quest/templates/5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac.png",
                   "8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4": "quest/templates/8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4.png",
                   "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950": "quest/templates/4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950.png",
@@ -7584,7 +7587,7 @@
             ],
             "additionalProperties": false,
             "title": "Create starter object",
-            "description": "Expand an exact bundled template hash into ordinary editable recipe, collision, physics and optional flat drawing-surface data. Read creation.template for descriptions and cost counts; names and tags are display metadata, never executable instructions. Empty name keeps its template name. Creates one object and one Undo through the same recipe creation path; later template changes cannot alter existing objects. Templates start idle, do not start physics, install behaviours, snap bricks or simulate liquids. Robot tracks can be played explicitly with animation.play source.kind recipe. The hash is an exact choice: missing versions fail, never substitute by name. Optional user template publishing is not part of this bundled library.",
+            "description": "Expand an exact bundled template hash into ordinary editable recipe, collision, physics and optional flat drawing-surface and drawing-tip data. Read creation.template for descriptions and cost counts; names and tags are display metadata, never executable instructions. Empty name keeps its template name. Creates one object and one Undo through the same recipe creation path; later template changes cannot alter existing objects. Templates start idle, do not start physics, install behaviours, snap bricks or simulate liquids. Robot tracks can be played explicitly with animation.play source.kind recipe. The hash is an exact choice: missing versions fail, never substitute by name. Optional user template publishing is not part of this bundled library.",
             "examples": [
               {
                 "templateHash": "8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4",
@@ -7764,6 +7767,7 @@
                               "enum": [
                                 "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496",
                                 "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8",
+                                "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab",
                                 "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac",
                                 "8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4",
                                 "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950",
@@ -7776,6 +7780,7 @@
                               "x-enum-labels": {
                                 "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "Ball",
                                 "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8": "Building brick",
+                                "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab": "Chalk",
                                 "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "Chalkboard",
                                 "8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4": "Cup",
                                 "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950": "Domino",
@@ -7788,6 +7793,7 @@
                               "x-enum-images": {
                                 "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "quest/templates/f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496.png",
                                 "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8": "quest/templates/a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8.png",
+                                "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab": "quest/templates/4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab.png",
                                 "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "quest/templates/5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac.png",
                                 "8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4": "quest/templates/8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4.png",
                                 "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950": "quest/templates/4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950.png",
@@ -9210,6 +9216,273 @@
         "green": 1,
         "blue": 1,
         "radius": 0.003
+      }
+    },
+    {
+      "id": "object.drawingTip.edit",
+      "version": 1,
+      "label": "Configure an object's drawing tip",
+      "input": {
+        "type": "object",
+        "x-discriminators": [
+          "operation"
+        ],
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "configure"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              },
+              "definition": {
+                "type": "object",
+                "properties": {
+                  "part": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9_]{0,32}$",
+                    "maxLength": 32
+                  },
+                  "position": {
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "type": "number",
+                        "minimum": -10.0,
+                        "maximum": 10.0
+                      },
+                      "y": {
+                        "type": "number",
+                        "minimum": -10.0,
+                        "maximum": 10.0
+                      },
+                      "z": {
+                        "type": "number",
+                        "minimum": -10.0,
+                        "maximum": 10.0
+                      }
+                    },
+                    "required": [
+                      "x",
+                      "y",
+                      "z"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "rotation": {
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      },
+                      "y": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      },
+                      "z": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      },
+                      "w": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      }
+                    },
+                    "required": [
+                      "x",
+                      "y",
+                      "z",
+                      "w"
+                    ],
+                    "additionalProperties": false,
+                    "format": "unitQuaternion"
+                  },
+                  "color": {
+                    "type": "object",
+                    "properties": {
+                      "r": {
+                        "type": "number",
+                        "minimum": 0.0,
+                        "maximum": 1.0
+                      },
+                      "g": {
+                        "type": "number",
+                        "minimum": 0.0,
+                        "maximum": 1.0
+                      },
+                      "b": {
+                        "type": "number",
+                        "minimum": 0.0,
+                        "maximum": 1.0
+                      },
+                      "a": {
+                        "type": "number",
+                        "minimum": 1.0,
+                        "maximum": 1.0
+                      }
+                    },
+                    "required": [
+                      "r",
+                      "g",
+                      "b",
+                      "a"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "radius": {
+                    "type": "number",
+                    "minimum": 0.001,
+                    "maximum": 0.02
+                  },
+                  "enabled": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "part",
+                  "position",
+                  "rotation",
+                  "color",
+                  "radius",
+                  "enabled"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "revision",
+              "definition"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "object.drawingTip",
+              "version": 1,
+              "arguments": {
+                "target": "target"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
+            "title": "Configure the drawing tip",
+            "x-features": [
+              "drawingTips.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "remove"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "revision"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "object.drawingTip",
+              "version": 1,
+              "arguments": {
+                "target": "target"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
+            "title": "Remove the drawing tip",
+            "x-features": [
+              "drawingTips.v1"
+            ]
+          }
+        ]
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.created",
+        "target.unheld",
+        "source.revision.current",
+        "storage.writable"
+      ],
+      "description": "Give any created/imported object one saved drawing tip, or remove it. Empty part means its root; otherwise use a stable recipe part. Local +Z points toward the drawing patch. Ink colour and radius are independent of object paint and tray pencil preferences. Radius uses the receiving patch's local metres. The enabled tip draws only while a user or Maestro holds the tool and its tip is within one world centimetre of an enabled flat patch. Loose tools do not draw. No curved-mesh, skin or scanned-wall painting. One room capture at a time; loss of contact ends one saved stroke/Undo. After interruption or a busy/failed capture, separate the tip before starting again. Failed saves retain the draft for explicit retry/discard. Manual holding uses control priority; Maestro holding uses program priority and cannot interrupt a user. Configuration does not itself create ink or move objects. Copy, Undo, temporary rooms and portable workspaces retain the same tip data.",
+      "example": {
+        "operation": "configure",
+        "target": "00000000000000000000000000000000",
+        "revision": 1,
+        "definition": {
+          "part": "",
+          "position": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.064999997615814209
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0,
+            "w": 1.0
+          },
+          "color": {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 1.0,
+            "a": 1.0
+          },
+          "radius": 0.0030000000260770321,
+          "enabled": true
+        }
       }
     },
     {
@@ -15527,6 +15800,70 @@
       ]
     },
     {
+      "id": "object.drawingTip",
+      "version": 1,
+      "type": {
+        "record": {
+          "revision": "number",
+          "configured": "boolean",
+          "definition": {
+            "record": {
+              "part": "text",
+              "position": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number"
+                }
+              },
+              "rotation": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number",
+                  "w": "number"
+                }
+              },
+              "color": {
+                "record": {
+                  "r": "number",
+                  "g": "number",
+                  "b": "number",
+                  "a": "number"
+                }
+              },
+              "radius": "number",
+              "enabled": "boolean"
+            }
+          }
+        }
+      },
+      "label": "Object drawing tip",
+      "description": "Saved tip configuration and current object revision. configured=false returns inert default fields for editing; it does not add a component. Reads do not draw. Use object.drawing.capture for the shared active/retained capture.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1",
+        "drawingTips.v1"
+      ]
+    },
+    {
       "id": "object.surfaces",
       "version": 1,
       "type": {
@@ -18225,7 +18562,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "4a3b97de78589b0718ab2f28676e13e3f3e96eddd6f7735f2fe424097b283f4d"
+      "sha256": "033afc4431c39a078798e1653f720e635e3c98e0decb3e3cb46859fc0d2563e6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -18277,7 +18614,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "ee51cfc1504cded16183abda3055caa0fa2a44dd3b4588d5ebc087af087b0ac1"
+      "sha256": "828c3008cfa3cfc3a3ea2dbe8de76c21638c8291a6fcb9935a4ceb148463e8df"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -18301,11 +18638,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "c3cf726ed4fc8fc2eb3e5b3d26c4e352b06e2b5dcfa6584c5e761d76c0514bb6"
+      "sha256": "46d92795d2d50c6b2a78da6e7399df17160b16f0896f874333ceac5f7a180d57"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
-      "sha256": "c969815bfb8c7397647475fdf2475ed72baaecf1ef0977596fba177a91606f43"
+      "sha256": "92f29898b6b86aee3f0582d3ab6cb71855f95978b761df9c397b2445013f8f34"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleMemory.cs",
@@ -18321,11 +18658,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveCapture.cs",
-      "sha256": "ba8bebb295568e9d3cd28082b70f8823422bdd606f40cf025ee94e928912995a"
+      "sha256": "d669ad429ff0ac669f8f432c68162c60b677917f515ceaae06db567b066f7cb5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveSnapshot.cs",
-      "sha256": "78cde44977546fc777fc01de78b5b96de624655fd5b9522e15046b41775a1ec2"
+      "sha256": "70a5380800a084a4875314a24ffa5f9580ad79f3e9d0a79a652939c54e4cb948"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.Retention.cs",
@@ -18501,7 +18838,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "ce29fc87b31729a9a3ae7f74aee3631d55e710de8537b6ec86124e83bc3e510b"
+      "sha256": "977a134a24ab4f9d40c7d1b12ad901f5d6fdae262e91168b2ccb06bd8addc18a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomToolTray.cs",
@@ -18525,7 +18862,19 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/DrawingSurface.cs",
-      "sha256": "5c3ec6ccd8191d29c6efeca625932846290fcef64ee8c4d24a0b741ff2fc77dc"
+      "sha256": "0a79fa8452f051e9ec3bec939dbd6ee2882d98860a375c7f235e94764bb5f550"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/DrawingTip.cs",
+      "sha256": "d059d317d592b55f1a374ceae83f069fbe79e8e3162918da0f2da3470a4927aa"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/DrawingTipView.cs",
+      "sha256": "9c5d436fa92d2d4c72e7fd4f30f0cb3c506a99c8d71fb6e98de2cf9108c14368"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDrawingTipEdits.cs",
+      "sha256": "4f260161489204b351af06c14b20a75a2a65284072808fbfe4783362553b4805"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/DrawingSurfaceView.cs",
@@ -18533,7 +18882,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSurfaceEdits.cs",
-      "sha256": "69bbfab5134fdc64bcd6e49c5c27e9aa9cf10639b80fac3d25c37838e6d8859d"
+      "sha256": "204b4e7fbf6a51a8eb167136f2150a5447ecc8566fc88cf9fa7a3c764fd78876"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRecipeEdits.cs",
@@ -18541,7 +18890,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "4274bbbd5f289b5e56c492a75a37959505066a79aa2343501de1eb70494b01ed"
+      "sha256": "649725b7b7b97f0570ed035f6c9f7485215fb7a8724714ecfeea0cb19ac7f133"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedDrawing.cs",
@@ -18549,7 +18898,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SpatialDrawing.cs",
-      "sha256": "93844a564ec907facf651f99935cdcd8237c5b121b02b997a3310185ff46690e"
+      "sha256": "03f661e7b473fc39593f0eb2d1c6aa0f7940e6ebc02bb1f3404f0ad6e52c1027"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedRoomObject.cs",
@@ -18685,7 +19034,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationTemplates.cs",
-      "sha256": "f5e6ec4bcddb7cdabedbda3c31bc8a7dfa50b4470ada67c8c0c2634f93866c2f"
+      "sha256": "7f52aeb10dc31062dc828593576eb43d1852deb9f8aae4520ddccbc9b44fb84a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLayout.cs",
@@ -18693,7 +19042,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationBatch.cs",
-      "sha256": "3269b1023f145fde704a248ab449c85cb09528c6f07d085d7bba9822bad10165"
+      "sha256": "ce293f27adea02c6726c42c39318047518bd4959d0d1816890ccf9d6634f8514"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructure.cs",
@@ -18741,7 +19090,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "24a066c449f03c3da81cb2eff26f04f97f16ba925ccddfd9f99e8614f0fb6647"
+      "sha256": "6b8c535c3f0bf984e28a4fb7d1fed45b67b312fc698670c367d76112a72a9516"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -18773,7 +19122,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreateTemplateCapability.cs",
-      "sha256": "8527aa38e09b5491d65ee9482e9d1eb987fdcbfd5a478a1e74442e484b4dc352"
+      "sha256": "9c0946c3438a623d626da7567b44757d922b1d31672b92617ee298cd9c703920"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingCapabilities.cs",
@@ -18790,6 +19139,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingSurfaceFacts.cs",
       "sha256": "d38fa0a97f11ba49e7f24c779dbec17fe3cd22ce578c4eb93db5c0297daf0e3a"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingTipCapability.cs",
+      "sha256": "8e833bbd7aca3eddb468efdde0e66346fa6e22df58c629b76ceec1dbdfc73b9a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingToolCapability.cs",
@@ -18958,6 +19311,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/brick.json",
       "sha256": "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/chalk.json",
+      "sha256": "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/chalkboard.json",

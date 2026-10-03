@@ -14,7 +14,7 @@ namespace Maestro.Quest.Tests
 {
     public sealed partial class WorkspaceGenerationTests
     {
-        static void ChangeSavedName(string data,string name){string path=Path.Combine(data,"room.v4.json");var room=JObject.Parse(File.ReadAllText(path));room["objects"][1]["name"]=name;File.WriteAllText(path,room.ToString());}
+        static void ChangeSavedName(string data,string name){string path=Path.Combine(data,"room.v5.json");var room=JObject.Parse(File.ReadAllText(path));room["objects"][1]["name"]=name;File.WriteAllText(path,room.ToString());}
         [Test] public void SavedRecoveryCapturesLatestRoomAndMemoryAndKeepsOriginalManifestAndPrivateEvidence()
         {
             var source=Prepare();string data=Path.Combine(Generation(source.Id),"data");byte[] originalManifest=File.ReadAllBytes(Path.Combine(Generation(source.Id),"manifest.json"));
@@ -23,12 +23,12 @@ namespace Maestro.Quest.Tests
             File.WriteAllText(Path.Combine(data,"private-receipts.json"),"Keep private history");using(RoomSnapshotTransaction.Enter(data)){}
             DamageSelection();string origin=DamageOrigin();var preview=store.PrepareDamagedRecovery(origin,source.Id,source.Receipt.ManifestHash);string copied=Path.Combine(Generation(preview.Id),"data");
             Assert.That(preview.Receipt.ManifestHash,Is.Not.EqualTo(source.Receipt.ManifestHash));Assert.That(store.InspectDamagedPreview(preview.Id,preview.Receipt.ManifestHash,origin),Is.Not.Null);
-            Assert.That(File.ReadAllText(Path.Combine(copied,"room.v4.json")),Does.Contain("Saved after import"));Assert.That(ProgramMemoryStore.ReadSaved(copied).Identity,Is.EqualTo(memory.Identity));Assert.That(File.Exists(Path.Combine(copied,"private-receipts.json")),Is.False);
+            Assert.That(File.ReadAllText(Path.Combine(copied,"room.v5.json")),Does.Contain("Saved after import"));Assert.That(ProgramMemoryStore.ReadSaved(copied).Identity,Is.EqualTo(memory.Identity));Assert.That(File.Exists(Path.Combine(copied,"private-receipts.json")),Is.False);
             var proof=JObject.Parse(File.ReadAllText(Path.Combine(Generation(preview.Id),"damaged-recovery.v1.json")));Assert.That((int)proof["version"],Is.EqualTo(2));Assert.That((string)proof["source"]["originalManifestHash"],Is.EqualTo(source.Receipt.ManifestHash));Assert.That((string)proof["source"]["fingerprint"],Has.Length.EqualTo(64));Assert.That((int)proof["source"]["excludedFiles"],Is.EqualTo(2));
             ChangeSavedName(data,"Edited after preview");var selected=store.CommitDamagedRecovery(preview.Id,preview.Receipt.ManifestHash,origin,PreserveFor(preview,origin));
-            Assert.That(selected.Active.ReviewRequired,Is.True);Assert.That(File.ReadAllText(Path.Combine(copied,"room.v4.json")),Does.Contain("Saved after import"));Assert.That(File.ReadAllText(Path.Combine(data,"room.v4.json")),Does.Contain("Edited after preview"));Assert.That(File.ReadAllBytes(Path.Combine(Generation(source.Id),"manifest.json")),Is.EqualTo(originalManifest));Assert.That(File.ReadAllText(Path.Combine(data,"private-receipts.json")),Is.EqualTo("Keep private history"));
+            Assert.That(selected.Active.ReviewRequired,Is.True);Assert.That(File.ReadAllText(Path.Combine(copied,"room.v5.json")),Does.Contain("Saved after import"));Assert.That(File.ReadAllText(Path.Combine(data,"room.v5.json")),Does.Contain("Edited after preview"));Assert.That(File.ReadAllBytes(Path.Combine(Generation(source.Id),"manifest.json")),Is.EqualTo(originalManifest));Assert.That(File.ReadAllText(Path.Combine(data,"private-receipts.json")),Is.EqualTo("Keep private history"));
         }
-        [TestCase("room.v4.json")] [TestCase("room.v5.json")] [TestCase("program-memory.v1.json.backup")] [TestCase("room-snapshot.v3.json")]
+        [TestCase("room.v5.json")] [TestCase("room.v6.json")] [TestCase("program-memory.v1.json.backup")] [TestCase("room-snapshot.v4.json")]
         public void SavedRecoveryNeverDefaultsDamagedMissingOrUnfinishedSavedContent(string name)
         {
             var source=Prepare();string data=Path.Combine(Generation(source.Id),"data"),path=Path.Combine(data,name);File.WriteAllText(path,"Preserve unavailable content");DamageSelection();string origin=DamageOrigin();
@@ -51,7 +51,7 @@ namespace Maestro.Quest.Tests
                 Assert.That(started.Wait(5000),Is.True);Assert.That(entered.Wait(100),Is.False,"A saved-room writer must wait for the complete captured pair.");
             });
             PreparedWorkspaceGeneration preview=null;try{preview=capturing.PrepareDamagedRecovery(origin,source.Id,source.Receipt.ManifestHash);}finally{if(writer!=null)Assert.That(writer.Wait(5000),Is.True);}
-            Assert.That(File.ReadAllText(Path.Combine(Generation(preview.Id),"data","room.v4.json")),Does.Contain("Captured together"));Assert.That(File.ReadAllText(Path.Combine(data,"room.v4.json")),Does.Contain("Later writer"));
+            Assert.That(File.ReadAllText(Path.Combine(Generation(preview.Id),"data","room.v5.json")),Does.Contain("Captured together"));Assert.That(File.ReadAllText(Path.Combine(data,"room.v5.json")),Does.Contain("Later writer"));
         }
         [TestCase("fingerprint")] [TestCase("originalManifestHash")] [TestCase("excludedFiles")]
         public void SavedRecoveryProofRejectsInvalidCaptureProvenance(string field)

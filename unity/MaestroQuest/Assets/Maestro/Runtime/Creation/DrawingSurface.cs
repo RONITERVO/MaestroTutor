@@ -25,12 +25,12 @@ namespace Maestro.Quest.Creation
         public bool enabled=true;
         public SurfaceStroke[] strokes=Array.Empty<SurfaceStroke>();
         public DrawingSurface Copy()=>new(){version=version,id=id,part=part,position=position,rotation=rotation,width=width,height=height,enabled=enabled,strokes=strokes?.Select(s=>s?.Copy()).ToArray()};
-        public static bool Name(string value)=>value!=null&&System.Text.RegularExpressions.Regex.IsMatch(value,"^[a-zA-Z][a-zA-Z0-9_]{0,31}$");
+        public static bool Name(string value)=>value!=null&&!value.Any(char.IsControl)&&System.Text.RegularExpressions.Regex.IsMatch(value,"^[a-zA-Z][a-zA-Z0-9_]{0,31}$");
         public bool Validate(RoomObjectData owner,out string error)
         {
             error="A drawing surface has invalid geometry, identity or stroke data";
             if(version!=1||!Name(id)||part==null||part!=""&&(owner.recipe?.parts==null||!owner.recipe.parts.Any(p=>p.id==part))||!float.IsFinite(position.sqrMagnitude)||position.sqrMagnitude>100||!MotionFrame.ValidRotation(rotation)||!float.IsFinite(width)||!float.IsFinite(height)||width<.02f||width>4||height<.02f||height>4||strokes==null||strokes.Length>MaximumStrokes)return false;
-            if(strokes.Any(s=>s==null||!Guid.TryParseExact(s.id,"N",out _))||strokes.Select(s=>s.id).Distinct().Count()!=strokes.Length)return false;
+            if(strokes.Any(s=>s==null||!Guid.TryParseExact(s.id,"N",out var parsed)||s.id!=parsed.ToString("N"))||strokes.Select(s=>s.id).Distinct().Count()!=strokes.Length)return false;
             foreach(var s in strokes) {
                 var c=s.color;
                 if(!RoomDocument.ValidateDrawing(s.points,s.radius,out _)||s.points.Length>MaximumPoints||!Unit(c.r)||!Unit(c.g)||!Unit(c.b)||c.a!=1||s.points.Any(p=>Mathf.Abs(p.z)>.000001f||Mathf.Abs(p.x)+s.radius>width*.5f+.000001f||Mathf.Abs(p.y)+s.radius>height*.5f+.000001f))return false;

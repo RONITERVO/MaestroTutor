@@ -55,7 +55,7 @@ namespace Maestro.Quest.Tests
             var recipe=RecipeTemplates.BoxRobot(true);recipe.playing=true;
             var doc=new RoomDocument {version=RoomDocument.CurrentVersion,objects=new[]{new RoomObjectData {id="book",kind=RoomObjectKind.Book,position=new Vector3(0,1,1)},new RoomObjectData {id="maestro",kind=RoomObjectKind.Maestro,position=new Vector3(-1,0,1)},new RoomObjectData {id=Guid.NewGuid().ToString("N"),name=label,kind=RoomObjectKind.Assembly,recipe=recipe,position=new Vector3(1,1,1)}}};
             byte[] Json(object v)=>Encoding.UTF8.GetBytes(JsonUtility.ToJson(v));
-            var docs=new Dictionary<string,byte[]> {["room.v4.json"]=Json(doc),["behaviours.v2.json"]=Json(new RuleDocument()),["controls.v2.json"]=Json(new ControllerPreferences {deadZone=.3f}),["avatar-activities.v2.json"]=Json(new AvatarActivityDocument()),["motions/motions.v2.json"]=Encoding.UTF8.GetBytes("{\"version\":2,\"entries\":[],\"sources\":[]}")};
+            var docs=new Dictionary<string,byte[]> {["room.v5.json"]=Json(doc),["behaviours.v2.json"]=Json(new RuleDocument()),["controls.v2.json"]=Json(new ControllerPreferences {deadZone=.3f}),["avatar-activities.v2.json"]=Json(new AvatarActivityDocument()),["motions/motions.v2.json"]=Encoding.UTF8.GetBytes("{\"version\":2,\"entries\":[],\"sources\":[]}")};
             using var output=new MemoryStream();WorkspaceArchive.Write(output,new WorkspaceArchiveSnapshot(docs,new Dictionary<string,Func<Stream>>()));return output.ToArray();
         }
         PreparedWorkspaceGeneration Prepare(byte[] bytes)=>store.Prepare(new MemoryStream(bytes,false));

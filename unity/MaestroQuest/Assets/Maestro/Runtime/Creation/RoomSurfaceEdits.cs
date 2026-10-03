@@ -62,12 +62,13 @@ namespace Maestro.Quest.Creation
             if(!Ownership.TryAcquire("surface-eraser", "Your surface eraser",RoomActorRole.Control,new[]{new Maestro.Quest.Programs.BehaviourCatalog.Claim(target,"wholeTarget")},null,out var lease,out var error,preservePlacement:true)){SetStatus(error);return;}
             using(lease){if(!EditSurface(target,ObjectRevision(target),new JObject {["operation"]="removeStroke",["surface"]=surface,["stroke"]=stroke},out _,out error))SetStatus(error);}
         }
-        internal bool FindDrawingSurface(Ray ray,float maximum,out string target,out string surface,out Vector3 point,out float distance)
+        internal bool FindDrawingSurface(Ray ray,float maximum,out string target,out string surface,out Vector3 point,out float distance,float? radius=null,string exclude=null)
         {
             target=surface=null;point=default;distance=maximum;
             foreach(var pair in objects) {
+                if(pair.Key==exclude)continue;
                 var view=pair.Value.GetComponent<DrawingSurfaceView>();
-                if(view&&view.Hit(ray,distance,out var hit,out var local,out float near,DrawingRadius)){target=pair.Key;surface=hit;point=local;distance=near;}
+                if(view&&view.Hit(ray,distance,out var hit,out var local,out float near,radius??DrawingRadius)){target=pair.Key;surface=hit;point=local;distance=near;}
             }
             return target!=null;
         }

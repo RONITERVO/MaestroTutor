@@ -17,7 +17,7 @@ namespace Maestro.Quest.Tests
     {
         [UnityTest] public IEnumerator SharedRecoveryOpensLaterSavedRoomAndRememberedValuesAfterPreviewRestart()
         {
-            var source=Prepare(Archive("Original imported object"));string data=Path.Combine(directory,"workspace-generations.v1","generations",source.Id,"data"),roomPath=Path.Combine(data,"room.v4.json");
+            var source=Prepare(Archive("Original imported object"));string data=Path.Combine(directory,"workspace-generations.v1","generations",source.Id,"data"),roomPath=Path.Combine(data,"room.v5.json");
             var document=JObject.Parse(File.ReadAllText(roomPath));document["objects"][2]["name"]="Saved after import";File.WriteAllText(roomPath,document.ToString());
             string program=new string('a',32),cell=new string('b',32);var memory=ProgramMemoryDocument.Empty().WithValues(program,new Dictionary<string,ProgramMemoryDocument.Cell>{[cell]=new("count",new ProgramValue(23d))});File.WriteAllBytes(Path.Combine(data,ProgramMemoryStore.FileName),memory.Encode());
             using(RoomSnapshotTransaction.Enter(data)){}File.WriteAllText(Path.Combine(data,"private-history.json"),"Retained private evidence");

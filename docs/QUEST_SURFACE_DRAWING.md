@@ -56,18 +56,49 @@ retry or discard. Moving the object while a draft is retained keeps its local in
 ## Persistence and boundaries
 
 Ink is part of copied objects, room Undo, temporary snapshots and portable
-workspaces. Current room files are `room.v4.json`, paired snapshot intents are
-`room-snapshot.v3.json`, and portable archive manifests are version 3. Clean older
+workspaces. Current room files are `room.v5.json`, paired snapshot intents are
+`room-snapshot.v4.json`, and portable archive manifests are version 4. Clean older
 room documents can load through the existing versioned reader; older originals
 remain. Prior in-flight snapshot journals and prior archives are preserved and
 refused instead of being reinterpreted. This is pre-release format work under the
 owner's reset permission; it does not authorize breaking future released saves.
 
 This increment is explicitly planar. It does not project paint onto arbitrary
-curved meshes, animated skin, scanned real-world walls or clothing; it does not
-turn arbitrary imported pencils into drawing tools. Configured planes can be
+curved meshes, animated skin, scanned real-world walls or clothing; drawing tips do not follow imported bones. Created/imported roots and recipe parts
+can be configured as drawing tools as described below. Configured planes can be
 positioned independently of the visual/collision mesh. The current patch hit test
 selects the nearest eligible plane, not a complete visual-occlusion query.
 Physical Quest comfort/readability and maximum-load performance remain device
 acceptance gates. Native and browser checks are documented with their evidence
 when the increment is packaged.
+
+## Configurable held drawing objects (2026-10-03)
+
+`object.drawingTip.edit` configures or removes one tip on any user-created object,
+including an imported model root or a stable recipe part. `object.drawingTip`
+returns the exact saved definition, whether it exists, and the current object
+revision. Agent calls, program blocks and generated fields share this contract.
+The Chalk starter is ordinary editable recipe/collision/physics/tip data.
+
+Tip position and rotation use the selected anchor's local coordinates; local +Z
+points toward the page. Ink colour and radius are separate from object paint and
+tray preferences. Radius uses the receiving patch's local metres. The contact band
+is one world centimetre on either side of the tip, independent of tool scale.
+A tip draws only while the user or a native held-prop attachment holds the tool.
+Loose objects do not scribble. Disabled tips retain their configuration. A newly configured tip arms on a released-tool frame or after separation.
+
+The physical tip calls the same `SpatialDrawing` capture as trigger/pinch input.
+There is one active or retained capture per room. Contact loss or release closes
+one stroke/save/Undo; pauses and ownership interruptions preserve the existing
+capture rules. While kept held, a busy, blocked or completed contact cannot restart until the tip
+separates. Release/re-grip is also an explicit new activation; a retained draft
+still requires retry/discard first. Failed saves never retry automatically. User-held tools use control
+priority; Maestro-held tools use program priority and cannot interrupt a human's
+surface ownership. Tips never draw onto their own object's patches. Manual edits, including Undo, wait while a capture is active or retained. Disabling
+or reconfiguring a tool retains its draft instead of saving during reconciliation.
+Copy, archive, temporary Keep/Discard and Undo carry the same component and ink data.
+
+This does not add a brush-fluid simulator, curved-mesh painting or automatic robot
+handwriting planning. An agent can author exact ink directly with surface edits,
+or use existing hold/movement/animation capabilities with a configured tool.
+Physical contact and maximum-load performance still require Quest acceptance.
