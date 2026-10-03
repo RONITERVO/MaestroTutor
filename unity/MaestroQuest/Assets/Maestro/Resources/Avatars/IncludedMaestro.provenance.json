@@ -1,0 +1,22 @@
+{
+  "sourceArchive": "Meshy_AI_Azure_Violet_Doll_biped.zip",
+  "sourceEntry": "Meshy_AI_Azure_Violet_Doll_biped/Meshy_AI_Azure_Violet_Doll_biped_Animation_Walking_withSkin.glb",
+  "sha256": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+  "bytes": 9234600,
+  "transformations": "None; exact source GLB bytes. Shared runtime materials and canonical retargeting are applied at load.",
+  "provider": "Meshy",
+  "paidPlanConfirmedByOwner": "2026-10-02",
+  "providerOwnershipGuidance": "https://help.meshy.ai/en/articles/10137554-what-is-the-ownership-of-the-generated-models",
+  "providedFor": "Included default Maestro avatar",
+  "rigHash": "6e6cd9efcc2ce2881098ecfc0aa4642b3f575630b85da412ad07120978e533a7",
+  "skeletonJoints": 68,
+  "canonicalPoseControls": 17,
+  "vertices": 15283,
+  "triangles": 15390,
+  "texturePixels": 12582912,
+  "embeddedClips": [
+    "Walking"
+  ],
+  "earlierCollection": "D:/MeshyAnimatedMaestro uses an older rig and is not included or assigned to this default.",
+  "deviceAcceptance": "Pending; PC validation does not prove Quest performance or likeness."
+}

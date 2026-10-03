@@ -1,0 +1,215 @@
+{
+  "version": 3,
+  "entry": "main",
+  "resources": [
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  ],
+  "functions": [
+    {
+      "name": "main",
+      "returns": "void",
+      "parameters": [],
+      "locals": [
+        {
+          "name": "current_1",
+          "type": {
+            "record": {
+              "target": "text",
+              "revision": "number",
+              "kind": "text",
+              "name": "text",
+              "position": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number"
+                }
+              },
+              "rotation": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number",
+                  "w": "number"
+                }
+              },
+              "scale": "number",
+              "content": {
+                "record": {
+                  "points": "number",
+                  "parts": "number",
+                  "frames": "number",
+                  "modelHash": "text",
+                  "recipePlaying": "boolean"
+                }
+              }
+            }
+          },
+          "initial": {
+            "target": "",
+            "revision": 0,
+            "kind": "",
+            "name": "",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 0
+            },
+            "scale": 0,
+            "content": {
+              "points": 0,
+              "parts": 0,
+              "frames": 0,
+              "modelHash": "",
+              "recipePlaying": false
+            }
+          }
+        },
+        {
+          "name": "current_2",
+          "type": {
+            "record": {
+              "target": "text",
+              "revision": "number",
+              "kind": "text",
+              "name": "text",
+              "position": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number"
+                }
+              },
+              "rotation": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number",
+                  "w": "number"
+                }
+              },
+              "scale": "number",
+              "content": {
+                "record": {
+                  "points": "number",
+                  "parts": "number",
+                  "frames": "number",
+                  "modelHash": "text",
+                  "recipePlaying": "boolean"
+                }
+              }
+            }
+          },
+          "initial": {
+            "target": "",
+            "revision": 0,
+            "kind": "",
+            "name": "",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 0
+            },
+            "scale": 0,
+            "content": {
+              "points": 0,
+              "parts": 0,
+              "frames": 0,
+              "modelHash": "",
+              "recipePlaying": false
+            }
+          }
+        }
+      ],
+      "body": [
+        {
+          "id": "read_current_1",
+          "op": "set",
+          "variable": "current_1",
+          "value": {
+            "fact": "object.definition",
+            "version": 1,
+            "arguments": {
+              "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "bindings": {}
+          }
+        },
+        {
+          "id": "read_current_2",
+          "op": "set",
+          "variable": "current_2",
+          "value": {
+            "fact": "object.definition",
+            "version": 1,
+            "arguments": {
+              "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "bindings": {}
+          }
+        },
+        {
+          "id": "action_1",
+          "op": "invoke",
+          "capability": "program.module.captureConstruction",
+          "version": 1,
+          "arguments": {
+            "name": "Captured pieces",
+            "members": [
+              {
+                "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "revision": 1,
+                "slot": "first"
+              },
+              {
+                "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "revision": 2,
+                "slot": "second"
+              }
+            ]
+          },
+          "bindings": {
+            "members.0.revision": {
+              "op": "field",
+              "args": [
+                {
+                  "var": "current_1"
+                },
+                {
+                  "value": "revision"
+                }
+              ]
+            },
+            "members.1.revision": {
+              "op": "field",
+              "args": [
+                {
+                  "var": "current_2"
+                },
+                {
+                  "value": "revision"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "dataVersion": 1,
+  "state": [],
+  "events": []
+}

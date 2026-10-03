@@ -1,0 +1,26 @@
+{
+  "id": "573ae9c2a80f4b4b864277d816fd5f55",
+  "capability": "workspace.archive.export",
+  "version": 1,
+  "resources": [],
+  "phase": "completed",
+  "status": "Action completed",
+  "output": {
+    "location": "Downloads/Maestro/maestro-workspace-d9a51fe614584e9ba5439469669b0709.zip",
+    "sizeKiB": 2.2470703125,
+    "manifestHash": "37c89ffc1376a1a2c9c8f74305906487316158f65c7614a2ca24763da22a9696",
+    "files": 5,
+    "models": 0,
+    "motions": 0,
+    "modules": 0,
+    "unavailablePrograms": 0,
+    "missingModels": 0,
+    "missingMotions": 0,
+    "missingControllerPrograms": 0
+  },
+  "call": {
+    "id": "workspace.archive.export",
+    "version": 1,
+    "arguments": {}
+  }
+}

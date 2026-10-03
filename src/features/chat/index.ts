@@ -17,6 +17,13 @@ export { default as SuggestionsList } from './components/SuggestionsList';
 export { default as BookmarkActions } from './components/BookmarkActions';
 export { default as TextScrollwheel } from './components/TextScrollwheel';
 
+// Shared book/phone attachment renderers.
+export { default as MiniGameViewer } from './components/MiniGameViewer';
+export { default as PdfViewer } from './components/PdfViewer';
+export { default as TextFileViewer } from './components/TextFileViewer';
+export { default as MiniGameErrorBoundary } from './components/MiniGameErrorBoundary';
+export { isRunnableMiniGameAttachment } from './utils/miniGameAttachment';
+
 // Services
 export { 
   getChatHistoryDB,
@@ -41,6 +48,11 @@ export {
 } from './utils/persistence';
 
 // Hooks
+export { useAgentTaskSpeech } from './hooks/useAgentTaskSpeech';
 export { useTutorConversation } from './hooks/useTutorConversation';
 export { useSuggestions } from './hooks/useSuggestions';
 export { useChatPersistence } from './hooks/useChatPersistence';
+
+export { prepareLiveRoomAgentContext, captureLiveRoomAgentHandoff, resetRoomAgentTasks } from './services/roomAgentTasks';
+
+export { hideRoomTaskMessage } from './services/roomTaskSummaries';

@@ -1,0 +1,108 @@
+{
+  "version": 2,
+  "entry": "main",
+  "resources": [],
+  "functions": [
+    {
+      "name": "main",
+      "returns": "void",
+      "parameters": [],
+      "locals": [
+        {
+          "name": "delay",
+          "initial": 0
+        }
+      ],
+      "body": [
+        {
+          "id": "block_1",
+          "op": "call",
+          "function": "computeDelay",
+          "args": [
+            {
+              "value": 2
+            },
+            {
+              "value": 0.25
+            }
+          ],
+          "result": "delay"
+        },
+        {
+          "id": "block_2",
+          "op": "invoke",
+          "capability": "time.wait",
+          "version": 1,
+          "arguments": {
+            "seconds": 1
+          },
+          "bindings": {
+            "seconds": {
+              "var": "delay"
+            }
+          }
+        },
+        {
+          "id": "block_3",
+          "op": "call",
+          "function": "computeDelay",
+          "args": [
+            {
+              "value": 2
+            },
+            {
+              "value": 1
+            }
+          ],
+          "result": "delay"
+        },
+        {
+          "id": "block_4",
+          "op": "invoke",
+          "capability": "time.wait",
+          "version": 1,
+          "arguments": {
+            "seconds": 1
+          },
+          "bindings": {
+            "seconds": {
+              "var": "delay"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "computeDelay",
+      "returns": "number",
+      "parameters": [
+        {
+          "name": "scale",
+          "type": "number"
+        },
+        {
+          "name": "seconds",
+          "type": "number"
+        }
+      ],
+      "locals": [],
+      "body": [
+        {
+          "id": "return_1",
+          "op": "return",
+          "value": {
+            "op": "mul",
+            "args": [
+              {
+                "var": "seconds"
+              },
+              {
+                "var": "scale"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

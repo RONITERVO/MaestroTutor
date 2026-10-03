@@ -1,0 +1,153 @@
+{
+  "before": {
+    "revision": 2,
+    "selectedHash": "",
+    "displayedHash": "",
+    "busy": false,
+    "phase": "ready",
+    "status": "Included Maestro",
+    "temporary": false,
+    "canPose": true
+  },
+  "library": {
+    "selected": {
+      "id": "75e328f90a01463ab79dbc6da1af3ebf",
+      "capability": "model.library.inspect",
+      "version": 1,
+      "resources": [],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "total": 1,
+        "offset": 0,
+        "entries": [
+          {
+            "modelHash": "7716642625ffe18842a6eb952b600ec8e5a821d9a0316f827214ca6c07e34356",
+            "name": "My blue Maestro.glb",
+            "bytes": 3960
+          }
+        ]
+      },
+      "call": {
+        "id": "model.library.inspect",
+        "version": 1,
+        "arguments": {
+          "offset": 0
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "75e328f90a01463ab79dbc6da1af3ebf",
+        "capability": "model.library.inspect",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "total": 1,
+          "offset": 0,
+          "entries": [
+            {
+              "modelHash": "7716642625ffe18842a6eb952b600ec8e5a821d9a0316f827214ca6c07e34356",
+              "name": "My blue Maestro.glb",
+              "bytes": 3960
+            }
+          ]
+        }
+      }
+    ],
+    "nextRunId": "febc43bd6dfa418b823d7c19fd134b9c",
+    "storageError": null,
+    "recovery": null
+  },
+  "loading": {
+    "revision": 2,
+    "selectedHash": "",
+    "displayedHash": "",
+    "busy": true,
+    "phase": "loading",
+    "status": "Loading custom Maestro…",
+    "temporary": false,
+    "canPose": false
+  },
+  "selection": {
+    "selected": {
+      "id": "febc43bd6dfa418b823d7c19fd134b9c",
+      "capability": "avatar.model.select",
+      "version": 1,
+      "resources": [
+        "maestro"
+      ],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "target": "maestro",
+        "modelHash": "7716642625ffe18842a6eb952b600ec8e5a821d9a0316f827214ca6c07e34356",
+        "revision": 6,
+        "temporary": false
+      },
+      "call": {
+        "id": "avatar.model.select",
+        "version": 1,
+        "arguments": {
+          "target": "maestro",
+          "modelHash": "7716642625ffe18842a6eb952b600ec8e5a821d9a0316f827214ca6c07e34356",
+          "revision": 2
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "75e328f90a01463ab79dbc6da1af3ebf",
+        "capability": "model.library.inspect",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "total": 1,
+          "offset": 0,
+          "entries": [
+            {
+              "modelHash": "7716642625ffe18842a6eb952b600ec8e5a821d9a0316f827214ca6c07e34356",
+              "name": "My blue Maestro.glb",
+              "bytes": 3960
+            }
+          ]
+        }
+      },
+      {
+        "id": "febc43bd6dfa418b823d7c19fd134b9c",
+        "capability": "avatar.model.select",
+        "version": 1,
+        "resources": [
+          "maestro"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "target": "maestro",
+          "modelHash": "7716642625ffe18842a6eb952b600ec8e5a821d9a0316f827214ca6c07e34356",
+          "revision": 6,
+          "temporary": false
+        }
+      }
+    ],
+    "nextRunId": "04da6f28c4b447a3a747764654030e21",
+    "storageError": null,
+    "recovery": null
+  },
+  "after": {
+    "revision": 6,
+    "selectedHash": "7716642625ffe18842a6eb952b600ec8e5a821d9a0316f827214ca6c07e34356",
+    "displayedHash": "7716642625ffe18842a6eb952b600ec8e5a821d9a0316f827214ca6c07e34356",
+    "busy": false,
+    "phase": "ready",
+    "status": "Custom Maestro ready — gestures, poses and recordings retained",
+    "temporary": false,
+    "canPose": true
+  }
+}

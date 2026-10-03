@@ -1,0 +1,2209 @@
+[
+  {
+    "name": "block",
+    "valid": true,
+    "arguments": {
+      "blueprint": {
+        "version": 1,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 1,
+                "color": {
+                  "r": 0.3,
+                  "g": 0.7,
+                  "b": 0.9,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "block"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "ball",
+    "valid": true,
+    "arguments": {
+      "blueprint": {
+        "version": 1,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 1,
+                "color": {
+                  "r": 0.3,
+                  "g": 0.7,
+                  "b": 0.9,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "ball"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "cylinder",
+    "valid": true,
+    "arguments": {
+      "blueprint": {
+        "version": 1,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 1,
+                "color": {
+                  "r": 0.3,
+                  "g": 0.7,
+                  "b": 0.9,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "cylinder"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "model exact hash",
+    "valid": true,
+    "arguments": {
+      "blueprint": {
+        "version": 1,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 1,
+                "color": {
+                  "r": 0.3,
+                  "g": 0.7,
+                  "b": 0.9,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "model",
+                  "modelHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "numeric room kind is not public source",
+    "valid": false,
+    "arguments": {
+      "blueprint": {
+        "version": 1,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 1,
+                "color": {
+                  "r": 0.3,
+                  "g": 0.7,
+                  "b": 0.9,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": 2
+                }
+              }
+            }
+          }
+        ]
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "unknown field is rejected",
+    "valid": false,
+    "arguments": {
+      "blueprint": {
+        "version": 1,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 1,
+                "color": {
+                  "r": 0.3,
+                  "g": 0.7,
+                  "b": 0.9,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "walkClip": 1,
+                "geometry": {
+                  "kind": "block"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "missing physics",
+    "valid": false,
+    "arguments": {
+      "blueprint": {
+        "version": 1,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 1,
+                "color": {
+                  "r": 0.3,
+                  "g": 0.7,
+                  "b": 0.9,
+                  "a": 1
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "block"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "transparent ink colour rejected",
+    "valid": false,
+    "arguments": {
+      "blueprint": {
+        "version": 1,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 1,
+                "color": {
+                  "r": 0.3,
+                  "g": 0.7,
+                  "b": 0.9,
+                  "a": 0.5
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "block"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "drawing",
+    "valid": true,
+    "arguments": {
+      "blueprint": {
+        "version": 1,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 1,
+                "color": {
+                  "r": 0.3,
+                  "g": 0.7,
+                  "b": 0.9,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "drawing",
+                  "points": [
+                    {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    },
+                    {
+                      "x": 0.1,
+                      "y": 0,
+                      "z": 0
+                    }
+                  ],
+                  "radius": 0.003
+                }
+              }
+            }
+          }
+        ]
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "zero length drawing",
+    "valid": false,
+    "arguments": {
+      "blueprint": {
+        "version": 1,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 1,
+                "color": {
+                  "r": 0.3,
+                  "g": 0.7,
+                  "b": 0.9,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "drawing",
+                  "points": [
+                    {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    },
+                    {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  ],
+                  "radius": 0.003
+                }
+              }
+            }
+          }
+        ]
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "drawing too far from origin",
+    "valid": false,
+    "arguments": {
+      "blueprint": {
+        "version": 1,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 1,
+                "color": {
+                  "r": 0.3,
+                  "g": 0.7,
+                  "b": 0.9,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "drawing",
+                  "points": [
+                    {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    },
+                    {
+                      "x": 9,
+                      "y": 9,
+                      "z": 0
+                    }
+                  ],
+                  "radius": 0.003
+                }
+              }
+            }
+          }
+        ]
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "recipe",
+    "valid": true,
+    "arguments": {
+      "blueprint": {
+        "version": 1,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 1,
+                "color": {
+                  "r": 0.3,
+                  "g": 0.7,
+                  "b": 0.9,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "recipe",
+                  "recipe": {
+                    "version": 1,
+                    "parts": [
+                      {
+                        "id": "Base",
+                        "parent": null,
+                        "shape": "box",
+                        "position": {
+                          "x": 0,
+                          "y": -0.105,
+                          "z": 0
+                        },
+                        "size": {
+                          "x": 0.25,
+                          "y": 0.035,
+                          "z": 0.19
+                        },
+                        "rotation": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0,
+                          "w": 1
+                        },
+                        "color": {
+                          "r": 0.7,
+                          "g": 0.49,
+                          "b": 0.27,
+                          "a": 1
+                        }
+                      },
+                      {
+                        "id": "LeftSupport",
+                        "parent": null,
+                        "shape": "box",
+                        "position": {
+                          "x": -0.08,
+                          "y": -0.045,
+                          "z": 0
+                        },
+                        "size": {
+                          "x": 0.035,
+                          "y": 0.11,
+                          "z": 0.08
+                        },
+                        "rotation": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0,
+                          "w": 1
+                        },
+                        "color": {
+                          "r": 0.12,
+                          "g": 0.5,
+                          "b": 0.48,
+                          "a": 1
+                        }
+                      },
+                      {
+                        "id": "RightSupport",
+                        "parent": null,
+                        "shape": "box",
+                        "position": {
+                          "x": 0.08,
+                          "y": -0.045,
+                          "z": 0
+                        },
+                        "size": {
+                          "x": 0.035,
+                          "y": 0.11,
+                          "z": 0.08
+                        },
+                        "rotation": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0,
+                          "w": 1
+                        },
+                        "color": {
+                          "r": 0.12,
+                          "g": 0.5,
+                          "b": 0.48,
+                          "a": 1
+                        }
+                      },
+                      {
+                        "id": "Axle",
+                        "parent": null,
+                        "shape": "cylinder",
+                        "position": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "size": {
+                          "x": 0.025,
+                          "y": 0.21,
+                          "z": 0.025
+                        },
+                        "rotation": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0.7071067811865476,
+                          "w": 0.7071067811865476
+                        },
+                        "color": {
+                          "r": 0.2,
+                          "g": 0.23,
+                          "b": 0.25,
+                          "a": 1
+                        }
+                      }
+                    ],
+                    "tracks": [],
+                    "duration": 2,
+                    "playing": false,
+                    "loop": false
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "playing recipe",
+    "valid": false,
+    "arguments": {
+      "blueprint": {
+        "version": 1,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 1,
+                "color": {
+                  "r": 0.3,
+                  "g": 0.7,
+                  "b": 0.9,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "recipe",
+                  "recipe": {
+                    "version": 1,
+                    "parts": [
+                      {
+                        "id": "Base",
+                        "parent": null,
+                        "shape": "box",
+                        "position": {
+                          "x": 0,
+                          "y": -0.105,
+                          "z": 0
+                        },
+                        "size": {
+                          "x": 0.25,
+                          "y": 0.035,
+                          "z": 0.19
+                        },
+                        "rotation": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0,
+                          "w": 1
+                        },
+                        "color": {
+                          "r": 0.7,
+                          "g": 0.49,
+                          "b": 0.27,
+                          "a": 1
+                        }
+                      },
+                      {
+                        "id": "LeftSupport",
+                        "parent": null,
+                        "shape": "box",
+                        "position": {
+                          "x": -0.08,
+                          "y": -0.045,
+                          "z": 0
+                        },
+                        "size": {
+                          "x": 0.035,
+                          "y": 0.11,
+                          "z": 0.08
+                        },
+                        "rotation": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0,
+                          "w": 1
+                        },
+                        "color": {
+                          "r": 0.12,
+                          "g": 0.5,
+                          "b": 0.48,
+                          "a": 1
+                        }
+                      },
+                      {
+                        "id": "RightSupport",
+                        "parent": null,
+                        "shape": "box",
+                        "position": {
+                          "x": 0.08,
+                          "y": -0.045,
+                          "z": 0
+                        },
+                        "size": {
+                          "x": 0.035,
+                          "y": 0.11,
+                          "z": 0.08
+                        },
+                        "rotation": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0,
+                          "w": 1
+                        },
+                        "color": {
+                          "r": 0.12,
+                          "g": 0.5,
+                          "b": 0.48,
+                          "a": 1
+                        }
+                      },
+                      {
+                        "id": "Axle",
+                        "parent": null,
+                        "shape": "cylinder",
+                        "position": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "size": {
+                          "x": 0.025,
+                          "y": 0.21,
+                          "z": 0.025
+                        },
+                        "rotation": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0.7071067811865476,
+                          "w": 0.7071067811865476
+                        },
+                        "color": {
+                          "r": 0.2,
+                          "g": 0.23,
+                          "b": 0.25,
+                          "a": 1
+                        }
+                      }
+                    ],
+                    "tracks": [],
+                    "duration": 2,
+                    "playing": true,
+                    "loop": false
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "saved flat ink",
+    "valid": true,
+    "arguments": {
+      "blueprint": {
+        "version": 1,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 1,
+                "color": {
+                  "r": 0.3,
+                  "g": 0.7,
+                  "b": 0.9,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [
+                  {
+                    "version": 1,
+                    "id": "front",
+                    "part": "",
+                    "position": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    },
+                    "rotation": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0,
+                      "w": 1
+                    },
+                    "width": 0.5,
+                    "height": 0.5,
+                    "enabled": true,
+                    "strokes": [
+                      {
+                        "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                        "color": {
+                          "r": 1,
+                          "g": 0,
+                          "b": 0,
+                          "a": 1
+                        },
+                        "radius": 0.003,
+                        "points": [
+                          {
+                            "x": -0.1,
+                            "y": 0,
+                            "z": 0
+                          },
+                          {
+                            "x": 0.1,
+                            "y": 0,
+                            "z": 0
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "block"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "missing recipe part",
+    "valid": false,
+    "arguments": {
+      "blueprint": {
+        "version": 1,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 1,
+                "color": {
+                  "r": 0.3,
+                  "g": 0.7,
+                  "b": 0.9,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [
+                  {
+                    "version": 1,
+                    "id": "front",
+                    "part": "missing",
+                    "position": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    },
+                    "rotation": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0,
+                      "w": 1
+                    },
+                    "width": 0.5,
+                    "height": 0.5,
+                    "enabled": true,
+                    "strokes": [
+                      {
+                        "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                        "color": {
+                          "r": 1,
+                          "g": 0,
+                          "b": 0,
+                          "a": 1
+                        },
+                        "radius": 0.003,
+                        "points": [
+                          {
+                            "x": -0.1,
+                            "y": 0,
+                            "z": 0
+                          },
+                          {
+                            "x": 0.1,
+                            "y": 0,
+                            "z": 0
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "block"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "duplicate surface ids",
+    "valid": false,
+    "arguments": {
+      "blueprint": {
+        "version": 1,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 1,
+                "color": {
+                  "r": 0.3,
+                  "g": 0.7,
+                  "b": 0.9,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [
+                  {
+                    "version": 1,
+                    "id": "front",
+                    "part": "",
+                    "position": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    },
+                    "rotation": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0,
+                      "w": 1
+                    },
+                    "width": 0.5,
+                    "height": 0.5,
+                    "enabled": true,
+                    "strokes": [
+                      {
+                        "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                        "color": {
+                          "r": 1,
+                          "g": 0,
+                          "b": 0,
+                          "a": 1
+                        },
+                        "radius": 0.003,
+                        "points": [
+                          {
+                            "x": -0.1,
+                            "y": 0,
+                            "z": 0
+                          },
+                          {
+                            "x": 0.1,
+                            "y": 0,
+                            "z": 0
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "version": 1,
+                    "id": "front",
+                    "part": "",
+                    "position": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    },
+                    "rotation": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0,
+                      "w": 1
+                    },
+                    "width": 0.5,
+                    "height": 0.5,
+                    "enabled": true,
+                    "strokes": [
+                      {
+                        "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                        "color": {
+                          "r": 1,
+                          "g": 0,
+                          "b": 0,
+                          "a": 1
+                        },
+                        "radius": 0.003,
+                        "points": [
+                          {
+                            "x": -0.1,
+                            "y": 0,
+                            "z": 0
+                          },
+                          {
+                            "x": 0.1,
+                            "y": 0,
+                            "z": 0
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "block"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "duplicate stroke ids",
+    "valid": false,
+    "arguments": {
+      "blueprint": {
+        "version": 1,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 1,
+                "color": {
+                  "r": 0.3,
+                  "g": 0.7,
+                  "b": 0.9,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [
+                  {
+                    "version": 1,
+                    "id": "front",
+                    "part": "",
+                    "position": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    },
+                    "rotation": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0,
+                      "w": 1
+                    },
+                    "width": 0.5,
+                    "height": 0.5,
+                    "enabled": true,
+                    "strokes": [
+                      {
+                        "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                        "color": {
+                          "r": 1,
+                          "g": 0,
+                          "b": 0,
+                          "a": 1
+                        },
+                        "radius": 0.003,
+                        "points": [
+                          {
+                            "x": -0.1,
+                            "y": 0,
+                            "z": 0
+                          },
+                          {
+                            "x": 0.1,
+                            "y": 0,
+                            "z": 0
+                          }
+                        ]
+                      },
+                      {
+                        "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                        "color": {
+                          "r": 1,
+                          "g": 0,
+                          "b": 0,
+                          "a": 1
+                        },
+                        "radius": 0.003,
+                        "points": [
+                          {
+                            "x": -0.1,
+                            "y": 0,
+                            "z": 0
+                          },
+                          {
+                            "x": 0.1,
+                            "y": 0,
+                            "z": 0
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "block"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "ink outside surface",
+    "valid": false,
+    "arguments": {
+      "blueprint": {
+        "version": 1,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 1,
+                "color": {
+                  "r": 0.3,
+                  "g": 0.7,
+                  "b": 0.9,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [
+                  {
+                    "version": 1,
+                    "id": "front",
+                    "part": "",
+                    "position": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    },
+                    "rotation": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0,
+                      "w": 1
+                    },
+                    "width": 0.1,
+                    "height": 0.5,
+                    "enabled": true,
+                    "strokes": [
+                      {
+                        "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                        "color": {
+                          "r": 1,
+                          "g": 0,
+                          "b": 0,
+                          "a": 1
+                        },
+                        "radius": 0.003,
+                        "points": [
+                          {
+                            "x": -0.1,
+                            "y": 0,
+                            "z": 0
+                          },
+                          {
+                            "x": 0.1,
+                            "y": 0,
+                            "z": 0
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "block"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "drawing tool",
+    "valid": true,
+    "arguments": {
+      "blueprint": {
+        "version": 1,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 1,
+                "color": {
+                  "r": 0.3,
+                  "g": 0.7,
+                  "b": 0.9,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [
+                  {
+                    "version": 1,
+                    "part": "",
+                    "position": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    },
+                    "rotation": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0,
+                      "w": 1
+                    },
+                    "color": {
+                      "r": 0,
+                      "g": 0,
+                      "b": 0,
+                      "a": 1
+                    },
+                    "radius": 0.003,
+                    "enabled": true
+                  }
+                ],
+                "geometry": {
+                  "kind": "block"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "tool missing part",
+    "valid": false,
+    "arguments": {
+      "blueprint": {
+        "version": 1,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 1,
+                "color": {
+                  "r": 0.3,
+                  "g": 0.7,
+                  "b": 0.9,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [
+                  {
+                    "version": 1,
+                    "part": "missing",
+                    "position": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    },
+                    "rotation": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0,
+                      "w": 1
+                    },
+                    "color": {
+                      "r": 0,
+                      "g": 0,
+                      "b": 0,
+                      "a": 1
+                    },
+                    "radius": 0.003,
+                    "enabled": true
+                  }
+                ],
+                "geometry": {
+                  "kind": "block"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "relative root motion",
+    "valid": true,
+    "arguments": {
+      "blueprint": {
+        "version": 1,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 1,
+                "color": {
+                  "r": 0.3,
+                  "g": 0.7,
+                  "b": 0.9,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "motion": {
+                  "loop": true,
+                  "frames": [
+                    {
+                      "time": 0,
+                      "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                      },
+                      "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0,
+                        "w": 1
+                      },
+                      "scale": 1
+                    },
+                    {
+                      "time": 1,
+                      "position": {
+                        "x": 1,
+                        "y": 0,
+                        "z": 0
+                      },
+                      "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0,
+                        "w": 1
+                      },
+                      "scale": 2
+                    }
+                  ]
+                },
+                "geometry": {
+                  "kind": "block"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "unordered motion",
+    "valid": false,
+    "arguments": {
+      "blueprint": {
+        "version": 1,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 1,
+                "color": {
+                  "r": 0.3,
+                  "g": 0.7,
+                  "b": 0.9,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "motion": {
+                  "loop": true,
+                  "frames": [
+                    {
+                      "time": 0,
+                      "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                      },
+                      "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0,
+                        "w": 1
+                      },
+                      "scale": 1
+                    },
+                    {
+                      "time": 0,
+                      "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                      },
+                      "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0,
+                        "w": 1
+                      },
+                      "scale": 1
+                    }
+                  ]
+                },
+                "geometry": {
+                  "kind": "block"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "motion leaves room after placement",
+    "valid": false,
+    "arguments": {
+      "blueprint": {
+        "version": 1,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 1,
+                "color": {
+                  "r": 0.3,
+                  "g": 0.7,
+                  "b": 0.9,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "motion": {
+                  "loop": true,
+                  "frames": [
+                    {
+                      "time": 0,
+                      "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                      },
+                      "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0,
+                        "w": 1
+                      },
+                      "scale": 1
+                    },
+                    {
+                      "time": 1,
+                      "position": {
+                        "x": 1,
+                        "y": 0,
+                        "z": 0
+                      },
+                      "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0,
+                        "w": 1
+                      },
+                      "scale": 2
+                    }
+                  ]
+                },
+                "geometry": {
+                  "kind": "block"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "position": {
+        "x": 24.9,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 2
+    }
+  },
+  {
+    "name": "motion scale exceeds room limit",
+    "valid": false,
+    "arguments": {
+      "blueprint": {
+        "version": 1,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 1,
+                "color": {
+                  "r": 0.3,
+                  "g": 0.7,
+                  "b": 0.9,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "motion": {
+                  "loop": true,
+                  "frames": [
+                    {
+                      "time": 0,
+                      "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                      },
+                      "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0,
+                        "w": 1
+                      },
+                      "scale": 1
+                    },
+                    {
+                      "time": 1,
+                      "position": {
+                        "x": 1,
+                        "y": 0,
+                        "z": 0
+                      },
+                      "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0,
+                        "w": 1
+                      },
+                      "scale": 2
+                    }
+                  ]
+                },
+                "geometry": {
+                  "kind": "block"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 4
+    }
+  }
+]

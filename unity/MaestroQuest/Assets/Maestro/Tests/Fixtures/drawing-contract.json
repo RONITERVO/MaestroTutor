@@ -1,0 +1,173 @@
+[
+  {
+    "name": "splice",
+    "call": {
+      "id": "object.drawing.edit",
+      "version": 1,
+      "arguments": {
+        "operation": "splice",
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 1,
+        "index": 2,
+        "deleteCount": 0,
+        "points": [
+          {
+            "x": 0.2,
+            "y": 0,
+            "z": 0
+          }
+        ]
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "thickness",
+    "call": {
+      "id": "object.drawing.edit",
+      "version": 1,
+      "arguments": {
+        "operation": "radius",
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 1,
+        "radius": 0.005
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "built-ins excluded",
+    "call": {
+      "id": "object.drawing.edit",
+      "version": 1,
+      "arguments": {
+        "operation": "splice",
+        "target": "book",
+        "revision": 1,
+        "index": 2,
+        "deleteCount": 0,
+        "points": [
+          {
+            "x": 0.2,
+            "y": 0,
+            "z": 0
+          }
+        ]
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "exact revision required",
+    "call": {
+      "id": "object.drawing.edit",
+      "version": 1,
+      "arguments": {
+        "operation": "splice",
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 0,
+        "index": 2,
+        "deleteCount": 0,
+        "points": [
+          {
+            "x": 0.2,
+            "y": 0,
+            "z": 0
+          }
+        ]
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "negative index excluded",
+    "call": {
+      "id": "object.drawing.edit",
+      "version": 1,
+      "arguments": {
+        "operation": "splice",
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 1,
+        "index": -1,
+        "deleteCount": 0,
+        "points": [
+          {
+            "x": 0.2,
+            "y": 0,
+            "z": 0
+          }
+        ]
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "point coordinate bounded",
+    "call": {
+      "id": "object.drawing.edit",
+      "version": 1,
+      "arguments": {
+        "operation": "splice",
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 1,
+        "index": 2,
+        "deleteCount": 0,
+        "points": [
+          {
+            "x": 20,
+            "y": 0,
+            "z": 0
+          }
+        ]
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "unknown fields rejected",
+    "call": {
+      "id": "object.drawing.edit",
+      "version": 1,
+      "arguments": {
+        "operation": "splice",
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 1,
+        "index": 2,
+        "deleteCount": 0,
+        "points": [
+          {
+            "x": 0.2,
+            "y": 0,
+            "z": 0
+          }
+        ],
+        "force": true
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "resolve retry",
+    "call": {
+      "id": "object.drawing.resolve",
+      "version": 1,
+      "arguments": {
+        "operation": "retry",
+        "sessionId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "resolve discard",
+    "call": {
+      "id": "object.drawing.resolve",
+      "version": 1,
+      "arguments": {
+        "operation": "discard",
+        "sessionId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+    },
+    "valid": true
+  }
+]

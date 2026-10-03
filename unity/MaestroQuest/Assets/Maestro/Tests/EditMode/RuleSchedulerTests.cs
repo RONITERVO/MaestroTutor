@@ -1,0 +1,245 @@
+// Copyright 2026 Roni Tervo
+// SPDX-License-Identifier: Apache-2.0
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using Newtonsoft.Json.Linq;
+using Maestro.Quest.Rules;
+using Maestro.Quest.Programs;
+using NUnit.Framework;
+using UnityEngine;
+
+namespace Maestro.Quest.Tests
+{
+    public sealed class RuleSchedulerTests
+    {
+        static JObject InvocationCall(string capability="animation.play",string target="maestro")=>capability=="time.wait"
+            ? new JObject {["id"]=capability,["version"]=1,["arguments"]=new JObject {["seconds"]=1}}
+            : new JObject {["id"]=capability,["version"]=1,["arguments"]=new JObject {["target"]=target,["seconds"]=1,["loop"]=false,["source"]=new JObject {["kind"]="recording"},["channel"]="wholeTarget"}};
+        [Test] public void InstantEffectsCompleteOnceWithoutAdvancingTheClockAndStayCompletedOnCancel()
+        {
+            var actions=new Actions();var scheduler=new RuleScheduler(actions);
+            var call=new JObject {["id"]="object.physics.impulse",["version"]=1,["arguments"]=new JObject {["target"]=Guid.NewGuid().ToString("N"),["x"]=0,["y"]=1,["z"]=0}};
+            Assert.That(scheduler.Invoke(call,7,out var id,out var error),Is.True,error);
+            Assert.That(actions.Started.Count,Is.EqualTo(1));Assert.That((string)scheduler.Invocation(id)["phase"],Is.EqualTo("completed"),"A completed physical effect cannot be cancelled as if still pending");scheduler.Tick(7);
+            Assert.That((string)scheduler.Invocation(id)["phase"],Is.EqualTo("completed"));
+            Assert.That(scheduler.CancelInvocation(id,out _),Is.True);scheduler.Tick(999);
+            Assert.That(actions.Started.Count,Is.EqualTo(1));Assert.That(scheduler.RunningCount,Is.Zero);
+        }
+        [Test] public void InstantOnlyForeverCannotRenewItsInstructionBudgetOrCatchUpInOneFrame()
+        {
+            var step=new RuleStep {action=RuleActionKind.PhysicsStop,targetId=Guid.NewGuid().ToString("N")};
+            var json=JObject.Parse(Maestro.Quest.Programs.BehaviourProgram.FromSteps(step));
+            json["version"]=3;json["state"]=new JArray();json["events"]=new JArray();
+            var body=json["functions"][0]["body"].DeepClone();
+            json["functions"][0]["body"]=new JArray(new JObject {["id"]="continuous",["op"]="forever",["body"]=body});
+            var sequence=new RuleSequence {id=Guid.NewGuid().ToString("N"),name="No timer",program=json.ToString()};
+            var actions=new Actions();var scheduler=new RuleScheduler(actions);scheduler.Configure(new RuleDocument {sequences=new[]{sequence}});
+            Assert.That(scheduler.Trigger(sequence.id,0),Is.True);
+            for(int i=0;i<66000&&scheduler.RunningCount>0;i++) {
+                int before=actions.Started.Count;scheduler.Tick(1000+i);
+                Assert.That(actions.Started.Count-before,Is.LessThanOrEqualTo(1),"No recursive instant-action catch-up");
+            }
+            Assert.That(scheduler.RunningCount,Is.Zero);Assert.That(scheduler.LastError,Does.Contain("instruction budget"));
+            Assert.That(actions.Started.Count,Is.GreaterThan(1));
+        }
+        [Test] public void OneOffCallsShareOwnershipAndCompletionWithoutSavedSequences()
+        {
+            var actions=new Actions();var scheduler=new RuleScheduler(actions);var saved=Sequence();saved.interruption=RuleInterruption.Ignore;
+            scheduler.Configure(new RuleDocument {sequences=new[] {saved}});
+            var call=InvocationCall();Assert.That(scheduler.Invoke(call,0,out var id,out var error),Is.True,error);
+            call["arguments"]["seconds"]=20;
+            Assert.That((float)scheduler.Invocation(id)["call"]["arguments"]["seconds"],Is.EqualTo(1),"Input copies are immutable");
+            Assert.That(scheduler.Trigger(saved.id,0),Is.False,"Saved and one-off actions reserve the same target");
+            Assert.That(scheduler.Invoke(InvocationCall(),0,out var rejected,out _),Is.False);Assert.That(rejected,Is.Null);
+            Assert.That(actions.Started.Count,Is.EqualTo(1));Assert.That(scheduler.ObserveRuns(),Is.Empty,"No fake saved sequence is displayed");
+            scheduler.Tick(1.1f);Assert.That((string)scheduler.Invocation(id)["phase"],Is.EqualTo("completed"));
+            Assert.That(scheduler.RunningCount,Is.Zero);Assert.That(scheduler.Outcomes,Is.Empty);
+            Assert.That(scheduler.CancelInvocation(id,out _),Is.True);Assert.That((string)scheduler.Invocation(id)["phase"],Is.EqualTo("completed"));
+            Assert.That(scheduler.Trigger(saved.id,2),Is.True);Assert.That(scheduler.Invoke(InvocationCall(),2,out _,out _),Is.False);
+            Assert.That(scheduler.CancelInvocation(scheduler.ObserveRuns().Single().id,out _),Is.False,"One-off cancellation cannot target a saved run");
+            scheduler.StopAll();
+            Assert.That(scheduler.Invoke(InvocationCall(),3,out var one,out _),Is.True);
+            Assert.That(scheduler.Invoke(InvocationCall(target:"book"),3,out var two,out _),Is.True);
+            Assert.That(scheduler.CancelInvocation(one,out _),Is.True);Assert.That(scheduler.RunningCount,Is.EqualTo(1));
+            Assert.That((string)scheduler.Invocation(two)["phase"],Is.EqualTo("running"));
+        }
+        [Test] public void OneOffLoadingCancellationAndFailureUseTheSameTerminalHistory()
+        {
+            var actions=new PreparingActions();var scheduler=new RuleScheduler(actions);
+            Assert.That(scheduler.Invoke(InvocationCall(),0,out var id,out _),Is.True);
+            Assert.That((string)scheduler.Invocation(id)["phase"],Is.EqualTo("preparing"));scheduler.Tick(5);
+            Assert.That(scheduler.RunningCount,Is.EqualTo(1));Assert.That(scheduler.CancelInvocation(id,out _),Is.True);
+            actions.Phase=RuleActionState.Ready;scheduler.Tick(20);
+            Assert.That((string)scheduler.Invocation(id)["phase"],Is.EqualTo("cancelled"));Assert.That(actions.Starts,Is.EqualTo(1));
+            actions.Phase=RuleActionState.Preparing;Assert.That(scheduler.Invoke(InvocationCall(),21,out var failed,out _),Is.True);
+            actions.Phase=RuleActionState.Failed;scheduler.Tick(22);
+            Assert.That((string)scheduler.Invocation(failed)["phase"],Is.EqualTo("failed"));Assert.That(scheduler.RunningCount,Is.Zero);
+            Assert.That(scheduler.Invoke(InvocationCall(),23,out var synchronous,out _),Is.False);
+            Assert.That((string)scheduler.Invocation(synchronous)["phase"],Is.EqualTo("failed"));
+            actions.Failure="Model error\n"+new string('x',2500);
+            Assert.That(scheduler.Invoke(InvocationCall(),24,out var bounded,out _),Is.False);
+            Assert.That(((string)scheduler.Invocation(bounded)["status"]).Length,Is.EqualTo(2048));
+        }
+        [Test] public void OneOffCapacityStopAndEvictionAreBoundedWithoutAutomaticReplay()
+        {
+            var scheduler=new RuleScheduler(new Actions());string first=null;
+            for(int i=0;i<8;i++){Assert.That(scheduler.Invoke(InvocationCall("time.wait"),0,out var id,out _),Is.True);first??=id;}
+            Assert.That(scheduler.HasCapacity,Is.False);Assert.That(scheduler.Invoke(InvocationCall("time.wait"),0,out _,out _),Is.False);
+            scheduler.Suspend(true);Assert.That(scheduler.RunningCount,Is.Zero);
+            Assert.That((string)scheduler.Invocation(first)["phase"],Is.EqualTo("cancelled"));
+            Assert.That(scheduler.Invoke(InvocationCall("time.wait"),1,out _,out _),Is.False);
+            scheduler.Suspend(false);scheduler.Tick(2);Assert.That(scheduler.RunningCount,Is.Zero);
+            for(int i=0;i<17;i++){Assert.That(scheduler.Invoke(InvocationCall("time.wait"),3+i*2,out _,out _),Is.True);scheduler.Tick(4.1f+i*2);}
+            Assert.That(scheduler.Invocation(first),Is.Null);Assert.That(scheduler.CancelInvocation(first,out _),Is.False);
+            Assert.That(scheduler.ObserveInvocations(null)["outcomes"].Count(),Is.EqualTo(16));
+        }
+        [Test] public void ChannelClaimsPermitWalkingWithArmsButRetainWholeBodyAndPropExclusivity()
+        {
+            var scheduler=new RuleScheduler(new Actions());
+            JObject Call(string id)=>new JObject {["id"]=id,["version"]=1,["arguments"]=new JObject {["target"]="maestro",["seconds"]=10}};
+            var follow=Call("avatar.follow.user");var look=Call("avatar.look.user");
+            var arms=Call("animation.play");arms["arguments"]["source"]=Newtonsoft.Json.Linq.JObject.Parse("{\"kind\":\"gesture\",\"gesture\":\"greeting\"}");arms["arguments"]["channel"]="upperBody";
+            var body=Call("animation.play");body["arguments"]["source"]=Newtonsoft.Json.Linq.JObject.Parse("{\"kind\":\"gesture\",\"gesture\":\"greeting\"}");body["arguments"]["channel"]="wholeTarget";
+            Assert.That(scheduler.Invoke(follow,0,out var walking,out var error),Is.True,error);
+            Assert.That(scheduler.Invoke(arms,0,out var waving,out error),Is.True,error);
+            Assert.That(scheduler.Invoke(look,0,out _,out _),Is.False,"Follow already owns gaze");
+            Assert.That(scheduler.Invoke(arms,0,out _,out _),Is.False,"Two gestures cannot own the same arms");
+            Assert.That(scheduler.Invoke(body,0,out _,out _),Is.False,"Full body includes every channel");
+            Assert.That(scheduler.CancelInvocation(waving,out _),Is.True);
+            Assert.That((string)scheduler.Invocation(walking)["phase"],Is.EqualTo("running"));
+            Assert.That(scheduler.Invoke(arms,1,out waving,out _),Is.True);
+            scheduler.StopConflicting(new RuleStep {action=RuleActionKind.FollowUser},true);
+            Assert.That((string)scheduler.Invocation(walking)["phase"],Is.EqualTo("cancelled"));
+            Assert.That((string)scheduler.Invocation(waving)["phase"],Is.EqualTo("running"));
+            scheduler.StopTarget("maestro",true);Assert.That(scheduler.RunningCount,Is.Zero,"Grabbing interrupts every owned channel");
+            Assert.That(scheduler.Invoke(body,2,out _,out _),Is.True);
+            Assert.That(scheduler.Invoke(arms,2,out _,out _),Is.False,"Conflicts are symmetric");
+            scheduler.StopAll();
+            var prop=Guid.NewGuid().ToString("N");
+            var carrying=new RuleStep {action=RuleActionKind.Gesture,seconds=5,propId=prop};
+            Assert.That(LegacyCapabilityAdapters.TryCall(carrying,out var named,out _),Is.True);
+            var call=new JObject {["id"]="animation.play",["version"]=1,["arguments"]=named.Arguments};
+            Assert.That(scheduler.Invoke(call,3,out _,out error),Is.True,error);
+            Assert.That(scheduler.Invoke(InvocationCall(target:prop),3,out _,out _),Is.False,"Props remain exclusive whole objects");
+            Assert.That(scheduler.Invoke(arms,3,out _,out _),Is.False);
+            arms["arguments"]["gesture"]="walk";Assert.That(scheduler.Invoke(arms,4,out _,out _),Is.False);
+        }
+        sealed class Actions : IRuleActions
+        {
+            public readonly List<string> Started = new();
+            public readonly HashSet<string> Active = new();
+            public int Stopped;
+            public bool CanRun(CapabilityCall step,out string error) { error = null; return true; }
+            public bool Start(string id,CapabilityCall invocation,out float seconds,out string error) { invocation.TryStep(out var step,out _); Active.Add(id); Started.Add(step.targetId); seconds = RuleDocument.IsInstant(step.action)?0:step.seconds == 0 ? 2 : step.seconds; error = null; return true; }
+            public void Stop(string id,bool preserve) { if (Active.Remove(id)) Stopped++; }
+        }
+        sealed class PreparingActions : IRuleActions,IRuleReadiness
+        {
+            public RuleActionState Phase = RuleActionState.Preparing;
+            public int Polls,Stops,Starts;
+            public string Failure="Missing saved motion";
+            public bool CanRun(CapabilityCall step,out string error) { error = null; return true; }
+            public bool Start(string id,CapabilityCall invocation,out float seconds,out string error) { invocation.TryStep(out var step,out _); Starts++; seconds = 2; error = null; return true; }
+            public void Stop(string id,bool preserve) { Stops++; }
+            public RuleActionState State(string id,out string error) { Polls++; error = Phase == RuleActionState.Failed ? Failure : null; return Phase; }
+        }
+        [Test] public void PreparationReservesTheTargetButStartsDurationOnlyWhenReadyAndNeverResumesAfterCancellation()
+        {
+            var sequence = Sequence(); var other = Sequence(); other.interruption = RuleInterruption.Ignore;
+            var actions = new PreparingActions(); var scheduler = new RuleScheduler(actions);
+            var binding = Binding(sequence,RuleEventKind.Speaking); binding.stopOnExit = true;
+            scheduler.Configure(new RuleDocument { sequences = new[] { sequence,other },bindings = new[] { binding } });
+            Assert.That(scheduler.Trigger(sequence.id,0),Is.True); scheduler.Tick(4); Assert.That(scheduler.PreparingCount,Is.EqualTo(1));
+            Assert.That(scheduler.Trigger(other.id,4),Is.False,"Loading reserves the same target");
+            actions.Phase = RuleActionState.Ready; scheduler.Tick(5); scheduler.Tick(6.99f); Assert.That(scheduler.RunningCount,Is.EqualTo(1));
+            scheduler.Tick(7.01f); Assert.That(scheduler.RunningCount,Is.Zero); Assert.That(actions.Stops,Is.EqualTo(1));
+            actions.Phase = RuleActionState.Preparing; scheduler.Trigger(sequence.id,10); int polls = actions.Polls; scheduler.Tick(40);
+            Assert.That(actions.Polls,Is.EqualTo(polls),"An expired load must not start before it is cancelled"); Assert.That(scheduler.RunningCount,Is.Zero);
+            scheduler.SetActivity("idle",41); scheduler.SetActivity("speaking",42); Assert.That(scheduler.PreparingCount,Is.EqualTo(1));
+            scheduler.SetActivity("idle",43); actions.Phase = RuleActionState.Ready; scheduler.Tick(44); Assert.That(scheduler.RunningCount,Is.Zero);
+            actions.Phase = RuleActionState.Preparing; scheduler.Trigger(sequence.id,45); scheduler.Suspend(true); scheduler.Suspend(false); actions.Phase = RuleActionState.Ready; scheduler.Tick(46); Assert.That(scheduler.RunningCount,Is.Zero);
+            actions.Phase = RuleActionState.Failed; Assert.That(scheduler.Trigger(sequence.id,50),Is.False); Assert.That(scheduler.LastError,Does.Contain("Missing"));
+        }
+        static RuleSequence Sequence(string target = "maestro") => new() { id = Guid.NewGuid().ToString("N"), name = "Test action", program=Maestro.Quest.Programs.BehaviourProgram.FromSteps(new RuleStep { action = RuleActionKind.RecordedAnimation, targetId = target, seconds = 2 }) };
+        static RuleBinding Binding(RuleSequence sequence,RuleEventKind kind) => new() { id = Guid.NewGuid().ToString("N"), sequenceId = sequence.id, trigger = kind, sourceId = "book" };
+        [Test] public void SharedSequenceRespondsToManualStateAndObjectTriggersWithoutRepeatedSnapshotFiring()
+        {
+            var action = Sequence(); var fake = new Actions(); var scheduler = new RuleScheduler(fake);
+            var tap = Binding(action,RuleEventKind.ItemTapped);
+            scheduler.Configure(new RuleDocument { sequences = new[] { action },bindings = new[] { Binding(action,RuleEventKind.Speaking),tap } });
+            scheduler.SetActivity("idle",0); scheduler.SetActivity("speaking",1); scheduler.SetActivity("speaking",1.1f);
+            Assert.That(fake.Started.Count,Is.EqualTo(1));
+            scheduler.Emit(RuleEventKind.ItemTapped,"maestro",2); Assert.That(fake.Started.Count,Is.EqualTo(1));
+            scheduler.Emit(RuleEventKind.ItemTapped,"book",2); Assert.That(fake.Started.Count,Is.EqualTo(2));
+            scheduler.Emit(RuleEventKind.ItemTapped,"book",2.1f); Assert.That(fake.Started.Count,Is.EqualTo(2),"Cooldown prevents repeated contact");
+            Assert.That(scheduler.Trigger(action.id,2.2f),Is.True); Assert.That(fake.Started.Count,Is.EqualTo(3)); Assert.That(scheduler.RunningCount,Is.EqualTo(1));
+        }
+        [Test] public void QueueKeepsOneLatestRequestAndDisjointTargetsRunTogether()
+        {
+            var first = Sequence(); var queued = Sequence(); queued.interruption = RuleInterruption.QueueLatest;
+            var other = Sequence("book"); var fake = new Actions(); var scheduler = new RuleScheduler(fake);
+            scheduler.Configure(new RuleDocument { sequences = new[] { first,queued,other } });
+            scheduler.Trigger(first.id,0); scheduler.Trigger(other.id,0);
+            for (int i = 0; i < 20; i++) scheduler.Trigger(queued.id,.1f);
+            Assert.That(scheduler.RunningCount,Is.EqualTo(2)); Assert.That(scheduler.QueuedCount,Is.EqualTo(1));
+            scheduler.Tick(2.1f); Assert.That(scheduler.RunningCount,Is.EqualTo(1)); Assert.That(scheduler.QueuedCount,Is.Zero); Assert.That(fake.Started.Count,Is.EqualTo(3));
+            scheduler.Suspend(true); Assert.That(fake.Active,Is.Empty); Assert.That(scheduler.Trigger(first.id,3),Is.False);
+            scheduler.Suspend(false); scheduler.Tick(10); Assert.That(fake.Active,Is.Empty,"Resume does not replay interrupted work");
+        }
+        [Test] public void StateExitCancelsRunningAndQueuedWhileRulesAndIgnoreProtectsCurrentAction()
+        {
+            var first = Sequence(); first.repeat = true; first.interruption = RuleInterruption.Ignore;
+            var second = Sequence(); second.interruption = RuleInterruption.QueueLatest;
+            var a = Binding(first,RuleEventKind.Speaking); a.stopOnExit = true;
+            var b = Binding(second,RuleEventKind.Speaking); b.stopOnExit = true;
+            var fake = new Actions(); var scheduler = new RuleScheduler(fake);
+            scheduler.Configure(new RuleDocument { sequences = new[] { first,second },bindings = new[] { a,b } });
+            scheduler.SetActivity("idle",0); scheduler.SetActivity("speaking",1);
+            Assert.That(scheduler.Trigger(first.id,1.1f),Is.False); Assert.That(scheduler.RunningCount,Is.EqualTo(1)); Assert.That(scheduler.QueuedCount,Is.EqualTo(1));
+            scheduler.SetActivity("listening",1.2f); Assert.That(fake.Active,Is.Empty); Assert.That(scheduler.QueuedCount,Is.Zero);
+            scheduler.Tick(100); Assert.That(fake.Active,Is.Empty);
+            scheduler.SetActivity("speaking",102); Assert.That(scheduler.RunningCount,Is.EqualTo(1));
+            scheduler.ForgetActivity(); Assert.That(fake.Active,Is.Empty); Assert.That(scheduler.QueuedCount,Is.Zero);
+            scheduler.SetActivity("speaking",104); Assert.That(fake.Active,Is.Empty,"Browser resume is a baseline, not a fresh speaking event");
+            scheduler.Trigger(first.id,105); scheduler.ForgetActivity(); Assert.That(scheduler.RunningCount,Is.EqualTo(1),"A manual action does not depend on browser activity");
+        }
+        [Test] public void SequentialActionsAdvanceOncePerTickAndEditingCanStopAnEntireSequence()
+        {
+            var sequence = Sequence(); sequence.repeat = true; sequence.SetSimpleSteps(new[] { new RuleStep { action = RuleActionKind.RecordedAnimation,targetId = "book",seconds = 1 },new RuleStep { action = RuleActionKind.RecordedAnimation,targetId = "maestro",seconds = 1 } });
+            var fake = new Actions(); var scheduler = new RuleScheduler(fake); scheduler.Configure(new RuleDocument { sequences = new[] { sequence } });
+            scheduler.Trigger(sequence.id,0); scheduler.Tick(1000); Assert.That(fake.Started.Count,Is.EqualTo(2),"No catch-up loop after a stalled frame");
+            Assert.That(fake.Started[1],Is.EqualTo("maestro")); scheduler.StopTarget("book",true); Assert.That(fake.Active,Is.Empty);
+        }
+        [Test] public void PropReferencesReserveBothTargetsAndActiveFailuresCancelTheRun()
+        {
+            var carry=Sequence(); string prop=Guid.NewGuid().ToString("N"); var carrying=carry.SimpleSteps();carrying[0].propId=prop;carry.SetSimpleSteps(carrying);
+            var other=Sequence(prop); other.interruption=RuleInterruption.Ignore;
+            var actions=new PreparingActions { Phase=RuleActionState.Ready }; var scheduler=new RuleScheduler(actions);
+            scheduler.Configure(new RuleDocument { sequences=new[] { carry,other } });
+            Assert.That(scheduler.Trigger(carry.id,0),Is.True); Assert.That(scheduler.Trigger(other.id,.1f),Is.False);
+            scheduler.StopTarget(prop,true); Assert.That(scheduler.RunningCount,Is.Zero);
+            Assert.That(scheduler.Trigger(carry.id,.2f),Is.True); actions.Phase=RuleActionState.Failed; scheduler.Tick(.3f);
+            Assert.That(scheduler.RunningCount,Is.Zero); Assert.That(scheduler.LastError,Does.Contain("Missing"));
+        }
+        [Test] public void ValidatesReferencesAndBoundsAndRecoversRulesButtonsAndIndependentCopies()
+        {
+            string directory = Path.Combine(Path.GetTempPath(),"MaestroRules-"+Guid.NewGuid().ToString("N"));
+            try
+            {
+                var sequence = Sequence(); var document = new RuleDocument { sequences = new[] { sequence },bindings = new[] { Binding(sequence,RuleEventKind.Speaking) },buttons = new[] { new RuleButtonData { id = Guid.NewGuid().ToString("N"),sequenceId = sequence.id,mount = ButtonMount.LeftController,position = new Vector3(-.12f,.08f,.06f) } } };
+                Assert.That(document.Validate(out _),Is.True); var copy = document.Copy(); var edited=copy.sequences[0].SimpleSteps();edited[0].seconds=9;copy.sequences[0].SetSimpleSteps(edited); Assert.That(document.sequences[0].SimpleSteps()[0].seconds,Is.EqualTo(2));
+                var storage = new RuleStorage(directory); Assert.That(storage.Save(document,out _),Is.True); Assert.That(storage.Save(copy,out _),Is.True);
+                File.WriteAllText(Path.Combine(directory,"behaviours.v2.json"),"broken");
+                var recovered = storage.Load(out var message); StringAssert.Contains("backup",message); Assert.That(recovered.buttons[0].position,Is.EqualTo(document.buttons[0].position));
+                Assert.That(recovered.sequences[0].SimpleSteps()[0].seconds,Is.EqualTo(2));
+                copy.buttons[0].position = Vector3.one; Assert.That(copy.Validate(out _),Is.False);
+                copy = document.Copy(); copy.bindings[0].sequenceId = Guid.NewGuid().ToString("N"); Assert.That(copy.Validate(out _),Is.False);
+                copy = document.Copy(); edited=copy.sequences[0].SimpleSteps();edited[0].seconds=-1;copy.sequences[0].SetSimpleSteps(edited); Assert.That(copy.Validate(out _),Is.False);
+                copy = document.Copy(); copy.bindings[0].trigger = (RuleEventKind)500; Assert.That(copy.Validate(out _),Is.False);
+            }
+            finally { if (Directory.Exists(directory)) Directory.Delete(directory,true); }
+        }
+    }
+}

@@ -1,3 +1,4 @@
+import { prepareRoomAgentHandoff, roomAgentRequestForVerification, roomAgentTargetsForVerification, startRoomAgentTask } from '../services/roomAgentTasks';
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 
@@ -242,7 +243,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
   const normalizeSuggestionCreatorToolRequest = useCallback((toolRequest: unknown, assistantMessageId: string) => {
     const assistantMessage = messagesRef.current.find(message => message.id === assistantMessageId);
     const fallbackText = truncateForToolPrompt(getVisibleAssistantMessageText(assistantMessage), 500);
-    return normalizeCoreSuggestionCreatorToolRequest(toolRequest, fallbackText);
+    return normalizeCoreSuggestionCreatorToolRequest(toolRequest, fallbackText, { allowAgent: roomAgentRequestForVerification(assistantMessageId, assistantMessage?.llmRawResponse || '') !== undefined, agentTargets: roomAgentTargetsForVerification(assistantMessageId, assistantMessage?.llmRawResponse || '') });
   }, [messagesRef, settingsRef]);
 
   const formatGeminiStatusLine = useCallback((event: GeminiProgressEvent): string | undefined => {
@@ -380,7 +381,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
   const { executeAssistantToolRequest } = useMemo(() => createAssistantTools({
     updateMessage, messagesRef, selectedLanguagePairRef,
     settingsRef, runAssistantImageGeneration, attachGeneratedToolMedia,
-    synthesizeGeminiAudioNote, generateMusic,
+    synthesizeGeminiAudioNote, generateMusic, runAgentTask: startRoomAgentTask,
   }), [
     updateMessage, messagesRef, selectedLanguagePairRef,
     settingsRef, runAssistantImageGeneration, attachGeneratedToolMedia,
@@ -410,7 +411,11 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       getProfile: getGlobalProfileDB, saveHistory: safeSaveChatHistoryDB, saveProfile: setGlobalProfileDB,
       notifyProfileUpdated: () => { window.dispatchEvent(new CustomEvent('globalProfileUpdated')); },
     },
-    runReplySuggestions,
+    runReplySuggestions: (input, options) => runReplySuggestions({ ...input,
+      agentRequest: roomAgentRequestForVerification(input.assistantMessageId, input.lastTutorMessage),
+      ...(roomAgentRequestForVerification(input.assistantMessageId, input.lastTutorMessage) !== undefined
+        ? { agentTargets: roomAgentTargetsForVerification(input.assistantMessageId, input.lastTutorMessage) } : {}),
+    }, options),
     normalizeSuggestionCreatorArtifact,
     normalizeSuggestionCreatorToolRequest,
     executeAssistantToolRequest,
@@ -487,6 +492,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     messagesRef,
     selectedLanguagePairRef,
     runTutorTextTurn,
+    prepareAgentHandoff: prepareRoomAgentHandoff,
     trackGeminiUsage,
     setLatestGroundingChunks,
     formatGeminiPhaseLabel,

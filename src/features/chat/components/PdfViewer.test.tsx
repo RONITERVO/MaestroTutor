@@ -182,4 +182,13 @@ describe('PdfViewer page windowing', () => {
     expect(new Set(renderedPages)).toEqual(new Set([1]));
     expect(container.textContent).toContain('20p');
   });
+
+  it('renders the dedicated book page without a chat activation slot or added controls', async () => {
+    const { container } = render(<PdfViewer src={SRC} variant="preview" embedId="book-pdf" activeOnBook />);
+    await waitFor(() => { expect(renderedPages.length).toBeGreaterThan(0); });
+    expect(container.querySelectorAll('button, input[type="checkbox"]')).toHaveLength(0);
+    expect(container.textContent).not.toContain('1 / 20');
+    expect(container.querySelector('[style*="max-height: 100vh"]')).not.toBeNull();
+    expect(new Set(renderedPages).size).toBeLessThanOrEqual(3);
+  });
 });

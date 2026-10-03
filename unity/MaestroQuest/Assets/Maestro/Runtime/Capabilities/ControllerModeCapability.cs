@@ -1,0 +1,25 @@
+// Copyright 2026 Roni Tervo
+// SPDX-License-Identifier: Apache-2.0
+using System.Collections.Generic;
+using Maestro.Quest.Interaction;
+using Newtonsoft.Json.Linq;
+using static Maestro.Quest.Programs.CapabilitySchema;
+namespace Maestro.Quest.Programs
+{
+    internal sealed class ControllerModeCapability:CapabilityModule
+    {
+        public override string Id=>"controller.mode.set";
+        public override string Label=>"Change movement or room view";
+        public override string Duration=>"instant";
+        public override IReadOnlyList<string> Requirements=>new[]{"controls.mode.current","tracking.available","manual.released"};
+        public override bool RequiresQuietRoom(JObject args)=>MovementControls.QuietMode((string)args["operation"]);
+        public override string Description=>"Explicit live opt-in only: enable/disable Maestro's stick or the user's separate movement, or switch Virtual/Mixed Reality view. Use only when the user requests that movement or view change; entering Virtual hides the real room. Read controller.mode immediately beforehand and pass its exact stateId. Manual changes, settings saves, focus/tracking changes and recovery invalidate it. Enabling never injects movement: sticks must return to neutral first. Your movement requires Virtual view; enabling Maestro requires loaded avatar and aligned running room physics. Enabling or changing view requires other runs and animation authoring to finish; it does not stop another actor. Disabling a stick is allowed alongside other runs. Returning to MR disables both sticks, restores the physical camera origin and pauses physics for alignment review. B/Y and palm Recall remain immediate manual recovery. These live modes are never saved; restart or tracking/focus loss requires explicit reenable. A completed receipt reports that moment, not continued tracking or path readiness; read the fact for current state. Cancelling a completed action does not undo its mode: issue the explicit disable or MR action with a fresh identity. Duplicate receipts never enable again.";
+        public override JObject InputSchema {get{var schema=Object(new JObject {["operation"]=Choice("view.virtual","view.mixedReality","maestro.enable","maestro.disable","user.enable","user.disable"),["stateId"]=Text("^[a-f0-9]{32}$",32)});schema["x-features"]=new JArray("controllerModes.v1");return CurrentInputs(schema,"controller.mode","stateId");}}
+        public override JObject OutputSchema=>Object(new JObject {["stateId"]=Text("^[a-f0-9]{32}$",32),["configurationId"]=Text("^[a-f0-9]{32}$",32),["avatarEnabled"]=new JObject {["type"]="boolean"},["userEnabled"]=new JObject {["type"]="boolean"},["virtualView"]=new JObject {["type"]="boolean"},["headTracked"]=new JObject {["type"]="boolean"},["focused"]=new JObject {["type"]="boolean"}});
+        public override JObject Example=>new() {["operation"]="view.virtual",["stateId"]=new string('0',32)};
+        static MovementControls Owner(CapabilityContext context)=>context.Editor?context.Editor.GetComponent<MovementControls>():null;
+        public override bool CanRun(CapabilityContext context,JObject args,out string error){var owner=Owner(context);error="Movement controls are unavailable";return owner&&owner.CanSetMode((string)args["stateId"],(string)args["operation"],out error);}
+        public override bool Start(CapabilityContext context,string runId,JObject args,out CapabilityOperation operation,out string error){operation=null;if(!CanRun(context,args,out error))return false;if(!Owner(context).SetMode((string)args["stateId"],(string)args["operation"],out var result,out error))return false;operation=new CompletedCapability(result);return true;}
+        internal static BehaviourCatalog.FactDefinition Fact()=>new("controller.mode",ProgramDataType.Read(JObject.Parse("{\"record\":{\"stateId\":\"text\",\"configurationId\":\"text\",\"avatarEnabled\":\"boolean\",\"userEnabled\":\"boolean\",\"virtualView\":\"boolean\",\"headTracked\":\"boolean\",\"focused\":\"boolean\"}}")),"Live movement and room view","Current transient opt-ins and view, with exact stateId for controller.mode.set. Read controller.settings for independent stick bindings. Focus/tracking and mode changes invalidate old state IDs. Enabled does not mean a clear path, controller tracking, or that a held stick has returned to neutral. Mode changes never save an artificial camera offset.",null,null,(context,args)=>{var owner=context.Editor?context.Editor.GetComponent<MovementControls>():null;return !owner||!owner.ConfigurationInitialized?null:ProgramValue.Literal(owner.ObserveMode());});
+    }
+}

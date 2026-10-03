@@ -16,6 +16,7 @@ import {
   shouldCommitMeasuredBox,
 } from '../utils/embedIntrinsics';
 import type { EmbedBox as EmbedBoxValue } from '../../../core/types';
+import { useSessionActive } from '../../../platform/browser/useSessionActive';
 
 type MiniGameRuntimeState = 'booting' | 'ready' | 'error';
 type MiniGameInteractionMode = 'scroll' | 'gestures';
@@ -43,6 +44,9 @@ interface MiniGameViewerProps {
   embedBox?: EmbedBoxValue;
   /** Called only when a live run measured a materially different box. */
   onEmbedBoxChange?: (box: EmbedBoxValue) => void;
+  /** The book owns one dedicated artifact surface, outside chat visibility. */
+  activeOnBook?: boolean;
+  onBookPoster?: (dataUrl: string) => void;
 }
 
 interface MiniGameInteractionDeckToggleProps {
@@ -124,6 +128,8 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
   bottomInset = 0,
   embedBox,
   onEmbedBoxChange,
+  activeOnBook = false,
+  onBookPoster,
 }) => {
   const { t } = useAppTranslations();
   const [showCode, setShowCode] = useState(false);
@@ -139,8 +145,12 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
   /** A captured poster we own until the manager takes it. */
   const pendingPosterRef = useRef<string | null>(null);
 
-  const slot = useEmbedSlot({ id: embedId, kind: 'mini-game' });
-  const { setRef, isLive, isFullyVisible, poster, pin, publishPoster, postersEnabled } = slot;
+  const slot = useEmbedSlot({ id: embedId, kind: 'mini-game', enabled: !activeOnBook });
+  const { setRef, poster, pin, publishPoster } = slot;
+  const sessionActive = useSessionActive();
+  const isLive = sessionActive && (activeOnBook || slot.isLive);
+  const isFullyVisible = activeOnBook || slot.isFullyVisible;
+  const postersEnabled = activeOnBook || slot.postersEnabled;
 
   /**
    * The reserved box. Derived from the source text when nothing is stored, so
@@ -303,6 +313,7 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
 
     const onMessage = (event: MessageEvent) => {
       const payload = event.data;
+      if (activeOnBook && event.source !== iframeRef.current?.contentWindow) return;
       if (!payload || payload.type !== 'maestro-mini-game-status' || payload.frameId !== frameId) return;
 
       if (payload.status === 'metrics' && payload.metrics) {
@@ -315,6 +326,10 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
       if (payload.status === 'poster') {
         const dataUrl = typeof payload.poster === 'string' ? payload.poster : '';
         if (!dataUrl) return;
+        if (activeOnBook) {
+          if (dataUrl.length <= 1_000_000 && /^data:image\/(png|jpeg|webp);base64,/.test(dataUrl)) onBookPoster?.(dataUrl);
+          return;
+        }
         const blobUrl = dataUrlToBlobUrl(dataUrl);
         if (!blobUrl) return;
         const previous = pendingPosterRef.current;
@@ -336,7 +351,7 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
       window.clearTimeout(bootTimeout);
       window.removeEventListener('message', onMessage);
     };
-  }, [frameId, isLive]);
+  }, [frameId, isLive, activeOnBook, onBookPoster]);
 
   /** Keep a recent still on hand, so a demotion never waits on a round trip. */
   useEffect(() => {
@@ -368,7 +383,7 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
   const effectiveBottomInset = Math.max(0, Math.round(bottomInset));
   const controlsUnderOverlay = effectiveBottomInset > 0;
   const focusedShellHeight = Math.max(92, Math.min(Math.round(effectiveBottomInset * 0.45) + 32, 122));
-  const wrapperBottomPadding = controlsUnderOverlay ? Math.max(72, focusedShellHeight - 10) : 8;
+  const wrapperBottomPadding = activeOnBook ? 0 : controlsUnderOverlay ? Math.max(72, focusedShellHeight - 10) : 8;
 
   const overlayIconShadowStyle: React.CSSProperties = {
     filter: 'drop-shadow(0 1px 2px var(--media-overlay-shadow-color))',
@@ -398,8 +413,8 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
 
   useEffect(() => {
     if (!isLive) return;
-    postMiniGameMode(gameGesturesEnabled ? 'gestures' : 'scroll');
-  }, [gameGesturesEnabled, isLive, postMiniGameMode]);
+    postMiniGameMode(activeOnBook || gameGesturesEnabled ? 'gestures' : 'scroll');
+  }, [gameGesturesEnabled, isLive, postMiniGameMode, activeOnBook]);
 
   /**
    * Playing pins the slot: an in-progress game must not be evicted just because
@@ -526,13 +541,13 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
   // -------------------------------------------------------------------- render
 
   return (
-    <div className="w-full flex flex-col items-center">
+    <div className={`w-full flex flex-col items-center ${activeOnBook ? 'quest-active-artifact' : ''}`}>
       <div className="relative w-full max-w-[560px]" style={{ paddingBottom: `${wrapperBottomPadding}px` }}>
 
         <EmbedBox
           aspectRatio={resolvedBox.aspectRatio}
           boxRef={setRef}
-          className={`rounded-2xl border ${lineColor} shadow-none ${controlsUnderOverlay && showCode ? 'z-30' : 'z-10'}`}
+          className={`${activeOnBook ? '' : `rounded-2xl border ${lineColor}`} shadow-none ${controlsUnderOverlay && showCode ? 'z-30' : 'z-10'}`}
         >
           {isLive ? (
             <iframe
@@ -548,8 +563,8 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
               referrerPolicy="no-referrer"
               style={{
                 backgroundColor: 'transparent',
-                pointerEvents: gameGesturesEnabled ? 'auto' : 'none',
-                touchAction: gameGesturesEnabled ? 'none' : 'pan-y',
+                pointerEvents: activeOnBook || gameGesturesEnabled ? 'auto' : 'none',
+                touchAction: activeOnBook || gameGesturesEnabled ? 'none' : 'pan-y',
               }}
             />
           ) : poster ? (
@@ -589,7 +604,7 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
             </button>
           )}
 
-          {isLive && !showCode && !gameGesturesEnabled && (
+          {isLive && !showCode && !gameGesturesEnabled && !activeOnBook && (
             <div
               className="absolute inset-0 z-20 bg-transparent"
               style={{ touchAction: 'pan-y' }}
@@ -664,10 +679,10 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
             }}
             aria-hidden
           />
-        ) : (
+        ) : !activeOnBook && (
           <div className="w-full mt-3 flex justify-center z-10 pointer-events-auto">
             <div className={`rounded-xl border ${lineColor} ${containerBg} px-4 py-2 backdrop-blur-sm pointer-events-auto shadow-sm flex items-center gap-4`}>
-              <MiniGameInteractionDeckToggle
+              {!activeOnBook && <MiniGameInteractionDeckToggle
                 gameGesturesEnabled={gameGesturesEnabled}
                 canUseGameGestures={canUseGameGestures}
                 groupLabel={interactionModeGroupLabel}
@@ -681,7 +696,7 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
                 containerBg={containerBg}
                 padBtnBg={padBtnBg}
                 onSelectMode={handleSelectGameGestureMode}
-              />
+              />}
               <button onClick={handleReload} className={`inline-flex items-center gap-1.5 rounded-full border ${lineColor} px-3 py-1 text-[10px] uppercase tracking-wider ${textColor} ${padBtnBg}`}>
                 <IconUndo className="w-3 h-3 shrink-0" />
                 <span className="font-semibold">{t('miniGame.restart') || 'Restart'}</span>

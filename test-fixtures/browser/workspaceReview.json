@@ -1,0 +1,147 @@
+{
+  "prepared": {
+    "requestId": "ffdf8cea0e654941b9c77cb793ec075c",
+    "phase": "prepared",
+    "status": "Inspect these exact contents and missing-reference counts before completing review.",
+    "workspace": {
+      "generationId": "646a161dbebd465e935eb322a85692eb",
+      "revision": "f26ec512081d4435a7c3b1ba89d89e3c"
+    },
+    "manifestHash": "12e6f670d3782e541dd29598586006ba5dfeb490906c18ba09216f29875b476e",
+    "committedRevision": "",
+    "summary": {
+      "files": 5,
+      "models": 0,
+      "motions": 0,
+      "modules": 0,
+      "unavailablePrograms": 0,
+      "missingModels": 0,
+      "missingMotions": 0,
+      "missingControllerPrograms": 0
+    },
+    "activityHeld": true
+  },
+  "completed": {
+    "requestId": "ffdf8cea0e654941b9c77cb793ec075c",
+    "phase": "completed",
+    "status": "Review completed. Stopped programs and physics stay stopped; start desired activity explicitly.",
+    "workspace": {
+      "generationId": "646a161dbebd465e935eb322a85692eb",
+      "revision": "f26ec512081d4435a7c3b1ba89d89e3c"
+    },
+    "manifestHash": "12e6f670d3782e541dd29598586006ba5dfeb490906c18ba09216f29875b476e",
+    "committedRevision": "2e64afad105547ae9d3b9ff663b89b94",
+    "summary": {
+      "files": 5,
+      "models": 0,
+      "motions": 0,
+      "modules": 0,
+      "unavailablePrograms": 0,
+      "missingModels": 0,
+      "missingMotions": 0,
+      "missingControllerPrograms": 0
+    },
+    "activityHeld": false
+  },
+  "current": {
+    "revision": "2e64afad105547ae9d3b9ff663b89b94",
+    "generationId": "646a161dbebd465e935eb322a85692eb",
+    "available": true,
+    "reviewRequired": false,
+    "changing": false,
+    "activationRequestId": "9fe0d9e159584624a611820eab221acf",
+    "reviewRequestId": "ffdf8cea0e654941b9c77cb793ec075c",
+    "error": ""
+  },
+  "execution": {
+    "selected": null,
+    "running": [],
+    "outcomes": [],
+    "nextRunId": "5860695bcc7a4c578fde535807ea21ea",
+    "storageError": null,
+    "recovery": null,
+    "workspace": {
+      "selected": {
+        "id": "2bf401597bd34a34b6f94763ced4f987",
+        "capability": "workspace.review.complete",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "requestId": "ffdf8cea0e654941b9c77cb793ec075c"
+        },
+        "call": {
+          "id": "workspace.review.complete",
+          "version": 1,
+          "arguments": {
+            "requestId": "ffdf8cea0e654941b9c77cb793ec075c",
+            "manifestHash": "12e6f670d3782e541dd29598586006ba5dfeb490906c18ba09216f29875b476e",
+            "expectedRevision": "f26ec512081d4435a7c3b1ba89d89e3c"
+          }
+        }
+      },
+      "running": [],
+      "outcomes": [
+        {
+          "id": "9782693520cb47fbb94d9c54fe43c3e9",
+          "capability": "workspace.archive.select",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "requestId": "cce6eb1db73a4f95aa8c5cbd5a491e12"
+          }
+        },
+        {
+          "id": "decd401942eb491488f4ee8abfd0920b",
+          "capability": "workspace.archive.activate",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "requestId": "9fe0d9e159584624a611820eab221acf"
+          }
+        },
+        {
+          "id": "d1aecf7bed7942e7b8f9d9a5998eff64",
+          "capability": "workspace.review.prepare",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "requestId": "fa109841074d463c9fc393ca6952df7f"
+          }
+        },
+        {
+          "id": "e966127ce53b44eeb162e3f20a422aa0",
+          "capability": "workspace.review.prepare",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "requestId": "ffdf8cea0e654941b9c77cb793ec075c"
+          }
+        },
+        {
+          "id": "2bf401597bd34a34b6f94763ced4f987",
+          "capability": "workspace.review.complete",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "requestId": "ffdf8cea0e654941b9c77cb793ec075c"
+          }
+        }
+      ],
+      "nextRunId": "ce268773d7d54776b809234054edb39b",
+      "storageError": null,
+      "recovery": null
+    }
+  }
+}

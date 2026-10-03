@@ -1,0 +1,28 @@
+// Copyright 2026 Roni Tervo
+// SPDX-License-Identifier: Apache-2.0
+using Maestro.Quest.Diagnostics;
+using Maestro.Quest.Imports;
+using Newtonsoft.Json.Linq;
+namespace Maestro.Quest.Programs
+{
+    public static class RuntimeDiagnosticFacts
+    {
+        public const string Feature="runtimeDiagnostics.v1";
+        static readonly string[] Features={Feature};
+        static RuntimeDiagnostics Sampler(BehaviourCatalog.FactContext context)=>context.Editor?context.Editor.GetComponentInParent<RuntimeDiagnostics>():null;
+        static ProgramDataType Record(params string[] names){var fields=new JObject();foreach(var name in names)fields[name]="number";return ProgramDataType.Read(new JObject {["record"]=fields});}
+        public static BehaviourCatalog.FactDefinition Frames()=>new("runtime.frameIntervals",ProgramDataType.Read(JObject.Parse("{\"record\":{\"active\":\"boolean\",\"hasSamples\":\"boolean\",\"samples\":\"number\",\"seconds\":\"number\",\"milliseconds\":{\"record\":{\"mean\":\"number\",\"p95\":\"number\",\"max\":\"number\"}},\"capacityLimited\":\"boolean\",\"ageSeconds\":\"number\",\"editor\":\"boolean\"}}")),
+            "Unity frame intervals","Local Unity Update intervals ending in the last 30 seconds, at most 4096 samples. Reads are cached for up to one second. seconds sums retained intervals (the oldest can start before the window); p95 uses nearest rank. ageSeconds is the last-sample age at the cached reading. No samples means zero placeholders, not healthy timing. Pause, focus loss, disable and invalid/backwards or over-1000-second clock gaps reset the window. capacityLimited reports discarded samples still inside the window. editor distinguishes desktop test evidence. These are not GPU times, compositor/display FPS, refresh rate, memory or a Store performance verdict. No automatic settings changes or persistence.",null,null,
+            (context,args)=>{var sampler=Sampler(context);return sampler?ProgramValue.Literal(sampler.ObserveFrames()):null;},features:Features);
+        static JObject Budget(int models,int vertices,int pixels,int morphs)=>new() {["models"]=models,["vertices"]=vertices,["textureMiPixels"]=pixels/1048576.0,["morphMillionVertices"]=morphs/1000000.0};
+        public static BehaviourCatalog.FactDefinition Models()=>new("runtime.modelBudget",ProgramDataType.Read(JObject.Parse("{\"record\":{\"reserved\":{\"record\":{\"models\":\"number\",\"vertices\":\"number\",\"textureMiPixels\":\"number\",\"morphMillionVertices\":\"number\"}},\"limits\":{\"record\":{\"models\":\"number\",\"vertices\":\"number\",\"textureMiPixels\":\"number\",\"morphMillionVertices\":\"number\"}}}}")),
+            "Imported model budgets","Process-wide model reservations including avatar, previews and in-flight imports, with enforced limits. Source vertices, decoded texture MiPixels (1048576 pixels), morph million-vertices (1000000) and instance counts are budgets, not measured RAM/VRAM. Does not include procedural objects, book textures, WebView or operating-system memory. Reading never loads, evicts or changes anything.",null,null,
+            (context,args)=>{if(!Sampler(context))return null;var live=ImportedModel.LiveBudget;return ProgramValue.Literal(new JObject {
+                ["reserved"]=Budget(live.Models,live.Vertices,live.TexturePixels,live.MorphVertices),
+                ["limits"]=Budget(ImportedModel.MaximumLiveModels,ImportedModel.MaximumLiveVertices,ImportedModel.MaximumLiveTexturePixels,ImportedModel.MaximumLiveMorphVertices)});},features:Features);
+        public static BehaviourCatalog.FactDefinition Motions()=>new("runtime.motionCache",Record("clips","curveValues","clipLimit","curveValueLimit"),
+            "Current room motion cache","Current room library cache entries and declared curve values, including in-flight loads, with enforced limits. Excludes embedded model clips, other workspace generations, source files and actual native/GPU byte usage. Reading does not load or evict clips.",null,null,
+            (context,args)=>{var library=context.Editor?context.Editor.Motions:null;if(!Sampler(context)||library==null)return null;return ProgramValue.Literal(new JObject {
+                ["clips"]=library.ResidentClipCount,["curveValues"]=library.ResidentCurveValues,["clipLimit"]=MotionLibrary.MaximumResidentClips,["curveValueLimit"]=MotionLibrary.MaximumResidentCurveValues});},features:Features);
+    }
+}

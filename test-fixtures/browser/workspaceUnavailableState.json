@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "revision": 1,
+  "sceneRevision": 1,
+  "ack": 0,
+  "session": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "status": "The selected workspace could not be opened. Saved files are preserved; recovery is required.",
+  "selectedId": "",
+  "ok": false,
+  "canUndo": false,
+  "canRedo": false,
+  "physicsRunning": false,
+  "visible": false,
+  "inspection": null,
+  "workspaceView": "objects",
+  "rules": null,
+  "motions": null,
+  "capabilities": [
+    "workspaceMaintenance.v1",
+    "workspaceArchiveActivation.v1",
+    "workspaceReview.v1",
+    "workspacePrevious.v1",
+    "execution.v1",
+    "executionReceipts.v1",
+    "actionRecovery.v1",
+    "factQueries.v1",
+    "catalog.v1",
+    "catalogVocabulary.v1"
+  ],
+  "physics": null,
+  "ownership": null,
+  "avatar": null,
+  "walk": null,
+  "activityProfile": null,
+  "objects": [],
+  "created": [],
+  "catalog": null,
+  "execution": {
+    "selected": null,
+    "running": [],
+    "outcomes": [],
+    "nextRunId": null,
+    "storageError": "The selected room is unavailable. Workspace maintenance remains available.",
+    "workspace": {
+      "selected": null,
+      "running": [],
+      "outcomes": [],
+      "nextRunId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "storageError": null,
+      "recovery": null
+    }
+  }
+}

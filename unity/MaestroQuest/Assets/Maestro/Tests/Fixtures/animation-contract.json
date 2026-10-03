@@ -1,0 +1,338 @@
+[
+  {
+    "name": "gesture-full",
+    "call": {
+      "id": "animation.play",
+      "version": 1,
+      "arguments": {
+        "target": "maestro",
+        "seconds": 1,
+        "source": {
+          "kind": "gesture",
+          "gesture": "greeting"
+        },
+        "channel": "wholeTarget"
+      }
+    },
+    "valid": true,
+    "channels": [
+      "wholeTarget"
+    ]
+  },
+  {
+    "name": "gesture-upper",
+    "call": {
+      "id": "animation.play",
+      "version": 1,
+      "arguments": {
+        "target": "maestro",
+        "seconds": 1,
+        "source": {
+          "kind": "gesture",
+          "gesture": "pointing"
+        },
+        "channel": "upperBody"
+      }
+    },
+    "valid": true,
+    "channels": [
+      "upperBody"
+    ]
+  },
+  {
+    "name": "recording",
+    "call": {
+      "id": "animation.play",
+      "version": 1,
+      "arguments": {
+        "target": "maestro",
+        "seconds": 1,
+        "source": {
+          "kind": "recording"
+        },
+        "channel": "wholeTarget",
+        "loop": false
+      }
+    },
+    "valid": true,
+    "channels": [
+      "wholeTarget"
+    ]
+  },
+  {
+    "name": "embedded",
+    "call": {
+      "id": "animation.play",
+      "version": 1,
+      "arguments": {
+        "target": "maestro",
+        "seconds": 1,
+        "source": {
+          "kind": "embedded",
+          "modelHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "clipIndex": 2
+        },
+        "channel": "wholeTarget",
+        "loop": true
+      }
+    },
+    "valid": true,
+    "channels": [
+      "wholeTarget"
+    ]
+  },
+  {
+    "name": "library",
+    "call": {
+      "id": "animation.play",
+      "version": 1,
+      "arguments": {
+        "target": "maestro",
+        "seconds": 1,
+        "source": {
+          "kind": "library",
+          "motionId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "channel": "wholeTarget",
+        "loop": true
+      }
+    },
+    "valid": true,
+    "channels": [
+      "wholeTarget"
+    ]
+  },
+  {
+    "name": "recipe",
+    "call": {
+      "id": "animation.play",
+      "version": 1,
+      "arguments": {
+        "target": "maestro",
+        "seconds": 1,
+        "source": {
+          "kind": "recipe"
+        },
+        "channel": "wholeTarget",
+        "loop": false
+      }
+    },
+    "valid": true,
+    "channels": [
+      "wholeTarget"
+    ]
+  },
+  {
+    "name": "unknown-source",
+    "call": {
+      "id": "animation.play",
+      "version": 1,
+      "arguments": {
+        "target": "maestro",
+        "seconds": 1,
+        "source": {
+          "kind": "remoteCode",
+          "url": "http://example.invalid"
+        },
+        "channel": "wholeTarget"
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "library-upper-not-supported",
+    "call": {
+      "id": "animation.play",
+      "version": 1,
+      "arguments": {
+        "target": "maestro",
+        "seconds": 1,
+        "source": {
+          "kind": "library",
+          "motionId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "channel": "upperBody",
+        "loop": true
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "upper-walk-not-supported",
+    "call": {
+      "id": "animation.play",
+      "version": 1,
+      "arguments": {
+        "target": "maestro",
+        "seconds": 1,
+        "source": {
+          "kind": "gesture",
+          "gesture": "walk"
+        },
+        "channel": "upperBody"
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "no-tag-substitution",
+    "call": {
+      "id": "animation.play",
+      "version": 1,
+      "arguments": {
+        "target": "maestro",
+        "seconds": 1,
+        "source": {
+          "kind": "library",
+          "tag": "wave"
+        },
+        "channel": "wholeTarget",
+        "loop": true
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "mixed-source-fields",
+    "call": {
+      "id": "animation.play",
+      "version": 1,
+      "arguments": {
+        "target": "maestro",
+        "seconds": 1,
+        "source": {
+          "kind": "gesture",
+          "gesture": "greeting",
+          "motionId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "channel": "wholeTarget"
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "extra-flat-gesture",
+    "call": {
+      "id": "animation.play",
+      "version": 1,
+      "arguments": {
+        "target": "maestro",
+        "seconds": 1,
+        "source": {
+          "kind": "gesture",
+          "gesture": "greeting"
+        },
+        "channel": "wholeTarget",
+        "gesture": "pointing"
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "missing-channel",
+    "call": {
+      "id": "animation.play",
+      "version": 1,
+      "arguments": {
+        "target": "maestro",
+        "seconds": 1,
+        "source": {
+          "kind": "gesture",
+          "gesture": "greeting"
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "unknown-channel",
+    "call": {
+      "id": "animation.play",
+      "version": 1,
+      "arguments": {
+        "target": "maestro",
+        "seconds": 1,
+        "source": {
+          "kind": "gesture",
+          "gesture": "greeting"
+        },
+        "channel": "hands"
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "upper-prop-not-supported",
+    "call": {
+      "id": "animation.play",
+      "version": 1,
+      "arguments": {
+        "target": "maestro",
+        "seconds": 1,
+        "source": {
+          "kind": "gesture",
+          "gesture": "greeting"
+        },
+        "channel": "upperBody",
+        "prop": {
+          "objectId": "cccccccccccccccccccccccccccccccc",
+          "avatarHash": "",
+          "hand": "right",
+          "release": "return",
+          "releaseAt": 1,
+          "offset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "full-prop",
+    "call": {
+      "id": "animation.play",
+      "version": 1,
+      "arguments": {
+        "target": "maestro",
+        "seconds": 1,
+        "source": {
+          "kind": "gesture",
+          "gesture": "greeting"
+        },
+        "channel": "wholeTarget",
+        "prop": {
+          "objectId": "cccccccccccccccccccccccccccccccc",
+          "avatarHash": "",
+          "hand": "right",
+          "release": "return",
+          "releaseAt": 1,
+          "offset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      }
+    },
+    "valid": true,
+    "channels": [
+      "wholeTarget",
+      "wholeTarget"
+    ]
+  }
+]

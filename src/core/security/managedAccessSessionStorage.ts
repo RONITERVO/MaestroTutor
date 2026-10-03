@@ -98,23 +98,29 @@ export const loadManagedAccessSession = async (): Promise<ManagedAccessSession |
   return cachedSession;
 };
 
-export const saveManagedAccessSession = async (session: ManagedAccessSession): Promise<void> => {
+export const saveManagedAccessSession = async (session: ManagedAccessSession, options?: { requirePersistence?: boolean }): Promise<void> => {
   let persisted = true;
   if (isNative) {
     await saveToSecureStorage(session);
   } else {
     persisted = writeLocalStorage(session);
   }
-  if (!persisted) return;
+  if (!persisted) {
+    if (options?.requirePersistence) throw new Error('The account session could not be saved or cleared on this device.');
+    return;
+  }
   cachedSession = session;
   dispatchManagedAccessChanged(session);
 };
 
-export const clearManagedAccessSession = async (): Promise<void> => {
+export const clearManagedAccessSession = async (options?: { requirePersistence?: boolean }): Promise<void> => {
   const persisted = isNative
     ? await removeFromSecureStorage()
     : removeLocalStorage();
-  if (!persisted) return;
+  if (!persisted) {
+    if (options?.requirePersistence) throw new Error('The account session could not be saved or cleared on this device.');
+    return;
+  }
   cachedSession = null;
   dispatchManagedAccessChanged(null);
 };

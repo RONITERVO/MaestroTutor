@@ -49,6 +49,14 @@ export const enTranslations: Record<string, string> = {
   "startPage.browserNotSupported": "Your browser does not support file saving. Please use Chrome or Edge.",
   
   // Session Controls - Action labels and descriptions
+  "sessionControls.backupSaved": "Saved: {location}",
+  "sessionControls.backupSavedShareFailed": "Saved: {location}. Sharing did not finish; your local backup is available.",
+  "sessionControls.backupRequired": "A backup was not completed. Your existing data has not been replaced or reset. Try saving again.",
+  "sessionControls.backupChanged": "Your conversation or settings changed during backup. Nothing was reset. Try again when ready.",
+  "sessionControls.confirmAction": "Confirm action",
+  "sessionControls.cancelAction": "Cancel action",
+  "sessionControls.actionWorking": "Finishing this action…",
+  "sessionControls.taskBackupDetails": "Backups include agent task records and any speech or camera frames saved with them. Imported tasks are history only; their actions will not run again.",
   "sessionControls.saveAll.label": "Save All",
   "sessionControls.saveAll.description": "Export all chats to backup file",
   "sessionControls.loadAll.label": "Load All",
@@ -113,6 +121,20 @@ export const enTranslations: Record<string, string> = {
   "apiKeyGate.googlePrivacyPolicy": "Google Privacy Policy",
 
   // Managed access
+  "questLink.title": "Link your Maestro account",
+  "questLink.description": "Sign in to use your existing Maestro account and credits in this book.",
+  "questLink.balanceHint": "Your existing Maestro balance is shared with this book.",
+  "questLink.creating": "Preparing a sign-in code…",
+  "questLink.waiting": "Waiting for your browser approval.",
+  "questLink.paused": "Return to the book after approving in your browser.",
+  "questLink.redeeming": "Confirming your approval…",
+  "questLink.signing-in": "Connecting your account…",
+  "questLink.cancelling": "Cancelling sign-in…",
+  "questLink.instructions": "Open the address below in your headset browser, or on your phone or computer. Sign in there and enter this code.",
+  "questLink.codeLabel": "Your account-link code",
+  "questLink.expires": "Code expires in {time}.",
+  "questLink.return": "Return to this book when you have approved. Your conversation stays here.",
+  "questLink.cancel": "Cancel sign-in",
   "managedAccess.title": "Managed access",
   "managedAccess.description": "Sign in to buy and use Maestro credits without supplying your own API key.",
   "managedAccess.orByok": "or use your own key",
@@ -335,6 +357,8 @@ export const enTranslations: Record<string, string> = {
   "chat.suggestion.practiceUnavailableLive": "Suggestion practice is unavailable during a live session.",
   
   // Chat - maestro status (used via CollapsedMaestroStatus)
+  "chat.maestro.agentWorking": "Maestro is working on your request",
+  "chat.maestro.title.agentWorking": "Agent task running. You can keep chatting.",
   "chat.maestro.idle": "Maestro is idle",
   "chat.maestro.title.idle": "Maestro is currently idle.",
   "chat.maestro.resting": "Maestro is resting...",

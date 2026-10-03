@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "package": "com.maestro.quest",
+  "versionName": "1.0.0",
+  "versionCode": 1,
+  "metaAppId": "1763835394893209",
+  "signingCertificateSha256": "",
+  "web": {
+    "firebaseApiKey": "",
+    "firebaseAuthDomain": "",
+    "firebaseProjectId": "",
+    "firebaseAppId": "",
+    "questFirebaseAppId": "",
+    "firebaseAppCheckSiteKey": "",
+    "backendBaseUrl": "",
+    "questAttestationUrl": "",
+    "questAccountLinkUrl": "",
+    "questAccountLinkVerificationUrl": "https://chatwithmaestro.com/quest-link.html"
+  }
+}

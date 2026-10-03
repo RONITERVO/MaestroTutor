@@ -1,0 +1,30 @@
+{
+  "dependencies": {
+    "com.meta.xr.mrutilitykit": "207.0.0",
+    "com.meta.xr.sdk.core": "207.0.0",
+    "com.vrmc.gltf": "https://github.com/vrm-c/UniVRM.git?path=/Packages/UniGLTF#a4711bbf8c4d10659d3e5568c2e3d7d595005e51",
+    "com.vrmc.vrm": "https://github.com/vrm-c/UniVRM.git?path=/Packages/VRM10#a4711bbf8c4d10659d3e5568c2e3d7d595005e51",
+    "com.unity.nuget.newtonsoft-json": "3.2.2",
+    "com.unity.inputsystem": "1.20.0",
+    "com.unity.test-framework": "1.6.0",
+    "com.unity.ugui": "2.0.0",
+    "com.unity.xr.hands": "1.9.0",
+    "com.unity.xr.interaction.toolkit": "3.6.1",
+    "com.unity.xr.management": "4.7.0",
+    "com.unity.xr.meta-openxr": "2.6.1",
+    "com.unity.xr.openxr": "1.18.0",
+    "com.unity.modules.androidjni": "1.0.0",
+    "com.unity.modules.animation": "1.0.0",
+    "com.unity.modules.audio": "1.0.0",
+    "com.unity.modules.assetbundle": "1.0.0",
+    "com.unity.modules.imageconversion": "1.0.0",
+    "com.unity.modules.jsonserialize": "1.0.0",
+    "com.unity.modules.physics": "1.0.0",
+    "com.unity.modules.physics2d": "1.0.0",
+    "com.unity.modules.ui": "1.0.0",
+    "com.unity.modules.unitywebrequest": "1.0.0",
+    "com.unity.modules.unitywebrequesttexture": "1.0.0",
+    "com.unity.modules.xr": "1.0.0",
+    "com.meta.xr.sdk.platform": "207.0.0"
+  }
+}

@@ -21,7 +21,8 @@ export interface EmbedBox {
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant' | 'system' | 'error' | 'status' | 'system_selection';
-  maestroToolKind?: 'image' | 'audio-note' | 'music';
+  maestroToolKind?: 'image' | 'audio-note' | 'music' | 'agent';
+  agentTask?: { id: string; sourceUserId?: string; sourceAssistantId?: string; phase: 'working' | 'replying' | 'completed' | 'limited' | 'stopped' | 'interrupted' | 'failed'; note: string };
   text?: string;
   /** Ephemeral ink feedback while the provider transcript is pending; never speech text. */
   speechPreviewProgress?: number;

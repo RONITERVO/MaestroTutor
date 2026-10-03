@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import { LiveInputContext } from '../../../core-sdk/media/liveInputContext';
 import { createLiveInputCapture } from './inputCapture';
 import { createLiveProviderCallbacks } from './providerCallbacks';
 import {
@@ -91,7 +92,7 @@ export function createLiveConversationController(ports: LiveRuntimePorts, callba
   const start = async (opts: StartLiveConversationOptions) => {
     const request = ++startRequest;
     const {
-      liveOpenTrigger, stream, videoElement,
+      liveOpenTrigger, stream, videoElement, conversationId,
       systemInstruction, voiceName, responseModalities = [Modality.AUDIO],
       playModelAudio = true, emitTurns = true, allowModelInterruptions = false,
       costFeature = 'liveConversation', gateInputOnSpeech = false, gateAudioAfterConnect = gateInputOnSpeech,
@@ -313,10 +314,18 @@ export function createLiveConversationController(ports: LiveRuntimePorts, callba
         ? await opts.buildSystemInstruction()
         : systemInstruction;
       if (abortIfInvalidated()) return;
+      const preparedContext = opts.prepareTurnContext ? structuredClone(await opts.prepareTurnContext(freshSystemInstruction)) : undefined;
+      const turnContext = preparedContext || conversationId ? {
+        ...preparedContext,
+        systemInstruction: preparedContext?.systemInstruction ?? freshSystemInstruction,
+        ...(conversationId ? { conversationId } : {}),
+      } : undefined;
+      if (abortIfInvalidated()) return;
       turnTimingRef.current?.mark('context.ready', { instructionCharacters: freshSystemInstruction?.length ?? 0 });
       const providerCallbacks = createLiveProviderCallbacks(state, {
         activity, audio: modelAudio, transcripts, cleanup, getAudioTelemetrySnapshot, debugLogService,
-      }, { sessionId, playModelAudio, emitTurns, observerActivity, usageTracker });
+      }, { sessionId, playModelAudio, emitTurns, observerActivity, usageTracker, turnContext });
+      state.liveInputContextRef.current = turnContext?.handoffId ? new LiveInputContext() : null;
       turnTimingRef.current?.mark('provider.connect-start');
       const session = await ai.live.connect({
         turnTiming: turnTimingRef.current ?? undefined,
@@ -325,7 +334,7 @@ export function createLiveConversationController(ports: LiveRuntimePorts, callba
         config: {
           ...getLiveCostControlConfig(),
           responseModalities,
-          systemInstruction: freshSystemInstruction,
+          systemInstruction: turnContext ? turnContext.systemInstruction : freshSystemInstruction,
           // Empty config objects to enable transcription without specifying parameters causing invalid argument errors
           inputAudioTranscription: {},
           outputAudioTranscription: {},

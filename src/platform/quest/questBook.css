@@ -1,0 +1,66 @@
+/* Full-page content only. New book controls belong to physical Unity objects. */
+.quest-book-surface { --quest-page-width: 50vw; width: 100vw; height: 100vh; overflow: hidden; background: #fff0d2; color: #342d2b; }
+.quest-chat-page { position: absolute; inset: 0 auto 0 0; width: var(--quest-page-width); overflow: hidden; container-type: inline-size; transform: translateZ(0); }
+.quest-chat-document { position: absolute; inset: 0; overflow: hidden; }
+.quest-chat-document > div { height: 100%; min-height: 0; }
+.quest-chat-document main { min-height: 0; }
+.quest-layout-conversation .quest-chat-page { left: auto; right: 0; }
+.quest-earlier-page { position: absolute; inset: 0 auto 0 0; width: var(--quest-page-width); display: flex; flex-direction: column; overflow: hidden; background: var(--page-bg-color); container-type: inline-size; transform: translateZ(0); }
+.quest-earlier-messages { flex: 1; min-height: 0; overflow: auto; padding: 16px; }
+.quest-practice-page { position: absolute; inset: 0 0 0 auto; width: var(--quest-page-width); display: flex; flex-direction: column; overflow: hidden; box-sizing: border-box; background: #fff0d2; }
+.quest-artifact-content { flex: 1; overflow: auto; min-height: 0; }
+.quest-artifact-content .quest-active-artifact { height: 100%; }
+.quest-active-artifact > div:first-child { max-width: none; min-height: 0; height: 100%; display: flex; flex-direction: column; }
+.quest-active-artifact .embed-box { flex: 1; min-height: 0; max-height: none; aspect-ratio: auto; }
+.quest-artifact-content > img, .quest-artifact-content video { width: 100%; height: 100%; object-fit: contain; }
+.quest-artifact-content audio { width: 100%; margin-top: 30%; }
+.quest-artifact-preview { width: 100%; display: flex; flex-direction: column; align-items: stretch; padding: 10px; gap: 8px; color: #342d2b; background: #f8ecd4; border: 1px solid #756b5c; border-radius: 10px; text-align: left; }
+.quest-artifact-preview img, .quest-artifact-preview svg { width: 100%; height: auto; max-height: 240px; object-fit: contain; }
+.quest-artifact-preview small { color: #286d69; }
+.quest-book-surface button:focus-visible { outline: 3px solid #2b8d88; outline-offset: 3px; }
+
+/* Library content is an explicitly opened spread; chat stays mounted underneath. */
+.quest-tutor-pages[hidden] { display: none !important; }
+.quest-library-spread { position: absolute; inset: 0; display: grid; grid-template-columns: 1fr 1fr; background: var(--page-bg-color, #fff0d2); color: var(--text-primary-color, #342d2b); font-size: 16px; line-height: 1.4; }
+.quest-library-page { min-width: 0; min-height: 0; padding: 24px; display: flex; flex-direction: column; gap: 16px; overflow: hidden; }
+.quest-library-page h1 { font-size: 28px; font-weight: 600; margin: 0; }
+.quest-library-page h2 { font-size: 24px; font-weight: 600; margin: 0 0 8px; overflow-wrap: anywhere; }
+.quest-library-page button, .quest-library-page input { font: inherit; }
+.quest-library-page button { min-height: 44px; padding: 9px 13px; border: 1px solid #918572; border-radius: 10px; background: #f8ecd4; color: #342d2b; }
+.quest-library-page button:disabled { opacity: .48; }
+.quest-library-page button:not(:disabled):hover { background: #e8dfc8; }
+.quest-library-page input:not([type=checkbox]) { width: 100%; min-width: 0; min-height: 44px; padding: 8px 10px; border: 1px solid #918572; border-radius: 8px; background: #fffaf0; color: #342d2b; box-sizing: border-box; }
+.quest-library-page input[type=checkbox] { width: 20px; height: 20px; accent-color: #286d69; flex-shrink: 0; }
+.quest-library-page input:focus-visible { outline: 3px solid #2b8d88; outline-offset: 2px; }
+.quest-library-title, .quest-library-search > div, .quest-library-actions, .quest-library-paging { display: flex; align-items: center; gap: 10px; }
+.quest-library-title, .quest-library-paging { justify-content: space-between; }
+.quest-library-search label { display: block; margin-bottom: 6px; }
+.quest-library-filters { display: flex; flex-wrap: wrap; gap: 8px 14px; padding: 0; border: 0; }
+.quest-library-filters label, .quest-library-check { display: flex; align-items: center; gap: 7px; min-height: 36px; }
+.quest-library-results { flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: 8px; padding: 3px; margin: -3px; }
+.quest-library-results button { text-align: left; display: flex; flex-direction: column; flex-shrink: 0; gap: 3px; overflow-wrap: anywhere; }
+.quest-library-results button[aria-pressed=true] { border: 2px solid #286d69; background: #e1eadc; padding: 8px 12px; }
+.quest-library-results small { font-size: 13px; color: #625a4f; }
+.quest-library-detail-scroll { flex: 1; min-height: 0; overflow: auto; padding: 3px; margin: -3px; }
+.quest-library-detail-scroll > p { margin: 0 0 16px; }
+.quest-library-actions { flex-wrap: wrap; margin: 12px 0; }
+.quest-library-edit { margin: 24px 0; }
+.quest-library-edit fieldset { display: flex; flex-direction: column; gap: 12px; border: 0; padding: 0; }
+.quest-library-edit legend { font-weight: 600; margin-bottom: 12px; }
+.quest-library-edit label input:not([type=checkbox]) { display: block; margin-top: 6px; }
+.quest-library-edit button { align-self: flex-start; }
+.quest-library-hint, .quest-library-status { font-size: 14px; overflow-wrap: anywhere; }
+.quest-library-status { margin: 0; padding-top: 12px; border-top: 1px solid #b6a98c; }
+.quest-library-source { font-size: 14px; }
+.quest-library-source summary { cursor: pointer; min-height: 36px; }
+.quest-library-source pre { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; }
+.quest-library-empty { color: #625a4f; padding: 16px 0; }
+
+.quest-activity-editor label { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin: .4rem 0; }
+.quest-activity-editor select { min-height: 44px; max-width: 60%; padding: .25rem; color: inherit; background: transparent; border: 1px solid currentColor; border-radius: .35rem; }
+.quest-activity-editor ul { list-style: none; margin: .5rem 0; padding: 0; }
+.quest-activity-editor li { display: grid; grid-template-columns: 1fr auto; gap: .25rem; margin: .5rem 0; }
+.quest-activity-editor li span { grid-column: 1; font-size: .85em; }
+.quest-activity-editor li button:last-child { grid-column: 2; grid-row: 1 / span 2; }
+.quest-activity-editor fieldset { border: 1px solid currentColor; padding: .65rem; border-radius: .5rem; }
+.quest-activity-editor label.quest-library-check { justify-content: flex-start; }

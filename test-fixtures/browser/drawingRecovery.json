@@ -1,0 +1,70 @@
+{
+  "before": {
+    "sessionId": "c91a8e0700f248949d3caa91f4410a0f",
+    "phase": "unsaved",
+    "points": 2,
+    "temporary": false,
+    "error": "Could not save room; the previous save is retained. Check available storage and try again."
+  },
+  "call": {
+    "id": "object.drawing.resolve",
+    "version": 1,
+    "arguments": {
+      "operation": "retry",
+      "sessionId": "c91a8e0700f248949d3caa91f4410a0f"
+    }
+  },
+  "receipt": {
+    "selected": {
+      "id": "f784f9998e2f44be8dd39ace9cc2cc42",
+      "capability": "object.drawing.resolve",
+      "version": 1,
+      "resources": [],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "sessionId": "c91a8e0700f248949d3caa91f4410a0f",
+        "phase": "saved",
+        "objectId": "3f215671f09f46f9a295e9534a248974",
+        "points": 2,
+        "temporary": false
+      },
+      "call": {
+        "id": "object.drawing.resolve",
+        "version": 1,
+        "arguments": {
+          "operation": "retry",
+          "sessionId": "c91a8e0700f248949d3caa91f4410a0f"
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "f784f9998e2f44be8dd39ace9cc2cc42",
+        "capability": "object.drawing.resolve",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "sessionId": "c91a8e0700f248949d3caa91f4410a0f",
+          "phase": "saved",
+          "objectId": "3f215671f09f46f9a295e9534a248974",
+          "points": 2,
+          "temporary": false
+        }
+      }
+    ],
+    "nextRunId": "4b59cac19cb24d0d9fb2c1a2befd670a",
+    "storageError": null,
+    "recovery": null
+  },
+  "after": {
+    "sessionId": "67308eeb76704ea8b6f84562659aa15e",
+    "phase": "idle",
+    "points": 0,
+    "temporary": false,
+    "error": ""
+  }
+}

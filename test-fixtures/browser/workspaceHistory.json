@@ -1,0 +1,172 @@
+{
+  "inspection": {
+    "requestId": "02001736a62e443f916531b18953c986",
+    "target": "recovery",
+    "fingerprint": "a99475c5ac247c8bf2c3ad962dbc278e9728666f3759fa026b9057345e765c41",
+    "evidenceId": "",
+    "summary": {
+      "files": 1,
+      "sizeKiB": 1
+    }
+  },
+  "reset": {
+    "requestId": "eb1bd011c9e64ab09f6a0db882a0c6c1",
+    "target": "recovery",
+    "fingerprint": "a99475c5ac247c8bf2c3ad962dbc278e9728666f3759fa026b9057345e765c41",
+    "evidenceId": "103e3713fb76442eb7cf12a317971d4f",
+    "summary": {
+      "files": 1,
+      "sizeKiB": 1
+    }
+  },
+  "inspectExecution": {
+    "selected": null,
+    "running": [],
+    "outcomes": [],
+    "nextRunId": "c1979c312a4e43dbb9ec4a54d44a78c9",
+    "storageError": null,
+    "recovery": null,
+    "workspace": {
+      "selected": {
+        "id": "c4a32781627e4975bf375c0ea5041d17",
+        "capability": "workspace.history.inspect",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "requestId": "02001736a62e443f916531b18953c986",
+          "target": "recovery",
+          "fingerprint": "a99475c5ac247c8bf2c3ad962dbc278e9728666f3759fa026b9057345e765c41",
+          "evidenceId": "",
+          "summary": {
+            "files": 1,
+            "sizeKiB": 1
+          }
+        },
+        "call": {
+          "id": "workspace.history.inspect",
+          "version": 1,
+          "arguments": {
+            "target": "recovery"
+          }
+        }
+      },
+      "running": [],
+      "outcomes": [
+        {
+          "id": "c4a32781627e4975bf375c0ea5041d17",
+          "capability": "workspace.history.inspect",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "requestId": "02001736a62e443f916531b18953c986",
+            "target": "recovery",
+            "fingerprint": "a99475c5ac247c8bf2c3ad962dbc278e9728666f3759fa026b9057345e765c41",
+            "evidenceId": "",
+            "summary": {
+              "files": 1,
+              "sizeKiB": 1
+            }
+          }
+        }
+      ],
+      "nextRunId": "9fbd27bea4f741bea2f9b18ded21e568",
+      "storageError": null,
+      "recovery": null
+    }
+  },
+  "resetExecution": {
+    "selected": null,
+    "running": [],
+    "outcomes": [],
+    "nextRunId": "c1979c312a4e43dbb9ec4a54d44a78c9",
+    "storageError": null,
+    "recovery": null,
+    "workspace": {
+      "selected": {
+        "id": "9fbd27bea4f741bea2f9b18ded21e568",
+        "capability": "workspace.history.reset",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "requestId": "eb1bd011c9e64ab09f6a0db882a0c6c1",
+          "target": "recovery",
+          "fingerprint": "a99475c5ac247c8bf2c3ad962dbc278e9728666f3759fa026b9057345e765c41",
+          "evidenceId": "103e3713fb76442eb7cf12a317971d4f",
+          "summary": {
+            "files": 1,
+            "sizeKiB": 1
+          }
+        },
+        "call": {
+          "id": "workspace.history.reset",
+          "version": 1,
+          "arguments": {
+            "inspectionId": "02001736a62e443f916531b18953c986",
+            "fingerprint": "a99475c5ac247c8bf2c3ad962dbc278e9728666f3759fa026b9057345e765c41"
+          }
+        }
+      },
+      "running": [],
+      "outcomes": [
+        {
+          "id": "c4a32781627e4975bf375c0ea5041d17",
+          "capability": "workspace.history.inspect",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "requestId": "02001736a62e443f916531b18953c986",
+            "target": "recovery",
+            "fingerprint": "a99475c5ac247c8bf2c3ad962dbc278e9728666f3759fa026b9057345e765c41",
+            "evidenceId": "",
+            "summary": {
+              "files": 1,
+              "sizeKiB": 1
+            }
+          }
+        },
+        {
+          "id": "9fbd27bea4f741bea2f9b18ded21e568",
+          "capability": "workspace.history.reset",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "requestId": "eb1bd011c9e64ab09f6a0db882a0c6c1",
+            "target": "recovery",
+            "fingerprint": "a99475c5ac247c8bf2c3ad962dbc278e9728666f3759fa026b9057345e765c41",
+            "evidenceId": "103e3713fb76442eb7cf12a317971d4f",
+            "summary": {
+              "files": 1,
+              "sizeKiB": 1
+            }
+          }
+        }
+      ],
+      "nextRunId": "42653124e2d042fc8dcb946ebd78713e",
+      "storageError": null,
+      "recovery": null
+    }
+  },
+  "status": {
+    "requestId": "eb1bd011c9e64ab09f6a0db882a0c6c1",
+    "target": "recovery",
+    "phase": "reset",
+    "status": "History preserved and tracking reset. Inspect current workspace before continuing.",
+    "fingerprint": "a99475c5ac247c8bf2c3ad962dbc278e9728666f3759fa026b9057345e765c41",
+    "evidenceId": "103e3713fb76442eb7cf12a317971d4f",
+    "summary": {
+      "files": 1,
+      "sizeKiB": 1
+    },
+    "acceptedAvailable": false
+  }
+}

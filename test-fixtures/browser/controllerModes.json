@@ -1,0 +1,322 @@
+{
+  "before": {
+    "stateId": "87ae15affaef4e0c95ef632b90feba20",
+    "configurationId": "957c9b45b971469da5e10a97950eb0fc",
+    "avatarEnabled": false,
+    "userEnabled": false,
+    "virtualView": false,
+    "headTracked": true,
+    "focused": true
+  },
+  "enable": {
+    "selected": {
+      "id": "fc4241c191234ee188623eff58a0fc58",
+      "capability": "controller.mode.set",
+      "version": 1,
+      "resources": [],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "stateId": "2f665d4ff98c42b7ae05cb71dee26fcd",
+        "configurationId": "957c9b45b971469da5e10a97950eb0fc",
+        "avatarEnabled": true,
+        "userEnabled": false,
+        "virtualView": false,
+        "headTracked": true,
+        "focused": true
+      },
+      "call": {
+        "id": "controller.mode.set",
+        "version": 1,
+        "arguments": {
+          "operation": "maestro.enable",
+          "stateId": "87ae15affaef4e0c95ef632b90feba20"
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "fc4241c191234ee188623eff58a0fc58",
+        "capability": "controller.mode.set",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "stateId": "2f665d4ff98c42b7ae05cb71dee26fcd",
+          "configurationId": "957c9b45b971469da5e10a97950eb0fc",
+          "avatarEnabled": true,
+          "userEnabled": false,
+          "virtualView": false,
+          "headTracked": true,
+          "focused": true
+        }
+      }
+    ],
+    "nextRunId": "64c364c17c0b4c90840c1407d21d03a3",
+    "storageError": null,
+    "recovery": null
+  },
+  "virtualView": {
+    "selected": {
+      "id": "64c364c17c0b4c90840c1407d21d03a3",
+      "capability": "controller.mode.set",
+      "version": 1,
+      "resources": [],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "stateId": "12da01e7c11745358873dd623923e0f9",
+        "configurationId": "957c9b45b971469da5e10a97950eb0fc",
+        "avatarEnabled": true,
+        "userEnabled": false,
+        "virtualView": true,
+        "headTracked": true,
+        "focused": true
+      },
+      "call": {
+        "id": "controller.mode.set",
+        "version": 1,
+        "arguments": {
+          "operation": "view.virtual",
+          "stateId": "2f665d4ff98c42b7ae05cb71dee26fcd"
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "fc4241c191234ee188623eff58a0fc58",
+        "capability": "controller.mode.set",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "stateId": "2f665d4ff98c42b7ae05cb71dee26fcd",
+          "configurationId": "957c9b45b971469da5e10a97950eb0fc",
+          "avatarEnabled": true,
+          "userEnabled": false,
+          "virtualView": false,
+          "headTracked": true,
+          "focused": true
+        }
+      },
+      {
+        "id": "64c364c17c0b4c90840c1407d21d03a3",
+        "capability": "controller.mode.set",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "stateId": "12da01e7c11745358873dd623923e0f9",
+          "configurationId": "957c9b45b971469da5e10a97950eb0fc",
+          "avatarEnabled": true,
+          "userEnabled": false,
+          "virtualView": true,
+          "headTracked": true,
+          "focused": true
+        }
+      }
+    ],
+    "nextRunId": "c0e6ddbcde8c48569c5fb1d7e3b0ead8",
+    "storageError": null,
+    "recovery": null
+  },
+  "user": {
+    "selected": {
+      "id": "c0e6ddbcde8c48569c5fb1d7e3b0ead8",
+      "capability": "controller.mode.set",
+      "version": 1,
+      "resources": [],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "stateId": "1c30ebd67ae44fd6b06d5b21d3426156",
+        "configurationId": "957c9b45b971469da5e10a97950eb0fc",
+        "avatarEnabled": true,
+        "userEnabled": true,
+        "virtualView": true,
+        "headTracked": true,
+        "focused": true
+      },
+      "call": {
+        "id": "controller.mode.set",
+        "version": 1,
+        "arguments": {
+          "operation": "user.enable",
+          "stateId": "12da01e7c11745358873dd623923e0f9"
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "fc4241c191234ee188623eff58a0fc58",
+        "capability": "controller.mode.set",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "stateId": "2f665d4ff98c42b7ae05cb71dee26fcd",
+          "configurationId": "957c9b45b971469da5e10a97950eb0fc",
+          "avatarEnabled": true,
+          "userEnabled": false,
+          "virtualView": false,
+          "headTracked": true,
+          "focused": true
+        }
+      },
+      {
+        "id": "64c364c17c0b4c90840c1407d21d03a3",
+        "capability": "controller.mode.set",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "stateId": "12da01e7c11745358873dd623923e0f9",
+          "configurationId": "957c9b45b971469da5e10a97950eb0fc",
+          "avatarEnabled": true,
+          "userEnabled": false,
+          "virtualView": true,
+          "headTracked": true,
+          "focused": true
+        }
+      },
+      {
+        "id": "c0e6ddbcde8c48569c5fb1d7e3b0ead8",
+        "capability": "controller.mode.set",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "stateId": "1c30ebd67ae44fd6b06d5b21d3426156",
+          "configurationId": "957c9b45b971469da5e10a97950eb0fc",
+          "avatarEnabled": true,
+          "userEnabled": true,
+          "virtualView": true,
+          "headTracked": true,
+          "focused": true
+        }
+      }
+    ],
+    "nextRunId": "4afc604090054008a153bfe0969ae56c",
+    "storageError": null,
+    "recovery": null
+  },
+  "mixed": {
+    "selected": {
+      "id": "4afc604090054008a153bfe0969ae56c",
+      "capability": "controller.mode.set",
+      "version": 1,
+      "resources": [],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "stateId": "b569f356e7bc4f14bb862a7bf76062e6",
+        "configurationId": "957c9b45b971469da5e10a97950eb0fc",
+        "avatarEnabled": false,
+        "userEnabled": false,
+        "virtualView": false,
+        "headTracked": true,
+        "focused": true
+      },
+      "call": {
+        "id": "controller.mode.set",
+        "version": 1,
+        "arguments": {
+          "operation": "view.mixedReality",
+          "stateId": "1c30ebd67ae44fd6b06d5b21d3426156"
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "fc4241c191234ee188623eff58a0fc58",
+        "capability": "controller.mode.set",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "stateId": "2f665d4ff98c42b7ae05cb71dee26fcd",
+          "configurationId": "957c9b45b971469da5e10a97950eb0fc",
+          "avatarEnabled": true,
+          "userEnabled": false,
+          "virtualView": false,
+          "headTracked": true,
+          "focused": true
+        }
+      },
+      {
+        "id": "64c364c17c0b4c90840c1407d21d03a3",
+        "capability": "controller.mode.set",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "stateId": "12da01e7c11745358873dd623923e0f9",
+          "configurationId": "957c9b45b971469da5e10a97950eb0fc",
+          "avatarEnabled": true,
+          "userEnabled": false,
+          "virtualView": true,
+          "headTracked": true,
+          "focused": true
+        }
+      },
+      {
+        "id": "c0e6ddbcde8c48569c5fb1d7e3b0ead8",
+        "capability": "controller.mode.set",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "stateId": "1c30ebd67ae44fd6b06d5b21d3426156",
+          "configurationId": "957c9b45b971469da5e10a97950eb0fc",
+          "avatarEnabled": true,
+          "userEnabled": true,
+          "virtualView": true,
+          "headTracked": true,
+          "focused": true
+        }
+      },
+      {
+        "id": "4afc604090054008a153bfe0969ae56c",
+        "capability": "controller.mode.set",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "stateId": "b569f356e7bc4f14bb862a7bf76062e6",
+          "configurationId": "957c9b45b971469da5e10a97950eb0fc",
+          "avatarEnabled": false,
+          "userEnabled": false,
+          "virtualView": false,
+          "headTracked": true,
+          "focused": true
+        }
+      }
+    ],
+    "nextRunId": "8cafa86da7794942b28214c9982ad7c9",
+    "storageError": null,
+    "recovery": null
+  },
+  "after": {
+    "stateId": "b569f356e7bc4f14bb862a7bf76062e6",
+    "configurationId": "957c9b45b971469da5e10a97950eb0fc",
+    "avatarEnabled": false,
+    "userEnabled": false,
+    "virtualView": false,
+    "headTracked": true,
+    "focused": true
+  }
+}

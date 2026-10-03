@@ -1,0 +1,111 @@
+{
+  "candidate": {
+    "generationId": "7cae741a372d4e26baa3e9d65e309bfa",
+    "manifestHash": "530460e78190d3b5207071c21548618f38a623e54643a21d1f306007f57c1bfb",
+    "available": true,
+    "error": ""
+  },
+  "preview": {
+    "requestId": "736f67ffda854da68cad435473950333",
+    "generationId": "64115af43a624d31aac5a2204a6edd09",
+    "manifestHash": "ee7166c7b234015872f7918a48d6424f1b7a5709cb7482368f872a3164d06931",
+    "summary": {
+      "files": 6,
+      "models": 0,
+      "motions": 0,
+      "modules": 0,
+      "unavailablePrograms": 0,
+      "missingModels": 0,
+      "missingMotions": 0,
+      "missingControllerPrograms": 0
+    },
+    "source": {
+      "kind": "retained",
+      "generationId": "7cae741a372d4e26baa3e9d65e309bfa"
+    }
+  },
+  "completed": {
+    "requestId": "736f67ffda854da68cad435473950333",
+    "phase": "review",
+    "status": "Recovered workspace opened. Complete content review before starting activity.",
+    "originHash": "5c1080035adcd568db13a79d1766d79fcafa0a572537b1dde80c9549716e4584",
+    "candidateCount": 1,
+    "preview": {
+      "generationId": "64115af43a624d31aac5a2204a6edd09",
+      "manifestHash": "ee7166c7b234015872f7918a48d6424f1b7a5709cb7482368f872a3164d06931"
+    },
+    "committedRevision": "35b69cb1be074d9396fc4bbbb4a03cd7",
+    "evidenceHash": "85b58e4fbeec9d7508912962ec8f791576e958ab109b1327d9c7b6cd5e96b88c"
+  },
+  "opening": {
+    "selected": null,
+    "running": [],
+    "outcomes": [],
+    "nextRunId": null,
+    "storageError": "The selected room is unavailable. Workspace maintenance remains available.",
+    "workspace": {
+      "selected": {
+        "id": "20fab71351e4412c8b25983526915af3",
+        "capability": "workspace.recovery.commit",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "requestId": "736f67ffda854da68cad435473950333"
+        },
+        "call": {
+          "id": "workspace.recovery.commit",
+          "version": 1,
+          "arguments": {
+            "requestId": "736f67ffda854da68cad435473950333",
+            "originHash": "5c1080035adcd568db13a79d1766d79fcafa0a572537b1dde80c9549716e4584",
+            "generationId": "64115af43a624d31aac5a2204a6edd09",
+            "manifestHash": "ee7166c7b234015872f7918a48d6424f1b7a5709cb7482368f872a3164d06931"
+          }
+        }
+      },
+      "running": [],
+      "outcomes": [
+        {
+          "id": "62792265c0944762b45cf2e44ebd829e",
+          "capability": "workspace.recovery.inspect",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "requestId": "736f67ffda854da68cad435473950333"
+          }
+        },
+        {
+          "id": "f2feceb666c84684970a5843b8ec6bac",
+          "capability": "workspace.recovery.select",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "requestId": "736f67ffda854da68cad435473950333"
+          }
+        },
+        {
+          "id": "20fab71351e4412c8b25983526915af3",
+          "capability": "workspace.recovery.commit",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "requestId": "736f67ffda854da68cad435473950333"
+          }
+        }
+      ],
+      "nextRunId": "4fba5a4fb9924b3d98d77b5e5c3f91d1",
+      "storageError": null,
+      "recovery": null
+    }
+  },
+  "rememberedCount": 23.0,
+  "reviewRequired": false
+}

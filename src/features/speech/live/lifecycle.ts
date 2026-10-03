@@ -9,7 +9,7 @@ import type { createLiveTelemetry } from './telemetry';
 import type { createLiveTranscripts } from './transcripts';
 
 export function createLiveLifecycle(state: Pick<LiveSessionData,
-  'sessionRef' | 'inputAudioContextRef' | 'outputAudioContextRef'
+  'liveInputContextRef' | 'sessionRef' | 'inputAudioContextRef' | 'outputAudioContextRef'
   | 'microphoneStreamRef' | 'canvasRef' | 'workletNodeRef'
   | 'playbackNodeRef' | 'logRef' | 'logFinalizedRef'
   | 'pendingUserTurnRef' | 'videoUpdateVersionRef' | 'videoFrameInFlightRef'
@@ -27,7 +27,7 @@ export function createLiveLifecycle(state: Pick<LiveSessionData,
   | 'awaitingModelTurnRef' | 'boundaryClosePromiseRef'
 >, ports: ReturnType<typeof createLiveActivity> & ReturnType<typeof createLiveModelAudio> & ReturnType<typeof createLiveTranscripts> & ReturnType<typeof createBrowserLiveVideo> & ReturnType<typeof createLiveTelemetry> & { flushCaptureWorkletNode: typeof flushCaptureWorkletNode }) {
   const {
-    sessionRef, inputAudioContextRef, outputAudioContextRef,
+    liveInputContextRef, sessionRef, inputAudioContextRef, outputAudioContextRef,
     microphoneStreamRef, canvasRef, workletNodeRef,
     playbackNodeRef, logRef, logFinalizedRef,
     pendingUserTurnRef, videoUpdateVersionRef, videoFrameInFlightRef,
@@ -83,6 +83,8 @@ export function createLiveLifecycle(state: Pick<LiveSessionData,
 
     // Invalidate current session to prevent stale callbacks from processing
     currentSessionIdRef.current = 0;
+    liveInputContextRef.current?.discard();
+    liveInputContextRef.current = null;
     cancelModelAudioDecodeJobs();
     startNextModelAudioTurn(0);
 

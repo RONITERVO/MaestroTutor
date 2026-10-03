@@ -1,3 +1,4 @@
+import { buildRoomHandoffVerification, buildLiveRoomHandoffVerification, buildRoomTaskVerification } from '../../../shared/prompts';
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 
@@ -9,6 +10,7 @@ import type { ChatMessage, LanguagePair, ReplySuggestion } from '../../core/type
 import { groupAdjacentRoleItems } from '../../shared/utils/conversationTurns';
 import { createCoreRuntime, type CoreRuntime } from '../runtime';
 import { pickGeminiClientSource, type GeminiClientSource } from '../gemini/clientSource';
+import type { RoomTaskTarget } from '../room/taskSteering';
 import type { AssistantArtifactOptions } from './artifactOptions';
 import { buildCompactAssistantHistoryText } from './assistantMessageContext';
 
@@ -19,6 +21,9 @@ export interface ReplySuggestionsInput {
   languagePair: LanguagePair;
   existingGlobalProfile?: string;
   responseSource?: 'chat' | 'live';
+  /** Host-captured request, available only for a proposed room handoff. */
+  agentRequest?: string;
+  agentTargets?: RoomTaskTarget[];
 }
 
 export type ReplySuggestionsOptions = GeminiClientSource & AssistantArtifactOptions & {
@@ -129,6 +134,9 @@ export const buildReplySuggestionsPrompt = (input: ReplySuggestionsInput, option
   if (input.responseSource === 'live') {
     prompt += LIVE_REPLY_SUGGESTIONS_SUFFIX;
   }
+  if (input.agentRequest !== undefined) prompt += input.responseSource === 'live'
+    ? buildLiveRoomHandoffVerification(input.agentRequest) : buildRoomHandoffVerification(input.agentRequest);
+  if (input.agentRequest !== undefined) prompt += buildRoomTaskVerification(input.agentTargets || []);
   return prompt;
 };
 
@@ -154,7 +162,19 @@ export const runReplySuggestions = async (
         ...pickGeminiClientSource(options),
         configOverrides: {
           responseMimeType: 'application/json',
-          responseJsonSchema: REPLY_SUGGESTIONS_RESPONSE_SCHEMA,
+          responseJsonSchema: input.agentRequest === undefined ? REPLY_SUGGESTIONS_RESPONSE_SCHEMA : {
+            ...REPLY_SUGGESTIONS_RESPONSE_SCHEMA,
+            properties: { ...REPLY_SUGGESTIONS_RESPONSE_SCHEMA.properties, toolRequest: {
+              anyOf: [...REPLY_SUGGESTIONS_RESPONSE_SCHEMA.properties.toolRequest.anyOf,
+                { type: 'object', additionalProperties: false, required: ['tool'], properties: {
+                  tool: { type: 'string', enum: ['agent'] }, ...(input.agentTargets?.length ? { task: {
+                    type: 'object', additionalProperties: false, required: ['action', 'taskId'], properties: {
+                      action: { type: 'string', enum: ['stop', 'revise', 'continue'] }, taskId: { type: 'string', enum: input.agentTargets.map(target => target.id) },
+                    },
+                  } } : {}),
+                } }],
+            } },
+          },
         },
         lifecycleHooks: {
           onProgress: event => options.lifecycleHooks?.onProgress?.(event),

@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SpeechGate } from '../../../../shared/audio/speechGate';
 import { ContinuousLiveTurnBoundary } from '../../../core-sdk/media/continuousLiveTurnBoundary';
 import { SemanticSpeechCapture } from '../../../core-sdk/media/observerSpeechDetection';
+import { LiveInputContext } from '../../../core-sdk/media/liveInputContext';
 import { createLiveInputCapture } from './inputCapture';
 import { createLiveSessionState } from './state';
 
@@ -48,5 +49,26 @@ describe('continuous Live input boundaries', () => {
     expect(h.send).toHaveBeenCalledExactlyOnceWith({ activityEnd: {} });
     expect(h.state.inputAudioTelemetryRef.current.audioStreamEnds).toBe(1);
     h.state.inputPacketizerRef.current!.dispose();
+  });
+});
+
+describe('Live handoff audio provenance', () => {
+  it('records only the encoded bytes successfully sent', async () => {
+    const h = setup(); const input = new LiveInputContext(() => 0); h.state.liveInputContextRef.current = input;
+    h.encode.mockResolvedValue('AAD/fwCA//8=');
+    await h.capture();
+    expect(h.send).toHaveBeenCalledExactlyOnceWith({ audio: { data: 'AAD/fwCA//8=', mimeType: 'audio/pcm;rate=16000' } });
+    const media = input.finish(); expect(atob(media.audio!.data).slice(44)).toBe(atob('AAD/fwCA//8='));
+    expect(media.audio!.samples).toBe(4); // Not the synthetic 1600-sample capture before encoding.
+    h.state.inputPacketizerRef.current!.dispose();
+  });
+  it.each(['closed', 'stale', 'failed'])('does not retain %s packets as sent context', async reason => {
+    const h = setup(); const input = new LiveInputContext(); h.state.liveInputContextRef.current = input;
+    if (reason === 'closed') h.state.inputClosedByServerRef.current = true;
+    if (reason === 'stale') h.encode.mockImplementation(async () => { h.state.currentSessionIdRef.current = 2; return 'AAA='; });
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    if (reason === 'failed') h.send.mockImplementation(() => { throw new Error('Closed socket'); });
+    await h.capture(); expect(input.finish()).toMatchObject({ complete: false, issue: 'missing', packets: [] });
+    h.state.inputPacketizerRef.current!.dispose(); warn.mockRestore();
   });
 });

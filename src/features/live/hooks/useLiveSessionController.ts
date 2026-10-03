@@ -1,3 +1,4 @@
+import { acquireUserMedia, sessionActivity } from '../../../platform/browser/sessionActivity';
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
@@ -26,11 +27,12 @@ import {
   useGeminiLiveConversation,
   LiveSessionState,
   type LiveTurnTranscriptUpdate,
+  type LiveTurnContext,
   pcmToWav,
   mapAudioSegmentsToTextLines,
 } from '../../speech';
 import { uploadMediaToFiles } from '../../../api/gemini/files';
-import { computeTtsCacheKey } from '../../chat';
+import { computeTtsCacheKey, prepareLiveRoomAgentContext, captureLiveRoomAgentHandoff } from '../../chat';
 import { processMediaForUpload } from '../../vision';
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE, type TokenCategory } from '../../../core/config/activityTokens';
 import { getPrimaryCode, getShortLangCodeForPrompt } from '../../../shared/utils/languageUtils';
@@ -111,12 +113,14 @@ export interface UseLiveSessionControllerReturn {
   
   // Handlers
   handleStartLiveSession: () => Promise<void>;
+  pauseLiveForSpeech: () => Promise<(() => void) | null>;
   handleStopLiveSession: (options?: { scheduleReengagement?: boolean }) => Promise<void>;
   handleLiveTurnComplete: (
     userText: string,
     modelText: string,
     userAudioPcm?: Int16Array,
-    modelAudioLines?: Int16Array[]
+    modelAudioLines?: Int16Array[],
+    context?: LiveTurnContext
   ) => Promise<void>;
   handleLiveTurnTranscriptUpdate: (update: LiveTurnTranscriptUpdate) => void;
 }
@@ -184,8 +188,9 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
   const liveSessionShouldRestoreSttRef = useRef(false);
   const liveSessionCaptureRef = useRef<{ stream: MediaStream; created: boolean } | null>(null);
   const liveUiTokenRef = useRef<string | null>(null);
-  const isFinalizingLiveTurnRef = useRef(false);
+  const isFinalizingLiveTurnRef = useRef<symbol | null>(null);
   const continueLiveRef = useRef(false);
+  const speechPauseRef = useRef<symbol | null>(null);
   const restartLiveRef = useRef<(() => Promise<void>) | null>(null);
   const liveDraftMessageMetaRef = useRef<{
     user: { id: string | null; timestamp: number | null };
@@ -324,9 +329,18 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
     userText: string, 
     modelText: string, 
     userAudioPcm?: Int16Array, 
-    modelAudioLines?: Int16Array[]
+    modelAudioLines?: Int16Array[],
+    context?: LiveTurnContext
   ) => {
-    isFinalizingLiveTurnRef.current = true;
+    const turnPairId = context?.conversationId;
+    const isCurrentTurn = () => Boolean(turnPairId)
+      && useMaestroStore.getState().settings.selectedLanguagePairId === turnPairId
+      && !useMaestroStore.getState().isLoadingHistory;
+    // A completion may have been queued before a language/conversation change.
+    // Never infer its origin from the currently selected conversation.
+    if (!turnPairId || !isCurrentTurn()) return;
+    const finalization = Symbol('live-turn');
+    isFinalizingLiveTurnRef.current = finalization;
     const hasModelAudio = Boolean(modelAudioLines?.some(segment => segment.length > 0));
     try {
       const userDraftMeta = liveDraftMessageMetaRef.current.user;
@@ -343,6 +357,8 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
           // Capture snapshot of the user when they finished speaking
           snapshotData = await captureSnapshot(false);
         } catch { /* ignore */ }
+
+        if (!isCurrentTurn()) return;
 
         // Save User Audio if available
         let recordedUtterance: RecordedUtterance | undefined = undefined;
@@ -396,6 +412,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
               console.warn('Optimization failed, using original for persistence', e);
             }
 
+            if (!isCurrentTurn() || !findExistingMessageId(userMessageId)) return;
             try {
               // 2. Upload FULL resolution to Files API for model context
               const up = await uploadMediaToFiles(snapshotData.base64, snapshotData.mimeType, 'live-user-snapshot');
@@ -411,6 +428,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
               ]);
               
               // 3. Update message with both low-res (local) and URI (remote)
+              if (!isCurrentTurn() || !findExistingMessageId(userMessageId)) return;
               updateMessage(userMessageId, {
                 storageOptimizedImageUrl: optimizedDataUrl,
                 storageOptimizedImageMimeType: optimizedMime,
@@ -419,6 +437,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
             } catch (e) {
               console.warn('Upload failed', e);
               // Still update persistence image
+              if (!isCurrentTurn() || !findExistingMessageId(userMessageId)) return;
               updateMessage(userMessageId, {
                 storageOptimizedImageUrl: optimizedDataUrl,
                 storageOptimizedImageMimeType: optimizedMime
@@ -447,6 +466,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
         if (findExistingMessageId(assistantId)) {
           updateMessage(assistantId, {
             rawAssistantResponse: modelText,
+            llmRawResponse: modelText,
             translations: undefined,
           });
         } else {
@@ -459,7 +479,8 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
             id: assistantId,
             timestamp: assistantTimestamp,
             role: 'assistant',
-            rawAssistantResponse: modelText
+            rawAssistantResponse: modelText,
+            llmRawResponse: modelText
           });
         }
 
@@ -547,6 +568,13 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
             translations: translations
           });
 
+          if (context?.handoffId && userMessageId) {
+            await captureLiveRoomAgentHandoff(context.handoffId, {
+              sourceUserId: userMessageId, sourceAssistantId: assistantId, conversationId: turnPairId,
+            }, userText, structuredText, context.liveInputMedia);
+          }
+
+          if (!isCurrentTurn()) return;
           // 4. Generate Suggestions Immediately. Live turns rely on this shared
           // path to decide whether to attach an artifact or run a tool request.
           void fetchAndSetReplySuggestions(assistantId, structuredText, getHistoryRespectingBookmark(completeHistory), {
@@ -569,9 +597,9 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
     } catch (error) {
       console.error('Failed to process live turn completion:', error);
     } finally {
-      isFinalizingLiveTurnRef.current = false;
-      if (modelText.trim() || hasModelAudio) {
-        clearAllLiveDraftMessages();
+      if (isFinalizingLiveTurnRef.current === finalization) {
+        isFinalizingLiveTurnRef.current = null;
+        if (isCurrentTurn() && (modelText.trim() || hasModelAudio)) clearAllLiveDraftMessages();
       }
     }
   }, [
@@ -659,7 +687,8 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
       // Keep the user-owned Live mode selected while re-arming; publishing idle
       // here would let the passive observer acquire the microphone in between.
       if (state === 'idle' && continueLiveRef.current) {
-        void restartLiveRef.current?.();
+        if (speechPauseRef.current) setLiveSessionState('armed');
+        else void restartLiveRef.current?.();
         return;
       }
       setLiveSessionState(state);
@@ -678,6 +707,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
       }
       if (state === 'idle' || state === 'error') {
         continueLiveRef.current = false;
+        speechPauseRef.current = null;
         restoreSttAfterLiveSession();
         releaseLiveSessionCapture();
       }
@@ -690,14 +720,34 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
     onTurnComplete: handleLiveTurnComplete
   });
 
+  const pauseLiveForSpeech = useCallback(async (): Promise<(() => void) | null> => {
+    const state = useMaestroStore.getState();
+    if (state.liveSessionState === 'idle' || state.liveSessionState === 'error') return () => {};
+    if (state.liveSessionState !== 'armed' || !continueLiveRef.current || speechPauseRef.current) return null;
+    const pairId = state.settings.selectedLanguagePairId;
+    const owner = Symbol('task-speech'); speechPauseRef.current = owner;
+    try { await stopLiveConversation(); }
+    catch { if (speechPauseRef.current === owner) speechPauseRef.current = null; throw new Error('Could not pause idle Live input.'); }
+    return () => {
+      if (speechPauseRef.current !== owner) return;
+      speechPauseRef.current = null;
+      if (continueLiveRef.current && sessionActivity.isActive() && useMaestroStore.getState().settings.selectedLanguagePairId === pairId) {
+        void restartLiveRef.current?.();
+      }
+    };
+  }, [stopLiveConversation]);
+
   // --- Public Handlers ---
 
   /**
    * Start a new Gemini Live conversation session
    */
   const handleStartLiveSession = useCallback(async () => {
+    if (!sessionActivity.isActive()) return;
     if (liveSessionState === 'connecting' || liveSessionState === 'active' || liveSessionState === 'armed') return;
 
+    const conversationId = useMaestroStore.getState().settings.selectedLanguagePairId;
+    if (!conversationId) return;
     setLiveSessionError(null);
 
     let stream: MediaStream | null = liveVideoStream && liveVideoStream.active ? liveVideoStream : null;
@@ -718,7 +768,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
         const videoConstraints = cameraVideoConstraints(settingsRef.current.selectedCameraId);
 
         // Request BOTH permissions upfront to avoid double prompts or late mic requests
-        stream = await navigator.mediaDevices.getUserMedia({
+        stream = await acquireUserMedia({
           video: videoConstraints,
           audio: true
         });
@@ -755,15 +805,20 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
       cancelReengagement();
 
       const liveSystemInstruction = await generateLiveSystemInstruction();
+      if (!sessionActivity.isActive() || !continueLiveRef.current
+        || useMaestroStore.getState().settings.selectedLanguagePairId !== conversationId) { releaseLiveSessionCapture(); return; }
       const voiceName = settingsRef.current.tts.voiceName || 'Kore';
 
       restartLiveRef.current = async () => {
-        if (!continueLiveRef.current) return;
+        if (!continueLiveRef.current || speechPauseRef.current || !sessionActivity.isActive()
+          || useMaestroStore.getState().settings.selectedLanguagePairId !== conversationId) return;
         await startLiveConversation({
           liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_CAMERA_LIVE,
+          conversationId,
           stream: liveSessionCaptureRef.current?.stream,
           videoElement: visualContextVideoRef.current,
           buildSystemInstruction: () => liveInstructionBuilderRef.current(),
+          prepareTurnContext: prepareLiveRoomAgentContext,
           voiceName,
           gateInputOnSpeech: true,
         });
@@ -771,10 +826,12 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
 
       await startLiveConversation({
         liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_CAMERA_LIVE,
+        conversationId,
         stream,
         videoElement: visualContextVideoRef.current,
         systemInstruction: liveSystemInstruction,
         buildSystemInstruction: () => liveInstructionBuilderRef.current(),
+        prepareTurnContext: prepareLiveRoomAgentContext,
         voiceName,
         // The user click opens Live immediately, while each microphone turn is
         // still held until VAD sees enough speech to avoid empty short turns.
@@ -782,6 +839,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
       });
     } catch (error) {
       continueLiveRef.current = false;
+      speechPauseRef.current = null;
       releaseLiveSessionCapture();
       restoreSttAfterLiveSession();
       const message = error instanceof Error ? error.message : t('general.error');
@@ -812,6 +870,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
    */
   const handleStopLiveSession = useCallback(async (options?: { scheduleReengagement?: boolean }) => {
     continueLiveRef.current = false;
+    speechPauseRef.current = null;
     const scheduleStopReengagement = options?.scheduleReengagement ?? true;
     try {
       await stopLiveConversation();
@@ -831,6 +890,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
     liveSessionState,
     liveSessionError,
     handleStartLiveSession,
+    pauseLiveForSpeech,
     handleStopLiveSession,
     handleLiveTurnComplete,
     handleLiveTurnTranscriptUpdate,

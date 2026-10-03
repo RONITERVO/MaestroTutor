@@ -1,0 +1,108 @@
+{
+  "completed": {
+    "selected": {
+      "id": "53370a0af5244ad9a0565d6a2f0c1bdb",
+      "capability": "time.wait",
+      "version": 1,
+      "resources": [],
+      "phase": "completed",
+      "status": "Action completed",
+      "call": {
+        "id": "time.wait",
+        "version": 1,
+        "arguments": {
+          "seconds": 1
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "53370a0af5244ad9a0565d6a2f0c1bdb",
+        "capability": "time.wait",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed"
+      },
+      {
+        "id": "40c4da18d725444598c34c81b4fcc894",
+        "capability": "time.wait",
+        "version": 1,
+        "resources": [],
+        "phase": "interrupted",
+        "status": "The app restarted before a final result was saved. Some effects may have happened; this action was not replayed."
+      }
+    ],
+    "nextRunId": "629bb019603d45bc970d0f02c977f245",
+    "storageError": null
+  },
+  "interrupted": {
+    "selected": {
+      "id": "40c4da18d725444598c34c81b4fcc894",
+      "capability": "time.wait",
+      "version": 1,
+      "resources": [],
+      "phase": "interrupted",
+      "status": "The app restarted before a final result was saved. Some effects may have happened; this action was not replayed.",
+      "call": {
+        "id": "time.wait",
+        "version": 1,
+        "arguments": {
+          "seconds": 1
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "53370a0af5244ad9a0565d6a2f0c1bdb",
+        "capability": "time.wait",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed"
+      },
+      {
+        "id": "40c4da18d725444598c34c81b4fcc894",
+        "capability": "time.wait",
+        "version": 1,
+        "resources": [],
+        "phase": "interrupted",
+        "status": "The app restarted before a final result was saved. Some effects may have happened; this action was not replayed."
+      }
+    ],
+    "nextRunId": "629bb019603d45bc970d0f02c977f245",
+    "storageError": null
+  },
+  "unsaved-completion": {
+    "selected": {
+      "id": "17c49cd98f80431390b4ef81a9c313cf",
+      "capability": "time.wait",
+      "version": 1,
+      "resources": [],
+      "phase": "completed",
+      "status": "Action completed",
+      "call": {
+        "id": "time.wait",
+        "version": 1,
+        "arguments": {
+          "seconds": 1
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "17c49cd98f80431390b4ef81a9c313cf",
+        "capability": "time.wait",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed"
+      }
+    ],
+    "nextRunId": null,
+    "storageError": "Action receipt storage failed. New actions are disabled; unsaved outcomes may be uncertain after restart."
+  }
+}

@@ -1,0 +1,165 @@
+{
+  "version": 3,
+  "entry": "main",
+  "resources": [],
+  "state": [
+    {
+      "name": "created",
+      "initial": 0
+    },
+    {
+      "name": "missed",
+      "initial": 0
+    }
+  ],
+  "events": [],
+  "functions": [
+    {
+      "name": "main",
+      "returns": "void",
+      "parameters": [],
+      "locals": [
+        {
+          "name": "received",
+          "initial": false
+        },
+        {
+          "name": "status",
+          "initial": ""
+        },
+        {
+          "name": "late",
+          "initial": false
+        },
+        {
+          "name": "scheduled",
+          "initial": ""
+        },
+        {
+          "name": "hour",
+          "initial": 18
+        }
+      ],
+      "body": [
+        {
+          "id": "calendarLoop",
+          "op": "forever",
+          "body": [
+            {
+              "id": "weekly",
+              "op": "awaitEvent",
+              "event": "clock.scheduled",
+              "source": "",
+              "timeout": {
+                "value": 0
+              },
+              "received": "received",
+              "value": "status",
+              "version": 1,
+              "arguments": {
+                "kind": "weekly",
+                "missed": "report",
+                "graceSeconds": 60,
+                "hour": 18,
+                "minute": 0,
+                "weekdays": [
+                  "mon",
+                  "tue",
+                  "wed",
+                  "thu",
+                  "fri"
+                ],
+                "zone": "utc",
+                "ambiguous": "earlier"
+              },
+              "bindings": {
+                "hour": {
+                  "var": "hour"
+                }
+              },
+              "fields": {
+                "late": "late",
+                "scheduledUtc": "scheduled"
+              }
+            },
+            {
+              "id": "whenDue",
+              "op": "if",
+              "test": {
+                "op": "and",
+                "args": [
+                  {
+                    "var": "received"
+                  },
+                  {
+                    "op": "not",
+                    "args": [
+                      {
+                        "var": "late"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "then": [
+                {
+                  "id": "createBall",
+                  "op": "invoke",
+                  "capability": "object.create",
+                  "version": 1,
+                  "arguments": {
+                    "shape": "ball",
+                    "name": "Ball",
+                    "x": 0.3,
+                    "y": 1.3,
+                    "z": 0.65,
+                    "scale": 1,
+                    "red": 0.2,
+                    "green": 0.6,
+                    "blue": 0.9,
+                    "kind": "primitive"
+                  },
+                  "bindings": {}
+                },
+                {
+                  "id": "countCreated",
+                  "op": "setState",
+                  "variable": "created",
+                  "value": {
+                    "op": "add",
+                    "args": [
+                      {
+                        "state": "created"
+                      },
+                      {
+                        "value": 1
+                      }
+                    ]
+                  }
+                }
+              ],
+              "else": [
+                {
+                  "id": "countMissed",
+                  "op": "setState",
+                  "variable": "missed",
+                  "value": {
+                    "op": "add",
+                    "args": [
+                      {
+                        "state": "missed"
+                      },
+                      {
+                        "value": 1
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

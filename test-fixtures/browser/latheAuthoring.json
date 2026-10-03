@@ -1,0 +1,1316 @@
+{
+  "boundary": "Captured real Unity Editor app states; browser fixture replays the acknowledgement and does not execute native actions.",
+  "before": {
+    "version": 1,
+    "revision": 22,
+    "sceneRevision": 6,
+    "ack": 8,
+    "session": "1c33748f430b4fc395f54a0de93ce687",
+    "status": "Object inspected",
+    "selectedId": "2caa6b73fb1143dd9fc59b892a21be7b",
+    "ok": true,
+    "canUndo": true,
+    "canRedo": false,
+    "physicsRunning": false,
+    "visible": false,
+    "inspection": {
+      "id": "2caa6b73fb1143dd9fc59b892a21be7b",
+      "partId": "",
+      "objectRevision": 9,
+      "recipe": {
+        "version": 1,
+        "parts": [
+          {
+            "id": "Body",
+            "parent": "",
+            "shape": "lathe",
+            "profile": [
+              {
+                "x": 0,
+                "y": -0.5
+              },
+              {
+                "x": 0.5,
+                "y": -0.5
+              },
+              {
+                "x": 0.5,
+                "y": 0.5
+              },
+              {
+                "x": 0.4000000059604645,
+                "y": 0.5
+              },
+              {
+                "x": 0.4000000059604645,
+                "y": -0.4000000059604645
+              },
+              {
+                "x": 0,
+                "y": -0.4000000059604645
+              }
+            ],
+            "segments": 24,
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "size": {
+              "x": 0.20000000298023224,
+              "y": 0.2199999988079071,
+              "z": 0.20000000298023224
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "color": {
+              "r": 0.20000000298023224,
+              "g": 0.6499999761581421,
+              "b": 0.6000000238418579,
+              "a": 1
+            }
+          }
+        ],
+        "tracks": [],
+        "playing": false,
+        "loop": false,
+        "duration": 2
+      }
+    },
+    "workspaceView": "objects",
+    "rules": {
+      "revision": 1,
+      "bindingPage": 0,
+      "bindingCount": 0,
+      "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
+      "canUndo": false,
+      "canRedo": false,
+      "readOnly": false,
+      "status": "Create an action sequence, then add triggers or buttons",
+      "selectedError": "",
+      "sequences": [],
+      "selected": null,
+      "memory": null,
+      "bindings": [],
+      "buttons": [],
+      "running": [],
+      "outcomes": []
+    },
+    "motions": null,
+    "capabilities": [
+      "physicsSettings.v1",
+      "avatarSettings.v1",
+      "physicsRun.v1",
+      "avatarMotion.v1",
+      "avatarWalk.v1",
+      "motions.v1",
+      "avatarActivities.v1",
+      "catalog.v1",
+      "catalogVocabulary.v1",
+      "roomOwnership.v1",
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "eventFields.v1",
+      "eventSubscriptions.v1",
+      "factQueries.v1",
+      "conditionWaits.v1",
+      "parallelPrograms.v1",
+      "rememberedVariables.v1",
+      "temporaryMemory.v1",
+      "structuredValues.v1",
+      "programModules.v1",
+      "moduleLibrary.v1",
+      "moduleLibraryFiles.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "objectEdits.v1",
+      "objectCopy.v1",
+      "drawingEdits.v1",
+      "recipeEdits.v1",
+      "latheGeometry.v1",
+      "recipePartPlayback.v1",
+      "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
+      "objectLaunch.v1",
+      "calendarSchedules.v1",
+      "animationAuthoring.v1",
+      "animationRecording.v1",
+      "animationPosing.v1",
+      "avatarModels.v1",
+      "modelImport.v1",
+      "modelArchiveImport.v1",
+      "motionBatchImport.v1",
+      "includedMotions.v1",
+      "authoredMotion.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1",
+      "temporaryRoom.v1",
+      "spatialSettings.v1",
+      "physicsSimulation.v1",
+      "roomEnvironment.v1",
+      "surfacePlacement.v1",
+      "controllerConfiguration.v1",
+      "controllerModes.v1",
+      "runtimeDiagnostics.v1",
+      "workspaceMaintenance.v1",
+      "workspaceArchiveActivation.v1",
+      "workspaceReview.v1",
+      "workspacePrevious.v1",
+      "workspaceRecovery.v1",
+      "workspaceSavedRecovery.v1",
+      "workspaceHistory.v1",
+      "workspaceEvidence.v1",
+      "workspaceRetention.v1",
+      "workspaceDisposal.v1"
+    ],
+    "physics": {
+      "ready": false,
+      "running": false,
+      "status": "Load or scan your room to use gravity"
+    },
+    "temporaryRoom": {
+      "active": false,
+      "pending": false,
+      "id": "2d0d1b31bd43432b989df419576729a5",
+      "saveId": "",
+      "phase": "idle",
+      "error": "",
+      "savedRevision": 0
+    },
+    "ownership": {
+      "suspended": false,
+      "error": "",
+      "owners": [
+        {
+          "id": "ambient:maestro",
+          "label": "Maestro tutor activity",
+          "role": "ambient",
+          "allowsGrab": false,
+          "claims": [
+            {
+              "target": "maestro",
+              "channel": "wholeTarget"
+            }
+          ]
+        }
+      ]
+    },
+    "avatar": {
+      "active": false,
+      "canLook": true,
+      "canFollow": false,
+      "mode": "stopped",
+      "status": "Choose Look at me or Follow me",
+      "lookReason": "",
+      "followReason": "Load the room, check its alignment, then Start physics before walking",
+      "distance": 1.3,
+      "speed": 0.65
+    },
+    "walk": {
+      "source": "embedded",
+      "motionId": "",
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "name": "Walking",
+      "status": "Embedded walking clip is available",
+      "playbackStatus": "",
+      "clipIndex": 0,
+      "available": true
+    },
+    "activityProfile": {
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "status": "Uses included animations where no state motion is assigned",
+      "revision": 1,
+      "canAssign": true,
+      "readOnly": false,
+      "canUndo": false,
+      "canRedo": false,
+      "roles": [
+        {
+          "role": 0,
+          "choices": [
+            {
+              "motionId": "21da54acb5c38d147ad297bf7ef22977",
+              "name": "Missing saved motion",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": false
+            }
+          ]
+        },
+        {
+          "role": 1,
+          "choices": [
+            {
+              "motionId": "bd0bf1a849d86d785e00c3a392639359",
+              "name": "Missing saved motion",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": false
+            }
+          ]
+        },
+        {
+          "role": 2,
+          "choices": [
+            {
+              "motionId": "9a66ea13d9ba08b954b9a0cbdc7d89dc",
+              "name": "Missing saved motion",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": false
+            }
+          ]
+        },
+        {
+          "role": 3,
+          "choices": [
+            {
+              "motionId": "b56ece79da8e21bac89927310921d734",
+              "name": "Missing saved motion",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": false
+            },
+            {
+              "motionId": "852ac885964d693deb8d3d3ba835acec",
+              "name": "Missing saved motion",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": false
+            }
+          ]
+        }
+      ]
+    },
+    "objects": [
+      {
+        "id": "1d93c1b05bad48eda8e3b31902413ccf",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "2caa6b73fb1143dd9fc59b892a21be7b",
+        "name": "Native profile cup",
+        "kind": "Assembly",
+        "objectRevision": 9,
+        "position": {
+          "x": 0.20000000298023224,
+          "y": 1,
+          "z": 0.5
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "8a16dda0d21d4611be9541251ab96518",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0,
+          "y": 1.159999966621399,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "e8eea5a3e40a4c79b137c988df8c258d",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 3,
+        "position": {
+          "x": 0.5199999809265137,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "maestro",
+        "name": "Maestro",
+        "kind": "Maestro",
+        "objectRevision": 2,
+        "position": {
+          "x": -0.7799999713897705,
+          "y": 0,
+          "z": 1.399999976158142
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": {
+          "distance": 1.3,
+          "speed": 0.65
+        }
+      }
+    ],
+    "created": [],
+    "catalog": {
+      "operation": "inspect",
+      "capability": "runtime.modelBudget",
+      "version": 1,
+      "definition": {
+        "id": "runtime.modelBudget",
+        "version": 1,
+        "type": {
+          "record": {
+            "reserved": {
+              "record": {
+                "models": "number",
+                "vertices": "number",
+                "textureMiPixels": "number",
+                "morphMillionVertices": "number"
+              }
+            },
+            "limits": {
+              "record": {
+                "models": "number",
+                "vertices": "number",
+                "textureMiPixels": "number",
+                "morphMillionVertices": "number"
+              }
+            }
+          }
+        },
+        "label": "Imported model budgets",
+        "description": "Process-wide model reservations including avatar, previews and in-flight imports, with enforced limits. Source vertices, decoded texture MiPixels (1048576 pixels), morph million-vertices (1000000) and instance counts are budgets, not measured RAM/VRAM. Does not include procedural objects, book textures, WebView or operating-system memory. Reading never loads, evicts or changes anything.",
+        "features": [
+          "runtimeDiagnostics.v1"
+        ]
+      },
+      "status": "Current fact value. Reading does not change the room.",
+      "category": "facts",
+      "available": true,
+      "value": {
+        "reserved": {
+          "models": 1,
+          "vertices": 15283,
+          "textureMiPixels": 12,
+          "morphMillionVertices": 0
+        },
+        "limits": {
+          "models": 6,
+          "vertices": 500000,
+          "textureMiPixels": 64,
+          "morphMillionVertices": 8
+        }
+      }
+    },
+    "execution": {
+      "selected": {
+        "id": "aea12572e5204c84a1a991444c05206b",
+        "capability": "object.create",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "objectId": "2caa6b73fb1143dd9fc59b892a21be7b"
+        },
+        "call": {
+          "id": "object.create",
+          "version": 1,
+          "arguments": {
+            "kind": "recipe",
+            "name": "Native profile cup",
+            "x": 0.2,
+            "y": 1,
+            "z": 0.5,
+            "scale": 1,
+            "recipe": {
+              "version": 1,
+              "duration": 2,
+              "playing": false,
+              "loop": false,
+              "parts": [
+                {
+                  "id": "Body",
+                  "parent": "",
+                  "shape": "lathe",
+                  "profile": [
+                    {
+                      "x": 0,
+                      "y": -0.5
+                    },
+                    {
+                      "x": 0.5,
+                      "y": -0.5
+                    },
+                    {
+                      "x": 0.5,
+                      "y": 0.5
+                    },
+                    {
+                      "x": 0.4,
+                      "y": 0.5
+                    },
+                    {
+                      "x": 0.4,
+                      "y": -0.4
+                    },
+                    {
+                      "x": 0,
+                      "y": -0.4
+                    }
+                  ],
+                  "segments": 24,
+                  "position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "size": {
+                    "x": 0.2,
+                    "y": 0.22,
+                    "z": 0.2
+                  },
+                  "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  },
+                  "color": {
+                    "r": 0.2,
+                    "g": 0.65,
+                    "b": 0.6,
+                    "a": 1
+                  }
+                }
+              ],
+              "tracks": []
+            }
+          }
+        }
+      },
+      "running": [],
+      "outcomes": [
+        {
+          "id": "1721fd3754cd4554a6d1fb6fbd40e2e3",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "2cc4720ce4134638a9c9bfb47a156802"
+          }
+        },
+        {
+          "id": "aea12572e5204c84a1a991444c05206b",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "2caa6b73fb1143dd9fc59b892a21be7b"
+          }
+        }
+      ],
+      "nextRunId": "a2f8a0bcb7a94f889493286a0179343f",
+      "storageError": null,
+      "recovery": null,
+      "workspace": {
+        "selected": null,
+        "running": [],
+        "outcomes": [],
+        "nextRunId": "574b837e067749bfb5dd68d58ba06323",
+        "storageError": null,
+        "recovery": null
+      }
+    }
+  },
+  "after": {
+    "version": 1,
+    "revision": 25,
+    "sceneRevision": 7,
+    "ack": 9,
+    "session": "1c33748f430b4fc395f54a0de93ce687",
+    "status": "Action completed",
+    "selectedId": "2caa6b73fb1143dd9fc59b892a21be7b",
+    "ok": true,
+    "canUndo": true,
+    "canRedo": false,
+    "physicsRunning": false,
+    "visible": false,
+    "inspection": {
+      "id": "2caa6b73fb1143dd9fc59b892a21be7b",
+      "partId": "",
+      "objectRevision": 10,
+      "recipe": {
+        "version": 1,
+        "parts": [
+          {
+            "id": "Body",
+            "parent": "",
+            "shape": "lathe",
+            "profile": [
+              {
+                "x": 0,
+                "y": -0.5
+              },
+              {
+                "x": 0.47999998927116394,
+                "y": -0.5
+              },
+              {
+                "x": 0.5,
+                "y": 0.5
+              },
+              {
+                "x": 0.4000000059604645,
+                "y": 0.5
+              },
+              {
+                "x": 0.4000000059604645,
+                "y": -0.4000000059604645
+              },
+              {
+                "x": 0,
+                "y": -0.4000000059604645
+              }
+            ],
+            "segments": 32,
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "size": {
+              "x": 0.20000000298023224,
+              "y": 0.2199999988079071,
+              "z": 0.20000000298023224
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "color": {
+              "r": 0.20000000298023224,
+              "g": 0.6499999761581421,
+              "b": 0.6000000238418579,
+              "a": 1
+            }
+          }
+        ],
+        "tracks": [],
+        "playing": false,
+        "loop": false,
+        "duration": 2
+      }
+    },
+    "workspaceView": "objects",
+    "rules": {
+      "revision": 1,
+      "bindingPage": 0,
+      "bindingCount": 0,
+      "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
+      "canUndo": false,
+      "canRedo": false,
+      "readOnly": false,
+      "status": "Create an action sequence, then add triggers or buttons",
+      "selectedError": "",
+      "sequences": [],
+      "selected": null,
+      "memory": null,
+      "bindings": [],
+      "buttons": [],
+      "running": [],
+      "outcomes": []
+    },
+    "motions": null,
+    "capabilities": [
+      "physicsSettings.v1",
+      "avatarSettings.v1",
+      "physicsRun.v1",
+      "avatarMotion.v1",
+      "avatarWalk.v1",
+      "motions.v1",
+      "avatarActivities.v1",
+      "catalog.v1",
+      "catalogVocabulary.v1",
+      "roomOwnership.v1",
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "eventFields.v1",
+      "eventSubscriptions.v1",
+      "factQueries.v1",
+      "conditionWaits.v1",
+      "parallelPrograms.v1",
+      "rememberedVariables.v1",
+      "temporaryMemory.v1",
+      "structuredValues.v1",
+      "programModules.v1",
+      "moduleLibrary.v1",
+      "moduleLibraryFiles.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "objectEdits.v1",
+      "objectCopy.v1",
+      "drawingEdits.v1",
+      "recipeEdits.v1",
+      "latheGeometry.v1",
+      "recipePartPlayback.v1",
+      "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
+      "objectLaunch.v1",
+      "calendarSchedules.v1",
+      "animationAuthoring.v1",
+      "animationRecording.v1",
+      "animationPosing.v1",
+      "avatarModels.v1",
+      "modelImport.v1",
+      "modelArchiveImport.v1",
+      "motionBatchImport.v1",
+      "includedMotions.v1",
+      "authoredMotion.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1",
+      "temporaryRoom.v1",
+      "spatialSettings.v1",
+      "physicsSimulation.v1",
+      "roomEnvironment.v1",
+      "surfacePlacement.v1",
+      "controllerConfiguration.v1",
+      "controllerModes.v1",
+      "runtimeDiagnostics.v1",
+      "workspaceMaintenance.v1",
+      "workspaceArchiveActivation.v1",
+      "workspaceReview.v1",
+      "workspacePrevious.v1",
+      "workspaceRecovery.v1",
+      "workspaceSavedRecovery.v1",
+      "workspaceHistory.v1",
+      "workspaceEvidence.v1",
+      "workspaceRetention.v1",
+      "workspaceDisposal.v1"
+    ],
+    "physics": {
+      "ready": false,
+      "running": false,
+      "status": "Load or scan your room to use gravity"
+    },
+    "temporaryRoom": {
+      "active": false,
+      "pending": false,
+      "id": "2d0d1b31bd43432b989df419576729a5",
+      "saveId": "",
+      "phase": "idle",
+      "error": "",
+      "savedRevision": 0
+    },
+    "ownership": {
+      "suspended": false,
+      "error": "",
+      "owners": [
+        {
+          "id": "ambient:maestro",
+          "label": "Maestro tutor activity",
+          "role": "ambient",
+          "allowsGrab": false,
+          "claims": [
+            {
+              "target": "maestro",
+              "channel": "wholeTarget"
+            }
+          ]
+        }
+      ]
+    },
+    "avatar": {
+      "active": false,
+      "canLook": true,
+      "canFollow": false,
+      "mode": "stopped",
+      "status": "Choose Look at me or Follow me",
+      "lookReason": "",
+      "followReason": "Load the room, check its alignment, then Start physics before walking",
+      "distance": 1.3,
+      "speed": 0.65
+    },
+    "walk": {
+      "source": "embedded",
+      "motionId": "",
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "name": "Walking",
+      "status": "Embedded walking clip is available",
+      "playbackStatus": "",
+      "clipIndex": 0,
+      "available": true
+    },
+    "activityProfile": {
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "status": "Uses included animations where no state motion is assigned",
+      "revision": 1,
+      "canAssign": true,
+      "readOnly": false,
+      "canUndo": false,
+      "canRedo": false,
+      "roles": [
+        {
+          "role": 0,
+          "choices": [
+            {
+              "motionId": "21da54acb5c38d147ad297bf7ef22977",
+              "name": "Missing saved motion",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": false
+            }
+          ]
+        },
+        {
+          "role": 1,
+          "choices": [
+            {
+              "motionId": "bd0bf1a849d86d785e00c3a392639359",
+              "name": "Missing saved motion",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": false
+            }
+          ]
+        },
+        {
+          "role": 2,
+          "choices": [
+            {
+              "motionId": "9a66ea13d9ba08b954b9a0cbdc7d89dc",
+              "name": "Missing saved motion",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": false
+            }
+          ]
+        },
+        {
+          "role": 3,
+          "choices": [
+            {
+              "motionId": "b56ece79da8e21bac89927310921d734",
+              "name": "Missing saved motion",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": false
+            },
+            {
+              "motionId": "852ac885964d693deb8d3d3ba835acec",
+              "name": "Missing saved motion",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": false
+            }
+          ]
+        }
+      ]
+    },
+    "objects": [
+      {
+        "id": "1d93c1b05bad48eda8e3b31902413ccf",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "2caa6b73fb1143dd9fc59b892a21be7b",
+        "name": "Native profile cup",
+        "kind": "Assembly",
+        "objectRevision": 10,
+        "position": {
+          "x": 0.20000000298023224,
+          "y": 1,
+          "z": 0.5
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "8a16dda0d21d4611be9541251ab96518",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0,
+          "y": 1.159999966621399,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "e8eea5a3e40a4c79b137c988df8c258d",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 3,
+        "position": {
+          "x": 0.5199999809265137,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "maestro",
+        "name": "Maestro",
+        "kind": "Maestro",
+        "objectRevision": 2,
+        "position": {
+          "x": -0.7799999713897705,
+          "y": 0,
+          "z": 1.399999976158142
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": {
+          "distance": 1.3,
+          "speed": 0.65
+        }
+      }
+    ],
+    "created": [],
+    "catalog": {
+      "operation": "inspect",
+      "capability": "runtime.modelBudget",
+      "version": 1,
+      "definition": {
+        "id": "runtime.modelBudget",
+        "version": 1,
+        "type": {
+          "record": {
+            "reserved": {
+              "record": {
+                "models": "number",
+                "vertices": "number",
+                "textureMiPixels": "number",
+                "morphMillionVertices": "number"
+              }
+            },
+            "limits": {
+              "record": {
+                "models": "number",
+                "vertices": "number",
+                "textureMiPixels": "number",
+                "morphMillionVertices": "number"
+              }
+            }
+          }
+        },
+        "label": "Imported model budgets",
+        "description": "Process-wide model reservations including avatar, previews and in-flight imports, with enforced limits. Source vertices, decoded texture MiPixels (1048576 pixels), morph million-vertices (1000000) and instance counts are budgets, not measured RAM/VRAM. Does not include procedural objects, book textures, WebView or operating-system memory. Reading never loads, evicts or changes anything.",
+        "features": [
+          "runtimeDiagnostics.v1"
+        ]
+      },
+      "status": "Current fact value. Reading does not change the room.",
+      "category": "facts",
+      "available": true,
+      "value": {
+        "reserved": {
+          "models": 1,
+          "vertices": 15283,
+          "textureMiPixels": 12,
+          "morphMillionVertices": 0
+        },
+        "limits": {
+          "models": 6,
+          "vertices": 500000,
+          "textureMiPixels": 64,
+          "morphMillionVertices": 8
+        }
+      }
+    },
+    "execution": {
+      "selected": {
+        "id": "a2f8a0bcb7a94f889493286a0179343f",
+        "capability": "object.recipe.edit",
+        "version": 1,
+        "resources": [
+          "2caa6b73fb1143dd9fc59b892a21be7b"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "target": "2caa6b73fb1143dd9fc59b892a21be7b",
+          "revision": 10,
+          "parts": 1,
+          "tracks": 0,
+          "duration": 2,
+          "loop": false,
+          "playing": false,
+          "autoplay": false
+        },
+        "call": {
+          "id": "object.recipe.edit",
+          "version": 1,
+          "arguments": {
+            "target": "2caa6b73fb1143dd9fc59b892a21be7b",
+            "revision": 9,
+            "parts": [
+              {
+                "id": "Body",
+                "parent": "",
+                "shape": "lathe",
+                "profile": [
+                  {
+                    "x": 0,
+                    "y": -0.5
+                  },
+                  {
+                    "x": 0.48,
+                    "y": -0.5
+                  },
+                  {
+                    "x": 0.5,
+                    "y": 0.5
+                  },
+                  {
+                    "x": 0.4000000059604645,
+                    "y": 0.5
+                  },
+                  {
+                    "x": 0.4000000059604645,
+                    "y": -0.4000000059604645
+                  },
+                  {
+                    "x": 0,
+                    "y": -0.4000000059604645
+                  }
+                ],
+                "segments": 32,
+                "position": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "size": {
+                  "x": 0.20000000298023224,
+                  "y": 0.2199999988079071,
+                  "z": 0.20000000298023224
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0,
+                  "w": 1
+                },
+                "color": {
+                  "r": 0.20000000298023224,
+                  "g": 0.6499999761581421,
+                  "b": 0.6000000238418579,
+                  "a": 1
+                }
+              }
+            ],
+            "removeParts": [],
+            "tracks": [],
+            "removeTracks": [],
+            "duration": 2,
+            "loop": false
+          }
+        }
+      },
+      "running": [],
+      "outcomes": [
+        {
+          "id": "1721fd3754cd4554a6d1fb6fbd40e2e3",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "2cc4720ce4134638a9c9bfb47a156802"
+          }
+        },
+        {
+          "id": "aea12572e5204c84a1a991444c05206b",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "2caa6b73fb1143dd9fc59b892a21be7b"
+          }
+        },
+        {
+          "id": "a2f8a0bcb7a94f889493286a0179343f",
+          "capability": "object.recipe.edit",
+          "version": 1,
+          "resources": [
+            "2caa6b73fb1143dd9fc59b892a21be7b"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "2caa6b73fb1143dd9fc59b892a21be7b",
+            "revision": 10,
+            "parts": 1,
+            "tracks": 0,
+            "duration": 2,
+            "loop": false,
+            "playing": false,
+            "autoplay": false
+          }
+        }
+      ],
+      "nextRunId": "a30132c650c44ef6adafc7999e5f7b23",
+      "storageError": null,
+      "recovery": null,
+      "workspace": {
+        "selected": null,
+        "running": [],
+        "outcomes": [],
+        "nextRunId": "574b837e067749bfb5dd68d58ba06323",
+        "storageError": null,
+        "recovery": null
+      }
+    }
+  }
+}

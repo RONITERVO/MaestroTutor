@@ -1,0 +1,136 @@
+{
+  "inspected": {
+    "requestId": "7b8998e5d9814d6491e4b6914a598691",
+    "phase": "inspected",
+    "status": "Inspect candidate metadata, then select an exact candidate for full verification.",
+    "originHash": "9b1c3e7296ac6ba3cce43beb5ab201f4ff357cfc4ebb9ab903d60614c5c74314",
+    "candidateCount": 2,
+    "preview": {
+      "generationId": "",
+      "manifestHash": ""
+    },
+    "committedRevision": "",
+    "evidenceHash": ""
+  },
+  "candidate": {
+    "generationId": "6b0a4a0a667d40b0913aec17385c6eb9",
+    "manifestHash": "a440925aa5703ad3a216fc0200a841d14a792549d75b200e8a31440e5c907b4d",
+    "available": true,
+    "error": ""
+  },
+  "prepared": {
+    "requestId": "7b8998e5d9814d6491e4b6914a598691",
+    "phase": "prepared",
+    "status": "Inspect verified contents and missing references before explicitly committing recovery.",
+    "originHash": "9b1c3e7296ac6ba3cce43beb5ab201f4ff357cfc4ebb9ab903d60614c5c74314",
+    "candidateCount": 2,
+    "preview": {
+      "generationId": "4b455bed0e3041c38404b479af65dc5e",
+      "manifestHash": "a440925aa5703ad3a216fc0200a841d14a792549d75b200e8a31440e5c907b4d"
+    },
+    "committedRevision": "",
+    "evidenceHash": ""
+  },
+  "preview": {
+    "requestId": "7b8998e5d9814d6491e4b6914a598691",
+    "generationId": "4b455bed0e3041c38404b479af65dc5e",
+    "manifestHash": "a440925aa5703ad3a216fc0200a841d14a792549d75b200e8a31440e5c907b4d",
+    "summary": {
+      "files": 5,
+      "models": 0,
+      "motions": 0,
+      "modules": 0,
+      "unavailablePrograms": 0,
+      "missingModels": 0,
+      "missingMotions": 0,
+      "missingControllerPrograms": 0
+    },
+    "source": {
+      "kind": "retained",
+      "generationId": "6b0a4a0a667d40b0913aec17385c6eb9"
+    }
+  },
+  "completed": {
+    "requestId": "7b8998e5d9814d6491e4b6914a598691",
+    "phase": "review",
+    "status": "Recovered workspace opened. Complete content review before starting activity.",
+    "originHash": "9b1c3e7296ac6ba3cce43beb5ab201f4ff357cfc4ebb9ab903d60614c5c74314",
+    "candidateCount": 2,
+    "preview": {
+      "generationId": "4b455bed0e3041c38404b479af65dc5e",
+      "manifestHash": "a440925aa5703ad3a216fc0200a841d14a792549d75b200e8a31440e5c907b4d"
+    },
+    "committedRevision": "73be2392d6434d2b88c65cc8bb980749",
+    "evidenceHash": "f7b78d5abdf1ef994b76e153f2d32cf9348df2ea270aae1ddb89f85b77498d0a"
+  },
+  "opening": {
+    "selected": null,
+    "running": [],
+    "outcomes": [],
+    "nextRunId": "c79ceda794074b8e8b534f0574a273e8",
+    "storageError": null,
+    "recovery": null,
+    "workspace": {
+      "selected": {
+        "id": "bdbca49db35b470293e7ef47b893e965",
+        "capability": "workspace.recovery.commit",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "requestId": "7b8998e5d9814d6491e4b6914a598691"
+        },
+        "call": {
+          "id": "workspace.recovery.commit",
+          "version": 1,
+          "arguments": {
+            "requestId": "7b8998e5d9814d6491e4b6914a598691",
+            "originHash": "9b1c3e7296ac6ba3cce43beb5ab201f4ff357cfc4ebb9ab903d60614c5c74314",
+            "generationId": "4b455bed0e3041c38404b479af65dc5e",
+            "manifestHash": "a440925aa5703ad3a216fc0200a841d14a792549d75b200e8a31440e5c907b4d"
+          }
+        }
+      },
+      "running": [],
+      "outcomes": [
+        {
+          "id": "14b8c1e032d04f86a098a1d236955771",
+          "capability": "workspace.recovery.inspect",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "requestId": "7b8998e5d9814d6491e4b6914a598691"
+          }
+        },
+        {
+          "id": "e041bd8fd51841019d8d7d17ba2bd754",
+          "capability": "workspace.recovery.select",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "requestId": "7b8998e5d9814d6491e4b6914a598691"
+          }
+        },
+        {
+          "id": "bdbca49db35b470293e7ef47b893e965",
+          "capability": "workspace.recovery.commit",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "requestId": "7b8998e5d9814d6491e4b6914a598691"
+          }
+        }
+      ],
+      "nextRunId": "090202f7cbd849dfbb548b2237f20bdf",
+      "storageError": null,
+      "recovery": null
+    }
+  }
+}

@@ -306,6 +306,7 @@ export function createSendCoordinator(ports: SendCoordinatorPorts) {
         });
         const { finalMessageUpdates } = await handleGeminiResponse({
           thinkingMessageId,
+          sourceUserId: messageType === 'user' ? userMessageContext.userMessageId || undefined : undefined,
           geminiPromptText,
           sanitizedDerivedHistory,
           systemInstructionForGemini,

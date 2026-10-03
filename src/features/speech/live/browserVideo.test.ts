@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { LiveInputContext } from '../../../core-sdk/media/liveInputContext';
 import { createBrowserLiveVideo } from './browserVideo';
 import { createLiveSessionState } from './state';
 
@@ -15,7 +16,7 @@ beforeEach(() => {
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({ drawImage: vi.fn() } as any);
   vi.spyOn(HTMLCanvasElement.prototype, 'toBlob').mockImplementation(callback => { frames.push(callback); });
   vi.stubGlobal('FileReader', class {
-    result = 'data:image/jpeg;base64,frame'; onloadend: (() => void) | null = null;
+    result = 'data:image/jpeg;base64,/9gKFP/Z'; onloadend: (() => void) | null = null;
     readAsDataURL() { reads.push(() => this.onloadend?.()); }
   });
 });
@@ -26,12 +27,12 @@ const readyVideo = (source: MediaStream) => {
   Object.defineProperties(video, { readyState: { value: 4 }, videoWidth: { value: 1280 }, videoHeight: { value: 720 } });
   return video;
 };
-const setup = () => {
+const setup = (hasCameraConsent = () => true) => {
   const state = createLiveSessionState({});
   state.currentSessionIdRef.current = 1;
   const sendRealtimeInput = vi.fn();
   state.sessionRef.current = { sendRealtimeInput };
-  const video = createBrowserLiveVideo(state, { hasCameraConsent: () => true });
+  const video = createBrowserLiveVideo(state, { hasCameraConsent });
   return { state, video, sendRealtimeInput };
 };
 
@@ -96,5 +97,25 @@ describe('browser Live video ownership', () => {
     await vi.advanceTimersByTimeAsync(1000); frames[0](new Blob(['old']));
     await h.video.updateVideoInput(null); reads[0](); await flush();
     expect(h.sendRealtimeInput).not.toHaveBeenCalled();
+  });
+});
+
+describe('Live handoff camera provenance', () => {
+  it.each(['sent', 'revoked', 'closed', 'stale', 'failed'])('retains only eligible sent frames: %s', async reason => {
+    let consent = true;
+    const h = setup(() => consent), source = stream();
+    const input = new LiveInputContext(() => 0); input.recordAudio('AAA='); h.state.liveInputContextRef.current = input;
+    await h.video.updateVideoInput(source, readyVideo(source));
+    await vi.advanceTimersByTimeAsync(1000); frames[0](new Blob(['synthetic JPEG']));
+    if (reason === 'revoked') consent = false;
+    if (reason === 'closed') h.state.inputClosedByServerRef.current = true;
+    if (reason === 'stale') h.state.currentSessionIdRef.current = 2;
+    if (reason === 'failed') h.sendRealtimeInput.mockImplementation(() => { throw new Error('Closed socket'); });
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    reads[0](); await flush();
+    const media = input.finish();
+    expect(media.frames).toHaveLength(reason === 'sent' ? 1 : 0);
+    if (reason === 'sent') expect(media.frames[0]).toEqual({ mimeType: 'image/jpeg', data: '/9gKFP/Z', atMs: 0, audioOffsetSamples: 1 });
+    await h.video.updateVideoInput(null); warn.mockRestore();
   });
 });

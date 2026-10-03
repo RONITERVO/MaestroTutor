@@ -30,6 +30,7 @@ vi.mock('../utils/localSpeechTrigger', () => ({ waitForLocalSpeechTrigger: ports
 
 import { useGeminiLiveConversation, type UseGeminiLiveConversationCallbacks } from './useGeminiLiveConversation';
 import { LIVE_OPEN_TRIGGER } from '../../../../shared/liveOpenReason';
+import { sessionActivity } from '../../../platform/browser/sessionActivity';
 
 const deferred = <T,>() => {
   let resolve!: (value: T) => void;
@@ -82,6 +83,16 @@ beforeEach(() => {
 afterEach(async () => { cleanup(); await flush(); vi.useRealTimers(); vi.unstubAllGlobals(); });
 
 describe('actual Live hook lifecycle before session-controller extraction', () => {
+  it('closes capture and the provider on host interruption and requires explicit resume', async () => {
+    const h = harness(); await h.start(true);
+    await act(async () => { sessionActivity.setSuspended(true); }); await flush();
+    expect(sessions[0].close).toHaveBeenCalledOnce();
+    expect(contexts.every(context => context.state === 'closed')).toBe(true);
+    expect(sessionActivity.status().settled).toBe(true);
+    sessionActivity.setSuspended(false);
+    await h.start(); expect(ports.connect).toHaveBeenCalledTimes(1);
+    sessionActivity.resume(); await h.start(); expect(ports.connect).toHaveBeenCalledTimes(2);
+  });
   it('remains usable after React StrictMode rehearses effect cleanup', async () => {
     const hook = renderHook(() => useGeminiLiveConversation(), {
       wrapper: ({ children }) => createElement(StrictMode, null, children),
@@ -323,4 +334,68 @@ describe('actual Live hook lifecycle before session-controller extraction', () =
     expect(sessions[0].close).not.toHaveBeenCalled();
     expect(stopTrack).not.toHaveBeenCalled();
   });
+});
+
+it('captures prepared context from the exact connection and forwards it with the completed turn', async () => {
+  const h = harness();
+  const prepareTurnContext = vi.fn(async (instruction?: string) => ({ systemInstruction: instruction + ' Room capability.', handoffId: 'owned-connection' }));
+  await act(async () => { await h.result.current.start({ liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_CAMERA_LIVE,
+    systemInstruction: 'Stale preflight instruction', buildSystemInstruction: async () => 'Fresh context', prepareTurnContext, playModelAudio: false }); });
+  expect(prepareTurnContext).toHaveBeenCalledExactlyOnceWith('Fresh context');
+  expect(connections[0].config.systemInstruction).toBe('Fresh context Room capability.');
+  expect(connections[0].config).not.toHaveProperty('handoffId');
+  connections[0].callbacks.onmessage({ serverContent: { inputTranscription: { text: 'Make a robot' }, outputTranscription: { text: 'I will ask the agent.' }, turnComplete: true } });
+  await flush(); await advance(1500);
+  expect(h.callbacks.onTurnComplete).toHaveBeenCalledExactlyOnceWith('Make a robot', 'I will ask the agent.', new Int16Array(), [], {
+    systemInstruction: 'Fresh context Room capability.', handoffId: 'owned-connection',
+    liveInputMedia: { version: 1, complete: false, issue: 'missing', frames: [], packets: [] },
+  });
+});
+
+it('does not connect after Stop while context preparation is pending', async () => {
+  const pending = deferred<{ systemInstruction: string; handoffId: string }>();
+  const h = harness(); let starting!: Promise<void>;
+  act(() => { starting = h.result.current.start({ liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_CAMERA_LIVE, playModelAudio: false,
+    prepareTurnContext: () => pending.promise }); });
+  await flush(); await act(async () => { await h.result.current.stop(); });
+  await act(async () => { pending.resolve({ systemInstruction: 'Late context', handoffId: 'stale' }); await starting; });
+  expect(ports.connect).not.toHaveBeenCalled(); expect(h.callbacks.onTurnComplete).not.toHaveBeenCalled();
+});
+
+it.each([false, true])('preserves actual sent audio through completion; interrupted=%s', async interrupted => {
+  const h = harness(); ports.encode.mockResolvedValue('AAD/fwCA//8=');
+  await act(async () => { await h.result.current.start({ liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_CAMERA_LIVE,
+    prepareTurnContext: async () => ({ systemInstruction: 'Original context', handoffId: 'owned-media' }), playModelAudio: false }); });
+  const capture = nodes.find(node => node.name === 'capture')!;
+  capture.port.onmessage!({ data: new Int16Array(1600).fill(200) }); await flush(); await advance(120);
+  expect(sessions[0].sendRealtimeInput).toHaveBeenCalledWith({ audio: { data: 'AAD/fwCA//8=', mimeType: 'audio/pcm;rate=16000' } });
+  if (interrupted) { connections[0].callbacks.onmessage({ serverContent: { interrupted: true } }); await flush(); }
+  connections[0].callbacks.onmessage({ serverContent: { inputTranscription: { text: 'Make this' }, outputTranscription: { text: 'I will ask the agent.' }, turnComplete: true } });
+  await flush();
+  const count = sessions[0].sendRealtimeInput.mock.calls.length;
+  capture.port.onmessage!({ data: new Int16Array(1600).fill(900) }); await flush(); await advance(1500);
+  expect(sessions[0].sendRealtimeInput).toHaveBeenCalledTimes(count);
+  const media = h.callbacks.onTurnComplete.mock.calls[0][4].liveInputMedia;
+  if (interrupted) expect(media).toMatchObject({ complete: false, issue: 'interrupted', packets: [] });
+  else {
+    expect(media.complete).toBe(true); expect(atob(media.audio.data).slice(44)).toBe(atob('AAD/fwCA//8='));
+    expect(media.packets).toEqual([{ atMs: 0, sampleOffset: 0, samples: 4 }]);
+  }
+  expect(capture.port.onmessage).toBeNull();
+});
+
+
+it('keeps the conversation captured before async connection even without a room handoff', async () => {
+  const h = harness(), pending = deferred<string>();
+  const options = { liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_CAMERA_LIVE, conversationId: 'original-pair',
+    buildSystemInstruction: () => pending.promise, playModelAudio: false };
+  let starting!: Promise<void>;
+  act(() => { starting = h.result.current.start(options); }); await flush();
+  options.conversationId = 'new-pair';
+  await act(async () => { pending.resolve('Original instruction'); await starting; });
+  expect(connections[0].config).not.toHaveProperty('conversationId');
+  expect(connections[0].config.systemInstruction).toBe('Original instruction');
+  connections[0].callbacks.onmessage({ serverContent: { outputTranscription: { text: 'Old answer' }, turnComplete: true } });
+  await flush(); await advance(1500);
+  expect(h.callbacks.onTurnComplete.mock.calls[0][4]).toEqual({ conversationId: 'original-pair', systemInstruction: 'Original instruction' });
 });

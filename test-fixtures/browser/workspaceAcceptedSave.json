@@ -1,0 +1,48 @@
+{
+  "saving": {
+    "requestId": "c3be2936790a4de5afeb7b53fad03d9c",
+    "phase": "completing",
+    "status": "Verifying the inspected contents before completing review",
+    "workspace": {
+      "generationId": "755c7b3f9af147c7afa58b4d71e57684",
+      "revision": "a4a80a65d73149109e4b5e85f44810fb"
+    },
+    "manifestHash": "0ba11909f15b6f8931f392ace17b67038e1e907c0ae8c46d4718507a4ff6a6e5",
+    "committedRevision": "",
+    "summary": {
+      "files": 5,
+      "models": 0,
+      "motions": 0,
+      "modules": 0,
+      "unavailablePrograms": 0,
+      "missingModels": 0,
+      "missingMotions": 0,
+      "missingControllerPrograms": 0
+    },
+    "activityHeld": true
+  },
+  "completed": {
+    "requestId": "c3be2936790a4de5afeb7b53fad03d9c",
+    "phase": "completed",
+    "status": "Review completed. Stopped programs and physics stay stopped; start desired activity explicitly.",
+    "workspace": {
+      "generationId": "755c7b3f9af147c7afa58b4d71e57684",
+      "revision": "a4a80a65d73149109e4b5e85f44810fb"
+    },
+    "manifestHash": "0ba11909f15b6f8931f392ace17b67038e1e907c0ae8c46d4718507a4ff6a6e5",
+    "committedRevision": "a555ce289f4a48339ce140127f43a08e",
+    "summary": {
+      "files": 5,
+      "models": 0,
+      "motions": 0,
+      "modules": 0,
+      "unavailablePrograms": 0,
+      "missingModels": 0,
+      "missingMotions": 0,
+      "missingControllerPrograms": 0
+    },
+    "activityHeld": false
+  },
+  "savedName": "Accepted while an earlier save was running",
+  "savedBehaviours": 1
+}

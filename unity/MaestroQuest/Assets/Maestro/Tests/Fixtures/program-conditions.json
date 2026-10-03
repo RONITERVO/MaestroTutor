@@ -1,0 +1,97 @@
+{
+  "version": 3,
+  "dataVersion": 1,
+  "entry": "main",
+  "resources": [],
+  "state": [
+    {
+      "name": "target",
+      "initial": "book"
+    },
+    {
+      "name": "threshold",
+      "initial": 0.5
+    },
+    {
+      "name": "matched",
+      "initial": false
+    }
+  ],
+  "events": [],
+  "functions": [
+    {
+      "name": "main",
+      "returns": "void",
+      "parameters": [],
+      "locals": [
+        {
+          "name": "received",
+          "initial": false
+        },
+        {
+          "name": "conditionValue",
+          "initial": false
+        }
+      ],
+      "body": [
+        {
+          "id": "watch",
+          "op": "awaitCondition",
+          "test": {
+            "op": "gt",
+            "args": [
+              {
+                "op": "field",
+                "args": [
+                  {
+                    "fact": "object.position",
+                    "version": 1,
+                    "arguments": {
+                      "target": "book"
+                    },
+                    "bindings": {
+                      "target": {
+                        "state": "target"
+                      }
+                    }
+                  },
+                  {
+                    "value": "x"
+                  }
+                ]
+              },
+              {
+                "state": "threshold"
+              }
+            ]
+          },
+          "transition": "true",
+          "initial": "baseline",
+          "stableSeconds": {
+            "value": 0.2
+          },
+          "timeout": {
+            "value": 3
+          },
+          "received": "received",
+          "value": "conditionValue"
+        },
+        {
+          "id": "remember",
+          "op": "setState",
+          "variable": "matched",
+          "value": {
+            "var": "received"
+          }
+        },
+        {
+          "id": "finish",
+          "op": "sleep",
+          "seconds": {
+            "value": 30
+          }
+        }
+      ]
+    }
+  ]
+}
