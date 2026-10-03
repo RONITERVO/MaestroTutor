@@ -31,9 +31,13 @@ namespace Maestro.Quest.Creation
                     if(h==null||h.connected!=connected||!h.enabled)return false;
                     if(!h.Aligned(Find(target).transform,Find(connected).transform,out error))return false;
                 }else if(operation=="configure"){if(definition==null){error="Provide a connection definition";return false;}data.connections=new[]{definition.Copy()};data.connections[0].connected=connected;}
-                else if(operation=="align"){
+                else if(operation=="slide"){
+                    var h=data.connections?.FirstOrDefault();error="Read a configured slider and choose a distance within its saved limits";
+                    if(h==null||h.kind!="slider"||h.connected!=connected||!float.IsFinite(angle)||angle<h.slide.minimum||angle>h.slide.maximum)return false;
+                    h.Slide(data,Pose(Read(connected),Find(connected).transform),angle);
+                }else if(operation=="align"){
                     var h=data.connections?.FirstOrDefault();error="Inspect an existing connection and its exact connected object before alignment";
-                    if(h==null||h.connected!=connected||!float.IsFinite(angle)||angle<-170||angle>170||h.kind=="fixed"&&angle!=0||h.kind=="hinge"&&h.limits.enabled&&(angle<h.limits.minimum||angle>h.limits.maximum))return false;
+                    if(h==null||h.kind=="slider"||h.connected!=connected||!float.IsFinite(angle)||angle<-170||angle>170||h.kind=="fixed"&&angle!=0||h.kind=="hinge"&&h.limits.enabled&&(angle<h.limits.minimum||angle>h.limits.maximum))return false;
                     // Compute in room coordinates, without touching the live transforms during admission or a failed save.
                     var other=Pose(Read(connected),Find(connected).transform);
                     h.Align(data,other,angle);

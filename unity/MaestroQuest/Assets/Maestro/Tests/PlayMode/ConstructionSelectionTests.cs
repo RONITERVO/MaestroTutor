@@ -43,7 +43,8 @@ namespace Maestro.Quest.Tests
             editor.Undo();Assert.That(editor.Find(id),Is.Not.Null);Assert.That(editor.ObserveConstructionSelection().members,Is.Empty);
             Assert.That(editor.SetConstructionSelection(editor.ObserveConstructionSelection().stateId,new[]{id},true,out error),Is.True,error);
             Assert.That(editor.BeginTemporaryRoom(out error),Is.True,error);Assert.That(editor.ObserveConstructionSelection().members,Is.Empty);Assert.That(editor.ObserveConstructionSelection().collecting,Is.False);
-            for(int i=0;i<180&&editor.TemporarySavePending;i++)yield return null;Assert.That(editor.TemporarySavePending,Is.False);
+            // Disk publication runs on a worker; frame counts are not elapsed-time deadlines in batch mode.
+            float deadline=Time.realtimeSinceStartup+10;while(editor.TemporarySavePending&&Time.realtimeSinceStartup<deadline)yield return new WaitForSecondsRealtime(.01f);Assert.That(editor.TemporarySavePending,Is.False,"Temporary save did not finish within ten seconds");
             Assert.That(editor.SetConstructionSelection(editor.ObserveConstructionSelection().stateId,new[]{id},true,out error),Is.True,error);Assert.That(editor.DiscardTemporaryRoom(out error),Is.True,error);
             Assert.That(editor.ObserveConstructionSelection().members,Is.Empty);Assert.That(editor.ObserveConstructionSelection().collecting,Is.False);yield return null;
         }

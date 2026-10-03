@@ -28,6 +28,16 @@ namespace Maestro.Quest.Creation
         public bool Valid=>new[]{target,spring,damper,speed,force}.All(float.IsFinite)&&
             mode is "passive" or "spring" or "motor"&&target>=-170&&target<=170&&spring>=0&&spring<=100&&damper>=0&&damper<=20&&speed>=-360&&speed<=360&&force>=0&&force<=20;
     }
+    [Serializable] public sealed class SliderSettings
+    {
+        // Distances and speeds use the connected object's local metres along its frame's +X.
+        public float minimum,maximum=.1f,target,spring=250,damper=3,speed=.1f,force=20;
+        public string mode="passive";
+        public SliderSettings Copy()=>new(){minimum=minimum,maximum=maximum,target=target,spring=spring,damper=damper,speed=speed,force=force,mode=mode};
+        public bool Valid=>new[]{minimum,maximum,target,spring,damper,speed,force}.All(float.IsFinite)&&
+            minimum>=-1&&maximum<=1&&maximum-minimum>=.005f&&target>=-1&&target<=1&&spring>=0&&spring<=500&&damper>=0&&damper<=50&&speed>=-.5f&&speed<=.5f&&force>=0&&force<=100&&
+            mode is "passive" or "spring" or "motor"&&(mode!="spring"||target>=minimum&&target<=maximum);
+    }
     /// <summary>Reusable local settings contain no room identity, so construction recipes can bind fresh members.</summary>
     [Serializable] public class ConnectionSettings
     {
@@ -38,12 +48,14 @@ namespace Maestro.Quest.Creation
         public ConnectionFrame ownerFrame=new(),connectedFrame=new();
         public HingeLimits limits=new();
         public HingeDrive drive=new();
-        public RoomConnection Bind(string connected)=>new(){connected=connected,enabled=enabled,kind=kind,breakForce=breakForce,breakTorque=breakTorque,ownerFrame=ownerFrame?.Copy(),connectedFrame=connectedFrame?.Copy(),limits=limits?.Copy(),drive=drive?.Copy()};
+        public SliderSettings slide=new();
+        public RoomConnection Bind(string connected)=>new(){connected=connected,enabled=enabled,kind=kind,breakForce=breakForce,breakTorque=breakTorque,ownerFrame=ownerFrame?.Copy(),connectedFrame=connectedFrame?.Copy(),limits=limits?.Copy(),drive=drive?.Copy(),slide=slide?.Copy()};
         public bool ValidateDefinition(out string error)
         {
-            error="A connection needs valid local frames, ordered limits and bounded break limits and hinge settings";
-            if(kind is not ("hinge" or "fixed")||!float.IsFinite(breakForce)||!float.IsFinite(breakTorque)||breakForce<0||breakForce>10000||breakTorque<0||breakTorque>10000)return false;
-            if(ownerFrame?.Valid!=true||connectedFrame?.Valid!=true||limits?.Valid!=true||drive?.Valid!=true)return false;
+            error="A connection needs valid local frames, ordered limits and bounded break limits and joint settings";
+            if(kind is not ("hinge" or "fixed" or "slider")||!float.IsFinite(breakForce)||!float.IsFinite(breakTorque)||breakForce<0||breakForce>10000||breakTorque<0||breakTorque>10000)return false;
+            if(ownerFrame?.Valid!=true||connectedFrame?.Valid!=true)return false;
+            if(kind=="hinge"&&(limits?.Valid!=true||drive?.Valid!=true)||kind=="slider"&&slide?.Valid!=true)return false;
             if(kind=="hinge"&&limits.enabled&&drive.mode=="spring"&&(drive.target<limits.minimum||drive.target>limits.maximum))return false;
             error=null;return true;
         }
@@ -79,16 +91,28 @@ namespace Maestro.Quest.Creation
         }
         static float FrameAngle(Quaternion a,Quaternion b)=>Vector3.SignedAngle(b*Vector3.up,a*Vector3.up,b*Vector3.right);
         public float Angle(Transform owner,Transform other)=>FrameAngle(owner.rotation*ownerFrame.rotation,other.rotation*connectedFrame.rotation);
-        bool AlignedFrames(Vector3 aPosition,Quaternion aRotation,Vector3 bPosition,Quaternion bRotation,out string error)
+        public float Travel(Transform owner,Transform other)=>Vector3.Dot(owner.TransformPoint(ownerFrame.position)-other.TransformPoint(connectedFrame.position),other.rotation*connectedFrame.rotation*Vector3.right)/other.TransformVector(connectedFrame.rotation*Vector3.right).magnitude;
+        bool AlignedFrames(Vector3 aPosition,Quaternion aRotation,Vector3 bPosition,Quaternion bRotation,float connectedScale,out string error)
         {
             error="Align the connection anchors before starting its physics";
+            if(kind=="slider"){
+                error="Align the sliding frames and place the owner inside its saved travel limits";
+                var axis=bRotation*Vector3.right;var delta=aPosition-bPosition;var along=Vector3.Dot(delta,axis);var distance=along/connectedScale;
+                if(Quaternion.Angle(aRotation,bRotation)>5||(delta-axis*along).magnitude>.03f||distance<slide.minimum-.003f||distance>slide.maximum+.003f)return false;
+                error=null;return true;
+            }
             if(Vector3.Distance(aPosition,bPosition)>.03f||Vector3.Angle(aRotation*Vector3.right,bRotation*Vector3.right)>5)return false;
             if(kind=="fixed"){error="Align both complete connection frames before starting physics";if(Quaternion.Angle(aRotation,bRotation)>5)return false;error=null;return true;}
             var angle=FrameAngle(aRotation,bRotation);if(limits.enabled&&(angle<limits.minimum-3||angle>limits.maximum+3))return false;
             error=null;return true;
         }
-        public bool Aligned(Transform owner,Transform other,out string error)=>AlignedFrames(owner.TransformPoint(ownerFrame.position),owner.rotation*ownerFrame.rotation,other.TransformPoint(connectedFrame.position),other.rotation*connectedFrame.rotation,out error);
-        internal bool Aligned(RoomObjectData owner,RoomObjectData other,out string error)=>AlignedFrames(owner.position+owner.rotation*(ownerFrame.position*owner.scale),owner.rotation*ownerFrame.rotation,other.position+other.rotation*(connectedFrame.position*other.scale),other.rotation*connectedFrame.rotation,out error);
+        public bool Aligned(Transform owner,Transform other,out string error)=>AlignedFrames(owner.TransformPoint(ownerFrame.position),owner.rotation*ownerFrame.rotation,other.TransformPoint(connectedFrame.position),other.rotation*connectedFrame.rotation,other.TransformVector(connectedFrame.rotation*Vector3.right).magnitude,out error);
+        internal bool Aligned(RoomObjectData owner,RoomObjectData other,out string error)=>AlignedFrames(owner.position+owner.rotation*(ownerFrame.position*owner.scale),owner.rotation*ownerFrame.rotation,other.position+other.rotation*(connectedFrame.position*other.scale),other.rotation*connectedFrame.rotation,other.scale,out error);
+        internal void Slide(RoomObjectData owner,RoomObjectData other,float distance)
+        {
+            Align(owner,other,0);
+            owner.position+=other.rotation*connectedFrame.rotation*Vector3.right*(distance*other.scale);
+        }
         internal void Align(RoomObjectData owner,RoomObjectData other,float angle)
         {
             owner.rotation=other.rotation*connectedFrame.rotation*Quaternion.AngleAxis(angle,Vector3.right)*Quaternion.Inverse(ownerFrame.rotation);

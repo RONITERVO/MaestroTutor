@@ -74,9 +74,11 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator RecordedAvatarCarriesThenThrowsBallWithRealGravityAndFloorBounce()
         {
-            Configure(PropRelease.Throw); Assert.That(runtime.Trigger(rules.Selected.id),Is.True,rules.Status);
+            Configure(PropRelease.Throw);
+            yield return null; // Finish scene/setup work before the live prop sampler starts its gap clock.
+            Assert.That(runtime.Trigger(rules.Selected.id),Is.True,rules.Status);
             yield return new WaitForSeconds(.2f);
-            var hold=ball.GetComponent<HeldRoomProp>(); Assert.That(hold && hold.Holding,Is.True); Assert.That(ball.GetComponent<Rigidbody>().isKinematic,Is.True);
+            var hold=ball.GetComponent<HeldRoomProp>(); Assert.That(hold && hold.Holding,Is.True,runtime.Scheduler.LastError); Assert.That(ball.GetComponent<Rigidbody>().isKinematic,Is.True);
             var hand=avatar.PoseRig.Bone(PoseJoint.RightHand); var step=rules.Selected.SimpleSteps()[0];
             Assert.That(Vector3.Distance(ball.transform.position,hand.position+hand.rotation*step.propOffset),Is.LessThan(.02f));
             yield return Until(() => hold && hold.Released || runtime.Scheduler.RunningCount == 0);

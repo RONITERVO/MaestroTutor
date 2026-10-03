@@ -5,7 +5,7 @@ export type ConnectionVector={x:number;y:number;z:number};
 export type ConnectionRotation=ConnectionVector&{w:number};
 export interface ConnectionPose {position:ConnectionVector;rotation:ConnectionRotation;scale:number}
 export type ConnectionDefinition={breakForce:number;breakTorque:number;enabled:boolean;ownerFrame:{position:ConnectionVector;rotation:ConnectionRotation};connectedFrame:{position:ConnectionVector;rotation:ConnectionRotation}} & (
- {kind:'fixed'} | {kind:'hinge';limits:{enabled:boolean;minimum:number;maximum:number};drive:{mode:string;target:number}}
+ {kind:'slider';slide:{minimum:number;maximum:number;mode:string;target:number}} | {kind:'fixed'} | {kind:'hinge';limits:{enabled:boolean;minimum:number;maximum:number};drive:{mode:string;target:number}}
 );
 export const length2=(p:ConnectionVector)=>p.x*p.x+p.y*p.y+p.z*p.z;
 const add=(a:ConnectionVector,b:ConnectionVector)=>({x:a.x+b.x,y:a.y+b.y,z:a.z+b.z});
@@ -17,11 +17,17 @@ export const rotate=(q:ConnectionRotation,v:ConnectionVector):ConnectionVector=>
 export const multiply=(a:ConnectionRotation,b:ConnectionRotation):ConnectionRotation=>({...add(add(scale(b,a.w),scale(a,b.w)),cross(a,b)),w:a.w*b.w-dot(a,b)});
 const angle=(a:ConnectionVector,b:ConnectionVector)=>Math.acos(Math.max(-1,Math.min(1,dot(a,b)/Math.sqrt(length2(a)*length2(b)))))*180/Math.PI;
 export function validConnectionDefinition(d:ConnectionDefinition):boolean {
- return ['hinge','fixed'].includes(d.kind)&&[d.breakForce,d.breakTorque].every(n=>Number.isFinite(n)&&n>=0&&n<=10000)&&(d.kind==='fixed'||d.limits.minimum<d.limits.maximum&&(!d.limits.enabled||d.drive.mode!=='spring'||d.drive.target>=d.limits.minimum&&d.drive.target<=d.limits.maximum))&&[d.ownerFrame,d.connectedFrame].every(f=>length2(f.position)<=100);
+ if(!['hinge','fixed','slider'].includes(d.kind)||![d.breakForce,d.breakTorque].every(n=>Number.isFinite(n)&&n>=0&&n<=10000)||![d.ownerFrame,d.connectedFrame].every(f=>length2(f.position)<=100))return false;
+ if(d.kind==='slider')return Math.fround(Math.fround(d.slide.maximum)-Math.fround(d.slide.minimum))>=Math.fround(.005)&&(d.slide.mode!=='spring'||d.slide.target>=d.slide.minimum&&d.slide.target<=d.slide.maximum);
+ return d.kind==='fixed'||d.limits.minimum<d.limits.maximum&&(!d.limits.enabled||d.drive.mode!=='spring'||d.drive.target>=d.limits.minimum&&d.drive.target<=d.limits.maximum);
 }
 export function alignedConnection(d:ConnectionDefinition,a:ConnectionPose,b:ConnectionPose):boolean {
  const ap=add(a.position,rotate(a.rotation,scale(d.ownerFrame.position,a.scale))),bp=add(b.position,rotate(b.rotation,scale(d.connectedFrame.position,b.scale)));
  const ar=multiply(a.rotation,d.ownerFrame.rotation),br=multiply(b.rotation,d.connectedFrame.rotation),axis=rotate(br,{x:1,y:0,z:0});
+ if(d.kind==='slider'){
+  const delta=add(ap,scale(bp,-1)),along=dot(delta,axis),travel=along/b.scale;
+  return Math.abs(ar.x*br.x+ar.y*br.y+ar.z*br.z+ar.w*br.w)>=Math.cos(2.5*Math.PI/180)&&length2(add(delta,scale(axis,-along)))<=.03*.03&&travel>=d.slide.minimum-.003&&travel<=d.slide.maximum+.003;
+ }
  if(length2(add(ap,scale(bp,-1)))>.03*.03||angle(rotate(ar,{x:1,y:0,z:0}),axis)>5)return false;
  if(d.kind==='fixed')return Math.abs(ar.x*br.x+ar.y*br.y+ar.z*br.z+ar.w*br.w)>=Math.cos(2.5*Math.PI/180);
  const au=rotate(ar,{x:0,y:1,z:0}),bu=rotate(br,{x:0,y:1,z:0});const signed=angle(bu,au)*(dot(axis,cross(bu,au))>=0?1:-1);

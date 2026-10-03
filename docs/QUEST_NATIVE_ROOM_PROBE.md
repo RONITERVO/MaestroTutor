@@ -179,3 +179,5 @@ actual PhysX breaks and delivery to the ordinary typed event scheduler. Neither
 fixture claims headset or provider acceptance. Construction selection/capture now
 runs before movement in the probe so each browser replay uses a contiguous series
 of native action identities, without inventing intermediate receipts.
+
+The slider journey creates the included spring-button blueprint, configures its spring target, reads saved tuning, explicitly aligns at a linear distance, verifies travel and Undo, then removes the construction with one Undo. `slider-authoring.json` feeds the generated Chrome form replay (`scripts/probe-slider-authoring.mjs`). Physical pressing and the shared program response are tested separately in Unity PlayMode; no headset/provider claim follows from these checks.

@@ -35,7 +35,7 @@ recreate an undone batch. Stop leaves already accepted creations in place.
 
 Version 3 requires 1–15 `connections`. Each entry names an `owner` slot, a distinct
 `connected` slot and an ordinary connection `definition` (kind, enabled, local frames, break limits
-and, for hinges, limits/drive). No room IDs or component versions belong in that definition. Each
+and type-specific hinge limits/drive or slider travel/drive). No room IDs or component versions belong in that definition. Each
 instance binds fresh member IDs internally; a blueprint cannot connect itself to
 an unrelated existing object. Each owner has at most one connection; cycles,
 missing slots and duplicate owners fail before saving. Version 1 rejects links.
@@ -172,3 +172,5 @@ form; advanced source can provide an explicit snapshot. Adding capture to a
 behaviour produces visible per-member reads with indexed revision bindings,
 using the shared current-input metadata and normal program limits. It does not
 save a separate capture-only workflow or refresh stale revisions automatically.
+
+The included **Spring button** module uses the same connected blueprint constructor and exports an ordinary `waitForTravel` condition wait for press/release rules. See [sliding mechanisms](QUEST_PHYSICAL_CONNECTIONS.md#sliding-mechanisms-and-the-included-button).

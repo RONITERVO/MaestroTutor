@@ -31,7 +31,7 @@ namespace Maestro.Quest.Tests
         {
             var args=(JObject)Source()["imports"][0]["module"]["program"]["functions"][1]["body"][0]["arguments"];var batch=JsonUtility.FromJson<CreationBatch>(args.ToString());
             Assert.That(batch.Prepare(out var first,out var error),Is.True,error);Assert.That(batch.Prepare(out var second,out error),Is.True,error);Assert.That(first[1].connections.Single().connected,Is.EqualTo(first[0].id));Assert.That(second[1].connections.Single().connected,Is.EqualTo(second[0].id));Assert.That(first.Select(x=>x.id).Intersect(second.Select(x=>x.id)),Is.Empty);
-            var wire=JObject.Parse(JsonUtility.ToJson(batch));Assert.That(((JObject)wire["blueprint"]["connections"][0]["definition"]).Properties().Select(p=>p.Name),Is.EquivalentTo(new[]{"enabled","kind","breakForce","breakTorque","ownerFrame","connectedFrame","limits","drive"}));
+            var wire=JObject.Parse(JsonUtility.ToJson(batch));Assert.That(((JObject)wire["blueprint"]["connections"][0]["definition"]).Properties().Select(p=>p.Name),Is.EquivalentTo(new[]{"enabled","kind","breakForce","breakTorque","ownerFrame","connectedFrame","limits","drive","slide"}));
             Assert.That(JsonUtility.FromJson<CreationBatch>(wire.ToString()).Prepare(out _,out error),Is.True,error);
             first[1].connections[0].drive.spring=99;Assert.That(batch.blueprint.connections[0].definition.drive.spring,Is.EqualTo(8));
         }

@@ -45,6 +45,14 @@ namespace Maestro.Quest.Tests
                 Assert.That(CapabilityArguments.Validate(call,new ConnectionCapability().InputSchema,out error),Is.True,error);call["connected"]=call["target"].DeepClone();Assert.That(CapabilityArguments.Validate(call,new ConnectionCapability().InputSchema,out _),Is.False,"Shared schema must reject self-links for "+op);
             }
         }
+        [Test] public void SliderSettingsAreDeepCopiedAndRejectNarrowTravelAndInvalidDrives(){
+            var room=Room();var link=room.objects[2].connections[0];link.kind="slider";link.slide=new SliderSettings{minimum=-.03f,maximum=.12f,mode="spring",target=.04f};Assert.That(room.Validate(out var error),Is.True,error);
+            var copy=room.Copy();copy.objects[2].connections[0].slide.target=0;Assert.That(link.slide.target,Is.EqualTo(.04f));
+            var module=new ConnectionCapability();var args=module.Example;args["definition"]=ConnectionCapability.Definition(link);Assert.That(BehaviourCatalog.TryCall(module.Id,1,args,out _,out error),Is.True,error);
+            foreach(var patch in new[]{new JObject{["maximum"]=-.028},new JObject{["target"]=.13},new JObject{["speed"]=.51},new JObject{["force"]=101},new JObject{["spring"]=501},new JObject{["damper"]=-1}}){var bad=(JObject)args.DeepClone();((JObject)bad["definition"]["slide"]).Merge(patch);Assert.That(CapabilityArguments.Validate(bad,module.InputSchema,out _),Is.False);}
+            var definition=(JObject)args["definition"];Assert.That(definition.ContainsKey("drive"),Is.False);Assert.That(definition.ContainsKey("limits"),Is.False);
+            var data=room.objects[2];data.position=Vector3.right*.2f;var other=room.objects[3];other.scale=2;Assert.That(link.Aligned(data,other,out error),Is.True,error);data.position=Vector3.right*.26f;Assert.That(link.Aligned(data,other,out _),Is.False);data.position=new Vector3(.2f,.04f,0);Assert.That(link.Aligned(data,other,out _),Is.False);
+        }
         [Test] public void PreviousHingeOnlyRoomIsPreservedWithoutSilentlyDroppingConnections(){
             string dir=Path.Combine(Path.GetTempPath(),"previous-connection-room-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(dir);
             try{var room=Room();var raw=JObject.Parse(JsonUtility.ToJson(room));raw["version"]=6;foreach(JObject value in (JArray)raw["objects"]){value["hinges"]=value["connections"];value.Remove("connections");}string text=raw.ToString(),path=Path.Combine(dir,"room.v6.json");File.WriteAllText(path,text);var store=new RoomStorage(dir);Assert.That(store.Load(out _),Is.Null);Assert.That(store.ReadOnly,Is.True);Assert.That(File.ReadAllText(path),Is.EqualTo(text));Assert.That(File.Exists(Path.Combine(dir,RoomStorage.FileName)),Is.False);}finally{Directory.Delete(dir,true);}

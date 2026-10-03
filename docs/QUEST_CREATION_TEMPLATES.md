@@ -37,7 +37,7 @@ container transfer and snow remain separate increments in
 [world authoring](QUEST_WORLD_AUTHORING.md). This set does not fulfill those gates. Existing pieces can now share a
 [layout reset](QUEST_LAYOUT_AUTHORING.md) with one Undo; this does not connect
 bricks or supply chess rules. [Physical connections](QUEST_PHYSICAL_CONNECTIONS.md)
-now provide shared hinge/fixed joins and break events; these are explicit
+now provide shared hinge/fixed/slider joins and break events; these are explicit
 components, not automatic stud interlocking.
 
 ## Discovery, identity and ownership

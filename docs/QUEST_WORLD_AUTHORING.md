@@ -130,7 +130,7 @@ users and Maestro collect, highlight and order pieces through the same state; se
 [construction selection](QUEST_CONSTRUCTION_SELECTION.md). A solid shared
 [construction handle](QUEST_CONSTRUCTION_MOVEMENT.md) now arranges those pieces
 with one save/Undo while physics is paused. Socket snapping,
-curved/deforming painting, sliders and liquids/snow remain unfinished.
+curved/deforming painting and liquids/snow remain unfinished. Bounded sliders and an editable spring-button example now extend the shared connections.
 [Planar surface drawing](QUEST_SURFACE_DRAWING.md) adds reusable explicit patches,
 shared ink editing/readback, a physical surface pencil/eraser, and configurable
 held drawing tips on ordinary created/imported objects.
@@ -231,10 +231,10 @@ v1 subscriptions by this note.
 ## Physical hinges (2026-10-03)
 
 The hinge increment has been generalized into one saved physical connection
-component: rotating hinges, rigid joins, optional break limits, native state and
+component: rotating hinges, rigid joins, bounded sliders, optional break limits, native state and
 a typed break event. Book controls, user programs and the agent share the same
 catalog contract. See [physical connections](QUEST_PHYSICAL_CONNECTIONS.md) for
 current IDs, save-format boundaries, repair semantics, budgets and verification.
 Connected version-3 blueprints and construction capture preserve both kinds with
-fresh member identities. No automatic snapping, sliders, liquid simulation or
+fresh member identities. The included spring button uses ordinary recipes and condition waits. No automatic snapping, liquid simulation or
 Quest performance guarantee is implied.

@@ -1713,3 +1713,15 @@ Capture the build, instantiate its module and verify fresh internal member IDs,
 retained break limits and one Undo. Verify unavailable old v6 room recovery without
 silent replacement. Repeat with up to sixteen links while measuring frame timing,
 power and grip comfort. Desktop tests do not substitute for this device acceptance.
+
+### Sliding mechanism acceptance — pending Quest 3
+
+Create the included Spring button through the ordinary module/workshop flow.
+Start room physics after alignment. Grip its cap, press it into the mount, release,
+and verify bounded travel and spring return. Check the same press/release thresholds
+in an editable program; a held press must not repeat until release. Try pushing it
+with an ordinary solid object. Report whether hand/controller physical contact is
+available before advertising finger pressing. Move/rotate/resize the complete
+construction, pause/resume, recenter and reopen the room. Verify resting position,
+readable book controls and frame-time traces. No installation or headset test has
+been performed for this increment while the device hold remains active.

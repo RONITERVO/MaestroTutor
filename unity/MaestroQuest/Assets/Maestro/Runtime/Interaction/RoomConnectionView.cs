@@ -15,6 +15,8 @@ namespace Maestro.Quest.Interaction
         public string Error {get;private set;}="";
         public bool Active=>joint;
         public bool Broken=>broken;
+        public bool HasTravel=>isActiveAndEnabled&&definition?.kind=="slider"&&editor&&editor.Find(definition.connected) is RoomItem other&&other.isActiveAndEnabled;
+        public float Travel=>HasTravel?definition.Travel(transform,editor.Find(definition.connected).transform):0;
         internal void ResetBreak(){broken=false;Refresh();}
         void OnJointBreak(float force){if(!admitted||definition==null)return;admitted=false;joint=null;retiring=null;broken=true;rigid?.SetConstraintBlocked(this,false);Phase="broken";Error="Connection broke; align or rearm explicitly to reconnect";editor?.NotifyConnectionBroken(item,definition);}
         public float Angle=>definition!=null&&linked?definition.Angle(transform,linked.transform):0;
@@ -24,7 +26,7 @@ namespace Maestro.Quest.Interaction
             var next=values?.Length==1?values[0]:null;string wire=next==null?"":JsonUtility.ToJson(next);
             if(wire!=encoded){Retire();broken=false;definition=next?.Copy();encoded=wire;}Refresh();
         }
-        void Retire(){admitted=false;if(!joint)return;if(joint is HingeJoint hinge){hinge.useMotor=false;hinge.useSpring=false;}retiring=joint;Destroy(joint);joint=null;}
+        void Retire(){admitted=false;if(!joint)return;if(joint is HingeJoint hinge){hinge.useMotor=false;hinge.useSpring=false;}if(joint is ConfigurableJoint slider){slider.xDrive=new JointDrive();slider.targetVelocity=Vector3.zero;}retiring=joint;Destroy(joint);joint=null;}
         void Suspend(string phase,string error="",bool block=true){Retire();Phase=phase;Error=error;rigid?.SetConstraintBlocked(this,block);}
         public void Refresh()
         {
@@ -54,8 +56,24 @@ namespace Maestro.Quest.Interaction
                 hinge.limits=new JointLimits{min=definition.limits.minimum-offset,max=definition.limits.maximum-offset,bounciness=0,contactDistance=1};hinge.useLimits=definition.limits.enabled;
                 hinge.spring=new JointSpring{targetPosition=definition.drive.target-offset,spring=definition.drive.spring,damper=definition.drive.damper};hinge.useSpring=definition.drive.mode=="spring";
                 hinge.motor=new JointMotor{targetVelocity=definition.drive.speed,force=definition.drive.force,freeSpin=false};hinge.useMotor=definition.drive.mode=="motor";
-            }else joint=gameObject.AddComponent<FixedJoint>();
+            }else joint=definition.kind=="slider"?gameObject.AddComponent<ConfigurableJoint>():gameObject.AddComponent<FixedJoint>();
             joint.autoConfigureConnectedAnchor=false;joint.anchor=definition.ownerFrame.position;joint.connectedBody=otherBody;joint.connectedAnchor=definition.connectedFrame.position;
+            if(joint is ConfigurableJoint slider){
+                var settings=definition.slide;float scale=other.transform.TransformVector(definition.connectedFrame.rotation*Vector3.right).magnitude;
+                float centre=(settings.minimum+settings.maximum)*.5f;
+                slider.axis=definition.ownerFrame.rotation*Vector3.right;slider.secondaryAxis=definition.ownerFrame.rotation*Vector3.up;
+                slider.xMotion=ConfigurableJointMotion.Limited;slider.yMotion=slider.zMotion=ConfigurableJointMotion.Locked;
+                slider.angularXMotion=slider.angularYMotion=slider.angularZMotion=ConfigurableJointMotion.Locked;
+                slider.configuredInWorldSpace=false;slider.swapBodies=false;
+                slider.connectedAnchor=definition.connectedFrame.position+definition.connectedFrame.rotation*Vector3.right*centre;
+                float half=(settings.maximum-settings.minimum)*.5f*scale;
+                slider.linearLimit=new SoftJointLimit{limit=half,bounciness=0,contactDistance=Mathf.Min(.025f,half*.5f)};
+                slider.linearLimitSpring=new SoftJointLimitSpring();
+                // PhysX's drive displacement/velocity is the connected frame relative to the owner.
+                slider.targetPosition=new Vector3((centre-settings.target)*scale,0,0);
+                slider.targetVelocity=new Vector3(settings.mode=="motor"?-settings.speed*scale:0,0,0);
+                slider.xDrive=new JointDrive{positionSpring=settings.mode=="spring"?settings.spring:0,positionDamper=settings.mode=="passive"?0:settings.damper,maximumForce=settings.mode=="passive"?0:settings.force};
+            }
             joint.enableCollision=false;joint.enablePreprocessing=false;joint.breakForce=definition.breakForce==0?Mathf.Infinity:definition.breakForce;joint.breakTorque=definition.breakTorque==0?Mathf.Infinity:definition.breakTorque;admitted=true;
             ownPlacement=rigid.PlacementRevision;otherPlacement=otherRigid.PlacementRevision;ownScale=transform.lossyScale;otherScale=other.transform.lossyScale;Phase="active";Error="";rigid.SetConstraintBlocked(this,false);
         }
