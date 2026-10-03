@@ -112,6 +112,17 @@ try{
   if(containerAfter.execution?.selected?.output?.transferredMl!==125)throw new Error('Measured transfer receipt did not report its conserved amount');
   const containerFromAfter=await liquidRead(liquidFrom),containerToAfter=await liquidRead(liquidTo);
   for(const state of [containerFromAfter,containerToAfter])if((state.catalog?.value as {definition:{amountMl:number}}).definition.amountMl!==125)throw new Error('Measured transfer quantities differ from the real room');
+  const pouringBefore=structuredClone(lease.state()),pouringSteps:{request:RoomCommand;response:unknown}[]=[];
+  const pouringQuery=async(request:RoomCommand)=>{const response=await execute([request]);pouringSteps.push({request,response});return response;};
+  await pouringQuery({action:'catalog',catalog:{operation:'search',category:'facts',query:'Live container contents',offset:0}});
+  await pouringQuery({action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.container.live',version:1}});
+  const containerLive=await pouringQuery({action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.container.live',version:1,arguments:{target:liquidFrom}}});
+  const liveValue=containerLive.catalog?.value as {phase:string;contents:{amountMl:number;savedAmountMl:number}};
+  if(!containerLive.catalog?.available||liveValue.phase!=='idle'||liveValue.contents.amountMl!==125||liveValue.contents.savedAmountMl!==125)throw new Error('Native live liquid fact disagrees with accepted contents while physics is paused');
+  await pouringQuery({action:'catalog',catalog:{operation:'search',category:'events',query:'A physical pour was saved',offset:0}});
+  const pouredEvent=await pouringQuery({action:'catalog',catalog:{operation:'inspect',category:'events',capability:'object.container.poured',version:1}});
+  if(pouredEvent.catalog?.operation!=='inspect'||!pouredEvent.catalog.definition)throw new Error('Native poured event is not discoverable');
+  await writeFile(join(directory,'container-pouring-contract.json'),JSON.stringify({boundary:'Full native app exposes live quantities and typed event metadata. Physical flow is verified separately in real Unity PlayMode interaction tests; no scan or headset performance proof.',before:pouringBefore,steps:pouringSteps,live:containerLive,event:pouredEvent},null,2));
   const containerUndo=await execute([{action:'undo'}]);const containerRestoredSource=await liquidRead(liquidFrom),containerRestoredDestination=await liquidRead(liquidTo);
   if((containerRestoredSource.catalog?.value as {definition:{amountMl:number}}).definition.amountMl!==250||(containerRestoredDestination.catalog?.value as {definition:{amountMl:number}}).definition.amountMl!==0)throw new Error('One native Undo did not restore both liquid quantities');
   await writeFile(join(directory,'container-authoring.json'),JSON.stringify({boundary:'Real Unity saved quantities, shared calls, facts and atomic Undo. No physical pouring or headset performance proof.',before:containerBefore,search:containerSearch,definition:containerDefinition,source:containerSource,destination:containerDestination,after:containerAfter,fromAfter:containerFromAfter,toAfter:containerToAfter,undo:containerUndo,restoredSource:containerRestoredSource,restoredDestination:containerRestoredDestination},null,2));

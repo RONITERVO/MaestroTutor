@@ -60,6 +60,7 @@ namespace Maestro.Quest.Creation
             }
             if(GetComponent<AnimationWorkshop>()?.HasUnsavedPose==true){error="Save or discard the retained pose before changing workspaces or temporary rooms";return false;}
             if(GetComponent<AnimationWorkshop>()?.HasUnsavedRecording==true){error="Save or discard the retained recording before changing workspaces or temporary rooms";return false;}
+            if(Liquids?.Active==true){error="Finish pouring or pause room physics before changing the temporary room";return false;}
             if(DrawingInProgress){error="Save or discard the current stroke before changing workspaces or temporary rooms";return false;}
             if(AnyHeld) {error="Release held objects before changing the temporary room";return false;}
             foreach(var item in objects.Values) {

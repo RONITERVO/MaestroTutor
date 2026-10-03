@@ -16,8 +16,9 @@ and a typed break event; see QUEST_PHYSICAL_CONNECTIONS.md. Connected blueprints
 and construction capture preserve all three kinds. An editable spring-button module
 uses ordinary recipes and condition waits for press/release. Saved snap points now
 support explicit construction placement or fixed joining with shared current
-revisions and one Undo; see QUEST_SNAP_POINTS.md. Liquid containers, physical
-proximity snap previews and the full default play kit remain unfinished.
+revisions and one Undo; see QUEST_SNAP_POINTS.md. Physical grip snap previews
+and bounded liquid containers/pouring now extend those components. Persistent
+water/snow fields and the full default play kit remain unfinished.
 See QUEST_RECIPE_AUTHORING.md and QUEST_NATIVE_ROOM_PROBE.md.
 
 The October 2 notebook scope and current review assessment are recorded in
@@ -2756,3 +2757,20 @@ ownership/revision guards and one atomic saved Undo; failed publication leaves
 both unchanged. See [containers](QUEST_CONTAINERS.md) for logical capacity,
 format boundaries and exact limitations. Physical pouring, streams/spills,
 water/snow fields, remaining default assets and Quest/release gates remain open.
+
+
+### Bounded physical pouring (2026-10-03)
+
+Tilting the same configured vessels now produces a bounded gravity stream while
+scanned-room physics is active. Solid geometry clips the stream; a compatible
+opening receives only its available capacity. Misses and overflow are accounted
+for as uncollected spill. This is a logical-volume approximation, without per-drop
+rigidbodies, persistent puddles, fluid forces or buoyancy.
+
+Live quantities publish through the ordinary room journal after a quiet interval,
+grip release, pause, Save or bounded checkpoint. Failed publication reverts the
+whole episode. The generated catalog adds `object.container.live` and
+`object.container.poured` for the same user/agent event programs; no additional
+per-toy tool is needed. Two-handed grips, typed event delivery, publication/Undo,
+collision blocking, overflow and failure recovery are desktop acceptance cases.
+Quest pouring comfort and performance remain open. See [containers](QUEST_CONTAINERS.md).

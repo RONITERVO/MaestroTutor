@@ -131,7 +131,7 @@ users and Maestro collect, highlight and order pieces through the same state; se
 [construction handle](QUEST_CONSTRUCTION_MOVEMENT.md) now arranges those pieces
 with one save/Undo while physics is paused. [Saved snap points](QUEST_SNAP_POINTS.md)
 now align complete constructions and optionally join them through one shared edit.
-Physical construction-handle previews now use the shared snap placement action (see [snap points](QUEST_SNAP_POINTS.md)). Curved/deforming painting and physical pouring/snow remain unfinished. Bounded sliders and an editable spring-button example now extend the shared connections.
+Physical construction-handle previews now use the shared snap placement action (see [snap points](QUEST_SNAP_POINTS.md)). Curved/deforming painting and persistent water/snow fields remain unfinished. Bounded physical pouring now uses the shared container component. Bounded sliders and an editable spring-button example now extend the shared connections.
 [Planar surface drawing](QUEST_SURFACE_DRAWING.md) adds reusable explicit patches,
 shared ink editing/readback, a physical surface pencil/eraser, and configurable
 held drawing tips on ordinary created/imported objects.
@@ -239,7 +239,7 @@ current IDs, save-format boundaries, repair semantics, budgets and verification.
 Connected version-3 blueprints and construction capture preserve all three kinds with
 fresh member identities. The included spring button uses ordinary recipes and condition waits.
 Construction-handle snapping is described in [snap points](QUEST_SNAP_POINTS.md);
-liquid simulation and Quest performance remain separate work.
+bounded pouring is described in [containers](QUEST_CONTAINERS.md); Quest performance remains a device gate.
 
 
 ### Measured liquid containers (2026-10-03)
@@ -252,6 +252,12 @@ share the ordinary ownership, receipt, persistence, Undo, temporary-room and
 prototype paths. `object.container` exposes the same saved state to the user and
 agent. See [liquid containers](QUEST_CONTAINERS.md).
 
-This is the quantity/presentation foundation. Automatic hand/gravity pouring,
-streams, spills, water forces, scooping and snow fields remain separate unfinished
-work. The rendered level cannot establish liquid collision or frame performance.
+`containerPouring.v1` extends those same components with bounded hand/gravity
+pouring while room physics is active. A gravity stream is clipped by solid
+geometry and transfers liquid through another configured opening. One short
+session publishes quantities atomically with one Undo and emits
+`object.container.poured`; `object.container.live` exposes current quantities
+without pretending they are already saved. Both are ordinary typed program/agent
+observations. Uncollected spills leave the model; persistent puddles, water forces,
+scooping and snow fields remain unfinished. Desktop verification cannot establish
+Quest pouring comfort or sustained frame performance.

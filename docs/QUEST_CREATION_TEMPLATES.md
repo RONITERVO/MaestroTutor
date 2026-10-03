@@ -19,7 +19,7 @@ animation. Successful receipt replay cannot create it twice.
 
 | Template | Components and intended use | Limits |
 | --- | --- | --- |
-| Cup | Lathe body/handle, cylinder floor and open ring walls; solid rigid body | Solid items, no liquid capacity or transfer |
+| Cup | Lathe body/handle, cylinder floor and open ring walls; solid rigid body | Editable 500 ml cylinder cavity; bounded pouring, no general fluid solver |
 | Plate | Shallow lathe dish, floor and rim | No automatic food/fluid behaviour |
 | Spoon | Open scoop, handle and compound collision | Small rigid objects only |
 | Fork | Handle, crossbar and four solid prongs | Simple rigid cutlery |
@@ -32,8 +32,8 @@ animation. Successful receipt replay cannot create it twice.
 | Box robot | Nineteen parented parts, two wave tracks, initially idle | Fixed whole-body proxy does not follow animated parts |
 
 The first set is deliberately smaller than the complete proposed play kit. Curved
-painting, further fidgets, automatic grip snap previews, a shipped chess layout,
-container transfer and snow remain separate increments in
+painting, further fidgets, a shipped chess layout, persistent water and snow
+remain separate increments in
 [world authoring](QUEST_WORLD_AUTHORING.md). This set does not fulfill those gates. Existing pieces can now share a
 [layout reset](QUEST_LAYOUT_AUTHORING.md) with one Undo; this does not connect
 bricks or supply chess rules. [Physical connections](QUEST_PHYSICAL_CONNECTIONS.md)

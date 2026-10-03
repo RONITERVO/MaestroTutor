@@ -34,7 +34,7 @@ namespace Maestro.Quest.Rules
             actions = new RoomRuleActions(editor,animations,clock); Scheduler = new RuleScheduler(actions,new InvocationReceipts(editor.ReceiptDirectory)); workshop.Runtime = this;Scheduler.ConfigureMemory(workshop.Memory,()=>workshop.MemoryBlocked);
             runtimeGate=editor.RuntimeGate;runtimeGate.Changed+=RefreshSuspension;RefreshSuspension();
             workshop.DocumentChanged += Reload;
-            editor.Editing += StopAll; editor.ItemGrabbed += Grabbed; editor.ItemReleased += Released; editor.ItemTapped += Tapped; editor.ItemCollided += Collided;editor.ConnectionBroken+=ConnectionBroke;
+            editor.Editing += StopAll; editor.ItemGrabbed += Grabbed; editor.ItemReleased += Released; editor.ItemTapped += Tapped; editor.ItemCollided += Collided;editor.ConnectionBroken+=ConnectionBroke;editor.ContainerPoured+=ContainerPoured;
             animations.Starting += Authoring; room.Restoring += StopAll; room.Restored += RecoverButtons;
             Reload();
         }
@@ -68,6 +68,10 @@ namespace Maestro.Quest.Rules
         void ConnectionBroke(string id,string connected,string kind,float force,float torque){
             if(editor.RuntimeGate.Held||paused||!focused||!isActiveAndEnabled||Scheduler==null||!Scheduler.IsListening("object.connection.broken",id))return;
             Scheduler.EmitNative("object.connection.broken",id,new Programs.ProgramValue(id),new Newtonsoft.Json.Linq.JObject {["connected"]=connected,["kind"]=kind,["forceLimit"]=force,["torqueLimit"]=torque},Time.unscaledTime,out _);
+        }
+        void ContainerPoured(string id,double received,double spilled,int receivers,string liquid){
+            if(editor.RuntimeGate.Held||paused||!focused||!isActiveAndEnabled||Scheduler==null||!Scheduler.IsListening("object.container.poured",id))return;
+            Scheduler.EmitNative("object.container.poured",id,new Programs.ProgramValue(id),new Newtonsoft.Json.Linq.JObject{["transferredMl"]=received,["spilledMl"]=spilled,["receivers"]=receivers,["liquid"]=liquid,["temporary"]=editor.TemporaryRoom},Time.unscaledTime,out _);
         }
         void Authoring(string id) => Scheduler.StopTarget(id,false);
         void RecoverButtons() => workshop.RecoverButtons();
@@ -122,7 +126,7 @@ namespace Maestro.Quest.Rules
             StopAll();
             if (workshop) workshop.DocumentChanged -= Reload;
             if(runtimeGate!=null)runtimeGate.Changed-=RefreshSuspension;
-            if (editor) { editor.Editing -= StopAll; editor.ItemGrabbed -= Grabbed; editor.ItemReleased -= Released; editor.ItemTapped -= Tapped; editor.ItemCollided -= Collided;editor.ConnectionBroken-=ConnectionBroke; }
+            if (editor) { editor.Editing -= StopAll; editor.ItemGrabbed -= Grabbed; editor.ItemReleased -= Released; editor.ItemTapped -= Tapped; editor.ItemCollided -= Collided;editor.ConnectionBroken-=ConnectionBroke;editor.ContainerPoured-=ContainerPoured; }
             if (animations) animations.Starting -= Authoring;
             if (room) { room.Restoring -= StopAll; room.Restored -= RecoverButtons; }
         }

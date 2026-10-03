@@ -1737,3 +1737,24 @@ Capture and recreate it, retaining editable points and fresh object IDs. Try a
 mismatched family, a held member and a missing point; none may partly move/save.
 This flow does not yet offer automatic near-point grip previews. Check readability
 and controller/hand comfort before advertising headset acceptance.
+
+
+## Bounded container pouring (pending Quest acceptance)
+
+Use two ordinary included cups. Configure the source with 400 ml of water through
+the shared container editor or ask Maestro to fill it; leave the receiver empty.
+Load/check the real-room scan and start physics. Hold both cups, place the receiver
+below the source lip, and tilt the source. Confirm the visible stream enters the
+receiver and both levels change. Return the source upright and release it. Read
+accepted contents after publication and check one Undo restores both quantities.
+
+Repeat with a real scanned surface between the cups, a nearly full receiver and
+an incompatible liquid. A blocked stream must not fill the receiver; overflow
+counts as uncollected spill, without implying a visible puddle. Pause physics
+while pouring and return from headset sleep: saved amounts must agree with the
+last successful publication and no earlier event should replay. Check temporary
+room discard and the existing runtime's pour-event wait.
+
+Profile two-hand/controller tracking, stream readability and sustained frame time
+with the maximum 16 configured containers. Desktop conservation/collision checks
+do not satisfy this device gate. No device installation or test is claimed here.

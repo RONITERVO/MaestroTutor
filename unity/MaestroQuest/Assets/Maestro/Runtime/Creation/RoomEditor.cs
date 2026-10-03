@@ -83,6 +83,7 @@ namespace Maestro.Quest.Creation
             journal = new RoomJournal(loaded ?? StarterDocument(book, maestro, includedAvatar));
             maestro.GetComponent<MaestroAvatar>()?.ConfigureRuntime(RuntimeGate);
             maestro.GetComponent<MaestroAvatar>()?.ConfigureOwnership(Ownership,"maestro");
+            Liquids=gameObject.AddComponent<LiquidPouring>();Liquids.Initialize(this);
             Reconcile();
             room.Restoring += BeforeRestore; room.Restored += AfterRestore;
             if (message != null) SetStatus(message);
@@ -122,6 +123,7 @@ namespace Maestro.Quest.Creation
             if (!identities.TryGetValue(item,out var id)) return;
             if(handOwners.Remove(id,out var lease))lease.Dispose();
             if(applying)return;
+            FinishLiquidPour(out _);
             var before = journal.Read(id); if (before == null) return;
             var after = Pose(before, item.transform);
             if (!Commit(new[] { after }, Array.Empty<string>(), "Placed — saving", true)) ApplyPose(item, journal.Read(id));
@@ -193,6 +195,7 @@ namespace Maestro.Quest.Creation
             error=null;
             if(WriteGate.Frozen){error=Maestro.Quest.Persistence.WorkspaceWriteGate.FrozenReason;return false;}
             if(journal==null){error="Room editor is not ready";return false;}
+            if(Liquids?.Owns(id)==true){error="Finish pouring or pause room physics before editing this container";return false;}
             if(storage.ReadOnly){error="This room was saved by a newer app and is read-only";return false;}
             var data=Read(id);var item=Find(id);
             if(data==null||!item){error="This object was removed; inspect the room first";return false;}
@@ -281,8 +284,8 @@ namespace Maestro.Quest.Creation
             Editing?.Invoke(); if(DeleteObject(selected,out var error)) { selected = null; UpdateSelection(); } else SetStatus(error);
         }
 
-        public void Undo() { using var write=WriteGate.TryWrite(out var blocked);if(write==null){SetStatus(blocked);return;} Editing?.Invoke(); if (Busy()) return; if (journal.Undo()) { Reconcile(); MarkDirty(); SetStatus("Undone"); } else SetStatus("Nothing to undo"); }
-        public void Redo() { using var write=WriteGate.TryWrite(out var blocked);if(write==null){SetStatus(blocked);return;} Editing?.Invoke(); if (Busy()) return; if (journal.Redo()) { Reconcile(); MarkDirty(); SetStatus("Redone"); } else SetStatus("Nothing to redo"); }
+        public void Undo() { if(!FinishLiquidPour(out var liquidError)){SetStatus(liquidError);return;} using var write=WriteGate.TryWrite(out var blocked);if(write==null){SetStatus(blocked);return;} Editing?.Invoke(); if (Busy()) return; if (journal.Undo()) { Reconcile(); MarkDirty(); SetStatus("Undone"); } else SetStatus("Nothing to undo"); }
+        public void Redo() { if(!FinishLiquidPour(out var liquidError)){SetStatus(liquidError);return;} using var write=WriteGate.TryWrite(out var blocked);if(write==null){SetStatus(blocked);return;} Editing?.Invoke(); if (Busy()) return; if (journal.Redo()) { Reconcile(); MarkDirty(); SetStatus("Redone"); } else SetStatus("Nothing to redo"); }
         internal bool DrawingInProgress=>GetComponent<SpatialDrawing>() is SpatialDrawing drawing&&(drawing.IsDrawing||drawing.HasUnsavedStroke);
         internal bool PutPencilAwayForPose(out string error)
         {
@@ -432,6 +435,7 @@ namespace Maestro.Quest.Creation
             }
             // Resolve links only after every member and its current pose/collider exists.
             foreach(var data in document.objects){var item=Find(data.id);var hinge=item.GetComponent<RoomConnectionView>();if(!hinge&&(data.connections?.Length??0)>0)hinge=item.gameObject.AddComponent<RoomConnectionView>();if(hinge)hinge.Apply(this,data.connections);}
+            Liquids?.Synchronize(document);
             applying = false; UpdateSelection();
         }
 
@@ -449,7 +453,7 @@ namespace Maestro.Quest.Creation
             foreach (var pair in objects) { var created = pair.Value.GetComponent<CreatedRoomObject>(); if (created) created.SetSelection(pair.Key == selected,constructionMembers.Contains(pair.Key)); }
             Changed?.Invoke();
         }
-        void BeforeRestore() { Editing?.Invoke(); applying = true; }
+        void BeforeRestore() { FinishLiquidPour(out _); Editing?.Invoke(); applying = true; }
         void AfterRestore()
         {
             applying = false;
@@ -490,6 +494,7 @@ namespace Maestro.Quest.Creation
             if(ResizeObject("maestro",scale,out var error))return true;SetStatus(error);return false;
         }
         public void SaveNow() {
+            if(!FinishLiquidPour(out var liquidError)){SetStatus(liquidError);return;}
             using var write=WriteGate.TryWrite(out var blocked);if(write==null){SetStatus(blocked);return;}
             if(TemporaryRoom) {if(!KeepTemporaryRoom(out var error))SetStatus(error);return;}
             CapturePhysicsPlacements(); MarkDirty(); saveAt = 0; SetStatus("Saving room");
@@ -568,7 +573,7 @@ namespace Maestro.Quest.Creation
         }
         internal bool TryFlush(out string error)
         {
-            error=null;
+            if(!FinishLiquidPour(out error))return false;
             if(saveDispatch.Frozen){error="Room saves are paused while recovery preserves original files.";return false;}
             if (journal == null || storage == null) { error="Room storage is not ready."; return false; }
             if (TemporaryRoom) { error="Keep or discard the temporary room before saving the ordinary workspace."; return false; }
@@ -601,6 +606,7 @@ namespace Maestro.Quest.Creation
         void OnApplicationQuit() => Flush();
         void OnDestroy()
         {
+            FinishLiquidPour(out _);
             RuntimeGate.Changed-=RefreshOwnership;Ownership.Suspend(true);Flush(); Motions?.Dispose();
             if (room) { room.Restoring -= BeforeRestore; room.Restored -= AfterRestore; }
             foreach (var item in objects.Values) if (item) { item.GrabStarted -= GrabStarted; item.GrabFinished -= GrabFinished;var rigid=item.GetComponent<RigidRoomItem>();if(rigid)rigid.ContactStarted-=ContactStarted; }

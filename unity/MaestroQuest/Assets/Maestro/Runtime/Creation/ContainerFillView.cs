@@ -40,18 +40,11 @@ namespace Maestro.Quest.Creation {
         // Integrate the circular cross-section CDF along the cylinder axis. This is
         // only a display plane; saved millilitres and transfer arithmetic never depend on it.
         internal static float Level(Vector3 normal,float radius,float height,float fraction){
-            double a=radius*System.Math.Sqrt(normal.x*normal.x+normal.z*normal.z),b=height*.5*System.Math.Abs(normal.y);
-            double low=-a-b,high=a+b;
-            for(int pass=0;pass<18;pass++){double mid=(low+high)*.5,cdf;
-                if(a<1e-8)cdf=(mid+b)/(2*b);
-                else if(b<1e-8)cdf=Disk(mid/a);
-                else cdf=a*(Integral((mid+b)/a)-Integral((mid-b)/a))/(2*b);
-                if(cdf<fraction)low=mid;else high=mid;
-            }
+            double extent=radius*System.Math.Sqrt(normal.x*normal.x+normal.z*normal.z)+height*.5*System.Math.Abs(normal.y),low=-extent,high=extent;
+            for(int pass=0;pass<18;pass++){double mid=(low+high)*.5;if(ContainerFlowGeometry.FractionBelow(normal,radius,height,mid)<fraction)low=mid;else high=mid;}
             return (float)((low+high)*.5);
         }
-        static double Disk(double x){if(x<=-1)return 0;if(x>=1)return 1;return .5+(System.Math.Asin(x)+x*System.Math.Sqrt(1-x*x))/System.Math.PI;}
-        static double Integral(double x){if(x<=-1)return 0;if(x>=1)return x;double root=System.Math.Sqrt(1-x*x);return x*.5+(x*System.Math.Asin(x)+root-root*root*root/3)/System.Math.PI;}
+
         void OnDestroy(){ArtResources.Release(mesh);ArtResources.Release(material);if(surface)Destroy(surface);}
     }
 }

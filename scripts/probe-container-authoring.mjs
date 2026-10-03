@@ -6,7 +6,7 @@ import {resolve} from 'node:path';
 import assert from 'node:assert/strict';
 const base=process.env.MAESTRO_HANDOFF_FIXTURE_URL||'http://127.0.0.1:5190';
 if(!['localhost','127.0.0.1'].includes(new URL(base).hostname))throw new Error('Local fixture required');
-const out=resolve('.quest-evidence/containers/browser');await mkdir(out,{recursive:true});
+const out=resolve(process.env.MAESTRO_CONTAINER_EVIDENCE||'.quest-evidence/containers/browser');await mkdir(out,{recursive:true});
 const native=JSON.parse(await readFile('test-fixtures/browser/containerAuthoring.json','utf8')),expected=native.after.execution.selected.call,a=expected.arguments;
 const browser=await chromium.launch({channel:'chrome',headless:true});
 try{

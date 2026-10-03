@@ -12482,7 +12482,7 @@
         "source.revision.current",
         "storage.writable"
       ],
-      "description": "Configure one saved cylindrical liquid store on any created object, or remove it. definition includes its contents: this authoring action can create, replace or empty liquid. Use object.container.transfer to conserve contents instead. The frame is the root-local bottom centre; +Y points toward the opening. Geometry describes the cavity and does not infer or modify mesh/colliders. Capacity is a logical game-rule value in millilitres, independent of visual scale; resizing a prop neither creates liquid nor changes capacity. One liquid identity and opaque display colour at a time, up to 16 containers per room. The shared saved amount survives Undo, duplication, prototypes, temporary rooms and archives. This version supports explicit measured transfers, not automatic gravity pouring, splashes, drinking, fluid forces or liquid mass. Imported bowls require explicit cavity configuration.",
+      "description": "Configure one saved cylindrical liquid store on any created object, or remove it. definition includes its contents: this authoring action can create, replace or empty liquid. Use object.container.transfer to conserve contents instead. The frame is the root-local bottom centre; +Y points toward the opening. Geometry describes the cavity and does not infer or modify mesh/colliders. Capacity is a logical game-rule value in millilitres, independent of visual scale; resizing a prop neither creates liquid nor changes capacity. One liquid identity and opaque display colour at a time, up to 16 containers per room. The shared saved amount survives Undo, duplication, prototypes, temporary rooms and archives. Room physics also runs bounded open-vessel pouring; inspect object.container.live and object.container.poured. Splashes, drinking, fluid forces and liquid mass remain unsupported. Imported bowls require explicit cavity configuration.",
       "example": {
         "operation": "configure",
         "target": "00000000000000000000000000000000",
@@ -12622,7 +12622,7 @@
         "source.revision.current",
         "storage.writable"
       ],
-      "description": "Move up to amountMl between two distinct configured containers in one atomic saved edit and one Undo. The result reports actual transferredMl, capped by source contents and destination space. Empty/full or incompatible liquid identity/colour fails without changing either object; an empty destination adopts source identity/colour. Both current object.container revisions are required and both objects are exclusively owned during execution. This is a logical transfer, with no implicit movement, proximity check, pouring animation or fluid simulation. Use it as a building block for user-authored games; physical pouring will use the same conserved operation. Stop cannot retract an already completed saved transfer; Undo can. It never repeats after reload on its own.",
+      "description": "Move up to amountMl between two distinct configured containers in one atomic saved edit and one Undo. The result reports actual transferredMl, capped by source contents and destination space. Empty/full or incompatible liquid identity/colour fails without changing either object; an empty destination adopts source identity/colour. Both current object.container revisions are required and both objects are exclusively owned during execution. This is a logical transfer, with no implicit movement, proximity check, pouring animation or fluid simulation. Use it as a building block for user-authored games; native physical pouring uses the same quantity arithmetic and atomic publication. Stop cannot retract an already completed saved transfer; Undo can. It never repeats after reload on its own.",
       "example": {
         "source": {
           "target": "00000000000000000000000000000000",
@@ -19704,6 +19704,56 @@
       }
     },
     {
+      "id": "object.container.poured",
+      "version": 1,
+      "label": "A physical pour was saved",
+      "activity": null,
+      "objectEvent": true,
+      "valueType": "text",
+      "description": "A native pouring episode was accepted by the shared room journal (or temporary fork). Value/source is the outgoing vessel ID. transferredMl is the total received by containers; spilledMl left the bounded container model, and does not imply a persistent puddle. receivers counts distinct receiving containers. Emitted after successful publication only; failed saves, cancellation, Undo and reload do not emit/replay it. A long continuous flow publishes at most once per ten-second checkpoint. Paused lifecycle listeners may miss the event; inspect current contents instead.",
+      "features": [
+        "eventPrograms.v1",
+        "eventFields.v1",
+        "containerPouring.v1"
+      ],
+      "fields": {
+        "type": "object",
+        "properties": {
+          "transferredMl": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 8000000.0
+          },
+          "spilledMl": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 8000000.0
+          },
+          "receivers": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 16.0
+          },
+          "liquid": {
+            "type": "string",
+            "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+            "maxLength": 32
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "transferredMl",
+          "spilledMl",
+          "receivers",
+          "liquid",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "object.anchor.proximity.changed",
       "version": 1,
       "label": "Object entered or left an anchor zone",
@@ -21409,6 +21459,51 @@
       "features": [
         "factQueries.v1",
         "containers.v1"
+      ]
+    },
+    {
+      "id": "object.container.live",
+      "version": 1,
+      "type": {
+        "record": {
+          "sessionId": "text",
+          "phase": "text",
+          "contents": {
+            "record": {
+              "amountMl": "number",
+              "savedAmountMl": "number",
+              "capacityMl": "number",
+              "transferredMl": "number",
+              "spilledMl": "number"
+            }
+          },
+          "temporary": "boolean",
+          "error": "text"
+        }
+      },
+      "label": "Live container contents",
+      "description": "Current native liquid quantity during physical pouring, separate from the last accepted object.container definition. Flowing contents are published together after 0.3 seconds without flow, at grip release, pause or Save, and at bounded ten-second checkpoints; one Undo restores that episode. Failed publication reverts all episode quantities and stops further pouring until physics is restarted. transferredMl/spilledMl are outgoing totals for this source in the current episode, reset after publication. No per-drop rigidbodies, pools, fluid mass, mixing or buoyancy. Amounts use logical millilitres independent of visual resizing.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1",
+        "containerPouring.v1"
       ]
     },
     {
@@ -24489,7 +24584,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "06d699f8edcea27bc3b007dced0295b5f1681af7f0bc144a6068563b6cbdd31d"
+      "sha256": "e55cdb6f811c6bdf4d43ba53455088c77ec1e3d86838987e61c221a4a7c270e8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -24537,11 +24632,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.Temporary.cs",
-      "sha256": "1f88dd95ac82ad68c9ee3ac5a980ec4c914fe8655a70bb6b92cae08a045de0ff"
+      "sha256": "65b14623ef0e8a7e4acd784b563797a3d48298165740c4bbda5e4b1d259213ff"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "a52ce60b3c47723d5617ca7f431316a1cef8c16b56e6f28ffcc8ab4634296f5d"
+      "sha256": "4afa208e8fdbcaeff270fbc3de3cba84e1de70514dddd8014699fd3ada17e9c1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -24645,7 +24740,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RoomRules.cs",
-      "sha256": "0ef826e27bf1c953476a261a8444b0b9594e3c93597431e7ae319499f7716d53"
+      "sha256": "0127f1b41b794c743c1adede9da2b507a2ce6d1c1fcfc130185345e39bbf9703"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleWorkshop.cs",
@@ -24765,7 +24860,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "86c08ebe7c675a4dcd48c000e7fff3591da85be744843fb290ff5d194a37ad2a"
+      "sha256": "91e33350b69f25051f760772b1e54cff25bcc50e38a4e8efda797126c6b443e8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomToolTray.cs",
@@ -24809,7 +24904,19 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ContainerFillView.cs",
-      "sha256": "de98eaee682afc22907662f9364f1f0c822a3b39ac5232cd4b736b3e9dd9b6e0"
+      "sha256": "f8968ff13572506a9b6f8158d8a51ee206f138a2023c92dd72ef6e54c501b632"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ContainerFlowGeometry.cs",
+      "sha256": "3defb946b2430a733490fd4467ec798cbb929a175a85c7a00531d6dbea99f018"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidPouring.cs",
+      "sha256": "f48e64b5c3597a721aaf432a6b7b437e22574e012790f5ff6db8e295f0fd5660"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLiquidEdits.cs",
+      "sha256": "07efa5d02e1efd0748230480a4df6a2614a3ca384414acffcb0979a360a43067"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomContainerEdits.cs",
@@ -25101,7 +25208,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContainerCapability.cs",
-      "sha256": "2352f82dd8b31e0368632c51bab22ade13bbfd212e2810506198bb0d1f329fe5"
+      "sha256": "da5daaa77104759bbc2a2159c83515b5e11628f0b606ae50b7ab664b589ac16e"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContainerPouringFacts.cs",
+      "sha256": "a9b23eb06b1cfee953400d98950b901fb10c2ea386c0032532655628dd8b5a88"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ControllerConfigurationCapability.cs",
