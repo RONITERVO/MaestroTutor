@@ -54,11 +54,13 @@ namespace Maestro.Quest.Programs
                     } else if((string)schema["format"]=="hingeConfiguration") {
                         var hinge=UnityEngine.JsonUtility.FromJson<Maestro.Quest.Creation.RoomHinge>(obj["definition"].ToString());hinge.connected=(string)obj["connected"];if(!hinge.Validate((string)obj["target"],out error))return false;
                     } else if((string)schema["format"]=="creationBatch") {
-                        if(!JsonUtility.FromJson<CreationBatch>(obj.ToString()).Prepare(out _,out error))return false;
+                        if(!CreationBatch.Read(obj).Prepare(out _,out error))return false;
                     } else if((string)schema["format"]=="objectLayout") {
                         if(!JsonUtility.FromJson<RoomLayout>(obj.ToString()).Validate(out error))return false;
                     } else if((string)schema["format"]=="lathePart") {
                         if(!RecipeLathe.Valid(JsonUtility.FromJson<RecipePart>(obj.ToString(Newtonsoft.Json.Formatting.None)))){error=path+" needs a simple counter-clockwise lathe profile";return false;}
+                    } else if((string)schema["format"]=="creationPrototype") {
+                        if(!CreationPrototype.Read(obj).Validate(out error))return false;
                     } else if((string)schema["format"]=="collisionRecipe") {
                         var recipe=JsonUtility.FromJson<CollisionRecipe>(obj.ToString());if(recipe==null||!recipe.Validate(out error))return false;
                     } else if(schema["format"]!=null) {

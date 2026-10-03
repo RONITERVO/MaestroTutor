@@ -113,3 +113,53 @@ reservation, later settings edits, detached list results, empty lists and reject
 invalid bound values before partial local updates. Web tests use the same fixture
 and verify structural typing and visual result-variable creation. These checks do
 not replace Quest interaction or performance acceptance.
+
+
+## Capture an existing construction
+
+`program.module.captureConstruction` publishes ordinary editable program source
+into the same reusable module library. It takes a name and 1–16 members, each
+with an exact object ID, current revision and distinct slot. The constructor
+exports `create(position, rotation, scale)` and returns new IDs in that order.
+The first member defines the origin and orientation; each member retains its
+own scale. Capture does not move the originals or start the constructor.
+
+Pause physics and recipe playback, finish animation authoring and drawing
+(including retained drafts), and release the members first. Capture reads live
+poses and the saved components. It rejects changed revisions, unavailable
+geometry, built-in Book/Maestro identities and hinge connections whose other end
+is outside the selection. Internal hinges use slots and bind only the newly
+created members. Capturing a temporary construction explicitly publishes a
+library module; discarding the temporary room does not remove that library file.
+
+The constructor uses the existing `object.batch.create` action and its new
+`prototype` source. A version-1 prototype contains public string-named geometry
+(block, ball, cylinder, drawing, recipe or model), paint, physics/collision,
+drawing patches and their ink, a drawing tip, and optional recorded root motion.
+It contains no saved-room enum ordinals or original object identities. Root-motion
+positions, rotations and scales are relative to the captured object's pose;
+instantiation transforms them with the new piece and checks every resulting
+frame. Recipe tracks, component names and stroke IDs stay editable within their
+new owner. Nothing plays automatically.
+
+Imported geometry retains exact model hashes. Model bytes are checked before any
+piece is committed; missing/damaged dependencies fail with no partial creation.
+The usual asynchronous renderer subsequently loads those verified local assets.
+A portable module file contains definitions, not GLB bytes; import the exact
+models on another workspace/device, or use a workspace archive containing them.
+Module references participate in the existing retention checks. No provider,
+model download or silent substitute is introduced.
+
+Capture is not a room/game backup: structure monitors, controller bindings,
+buttons, running programs and unsaved drafts are separate shared entities.
+Existing source-size, creation and room budgets still apply. Oversized capture
+fails explicitly rather than dropping components. Creating a captured assembly
+uses one room save and Undo; publishing/removing its module uses the library's
+existing asynchronous receipt semantics and is not undone by room Undo. Stop
+can stop waiting for an already dispatched library write, so inspect the receipt
+instead of replaying it. Pinned imports keep their exact definitions.
+
+Native support is advertised as `creationPrototypes.v1` and
+`constructionCapture.v1`. The existing schema-generated forms, module inspection,
+source/blocks editor and agent catalog expose the same definitions. Prototype
+geometry and transformed-motion boundaries have shared native/web fixtures.

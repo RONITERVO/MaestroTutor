@@ -1,6 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {validHingeDefinition,type HingeDefinition} from './roomHinge';
+import {validCreationPrototypeGeometry} from './creationPrototype';
 import {validCreationBatchGeometry} from './creationBatch';
 import {readDataType,type DataType} from './programValues';
 import {validCollisionRecipe} from './collisionRecipe';
@@ -16,7 +17,7 @@ export interface CapabilitySchema {
  oneOf?:CapabilitySchema[];'x-confirmation'?:string;'x-discriminators'?:string[];title?:string;description?:string;examples?:unknown[];'x-static'?:boolean;'x-channels'?:string[];'x-requirements'?:string[];'x-features'?:string[];
  items?:CapabilitySchema;minItems?:number;maxItems?:number;nullable?:boolean;
  properties?:Record<string,CapabilitySchema>;required?:string[];additionalProperties?:false;
- format?:'unitQuaternion'|'boundedOffset'|'roomRecipe'|'lathePart'|'collisionRecipe'|'programModule'|'programMemoryValue'|'objectLayout'|'creationBatch'|'structureSource'|'hingeConfiguration';'x-resource'?:'object';'x-requires'?:Record<string,string>;
+ format?:'unitQuaternion'|'boundedOffset'|'roomRecipe'|'lathePart'|'collisionRecipe'|'programModule'|'programMemoryValue'|'objectLayout'|'creationBatch'|'creationPrototype'|'structureSource'|'hingeConfiguration';'x-resource'?:'object';'x-requires'?:Record<string,string>;
  minimum?:number;maximum?:number;maxLength?:number;pattern?:string;enum?:string[];'x-enum-labels'?:Record<string,string>;'x-enum-images'?:Record<string,string>;
 }
 export interface CapabilityDefinition {
@@ -68,6 +69,7 @@ function validate(value:unknown,schema:CapabilitySchema,path:string):string|null
     return new Set(entries.map(x=>x.slot)).size===entries.length&&new Set(entries.map(x=>x.target??x.placement!.target)).size===entries.length&&entries.every(x=>!x.placement||x.placement.position.x**2+x.placement.position.y**2+x.placement.position.z**2<=625)?null:path+' needs distinct slots and valid baseline placements';
    }
    if(schema.format==='hingeConfiguration')return value.target!==value.connected&&validHingeDefinition(value.definition as HingeDefinition)?null:path+' needs different objects, bounded anchors and a spring target inside its limits';
+   if(schema.format==='creationPrototype')return validCreationPrototypeGeometry(value)?null:path+' needs valid local geometry, ink and motion';
    if(schema.format==='creationBatch')return validCreationBatchGeometry(value)?null:path+' needs distinct idle pieces with valid transformed placements';
    if(schema.format==='objectLayout'){
     const placements=value.placements as {target:string;position:{x:number;y:number;z:number}}[];

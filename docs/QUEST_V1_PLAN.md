@@ -2715,3 +2715,15 @@ fail explicitly. Receipt reservation must publish before any effect starts; no
 runtime action or uncertain effect is retried. See [action recovery](QUEST_ACTION_RECOVERY.md).
 This addresses the observed transient publication class without claiming its
 external cause or closing device storage, abrupt-power-loss or frame-time gates.
+
+
+### Reusable construction capture increment (2026-10-03)
+
+Existing creations can be captured into an ordinary constructor module instead
+of a second blueprint database. Capture preserves native/imported geometry,
+paint, drawing components/ink, physics/collision, recorded root motion and closed
+hinge connections. New instances do not depend on their originals. One shared
+public prototype schema, generated forms and the existing module library serve
+both the user and agent. See [batch creation](QUEST_BATCH_CREATION.md) for exact
+boundaries and model portability. This extends the authoring foundation; it does
+not close Quest interaction/performance, snapping, effects or release gates.

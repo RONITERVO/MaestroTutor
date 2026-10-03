@@ -123,3 +123,16 @@ restores the earlier test's history. `program-structure-watch.json` in the evide
 directory retains module, source and every relevant native state. This journey
 uses an explicit move; the separate PlayMode test covers an actual ball collision.
 Neither route automatically resumes a cancelled run or calls an AI provider.
+
+
+## Captured constructions (2026-10-03)
+
+After the included lever journey, the client reads each live member's definition
+revision, inspects and runs the shared capture action, waits for its receipt,
+and reads the published module from the native library. It removes the original
+members with Undo, rebuilds from the captured constructor, checks fresh identities
+and an internal hinge, then undoes the complete copy and removes the probe's
+library module. `construction-capture.json` retains the request, catalog definition,
+receipt, module and before/after states. This checks the real transport/runtime;
+PlayMode separately checks model-dependency failure/cancellation and stale capture.
+It does not assert headset, provider or frame-time acceptance.

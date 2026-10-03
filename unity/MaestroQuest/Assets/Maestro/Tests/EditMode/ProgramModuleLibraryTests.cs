@@ -23,6 +23,14 @@ namespace Maestro.Quest.Tests
    var duplicate=library.Publish(Definition());library.Flush();Assert.That(duplicate.Changed,Is.False);Assert.That(duplicate.Error,Is.Null);Assert.That(library.Count,Is.EqualTo(1));Assert.That(library.Revision,Is.EqualTo(2));
    var reloaded=new ProgramModuleLibrary(directory);await Task.Run(reloaded.Flush);Assert.That(ProgramModules.Hash(reloaded.Inspect(hash).ReadDefinition()),Is.EqualTo(hash));
   }
+  [Test] public void PublishingInDeepWorkspaceDoesNotAddTheContentHashToItsTemporaryName(){
+   string parent=Path.Combine(directory,new string('x',160-directory.Length-1));
+   var deep=new ProgramModuleLibrary(parent);deep.Flush();var module=Definition("Deep workspace");string hash=ProgramModules.Hash(module);
+   string path=Path.Combine(parent,"program-modules.v1",hash+".json");Assert.That(path.Length,Is.LessThan(260));Assert.That((path+"."+new string('x',32)+".tmp").Length,Is.GreaterThanOrEqualTo(260));
+   var write=deep.Publish(module);deep.Flush();Assert.That(write.Error,Is.Null);Assert.That(File.Exists(path),Is.True);Assert.That(Directory.GetFiles(Path.GetDirectoryName(path),"*.tmp"),Is.Empty);
+   var reloaded=new ProgramModuleLibrary(parent);reloaded.Flush();Assert.That(reloaded.Inspect(hash).Name,Is.EqualTo("Deep workspace"));
+   var remove=reloaded.Remove(hash);reloaded.Flush();Assert.That(remove.Error,Is.Null);Assert.That(File.Exists(path),Is.False);
+  }
   [Test] public void DamagedEntryIsIsolatedPreservedAndExplicitlyRemovable(){
    var write=library.Publish(Definition());library.Flush();string corrupt=new string('a',64),path=Path.Combine(directory,"program-modules.v1",corrupt+".json");File.WriteAllText(path,"{broken");
    library=new ProgramModuleLibrary(directory);library.Flush();Assert.That(library.Count,Is.EqualTo(2));Assert.That(library.Inspect(write.Hash).Error,Is.Null);Assert.That(library.Inspect(corrupt).Error,Is.Not.Null);Assert.That(File.ReadAllText(path),Is.EqualTo("{broken"));

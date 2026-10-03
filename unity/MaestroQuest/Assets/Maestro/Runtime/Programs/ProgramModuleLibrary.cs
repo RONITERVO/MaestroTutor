@@ -129,7 +129,9 @@ namespace Maestro.Quest.Programs
     string temporary=null;try {
      Directory.CreateDirectory(directory);string path=Path.Combine(directory,hash+".json");
      if(File.Exists(path))return new Result {Entry=Decode(hash,Read(path)),Changed=false};
-     temporary=path+"."+Guid.NewGuid().ToString("N")+".tmp";
+     // A stage must not be longer than its 64-character content-addressed destination.
+     // Unity Windows file APIs can reject an otherwise usable workspace at MAX_PATH.
+     temporary=Path.Combine(directory,Guid.NewGuid().ToString("N")+".tmp");
      using(var stream=new FileStream(temporary,FileMode.CreateNew,FileAccess.Write,FileShare.None)){var bytes=new UTF8Encoding(false,true).GetBytes(source);stream.Write(bytes,0,bytes.Length);stream.Flush(true);}
      File.Move(temporary,path);temporary=null;return new Result {Entry=Decode(hash,source),Changed=true};
     }catch(Exception ex){return new Result {Error=ex.Message};}finally{if(temporary!=null)try{File.Delete(temporary);}catch(Exception){}}

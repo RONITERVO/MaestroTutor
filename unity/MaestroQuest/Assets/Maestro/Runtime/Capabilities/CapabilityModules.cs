@@ -31,7 +31,7 @@ namespace Maestro.Quest.Programs
             new WorkspaceCancelReviewCapability(),
             new WorkspaceRecoveryCapability("inspect"),new WorkspaceRecoveryCapability("select"),new WorkspaceRecoveryCapability("commit"),new WorkspaceRecoveryCapability("cancel"),
             new ProgramMemoryCapability(),
-            new PublishProgramModuleCapability(),
+            new PublishProgramModuleCapability(),new CaptureConstructionCapability(),
             new ImportProgramModuleCapability(),
             new RemoveProgramModuleCapability(),
             new CreateObjectCapability(),new BatchCreationCapability(),new DrawingToolCapability(),new DrawingTipCapability(),new HingeCapability(),new DrawingSurfaceCapability(),new DrawingEditCapability(),new DrawingResolveCapability(),new RecipeEditCapability(),

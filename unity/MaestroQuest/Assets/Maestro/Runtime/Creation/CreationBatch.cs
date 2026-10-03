@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine;
 using Maestro.Quest.Interaction;
@@ -12,8 +13,26 @@ namespace Maestro.Quest.Creation
     {
         public string kind,templateHash;
         public RoomRecipe recipe;
+        public CreationPrototype prototype;
         public CollisionRecipe collision;
         public ObjectPhysicsSettings physics;
+        internal bool Prepare(string name,Vector3 position,Quaternion rotation,float scale,out RoomObjectData data,out string error) {
+            data=null;
+            if(kind=="prototype") {
+                error="Provide a creation prototype";if(prototype==null||!prototype.Validate(out error))return false;
+                data=prototype.Instantiate(name,position,rotation,scale);
+                if(data.motion!=null&&!data.motion.Validate(data.kind)){data=null;error="Every transformed animation frame must stay within room placement and scale limits";return false;}
+                error=null;return true;
+            }
+            if(!Resolve(out var recipe,out var collision,out var physics,out var defaultName,out error))return false;
+            if(!RoomEditor.PrepareRecipeObject(string.IsNullOrEmpty(name)?defaultName:name,position,scale,recipe,collision,physics,out data,out error))return false;
+            if(kind=="template"){var entry=CreationTemplates.Find(templateHash);data.surfaces=entry.Surfaces;data.drawingTips=entry.DrawingTips;}
+            data.rotation=rotation;return true;
+        }
+        internal bool Validate(out string error) {
+            error="Provide an editable creation source";
+            return kind=="prototype"?prototype!=null&&prototype.Validate(out error):Resolve(out _,out _,out _,out _,out error);
+        }
         internal bool Resolve(out RoomRecipe geometry,out CollisionRecipe shapes,out ObjectPhysicsSettings settings,out string defaultName,out string error)
         {
             geometry=null;shapes=null;settings=null;defaultName="Recipe piece";error="Choose an available template or an idle recipe";
@@ -55,7 +74,7 @@ namespace Maestro.Quest.Creation
                 error="A blueprint needs distinct named pieces with valid local poses and scales";
                 if(p==null||p.slot==null||!Regex.IsMatch(p.slot,"\\A[a-zA-Z][a-zA-Z0-9_]{0,23}\\z")||!slots.Add(p.slot)||p.name==null||p.name.Length>80||p.name.Any(char.IsControl)||
                     !float.IsFinite(p.position.sqrMagnitude)||p.position.sqrMagnitude>100||!MotionFrame.ValidRotation(p.rotation)||!float.IsFinite(p.scale)||p.scale<.1f||p.scale>4||p.source==null)return false;
-                if(!p.source.Resolve(out _,out _,out _,out _,out error))return false;
+                if(!p.source.Validate(out error))return false;
             }
             var connections=hinges??Array.Empty<BlueprintHinge>();
             error="Use version 2 for 1–15 hinge links between distinct blueprint slots";
@@ -76,18 +95,22 @@ namespace Maestro.Quest.Creation
         public Vector3 position;
         public Quaternion rotation=Quaternion.identity;
         public float scale=1;
+        internal static CreationBatch Read(JObject value) {
+            var batch=JsonUtility.FromJson<CreationBatch>(value.ToString());
+            for(int i=0;i<batch.blueprint.pieces.Length;i++)if(batch.blueprint.pieces[i].source.kind=="prototype")
+                batch.blueprint.pieces[i].source.prototype=CreationPrototype.Read((JObject)value["blueprint"]["pieces"][i]["source"]["prototype"]);
+            return batch;
+        }
         public bool Prepare(out RoomObjectData[] objects,out string error) {
             objects=null;error="Provide a valid blueprint, room position, unit rotation and scale";
             if(blueprint==null||!float.IsFinite(position.sqrMagnitude)||position.sqrMagnitude>625||!MotionFrame.ValidRotation(rotation)||!float.IsFinite(scale)||scale<.1f||scale>4)return false;
             if(!blueprint.Validate(out error))return false;
             var values=new List<RoomObjectData>();
             foreach(var piece in blueprint.pieces) {
-                if(!piece.source.Resolve(out var recipe,out var collision,out var physics,out var defaultName,out error))return false;
                 var p=position+rotation.normalized*(piece.position*scale);float size=scale*piece.scale;
                 if(!float.IsFinite(p.sqrMagnitude)||p.sqrMagnitude>625||size<.1f||size>4){error="Every transformed piece must stay within room placement and scale limits";return false;}
-                if(!RoomEditor.PrepareRecipeObject(string.IsNullOrEmpty(piece.name)?defaultName:piece.name,p,size,recipe,collision,physics,out var data,out error))return false;
-                if(piece.source.kind=="template"){var template=CreationTemplates.Find(piece.source.templateHash);data.surfaces=template.Surfaces;data.drawingTips=template.DrawingTips;}
-                data.rotation=(rotation.normalized*piece.rotation.normalized).normalized;values.Add(data);
+                if(!piece.source.Prepare(piece.name,p,(rotation.normalized*piece.rotation.normalized).normalized,size,out var data,out error))return false;
+                values.Add(data);
             }
             // Every new identity exists before resolving slot references. Never bind an existing room object by name.
             var slots=blueprint.pieces.Select((piece,index)=>(piece.slot,index)).ToDictionary(x=>x.slot,x=>values[x.index]);
