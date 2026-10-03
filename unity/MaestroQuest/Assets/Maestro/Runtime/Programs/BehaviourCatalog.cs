@@ -57,6 +57,7 @@ namespace Maestro.Quest.Programs
             public readonly bool ObjectEvent;
             public readonly string Description;
             readonly JObject fields,input,example;
+            readonly string[] extraFeatures=Array.Empty<string>();
             readonly Func<IProgramEventWorld,JObject,float,IProgramEventWatch> watch;
             public bool HasSubscription=>watch!=null;
             public JObject Input=>input==null?null:(JObject)input.DeepClone();
@@ -65,8 +66,8 @@ namespace Maestro.Quest.Programs
             { Id=id;Kind=kind;Label=label;Activity=activity;ObjectEvent=objectEvent;
                 Description=objectEvent?"An object interaction occurred. The primary text value is its object ID; source filters accept that exact ID or empty for any object.":"Maestro entered "+activity+". The primary text value is the state name. Source must be empty. The initial activity snapshot establishes a baseline without emitting an event."; }
             // New native events do not require a legacy tray enum or a signal route.
-            public EventDefinition(string id,string label,string description,JObject fields,bool objectEvent=false,JObject input=null,JObject example=null,Func<IProgramEventWorld,JObject,float,IProgramEventWatch> watch=null)
-            { Id=id;Label=label;Description=description;ObjectEvent=objectEvent;this.fields=(JObject)fields.DeepClone();this.input=input==null?null:(JObject)input.DeepClone();this.example=example==null?null:(JObject)example.DeepClone();this.watch=watch; }
+            public EventDefinition(string id,string label,string description,JObject fields,bool objectEvent=false,JObject input=null,JObject example=null,Func<IProgramEventWorld,JObject,float,IProgramEventWatch> watch=null,string[] features=null)
+            { Id=id;Label=label;Description=description;ObjectEvent=objectEvent;this.fields=(JObject)fields.DeepClone();this.input=input==null?null:(JObject)input.DeepClone();this.example=example==null?null:(JObject)example.DeepClone();this.watch=watch;extraFeatures=features==null?Array.Empty<string>():(string[])features.Clone(); }
             public bool ValidArguments(int version,JObject arguments,out string error) {
                 error="Unknown event subscription version or arguments";return HasSubscription&&version==Version&&CapabilityArguments.Validate(arguments,input,out error,"event arguments");
             }
@@ -87,7 +88,8 @@ namespace Maestro.Quest.Programs
                     ["features"]=fields==null?new JArray("eventPrograms.v1"):new JArray("eventPrograms.v1","eventFields.v1")};
                 if(fields!=null)result["fields"]=Fields;
                 if(HasSubscription) {((JArray)result["features"]).Add("eventSubscriptions.v1");result["input"]=Input;result["example"]=example.DeepClone();}
-                if(input?["x-features"] is JArray features)foreach(var feature in features)((JArray)result["features"]).Add(feature.DeepClone());
+                var required=((JArray)result["features"]).Values<string>().Concat(extraFeatures).Concat(input?["x-features"] is JArray features?features.Values<string>():Array.Empty<string>());
+                result["features"]=new JArray(required.Distinct());
                 return result;
             }
         }
@@ -141,7 +143,7 @@ namespace Maestro.Quest.Programs
         }
         public static readonly IReadOnlyList<ActionDefinition> Actions=Array.AsReadOnly(CapabilityModules.All.Select(module=>new ActionDefinition(module)).ToArray());
         public static readonly IReadOnlyList<EventDefinition> Events=Array.AsReadOnly(new[] {
-            AnchorProximitySubscription.Definition(),
+            ConnectionCapability.BreakEvent(),AnchorProximitySubscription.Definition(),
             PhysicsMotionSubscription.Definition(),
             CalendarSubscription.Definition(),
             new EventDefinition("maestro.speaking.enter",RuleEventKind.Speaking,"Speaking","speaking"),
@@ -169,7 +171,7 @@ namespace Maestro.Quest.Programs
                 watch:(world,args,now)=>new ProximitySubscription(world,args,now)),
         });
         public static readonly IReadOnlyList<FactDefinition> Facts=Array.AsReadOnly(new[] {
-            NativeObjectFacts.Definition(),LayoutCapability.Placement(),ConstructionSelectionCapability.Fact(),ConstructionManipulationCapability.Fact(),StructureFacts.List(),StructureFacts.Definition(),StructureFacts.Slot(),StructureFacts.State(),CreateTemplateCapability.Fact(),LaunchObjectCapability.Trajectory(),DrawingToolCapability.Fact(),DrawingTipCapability.Fact(),HingeCapability.Fact(),HingeCapability.FrameFact(),HingeCapability.State(),DrawingSurfaceFacts.Overview(),DrawingSurfaceFacts.Definition(),DrawingSurfaceFacts.Strokes(),DrawingSurfaceFacts.Stroke(),DrawingEditCapability.SummaryFact(),DrawingEditCapability.PointsFact(),DrawingResolveCapability.Fact(),RecipeEditFacts.Overview(),RecipeEditFacts.Part(),RecipeEditFacts.Track(),LatheProfileFact.Definition(),CollisionCapability.Overview(),CollisionCapability.ShapeFact(),RecipePartAnimationFacts.Pose(),ObjectAttachmentFacts.Anchor(),ObjectAttachmentFacts.Attachment(),NativeObjectFacts.Position(),PhysicsSettingsCapability.Fact(),AvatarMovementSettingsCapability.Fact(),AvatarWalkSettingsCapability.Fact(),AvatarWalkSettingsCapability.Clips(),ControllerConfigurationCapability.Fact(),ControllerModeCapability.Fact(),AnimationAuthoringFacts.Summary(),AnimationAuthoringFacts.Frame(),AnimationAuthoringFacts.Joint(),AnimationRecordingCapability.Fact(),AnimationPosingCapability.Fact(),AnimationPosingCapability.Joint(),AvatarModelCapability.Fact(), AvatarModelCapability.IncludedFact(),ModelImportCapability.Fact(),ModelImportCapability.Motions(),ModelImportCapability.Archive(),MotionBatchCapability.Session(),IncludedMotionsCapability.Fact(),MotionBatchCapability.File(),
+            NativeObjectFacts.Definition(),LayoutCapability.Placement(),ConstructionSelectionCapability.Fact(),ConstructionManipulationCapability.Fact(),StructureFacts.List(),StructureFacts.Definition(),StructureFacts.Slot(),StructureFacts.State(),CreateTemplateCapability.Fact(),LaunchObjectCapability.Trajectory(),DrawingToolCapability.Fact(),DrawingTipCapability.Fact(),ConnectionCapability.Fact(),ConnectionCapability.TuningFact(),ConnectionCapability.FrameFact(),ConnectionCapability.State(),DrawingSurfaceFacts.Overview(),DrawingSurfaceFacts.Definition(),DrawingSurfaceFacts.Strokes(),DrawingSurfaceFacts.Stroke(),DrawingEditCapability.SummaryFact(),DrawingEditCapability.PointsFact(),DrawingResolveCapability.Fact(),RecipeEditFacts.Overview(),RecipeEditFacts.Part(),RecipeEditFacts.Track(),LatheProfileFact.Definition(),CollisionCapability.Overview(),CollisionCapability.ShapeFact(),RecipePartAnimationFacts.Pose(),ObjectAttachmentFacts.Anchor(),ObjectAttachmentFacts.Attachment(),NativeObjectFacts.Position(),PhysicsSettingsCapability.Fact(),AvatarMovementSettingsCapability.Fact(),AvatarWalkSettingsCapability.Fact(),AvatarWalkSettingsCapability.Clips(),ControllerConfigurationCapability.Fact(),ControllerModeCapability.Fact(),AnimationAuthoringFacts.Summary(),AnimationAuthoringFacts.Frame(),AnimationAuthoringFacts.Joint(),AnimationRecordingCapability.Fact(),AnimationPosingCapability.Fact(),AnimationPosingCapability.Joint(),AvatarModelCapability.Fact(), AvatarModelCapability.IncludedFact(),ModelImportCapability.Fact(),ModelImportCapability.Motions(),ModelImportCapability.Archive(),MotionBatchCapability.Session(),IncludedMotionsCapability.Fact(),MotionBatchCapability.File(),
             WorkspaceRetentionFacts.Status(),WorkspaceRetentionFacts.Entry(),WorkspaceRetentionFacts.Removal(),
             WorkspaceEvidenceFacts.Status(),WorkspaceEvidenceFacts.Entry(),
             WorkspaceHistoryFacts.Status(),

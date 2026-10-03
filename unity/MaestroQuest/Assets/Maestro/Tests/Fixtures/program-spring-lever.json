@@ -5,7 +5,7 @@
   "imports": [
     {
       "alias": "leverKit",
-      "hash": "4cc6359c622644c36a3d533aed998d010eccec2cdeee9c9e6c0898520a303858",
+      "hash": "26693f5460acb81b524a441341bc58bc54d93aab8d3c75fdf5fa656d6942dd9b",
       "module": {
         "version": 1,
         "name": "Spring lever",
@@ -76,7 +76,7 @@
                   "version": 1,
                   "arguments": {
                     "blueprint": {
-                      "version": 2,
+                      "version": 3,
                       "pieces": [
                         {
                           "slot": "mount",
@@ -417,7 +417,7 @@
                           }
                         }
                       ],
-                      "hinges": [
+                      "connections": [
                         {
                           "owner": "handle",
                           "connected": "mount",
@@ -461,7 +461,10 @@
                               "damper": 0.8,
                               "speed": 0,
                               "force": 1
-                            }
+                            },
+                            "kind": "hinge",
+                            "breakForce": 0,
+                            "breakTorque": 0
                           }
                         }
                       ]

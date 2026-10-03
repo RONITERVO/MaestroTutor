@@ -6,6 +6,7 @@ import {isDeepStrictEqual} from 'node:util';
 import {HeadlessRoomTransport} from '../src/headless/roomTransport';
 import {runRoomActionTask,type RoomCommand} from '../src/core-sdk/room/roomAgent';
 import {createHeadlessClient} from '../src/headless/client';
+import {capabilityDefinition} from '../shared/capabilities';
 import {constructionCaptureCall} from '../shared/roomSelection';
 import {insertProgramCapability} from '../src/core-sdk/room/programCapabilityEditing';
 import {getGeminiModels} from '../src/core-sdk/modelRegistry';
@@ -143,26 +144,44 @@ try{
    layoutBefore=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'template',templateHash:brickHash,name:brickSource.name+' '+(i+1),x:.4+i*.25,y:1.2,z:.7,scale:1}}}}]);
    const id=layoutBefore.execution?.selected?.output?.objectId;if(typeof id!=='string')throw new Error('Layout member missing');layoutIds.push(id);
   }
-  const hingeSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Configure a physical hinge',offset:0}}]);
-  const hingeDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.hinge.edit',version:1}}]);
-  const hingeCurrent=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.hinge',version:1,arguments:{target:layoutIds[0]}}}]);
-  const hingeValue=hingeCurrent.catalog?.value as {configured:boolean;revision:number;connected:string;definition:{enabled:boolean;drive:{mode:string;target:number};limits:{enabled:boolean}}};
+  const hingeSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Connect physical pieces',offset:0}}]);
+  const hingeDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.connection.edit',version:1}}]);
+  const hingeCurrent=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.connection',version:1,arguments:{target:layoutIds[0]}}}]);
+  const hingeValue=hingeCurrent.catalog?.value as {configured:boolean;revision:number;connected:string;definition:{enabled:boolean;kind:string;breakForce:number;breakTorque:number}};
   if(hingeValue?.configured)throw new Error('New piece unexpectedly has a hinge');
   const hingeFrames:Record<string,unknown>={};for(const side of ['owner','connected']){
-   const read=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.hinge.frame',version:1,arguments:{target:layoutIds[0],side}}}]);
+   const read=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.connection.frame',version:1,arguments:{target:layoutIds[0],side}}}]);
    const value=read.catalog?.value as {revision:number;frame:unknown};if(value.revision!==hingeValue.revision)throw new Error('Hinge frame revision changed');hingeFrames[side+'Frame']=value.frame;
   }
-  const hingeArgs={operation:'configure',target:layoutIds[0],connected:layoutIds[1],revision:hingeValue.revision,definition:{...hingeValue.definition,...hingeFrames,enabled:true,drive:{...hingeValue.definition.drive,mode:'spring',target:20},limits:{...hingeValue.definition.limits,enabled:true}}};
-  const hingeAfter=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.hinge.edit',version:1,arguments:hingeArgs}}}]);
-  const hingeRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.hinge',version:1,arguments:{target:layoutIds[0]}}}]);
-  const hingeSaved=hingeRead.catalog?.value as typeof hingeValue;if(!hingeSaved?.configured||hingeSaved.connected!==layoutIds[1]||hingeSaved.definition.drive.target!==20)throw new Error('Hinge source did not persist');
-  const hingeAligned=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.hinge.edit',version:1,arguments:{operation:'align',target:layoutIds[0],connected:layoutIds[1],revision:hingeSaved.revision,angle:30}}}}]);
-  const hingeState=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.hinge.state',version:1,arguments:{target:layoutIds[0]}}}]);
+  const hingeDefaults=capabilityDefinition('object.connection.edit')!.example!.definition as {limits:Record<string,unknown>;drive:Record<string,unknown>};
+  const hingeArgs={operation:'configure',target:layoutIds[0],connected:layoutIds[1],revision:hingeValue.revision,definition:{...hingeValue.definition,...hingeFrames,enabled:true,drive:{...hingeDefaults.drive,mode:'spring',target:20},limits:{...hingeDefaults.limits,enabled:true}}};
+  const hingeAfter=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.connection.edit',version:1,arguments:hingeArgs}}}]);
+  const hingeRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.connection',version:1,arguments:{target:layoutIds[0]}}}]);
+  const hingeTuning=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.connection.hinge',version:1,arguments:{target:layoutIds[0]}}}]);
+  const hingeSaved=hingeRead.catalog?.value as typeof hingeValue;if(!hingeSaved?.configured||hingeSaved.connected!==layoutIds[1]||(hingeTuning.catalog?.value as {drive:{target:number}}).drive.target!==20)throw new Error('Hinge source did not persist');
+  const hingeAligned=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.connection.edit',version:1,arguments:{operation:'align',target:layoutIds[0],connected:layoutIds[1],revision:hingeSaved.revision,angle:30}}}}]);
+  const hingeState=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.connection.state',version:1,arguments:{target:layoutIds[0]}}}]);
   if(Math.abs((hingeState.catalog?.value as {angle:number}).angle-30)>.05)throw new Error('Hinge alignment readback differs');
   await execute([{action:'undo'}]);await execute([{action:'undo'}]);
-  const hingeUndo=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.hinge',version:1,arguments:{target:layoutIds[0]}}}]);
+  const hingeUndo=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.connection',version:1,arguments:{target:layoutIds[0]}}}]);
   if((hingeUndo.catalog?.value as typeof hingeValue).configured)throw new Error('Hinge Undo did not remove component');
-  await writeFile(join(directory,'hinge-authoring.json'),JSON.stringify({boundary:'Real Unity configuration, alignment, readback and Undo. PhysX tested separately; no headset or provider proof.',before:layoutBefore,search:hingeSearch,definition:hingeDefinition,current:hingeCurrent,after:hingeAfter,read:hingeRead,aligned:hingeAligned,state:hingeState,undo:hingeUndo},null,2));
+  await writeFile(join(directory,'hinge-authoring.json'),JSON.stringify({boundary:'Real Unity configuration, alignment, readback and Undo. PhysX tested separately; no headset or provider proof.',before:layoutBefore,search:hingeSearch,definition:hingeDefinition,current:hingeCurrent,after:hingeAfter,read:hingeRead,tuning:hingeTuning,aligned:hingeAligned,state:hingeState,undo:hingeUndo},null,2));
+  const connectionBefore=hingeUndo;
+  const connectionSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Connect physical pieces',offset:0}}]);
+  const connectionDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.connection.edit',version:1}}]);
+  const connectionCurrent=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.connection',version:1,arguments:{target:layoutIds[0]}}}]);
+  const connectionArgs={operation:'attach',target:layoutIds[0],connected:layoutIds[1],revision:(connectionCurrent.catalog?.value as {revision:number}).revision,breakForce:45,breakTorque:3};
+  const connectionAfter=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.connection.edit',version:1,arguments:connectionArgs}}}]);
+  const connectionRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.connection',version:1,arguments:{target:layoutIds[0]}}}]);
+  const connectionSaved=connectionRead.catalog?.value as typeof hingeValue;
+  if(!connectionSaved?.configured||connectionSaved.definition.kind!=='fixed'||connectionSaved.definition.breakForce!==45||connectionSaved.definition.breakTorque!==3||connectionSaved.connected!==layoutIds[1])throw new Error('Fixed connection did not persist its exact members and break limits');
+  for(const id of layoutIds){const before=hingeUndo.objects.find(o=>o.id===id)!,after=connectionAfter.objects.find(o=>o.id===id)!;if(JSON.stringify(before.position)!==JSON.stringify(after.position)||JSON.stringify(before.rotation)!==JSON.stringify(after.rotation))throw new Error('Fixed join moved its members');}
+  const connectionState=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.connection.state',version:1,arguments:{target:layoutIds[0]}}}]);
+  if((connectionState.catalog?.value as {active:boolean;broken:boolean}).active)throw new Error('Joining unexpectedly started physics');
+  const connectionUndo=await execute([{action:'undo'}]);
+  const connectionUndone=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.connection',version:1,arguments:{target:layoutIds[0]}}}]);
+  if((connectionUndone.catalog?.value as typeof hingeValue).configured)throw new Error('Single Undo did not remove fixed connection');
+  await writeFile(join(directory,'connection-authoring.json'),JSON.stringify({boundary:'Real Unity native attach/readback/Undo. PhysX break and typed event tested separately; no headset or provider proof.',before:connectionBefore,search:connectionSearch,definition:connectionDefinition,current:connectionCurrent,arguments:connectionArgs,after:connectionAfter,read:connectionRead,state:connectionState,undo:connectionUndo,undone:connectionUndone},null,2));
   const placements=layoutIds.map((target,i)=>({target,position:{x:.3+i*.25,y:1,z:.8},rotation:{x:0,y:0,z:0,w:1},scale:1}));
   const layoutSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Arrange or reset objects',offset:0}}]);
   const layoutDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.layout.apply',version:1}}]);
@@ -269,7 +288,7 @@ try{
   const connectedAfter=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.batch.create',version:1,arguments:connectedArgs}}}]);
   const connectedIds=connectedAfter.execution?.selected?.output?.objectIds;
   if(!Array.isArray(connectedIds)||connectedIds.length!==2||!connectedIds.every(id=>typeof id==='string')||new Set(connectedIds).size!==2||connectedAfter.objects.length!==connectedBefore.objects.length+2)throw new Error('Connected blueprint did not create exactly two distinct pieces');
-  const connectedRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.hinge',version:1,arguments:{target:connectedIds[1]}}}]);
+  const connectedRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.connection',version:1,arguments:{target:connectedIds[1]}}}]);
   const connectedValue=connectedRead.catalog?.value as {configured:boolean;connected:string};
   if(!connectedValue.configured||connectedValue.connected!==connectedIds[0])throw new Error('Blueprint did not bind its hinge to its own mount');
   const connectedUndo=await execute([{action:'undo'}]);if(connectedIds.some(id=>connectedUndo.objects.some(o=>o.id===id))||connectedUndo.objects.length!==connectedBefore.objects.length)throw new Error('Connected blueprint was not one Undo');
@@ -285,7 +304,7 @@ try{
   while(!leverAfter.rules?.outcomes?.some(o=>o.sequenceId===leverId)&&Date.now()<leverDeadline){await new Promise(r=>setTimeout(r,100));leverAfter=await execute([{action:'rules',rule:{action:'inspect',target:leverId}}]);}
   const leverOutcome=leverAfter.rules?.outcomes?.find(o=>o.sequenceId===leverId),leverMembers=leverAfter.objects.filter(o=>!leverBefore.objects.some(before=>before.id===o.id)).map(o=>o.id);
   if(leverOutcome?.phase!=='completed'||leverMembers.length!==2||leverMembers.some(id=>connectedIds.includes(id)))throw new Error('Spring lever module did not complete with fresh members: '+JSON.stringify(leverOutcome));
-  const leverFacts=[];for(const id of leverMembers){const read=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.hinge',version:1,arguments:{target:id}}}]);leverFacts.push(read);}
+  const leverFacts=[];for(const id of leverMembers){const read=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.connection',version:1,arguments:{target:id}}}]);leverFacts.push(read);}
   const leverOwners=leverFacts.filter(f=>(f.catalog?.value as {configured:boolean}).configured);
   if(leverOwners.length!==1||!leverMembers.includes((leverOwners[0].catalog?.value as {connected:string}).connected))throw new Error('Program-created hinge does not connect the new members');
   const selectionBefore=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'room.selection',version:1}}]);
@@ -295,7 +314,24 @@ try{
   const selectionRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'room.selection',version:1}}]);
   if(!isDeepStrictEqual(selectionRead.catalog?.value,{stateId:selectionBoth.constructionSelection!.stateId,members:leverMembers,collecting:false}))throw new Error('Native fact and inline construction selection differ');
   const selectionLocated=await execute([{action:'inspect',target:leverMembers[0]}]);if(selectionLocated.selectedId!==leverMembers[0])throw new Error('Locate did not focus the requested construction member');
-  const movementBefore=selectionLocated;
+  const captureMembers=[],captureFacts=[];
+  for(let i=0;i<leverMembers.length;i++){
+   const fact=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.definition',version:1,arguments:{target:leverMembers[i]}}}]);
+   captureFacts.push(fact);captureMembers.push({target:leverMembers[i],slot:'piece_'+(i+1),revision:(fact.catalog?.value as {revision:number}).revision});
+  }
+  const captureArguments=constructionCaptureCall(selectionLocated.constructionSelection!,selectionLocated.objects).arguments;
+  if(!isDeepStrictEqual(captureArguments.members,captureMembers))throw new Error('Book selection draft differs from current native member facts');
+  const captureSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Save construction',offset:0}}]);
+  const captureDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'program.module.captureConstruction',version:1}}]);
+  let captureAfter=await execute([{action:'execution',execution:{operation:'start',call:{id:'program.module.captureConstruction',version:1,arguments:captureArguments}}}]);
+  const captureRun=captureAfter.execution?.selected?.id;if(!captureRun)throw new Error('Capture did not return a run identity');
+  const captureDeadline=Date.now()+15000;
+  while(captureAfter.execution?.selected?.phase!=='completed'&&Date.now()<captureDeadline){await new Promise(r=>setTimeout(r,100));captureAfter=await execute([{action:'execution',execution:{operation:'inspect',runId:captureRun}}]);}
+  const capturedHash=captureAfter.execution?.selected?.output?.hash;if(typeof capturedHash!=='string')throw new Error('Capture did not publish a reusable module: '+JSON.stringify(captureAfter.execution?.selected));
+  const capturedRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'modules',capability:capturedHash,version:1}}]);
+  const capturedModule=capturedRead.catalog?.definition as {program:{functions:{name:string;body:{arguments:Record<string,unknown>}[]}[]}};
+  if(!capturedModule||leverMembers.some(id=>JSON.stringify(capturedModule).includes(id)))throw new Error('Captured source retained original object identities');
+  const movementBefore=capturedRead;
   const movementShown=await execute([{action:'execution',execution:{operation:'start',call:{id:'room.selection.manipulate',version:1,arguments:{stateId:selectionBoth.constructionSelection!.stateId,members:leverMembers,visible:true}}}}]);
   if(!movementShown.constructionManipulation?.visible||movementShown.constructionManipulation.holding)throw new Error('Native construction handle was not shown idle');
   const movementRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'room.selection.manipulation',version:1}}]);
@@ -313,23 +349,6 @@ try{
   const movementUndo=await execute([{action:'undo'}]);
   for(let i=0;i<2;i++){const actual=movementUndo.objects.find(o=>o.id===leverMembers[i])!,expected=movementFacts[i].catalog?.value as typeof movementOrigin;if(Math.hypot(actual.position.x-expected.position.x,actual.position.y-expected.position.y,actual.position.z-expected.position.z)>.0001||Math.abs(actual.scale-expected.scale)>.0001)throw new Error('One group Undo did not restore both members');}
   const movementHidden=await execute([{action:'execution',execution:{operation:'start',call:{id:'room.selection.manipulate',version:1,arguments:{stateId:movementUndo.constructionSelection!.stateId,members:leverMembers,visible:false}}}}]);if(movementHidden.constructionManipulation?.visible)throw new Error('Move handle did not close');
-  const captureMembers=[],captureFacts=[];
-  for(let i=0;i<leverMembers.length;i++){
-   const fact=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.definition',version:1,arguments:{target:leverMembers[i]}}}]);
-   captureFacts.push(fact);captureMembers.push({target:leverMembers[i],slot:'piece_'+(i+1),revision:(fact.catalog?.value as {revision:number}).revision});
-  }
-  const captureArguments=constructionCaptureCall(movementHidden.constructionSelection!,movementHidden.objects).arguments;
-  if(!isDeepStrictEqual(captureArguments.members,captureMembers))throw new Error('Book selection draft differs from current native member facts');
-  const captureSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Save construction',offset:0}}]);
-  const captureDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'program.module.captureConstruction',version:1}}]);
-  let captureAfter=await execute([{action:'execution',execution:{operation:'start',call:{id:'program.module.captureConstruction',version:1,arguments:captureArguments}}}]);
-  const captureRun=captureAfter.execution?.selected?.id;if(!captureRun)throw new Error('Capture did not return a run identity');
-  const captureDeadline=Date.now()+15000;
-  while(captureAfter.execution?.selected?.phase!=='completed'&&Date.now()<captureDeadline){await new Promise(r=>setTimeout(r,100));captureAfter=await execute([{action:'execution',execution:{operation:'inspect',runId:captureRun}}]);}
-  const capturedHash=captureAfter.execution?.selected?.output?.hash;if(typeof capturedHash!=='string')throw new Error('Capture did not publish a reusable module: '+JSON.stringify(captureAfter.execution?.selected));
-  const capturedRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'modules',capability:capturedHash,version:1}}]);
-  const capturedModule=capturedRead.catalog?.definition as {program:{functions:{name:string;body:{arguments:Record<string,unknown>}[]}[]}};
-  if(!capturedModule||leverMembers.some(id=>JSON.stringify(capturedModule).includes(id)))throw new Error('Captured source retained original object identities');
   const currentCaptureSource=insertProgramCapability(JSON.stringify({version:2,entry:'main',resources:[],functions:[{name:'main',returns:'void',parameters:[],locals:[],body:[]}]}),{id:'program.module.captureConstruction',version:1,arguments:{...captureArguments,members:captureMembers.map(m=>({...m,revision:1}))}},{kind:'current',fields:captureMembers.map((_,i)=>`members.${i}.revision`)});
   const currentCaptureSaved=await execute([{action:'rules',rule:{action:'edit',revision:lease.state().rules!.revision,edits:[{kind:'save',reference:'capture_current',sequence:{id:'',name:'Native current capture probe',interruption:0,repeat:false,program:JSON.stringify(currentCaptureSource)}}]}}]);
   const currentCaptureId=currentCaptureSaved.rules?.sequences.find(s=>s.name==='Native current capture probe')?.id;if(!currentCaptureId)throw new Error('Current-member capture caller was not saved');
@@ -344,11 +363,11 @@ try{
   const rebuilt=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.batch.create',version:1,arguments:rebuiltArgs}}}]);
   const rebuiltIds=rebuilt.execution?.selected?.output?.objectIds;
   if(!Array.isArray(rebuiltIds)||rebuiltIds.length!==2||rebuiltIds.some(id=>typeof id!=='string'||leverMembers.includes(id)))throw new Error('Captured construction did not survive removal of originals');
-  const rebuiltHinges=[];for(const id of rebuiltIds){const read=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.hinge',version:1,arguments:{target:id as string}}}]);rebuiltHinges.push(read);}
+  const rebuiltHinges=[];for(const id of rebuiltIds){const read=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.connection',version:1,arguments:{target:id as string}}}]);rebuiltHinges.push(read);}
   const rebuiltOwner=rebuiltHinges.find(r=>(r.catalog?.value as {configured:boolean}).configured);
   if(!rebuiltOwner||!rebuiltIds.includes((rebuiltOwner.catalog?.value as {connected:string}).connected))throw new Error('Rebuilt hinge did not bind its fresh members');
   const rebuiltUndo=await execute([{action:'undo'}]);if(rebuiltIds.some(id=>rebuiltUndo.objects.some(o=>o.id===id)))throw new Error('Captured construction did not keep one Undo');
-  await writeFile(join(directory,'construction-capture.json'),JSON.stringify({boundary:'Real Unity shared transport and module library; no headset or provider proof.',arguments:captureArguments,facts:captureFacts,before:leverAfter,search:captureSearch,definition:captureDefinition,captured:captureAfter,module:capturedRead,originalsRemoved:leverUndo,rebuilt,hinges:rebuiltHinges,undo:rebuiltUndo},null,2));
+  await writeFile(join(directory,'construction-capture.json'),JSON.stringify({boundary:'Real Unity shared transport and module library; no headset or provider proof.',arguments:captureArguments,facts:captureFacts,before:selectionLocated,search:captureSearch,definition:captureDefinition,captured:captureAfter,module:capturedRead,originalsRemoved:leverUndo,rebuilt,connections:rebuiltHinges,undo:rebuiltUndo},null,2));
   await writeFile(join(directory,'construction-movement.json'),JSON.stringify({boundary:'Real Unity native handle visibility/facts, group transform and one Undo. Physical grip is verified separately in PlayMode; no headset/provider proof.',before:movementBefore,shown:movementShown,read:movementRead,facts:movementFacts,search:movementSearch,definition:movementDefinition,arguments:movementArguments,transformed:movementTransformed,afterFacts:movementAfterFacts,undo:movementUndo,hidden:movementHidden},null,2));
   await writeFile(join(directory,'construction-selection.json'),JSON.stringify({boundary:'Real Unity room selection, fact, locate and capture states; browser replay is separate, no physical headset proof.',before:selectionBefore,first:selectionFirst,both:selectionBoth,read:selectionRead,located:selectionLocated,definition:captureDefinition,facts:captureFacts,captured:captureAfter,removed:leverUndo},null,2));
   let captureRemoved=await execute([{action:'execution',execution:{operation:'start',call:{id:'program.module.remove',version:1,arguments:{hash:capturedHash}}}}]);

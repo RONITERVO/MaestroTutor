@@ -124,7 +124,7 @@ now instantiates template/inline-recipe blueprints through ordinary programs and
 returns typed lists of piece IDs. [Persistent structures](QUEST_STRUCTURES.md) now
 retain named slots, baselines and missing members, with shared capture/reset and
 live displacement facts. Construction capture now publishes ordinary editable
-constructor modules with fresh member identities and internal hinges; see
+constructor modules with fresh member identities and internal physical connections; see
 [creation and capture](QUEST_BATCH_CREATION.md). Shared transient selection lets
 users and Maestro collect, highlight and order pieces through the same state; see
 [construction selection](QUEST_CONSTRUCTION_SELECTION.md). A solid shared
@@ -230,58 +230,11 @@ v1 subscriptions by this note.
 
 ## Physical hinges (2026-10-03)
 
-`object.hinge.edit` configures, aligns or removes a saved physical connection
-between two independently grabbable created/imported objects. Both local frames
-use +X as the axis and +Y as the zero-angle direction. Passive rotation, limited
-lever movement, spring return and a bounded motor are modes of this one component.
-The moving member uses solid/bouncy physics; its connected mount may remain fixed.
-Connected-body collision is suppressed, while scanned-room/other-object collisions
-remain ordinary PhysX. Recipe part tracks remain visual animation, not rigid joints.
-
-The optional book workshop, agent and programs share the generated action form,
-revision check, both affected object claims and save/Undo. `object.hinge` reads
-settings and identity; `object.hinge.frame` reads either exact saved frame, and
-`object.hinge.state` reports admitted/paused/missing/owned/misaligned state and
-signed angle. Splitting frame reads keeps every program value within the existing
-budget. Read both frames at the same object revision before editing.
-
-Configure does not align objects or start physics. Connection edits capture the
-current member poses and stop their old velocities before re-admission. Explicit **align** places
-the moving member against the connected object's current frame at a chosen angle,
-with one Undo to the observed live pose. Failed persistence cannot move anything.
-Starting physics admits coincident anchors (3 cm tolerance), aligned axes (5°)
-and an angle within limits (3° tolerance). Missing objects or animation ownership
-freeze the affected member. No names are substituted for missing stable IDs.
-Explicit teleports and scale changes invalidate the old constraint; use align to
-repair a displaced connection. A controller grip on an admitted hinge retains
-velocity-tracked physics. Scaling or moving a mount is not an automatic assembly edit.
-
-A saved motor is component configuration: Stop on the already completed configure
-call does not remove it. Disable/remove the component or pause room physics. Focus
-loss and runtime holds pause the world. Explicit Start physics may resume a valid
-saved motor; old velocities are discarded. Recreating a hinge offsets native
-limits/spring targets by its saved frame angle, so reload does not redefine zero.
-
-Room format 6, paired snapshot intent 5 and portable archive 5 prevent an older
-reader silently dropping hinges. Known older clean rooms still load; unknown
-component versions and older in-flight journals/archives remain preserved/refused.
-Connections survive deep copy, temporary discard and portable room snapshots.
-A copied member keeps its exact connection ID and may require explicit alignment.
-
-Initial bounds: 16 room hinges, one outgoing connection per created object, no
-cycles; anchors within 10 local metres; limits/targets within ±170°; spring 0–100,
-damper 0–20, motor speed ±360°/s and force 0–20. These are admission budgets,
-not a Quest performance guarantee. No breaking, snapping, sliders, cloth or liquid
-simulation is implied. A lever/fidget can be composed from ordinary mount and
-moving-object recipes plus this component. Version-2 connected blueprints now
-create the whole mechanism atomically, using local slot names and fresh IDs. The
-included Spring lever is editable program source using this path, with no separate
-toy logic. Missing slots, cycles, misaligned frames and aggregate hinge overflow
-reject the whole creation. A blueprint library, snapping and other joint types
-remain further work; see [batch creation](QUEST_BATCH_CREATION.md).
-
-Native tests exercise gravity/anchor retention, motor direction, spring reference
-through reload, limits, controller/animation ownership, missing/alignment recovery,
-save failure, Undo and temporary discard. The full-app transport and Chrome form
-journey verify the same native definitions and receipts separately from headset
-interaction. Quest comfort/performance acceptance remains required.
+The hinge increment has been generalized into one saved physical connection
+component: rotating hinges, rigid joins, optional break limits, native state and
+a typed break event. Book controls, user programs and the agent share the same
+catalog contract. See [physical connections](QUEST_PHYSICAL_CONNECTIONS.md) for
+current IDs, save-format boundaries, repair semantics, budgets and verification.
+Connected version-3 blueprints and construction capture preserve both kinds with
+fresh member identities. No automatic snapping, sliders, liquid simulation or
+Quest performance guarantee is implied.

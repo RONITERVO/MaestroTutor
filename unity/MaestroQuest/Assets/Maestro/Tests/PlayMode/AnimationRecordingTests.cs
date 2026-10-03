@@ -51,7 +51,7 @@ namespace Maestro.Quest.Tests
         [UnityTest] public IEnumerator FailedRecordingSaveRetainsFrozenFramesForAnExactRetry()
         {
             AuthorRuntime();yield return RecordAction("start");yield return new WaitForSeconds(.12f);avatarItem.transform.localPosition+=Vector3.right*.2f;editor.SaveNow();yield return null;
-            string file=Path.Combine(directory,"room.v6.json");if(File.Exists(file))File.Delete(file);Directory.CreateDirectory(file);int revision=editor.ObjectRevision("maestro");string session=workshop.RecordingSessionId;
+            string file=Path.Combine(directory,"room.v7.json");if(File.Exists(file))File.Delete(file);Directory.CreateDirectory(file);int revision=editor.ObjectRevision("maestro");string session=workshop.RecordingSessionId;
             Assert.That(authorActions.Execute(RecordingRequest(RecordingCall("finish")),out var error),Is.False);Assert.That(error,Does.Contain("frames retained"));var frozen=RecordingFact();Assert.That((string)frozen["phase"],Is.EqualTo("unsaved"));Assert.That(workshop.IsRecording,Is.False);Assert.That(workshop.ControlsTarget("maestro"),Is.False);Assert.That(editor.ObjectRevision("maestro"),Is.EqualTo(revision));Assert.That(editor.Read("maestro").motion,Is.Null);
             yield return new WaitForSeconds(.12f);Assert.That(RecordingFact()["frames"],Is.EqualTo(frozen["frames"]));Assert.That(workshop.CanStartRecording(session,"maestro",revision,out _),Is.False);Assert.That(editor.BeginTemporaryRoom(out error),Is.False);Assert.That(error,Does.Contain("retained recording"));Assert.That(workshop.HasUnsavedRecording,Is.True);
             Directory.Delete(file);yield return RecordAction("finish");Assert.That(editor.Read("maestro").motion.frames.Length,Is.EqualTo((int)frozen["frames"]));Assert.That(workshop.HasUnsavedRecording,Is.False);Assert.That(workshop.RecordingSessionId,Is.Not.EqualTo(session));
@@ -59,7 +59,7 @@ namespace Maestro.Quest.Tests
         [UnityTest] public IEnumerator RetainedTakeRefusesChangedObjectsButCanBeDiscardedAfterDeletion()
         {
             AuthorRuntime();string id=editor.Snapshot().objects.First(x=>x.kind==RoomObjectKind.Block).id;yield return RecordAction("start",id);yield return new WaitForSeconds(.12f);editor.SaveNow();yield return null;
-            string file=Path.Combine(directory,"room.v6.json");if(File.Exists(file))File.Delete(file);Directory.CreateDirectory(file);Assert.That(authorActions.Execute(RecordingRequest(RecordingCall("finish",id)),out _),Is.False);Directory.Delete(file);
+            string file=Path.Combine(directory,"room.v7.json");if(File.Exists(file))File.Delete(file);Directory.CreateDirectory(file);Assert.That(authorActions.Execute(RecordingRequest(RecordingCall("finish",id)),out _),Is.False);Directory.Delete(file);
             Assert.That(editor.MoveObject(id,Vector3.right,out var error),Is.True,error);Assert.That(authorActions.Execute(RecordingRequest(RecordingCall("finish",id)),out _),Is.False);Assert.That(workshop.HasUnsavedRecording,Is.True);
             Assert.That(editor.DeleteObject(id,out error),Is.True,error);yield return RecordAction("discard",id);Assert.That(workshop.HasUnsavedRecording,Is.False);Assert.That(editor.Find(id),Is.Null);
         }

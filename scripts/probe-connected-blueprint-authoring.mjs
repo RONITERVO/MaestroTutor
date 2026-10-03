@@ -7,7 +7,7 @@ import {resolve} from 'node:path';
 import assert from 'node:assert/strict';
 const base=process.env.MAESTRO_HANDOFF_FIXTURE_URL||'http://127.0.0.1:5190';
 if(!['localhost','127.0.0.1'].includes(new URL(base).hostname))throw new Error('Local fixture required');
-const out=resolve('.quest-evidence/connected-blueprints');await mkdir(out,{recursive:true});
+const out=resolve(process.env.MAESTRO_CONNECTION_EVIDENCE_DIR||'.quest-evidence/connected-blueprints');await mkdir(out,{recursive:true});
 const native=JSON.parse(await readFile('test-fixtures/browser/connectedBlueprintAuthoring.json','utf8')),expected=native.after.execution.selected.call;
 const browser=await chromium.launch({channel:'chrome',headless:true});
 try {
@@ -17,8 +17,8 @@ try {
  await page.goto(base+'/test-fixtures/browser/quest-connected-blueprint.html',{waitUntil:'domcontentloaded',timeout:60000});
  await page.getByLabel('Search actions',{exact:true}).fill('Create a structure');await page.getByRole('button',{name:'Search',exact:true}).click();await page.getByRole('button',{name:/Create a structure.*object.batch.create/}).click();
  await page.getByLabel('Action arguments',{exact:true}).fill(JSON.stringify(expected.arguments,null,2));
- await page.getByText('Edit action fields',{exact:true}).click();await page.getByText('Action inputs blueprint hinges · 1 entries',{exact:true}).click();
- const connected=page.getByLabel('Action inputs blueprint hinges 1 connected',{exact:true});await connected.fill('missing');assert.equal(await page.getByRole('button',{name:'Run action now',exact:true}).isDisabled(),true);await connected.fill(expected.arguments.blueprint.hinges[0].connected);
+ await page.getByText('Edit action fields',{exact:true}).click();await page.getByText('Action inputs blueprint connections · 1 entries',{exact:true}).click();
+ const connected=page.getByLabel('Action inputs blueprint connections 1 connected',{exact:true});await connected.fill('missing');assert.equal(await page.getByRole('button',{name:'Run action now',exact:true}).isDisabled(),true);await connected.fill(expected.arguments.blueprint.connections[0].connected);
  assert.equal(await page.getByRole('button',{name:'Run action now',exact:true}).isDisabled(),false);
  await connected.scrollIntoViewIfNeeded();await page.screenshot({path:resolve(out,'book-connected-blueprint-editor.png')});await page.getByRole('button',{name:'Run action now',exact:true}).click();
  await page.waitForFunction(()=>window.maestroConnectedBlueprintRequests.some(r=>r.commands[0].action==='execution')&&!window.maestroConnectedBlueprintSnapshot().request);await page.getByLabel('Action result',{exact:true}).waitFor();

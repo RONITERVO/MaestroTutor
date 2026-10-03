@@ -55,8 +55,9 @@ namespace Maestro.Quest.Programs
                         var members=((JArray)obj["members"]).Values<string>().ToArray();if(members.Distinct().Count()!=members.Length){error=path+" needs distinct construction pieces";return false;}
                     } else if((string)schema["format"]=="structureSource") {
                         if(!StructureSaveCapability.ValidSource(obj,out error))return false;
-                    } else if((string)schema["format"]=="hingeConfiguration") {
-                        var hinge=UnityEngine.JsonUtility.FromJson<Maestro.Quest.Creation.RoomHinge>(obj["definition"].ToString());hinge.connected=(string)obj["connected"];if(!hinge.Validate((string)obj["target"],out error))return false;
+                    } else if((string)schema["format"]=="connectionConfiguration") {
+                        if(obj["connected"]!=null&&(string)obj["target"]==(string)obj["connected"]){error=path+" needs different connection members";return false;}
+                        if(obj["definition"]!=null){var connection=UnityEngine.JsonUtility.FromJson<Maestro.Quest.Creation.RoomConnection>(obj["definition"].ToString());connection.connected=(string)obj["connected"];if(!connection.Validate((string)obj["target"],out error))return false;}
                     } else if((string)schema["format"]=="creationBatch") {
                         if(!CreationBatch.Read(obj).Prepare(out _,out error))return false;
                     } else if((string)schema["format"]=="objectLayout") {

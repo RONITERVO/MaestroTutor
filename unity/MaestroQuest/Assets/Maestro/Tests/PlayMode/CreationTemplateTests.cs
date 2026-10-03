@@ -31,7 +31,7 @@ namespace Maestro.Quest.Tests
         [UnityTest] public IEnumerator ConfiguredCreationValidatesWholeObjectAndFailedSaveLeavesNoPartialCreation() {
             var entry=CreationTemplates.All.First(e=>e.Id=="cup");int count=editor.Snapshot().objects.Length;var bad=entry.Collision;bad.shapes[1].innerRadius=.499f;
             Assert.That(editor.CreateRecipe("Bad",Vector3.zero,1,entry.Recipe,bad,entry.Physics,out var id,out _),Is.False);Assert.That(id,Is.Null);Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count));
-            string obstacle=Path.Combine(directory,"room.v6.json.pending");Directory.CreateDirectory(obstacle);
+            string obstacle=Path.Combine(directory,RoomStorage.FileName+".pending");Directory.CreateDirectory(obstacle);
             try {Assert.That(editor.CreateRecipe("Cup",Vector3.zero,1,entry.Recipe,entry.Collision,entry.Physics,out id,out _),Is.False);Assert.That(id,Is.Null);Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count));}finally{Directory.Delete(obstacle);}
             yield return null;
         }

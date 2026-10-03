@@ -56,8 +56,8 @@ retry or discard. Moving the object while a draft is retained keeps its local in
 ## Persistence and boundaries
 
 Ink is part of copied objects, room Undo, temporary snapshots and portable
-workspaces. Current room files are `room.v6.json`, paired snapshot intents are
-`room-snapshot.v5.json`, and portable archive manifests are version 5. Clean older
+workspaces. Current room files are `room.v7.json`, paired snapshot intents are
+`room-snapshot.v6.json`, and portable archive manifests are version 6. Clean older
 room documents can load through the existing versioned reader; older originals
 remain. Prior in-flight snapshot journals and prior archives are preserved and
 refused instead of being reinterpreted. This is pre-release format work under the

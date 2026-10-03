@@ -68,7 +68,7 @@
             "version": 1,
             "arguments": {
               "blueprint": {
-                "version": 2,
+                "version": 3,
                 "pieces": [
                   {
                     "slot": "mount",
@@ -409,7 +409,7 @@
                     }
                   }
                 ],
-                "hinges": [
+                "connections": [
                   {
                     "owner": "handle",
                     "connected": "mount",
@@ -453,7 +453,10 @@
                         "damper": 0.8,
                         "speed": 0,
                         "force": 1
-                      }
+                      },
+                      "kind": "hinge",
+                      "breakForce": 0,
+                      "breakTorque": 0
                     }
                   }
                 ]

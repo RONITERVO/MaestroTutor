@@ -32,9 +32,9 @@ absolute scale to differently sized pieces.
 `groupTransforms.v1` advertises the action. All revisions must be current. Physics,
 drawing, member playback and animation authoring must be stopped; members must
 be idle released creations with ready geometry. Both ends of every attached
-hinge must be included. Final origins must remain within 25 metres of the room
+physical connection must be included. Final origins must remain within 25 metres of the room
 origin and every piece's scale within 0.1–4. The entire request is validated
-before any saved edit. Geometry, recorded motion, hinge-local frames and saved
+before any saved edit. Geometry, recorded motion, connection-local frames and saved
 structure baselines are unchanged. There is no collision-free placement promise.
 
 The physical preview and action share the same allocation-free pose projection.
@@ -64,7 +64,7 @@ using stale preview data.
 
 PlayMode tests exercise actual XR first/last grip events and two-hand resizing,
 rotation/scale around a room-local pivot, current revisions, member bounds,
-complete/incomplete hinges, one Undo, receipt replay, cancellation, physics start,
+complete/incomplete connections, one Undo, receipt replay, cancellation, physics start,
 temporary rooms and failed-save rollback. The full-app Editor journey shows and
 hides the native handle, reads its fact, transforms the included lever's two
 members and verifies one Undo. The browser replay checks the real book controls

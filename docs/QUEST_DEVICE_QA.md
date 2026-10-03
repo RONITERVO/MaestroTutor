@@ -1698,3 +1698,18 @@ preview and restore all starting poses without adding Undo. Test two hinged piec
 together; moving only one must explain that both ends are required. This is an
 arrangement handle, not a physical weld: after placement the pieces retain their
 ordinary physics. Test save failure/space limits separately from physical comfort.
+
+### Rigid and breakable connection acceptance — pending Quest test
+
+With physics paused, place two creations, choose Connect physical pieces / attach,
+select the two members, load current values and join them. Their poses must remain
+unchanged. Start physics and grip/throw the joined build. Test a dynamic-to-fixed
+mount and a dynamic-to-dynamic pair; connected members suppress mutual collisions.
+Use low positive break limits, cause a break, and observe a program waiting for
+object.connection.broken. It must run once for that break. Pause/resume must not
+repair it. Explicit align/rearm may repair it; rearm must not add an Undo entry.
+
+Capture the build, instantiate its module and verify fresh internal member IDs,
+retained break limits and one Undo. Verify unavailable old v6 room recovery without
+silent replacement. Repeat with up to sixteen links while measuring frame timing,
+power and grip comfort. Desktop tests do not substitute for this device acceptance.

@@ -975,7 +975,9 @@ namespace Maestro.Quest.Tests
             Assert.That(runtime.Trigger(sequenceId),Is.True);var before=block.transform.localPosition;
             var events=Query(new JObject {["operation"]="search",["category"]="events",["query"]="",["offset"]=0},"events");
             var next=Query(new JObject {["operation"]="search",["category"]="events",["query"]="",["offset"]=6},"events-next");
-            Assert.That(events["entries"].Count()+next["entries"].Count(),Is.EqualTo(Maestro.Quest.Programs.BehaviourCatalog.Events.Count));
+            int found=events["entries"].Count()+next["entries"].Count();
+            while(found<(int)events["total"]){var page=Query(new JObject {["operation"]="search",["category"]="events",["query"]="",["offset"]=found},"events-next-"+found);Assert.That(page["entries"].Count(),Is.GreaterThan(0));found+=page["entries"].Count();}
+            Assert.That(found,Is.EqualTo(Maestro.Quest.Programs.BehaviourCatalog.Events.Count));
             var contact=Query(new JObject {["operation"]="inspect",["category"]="events",["capability"]="object.collided",["version"]=1},"contact");
             Assert.That((string)contact["definition"]["fields"]["properties"]["speed"]["type"],Is.EqualTo("number"));
             yield return new WaitForSeconds(.2f);Assert.That(block.transform.localPosition.x,Is.GreaterThan(before.x+.01f));

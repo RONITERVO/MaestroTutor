@@ -22,10 +22,10 @@ namespace Maestro.Quest.Tests
         {
             var ex=new RoomAgentExecutor(editor);var request=TemplateRequest(LeverCall());int before=editor.Snapshot().objects.Length;
             Assert.That(ex.Execute(request,out var error,out _),Is.True,error);var ids=((JArray)ex.Executions.Observe()["selected"]["output"]["objectIds"]).Values<string>().ToArray();
-            Assert.That(editor.Read(ids[1]).hinges.Single().connected,Is.EqualTo(ids[0]));Assert.That(physics.Running,Is.False);
-            Assert.That(new RoomStorage(directory).Load(out _).objects.Single(x=>x.id==ids[1]).hinges[0].connected,Is.EqualTo(ids[0]));
+            Assert.That(editor.Read(ids[1]).connections.Single().connected,Is.EqualTo(ids[0]));Assert.That(physics.Running,Is.False);
+            Assert.That(new RoomStorage(directory).Load(out _).objects.Single(x=>x.id==ids[1]).connections[0].connected,Is.EqualTo(ids[0]));
             editor.Undo();Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(before));Assert.That(ex.Execute(request,out error,out _),Is.True,error);Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(before));
-            editor.Redo();Assert.That(editor.Read(ids[1]).hinges[0].connected,Is.EqualTo(ids[0]));Assert.That(editor.Find(ids[1]).GetComponent<RoomHingeView>(),Is.Not.Null);yield return null;
+            editor.Redo();Assert.That(editor.Read(ids[1]).connections[0].connected,Is.EqualTo(ids[0]));Assert.That(editor.Find(ids[1]).GetComponent<RoomConnectionView>(),Is.Not.Null);yield return null;
         }
         [UnityTest] public IEnumerator ConnectedCandidateFailureLeavesNoPartialBodiesOrReferences()
         {
@@ -40,11 +40,11 @@ namespace Maestro.Quest.Tests
             Assert.That(workshop.Execute(new RuleRequest{action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit{kind="save",reference="lever",sequence=new RuleSequence{id="",name="Build spring lever",program=source.ToString()}}}},out var error,out var sequenceIds),Is.True,error);
             Assert.That(runtime.Trigger(sequenceIds.Single()),Is.True,runtime.Scheduler.LastError);for(int i=0;i<30&&runtime.Scheduler.RunningCount>0;i++){runtime.Scheduler.Tick(Time.unscaledTime);yield return null;}
             Assert.That(runtime.Scheduler.Outcomes.Last().phase,Is.EqualTo("completed"),runtime.Scheduler.LastError);var created=editor.Snapshot().objects.Where(x=>!before.Contains(x.id)).ToArray();Assert.That(created.Length,Is.EqualTo(2));
-            var data=created.Single(x=>x.hinges.Length==1);var item=editor.Find(data.id);var view=item.GetComponent<RoomHingeView>();var body=item.GetComponent<Rigidbody>();Assert.That(item.Grab,Is.Not.Null);
+            var data=created.Single(x=>x.connections.Length==1);var item=editor.Find(data.id);var view=item.GetComponent<RoomConnectionView>();var body=item.GetComponent<Rigidbody>();Assert.That(item.Grab,Is.Not.Null);
             physics.SetSurfaces(true,"Test surfaces aligned");physics.StartPhysics();view.Refresh();yield return new WaitForFixedUpdate();Assert.That(view.Active,Is.True,view.Error);
             float max=0;for(int i=0;i<30;i++){body.AddTorque(Vector3.right,ForceMode.Force);yield return new WaitForFixedUpdate();max=Mathf.Max(max,Mathf.Abs(view.Angle));}
             for(int i=0;i<80;i++)yield return new WaitForFixedUpdate();
-            Assert.That(max,Is.GreaterThan(5).And.LessThan(54));Assert.That(Mathf.Abs(view.Angle),Is.LessThan(3));Assert.That(Vector3.Distance(item.transform.position,editor.Find(data.hinges[0].connected).transform.position),Is.LessThan(.015f));
+            Assert.That(max,Is.GreaterThan(5).And.LessThan(54));Assert.That(Mathf.Abs(view.Angle),Is.LessThan(3));Assert.That(Vector3.Distance(item.transform.position,editor.Find(data.connections[0].connected).transform.position),Is.LessThan(.015f));
         }
         [UnityTest] public IEnumerator ConnectedCreationInATemporaryRoomDiscardsEveryMember()
         {
@@ -52,13 +52,13 @@ namespace Maestro.Quest.Tests
             var ex=new RoomAgentExecutor(editor);Assert.That(ex.Execute(TemplateRequest(LeverCall()),out error,out _),Is.True,error);Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count+2));Assert.That(new RoomStorage(directory).Load(out _).objects.Length,Is.EqualTo(count));
             Assert.That(editor.DiscardTemporaryRoom(out error),Is.True,error);Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count));yield return null;
         }
-        [UnityTest] public IEnumerator ConnectedBatchesReserveTheWholeRoomHingeBudgetBeforeSaving()
+        [UnityTest] public IEnumerator ConnectedBatchesReserveTheWholeRoomConnectionBudgetBeforeSaving()
         {
-            CreationBatch Chain(int count){var args=(JObject)LeverCall()["arguments"];var p=args["blueprint"]["pieces"][1];var h=args["blueprint"]["hinges"][0];
+            CreationBatch Chain(int count){var args=(JObject)LeverCall()["arguments"];var p=args["blueprint"]["pieces"][1];var h=args["blueprint"]["connections"][0];
                 args["blueprint"]["pieces"]=new JArray(Enumerable.Range(0,count).Select(i=>{var c=p.DeepClone();c["slot"]="piece_"+i;return c;}));
-                args["blueprint"]["hinges"]=new JArray(Enumerable.Range(0,count-1).Select(i=>{var c=h.DeepClone();c["owner"]="piece_"+i;c["connected"]="piece_"+(i+1);return c;}));return JsonUtility.FromJson<CreationBatch>(args.ToString());}
+                args["blueprint"]["connections"]=new JArray(Enumerable.Range(0,count-1).Select(i=>{var c=h.DeepClone();c["owner"]="piece_"+i;c["connected"]="piece_"+(i+1);return c;}));return JsonUtility.FromJson<CreationBatch>(args.ToString());}
             Assert.That(editor.CreateBatch(Chain(16),out _,out var error),Is.True,error);Assert.That(editor.CreateBatch(Chain(2),out _,out error),Is.True,error);int before=editor.Snapshot().objects.Length;
-            Assert.That(editor.CreateBatch(Chain(2),out _,out error),Is.False);Assert.That(error,Does.Contain("sixteen hinges"));Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(before));Assert.That(editor.Snapshot().objects.Sum(x=>x.hinges?.Length??0),Is.EqualTo(16));yield return null;
+            Assert.That(editor.CreateBatch(Chain(2),out _,out error),Is.False);Assert.That(error,Does.Contain("sixteen connections"));Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(before));Assert.That(editor.Snapshot().objects.Sum(x=>x.connections?.Length??0),Is.EqualTo(16));yield return null;
         }
     }
 }

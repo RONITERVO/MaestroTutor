@@ -21,9 +21,11 @@ namespace Maestro.Quest.Tests
             Assert.That((string)first["category"],Is.EqualTo("events"));Assert.That(first["entries"].Count(),Is.EqualTo(6));
             Assert.That(first["entries"].All(x=>((JObject)x).Count==3),Is.True,"Search pages must not expand schemas");
             var second=Query("{\"operation\":\"search\",\"category\":\"events\",\"query\":\"\",\"offset\":6}");
-            var ids=first["entries"].Concat(second["entries"]).Select(x=>(string)x["id"]).ToArray();
+            var pages=new System.Collections.Generic.List<JObject>{first,second};
+            while(pages.Sum(x=>x["entries"].Count())<(int)first["total"])pages.Add(Query(new JObject {["operation"]="search",["category"]="events",["query"]="",["offset"]=pages.Sum(x=>x["entries"].Count())}.ToString()));
+            var ids=pages.SelectMany(x=>x["entries"]).Select(x=>(string)x["id"]).ToArray();
             Assert.That(ids,Is.EqualTo(BehaviourCatalog.Events.Select(x=>x.Id).OrderBy(x=>x,StringComparer.Ordinal)));
-            second["entries"][0]["label"]="Changed by caller";
+            pages.Last()["entries"][0]["label"]="Changed by caller";
             Assert.That((string)catalog.Observe()["entries"][0]["label"],Is.Not.EqualTo("Changed by caller"));
             var inspected=Query("{\"operation\":\"inspect\",\"category\":\"events\",\"capability\":\"object.collided\",\"version\":1}");
             Assert.That(JToken.DeepEquals(inspected["definition"],BehaviourCatalog.Events.Single(x=>x.Id=="object.collided").ToJson()),Is.True);
@@ -82,7 +84,7 @@ namespace Maestro.Quest.Tests
                 }
                 foreach(var guard in (JArray)mapping["guards"])Assert.That(mapping["fields"][(string)guard],Is.Not.Null);
             }
-            Assert.That(count,Is.EqualTo(40));
+            Assert.That(count,Is.EqualTo(42));
         }
         sealed class ChangingCurrentInputs:IProgramFacts
         {

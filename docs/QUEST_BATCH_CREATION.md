@@ -1,8 +1,8 @@
 # Atomic structure creation and typed results
 
 `object.batch.create` (`batchCreation.v1`) creates 1–16 pieces from an editable
-blueprint. Version 1 keeps pieces independent; version 2 adds physical hinges with
-`connectedBlueprints.v1` and `physicalHinges.v1`. The optional book form, source/blocks
+blueprint. Version 1 keeps pieces independent; version 3 adds physical connections with
+`connectedBlueprints.v2` and `physicalConnections.v1`. The optional book form, source/blocks
 and room agent use the same contract. This does not create a persistent assembly
 entity, a separate blueprint library or snap sockets.
 
@@ -33,17 +33,19 @@ recreate an undone batch. Stop leaves already accepted creations in place.
 
 ## Connected blueprints
 
-Version 2 requires 1–15 `hinges`. Each entry names an `owner` slot, a distinct
-`connected` slot and an ordinary hinge `definition` (enabled, local frames, limits
-and drive). No room IDs or component versions belong in that definition. Each
+Version 3 requires 1–15 `connections`. Each entry names an `owner` slot, a distinct
+`connected` slot and an ordinary connection `definition` (kind, enabled, local frames, break limits
+and, for hinges, limits/drive). No room IDs or component versions belong in that definition. Each
 instance binds fresh member IDs internally; a blueprint cannot connect itself to
 an unrelated existing object. Each owner has at most one connection; cycles,
 missing slots and duplicate owners fail before saving. Version 1 rejects links.
 
 The complete transformed placement must have coincident anchors within 3 cm,
 axes within 5 degrees and an angle inside enabled limits with 3 degrees tolerance.
+Fixed joins require full-frame orientation agreement within 5 degrees.
+Version 2 used the old hinge schema and is refused rather than losing links.
 Uniform scaling affects anchor distances too. All new links count against the
-existing 16-hinge room budget before creation. Save failure cannot leave half a
+existing 16-connection room budget before creation. Save failure cannot leave half a
 mechanism. Creation does not start room physics or promise collision-free placement.
 
 The included **Spring lever** module is ordinary editable source: a fixed mount,
@@ -127,8 +129,8 @@ own scale. Capture does not move the originals or start the constructor.
 Pause physics and recipe playback, finish animation authoring and drawing
 (including retained drafts), and release the members first. Capture reads live
 poses and the saved components. It rejects changed revisions, unavailable
-geometry, built-in Book/Maestro identities and hinge connections whose other end
-is outside the selection. Internal hinges use slots and bind only the newly
+geometry, built-in Book/Maestro identities and physical connections whose other end
+is outside the selection. Internal connections use slots and bind only the newly
 created members. Capturing a temporary construction explicitly publishes a
 library module; discarding the temporary room does not remove that library file.
 

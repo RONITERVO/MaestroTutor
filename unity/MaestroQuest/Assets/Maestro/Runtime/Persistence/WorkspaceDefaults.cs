@@ -26,7 +26,7 @@ namespace Maestro.Quest.Persistence
                 new RoomObjectData {id="book",kind=RoomObjectKind.Book,position=BookPosition,rotation=BookRotation},
                 new RoomObjectData {id="maestro",kind=RoomObjectKind.Maestro,modelHash=includedAvatar?.Hash,walkClip=(includedAvatar?.WalkClipIndex??-1)+1,position=MaestroPosition,rotation=MaestroRotation}}};
             var documents=new Dictionary<string,byte[]> {
-                ["room.v6.json"]=Document(room),["behaviours.v2.json"]=Document(new RuleDocument()),
+                ["room.v7.json"]=Document(room),["behaviours.v2.json"]=Document(new RuleDocument()),
                 ["controls.v2.json"]=Document(new ControllerPreferences()),["avatar-activities.v2.json"]=Document(includedMotions?.DefaultActivities(includedAvatar?.Hash)??new AvatarActivityDocument()),
                 ["motions/motions.v2.json"]=Document(includedMotions?.Catalogue??new MotionCatalogue())};
             var assets=new Dictionary<string,Func<Stream>>();

@@ -34,7 +34,7 @@ namespace Maestro.Quest.Rules
             actions = new RoomRuleActions(editor,animations,clock); Scheduler = new RuleScheduler(actions,new InvocationReceipts(editor.ReceiptDirectory)); workshop.Runtime = this;Scheduler.ConfigureMemory(workshop.Memory,()=>workshop.MemoryBlocked);
             runtimeGate=editor.RuntimeGate;runtimeGate.Changed+=RefreshSuspension;RefreshSuspension();
             workshop.DocumentChanged += Reload;
-            editor.Editing += StopAll; editor.ItemGrabbed += Grabbed; editor.ItemReleased += Released; editor.ItemTapped += Tapped; editor.ItemCollided += Collided;
+            editor.Editing += StopAll; editor.ItemGrabbed += Grabbed; editor.ItemReleased += Released; editor.ItemTapped += Tapped; editor.ItemCollided += Collided;editor.ConnectionBroken+=ConnectionBroke;
             animations.Starting += Authoring; room.Restoring += StopAll; room.Restored += RecoverButtons;
             Reload();
         }
@@ -64,6 +64,10 @@ namespace Maestro.Quest.Rules
             if(editor.RuntimeGate.Held||paused||!focused||!isActiveAndEnabled||Scheduler==null||!Scheduler.IsListening("object.collided",id))return;
             var fields=new Newtonsoft.Json.Linq.JObject {["otherId"]=otherId,["otherKind"]=kind,["speed"]=speed,["x"]=point.x,["y"]=point.y,["z"]=point.z};
             Scheduler.EmitNative("object.collided",id,new Programs.ProgramValue(id),fields,Time.unscaledTime,out _);
+        }
+        void ConnectionBroke(string id,string connected,string kind,float force,float torque){
+            if(editor.RuntimeGate.Held||paused||!focused||!isActiveAndEnabled||Scheduler==null||!Scheduler.IsListening("object.connection.broken",id))return;
+            Scheduler.EmitNative("object.connection.broken",id,new Programs.ProgramValue(id),new Newtonsoft.Json.Linq.JObject {["connected"]=connected,["kind"]=kind,["forceLimit"]=force,["torqueLimit"]=torque},Time.unscaledTime,out _);
         }
         void Authoring(string id) => Scheduler.StopTarget(id,false);
         void RecoverButtons() => workshop.RecoverButtons();
@@ -118,7 +122,7 @@ namespace Maestro.Quest.Rules
             StopAll();
             if (workshop) workshop.DocumentChanged -= Reload;
             if(runtimeGate!=null)runtimeGate.Changed-=RefreshSuspension;
-            if (editor) { editor.Editing -= StopAll; editor.ItemGrabbed -= Grabbed; editor.ItemReleased -= Released; editor.ItemTapped -= Tapped; editor.ItemCollided -= Collided; }
+            if (editor) { editor.Editing -= StopAll; editor.ItemGrabbed -= Grabbed; editor.ItemReleased -= Released; editor.ItemTapped -= Tapped; editor.ItemCollided -= Collided;editor.ConnectionBroken-=ConnectionBroke; }
             if (animations) animations.Starting -= Authoring;
             if (room) { room.Restoring -= StopAll; room.Restored -= RecoverButtons; }
         }

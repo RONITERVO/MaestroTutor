@@ -6,11 +6,11 @@ using System.Linq;
 using UnityEngine;
 namespace Maestro.Quest.Creation
 {
-    [Serializable] public sealed class HingeFrame
+    [Serializable] public sealed class ConnectionFrame
     {
         public Vector3 position;
         public Quaternion rotation=Quaternion.identity;
-        public HingeFrame Copy()=>new(){position=position,rotation=rotation};
+        public ConnectionFrame Copy()=>new(){position=position,rotation=rotation};
         public bool Valid=>float.IsFinite(position.sqrMagnitude)&&position.sqrMagnitude<=100&&MotionFrame.ValidRotation(rotation);
     }
     [Serializable] public sealed class HingeLimits
@@ -29,32 +29,36 @@ namespace Maestro.Quest.Creation
             mode is "passive" or "spring" or "motor"&&target>=-170&&target<=170&&spring>=0&&spring<=100&&damper>=0&&damper<=20&&speed>=-360&&speed<=360&&force>=0&&force<=20;
     }
     /// <summary>Reusable local settings contain no room identity, so construction recipes can bind fresh members.</summary>
-    [Serializable] public class HingeSettings
+    [Serializable] public class ConnectionSettings
     {
         public bool enabled=true;
-        public HingeFrame ownerFrame=new(),connectedFrame=new();
+        public string kind="hinge";
+        // Zero explicitly means unbreakable. PhysX receives infinity only at admission.
+        public float breakForce,breakTorque;
+        public ConnectionFrame ownerFrame=new(),connectedFrame=new();
         public HingeLimits limits=new();
         public HingeDrive drive=new();
-        public RoomHinge Bind(string connected)=>new(){connected=connected,enabled=enabled,ownerFrame=ownerFrame?.Copy(),connectedFrame=connectedFrame?.Copy(),limits=limits?.Copy(),drive=drive?.Copy()};
+        public RoomConnection Bind(string connected)=>new(){connected=connected,enabled=enabled,kind=kind,breakForce=breakForce,breakTorque=breakTorque,ownerFrame=ownerFrame?.Copy(),connectedFrame=connectedFrame?.Copy(),limits=limits?.Copy(),drive=drive?.Copy()};
         public bool ValidateDefinition(out string error)
         {
-            error="A hinge needs valid local frames, ordered limits and one bounded drive";
+            error="A connection needs valid local frames, ordered limits and bounded break limits and hinge settings";
+            if(kind is not ("hinge" or "fixed")||!float.IsFinite(breakForce)||!float.IsFinite(breakTorque)||breakForce<0||breakForce>10000||breakTorque<0||breakTorque>10000)return false;
             if(ownerFrame?.Valid!=true||connectedFrame?.Valid!=true||limits?.Valid!=true||drive?.Valid!=true)return false;
-            if(limits.enabled&&drive.mode=="spring"&&(drive.target<limits.minimum||drive.target>limits.maximum))return false;
+            if(kind=="hinge"&&limits.enabled&&drive.mode=="spring"&&(drive.target<limits.minimum||drive.target>limits.maximum))return false;
             error=null;return true;
         }
     }
     /// <summary>Two local frames retain the hinge's zero reference through reloads. +X is its axis, +Y its zero direction.</summary>
-    [Serializable] public sealed class RoomHinge:HingeSettings
+    [Serializable] public sealed class RoomConnection:ConnectionSettings
     {
-        public const int MaximumRoomHinges=16;
+        public const int MaximumRoomConnections=16;
         public int version=1;
         public string connected;
-        public RoomHinge Copy(){var copy=Bind(connected);copy.version=version;return copy;}
+        public RoomConnection Copy(){var copy=Bind(connected);copy.version=version;return copy;}
         internal static bool Id(string id)=>Guid.TryParseExact(id,"N",out var parsed)&&id==parsed.ToString("N");
         public bool Validate(string owner,out string error)
         {
-            error="A hinge needs version 1 and different created-object IDs";
+            error="A connection needs version 1 and different created-object IDs";
             return version==1&&Id(owner)&&Id(connected)&&owner!=connected&&ValidateDefinition(out error);
         }
         internal static bool Acyclic(IReadOnlyDictionary<string,string> links)
@@ -64,11 +68,11 @@ namespace Maestro.Quest.Creation
         }
         public static bool ValidateCollection(RoomObjectData[] objects,out string error)
         {
-            error="Keep at most one hinge per created object and sixteen per room, without connection cycles";
+            error="Keep at most one connection per created object and sixteen per room, without connection cycles";
             var links=new Dictionary<string,string>();
-            foreach(var item in objects){error="Keep at most one hinge per created object";var hinges=item.hinges??Array.Empty<RoomHinge>();if(hinges.Length>1||item.IsBuiltIn&&hinges.Length>0||hinges.Any(h=>h==null))return false;
-                if(hinges.Length==0)continue;if(!hinges[0].Validate(item.id,out error))return false;links.Add(item.id,hinges[0].connected);}
-            error="Keep at most sixteen hinges per room without connection cycles";if(links.Count>MaximumRoomHinges)return false;
+            foreach(var item in objects){error="Keep at most one connection per created object";var connections=item.connections??Array.Empty<RoomConnection>();if(connections.Length>1||item.IsBuiltIn&&connections.Length>0||connections.Any(h=>h==null))return false;
+                if(connections.Length==0)continue;if(!connections[0].Validate(item.id,out error))return false;links.Add(item.id,connections[0].connected);}
+            error="Keep at most sixteen connections per room without connection cycles";if(links.Count>MaximumRoomConnections)return false;
             if(!Acyclic(links))return false;
             // Missing referenced objects stay explicit; runtime freezes the affected member. Undo can restore the exact identity.
             error=null;return true;
@@ -77,8 +81,9 @@ namespace Maestro.Quest.Creation
         public float Angle(Transform owner,Transform other)=>FrameAngle(owner.rotation*ownerFrame.rotation,other.rotation*connectedFrame.rotation);
         bool AlignedFrames(Vector3 aPosition,Quaternion aRotation,Vector3 bPosition,Quaternion bRotation,out string error)
         {
-            error="Align the hinge anchors before starting its physics";
+            error="Align the connection anchors before starting its physics";
             if(Vector3.Distance(aPosition,bPosition)>.03f||Vector3.Angle(aRotation*Vector3.right,bRotation*Vector3.right)>5)return false;
+            if(kind=="fixed"){error="Align both complete connection frames before starting physics";if(Quaternion.Angle(aRotation,bRotation)>5)return false;error=null;return true;}
             var angle=FrameAngle(aRotation,bRotation);if(limits.enabled&&(angle<limits.minimum-3||angle>limits.maximum+3))return false;
             error=null;return true;
         }

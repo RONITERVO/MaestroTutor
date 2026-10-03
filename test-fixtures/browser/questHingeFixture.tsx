@@ -8,7 +8,8 @@ import {CapabilityBrowser} from '../../src/platform/quest/CapabilityBrowser';
 import '../../src/app/index.css';
 import '../../src/platform/quest/roomWorkspace.css';
 if(!import.meta.env.DEV)throw new Error('Development fixture only');
-const native=await (await fetch('./hingeAuthoring.json')).json() as Record<string,RoomAgentState>;
+const fixture=new URLSearchParams(location.search).get('kind')==='fixed'?'connectionAuthoring.json':'hingeAuthoring.json';
+const native=await (await fetch('./'+fixture)).json() as Record<string,RoomAgentState>;
 const client=new RoomAgentClient(),requests:unknown[]=[];
 let state=structuredClone(native.before);state.visible=true;let revision=state.revision;
 if(!client.receive(state))throw new Error('Invalid captured native hinge state');
@@ -19,7 +20,7 @@ setInterval(()=>{
   requests.push(structuredClone(request));const command=request.commands[0];let key:string;
   if(command.action==='catalog'&&command.catalog?.operation==='search')key='search';
   else if(command.action==='catalog'&&command.catalog?.operation==='inspect')key=command.catalog.category==='facts'?'current':'definition';
-  else if(command.action==='execution'&&command.execution?.operation==='start'&&command.execution.call.id==='object.hinge.edit')key='after';
+  else if(command.action==='execution'&&command.execution?.operation==='start'&&command.execution.call.id==='object.connection.edit')key='after';
   else throw new Error('Unexpected hinge replay command');
   state=structuredClone(native[key]);state.visible=true;state.ack=request.sequence;
  }

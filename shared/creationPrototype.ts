@@ -1,7 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 // Geometry checks after the catalog's strict structural validation.
-import {length2,normalized,rotate,multiply,type HingePose} from './roomHinge';
+import {length2,normalized,rotate,multiply,type ConnectionPose} from './roomConnection';
 type V={x:number;y:number;z:number};
 type Q=V&{w:number};
 interface Frame {time:number;position:V;rotation:Q;scale:number}
@@ -28,7 +28,7 @@ export function validCreationPrototypeGeometry(value:Record<string,unknown>):boo
  if(p.motion?.frames.some((f,i)=>i===0?f.time!==0||length2(f.position)>250001:f.time<=p.motion!.frames[i-1].time||length2(f.position)>250001))return false;
  return true;
 }
-export function validPrototypePlacement(p:CreationPrototype,pose:HingePose):boolean {
+export function validPrototypePlacement(p:CreationPrototype,pose:ConnectionPose):boolean {
  const q=normalized(pose.rotation);
  return !p.motion||p.motion.frames.every(f=>{
   const local=rotate(q,{x:f.position.x*pose.scale,y:f.position.y*pose.scale,z:f.position.z*pose.scale});

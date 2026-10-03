@@ -163,3 +163,19 @@ resize the complete hinge assembly, verifies both results, restores both with on
 Undo, then hides the handle. `construction-movement.json` retains these actual
 observations and the exact action arguments. Physical grip ownership, two-hand
 resizing and interruption are separately tested through Unity XR PlayMode.
+
+## Physical connection probe
+
+The full app configures a hinge through `object.connection.edit`, reads common
+settings and hinge tuning separately, aligns it, and verifies live readback/Undo.
+It then uses `attach` to join two pieces at their existing poses, reads their exact
+IDs and break limits and verifies one Undo removes the join. `connection-authoring.json`
+records those observations; `hinge-authoring.json` records the hinge path.
+
+The Chrome connection fixtures replay these real states through generated controls,
+requiring current revision guards, refusing negative break limits/self-links and
+matching the native call and receipt. Native PlayMode tests separately exercise
+actual PhysX breaks and delivery to the ordinary typed event scheduler. Neither
+fixture claims headset or provider acceptance. Construction selection/capture now
+runs before movement in the probe so each browser replay uses a contiguous series
+of native action identities, without inventing intermediate receipts.

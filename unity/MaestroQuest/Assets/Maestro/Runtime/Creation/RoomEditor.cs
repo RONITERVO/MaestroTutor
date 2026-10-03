@@ -426,7 +426,7 @@ namespace Maestro.Quest.Creation
                 }
             }
             // Resolve links only after every member and its current pose/collider exists.
-            foreach(var data in document.objects){var item=Find(data.id);var hinge=item.GetComponent<RoomHingeView>();if(!hinge&&(data.hinges?.Length??0)>0)hinge=item.gameObject.AddComponent<RoomHingeView>();if(hinge)hinge.Apply(this,data.hinges);}
+            foreach(var data in document.objects){var item=Find(data.id);var hinge=item.GetComponent<RoomConnectionView>();if(!hinge&&(data.connections?.Length??0)>0)hinge=item.gameObject.AddComponent<RoomConnectionView>();if(hinge)hinge.Apply(this,data.connections);}
             applying = false; UpdateSelection();
         }
 

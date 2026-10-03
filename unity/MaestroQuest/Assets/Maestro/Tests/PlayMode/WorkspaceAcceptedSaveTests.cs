@@ -94,7 +94,7 @@ namespace Maestro.Quest.Tests
         {
             yield return ReadyForReview();DisableAcceptedSaveUpdates();var editor=host.Current.Editor;var rules=host.Current.Rules;
             var changed=AcceptedEdit("Failure keeps the live accepted document");string id=BeginReview();yield return FinishReview(id);
-            using var ruleSave=new DelayedAcceptedSave(rules);string blocked=Path.Combine(editor.SaveDirectory,"room.v6.json.pending");Directory.CreateDirectory(blocked);
+            using var ruleSave=new DelayedAcceptedSave(rules);string blocked=Path.Combine(editor.SaveDirectory,RoomStorage.FileName+".pending");Directory.CreateDirectory(blocked);
             try {
                 ApproveReview(id);yield return WaitAcceptedWorker(editor);Assert.That(AcceptedWorker(editor).Result,Is.Not.Null);
                 for(int i=0;i<3;i++)yield return null;Assert.That(editor.WriteGate.Frozen,Is.True);Assert.That(host.Review.WorkerPending,Is.True);Assert.That(ruleSave.Released,Is.False);

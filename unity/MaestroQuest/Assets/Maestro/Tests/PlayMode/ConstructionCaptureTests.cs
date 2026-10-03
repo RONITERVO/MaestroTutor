@@ -47,7 +47,7 @@ namespace Maestro.Quest.Tests
             Assert.That(editor.CaptureConstruction(members.Take(1).ToArray(),out _,out error),Is.False);Assert.That(error,Does.Contain("both ends"));
             Assert.That(editor.CaptureConstruction(members,out var captured,out error),Is.True,error);
             var module=ConstructionModule.Definition(captured,"My lever");ProgramModuleLibrary.Validate(module);Assert.That(module.ToString(),Does.Not.Contain(ids[0]));
-            Assert.That(editor.CreateBatch(captured,out var fresh,out error),Is.True,error);Assert.That(editor.Read(fresh[1]).hinges.Single().connected,Is.EqualTo(fresh[0]));
+            Assert.That(editor.CreateBatch(captured,out var fresh,out error),Is.True,error);Assert.That(editor.Read(fresh[1]).connections.Single().connected,Is.EqualTo(fresh[0]));
             editor.Undo();Assert.That(fresh.All(id=>!editor.Find(id)),Is.True);Assert.That(ids.All(id=>editor.Find(id)),Is.True);yield return null;
         }
         [UnityTest] public IEnumerator CapturedInkTipAndMotionRemainEditableIndependentComponents() {
