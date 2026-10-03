@@ -63,8 +63,9 @@ Quest 3 input, room alignment or frame-time acceptance.
 ## Next layers
 
 Saved assembly definitions should own stable member slots, initial placements,
-explicit missing-member policy and pinned construction sources. Batch instancing
-must account for every created object and commit once. Snap sockets, editable
+explicit missing-member policy and pinned construction sources. [Batch instancing](QUEST_BATCH_CREATION.md) now accounts for every created object
+and commits once, using literal template/inline-recipe blueprints in ordinary
+programs. Persistent membership is still separate. Snap sockets, editable
 breakable connections and bounded displacement/settling observations then build
 on those definitions. A collapse rule should expose the supporting member changes
 and recent contacts; proximity/contact alone must not claim a certain cause.

@@ -7649,6 +7649,1499 @@
       }
     },
     {
+      "id": "object.batch.create",
+      "version": 1,
+      "label": "Create a structure",
+      "input": {
+        "type": "object",
+        "properties": {
+          "blueprint": {
+            "type": "object",
+            "properties": {
+              "version": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 1.0
+              },
+              "pieces": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "slot": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,23}$",
+                      "maxLength": 24
+                    },
+                    "name": {
+                      "type": "string",
+                      "pattern": "^.{0,80}$",
+                      "maxLength": 80
+                    },
+                    "position": {
+                      "type": "object",
+                      "properties": {
+                        "x": {
+                          "type": "number",
+                          "minimum": -10.0,
+                          "maximum": 10.0
+                        },
+                        "y": {
+                          "type": "number",
+                          "minimum": -10.0,
+                          "maximum": 10.0
+                        },
+                        "z": {
+                          "type": "number",
+                          "minimum": -10.0,
+                          "maximum": 10.0
+                        }
+                      },
+                      "required": [
+                        "x",
+                        "y",
+                        "z"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "rotation": {
+                      "type": "object",
+                      "properties": {
+                        "x": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "y": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "z": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "w": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        }
+                      },
+                      "required": [
+                        "x",
+                        "y",
+                        "z",
+                        "w"
+                      ],
+                      "additionalProperties": false,
+                      "format": "unitQuaternion"
+                    },
+                    "scale": {
+                      "type": "number",
+                      "minimum": 0.1,
+                      "maximum": 4.0
+                    },
+                    "source": {
+                      "type": "object",
+                      "title": "Piece source",
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "template"
+                              ],
+                              "x-static": true
+                            },
+                            "templateHash": {
+                              "type": "string",
+                              "enum": [
+                                "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496",
+                                "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8",
+                                "8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4",
+                                "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950",
+                                "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18",
+                                "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99",
+                                "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316",
+                                "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71",
+                                "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45"
+                              ],
+                              "x-enum-labels": {
+                                "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "Ball",
+                                "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8": "Building brick",
+                                "8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4": "Cup",
+                                "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950": "Domino",
+                                "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18": "Fork",
+                                "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99": "Pawn",
+                                "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316": "Plate",
+                                "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71": "Box robot",
+                                "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "Spoon"
+                              },
+                              "x-enum-images": {
+                                "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "quest/templates/f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496.png",
+                                "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8": "quest/templates/a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8.png",
+                                "8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4": "quest/templates/8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4.png",
+                                "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950": "quest/templates/4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950.png",
+                                "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18": "quest/templates/3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18.png",
+                                "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99": "quest/templates/a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99.png",
+                                "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316": "quest/templates/e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316.png",
+                                "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71": "quest/templates/7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71.png",
+                                "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "quest/templates/f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45.png"
+                              }
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "templateHash"
+                          ],
+                          "additionalProperties": false,
+                          "title": "Starter template"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "recipe"
+                              ],
+                              "x-static": true
+                            },
+                            "recipe": {
+                              "type": "object",
+                              "properties": {
+                                "version": {
+                                  "type": "integer",
+                                  "minimum": 1.0,
+                                  "maximum": 1.0
+                                },
+                                "parts": {
+                                  "type": "array",
+                                  "items": {
+                                    "oneOf": [
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "id": {
+                                            "type": "string",
+                                            "pattern": "^[a-zA-Z0-9_]{1,32}$",
+                                            "maxLength": 32
+                                          },
+                                          "parent": {
+                                            "type": "string",
+                                            "pattern": "^[a-zA-Z0-9_]{0,32}$",
+                                            "maxLength": 32,
+                                            "nullable": true
+                                          },
+                                          "shape": {
+                                            "type": "string",
+                                            "enum": [
+                                              "box",
+                                              "sphere",
+                                              "cylinder"
+                                            ]
+                                          },
+                                          "position": {
+                                            "type": "object",
+                                            "properties": {
+                                              "x": {
+                                                "type": "number",
+                                                "minimum": -2.0,
+                                                "maximum": 2.0
+                                              },
+                                              "y": {
+                                                "type": "number",
+                                                "minimum": -2.0,
+                                                "maximum": 2.0
+                                              },
+                                              "z": {
+                                                "type": "number",
+                                                "minimum": -2.0,
+                                                "maximum": 2.0
+                                              }
+                                            },
+                                            "required": [
+                                              "x",
+                                              "y",
+                                              "z"
+                                            ],
+                                            "additionalProperties": false
+                                          },
+                                          "size": {
+                                            "type": "object",
+                                            "properties": {
+                                              "x": {
+                                                "type": "number",
+                                                "minimum": 0.005,
+                                                "maximum": 2.0
+                                              },
+                                              "y": {
+                                                "type": "number",
+                                                "minimum": 0.005,
+                                                "maximum": 2.0
+                                              },
+                                              "z": {
+                                                "type": "number",
+                                                "minimum": 0.005,
+                                                "maximum": 2.0
+                                              }
+                                            },
+                                            "required": [
+                                              "x",
+                                              "y",
+                                              "z"
+                                            ],
+                                            "additionalProperties": false
+                                          },
+                                          "rotation": {
+                                            "type": "object",
+                                            "properties": {
+                                              "x": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              },
+                                              "y": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              },
+                                              "z": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              },
+                                              "w": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              }
+                                            },
+                                            "required": [
+                                              "x",
+                                              "y",
+                                              "z",
+                                              "w"
+                                            ],
+                                            "additionalProperties": false,
+                                            "format": "unitQuaternion"
+                                          },
+                                          "color": {
+                                            "type": "object",
+                                            "properties": {
+                                              "r": {
+                                                "type": "number",
+                                                "minimum": 0.0,
+                                                "maximum": 1.0
+                                              },
+                                              "g": {
+                                                "type": "number",
+                                                "minimum": 0.0,
+                                                "maximum": 1.0
+                                              },
+                                              "b": {
+                                                "type": "number",
+                                                "minimum": 0.0,
+                                                "maximum": 1.0
+                                              },
+                                              "a": {
+                                                "type": "number",
+                                                "minimum": 1.0,
+                                                "maximum": 1.0
+                                              }
+                                            },
+                                            "required": [
+                                              "r",
+                                              "g",
+                                              "b",
+                                              "a"
+                                            ],
+                                            "additionalProperties": false
+                                          },
+                                          "profile": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "object",
+                                              "properties": {
+                                                "x": {
+                                                  "type": "number",
+                                                  "minimum": 0.0,
+                                                  "maximum": 0.5
+                                                },
+                                                "y": {
+                                                  "type": "number",
+                                                  "minimum": -0.5,
+                                                  "maximum": 0.5
+                                                }
+                                              },
+                                              "required": [
+                                                "x",
+                                                "y"
+                                              ],
+                                              "additionalProperties": false
+                                            },
+                                            "minItems": 0,
+                                            "maxItems": 0
+                                          },
+                                          "segments": {
+                                            "type": "integer",
+                                            "minimum": 0.0,
+                                            "maximum": 0.0
+                                          }
+                                        },
+                                        "required": [
+                                          "id",
+                                          "parent",
+                                          "shape",
+                                          "position",
+                                          "size",
+                                          "rotation",
+                                          "color"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "id": {
+                                            "type": "string",
+                                            "pattern": "^[a-zA-Z0-9_]{1,32}$",
+                                            "maxLength": 32
+                                          },
+                                          "parent": {
+                                            "type": "string",
+                                            "pattern": "^[a-zA-Z0-9_]{0,32}$",
+                                            "maxLength": 32,
+                                            "nullable": true
+                                          },
+                                          "shape": {
+                                            "type": "string",
+                                            "enum": [
+                                              "lathe"
+                                            ]
+                                          },
+                                          "position": {
+                                            "type": "object",
+                                            "properties": {
+                                              "x": {
+                                                "type": "number",
+                                                "minimum": -2.0,
+                                                "maximum": 2.0
+                                              },
+                                              "y": {
+                                                "type": "number",
+                                                "minimum": -2.0,
+                                                "maximum": 2.0
+                                              },
+                                              "z": {
+                                                "type": "number",
+                                                "minimum": -2.0,
+                                                "maximum": 2.0
+                                              }
+                                            },
+                                            "required": [
+                                              "x",
+                                              "y",
+                                              "z"
+                                            ],
+                                            "additionalProperties": false
+                                          },
+                                          "size": {
+                                            "type": "object",
+                                            "properties": {
+                                              "x": {
+                                                "type": "number",
+                                                "minimum": 0.005,
+                                                "maximum": 2.0
+                                              },
+                                              "y": {
+                                                "type": "number",
+                                                "minimum": 0.005,
+                                                "maximum": 2.0
+                                              },
+                                              "z": {
+                                                "type": "number",
+                                                "minimum": 0.005,
+                                                "maximum": 2.0
+                                              }
+                                            },
+                                            "required": [
+                                              "x",
+                                              "y",
+                                              "z"
+                                            ],
+                                            "additionalProperties": false
+                                          },
+                                          "rotation": {
+                                            "type": "object",
+                                            "properties": {
+                                              "x": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              },
+                                              "y": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              },
+                                              "z": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              },
+                                              "w": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              }
+                                            },
+                                            "required": [
+                                              "x",
+                                              "y",
+                                              "z",
+                                              "w"
+                                            ],
+                                            "additionalProperties": false,
+                                            "format": "unitQuaternion"
+                                          },
+                                          "color": {
+                                            "type": "object",
+                                            "properties": {
+                                              "r": {
+                                                "type": "number",
+                                                "minimum": 0.0,
+                                                "maximum": 1.0
+                                              },
+                                              "g": {
+                                                "type": "number",
+                                                "minimum": 0.0,
+                                                "maximum": 1.0
+                                              },
+                                              "b": {
+                                                "type": "number",
+                                                "minimum": 0.0,
+                                                "maximum": 1.0
+                                              },
+                                              "a": {
+                                                "type": "number",
+                                                "minimum": 1.0,
+                                                "maximum": 1.0
+                                              }
+                                            },
+                                            "required": [
+                                              "r",
+                                              "g",
+                                              "b",
+                                              "a"
+                                            ],
+                                            "additionalProperties": false
+                                          },
+                                          "profile": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "object",
+                                              "properties": {
+                                                "x": {
+                                                  "type": "number",
+                                                  "minimum": 0.0,
+                                                  "maximum": 0.5
+                                                },
+                                                "y": {
+                                                  "type": "number",
+                                                  "minimum": -0.5,
+                                                  "maximum": 0.5
+                                                }
+                                              },
+                                              "required": [
+                                                "x",
+                                                "y"
+                                              ],
+                                              "additionalProperties": false
+                                            },
+                                            "minItems": 3,
+                                            "maxItems": 16
+                                          },
+                                          "segments": {
+                                            "type": "integer",
+                                            "minimum": 8.0,
+                                            "maximum": 48.0
+                                          }
+                                        },
+                                        "required": [
+                                          "id",
+                                          "parent",
+                                          "shape",
+                                          "position",
+                                          "size",
+                                          "rotation",
+                                          "color",
+                                          "profile",
+                                          "segments"
+                                        ],
+                                        "additionalProperties": false,
+                                        "format": "lathePart",
+                                        "title": "Lathe",
+                                        "description": "Rotate a simple counter-clockwise closed profile around Y. x is radius 0–0.5; y is height -0.5–0.5, scaled by part dimensions. 3–16 distinct points, 8–48 angular segments. No self intersections or touching edges. Geometry only: the assembly still uses an approximate box collider.",
+                                        "x-features": [
+                                          "latheGeometry.v1"
+                                        ]
+                                      }
+                                    ],
+                                    "x-discriminators": [
+                                      "shape"
+                                    ]
+                                  },
+                                  "minItems": 1,
+                                  "maxItems": 32
+                                },
+                                "tracks": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "part": {
+                                        "type": "string",
+                                        "pattern": "^[a-zA-Z0-9_]{1,32}$",
+                                        "maxLength": 32
+                                      },
+                                      "keys": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "object",
+                                          "properties": {
+                                            "time": {
+                                              "type": "number",
+                                              "minimum": 0.0,
+                                              "maximum": 30.0
+                                            },
+                                            "rotation": {
+                                              "type": "object",
+                                              "properties": {
+                                                "x": {
+                                                  "type": "number",
+                                                  "minimum": -1.0,
+                                                  "maximum": 1.0
+                                                },
+                                                "y": {
+                                                  "type": "number",
+                                                  "minimum": -1.0,
+                                                  "maximum": 1.0
+                                                },
+                                                "z": {
+                                                  "type": "number",
+                                                  "minimum": -1.0,
+                                                  "maximum": 1.0
+                                                },
+                                                "w": {
+                                                  "type": "number",
+                                                  "minimum": -1.0,
+                                                  "maximum": 1.0
+                                                }
+                                              },
+                                              "required": [
+                                                "x",
+                                                "y",
+                                                "z",
+                                                "w"
+                                              ],
+                                              "additionalProperties": false,
+                                              "format": "unitQuaternion"
+                                            }
+                                          },
+                                          "required": [
+                                            "time",
+                                            "rotation"
+                                          ],
+                                          "additionalProperties": false
+                                        },
+                                        "minItems": 2,
+                                        "maxItems": 16
+                                      }
+                                    },
+                                    "required": [
+                                      "part",
+                                      "keys"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  "minItems": 0,
+                                  "maxItems": 17
+                                },
+                                "duration": {
+                                  "type": "number",
+                                  "minimum": 0.1,
+                                  "maximum": 30.0
+                                },
+                                "playing": {
+                                  "type": "boolean"
+                                },
+                                "loop": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": [
+                                "version",
+                                "parts",
+                                "tracks",
+                                "duration",
+                                "playing",
+                                "loop"
+                              ],
+                              "additionalProperties": false,
+                              "format": "roomRecipe"
+                            },
+                            "collision": {
+                              "type": "object",
+                              "properties": {
+                                "version": {
+                                  "type": "integer",
+                                  "minimum": 1.0,
+                                  "maximum": 1.0
+                                },
+                                "shapes": {
+                                  "type": "array",
+                                  "items": {
+                                    "oneOf": [
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "id": {
+                                            "type": "string",
+                                            "pattern": "^[a-zA-Z0-9_]{1,32}$",
+                                            "maxLength": 32
+                                          },
+                                          "shape": {
+                                            "type": "string",
+                                            "enum": [
+                                              "box"
+                                            ]
+                                          },
+                                          "position": {
+                                            "type": "object",
+                                            "properties": {
+                                              "x": {
+                                                "type": "number",
+                                                "minimum": -2.0,
+                                                "maximum": 2.0
+                                              },
+                                              "y": {
+                                                "type": "number",
+                                                "minimum": -2.0,
+                                                "maximum": 2.0
+                                              },
+                                              "z": {
+                                                "type": "number",
+                                                "minimum": -2.0,
+                                                "maximum": 2.0
+                                              }
+                                            },
+                                            "required": [
+                                              "x",
+                                              "y",
+                                              "z"
+                                            ],
+                                            "additionalProperties": false
+                                          },
+                                          "size": {
+                                            "type": "object",
+                                            "properties": {
+                                              "x": {
+                                                "type": "number",
+                                                "minimum": 0.005,
+                                                "maximum": 2.0
+                                              },
+                                              "y": {
+                                                "type": "number",
+                                                "minimum": 0.005,
+                                                "maximum": 2.0
+                                              },
+                                              "z": {
+                                                "type": "number",
+                                                "minimum": 0.005,
+                                                "maximum": 2.0
+                                              }
+                                            },
+                                            "required": [
+                                              "x",
+                                              "y",
+                                              "z"
+                                            ],
+                                            "additionalProperties": false
+                                          },
+                                          "rotation": {
+                                            "type": "object",
+                                            "properties": {
+                                              "x": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              },
+                                              "y": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              },
+                                              "z": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              },
+                                              "w": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              }
+                                            },
+                                            "required": [
+                                              "x",
+                                              "y",
+                                              "z",
+                                              "w"
+                                            ],
+                                            "additionalProperties": false,
+                                            "format": "unitQuaternion"
+                                          },
+                                          "segments": {
+                                            "type": "integer",
+                                            "minimum": 0.0,
+                                            "maximum": 0.0
+                                          },
+                                          "innerRadius": {
+                                            "type": "number",
+                                            "minimum": 0.0,
+                                            "maximum": 0.0
+                                          }
+                                        },
+                                        "required": [
+                                          "id",
+                                          "shape",
+                                          "position",
+                                          "size",
+                                          "rotation"
+                                        ],
+                                        "additionalProperties": false,
+                                        "title": "Box"
+                                      },
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "id": {
+                                            "type": "string",
+                                            "pattern": "^[a-zA-Z0-9_]{1,32}$",
+                                            "maxLength": 32
+                                          },
+                                          "shape": {
+                                            "type": "string",
+                                            "enum": [
+                                              "sphere"
+                                            ]
+                                          },
+                                          "position": {
+                                            "type": "object",
+                                            "properties": {
+                                              "x": {
+                                                "type": "number",
+                                                "minimum": -2.0,
+                                                "maximum": 2.0
+                                              },
+                                              "y": {
+                                                "type": "number",
+                                                "minimum": -2.0,
+                                                "maximum": 2.0
+                                              },
+                                              "z": {
+                                                "type": "number",
+                                                "minimum": -2.0,
+                                                "maximum": 2.0
+                                              }
+                                            },
+                                            "required": [
+                                              "x",
+                                              "y",
+                                              "z"
+                                            ],
+                                            "additionalProperties": false
+                                          },
+                                          "size": {
+                                            "type": "object",
+                                            "properties": {
+                                              "x": {
+                                                "type": "number",
+                                                "minimum": 0.005,
+                                                "maximum": 2.0
+                                              },
+                                              "y": {
+                                                "type": "number",
+                                                "minimum": 0.005,
+                                                "maximum": 2.0
+                                              },
+                                              "z": {
+                                                "type": "number",
+                                                "minimum": 0.005,
+                                                "maximum": 2.0
+                                              }
+                                            },
+                                            "required": [
+                                              "x",
+                                              "y",
+                                              "z"
+                                            ],
+                                            "additionalProperties": false
+                                          },
+                                          "rotation": {
+                                            "type": "object",
+                                            "properties": {
+                                              "x": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              },
+                                              "y": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              },
+                                              "z": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              },
+                                              "w": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              }
+                                            },
+                                            "required": [
+                                              "x",
+                                              "y",
+                                              "z",
+                                              "w"
+                                            ],
+                                            "additionalProperties": false,
+                                            "format": "unitQuaternion"
+                                          },
+                                          "segments": {
+                                            "type": "integer",
+                                            "minimum": 0.0,
+                                            "maximum": 0.0
+                                          },
+                                          "innerRadius": {
+                                            "type": "number",
+                                            "minimum": 0.0,
+                                            "maximum": 0.0
+                                          }
+                                        },
+                                        "required": [
+                                          "id",
+                                          "shape",
+                                          "position",
+                                          "size",
+                                          "rotation"
+                                        ],
+                                        "additionalProperties": false,
+                                        "title": "Sphere"
+                                      },
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "id": {
+                                            "type": "string",
+                                            "pattern": "^[a-zA-Z0-9_]{1,32}$",
+                                            "maxLength": 32
+                                          },
+                                          "shape": {
+                                            "type": "string",
+                                            "enum": [
+                                              "cylinder"
+                                            ]
+                                          },
+                                          "position": {
+                                            "type": "object",
+                                            "properties": {
+                                              "x": {
+                                                "type": "number",
+                                                "minimum": -2.0,
+                                                "maximum": 2.0
+                                              },
+                                              "y": {
+                                                "type": "number",
+                                                "minimum": -2.0,
+                                                "maximum": 2.0
+                                              },
+                                              "z": {
+                                                "type": "number",
+                                                "minimum": -2.0,
+                                                "maximum": 2.0
+                                              }
+                                            },
+                                            "required": [
+                                              "x",
+                                              "y",
+                                              "z"
+                                            ],
+                                            "additionalProperties": false
+                                          },
+                                          "size": {
+                                            "type": "object",
+                                            "properties": {
+                                              "x": {
+                                                "type": "number",
+                                                "minimum": 0.005,
+                                                "maximum": 2.0
+                                              },
+                                              "y": {
+                                                "type": "number",
+                                                "minimum": 0.005,
+                                                "maximum": 2.0
+                                              },
+                                              "z": {
+                                                "type": "number",
+                                                "minimum": 0.005,
+                                                "maximum": 2.0
+                                              }
+                                            },
+                                            "required": [
+                                              "x",
+                                              "y",
+                                              "z"
+                                            ],
+                                            "additionalProperties": false
+                                          },
+                                          "rotation": {
+                                            "type": "object",
+                                            "properties": {
+                                              "x": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              },
+                                              "y": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              },
+                                              "z": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              },
+                                              "w": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              }
+                                            },
+                                            "required": [
+                                              "x",
+                                              "y",
+                                              "z",
+                                              "w"
+                                            ],
+                                            "additionalProperties": false,
+                                            "format": "unitQuaternion"
+                                          },
+                                          "segments": {
+                                            "type": "integer",
+                                            "minimum": 8.0,
+                                            "maximum": 24.0
+                                          },
+                                          "innerRadius": {
+                                            "type": "number",
+                                            "minimum": 0.0,
+                                            "maximum": 0.0
+                                          }
+                                        },
+                                        "required": [
+                                          "id",
+                                          "shape",
+                                          "position",
+                                          "size",
+                                          "rotation",
+                                          "segments"
+                                        ],
+                                        "additionalProperties": false,
+                                        "title": "Cylinder"
+                                      },
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "id": {
+                                            "type": "string",
+                                            "pattern": "^[a-zA-Z0-9_]{1,32}$",
+                                            "maxLength": 32
+                                          },
+                                          "shape": {
+                                            "type": "string",
+                                            "enum": [
+                                              "ring"
+                                            ]
+                                          },
+                                          "position": {
+                                            "type": "object",
+                                            "properties": {
+                                              "x": {
+                                                "type": "number",
+                                                "minimum": -2.0,
+                                                "maximum": 2.0
+                                              },
+                                              "y": {
+                                                "type": "number",
+                                                "minimum": -2.0,
+                                                "maximum": 2.0
+                                              },
+                                              "z": {
+                                                "type": "number",
+                                                "minimum": -2.0,
+                                                "maximum": 2.0
+                                              }
+                                            },
+                                            "required": [
+                                              "x",
+                                              "y",
+                                              "z"
+                                            ],
+                                            "additionalProperties": false
+                                          },
+                                          "size": {
+                                            "type": "object",
+                                            "properties": {
+                                              "x": {
+                                                "type": "number",
+                                                "minimum": 0.005,
+                                                "maximum": 2.0
+                                              },
+                                              "y": {
+                                                "type": "number",
+                                                "minimum": 0.005,
+                                                "maximum": 2.0
+                                              },
+                                              "z": {
+                                                "type": "number",
+                                                "minimum": 0.005,
+                                                "maximum": 2.0
+                                              }
+                                            },
+                                            "required": [
+                                              "x",
+                                              "y",
+                                              "z"
+                                            ],
+                                            "additionalProperties": false
+                                          },
+                                          "rotation": {
+                                            "type": "object",
+                                            "properties": {
+                                              "x": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              },
+                                              "y": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              },
+                                              "z": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              },
+                                              "w": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              }
+                                            },
+                                            "required": [
+                                              "x",
+                                              "y",
+                                              "z",
+                                              "w"
+                                            ],
+                                            "additionalProperties": false,
+                                            "format": "unitQuaternion"
+                                          },
+                                          "segments": {
+                                            "type": "integer",
+                                            "minimum": 8.0,
+                                            "maximum": 24.0
+                                          },
+                                          "innerRadius": {
+                                            "type": "number",
+                                            "minimum": 0.05,
+                                            "maximum": 0.45
+                                          }
+                                        },
+                                        "required": [
+                                          "id",
+                                          "shape",
+                                          "position",
+                                          "size",
+                                          "rotation",
+                                          "segments",
+                                          "innerRadius"
+                                        ],
+                                        "additionalProperties": false,
+                                        "title": "Ring"
+                                      }
+                                    ],
+                                    "x-discriminators": [
+                                      "shape"
+                                    ]
+                                  },
+                                  "minItems": 0,
+                                  "maxItems": 16
+                                }
+                              },
+                              "required": [
+                                "version",
+                                "shapes"
+                              ],
+                              "additionalProperties": false,
+                              "format": "collisionRecipe",
+                              "x-features": [
+                                "collisionShapes.v1",
+                                "creationComponents.v1"
+                              ],
+                              "description": "Root-local proxies, independent of visuals. Sphere dimensions must match. Cylinder/ring axes are Y. Ring innerRadius is normalized to outer radius 0.5; wall thickness must be at least .005 local metres. Positions within 2m and total proxy extent within 3m. 64 pieces per recipe; a ring costs segments pieces, other shapes cost one."
+                            },
+                            "physics": {
+                              "type": "object",
+                              "properties": {
+                                "mode": {
+                                  "type": "string",
+                                  "enum": [
+                                    "fixed",
+                                    "solid",
+                                    "bouncy"
+                                  ]
+                                },
+                                "shape": {
+                                  "type": "string",
+                                  "enum": [
+                                    "automatic",
+                                    "box",
+                                    "sphere"
+                                  ]
+                                },
+                                "mass": {
+                                  "type": "number",
+                                  "minimum": 0.05,
+                                  "maximum": 20.0
+                                }
+                              },
+                              "required": [
+                                "mode",
+                                "shape",
+                                "mass"
+                              ],
+                              "additionalProperties": false,
+                              "x-features": [
+                                "creationComponents.v1"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "recipe"
+                          ],
+                          "additionalProperties": false,
+                          "title": "Editable recipe"
+                        }
+                      ],
+                      "x-discriminators": [
+                        "kind"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "slot",
+                    "name",
+                    "position",
+                    "rotation",
+                    "scale",
+                    "source"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 1,
+                "maxItems": 16
+              }
+            },
+            "required": [
+              "version",
+              "pieces"
+            ],
+            "additionalProperties": false
+          },
+          "position": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "y": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "z": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "additionalProperties": false
+          },
+          "rotation": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": -1.0,
+                "maximum": 1.0
+              },
+              "y": {
+                "type": "number",
+                "minimum": -1.0,
+                "maximum": 1.0
+              },
+              "z": {
+                "type": "number",
+                "minimum": -1.0,
+                "maximum": 1.0
+              },
+              "w": {
+                "type": "number",
+                "minimum": -1.0,
+                "maximum": 1.0
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z",
+              "w"
+            ],
+            "additionalProperties": false,
+            "format": "unitQuaternion"
+          },
+          "scale": {
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 4.0
+          }
+        },
+        "required": [
+          "blueprint",
+          "position",
+          "rotation",
+          "scale"
+        ],
+        "additionalProperties": false,
+        "format": "creationBatch",
+        "x-features": [
+          "batchCreation.v1",
+          "actionResults.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [
+        "room.capacity",
+        "storage.writable",
+        "blueprint.valid"
+      ],
+      "description": "Instantiate an editable version-1 blueprint of 1–16 independently grabbable physical pieces. Each named slot contains an exact bundled template hash or inline recipe/collision/physics source and a local pose/scale. The outer pose/scale transforms the entire arrangement in room axes. All final positions must be within 25 metres and all final scales 0.1–4; recipe, vertex, collision and room-object budgets apply to the whole candidate. Reserves every creation before a program starts the call, then saves once with one Undo; failure creates no partial structure. Returns objectIds and slots in matching blueprint order. Objects retain independent editable source and no longer depend on the blueprint. Save this definition in ordinary reusable programs/modules; this does not install a separate blueprint library or persistent group, create snap joints, replace missing pieces, avoid overlaps, or start physics/animations. Pieces must start idle. Temporary creation stays in the fork; Stop leaves accepted pieces and duplicate receipts do not create again. Use explicit returned IDs for later actions/reset; never identify pieces by display names.",
+      "example": {
+        "blueprint": {
+          "version": 1,
+          "pieces": [
+            {
+              "slot": "brick_1",
+              "name": "Castle brick 1",
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0
+              },
+              "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "scale": 1,
+              "source": {
+                "kind": "template",
+                "templateHash": "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8"
+              }
+            },
+            {
+              "slot": "brick_2",
+              "name": "Castle brick 2",
+              "position": {
+                "x": 0.25,
+                "y": 0.0,
+                "z": 0
+              },
+              "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "scale": 1,
+              "source": {
+                "kind": "template",
+                "templateHash": "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8"
+              }
+            },
+            {
+              "slot": "brick_3",
+              "name": "Castle brick 3",
+              "position": {
+                "x": 0.0,
+                "y": 0.08,
+                "z": 0
+              },
+              "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "scale": 1,
+              "source": {
+                "kind": "template",
+                "templateHash": "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8"
+              }
+            },
+            {
+              "slot": "brick_4",
+              "name": "Castle brick 4",
+              "position": {
+                "x": 0.25,
+                "y": 0.08,
+                "z": 0
+              },
+              "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "scale": 1,
+              "source": {
+                "kind": "template",
+                "templateHash": "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8"
+              }
+            },
+            {
+              "slot": "brick_5",
+              "name": "Castle brick 5",
+              "position": {
+                "x": 0.0,
+                "y": 0.16,
+                "z": 0
+              },
+              "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "scale": 1,
+              "source": {
+                "kind": "template",
+                "templateHash": "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8"
+              }
+            },
+            {
+              "slot": "brick_6",
+              "name": "Castle brick 6",
+              "position": {
+                "x": 0.25,
+                "y": 0.16,
+                "z": 0
+              },
+              "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "scale": 1,
+              "source": {
+                "kind": "template",
+                "templateHash": "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8"
+              }
+            }
+          ]
+        },
+        "position": {
+          "x": 0.3,
+          "y": 1,
+          "z": 0.7
+        },
+        "rotation": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "scale": 1
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "objectIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$",
+              "maxLength": 32,
+              "x-resource": "object"
+            },
+            "minItems": 1,
+            "maxItems": 16
+          },
+          "slots": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,23}$",
+              "maxLength": 24
+            },
+            "minItems": 1,
+            "maxItems": 16
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "objectIds",
+          "slots",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "object.drawing.edit",
       "version": 1,
       "label": "Edit a pencil stroke",
@@ -15200,15 +16693,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "10b6826f266a5a03831d4a3703e9c5c345e7e389227dd0b985a288c861695f3d"
+      "sha256": "34f57b3cc21edad3e8fc6f1722cc2951fa976586e5b755ae7557e3608189f71c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
-      "sha256": "b9774612b7f5010a98840c9e4bb89788873577d36303e9cf909902c710081ea5"
+      "sha256": "2818d6d739fe008b9993391816823dc387b28883b2f52eabec9aa79d5199a26a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramMachine.cs",
-      "sha256": "2f9b347670b9a3ce5951a0629238eec42777fc64db15d1395563c0a53bef1a32"
+      "sha256": "b8f5f5c0d0917167485bea696fa31c5e34de595a67f825e20d33cd982b5d82dc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramMemoryDocument.cs",
@@ -15232,7 +16725,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "5a4e499a031ba33296f9962ac9fe83ade640295233eee534779567fab4e16d4a"
+      "sha256": "39294157f4a5dcb5163e14c886637ea841c225848de55e85301b636ee5a460c1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -15456,7 +16949,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "6de4197cc72465bd049a96bccf82da4b3b4dfa0ce23533a72325f498408cb4d8"
+      "sha256": "1ec5f9c5e85a638ac57561a68be86c8dbe3d204a3ba9433da09f2ea5d8aac754"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomToolTray.cs",
@@ -15627,6 +17120,10 @@
       "sha256": "f95b1f0e772a782aeb44d885dda0ae6b6a835f3a80ab53c039cb2a379e0c0369"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationBatch.cs",
+      "sha256": "ee65a5f161529a0cb9764892cdcec1c2799a5ae9337887299665537b8a5a28ac"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/LegacyCapabilityAdapters.cs",
       "sha256": "f5e46d1a74dbc76d0bf10636ad0a0574b95a98c09f50b1daae1ec055c92601ce"
     },
@@ -15655,16 +17152,20 @@
       "sha256": "876e746cb903d0ae11b6a6dca42cc5d05157d5a40722c9ace3478a3eac4aec7a"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/BatchCreationCapability.cs",
+      "sha256": "5026c6fab9ffa5939216fdd149f2f1d553446644a2dfd62dacdb7220af93bcad"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModule.cs",
       "sha256": "859ee7a87cd31a55e71fa435243d62bd94be8aa144104c9670a5dec0090eb975"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "7aad2d98b2d4a6a3d42c4e001df99c1a463906f5fbdb15ca70456ee241fea538"
+      "sha256": "cdbd8100ee3e01d8f61bd902cabec209c6e2c5adaca6807915e4a4f088e344be"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
-      "sha256": "c48b663f2fb4d532d0ff971fae2cfccc74a3d0633bd8806d0f43becc921bf587"
+      "sha256": "bbf3b07846fd2cdaabe343c16b6e928206170f78b5d6cd63a47ae7129bb40c33"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityStepAdapter.cs",
@@ -15808,7 +17309,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SpatialSettingsCapabilities.cs",
-      "sha256": "1c95c8472e61047dd72ebd2f41ba6849cfdb7e6f167555a1e37fa515a6d5e692"
+      "sha256": "82ce0766868b99ec580c4a13dbc6410bd9bf599bb275c03e74a4018355ac6a23"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SurfacePlacementCapability.cs",

@@ -119,7 +119,7 @@ function validateProgram(root:Record<string,unknown>):void {
       need(literalCapabilityResources(capability,args,obj(n.bindings),root.version as number).every(id=>resources.has(id)),'Declare every action resource');
       if(n.results!==undefined) {
        need(root.version===3,'Action results need program version 3');const assigned=new Set<string>();
-       for(const [key,destination] of Object.entries(obj(n.results))){const t=capabilityOutputType(capability,key);need(t&&typeof destination==='string'&&f.types.get(destination)===t&&!assigned.has(destination),'Invalid or duplicate action result destination');assigned.add(destination as string);}
+       for(const [key,destination] of Object.entries(obj(n.results))){const t=capabilityOutputType(capability,key);need(t&&typeof destination==='string'&&f.types.has(destination)&&sameDataType(f.types.get(destination)!,t)&&!assigned.has(destination),'Invalid or duplicate action result destination');assigned.add(destination as string);}
       }
       for(const [key,value] of Object.entries(obj(n.bindings))){const t=capabilityParameterType(capability,key,obj(n.arguments));need(t,'Unsupported capability argument binding');need(argumentValue(n.arguments,key)!==undefined,'A bound argument needs a literal placeholder');need(expr(value,f.types)===t,'Capability argument type differs');}break;
      }

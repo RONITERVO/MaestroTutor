@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import {behaviourFact} from './behaviourCatalog';
 import {behaviourEvent} from './behaviourEvents';
-import {capabilityDefinition,capabilityFeatures,capabilityInput,resolveCapabilitySchema,type CapabilitySchema} from './capabilities';
+import {capabilityDefinition,capabilityOutputType,capabilityFeatures,capabilityInput,resolveCapabilitySchema,type CapabilitySchema} from './capabilities';
 import type {BehaviourProgram} from './programSyntax';
 import {visitProgramNodes,visitNodeExpressions} from './programTraversal';
 const record=(v:unknown):v is Record<string,unknown>=>v!==null&&typeof v==='object'&&!Array.isArray(v);
@@ -44,6 +44,7 @@ export function programFeatureRequirements(program:BehaviourProgram):Set<string>
      if(['object.position.set','object.scale.set','object.color.set','object.delete'].includes(node.capability))features.add('objectEdits.v1');
      add(invocationFeatureRequirements(node.capability,node.arguments,Object.keys(node.bindings)));
      if(node.waitForChannels!==undefined)features.add('channelWaits.v1');
+     if(Object.keys(node.results??{}).some(key=>{const type=capabilityOutputType(node.capability,key);return type&&typeof type==='object';}))features.add('structuredResults.v1');
      if(node.results!==undefined||Object.keys(capabilityDefinition(node.capability)?.output?.properties??{}).length>0)features.add('actionResults.v1');
      break;
    }

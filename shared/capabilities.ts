@@ -1,5 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {validCreationBatchGeometry} from './creationBatch';
+import {readDataType,type DataType} from './programValues';
 import {validCollisionRecipe} from './collisionRecipe';
 import {moduleHash,validModuleRecord} from './programModuleIdentity';
 import {parseRecipe,validLathePart} from './roomRecipe';
@@ -13,7 +15,7 @@ export interface CapabilitySchema {
  oneOf?:CapabilitySchema[];'x-confirmation'?:string;'x-discriminators'?:string[];title?:string;description?:string;examples?:unknown[];'x-static'?:boolean;'x-channels'?:string[];'x-requirements'?:string[];'x-features'?:string[];
  items?:CapabilitySchema;minItems?:number;maxItems?:number;nullable?:boolean;
  properties?:Record<string,CapabilitySchema>;required?:string[];additionalProperties?:false;
- format?:'unitQuaternion'|'boundedOffset'|'roomRecipe'|'lathePart'|'collisionRecipe'|'programModule'|'programMemoryValue'|'objectLayout';'x-resource'?:'object';'x-requires'?:Record<string,string>;
+ format?:'unitQuaternion'|'boundedOffset'|'roomRecipe'|'lathePart'|'collisionRecipe'|'programModule'|'programMemoryValue'|'objectLayout'|'creationBatch';'x-resource'?:'object';'x-requires'?:Record<string,string>;
  minimum?:number;maximum?:number;maxLength?:number;pattern?:string;enum?:string[];'x-enum-labels'?:Record<string,string>;'x-enum-images'?:Record<string,string>;
 }
 export interface CapabilityDefinition {
@@ -60,6 +62,7 @@ function validate(value:unknown,schema:CapabilitySchema,path:string):string|null
     const error=validate(entry,properties[key],path+'.'+key);if(error)return error;
     if(Object.entries(properties[key]['x-requires']??{}).some(([field,expected])=>value[field]!==expected))return path+'.'+key+' has incompatible arguments';
    }
+   if(schema.format==='creationBatch')return validCreationBatchGeometry(value)?null:path+' needs distinct idle pieces with valid transformed placements';
    if(schema.format==='objectLayout'){
     const placements=value.placements as {target:string;position:{x:number;y:number;z:number}}[];
     return new Set(placements.map(p=>p.target)).size===placements.length&&placements.every(p=>p.position.x**2+p.position.y**2+p.position.z**2<=625)?null:path+' needs distinct objects within 25 metres';
@@ -99,10 +102,17 @@ export function validateCapabilityOutput(id:string,version:number,output:unknown
  if(!definition||definition.version!==version||!definition.output)return 'Unknown action output contract';
  return validate(output,definition.output,'result');
 }
-export function capabilityOutputType(id:string,key:string):BehaviourValueType|null {
+export function capabilityOutputType(id:string,key:string):DataType|null {
  const schema=definitions.get(id)?.output?.properties;
  if(!schema||!own(schema,key))return null;
- const type=schema[key].type;return type==='string'?'text':type==='integer'?'number':type==='number'||type==='boolean'?type:null;
+ const shape=(field:CapabilitySchema|undefined,depth:number):DataType=>{
+  if(!field||depth>4||field.oneOf||field.nullable)throw new Error('No fixed output type');
+  if(field.type==='string')return 'text';if(field.type==='number'||field.type==='integer')return 'number';if(field.type==='boolean')return 'boolean';
+  if(field.type==='array')return {list:shape(field.items,depth+1)};
+  if(!field.properties||field.required?.length!==Object.keys(field.properties).length)throw new Error('Optional record fields are not program values');
+  return {record:Object.fromEntries(Object.entries(field.properties).map(([k,v])=>[k,shape(v,depth+1)]))};
+ };
+ try{return readDataType(shape(schema[key],0));}catch{return null;}
 }
 export function literalCapabilityResources(id:string,args:Record<string,unknown>,bindings:Record<string,unknown>,version:number):string[] {
  const literal=clone(args),schema=capabilityInput(id,args);

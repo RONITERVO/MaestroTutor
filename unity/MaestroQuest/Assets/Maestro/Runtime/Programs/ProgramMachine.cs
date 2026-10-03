@@ -184,10 +184,15 @@ namespace Maestro.Quest.Programs
             error=null;output??=new JObject();
             if(resultContract==null) {if(output.Count!=0) {error="Unexpected native action result";return false;}return true;}
             if(!CapabilityArguments.Validate(output,resultContract.OutputSchema,out error,"result"))return false;
+            // Validate all bound values before registering IDs or changing locals.
+            var values=new Dictionary<string,ProgramValue>();
+            try {if(resultBindings!=null)foreach(var binding in resultBindings.Properties()) {
+                string name=(string)binding.Value;values[name]=ProgramValue.Literal(output[binding.Name],resultScope.Values[name].Type);
+            }}catch(ProgramFault failure){error=failure.Message;return false;}
             // Only validated results from the native handler authorize newly created IDs.
             foreach(var id in CapabilityArguments.Resources(output,resultContract.OutputSchema))if(!string.IsNullOrEmpty(id)&&!program.Allows(id)){createdResources.Add(id);creationBudget.Created.Add(id);}
             creationBudget.Reserved-=reservedCreations;reservedCreations=0;
-            if(resultBindings!=null)foreach(var binding in resultBindings.Properties())resultScope.Values[(string)binding.Value]=ProgramValue.Literal(output[binding.Name]);
+            foreach(var value in values)resultScope.Values[value.Key]=value.Value;
             LastOutput=(JObject)output.DeepClone();resultContract=null;resultScope=null;resultBindings=null;return true;
         }
         public void Resume(bool received,ProgramValue value=default,JObject fields=null)

@@ -9,6 +9,8 @@ namespace Maestro.Quest.Programs
     internal abstract class SpatialSettingsCapability:CapabilityModule
     {
         public override string Duration=>"instant";
+        // Returning an already-owned target is not a creation (including after a full batch).
+        internal override int MaximumCreatedObjects(JObject arguments)=>0;
         public override IReadOnlyList<string> Channels=>new[]{"wholeTarget"};
         public override IReadOnlyList<string> Requirements=>new[]{"target.exists","target.unheld","authoring.inactive","object.revision.current","storage.writable"};
         protected abstract bool Ready(RoomEditor editor,JObject args,out string error);

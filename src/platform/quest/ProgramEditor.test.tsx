@@ -371,3 +371,11 @@ it('edits a weekly calendar wait and switches to an exact one-off without stale 
  h.click('Edit values weekly');h.change('Schedule','0');h.change('Date and time with UTC offset','2026-10-02T18:00:00Z');h.click('Update draft');
  node=JSON.parse(h.source()).functions[0].body[0].body[0];expect(node.arguments.kind).toBe('once');expect(node.bindings.hour).toBeUndefined();expect(parseProgram(h.source()).error).toBeNull();
 });
+
+it('creates typed list variables for a structure result in the same visual program editor',()=>{
+ const initial=JSON.parse(readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-batch-create.json','utf8')) as BehaviourProgram;
+ initial.functions[0].body=initial.functions[0].body.slice(0,1);const call=initial.functions[0].body[0];if(call.op!=='invoke')throw new Error('Expected batch call');delete call.results;initial.functions[0].locals=[];delete initial.dataVersion;
+ const h=harness(initial);fireEvent.click(h.screen.getByLabelText('create new variable for objectIds'));
+ const parsed=parseProgram(h.source());expect(parsed.error).toBeNull();expect(parsed.program?.dataVersion).toBe(1);expect(parsed.program?.functions[0].locals).toContainEqual({name:'objectIds',type:{list:'text'},initial:[]});expect(parsed.program?.functions[0].body[0]).toMatchObject({results:{objectIds:'objectIds'}});
+ expect((h.screen.getByLabelText('create result objectIds') as HTMLSelectElement).value).toBe('objectIds');
+});

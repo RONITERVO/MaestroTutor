@@ -269,8 +269,8 @@ namespace Maestro.Quest.Programs
                             foreach(var output in Object(node["results"]).Properties()) {
                                 Need(outputs[output.Name] is JObject,"Unknown action result");
                                 string destination=Text(output.Value);
-                                var outputType=(string)outputs[output.Name]["type"] switch {"string"=>ProgramType.Text,"number" or "integer"=>ProgramType.Number,"boolean"=>ProgramType.Boolean,_=>ProgramType.Void};
-                                Need(outputType!=ProgramType.Void&&function.Types.TryGetValue(destination,out var localType)&&localType==outputType&&assigned.Add(destination),"Invalid or duplicate action result destination");
+                                var outputType=CapabilitySchema.OutputType(outputs[output.Name] as JObject);
+                                Need(outputType!=null&&function.Types.TryGetValue(destination,out var localType)&&localType==outputType&&assigned.Add(destination),"Invalid or duplicate action result destination");
                             }
                         }
                         foreach(var binding in Object(node["bindings"]).Properties()) {

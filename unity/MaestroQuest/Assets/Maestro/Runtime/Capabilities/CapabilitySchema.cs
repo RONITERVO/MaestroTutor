@@ -67,6 +67,21 @@ namespace Maestro.Quest.Programs
             schema["x-current"]=new JObject {["fact"]=fact,["version"]=1,["arguments"]=arguments??new JObject(),["fields"]=mappings,["guards"]=new JArray(guard)};
             return schema;
         }
+        public static ProgramDataType OutputType(JObject schema) {
+            JToken Shape(JObject field,int depth) {
+                if(field==null||depth>4||field["oneOf"]!=null||(bool?)field["nullable"]==true)throw new ProgramFault("Output has no fixed program type");
+                switch((string)field["type"]) {
+                    case "string":return new JValue("text");case "number":case "integer":return new JValue("number");case "boolean":return new JValue("boolean");
+                    case "array":return new JObject { ["list"]=Shape(field["items"] as JObject,depth+1)};
+                    case "object":
+                        var fields=field["properties"] as JObject;var required=field["required"] as JArray;
+                        if(fields==null||required==null||required.Count!=fields.Count)throw new ProgramFault("Optional record fields are not program values");
+                        return new JObject { ["record"]=new JObject(fields.Properties().Select(p=>new JProperty(p.Name,Shape(p.Value as JObject,depth+1))))};
+                    default:throw new ProgramFault("Output has no program type");
+                }
+            }
+            try{return ProgramDataType.Read(Shape(schema,0));}catch(ProgramFault){return null;}
+        }
         public static JObject Resource(JObject schema) {schema["x-resource"]="object";return schema;}
         public static JObject Prop()=>Object(new JObject {
             ["objectId"]=Resource(Text("^[a-fA-F0-9]{32}$",32)),["avatarHash"]=Text("^(|[a-f0-9]{64})$",64),

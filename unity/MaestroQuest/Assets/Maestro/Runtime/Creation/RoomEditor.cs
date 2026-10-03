@@ -171,9 +171,7 @@ namespace Maestro.Quest.Creation
         public bool CreateRecipe(string name,Vector3 position,float scale,RoomRecipe recipe,out string id,out string error)=>CreateRecipe(name,position,scale,recipe,null,null,out id,out error);
         public bool CreateRecipe(string name,Vector3 position,float scale,RoomRecipe recipe,CollisionRecipe collision,ObjectPhysicsSettings physics,out string id,out string error) {
             id=null;if(!CanCreateRecipe(recipe,collision,physics,out error))return false;
-            var item=new RoomObjectData {id=Guid.NewGuid().ToString("N"),name=name,kind=RoomObjectKind.Assembly,position=position,scale=scale,
-                color=Color.white,physics=ItemPhysics.Fixed,recipe=recipe.Copy(),collision=collision?.shapes.Length>0?collision.Copy():null};
-            if(physics!=null&&!RoomControls.SetPhysics(item,physics,out error))return false;
+            if(!PrepareRecipeObject(name,position,scale,recipe,collision,physics,out var item,out error))return false;
             return CommitCreatedObject(item,out id,out error);
         }
         bool CommitCreatedObject(RoomObjectData item,out string id,out string error) {

@@ -31,7 +31,7 @@ require putting chat, assets, physics and all history in one enormous JSON file.
 
 ## What already exists
 
-The current catalog contains 63 actions, 12 events and 61 facts. It already has
+The current catalog contains 64 actions, 12 events and 61 facts. It already has
 native capability modules, generated forms, shared human/agent execution,
 revision checks, durable one-off receipts, contact/proximity/settling observations,
 structured program values, parallel branches, pinned reusable program modules,
@@ -113,7 +113,10 @@ The first nine recipe templates now cover tableware, a domino, loose stacking
 bricks, a pawn, a ball and a simple animated robot. They share atomic geometry,
 collision and physics creation; see [starter objects](QUEST_CREATION_TEMPLATES.md).
 A shared [layout operation](QUEST_LAYOUT_AUTHORING.md) now arranges/resets up to
-16 existing pieces atomically with live-pose Undo. Assemblies/blueprints, snapping,
+16 existing pieces atomically with live-pose Undo. [Atomic structure creation](QUEST_BATCH_CREATION.md)
+now instantiates template/inline-recipe blueprints through ordinary programs and
+returns typed lists of piece IDs. Persistent assembly membership, a dedicated
+blueprint library, snapping,
 paintable surfaces, physical joints and liquids/snow remain unfinished.
 
 The complete shipped play kit should demonstrate each accepted reusable component,

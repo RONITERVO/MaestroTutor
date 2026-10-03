@@ -76,7 +76,13 @@ describe('prompt ownership', () => {
     const source = readFileSync(new URL('../../../shared/capabilities.ts', import.meta.url), 'utf8');
     const ast = ts.createSourceFile('capabilities.ts', source, ts.ScriptTarget.Latest, true);
     const imports = ast.statements.filter(ts.isImportDeclaration).map(node => (node.moduleSpecifier as ts.StringLiteral).text);
-    expect(imports).toEqual(['./collisionRecipe','./programModuleIdentity','./roomRecipe','./behaviourCatalog']);
+    expect(imports).toEqual(['./creationBatch','./programValues','./collisionRecipe','./programModuleIdentity','./roomRecipe','./behaviourCatalog']);
+    for (const name of ['creationBatch', 'programValues']) {
+      const dependency = readFileSync(new URL('../../../shared/' + name + '.ts', import.meta.url), 'utf8');
+      const dependencyAst = ts.createSourceFile(name + '.ts', dependency, ts.ScriptTarget.Latest, true);
+      expect(dependencyAst.statements.filter(ts.isImportDeclaration)).toEqual([]);
+      expect(catalogueRuntimeViolations(dependency, name + '.ts')).toEqual([]);
+    }
     const identity = readFileSync(new URL('../../../shared/programModuleIdentity.ts', import.meta.url), 'utf8');
     expect(catalogueRuntimeViolations(identity, 'programModuleIdentity.ts')).toEqual([]);
     const recipe = readFileSync(new URL('../../../shared/roomRecipe.ts', import.meta.url), 'utf8');
