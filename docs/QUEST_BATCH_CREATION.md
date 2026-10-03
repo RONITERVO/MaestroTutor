@@ -1,13 +1,15 @@
 # Atomic structure creation and typed results
 
-`object.batch.create` (`batchCreation.v1`) creates 1–16 independent pieces from an
-editable version-1 blueprint. The optional book form, source/blocks and room agent
-use the same contract. This is multi-object instancing; it does not yet create a
-persistent assembly entity, a separate blueprint library, snap sockets or joints.
+`object.batch.create` (`batchCreation.v1`) creates 1–16 pieces from an editable
+blueprint. Version 1 keeps pieces independent; version 2 adds physical hinges with
+`connectedBlueprints.v1` and `physicalHinges.v1`. The optional book form, source/blocks
+and room agent use the same contract. This does not create a persistent assembly
+entity, a separate blueprint library or snap sockets.
 
 ## Definition and placement
 
-A blueprint contains ordered pieces with unique readable `slot` keys, a display
+A blueprint contains ordered pieces with unique `slot` keys matching
+`[a-zA-Z][a-zA-Z0-9_]{0,23}`, a display
 name, local position/rotation/scale, and a source. Sources are either an exact
 bundled template hash or an inline recipe with optional collision and physics.
 Both expand through the same recipe/component preparation used by single-object
@@ -28,6 +30,28 @@ A failed candidate/save adds no partial objects. Accepted saved creation writes
 once and adds one Undo; temporary creation stays in the existing fork. Undo removes
 the whole batch and Redo restores the same IDs. Completed receipt replay cannot
 recreate an undone batch. Stop leaves already accepted creations in place.
+
+## Connected blueprints
+
+Version 2 requires 1–15 `hinges`. Each entry names an `owner` slot, a distinct
+`connected` slot and an ordinary hinge `definition` (enabled, local frames, limits
+and drive). No room IDs or component versions belong in that definition. Each
+instance binds fresh member IDs internally; a blueprint cannot connect itself to
+an unrelated existing object. Each owner has at most one connection; cycles,
+missing slots and duplicate owners fail before saving. Version 1 rejects links.
+
+The complete transformed placement must have coincident anchors within 3 cm,
+axes within 5 degrees and an angle inside enabled limits with 3 degrees tolerance.
+Uniform scaling affects anchor distances too. All new links count against the
+existing 16-hinge room budget before creation. Save failure cannot leave half a
+mechanism. Creation does not start room physics or promise collision-free placement.
+
+The included **Spring lever** module is ordinary editable source: a fixed mount,
+a solid handle and a limited spring hinge. Its exported `create(position, rotation,
+scale)` function returns the mount and handle IDs, in that order. Loading the
+module does nothing. Invoke its function from a program; Start physics remains
+explicit. See [program modules](QUEST_PROGRAM_MODULES.md). Adjust geometry, limits
+and spring settings in a copy; no special lever tool or runtime is involved.
 
 ## Shared programs and object identity
 

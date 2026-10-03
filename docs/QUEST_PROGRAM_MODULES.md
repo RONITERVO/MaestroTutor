@@ -254,3 +254,29 @@ and displays the captured live states; catalog acknowledgements in that replay
 are simulated. The full-app native transport also runs the exact pinned watcher
 through save/start/move/reset/rearm/stop. No provider call or headset acceptance
 is implied by these checks.
+
+
+### Included Spring lever
+
+The second included definition, **Spring lever**, exports
+`create(position: {x,y,z}, rotation: {x,y,z,w}, scale: number) -> list<text>`.
+Its exact source hash is
+`4cc6359c622644c36a3d533aed998d010eccec2cdeee9c9e6c0898520a303858`.
+The function uses ordinary `object.batch.create` version-2 blueprint data and
+returns `[mountId, handleId]`. The entry is empty: inspection/import/Start of that
+empty entry cannot create objects. Call `create` from a caller program, such as
+`program-spring-lever.json`, or copy and edit the module in the book.
+
+Each call creates two new objects with one internal hinge, charged against normal
+creation and room budgets, saved in one Undo. The mount stays fixed; the handle is
+solid, limited to ±50 degrees and returns toward zero with a spring. Start physics
+explicitly after room surfaces are ready. No automatic scene placement, imported
+assets, AI calls, new toy-specific capabilities or snapping are involved. A saved
+copy keeps its exact embedded source across app updates. Geometry, collision
+proxies, mass, limits and spring settings remain editable ordinary data.
+
+Desktop checks cover exact pinned identity, fresh instance IDs, atomic failure,
+Undo/Redo, temporary discard and real PhysX displacement/return after a push.
+The full-app transport exercises the same module through save/start/readback/Undo;
+the Chrome form replays captured native acknowledgements. These do not substitute
+for Quest grip, touch, scan alignment, comfort or performance acceptance.

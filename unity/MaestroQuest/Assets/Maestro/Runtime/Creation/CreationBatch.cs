@@ -37,20 +37,36 @@ namespace Maestro.Quest.Creation
         public float scale=1;
         public CreationSource source;
     }
+    [Serializable] public sealed class BlueprintHinge
+    {
+        public string owner,connected;
+        public HingeSettings definition;
+    }
     [Serializable] public sealed class CreationBlueprint
     {
         public int version=1;
         public CreationPiece[] pieces;
+        public BlueprintHinge[] hinges=Array.Empty<BlueprintHinge>();
         public bool Validate(out string error) {
-            error="A blueprint needs version 1 and 1–16 distinct named pieces";
-            if(version!=1||pieces==null||pieces.Length<1||pieces.Length>16)return false;
+            error="A blueprint needs version 1 or 2 and 1–16 distinct named pieces";
+            if(version is not (1 or 2)||pieces==null||pieces.Length<1||pieces.Length>16)return false;
             var slots=new HashSet<string>(StringComparer.Ordinal);
             foreach(var p in pieces) {
                 error="A blueprint needs distinct named pieces with valid local poses and scales";
-                if(p==null||p.slot==null||!Regex.IsMatch(p.slot,"^[a-zA-Z][a-zA-Z0-9_]{0,23}$")||!slots.Add(p.slot)||p.name==null||p.name.Length>80||p.name.Any(char.IsControl)||
+                if(p==null||p.slot==null||!Regex.IsMatch(p.slot,"\\A[a-zA-Z][a-zA-Z0-9_]{0,23}\\z")||!slots.Add(p.slot)||p.name==null||p.name.Length>80||p.name.Any(char.IsControl)||
                     !float.IsFinite(p.position.sqrMagnitude)||p.position.sqrMagnitude>100||!MotionFrame.ValidRotation(p.rotation)||!float.IsFinite(p.scale)||p.scale<.1f||p.scale>4||p.source==null)return false;
                 if(!p.source.Resolve(out _,out _,out _,out _,out error))return false;
             }
+            var connections=hinges??Array.Empty<BlueprintHinge>();
+            error="Use version 2 for 1–15 hinge links between distinct blueprint slots";
+            if(version==1&&connections.Length>0||version==2&&(connections.Length<1||connections.Length>15))return false;
+            var links=new Dictionary<string,string>(StringComparer.Ordinal);
+            foreach(var h in connections){
+                error="Each hinge needs two existing slots and a distinct owner; definitions cannot contain external object IDs";
+                if(h==null||h.owner==null||h.connected==null||!slots.Contains(h.owner)||!slots.Contains(h.connected)||h.owner==h.connected||links.ContainsKey(h.owner)||h.definition==null)return false;
+                if(!h.definition.ValidateDefinition(out error))return false;links.Add(h.owner,h.connected);
+            }
+            error="Blueprint hinge links cannot form a cycle";if(!RoomHinge.Acyclic(links))return false;
             error=null;return true;
         }
     }
@@ -73,6 +89,13 @@ namespace Maestro.Quest.Creation
                 if(piece.source.kind=="template"){var template=CreationTemplates.Find(piece.source.templateHash);data.surfaces=template.Surfaces;data.drawingTips=template.DrawingTips;}
                 data.rotation=(rotation.normalized*piece.rotation.normalized).normalized;values.Add(data);
             }
+            // Every new identity exists before resolving slot references. Never bind an existing room object by name.
+            var slots=blueprint.pieces.Select((piece,index)=>(piece.slot,index)).ToDictionary(x=>x.slot,x=>values[x.index]);
+            foreach(var link in blueprint.hinges??Array.Empty<BlueprintHinge>()){
+                var owner=slots[link.owner];var other=slots[link.connected];var hinge=link.definition.Bind(other.id);
+                if(!hinge.Aligned(owner,other,out error))return false;owner.hinges=new[]{hinge};
+            }
+            if(!RoomHinge.ValidateCollection(values.ToArray(),out error))return false;
             objects=values.ToArray();error=null;return true;
         }
     }

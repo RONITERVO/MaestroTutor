@@ -23,8 +23,7 @@ namespace Maestro.Quest.Creation
                     if(h==null||h.connected!=connected||!float.IsFinite(angle)||angle<-170||angle>170||h.limits.enabled&&(angle<h.limits.minimum||angle>h.limits.maximum))return false;
                     // Compute in room coordinates, without touching the live transforms during admission or a failed save.
                     var other=Pose(Read(connected),Find(connected).transform);
-                    data.rotation=other.rotation*h.connectedFrame.rotation*Quaternion.AngleAxis(angle,Vector3.right)*Quaternion.Inverse(h.ownerFrame.rotation);
-                    data.position=other.position+other.rotation*(h.connectedFrame.position*other.scale)-data.rotation*(h.ownerFrame.position*data.scale);
+                    h.Align(data,other,angle);
                 } else {error="Unknown hinge operation";return false;}
             }
             var candidate=Snapshot();var next=data;candidate.objects=candidate.objects.Select(x=>x.id==target?next:x).ToArray();return candidate.Validate(out error);

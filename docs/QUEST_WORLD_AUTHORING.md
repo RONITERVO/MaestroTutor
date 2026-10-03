@@ -267,8 +267,12 @@ cycles; anchors within 10 local metres; limits/targets within ±170°; spring 0�
 damper 0–20, motor speed ±360°/s and force 0–20. These are admission budgets,
 not a Quest performance guarantee. No breaking, snapping, sliders, cloth or liquid
 simulation is implied. A lever/fidget can be composed from ordinary mount and
-moving-object recipes plus this component. Atomic blueprint links and a shipped
-playable starter remain subsequent work.
+moving-object recipes plus this component. Version-2 connected blueprints now
+create the whole mechanism atomically, using local slot names and fresh IDs. The
+included Spring lever is editable program source using this path, with no separate
+toy logic. Missing slots, cycles, misaligned frames and aggregate hinge overflow
+reject the whole creation. A blueprint library, snapping and other joint types
+remain further work; see [batch creation](QUEST_BATCH_CREATION.md).
 
 Native tests exercise gravity/anchor retention, motor direction, spring reference
 through reload, limits, controller/animation ownership, missing/alignment recovery,

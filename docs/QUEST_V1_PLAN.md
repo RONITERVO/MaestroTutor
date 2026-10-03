@@ -2691,3 +2691,16 @@ tests. The shared catalog provides revision-bound editing and exact readback.
 See [surface drawing](QUEST_SURFACE_DRAWING.md) for limits and current save formats.
 Physical contact comfort, tracking loss and maximum-load Quest performance remain
 unverified; no headset installation is part of this desktop checkpoint.
+
+
+### Connected blueprint increment (2026-10-03)
+
+Version-2 batch blueprints bind member slots to fresh IDs and save all pieces and
+hinges in one Undo, with complete graph/placement/room-budget validation. The
+second included module, Spring lever, is ordinary source using this contract.
+Users and agents can inspect/copy/change it through the shared library and forms.
+The reusable native hinge component handles movement and spring return. No
+special fidget execution path, provider call or automatic physics start is added.
+See [batch creation](QUEST_BATCH_CREATION.md) for bounds. Quest interaction and
+performance acceptance remain pending, as do snapping, broader mechanisms,
+container effects and release gates.

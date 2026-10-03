@@ -76,11 +76,11 @@ describe('prompt ownership', () => {
     const source = readFileSync(new URL('../../../shared/capabilities.ts', import.meta.url), 'utf8');
     const ast = ts.createSourceFile('capabilities.ts', source, ts.ScriptTarget.Latest, true);
     const imports = ast.statements.filter(ts.isImportDeclaration).map(node => (node.moduleSpecifier as ts.StringLiteral).text);
-    expect(imports).toEqual(['./creationBatch','./programValues','./collisionRecipe','./programModuleIdentity','./roomRecipe','./behaviourCatalog']);
-    for (const name of ['creationBatch', 'programValues']) {
+    expect(imports).toEqual(['./roomHinge','./creationBatch','./programValues','./collisionRecipe','./programModuleIdentity','./roomRecipe','./behaviourCatalog']);
+    for (const name of ['creationBatch', 'programValues', 'roomHinge']) {
       const dependency = readFileSync(new URL('../../../shared/' + name + '.ts', import.meta.url), 'utf8');
       const dependencyAst = ts.createSourceFile(name + '.ts', dependency, ts.ScriptTarget.Latest, true);
-      expect(dependencyAst.statements.filter(ts.isImportDeclaration)).toEqual([]);
+      expect(dependencyAst.statements.filter(ts.isImportDeclaration).map(node=>(node.moduleSpecifier as ts.StringLiteral).text)).toEqual(name==='creationBatch'?['./roomHinge']:[]);
       expect(catalogueRuntimeViolations(dependency, name + '.ts')).toEqual([]);
     }
     const identity = readFileSync(new URL('../../../shared/programModuleIdentity.ts', import.meta.url), 'utf8');

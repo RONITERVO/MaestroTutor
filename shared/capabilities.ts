@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {validHingeDefinition,type HingeDefinition} from './roomHinge';
 import {validCreationBatchGeometry} from './creationBatch';
 import {readDataType,type DataType} from './programValues';
 import {validCollisionRecipe} from './collisionRecipe';
@@ -66,11 +67,7 @@ function validate(value:unknown,schema:CapabilitySchema,path:string):string|null
     const entries=(value.kind==='capture'?value.members:value.slots) as {slot:string;target?:string;placement?:{target:string;position:{x:number;y:number;z:number}}}[];
     return new Set(entries.map(x=>x.slot)).size===entries.length&&new Set(entries.map(x=>x.target??x.placement!.target)).size===entries.length&&entries.every(x=>!x.placement||x.placement.position.x**2+x.placement.position.y**2+x.placement.position.z**2<=625)?null:path+' needs distinct slots and valid baseline placements';
    }
-   if(schema.format==='hingeConfiguration'){
-    const d=value.definition as {ownerFrame:{position:Record<string,number>};connectedFrame:{position:Record<string,number>};limits:{enabled:boolean;minimum:number;maximum:number};drive:{mode:string;target:number}};
-    return value.target!==value.connected&&d.limits.minimum<d.limits.maximum&&(!d.limits.enabled||d.drive.mode!=='spring'||d.drive.target>=d.limits.minimum&&d.drive.target<=d.limits.maximum)&&
-     [d.ownerFrame,d.connectedFrame].every(f=>Object.values(f.position).reduce((sum,n)=>sum+n*n,0)<=100)?null:path+' needs different objects, bounded anchors and a spring target inside its limits';
-   }
+   if(schema.format==='hingeConfiguration')return value.target!==value.connected&&validHingeDefinition(value.definition as HingeDefinition)?null:path+' needs different objects, bounded anchors and a spring target inside its limits';
    if(schema.format==='creationBatch')return validCreationBatchGeometry(value)?null:path+' needs distinct idle pieces with valid transformed placements';
    if(schema.format==='objectLayout'){
     const placements=value.placements as {target:string;position:{x:number;y:number;z:number}}[];

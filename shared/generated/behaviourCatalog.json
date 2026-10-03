@@ -7667,7 +7667,7 @@
               "version": {
                 "type": "integer",
                 "minimum": 1.0,
-                "maximum": 1.0
+                "maximum": 2.0
               },
               "pieces": {
                 "type": "array",
@@ -8883,6 +8883,261 @@
                 },
                 "minItems": 1,
                 "maxItems": 16
+              },
+              "hinges": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "owner": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,23}$",
+                      "maxLength": 24
+                    },
+                    "connected": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,23}$",
+                      "maxLength": 24
+                    },
+                    "definition": {
+                      "type": "object",
+                      "properties": {
+                        "enabled": {
+                          "type": "boolean"
+                        },
+                        "ownerFrame": {
+                          "type": "object",
+                          "properties": {
+                            "position": {
+                              "type": "object",
+                              "properties": {
+                                "x": {
+                                  "type": "number",
+                                  "minimum": -10.0,
+                                  "maximum": 10.0
+                                },
+                                "y": {
+                                  "type": "number",
+                                  "minimum": -10.0,
+                                  "maximum": 10.0
+                                },
+                                "z": {
+                                  "type": "number",
+                                  "minimum": -10.0,
+                                  "maximum": 10.0
+                                }
+                              },
+                              "required": [
+                                "x",
+                                "y",
+                                "z"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "rotation": {
+                              "type": "object",
+                              "properties": {
+                                "x": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                },
+                                "y": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                },
+                                "z": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                },
+                                "w": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                }
+                              },
+                              "required": [
+                                "x",
+                                "y",
+                                "z",
+                                "w"
+                              ],
+                              "additionalProperties": false,
+                              "format": "unitQuaternion"
+                            }
+                          },
+                          "required": [
+                            "position",
+                            "rotation"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "connectedFrame": {
+                          "type": "object",
+                          "properties": {
+                            "position": {
+                              "type": "object",
+                              "properties": {
+                                "x": {
+                                  "type": "number",
+                                  "minimum": -10.0,
+                                  "maximum": 10.0
+                                },
+                                "y": {
+                                  "type": "number",
+                                  "minimum": -10.0,
+                                  "maximum": 10.0
+                                },
+                                "z": {
+                                  "type": "number",
+                                  "minimum": -10.0,
+                                  "maximum": 10.0
+                                }
+                              },
+                              "required": [
+                                "x",
+                                "y",
+                                "z"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "rotation": {
+                              "type": "object",
+                              "properties": {
+                                "x": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                },
+                                "y": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                },
+                                "z": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                },
+                                "w": {
+                                  "type": "number",
+                                  "minimum": -1.0,
+                                  "maximum": 1.0
+                                }
+                              },
+                              "required": [
+                                "x",
+                                "y",
+                                "z",
+                                "w"
+                              ],
+                              "additionalProperties": false,
+                              "format": "unitQuaternion"
+                            }
+                          },
+                          "required": [
+                            "position",
+                            "rotation"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "limits": {
+                          "type": "object",
+                          "properties": {
+                            "enabled": {
+                              "type": "boolean"
+                            },
+                            "minimum": {
+                              "type": "number",
+                              "minimum": -170.0,
+                              "maximum": 170.0
+                            },
+                            "maximum": {
+                              "type": "number",
+                              "minimum": -170.0,
+                              "maximum": 170.0
+                            }
+                          },
+                          "required": [
+                            "enabled",
+                            "minimum",
+                            "maximum"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "drive": {
+                          "type": "object",
+                          "properties": {
+                            "mode": {
+                              "type": "string",
+                              "enum": [
+                                "passive",
+                                "spring",
+                                "motor"
+                              ]
+                            },
+                            "target": {
+                              "type": "number",
+                              "minimum": -170.0,
+                              "maximum": 170.0
+                            },
+                            "spring": {
+                              "type": "number",
+                              "minimum": 0.0,
+                              "maximum": 100.0
+                            },
+                            "damper": {
+                              "type": "number",
+                              "minimum": 0.0,
+                              "maximum": 20.0
+                            },
+                            "speed": {
+                              "type": "number",
+                              "minimum": -360.0,
+                              "maximum": 360.0
+                            },
+                            "force": {
+                              "type": "number",
+                              "minimum": 0.0,
+                              "maximum": 20.0
+                            }
+                          },
+                          "required": [
+                            "mode",
+                            "target",
+                            "spring",
+                            "damper",
+                            "speed",
+                            "force"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "enabled",
+                        "ownerFrame",
+                        "connectedFrame",
+                        "limits",
+                        "drive"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "owner",
+                    "connected",
+                    "definition"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 0,
+                "maxItems": 15,
+                "x-features": [
+                  "connectedBlueprints.v1",
+                  "physicalHinges.v1"
+                ]
               }
             },
             "required": [
@@ -8977,7 +9232,7 @@
         "storage.writable",
         "blueprint.valid"
       ],
-      "description": "Instantiate an editable version-1 blueprint of 1–16 independently grabbable physical pieces. Each named slot contains an exact bundled template hash or inline recipe/collision/physics source and a local pose/scale. The outer pose/scale transforms the entire arrangement in room axes. All final positions must be within 25 metres and all final scales 0.1–4; recipe, vertex, collision and room-object budgets apply to the whole candidate. Reserves every creation before a program starts the call, then saves once with one Undo; failure creates no partial structure. Returns objectIds and slots in matching blueprint order. Objects retain independent editable source and no longer depend on the blueprint. Save this definition in ordinary reusable programs/modules; this does not install a separate blueprint library or persistent group, create snap joints, replace missing pieces, avoid overlaps, or start physics/animations. Pieces must start idle. Temporary creation stays in the fork; Stop leaves accepted pieces and duplicate receipts do not create again. Use explicit returned IDs for later actions/reset; never identify pieces by display names.",
+      "description": "Instantiate an editable version-1 independent or version-2 hinge-connected blueprint of 1–16 independently grabbable physical pieces. Each named slot contains an exact bundled template hash or inline recipe/collision/physics source and a local pose/scale. The outer pose/scale transforms the entire arrangement in room axes. All final positions must be within 25 metres and all final scales 0.1–4; recipe, vertex, collision and room-object budgets apply to the whole candidate. Reserves every creation before a program starts the call, then saves once with one Undo; failure creates no partial structure. Returns objectIds and slots in matching blueprint order. Version 2 includes 1–15 slot-to-slot hinge links, each using the ordinary hinge definition. One outgoing connection per piece, no cycles or external IDs; authored frames must already align at the transformed pose. Links become exact new object IDs only after all pieces are prepared, within the shared 16-hinge room budget. Objects retain editable source and no longer depend on the blueprint. Save this definition in ordinary reusable programs/modules; this does not install a separate blueprint library or persistent group, create snap joints, replace missing pieces, avoid overlaps, or start physics/animations. Pieces must start idle. Temporary creation stays in the fork; Stop leaves accepted pieces and duplicate receipts do not create again. Use explicit returned IDs for later actions/reset; never identify pieces by display names.",
       "example": {
         "blueprint": {
           "version": 1,
@@ -19233,7 +19488,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "47d9ba2782c52fe1e5720b88c442e5ee1e230dcc0404e36c474e8021d6f6546e"
+      "sha256": "26d709bc24cfae6f7bee9ca71180d2ac1b451f4da556addc7c305d61b4884e27"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -19489,11 +19744,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomHinge.cs",
-      "sha256": "67fadbe7816068b3b75b3d096b0573aa6f0674763efc07feafe1ce8c4a1b1214"
+      "sha256": "7acda5729f4a5d29bd442834c37bc19da7cdd4a8a955312e60828b0a929efd58"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomHingeEdits.cs",
-      "sha256": "58f2dd15adea363a369c6f3b905d89d73d315a0728079a3ef91a97073320e8ee"
+      "sha256": "c14a12387b3e20b544697caaec7603af4620111f0fb6450f8c6d995fcc401955"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomHingeView.cs",
@@ -19673,7 +19928,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationBatch.cs",
-      "sha256": "ce293f27adea02c6726c42c39318047518bd4959d0d1816890ccf9d6634f8514"
+      "sha256": "9c97581950e8fe30811bc1991f3c3837b4a93a216d58cfeccea8dc69b5070e5e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructure.cs",
@@ -19713,7 +19968,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/BatchCreationCapability.cs",
-      "sha256": "5026c6fab9ffa5939216fdd149f2f1d553446644a2dfd62dacdb7220af93bcad"
+      "sha256": "6ee4cac0e88f3cfe2da002b0ee2147125ec6dd29e78fbbfbfb9e86ae56e37c45"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModule.cs",
@@ -19982,6 +20237,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/spoon.json",
       "sha256": "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Resources/Programs/Modules/SpringLever.json",
+      "sha256": "9929c8ad8a356f28bff25979322d4753959959f138d9afc884166724aa436bb2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Programs/Modules/StructureWatch.json",

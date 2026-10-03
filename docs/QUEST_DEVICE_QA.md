@@ -1650,3 +1650,16 @@ that misaligned or missing connections freeze and explain their state until
 explicit repair. Test interaction against scanned surfaces and all 16 admitted
 hinges while observing native frame timing. Desktop PhysX and book-form checks
 do not establish Quest comfort, stability or performance.
+
+
+### Included connected Spring lever — pending Quest acceptance
+
+Inspect/copy Spring lever from the shared module library and call `create` with a
+placement in clear space. Confirm that one mount and one handle appear, then Start
+physics. Push the handle with an item and grip/release it using controllers and
+hands: it should move within its limits, remain attached and return toward zero.
+Create a second instance: it must connect only its own pieces. Undo/Redo creation,
+reload at a nonzero angle and test temporary-room discard. Edit the copy's geometry
+and spring settings through the ordinary source/forms. Check paused-room behavior,
+scan collisions and native frame timing with multiple instances. Desktop PhysX and
+native transport checks do not close these headset gates.
