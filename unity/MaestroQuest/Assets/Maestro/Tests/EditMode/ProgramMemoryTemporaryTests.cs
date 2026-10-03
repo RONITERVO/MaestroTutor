@@ -75,7 +75,7 @@ namespace Maestro.Quest.Tests
         }
         [Test]public void UnrelatedPendingRoomFileAllowsExplicitRetryWhenTheSavedPairIsUnchanged()
         {
-            Write(1);new RoomStorage(directory).Save(Room(1),out _);var before=RoomSnapshotTransaction.Capture(directory);memory.BeginTemporary();Write(2);string pending=Path.Combine(directory,"room.v5.json.pending");Directory.CreateDirectory(pending);
+            Write(1);new RoomStorage(directory).Save(Room(1),out _);var before=RoomSnapshotTransaction.Capture(directory);memory.BeginTemporary();Write(2);string pending=Path.Combine(directory,"room.v6.json.pending");Directory.CreateDirectory(pending);
             using(var failed=new TemporaryMemorySave(memory,before,Room(2),gate)){Assert.That(failed.Run(),Is.Not.Null);Assert.That(failed.Uncertain,Is.False);}Directory.Delete(pending);
             using var retry=new TemporaryMemorySave(memory,before,Room(2),gate);Assert.That(retry.Run(),Is.Null);retry.Confirm();memory.EndTemporary();Assert.That(Count(memory.Snapshot()),Is.EqualTo(2));
         }

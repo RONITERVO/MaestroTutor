@@ -94,7 +94,7 @@ namespace Maestro.Quest.Tests
         {
             yield return ReadyForReview();DisableAcceptedSaveUpdates();var editor=host.Current.Editor;var rules=host.Current.Rules;
             var changed=AcceptedEdit("Failure keeps the live accepted document");string id=BeginReview();yield return FinishReview(id);
-            using var ruleSave=new DelayedAcceptedSave(rules);string blocked=Path.Combine(editor.SaveDirectory,"room.v5.json.pending");Directory.CreateDirectory(blocked);
+            using var ruleSave=new DelayedAcceptedSave(rules);string blocked=Path.Combine(editor.SaveDirectory,"room.v6.json.pending");Directory.CreateDirectory(blocked);
             try {
                 ApproveReview(id);yield return WaitAcceptedWorker(editor);Assert.That(AcceptedWorker(editor).Result,Is.Not.Null);
                 for(int i=0;i<3;i++)yield return null;Assert.That(editor.WriteGate.Frozen,Is.True);Assert.That(host.Review.WorkerPending,Is.True);Assert.That(ruleSave.Released,Is.False);
@@ -111,7 +111,7 @@ namespace Maestro.Quest.Tests
                 if(point!="review.beforeCapture")return;
                 // A newer save discovered after preflight makes this store read-only.
                 // The earlier writer remains owned until it reports completion.
-                File.WriteAllText(Path.Combine(editor.SaveDirectory,"room.v6.json"),"{}");
+                File.WriteAllText(Path.Combine(editor.SaveDirectory,"room.v7.json"),"{}");
                 var storage=(RoomStorage)typeof(RoomEditor).GetField("storage",BindingFlags.Instance|BindingFlags.NonPublic).GetValue(editor);
                 storage.Load(out _);Assert.That(storage.ReadOnly,Is.True);
             };
@@ -120,7 +120,7 @@ namespace Maestro.Quest.Tests
             Assert.That(editor.WriteGate.Frozen,Is.True);Assert.That(host.Review.WorkerPending,Is.True);
             earlier.Release("Earlier writer detected unavailable storage");yield return FinishReview(id);
             Assert.That((string)host.Review.Read(id)["phase"],Is.EqualTo("failed"));Assert.That(host.ReviewRequired,Is.True);Assert.That(editor.WriteGate.Frozen,Is.False);
-            Assert.That(File.ReadAllText(Path.Combine(editor.SaveDirectory,"room.v6.json")),Is.EqualTo("{}"));
+            Assert.That(File.ReadAllText(Path.Combine(editor.SaveDirectory,"room.v7.json")),Is.EqualTo("{}"));
         }
         [UnityTest] public IEnumerator ClosingTheHostWaitsForAcceptedWritesBeforeAnotherOwnerOpensTheWorkspace()
         {

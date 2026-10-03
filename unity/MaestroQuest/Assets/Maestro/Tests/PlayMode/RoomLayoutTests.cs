@@ -40,7 +40,7 @@ namespace Maestro.Quest.Tests
             Assert.That(runtime.Trigger(sequenceId),Is.True);Assert.That(executor.Execute(LayoutRequest(layout),out _,out _),Is.False);runtime.Scheduler.StopAll();
             Assert.That(editor.Find(a).transform.localPosition,Is.EqualTo(new Vector3(3,2,1)));
             var missing=Layout(a,new string('e',32));Assert.That(editor.ApplyLayout(missing,out _),Is.False);Assert.That(editor.Read(a).position,Is.EqualTo(new Vector3(3,2,1)));
-            string obstacle=Path.Combine(directory,"room.v5.json.pending");Directory.CreateDirectory(obstacle);before=JsonUtility.ToJson(editor.Snapshot());
+            string obstacle=Path.Combine(directory,"room.v6.json.pending");Directory.CreateDirectory(obstacle);before=JsonUtility.ToJson(editor.Snapshot());
             try {Assert.That(executor.Execute(LayoutRequest(layout),out _,out _),Is.False);Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(before));Assert.That(editor.Find(a).transform.localPosition,Is.EqualTo(new Vector3(3,2,1)));}finally{Directory.Delete(obstacle);}
         }
         [UnityTest] public IEnumerator LivePlacementUsesRoomAxesAndAlreadyMatchingLayoutUpdatesSavedPoseWithoutEmptyUndo() {

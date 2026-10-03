@@ -140,6 +140,26 @@ try{
    layoutBefore=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'template',templateHash:brickHash,name:brickSource.name+' '+(i+1),x:.4+i*.25,y:1.2,z:.7,scale:1}}}}]);
    const id=layoutBefore.execution?.selected?.output?.objectId;if(typeof id!=='string')throw new Error('Layout member missing');layoutIds.push(id);
   }
+  const hingeSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Configure a physical hinge',offset:0}}]);
+  const hingeDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.hinge.edit',version:1}}]);
+  const hingeCurrent=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.hinge',version:1,arguments:{target:layoutIds[0]}}}]);
+  const hingeValue=hingeCurrent.catalog?.value as {configured:boolean;revision:number;connected:string;definition:{enabled:boolean;drive:{mode:string;target:number};limits:{enabled:boolean}}};
+  if(hingeValue?.configured)throw new Error('New piece unexpectedly has a hinge');
+  const hingeFrames:Record<string,unknown>={};for(const side of ['owner','connected']){
+   const read=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.hinge.frame',version:1,arguments:{target:layoutIds[0],side}}}]);
+   const value=read.catalog?.value as {revision:number;frame:unknown};if(value.revision!==hingeValue.revision)throw new Error('Hinge frame revision changed');hingeFrames[side+'Frame']=value.frame;
+  }
+  const hingeArgs={operation:'configure',target:layoutIds[0],connected:layoutIds[1],revision:hingeValue.revision,definition:{...hingeValue.definition,...hingeFrames,enabled:true,drive:{...hingeValue.definition.drive,mode:'spring',target:20},limits:{...hingeValue.definition.limits,enabled:true}}};
+  const hingeAfter=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.hinge.edit',version:1,arguments:hingeArgs}}}]);
+  const hingeRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.hinge',version:1,arguments:{target:layoutIds[0]}}}]);
+  const hingeSaved=hingeRead.catalog?.value as typeof hingeValue;if(!hingeSaved?.configured||hingeSaved.connected!==layoutIds[1]||hingeSaved.definition.drive.target!==20)throw new Error('Hinge source did not persist');
+  const hingeAligned=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.hinge.edit',version:1,arguments:{operation:'align',target:layoutIds[0],connected:layoutIds[1],revision:hingeSaved.revision,angle:30}}}}]);
+  const hingeState=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.hinge.state',version:1,arguments:{target:layoutIds[0]}}}]);
+  if(Math.abs((hingeState.catalog?.value as {angle:number}).angle-30)>.05)throw new Error('Hinge alignment readback differs');
+  await execute([{action:'undo'}]);await execute([{action:'undo'}]);
+  const hingeUndo=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.hinge',version:1,arguments:{target:layoutIds[0]}}}]);
+  if((hingeUndo.catalog?.value as typeof hingeValue).configured)throw new Error('Hinge Undo did not remove component');
+  await writeFile(join(directory,'hinge-authoring.json'),JSON.stringify({boundary:'Real Unity configuration, alignment, readback and Undo. PhysX tested separately; no headset or provider proof.',before:layoutBefore,search:hingeSearch,definition:hingeDefinition,current:hingeCurrent,after:hingeAfter,read:hingeRead,aligned:hingeAligned,state:hingeState,undo:hingeUndo},null,2));
   const placements=layoutIds.map((target,i)=>({target,position:{x:.3+i*.25,y:1,z:.8},rotation:{x:0,y:0,z:0,w:1},scale:1}));
   const layoutSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Arrange or reset objects',offset:0}}]);
   const layoutDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.layout.apply',version:1}}]);

@@ -49,7 +49,7 @@ namespace Maestro.Quest.Tests
             Assert.That(loaded.version,Is.EqualTo(RoomDocument.CurrentVersion));Assert.That(loaded.objects[1].walkClip,Is.EqualTo(2));
             Assert.That(new RuleStorage(directory).Load(out _).sequences,Is.Empty);
             Assert.That(store.Save(loaded,out _),Is.True);Assert.That(File.ReadAllText(path),Is.EqualTo(original));
-            File.WriteAllText(Path.Combine(directory,"room.v5.json"),"broken");
+            File.WriteAllText(Path.Combine(directory,"room.v6.json"),"broken");
             store=new RoomStorage(directory);Assert.That(store.Load(out _),Is.Null);Assert.That(store.ReadOnly,Is.True);
         }
         [Test] public void StableMotionIdsPersistThroughCopyUndoAndReloadAndRejectPathsAndWrongTargets()

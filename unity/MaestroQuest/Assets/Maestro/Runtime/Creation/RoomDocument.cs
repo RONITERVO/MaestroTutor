@@ -20,6 +20,7 @@ namespace Maestro.Quest.Creation
         public CollisionRecipe collision;
         public DrawingSurface[] surfaces=Array.Empty<DrawingSurface>();
         public DrawingTip[] drawingTips=Array.Empty<DrawingTip>();
+        public RoomHinge[] hinges=Array.Empty<RoomHinge>();
         public RoomObjectKind kind;
         public Vector3 position;
         public Quaternion rotation = Quaternion.identity;
@@ -39,13 +40,13 @@ namespace Maestro.Quest.Creation
         public int walkClip;
         public string walkMotionId;
         public bool IsBuiltIn => kind == RoomObjectKind.Book || kind == RoomObjectKind.Maestro;
-        public RoomObjectData Copy() => new() { id = id, name = name, recipe = recipe?.Copy(), collision=collision?.Copy(), surfaces=surfaces?.Select(s=>s?.Copy()).ToArray(), drawingTips=drawingTips?.Select(t=>t?.Copy()).ToArray(), kind = kind, position = position, rotation = rotation, scale = scale, color = color, radius = radius, points = points == null ? null : (Vector3[])points.Clone(), joints = MotionFrame.CopyJoints(joints), motion = motion?.Copy(), modelHash = modelHash, physics = physics, mass = mass, collisionShape = collisionShape, followDistance = followDistance, walkSpeed = walkSpeed, walkClip = walkClip, walkMotionId = walkMotionId };
+        public RoomObjectData Copy() => new() { id = id, name = name, recipe = recipe?.Copy(), collision=collision?.Copy(), surfaces=surfaces?.Select(s=>s?.Copy()).ToArray(), drawingTips=drawingTips?.Select(t=>t?.Copy()).ToArray(), hinges=hinges?.Select(h=>h?.Copy()).ToArray(), kind = kind, position = position, rotation = rotation, scale = scale, color = color, radius = radius, points = points == null ? null : (Vector3[])points.Clone(), joints = MotionFrame.CopyJoints(joints), motion = motion?.Copy(), modelHash = modelHash, physics = physics, mass = mass, collisionShape = collisionShape, followDistance = followDistance, walkSpeed = walkSpeed, walkClip = walkClip, walkMotionId = walkMotionId };
     }
 
     [Serializable]
     public sealed class RoomDocument
     {
-        public const int CurrentVersion=5;
+        public const int CurrentVersion=6;
         public const int MaximumObjects = 64;
         public const int MaximumStrokePoints = 2048;
         public const int MaximumTotalPoints = 32768;
@@ -60,7 +61,7 @@ namespace Maestro.Quest.Creation
         public bool Validate(out string error)
         {
             error = null;
-            if (version != 1 && version != 2 && version != 3 && version != 4 && version != CurrentVersion || objects == null || objects.Length < 2 || objects.Length > MaximumObjects + 2)
+            if (version != 1 && version != 2 && version != 3 && version != 4 && version != 5 && version != CurrentVersion || objects == null || objects.Length < 2 || objects.Length > MaximumObjects + 2)
                 return Fail("This room file has an unsupported version or object count.", out error);
             var ids = new HashSet<string>(); int partCount = 0; int pointCount = 0, builtIns = 0, frameCount = 0, jointCount = 0;
             foreach (var item in objects)
@@ -74,6 +75,7 @@ namespace Maestro.Quest.Creation
                 if(!DrawingSurface.ValidateCollection(item,out error))return false;
                 if(version<5&&(item.drawingTips?.Length??0)>0)return Fail("Drawing tips require the current room format.",out error);
                 if(!DrawingTip.ValidateCollection(item,out error))return false;
+                if(version<6&&(item.hinges?.Length??0)>0)return Fail("Physical hinges require the current room format.",out error);
                 pointCount+=DrawingSurface.PointCount(item);
                 bool mayHaveModel = item.kind == RoomObjectKind.ImportedModel || item.kind == RoomObjectKind.Maestro;
                 if (!string.IsNullOrEmpty(item.walkMotionId) && (version < 2 || item.kind != RoomObjectKind.Maestro || !Guid.TryParseExact(item.walkMotionId,"N",out _) || item.walkClip != 0))
@@ -124,6 +126,7 @@ namespace Maestro.Quest.Creation
             if (frameCount > 1200 || jointCount > 6000) return Fail("This room has reached its animation limit.",out error);
             if (objects.Count(item => item.kind == RoomObjectKind.ImportedModel) > 4) return Fail("Keep at most four imported models in this room.", out error);
             if(version<3 && (structures?.Length??0)>0)return Fail("Structures require the current room format.",out error);
+            if(!RoomHinge.ValidateCollection(objects,out error))return false;
             return RoomStructure.ValidateCollection(structures??(version<3?Array.Empty<RoomStructure>():null),ids,out error);
         }
 

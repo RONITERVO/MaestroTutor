@@ -34,7 +34,7 @@ namespace Maestro.Quest.Tests
             var ex=new RoomAgentExecutor(editor);SurfaceRun(ex,SurfaceConfigure());var view=block.GetComponent<DrawingSurfaceView>();var patch=view.Surface("Front");var pencil=root.AddComponent<SpatialDrawing>();pencil.Editor=editor;editor.ToggleSurfaceDrawing();int count=editor.Snapshot().objects.Length;
             Ray At(float x,float y)=>new(patch.TransformPoint(new Vector3(x,y,-.12f)),patch.forward);
             pencil.Begin(0,At(-.03f,0));pencil.Move(0,At(0,.025f));pencil.Move(0,At(.03f,0));Assert.That(pencil.IsDrawing,Is.True);
-            string obstacle=Path.Combine(directory,"room.v5.json.pending");Directory.CreateDirectory(obstacle);pencil.End(0);Assert.That(pencil.HasUnsavedStroke,Is.True);Assert.That(view.StrokeCount,Is.Zero);string session=pencil.SessionId;
+            string obstacle=Path.Combine(directory,"room.v6.json.pending");Directory.CreateDirectory(obstacle);pencil.End(0);Assert.That(pencil.HasUnsavedStroke,Is.True);Assert.That(view.StrokeCount,Is.Zero);string session=pencil.SessionId;
             block.transform.position+=Vector3.up*.15f;Directory.Delete(obstacle);Assert.That(pencil.Resolve(session,false,out var result,out var error),Is.True,error);Assert.That((string)result["objectId"],Is.EqualTo(editor.Identity(block)));Assert.That(pencil.HasUnsavedStroke,Is.False);Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count));Assert.That(view.StrokeCount,Is.EqualTo(1));Assert.That(editor.Read(editor.Identity(block)).surfaces[0].strokes[0].points.Length,Is.EqualTo(3));Assert.That(pencil.Resolve(session,false,out _,out _),Is.False);yield return null;
         }
         [UnityTest] public IEnumerator PhysicalSurfaceEraserAndMissNeverDeleteTheObjectOrCreateAirInk()

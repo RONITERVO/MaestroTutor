@@ -9486,6 +9486,470 @@
       }
     },
     {
+      "id": "object.hinge.edit",
+      "version": 1,
+      "label": "Configure a physical hinge",
+      "input": {
+        "type": "object",
+        "x-discriminators": [
+          "operation"
+        ],
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "configure"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              },
+              "connected": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "definition": {
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "ownerFrame": {
+                    "type": "object",
+                    "properties": {
+                      "position": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number",
+                            "minimum": -10.0,
+                            "maximum": 10.0
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": -10.0,
+                            "maximum": 10.0
+                          },
+                          "z": {
+                            "type": "number",
+                            "minimum": -10.0,
+                            "maximum": 10.0
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y",
+                          "z"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "rotation": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number",
+                            "minimum": -1.0,
+                            "maximum": 1.0
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": -1.0,
+                            "maximum": 1.0
+                          },
+                          "z": {
+                            "type": "number",
+                            "minimum": -1.0,
+                            "maximum": 1.0
+                          },
+                          "w": {
+                            "type": "number",
+                            "minimum": -1.0,
+                            "maximum": 1.0
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y",
+                          "z",
+                          "w"
+                        ],
+                        "additionalProperties": false,
+                        "format": "unitQuaternion"
+                      }
+                    },
+                    "required": [
+                      "position",
+                      "rotation"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "connectedFrame": {
+                    "type": "object",
+                    "properties": {
+                      "position": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number",
+                            "minimum": -10.0,
+                            "maximum": 10.0
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": -10.0,
+                            "maximum": 10.0
+                          },
+                          "z": {
+                            "type": "number",
+                            "minimum": -10.0,
+                            "maximum": 10.0
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y",
+                          "z"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "rotation": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number",
+                            "minimum": -1.0,
+                            "maximum": 1.0
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": -1.0,
+                            "maximum": 1.0
+                          },
+                          "z": {
+                            "type": "number",
+                            "minimum": -1.0,
+                            "maximum": 1.0
+                          },
+                          "w": {
+                            "type": "number",
+                            "minimum": -1.0,
+                            "maximum": 1.0
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y",
+                          "z",
+                          "w"
+                        ],
+                        "additionalProperties": false,
+                        "format": "unitQuaternion"
+                      }
+                    },
+                    "required": [
+                      "position",
+                      "rotation"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "limits": {
+                    "type": "object",
+                    "properties": {
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "minimum": {
+                        "type": "number",
+                        "minimum": -170.0,
+                        "maximum": 170.0
+                      },
+                      "maximum": {
+                        "type": "number",
+                        "minimum": -170.0,
+                        "maximum": 170.0
+                      }
+                    },
+                    "required": [
+                      "enabled",
+                      "minimum",
+                      "maximum"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "drive": {
+                    "type": "object",
+                    "properties": {
+                      "mode": {
+                        "type": "string",
+                        "enum": [
+                          "passive",
+                          "spring",
+                          "motor"
+                        ]
+                      },
+                      "target": {
+                        "type": "number",
+                        "minimum": -170.0,
+                        "maximum": 170.0
+                      },
+                      "spring": {
+                        "type": "number",
+                        "minimum": 0.0,
+                        "maximum": 100.0
+                      },
+                      "damper": {
+                        "type": "number",
+                        "minimum": 0.0,
+                        "maximum": 20.0
+                      },
+                      "speed": {
+                        "type": "number",
+                        "minimum": -360.0,
+                        "maximum": 360.0
+                      },
+                      "force": {
+                        "type": "number",
+                        "minimum": 0.0,
+                        "maximum": 20.0
+                      }
+                    },
+                    "required": [
+                      "mode",
+                      "target",
+                      "spring",
+                      "damper",
+                      "speed",
+                      "force"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "enabled",
+                  "ownerFrame",
+                  "connectedFrame",
+                  "limits",
+                  "drive"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "revision",
+              "connected",
+              "definition"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "object.hinge",
+              "version": 1,
+              "arguments": {
+                "target": "target"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
+            "format": "hingeConfiguration",
+            "title": "configure",
+            "x-features": [
+              "physicalHinges.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "align"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              },
+              "connected": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "angle": {
+                "type": "number",
+                "minimum": -170.0,
+                "maximum": 170.0
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "revision",
+              "connected",
+              "angle"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "object.hinge",
+              "version": 1,
+              "arguments": {
+                "target": "target"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
+            "title": "align",
+            "x-features": [
+              "physicalHinges.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "remove"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "revision"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "object.hinge",
+              "version": 1,
+              "arguments": {
+                "target": "target"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
+            "title": "remove",
+            "x-features": [
+              "physicalHinges.v1"
+            ]
+          }
+        ]
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.created",
+        "target.unheld",
+        "source.revision.current",
+        "storage.writable"
+      ],
+      "description": "Save/remove one physical hinge on a created object, or explicitly align it to its connected object's current pose at a selected angle. Both local frames use +X as the axis and +Y as zero angle. Moving member needs solid/bouncy physics; connected member may be fixed. Configure never moves to align or starts room physics. Misaligned, missing or animation-owned members suspend the constraint and freeze its moving body; inspect object.hinge.state. Explicit align moves only the target and records one live-pose Undo. Connected-body collisions are disabled; other world collisions remain. Passive, spring return and motor are mutually exclusive. Limits/target angles persist relative to the saved frames through reloads. Disabling/removing releases the connection. Pausing room physics/focus stops motion; explicit Start physics re-admits valid components, including configured motors, without replaying old velocity. Sixteen hinges per room, one per object, no cycles. Whole-object scaling can invalidate alignment. Stable IDs never rebind by name. This is not snapping, cloth, breakable joints or a separate toy system.",
+      "example": {
+        "operation": "configure",
+        "target": "00000000000000000000000000000000",
+        "revision": 1,
+        "connected": "11111111111111111111111111111111",
+        "definition": {
+          "enabled": true,
+          "ownerFrame": {
+            "position": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            "rotation": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0,
+              "w": 1.0
+            }
+          },
+          "connectedFrame": {
+            "position": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            "rotation": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0,
+              "w": 1.0
+            }
+          },
+          "limits": {
+            "enabled": false,
+            "minimum": -90.0,
+            "maximum": 90.0
+          },
+          "drive": {
+            "mode": "passive",
+            "target": 0.0,
+            "spring": 10.0,
+            "damper": 1.0,
+            "speed": 90.0,
+            "force": 1.0
+          }
+        }
+      }
+    },
+    {
       "id": "object.surface.edit",
       "version": 1,
       "label": "Edit a drawing surface",
@@ -15864,6 +16328,161 @@
       ]
     },
     {
+      "id": "object.hinge",
+      "version": 1,
+      "type": {
+        "record": {
+          "revision": "number",
+          "configured": "boolean",
+          "connected": "text",
+          "definition": {
+            "record": {
+              "enabled": "boolean",
+              "limits": {
+                "record": {
+                  "enabled": "boolean",
+                  "minimum": "number",
+                  "maximum": "number"
+                }
+              },
+              "drive": {
+                "record": {
+                  "mode": "text",
+                  "target": "number",
+                  "spring": "number",
+                  "damper": "number",
+                  "speed": "number",
+                  "force": "number"
+                }
+              }
+            }
+          }
+        }
+      },
+      "label": "Saved physical hinge",
+      "description": "Configuration and revision; configured=false returns inert defaults. connected is an exact stable ID or empty, never a name. Read each local frame with object.hinge.frame. Settings use the same schema for user/agent editing.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1",
+        "physicalHinges.v1"
+      ]
+    },
+    {
+      "id": "object.hinge.frame",
+      "version": 1,
+      "type": {
+        "record": {
+          "revision": "number",
+          "configured": "boolean",
+          "frame": {
+            "record": {
+              "position": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number"
+                }
+              },
+              "rotation": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number",
+                  "w": "number"
+                }
+              }
+            }
+          }
+        }
+      },
+      "label": "Saved hinge frame",
+      "description": "Read one local frame within the bounded program-value budget. Use the same object revision for both sides when assembling a configuration; reads never align or start physics.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "side": {
+            "type": "string",
+            "enum": [
+              "owner",
+              "connected"
+            ]
+          }
+        },
+        "required": [
+          "target",
+          "side"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000",
+        "side": "owner"
+      },
+      "features": [
+        "factQueries.v1",
+        "physicalHinges.v1"
+      ]
+    },
+    {
+      "id": "object.hinge.state",
+      "version": 1,
+      "type": {
+        "record": {
+          "phase": "text",
+          "active": "boolean",
+          "angle": "number",
+          "error": "text"
+        }
+      },
+      "label": "Live hinge state",
+      "description": "Observed native state, separate from the saved definition. active means an admitted PhysX constraint. Angle is signed degrees around the saved connected frame's +X axis, wrapped to [-180,180]; it is not a revolution counter. Missing/paused/owned/misaligned states do not imply motion completed.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1",
+        "physicalHinges.v1"
+      ]
+    },
+    {
       "id": "object.surfaces",
       "version": 1,
       "type": {
@@ -18562,7 +19181,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "033afc4431c39a078798e1653f720e635e3c98e0decb3e3cb46859fc0d2563e6"
+      "sha256": "e1db6427127e79ab1a9ee33dfd1a0347d7c889049f8ef213f18ec30556f68e7d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -18582,7 +19201,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "ebacd3339fba6627f352d7502e559d451aba234d51779284793295899c739fea"
+      "sha256": "57f3b394e09b590e22b7a36c3d4e831ad5a99f9a96b4004c9bcf9e2932503e2e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -18614,7 +19233,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "828c3008cfa3cfc3a3ea2dbe8de76c21638c8291a6fcb9935a4ceb148463e8df"
+      "sha256": "47d9ba2782c52fe1e5720b88c442e5ee1e230dcc0404e36c474e8021d6f6546e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -18638,11 +19257,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "46d92795d2d50c6b2a78da6e7399df17160b16f0896f874333ceac5f7a180d57"
+      "sha256": "a508e675d77ff7458ce12dbebdfa9380bb570ca06a7ac5912baa54bb7a79323d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
-      "sha256": "92f29898b6b86aee3f0582d3ab6cb71855f95978b761df9c397b2445013f8f34"
+      "sha256": "4dc344865573b3e4d1cb709f1861a172ecdb9427cadaa7e4d5423503b20243ca"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleMemory.cs",
@@ -18658,11 +19277,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveCapture.cs",
-      "sha256": "d669ad429ff0ac669f8f432c68162c60b677917f515ceaae06db567b066f7cb5"
+      "sha256": "bdba5b6c2491df7570cfdadc0ae41a2a51fb02420e5280585c0e585640b46902"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveSnapshot.cs",
-      "sha256": "70a5380800a084a4875314a24ffa5f9580ad79f3e9d0a79a652939c54e4cb948"
+      "sha256": "4ef68a07099b915f649e3616d90d184c19aa3a1c68647af87e6d6064d467a6e2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.Retention.cs",
@@ -18806,7 +19425,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.cs",
-      "sha256": "ab33aa78bd007c4f29ab5ce2515d27233d4006c5eb903969246cf9677af57a23"
+      "sha256": "1a348d9a8f242c4a4db303c21504179b67de43f9a56627e914e03759f4b71aa5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomPropAnchor.cs",
@@ -18838,7 +19457,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "977a134a24ab4f9d40c7d1b12ad901f5d6fdae262e91168b2ccb06bd8addc18a"
+      "sha256": "00f14c16b0c1aa7eb4b7587cb054eb6a6623b15873aa47683e7c704000cbafd6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomToolTray.cs",
@@ -18869,6 +19488,18 @@
       "sha256": "d059d317d592b55f1a374ceae83f069fbe79e8e3162918da0f2da3470a4927aa"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomHinge.cs",
+      "sha256": "67fadbe7816068b3b75b3d096b0573aa6f0674763efc07feafe1ce8c4a1b1214"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomHingeEdits.cs",
+      "sha256": "58f2dd15adea363a369c6f3b905d89d73d315a0728079a3ef91a97073320e8ee"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomHingeView.cs",
+      "sha256": "f1ce25188054de5483acd250caba313084d47eeae480c00a6805036446dcf5ca"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/DrawingTipView.cs",
       "sha256": "9c5d436fa92d2d4c72e7fd4f30f0cb3c506a99c8d71fb6e98de2cf9108c14368"
     },
@@ -18890,7 +19521,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "649725b7b7b97f0570ed035f6c9f7485215fb7a8724714ecfeea0cb19ac7f133"
+      "sha256": "890c18c1d0f566ce223e70559e1c10c11de2ab85cbad8b537325d4513efa6ee7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedDrawing.cs",
@@ -19090,7 +19721,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "6b8c535c3f0bf984e28a4fb7d1fed45b67b312fc698670c367d76112a72a9516"
+      "sha256": "631b08e96d377a746dcb91e2bad3e96af8766b0bb0151ca78f6dd97e2fa5f6f1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -19155,6 +19786,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/GestureCapabilities.cs",
       "sha256": "84d2aad5dba840bd58229547c45e12a2028b1253ee3192c8fcd69cb283a7db6a"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/HingeCapability.cs",
+      "sha256": "32ecb2d41654b9db33154152a56904624db7b299728afccc31095b282644f55a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/HoldObjectCapability.cs",

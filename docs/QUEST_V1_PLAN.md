@@ -11,7 +11,9 @@ geometry increment: assemblies use a box by default. Independent editable collis
 recipes now add box/sphere/cylinder/ring compounds with shared book/agent/program
 authoring, bounded cost and save/Undo. A native physics test exercises an open cup
 catching a ball and a compound cup landing on a floor. See QUEST_COLLISION_AUTHORING.md.
-Liquid containers, physical joints and the default play kit remain unfinished.
+Physical hinges now have a shared saved component/action and live-state facts; see
+QUEST_WORLD_AUTHORING.md#physical-hinges-2026-10-03. Liquid containers, other joint
+types, atomic connected blueprints and the full default play kit remain unfinished.
 See QUEST_RECIPE_AUTHORING.md and QUEST_NATIVE_ROOM_PROBE.md.
 
 The October 2 notebook scope and current review assessment are recorded in

@@ -31,7 +31,7 @@ require putting chat, assets, physics and all history in one enormous JSON file.
 
 ## What already exists
 
-The current catalog contains 70 actions, 12 events and 71 facts. It already has
+The current catalog contains 71 actions, 12 events and 74 facts. It already has
 native capability modules, generated forms, shared human/agent execution,
 revision checks, durable one-off receipts, contact/proximity/settling observations,
 structured program values and action inputs/results, parallel branches, pinned reusable program modules,
@@ -47,7 +47,7 @@ parented rotations and bounded tracks. The lathe increment is described in
 Recipe parts are visual joints, not independent rigid bodies. The object can now
 use an editable compound collision recipe; see
 [collision authoring](QUEST_COLLISION_AUTHORING.md). Shared attachment and aimed throws exist; automatic IK catching,
-hit reactions, physical hinges/springs, curved/deforming paintable surfaces, structural
+hit reactions, curved/deforming paintable surfaces, structural
 blueprint libraries and liquids/snow are not completed by those features. Persistent structure baselines and typed member-list bindings now let one program
 create a small build, capture it, displace pieces and reset them; see
 [structures](QUEST_STRUCTURES.md). The current
@@ -221,3 +221,57 @@ The user's credit balance is a reported starting point, not a verified API balan
 Any later development generation should record model/task, estimated/actual cost,
 provenance and accepted output. API generation is not silently added to end-user
 v1 subscriptions by this note.
+
+## Physical hinges (2026-10-03)
+
+`object.hinge.edit` configures, aligns or removes a saved physical connection
+between two independently grabbable created/imported objects. Both local frames
+use +X as the axis and +Y as the zero-angle direction. Passive rotation, limited
+lever movement, spring return and a bounded motor are modes of this one component.
+The moving member uses solid/bouncy physics; its connected mount may remain fixed.
+Connected-body collision is suppressed, while scanned-room/other-object collisions
+remain ordinary PhysX. Recipe part tracks remain visual animation, not rigid joints.
+
+The optional book workshop, agent and programs share the generated action form,
+revision check, both affected object claims and save/Undo. `object.hinge` reads
+settings and identity; `object.hinge.frame` reads either exact saved frame, and
+`object.hinge.state` reports admitted/paused/missing/owned/misaligned state and
+signed angle. Splitting frame reads keeps every program value within the existing
+budget. Read both frames at the same object revision before editing.
+
+Configure does not align objects or start physics. Connection edits capture the
+current member poses and stop their old velocities before re-admission. Explicit **align** places
+the moving member against the connected object's current frame at a chosen angle,
+with one Undo to the observed live pose. Failed persistence cannot move anything.
+Starting physics admits coincident anchors (3 cm tolerance), aligned axes (5°)
+and an angle within limits (3° tolerance). Missing objects or animation ownership
+freeze the affected member. No names are substituted for missing stable IDs.
+Explicit teleports and scale changes invalidate the old constraint; use align to
+repair a displaced connection. A controller grip on an admitted hinge retains
+velocity-tracked physics. Scaling or moving a mount is not an automatic assembly edit.
+
+A saved motor is component configuration: Stop on the already completed configure
+call does not remove it. Disable/remove the component or pause room physics. Focus
+loss and runtime holds pause the world. Explicit Start physics may resume a valid
+saved motor; old velocities are discarded. Recreating a hinge offsets native
+limits/spring targets by its saved frame angle, so reload does not redefine zero.
+
+Room format 6, paired snapshot intent 5 and portable archive 5 prevent an older
+reader silently dropping hinges. Known older clean rooms still load; unknown
+component versions and older in-flight journals/archives remain preserved/refused.
+Connections survive deep copy, temporary discard and portable room snapshots.
+A copied member keeps its exact connection ID and may require explicit alignment.
+
+Initial bounds: 16 room hinges, one outgoing connection per created object, no
+cycles; anchors within 10 local metres; limits/targets within ±170°; spring 0–100,
+damper 0–20, motor speed ±360°/s and force 0–20. These are admission budgets,
+not a Quest performance guarantee. No breaking, snapping, sliders, cloth or liquid
+simulation is implied. A lever/fidget can be composed from ordinary mount and
+moving-object recipes plus this component. Atomic blueprint links and a shipped
+playable starter remain subsequent work.
+
+Native tests exercise gravity/anchor retention, motor direction, spring reference
+through reload, limits, controller/animation ownership, missing/alignment recovery,
+save failure, Undo and temporary discard. The full-app transport and Chrome form
+journey verify the same native definitions and receipts separately from headset
+interaction. Quest comfort/performance acceptance remains required.

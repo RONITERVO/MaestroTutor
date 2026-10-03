@@ -424,6 +424,8 @@ namespace Maestro.Quest.Creation
                     item.GetComponent<CreatedRoomObject>().ApplyColor(data.color); slot++;
                 }
             }
+            // Resolve links only after every member and its current pose/collider exists.
+            foreach(var data in document.objects){var item=Find(data.id);var hinge=item.GetComponent<RoomHingeView>();if(!hinge&&(data.hinges?.Length??0)>0)hinge=item.gameObject.AddComponent<RoomHingeView>();if(hinge)hinge.Apply(this,data.hinges);}
             applying = false; UpdateSelection();
         }
 

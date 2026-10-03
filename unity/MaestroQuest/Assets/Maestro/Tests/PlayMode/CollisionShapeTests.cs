@@ -53,7 +53,7 @@ namespace Maestro.Quest.Tests
             hand.selectInput.manualPerformed=false;hand.selectInput.manualValue=0;manager.SelectExit((IXRSelectInteractor)hand,item.Grab);yield return null;Assert.That(item.Grab.isSelected,Is.False,"Released controller must stop selecting the cup wall");
             Assert.That(editor.ConfigurePhysics(target,editor.ObjectRevision(target),new ObjectPhysicsSettings {mode="fixed",shape="sphere",mass=.5f},out var error),Is.True,error);Assert.That(item.Grab.colliders.Single(),Is.TypeOf<SphereCollider>());Assert.That(editor.Read(target).collision.Pieces,Is.EqualTo(13));
             Assert.That(editor.ConfigurePhysics(target,editor.ObjectRevision(target),new ObjectPhysicsSettings {mode="fixed",shape="automatic",mass=.5f},out error),Is.True,error);Assert.That(item.Grab.colliders.Count,Is.EqualTo(13));yield return null;
-            string saved=JsonUtility.ToJson(editor.Read(target));var meshes=item.Grab.colliders.ToArray();string obstacle=Path.Combine(directory,"room.v5.json.pending");Directory.CreateDirectory(obstacle);
+            string saved=JsonUtility.ToJson(editor.Read(target));var meshes=item.Grab.colliders.ToArray();string obstacle=Path.Combine(directory,"room.v6.json.pending");Directory.CreateDirectory(obstacle);
             try{Assert.That(executor.Execute(ObjectEditRequest(CollisionCall(target,new CollisionRecipe())),out _,out _),Is.False);Assert.That(JsonUtility.ToJson(editor.Read(target)),Is.EqualTo(saved));Assert.That(item.Grab.colliders,Is.EqualTo(meshes));}finally{Directory.Delete(obstacle);}
         }
     }

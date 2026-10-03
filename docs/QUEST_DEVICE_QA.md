@@ -1637,3 +1637,16 @@ scales, simultaneous tools, interrupted tracking, room pause and failed-save
 retry/discard. A loose/resting chalk must not draw. Maestro-held chalk must respect
 human surface ownership. Measure frame time with active tools and full ink budgets.
 Desktop tests and browser replay do not close this device gate.
+
+### Physical hinge acceptance — pending Quest test
+
+Using the shared workshop or agent, create a fixed mount and solid moving member,
+configure their local hinge frames, explicitly align, then Start physics. Try a
+free spinner, a limited lever, spring return and motor. Grip/release the member
+and check that it stays attached. Pause/resume and reload at a nonzero angle: the
+saved limits and spring target must retain the same zero reference, with no old
+throw speed restored. Move/resize a member, delete/Undo its mount, and confirm
+that misaligned or missing connections freeze and explain their state until
+explicit repair. Test interaction against scanned surfaces and all 16 admitted
+hinges while observing native frame timing. Desktop PhysX and book-form checks
+do not establish Quest comfort, stability or performance.

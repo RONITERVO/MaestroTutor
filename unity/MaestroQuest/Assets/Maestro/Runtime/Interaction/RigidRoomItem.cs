@@ -21,6 +21,8 @@ namespace Maestro.Quest.Interaction
         RoomPhysicsWorld world;
         PhysicsMaterial material;
         readonly HashSet<object> owners = new();
+        readonly HashSet<object> constraints = new();
+        public void SetConstraintBlocked(object owner,bool blocked){bool changed=blocked?constraints.Add(owner):constraints.Remove(owner);if(changed){MotionRevision++;Refresh();}}
         ItemPhysics profile;
         bool wasMoving, canceled, geometryReady = true;
         float quietSince;
@@ -37,6 +39,7 @@ namespace Maestro.Quest.Interaction
             ContactStarted.Invoke(item,collision.collider,point,speed);
         }
         public uint MotionRevision {get;private set;}
+        public uint PlacementRevision {get;private set;}
         public bool TryReadMotion(out bool available,out float speed,out float angularSpeed) {
             available=false;speed=angularSpeed=0;
             if(!isActiveAndEnabled||!body||!item||!item.isActiveAndEnabled||!item.Grab||!Dynamic)return false;
@@ -79,7 +82,7 @@ namespace Maestro.Quest.Interaction
             Refresh();
         }
         void PhysicsChanged(){MotionRevision++;Refresh();}
-        bool Allowed => Dynamic && geometryReady && owners.Count == 0 && world && world.CanSimulate(transform.position);
+        bool Allowed => Dynamic && geometryReady && owners.Count == 0 && constraints.Count == 0 && world && world.CanSimulate(transform.position);
         void Grabbed(SelectEnterEventArgs _) { MotionRevision++;canceled = false; wasMoving = true; }
         void Released(SelectExitEventArgs args)
         {
@@ -111,7 +114,7 @@ namespace Maestro.Quest.Interaction
         }
         public void Teleported()
         {
-            MotionRevision++;StopVelocity(); canceled = true;
+            PlacementRevision++;MotionRevision++;StopVelocity(); canceled = true;
             lastGoodPosition = transform.position; lastGoodRotation = transform.rotation;
             if (body) { body.position = transform.position; body.rotation = transform.rotation; }
             Refresh();
@@ -123,6 +126,7 @@ namespace Maestro.Quest.Interaction
             if(!Dynamic) {error="Choose solid or bouncy physics for this object first";return false;}
             if(!geometryReady) {error="Object collision geometry is still loading";return false;}
             if(item.Grab.isSelected) {error="Release the object before changing its motion";return false;}
+            if(constraints.Count>0) {error="A physical connection is suspended; inspect its state";return false;}
             if(AnimationOwned) {error="An animation or carried prop owns this object";return false;}
             if(!world||!world.CanSimulate(transform.position)) {error="Start room physics with valid scanned surfaces first";return false;}
             return true;

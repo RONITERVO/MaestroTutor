@@ -15,7 +15,7 @@ export interface CapabilitySchema {
  oneOf?:CapabilitySchema[];'x-confirmation'?:string;'x-discriminators'?:string[];title?:string;description?:string;examples?:unknown[];'x-static'?:boolean;'x-channels'?:string[];'x-requirements'?:string[];'x-features'?:string[];
  items?:CapabilitySchema;minItems?:number;maxItems?:number;nullable?:boolean;
  properties?:Record<string,CapabilitySchema>;required?:string[];additionalProperties?:false;
- format?:'unitQuaternion'|'boundedOffset'|'roomRecipe'|'lathePart'|'collisionRecipe'|'programModule'|'programMemoryValue'|'objectLayout'|'creationBatch'|'structureSource';'x-resource'?:'object';'x-requires'?:Record<string,string>;
+ format?:'unitQuaternion'|'boundedOffset'|'roomRecipe'|'lathePart'|'collisionRecipe'|'programModule'|'programMemoryValue'|'objectLayout'|'creationBatch'|'structureSource'|'hingeConfiguration';'x-resource'?:'object';'x-requires'?:Record<string,string>;
  minimum?:number;maximum?:number;maxLength?:number;pattern?:string;enum?:string[];'x-enum-labels'?:Record<string,string>;'x-enum-images'?:Record<string,string>;
 }
 export interface CapabilityDefinition {
@@ -65,6 +65,11 @@ function validate(value:unknown,schema:CapabilitySchema,path:string):string|null
    if(schema.format==='structureSource'){
     const entries=(value.kind==='capture'?value.members:value.slots) as {slot:string;target?:string;placement?:{target:string;position:{x:number;y:number;z:number}}}[];
     return new Set(entries.map(x=>x.slot)).size===entries.length&&new Set(entries.map(x=>x.target??x.placement!.target)).size===entries.length&&entries.every(x=>!x.placement||x.placement.position.x**2+x.placement.position.y**2+x.placement.position.z**2<=625)?null:path+' needs distinct slots and valid baseline placements';
+   }
+   if(schema.format==='hingeConfiguration'){
+    const d=value.definition as {ownerFrame:{position:Record<string,number>};connectedFrame:{position:Record<string,number>};limits:{enabled:boolean;minimum:number;maximum:number};drive:{mode:string;target:number}};
+    return value.target!==value.connected&&d.limits.minimum<d.limits.maximum&&(!d.limits.enabled||d.drive.mode!=='spring'||d.drive.target>=d.limits.minimum&&d.drive.target<=d.limits.maximum)&&
+     [d.ownerFrame,d.connectedFrame].every(f=>Object.values(f.position).reduce((sum,n)=>sum+n*n,0)<=100)?null:path+' needs different objects, bounded anchors and a spring target inside its limits';
    }
    if(schema.format==='creationBatch')return validCreationBatchGeometry(value)?null:path+' needs distinct idle pieces with valid transformed placements';
    if(schema.format==='objectLayout'){

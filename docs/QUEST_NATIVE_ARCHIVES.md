@@ -67,20 +67,20 @@ requesting another export. A cancelled receipt is not later rewritten as success
 App-private cache/pending provider entries left by process loss are not evidence
 of a completed export; crash cleanup and power-loss acceptance remain work.
 
-## Version 3 format
+## Version 5 format
 
 The ZIP includes `manifest.json` with exactly `format`, `version` and `entries`.
-The format is `maestro-native-workspace`, version is `4`, and every entry has exact
+The format is `maestro-native-workspace`, version is `5`, and every entry has exact
 `path`, `bytes` and lowercase SHA-256. Hashes detect mismatched content; they do not
 authenticate the author. The manifest hash identifies the inspected inventory.
 
-Version 3 includes persistent structures and drawing patches/ink in the v4 room
-document. Pre-release v1/v2 archives remain preserved but are not interpreted as
-v3; see [surface persistence](QUEST_SURFACE_DRAWING.md#persistence-and-boundaries).
+Version 5 includes structures, drawing patches/ink, drawing tips and physical hinges
+in the v6 room document. Pre-release v1–v4 archives remain preserved but are not
+interpreted as v5; see [surface persistence](QUEST_SURFACE_DRAWING.md#persistence-and-boundaries).
 
 Required documents:
 
-- `room.v5.json`
+- `room.v6.json`
 - `behaviours.v2.json`
 - `controls.v2.json`
 - `avatar-activities.v2.json`
