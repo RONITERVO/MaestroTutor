@@ -35,6 +35,9 @@ namespace Maestro.Quest.Creation
         internal bool HasUnsavedChanges => dirty || saveTask != null;
         public string Status { get; private set; } = "Choose a shape or pick up an object";
         public bool DrawingMode { get; private set; }
+        public bool DrawingOnSurfaces {get;private set;}
+        public bool SurfaceErasing {get;private set;}
+        public float DrawingRadius {get;private set;}=.003f;
         public Color Paint { get; private set; } = IllustratedMaterials.Hex("2B8D88");
         public bool CanUndo => !WriteGate.Frozen && journal != null && journal.CanUndo;
         public bool CanRedo => !WriteGate.Frozen && journal != null && journal.CanRedo;
@@ -157,10 +160,12 @@ namespace Maestro.Quest.Creation
             return CommitCreatedObject(item,out id,out error);
         }
         public bool CanCreateRecipe(RoomRecipe recipe,out string error)=>CanCreateRecipe(recipe,null,null,out error);
-        public bool CanCreateRecipe(RoomRecipe recipe,CollisionRecipe collision,ObjectPhysicsSettings physics,out string error) {
+        public bool CanCreateRecipe(RoomRecipe recipe,CollisionRecipe collision,ObjectPhysicsSettings physics,out string error,DrawingSurface[] surfaces=null) {
             if(!CanCreatePrimitive(out error))return false;
             if(recipe==null) {error="Provide a construction recipe";return false;}
             if(!recipe.Validate(out error))return false;
+            if(!DrawingSurface.ValidateCollection(new RoomObjectData {kind=RoomObjectKind.Assembly,recipe=recipe,surfaces=surfaces},out error))return false;
+            if(Snapshot().objects.Sum(x=>x.surfaces?.Length??0)+(surfaces?.Length??0)>DrawingSurface.MaximumRoomSurfaces){error="This room has reached its drawing-surface limit";return false;}
             if(collision!=null&&!collision.Validate(out error))return false;
             if(physics!=null&&!RoomControls.ValidPhysics(physics)){error="Provide valid fixed/solid/bouncy physics, collision mode and mass";return false;}
             if(journal.Snapshot().objects.Sum(CollisionRecipe.ReservedPieces)+Math.Max(1,collision?.Pieces??0)>CollisionRecipe.MaximumRoomPieces){error="Collision shapes exceed the room piece budget";return false;}
@@ -169,9 +174,9 @@ namespace Maestro.Quest.Creation
             return true;
         }
         public bool CreateRecipe(string name,Vector3 position,float scale,RoomRecipe recipe,out string id,out string error)=>CreateRecipe(name,position,scale,recipe,null,null,out id,out error);
-        public bool CreateRecipe(string name,Vector3 position,float scale,RoomRecipe recipe,CollisionRecipe collision,ObjectPhysicsSettings physics,out string id,out string error) {
-            id=null;if(!CanCreateRecipe(recipe,collision,physics,out error))return false;
-            if(!PrepareRecipeObject(name,position,scale,recipe,collision,physics,out var item,out error))return false;
+        public bool CreateRecipe(string name,Vector3 position,float scale,RoomRecipe recipe,CollisionRecipe collision,ObjectPhysicsSettings physics,out string id,out string error,DrawingSurface[] surfaces=null) {
+            id=null;if(!CanCreateRecipe(recipe,collision,physics,out error,surfaces))return false;
+            if(!PrepareRecipeObject(name,position,scale,recipe,collision,physics,out var item,out error,surfaces))return false;
             return CommitCreatedObject(item,out id,out error);
         }
         bool CommitCreatedObject(RoomObjectData item,out string id,out string error) {
@@ -250,6 +255,7 @@ namespace Maestro.Quest.Creation
         {
             CapturePhysicsPlacements();
             Paint = color; Paint = new Color(Paint.r,Paint.g,Paint.b,1);
+            if(DrawingMode){SetStatus("Pencil colour chosen for the next stroke");return;}
             var item = journal.Read(selected);
             if (item != null && !item.IsBuiltIn) { Editing?.Invoke(); if(!PaintObject(selected,Paint,out var error))SetStatus(error); }
             else SetStatus("Paint chosen for your next creation");
@@ -278,9 +284,17 @@ namespace Maestro.Quest.Creation
             error=null;if(DrawingInProgress){error="Finish the current stroke before posing";return false;}
             // The pose caller already coordinates its target. The manual global
             // Editing signal would cancel its own invocation and unrelated actors.
-            DrawingMode=false;SetStatus("Pencil put away");return true;
+            DrawingMode=false;DrawingOnSurfaces=false;SurfaceErasing=false;SetStatus("Pencil put away");return true;
         }
-        public void ToggleDrawing() { Editing?.Invoke(); DrawingMode = !DrawingMode; SetStatus(DrawingMode ? "Pencil: hold trigger or pinch to draw" : "Pencil put away"); }
+        internal bool CanConfigureDrawing(out string error){error=DrawingInProgress?"Finish or discard the current stroke first":WriteGate.Frozen?"Finish the workspace operation first":Ownership.Suspended?"Room actions are paused":null;return error==null;}
+        internal bool ConfigureDrawing(string mode,Color color,float radius,out string error) {
+            if(!CanConfigureDrawing(out error))return false;
+            if(!new[]{"off","space","surface","surfaceErase"}.Contains(mode)||!float.IsFinite(radius)||radius<.001f||radius>.02f||new[]{color.r,color.g,color.b}.Any(n=>!float.IsFinite(n)||n<0||n>1)){error="Choose a supported pencil mode, colour and thickness";return false;}
+            DrawingMode=mode!="off";DrawingOnSurfaces=mode=="surface"||mode=="surfaceErase";SurfaceErasing=mode=="surfaceErase";DrawingRadius=radius;Paint=new Color(color.r,color.g,color.b,1);
+            SetStatus(mode=="off"?"Pencil put away":mode=="surfaceErase"?"Surface eraser: tap a stroke to remove it":mode=="surface"?"Surface pencil: draw on an enabled patch within 25 cm":"Space pencil: hold trigger or pinch to draw");return true;
+        }
+        public void ToggleDrawing(){if(!ConfigureDrawing(DrawingMode&&!DrawingOnSurfaces?"off":"space",Paint,DrawingRadius,out var error))SetStatus(error);}
+        public void ToggleSurfaceDrawing(){if(!ConfigureDrawing(DrawingMode&&DrawingOnSurfaces&&!SurfaceErasing?"off":"surface",Paint,DrawingRadius,out var error))SetStatus(error);}
 
         public bool AddDrawing(IReadOnlyList<Vector3> worldPoints, Color color)
         {
@@ -394,6 +408,7 @@ namespace Maestro.Quest.Creation
                 if(created || changed==null || changed.Contains(data.id)) {
                 item.GetComponent<CreatedRoomObject>()?.ApplyRecipe(data.recipe);
                 item.GetComponent<CreatedRoomObject>()?.ApplyDrawing(data);
+                var surfaces=item.GetComponent<DrawingSurfaceView>();if(!surfaces&&(data.surfaces?.Length??0)>0)surfaces=item.gameObject.AddComponent<DrawingSurfaceView>();if(surfaces)surfaces.Apply(data.surfaces);
                 item.GetComponent<CreatedRoomObject>()?.ApplyCollision(data.collision);
                 item.GetComponent<CreatedRoomObject>()?.SetCollisionShape(data.collisionShape);
                 item.GetComponent<RigidRoomItem>()?.Configure(PhysicsWorld,data.physics,data.mass);

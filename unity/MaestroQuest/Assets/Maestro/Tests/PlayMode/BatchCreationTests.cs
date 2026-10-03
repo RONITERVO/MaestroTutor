@@ -31,7 +31,7 @@ namespace Maestro.Quest.Tests
             var executor=new RoomAgentExecutor(editor);var call=BatchCall();var before=JsonUtility.ToJson(editor.Snapshot());
             var robot=CreationTemplates.All.First(e=>e.Id=="robot");var piece=call["arguments"]["blueprint"]["pieces"][0];call["arguments"]["blueprint"]["pieces"]=new JArray(Enumerable.Range(0,16).Select(i=>{var p=piece.DeepClone();p["slot"]="robot_"+i;p["source"]["templateHash"]=robot.Hash;return p;}));
             Assert.That(executor.Execute(TemplateRequest(call),out _,out _),Is.False);Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(before),"The combined 304-part blueprint exceeds the room budget even though each robot fits");
-            string obstacle=Path.Combine(directory,"room.v3.json.pending");Directory.CreateDirectory(obstacle);
+            string obstacle=Path.Combine(directory,"room.v4.json.pending");Directory.CreateDirectory(obstacle);
             try{Assert.That(executor.Execute(TemplateRequest(BatchCall()),out _,out _),Is.False);Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(before));}finally{Directory.Delete(obstacle);}yield return null;
         }
         [UnityTest] public IEnumerator RealNativeProgramPaintsEveryReturnedPieceAndTemporaryDiscardRemovesWholeBatch() {

@@ -160,7 +160,7 @@ namespace Maestro.Quest.Book
             else if (pageHeld) Router.Move(index, ray);
             input.PageHeld = pageHeld;
             bool pencil = Editor && Editor.DrawingMode && !page;
-            DrawPointer(input, ray, pencil || (hitSomething && (page || item)), pencil ? ray.GetPoint(.12f) : hit.point);
+            DrawPointer(input, ray, pencil || (hitSomething && (page || item)), pencil ? (Drawing?Drawing.PointerPoint(ray):ray.GetPoint(.12f)) : hit.point);
             // B/Y recovers the room, including a book placed beyond reach.
             if (!usingHand && input.Restore.WasPressedThisFrame()) RestoreRoom();
         }

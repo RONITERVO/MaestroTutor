@@ -1606,3 +1606,23 @@ fixed complete-room feature-count and absent-memory serialization failures. See
 no headset and no AI provider. Android WebView, input, room scan, provider and
 physical performance gates above remain required. Do not use this result to mark
 those gates complete.
+
+
+## Planar ink and chalkboard — pending Quest 3 acceptance
+
+The surface-drawing increment is desktop-tested separately. Device work remains
+on hold; these checks are not reported as completed:
+
+- Ask for a Chalkboard, put it within reach and use Surface with controller trigger
+  and hand pinch. Confirm the tip follows the visible patch and misses make no ink.
+- Select colours, erase one stroke, then Undo/Redo. The board must remain present.
+  Check the widened 3D tray is reachable and its labels remain readable.
+- Move, rotate, scale and copy the marked board. Marks must follow its Board part.
+- Interrupt drawing with a grab or app pause; verify the retained draft is visible,
+  retry/discard is understandable, and retry cannot change a replaced patch.
+- Keep/Discard temporary ink, restart, and export/import a workspace. Confirm saved
+  colour, thickness and identity, and no repeated stroke after reconnect.
+- Profile a representative busy room and the configured ink limits with the book,
+  default avatar and its animations active. Admission limits alone are not a
+  performance pass. Check ray behaviour around foreground/occluding objects;
+  this increment uses explicit patch intersections, not full mesh projection.

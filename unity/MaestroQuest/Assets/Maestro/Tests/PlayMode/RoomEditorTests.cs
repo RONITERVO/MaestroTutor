@@ -111,8 +111,8 @@ namespace Maestro.Quest.Tests
             var router = root.AddComponent<BookPointerRouter>(); router.Editor = editor;
             yield return null; Physics.SyncTransforms();
             int before = editor.Snapshot().objects.Length;
-            var blockRay = new Ray(new Vector3(1.76f,.12f,0),Vector3.forward);
-            var copyRay = new Ray(new Vector3(2.24f,.12f,0),Vector3.forward);
+            var blockRay = new Ray(new Vector3(1.70f,.12f,0),Vector3.forward);
+            var copyRay = new Ray(new Vector3(2.18f,.12f,0),Vector3.forward);
             Assert.That(router.Begin(0,blockRay),Is.True);
             router.End(0,copyRay);
             Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(before));

@@ -91,6 +91,33 @@ try{
   await writeFile(join(directory,'template-authoring.json'),JSON.stringify({boundary:'Real Unity native states; browser acknowledgements replayed separately. Not headset or provider proof.',before:templateBefore,search:templateSearch,definition:templateDefinition,after:templateAfter,read:templateRead,collision:templateCollision,physics:templatePhysics,undo:templateUndo},null,2));
   const brickSource=JSON.parse(await readFile('unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/brick.json','utf8'));
   const {createHash}=await import('node:crypto');const brickHash=createHash('sha256').update(await readFile('unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/brick.json')).digest('hex');
+  const chalkSource=JSON.parse(await readFile('unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/chalkboard.json','utf8'));
+  const chalkHash=createHash('sha256').update(await readFile('unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/chalkboard.json')).digest('hex');
+  const chalkCreated=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'template',templateHash:chalkHash,name:'',x:.4,y:1,z:.6,scale:1}}}}]);
+  const chalkId=chalkCreated.execution?.selected?.output?.objectId;if(typeof chalkId!=='string')throw new Error('Chalkboard template did not create an object');
+  const chalkTool=await execute([{action:'execution',execution:{operation:'start',call:{id:'drawing.tool.set',version:1,arguments:{mode:'surface',red:1,green:1,blue:1,radius:.003}}}}]);
+  const chalkToolRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'drawing.tool',version:1}}]);
+  if((chalkToolRead.catalog?.value as {mode?:string})?.mode!=='surface')throw new Error('Shared pencil mode did not apply');
+  const surfaceSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Edit a drawing surface',offset:0}}]);
+  const surfaceDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.surface.edit',version:1}}]);
+  const surfaceCurrent=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.surfaces',version:1,arguments:{target:chalkId}}}]);
+  const surfaceValue=surfaceCurrent.catalog?.value as {revision:number;surfaces:{id:string;part:string}[]};
+  if(surfaceValue?.surfaces[0]?.part!==chalkSource.definition.surfaces[0].part)throw new Error('Template drawing patch missing');
+  const surfaceArgs={operation:'add',target:chalkId,revision:surfaceValue.revision,surface:'Front',stroke:'',red:1,green:1,blue:1,radius:.003,points:[{x:-.2,y:0,z:0},{x:0,y:.15,z:0},{x:.2,y:0,z:0}]};
+  const surfaceAfter=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.surface.edit',version:1,arguments:surfaceArgs}}}]);
+  const stroke=surfaceAfter.execution?.selected?.output?.stroke,inkRevision=surfaceAfter.execution?.selected?.output?.revision;
+  if(typeof stroke!=='string'||typeof inkRevision!=='number')throw new Error('Surface ink receipt missing');
+  const inkRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.surface.stroke',version:1,arguments:{target:chalkId,surface:'Front',stroke,revision:inkRevision,offset:0}}}]);
+  const inkValue=inkRead.catalog?.value as {total?:number;points?:unknown[]};if(inkValue?.total!==3||JSON.stringify(inkValue.points)!==JSON.stringify(surfaceArgs.points))throw new Error('Native ink differs from shared authoring');
+  const erased=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.surface.edit',version:1,arguments:{operation:'removeStroke',target:chalkId,surface:'Front',stroke,revision:inkRevision}}}}]);
+  const erasedRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.surfaces',version:1,arguments:{target:chalkId}}}]);
+  if((erasedRead.catalog?.value as {surfaces:{strokes:number}[]})?.surfaces[0].strokes!==0)throw new Error('Surface erasing did not remove ink');
+  await execute([{action:'undo'}]);
+  const surfaceUndo=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.surfaces',version:1,arguments:{target:chalkId}}}]);
+  if((surfaceUndo.catalog?.value as {surfaces:{strokes:number}[]})?.surfaces[0].strokes!==1)throw new Error('Ink Undo did not restore stroke');
+  await execute([{action:'undo'}]);await execute([{action:'undo'}]);
+  await execute([{action:'execution',execution:{operation:'start',call:{id:'drawing.tool.set',version:1,arguments:{mode:'off',red:1,green:1,blue:1,radius:.003}}}}]);
+  await writeFile(join(directory,'surface-authoring.json'),JSON.stringify({boundary:'Real Unity native states and shared transport; browser acknowledgements replayed separately. No headset or provider proof.',before:chalkCreated,tool:chalkTool,toolRead:chalkToolRead,search:surfaceSearch,definition:surfaceDefinition,current:surfaceCurrent,after:surfaceAfter,read:inkRead,erased,erasedRead,undo:surfaceUndo},null,2));
   const layoutIds:string[]=[];let layoutBefore=templateUndo;
   for(let i=0;i<2;i++){
    layoutBefore=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'template',templateHash:brickHash,name:brickSource.name+' '+(i+1),x:.4+i*.25,y:1.2,z:.7,scale:1}}}}]);
@@ -194,7 +221,7 @@ try{
   await execute([{action:'undo'}]);await execute([{action:'undo'}]);await execute([{action:'undo'}]);
   await execute([{action:'rules',rule:{action:'edit',revision:lease.state().rules!.revision,edits:[{kind:'delete',target:compositionId}]}}]);
   await writeFile(join(directory,'program-composition.json'),JSON.stringify({boundary:'Real Unity runtime and shared transport; no headset or provider proof.',source:JSON.parse(compositionSource),saved:compositionSaved,after:compositionAfter,group:compositionGroup,state:compositionState,undo:compositionUndo,outcome:compositionOutcome},null,2));
-  outcome={watch:{moduleHash,program:watcherId,includedSourceAndNativeRearmVerified:true},composition:{program:compositionId,outcome:compositionOutcome,buildCaptureMoveResetAndUndoVerified:true},structures:{captureReceipt:structureAfter.execution?.selected,liveDisplacementResetAndUndoVerified:true},batch:{createReceipt:batchAfter.execution?.selected,identitiesAndSingleUndoVerified:true},layout:{applyReceipt:layoutAfter.execution?.selected,liveReadAndSingleUndoVerified:true},template:{hash:templateArgs.templateHash,createReceipt:templateAfter.execution?.selected,componentsAndSingleUndoVerified:true},createdId:target,createReceipt:selected,paintVerified:true,undoPaintVerified:true,undoCreateVerified:true,diagnostics:diagnostic.catalog.value,lathe:{createReceipt:lathe.execution?.selected,profile:value,editAndUndoVerified:true},collision:{summary:summaryValue,editAndUndoVerified:true},latheCycles:cycle+1};
+  outcome={surface:{chalkHash,stroke,toolAndInkReadEraseUndoVerified:true},watch:{moduleHash,program:watcherId,includedSourceAndNativeRearmVerified:true},composition:{program:compositionId,outcome:compositionOutcome,buildCaptureMoveResetAndUndoVerified:true},structures:{captureReceipt:structureAfter.execution?.selected,liveDisplacementResetAndUndoVerified:true},batch:{createReceipt:batchAfter.execution?.selected,identitiesAndSingleUndoVerified:true},layout:{applyReceipt:layoutAfter.execution?.selected,liveReadAndSingleUndoVerified:true},template:{hash:templateArgs.templateHash,createReceipt:templateAfter.execution?.selected,componentsAndSingleUndoVerified:true},createdId:target,createReceipt:selected,paintVerified:true,undoPaintVerified:true,undoCreateVerified:true,diagnostics:diagnostic.catalog.value,lathe:{createReceipt:lathe.execution?.selected,profile:value,editAndUndoVerified:true},collision:{summary:summaryValue,editAndUndoVerified:true},latheCycles:cycle+1};
   }
  }
  await writeFile(join(directory,'journey.json'),JSON.stringify({version:1,boundary:'Real Unity Editor app and shared room protocol; no Quest input, WebView, scan or Store proof',providerUsed:!!prompt,initial,observations,outcome},null,2));

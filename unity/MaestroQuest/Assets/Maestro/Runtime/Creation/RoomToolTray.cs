@@ -14,34 +14,36 @@ namespace Maestro.Quest.Creation
         RoomEditor editor;
         RoomInteraction room;
         TextMesh status,pencilLabel,eraseLabel;
-        Material pencilPaint;
+        Material pencilPaint,surfacePaint;
         public void Build(RoomEditor editor, RoomInteraction room)
         {
             this.editor = editor; this.room = room;
             var wood = Material(IllustratedMaterials.Hex("C89D65")); var paper = Material(IllustratedMaterials.Paper);
             var teal = Material(IllustratedMaterials.Hex("2B8D88")); var ink = Material(IllustratedMaterials.Ink);
-            Part(transform,PrimitiveType.Cube,new Vector3(0,-.06f,0),new Vector3(.62f,.56f,.025f),wood);
-            var handle = gameObject.AddComponent<BoxCollider>(); handle.center = new Vector3(0,-.06f,.007f); handle.size = new Vector3(.62f,.56f,.025f);
+            Part(transform,PrimitiveType.Cube,new Vector3(0,-.06f,0),new Vector3(.74f,.56f,.025f),wood);
+            var handle = gameObject.AddComponent<BoxCollider>(); handle.center = new Vector3(0,-.06f,.007f); handle.size = new Vector3(.74f,.56f,.025f);
             var movable = gameObject.AddComponent<RoomItem>(); movable.Configure(new Collider[] { handle },1,1); room.Register(movable);
             var kinds = new[] { RoomTool.Block, RoomTool.Ball, RoomTool.Cylinder };
             var primitives = new[] { PrimitiveType.Cube, PrimitiveType.Sphere, PrimitiveType.Cylinder };
             for (int i = 0; i < 3; i++)
             {
-                var tool = Tool(kinds[i],new Vector3(-.24f + i*.12f,.12f,-.04f),kinds[i].ToString());
+                var tool = Tool(kinds[i],new Vector3(-.30f + i*.12f,.12f,-.04f),kinds[i].ToString());
                 Part(tool,primitives[i],Vector3.zero,primitives[i] == PrimitiveType.Cylinder ? new Vector3(.046f,.025f,.046f) : Vector3.one*.046f,teal);
             }
-            var pencil = Tool(RoomTool.Pencil,new Vector3(.12f,.12f,-.04f),"Draw");
+            var pencil = Tool(RoomTool.Pencil,new Vector3(.06f,.12f,-.04f),"Draw");
             pencilLabel=pencil.GetComponentInChildren<TextMesh>();
             pencilPaint = Material(IllustratedMaterials.Ribbon);
             Part(pencil,PrimitiveType.Cylinder,new Vector3(0,.012f,0),new Vector3(.016f,.031f,.016f),pencilPaint);
             Part(pencil,PrimitiveType.Sphere,new Vector3(0,-.025f,0),Vector3.one*.012f,ink);
-            var copy = Tool(RoomTool.Duplicate,new Vector3(.24f,.12f,-.04f),"Copy");
+            var copy = Tool(RoomTool.Duplicate,new Vector3(.18f,.12f,-.04f),"Copy");
             Part(copy,PrimitiveType.Cube,new Vector3(-.011f,.007f,.005f),Vector3.one*.038f,paper);
             Part(copy,PrimitiveType.Cube,new Vector3(.011f,-.007f,-.014f),Vector3.one*.038f,teal);
-            var colors = new[] { IllustratedMaterials.Cover, IllustratedMaterials.Hex("2B8D88"), IllustratedMaterials.Ribbon, IllustratedMaterials.Hex("B8644E"), IllustratedMaterials.Ink };
+            var surface=Tool(RoomTool.SurfacePencil,new Vector3(.30f,.12f,-.04f),"Surface");surfacePaint=Material(IllustratedMaterials.Paper);
+            Part(surface,PrimitiveType.Cylinder,Vector3.zero,new Vector3(.022f,.032f,.022f),surfacePaint);
+            var colors = new[] { IllustratedMaterials.Cover, IllustratedMaterials.Hex("2B8D88"), IllustratedMaterials.Ribbon, IllustratedMaterials.Hex("B8644E"), IllustratedMaterials.Ink, Color.white };
             for (int i = 0; i < colors.Length; i++)
             {
-                var well = Tool(RoomTool.Paint,new Vector3(-.24f+i*.12f,0,-.032f),"Paint"); well.GetComponent<PhysicalRoomAction>().Paint = colors[i];
+                var well = Tool(RoomTool.Paint,new Vector3(-.30f+i*.12f,0,-.032f),"Paint"); well.GetComponent<PhysicalRoomAction>().Paint = colors[i];
                 Part(well,PrimitiveType.Sphere,Vector3.zero,new Vector3(.052f,.052f,.025f),Material(colors[i]));
             }
             var bottom = new[] { RoomTool.Erase, RoomTool.Undo, RoomTool.Redo, RoomTool.Save, RoomTool.Recall };
@@ -83,11 +85,12 @@ namespace Maestro.Quest.Creation
             if(!isActiveAndEnabled||!editor||!status||!pencilLabel||!eraseLabel||!pencilPaint)return;
             var pencilAction=pencilLabel.GetComponentInParent<PhysicalRoomAction>();var eraseAction=eraseLabel.GetComponentInParent<PhysicalRoomAction>();
             if(!pencilAction||!eraseAction)return;
-            bool retained=editor.GetComponent<SpatialDrawing>()?.HasUnsavedStroke==true;pencilLabel.text=retained?"Retry stroke":"Draw";eraseLabel.text=retained?"Discard stroke":"Erase";
+            bool retained=editor.GetComponent<SpatialDrawing>()?.HasUnsavedStroke==true;pencilLabel.text=retained?"Retry stroke":"Draw";eraseLabel.text=retained?"Discard stroke":editor.DrawingOnSurfaces?"Erase ink":"Erase";
+            if(surfacePaint)surfacePaint.color=editor.DrawingMode&&editor.DrawingOnSurfaces?IllustratedMaterials.Hex("2B8D88"):IllustratedMaterials.Paper;
             pencilAction.AccessibleName=pencilLabel.text;eraseAction.AccessibleName=eraseLabel.text;
             status.text = (editor.TemporaryRoom?"TEMPORARY | ":"SAVED ROOM | ")+editor.Status;
             if (status.text.Length > 70) status.text = status.text.Substring(0,70) + "…";
-            pencilPaint.color = retained ? IllustratedMaterials.Hex("D99B43") : editor.DrawingMode ? IllustratedMaterials.Hex("2B8D88") : IllustratedMaterials.Ribbon;
+            pencilPaint.color = retained ? IllustratedMaterials.Hex("D99B43") : editor.DrawingMode&&!editor.DrawingOnSurfaces ? IllustratedMaterials.Hex("2B8D88") : IllustratedMaterials.Ribbon;
         }
         static TextMesh Label(Transform parent, Vector3 position, string text, float size)
         {

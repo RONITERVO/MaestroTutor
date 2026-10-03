@@ -7506,6 +7506,7 @@
                 "enum": [
                   "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496",
                   "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8",
+                  "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac",
                   "8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4",
                   "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950",
                   "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18",
@@ -7517,6 +7518,7 @@
                 "x-enum-labels": {
                   "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "Ball",
                   "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8": "Building brick",
+                  "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "Chalkboard",
                   "8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4": "Cup",
                   "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950": "Domino",
                   "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18": "Fork",
@@ -7528,6 +7530,7 @@
                 "x-enum-images": {
                   "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "quest/templates/f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496.png",
                   "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8": "quest/templates/a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8.png",
+                  "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "quest/templates/5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac.png",
                   "8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4": "quest/templates/8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4.png",
                   "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950": "quest/templates/4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950.png",
                   "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18": "quest/templates/3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18.png",
@@ -7581,7 +7584,7 @@
             ],
             "additionalProperties": false,
             "title": "Create starter object",
-            "description": "Expand an exact bundled template hash into ordinary editable recipe, collision and physics data. Read creation.template for descriptions and cost counts; names and tags are display metadata, never executable instructions. Empty name keeps its template name. Creates one object and one Undo through the same recipe creation path; later template changes cannot alter existing objects. Templates start idle, do not start physics, install behaviours, snap bricks or simulate liquids. Robot tracks can be played explicitly with animation.play source.kind recipe. The hash is an exact choice: missing versions fail, never substitute by name. Optional user template publishing is not part of this bundled library.",
+            "description": "Expand an exact bundled template hash into ordinary editable recipe, collision, physics and optional flat drawing-surface data. Read creation.template for descriptions and cost counts; names and tags are display metadata, never executable instructions. Empty name keeps its template name. Creates one object and one Undo through the same recipe creation path; later template changes cannot alter existing objects. Templates start idle, do not start physics, install behaviours, snap bricks or simulate liquids. Robot tracks can be played explicitly with animation.play source.kind recipe. The hash is an exact choice: missing versions fail, never substitute by name. Optional user template publishing is not part of this bundled library.",
             "examples": [
               {
                 "templateHash": "8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4",
@@ -7761,6 +7764,7 @@
                               "enum": [
                                 "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496",
                                 "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8",
+                                "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac",
                                 "8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4",
                                 "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950",
                                 "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18",
@@ -7772,6 +7776,7 @@
                               "x-enum-labels": {
                                 "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "Ball",
                                 "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8": "Building brick",
+                                "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "Chalkboard",
                                 "8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4": "Cup",
                                 "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950": "Domino",
                                 "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18": "Fork",
@@ -7783,6 +7788,7 @@
                               "x-enum-images": {
                                 "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "quest/templates/f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496.png",
                                 "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8": "quest/templates/a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8.png",
+                                "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "quest/templates/5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac.png",
                                 "8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4": "quest/templates/8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4.png",
                                 "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950": "quest/templates/4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950.png",
                                 "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18": "quest/templates/3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18.png",
@@ -9142,6 +9148,685 @@
       }
     },
     {
+      "id": "drawing.tool.set",
+      "version": 1,
+      "label": "Choose the physical pencil",
+      "input": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "off",
+              "space",
+              "surface",
+              "surfaceErase"
+            ]
+          },
+          "red": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          },
+          "green": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          },
+          "blue": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          },
+          "radius": {
+            "type": "number",
+            "minimum": 0.001,
+            "maximum": 0.02
+          }
+        },
+        "required": [
+          "mode",
+          "red",
+          "green",
+          "blue",
+          "radius"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "drawingSurfaces.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [
+        "drawing.idle",
+        "room.active"
+      ],
+      "description": "Select off, free-space pencil or flat-surface pencil or surfaceErase, RGB ink and local radius for the next physical trigger/pinch stroke. Surface mode only draws on explicitly configured enabled patches within 25 cm and never falls back to free-space ink. surfaceErase removes the nearest complete stroke within twice the local radius (minimum 1 cm) per tap, with one Undo. It never deletes the object. New captures require releasing the surface object first. No marks are created, targets moved or behaviours started by selecting the tool. Tool preferences are session-local; saved stroke colour/thickness do not change. Active and retained captures must finish or be discarded before switching. The tray uses the same configuration path.",
+      "example": {
+        "mode": "surface",
+        "red": 1,
+        "green": 1,
+        "blue": 1,
+        "radius": 0.003
+      }
+    },
+    {
+      "id": "object.surface.edit",
+      "version": 1,
+      "label": "Edit a drawing surface",
+      "input": {
+        "type": "object",
+        "x-discriminators": [
+          "operation"
+        ],
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "configure"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              },
+              "surface": {
+                "type": "string",
+                "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+                "maxLength": 32
+              },
+              "definition": {
+                "type": "object",
+                "properties": {
+                  "part": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9_]{0,32}$",
+                    "maxLength": 32
+                  },
+                  "position": {
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "type": "number",
+                        "minimum": -10.0,
+                        "maximum": 10.0
+                      },
+                      "y": {
+                        "type": "number",
+                        "minimum": -10.0,
+                        "maximum": 10.0
+                      },
+                      "z": {
+                        "type": "number",
+                        "minimum": -10.0,
+                        "maximum": 10.0
+                      }
+                    },
+                    "required": [
+                      "x",
+                      "y",
+                      "z"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "rotation": {
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      },
+                      "y": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      },
+                      "z": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      },
+                      "w": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      }
+                    },
+                    "required": [
+                      "x",
+                      "y",
+                      "z",
+                      "w"
+                    ],
+                    "additionalProperties": false,
+                    "format": "unitQuaternion"
+                  },
+                  "width": {
+                    "type": "number",
+                    "minimum": 0.02,
+                    "maximum": 4.0
+                  },
+                  "height": {
+                    "type": "number",
+                    "minimum": 0.02,
+                    "maximum": 4.0
+                  },
+                  "enabled": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "part",
+                  "position",
+                  "rotation",
+                  "width",
+                  "height",
+                  "enabled"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "revision",
+              "surface",
+              "definition"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "object.surfaces",
+              "version": 1,
+              "arguments": {
+                "target": "target"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
+            "title": "Configure a flat drawing patch",
+            "x-features": [
+              "drawingSurfaces.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "add"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              },
+              "surface": {
+                "type": "string",
+                "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+                "maxLength": 32
+              },
+              "stroke": {
+                "type": "string",
+                "pattern": "^([a-f0-9]{32})?$",
+                "maxLength": 32
+              },
+              "red": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 1.0
+              },
+              "green": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 1.0
+              },
+              "blue": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 1.0
+              },
+              "radius": {
+                "type": "number",
+                "minimum": 0.001,
+                "maximum": 0.02
+              },
+              "points": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "number",
+                      "minimum": -2.0,
+                      "maximum": 2.0
+                    },
+                    "y": {
+                      "type": "number",
+                      "minimum": -2.0,
+                      "maximum": 2.0
+                    },
+                    "z": {
+                      "type": "number",
+                      "minimum": 0.0,
+                      "maximum": 0.0
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y",
+                    "z"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 2,
+                "maxItems": 64
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "revision",
+              "surface",
+              "stroke",
+              "red",
+              "green",
+              "blue",
+              "radius",
+              "points"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "object.surfaces",
+              "version": 1,
+              "arguments": {
+                "target": "target"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
+            "title": "Draw a surface stroke",
+            "x-features": [
+              "drawingSurfaces.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "splice"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              },
+              "surface": {
+                "type": "string",
+                "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+                "maxLength": 32
+              },
+              "stroke": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "index": {
+                "type": "integer",
+                "minimum": 0.0,
+                "maximum": 512.0
+              },
+              "deleteCount": {
+                "type": "integer",
+                "minimum": 0.0,
+                "maximum": 512.0
+              },
+              "points": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "number",
+                      "minimum": -2.0,
+                      "maximum": 2.0
+                    },
+                    "y": {
+                      "type": "number",
+                      "minimum": -2.0,
+                      "maximum": 2.0
+                    },
+                    "z": {
+                      "type": "number",
+                      "minimum": 0.0,
+                      "maximum": 0.0
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y",
+                    "z"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 0,
+                "maxItems": 64
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "revision",
+              "surface",
+              "stroke",
+              "index",
+              "deleteCount",
+              "points"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "object.surfaces",
+              "version": 1,
+              "arguments": {
+                "target": "target"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
+            "title": "Edit surface stroke points",
+            "x-features": [
+              "drawingSurfaces.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "removeStroke"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              },
+              "surface": {
+                "type": "string",
+                "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+                "maxLength": 32
+              },
+              "stroke": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "revision",
+              "surface",
+              "stroke"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "object.surfaces",
+              "version": 1,
+              "arguments": {
+                "target": "target"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
+            "title": "Erase one stroke",
+            "x-features": [
+              "drawingSurfaces.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "clear"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              },
+              "surface": {
+                "type": "string",
+                "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+                "maxLength": 32
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "revision",
+              "surface"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "object.surfaces",
+              "version": 1,
+              "arguments": {
+                "target": "target"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
+            "title": "Clear the surface",
+            "x-features": [
+              "drawingSurfaces.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "removeSurface"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              },
+              "surface": {
+                "type": "string",
+                "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+                "maxLength": 32
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "revision",
+              "surface"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "object.surfaces",
+              "version": 1,
+              "arguments": {
+                "target": "target"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
+            "title": "Remove the patch and its marks",
+            "x-features": [
+              "drawingSurfaces.v1"
+            ]
+          }
+        ]
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.created",
+        "target.unheld",
+        "source.revision.current",
+        "storage.writable"
+      ],
+      "description": "Configure reusable flat drawing patches on user-created objects or named recipe parts. This is an explicit plane, not projection onto collision boxes, imported mesh triangles, skin or the physical room. Position/rotation belong to the object or part; local X/Y are paper coordinates and the front faces local -Z. Width/height are .02–4 local metres. Use empty part for the object root. Existing marks stay in their patch coordinates; moving/reorienting a patch moves them deliberately and shrinking cannot crop them silently. enabled controls new physical/add strokes, not visibility. add supplies 2–64 planar points (z=0) and returns an exact stroke ID; empty stroke generates one. splice exposes up to 512 points per stroke in batches of 64. removeStroke, clear and removeSurface explicitly remove marks with one Undo. Four surfaces per object, 64 surfaces/128 strokes and 32768 drawing points per room including spatial strokes. Failed saves preserve ink. Temporary edits stay in the fork until Keep. No UVs, physics, animation or drawing-input start is added.",
+      "example": {
+        "operation": "configure",
+        "target": "00000000000000000000000000000000",
+        "revision": 1,
+        "surface": "Front",
+        "definition": {
+          "part": "",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": -0.066
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "width": 0.12,
+          "height": 0.12,
+          "enabled": true
+        }
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "surface": {
+            "type": "string",
+            "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+            "maxLength": 32
+          },
+          "stroke": {
+            "type": "string",
+            "pattern": "^([a-f0-9]{32})?$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "target",
+          "revision",
+          "surface",
+          "stroke"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "object.drawing.edit",
       "version": 1,
       "label": "Edit a pencil stroke",
@@ -9404,7 +10089,7 @@
         "drawing.retained",
         "drawing.session.current"
       ],
-      "description": "Resolve the same frozen failed physical-pencil draft as the tray's Retry stroke and Discard stroke controls. Read object.drawing.capture and supply its current sessionId. Retry creates exactly that stroke through normal saved creation and Undo, or locally in its original temporary room until Keep; failure retains the points and error for another explicit attempt. Discard removes only the unsaved in-memory draft, never a saved selected object. No live stroke is interrupted, no drawing mode is enabled and no automatic retry occurs. The retained draft blocks workspace/temporary-room changes until resolved. App/room destruction loses unsaved memory; it is not a crash recovery archive. Saved output acknowledges an object, while discarded output has empty objectId. A completed receipt is historical and cannot save/discard a later draft. Neither path starts playback or physics.",
+      "description": "Resolve the same frozen failed physical-pencil draft as the tray's Retry stroke and Discard stroke controls. Read object.drawing.capture and supply its current sessionId. For a configured surface, retry appends ink to that unchanged patch and objectId identifies its owner; read object.surface.strokes for stroke IDs. Changed or missing patches refuse retry. For free-space captures, retry creates exactly that stroke through normal saved creation and Undo, or locally in its original temporary room until Keep; failure retains the points and error for another explicit attempt. Discard removes only the unsaved in-memory draft, never a saved selected object. No live stroke is interrupted, no drawing mode is enabled and no automatic retry occurs. The retained draft blocks workspace/temporary-room changes until resolved. App/room destruction loses unsaved memory; it is not a crash recovery archive. Saved output acknowledges an object, while discarded output has empty objectId. A completed receipt is historical and cannot save/discard a later draft. Neither path starts playback or physics.",
       "example": {
         "operation": "retry",
         "sessionId": "00000000000000000000000000000000"
@@ -14824,6 +15509,273 @@
       ]
     },
     {
+      "id": "drawing.tool",
+      "version": 1,
+      "type": {
+        "record": {
+          "mode": "text",
+          "red": "number",
+          "green": "number",
+          "blue": "number",
+          "radius": "number"
+        }
+      },
+      "label": "Current physical pencil",
+      "description": "Session-local mode and next-stroke ink, shared with the physical tray. Reads do not capture geometry, change colour or enable input.",
+      "features": [
+        "drawingSurfaces.v1"
+      ]
+    },
+    {
+      "id": "object.surfaces",
+      "version": 1,
+      "type": {
+        "record": {
+          "target": "text",
+          "revision": "number",
+          "surfaces": {
+            "list": {
+              "record": {
+                "id": "text",
+                "part": "text",
+                "enabled": "boolean",
+                "strokes": "number"
+              }
+            }
+          }
+        }
+      },
+      "label": "Object drawing surfaces",
+      "description": "All configured flat drawing patches (at most four), with the current object revision. Reads do not infer surfaces from a mesh or collider. part is empty for object-local coordinates. Mark counts remain when drawing is disabled. Read object.surface and object.surface.strokes for exact editable definitions.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1",
+        "drawingSurfaces.v1"
+      ]
+    },
+    {
+      "id": "object.surface",
+      "version": 1,
+      "type": {
+        "record": {
+          "revision": "number",
+          "part": "text",
+          "position": {
+            "record": {
+              "x": "number",
+              "y": "number",
+              "z": "number"
+            }
+          },
+          "rotation": {
+            "record": {
+              "x": "number",
+              "y": "number",
+              "z": "number",
+              "w": "number"
+            }
+          },
+          "width": "number",
+          "height": "number",
+          "enabled": "boolean"
+        }
+      },
+      "label": "Drawing surface definition",
+      "description": "Exact plane configuration in its object's or recipe part's local axes. Front faces -Z. This is saved configuration, not the current animated world pose; a patch does not follow skin deformation or imported bones.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "surface": {
+            "type": "string",
+            "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "target",
+          "surface"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000",
+        "surface": "Front"
+      },
+      "features": [
+        "factQueries.v1",
+        "drawingSurfaces.v1"
+      ]
+    },
+    {
+      "id": "object.surface.strokes",
+      "version": 1,
+      "type": {
+        "record": {
+          "revision": "number",
+          "total": "number",
+          "offset": "number",
+          "strokes": {
+            "list": {
+              "record": {
+                "id": "text",
+                "points": "number",
+                "radius": "number"
+              }
+            }
+          }
+        }
+      },
+      "label": "Surface stroke identities",
+      "description": "Read up to six saved stroke identities in creation order. Exact current object revision is required; offset equal to total returns an empty page. Read object.surface.stroke for colour and points; IDs survive object copying within their own surface.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "surface": {
+            "type": "string",
+            "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+            "maxLength": 32
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 32.0
+          }
+        },
+        "required": [
+          "target",
+          "surface",
+          "revision",
+          "offset"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000",
+        "surface": "Front",
+        "revision": 1,
+        "offset": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "drawingSurfaces.v1"
+      ]
+    },
+    {
+      "id": "object.surface.stroke",
+      "version": 1,
+      "type": {
+        "record": {
+          "revision": "number",
+          "total": "number",
+          "offset": "number",
+          "radius": "number",
+          "color": {
+            "record": {
+              "r": "number",
+              "g": "number",
+              "b": "number",
+              "a": "number"
+            }
+          },
+          "points": {
+            "list": {
+              "record": {
+                "x": "number",
+                "y": "number",
+                "z": "number"
+              }
+            }
+          }
+        }
+      },
+      "label": "Surface stroke point page",
+      "description": "Read colour, radius and up to six exact planar points. Points and radius use patch-local metres; z=0, X/Y remain inside the patch including radius. Paged reads refuse stale object revisions. No projection, simplification or ownership is implied.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "surface": {
+            "type": "string",
+            "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+            "maxLength": 32
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "stroke": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 512.0
+          }
+        },
+        "required": [
+          "target",
+          "surface",
+          "revision",
+          "stroke",
+          "offset"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000",
+        "surface": "Front",
+        "revision": 1,
+        "stroke": "11111111111111111111111111111111",
+        "offset": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "drawingSurfaces.v1"
+      ]
+    },
+    {
       "id": "object.drawing",
       "version": 1,
       "type": {
@@ -17273,7 +18225,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "1709bdf26133847df5009c9c640911d7396f467caca0fbbbecca968060190614"
+      "sha256": "4a3b97de78589b0718ab2f28676e13e3f3e96eddd6f7735f2fe424097b283f4d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -17325,7 +18277,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "9ec81e4e45b14a6271f0c35378504d1f2b605a380872f32c4de9a9bb5f60a7fd"
+      "sha256": "ee51cfc1504cded16183abda3055caa0fa2a44dd3b4588d5ebc087af087b0ac1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -17349,11 +18301,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "4c872cdd4464e5d791b209950f7005e159d1d83b01ec1d5b3ab288a96ae4d4d7"
+      "sha256": "c3cf726ed4fc8fc2eb3e5b3d26c4e352b06e2b5dcfa6584c5e761d76c0514bb6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
-      "sha256": "8e415e6575f38b12e88361a96b998a8b5b6ca055f6f6f04efd6926c0ed879dde"
+      "sha256": "c969815bfb8c7397647475fdf2475ed72baaecf1ef0977596fba177a91606f43"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleMemory.cs",
@@ -17369,11 +18321,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveCapture.cs",
-      "sha256": "57801d6b4169126576531adbb587c0a3e9220168d658e6f84b06c80ac3928bf4"
+      "sha256": "ba8bebb295568e9d3cd28082b70f8823422bdd606f40cf025ee94e928912995a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveSnapshot.cs",
-      "sha256": "e14a2eb5b5a7f58858f4544cdd758cabccd698323e44ad1872e36f57af9bbd4b"
+      "sha256": "78cde44977546fc777fc01de78b5b96de624655fd5b9522e15046b41775a1ec2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.Retention.cs",
@@ -17549,11 +18501,19 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "ab671d504c5767fb0a961b1b794bda2a46d0e91a255ccfbbf169bdda5d6e14ef"
+      "sha256": "ce29fc87b31729a9a3ae7f74aee3631d55e710de8537b6ec86124e83bc3e510b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomToolTray.cs",
-      "sha256": "cf2544fb17517368dd83359f3090875561f36b8ecd0ff247c89abe52b0cb06fb"
+      "sha256": "8d7de60e88ab6008186b6e23df8dfb1f367a9d26690a8e743d3389a8ff1d6296"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PhysicalRoomAction.cs",
+      "sha256": "302f776bbfd311acc05238fd0b9e9e14d0b53d0e89c568a1a00b91e2f82f42ea"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/BookControllerInput.cs",
+      "sha256": "77960a5459442755d74dd61347579f986a601256e712a6bba14e2f98e7d3544c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectCopy.cs",
@@ -17561,7 +18521,19 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDrawingEdits.cs",
-      "sha256": "643a28cd4f7df0510ef1c7cce3331d63a920e63d64f08673ed605618813cbc51"
+      "sha256": "6f01acd6531ab8404bd1a136979c0a20b725bd8babfe69719d6facf874eae829"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/DrawingSurface.cs",
+      "sha256": "5c3ec6ccd8191d29c6efeca625932846290fcef64ee8c4d24a0b741ff2fc77dc"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/DrawingSurfaceView.cs",
+      "sha256": "14893472cab212ce19d40683af394fb8d076e3eac96f6f64ec238f7dc01cc2b0"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSurfaceEdits.cs",
+      "sha256": "69bbfab5134fdc64bcd6e49c5c27e9aa9cf10639b80fac3d25c37838e6d8859d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRecipeEdits.cs",
@@ -17569,7 +18541,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "145bde30e5708bf7a1707db464ca741d90c0018b04528f7f588fcf49d6384b7d"
+      "sha256": "4274bbbd5f289b5e56c492a75a37959505066a79aa2343501de1eb70494b01ed"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedDrawing.cs",
@@ -17577,7 +18549,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SpatialDrawing.cs",
-      "sha256": "beda025d362a47bff103236f7467cc6df08af1ba471aedc3ad6c70ae168a9d24"
+      "sha256": "93844a564ec907facf651f99935cdcd8237c5b121b02b997a3310185ff46690e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedRoomObject.cs",
@@ -17713,7 +18685,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationTemplates.cs",
-      "sha256": "409510ce0cadc96bcb226d1f5f29a19c9d25a125e0ec3f780ca3e2757c3e5f0c"
+      "sha256": "f5e6ec4bcddb7cdabedbda3c31bc8a7dfa50b4470ada67c8c0c2634f93866c2f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLayout.cs",
@@ -17721,7 +18693,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationBatch.cs",
-      "sha256": "ee65a5f161529a0cb9764892cdcec1c2799a5ae9337887299665537b8a5a28ac"
+      "sha256": "3269b1023f145fde704a248ab449c85cb09528c6f07d085d7bba9822bad10165"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructure.cs",
@@ -17769,7 +18741,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "03706ee4514ebe989cbd609e4c40e2129d5cb92c77a015c3497dd47711af0b84"
+      "sha256": "24a066c449f03c3da81cb2eff26f04f97f16ba925ccddfd9f99e8614f0fb6647"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -17801,7 +18773,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreateTemplateCapability.cs",
-      "sha256": "99efdb063b6d0a2f1275cda0f55c71aed81c984a3f4d5da2157e5b96e8365346"
+      "sha256": "8527aa38e09b5491d65ee9482e9d1eb987fdcbfd5a478a1e74442e484b4dc352"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingCapabilities.cs",
@@ -17809,7 +18781,19 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingResolveCapability.cs",
-      "sha256": "7791807556ce67a5e5ddafe4d3809cd792e79861e0d68c96eed10c8f1ee9c681"
+      "sha256": "fd61c2dd13a1e8cf51cfa0ad9f256e66960f713cdd13f684943a8b8570e7526d"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingSurfaceCapability.cs",
+      "sha256": "a6843bcaad68587f84336d8d3cbeb1ba7a704136be9dd7b721c04bce1e69b1f7"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingSurfaceFacts.cs",
+      "sha256": "d38fa0a97f11ba49e7f24c779dbec17fe3cd22ce578c4eb93db5c0297daf0e3a"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingToolCapability.cs",
+      "sha256": "8ef83f4544252c1e6ea45245873fb732d71121004161f7391389dd56c7361cad"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/EmbeddedAnimationCapability.cs",
@@ -17974,6 +18958,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/brick.json",
       "sha256": "a66885d4fe74be9e354f779bb40c8fac99e1638cfab8aa63fc68c452affe48c8"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/chalkboard.json",
+      "sha256": "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/cup.json",

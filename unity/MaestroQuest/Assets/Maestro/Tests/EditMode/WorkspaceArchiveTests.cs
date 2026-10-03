@@ -34,7 +34,7 @@ namespace Maestro.Quest.Tests
             byte[] model=ModelFixture.Mixamo();modelHash=ModelLibrary.Hash(model);payloads["models/"+modelHash+".glb"]=model;
             using var motions=new MotionLibrary(Path.Combine(directory,"source-motions"));var motion=motions.ImportAsync("Wave.glb",model,"gestures").GetAwaiter().GetResult().Single();motionId=motion.id;motionPath="motions/"+motion.hash+".motion.glb";
             payloads[motionPath]=File.ReadAllBytes(Path.Combine(directory,"source-motions",motion.hash+".motion.glb"));documents["motions/motions.v2.json"]=File.ReadAllBytes(Path.Combine(directory,"source-motions","motions.v2.json"));
-            documents["room.v3.json"]=Document(new RoomDocument {version=RoomDocument.CurrentVersion,objects=new[]{new RoomObjectData {id="book",kind=RoomObjectKind.Book},new RoomObjectData {id="maestro",kind=RoomObjectKind.Maestro,modelHash=modelHash,walkMotionId=motion.id}}});
+            documents["room.v4.json"]=Document(new RoomDocument {version=RoomDocument.CurrentVersion,objects=new[]{new RoomObjectData {id="book",kind=RoomObjectKind.Book},new RoomObjectData {id="maestro",kind=RoomObjectKind.Maestro,modelHash=modelHash,walkMotionId=motion.id}}});
             documents["behaviours.v2.json"]=Document(new RuleDocument());documents["controls.v2.json"]=Document(new ControllerPreferences());documents["avatar-activities.v2.json"]=Document(new AvatarActivityDocument());
             documents["models/"+modelHash+".txt"]=Bytes("Maestro äö\nOriginal attribution kept");
             var module=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-modules-nested.json")))["imports"][0]["module"] as JObject;moduleHash=ProgramModules.Hash(module);documents["program-modules.v1/"+moduleHash+".json"]=Bytes(module.ToString(Formatting.None));
@@ -45,6 +45,12 @@ namespace Maestro.Quest.Tests
             using var input=new MemoryStream(Archive());using var staged=WorkspaceArchive.Stage(input,directory);
             var restored=new RoomStorage(staged.DirectoryPath).Load(out var loadError);Assert.That(restored,Is.Not.Null,loadError);
             Assert.That(restored.structures.Single().slots.Single().placement.target,Is.EqualTo(new string('a',32)));Assert.That(restored.Validate(out var error),Is.True,error);
+        }
+        [Test] public void AttachedInkSurvivesPortableArchiveWithExactIdentityAndPoints()
+        {
+            var room=JsonUtility.FromJson<RoomDocument>(Encoding.UTF8.GetString(documents[RoomStorage.FileName]));var entry=CreationTemplates.All.First(x=>x.Id=="chalkboard");
+            var board=new RoomObjectData {id=new string('d',32),kind=RoomObjectKind.Assembly,recipe=entry.Recipe,surfaces=entry.Surfaces};board.surfaces[0].strokes=new[]{new SurfaceStroke {id=new string('e',32),color=Color.cyan,points=new[]{Vector3.left*.05f,Vector3.up*.03f,Vector3.right*.05f}}};room.objects=room.objects.Append(board).ToArray();documents[RoomStorage.FileName]=Document(room);
+            using var input=new MemoryStream(Archive());using var staged=WorkspaceArchive.Stage(input,directory);var restored=new RoomStorage(staged.DirectoryPath).Load(out var error);Assert.That(restored,Is.Not.Null,error);var ink=restored.objects.Single(o=>o.id==board.id).surfaces[0].strokes.Single();Assert.That(ink.id,Is.EqualTo(new string('e',32)));Assert.That(ink.color,Is.EqualTo(Color.cyan));Assert.That(ink.points,Is.EqualTo(board.surfaces[0].strokes[0].points));
         }
         [Test] public void IncludedModuleCopiesAndEmbeddedWatcherSurviveWithoutAnyInstalledDefaults()
         {
@@ -100,10 +106,10 @@ namespace Maestro.Quest.Tests
         }
         [Test] public void SnapshotDetachesDocumentsAndDoesNotRebindMissingModels()
         {
-            string missing=new string('c',64);var room=JObject.Parse(Encoding.UTF8.GetString(documents["room.v3.json"]));room["objects"][1]["modelHash"]=missing;documents["room.v3.json"]=Bytes(room.ToString(Formatting.None));
-            var snapshot=Snapshot();Array.Fill(documents["room.v3.json"],(byte)'x');documents.Clear();using var output=new MemoryStream();var receipt=WorkspaceArchive.Write(output,snapshot);
+            string missing=new string('c',64);var room=JObject.Parse(Encoding.UTF8.GetString(documents["room.v4.json"]));room["objects"][1]["modelHash"]=missing;documents["room.v4.json"]=Bytes(room.ToString(Formatting.None));
+            var snapshot=Snapshot();Array.Fill(documents["room.v4.json"],(byte)'x');documents.Clear();using var output=new MemoryStream();var receipt=WorkspaceArchive.Write(output,snapshot);
             Assert.That(receipt.Summary.MissingModels,Is.EqualTo(new[]{missing}));using var staged=WorkspaceArchive.Stage(new MemoryStream(output.ToArray()),directory);Assert.That(staged.Receipt.Summary.MissingModels,Is.EqualTo(new[]{missing}));
-            Assert.That(JObject.Parse(File.ReadAllText(Path.Combine(staged.DirectoryPath,"room.v3.json")))["objects"][1]["modelHash"].Value<string>(),Is.EqualTo(missing));
+            Assert.That(JObject.Parse(File.ReadAllText(Path.Combine(staged.DirectoryPath,"room.v4.json")))["objects"][1]["modelHash"].Value<string>(),Is.EqualTo(missing));
         }
         [Test] public void UnavailableBehaviourSourceSurvivesWithoutExecutingOrBlockingOtherStores()
         {
@@ -116,7 +122,7 @@ namespace Maestro.Quest.Tests
             payloads.Remove(motionPath);Assert.Throws<InvalidDataException>(()=>Snapshot());var motions=JObject.Parse(Encoding.UTF8.GetString(documents["motions/motions.v2.json"]));motions["entries"][0]["removed"]=true;motions["entries"][0]["archived"]=true;documents["motions/motions.v2.json"]=Bytes(motions.ToString());
             using var stage=WorkspaceArchive.Stage(new MemoryStream(Archive()),directory);using var restored=new MotionLibrary(Path.Combine(stage.DirectoryPath,"motions"));Assert.That(restored.Inspect(motionId).removed,Is.True);Assert.That(restored.Inspect(motionId).id,Is.EqualTo(motionId));Assert.That(restored.PayloadPresent(motionId),Is.False);Assert.That(stage.Receipt.Summary.MissingMotions,Is.EqualTo(new[]{motionId}));
         }
-        [TestCase("../outside.json")][TestCase("/room.v3.json")][TestCase("models/../../outside.glb")][TestCase("room.v3.json.backup")][TestCase("action-receipts.v1.json")][TestCase("MODELS/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.glb")]
+        [TestCase("../outside.json")][TestCase("/room.v4.json")][TestCase("models/../../outside.glb")][TestCase("room.v4.json.backup")][TestCase("action-receipts.v1.json")][TestCase("MODELS/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.glb")]
         public void UnknownOrUnsafePathsAreRejectedBeforeStaging(string path)
         {
             var entries=Entries(Archive());entries[path]=Bytes("not accepted");Assert.Throws<InvalidDataException>(()=>WorkspaceArchive.Stage(new MemoryStream(Zip(entries)),directory));NoStages();
@@ -138,8 +144,8 @@ namespace Maestro.Quest.Tests
         [Test] public void ManifestDuplicatesVersionsLengthsAndDirectoryCountsAreBounded()
         {
             byte[] good=Archive();var entries=Entries(good);string original=Encoding.UTF8.GetString(entries["manifest.json"]);
-            entries["manifest.json"]=Bytes(original.Replace("\"version\":2","\"version\":2,\"version\":2"));Assert.Throws<JsonReaderException>(()=>WorkspaceArchive.Stage(new MemoryStream(Zip(entries)),directory));NoStages();
-            entries["manifest.json"]=Bytes(original.Replace("\"version\":2","\"version\":3"));Assert.Throws<InvalidDataException>(()=>WorkspaceArchive.Stage(new MemoryStream(Zip(entries)),directory));NoStages();
+            entries["manifest.json"]=Bytes(original.Replace("\"version\":3","\"version\":3,\"version\":3"));Assert.Throws<JsonReaderException>(()=>WorkspaceArchive.Stage(new MemoryStream(Zip(entries)),directory));NoStages();
+            entries["manifest.json"]=Bytes(original.Replace("\"version\":3","\"version\":99"));Assert.Throws<InvalidDataException>(()=>WorkspaceArchive.Stage(new MemoryStream(Zip(entries)),directory));NoStages();
             var manifest=JObject.Parse(original);manifest["entries"][0]["bytes"]=long.MaxValue;entries["manifest.json"]=Bytes(manifest.ToString());Assert.Throws<InvalidDataException>(()=>WorkspaceArchive.Stage(new MemoryStream(Zip(entries)),directory));NoStages();
             good[good.Length-22+10]=0xff;good[good.Length-22+11]=0xff;Assert.Throws<InvalidDataException>(()=>WorkspaceArchive.Stage(new MemoryStream(good),directory));NoStages();
         }

@@ -31,7 +31,7 @@ require putting chat, assets, physics and all history in one enormous JSON file.
 
 ## What already exists
 
-The current catalog contains 67 actions, 12 events and 65 facts. It already has
+The current catalog contains 69 actions, 12 events and 70 facts. It already has
 native capability modules, generated forms, shared human/agent execution,
 revision checks, durable one-off receipts, contact/proximity/settling observations,
 structured program values and action inputs/results, parallel branches, pinned reusable program modules,
@@ -47,7 +47,7 @@ parented rotations and bounded tracks. The lathe increment is described in
 Recipe parts are visual joints, not independent rigid bodies. The object can now
 use an editable compound collision recipe; see
 [collision authoring](QUEST_COLLISION_AUTHORING.md). Shared attachment and aimed throws exist; automatic IK catching,
-hit reactions, physical hinges/springs, generic paintable surfaces, structural
+hit reactions, physical hinges/springs, curved/deforming paintable surfaces, structural
 blueprint libraries and liquids/snow are not completed by those features. Persistent structure baselines and typed member-list bindings now let one program
 create a small build, capture it, displace pieces and reset them; see
 [structures](QUEST_STRUCTURES.md). The current
@@ -115,8 +115,8 @@ These describe capabilities; choosing the bounded recipe architecture is our des
 | Cup, drink, bucket | Logical container volume/capacity, fill surface, bounded pour transfer and visual stream/splash | Pouring transfers conserved quantity between compatible containers; particles are presentation, not thousands of rigid bodies. Arbitrary imported bowls require a configured container shape. |
 | Snow patch, snowball, shallow water area | Bounded surface field/deformation plus effects; explicit scoop/pack/transfer operations | Finger/object marks on a patch, limited piles/balls and bucket interaction. Room-wide water/snow is an optional visual volume; full granular/fluid simulation is outside initial v1 scope. |
 
-The first nine recipe templates now cover tableware, a domino, loose stacking
-bricks, a pawn, a ball and a simple animated robot. They share atomic geometry,
+The first ten recipe templates now cover tableware, a domino, loose stacking
+bricks, a pawn, a ball, a simple animated robot and a chalkboard. They share atomic geometry,
 collision and physics creation; see [starter objects](QUEST_CREATION_TEMPLATES.md).
 A shared [layout operation](QUEST_LAYOUT_AUTHORING.md) now arranges/resets up to
 16 existing pieces atomically with live-pose Undo. [Atomic structure creation](QUEST_BATCH_CREATION.md)
@@ -124,7 +124,9 @@ now instantiates template/inline-recipe blueprints through ordinary programs and
 returns typed lists of piece IDs. [Persistent structures](QUEST_STRUCTURES.md) now
 retain named slots, baselines and missing members, with shared capture/reset and
 live displacement facts. A dedicated blueprint library, snapping,
-paintable surfaces, physical joints and liquids/snow remain unfinished.
+curved/deforming painting, physical joints and liquids/snow remain unfinished.
+[Planar surface drawing](QUEST_SURFACE_DRAWING.md) adds reusable explicit patches,
+shared ink editing/readback and a physical surface pencil/eraser.
 
 The complete shipped play kit should demonstrate each accepted reusable component,
 not maximize asset count. Every template needs editable source/configuration,

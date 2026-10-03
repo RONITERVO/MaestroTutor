@@ -49,10 +49,15 @@ namespace Maestro.Quest.Editor
                 root=new GameObject(entry.Name);geometry=root.AddComponent<RecipeObject>();geometry.Apply(entry.Recipe);
                 var bounds=geometry.LocalBounds;var centre=bounds.center;float radius=Mathf.Max(bounds.size.x,Mathf.Max(bounds.size.y,bounds.size.z));
                 camera=new GameObject("Template preview",typeof(Camera)).GetComponent<Camera>();camera.clearFlags=CameraClearFlags.SolidColor;camera.backgroundColor=new Color(.944f,.929f,.887f,1);camera.orthographic=true;camera.orthographicSize=radius*.72f;camera.nearClipPlane=.001f;
-                camera.transform.position=centre+new Vector3(.7f,1.1f,1.8f)*radius;camera.transform.LookAt(centre);
+                camera.transform.position=centre+(entry.Surfaces.Length>0?new Vector3(.5f,.4f,-1.8f):new Vector3(.7f,1.1f,1.8f))*radius;camera.transform.LookAt(centre);
                 Capture(camera,Path.Combine(output,"template-"+entry.Hash+".png"),512,512);
+                if(entry.Surfaces.Length>0) {
+                    var surfaces=entry.Surfaces;surfaces[0].strokes=new[]{new SurfaceStroke {id=new string('a',32),color=Color.white,radius=.006f,points=new[]{new Vector3(-.2f,0,0),new Vector3(0,.15f,0),new Vector3(.2f,0,0)}}};
+                    root.AddComponent<DrawingSurfaceView>().Apply(surfaces);Capture(camera,Path.Combine(output,"surface-ink-unity.png"),1024,768);
+                }
                 UnityEngine.Object.DestroyImmediate(root);UnityEngine.Object.DestroyImmediate(camera.gameObject);
             }
+            RenderToolTray();
             Debug.Log("MAESTRO_RECIPES_RENDERED");
         }
 
@@ -140,8 +145,8 @@ namespace Maestro.Quest.Editor
             var tray = new GameObject("Solid creation tools"); tray.AddComponent<RoomToolTray>().Build(editor,room);
             var camera = new GameObject("Verification camera",typeof(Camera)).GetComponent<Camera>();
             camera.clearFlags = CameraClearFlags.SolidColor; camera.backgroundColor = new Color(.93f,.91f,.87f,1);
-            camera.orthographic = true; camera.orthographicSize = .25f; camera.nearClipPlane = .01f;
-            camera.transform.position = new Vector3(.03f,.04f,-1); camera.transform.LookAt(Vector3.zero);
+            camera.orthographic = true; camera.orthographicSize = .36f; camera.nearClipPlane = .01f;
+            camera.transform.position = new Vector3(.03f,-.055f,-1); camera.transform.LookAt(new Vector3(0,-.055f,0));
             Capture(camera,Path.Combine(output,"creation-tools-unity.png"),1500,1050);
             Debug.Log("MAESTRO_CREATION_TOOLS_RENDERED");
         }

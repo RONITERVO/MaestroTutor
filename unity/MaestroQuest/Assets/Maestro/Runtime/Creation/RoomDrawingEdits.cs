@@ -10,7 +10,7 @@ namespace Maestro.Quest.Creation
         internal bool CanCreateDrawing(Vector3[] points,float radius,out string error)
         {
             if(!CanCreatePrimitive(out error)||!RoomDocument.ValidateDrawing(points,radius,out error))return false;
-            if(Snapshot().objects.Sum(x=>x.points?.Length??0)+points.Length>RoomDocument.MaximumTotalPoints){error="This room has reached its drawing limit";return false;}
+            if(Snapshot().objects.Sum(x=>(x.points?.Length??0)+DrawingSurface.PointCount(x))+points.Length>RoomDocument.MaximumTotalPoints){error="This room has reached its drawing limit";return false;}
             return true;
         }
         internal bool CreateDrawing(string name,Vector3 position,float scale,Color color,float radius,Vector3[] points,out string id,out string error)

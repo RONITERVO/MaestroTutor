@@ -2665,3 +2665,15 @@ Adult positioning/distribution, actual provider billing/region eligibility, publ
 policy deployment, device acceptance, release signing and Store submission remain
 open. Self-confirmation is not verified age. Native manual room editing remains
 separate from the book/AI gate; no additional Gemini path was introduced.
+
+
+### Reusable planar drawing increment (2026-10-03)
+
+`drawingSurfaces.v1` gives created objects explicit flat patches, local ink,
+shared configure/add/splice/erase/readback and session-local physical tool choices.
+The tenth editable starter is a chalkboard. Retained physical strokes coordinate
+ownership and preserve failed saves; copying, Undo, temporary rooms and portable
+archives carry the same data. See [surface drawing](QUEST_SURFACE_DRAWING.md) for
+bounds and persistence versions. This does not complete arbitrary mesh painting,
+user-configured drawing-tip objects, scanned-wall overlays, fidgets or liquids.
+Quest acceptance is pending; no device changes are part of desktop verification.

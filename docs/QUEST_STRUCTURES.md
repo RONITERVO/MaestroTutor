@@ -69,8 +69,9 @@ room/program-memory snapshots include the metadata. A missing member does not
 make the room unreadable. Unknown future structure versions preserve the primary
 file instead of falling back to a backup that could silently lose the definition.
 
-The current room format is v3, paired snapshot intent v2, and portable workspace
-archive v2. Clean legacy room v1/v2 files can still be read with empty structures;
+The current room format is v4, paired snapshot intent v3, and portable workspace
+archive v3, now including [drawing patches](QUEST_SURFACE_DRAWING.md). Clean legacy
+room v1/v2 files can still be read with empty structures; v3 retains its structures;
 original files remain. Old in-flight snapshot evidence and old portable archives
 are preserved but not interpreted as the new format. This is a pre-release format
 change under the owner's development-reset permission, not permission to silently

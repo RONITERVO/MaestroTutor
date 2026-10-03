@@ -7,13 +7,13 @@ namespace Maestro.Quest.Creation
 {
     public sealed class RoomStorage
     {
-        public const string FileName="room.v3.json";
+        public const string FileName="room.v4.json";
         readonly VersionedRoomFile<RoomDocument> file;
         readonly string directory;
         volatile string coordinationError;
         public bool ReadOnly => coordinationError!=null||file.ReadOnly;
         public RoomStorage(string directory) {
-            this.directory=directory;file=new VersionedRoomFile<RoomDocument>(directory,"room",4*1024*1024,x => x.Validate(out _),x => x.Copy(),Normalize,x => x.version = RoomDocument.CurrentVersion,version:RoomDocument.CurrentVersion,newerDocument:x=>x.structures?.Any(s=>s!=null&&s.version>1)==true);
+            this.directory=directory;file=new VersionedRoomFile<RoomDocument>(directory,"room",4*1024*1024,x => x.Validate(out _),x => x.Copy(),Normalize,x => x.version = RoomDocument.CurrentVersion,version:RoomDocument.CurrentVersion,newerDocument:x=>x.structures?.Any(s=>s!=null&&s.version>1)==true||x.objects?.Any(o=>o?.surfaces?.Any(s=>s!=null&&s.version>1)==true)==true);
         }
         public RoomDocument Load(out string message) {
             try {using var owner=RoomSnapshotTransaction.Enter(directory,recover:true,initialize:false);return file.Load(out message);}
@@ -31,7 +31,7 @@ namespace Maestro.Quest.Creation
         }
         internal static void Normalize(RoomDocument room)
         {
-            if(room.version<RoomDocument.CurrentVersion && room.structures==null)room.structures=Array.Empty<RoomStructure>();
+            if(room.version<3 && room.structures==null)room.structures=Array.Empty<RoomStructure>();
             if (room.objects == null) return;
             foreach (var item in room.objects)
             {

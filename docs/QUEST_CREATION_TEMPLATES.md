@@ -27,10 +27,11 @@ animation. Successful receipt replay cannot create it twice.
 | Building brick | Body and four visible studs, single bounded proxy | Loose stacking; studs do not interlock or snap |
 | Pawn | Lathe chess pawn with conservative cylinder collision | Editable/copyable piece; no chessboard or legal-move engine |
 | Ball | Sphere with bouncy physics | Existing throw/roll/contact capabilities |
+| Chalkboard | Five editable parts and a drawing patch on the Board part | Flat ink, whole-stroke erase; no curved projection |
 | Box robot | Nineteen parented parts, two wave tracks, initially idle | Fixed whole-body proxy does not follow animated parts |
 
-The first set is deliberately smaller than the complete proposed play kit. Drawing
-surfaces, physical joints/fidgets, assemblies/snapping, a shipped chess layout,
+The first set is deliberately smaller than the complete proposed play kit. Curved
+painting, physical joints/fidgets, assemblies/snapping, a shipped chess layout,
 container transfer and snow remain separate increments in
 [world authoring](QUEST_WORLD_AUTHORING.md). This set does not fulfill those gates. Existing pieces can now share a
 [layout reset](QUEST_LAYOUT_AUTHORING.md) with one Undo; this does not connect
@@ -84,3 +85,7 @@ This is desktop verification. Current Quest 3 grabbing, visibility, small-object
 collision, frame time and comfort still need device acceptance. The implementation
 has not installed or changed the headset, deployed providers or submitted a Store
 build.
+
+The chalkboard expands optional drawing-surface configuration alongside geometry,
+collision and physics. Its blank patch is detached editable data; shared
+[surface actions](QUEST_SURFACE_DRAWING.md) edit it and inspect saved ink.

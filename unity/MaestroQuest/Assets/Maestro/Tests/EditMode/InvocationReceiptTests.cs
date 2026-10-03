@@ -181,8 +181,8 @@ namespace Maestro.Quest.Tests
         [Test] public void CorruptRecoveryMetadataIsPreservedAndCannotNameFilesOutsideTheJournal()
         {
             Directory.CreateDirectory(directory);string marker=Path.Combine(directory,"action-recovery.pending.json");
-            string raw=new JObject {["version"]=1,["id"]="../outside",["files"]=new JArray("../room.v4.json")}.ToString();
-            File.WriteAllText(marker,raw);string room=Path.Combine(directory,"room.v4.json");File.WriteAllText(room,"keep this room");
+            string raw=new JObject {["version"]=1,["id"]="../outside",["files"]=new JArray("../room.v5.json")}.ToString();
+            File.WriteAllText(marker,raw);string room=Path.Combine(directory,"room.v5.json");File.WriteAllText(room,"keep this room");
             var receipts=new InvocationReceipts(directory);Assert.That(receipts.Recover((string)receipts.RecoveryView["id"],out var error),Is.True,error);
             string archive=Directory.GetDirectories(Path.Combine(directory,"action-receipt-archives")).Single();
             Assert.That(File.ReadAllText(Path.Combine(archive,"previous-marker.json")),Is.EqualTo(raw));Assert.That(File.ReadAllText(room),Is.EqualTo("keep this room"));

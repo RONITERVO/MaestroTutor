@@ -54,7 +54,7 @@ namespace Maestro.Quest.Tests
             var item=editor.Find(target);var hand=Hand(1,item.transform.position);manager.SelectEnter((IXRSelectInteractor)hand,item.Grab);Assert.That(executor.Execute(DrawingRequest(DrawingCall(target,.01f)),out _,out _),Is.False);manager.SelectExit((IXRSelectInteractor)hand,item.Grab);yield return null;
             Assert.That(animations.StartRecording((string)animations.ObserveRecording()["sessionId"],target,editor.ObjectRevision(target),out _,out error),Is.True,error);Assert.That(executor.Execute(DrawingRequest(DrawingCall(target,.01f)),out _,out _),Is.False);Assert.That(animations.DiscardRecording((string)animations.ObserveRecording()["sessionId"],out _,out error),Is.True,error);
             string saved=JsonUtility.ToJson(editor.Read(target));var mesh=item.GetComponent<MeshFilter>().sharedMesh;foreach(var bad in new[]{Splice(target,20,0,Vector3.one),Splice(target,0,3),Splice(target,0,3,Vector3.zero,Vector3.zero),DrawingCall(editor.Identity(block),.004f)})Assert.That(executor.Execute(DrawingRequest(bad),out _,out _),Is.False);
-            string obstacle=Path.Combine(directory,"room.v3.json.pending");Directory.CreateDirectory(obstacle);Assert.That(executor.Execute(DrawingRequest(DrawingCall(target,.01f)),out _,out _),Is.False);Assert.That(JsonUtility.ToJson(editor.Read(target)),Is.EqualTo(saved));Assert.That(item.GetComponent<MeshFilter>().sharedMesh,Is.SameAs(mesh));Directory.Delete(obstacle);yield return null;
+            string obstacle=Path.Combine(directory,"room.v4.json.pending");Directory.CreateDirectory(obstacle);Assert.That(executor.Execute(DrawingRequest(DrawingCall(target,.01f)),out _,out _),Is.False);Assert.That(JsonUtility.ToJson(editor.Read(target)),Is.EqualTo(saved));Assert.That(item.GetComponent<MeshFilter>().sharedMesh,Is.SameAs(mesh));Directory.Delete(obstacle);yield return null;
         }
         [UnityTest] public IEnumerator StrokeUndoRequiresReleaseAndTemporaryEditsStayInTheirFork()
         {
@@ -68,7 +68,7 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator FailedPhysicalStrokeRetainsPointsAndBlocksBoundariesUntilExplicitRetryOrDiscard()
         {
-            var pencil=root.AddComponent<SpatialDrawing>();pencil.Editor=editor;editor.ToggleDrawing();string obstacle=Path.Combine(directory,"room.v3.json.pending");Directory.CreateDirectory(obstacle);int count=editor.Snapshot().objects.Length;
+            var pencil=root.AddComponent<SpatialDrawing>();pencil.Editor=editor;editor.ToggleDrawing();string obstacle=Path.Combine(directory,"room.v4.json.pending");Directory.CreateDirectory(obstacle);int count=editor.Snapshot().objects.Length;
             pencil.Begin(0,new Ray(new Vector3(.2f,1,.5f),Vector3.forward));pencil.Move(0,new Ray(new Vector3(.3f,1,.5f),Vector3.forward));pencil.End(0);string session=pencil.SessionId;var capture=pencil.Observe();
             Assert.That(pencil.HasUnsavedStroke,Is.True);Assert.That((int)pencil.Observe()["points"],Is.EqualTo(2));Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count));Assert.That(editor.WriteGate.CanFreeze(out _),Is.False);Assert.That(editor.BeginTemporaryRoom(out _),Is.False);
             pencil.Begin(1,new Ray(Vector3.one,Vector3.forward));Assert.That(pencil.SessionId,Is.EqualTo(session));Assert.That(pencil.IsDrawing,Is.False);Directory.Delete(obstacle);
@@ -78,13 +78,13 @@ namespace Maestro.Quest.Tests
         [UnityTest] public IEnumerator PhysicalDraftControlsNameTheirActualEffectAndPreserveSelectedSavedObjects()
         {
             var pencil=root.AddComponent<SpatialDrawing>();pencil.Editor=editor;editor.ToggleDrawing();var trayObject=new GameObject("Draft tray");trayObject.transform.SetParent(root.transform,false);trayObject.AddComponent<RoomToolTray>().Build(editor,root.GetComponent<RoomInteraction>());var tools=trayObject.GetComponentsInChildren<PhysicalRoomAction>();
-            string obstacle=Path.Combine(directory,"room.v3.json.pending");Directory.CreateDirectory(obstacle);void Draw(){pencil.Begin(0,new Ray(Vector3.one,Vector3.forward));pencil.Move(0,new Ray(Vector3.one+Vector3.right*.1f,Vector3.forward));pencil.End(0);}
+            string obstacle=Path.Combine(directory,"room.v4.json.pending");Directory.CreateDirectory(obstacle);void Draw(){pencil.Begin(0,new Ray(Vector3.one,Vector3.forward));pencil.Move(0,new Ray(Vector3.one+Vector3.right*.1f,Vector3.forward));pencil.End(0);}
             Draw();Assert.That(tools.Single(t=>t.Tool==RoomTool.Pencil).AccessibleName,Is.EqualTo("Retry stroke"));Assert.That(tools.Single(t=>t.Tool==RoomTool.Erase).AccessibleName,Is.EqualTo("Discard stroke"));Directory.Delete(obstacle);tools.Single(t=>t.Tool==RoomTool.Save).Activate();Assert.That(pencil.HasUnsavedStroke,Is.False);string saved=editor.SelectedId;Assert.That(editor.Read(saved).kind,Is.EqualTo(RoomObjectKind.Drawing));
             Directory.CreateDirectory(obstacle);Draw();Assert.That(pencil.HasUnsavedStroke,Is.True);tools.Single(t=>t.Tool==RoomTool.Erase).Activate();Assert.That(pencil.HasUnsavedStroke,Is.False);Assert.That(editor.Find(saved),Is.Not.Null);Assert.That(tools.Single(t=>t.Tool==RoomTool.Erase).AccessibleName,Is.EqualTo("Erase"));Directory.Delete(obstacle);yield return null;
         }
         [UnityTest] public IEnumerator RetiringFailedPhysicalStrokeReleasesItsWriteLeaseWithoutSavingOrReplaying()
         {
-            var pencil=root.AddComponent<SpatialDrawing>();pencil.Editor=editor;editor.ToggleDrawing();Directory.CreateDirectory(Path.Combine(directory,"room.v3.json.pending"));pencil.Begin(0,new Ray(Vector3.one,Vector3.forward));pencil.Move(0,new Ray(Vector3.one+Vector3.right*.1f,Vector3.forward));pencil.End(0);Assert.That(pencil.HasUnsavedStroke,Is.True);var retirement=editor.WriteGate.Retire();Assert.That(retirement.IsCompleted,Is.False);UnityEngine.Object.Destroy(pencil);yield return null;Assert.That(retirement.IsCompleted,Is.True);
+            var pencil=root.AddComponent<SpatialDrawing>();pencil.Editor=editor;editor.ToggleDrawing();Directory.CreateDirectory(Path.Combine(directory,"room.v4.json.pending"));pencil.Begin(0,new Ray(Vector3.one,Vector3.forward));pencil.Move(0,new Ray(Vector3.one+Vector3.right*.1f,Vector3.forward));pencil.End(0);Assert.That(pencil.HasUnsavedStroke,Is.True);var retirement=editor.WriteGate.Retire();Assert.That(retirement.IsCompleted,Is.False);UnityEngine.Object.Destroy(pencil);yield return null;Assert.That(retirement.IsCompleted,Is.True);
         }
     }
 }

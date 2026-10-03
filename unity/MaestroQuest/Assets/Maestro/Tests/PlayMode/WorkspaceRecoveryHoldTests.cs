@@ -32,17 +32,17 @@ namespace Maestro.Quest.Tests
         static void CloseRecovery(WorkspaceRecoveryHold hold){try{hold.Completion.GetAwaiter().GetResult();}catch(Exception){}hold.Dispose();}
         [UnityTest] public IEnumerator DamagedBehaviourStoreAndUnsavedRoomEditsArePreservedWithoutLifecycleOverwritingOriginals()
         {
-            yield return ReadyForDamagedPreservation(true);var editor=host.Current.Editor;var rules=host.Current.Rules;string data=editor.SaveDirectory;byte[] original=File.ReadAllBytes(Path.Combine(data,"room.v3.json"));AcceptedEdit("Accepted but not yet saved");
+            yield return ReadyForDamagedPreservation(true);var editor=host.Current.Editor;var rules=host.Current.Rules;string data=editor.SaveDirectory;byte[] original=File.ReadAllBytes(Path.Combine(data,"room.v4.json"));AcceptedEdit("Accepted but not yet saved");
             Assert.That(WorkspaceArchiveCapture.CanStart(editor,rules,host.Current.Controls,out _),Is.False);
             Assert.That(WorkspaceRecoveryHold.TryAcquire(editor,rules,host.Current.Controls,out var hold,out var error),Is.True,error);
             try {
                 Assert.That(editor.TryFlush(out _),Is.False);Assert.That(rules.TryFlush(out _),Is.False);editor.SendMessage("OnApplicationPause",true);rules.SendMessage("OnApplicationPause",true);
                 var capture=hold.Capture(Path.Combine(directory,"recovery-evidence"));while(!capture.IsCompleted)yield return null;var result=capture.GetAwaiter().GetResult();yield return new WaitForSeconds(.7f);
-                Assert.That(File.ReadAllBytes(Path.Combine(data,"room.v3.json")),Is.EqualTo(original));Assert.That(RecoveryText(result.Path,"raw/behaviours.v2.json"),Is.EqualTo("{unreadable original"));
+                Assert.That(File.ReadAllBytes(Path.Combine(data,"room.v4.json")),Is.EqualTo(original));Assert.That(RecoveryText(result.Path,"raw/behaviours.v2.json"),Is.EqualTo("{unreadable original"));
                 var accepted=JObject.Parse(RecoveryText(result.Path,"accepted.json"));Assert.That((bool)accepted["available"]["behaviours"],Is.False);Assert.That((bool)accepted["available"]["room"],Is.True);Assert.That(accepted["room"]["objects"].Any(x=>(string)x["name"]=="Accepted but not yet saved"),Is.True);
                 Assert.That(editor.WriteGate.Frozen,Is.True);Assert.That(editor.CanUndo,Is.False);Assert.That(physics.Running,Is.False);
                 string evidence=Environment.GetEnvironmentVariable("MAESTRO_RECOVERY_EVIDENCE");if(!string.IsNullOrEmpty(evidence)){Directory.CreateDirectory(evidence);File.Copy(result.Path,Path.Combine(evidence,"damaged-workspace-evidence.zip"),true);File.WriteAllText(Path.Combine(evidence,"accepted.json"),accepted.ToString());}
-                UnityEngine.Object.Destroy(root);yield return null;Assert.That(File.ReadAllBytes(Path.Combine(data,"room.v3.json")),Is.EqualTo(original),"Teardown cannot replace originals with fallback or accepted snapshots");
+                UnityEngine.Object.Destroy(root);yield return null;Assert.That(File.ReadAllBytes(Path.Combine(data,"room.v4.json")),Is.EqualTo(original),"Teardown cannot replace originals with fallback or accepted snapshots");
             }finally{CloseRecovery(hold);}
         }
         [UnityTest] public IEnumerator CancellationCannotReleaseOwnershipUntilBothPreviouslyDispatchedSavesFinish()
@@ -63,9 +63,9 @@ namespace Maestro.Quest.Tests
             try {
                 var capture=hold.Capture(Path.Combine(directory,"recovery-evidence"));yield return null;Assert.That(capture.IsCompleted,Is.False);
                 Assert.That(new RoomStorage(data).Save(older,out error),Is.True,error);save.SetResult(null);while(!capture.IsCompleted)yield return null;var result=capture.GetAwaiter().GetResult();
-                Assert.That(RecoveryText(result.Path,"raw/room.v3.json"),Does.Contain("Older save finished"));Assert.That(RecoveryText(result.Path,"accepted.json"),Does.Contain("Newer accepted edit"));
+                Assert.That(RecoveryText(result.Path,"raw/room.v4.json"),Does.Contain("Older save finished"));Assert.That(RecoveryText(result.Path,"accepted.json"),Does.Contain("Newer accepted edit"));
             }finally{save.TrySetResult(null);CloseRecovery(hold);}
-            Assert.That(editor.CanUndo,Is.True);Assert.That(editor.TryFlush(out error),Is.True,error);Assert.That(File.ReadAllText(Path.Combine(data,"room.v3.json")),Does.Contain("Newer accepted edit"));
+            Assert.That(editor.CanUndo,Is.True);Assert.That(editor.TryFlush(out error),Is.True,error);Assert.That(File.ReadAllText(Path.Combine(data,"room.v4.json")),Does.Contain("Newer accepted edit"));
         }
         [UnityTest] public IEnumerator TemporaryForkAndSavedBaseRemainSeparateInRecoveryEvidence()
         {
@@ -78,7 +78,7 @@ namespace Maestro.Quest.Tests
                 Assert.That((int)accepted["version"],Is.EqualTo(2));Assert.That((bool)accepted["available"]["programMemory"],Is.True);
                 Assert.That(ProgramMemoryDocument.Decode(Encoding.UTF8.GetBytes(accepted["programMemory"].ToString())).Programs,Is.Empty);
                 Assert.That(ProgramMemoryDocument.Decode(Encoding.UTF8.GetBytes(accepted["temporaryMemory"].ToString())).Programs[program][cell].Value.Number,Is.EqualTo(7));
-                Assert.That(accepted["room"]["objects"].Any(x=>(string)x["name"]=="Saved original robot"),Is.True);Assert.That(accepted["temporaryRoom"]["objects"].Any(x=>(string)x["name"]=="Temporary live robot"),Is.True);Assert.That(RecoveryText(result.Path,"raw/room.v3.json"),Does.Not.Contain("Temporary live robot"));
+                Assert.That(accepted["room"]["objects"].Any(x=>(string)x["name"]=="Saved original robot"),Is.True);Assert.That(accepted["temporaryRoom"]["objects"].Any(x=>(string)x["name"]=="Temporary live robot"),Is.True);Assert.That(RecoveryText(result.Path,"raw/room.v4.json"),Does.Not.Contain("Temporary live robot"));
             }finally{CloseRecovery(hold);}
             Assert.That(editor.TemporaryRoom,Is.True);Assert.That(editor.Snapshot().objects.Single(x=>!x.IsBuiltIn).name,Is.EqualTo("Temporary live robot"));
         }

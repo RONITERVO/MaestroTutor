@@ -1,0 +1,54 @@
+// Copyright 2026 Roni Tervo
+// SPDX-License-Identifier: Apache-2.0
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Maestro.Quest.Art;
+using UnityEngine;
+namespace Maestro.Quest.Creation
+{
+    /// <summary>Owned ink meshes follow the configured anchor. No colliders or rigid bodies are created for ink.</summary>
+    public sealed class DrawingSurfaceView:MonoBehaviour
+    {
+        sealed class Patch {public DrawingSurface Data;public Transform Root,Anchor;public string Encoded;}
+        readonly Dictionary<string,Patch> patches=new();
+        public int StrokeCount=>patches.Values.Sum(p=>p.Data.strokes.Length);
+        public void Apply(DrawingSurface[] surfaces)
+        {
+            var active=(surfaces??Array.Empty<DrawingSurface>()).Select(s=>s.id).ToHashSet();
+            foreach(var id in patches.Keys.Where(id=>!active.Contains(id)).ToArray()){Release(patches[id]);patches.Remove(id);}
+            foreach(var surface in surfaces??Array.Empty<DrawingSurface>()) {
+                var recipe=GetComponent<RecipeObject>();var anchor=string.IsNullOrEmpty(surface.part)?transform:recipe?recipe.Part(surface.part):null;
+                string encoded=JsonUtility.ToJson(surface);
+                if(patches.TryGetValue(surface.id,out var prior)&&prior.Root&&prior.Anchor==anchor&&prior.Encoded==encoded)continue;
+                if(prior!=null)Release(prior);patches.Remove(surface.id);if(!anchor)continue;
+                var root=new GameObject("Drawing surface "+surface.id).transform;root.SetParent(anchor,false);root.SetLocalPositionAndRotation(surface.position,surface.rotation);
+                try {
+                    foreach(var stroke in surface.strokes) {
+                        var ink=new GameObject("Ink "+stroke.id).transform;ink.SetParent(root,false);var marks=ink.gameObject.AddComponent<PencilMarks>();
+                        marks.SetPaths(new[]{stroke.points.Select(p=>p-Vector3.forward*stroke.radius).ToArray()},stroke.radius);marks.SetColor(stroke.color);
+                    }
+                }catch{ArtResources.Release(root.gameObject);throw;}
+                patches.Add(surface.id,new Patch {Data=surface.Copy(),Root=root,Anchor=anchor,Encoded=encoded});
+            }
+        }
+        static void Release(Patch patch){if(patch.Root){patch.Root.gameObject.SetActive(false);ArtResources.Release(patch.Root.gameObject);}}
+        public Transform Surface(string id)=>patches.TryGetValue(id,out var p)&&p.Root?p.Root:null;
+        public bool Hit(Ray ray,float maximum,out string id,out Vector3 local,out float distance,float radius=.003f)
+        {
+            id=null;local=default;distance=maximum;
+            if(!float.IsFinite(ray.origin.sqrMagnitude)||!float.IsFinite(ray.direction.sqrMagnitude)||ray.direction.sqrMagnitude<.00001f)return false;
+            ray.direction=ray.direction.normalized;
+            foreach(var patch in patches.Values) {
+                if(!patch.Data.enabled||!patch.Root||!patch.Root.gameObject.activeInHierarchy)continue;
+                var origin=patch.Root.InverseTransformPoint(ray.origin);var direction=patch.Root.InverseTransformVector(ray.direction);
+                if(direction.z<=.00001f||origin.z>0)continue;float t=-origin.z/direction.z;if(t<0||t>distance)continue;
+                var point=origin+direction*t;
+                if(Mathf.Abs(point.x)+radius>patch.Data.width*.5f||Mathf.Abs(point.y)+radius>patch.Data.height*.5f)continue;
+                id=patch.Data.id;local=new Vector3(point.x,point.y,0);distance=t;
+            }
+            return id!=null;
+        }
+        void OnDestroy(){foreach(var p in patches.Values)Release(p);patches.Clear();}
+    }
+}
