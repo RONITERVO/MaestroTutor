@@ -17,7 +17,7 @@ setInterval(()=>{
  const request=client.snapshot().request;
  if(request&&request.sequence>state.ack){
   requests.push(structuredClone(request));const command=request.commands[0];let key:string;
-  if(command.action==='catalog'&&command.catalog?.operation==='search')key='search';
+  if(command.action==='catalog'&&command.catalog?.operation==='search'&&native.search.catalog?.operation==='search'&&command.catalog.query===native.search.catalog.query)key='search';
   else if(command.action==='catalog'&&command.catalog?.operation==='inspect')key=command.catalog.category==='facts'?'current':'definition';
   else if(command.action==='execution'&&command.execution?.operation==='start'&&command.execution.call.id==='structure.save')key='after';
   else throw new Error('Unexpected structure replay command');

@@ -15,7 +15,7 @@ try {
  await context.route('**/*',route=>['localhost','127.0.0.1'].includes(new URL(route.request().url()).hostname)?route.continue():route.abort());
  const page=await context.newPage(),errors=[];page.on('pageerror',error=>errors.push(String(error)));
  await page.goto(base+'/test-fixtures/browser/quest-structures.html',{waitUntil:'domcontentloaded',timeout:60000});
- await page.getByLabel('Search actions',{exact:true}).fill('Save a structure');await page.getByRole('button',{name:'Search',exact:true}).click();await page.getByRole('button',{name:/Save a structure.*structure.save/}).click();
+ await page.getByLabel('Search actions',{exact:true}).fill(native.search.catalog.query);await page.getByRole('button',{name:'Search',exact:true}).click();await page.getByRole('button',{name:/Save a structure.*structure.save/}).click();
  await page.getByText('Edit action fields',{exact:true}).click();await page.getByLabel('Action inputs source name',{exact:true}).fill(expected.arguments.source.name);
  await page.getByText('Action inputs source members · 1 entries',{exact:true}).click();
  await page.getByRole('button',{name:'Add Action inputs source members entry',exact:true}).click();

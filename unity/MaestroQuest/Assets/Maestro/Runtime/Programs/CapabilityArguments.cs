@@ -53,6 +53,10 @@ namespace Maestro.Quest.Programs
                         if(!JsonUtility.FromJson<RoomGroupTransform>(obj.ToString()).Validate(out error))return false;
                     } else if((string)schema["format"]=="snapPointDefinition") {
                         var point=JsonUtility.FromJson<RoomSnapPoint>(obj.ToString());if(!obj.ContainsKey("id"))point.id="Point";if(!point.Validate(out error))return false;
+                    } else if((string)schema["format"]=="containerDefinition") {
+                        if(!JsonUtility.FromJson<RoomContainer>(obj.ToString()).Validate(out error))return false;
+                    } else if((string)schema["format"]=="containerTransfer") {
+                        if((string)obj["source"]["target"]==(string)obj["destination"]["target"]){error=path+" needs distinct source and destination";return false;}
                     } else if((string)schema["format"]=="snapPlacement") {
                         if(!JsonUtility.FromJson<RoomSnapPlacement>(obj.ToString()).Validate(out error))return false;
                     } else if((string)schema["format"]=="constructionSelection") {

@@ -17,7 +17,7 @@ export interface CapabilitySchema {
  oneOf?:CapabilitySchema[];'x-confirmation'?:string;'x-discriminators'?:string[];title?:string;description?:string;examples?:unknown[];'x-static'?:boolean;'x-channels'?:string[];'x-requirements'?:string[];'x-features'?:string[];
  items?:CapabilitySchema;minItems?:number;maxItems?:number;nullable?:boolean;
  properties?:Record<string,CapabilitySchema>;required?:string[];additionalProperties?:false;
- format?:'unitQuaternion'|'boundedOffset'|'roomRecipe'|'lathePart'|'collisionRecipe'|'programModule'|'programMemoryValue'|'objectLayout'|'creationBatch'|'creationPrototype'|'structureSource'|'connectionConfiguration'|'constructionSelection'|'groupTransform'|'snapPointDefinition'|'snapPlacement';'x-resource'?:'object';'x-requires'?:Record<string,string>;
+ format?:'unitQuaternion'|'boundedOffset'|'roomRecipe'|'lathePart'|'collisionRecipe'|'programModule'|'programMemoryValue'|'objectLayout'|'creationBatch'|'creationPrototype'|'structureSource'|'connectionConfiguration'|'constructionSelection'|'groupTransform'|'snapPointDefinition'|'snapPlacement'|'containerDefinition'|'containerTransfer';'x-resource'?:'object';'x-requires'?:Record<string,string>;
  minimum?:number;maximum?:number;maxLength?:number;pattern?:string;enum?:string[];'x-enum-labels'?:Record<string,string>;'x-enum-images'?:Record<string,string>;
 }
 export interface CapabilityDefinition {
@@ -79,6 +79,8 @@ function validate(value:unknown,schema:CapabilitySchema,path:string):string|null
    }
    if(schema.format==='groupTransform'){const members=value.members as {target:string}[],p=value.position as {x:number;y:number;z:number};return new Set(members.map(m=>m.target)).size===members.length&&p.x*p.x+p.y*p.y+p.z*p.z<=625?null:path+' needs distinct members and an origin within 25 metres';}
    if(schema.format==='snapPointDefinition'){const p=(value.frame as {position:{x:number;y:number;z:number}}).position;return p.x*p.x+p.y*p.y+p.z*p.z<=100?null:path+' needs a snap frame within ten local metres';}
+   if(schema.format==='containerDefinition'){const p=(value.frame as {position:{x:number;y:number;z:number}}).position;return p.x*p.x+p.y*p.y+p.z*p.z<=100&&(value.amountMl as number)<=(value.capacityMl as number)?null:path+' needs a cavity within ten local metres and contents within capacity';}
+   if(schema.format==='containerTransfer')return (value.source as {target:string}).target!==(value.destination as {target:string}).target?null:path+' needs distinct source and destination';
    if(schema.format==='snapPlacement'){const members=value.members as {target:string}[],destination=value.destination as {target:string};return new Set(members.map(m=>m.target)).size===members.length&&!members.some(m=>m.target===destination.target)?null:path+' needs distinct moving members and an outside destination';}
    if(schema.format==='constructionSelection'){const members=value.members as string[];return new Set(members).size===members.length?null:path+' needs distinct construction pieces';}
    if(schema.format==='structureSource'){

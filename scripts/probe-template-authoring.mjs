@@ -15,7 +15,7 @@ try {
  await context.route('**/*',route=>['localhost','127.0.0.1'].includes(new URL(route.request().url()).hostname)?route.continue():route.abort());
  const page=await context.newPage(),errors=[];page.on('pageerror',error=>errors.push(String(error)));
  await page.goto(base+'/test-fixtures/browser/quest-template.html',{waitUntil:'domcontentloaded',timeout:60000});
- await page.getByLabel('Search actions',{exact:true}).fill('Create object');await page.getByRole('button',{name:'Search',exact:true}).click();
+ await page.getByLabel('Search actions',{exact:true}).fill(native.search.catalog.query);await page.getByRole('button',{name:'Search',exact:true}).click();
  await page.getByRole('button',{name:/Create object.*object.create/}).click();
  await page.getByLabel('Creation kind',{exact:true}).selectOption({label:'Create starter object'});
  await page.getByText('Edit action fields',{exact:true}).click();

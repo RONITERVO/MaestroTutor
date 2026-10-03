@@ -47,7 +47,7 @@ parented rotations and bounded tracks. The lathe increment is described in
 Recipe parts are visual joints, not independent rigid bodies. The object can now
 use an editable compound collision recipe; see
 [collision authoring](QUEST_COLLISION_AUTHORING.md). Shared attachment and aimed throws exist; automatic IK catching,
-hit reactions, automatic physical snap previews, curved/deforming paintable surfaces and
+hit reactions, curved/deforming paintable surfaces and
 liquids/snow are not completed by those features. Persistent structure baselines and typed member-list bindings now let one program
 create a small build, capture it, displace pieces and reset them; see
 [structures](QUEST_STRUCTURES.md). The current
@@ -131,7 +131,7 @@ users and Maestro collect, highlight and order pieces through the same state; se
 [construction handle](QUEST_CONSTRUCTION_MOVEMENT.md) now arranges those pieces
 with one save/Undo while physics is paused. [Saved snap points](QUEST_SNAP_POINTS.md)
 now align complete constructions and optionally join them through one shared edit.
-Automatic physical snap previews, curved/deforming painting and liquids/snow remain unfinished. Bounded sliders and an editable spring-button example now extend the shared connections.
+Physical construction-handle previews now use the shared snap placement action (see [snap points](QUEST_SNAP_POINTS.md)). Curved/deforming painting and physical pouring/snow remain unfinished. Bounded sliders and an editable spring-button example now extend the shared connections.
 [Planar surface drawing](QUEST_SURFACE_DRAWING.md) adds reusable explicit patches,
 shared ink editing/readback, a physical surface pencil/eraser, and configurable
 held drawing tips on ordinary created/imported objects.
@@ -237,5 +237,21 @@ a typed break event. Book controls, user programs and the agent share the same
 catalog contract. See [physical connections](QUEST_PHYSICAL_CONNECTIONS.md) for
 current IDs, save-format boundaries, repair semantics, budgets and verification.
 Connected version-3 blueprints and construction capture preserve all three kinds with
-fresh member identities. The included spring button uses ordinary recipes and condition waits. No automatic snapping, liquid simulation or
-Quest performance guarantee is implied.
+fresh member identities. The included spring button uses ordinary recipes and condition waits.
+Construction-handle snapping is described in [snap points](QUEST_SNAP_POINTS.md);
+liquid simulation and Quest performance remain separate work.
+
+
+### Measured liquid containers (2026-10-03)
+
+`containers.v1` adds one reusable saved liquid store per created object, at most
+16 per room. `object.container.edit` configures its cavity and authors its contents;
+`object.container.transfer` conserves an explicitly requested amount between two
+revision-guarded objects, capped by source quantity and destination space. Both
+share the ordinary ownership, receipt, persistence, Undo, temporary-room and
+prototype paths. `object.container` exposes the same saved state to the user and
+agent. See [liquid containers](QUEST_CONTAINERS.md).
+
+This is the quantity/presentation foundation. Automatic hand/gravity pouring,
+streams, spills, water forces, scooping and snow fields remain separate unfinished
+work. The rendered level cannot establish liquid collision or frame performance.

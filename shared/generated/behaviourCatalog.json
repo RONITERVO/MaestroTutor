@@ -7624,7 +7624,7 @@
                   "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33",
                   "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab",
                   "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac",
-                  "8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4",
+                  "22b5810eeed904680847631faf04ee3797f56bffdf3beb031f82609ed49c3ec1",
                   "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950",
                   "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18",
                   "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99",
@@ -7637,7 +7637,7 @@
                   "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33": "Building brick",
                   "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab": "Chalk",
                   "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "Chalkboard",
-                  "8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4": "Cup",
+                  "22b5810eeed904680847631faf04ee3797f56bffdf3beb031f82609ed49c3ec1": "Cup",
                   "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950": "Domino",
                   "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18": "Fork",
                   "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99": "Pawn",
@@ -7650,7 +7650,7 @@
                   "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33": "quest/templates/5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33.png",
                   "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab": "quest/templates/4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab.png",
                   "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "quest/templates/5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac.png",
-                  "8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4": "quest/templates/8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4.png",
+                  "22b5810eeed904680847631faf04ee3797f56bffdf3beb031f82609ed49c3ec1": "quest/templates/22b5810eeed904680847631faf04ee3797f56bffdf3beb031f82609ed49c3ec1.png",
                   "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950": "quest/templates/4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950.png",
                   "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18": "quest/templates/3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18.png",
                   "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99": "quest/templates/a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99.png",
@@ -7703,10 +7703,10 @@
             ],
             "additionalProperties": false,
             "title": "Create starter object",
-            "description": "Expand an exact bundled template hash into ordinary editable recipe, collision, physics and optional flat drawing-surface, drawing-tip and snap-point data. Read creation.template for descriptions and cost counts; names and tags are display metadata, never executable instructions. Empty name keeps its template name. Creates one object and one Undo through the same recipe creation path; later template changes cannot alter existing objects. Templates start idle, do not start physics, install behaviours, snap bricks or simulate liquids. Robot tracks can be played explicitly with animation.play source.kind recipe. The hash is an exact choice: missing versions fail, never substitute by name. Optional user template publishing is not part of this bundled library.",
+            "description": "Expand an exact bundled template hash into ordinary editable recipe, collision, physics and optional flat drawing-surface, drawing-tip, snap-point and logical liquid-container data. Read creation.template for descriptions and cost counts; names and tags are display metadata, never executable instructions. Empty name keeps its template name. Creates one object and one Undo through the same recipe creation path; later template changes cannot alter existing objects. Templates start idle, do not start physics, install behaviours, snap bricks or simulate liquids. Robot tracks can be played explicitly with animation.play source.kind recipe. The hash is an exact choice: missing versions fail, never substitute by name. Optional user template publishing is not part of this bundled library.",
             "examples": [
               {
-                "templateHash": "8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4",
+                "templateHash": "22b5810eeed904680847631faf04ee3797f56bffdf3beb031f82609ed49c3ec1",
                 "name": "",
                 "x": 0.3,
                 "y": 1.3,
@@ -7885,7 +7885,7 @@
                                 "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33",
                                 "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab",
                                 "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac",
-                                "8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4",
+                                "22b5810eeed904680847631faf04ee3797f56bffdf3beb031f82609ed49c3ec1",
                                 "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950",
                                 "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18",
                                 "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99",
@@ -7898,7 +7898,7 @@
                                 "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33": "Building brick",
                                 "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab": "Chalk",
                                 "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "Chalkboard",
-                                "8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4": "Cup",
+                                "22b5810eeed904680847631faf04ee3797f56bffdf3beb031f82609ed49c3ec1": "Cup",
                                 "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950": "Domino",
                                 "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18": "Fork",
                                 "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99": "Pawn",
@@ -7911,7 +7911,7 @@
                                 "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33": "quest/templates/5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33.png",
                                 "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab": "quest/templates/4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab.png",
                                 "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "quest/templates/5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac.png",
-                                "8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4": "quest/templates/8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4.png",
+                                "22b5810eeed904680847631faf04ee3797f56bffdf3beb031f82609ed49c3ec1": "quest/templates/22b5810eeed904680847631faf04ee3797f56bffdf3beb031f82609ed49c3ec1.png",
                                 "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950": "quest/templates/4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950.png",
                                 "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18": "quest/templates/3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18.png",
                                 "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99": "quest/templates/a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99.png",
@@ -10021,6 +10021,162 @@
                                   "minItems": 0,
                                   "maxItems": 64
                                 },
+                                "containers": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "frame": {
+                                        "type": "object",
+                                        "properties": {
+                                          "position": {
+                                            "type": "object",
+                                            "properties": {
+                                              "x": {
+                                                "type": "number",
+                                                "minimum": -10.0,
+                                                "maximum": 10.0
+                                              },
+                                              "y": {
+                                                "type": "number",
+                                                "minimum": -10.0,
+                                                "maximum": 10.0
+                                              },
+                                              "z": {
+                                                "type": "number",
+                                                "minimum": -10.0,
+                                                "maximum": 10.0
+                                              }
+                                            },
+                                            "required": [
+                                              "x",
+                                              "y",
+                                              "z"
+                                            ],
+                                            "additionalProperties": false
+                                          },
+                                          "rotation": {
+                                            "type": "object",
+                                            "properties": {
+                                              "x": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              },
+                                              "y": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              },
+                                              "z": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              },
+                                              "w": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              }
+                                            },
+                                            "required": [
+                                              "x",
+                                              "y",
+                                              "z",
+                                              "w"
+                                            ],
+                                            "additionalProperties": false,
+                                            "format": "unitQuaternion"
+                                          }
+                                        },
+                                        "required": [
+                                          "position",
+                                          "rotation"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      "radius": {
+                                        "type": "number",
+                                        "minimum": 0.005,
+                                        "maximum": 1.0
+                                      },
+                                      "height": {
+                                        "type": "number",
+                                        "minimum": 0.01,
+                                        "maximum": 2.0
+                                      },
+                                      "capacityMl": {
+                                        "type": "number",
+                                        "minimum": 1.0,
+                                        "maximum": 1000000.0
+                                      },
+                                      "amountMl": {
+                                        "type": "number",
+                                        "minimum": 0.0,
+                                        "maximum": 1000000.0
+                                      },
+                                      "liquid": {
+                                        "type": "string",
+                                        "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+                                        "maxLength": 32
+                                      },
+                                      "color": {
+                                        "type": "object",
+                                        "properties": {
+                                          "r": {
+                                            "type": "number",
+                                            "minimum": 0.0,
+                                            "maximum": 1.0
+                                          },
+                                          "g": {
+                                            "type": "number",
+                                            "minimum": 0.0,
+                                            "maximum": 1.0
+                                          },
+                                          "b": {
+                                            "type": "number",
+                                            "minimum": 0.0,
+                                            "maximum": 1.0
+                                          },
+                                          "a": {
+                                            "type": "number",
+                                            "minimum": 1.0,
+                                            "maximum": 1.0
+                                          }
+                                        },
+                                        "required": [
+                                          "r",
+                                          "g",
+                                          "b",
+                                          "a"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      "version": {
+                                        "type": "integer",
+                                        "minimum": 1.0,
+                                        "maximum": 1.0
+                                      }
+                                    },
+                                    "required": [
+                                      "frame",
+                                      "radius",
+                                      "height",
+                                      "capacityMl",
+                                      "amountMl",
+                                      "liquid",
+                                      "color",
+                                      "version"
+                                    ],
+                                    "additionalProperties": false,
+                                    "format": "containerDefinition",
+                                    "x-features": [
+                                      "containers.v1"
+                                    ]
+                                  },
+                                  "minItems": 0,
+                                  "maxItems": 1
+                                },
                                 "motion": {
                                   "type": "object",
                                   "properties": {
@@ -12062,6 +12218,435 @@
           "radius": 0.0030000000260770321,
           "enabled": true
         }
+      }
+    },
+    {
+      "id": "object.container.edit",
+      "version": 1,
+      "label": "Configure or fill a liquid container",
+      "input": {
+        "type": "object",
+        "x-discriminators": [
+          "operation"
+        ],
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "configure"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              },
+              "definition": {
+                "type": "object",
+                "properties": {
+                  "frame": {
+                    "type": "object",
+                    "properties": {
+                      "position": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number",
+                            "minimum": -10.0,
+                            "maximum": 10.0
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": -10.0,
+                            "maximum": 10.0
+                          },
+                          "z": {
+                            "type": "number",
+                            "minimum": -10.0,
+                            "maximum": 10.0
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y",
+                          "z"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "rotation": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number",
+                            "minimum": -1.0,
+                            "maximum": 1.0
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": -1.0,
+                            "maximum": 1.0
+                          },
+                          "z": {
+                            "type": "number",
+                            "minimum": -1.0,
+                            "maximum": 1.0
+                          },
+                          "w": {
+                            "type": "number",
+                            "minimum": -1.0,
+                            "maximum": 1.0
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y",
+                          "z",
+                          "w"
+                        ],
+                        "additionalProperties": false,
+                        "format": "unitQuaternion"
+                      }
+                    },
+                    "required": [
+                      "position",
+                      "rotation"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "radius": {
+                    "type": "number",
+                    "minimum": 0.005,
+                    "maximum": 1.0
+                  },
+                  "height": {
+                    "type": "number",
+                    "minimum": 0.01,
+                    "maximum": 2.0
+                  },
+                  "capacityMl": {
+                    "type": "number",
+                    "minimum": 1.0,
+                    "maximum": 1000000.0
+                  },
+                  "amountMl": {
+                    "type": "number",
+                    "minimum": 0.0,
+                    "maximum": 1000000.0
+                  },
+                  "liquid": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+                    "maxLength": 32
+                  },
+                  "color": {
+                    "type": "object",
+                    "properties": {
+                      "r": {
+                        "type": "number",
+                        "minimum": 0.0,
+                        "maximum": 1.0
+                      },
+                      "g": {
+                        "type": "number",
+                        "minimum": 0.0,
+                        "maximum": 1.0
+                      },
+                      "b": {
+                        "type": "number",
+                        "minimum": 0.0,
+                        "maximum": 1.0
+                      },
+                      "a": {
+                        "type": "number",
+                        "minimum": 1.0,
+                        "maximum": 1.0
+                      }
+                    },
+                    "required": [
+                      "r",
+                      "g",
+                      "b",
+                      "a"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "frame",
+                  "radius",
+                  "height",
+                  "capacityMl",
+                  "amountMl",
+                  "liquid",
+                  "color"
+                ],
+                "additionalProperties": false,
+                "format": "containerDefinition"
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "revision",
+              "definition"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "object.container",
+              "version": 1,
+              "arguments": {
+                "target": "target"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
+            "title": "Configure / fill",
+            "x-features": [
+              "containers.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "remove"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "revision"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "object.container",
+              "version": 1,
+              "arguments": {
+                "target": "target"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
+            "title": "Remove container",
+            "x-features": [
+              "containers.v1"
+            ]
+          }
+        ]
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.created",
+        "target.unheld",
+        "source.revision.current",
+        "storage.writable"
+      ],
+      "description": "Configure one saved cylindrical liquid store on any created object, or remove it. definition includes its contents: this authoring action can create, replace or empty liquid. Use object.container.transfer to conserve contents instead. The frame is the root-local bottom centre; +Y points toward the opening. Geometry describes the cavity and does not infer or modify mesh/colliders. Capacity is a logical game-rule value in millilitres, independent of visual scale; resizing a prop neither creates liquid nor changes capacity. One liquid identity and opaque display colour at a time, up to 16 containers per room. The shared saved amount survives Undo, duplication, prototypes, temporary rooms and archives. This version supports explicit measured transfers, not automatic gravity pouring, splashes, drinking, fluid forces or liquid mass. Imported bowls require explicit cavity configuration.",
+      "example": {
+        "operation": "configure",
+        "target": "00000000000000000000000000000000",
+        "revision": 1,
+        "definition": {
+          "frame": {
+            "position": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            "rotation": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0,
+              "w": 1.0
+            }
+          },
+          "radius": 0.039999999105930328,
+          "height": 0.10000000149011612,
+          "capacityMl": 250.0,
+          "amountMl": 200.0,
+          "liquid": "Water",
+          "color": {
+            "r": 0.15999999642372131,
+            "g": 0.550000011920929,
+            "b": 0.85000002384185791,
+            "a": 1.0
+          }
+        }
+      }
+    },
+    {
+      "id": "object.container.transfer",
+      "version": 1,
+      "label": "Transfer a measured amount of liquid",
+      "input": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "object",
+            "properties": {
+              "target": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              }
+            },
+            "required": [
+              "target",
+              "revision"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "object.container",
+              "version": 1,
+              "arguments": {
+                "target": "target"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            }
+          },
+          "destination": {
+            "type": "object",
+            "properties": {
+              "target": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              }
+            },
+            "required": [
+              "target",
+              "revision"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "object.container",
+              "version": 1,
+              "arguments": {
+                "target": "target"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            }
+          },
+          "amountMl": {
+            "type": "number",
+            "minimum": 0.001,
+            "maximum": 1000000.0
+          }
+        },
+        "required": [
+          "source",
+          "destination",
+          "amountMl"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "containers.v1"
+        ],
+        "format": "containerTransfer"
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "targets.created",
+        "targets.unheld",
+        "source.revision.current",
+        "storage.writable"
+      ],
+      "description": "Move up to amountMl between two distinct configured containers in one atomic saved edit and one Undo. The result reports actual transferredMl, capped by source contents and destination space. Empty/full or incompatible liquid identity/colour fails without changing either object; an empty destination adopts source identity/colour. Both current object.container revisions are required and both objects are exclusively owned during execution. This is a logical transfer, with no implicit movement, proximity check, pouring animation or fluid simulation. Use it as a building block for user-authored games; physical pouring will use the same conserved operation. Stop cannot retract an already completed saved transfer; Undo can. It never repeats after reload on its own.",
+      "example": {
+        "source": {
+          "target": "00000000000000000000000000000000",
+          "revision": 1
+        },
+        "destination": {
+          "target": "11111111111111111111111111111111",
+          "revision": 1
+        },
+        "amountMl": 100
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "transferredMl": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1000000.0
+          }
+        },
+        "required": [
+          "transferredMl"
+        ],
+        "additionalProperties": false
       }
     },
     {
@@ -20757,6 +21342,76 @@
       ]
     },
     {
+      "id": "object.container",
+      "version": 1,
+      "type": {
+        "record": {
+          "revision": "number",
+          "configured": "boolean",
+          "definition": {
+            "record": {
+              "frame": {
+                "record": {
+                  "position": {
+                    "record": {
+                      "x": "number",
+                      "y": "number",
+                      "z": "number"
+                    }
+                  },
+                  "rotation": {
+                    "record": {
+                      "x": "number",
+                      "y": "number",
+                      "z": "number",
+                      "w": "number"
+                    }
+                  }
+                }
+              },
+              "radius": "number",
+              "height": "number",
+              "capacityMl": "number",
+              "amountMl": "number",
+              "liquid": "text",
+              "color": {
+                "record": {
+                  "r": "number",
+                  "g": "number",
+                  "b": "number",
+                  "a": "number"
+                }
+              }
+            }
+          }
+        }
+      },
+      "label": "Liquid container and contents",
+      "description": "Saved cavity, capacity, exact contents and current object revision. configured=false returns editable defaults, without creating a component. Amount/capacity use millilitres, independent of prop scale. Reads do not refill, transfer or simulate liquid.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1",
+        "containers.v1"
+      ]
+    },
+    {
       "id": "object.snapPoint",
       "version": 1,
       "type": {
@@ -23834,7 +24489,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "929af12ba849402e2660930ac7a127d05dc1ca13ba819dda74b6d8526bde92b4"
+      "sha256": "06d699f8edcea27bc3b007dced0295b5f1681af7f0bc144a6068563b6cbdd31d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -23854,7 +24509,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "c0f402aa61cbf541fedd5aa92c9444425c59067319993816237b2b333d063bc3"
+      "sha256": "250d9cbb8e0a1a667b56792f69406b07e6d8654f7a16e7056bf41976570921dc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -23886,7 +24541,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "6b0db0fc1fcf587298c9f10fa4687bf48482cb301860c1d00b17a22c0121a0c3"
+      "sha256": "a52ce60b3c47723d5617ca7f431316a1cef8c16b56e6f28ffcc8ab4634296f5d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -23910,11 +24565,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "b9bea6142787ad1a1481af4b28973c8a418c1ff0d54df892438128ac84d05795"
+      "sha256": "ab789d3d7abeb5a7dc115a3298d53286a8ecc7a5bee6d74a5909aeb129ee07f4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
-      "sha256": "eb82f7e36f0a7689d342e6dd384735932879332592a0529fc488be748e78de1c"
+      "sha256": "0d92f36dbeeba650819122a461420ea0b081c375b79fd7df7a9f432e8fd0d5ab"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleMemory.cs",
@@ -23930,11 +24585,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveCapture.cs",
-      "sha256": "b551fdb093c2979e612d7b5103d7d4766abd4ceca4a433bed8b6c6fadebc2310"
+      "sha256": "138f8aa7993129ecd002946c1f459760f608917f1e49ca592c018f5e903b821a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveSnapshot.cs",
-      "sha256": "a1702942cd453658262e8d7e7ba82520571517f6f63d2e41c70dddfe7347ba8c"
+      "sha256": "6cf43bf96037c96ed1b415aebf9e4d8a4ff59b09e44d21dacbc6840df6749032"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.Retention.cs",
@@ -24110,7 +24765,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "315642c63c4c0a4aee9721bec71c69232ff7469720c5ae36f84bbf20a019be23"
+      "sha256": "86c08ebe7c675a4dcd48c000e7fff3591da85be744843fb290ff5d194a37ad2a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomToolTray.cs",
@@ -24147,6 +24802,18 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSnapPoint.cs",
       "sha256": "58da81dbf26d64289bf757e63d58e845480257dc6eee00d5e1bb5241830b9483"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomContainer.cs",
+      "sha256": "b8f4ede0b5bf90957e8fdb597ac8bc7b703bc9e5ac7657e48d638af11d2c6a2f"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ContainerFillView.cs",
+      "sha256": "de98eaee682afc22907662f9364f1f0c822a3b39ac5232cd4b736b3e9dd9b6e0"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomContainerEdits.cs",
+      "sha256": "6da4b9cec11e6a3cc86dcace1634ceed82192ae7a17d51b5d3ad117f4a20f60a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSnapEdits.cs",
@@ -24198,7 +24865,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "ba6e144e40af1ce8aae0bc9a547adb0f5a4a3bc492d774418abfe85fedce30de"
+      "sha256": "956b001f297ad3147ae8aa78c63a26dde59dbf3b8907c7a521e9ba55e24fff85"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedDrawing.cs",
@@ -24342,7 +25009,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationTemplates.cs",
-      "sha256": "2711b0b520b87218c3bd199d15ed47e40391ab4d8d6cec8dc0b6926adf45f0f0"
+      "sha256": "3b57ef1fae7a9106e7fdce75fdf57b9afe5d185bc94da54467da631beca2eaa4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLayout.cs",
@@ -24350,7 +25017,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationBatch.cs",
-      "sha256": "70f827abc767e47b11f532202c69bbab4218263a83b2129552c210e2c5dc16b6"
+      "sha256": "b2f31092e595c04ad37cc5381470b28c6487e1b7a1ce55f3ca73b7dea77c4158"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructure.cs",
@@ -24398,7 +25065,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "6b0ea92265b8499ad97be754b2ddaa2b7669ee04930b99d743d622d705879807"
+      "sha256": "70d2e95974a9854005fbf98b7a10b5cd80653b447efcb1cde8e9464a932194a4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -24433,6 +25100,10 @@
       "sha256": "1798d20937e2ef892dfb56255d669ab290ceb11a19dee6990a040c352ae96eaa"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContainerCapability.cs",
+      "sha256": "2352f82dd8b31e0368632c51bab22ade13bbfd212e2810506198bb0d1f329fe5"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ControllerConfigurationCapability.cs",
       "sha256": "2b23761add0e3dbcbfea3c44d6868214b6d1059ac1832df33f1e9c77b905ecf7"
     },
@@ -24450,11 +25121,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreateTemplateCapability.cs",
-      "sha256": "8cf6feb4f24130269df260a64102422027a034acf5e5e4365fd8738e92f68ac5"
+      "sha256": "78b090ca6dd8dd65b8549bda8c8b076d90395c926fc1c863dbb607aeaac76aa5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreationPrototypeSchema.cs",
-      "sha256": "bb4ad4e7927197b60c92c8b5774fa70cc041d15d9b8114e08125fadcc9e734b9"
+      "sha256": "97e5884669cd7083a897569b2ff8334f6068014ce8543aaa9a963bc0df817c80"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingCapabilities.cs",
@@ -24666,7 +25337,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/cup.json",
-      "sha256": "8d5fce78b52eb31a2d64d2d5b303bc947d6731c38c80968e3e83ae67effdf8b4"
+      "sha256": "22b5810eeed904680847631faf04ee3797f56bffdf3beb031f82609ed49c3ec1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/domino.json",

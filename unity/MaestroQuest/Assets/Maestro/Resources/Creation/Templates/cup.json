@@ -3,7 +3,7 @@
   "version": 1,
   "id": "cup",
   "name": "Cup",
-  "description": "Open cup with a handle and compound walls for solid objects. No liquid simulation.",
+  "description": "Open cup with a handle, compound walls and an editable 500 ml logical liquid store. Physical pouring is not yet enabled.",
   "tags": [
     "tableware",
     "container",
@@ -196,6 +196,35 @@
       "mode": "solid",
       "shape": "automatic",
       "mass": 0.3
-    }
+    },
+    "containers": [
+      {
+        "version": 1,
+        "frame": {
+          "position": {
+            "x": 0,
+            "y": -0.088,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "radius": 0.078,
+        "height": 0.198,
+        "capacityMl": 500,
+        "amountMl": 0,
+        "liquid": "Water",
+        "color": {
+          "r": 0.16,
+          "g": 0.55,
+          "b": 0.85,
+          "a": 1
+        }
+      }
+    ]
   }
 }

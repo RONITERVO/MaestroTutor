@@ -2745,3 +2745,14 @@ keep their existing throw semantics. See [snap points](QUEST_SNAP_POINTS.md) for
 matching, cancellation, breaking limits and the absent occupancy/overlap policy.
 This advances the construction kit; it does not complete bounded water/snow,
 remaining default assets, Quest acceptance or the account/Store release gates.
+
+
+### Measured liquid-container foundation (2026-10-03)
+
+The shared container component adds saved millilitres, bounded logical transfers,
+current-state facts and lightweight level meshes. The same component travels with
+copies, prototypes and room snapshots. Both transfer endpoints use ordinary
+ownership/revision guards and one atomic saved Undo; failed publication leaves
+both unchanged. See [containers](QUEST_CONTAINERS.md) for logical capacity,
+format boundaries and exact limitations. Physical pouring, streams/spills,
+water/snow fields, remaining default assets and Quest/release gates remain open.
