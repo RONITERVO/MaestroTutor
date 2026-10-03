@@ -94,3 +94,17 @@ hands/controllers, passthrough/scan alignment, provider behaviour, headset frame
 timing, device storage/power-loss behaviour, release signing or Store acceptance.
 The same command semantics improve developer/user/agent parity, but cannot replace
 rendered UI journeys and actual device interaction checks.
+
+## Transient file locks
+
+The desktop transport retries a locked observation read at most eight attempts
+with bounded backoff. Byte limits, JSON validation, probe identity and shared
+state validation still apply. This retry reads the same file; it does not create
+or resend an action. A persistent lock cancels pending client work with an
+explicit failure and never fabricates an acknowledgement. Deterministic tests
+cover both a temporary Windows `EBUSY` read and an exhausted retry budget.
+
+Storage writes are a separate boundary: a failed room save is still a failed
+action. Native storage diagnostics record the failed stage and error code without
+private file paths or document contents; the probe must not reinterpret that
+failure as a transient transport read.

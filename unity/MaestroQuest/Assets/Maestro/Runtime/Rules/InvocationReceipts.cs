@@ -66,15 +66,18 @@ namespace Maestro.Quest.Rules
         bool Save()
         {
             if(Error!=null)return false;
+            string phase="stage";
             try {
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
                 var bytes=Encoding.UTF8.GetBytes(new JObject {["version"]=1,["entries"]=new JArray(entries.Select(x=>x.DeepClone()))}.ToString(Formatting.None));
                 if(bytes.Length>1024*1024)throw new InvalidDataException("Receipt limit");
                 string pending=path+".pending";
                 using(var stream=new FileStream(pending,FileMode.Create,FileAccess.Write,FileShare.None)) {stream.Write(bytes,0,bytes.Length);stream.Flush(true);}
+                phase="publish";
                 if(File.Exists(path))File.Replace(pending,path,null);else File.Move(pending,path);
                 return true;
             } catch(Exception ex) when(StorageFailure(ex)) {
+                UnityEngine.Debug.LogWarning($"Maestro action receipt save failed during {phase} ({ex.GetType().Name}, 0x{ex.HResult:X8})");
                 Fail("Action receipt storage failed. New actions are disabled; unsaved outcomes may be uncertain after restart.");return false;
             }
         }

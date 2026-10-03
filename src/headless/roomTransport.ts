@@ -24,8 +24,15 @@ export class HeadlessRoomTransport {
  private failure:Error|null=null;
  private constructor(readonly directory:string,readonly id:string){}
  private async read(name:string,limit:number):Promise<unknown>{
-  const path=join(this.directory,name);if((await stat(path)).size>limit)throw new Error('Room probe message exceeds its byte limit.');
-  const bytes=await readFile(path);if(bytes.length>limit)throw new Error('Room probe message exceeds its byte limit.');return JSON.parse(bytes.toString('utf8'));
+  const path=join(this.directory,name);
+  // Retry only this read while an atomic publication or Windows scanner holds
+  // the file. Do not resend commands or accept malformed/stale observations.
+  for(let attempt=0;;attempt++){
+   try{
+    if((await stat(path)).size>limit)throw new Error('Room probe message exceeds its byte limit.');
+    const bytes=await readFile(path);if(bytes.length>limit)throw new Error('Room probe message exceeds its byte limit.');return JSON.parse(bytes.toString('utf8'));
+   }catch(error){if(attempt>=7||!['EPERM','EACCES','EBUSY'].includes((error as NodeJS.ErrnoException).code??''))throw error;await sleep(20*(attempt+1));}
+  }
  }
  private send(operation:'exchange'|'stop'){
   const value={version:1,id:this.id,operation,...(operation==='exchange'?{snapshot:this.client.snapshot()}:{})};

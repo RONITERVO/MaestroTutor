@@ -6,9 +6,13 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {randomUUID} from 'node:crypto';
 import {HeadlessRoomTransport,publishRoomProbeFile} from './roomTransport';
+vi.mock('node:fs/promises',async importOriginal=>{
+ const original=await importOriginal<typeof import('node:fs/promises')>();return {...original,readFile:vi.fn(original.readFile)};
+});
+const originalFs=await vi.importActual<typeof import('node:fs/promises')>('node:fs/promises');
 const sleep=(ms:number)=>new Promise<void>(resolve=>setTimeout(resolve,ms));
 const cleanup:(()=>Promise<void>)[]=[];
-afterEach(async()=>{vi.restoreAllMocks();const errors:unknown[]=[];for(const close of cleanup.splice(0).reverse())try{await close();}catch(error){errors.push(error);}if(errors.length)throw errors[0];});
+afterEach(async()=>{vi.restoreAllMocks();vi.mocked(readFile).mockImplementation(originalFs.readFile);const errors:unknown[]=[];for(const close of cleanup.splice(0).reverse())try{await close();}catch(error){errors.push(error);}if(errors.length)throw errors[0];});
 async function boundary(wrongIdentity=false){
  const directory=await mkdtemp(join(tmpdir(),'maestro-room-transport-')),id=randomUUID().replace(/-/g,'');
  await writeFile(join(directory,'owner.json'),JSON.stringify({version:1,id}));await writeFile(join(directory,'ready.json'),JSON.stringify({version:1,id}));
@@ -53,4 +57,23 @@ it('preserves the rejected native observation and its diagnostic when a pending 
  await expect(lease.execute([{action:'undo'}],initial.sceneRevision,initial.objects)).rejects.toThrow('interrupted');
  expect(()=>transport.checkHealth()).toThrow('shared client contract');
  const rejected=JSON.parse(await readFile(join(native.directory,'rejected-state.json'),'utf8'));expect(rejected.state.status).toBeNull();
+});
+
+it('retries a briefly locked state read without resending an action or accepting an unconfirmed result',async()=>{
+ const native=await boundary(),transport=await HeadlessRoomTransport.connect(native.directory,3000);cleanup.push(()=>transport.close(false));
+ let busy=3,reads=0;vi.mocked(readFile).mockImplementation(async(...args)=>{
+  if(String(args[0])===join(native.directory,'state.json')){reads++;if(busy-->0)throw Object.assign(new Error('Temporary sharing violation'),{code:'EBUSY'});}
+  return originalFs.readFile(...args);
+ });
+ const lease=transport.lease(),initial=lease.state();const receipt=await lease.execute([{action:'undo'}],initial.sceneRevision,initial.objects);
+ expect(receipt.ack).toBe(1);expect(reads).toBeGreaterThanOrEqual(4);expect(native.received()).toBe(1);expect(()=>transport.checkHealth()).not.toThrow();
+});
+it('bounds a persistent read lock and cancels pending work with no fabricated acknowledgement',async()=>{
+ const native=await boundary(),transport=await HeadlessRoomTransport.connect(native.directory,3000);cleanup.push(()=>transport.close(false));let reads=0;
+ vi.mocked(readFile).mockImplementation(async(...args)=>{
+  if(String(args[0])===join(native.directory,'state.json')){reads++;throw Object.assign(new Error('Persistent sharing violation'),{code:'EBUSY'});}
+  return originalFs.readFile(...args);
+ });
+ const lease=transport.lease(),initial=lease.state();await expect(lease.execute([{action:'undo'}],initial.sceneRevision,initial.objects)).rejects.toThrow('interrupted');
+ expect(()=>transport.checkHealth()).toThrow('Persistent sharing violation');expect(reads).toBe(8);expect(native.received()).toBe(1);
 });
