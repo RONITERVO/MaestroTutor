@@ -307,3 +307,21 @@ its motion must move outward from the closest supporting plane. Every other hit,
 later segment, endpoint and head-clearance check remains active. A real settled
 PhysX ball now exercises the launch test; adjacent walls, penetration and downward
 flight have explicit refusal coverage. Concave surfaces retain conservative checks.
+
+
+## Carried-material transfer journey (2026-10-04)
+
+The full native journey creates a released carrier with a measured material store,
+discovers `object.material.transfer`, loads both current revisions, takes material
+from a field, deposits part of it back and reads both actual balances after each
+operation. Two separate Undo operations restore the take state and then the
+original field/store state. `material-transfer-authoring.json` retains the exact
+native calls, receipts and readbacks. The carrier and its configuration are then
+undone so later journey steps start from their intended room.
+
+`probe-material-transfer-authoring.mjs` replays those captured observations in the
+ordinary catalog editor. It checks endpoint variants, both current-revision reads,
+same-object and oversized-amount refusal, and the exact emitted call and native
+result. It does not run a browser material simulation. This authoring check does
+not claim physical shovel contact, carrying visuals, hand packing, provider
+reasoning or headset acceptance; those are separate adapters and release gates.

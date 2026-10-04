@@ -44,7 +44,16 @@ namespace Maestro.Quest.Creation {
             if(removed<.001){removed=0;return false;}
             field.heights=next;error=null;return true;
         }
-        static bool FootprintValid(RoomHeightField f,Vector2 p,float r)=>float.IsFinite(p.x)&&float.IsFinite(p.y)&&
+        internal static bool Deposit(RoomHeightField field,Vector2 centre,float radius,double requested,out double added,out string error){
+            added=0;error="Choose a valid surface, in-bounds local footprint and 0.001–8000 local litres";
+            if(field==null||!field.Validate(out _)||!FootprintValid(field,centre,radius)||!double.IsFinite(requested)||requested<.001||requested>8000)return false;
+            var footprint=new Footprint(field,centre,radius,true);
+            var next=footprint.FitAtMost(Math.Min(requested,footprint.Capacity),out added);
+            error="The footprint has less than 0.001 representable litre of space; enlarge it or choose another place";
+            if(added<.001){added=0;return false;}
+            field.heights=next;error=null;return true;
+        }
+        internal static bool FootprintValid(RoomHeightField f,Vector2 p,float r)=>float.IsFinite(p.x)&&float.IsFinite(p.y)&&
             Mathf.Abs(p.x)<=f.width*.5f&&Mathf.Abs(p.y)<=f.depth*.5f&&float.IsFinite(r)&&r>=.005f&&r<=2;
         sealed class Footprint {
             readonly RoomHeightField field;

@@ -1,0 +1,306 @@
+[
+  {
+    "name": "field to store",
+    "arguments": {
+      "source": {
+        "kind": "field",
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 1,
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": 0.2
+      },
+      "destination": {
+        "kind": "store",
+        "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "revision": 1
+      },
+      "amountLitres": 0.5
+    },
+    "valid": true
+  },
+  {
+    "name": "store to field",
+    "arguments": {
+      "source": {
+        "kind": "store",
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 1
+      },
+      "destination": {
+        "kind": "field",
+        "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "revision": 1,
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": 0.2
+      },
+      "amountLitres": 0.5
+    },
+    "valid": true
+  },
+  {
+    "name": "store to store",
+    "arguments": {
+      "source": {
+        "kind": "store",
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 1
+      },
+      "destination": {
+        "kind": "store",
+        "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "revision": 1
+      },
+      "amountLitres": 0.5
+    },
+    "valid": true
+  },
+  {
+    "name": "field to field",
+    "arguments": {
+      "source": {
+        "kind": "field",
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 1,
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": 0.2
+      },
+      "destination": {
+        "kind": "field",
+        "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "revision": 1,
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": 0.2
+      },
+      "amountLitres": 0.5
+    },
+    "valid": true
+  },
+  {
+    "name": "same owner",
+    "arguments": {
+      "source": {
+        "kind": "field",
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 1,
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": 0.2
+      },
+      "destination": {
+        "kind": "store",
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 1
+      },
+      "amountLitres": 0.5
+    },
+    "valid": false
+  },
+  {
+    "name": "unknown endpoint kind",
+    "arguments": {
+      "source": {
+        "kind": "liquid",
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 1,
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": 0.2
+      },
+      "destination": {
+        "kind": "store",
+        "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "revision": 1
+      },
+      "amountLitres": 0.5
+    },
+    "valid": false
+  },
+  {
+    "name": "missing source revision",
+    "arguments": {
+      "source": {
+        "kind": "field",
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": 0.2
+      },
+      "destination": {
+        "kind": "store",
+        "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "revision": 1
+      },
+      "amountLitres": 0.5
+    },
+    "valid": false
+  },
+  {
+    "name": "zero destination revision",
+    "arguments": {
+      "source": {
+        "kind": "field",
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 1,
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": 0.2
+      },
+      "destination": {
+        "kind": "store",
+        "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "revision": 0
+      },
+      "amountLitres": 0.5
+    },
+    "valid": false
+  },
+  {
+    "name": "zero amount",
+    "arguments": {
+      "source": {
+        "kind": "field",
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 1,
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": 0.2
+      },
+      "destination": {
+        "kind": "store",
+        "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "revision": 1
+      },
+      "amountLitres": 0
+    },
+    "valid": false
+  },
+  {
+    "name": "oversized amount",
+    "arguments": {
+      "source": {
+        "kind": "field",
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 1,
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": 0.2
+      },
+      "destination": {
+        "kind": "store",
+        "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "revision": 1
+      },
+      "amountLitres": 8000.001
+    },
+    "valid": false
+  },
+  {
+    "name": "negative radius",
+    "arguments": {
+      "source": {
+        "kind": "field",
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 1,
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": -1
+      },
+      "destination": {
+        "kind": "store",
+        "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "revision": 1
+      },
+      "amountLitres": 0.5
+    },
+    "valid": false
+  },
+  {
+    "name": "out of range centre",
+    "arguments": {
+      "source": {
+        "kind": "field",
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 1,
+        "centre": {
+          "x": 3,
+          "z": 0
+        },
+        "radius": 0.2
+      },
+      "destination": {
+        "kind": "store",
+        "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "revision": 1
+      },
+      "amountLitres": 0.5
+    },
+    "valid": false
+  },
+  {
+    "name": "store cannot invent a footprint",
+    "arguments": {
+      "source": {
+        "kind": "field",
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 1,
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": 0.2
+      },
+      "destination": {
+        "kind": "store",
+        "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "revision": 1,
+        "radius": 0.2
+      },
+      "amountLitres": 0.5
+    },
+    "valid": false
+  },
+  {
+    "name": "field needs footprint",
+    "arguments": {
+      "source": {
+        "kind": "field",
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 1,
+        "radius": 0.2
+      },
+      "destination": {
+        "kind": "store",
+        "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "revision": 1
+      },
+      "amountLitres": 0.5
+    },
+    "valid": false
+  }
+]

@@ -70,3 +70,30 @@ copies/prototypes, archive retention, real XRI grip/release and gravity against
 accepted surface collision. A full-app shared-client journey records exact native
 states; the separate Chrome fixture replays those acknowledgements to check the
 generated form. Neither is a substitute for Quest performance/comfort acceptance.
+
+
+## Surface and carried-store transfer
+
+`object.material.transfer` bridges the existing field geometry and measured store.
+Each of two distinct objects explicitly selects `kind: field` (current revision,
+local X/Z centre and radius) or `kind: store` (current revision). The shared book
+form, agent and programs can take surface material into a carrier, deposit it on
+a surface, transfer between carriers, or reuse the surface-to-surface kernel.
+
+Material label and opaque colour must match exactly, including on empty receivers.
+The requested 0.001–8000 local litres are bounded by source availability and
+receiver capacity or field headroom. Store-to-field fitting removes the volume
+actually representable by the accepted heights. The result reports measured
+`removedLitres`, `addedLitres` and signed `roundingLitres`; permitted difference is
+max(0.000001 litre, removedLitres × 0.000001). There is no second hidden balance.
+Missing/incompatible components, unrepresentable changes or failed saves preserve
+both inputs. Revisions and exclusive ownership protect both objects.
+
+One save and one Undo changes both sides; receipt replay cannot repeat a transfer.
+Temporary edits remain in their fork. Existing room v17 and archive support already
+preserve both component types, so this adds no stored fields or migration. Feature:
+`materialTransfer.v1`. Stores can belong to movable rigid objects, but this explicit
+authoring action requires both objects released. Fields remain fixed. Transferring
+contents does not change store geometry, world scale, mass or liquid-container
+balances. Physical shovel contact, carrying visuals and hand packing remain the
+next adapters over this shared operation; this action does not claim those gestures.

@@ -2,6 +2,13 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
+Measured material can now transfer between existing height fields and carried
+stores through one native capability, shared book form and program/agent path.
+Both endpoints use current revisions and one atomic save/Undo. This closes the
+balance bridge needed by a reusable shovel; physical contact/gesture adapters and
+carried-material visuals remain open. See
+[material transfers](QUEST_MATERIAL_PACKING.md#surface-and-carried-store-transfer).
+
 The original chat/Live handoff and result guidance now defer supported room work
 to the native catalog, including existing model/motion imports. System file choice
 and permissions remain explicit user steps. Planner reads and actions use their
