@@ -28,15 +28,9 @@ namespace Maestro.Quest.Interaction
             if(!rigid.CanReceivePhysicsAction(out error))return false;
             float dt=Time.fixedDeltaTime;
             if(!Finite(destination)||!Finite(Physics.gravity)||!float.IsFinite(seconds)||seconds<.2f||seconds>2||!float.IsFinite(maxSpeed)||maxSpeed<.1f||maxSpeed>8||dt<.005f||dt>.05f){error="The throw or physics time step is outside supported limits";return false;}
-            Physics.SyncTransforms();
-            bool found=false;Bounds bounds=default;SphereCollider sphere=null;int count=0;
-            foreach(var collider in item.Grab.colliders)if(collider&&collider.enabled&&!collider.isTrigger){if(!found)bounds=collider.bounds;else bounds.Encapsulate(collider.bounds);found=true;count++;sphere=collider as SphereCollider;}
-            if(!found){error="The object has no ready collision volume";return false;}
-            Origin=bounds.center;Destination=destination;
+            if(!RoomCollisionVolume.Read(item,1,out var volume,out error))return false;
+            Origin=volume.Centre(item);Destination=destination;Radius=volume.Radius;
             if(!world.CanSimulate(Origin)){error="The planned throw starts outside the aligned room";return false;}
-            // Exact enclosing radius for a sphere; conservative rotation-independent volume for other shapes.
-            Radius=count==1&&sphere?sphere.radius*Mathf.Max(Mathf.Abs(sphere.transform.lossyScale.x),Mathf.Abs(sphere.transform.lossyScale.y),Mathf.Abs(sphere.transform.lossyScale.z)):bounds.extents.magnitude;
-            if(!Finite(Origin)||!float.IsFinite(Radius)||Radius<=0||Radius>1){error="Aim a loaded object with a collision radius at most one metre";return false;}
             int steps=Mathf.CeilToInt(seconds/dt);Seconds=steps*dt;
             // Semi-implicit fixed-step estimate with the existing room body's small linear damping.
             // Contacts and moving targets are deliberately not predicted.

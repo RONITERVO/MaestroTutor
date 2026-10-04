@@ -15,6 +15,7 @@ export function insertProgramCapability(source:string,call:CapabilityInvocation,
  const definition=capabilityDefinition(call.id)!;if(definition.domain==='workspace')throw new Error('Workspace maintenance cannot run as a room behaviour.');
  const program=parsed.program,entry=program.functions.find(fn=>fn.name===(functionName??program.entry));
  if(!entry)throw new Error('Choose an existing function for this action.');
+ if((definition.minimumProgramVersion??2)>program.version){program.version=3;program.state??=[];program.events??=[];}
  const ids=new Set<string>();for(const fn of program.functions)visitProgramNodes(fn.body,node=>ids.add(node.id));
  const fresh=(prefix:string,used:Set<string>)=>{let i=1;while(used.has(prefix+i))i++;const value=prefix+i;used.add(value);return value;};
  const invoke:Extract<ProgramNode,{op:'invoke'}>={id:fresh('action_',ids),op:'invoke',capability:call.id,version:call.version,arguments:structuredClone(call.arguments),bindings:{}};

@@ -78,11 +78,15 @@ namespace Maestro.Quest.Programs
             ["version"]=2,["entry"]="main",["resources"]=new JArray(steps.SelectMany(RuleDocument.Targets).Distinct()),
             ["functions"]=new JArray(new JObject { ["name"]="main",["returns"]="void",["parameters"]=new JArray(),["locals"]=new JArray(),["body"]=ActionNodes(steps) })
         }.ToString(Formatting.None);
-        public static string FromInvocation(JObject call) => new JObject {
-            ["version"]=2,["entry"]="main",["resources"]=new JArray(CapabilityArguments.Resources((JObject)call["arguments"],BehaviourCatalog.Action((string)call["id"]).InputSchema)),
+        public static string FromInvocation(JObject call) {
+            var definition=BehaviourCatalog.Action((string)call["id"]);var source=new JObject {
+            ["version"]=definition.Module.MinimumProgramVersion,["entry"]="main",["resources"]=new JArray(CapabilityArguments.Resources((JObject)call["arguments"],BehaviourCatalog.Action((string)call["id"]).InputSchema)),
             ["functions"]=new JArray(new JObject {["name"]="main",["returns"]="void",["parameters"]=new JArray(),["locals"]=new JArray(),
                 ["body"]=new JArray(new JObject {["id"]="action",["op"]="invoke",["capability"]=call["id"].DeepClone(),["version"]=call["version"].DeepClone(),["arguments"]=call["arguments"].DeepClone(),["bindings"]=new JObject()})})
-        }.ToString(Formatting.None);
+            };
+            if(definition.Module.MinimumProgramVersion>=3){source["state"]=new JArray();source["events"]=new JArray();}
+            return source.ToString(Formatting.None);
+        }
         public bool ReferencesMotion(string id)=>Source.Contains("\""+id+"\"");
         internal ProgramFunction Function(string name)=>functions[name];
         internal CapabilityCall Action(string id)=>actions[id].Copy();
@@ -262,6 +266,7 @@ namespace Maestro.Quest.Programs
                         string capability=Text(node["capability"]);Need((node["version"]?.Type==JTokenType.Integer||node["version"]?.Type==JTokenType.Float)&&(double)node["version"]==Math.Truncate((double)node["version"]),"Capability version must be an integer");
                         Need(BehaviourCatalog.TryCall(capability,(int)node["version"],Object(node["arguments"]),out var step,out var invocationError),invocationError??"Invalid capability arguments");
                         var contract=BehaviourCatalog.Action(capability);
+                        Need(Version>=contract.Module.MinimumProgramVersion,"This capability needs program version "+contract.Module.MinimumProgramVersion);
                         Need(CapabilityArguments.LiteralResources(Object(node["arguments"]),contract.InputSchema,Object(node["bindings"]),Version).All(resources.Contains),"Declare every action resource");step.NodeId=id;actions.Add(id,step);
                         if(node.ContainsKey("results")) {
                             Need(Version==3,"Action results need program version 3");

@@ -46,9 +46,10 @@ parented rotations and bounded tracks. The lathe increment is described in
 [recipe authoring](QUEST_RECIPE_AUTHORING.md#editable-revolved-profiles-2026-10-02).
 Recipe parts are visual joints, not independent rigid bodies. The object can now
 use an editable compound collision recipe; see
-[collision authoring](QUEST_COLLISION_AUTHORING.md). Shared attachment and aimed throws exist; automatic IK catching,
-hit reactions, arbitrary mesh/deforming paintable surfaces and
-liquids/snow are not completed by those features. Persistent structure baselines and typed member-list bindings now let one program
+[collision authoring](QUEST_COLLISION_AUTHORING.md). Shared attachment, aimed throws and bounded assisted catching exist; see
+[physical catching](QUEST_PHYSICAL_CATCHING.md). Hit reactions, arbitrary
+mesh/deforming paintable surfaces and full fluid/granular simulation are separate
+capabilities, not implied by those actions. Persistent structure baselines and typed member-list bindings now let one program
 create a small build, capture it, displace pieces and reset them; see
 [structures](QUEST_STRUCTURES.md). The current
 16-creations-per-run budget cannot be described as arbitrary castle construction.
@@ -137,7 +138,7 @@ users and Maestro collect, highlight and order pieces through the same state; se
 [construction handle](QUEST_CONSTRUCTION_MOVEMENT.md) now arranges those pieces
 with one save/Undo while physics is paused. [Saved snap points](QUEST_SNAP_POINTS.md)
 now align complete constructions and optionally join them through one shared edit.
-Physical construction-handle previews now use the shared snap placement action (see [snap points](QUEST_SNAP_POINTS.md)). Configured cylindrical/spherical patches now extend plane drawing; arbitrary mesh/skin painting and persistent water/snow fields remain unfinished. Bounded physical pouring now uses the shared container component. Bounded sliders and an editable spring-button example now extend the shared connections.
+Physical construction-handle previews now use the shared snap placement action (see [snap points](QUEST_SNAP_POINTS.md)). Configured cylindrical/spherical patches now extend plane drawing; arbitrary mesh/skin painting and persistent liquid fields remain unfinished. Sculptable snow fields and measured packing use bounded geometry rather than individual grains. Bounded physical pouring now uses the shared container component. Bounded sliders and an editable spring-button example now extend the shared connections.
 [Surface drawing](QUEST_SURFACE_DRAWING.md) adds reusable explicit patches,
 shared ink editing/readback, a physical surface pencil/eraser, and configurable
 held drawing tips on ordinary created/imported objects. Pencil, Paint brush and
@@ -416,3 +417,13 @@ does not add physical shovel capture or a hand-packing gesture. Those remain
 outstanding, alongside full-app Quest acceptance and release work. The latest
 format is room v17 with paired intent/archive v16; earlier checkpoints above retain
 their original format and evidence numbers.
+
+## Physical catching
+
+The shared system now adds `object.physics.catch`, a live `object.catch` fact and
+`object.caught` event. A native local loop detects contact and reaches with the
+visible avatar arm; root/recipe sockets use the same action. The incoming prop
+remains available for human pickup/throw until contact. Per-channel/reflex ownership,
+ordinary physics and explicit missed/caught outcomes support user-authored games
+without giving the LLM responsibility for frame timing. See
+[physical catching](QUEST_PHYSICAL_CATCHING.md) for limits and acceptance boundaries.

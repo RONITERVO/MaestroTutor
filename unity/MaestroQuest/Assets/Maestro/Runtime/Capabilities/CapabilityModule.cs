@@ -17,6 +17,7 @@ namespace Maestro.Quest.Programs
         internal virtual IEnumerable<CapabilityStepAdapter> StepAdapters=>Array.Empty<CapabilityStepAdapter>();
         public abstract string Id {get;}
         public virtual int Version=>1;
+        public virtual int MinimumProgramVersion=>2;
         public abstract string Label {get;}
         public virtual string Description=>null;
         public abstract JObject InputSchema {get;}
@@ -79,6 +80,7 @@ namespace Maestro.Quest.Programs
         public abstract float Seconds {get;}
         public virtual RuleActionState State(out string error) {error=null;return RuleActionState.Ready;}
         public virtual void Tick() {}
+        public virtual bool WaitsThroughGrab(string target)=>false;
         public virtual bool Complete(out string error) {error=null;return true;}
         public virtual void Stop(bool preservePlacement) {}
         // Describes effects that Stop cannot retract (for example a dispatched write).

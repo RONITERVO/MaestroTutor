@@ -5,7 +5,7 @@ import {behaviourEvent,eventFieldType,validateEventArguments,eventArgumentType} 
 import {type RuleStep} from './ruleSteps';
 import {behaviourFactTypes,behaviourFact} from '../../../shared/behaviourCatalog';
 import {validateFactArguments,factArgumentType} from '../../../shared/behaviourFacts';
-import {separateCapabilityBindings,validateCapabilityArguments,capabilityParameterType,argumentValue,capabilityOutputType,literalCapabilityResources} from '../../../shared/capabilities';
+import {capabilityDefinition,separateCapabilityBindings,validateCapabilityArguments,capabilityParameterType,argumentValue,capabilityOutputType,literalCapabilityResources} from '../../../shared/capabilities';
 import {stepInvocation,invocationStep} from './capabilitySteps';
 import {checkedDataValue,readDataType,sameDataType,dataOperationType} from '../../../shared/programValues';
 import type {ScalarType} from '../../../shared/programValues';
@@ -116,6 +116,7 @@ function validateProgram(root:Record<string,unknown>):void {
       keys(n,'id op capability version arguments bindings','results waitForChannels');if(n.waitForChannels!==undefined){need(root.version===3,'Channel waiting needs program version 3');expect('waitForChannels','number');}const capability=text(n.capability),args=obj(n.arguments);
       need(typeof n.version==='number','Capability version must be numeric');
       const error=validateCapabilityArguments(capability,n.version,args);need(!error,error??'Invalid capability arguments');
+      need((root.version as number)>=(capabilityDefinition(capability)?.minimumProgramVersion??2),'This capability needs program version '+(capabilityDefinition(capability)?.minimumProgramVersion??2));
       need(literalCapabilityResources(capability,args,obj(n.bindings),root.version as number).every(id=>resources.has(id)),'Declare every action resource');
       if(n.results!==undefined) {
        need(root.version===3,'Action results need program version 3');const assigned=new Set<string>();

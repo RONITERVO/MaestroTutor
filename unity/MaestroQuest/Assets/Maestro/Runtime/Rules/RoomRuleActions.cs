@@ -9,7 +9,7 @@ using Newtonsoft.Json.Linq;
 namespace Maestro.Quest.Rules
 {
     /// <summary>One lifecycle host for every native module. No capability IDs, enum dispatch or argument fields.</summary>
-    public sealed class RoomRuleActions : IRuleActions, IRuleCompletion, IRuleReadiness, IRuleInterruptionInfo, IRuleOwnershipSource, IProgramFacts, IProgramFactQueries, IProgramEventWorld, IProgramPhysicsWorld, IProgramClockWorld, IProgramAnchorWorld, IRuleResults
+    public sealed class RoomRuleActions : IRuleActions, IRuleCompletion, IRuleReadiness, IRuleInterruptionInfo, IRuleGrabPolicy, IRuleOwnershipSource, IProgramFacts, IProgramFactQueries, IProgramEventWorld, IProgramPhysicsWorld, IProgramClockWorld, IProgramAnchorWorld, IRuleResults
     {
         readonly CapabilityContext context;
         readonly Dictionary<string,CapabilityOperation> operations=new();
@@ -67,6 +67,7 @@ namespace Maestro.Quest.Rules
             finally {try {operation.Stop(false);} finally {ReleaseOwned(runId);}}
         }
         public JObject TakeResult(string runId)=>results.Remove(runId,out var result)?result:new JObject();
+        public bool WaitsThroughGrab(string runId,string target)=>operations.TryGetValue(runId,out var operation)&&operation.WaitsThroughGrab(target);
         public string InterruptionStatus(string runId)=>operations.TryGetValue(runId,out var operation)?operation.InterruptionStatus:null;
         void ReleaseOwned(string runId) {if(owned.Remove(runId,out var lease))lease.Dispose();}
         public void Stop(string runId,bool preservePlacement) {results.Remove(runId);interrupted.Remove(runId);try {if(operations.Remove(runId,out var operation))operation.Stop(preservePlacement);}finally {ReleaseOwned(runId);}}

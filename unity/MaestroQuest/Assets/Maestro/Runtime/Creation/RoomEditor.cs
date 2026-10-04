@@ -46,6 +46,8 @@ namespace Maestro.Quest.Creation
         public event Action<RoomItem> ItemGrabbed;
         public event Action<string> ItemReleased, ItemTapped;
         public event Action<string,string,string,Vector3,float> ItemCollided;
+        public event Action<string,string,string,Vector3,float> ItemCaught;
+        internal void ReportCatch(string target,string holder,string part,Vector3 point,float speed)=>ItemCaught?.Invoke(target,holder,part,point,speed);
         public string Identity(RoomItem item) => item && identities.TryGetValue(item,out var id) ? id : null;
         public void Tapped(RoomItem item) { if(ConstructionTap(item))return;var id = Identity(item); if (id != null) ItemTapped?.Invoke(id); }
         public int Revision { get; private set; } = 1;

@@ -17,6 +17,7 @@ namespace Maestro.Quest.Rules
     }
     public interface IRuleOwnershipSource { RoomOwnership Ownership {get;} }
     public interface IRuleInterruptionInfo { string InterruptionStatus(string runId); }
+    public interface IRuleGrabPolicy { bool WaitsThroughGrab(string runId,string target); }
     public interface IRuleResults { Newtonsoft.Json.Linq.JObject TakeResult(string runId); }
     public interface IRuleCompletion { bool Complete(string runId,out string error); }
     public enum RuleActionState { Preparing, Ready, Failed }
@@ -207,7 +208,7 @@ namespace Maestro.Quest.Rules
                 } else actions.Stop(run.Id,false);
                 if(!CompleteResult(run,out error)) {LastError=error;Stop(run,false,"failed",error);return false;}
                 run.Active=null;
-                if(run.Reactive) {ReleaseClaims(run);run.Targets.Clear();run.Claims=Array.Empty<BehaviourCatalog.Claim>();}
+                if(run.Reactive) {ReleaseClaims(run);if(run.Invocation==null)run.Targets.Clear();run.Claims=Array.Empty<BehaviourCatalog.Claim>();}
                 // An instant effect is already done. Don't reset activation work or
                 // causal depth, and don't execute a second effect in this frame.
                 if(run.Invocation!=null) {
@@ -265,7 +266,7 @@ namespace Maestro.Quest.Rules
                 else actions.Stop(run.Id,false);
                 if(!CompleteResult(run,out var resultError)) {LastError=resultError;Stop(run,false,"failed",resultError);continue;}
                 bool timed=run.Active!=null&&!run.Active.Instant&&!run.Active.AwaitCompletion;
-                run.Active=null;if(run.Reactive) {ReleaseClaims(run);run.Targets.Clear();run.Claims=Array.Empty<BehaviourCatalog.Claim>();if(timed) {run.Machine.BeginActivation();run.EventDepth=0;}}
+                run.Active=null;if(run.Reactive) {ReleaseClaims(run);if(run.Invocation==null)run.Targets.Clear();run.Claims=Array.Empty<BehaviourCatalog.Claim>();if(timed) {run.Machine.BeginActivation();run.EventDepth=0;}}
                 // At most one step per run per tick, even after a long frame.
                 StartStep(run,now);
             }
@@ -290,6 +291,14 @@ namespace Maestro.Quest.Rules
             // own nothing until their next invocation and are rechecked then.
             queued.RemoveAll(x=>document.sequences.FirstOrDefault(y=>y.id==x.SequenceId) is RuleSequence sequence &&
                 sequence.Compile(out _).Version!=3 && Whole(sequence.Targets()).Any(claim=>claims.Any(claim.Conflicts)));
+        }
+        public void GrabTarget(string targetId)
+        {
+            foreach(var run in running.Where(x=>x.Targets.Contains(targetId)).ToArray()){
+                bool observes=!run.Claims.Any(c=>c.Target==targetId)&&actions is IRuleGrabPolicy policy&&policy.WaitsThroughGrab(run.Id,targetId);
+                if(!observes)Stop(run,true);
+            }
+            queued.RemoveAll(x=>document.sequences.FirstOrDefault(y=>y.id==x.SequenceId)?.Targets().Contains(targetId)==true);
         }
         public void StopTarget(string targetId, bool preservePlacement)
         {

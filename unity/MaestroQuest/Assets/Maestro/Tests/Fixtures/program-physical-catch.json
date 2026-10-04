@@ -1,0 +1,64 @@
+{
+  "version": 3,
+  "entry": "main",
+  "resources": [],
+  "state": [
+    {
+      "name": "caughtBy",
+      "initial": ""
+    }
+  ],
+  "events": [],
+  "functions": [
+    {
+      "name": "main",
+      "returns": "void",
+      "parameters": [],
+      "locals": [
+        {
+          "name": "received",
+          "initial": false
+        },
+        {
+          "name": "value",
+          "initial": ""
+        },
+        {
+          "name": "holder",
+          "initial": ""
+        }
+      ],
+      "body": [
+        {
+          "id": "wait",
+          "op": "awaitEvent",
+          "event": "object.caught",
+          "source": "",
+          "timeout": {
+            "value": 0
+          },
+          "received": "received",
+          "value": "value",
+          "fields": {
+            "holder": "holder"
+          }
+        },
+        {
+          "id": "remember",
+          "op": "setState",
+          "variable": "caughtBy",
+          "value": {
+            "var": "holder"
+          }
+        },
+        {
+          "id": "hold",
+          "op": "sleep",
+          "seconds": {
+            "value": 20
+          }
+        }
+      ]
+    }
+  ]
+}

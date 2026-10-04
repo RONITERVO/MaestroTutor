@@ -192,3 +192,27 @@ are then undone separately. `snap-authoring.json` feeds the production generated
 book form replay in `scripts/probe-snap-authoring.mjs`. Both revisions are required;
 invalid turns are refused and the accepted call and receipt match native evidence.
 Physical proximity previews and headset acceptance remain separate future checks.
+
+## Physical catching journey (2026-10-04)
+
+The deterministic no-provider journey opts into a clearly labelled synthetic floor
+through `MAESTRO_ROOM_PROBE_PHYSICS=1`. The Editor adapter creates it only in its
+fresh isolated probe scene; `ready.json` records `syntheticPhysics`. Physics stays
+paused until the ordinary shared action explicitly starts it. The optional real
+provider route does not enable this fixture. This is not a captured room scan.
+
+The journey creates a recipe socket and ball, discovers `object.physics.catch`,
+checks its refusal with physics paused and readiness after starting, and observes
+its waiting fact. A separate shared launch sends the free ball into the socket.
+The app must physically catch, hold and drop it and retain both named resources
+in the completed receipt. Replaying that exact receipt cannot start another catch.
+The journey pauses physics and removes its creations afterwards.
+
+`physical-catching.json` is retained as the book fixture, and a web regression test
+passes all ten native observations through `RoomAgentClient`. Run
+`scripts/probe-physical-catching.mjs` against the local Vite fixture to check the
+generated form, bounded inputs, availability and exact command/result identity.
+The browser replays those observations; native PlayMode separately verifies the
+shipped Meshy rig's actual flight interception, rotation-only reaching, human
+priority, obstruction, timeout, cancellation and typed event delivery. No provider
+or Quest acceptance is inferred from desktop success.

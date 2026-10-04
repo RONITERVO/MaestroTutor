@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Text;
 using Maestro.Quest.Creation;
+using Maestro.Quest.Interaction;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -42,7 +43,12 @@ namespace Maestro.Quest.Editor
                     root=new GameObject("Maestro probe app");root.SetActive(false);
                     var room=root.AddComponent<MaestroRoom>();room.ProbeWorkspaceDirectory=Path.Combine(directory,"workspace");root.SetActive(true);
                     agent=root.GetComponent<RoomAgent>();
-                    Publish("ready.json",new JObject {["version"]=1,["id"]=id,["boundary"]="Real Unity app in Editor; no Android WebView, headset or real room scan"});
+                    bool synthetic=Environment.GetEnvironmentVariable("MAESTRO_ROOM_PROBE_PHYSICS")=="1";
+                    if(synthetic){
+                        var floor=GameObject.CreatePrimitive(PrimitiveType.Cube);floor.name="Probe-only synthetic scanned floor";floor.transform.SetParent(root.transform,false);floor.transform.position=new Vector3(0,-.1f,0);floor.transform.localScale=new Vector3(20,.2f,20);floor.layer=RoomPhysicsLayers.Scanned;
+                        root.GetComponent<RoomPhysicsWorld>().SetSurfaces(true,"Probe-only synthetic floor; no real scan or alignment proof");
+                    }
+                    Publish("ready.json",new JObject {["version"]=1,["id"]=id,["boundary"]="Real Unity app in Editor; no Android WebView, headset or real room scan",["syntheticPhysics"]=synthetic});
                 }catch(Exception e){Fail(e);}
             }else if(state==PlayModeStateChange.EnteredEditMode){
                 directory=SessionState.GetString(Key,"");if(string.IsNullOrEmpty(directory))return;

@@ -25863,6 +25863,272 @@
       }
     },
     {
+      "id": "object.physics.catch",
+      "version": 1,
+      "label": "Catch a physical object",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "holder": {
+            "type": "object",
+            "title": "Attachment point",
+            "x-discriminators": [
+              "kind"
+            ],
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "objectId": {
+                    "type": "string",
+                    "pattern": "^[a-fA-F0-9]{32}$",
+                    "maxLength": 32,
+                    "x-resource": "object"
+                  },
+                  "part": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9_]{1,32}$",
+                    "maxLength": 32
+                  },
+                  "revision": {
+                    "type": "integer",
+                    "minimum": 1.0,
+                    "maximum": 2147483647.0
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "recipePart"
+                    ],
+                    "x-static": true
+                  }
+                },
+                "required": [
+                  "objectId",
+                  "part",
+                  "revision",
+                  "kind"
+                ],
+                "additionalProperties": false,
+                "title": "Recipe part"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "objectId": {
+                    "type": "string",
+                    "enum": [
+                      "maestro"
+                    ],
+                    "x-resource": "object"
+                  },
+                  "hand": {
+                    "type": "string",
+                    "enum": [
+                      "left",
+                      "right"
+                    ]
+                  },
+                  "avatarHash": {
+                    "type": "string",
+                    "pattern": "^(|[a-f0-9]{64})$",
+                    "maxLength": 64
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "avatarHand"
+                    ],
+                    "x-static": true
+                  }
+                },
+                "required": [
+                  "objectId",
+                  "hand",
+                  "avatarHash",
+                  "kind"
+                ],
+                "additionalProperties": false,
+                "title": "Maestro hand"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "objectId": {
+                    "type": "string",
+                    "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+                    "maxLength": 32,
+                    "x-resource": "object"
+                  },
+                  "revision": {
+                    "type": "integer",
+                    "minimum": 1.0,
+                    "maximum": 2147483647.0
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "object"
+                    ],
+                    "x-static": true
+                  }
+                },
+                "required": [
+                  "objectId",
+                  "revision",
+                  "kind"
+                ],
+                "additionalProperties": false,
+                "title": "Object root"
+              }
+            ]
+          },
+          "offset": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": -1.0,
+                "maximum": 1.0
+              },
+              "y": {
+                "type": "number",
+                "minimum": -1.0,
+                "maximum": 1.0
+              },
+              "z": {
+                "type": "number",
+                "minimum": -1.0,
+                "maximum": 1.0
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "additionalProperties": false,
+            "format": "boundedOffset"
+          },
+          "timeout": {
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 15.0
+          },
+          "holdSeconds": {
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 10.0
+          },
+          "gripRadius": {
+            "type": "number",
+            "minimum": 0.02,
+            "maximum": 0.15
+          },
+          "maxSpeed": {
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 8.0
+          }
+        },
+        "required": [
+          "target",
+          "holder",
+          "offset",
+          "timeout",
+          "holdSeconds",
+          "gripRadius",
+          "maxSpeed"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "physicalCatching.v1",
+          "objectAttachments.v1",
+          "actionResults.v1"
+        ]
+      },
+      "duration": "completion",
+      "ownership": "catchSocketThenContactProp",
+      "channels": [
+        "catchSocket",
+        "upperBody"
+      ],
+      "requirements": [
+        "target.dynamicCreation",
+        "holder.anchorReady",
+        "room.physicsRunning",
+        "authoring.inactive"
+      ],
+      "minimumProgramVersion": 3,
+      "description": "Wait locally for a small solid/bouncy creation to physically reach an exact root, recipe-part or Maestro-hand socket. The incoming prop stays free while waiting, including user grip/release and throws from other actions. The holder's catch socket is reserved; avatarHand also owns upperBody and uses bounded rotation-only shoulder/elbow reaching on its current visible rig. Recipe/root sockets use their existing motion. offset is the desired collision-volume centre in holder-scale socket axes (not the object's pivot). The enclosing collision radius must be at most 0.3 world metres. Fixed-step relative sweeps detect crossings at radius+gripRadius, reject motion discontinuities and speeds above maxSpeed, and check scanned/object/controller obstruction and head clearance before contact capture. This is assisted catching, not finger physics or guaranteed interception. On contact a native reflex lease takes only the free prop; human grip/control has priority. It holds for holdSeconds then drops using real gravity. A timeout completes with caught=false and phase=missed; caught=true is only observed physical capture, dropped=true only a successful release. Missing/replaced anchors, authoring, pause or lost tracking stop without replay; cancellation keeps an already caught prop at its current placement. Use a version 3 program for per-action claims; legacy programs reserving the incoming prop are refused. No saved catch component or automatic restart. Read object.catch for live attempts and the receipt for terminal outcome; branch on caught instead of assuming success.",
+      "example": {
+        "target": "00000000000000000000000000000000",
+        "holder": {
+          "kind": "avatarHand",
+          "objectId": "maestro",
+          "hand": "right",
+          "avatarHash": ""
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0.18
+        },
+        "timeout": 5,
+        "holdSeconds": 1,
+        "gripRadius": 0.05,
+        "maxSpeed": 5
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32
+          },
+          "holder": {
+            "type": "string",
+            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+            "maxLength": 32
+          },
+          "phase": {
+            "type": "string",
+            "enum": [
+              "missed",
+              "dropped"
+            ]
+          },
+          "caught": {
+            "type": "boolean"
+          },
+          "dropped": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string",
+            "pattern": "^[^\\x00-\\x1f]*$",
+            "maxLength": 256
+          }
+        },
+        "required": [
+          "target",
+          "holder",
+          "phase",
+          "caught",
+          "dropped",
+          "reason"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "object.recording.throw",
       "version": 1,
       "label": "Throw recording",
@@ -27033,6 +27299,64 @@
       }
     },
     {
+      "id": "object.caught",
+      "version": 1,
+      "label": "Object physically caught",
+      "activity": null,
+      "objectEvent": true,
+      "valueType": "text",
+      "description": "Emitted once after a successful native physical catch, never merely near a socket or on a missed attempt. Source and primary value are the incoming object ID; holder and part identify the actual catcher, speed is the incoming world speed in metres/second, and x/y/z are the captured volume centre. The event is queued through the shared bounded scheduler; it does not grant mutation authority or replay after a pause/restart. Observe the attempt or receipt for later drop, manual takeover or failure.",
+      "features": [
+        "eventPrograms.v1",
+        "eventFields.v1",
+        "physicalCatching.v1"
+      ],
+      "fields": {
+        "type": "object",
+        "properties": {
+          "holder": {
+            "type": "string",
+            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+            "maxLength": 32
+          },
+          "part": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_]{0,32}$",
+            "maxLength": 32
+          },
+          "speed": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 8.0
+          },
+          "x": {
+            "type": "number",
+            "minimum": -1000000.0,
+            "maximum": 1000000.0
+          },
+          "y": {
+            "type": "number",
+            "minimum": -1000000.0,
+            "maximum": 1000000.0
+          },
+          "z": {
+            "type": "number",
+            "minimum": -1000000.0,
+            "maximum": 1000000.0
+          }
+        },
+        "required": [
+          "holder",
+          "part",
+          "speed",
+          "x",
+          "y",
+          "z"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "maestro.speaking.enter",
       "version": 1,
       "label": "Speaking",
@@ -27987,6 +28311,50 @@
       },
       "features": [
         "factQueries.v1"
+      ]
+    },
+    {
+      "id": "object.catch",
+      "version": 1,
+      "type": {
+        "record": {
+          "target": "text",
+          "attempts": {
+            "list": {
+              "record": {
+                "holder": "text",
+                "part": "text",
+                "phase": "text",
+                "caught": "boolean",
+                "reason": "text"
+              }
+            }
+          }
+        }
+      },
+      "label": "Live physical catch attempts",
+      "description": "Read active attempts for a loaded prop. Waiting does not own the prop, holding means actual contact capture, and missed means timeout. Retired attempts leave this list; their durable one-off receipt remains authoritative. No inference from avatar proximity.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1",
+        "physicalCatching.v1"
       ]
     },
     {
@@ -31710,7 +32078,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "95ed4e12b993bb522953a094e295faf6148a785e19a6afc357d375ae5b4b8635"
+      "sha256": "8f6619b64670560266af010285271ec03f603a8a7c0e09d8470b3d4e014ece25"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -31734,7 +32102,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
-      "sha256": "43f9fac6efc6ded39a996cfbbe895c3e9db94b574cf099ffccc81e3b5ee62ee9"
+      "sha256": "67c99f8863e7a5ff90be1ba69822060df5d9dd99f66d103f617fc44606b511a5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramMachine.cs",
@@ -31762,7 +32130,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "637562ea0f148f72e129a800b49f7afd055ac62a1a97d1258c052a8ec9f145b7"
+      "sha256": "ab2e0b4c6211669e876f071c3197a648cf6c39c798c640c608aa3f9c2b113dee"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -31862,11 +32230,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RoomRuleActions.cs",
-      "sha256": "f0391a64af119086c10981a0beb6ebaf9067d48287fd7e6edea1ccf9a848db85"
+      "sha256": "7d4f87a2835f03c4a40587f050262772f62438762caccb4cf4614e89c79a3da0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RoomRules.cs",
-      "sha256": "8b1c9b07200d75d8f9d63b869d87baa368bc3e2eed75cd296ebd2d0e017117af"
+      "sha256": "6434ccd58dd8de4780e2c81d23a435dae75639fb44d1f679e24a81dfc919fce6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleWorkshop.cs",
@@ -31902,7 +32270,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleScheduler.cs",
-      "sha256": "61fbea6fd4518611f6cbb5fd1519044fec291a80cb9113a83aad3aa732b061ff"
+      "sha256": "201de5f74199a8944254a1bd8d9776eff4e6c0144382355e10754586c0fec223"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleChannelWaits.cs",
@@ -31978,7 +32346,27 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomBallistics.cs",
-      "sha256": "7ef510d48924c2589d2d95b4551759c7ab3f9626e0196aa495ab845f38602fa3"
+      "sha256": "7d01959fb932605f2e77d70ff9ef1231ef6344b4efb1d5584205a8a830901aca"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomCollisionVolume.cs",
+      "sha256": "af1b641347db3abb6ab44c9be970ace25cdb8f4918dd4363e7e743f5c96a94c5"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/CatchGeometry.cs",
+      "sha256": "4087b536b7e6b3596ab88854d99fc98513079898bd9163365e87be8d77574c00"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/CatchClearance.cs",
+      "sha256": "8d0f99c25ce9acf5962a2d6e41b6011244604d15fe045fe7f46c6188ca7b47a7"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomCatch.cs",
+      "sha256": "8b612ccbffa77d4e1578780c4bd48029a12991519421b81414855120bba6f59e"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarCatchReach.cs",
+      "sha256": "7b3ef630171c3fbceb78930e4de6c8d3dce6a83711f971e73c9a5746c7cc452c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.cs",
@@ -32014,7 +32402,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "7f8dca000e4f28710f9868aea8b2519b14cde49a47e888e51921d9aaf1610a4e"
+      "sha256": "03e6849e59357822b4ed89c78b0bf23e11175c8456da080629ffeb25e6121ff3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomToolTray.cs",
@@ -32386,11 +32774,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModule.cs",
-      "sha256": "859ee7a87cd31a55e71fa435243d62bd94be8aa144104c9670a5dec0090eb975"
+      "sha256": "5723226c1503bf8806464af5121bce8562861b65cb2de686b7d3930f0b3ac2e7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "29d99e53d0f5e9d4090cbf825bde2684b2eef3fa97b8d9ee704eb9e7e7ab6d28"
+      "sha256": "f660bbc9e286351e4d83a7a7cda9d5660e87a3837e08ff7fd1f971aa1b415f12"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -32403,6 +32791,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CaptureConstructionCapability.cs",
       "sha256": "c1d3637d88f32bcb797dcc0f63a935f2622ab0623724412f6526f93a006d0351"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CatchObjectCapability.cs",
+      "sha256": "e3d14314a321043e0a8fdb1857df7db8d8c100e341743d7472689b24e1ea6506"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CollisionCapability.cs",

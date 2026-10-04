@@ -2,6 +2,11 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
+Native physical catching passed desktop verification through the shared capability path.
+It includes bounded contact capture, avatar arm reaching, root/recipe sockets and
+a typed caught event; see [physical catching](QUEST_PHYSICAL_CATCHING.md).
+Desktop synthetic-floor acceptance does not close the pending headset gates.
+
 Physical surface drawing now checks solid obstructions in the shared contact path
 for trigger/pinch, erasing and held drawing tips. Scanned walls block ink without
 changing tool recovery through walls. Logical ink editing remains available to
@@ -23,15 +28,17 @@ and construction capture preserve all three kinds. An editable spring-button mod
 uses ordinary recipes and condition waits for press/release. Saved snap points now
 support explicit construction placement or fixed joining with shared current
 revisions and one Undo; see QUEST_SNAP_POINTS.md. Physical grip snap previews
-and bounded liquid containers/pouring/vessel scooping now extend those components. Persistent
-water/snow fields and the full default play kit remain unfinished.
+and bounded liquid containers/pouring/vessel scooping now extend those components. Sculptable snow fields, measured snowball packing and 24 editable templates plus
+seven reusable modules now cover part of the proposed kit. Persistent liquid fields,
+physical shovel/packing gestures and complete device acceptance remain unfinished.
 See QUEST_RECIPE_AUTHORING.md and QUEST_NATIVE_ROOM_PROBE.md.
 
 The October 2 notebook scope and current review assessment are recorded in
 [expandable world authoring](QUEST_WORLD_AUTHORING.md). Editable native recipes,
 reusable object components and the existing shared event-program runtime remain
-the direction. The default play kit, richer geometry, assemblies, surface paint,
-physical joints and approximate water/snow are acceptance work, not shipped claims.
+the direction. The implemented kit, geometry, assemblies, surface ink, physical joints, containers
+and snow fields are documented below; further component coverage and device
+acceptance remain open.
 No generation credits were spent for this assessment.
 
 The real full-app Editor room now has an isolated development file transport for
