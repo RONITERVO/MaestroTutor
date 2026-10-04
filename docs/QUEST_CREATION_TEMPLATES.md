@@ -20,6 +20,8 @@ animation. Successful receipt replay cannot create it twice.
 | Template | Components and intended use | Limits |
 | --- | --- | --- |
 | Cup | Lathe body/handle, cylinder floor and open ring walls; solid rigid body | Editable 500 ml cylinder cavity; bounded pouring, no general fluid solver |
+| Bucket | Open handled lathe vessel, compound walls and a 2 litre empty store | Dip into a larger configured vessel, lift and pour; no fluid forces |
+| Water basin | Fixed open lathe vessel with 32 litres in a 40 litre store | Shared measured water source; no persistent room-wide water field |
 | Plate | Shallow lathe dish, floor and rim | No automatic food/fluid behaviour |
 | Spoon | Open scoop, handle and compound collision | Small rigid objects only |
 | Fork | Handle, crossbar and four solid prongs | Simple rigid cutlery |

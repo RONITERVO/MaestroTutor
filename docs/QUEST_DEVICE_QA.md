@@ -1826,3 +1826,24 @@ construction and verify the new rotor connects to its new mount. Evaluate hand
 reach, small-collider tunnelling, readability and frame time with the full kit.
 Desktop ball-contact tests are not hand/controller device acceptance. Do not
 mark this section passed from Editor tests or renders.
+
+
+## Bucket and basin scooping: device acceptance pending
+
+Create the ordinary Water basin and Bucket templates in a reachable clear area;
+start room physics only after room setup. With controller grip, then tracked hands,
+submerge the bucket's full opening inside the basin without passing through its
+floor or walls. Confirm it fills, stops after lifting clear, retains its quantity,
+and pours into an ordinary cup. Try a second vessel concurrently and a nearly full
+receiver. Compare accepted/live quantities through the shared catalog; Undo should
+restore the whole completed flow episode, with no event replay.
+
+An opening above water, incompatible nonempty contents, inverted vessel or solid
+lid should prevent scooping. A cross-handle should still permit a clear sampled
+path. Depleting the basin lowers its surface and should stop intake once the full
+opening is no longer submerged. Test a user program waiting on the saved-scoop
+event, physics pause, tracking loss/headset sleep, temporary-room discard and save
+failure recovery. Measure sustained frame time at the supported container limit.
+Record visual fill-plane clarity and grip comfort separately from measured
+quantities. This model has no fluid forces, displacement or persistent spill field.
+No current headset installation or acceptance is claimed by desktop checks.

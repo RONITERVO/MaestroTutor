@@ -156,10 +156,33 @@ try{
   const pouredEvent=await pouringQuery({action:'catalog',catalog:{operation:'inspect',category:'events',capability:'object.container.poured',version:1}});
   if(pouredEvent.catalog?.operation!=='inspect'||!pouredEvent.catalog.definition)throw new Error('Native poured event is not discoverable');
   await writeFile(join(directory,'container-pouring-contract.json'),JSON.stringify({boundary:'Full native app exposes live quantities and typed event metadata. Physical flow is verified separately in real Unity PlayMode interaction tests; no scan or headset performance proof.',before:pouringBefore,steps:pouringSteps,live:containerLive,event:pouredEvent},null,2));
+  const scoopingBefore=structuredClone(lease.state()),scoopingSteps:{request:RoomCommand;response:unknown}[]=[];
+  const scoopingQuery=async(request:RoomCommand)=>{const response=await execute([request]);scoopingSteps.push({request,response});return response;};
+  await scoopingQuery({action:'catalog',catalog:{operation:'search',category:'facts',query:'Live liquid scooping',offset:0}});
+  await scoopingQuery({action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.container.scooping',version:1}});
+  const scoopLive=await scoopingQuery({action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.container.scooping',version:1,arguments:{target:liquidFrom}}});
+  const scoopValue=scoopLive.catalog?.value as {phase:string;scoopedMl:number;drawnMl:number};
+  if(!scoopLive.catalog?.available||scoopValue.phase!=='idle'||scoopValue.scoopedMl!==0||scoopValue.drawnMl!==0)throw new Error('Native scooping fact should be idle while physics is paused');
+  await scoopingQuery({action:'catalog',catalog:{operation:'search',category:'events',query:'A liquid scoop was saved',offset:0}});
+  const scoopedEvent=await scoopingQuery({action:'catalog',catalog:{operation:'inspect',category:'events',capability:'object.container.scooped',version:1}});
+  if(!scoopedEvent.catalog?.definition)throw new Error('Native scooped event is not discoverable');
+  await writeFile(join(directory,'container-scooping-contract.json'),JSON.stringify({boundary:'Full native app reads idle scooping state and typed event metadata. Physical flow is verified separately in real Unity PlayMode interaction tests; no scan or headset performance proof.',before:scoopingBefore,steps:scoopingSteps,live:scoopLive,event:scoopedEvent},null,2));
   const containerUndo=await execute([{action:'undo'}]);const containerRestoredSource=await liquidRead(liquidFrom),containerRestoredDestination=await liquidRead(liquidTo);
   if((containerRestoredSource.catalog?.value as {definition:{amountMl:number}}).definition.amountMl!==250||(containerRestoredDestination.catalog?.value as {definition:{amountMl:number}}).definition.amountMl!==0)throw new Error('One native Undo did not restore both liquid quantities');
   await writeFile(join(directory,'container-authoring.json'),JSON.stringify({boundary:'Real Unity saved quantities, shared calls, facts and atomic Undo. No physical pouring or headset performance proof.',before:containerBefore,search:containerSearch,definition:containerDefinition,source:containerSource,destination:containerDestination,after:containerAfter,fromAfter:containerFromAfter,toAfter:containerToAfter,undo:containerUndo,restoredSource:containerRestoredSource,restoredDestination:containerRestoredDestination},null,2));
   await execute([{action:'undo'}]);await execute([{action:'undo'}]);await execute([{action:'undo'}]);
+  const scoopTemplates=[];
+  for(const [template,amount,capacity] of [['bucket',0,2000],['basin',32000,40000]] as const){
+    const hash=createHash('sha256').update(await readFile(`unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/${template}.json`)).digest('hex');
+    const before=structuredClone(lease.state());
+    const created=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'template',templateHash:hash,name:'',x:.4,y:1,z:.6,scale:1}}}}]);
+    const id=created.execution?.selected?.output?.objectId;if(typeof id!=='string')throw new Error('Missing scoop-template object identity');
+    const contents=await liquidRead(id),definition=(contents.catalog?.value as {definition:{amountMl:number;capacityMl:number}}).definition;
+    if(definition.amountMl!==amount||definition.capacityMl!==capacity)throw new Error('Scoop-template quantities differ from the source');
+    const undone=await execute([{action:'undo'}]);if(undone.objects.some(object=>object.id===id)||undone.objects.length!==before.objects.length)throw new Error('Scoop-template Undo did not remove one complete object');
+    scoopTemplates.push({template,hash,before,created,contents,undone});
+  }
+  await writeFile(join(directory,'scooping-templates.json'),JSON.stringify({boundary:'Ordinary shared creation, accepted quantities and one Undo; physical scooping is tested separately.',templates:scoopTemplates},null,2));
   const chalkSource=JSON.parse(await readFile('unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/chalkboard.json','utf8'));
   const chalkHash=createHash('sha256').update(await readFile('unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/chalkboard.json')).digest('hex');
   const chalkCreated=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'template',templateHash:chalkHash,name:'',x:.4,y:1,z:.6,scale:1}}}}]);

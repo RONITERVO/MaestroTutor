@@ -1,0 +1,6356 @@
+{
+  "boundary": "Full native app reads idle scooping state and typed event metadata. Physical flow is verified separately in real Unity PlayMode interaction tests; no scan or headset performance proof.",
+  "before": {
+    "version": 1,
+    "revision": 161,
+    "sceneRevision": 25,
+    "ack": 61,
+    "session": "cc306c43811b4736b7d043ac99f06e9a",
+    "status": "Event definition. Inspecting does not subscribe or start a behaviour.",
+    "selectedId": "233d410d78f54f86951788dbc0cd36a6",
+    "ok": true,
+    "canUndo": true,
+    "canRedo": false,
+    "physicsRunning": false,
+    "visible": false,
+    "inspection": null,
+    "constructionSelection": {
+      "stateId": "f8674f981f0e4202b7df79b4759dc437",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "f8674f981f0e4202b7df79b4759dc437",
+      "error": "",
+      "visible": false,
+      "holding": false
+    },
+    "workspaceView": "objects",
+    "rules": {
+      "revision": 1,
+      "bindingPage": 0,
+      "bindingCount": 0,
+      "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
+      "canUndo": false,
+      "canRedo": false,
+      "readOnly": false,
+      "status": "Create an action sequence, then add triggers or buttons",
+      "selectedError": "",
+      "sequences": [],
+      "selected": null,
+      "memory": null,
+      "bindings": [],
+      "buttons": [],
+      "running": [],
+      "outcomes": []
+    },
+    "motions": null,
+    "capabilities": [
+      "physicsSettings.v1",
+      "avatarSettings.v1",
+      "physicsRun.v1",
+      "avatarMotion.v1",
+      "avatarWalk.v1",
+      "motions.v1",
+      "avatarActivities.v1",
+      "catalog.v1",
+      "catalogVocabulary.v1",
+      "roomOwnership.v1",
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "eventFields.v1",
+      "eventSubscriptions.v1",
+      "factQueries.v1",
+      "conditionWaits.v1",
+      "parallelPrograms.v1",
+      "rememberedVariables.v1",
+      "temporaryMemory.v1",
+      "structuredValues.v1",
+      "programModules.v1",
+      "moduleLibrary.v1",
+      "moduleLibraryFiles.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
+      "objectEdits.v1",
+      "objectCopy.v1",
+      "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "drawingTips.v1",
+      "containers.v1",
+      "containerPouring.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
+      "recipeEdits.v1",
+      "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "roomViewCapture.v1",
+      "collisionShapes.v1",
+      "recipePartPlayback.v1",
+      "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
+      "objectLaunch.v1",
+      "calendarSchedules.v1",
+      "animationAuthoring.v1",
+      "animationRecording.v1",
+      "animationPosing.v1",
+      "avatarModels.v1",
+      "modelImport.v1",
+      "modelArchiveImport.v1",
+      "motionBatchImport.v1",
+      "includedMotions.v1",
+      "authoredMotion.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1",
+      "temporaryRoom.v1",
+      "spatialSettings.v1",
+      "physicsSimulation.v1",
+      "roomEnvironment.v1",
+      "surfacePlacement.v1",
+      "controllerConfiguration.v1",
+      "controllerModes.v1",
+      "runtimeDiagnostics.v1",
+      "workspaceMaintenance.v1",
+      "workspaceArchiveActivation.v1",
+      "workspaceReview.v1",
+      "workspacePrevious.v1",
+      "workspaceRecovery.v1",
+      "workspaceSavedRecovery.v1",
+      "workspaceHistory.v1",
+      "workspaceEvidence.v1",
+      "workspaceRetention.v1",
+      "workspaceDisposal.v1"
+    ],
+    "physics": {
+      "ready": false,
+      "running": false,
+      "status": "Load or scan your room to use gravity"
+    },
+    "temporaryRoom": {
+      "active": false,
+      "pending": false,
+      "id": "071ff64635cb4bb6b2884fc071a12b99",
+      "saveId": "",
+      "phase": "idle",
+      "error": "",
+      "savedRevision": 0
+    },
+    "ownership": {
+      "suspended": false,
+      "error": "",
+      "owners": [
+        {
+          "id": "ambient:maestro",
+          "label": "Maestro tutor activity",
+          "role": "ambient",
+          "allowsGrab": false,
+          "claims": [
+            {
+              "target": "maestro",
+              "channel": "wholeTarget"
+            }
+          ]
+        }
+      ]
+    },
+    "avatar": {
+      "active": false,
+      "canLook": true,
+      "canFollow": false,
+      "mode": "stopped",
+      "status": "Choose Look at me or Follow me",
+      "lookReason": "",
+      "followReason": "Load the room, check its alignment, then Start physics before walking",
+      "distance": 1.3,
+      "speed": 0.65
+    },
+    "walk": {
+      "source": "embedded",
+      "motionId": "",
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "name": "Walking",
+      "status": "Embedded walking clip is available",
+      "playbackStatus": "",
+      "clipIndex": 0,
+      "available": true
+    },
+    "activityProfile": {
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "status": "Uses included animations where no state motion is assigned",
+      "revision": 1,
+      "canAssign": true,
+      "readOnly": false,
+      "canUndo": false,
+      "canRedo": false,
+      "roles": [
+        {
+          "role": 0,
+          "choices": [
+            {
+              "motionId": "21da54acb5c38d147ad297bf7ef22977",
+              "name": "Idle_4",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 1,
+          "choices": [
+            {
+              "motionId": "bd0bf1a849d86d785e00c3a392639359",
+              "name": "Listening_Gesture",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 2,
+          "choices": [
+            {
+              "motionId": "9a66ea13d9ba08b954b9a0cbdc7d89dc",
+              "name": "Idle_12",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 3,
+          "choices": [
+            {
+              "motionId": "b56ece79da8e21bac89927310921d734",
+              "name": "Talk_with_Hands_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            },
+            {
+              "motionId": "852ac885964d693deb8d3d3ba835acec",
+              "name": "Talk_with_Right_Hand_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            }
+          ]
+        }
+      ]
+    },
+    "objects": [
+      {
+        "id": "4171d5f14e644752974773804ec52086",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "8ac2a51a786c4197b258b8ae893b99c9",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "8b69a414a07940daad416bfa7dae4149",
+        "name": "Source cup",
+        "kind": "Assembly",
+        "objectRevision": 24,
+        "position": {
+          "x": 0.30000001192092896,
+          "y": 1.2999999523162842,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.30000001192092896
+        },
+        "movement": null
+      },
+      {
+        "id": "94a6e157f8444241b43b730e44e64326",
+        "name": "Receiving cup",
+        "kind": "Assembly",
+        "objectRevision": 25,
+        "position": {
+          "x": 0.800000011920929,
+          "y": 1.2999999523162842,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.30000001192092896
+        },
+        "movement": null
+      },
+      {
+        "id": "bbc15e3c36004443baf701bbb9470ac9",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 3,
+        "position": {
+          "x": 0.5199999809265137,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0,
+          "y": 1.159999966621399,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "maestro",
+        "name": "Maestro",
+        "kind": "Maestro",
+        "objectRevision": 2,
+        "position": {
+          "x": -0.7799999713897705,
+          "y": 0,
+          "z": 1.399999976158142
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": {
+          "distance": 1.3,
+          "speed": 0.65
+        }
+      }
+    ],
+    "created": [],
+    "capture": {
+      "captureId": "a834f21edeba4642ba7223c0e2f73754",
+      "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
+      "mimeType": "image/jpeg",
+      "width": 512,
+      "height": 384,
+      "capturedAt": "2026-10-04T01:48:03.361102Z",
+      "sceneRevision": 3,
+      "verticalFov": 60,
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      }
+    },
+    "catalog": {
+      "operation": "inspect",
+      "capability": "object.container.poured",
+      "version": 1,
+      "definition": {
+        "id": "object.container.poured",
+        "version": 1,
+        "label": "A physical pour was saved",
+        "activity": null,
+        "objectEvent": true,
+        "valueType": "text",
+        "description": "A native pouring episode was accepted by the shared room journal (or temporary fork). Value/source is the outgoing vessel ID. transferredMl is the total received by containers; spilledMl left the bounded container model, and does not imply a persistent puddle. receivers counts distinct receiving containers. Emitted after successful publication only; failed saves, cancellation, Undo and reload do not emit/replay it. A long continuous flow publishes at most once per ten-second checkpoint. Paused lifecycle listeners may miss the event; inspect current contents instead.",
+        "features": [
+          "eventPrograms.v1",
+          "eventFields.v1",
+          "containerPouring.v1"
+        ],
+        "fields": {
+          "type": "object",
+          "properties": {
+            "transferredMl": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 8000000
+            },
+            "spilledMl": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 8000000
+            },
+            "receivers": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16
+            },
+            "liquid": {
+              "type": "string",
+              "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+              "maxLength": 32
+            },
+            "temporary": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "transferredMl",
+            "spilledMl",
+            "receivers",
+            "liquid",
+            "temporary"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "status": "Event definition. Inspecting does not subscribe or start a behaviour.",
+      "category": "events"
+    },
+    "execution": {
+      "selected": {
+        "id": "0aa9f79b548b43bead2143dba2db9702",
+        "capability": "object.container.transfer",
+        "version": 1,
+        "resources": [
+          "8b69a414a07940daad416bfa7dae4149",
+          "94a6e157f8444241b43b730e44e64326"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "transferredMl": 125
+        },
+        "call": {
+          "id": "object.container.transfer",
+          "version": 1,
+          "arguments": {
+            "source": {
+              "target": "8b69a414a07940daad416bfa7dae4149",
+              "revision": 23
+            },
+            "destination": {
+              "target": "94a6e157f8444241b43b730e44e64326",
+              "revision": 22
+            },
+            "amountMl": 125
+          }
+        }
+      },
+      "running": [],
+      "outcomes": [
+        {
+          "id": "e1940ebe60914bb1945880f1de10ca5e",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "a4e53f9b68bd428b855885fec3592925"
+          }
+        },
+        {
+          "id": "3771c5d201c04ee78e92587e911170d6",
+          "capability": "room.view.capture",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "captureId": "a834f21edeba4642ba7223c0e2f73754",
+            "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
+            "mimeType": "image/jpeg",
+            "width": 512,
+            "height": 384,
+            "capturedAt": "2026-10-04T01:48:03.361102Z",
+            "sceneRevision": 3,
+            "verticalFov": 60,
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            }
+          }
+        },
+        {
+          "id": "b4cf05131606452daa5b381feb850804",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "18e6ead4078b4de9a3739c87e68ceea2"
+          }
+        },
+        {
+          "id": "acbc1bd2d0fb4c809db8885702722229",
+          "capability": "object.recipe.edit",
+          "version": 1,
+          "resources": [
+            "18e6ead4078b4de9a3739c87e68ceea2"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "18e6ead4078b4de9a3739c87e68ceea2",
+            "revision": 10,
+            "parts": 1,
+            "tracks": 0,
+            "duration": 2,
+            "loop": false,
+            "playing": false,
+            "autoplay": false
+          }
+        },
+        {
+          "id": "b0607f3a589f498c9c9191bb969c7d63",
+          "capability": "object.collision.edit",
+          "version": 1,
+          "resources": [
+            "18e6ead4078b4de9a3739c87e68ceea2"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "18e6ead4078b4de9a3739c87e68ceea2",
+            "revision": 12,
+            "shapes": 2,
+            "pieces": 13,
+            "customActive": true,
+            "temporary": false
+          }
+        },
+        {
+          "id": "46a93eef51974f509a9f2dc5ac1ccf57",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "82b0297e0bd54e44968acb898819dff7"
+          }
+        },
+        {
+          "id": "4b98f6058deb475485c534f7b67b245f",
+          "capability": "object.recipe.edit",
+          "version": 1,
+          "resources": [
+            "82b0297e0bd54e44968acb898819dff7"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "82b0297e0bd54e44968acb898819dff7",
+            "revision": 15,
+            "parts": 1,
+            "tracks": 0,
+            "duration": 2,
+            "loop": false,
+            "playing": false,
+            "autoplay": false
+          }
+        },
+        {
+          "id": "c7c8bd8baec04f4aabb82eea9ec59445",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "b4cc9f6613f24304a4c765bce8344b70"
+          }
+        },
+        {
+          "id": "e77cdcfca903492fae2f2698a3fa2b44",
+          "capability": "object.recipe.edit",
+          "version": 1,
+          "resources": [
+            "b4cc9f6613f24304a4c765bce8344b70"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "b4cc9f6613f24304a4c765bce8344b70",
+            "revision": 18,
+            "parts": 1,
+            "tracks": 0,
+            "duration": 2,
+            "loop": false,
+            "playing": false,
+            "autoplay": false
+          }
+        },
+        {
+          "id": "f63d8ff4f05e48bd83c45c4f7cf37576",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "233d410d78f54f86951788dbc0cd36a6"
+          }
+        },
+        {
+          "id": "9c033ad5f466415a8be831b306104dfe",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "8b69a414a07940daad416bfa7dae4149"
+          }
+        },
+        {
+          "id": "f39493ac5c8640d18e6f009258ea0045",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "94a6e157f8444241b43b730e44e64326"
+          }
+        },
+        {
+          "id": "cbe282ce18a041c7b5b80467a80b9d1b",
+          "capability": "object.container.edit",
+          "version": 1,
+          "resources": [
+            "8b69a414a07940daad416bfa7dae4149"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "0aa9f79b548b43bead2143dba2db9702",
+          "capability": "object.container.transfer",
+          "version": 1,
+          "resources": [
+            "8b69a414a07940daad416bfa7dae4149",
+            "94a6e157f8444241b43b730e44e64326"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "transferredMl": 125
+          }
+        }
+      ],
+      "nextRunId": "2ce5c318f1004dfb986e1cbf28761a02",
+      "storageError": null,
+      "recovery": null,
+      "workspace": {
+        "selected": null,
+        "running": [],
+        "outcomes": [],
+        "nextRunId": "44396f05256f4ab8b24626964476caaf",
+        "storageError": null,
+        "recovery": null
+      }
+    }
+  },
+  "steps": [
+    {
+      "request": {
+        "action": "catalog",
+        "catalog": {
+          "operation": "search",
+          "category": "facts",
+          "query": "Live liquid scooping",
+          "offset": 0
+        }
+      },
+      "response": {
+        "version": 1,
+        "revision": 163,
+        "sceneRevision": 25,
+        "ack": 62,
+        "session": "cc306c43811b4736b7d043ac99f06e9a",
+        "status": "Found 2 facts. Search does not run or enable anything.",
+        "selectedId": "233d410d78f54f86951788dbc0cd36a6",
+        "ok": true,
+        "canUndo": true,
+        "canRedo": false,
+        "physicsRunning": false,
+        "visible": false,
+        "inspection": null,
+        "constructionSelection": {
+          "stateId": "f8674f981f0e4202b7df79b4759dc437",
+          "collecting": false,
+          "members": []
+        },
+        "constructionManipulation": {
+          "stateId": "f8674f981f0e4202b7df79b4759dc437",
+          "error": "",
+          "visible": false,
+          "holding": false
+        },
+        "workspaceView": "objects",
+        "rules": {
+          "revision": 1,
+          "bindingPage": 0,
+          "bindingCount": 0,
+          "queued": 0,
+          "eventQueue": 0,
+          "eventsDropped": 0,
+          "canUndo": false,
+          "canRedo": false,
+          "readOnly": false,
+          "status": "Create an action sequence, then add triggers or buttons",
+          "selectedError": "",
+          "sequences": [],
+          "selected": null,
+          "memory": null,
+          "bindings": [],
+          "buttons": [],
+          "running": [],
+          "outcomes": []
+        },
+        "motions": null,
+        "capabilities": [
+          "physicsSettings.v1",
+          "avatarSettings.v1",
+          "physicsRun.v1",
+          "avatarMotion.v1",
+          "avatarWalk.v1",
+          "motions.v1",
+          "avatarActivities.v1",
+          "catalog.v1",
+          "catalogVocabulary.v1",
+          "roomOwnership.v1",
+          "behaviourPrograms.v3",
+          "eventPrograms.v1",
+          "eventFields.v1",
+          "eventSubscriptions.v1",
+          "factQueries.v1",
+          "conditionWaits.v1",
+          "parallelPrograms.v1",
+          "rememberedVariables.v1",
+          "temporaryMemory.v1",
+          "structuredValues.v1",
+          "programModules.v1",
+          "moduleLibrary.v1",
+          "moduleLibraryFiles.v1",
+          "execution.v1",
+          "executionReceipts.v1",
+          "actionResults.v1",
+          "recipeCreation.v1",
+          "creationComponents.v1",
+          "creationTemplates.v1",
+          "layoutEdits.v1",
+          "structures.v1",
+          "batchCreation.v1",
+          "structuredResults.v1",
+          "structuredInputs.v1",
+          "indexedInputs.v1",
+          "constructionSelection.v1",
+          "groupTransforms.v1",
+          "constructionManipulation.v1",
+          "constructionSnapping.v1",
+          "objectEdits.v1",
+          "objectCopy.v1",
+          "drawingEdits.v1",
+          "drawingSurfaces.v1",
+          "drawingTips.v1",
+          "containers.v1",
+          "containerPouring.v1",
+          "containerScooping.v1",
+          "physicalConnections.v1",
+          "physicalSliders.v1",
+          "snapPoints.v1",
+          "connectedBlueprints.v2",
+          "creationPrototypes.v1",
+          "constructionCapture.v1",
+          "recipeEdits.v1",
+          "latheGeometry.v1",
+          "extrusionGeometry.v1",
+          "sweepGeometry.v1",
+          "roomViewCapture.v1",
+          "collisionShapes.v1",
+          "recipePartPlayback.v1",
+          "objectAttachments.v1",
+          "anchorZones.v1",
+          "channelWaits.v1",
+          "objectLaunch.v1",
+          "calendarSchedules.v1",
+          "animationAuthoring.v1",
+          "animationRecording.v1",
+          "animationPosing.v1",
+          "avatarModels.v1",
+          "modelImport.v1",
+          "modelArchiveImport.v1",
+          "motionBatchImport.v1",
+          "includedMotions.v1",
+          "authoredMotion.v1",
+          "unavailablePrograms.v1",
+          "actionRecovery.v1",
+          "temporaryRoom.v1",
+          "spatialSettings.v1",
+          "physicsSimulation.v1",
+          "roomEnvironment.v1",
+          "surfacePlacement.v1",
+          "controllerConfiguration.v1",
+          "controllerModes.v1",
+          "runtimeDiagnostics.v1",
+          "workspaceMaintenance.v1",
+          "workspaceArchiveActivation.v1",
+          "workspaceReview.v1",
+          "workspacePrevious.v1",
+          "workspaceRecovery.v1",
+          "workspaceSavedRecovery.v1",
+          "workspaceHistory.v1",
+          "workspaceEvidence.v1",
+          "workspaceRetention.v1",
+          "workspaceDisposal.v1"
+        ],
+        "physics": {
+          "ready": false,
+          "running": false,
+          "status": "Load or scan your room to use gravity"
+        },
+        "temporaryRoom": {
+          "active": false,
+          "pending": false,
+          "id": "071ff64635cb4bb6b2884fc071a12b99",
+          "saveId": "",
+          "phase": "idle",
+          "error": "",
+          "savedRevision": 0
+        },
+        "ownership": {
+          "suspended": false,
+          "error": "",
+          "owners": [
+            {
+              "id": "ambient:maestro",
+              "label": "Maestro tutor activity",
+              "role": "ambient",
+              "allowsGrab": false,
+              "claims": [
+                {
+                  "target": "maestro",
+                  "channel": "wholeTarget"
+                }
+              ]
+            }
+          ]
+        },
+        "avatar": {
+          "active": false,
+          "canLook": true,
+          "canFollow": false,
+          "mode": "stopped",
+          "status": "Choose Look at me or Follow me",
+          "lookReason": "",
+          "followReason": "Load the room, check its alignment, then Start physics before walking",
+          "distance": 1.3,
+          "speed": 0.65
+        },
+        "walk": {
+          "source": "embedded",
+          "motionId": "",
+          "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+          "name": "Walking",
+          "status": "Embedded walking clip is available",
+          "playbackStatus": "",
+          "clipIndex": 0,
+          "available": true
+        },
+        "activityProfile": {
+          "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+          "status": "Uses included animations where no state motion is assigned",
+          "revision": 1,
+          "canAssign": true,
+          "readOnly": false,
+          "canUndo": false,
+          "canRedo": false,
+          "roles": [
+            {
+              "role": 0,
+              "choices": [
+                {
+                  "motionId": "21da54acb5c38d147ad297bf7ef22977",
+                  "name": "Idle_4",
+                  "weight": 1,
+                  "speed": 1,
+                  "cooldown": 0,
+                  "loop": true,
+                  "available": true
+                }
+              ]
+            },
+            {
+              "role": 1,
+              "choices": [
+                {
+                  "motionId": "bd0bf1a849d86d785e00c3a392639359",
+                  "name": "Listening_Gesture",
+                  "weight": 1,
+                  "speed": 1,
+                  "cooldown": 0,
+                  "loop": true,
+                  "available": true
+                }
+              ]
+            },
+            {
+              "role": 2,
+              "choices": [
+                {
+                  "motionId": "9a66ea13d9ba08b954b9a0cbdc7d89dc",
+                  "name": "Idle_12",
+                  "weight": 1,
+                  "speed": 1,
+                  "cooldown": 0,
+                  "loop": true,
+                  "available": true
+                }
+              ]
+            },
+            {
+              "role": 3,
+              "choices": [
+                {
+                  "motionId": "b56ece79da8e21bac89927310921d734",
+                  "name": "Talk_with_Hands_Open",
+                  "weight": 1,
+                  "speed": 1,
+                  "cooldown": 2,
+                  "loop": false,
+                  "available": true
+                },
+                {
+                  "motionId": "852ac885964d693deb8d3d3ba835acec",
+                  "name": "Talk_with_Right_Hand_Open",
+                  "weight": 1,
+                  "speed": 1,
+                  "cooldown": 2,
+                  "loop": false,
+                  "available": true
+                }
+              ]
+            }
+          ]
+        },
+        "objects": [
+          {
+            "id": "4171d5f14e644752974773804ec52086",
+            "name": "Cylinder",
+            "kind": "Cylinder",
+            "objectRevision": 5,
+            "position": {
+              "x": 0.8600000143051147,
+              "y": 1.4500000476837158,
+              "z": 0.800000011920929
+            },
+            "scale": 1,
+            "color": {
+              "r": 0.16862745583057404,
+              "g": 0.5529412031173706,
+              "b": 0.5333333611488342,
+              "a": 1
+            },
+            "animated": false,
+            "held": false,
+            "simulating": false,
+            "physics": {
+              "mode": "fixed",
+              "shape": "automatic",
+              "mass": 0.5
+            },
+            "movement": null
+          },
+          {
+            "id": "8ac2a51a786c4197b258b8ae893b99c9",
+            "name": "Ball",
+            "kind": "Ball",
+            "objectRevision": 4,
+            "position": {
+              "x": 0.6899999976158142,
+              "y": 1.4500000476837158,
+              "z": 0.800000011920929
+            },
+            "scale": 1,
+            "color": {
+              "r": 0.7647058963775635,
+              "g": 0.6000000238418579,
+              "b": 0.3137255012989044,
+              "a": 1
+            },
+            "animated": false,
+            "held": false,
+            "simulating": false,
+            "physics": {
+              "mode": "fixed",
+              "shape": "automatic",
+              "mass": 0.5
+            },
+            "movement": null
+          },
+          {
+            "id": "8b69a414a07940daad416bfa7dae4149",
+            "name": "Source cup",
+            "kind": "Assembly",
+            "objectRevision": 24,
+            "position": {
+              "x": 0.30000001192092896,
+              "y": 1.2999999523162842,
+              "z": 0.6499999761581421
+            },
+            "scale": 1,
+            "color": {
+              "r": 1,
+              "g": 1,
+              "b": 1,
+              "a": 1
+            },
+            "animated": false,
+            "held": false,
+            "simulating": false,
+            "physics": {
+              "mode": "solid",
+              "shape": "automatic",
+              "mass": 0.30000001192092896
+            },
+            "movement": null
+          },
+          {
+            "id": "94a6e157f8444241b43b730e44e64326",
+            "name": "Receiving cup",
+            "kind": "Assembly",
+            "objectRevision": 25,
+            "position": {
+              "x": 0.800000011920929,
+              "y": 1.2999999523162842,
+              "z": 0.6499999761581421
+            },
+            "scale": 1,
+            "color": {
+              "r": 1,
+              "g": 1,
+              "b": 1,
+              "a": 1
+            },
+            "animated": false,
+            "held": false,
+            "simulating": false,
+            "physics": {
+              "mode": "solid",
+              "shape": "automatic",
+              "mass": 0.30000001192092896
+            },
+            "movement": null
+          },
+          {
+            "id": "bbc15e3c36004443baf701bbb9470ac9",
+            "name": "Block",
+            "kind": "Block",
+            "objectRevision": 3,
+            "position": {
+              "x": 0.5199999809265137,
+              "y": 1.4500000476837158,
+              "z": 0.800000011920929
+            },
+            "scale": 1,
+            "color": {
+              "r": 0.45098039507865906,
+              "g": 0.32549020648002625,
+              "b": 0.30588236451148987,
+              "a": 1
+            },
+            "animated": false,
+            "held": false,
+            "simulating": false,
+            "physics": {
+              "mode": "fixed",
+              "shape": "automatic",
+              "mass": 0.5
+            },
+            "movement": null
+          },
+          {
+            "id": "book",
+            "name": "Book",
+            "kind": "Book",
+            "objectRevision": 1,
+            "position": {
+              "x": 0,
+              "y": 1.159999966621399,
+              "z": 0.6499999761581421
+            },
+            "scale": 1,
+            "color": {
+              "r": 1,
+              "g": 1,
+              "b": 1,
+              "a": 1
+            },
+            "animated": false,
+            "held": false,
+            "simulating": false,
+            "physics": {
+              "mode": "fixed",
+              "shape": "automatic",
+              "mass": 0.5
+            },
+            "movement": null
+          },
+          {
+            "id": "maestro",
+            "name": "Maestro",
+            "kind": "Maestro",
+            "objectRevision": 2,
+            "position": {
+              "x": -0.7799999713897705,
+              "y": 0,
+              "z": 1.399999976158142
+            },
+            "scale": 1,
+            "color": {
+              "r": 1,
+              "g": 1,
+              "b": 1,
+              "a": 1
+            },
+            "animated": false,
+            "held": false,
+            "simulating": false,
+            "physics": {
+              "mode": "fixed",
+              "shape": "automatic",
+              "mass": 0.5
+            },
+            "movement": {
+              "distance": 1.3,
+              "speed": 0.65
+            }
+          }
+        ],
+        "created": [],
+        "capture": {
+          "captureId": "a834f21edeba4642ba7223c0e2f73754",
+          "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
+          "mimeType": "image/jpeg",
+          "width": 512,
+          "height": 384,
+          "capturedAt": "2026-10-04T01:48:03.361102Z",
+          "sceneRevision": 3,
+          "verticalFov": 60,
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "catalog": {
+          "operation": "search",
+          "query": "Live liquid scooping",
+          "offset": 0,
+          "pageSize": 6,
+          "total": 2,
+          "entries": [
+            {
+              "id": "object.container.live",
+              "version": 1,
+              "label": "Live container contents"
+            },
+            {
+              "id": "object.container.scooping",
+              "version": 1,
+              "label": "Live liquid scooping"
+            }
+          ],
+          "status": "Found 2 facts. Search does not run or enable anything.",
+          "category": "facts"
+        },
+        "execution": {
+          "selected": {
+            "id": "0aa9f79b548b43bead2143dba2db9702",
+            "capability": "object.container.transfer",
+            "version": 1,
+            "resources": [
+              "8b69a414a07940daad416bfa7dae4149",
+              "94a6e157f8444241b43b730e44e64326"
+            ],
+            "phase": "completed",
+            "status": "Action completed",
+            "output": {
+              "transferredMl": 125
+            },
+            "call": {
+              "id": "object.container.transfer",
+              "version": 1,
+              "arguments": {
+                "source": {
+                  "target": "8b69a414a07940daad416bfa7dae4149",
+                  "revision": 23
+                },
+                "destination": {
+                  "target": "94a6e157f8444241b43b730e44e64326",
+                  "revision": 22
+                },
+                "amountMl": 125
+              }
+            }
+          },
+          "running": [],
+          "outcomes": [
+            {
+              "id": "e1940ebe60914bb1945880f1de10ca5e",
+              "capability": "object.create",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "objectId": "a4e53f9b68bd428b855885fec3592925"
+              }
+            },
+            {
+              "id": "3771c5d201c04ee78e92587e911170d6",
+              "capability": "room.view.capture",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "captureId": "a834f21edeba4642ba7223c0e2f73754",
+                "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
+                "mimeType": "image/jpeg",
+                "width": 512,
+                "height": 384,
+                "capturedAt": "2026-10-04T01:48:03.361102Z",
+                "sceneRevision": 3,
+                "verticalFov": 60,
+                "position": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0,
+                  "w": 1
+                }
+              }
+            },
+            {
+              "id": "b4cf05131606452daa5b381feb850804",
+              "capability": "object.create",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "objectId": "18e6ead4078b4de9a3739c87e68ceea2"
+              }
+            },
+            {
+              "id": "acbc1bd2d0fb4c809db8885702722229",
+              "capability": "object.recipe.edit",
+              "version": 1,
+              "resources": [
+                "18e6ead4078b4de9a3739c87e68ceea2"
+              ],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "target": "18e6ead4078b4de9a3739c87e68ceea2",
+                "revision": 10,
+                "parts": 1,
+                "tracks": 0,
+                "duration": 2,
+                "loop": false,
+                "playing": false,
+                "autoplay": false
+              }
+            },
+            {
+              "id": "b0607f3a589f498c9c9191bb969c7d63",
+              "capability": "object.collision.edit",
+              "version": 1,
+              "resources": [
+                "18e6ead4078b4de9a3739c87e68ceea2"
+              ],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "target": "18e6ead4078b4de9a3739c87e68ceea2",
+                "revision": 12,
+                "shapes": 2,
+                "pieces": 13,
+                "customActive": true,
+                "temporary": false
+              }
+            },
+            {
+              "id": "46a93eef51974f509a9f2dc5ac1ccf57",
+              "capability": "object.create",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "objectId": "82b0297e0bd54e44968acb898819dff7"
+              }
+            },
+            {
+              "id": "4b98f6058deb475485c534f7b67b245f",
+              "capability": "object.recipe.edit",
+              "version": 1,
+              "resources": [
+                "82b0297e0bd54e44968acb898819dff7"
+              ],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "target": "82b0297e0bd54e44968acb898819dff7",
+                "revision": 15,
+                "parts": 1,
+                "tracks": 0,
+                "duration": 2,
+                "loop": false,
+                "playing": false,
+                "autoplay": false
+              }
+            },
+            {
+              "id": "c7c8bd8baec04f4aabb82eea9ec59445",
+              "capability": "object.create",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "objectId": "b4cc9f6613f24304a4c765bce8344b70"
+              }
+            },
+            {
+              "id": "e77cdcfca903492fae2f2698a3fa2b44",
+              "capability": "object.recipe.edit",
+              "version": 1,
+              "resources": [
+                "b4cc9f6613f24304a4c765bce8344b70"
+              ],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "target": "b4cc9f6613f24304a4c765bce8344b70",
+                "revision": 18,
+                "parts": 1,
+                "tracks": 0,
+                "duration": 2,
+                "loop": false,
+                "playing": false,
+                "autoplay": false
+              }
+            },
+            {
+              "id": "f63d8ff4f05e48bd83c45c4f7cf37576",
+              "capability": "object.create",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "objectId": "233d410d78f54f86951788dbc0cd36a6"
+              }
+            },
+            {
+              "id": "9c033ad5f466415a8be831b306104dfe",
+              "capability": "object.create",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "objectId": "8b69a414a07940daad416bfa7dae4149"
+              }
+            },
+            {
+              "id": "f39493ac5c8640d18e6f009258ea0045",
+              "capability": "object.create",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "objectId": "94a6e157f8444241b43b730e44e64326"
+              }
+            },
+            {
+              "id": "cbe282ce18a041c7b5b80467a80b9d1b",
+              "capability": "object.container.edit",
+              "version": 1,
+              "resources": [
+                "8b69a414a07940daad416bfa7dae4149"
+              ],
+              "phase": "completed",
+              "status": "Action completed"
+            },
+            {
+              "id": "0aa9f79b548b43bead2143dba2db9702",
+              "capability": "object.container.transfer",
+              "version": 1,
+              "resources": [
+                "8b69a414a07940daad416bfa7dae4149",
+                "94a6e157f8444241b43b730e44e64326"
+              ],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "transferredMl": 125
+              }
+            }
+          ],
+          "nextRunId": "2ce5c318f1004dfb986e1cbf28761a02",
+          "storageError": null,
+          "recovery": null,
+          "workspace": {
+            "selected": null,
+            "running": [],
+            "outcomes": [],
+            "nextRunId": "44396f05256f4ab8b24626964476caaf",
+            "storageError": null,
+            "recovery": null
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "action": "catalog",
+        "catalog": {
+          "operation": "inspect",
+          "category": "facts",
+          "capability": "object.container.scooping",
+          "version": 1
+        }
+      },
+      "response": {
+        "version": 1,
+        "revision": 165,
+        "sceneRevision": 25,
+        "ack": 63,
+        "session": "cc306c43811b4736b7d043ac99f06e9a",
+        "status": "Choose fact arguments to read a value.",
+        "selectedId": "233d410d78f54f86951788dbc0cd36a6",
+        "ok": true,
+        "canUndo": true,
+        "canRedo": false,
+        "physicsRunning": false,
+        "visible": false,
+        "inspection": null,
+        "constructionSelection": {
+          "stateId": "f8674f981f0e4202b7df79b4759dc437",
+          "collecting": false,
+          "members": []
+        },
+        "constructionManipulation": {
+          "stateId": "f8674f981f0e4202b7df79b4759dc437",
+          "error": "",
+          "visible": false,
+          "holding": false
+        },
+        "workspaceView": "objects",
+        "rules": {
+          "revision": 1,
+          "bindingPage": 0,
+          "bindingCount": 0,
+          "queued": 0,
+          "eventQueue": 0,
+          "eventsDropped": 0,
+          "canUndo": false,
+          "canRedo": false,
+          "readOnly": false,
+          "status": "Create an action sequence, then add triggers or buttons",
+          "selectedError": "",
+          "sequences": [],
+          "selected": null,
+          "memory": null,
+          "bindings": [],
+          "buttons": [],
+          "running": [],
+          "outcomes": []
+        },
+        "motions": null,
+        "capabilities": [
+          "physicsSettings.v1",
+          "avatarSettings.v1",
+          "physicsRun.v1",
+          "avatarMotion.v1",
+          "avatarWalk.v1",
+          "motions.v1",
+          "avatarActivities.v1",
+          "catalog.v1",
+          "catalogVocabulary.v1",
+          "roomOwnership.v1",
+          "behaviourPrograms.v3",
+          "eventPrograms.v1",
+          "eventFields.v1",
+          "eventSubscriptions.v1",
+          "factQueries.v1",
+          "conditionWaits.v1",
+          "parallelPrograms.v1",
+          "rememberedVariables.v1",
+          "temporaryMemory.v1",
+          "structuredValues.v1",
+          "programModules.v1",
+          "moduleLibrary.v1",
+          "moduleLibraryFiles.v1",
+          "execution.v1",
+          "executionReceipts.v1",
+          "actionResults.v1",
+          "recipeCreation.v1",
+          "creationComponents.v1",
+          "creationTemplates.v1",
+          "layoutEdits.v1",
+          "structures.v1",
+          "batchCreation.v1",
+          "structuredResults.v1",
+          "structuredInputs.v1",
+          "indexedInputs.v1",
+          "constructionSelection.v1",
+          "groupTransforms.v1",
+          "constructionManipulation.v1",
+          "constructionSnapping.v1",
+          "objectEdits.v1",
+          "objectCopy.v1",
+          "drawingEdits.v1",
+          "drawingSurfaces.v1",
+          "drawingTips.v1",
+          "containers.v1",
+          "containerPouring.v1",
+          "containerScooping.v1",
+          "physicalConnections.v1",
+          "physicalSliders.v1",
+          "snapPoints.v1",
+          "connectedBlueprints.v2",
+          "creationPrototypes.v1",
+          "constructionCapture.v1",
+          "recipeEdits.v1",
+          "latheGeometry.v1",
+          "extrusionGeometry.v1",
+          "sweepGeometry.v1",
+          "roomViewCapture.v1",
+          "collisionShapes.v1",
+          "recipePartPlayback.v1",
+          "objectAttachments.v1",
+          "anchorZones.v1",
+          "channelWaits.v1",
+          "objectLaunch.v1",
+          "calendarSchedules.v1",
+          "animationAuthoring.v1",
+          "animationRecording.v1",
+          "animationPosing.v1",
+          "avatarModels.v1",
+          "modelImport.v1",
+          "modelArchiveImport.v1",
+          "motionBatchImport.v1",
+          "includedMotions.v1",
+          "authoredMotion.v1",
+          "unavailablePrograms.v1",
+          "actionRecovery.v1",
+          "temporaryRoom.v1",
+          "spatialSettings.v1",
+          "physicsSimulation.v1",
+          "roomEnvironment.v1",
+          "surfacePlacement.v1",
+          "controllerConfiguration.v1",
+          "controllerModes.v1",
+          "runtimeDiagnostics.v1",
+          "workspaceMaintenance.v1",
+          "workspaceArchiveActivation.v1",
+          "workspaceReview.v1",
+          "workspacePrevious.v1",
+          "workspaceRecovery.v1",
+          "workspaceSavedRecovery.v1",
+          "workspaceHistory.v1",
+          "workspaceEvidence.v1",
+          "workspaceRetention.v1",
+          "workspaceDisposal.v1"
+        ],
+        "physics": {
+          "ready": false,
+          "running": false,
+          "status": "Load or scan your room to use gravity"
+        },
+        "temporaryRoom": {
+          "active": false,
+          "pending": false,
+          "id": "071ff64635cb4bb6b2884fc071a12b99",
+          "saveId": "",
+          "phase": "idle",
+          "error": "",
+          "savedRevision": 0
+        },
+        "ownership": {
+          "suspended": false,
+          "error": "",
+          "owners": [
+            {
+              "id": "ambient:maestro",
+              "label": "Maestro tutor activity",
+              "role": "ambient",
+              "allowsGrab": false,
+              "claims": [
+                {
+                  "target": "maestro",
+                  "channel": "wholeTarget"
+                }
+              ]
+            }
+          ]
+        },
+        "avatar": {
+          "active": false,
+          "canLook": true,
+          "canFollow": false,
+          "mode": "stopped",
+          "status": "Choose Look at me or Follow me",
+          "lookReason": "",
+          "followReason": "Load the room, check its alignment, then Start physics before walking",
+          "distance": 1.3,
+          "speed": 0.65
+        },
+        "walk": {
+          "source": "embedded",
+          "motionId": "",
+          "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+          "name": "Walking",
+          "status": "Embedded walking clip is available",
+          "playbackStatus": "",
+          "clipIndex": 0,
+          "available": true
+        },
+        "activityProfile": {
+          "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+          "status": "Uses included animations where no state motion is assigned",
+          "revision": 1,
+          "canAssign": true,
+          "readOnly": false,
+          "canUndo": false,
+          "canRedo": false,
+          "roles": [
+            {
+              "role": 0,
+              "choices": [
+                {
+                  "motionId": "21da54acb5c38d147ad297bf7ef22977",
+                  "name": "Idle_4",
+                  "weight": 1,
+                  "speed": 1,
+                  "cooldown": 0,
+                  "loop": true,
+                  "available": true
+                }
+              ]
+            },
+            {
+              "role": 1,
+              "choices": [
+                {
+                  "motionId": "bd0bf1a849d86d785e00c3a392639359",
+                  "name": "Listening_Gesture",
+                  "weight": 1,
+                  "speed": 1,
+                  "cooldown": 0,
+                  "loop": true,
+                  "available": true
+                }
+              ]
+            },
+            {
+              "role": 2,
+              "choices": [
+                {
+                  "motionId": "9a66ea13d9ba08b954b9a0cbdc7d89dc",
+                  "name": "Idle_12",
+                  "weight": 1,
+                  "speed": 1,
+                  "cooldown": 0,
+                  "loop": true,
+                  "available": true
+                }
+              ]
+            },
+            {
+              "role": 3,
+              "choices": [
+                {
+                  "motionId": "b56ece79da8e21bac89927310921d734",
+                  "name": "Talk_with_Hands_Open",
+                  "weight": 1,
+                  "speed": 1,
+                  "cooldown": 2,
+                  "loop": false,
+                  "available": true
+                },
+                {
+                  "motionId": "852ac885964d693deb8d3d3ba835acec",
+                  "name": "Talk_with_Right_Hand_Open",
+                  "weight": 1,
+                  "speed": 1,
+                  "cooldown": 2,
+                  "loop": false,
+                  "available": true
+                }
+              ]
+            }
+          ]
+        },
+        "objects": [
+          {
+            "id": "4171d5f14e644752974773804ec52086",
+            "name": "Cylinder",
+            "kind": "Cylinder",
+            "objectRevision": 5,
+            "position": {
+              "x": 0.8600000143051147,
+              "y": 1.4500000476837158,
+              "z": 0.800000011920929
+            },
+            "scale": 1,
+            "color": {
+              "r": 0.16862745583057404,
+              "g": 0.5529412031173706,
+              "b": 0.5333333611488342,
+              "a": 1
+            },
+            "animated": false,
+            "held": false,
+            "simulating": false,
+            "physics": {
+              "mode": "fixed",
+              "shape": "automatic",
+              "mass": 0.5
+            },
+            "movement": null
+          },
+          {
+            "id": "8ac2a51a786c4197b258b8ae893b99c9",
+            "name": "Ball",
+            "kind": "Ball",
+            "objectRevision": 4,
+            "position": {
+              "x": 0.6899999976158142,
+              "y": 1.4500000476837158,
+              "z": 0.800000011920929
+            },
+            "scale": 1,
+            "color": {
+              "r": 0.7647058963775635,
+              "g": 0.6000000238418579,
+              "b": 0.3137255012989044,
+              "a": 1
+            },
+            "animated": false,
+            "held": false,
+            "simulating": false,
+            "physics": {
+              "mode": "fixed",
+              "shape": "automatic",
+              "mass": 0.5
+            },
+            "movement": null
+          },
+          {
+            "id": "8b69a414a07940daad416bfa7dae4149",
+            "name": "Source cup",
+            "kind": "Assembly",
+            "objectRevision": 24,
+            "position": {
+              "x": 0.30000001192092896,
+              "y": 1.2999999523162842,
+              "z": 0.6499999761581421
+            },
+            "scale": 1,
+            "color": {
+              "r": 1,
+              "g": 1,
+              "b": 1,
+              "a": 1
+            },
+            "animated": false,
+            "held": false,
+            "simulating": false,
+            "physics": {
+              "mode": "solid",
+              "shape": "automatic",
+              "mass": 0.30000001192092896
+            },
+            "movement": null
+          },
+          {
+            "id": "94a6e157f8444241b43b730e44e64326",
+            "name": "Receiving cup",
+            "kind": "Assembly",
+            "objectRevision": 25,
+            "position": {
+              "x": 0.800000011920929,
+              "y": 1.2999999523162842,
+              "z": 0.6499999761581421
+            },
+            "scale": 1,
+            "color": {
+              "r": 1,
+              "g": 1,
+              "b": 1,
+              "a": 1
+            },
+            "animated": false,
+            "held": false,
+            "simulating": false,
+            "physics": {
+              "mode": "solid",
+              "shape": "automatic",
+              "mass": 0.30000001192092896
+            },
+            "movement": null
+          },
+          {
+            "id": "bbc15e3c36004443baf701bbb9470ac9",
+            "name": "Block",
+            "kind": "Block",
+            "objectRevision": 3,
+            "position": {
+              "x": 0.5199999809265137,
+              "y": 1.4500000476837158,
+              "z": 0.800000011920929
+            },
+            "scale": 1,
+            "color": {
+              "r": 0.45098039507865906,
+              "g": 0.32549020648002625,
+              "b": 0.30588236451148987,
+              "a": 1
+            },
+            "animated": false,
+            "held": false,
+            "simulating": false,
+            "physics": {
+              "mode": "fixed",
+              "shape": "automatic",
+              "mass": 0.5
+            },
+            "movement": null
+          },
+          {
+            "id": "book",
+            "name": "Book",
+            "kind": "Book",
+            "objectRevision": 1,
+            "position": {
+              "x": 0,
+              "y": 1.159999966621399,
+              "z": 0.6499999761581421
+            },
+            "scale": 1,
+            "color": {
+              "r": 1,
+              "g": 1,
+              "b": 1,
+              "a": 1
+            },
+            "animated": false,
+            "held": false,
+            "simulating": false,
+            "physics": {
+              "mode": "fixed",
+              "shape": "automatic",
+              "mass": 0.5
+            },
+            "movement": null
+          },
+          {
+            "id": "maestro",
+            "name": "Maestro",
+            "kind": "Maestro",
+            "objectRevision": 2,
+            "position": {
+              "x": -0.7799999713897705,
+              "y": 0,
+              "z": 1.399999976158142
+            },
+            "scale": 1,
+            "color": {
+              "r": 1,
+              "g": 1,
+              "b": 1,
+              "a": 1
+            },
+            "animated": false,
+            "held": false,
+            "simulating": false,
+            "physics": {
+              "mode": "fixed",
+              "shape": "automatic",
+              "mass": 0.5
+            },
+            "movement": {
+              "distance": 1.3,
+              "speed": 0.65
+            }
+          }
+        ],
+        "created": [],
+        "capture": {
+          "captureId": "a834f21edeba4642ba7223c0e2f73754",
+          "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
+          "mimeType": "image/jpeg",
+          "width": 512,
+          "height": 384,
+          "capturedAt": "2026-10-04T01:48:03.361102Z",
+          "sceneRevision": 3,
+          "verticalFov": 60,
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "catalog": {
+          "operation": "inspect",
+          "capability": "object.container.scooping",
+          "version": 1,
+          "definition": {
+            "id": "object.container.scooping",
+            "version": 1,
+            "type": {
+              "record": {
+                "sessionId": "text",
+                "phase": "text",
+                "scoopedMl": "number",
+                "drawnMl": "number",
+                "donors": "number",
+                "recipients": "number"
+              }
+            },
+            "label": "Live liquid scooping",
+            "description": "Current physical-flow episode: scoopedMl entered this vessel through its submerged opening; drawnMl was taken from it by other vessels. donors/recipients count distinct counterpart vessels. These counters reset on publication or rollback. Read object.container.live for current and accepted quantities. An upward-facing smaller open cavity must fit inside the donor with its entire opening below the measured surface, with a clear bounded path. The same conserved quantities, physics pause, grips, save/Undo and temporary-room episode are used for pouring and scooping. No fluid forces, displacement, air simulation or persistent pools.",
+            "input": {
+              "type": "object",
+              "properties": {
+                "target": {
+                  "type": "string",
+                  "pattern": "^[a-fA-F0-9]{32}$",
+                  "maxLength": 32,
+                  "x-resource": "object"
+                }
+              },
+              "required": [
+                "target"
+              ],
+              "additionalProperties": false
+            },
+            "example": {
+              "target": "00000000000000000000000000000000"
+            },
+            "features": [
+              "factQueries.v1",
+              "containerScooping.v1"
+            ]
+          },
+          "status": "Choose fact arguments to read a value.",
+          "category": "facts",
+          "available": false,
+          "value": null
+        },
+        "execution": {
+          "selected": {
+            "id": "0aa9f79b548b43bead2143dba2db9702",
+            "capability": "object.container.transfer",
+            "version": 1,
+            "resources": [
+              "8b69a414a07940daad416bfa7dae4149",
+              "94a6e157f8444241b43b730e44e64326"
+            ],
+            "phase": "completed",
+            "status": "Action completed",
+            "output": {
+              "transferredMl": 125
+            },
+            "call": {
+              "id": "object.container.transfer",
+              "version": 1,
+              "arguments": {
+                "source": {
+                  "target": "8b69a414a07940daad416bfa7dae4149",
+                  "revision": 23
+                },
+                "destination": {
+                  "target": "94a6e157f8444241b43b730e44e64326",
+                  "revision": 22
+                },
+                "amountMl": 125
+              }
+            }
+          },
+          "running": [],
+          "outcomes": [
+            {
+              "id": "e1940ebe60914bb1945880f1de10ca5e",
+              "capability": "object.create",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "objectId": "a4e53f9b68bd428b855885fec3592925"
+              }
+            },
+            {
+              "id": "3771c5d201c04ee78e92587e911170d6",
+              "capability": "room.view.capture",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "captureId": "a834f21edeba4642ba7223c0e2f73754",
+                "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
+                "mimeType": "image/jpeg",
+                "width": 512,
+                "height": 384,
+                "capturedAt": "2026-10-04T01:48:03.361102Z",
+                "sceneRevision": 3,
+                "verticalFov": 60,
+                "position": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0,
+                  "w": 1
+                }
+              }
+            },
+            {
+              "id": "b4cf05131606452daa5b381feb850804",
+              "capability": "object.create",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "objectId": "18e6ead4078b4de9a3739c87e68ceea2"
+              }
+            },
+            {
+              "id": "acbc1bd2d0fb4c809db8885702722229",
+              "capability": "object.recipe.edit",
+              "version": 1,
+              "resources": [
+                "18e6ead4078b4de9a3739c87e68ceea2"
+              ],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "target": "18e6ead4078b4de9a3739c87e68ceea2",
+                "revision": 10,
+                "parts": 1,
+                "tracks": 0,
+                "duration": 2,
+                "loop": false,
+                "playing": false,
+                "autoplay": false
+              }
+            },
+            {
+              "id": "b0607f3a589f498c9c9191bb969c7d63",
+              "capability": "object.collision.edit",
+              "version": 1,
+              "resources": [
+                "18e6ead4078b4de9a3739c87e68ceea2"
+              ],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "target": "18e6ead4078b4de9a3739c87e68ceea2",
+                "revision": 12,
+                "shapes": 2,
+                "pieces": 13,
+                "customActive": true,
+                "temporary": false
+              }
+            },
+            {
+              "id": "46a93eef51974f509a9f2dc5ac1ccf57",
+              "capability": "object.create",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "objectId": "82b0297e0bd54e44968acb898819dff7"
+              }
+            },
+            {
+              "id": "4b98f6058deb475485c534f7b67b245f",
+              "capability": "object.recipe.edit",
+              "version": 1,
+              "resources": [
+                "82b0297e0bd54e44968acb898819dff7"
+              ],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "target": "82b0297e0bd54e44968acb898819dff7",
+                "revision": 15,
+                "parts": 1,
+                "tracks": 0,
+                "duration": 2,
+                "loop": false,
+                "playing": false,
+                "autoplay": false
+              }
+            },
+            {
+              "id": "c7c8bd8baec04f4aabb82eea9ec59445",
+              "capability": "object.create",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "objectId": "b4cc9f6613f24304a4c765bce8344b70"
+              }
+            },
+            {
+              "id": "e77cdcfca903492fae2f2698a3fa2b44",
+              "capability": "object.recipe.edit",
+              "version": 1,
+              "resources": [
+                "b4cc9f6613f24304a4c765bce8344b70"
+              ],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "target": "b4cc9f6613f24304a4c765bce8344b70",
+                "revision": 18,
+                "parts": 1,
+                "tracks": 0,
+                "duration": 2,
+                "loop": false,
+                "playing": false,
+                "autoplay": false
+              }
+            },
+            {
+              "id": "f63d8ff4f05e48bd83c45c4f7cf37576",
+              "capability": "object.create",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "objectId": "233d410d78f54f86951788dbc0cd36a6"
+              }
+            },
+            {
+              "id": "9c033ad5f466415a8be831b306104dfe",
+              "capability": "object.create",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "objectId": "8b69a414a07940daad416bfa7dae4149"
+              }
+            },
+            {
+              "id": "f39493ac5c8640d18e6f009258ea0045",
+              "capability": "object.create",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "objectId": "94a6e157f8444241b43b730e44e64326"
+              }
+            },
+            {
+              "id": "cbe282ce18a041c7b5b80467a80b9d1b",
+              "capability": "object.container.edit",
+              "version": 1,
+              "resources": [
+                "8b69a414a07940daad416bfa7dae4149"
+              ],
+              "phase": "completed",
+              "status": "Action completed"
+            },
+            {
+              "id": "0aa9f79b548b43bead2143dba2db9702",
+              "capability": "object.container.transfer",
+              "version": 1,
+              "resources": [
+                "8b69a414a07940daad416bfa7dae4149",
+                "94a6e157f8444241b43b730e44e64326"
+              ],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "transferredMl": 125
+              }
+            }
+          ],
+          "nextRunId": "2ce5c318f1004dfb986e1cbf28761a02",
+          "storageError": null,
+          "recovery": null,
+          "workspace": {
+            "selected": null,
+            "running": [],
+            "outcomes": [],
+            "nextRunId": "44396f05256f4ab8b24626964476caaf",
+            "storageError": null,
+            "recovery": null
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "action": "catalog",
+        "catalog": {
+          "operation": "inspect",
+          "category": "facts",
+          "capability": "object.container.scooping",
+          "version": 1,
+          "arguments": {
+            "target": "8b69a414a07940daad416bfa7dae4149"
+          }
+        }
+      },
+      "response": {
+        "version": 1,
+        "revision": 167,
+        "sceneRevision": 25,
+        "ack": 64,
+        "session": "cc306c43811b4736b7d043ac99f06e9a",
+        "status": "Current fact value. Reading does not change the room.",
+        "selectedId": "233d410d78f54f86951788dbc0cd36a6",
+        "ok": true,
+        "canUndo": true,
+        "canRedo": false,
+        "physicsRunning": false,
+        "visible": false,
+        "inspection": null,
+        "constructionSelection": {
+          "stateId": "f8674f981f0e4202b7df79b4759dc437",
+          "collecting": false,
+          "members": []
+        },
+        "constructionManipulation": {
+          "stateId": "f8674f981f0e4202b7df79b4759dc437",
+          "error": "",
+          "visible": false,
+          "holding": false
+        },
+        "workspaceView": "objects",
+        "rules": {
+          "revision": 1,
+          "bindingPage": 0,
+          "bindingCount": 0,
+          "queued": 0,
+          "eventQueue": 0,
+          "eventsDropped": 0,
+          "canUndo": false,
+          "canRedo": false,
+          "readOnly": false,
+          "status": "Create an action sequence, then add triggers or buttons",
+          "selectedError": "",
+          "sequences": [],
+          "selected": null,
+          "memory": null,
+          "bindings": [],
+          "buttons": [],
+          "running": [],
+          "outcomes": []
+        },
+        "motions": null,
+        "capabilities": [
+          "physicsSettings.v1",
+          "avatarSettings.v1",
+          "physicsRun.v1",
+          "avatarMotion.v1",
+          "avatarWalk.v1",
+          "motions.v1",
+          "avatarActivities.v1",
+          "catalog.v1",
+          "catalogVocabulary.v1",
+          "roomOwnership.v1",
+          "behaviourPrograms.v3",
+          "eventPrograms.v1",
+          "eventFields.v1",
+          "eventSubscriptions.v1",
+          "factQueries.v1",
+          "conditionWaits.v1",
+          "parallelPrograms.v1",
+          "rememberedVariables.v1",
+          "temporaryMemory.v1",
+          "structuredValues.v1",
+          "programModules.v1",
+          "moduleLibrary.v1",
+          "moduleLibraryFiles.v1",
+          "execution.v1",
+          "executionReceipts.v1",
+          "actionResults.v1",
+          "recipeCreation.v1",
+          "creationComponents.v1",
+          "creationTemplates.v1",
+          "layoutEdits.v1",
+          "structures.v1",
+          "batchCreation.v1",
+          "structuredResults.v1",
+          "structuredInputs.v1",
+          "indexedInputs.v1",
+          "constructionSelection.v1",
+          "groupTransforms.v1",
+          "constructionManipulation.v1",
+          "constructionSnapping.v1",
+          "objectEdits.v1",
+          "objectCopy.v1",
+          "drawingEdits.v1",
+          "drawingSurfaces.v1",
+          "drawingTips.v1",
+          "containers.v1",
+          "containerPouring.v1",
+          "containerScooping.v1",
+          "physicalConnections.v1",
+          "physicalSliders.v1",
+          "snapPoints.v1",
+          "connectedBlueprints.v2",
+          "creationPrototypes.v1",
+          "constructionCapture.v1",
+          "recipeEdits.v1",
+          "latheGeometry.v1",
+          "extrusionGeometry.v1",
+          "sweepGeometry.v1",
+          "roomViewCapture.v1",
+          "collisionShapes.v1",
+          "recipePartPlayback.v1",
+          "objectAttachments.v1",
+          "anchorZones.v1",
+          "channelWaits.v1",
+          "objectLaunch.v1",
+          "calendarSchedules.v1",
+          "animationAuthoring.v1",
+          "animationRecording.v1",
+          "animationPosing.v1",
+          "avatarModels.v1",
+          "modelImport.v1",
+          "modelArchiveImport.v1",
+          "motionBatchImport.v1",
+          "includedMotions.v1",
+          "authoredMotion.v1",
+          "unavailablePrograms.v1",
+          "actionRecovery.v1",
+          "temporaryRoom.v1",
+          "spatialSettings.v1",
+          "physicsSimulation.v1",
+          "roomEnvironment.v1",
+          "surfacePlacement.v1",
+          "controllerConfiguration.v1",
+          "controllerModes.v1",
+          "runtimeDiagnostics.v1",
+          "workspaceMaintenance.v1",
+          "workspaceArchiveActivation.v1",
+          "workspaceReview.v1",
+          "workspacePrevious.v1",
+          "workspaceRecovery.v1",
+          "workspaceSavedRecovery.v1",
+          "workspaceHistory.v1",
+          "workspaceEvidence.v1",
+          "workspaceRetention.v1",
+          "workspaceDisposal.v1"
+        ],
+        "physics": {
+          "ready": false,
+          "running": false,
+          "status": "Load or scan your room to use gravity"
+        },
+        "temporaryRoom": {
+          "active": false,
+          "pending": false,
+          "id": "071ff64635cb4bb6b2884fc071a12b99",
+          "saveId": "",
+          "phase": "idle",
+          "error": "",
+          "savedRevision": 0
+        },
+        "ownership": {
+          "suspended": false,
+          "error": "",
+          "owners": [
+            {
+              "id": "ambient:maestro",
+              "label": "Maestro tutor activity",
+              "role": "ambient",
+              "allowsGrab": false,
+              "claims": [
+                {
+                  "target": "maestro",
+                  "channel": "wholeTarget"
+                }
+              ]
+            }
+          ]
+        },
+        "avatar": {
+          "active": false,
+          "canLook": true,
+          "canFollow": false,
+          "mode": "stopped",
+          "status": "Choose Look at me or Follow me",
+          "lookReason": "",
+          "followReason": "Load the room, check its alignment, then Start physics before walking",
+          "distance": 1.3,
+          "speed": 0.65
+        },
+        "walk": {
+          "source": "embedded",
+          "motionId": "",
+          "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+          "name": "Walking",
+          "status": "Embedded walking clip is available",
+          "playbackStatus": "",
+          "clipIndex": 0,
+          "available": true
+        },
+        "activityProfile": {
+          "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+          "status": "Uses included animations where no state motion is assigned",
+          "revision": 1,
+          "canAssign": true,
+          "readOnly": false,
+          "canUndo": false,
+          "canRedo": false,
+          "roles": [
+            {
+              "role": 0,
+              "choices": [
+                {
+                  "motionId": "21da54acb5c38d147ad297bf7ef22977",
+                  "name": "Idle_4",
+                  "weight": 1,
+                  "speed": 1,
+                  "cooldown": 0,
+                  "loop": true,
+                  "available": true
+                }
+              ]
+            },
+            {
+              "role": 1,
+              "choices": [
+                {
+                  "motionId": "bd0bf1a849d86d785e00c3a392639359",
+                  "name": "Listening_Gesture",
+                  "weight": 1,
+                  "speed": 1,
+                  "cooldown": 0,
+                  "loop": true,
+                  "available": true
+                }
+              ]
+            },
+            {
+              "role": 2,
+              "choices": [
+                {
+                  "motionId": "9a66ea13d9ba08b954b9a0cbdc7d89dc",
+                  "name": "Idle_12",
+                  "weight": 1,
+                  "speed": 1,
+                  "cooldown": 0,
+                  "loop": true,
+                  "available": true
+                }
+              ]
+            },
+            {
+              "role": 3,
+              "choices": [
+                {
+                  "motionId": "b56ece79da8e21bac89927310921d734",
+                  "name": "Talk_with_Hands_Open",
+                  "weight": 1,
+                  "speed": 1,
+                  "cooldown": 2,
+                  "loop": false,
+                  "available": true
+                },
+                {
+                  "motionId": "852ac885964d693deb8d3d3ba835acec",
+                  "name": "Talk_with_Right_Hand_Open",
+                  "weight": 1,
+                  "speed": 1,
+                  "cooldown": 2,
+                  "loop": false,
+                  "available": true
+                }
+              ]
+            }
+          ]
+        },
+        "objects": [
+          {
+            "id": "4171d5f14e644752974773804ec52086",
+            "name": "Cylinder",
+            "kind": "Cylinder",
+            "objectRevision": 5,
+            "position": {
+              "x": 0.8600000143051147,
+              "y": 1.4500000476837158,
+              "z": 0.800000011920929
+            },
+            "scale": 1,
+            "color": {
+              "r": 0.16862745583057404,
+              "g": 0.5529412031173706,
+              "b": 0.5333333611488342,
+              "a": 1
+            },
+            "animated": false,
+            "held": false,
+            "simulating": false,
+            "physics": {
+              "mode": "fixed",
+              "shape": "automatic",
+              "mass": 0.5
+            },
+            "movement": null
+          },
+          {
+            "id": "8ac2a51a786c4197b258b8ae893b99c9",
+            "name": "Ball",
+            "kind": "Ball",
+            "objectRevision": 4,
+            "position": {
+              "x": 0.6899999976158142,
+              "y": 1.4500000476837158,
+              "z": 0.800000011920929
+            },
+            "scale": 1,
+            "color": {
+              "r": 0.7647058963775635,
+              "g": 0.6000000238418579,
+              "b": 0.3137255012989044,
+              "a": 1
+            },
+            "animated": false,
+            "held": false,
+            "simulating": false,
+            "physics": {
+              "mode": "fixed",
+              "shape": "automatic",
+              "mass": 0.5
+            },
+            "movement": null
+          },
+          {
+            "id": "8b69a414a07940daad416bfa7dae4149",
+            "name": "Source cup",
+            "kind": "Assembly",
+            "objectRevision": 24,
+            "position": {
+              "x": 0.30000001192092896,
+              "y": 1.2999999523162842,
+              "z": 0.6499999761581421
+            },
+            "scale": 1,
+            "color": {
+              "r": 1,
+              "g": 1,
+              "b": 1,
+              "a": 1
+            },
+            "animated": false,
+            "held": false,
+            "simulating": false,
+            "physics": {
+              "mode": "solid",
+              "shape": "automatic",
+              "mass": 0.30000001192092896
+            },
+            "movement": null
+          },
+          {
+            "id": "94a6e157f8444241b43b730e44e64326",
+            "name": "Receiving cup",
+            "kind": "Assembly",
+            "objectRevision": 25,
+            "position": {
+              "x": 0.800000011920929,
+              "y": 1.2999999523162842,
+              "z": 0.6499999761581421
+            },
+            "scale": 1,
+            "color": {
+              "r": 1,
+              "g": 1,
+              "b": 1,
+              "a": 1
+            },
+            "animated": false,
+            "held": false,
+            "simulating": false,
+            "physics": {
+              "mode": "solid",
+              "shape": "automatic",
+              "mass": 0.30000001192092896
+            },
+            "movement": null
+          },
+          {
+            "id": "bbc15e3c36004443baf701bbb9470ac9",
+            "name": "Block",
+            "kind": "Block",
+            "objectRevision": 3,
+            "position": {
+              "x": 0.5199999809265137,
+              "y": 1.4500000476837158,
+              "z": 0.800000011920929
+            },
+            "scale": 1,
+            "color": {
+              "r": 0.45098039507865906,
+              "g": 0.32549020648002625,
+              "b": 0.30588236451148987,
+              "a": 1
+            },
+            "animated": false,
+            "held": false,
+            "simulating": false,
+            "physics": {
+              "mode": "fixed",
+              "shape": "automatic",
+              "mass": 0.5
+            },
+            "movement": null
+          },
+          {
+            "id": "book",
+            "name": "Book",
+            "kind": "Book",
+            "objectRevision": 1,
+            "position": {
+              "x": 0,
+              "y": 1.159999966621399,
+              "z": 0.6499999761581421
+            },
+            "scale": 1,
+            "color": {
+              "r": 1,
+              "g": 1,
+              "b": 1,
+              "a": 1
+            },
+            "animated": false,
+            "held": false,
+            "simulating": false,
+            "physics": {
+              "mode": "fixed",
+              "shape": "automatic",
+              "mass": 0.5
+            },
+            "movement": null
+          },
+          {
+            "id": "maestro",
+            "name": "Maestro",
+            "kind": "Maestro",
+            "objectRevision": 2,
+            "position": {
+              "x": -0.7799999713897705,
+              "y": 0,
+              "z": 1.399999976158142
+            },
+            "scale": 1,
+            "color": {
+              "r": 1,
+              "g": 1,
+              "b": 1,
+              "a": 1
+            },
+            "animated": false,
+            "held": false,
+            "simulating": false,
+            "physics": {
+              "mode": "fixed",
+              "shape": "automatic",
+              "mass": 0.5
+            },
+            "movement": {
+              "distance": 1.3,
+              "speed": 0.65
+            }
+          }
+        ],
+        "created": [],
+        "capture": {
+          "captureId": "a834f21edeba4642ba7223c0e2f73754",
+          "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
+          "mimeType": "image/jpeg",
+          "width": 512,
+          "height": 384,
+          "capturedAt": "2026-10-04T01:48:03.361102Z",
+          "sceneRevision": 3,
+          "verticalFov": 60,
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "catalog": {
+          "operation": "inspect",
+          "capability": "object.container.scooping",
+          "version": 1,
+          "definition": {
+            "id": "object.container.scooping",
+            "version": 1,
+            "type": {
+              "record": {
+                "sessionId": "text",
+                "phase": "text",
+                "scoopedMl": "number",
+                "drawnMl": "number",
+                "donors": "number",
+                "recipients": "number"
+              }
+            },
+            "label": "Live liquid scooping",
+            "description": "Current physical-flow episode: scoopedMl entered this vessel through its submerged opening; drawnMl was taken from it by other vessels. donors/recipients count distinct counterpart vessels. These counters reset on publication or rollback. Read object.container.live for current and accepted quantities. An upward-facing smaller open cavity must fit inside the donor with its entire opening below the measured surface, with a clear bounded path. The same conserved quantities, physics pause, grips, save/Undo and temporary-room episode are used for pouring and scooping. No fluid forces, displacement, air simulation or persistent pools.",
+            "input": {
+              "type": "object",
+              "properties": {
+                "target": {
+                  "type": "string",
+                  "pattern": "^[a-fA-F0-9]{32}$",
+                  "maxLength": 32,
+                  "x-resource": "object"
+                }
+              },
+              "required": [
+                "target"
+              ],
+              "additionalProperties": false
+            },
+            "example": {
+              "target": "00000000000000000000000000000000"
+            },
+            "features": [
+              "factQueries.v1",
+              "containerScooping.v1"
+            ]
+          },
+          "status": "Current fact value. Reading does not change the room.",
+          "category": "facts",
+          "arguments": {
+            "target": "8b69a414a07940daad416bfa7dae4149"
+          },
+          "available": true,
+          "value": {
+            "sessionId": "3d075d834f594d69a4c5144367fb0555",
+            "phase": "idle",
+            "scoopedMl": 0,
+            "drawnMl": 0,
+            "donors": 0,
+            "recipients": 0
+          }
+        },
+        "execution": {
+          "selected": {
+            "id": "0aa9f79b548b43bead2143dba2db9702",
+            "capability": "object.container.transfer",
+            "version": 1,
+            "resources": [
+              "8b69a414a07940daad416bfa7dae4149",
+              "94a6e157f8444241b43b730e44e64326"
+            ],
+            "phase": "completed",
+            "status": "Action completed",
+            "output": {
+              "transferredMl": 125
+            },
+            "call": {
+              "id": "object.container.transfer",
+              "version": 1,
+              "arguments": {
+                "source": {
+                  "target": "8b69a414a07940daad416bfa7dae4149",
+                  "revision": 23
+                },
+                "destination": {
+                  "target": "94a6e157f8444241b43b730e44e64326",
+                  "revision": 22
+                },
+                "amountMl": 125
+              }
+            }
+          },
+          "running": [],
+          "outcomes": [
+            {
+              "id": "e1940ebe60914bb1945880f1de10ca5e",
+              "capability": "object.create",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "objectId": "a4e53f9b68bd428b855885fec3592925"
+              }
+            },
+            {
+              "id": "3771c5d201c04ee78e92587e911170d6",
+              "capability": "room.view.capture",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "captureId": "a834f21edeba4642ba7223c0e2f73754",
+                "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
+                "mimeType": "image/jpeg",
+                "width": 512,
+                "height": 384,
+                "capturedAt": "2026-10-04T01:48:03.361102Z",
+                "sceneRevision": 3,
+                "verticalFov": 60,
+                "position": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0,
+                  "w": 1
+                }
+              }
+            },
+            {
+              "id": "b4cf05131606452daa5b381feb850804",
+              "capability": "object.create",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "objectId": "18e6ead4078b4de9a3739c87e68ceea2"
+              }
+            },
+            {
+              "id": "acbc1bd2d0fb4c809db8885702722229",
+              "capability": "object.recipe.edit",
+              "version": 1,
+              "resources": [
+                "18e6ead4078b4de9a3739c87e68ceea2"
+              ],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "target": "18e6ead4078b4de9a3739c87e68ceea2",
+                "revision": 10,
+                "parts": 1,
+                "tracks": 0,
+                "duration": 2,
+                "loop": false,
+                "playing": false,
+                "autoplay": false
+              }
+            },
+            {
+              "id": "b0607f3a589f498c9c9191bb969c7d63",
+              "capability": "object.collision.edit",
+              "version": 1,
+              "resources": [
+                "18e6ead4078b4de9a3739c87e68ceea2"
+              ],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "target": "18e6ead4078b4de9a3739c87e68ceea2",
+                "revision": 12,
+                "shapes": 2,
+                "pieces": 13,
+                "customActive": true,
+                "temporary": false
+              }
+            },
+            {
+              "id": "46a93eef51974f509a9f2dc5ac1ccf57",
+              "capability": "object.create",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "objectId": "82b0297e0bd54e44968acb898819dff7"
+              }
+            },
+            {
+              "id": "4b98f6058deb475485c534f7b67b245f",
+              "capability": "object.recipe.edit",
+              "version": 1,
+              "resources": [
+                "82b0297e0bd54e44968acb898819dff7"
+              ],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "target": "82b0297e0bd54e44968acb898819dff7",
+                "revision": 15,
+                "parts": 1,
+                "tracks": 0,
+                "duration": 2,
+                "loop": false,
+                "playing": false,
+                "autoplay": false
+              }
+            },
+            {
+              "id": "c7c8bd8baec04f4aabb82eea9ec59445",
+              "capability": "object.create",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "objectId": "b4cc9f6613f24304a4c765bce8344b70"
+              }
+            },
+            {
+              "id": "e77cdcfca903492fae2f2698a3fa2b44",
+              "capability": "object.recipe.edit",
+              "version": 1,
+              "resources": [
+                "b4cc9f6613f24304a4c765bce8344b70"
+              ],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "target": "b4cc9f6613f24304a4c765bce8344b70",
+                "revision": 18,
+                "parts": 1,
+                "tracks": 0,
+                "duration": 2,
+                "loop": false,
+                "playing": false,
+                "autoplay": false
+              }
+            },
+            {
+              "id": "f63d8ff4f05e48bd83c45c4f7cf37576",
+              "capability": "object.create",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "objectId": "233d410d78f54f86951788dbc0cd36a6"
+              }
+            },
+            {
+              "id": "9c033ad5f466415a8be831b306104dfe",
+              "capability": "object.create",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "objectId": "8b69a414a07940daad416bfa7dae4149"
+              }
+            },
+            {
+              "id": "f39493ac5c8640d18e6f009258ea0045",
+              "capability": "object.create",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "objectId": "94a6e157f8444241b43b730e44e64326"
+              }
+            },
+            {
+              "id": "cbe282ce18a041c7b5b80467a80b9d1b",
+              "capability": "object.container.edit",
+              "version": 1,
+              "resources": [
+                "8b69a414a07940daad416bfa7dae4149"
+              ],
+              "phase": "completed",
+              "status": "Action completed"
+            },
+            {
+              "id": "0aa9f79b548b43bead2143dba2db9702",
+              "capability": "object.container.transfer",
+              "version": 1,
+              "resources": [
+                "8b69a414a07940daad416bfa7dae4149",
+                "94a6e157f8444241b43b730e44e64326"
+              ],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "transferredMl": 125
+              }
+            }
+          ],
+          "nextRunId": "2ce5c318f1004dfb986e1cbf28761a02",
+          "storageError": null,
+          "recovery": null,
+          "workspace": {
+            "selected": null,
+            "running": [],
+            "outcomes": [],
+            "nextRunId": "44396f05256f4ab8b24626964476caaf",
+            "storageError": null,
+            "recovery": null
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "action": "catalog",
+        "catalog": {
+          "operation": "search",
+          "category": "events",
+          "query": "A liquid scoop was saved",
+          "offset": 0
+        }
+      },
+      "response": {
+        "version": 1,
+        "revision": 171,
+        "sceneRevision": 25,
+        "ack": 65,
+        "session": "cc306c43811b4736b7d043ac99f06e9a",
+        "status": "Found 1 events. Search does not run or enable anything.",
+        "selectedId": "233d410d78f54f86951788dbc0cd36a6",
+        "ok": true,
+        "canUndo": true,
+        "canRedo": false,
+        "physicsRunning": false,
+        "visible": false,
+        "inspection": null,
+        "constructionSelection": {
+          "stateId": "f8674f981f0e4202b7df79b4759dc437",
+          "collecting": false,
+          "members": []
+        },
+        "constructionManipulation": {
+          "stateId": "f8674f981f0e4202b7df79b4759dc437",
+          "error": "",
+          "visible": false,
+          "holding": false
+        },
+        "workspaceView": "objects",
+        "rules": {
+          "revision": 1,
+          "bindingPage": 0,
+          "bindingCount": 0,
+          "queued": 0,
+          "eventQueue": 0,
+          "eventsDropped": 0,
+          "canUndo": false,
+          "canRedo": false,
+          "readOnly": false,
+          "status": "Create an action sequence, then add triggers or buttons",
+          "selectedError": "",
+          "sequences": [],
+          "selected": null,
+          "memory": null,
+          "bindings": [],
+          "buttons": [],
+          "running": [],
+          "outcomes": []
+        },
+        "motions": null,
+        "capabilities": [
+          "physicsSettings.v1",
+          "avatarSettings.v1",
+          "physicsRun.v1",
+          "avatarMotion.v1",
+          "avatarWalk.v1",
+          "motions.v1",
+          "avatarActivities.v1",
+          "catalog.v1",
+          "catalogVocabulary.v1",
+          "roomOwnership.v1",
+          "behaviourPrograms.v3",
+          "eventPrograms.v1",
+          "eventFields.v1",
+          "eventSubscriptions.v1",
+          "factQueries.v1",
+          "conditionWaits.v1",
+          "parallelPrograms.v1",
+          "rememberedVariables.v1",
+          "temporaryMemory.v1",
+          "structuredValues.v1",
+          "programModules.v1",
+          "moduleLibrary.v1",
+          "moduleLibraryFiles.v1",
+          "execution.v1",
+          "executionReceipts.v1",
+          "actionResults.v1",
+          "recipeCreation.v1",
+          "creationComponents.v1",
+          "creationTemplates.v1",
+          "layoutEdits.v1",
+          "structures.v1",
+          "batchCreation.v1",
+          "structuredResults.v1",
+          "structuredInputs.v1",
+          "indexedInputs.v1",
+          "constructionSelection.v1",
+          "groupTransforms.v1",
+          "constructionManipulation.v1",
+          "constructionSnapping.v1",
+          "objectEdits.v1",
+          "objectCopy.v1",
+          "drawingEdits.v1",
+          "drawingSurfaces.v1",
+          "drawingTips.v1",
+          "containers.v1",
+          "containerPouring.v1",
+          "containerScooping.v1",
+          "physicalConnections.v1",
+          "physicalSliders.v1",
+          "snapPoints.v1",
+          "connectedBlueprints.v2",
+          "creationPrototypes.v1",
+          "constructionCapture.v1",
+          "recipeEdits.v1",
+          "latheGeometry.v1",
+          "extrusionGeometry.v1",
+          "sweepGeometry.v1",
+          "roomViewCapture.v1",
+          "collisionShapes.v1",
+          "recipePartPlayback.v1",
+          "objectAttachments.v1",
+          "anchorZones.v1",
+          "channelWaits.v1",
+          "objectLaunch.v1",
+          "calendarSchedules.v1",
+          "animationAuthoring.v1",
+          "animationRecording.v1",
+          "animationPosing.v1",
+          "avatarModels.v1",
+          "modelImport.v1",
+          "modelArchiveImport.v1",
+          "motionBatchImport.v1",
+          "includedMotions.v1",
+          "authoredMotion.v1",
+          "unavailablePrograms.v1",
+          "actionRecovery.v1",
+          "temporaryRoom.v1",
+          "spatialSettings.v1",
+          "physicsSimulation.v1",
+          "roomEnvironment.v1",
+          "surfacePlacement.v1",
+          "controllerConfiguration.v1",
+          "controllerModes.v1",
+          "runtimeDiagnostics.v1",
+          "workspaceMaintenance.v1",
+          "workspaceArchiveActivation.v1",
+          "workspaceReview.v1",
+          "workspacePrevious.v1",
+          "workspaceRecovery.v1",
+          "workspaceSavedRecovery.v1",
+          "workspaceHistory.v1",
+          "workspaceEvidence.v1",
+          "workspaceRetention.v1",
+          "workspaceDisposal.v1"
+        ],
+        "physics": {
+          "ready": false,
+          "running": false,
+          "status": "Load or scan your room to use gravity"
+        },
+        "temporaryRoom": {
+          "active": false,
+          "pending": false,
+          "id": "071ff64635cb4bb6b2884fc071a12b99",
+          "saveId": "",
+          "phase": "idle",
+          "error": "",
+          "savedRevision": 0
+        },
+        "ownership": {
+          "suspended": false,
+          "error": "",
+          "owners": [
+            {
+              "id": "ambient:maestro",
+              "label": "Maestro tutor activity",
+              "role": "ambient",
+              "allowsGrab": false,
+              "claims": [
+                {
+                  "target": "maestro",
+                  "channel": "wholeTarget"
+                }
+              ]
+            }
+          ]
+        },
+        "avatar": {
+          "active": false,
+          "canLook": true,
+          "canFollow": false,
+          "mode": "stopped",
+          "status": "Choose Look at me or Follow me",
+          "lookReason": "",
+          "followReason": "Load the room, check its alignment, then Start physics before walking",
+          "distance": 1.3,
+          "speed": 0.65
+        },
+        "walk": {
+          "source": "embedded",
+          "motionId": "",
+          "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+          "name": "Walking",
+          "status": "Embedded walking clip is available",
+          "playbackStatus": "",
+          "clipIndex": 0,
+          "available": true
+        },
+        "activityProfile": {
+          "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+          "status": "Uses included animations where no state motion is assigned",
+          "revision": 1,
+          "canAssign": true,
+          "readOnly": false,
+          "canUndo": false,
+          "canRedo": false,
+          "roles": [
+            {
+              "role": 0,
+              "choices": [
+                {
+                  "motionId": "21da54acb5c38d147ad297bf7ef22977",
+                  "name": "Idle_4",
+                  "weight": 1,
+                  "speed": 1,
+                  "cooldown": 0,
+                  "loop": true,
+                  "available": true
+                }
+              ]
+            },
+            {
+              "role": 1,
+              "choices": [
+                {
+                  "motionId": "bd0bf1a849d86d785e00c3a392639359",
+                  "name": "Listening_Gesture",
+                  "weight": 1,
+                  "speed": 1,
+                  "cooldown": 0,
+                  "loop": true,
+                  "available": true
+                }
+              ]
+            },
+            {
+              "role": 2,
+              "choices": [
+                {
+                  "motionId": "9a66ea13d9ba08b954b9a0cbdc7d89dc",
+                  "name": "Idle_12",
+                  "weight": 1,
+                  "speed": 1,
+                  "cooldown": 0,
+                  "loop": true,
+                  "available": true
+                }
+              ]
+            },
+            {
+              "role": 3,
+              "choices": [
+                {
+                  "motionId": "b56ece79da8e21bac89927310921d734",
+                  "name": "Talk_with_Hands_Open",
+                  "weight": 1,
+                  "speed": 1,
+                  "cooldown": 2,
+                  "loop": false,
+                  "available": true
+                },
+                {
+                  "motionId": "852ac885964d693deb8d3d3ba835acec",
+                  "name": "Talk_with_Right_Hand_Open",
+                  "weight": 1,
+                  "speed": 1,
+                  "cooldown": 2,
+                  "loop": false,
+                  "available": true
+                }
+              ]
+            }
+          ]
+        },
+        "objects": [
+          {
+            "id": "4171d5f14e644752974773804ec52086",
+            "name": "Cylinder",
+            "kind": "Cylinder",
+            "objectRevision": 5,
+            "position": {
+              "x": 0.8600000143051147,
+              "y": 1.4500000476837158,
+              "z": 0.800000011920929
+            },
+            "scale": 1,
+            "color": {
+              "r": 0.16862745583057404,
+              "g": 0.5529412031173706,
+              "b": 0.5333333611488342,
+              "a": 1
+            },
+            "animated": false,
+            "held": false,
+            "simulating": false,
+            "physics": {
+              "mode": "fixed",
+              "shape": "automatic",
+              "mass": 0.5
+            },
+            "movement": null
+          },
+          {
+            "id": "8ac2a51a786c4197b258b8ae893b99c9",
+            "name": "Ball",
+            "kind": "Ball",
+            "objectRevision": 4,
+            "position": {
+              "x": 0.6899999976158142,
+              "y": 1.4500000476837158,
+              "z": 0.800000011920929
+            },
+            "scale": 1,
+            "color": {
+              "r": 0.7647058963775635,
+              "g": 0.6000000238418579,
+              "b": 0.3137255012989044,
+              "a": 1
+            },
+            "animated": false,
+            "held": false,
+            "simulating": false,
+            "physics": {
+              "mode": "fixed",
+              "shape": "automatic",
+              "mass": 0.5
+            },
+            "movement": null
+          },
+          {
+            "id": "8b69a414a07940daad416bfa7dae4149",
+            "name": "Source cup",
+            "kind": "Assembly",
+            "objectRevision": 24,
+            "position": {
+              "x": 0.30000001192092896,
+              "y": 1.2999999523162842,
+              "z": 0.6499999761581421
+            },
+            "scale": 1,
+            "color": {
+              "r": 1,
+              "g": 1,
+              "b": 1,
+              "a": 1
+            },
+            "animated": false,
+            "held": false,
+            "simulating": false,
+            "physics": {
+              "mode": "solid",
+              "shape": "automatic",
+              "mass": 0.30000001192092896
+            },
+            "movement": null
+          },
+          {
+            "id": "94a6e157f8444241b43b730e44e64326",
+            "name": "Receiving cup",
+            "kind": "Assembly",
+            "objectRevision": 25,
+            "position": {
+              "x": 0.800000011920929,
+              "y": 1.2999999523162842,
+              "z": 0.6499999761581421
+            },
+            "scale": 1,
+            "color": {
+              "r": 1,
+              "g": 1,
+              "b": 1,
+              "a": 1
+            },
+            "animated": false,
+            "held": false,
+            "simulating": false,
+            "physics": {
+              "mode": "solid",
+              "shape": "automatic",
+              "mass": 0.30000001192092896
+            },
+            "movement": null
+          },
+          {
+            "id": "bbc15e3c36004443baf701bbb9470ac9",
+            "name": "Block",
+            "kind": "Block",
+            "objectRevision": 3,
+            "position": {
+              "x": 0.5199999809265137,
+              "y": 1.4500000476837158,
+              "z": 0.800000011920929
+            },
+            "scale": 1,
+            "color": {
+              "r": 0.45098039507865906,
+              "g": 0.32549020648002625,
+              "b": 0.30588236451148987,
+              "a": 1
+            },
+            "animated": false,
+            "held": false,
+            "simulating": false,
+            "physics": {
+              "mode": "fixed",
+              "shape": "automatic",
+              "mass": 0.5
+            },
+            "movement": null
+          },
+          {
+            "id": "book",
+            "name": "Book",
+            "kind": "Book",
+            "objectRevision": 1,
+            "position": {
+              "x": 0,
+              "y": 1.159999966621399,
+              "z": 0.6499999761581421
+            },
+            "scale": 1,
+            "color": {
+              "r": 1,
+              "g": 1,
+              "b": 1,
+              "a": 1
+            },
+            "animated": false,
+            "held": false,
+            "simulating": false,
+            "physics": {
+              "mode": "fixed",
+              "shape": "automatic",
+              "mass": 0.5
+            },
+            "movement": null
+          },
+          {
+            "id": "maestro",
+            "name": "Maestro",
+            "kind": "Maestro",
+            "objectRevision": 2,
+            "position": {
+              "x": -0.7799999713897705,
+              "y": 0,
+              "z": 1.399999976158142
+            },
+            "scale": 1,
+            "color": {
+              "r": 1,
+              "g": 1,
+              "b": 1,
+              "a": 1
+            },
+            "animated": false,
+            "held": false,
+            "simulating": false,
+            "physics": {
+              "mode": "fixed",
+              "shape": "automatic",
+              "mass": 0.5
+            },
+            "movement": {
+              "distance": 1.3,
+              "speed": 0.65
+            }
+          }
+        ],
+        "created": [],
+        "capture": {
+          "captureId": "a834f21edeba4642ba7223c0e2f73754",
+          "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
+          "mimeType": "image/jpeg",
+          "width": 512,
+          "height": 384,
+          "capturedAt": "2026-10-04T01:48:03.361102Z",
+          "sceneRevision": 3,
+          "verticalFov": 60,
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "catalog": {
+          "operation": "search",
+          "query": "A liquid scoop was saved",
+          "offset": 0,
+          "pageSize": 6,
+          "total": 1,
+          "entries": [
+            {
+              "id": "object.container.scooped",
+              "version": 1,
+              "label": "A liquid scoop was saved"
+            }
+          ],
+          "status": "Found 1 events. Search does not run or enable anything.",
+          "category": "events"
+        },
+        "execution": {
+          "selected": {
+            "id": "0aa9f79b548b43bead2143dba2db9702",
+            "capability": "object.container.transfer",
+            "version": 1,
+            "resources": [
+              "8b69a414a07940daad416bfa7dae4149",
+              "94a6e157f8444241b43b730e44e64326"
+            ],
+            "phase": "completed",
+            "status": "Action completed",
+            "output": {
+              "transferredMl": 125
+            },
+            "call": {
+              "id": "object.container.transfer",
+              "version": 1,
+              "arguments": {
+                "source": {
+                  "target": "8b69a414a07940daad416bfa7dae4149",
+                  "revision": 23
+                },
+                "destination": {
+                  "target": "94a6e157f8444241b43b730e44e64326",
+                  "revision": 22
+                },
+                "amountMl": 125
+              }
+            }
+          },
+          "running": [],
+          "outcomes": [
+            {
+              "id": "e1940ebe60914bb1945880f1de10ca5e",
+              "capability": "object.create",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "objectId": "a4e53f9b68bd428b855885fec3592925"
+              }
+            },
+            {
+              "id": "3771c5d201c04ee78e92587e911170d6",
+              "capability": "room.view.capture",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "captureId": "a834f21edeba4642ba7223c0e2f73754",
+                "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
+                "mimeType": "image/jpeg",
+                "width": 512,
+                "height": 384,
+                "capturedAt": "2026-10-04T01:48:03.361102Z",
+                "sceneRevision": 3,
+                "verticalFov": 60,
+                "position": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0,
+                  "w": 1
+                }
+              }
+            },
+            {
+              "id": "b4cf05131606452daa5b381feb850804",
+              "capability": "object.create",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "objectId": "18e6ead4078b4de9a3739c87e68ceea2"
+              }
+            },
+            {
+              "id": "acbc1bd2d0fb4c809db8885702722229",
+              "capability": "object.recipe.edit",
+              "version": 1,
+              "resources": [
+                "18e6ead4078b4de9a3739c87e68ceea2"
+              ],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "target": "18e6ead4078b4de9a3739c87e68ceea2",
+                "revision": 10,
+                "parts": 1,
+                "tracks": 0,
+                "duration": 2,
+                "loop": false,
+                "playing": false,
+                "autoplay": false
+              }
+            },
+            {
+              "id": "b0607f3a589f498c9c9191bb969c7d63",
+              "capability": "object.collision.edit",
+              "version": 1,
+              "resources": [
+                "18e6ead4078b4de9a3739c87e68ceea2"
+              ],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "target": "18e6ead4078b4de9a3739c87e68ceea2",
+                "revision": 12,
+                "shapes": 2,
+                "pieces": 13,
+                "customActive": true,
+                "temporary": false
+              }
+            },
+            {
+              "id": "46a93eef51974f509a9f2dc5ac1ccf57",
+              "capability": "object.create",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "objectId": "82b0297e0bd54e44968acb898819dff7"
+              }
+            },
+            {
+              "id": "4b98f6058deb475485c534f7b67b245f",
+              "capability": "object.recipe.edit",
+              "version": 1,
+              "resources": [
+                "82b0297e0bd54e44968acb898819dff7"
+              ],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "target": "82b0297e0bd54e44968acb898819dff7",
+                "revision": 15,
+                "parts": 1,
+                "tracks": 0,
+                "duration": 2,
+                "loop": false,
+                "playing": false,
+                "autoplay": false
+              }
+            },
+            {
+              "id": "c7c8bd8baec04f4aabb82eea9ec59445",
+              "capability": "object.create",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "objectId": "b4cc9f6613f24304a4c765bce8344b70"
+              }
+            },
+            {
+              "id": "e77cdcfca903492fae2f2698a3fa2b44",
+              "capability": "object.recipe.edit",
+              "version": 1,
+              "resources": [
+                "b4cc9f6613f24304a4c765bce8344b70"
+              ],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "target": "b4cc9f6613f24304a4c765bce8344b70",
+                "revision": 18,
+                "parts": 1,
+                "tracks": 0,
+                "duration": 2,
+                "loop": false,
+                "playing": false,
+                "autoplay": false
+              }
+            },
+            {
+              "id": "f63d8ff4f05e48bd83c45c4f7cf37576",
+              "capability": "object.create",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "objectId": "233d410d78f54f86951788dbc0cd36a6"
+              }
+            },
+            {
+              "id": "9c033ad5f466415a8be831b306104dfe",
+              "capability": "object.create",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "objectId": "8b69a414a07940daad416bfa7dae4149"
+              }
+            },
+            {
+              "id": "f39493ac5c8640d18e6f009258ea0045",
+              "capability": "object.create",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "objectId": "94a6e157f8444241b43b730e44e64326"
+              }
+            },
+            {
+              "id": "cbe282ce18a041c7b5b80467a80b9d1b",
+              "capability": "object.container.edit",
+              "version": 1,
+              "resources": [
+                "8b69a414a07940daad416bfa7dae4149"
+              ],
+              "phase": "completed",
+              "status": "Action completed"
+            },
+            {
+              "id": "0aa9f79b548b43bead2143dba2db9702",
+              "capability": "object.container.transfer",
+              "version": 1,
+              "resources": [
+                "8b69a414a07940daad416bfa7dae4149",
+                "94a6e157f8444241b43b730e44e64326"
+              ],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "transferredMl": 125
+              }
+            }
+          ],
+          "nextRunId": "2ce5c318f1004dfb986e1cbf28761a02",
+          "storageError": null,
+          "recovery": null,
+          "workspace": {
+            "selected": null,
+            "running": [],
+            "outcomes": [],
+            "nextRunId": "44396f05256f4ab8b24626964476caaf",
+            "storageError": null,
+            "recovery": null
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "action": "catalog",
+        "catalog": {
+          "operation": "inspect",
+          "category": "events",
+          "capability": "object.container.scooped",
+          "version": 1
+        }
+      },
+      "response": {
+        "version": 1,
+        "revision": 173,
+        "sceneRevision": 25,
+        "ack": 66,
+        "session": "cc306c43811b4736b7d043ac99f06e9a",
+        "status": "Event definition. Inspecting does not subscribe or start a behaviour.",
+        "selectedId": "233d410d78f54f86951788dbc0cd36a6",
+        "ok": true,
+        "canUndo": true,
+        "canRedo": false,
+        "physicsRunning": false,
+        "visible": false,
+        "inspection": null,
+        "constructionSelection": {
+          "stateId": "f8674f981f0e4202b7df79b4759dc437",
+          "collecting": false,
+          "members": []
+        },
+        "constructionManipulation": {
+          "stateId": "f8674f981f0e4202b7df79b4759dc437",
+          "error": "",
+          "visible": false,
+          "holding": false
+        },
+        "workspaceView": "objects",
+        "rules": {
+          "revision": 1,
+          "bindingPage": 0,
+          "bindingCount": 0,
+          "queued": 0,
+          "eventQueue": 0,
+          "eventsDropped": 0,
+          "canUndo": false,
+          "canRedo": false,
+          "readOnly": false,
+          "status": "Create an action sequence, then add triggers or buttons",
+          "selectedError": "",
+          "sequences": [],
+          "selected": null,
+          "memory": null,
+          "bindings": [],
+          "buttons": [],
+          "running": [],
+          "outcomes": []
+        },
+        "motions": null,
+        "capabilities": [
+          "physicsSettings.v1",
+          "avatarSettings.v1",
+          "physicsRun.v1",
+          "avatarMotion.v1",
+          "avatarWalk.v1",
+          "motions.v1",
+          "avatarActivities.v1",
+          "catalog.v1",
+          "catalogVocabulary.v1",
+          "roomOwnership.v1",
+          "behaviourPrograms.v3",
+          "eventPrograms.v1",
+          "eventFields.v1",
+          "eventSubscriptions.v1",
+          "factQueries.v1",
+          "conditionWaits.v1",
+          "parallelPrograms.v1",
+          "rememberedVariables.v1",
+          "temporaryMemory.v1",
+          "structuredValues.v1",
+          "programModules.v1",
+          "moduleLibrary.v1",
+          "moduleLibraryFiles.v1",
+          "execution.v1",
+          "executionReceipts.v1",
+          "actionResults.v1",
+          "recipeCreation.v1",
+          "creationComponents.v1",
+          "creationTemplates.v1",
+          "layoutEdits.v1",
+          "structures.v1",
+          "batchCreation.v1",
+          "structuredResults.v1",
+          "structuredInputs.v1",
+          "indexedInputs.v1",
+          "constructionSelection.v1",
+          "groupTransforms.v1",
+          "constructionManipulation.v1",
+          "constructionSnapping.v1",
+          "objectEdits.v1",
+          "objectCopy.v1",
+          "drawingEdits.v1",
+          "drawingSurfaces.v1",
+          "drawingTips.v1",
+          "containers.v1",
+          "containerPouring.v1",
+          "containerScooping.v1",
+          "physicalConnections.v1",
+          "physicalSliders.v1",
+          "snapPoints.v1",
+          "connectedBlueprints.v2",
+          "creationPrototypes.v1",
+          "constructionCapture.v1",
+          "recipeEdits.v1",
+          "latheGeometry.v1",
+          "extrusionGeometry.v1",
+          "sweepGeometry.v1",
+          "roomViewCapture.v1",
+          "collisionShapes.v1",
+          "recipePartPlayback.v1",
+          "objectAttachments.v1",
+          "anchorZones.v1",
+          "channelWaits.v1",
+          "objectLaunch.v1",
+          "calendarSchedules.v1",
+          "animationAuthoring.v1",
+          "animationRecording.v1",
+          "animationPosing.v1",
+          "avatarModels.v1",
+          "modelImport.v1",
+          "modelArchiveImport.v1",
+          "motionBatchImport.v1",
+          "includedMotions.v1",
+          "authoredMotion.v1",
+          "unavailablePrograms.v1",
+          "actionRecovery.v1",
+          "temporaryRoom.v1",
+          "spatialSettings.v1",
+          "physicsSimulation.v1",
+          "roomEnvironment.v1",
+          "surfacePlacement.v1",
+          "controllerConfiguration.v1",
+          "controllerModes.v1",
+          "runtimeDiagnostics.v1",
+          "workspaceMaintenance.v1",
+          "workspaceArchiveActivation.v1",
+          "workspaceReview.v1",
+          "workspacePrevious.v1",
+          "workspaceRecovery.v1",
+          "workspaceSavedRecovery.v1",
+          "workspaceHistory.v1",
+          "workspaceEvidence.v1",
+          "workspaceRetention.v1",
+          "workspaceDisposal.v1"
+        ],
+        "physics": {
+          "ready": false,
+          "running": false,
+          "status": "Load or scan your room to use gravity"
+        },
+        "temporaryRoom": {
+          "active": false,
+          "pending": false,
+          "id": "071ff64635cb4bb6b2884fc071a12b99",
+          "saveId": "",
+          "phase": "idle",
+          "error": "",
+          "savedRevision": 0
+        },
+        "ownership": {
+          "suspended": false,
+          "error": "",
+          "owners": [
+            {
+              "id": "ambient:maestro",
+              "label": "Maestro tutor activity",
+              "role": "ambient",
+              "allowsGrab": false,
+              "claims": [
+                {
+                  "target": "maestro",
+                  "channel": "wholeTarget"
+                }
+              ]
+            }
+          ]
+        },
+        "avatar": {
+          "active": false,
+          "canLook": true,
+          "canFollow": false,
+          "mode": "stopped",
+          "status": "Choose Look at me or Follow me",
+          "lookReason": "",
+          "followReason": "Load the room, check its alignment, then Start physics before walking",
+          "distance": 1.3,
+          "speed": 0.65
+        },
+        "walk": {
+          "source": "embedded",
+          "motionId": "",
+          "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+          "name": "Walking",
+          "status": "Embedded walking clip is available",
+          "playbackStatus": "",
+          "clipIndex": 0,
+          "available": true
+        },
+        "activityProfile": {
+          "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+          "status": "Uses included animations where no state motion is assigned",
+          "revision": 1,
+          "canAssign": true,
+          "readOnly": false,
+          "canUndo": false,
+          "canRedo": false,
+          "roles": [
+            {
+              "role": 0,
+              "choices": [
+                {
+                  "motionId": "21da54acb5c38d147ad297bf7ef22977",
+                  "name": "Idle_4",
+                  "weight": 1,
+                  "speed": 1,
+                  "cooldown": 0,
+                  "loop": true,
+                  "available": true
+                }
+              ]
+            },
+            {
+              "role": 1,
+              "choices": [
+                {
+                  "motionId": "bd0bf1a849d86d785e00c3a392639359",
+                  "name": "Listening_Gesture",
+                  "weight": 1,
+                  "speed": 1,
+                  "cooldown": 0,
+                  "loop": true,
+                  "available": true
+                }
+              ]
+            },
+            {
+              "role": 2,
+              "choices": [
+                {
+                  "motionId": "9a66ea13d9ba08b954b9a0cbdc7d89dc",
+                  "name": "Idle_12",
+                  "weight": 1,
+                  "speed": 1,
+                  "cooldown": 0,
+                  "loop": true,
+                  "available": true
+                }
+              ]
+            },
+            {
+              "role": 3,
+              "choices": [
+                {
+                  "motionId": "b56ece79da8e21bac89927310921d734",
+                  "name": "Talk_with_Hands_Open",
+                  "weight": 1,
+                  "speed": 1,
+                  "cooldown": 2,
+                  "loop": false,
+                  "available": true
+                },
+                {
+                  "motionId": "852ac885964d693deb8d3d3ba835acec",
+                  "name": "Talk_with_Right_Hand_Open",
+                  "weight": 1,
+                  "speed": 1,
+                  "cooldown": 2,
+                  "loop": false,
+                  "available": true
+                }
+              ]
+            }
+          ]
+        },
+        "objects": [
+          {
+            "id": "4171d5f14e644752974773804ec52086",
+            "name": "Cylinder",
+            "kind": "Cylinder",
+            "objectRevision": 5,
+            "position": {
+              "x": 0.8600000143051147,
+              "y": 1.4500000476837158,
+              "z": 0.800000011920929
+            },
+            "scale": 1,
+            "color": {
+              "r": 0.16862745583057404,
+              "g": 0.5529412031173706,
+              "b": 0.5333333611488342,
+              "a": 1
+            },
+            "animated": false,
+            "held": false,
+            "simulating": false,
+            "physics": {
+              "mode": "fixed",
+              "shape": "automatic",
+              "mass": 0.5
+            },
+            "movement": null
+          },
+          {
+            "id": "8ac2a51a786c4197b258b8ae893b99c9",
+            "name": "Ball",
+            "kind": "Ball",
+            "objectRevision": 4,
+            "position": {
+              "x": 0.6899999976158142,
+              "y": 1.4500000476837158,
+              "z": 0.800000011920929
+            },
+            "scale": 1,
+            "color": {
+              "r": 0.7647058963775635,
+              "g": 0.6000000238418579,
+              "b": 0.3137255012989044,
+              "a": 1
+            },
+            "animated": false,
+            "held": false,
+            "simulating": false,
+            "physics": {
+              "mode": "fixed",
+              "shape": "automatic",
+              "mass": 0.5
+            },
+            "movement": null
+          },
+          {
+            "id": "8b69a414a07940daad416bfa7dae4149",
+            "name": "Source cup",
+            "kind": "Assembly",
+            "objectRevision": 24,
+            "position": {
+              "x": 0.30000001192092896,
+              "y": 1.2999999523162842,
+              "z": 0.6499999761581421
+            },
+            "scale": 1,
+            "color": {
+              "r": 1,
+              "g": 1,
+              "b": 1,
+              "a": 1
+            },
+            "animated": false,
+            "held": false,
+            "simulating": false,
+            "physics": {
+              "mode": "solid",
+              "shape": "automatic",
+              "mass": 0.30000001192092896
+            },
+            "movement": null
+          },
+          {
+            "id": "94a6e157f8444241b43b730e44e64326",
+            "name": "Receiving cup",
+            "kind": "Assembly",
+            "objectRevision": 25,
+            "position": {
+              "x": 0.800000011920929,
+              "y": 1.2999999523162842,
+              "z": 0.6499999761581421
+            },
+            "scale": 1,
+            "color": {
+              "r": 1,
+              "g": 1,
+              "b": 1,
+              "a": 1
+            },
+            "animated": false,
+            "held": false,
+            "simulating": false,
+            "physics": {
+              "mode": "solid",
+              "shape": "automatic",
+              "mass": 0.30000001192092896
+            },
+            "movement": null
+          },
+          {
+            "id": "bbc15e3c36004443baf701bbb9470ac9",
+            "name": "Block",
+            "kind": "Block",
+            "objectRevision": 3,
+            "position": {
+              "x": 0.5199999809265137,
+              "y": 1.4500000476837158,
+              "z": 0.800000011920929
+            },
+            "scale": 1,
+            "color": {
+              "r": 0.45098039507865906,
+              "g": 0.32549020648002625,
+              "b": 0.30588236451148987,
+              "a": 1
+            },
+            "animated": false,
+            "held": false,
+            "simulating": false,
+            "physics": {
+              "mode": "fixed",
+              "shape": "automatic",
+              "mass": 0.5
+            },
+            "movement": null
+          },
+          {
+            "id": "book",
+            "name": "Book",
+            "kind": "Book",
+            "objectRevision": 1,
+            "position": {
+              "x": 0,
+              "y": 1.159999966621399,
+              "z": 0.6499999761581421
+            },
+            "scale": 1,
+            "color": {
+              "r": 1,
+              "g": 1,
+              "b": 1,
+              "a": 1
+            },
+            "animated": false,
+            "held": false,
+            "simulating": false,
+            "physics": {
+              "mode": "fixed",
+              "shape": "automatic",
+              "mass": 0.5
+            },
+            "movement": null
+          },
+          {
+            "id": "maestro",
+            "name": "Maestro",
+            "kind": "Maestro",
+            "objectRevision": 2,
+            "position": {
+              "x": -0.7799999713897705,
+              "y": 0,
+              "z": 1.399999976158142
+            },
+            "scale": 1,
+            "color": {
+              "r": 1,
+              "g": 1,
+              "b": 1,
+              "a": 1
+            },
+            "animated": false,
+            "held": false,
+            "simulating": false,
+            "physics": {
+              "mode": "fixed",
+              "shape": "automatic",
+              "mass": 0.5
+            },
+            "movement": {
+              "distance": 1.3,
+              "speed": 0.65
+            }
+          }
+        ],
+        "created": [],
+        "capture": {
+          "captureId": "a834f21edeba4642ba7223c0e2f73754",
+          "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
+          "mimeType": "image/jpeg",
+          "width": 512,
+          "height": 384,
+          "capturedAt": "2026-10-04T01:48:03.361102Z",
+          "sceneRevision": 3,
+          "verticalFov": 60,
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "catalog": {
+          "operation": "inspect",
+          "capability": "object.container.scooped",
+          "version": 1,
+          "definition": {
+            "id": "object.container.scooped",
+            "version": 1,
+            "label": "A liquid scoop was saved",
+            "activity": null,
+            "objectEvent": true,
+            "valueType": "text",
+            "description": "A physical liquid-flow episode containing scooping was accepted by the room journal or temporary fork. Value/source is the receiving vessel ID; scoopedMl is its total intake and donors counts distinct source vessels. Emitted only after successful publication; failed saves, Undo and reload do not emit it. Pouring retains its separate object.container.poured event. A continuous episode checkpoints after ten seconds. Lifecycle-paused listeners may miss an event; inspect current contents instead.",
+            "features": [
+              "eventPrograms.v1",
+              "eventFields.v1",
+              "containerScooping.v1"
+            ],
+            "fields": {
+              "type": "object",
+              "properties": {
+                "scoopedMl": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 8000000
+                },
+                "donors": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 16
+                },
+                "liquid": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+                  "maxLength": 32
+                },
+                "temporary": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "scoopedMl",
+                "donors",
+                "liquid",
+                "temporary"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "status": "Event definition. Inspecting does not subscribe or start a behaviour.",
+          "category": "events"
+        },
+        "execution": {
+          "selected": {
+            "id": "0aa9f79b548b43bead2143dba2db9702",
+            "capability": "object.container.transfer",
+            "version": 1,
+            "resources": [
+              "8b69a414a07940daad416bfa7dae4149",
+              "94a6e157f8444241b43b730e44e64326"
+            ],
+            "phase": "completed",
+            "status": "Action completed",
+            "output": {
+              "transferredMl": 125
+            },
+            "call": {
+              "id": "object.container.transfer",
+              "version": 1,
+              "arguments": {
+                "source": {
+                  "target": "8b69a414a07940daad416bfa7dae4149",
+                  "revision": 23
+                },
+                "destination": {
+                  "target": "94a6e157f8444241b43b730e44e64326",
+                  "revision": 22
+                },
+                "amountMl": 125
+              }
+            }
+          },
+          "running": [],
+          "outcomes": [
+            {
+              "id": "e1940ebe60914bb1945880f1de10ca5e",
+              "capability": "object.create",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "objectId": "a4e53f9b68bd428b855885fec3592925"
+              }
+            },
+            {
+              "id": "3771c5d201c04ee78e92587e911170d6",
+              "capability": "room.view.capture",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "captureId": "a834f21edeba4642ba7223c0e2f73754",
+                "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
+                "mimeType": "image/jpeg",
+                "width": 512,
+                "height": 384,
+                "capturedAt": "2026-10-04T01:48:03.361102Z",
+                "sceneRevision": 3,
+                "verticalFov": 60,
+                "position": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0,
+                  "w": 1
+                }
+              }
+            },
+            {
+              "id": "b4cf05131606452daa5b381feb850804",
+              "capability": "object.create",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "objectId": "18e6ead4078b4de9a3739c87e68ceea2"
+              }
+            },
+            {
+              "id": "acbc1bd2d0fb4c809db8885702722229",
+              "capability": "object.recipe.edit",
+              "version": 1,
+              "resources": [
+                "18e6ead4078b4de9a3739c87e68ceea2"
+              ],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "target": "18e6ead4078b4de9a3739c87e68ceea2",
+                "revision": 10,
+                "parts": 1,
+                "tracks": 0,
+                "duration": 2,
+                "loop": false,
+                "playing": false,
+                "autoplay": false
+              }
+            },
+            {
+              "id": "b0607f3a589f498c9c9191bb969c7d63",
+              "capability": "object.collision.edit",
+              "version": 1,
+              "resources": [
+                "18e6ead4078b4de9a3739c87e68ceea2"
+              ],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "target": "18e6ead4078b4de9a3739c87e68ceea2",
+                "revision": 12,
+                "shapes": 2,
+                "pieces": 13,
+                "customActive": true,
+                "temporary": false
+              }
+            },
+            {
+              "id": "46a93eef51974f509a9f2dc5ac1ccf57",
+              "capability": "object.create",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "objectId": "82b0297e0bd54e44968acb898819dff7"
+              }
+            },
+            {
+              "id": "4b98f6058deb475485c534f7b67b245f",
+              "capability": "object.recipe.edit",
+              "version": 1,
+              "resources": [
+                "82b0297e0bd54e44968acb898819dff7"
+              ],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "target": "82b0297e0bd54e44968acb898819dff7",
+                "revision": 15,
+                "parts": 1,
+                "tracks": 0,
+                "duration": 2,
+                "loop": false,
+                "playing": false,
+                "autoplay": false
+              }
+            },
+            {
+              "id": "c7c8bd8baec04f4aabb82eea9ec59445",
+              "capability": "object.create",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "objectId": "b4cc9f6613f24304a4c765bce8344b70"
+              }
+            },
+            {
+              "id": "e77cdcfca903492fae2f2698a3fa2b44",
+              "capability": "object.recipe.edit",
+              "version": 1,
+              "resources": [
+                "b4cc9f6613f24304a4c765bce8344b70"
+              ],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "target": "b4cc9f6613f24304a4c765bce8344b70",
+                "revision": 18,
+                "parts": 1,
+                "tracks": 0,
+                "duration": 2,
+                "loop": false,
+                "playing": false,
+                "autoplay": false
+              }
+            },
+            {
+              "id": "f63d8ff4f05e48bd83c45c4f7cf37576",
+              "capability": "object.create",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "objectId": "233d410d78f54f86951788dbc0cd36a6"
+              }
+            },
+            {
+              "id": "9c033ad5f466415a8be831b306104dfe",
+              "capability": "object.create",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "objectId": "8b69a414a07940daad416bfa7dae4149"
+              }
+            },
+            {
+              "id": "f39493ac5c8640d18e6f009258ea0045",
+              "capability": "object.create",
+              "version": 1,
+              "resources": [],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "objectId": "94a6e157f8444241b43b730e44e64326"
+              }
+            },
+            {
+              "id": "cbe282ce18a041c7b5b80467a80b9d1b",
+              "capability": "object.container.edit",
+              "version": 1,
+              "resources": [
+                "8b69a414a07940daad416bfa7dae4149"
+              ],
+              "phase": "completed",
+              "status": "Action completed"
+            },
+            {
+              "id": "0aa9f79b548b43bead2143dba2db9702",
+              "capability": "object.container.transfer",
+              "version": 1,
+              "resources": [
+                "8b69a414a07940daad416bfa7dae4149",
+                "94a6e157f8444241b43b730e44e64326"
+              ],
+              "phase": "completed",
+              "status": "Action completed",
+              "output": {
+                "transferredMl": 125
+              }
+            }
+          ],
+          "nextRunId": "2ce5c318f1004dfb986e1cbf28761a02",
+          "storageError": null,
+          "recovery": null,
+          "workspace": {
+            "selected": null,
+            "running": [],
+            "outcomes": [],
+            "nextRunId": "44396f05256f4ab8b24626964476caaf",
+            "storageError": null,
+            "recovery": null
+          }
+        }
+      }
+    }
+  ],
+  "live": {
+    "version": 1,
+    "revision": 167,
+    "sceneRevision": 25,
+    "ack": 64,
+    "session": "cc306c43811b4736b7d043ac99f06e9a",
+    "status": "Current fact value. Reading does not change the room.",
+    "selectedId": "233d410d78f54f86951788dbc0cd36a6",
+    "ok": true,
+    "canUndo": true,
+    "canRedo": false,
+    "physicsRunning": false,
+    "visible": false,
+    "inspection": null,
+    "constructionSelection": {
+      "stateId": "f8674f981f0e4202b7df79b4759dc437",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "f8674f981f0e4202b7df79b4759dc437",
+      "error": "",
+      "visible": false,
+      "holding": false
+    },
+    "workspaceView": "objects",
+    "rules": {
+      "revision": 1,
+      "bindingPage": 0,
+      "bindingCount": 0,
+      "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
+      "canUndo": false,
+      "canRedo": false,
+      "readOnly": false,
+      "status": "Create an action sequence, then add triggers or buttons",
+      "selectedError": "",
+      "sequences": [],
+      "selected": null,
+      "memory": null,
+      "bindings": [],
+      "buttons": [],
+      "running": [],
+      "outcomes": []
+    },
+    "motions": null,
+    "capabilities": [
+      "physicsSettings.v1",
+      "avatarSettings.v1",
+      "physicsRun.v1",
+      "avatarMotion.v1",
+      "avatarWalk.v1",
+      "motions.v1",
+      "avatarActivities.v1",
+      "catalog.v1",
+      "catalogVocabulary.v1",
+      "roomOwnership.v1",
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "eventFields.v1",
+      "eventSubscriptions.v1",
+      "factQueries.v1",
+      "conditionWaits.v1",
+      "parallelPrograms.v1",
+      "rememberedVariables.v1",
+      "temporaryMemory.v1",
+      "structuredValues.v1",
+      "programModules.v1",
+      "moduleLibrary.v1",
+      "moduleLibraryFiles.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
+      "objectEdits.v1",
+      "objectCopy.v1",
+      "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "drawingTips.v1",
+      "containers.v1",
+      "containerPouring.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
+      "recipeEdits.v1",
+      "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "roomViewCapture.v1",
+      "collisionShapes.v1",
+      "recipePartPlayback.v1",
+      "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
+      "objectLaunch.v1",
+      "calendarSchedules.v1",
+      "animationAuthoring.v1",
+      "animationRecording.v1",
+      "animationPosing.v1",
+      "avatarModels.v1",
+      "modelImport.v1",
+      "modelArchiveImport.v1",
+      "motionBatchImport.v1",
+      "includedMotions.v1",
+      "authoredMotion.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1",
+      "temporaryRoom.v1",
+      "spatialSettings.v1",
+      "physicsSimulation.v1",
+      "roomEnvironment.v1",
+      "surfacePlacement.v1",
+      "controllerConfiguration.v1",
+      "controllerModes.v1",
+      "runtimeDiagnostics.v1",
+      "workspaceMaintenance.v1",
+      "workspaceArchiveActivation.v1",
+      "workspaceReview.v1",
+      "workspacePrevious.v1",
+      "workspaceRecovery.v1",
+      "workspaceSavedRecovery.v1",
+      "workspaceHistory.v1",
+      "workspaceEvidence.v1",
+      "workspaceRetention.v1",
+      "workspaceDisposal.v1"
+    ],
+    "physics": {
+      "ready": false,
+      "running": false,
+      "status": "Load or scan your room to use gravity"
+    },
+    "temporaryRoom": {
+      "active": false,
+      "pending": false,
+      "id": "071ff64635cb4bb6b2884fc071a12b99",
+      "saveId": "",
+      "phase": "idle",
+      "error": "",
+      "savedRevision": 0
+    },
+    "ownership": {
+      "suspended": false,
+      "error": "",
+      "owners": [
+        {
+          "id": "ambient:maestro",
+          "label": "Maestro tutor activity",
+          "role": "ambient",
+          "allowsGrab": false,
+          "claims": [
+            {
+              "target": "maestro",
+              "channel": "wholeTarget"
+            }
+          ]
+        }
+      ]
+    },
+    "avatar": {
+      "active": false,
+      "canLook": true,
+      "canFollow": false,
+      "mode": "stopped",
+      "status": "Choose Look at me or Follow me",
+      "lookReason": "",
+      "followReason": "Load the room, check its alignment, then Start physics before walking",
+      "distance": 1.3,
+      "speed": 0.65
+    },
+    "walk": {
+      "source": "embedded",
+      "motionId": "",
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "name": "Walking",
+      "status": "Embedded walking clip is available",
+      "playbackStatus": "",
+      "clipIndex": 0,
+      "available": true
+    },
+    "activityProfile": {
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "status": "Uses included animations where no state motion is assigned",
+      "revision": 1,
+      "canAssign": true,
+      "readOnly": false,
+      "canUndo": false,
+      "canRedo": false,
+      "roles": [
+        {
+          "role": 0,
+          "choices": [
+            {
+              "motionId": "21da54acb5c38d147ad297bf7ef22977",
+              "name": "Idle_4",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 1,
+          "choices": [
+            {
+              "motionId": "bd0bf1a849d86d785e00c3a392639359",
+              "name": "Listening_Gesture",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 2,
+          "choices": [
+            {
+              "motionId": "9a66ea13d9ba08b954b9a0cbdc7d89dc",
+              "name": "Idle_12",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 3,
+          "choices": [
+            {
+              "motionId": "b56ece79da8e21bac89927310921d734",
+              "name": "Talk_with_Hands_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            },
+            {
+              "motionId": "852ac885964d693deb8d3d3ba835acec",
+              "name": "Talk_with_Right_Hand_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            }
+          ]
+        }
+      ]
+    },
+    "objects": [
+      {
+        "id": "4171d5f14e644752974773804ec52086",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "8ac2a51a786c4197b258b8ae893b99c9",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "8b69a414a07940daad416bfa7dae4149",
+        "name": "Source cup",
+        "kind": "Assembly",
+        "objectRevision": 24,
+        "position": {
+          "x": 0.30000001192092896,
+          "y": 1.2999999523162842,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.30000001192092896
+        },
+        "movement": null
+      },
+      {
+        "id": "94a6e157f8444241b43b730e44e64326",
+        "name": "Receiving cup",
+        "kind": "Assembly",
+        "objectRevision": 25,
+        "position": {
+          "x": 0.800000011920929,
+          "y": 1.2999999523162842,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.30000001192092896
+        },
+        "movement": null
+      },
+      {
+        "id": "bbc15e3c36004443baf701bbb9470ac9",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 3,
+        "position": {
+          "x": 0.5199999809265137,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0,
+          "y": 1.159999966621399,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "maestro",
+        "name": "Maestro",
+        "kind": "Maestro",
+        "objectRevision": 2,
+        "position": {
+          "x": -0.7799999713897705,
+          "y": 0,
+          "z": 1.399999976158142
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": {
+          "distance": 1.3,
+          "speed": 0.65
+        }
+      }
+    ],
+    "created": [],
+    "capture": {
+      "captureId": "a834f21edeba4642ba7223c0e2f73754",
+      "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
+      "mimeType": "image/jpeg",
+      "width": 512,
+      "height": 384,
+      "capturedAt": "2026-10-04T01:48:03.361102Z",
+      "sceneRevision": 3,
+      "verticalFov": 60,
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      }
+    },
+    "catalog": {
+      "operation": "inspect",
+      "capability": "object.container.scooping",
+      "version": 1,
+      "definition": {
+        "id": "object.container.scooping",
+        "version": 1,
+        "type": {
+          "record": {
+            "sessionId": "text",
+            "phase": "text",
+            "scoopedMl": "number",
+            "drawnMl": "number",
+            "donors": "number",
+            "recipients": "number"
+          }
+        },
+        "label": "Live liquid scooping",
+        "description": "Current physical-flow episode: scoopedMl entered this vessel through its submerged opening; drawnMl was taken from it by other vessels. donors/recipients count distinct counterpart vessels. These counters reset on publication or rollback. Read object.container.live for current and accepted quantities. An upward-facing smaller open cavity must fit inside the donor with its entire opening below the measured surface, with a clear bounded path. The same conserved quantities, physics pause, grips, save/Undo and temporary-room episode are used for pouring and scooping. No fluid forces, displacement, air simulation or persistent pools.",
+        "input": {
+          "type": "object",
+          "properties": {
+            "target": {
+              "type": "string",
+              "pattern": "^[a-fA-F0-9]{32}$",
+              "maxLength": 32,
+              "x-resource": "object"
+            }
+          },
+          "required": [
+            "target"
+          ],
+          "additionalProperties": false
+        },
+        "example": {
+          "target": "00000000000000000000000000000000"
+        },
+        "features": [
+          "factQueries.v1",
+          "containerScooping.v1"
+        ]
+      },
+      "status": "Current fact value. Reading does not change the room.",
+      "category": "facts",
+      "arguments": {
+        "target": "8b69a414a07940daad416bfa7dae4149"
+      },
+      "available": true,
+      "value": {
+        "sessionId": "3d075d834f594d69a4c5144367fb0555",
+        "phase": "idle",
+        "scoopedMl": 0,
+        "drawnMl": 0,
+        "donors": 0,
+        "recipients": 0
+      }
+    },
+    "execution": {
+      "selected": {
+        "id": "0aa9f79b548b43bead2143dba2db9702",
+        "capability": "object.container.transfer",
+        "version": 1,
+        "resources": [
+          "8b69a414a07940daad416bfa7dae4149",
+          "94a6e157f8444241b43b730e44e64326"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "transferredMl": 125
+        },
+        "call": {
+          "id": "object.container.transfer",
+          "version": 1,
+          "arguments": {
+            "source": {
+              "target": "8b69a414a07940daad416bfa7dae4149",
+              "revision": 23
+            },
+            "destination": {
+              "target": "94a6e157f8444241b43b730e44e64326",
+              "revision": 22
+            },
+            "amountMl": 125
+          }
+        }
+      },
+      "running": [],
+      "outcomes": [
+        {
+          "id": "e1940ebe60914bb1945880f1de10ca5e",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "a4e53f9b68bd428b855885fec3592925"
+          }
+        },
+        {
+          "id": "3771c5d201c04ee78e92587e911170d6",
+          "capability": "room.view.capture",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "captureId": "a834f21edeba4642ba7223c0e2f73754",
+            "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
+            "mimeType": "image/jpeg",
+            "width": 512,
+            "height": 384,
+            "capturedAt": "2026-10-04T01:48:03.361102Z",
+            "sceneRevision": 3,
+            "verticalFov": 60,
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            }
+          }
+        },
+        {
+          "id": "b4cf05131606452daa5b381feb850804",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "18e6ead4078b4de9a3739c87e68ceea2"
+          }
+        },
+        {
+          "id": "acbc1bd2d0fb4c809db8885702722229",
+          "capability": "object.recipe.edit",
+          "version": 1,
+          "resources": [
+            "18e6ead4078b4de9a3739c87e68ceea2"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "18e6ead4078b4de9a3739c87e68ceea2",
+            "revision": 10,
+            "parts": 1,
+            "tracks": 0,
+            "duration": 2,
+            "loop": false,
+            "playing": false,
+            "autoplay": false
+          }
+        },
+        {
+          "id": "b0607f3a589f498c9c9191bb969c7d63",
+          "capability": "object.collision.edit",
+          "version": 1,
+          "resources": [
+            "18e6ead4078b4de9a3739c87e68ceea2"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "18e6ead4078b4de9a3739c87e68ceea2",
+            "revision": 12,
+            "shapes": 2,
+            "pieces": 13,
+            "customActive": true,
+            "temporary": false
+          }
+        },
+        {
+          "id": "46a93eef51974f509a9f2dc5ac1ccf57",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "82b0297e0bd54e44968acb898819dff7"
+          }
+        },
+        {
+          "id": "4b98f6058deb475485c534f7b67b245f",
+          "capability": "object.recipe.edit",
+          "version": 1,
+          "resources": [
+            "82b0297e0bd54e44968acb898819dff7"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "82b0297e0bd54e44968acb898819dff7",
+            "revision": 15,
+            "parts": 1,
+            "tracks": 0,
+            "duration": 2,
+            "loop": false,
+            "playing": false,
+            "autoplay": false
+          }
+        },
+        {
+          "id": "c7c8bd8baec04f4aabb82eea9ec59445",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "b4cc9f6613f24304a4c765bce8344b70"
+          }
+        },
+        {
+          "id": "e77cdcfca903492fae2f2698a3fa2b44",
+          "capability": "object.recipe.edit",
+          "version": 1,
+          "resources": [
+            "b4cc9f6613f24304a4c765bce8344b70"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "b4cc9f6613f24304a4c765bce8344b70",
+            "revision": 18,
+            "parts": 1,
+            "tracks": 0,
+            "duration": 2,
+            "loop": false,
+            "playing": false,
+            "autoplay": false
+          }
+        },
+        {
+          "id": "f63d8ff4f05e48bd83c45c4f7cf37576",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "233d410d78f54f86951788dbc0cd36a6"
+          }
+        },
+        {
+          "id": "9c033ad5f466415a8be831b306104dfe",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "8b69a414a07940daad416bfa7dae4149"
+          }
+        },
+        {
+          "id": "f39493ac5c8640d18e6f009258ea0045",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "94a6e157f8444241b43b730e44e64326"
+          }
+        },
+        {
+          "id": "cbe282ce18a041c7b5b80467a80b9d1b",
+          "capability": "object.container.edit",
+          "version": 1,
+          "resources": [
+            "8b69a414a07940daad416bfa7dae4149"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "0aa9f79b548b43bead2143dba2db9702",
+          "capability": "object.container.transfer",
+          "version": 1,
+          "resources": [
+            "8b69a414a07940daad416bfa7dae4149",
+            "94a6e157f8444241b43b730e44e64326"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "transferredMl": 125
+          }
+        }
+      ],
+      "nextRunId": "2ce5c318f1004dfb986e1cbf28761a02",
+      "storageError": null,
+      "recovery": null,
+      "workspace": {
+        "selected": null,
+        "running": [],
+        "outcomes": [],
+        "nextRunId": "44396f05256f4ab8b24626964476caaf",
+        "storageError": null,
+        "recovery": null
+      }
+    }
+  },
+  "event": {
+    "version": 1,
+    "revision": 173,
+    "sceneRevision": 25,
+    "ack": 66,
+    "session": "cc306c43811b4736b7d043ac99f06e9a",
+    "status": "Event definition. Inspecting does not subscribe or start a behaviour.",
+    "selectedId": "233d410d78f54f86951788dbc0cd36a6",
+    "ok": true,
+    "canUndo": true,
+    "canRedo": false,
+    "physicsRunning": false,
+    "visible": false,
+    "inspection": null,
+    "constructionSelection": {
+      "stateId": "f8674f981f0e4202b7df79b4759dc437",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "f8674f981f0e4202b7df79b4759dc437",
+      "error": "",
+      "visible": false,
+      "holding": false
+    },
+    "workspaceView": "objects",
+    "rules": {
+      "revision": 1,
+      "bindingPage": 0,
+      "bindingCount": 0,
+      "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
+      "canUndo": false,
+      "canRedo": false,
+      "readOnly": false,
+      "status": "Create an action sequence, then add triggers or buttons",
+      "selectedError": "",
+      "sequences": [],
+      "selected": null,
+      "memory": null,
+      "bindings": [],
+      "buttons": [],
+      "running": [],
+      "outcomes": []
+    },
+    "motions": null,
+    "capabilities": [
+      "physicsSettings.v1",
+      "avatarSettings.v1",
+      "physicsRun.v1",
+      "avatarMotion.v1",
+      "avatarWalk.v1",
+      "motions.v1",
+      "avatarActivities.v1",
+      "catalog.v1",
+      "catalogVocabulary.v1",
+      "roomOwnership.v1",
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "eventFields.v1",
+      "eventSubscriptions.v1",
+      "factQueries.v1",
+      "conditionWaits.v1",
+      "parallelPrograms.v1",
+      "rememberedVariables.v1",
+      "temporaryMemory.v1",
+      "structuredValues.v1",
+      "programModules.v1",
+      "moduleLibrary.v1",
+      "moduleLibraryFiles.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
+      "objectEdits.v1",
+      "objectCopy.v1",
+      "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "drawingTips.v1",
+      "containers.v1",
+      "containerPouring.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
+      "recipeEdits.v1",
+      "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "roomViewCapture.v1",
+      "collisionShapes.v1",
+      "recipePartPlayback.v1",
+      "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
+      "objectLaunch.v1",
+      "calendarSchedules.v1",
+      "animationAuthoring.v1",
+      "animationRecording.v1",
+      "animationPosing.v1",
+      "avatarModels.v1",
+      "modelImport.v1",
+      "modelArchiveImport.v1",
+      "motionBatchImport.v1",
+      "includedMotions.v1",
+      "authoredMotion.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1",
+      "temporaryRoom.v1",
+      "spatialSettings.v1",
+      "physicsSimulation.v1",
+      "roomEnvironment.v1",
+      "surfacePlacement.v1",
+      "controllerConfiguration.v1",
+      "controllerModes.v1",
+      "runtimeDiagnostics.v1",
+      "workspaceMaintenance.v1",
+      "workspaceArchiveActivation.v1",
+      "workspaceReview.v1",
+      "workspacePrevious.v1",
+      "workspaceRecovery.v1",
+      "workspaceSavedRecovery.v1",
+      "workspaceHistory.v1",
+      "workspaceEvidence.v1",
+      "workspaceRetention.v1",
+      "workspaceDisposal.v1"
+    ],
+    "physics": {
+      "ready": false,
+      "running": false,
+      "status": "Load or scan your room to use gravity"
+    },
+    "temporaryRoom": {
+      "active": false,
+      "pending": false,
+      "id": "071ff64635cb4bb6b2884fc071a12b99",
+      "saveId": "",
+      "phase": "idle",
+      "error": "",
+      "savedRevision": 0
+    },
+    "ownership": {
+      "suspended": false,
+      "error": "",
+      "owners": [
+        {
+          "id": "ambient:maestro",
+          "label": "Maestro tutor activity",
+          "role": "ambient",
+          "allowsGrab": false,
+          "claims": [
+            {
+              "target": "maestro",
+              "channel": "wholeTarget"
+            }
+          ]
+        }
+      ]
+    },
+    "avatar": {
+      "active": false,
+      "canLook": true,
+      "canFollow": false,
+      "mode": "stopped",
+      "status": "Choose Look at me or Follow me",
+      "lookReason": "",
+      "followReason": "Load the room, check its alignment, then Start physics before walking",
+      "distance": 1.3,
+      "speed": 0.65
+    },
+    "walk": {
+      "source": "embedded",
+      "motionId": "",
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "name": "Walking",
+      "status": "Embedded walking clip is available",
+      "playbackStatus": "",
+      "clipIndex": 0,
+      "available": true
+    },
+    "activityProfile": {
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "status": "Uses included animations where no state motion is assigned",
+      "revision": 1,
+      "canAssign": true,
+      "readOnly": false,
+      "canUndo": false,
+      "canRedo": false,
+      "roles": [
+        {
+          "role": 0,
+          "choices": [
+            {
+              "motionId": "21da54acb5c38d147ad297bf7ef22977",
+              "name": "Idle_4",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 1,
+          "choices": [
+            {
+              "motionId": "bd0bf1a849d86d785e00c3a392639359",
+              "name": "Listening_Gesture",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 2,
+          "choices": [
+            {
+              "motionId": "9a66ea13d9ba08b954b9a0cbdc7d89dc",
+              "name": "Idle_12",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 3,
+          "choices": [
+            {
+              "motionId": "b56ece79da8e21bac89927310921d734",
+              "name": "Talk_with_Hands_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            },
+            {
+              "motionId": "852ac885964d693deb8d3d3ba835acec",
+              "name": "Talk_with_Right_Hand_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            }
+          ]
+        }
+      ]
+    },
+    "objects": [
+      {
+        "id": "4171d5f14e644752974773804ec52086",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "8ac2a51a786c4197b258b8ae893b99c9",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "8b69a414a07940daad416bfa7dae4149",
+        "name": "Source cup",
+        "kind": "Assembly",
+        "objectRevision": 24,
+        "position": {
+          "x": 0.30000001192092896,
+          "y": 1.2999999523162842,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.30000001192092896
+        },
+        "movement": null
+      },
+      {
+        "id": "94a6e157f8444241b43b730e44e64326",
+        "name": "Receiving cup",
+        "kind": "Assembly",
+        "objectRevision": 25,
+        "position": {
+          "x": 0.800000011920929,
+          "y": 1.2999999523162842,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.30000001192092896
+        },
+        "movement": null
+      },
+      {
+        "id": "bbc15e3c36004443baf701bbb9470ac9",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 3,
+        "position": {
+          "x": 0.5199999809265137,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0,
+          "y": 1.159999966621399,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "maestro",
+        "name": "Maestro",
+        "kind": "Maestro",
+        "objectRevision": 2,
+        "position": {
+          "x": -0.7799999713897705,
+          "y": 0,
+          "z": 1.399999976158142
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": {
+          "distance": 1.3,
+          "speed": 0.65
+        }
+      }
+    ],
+    "created": [],
+    "capture": {
+      "captureId": "a834f21edeba4642ba7223c0e2f73754",
+      "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
+      "mimeType": "image/jpeg",
+      "width": 512,
+      "height": 384,
+      "capturedAt": "2026-10-04T01:48:03.361102Z",
+      "sceneRevision": 3,
+      "verticalFov": 60,
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      }
+    },
+    "catalog": {
+      "operation": "inspect",
+      "capability": "object.container.scooped",
+      "version": 1,
+      "definition": {
+        "id": "object.container.scooped",
+        "version": 1,
+        "label": "A liquid scoop was saved",
+        "activity": null,
+        "objectEvent": true,
+        "valueType": "text",
+        "description": "A physical liquid-flow episode containing scooping was accepted by the room journal or temporary fork. Value/source is the receiving vessel ID; scoopedMl is its total intake and donors counts distinct source vessels. Emitted only after successful publication; failed saves, Undo and reload do not emit it. Pouring retains its separate object.container.poured event. A continuous episode checkpoints after ten seconds. Lifecycle-paused listeners may miss an event; inspect current contents instead.",
+        "features": [
+          "eventPrograms.v1",
+          "eventFields.v1",
+          "containerScooping.v1"
+        ],
+        "fields": {
+          "type": "object",
+          "properties": {
+            "scoopedMl": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 8000000
+            },
+            "donors": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16
+            },
+            "liquid": {
+              "type": "string",
+              "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+              "maxLength": 32
+            },
+            "temporary": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "scoopedMl",
+            "donors",
+            "liquid",
+            "temporary"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "status": "Event definition. Inspecting does not subscribe or start a behaviour.",
+      "category": "events"
+    },
+    "execution": {
+      "selected": {
+        "id": "0aa9f79b548b43bead2143dba2db9702",
+        "capability": "object.container.transfer",
+        "version": 1,
+        "resources": [
+          "8b69a414a07940daad416bfa7dae4149",
+          "94a6e157f8444241b43b730e44e64326"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "transferredMl": 125
+        },
+        "call": {
+          "id": "object.container.transfer",
+          "version": 1,
+          "arguments": {
+            "source": {
+              "target": "8b69a414a07940daad416bfa7dae4149",
+              "revision": 23
+            },
+            "destination": {
+              "target": "94a6e157f8444241b43b730e44e64326",
+              "revision": 22
+            },
+            "amountMl": 125
+          }
+        }
+      },
+      "running": [],
+      "outcomes": [
+        {
+          "id": "e1940ebe60914bb1945880f1de10ca5e",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "a4e53f9b68bd428b855885fec3592925"
+          }
+        },
+        {
+          "id": "3771c5d201c04ee78e92587e911170d6",
+          "capability": "room.view.capture",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "captureId": "a834f21edeba4642ba7223c0e2f73754",
+            "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
+            "mimeType": "image/jpeg",
+            "width": 512,
+            "height": 384,
+            "capturedAt": "2026-10-04T01:48:03.361102Z",
+            "sceneRevision": 3,
+            "verticalFov": 60,
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            }
+          }
+        },
+        {
+          "id": "b4cf05131606452daa5b381feb850804",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "18e6ead4078b4de9a3739c87e68ceea2"
+          }
+        },
+        {
+          "id": "acbc1bd2d0fb4c809db8885702722229",
+          "capability": "object.recipe.edit",
+          "version": 1,
+          "resources": [
+            "18e6ead4078b4de9a3739c87e68ceea2"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "18e6ead4078b4de9a3739c87e68ceea2",
+            "revision": 10,
+            "parts": 1,
+            "tracks": 0,
+            "duration": 2,
+            "loop": false,
+            "playing": false,
+            "autoplay": false
+          }
+        },
+        {
+          "id": "b0607f3a589f498c9c9191bb969c7d63",
+          "capability": "object.collision.edit",
+          "version": 1,
+          "resources": [
+            "18e6ead4078b4de9a3739c87e68ceea2"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "18e6ead4078b4de9a3739c87e68ceea2",
+            "revision": 12,
+            "shapes": 2,
+            "pieces": 13,
+            "customActive": true,
+            "temporary": false
+          }
+        },
+        {
+          "id": "46a93eef51974f509a9f2dc5ac1ccf57",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "82b0297e0bd54e44968acb898819dff7"
+          }
+        },
+        {
+          "id": "4b98f6058deb475485c534f7b67b245f",
+          "capability": "object.recipe.edit",
+          "version": 1,
+          "resources": [
+            "82b0297e0bd54e44968acb898819dff7"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "82b0297e0bd54e44968acb898819dff7",
+            "revision": 15,
+            "parts": 1,
+            "tracks": 0,
+            "duration": 2,
+            "loop": false,
+            "playing": false,
+            "autoplay": false
+          }
+        },
+        {
+          "id": "c7c8bd8baec04f4aabb82eea9ec59445",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "b4cc9f6613f24304a4c765bce8344b70"
+          }
+        },
+        {
+          "id": "e77cdcfca903492fae2f2698a3fa2b44",
+          "capability": "object.recipe.edit",
+          "version": 1,
+          "resources": [
+            "b4cc9f6613f24304a4c765bce8344b70"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "b4cc9f6613f24304a4c765bce8344b70",
+            "revision": 18,
+            "parts": 1,
+            "tracks": 0,
+            "duration": 2,
+            "loop": false,
+            "playing": false,
+            "autoplay": false
+          }
+        },
+        {
+          "id": "f63d8ff4f05e48bd83c45c4f7cf37576",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "233d410d78f54f86951788dbc0cd36a6"
+          }
+        },
+        {
+          "id": "9c033ad5f466415a8be831b306104dfe",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "8b69a414a07940daad416bfa7dae4149"
+          }
+        },
+        {
+          "id": "f39493ac5c8640d18e6f009258ea0045",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "94a6e157f8444241b43b730e44e64326"
+          }
+        },
+        {
+          "id": "cbe282ce18a041c7b5b80467a80b9d1b",
+          "capability": "object.container.edit",
+          "version": 1,
+          "resources": [
+            "8b69a414a07940daad416bfa7dae4149"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "0aa9f79b548b43bead2143dba2db9702",
+          "capability": "object.container.transfer",
+          "version": 1,
+          "resources": [
+            "8b69a414a07940daad416bfa7dae4149",
+            "94a6e157f8444241b43b730e44e64326"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "transferredMl": 125
+          }
+        }
+      ],
+      "nextRunId": "2ce5c318f1004dfb986e1cbf28761a02",
+      "storageError": null,
+      "recovery": null,
+      "workspace": {
+        "selected": null,
+        "running": [],
+        "outcomes": [],
+        "nextRunId": "44396f05256f4ab8b24626964476caaf",
+        "storageError": null,
+        "recovery": null
+      }
+    }
+  }
+}

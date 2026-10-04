@@ -267,7 +267,7 @@ session publishes quantities atomically with one Undo and emits
 `object.container.poured`; `object.container.live` exposes current quantities
 without pretending they are already saved. Both are ordinary typed program/agent
 observations. Uncollected spills leave the model; persistent puddles, water forces,
-scooping and snow fields remain unfinished. Desktop verification cannot establish
+bare-hand scooping and snow fields remain unfinished. Desktop verification cannot establish
 Quest pouring comfort or sustained frame performance.
 
 
@@ -292,3 +292,13 @@ source validation, generated-vertex budgets, saving, Undo and temporary rooms
 remain shared. See [recipe authoring](QUEST_RECIPE_AUTHORING.md#editable-profile-sweeps-2026-10-04).
 This does not add automatic Boolean cleanup, matching collision generation or
 closed spline loops. Physical proxies and headset acceptance remain explicit.
+
+
+`containerScooping.v1` now adds bounded vessel dipping to that same liquid model:
+whole submerged openings, conservative clear paths, shared source/receiver rate
+limits and conserved quantities. Bucket and Water basin are ordinary editable
+starter templates. `object.container.scooping` and `object.container.scooped`
+provide typed live observations and accepted events to both users and Maestro.
+The existing pouring counters retain their meaning. This does not implement
+finger scooping, displacement, fluid forces or persistent water/snow fields;
+see [containers](QUEST_CONTAINERS.md#physical-vessel-scooping-2026-10-04).

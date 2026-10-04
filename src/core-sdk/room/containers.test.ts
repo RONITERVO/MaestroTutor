@@ -23,3 +23,16 @@ it('uses the same native pouring-event program and rejects unsupported runtimes 
  program.functions[0].locals.find(v=>v.name==='ml')!.initial='wrong type';
  expect(parseProgram(JSON.stringify(program)).program).toBeNull();
 });
+
+it('shares physical scooping events without changing the existing pouring contract',()=>{
+ const program=JSON.parse(readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-container-scoop.json','utf8')) as BehaviourProgram;
+ expect(parseProgram(JSON.stringify(program)).error).toBeNull();
+ expect(behaviourEvent('object.container.scooped')?.features).toContain('containerScooping.v1');
+ const commands=[{action:'rules',rule:{action:'edit',revision:1,edits:[{kind:'save',sequence:{program:JSON.stringify(program)}}]}}];
+ const capabilities=['behaviourPrograms.v3','eventPrograms.v1','eventFields.v1','containerPouring.v1'];
+ expect(()=>requireRoomCapabilities(commands,{capabilities})).toThrow('containerScooping.v1');
+ expect(()=>requireRoomCapabilities(commands,{capabilities:[...capabilities,'containerScooping.v1']})).not.toThrow();
+ program.functions[0].locals.find(v=>v.name==='ml')!.initial='wrong type';
+ expect(parseProgram(JSON.stringify(program)).program).toBeNull();
+ expect(behaviourEvent('object.container.poured')?.features).not.toContain('containerScooping.v1');
+});

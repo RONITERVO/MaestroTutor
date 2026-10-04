@@ -37,13 +37,8 @@ namespace Maestro.Quest.Creation {
             mesh.Clear();mesh.SetVertices(vertices);mesh.SetTriangles(triangles,0);normals.Clear();for(int i=0;i<vertices.Count;i++)normals.Add(normal);mesh.SetNormals(normals);mesh.RecalculateBounds();
         }
         void Edge(Vector3 a,Vector3 b,Vector3 normal,float level){float da=Vector3.Dot(normal,a)-level,db=Vector3.Dot(normal,b)-level;if(da*db>0||Mathf.Abs(da-db)<1e-8f)return;var point=Vector3.LerpUnclamped(a,b,da/(da-db));foreach(var p in rim)if((p-point).sqrMagnitude<1e-12f)return;rim.Add(point);}
-        // Integrate the circular cross-section CDF along the cylinder axis. This is
-        // only a display plane; saved millilitres and transfer arithmetic never depend on it.
-        internal static float Level(Vector3 normal,float radius,float height,float fraction){
-            double extent=radius*System.Math.Sqrt(normal.x*normal.x+normal.z*normal.z)+height*.5*System.Math.Abs(normal.y),low=-extent,high=extent;
-            for(int pass=0;pass<18;pass++){double mid=(low+high)*.5;if(ContainerFlowGeometry.FractionBelow(normal,radius,height,mid)<fraction)low=mid;else high=mid;}
-            return (float)((low+high)*.5);
-        }
+        // Kept as the existing display entry point; immersion uses the identical plane.
+        internal static float Level(Vector3 normal,float radius,float height,float fraction)=>ContainerFlowGeometry.Level(normal,radius,height,fraction);
 
         void OnDestroy(){ArtResources.Release(mesh);ArtResources.Release(material);if(surface)Destroy(surface);}
     }

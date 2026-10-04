@@ -8279,7 +8279,9 @@
                 "type": "string",
                 "enum": [
                   "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496",
+                  "b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651",
                   "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33",
+                  "7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca",
                   "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab",
                   "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac",
                   "22b5810eeed904680847631faf04ee3797f56bffdf3beb031f82609ed49c3ec1",
@@ -8292,7 +8294,9 @@
                 ],
                 "x-enum-labels": {
                   "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "Ball",
+                  "b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651": "Water basin",
                   "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33": "Building brick",
+                  "7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca": "Bucket",
                   "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab": "Chalk",
                   "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "Chalkboard",
                   "22b5810eeed904680847631faf04ee3797f56bffdf3beb031f82609ed49c3ec1": "Cup",
@@ -8305,7 +8309,9 @@
                 },
                 "x-enum-images": {
                   "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "quest/templates/f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496.png",
+                  "b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651": "quest/templates/b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651.png",
                   "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33": "quest/templates/5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33.png",
+                  "7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca": "quest/templates/7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca.png",
                   "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab": "quest/templates/4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab.png",
                   "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "quest/templates/5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac.png",
                   "22b5810eeed904680847631faf04ee3797f56bffdf3beb031f82609ed49c3ec1": "quest/templates/22b5810eeed904680847631faf04ee3797f56bffdf3beb031f82609ed49c3ec1.png",
@@ -8540,7 +8546,9 @@
                               "type": "string",
                               "enum": [
                                 "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496",
+                                "b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651",
                                 "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33",
+                                "7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca",
                                 "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab",
                                 "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac",
                                 "22b5810eeed904680847631faf04ee3797f56bffdf3beb031f82609ed49c3ec1",
@@ -8553,7 +8561,9 @@
                               ],
                               "x-enum-labels": {
                                 "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "Ball",
+                                "b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651": "Water basin",
                                 "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33": "Building brick",
+                                "7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca": "Bucket",
                                 "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab": "Chalk",
                                 "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "Chalkboard",
                                 "22b5810eeed904680847631faf04ee3797f56bffdf3beb031f82609ed49c3ec1": "Cup",
@@ -8566,7 +8576,9 @@
                               },
                               "x-enum-images": {
                                 "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "quest/templates/f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496.png",
+                                "b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651": "quest/templates/b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651.png",
                                 "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33": "quest/templates/5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33.png",
+                                "7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca": "quest/templates/7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca.png",
                                 "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab": "quest/templates/4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab.png",
                                 "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "quest/templates/5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac.png",
                                 "22b5810eeed904680847631faf04ee3797f56bffdf3beb031f82609ed49c3ec1": "quest/templates/22b5810eeed904680847631faf04ee3797f56bffdf3beb031f82609ed49c3ec1.png",
@@ -14134,7 +14146,7 @@
         "source.revision.current",
         "storage.writable"
       ],
-      "description": "Configure one saved cylindrical liquid store on any created object, or remove it. definition includes its contents: this authoring action can create, replace or empty liquid. Use object.container.transfer to conserve contents instead. The frame is the root-local bottom centre; +Y points toward the opening. Geometry describes the cavity and does not infer or modify mesh/colliders. Capacity is a logical game-rule value in millilitres, independent of visual scale; resizing a prop neither creates liquid nor changes capacity. One liquid identity and opaque display colour at a time, up to 16 containers per room. The shared saved amount survives Undo, duplication, prototypes, temporary rooms and archives. Room physics also runs bounded open-vessel pouring; inspect object.container.live and object.container.poured. Splashes, drinking, fluid forces and liquid mass remain unsupported. Imported bowls require explicit cavity configuration.",
+      "description": "Configure one saved cylindrical liquid store on any created object, or remove it. definition includes its contents: this authoring action can create, replace or empty liquid. Use object.container.transfer to conserve contents instead. The frame is the root-local bottom centre; +Y points toward the opening. Geometry describes the cavity and does not infer or modify mesh/colliders. Capacity is a logical game-rule value in millilitres, independent of visual scale; resizing a prop neither creates liquid nor changes capacity. One liquid identity and opaque display colour at a time, up to 16 containers per room. The shared saved amount survives Undo, duplication, prototypes, temporary rooms and archives. Room physics also runs bounded open-vessel pouring and immersion filling; inspect object.container.live, object.container.scooping, object.container.poured and object.container.scooped. Splashes, drinking, fluid forces and liquid mass remain unsupported. Imported bowls require explicit cavity configuration.",
       "example": {
         "operation": "configure",
         "target": "00000000000000000000000000000000",
@@ -21903,6 +21915,50 @@
       }
     },
     {
+      "id": "object.container.scooped",
+      "version": 1,
+      "label": "A liquid scoop was saved",
+      "activity": null,
+      "objectEvent": true,
+      "valueType": "text",
+      "description": "A physical liquid-flow episode containing scooping was accepted by the room journal or temporary fork. Value/source is the receiving vessel ID; scoopedMl is its total intake and donors counts distinct source vessels. Emitted only after successful publication; failed saves, Undo and reload do not emit it. Pouring retains its separate object.container.poured event. A continuous episode checkpoints after ten seconds. Lifecycle-paused listeners may miss an event; inspect current contents instead.",
+      "features": [
+        "eventPrograms.v1",
+        "eventFields.v1",
+        "containerScooping.v1"
+      ],
+      "fields": {
+        "type": "object",
+        "properties": {
+          "scoopedMl": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 8000000.0
+          },
+          "donors": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 16.0
+          },
+          "liquid": {
+            "type": "string",
+            "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+            "maxLength": 32
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "scoopedMl",
+          "donors",
+          "liquid",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "object.anchor.proximity.changed",
       "version": 1,
       "label": "Object entered or left an anchor zone",
@@ -23631,7 +23687,7 @@
         }
       },
       "label": "Live container contents",
-      "description": "Current native liquid quantity during physical pouring, separate from the last accepted object.container definition. Flowing contents are published together after 0.3 seconds without flow, at grip release, pause or Save, and at bounded ten-second checkpoints; one Undo restores that episode. Failed publication reverts all episode quantities and stops further pouring until physics is restarted. transferredMl/spilledMl are outgoing totals for this source in the current episode, reset after publication. No per-drop rigidbodies, pools, fluid mass, mixing or buoyancy. Amounts use logical millilitres independent of visual resizing.",
+      "description": "Current native liquid quantity during physical pouring or scooping, separate from the last accepted object.container definition. Flowing contents are published together after 0.3 seconds without flow, at grip release, pause or Save, and at bounded ten-second checkpoints; one Undo restores that episode. Failed publication reverts all episode quantities and stops further pouring until physics is restarted. transferredMl/spilledMl are outgoing pouring totals for this source in the current episode, reset after publication. Scooping has separate object.container.scooping counters. No per-drop rigidbodies, pools, fluid mass, mixing or buoyancy. Amounts use logical millilitres independent of visual resizing.",
       "input": {
         "type": "object",
         "properties": {
@@ -23653,6 +23709,44 @@
       "features": [
         "factQueries.v1",
         "containerPouring.v1"
+      ]
+    },
+    {
+      "id": "object.container.scooping",
+      "version": 1,
+      "type": {
+        "record": {
+          "sessionId": "text",
+          "phase": "text",
+          "scoopedMl": "number",
+          "drawnMl": "number",
+          "donors": "number",
+          "recipients": "number"
+        }
+      },
+      "label": "Live liquid scooping",
+      "description": "Current physical-flow episode: scoopedMl entered this vessel through its submerged opening; drawnMl was taken from it by other vessels. donors/recipients count distinct counterpart vessels. These counters reset on publication or rollback. Read object.container.live for current and accepted quantities. An upward-facing smaller open cavity must fit inside the donor with its entire opening below the measured surface, with a clear bounded path. The same conserved quantities, physics pause, grips, save/Undo and temporary-room episode are used for pouring and scooping. No fluid forces, displacement, air simulation or persistent pools.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1",
+        "containerScooping.v1"
       ]
     },
     {
@@ -26799,7 +26893,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "22d592f8c1e69f893a82302bbd93b891208460a9224fbc57ce39e75d996e515c"
+      "sha256": "fca7b9a25fbb4d1cd425477e2e1d877879d59e3bba7b1de6b0775c534447f1af"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -26851,7 +26945,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "948661f413a730674864b4a2b643d4fc8cf7185595994ce028fffde011672f35"
+      "sha256": "db1b7148619d27983a58a4669d95b891d2aa7c83a0b1c96366a673cfd91f6cc4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -26955,7 +27049,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RoomRules.cs",
-      "sha256": "5f06fb719a6872e4a06048f9f28ea1696ed043f185891275194d825516154f7f"
+      "sha256": "8b1c9b07200d75d8f9d63b869d87baa368bc3e2eed75cd296ebd2d0e017117af"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleWorkshop.cs",
@@ -27139,19 +27233,19 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ContainerFillView.cs",
-      "sha256": "f8968ff13572506a9b6f8158d8a51ee206f138a2023c92dd72ef6e54c501b632"
+      "sha256": "a16b6948fb43c3887a5020b2fe751fd75d33ebfcc2aac780c2959d7a25fd1c41"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ContainerFlowGeometry.cs",
-      "sha256": "3defb946b2430a733490fd4467ec798cbb929a175a85c7a00531d6dbea99f018"
+      "sha256": "ad703fae68181793ca1a45b66f03041b967465c666c513babe8038974174ec35"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidPouring.cs",
-      "sha256": "f48e64b5c3597a721aaf432a6b7b437e22574e012790f5ff6db8e295f0fd5660"
+      "sha256": "55b4afa3ba62b94b653cac276204ee3c3e49b99cb3d565e883acd23d7ca71af4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLiquidEdits.cs",
-      "sha256": "07efa5d02e1efd0748230480a4df6a2614a3ca384414acffcb0979a360a43067"
+      "sha256": "1654a68359259e8357bd062630e20cb24c23123d4b9f5cc4ea9d5cf52de3f4e8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomContainerEdits.cs",
@@ -27447,11 +27541,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContainerCapability.cs",
-      "sha256": "da5daaa77104759bbc2a2159c83515b5e11628f0b606ae50b7ab664b589ac16e"
+      "sha256": "9ca07b4c41b42032105063620300c0055fc9ae895122321f257d7914ad3c8bc3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContainerPouringFacts.cs",
-      "sha256": "a9b23eb06b1cfee953400d98950b901fb10c2ea386c0032532655628dd8b5a88"
+      "sha256": "d02c9780b85350843b494744b744be7b44dfd8d1db42f79455bb554055d83c7c"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContainerScoopingFacts.cs",
+      "sha256": "7e5f749c7490c7b87b2e959316e3cdc7a8b346b98fdc1335b253e5992610fd4b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ControllerConfigurationCapability.cs",
@@ -27682,8 +27780,16 @@
       "sha256": "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/basin.json",
+      "sha256": "b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/brick.json",
       "sha256": "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/bucket.json",
+      "sha256": "7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/chalk.json",

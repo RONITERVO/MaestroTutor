@@ -23,7 +23,7 @@ and construction capture preserve all three kinds. An editable spring-button mod
 uses ordinary recipes and condition waits for press/release. Saved snap points now
 support explicit construction placement or fixed joining with shared current
 revisions and one Undo; see QUEST_SNAP_POINTS.md. Physical grip snap previews
-and bounded liquid containers/pouring now extend those components. Persistent
+and bounded liquid containers/pouring/vessel scooping now extend those components. Persistent
 water/snow fields and the full default play kit remain unfinished.
 See QUEST_RECIPE_AUTHORING.md and QUEST_NATIVE_ROOM_PROBE.md.
 
@@ -2842,3 +2842,37 @@ Quest grip/direct-touch feel, stability at other scales and sustained performanc
 remain device acceptance items. The wider play kit, provider and Store gates
 remain open. No device installation, provider call, paid generation, deployment,
 release signing or submission was performed for this increment.
+
+
+### Shared vessel scooping and editable water defaults (2026-10-04)
+
+Added Bucket and Water basin templates with editable geometry, collision, physics
+and version-1 container data. Dipping a smaller upward-facing open cavity inside
+a larger liquid store transfers conserved contents at bounded rates. It shares
+pouring's existing live episode, publication/rollback, temporary-room semantics and
+Undo. Lift out to stop; pour into another configured vessel using the same data.
+Solid obstructions and opening/cavity bounds prevent filling through a wall or lid.
+
+The catalog adds `object.container.scooping` and `object.container.scooped` behind
+`containerScooping.v1`. The existing live quantity schema and outgoing pour counters
+remain unchanged. User and agent programs use the same typed event, including
+saved scoop amount, donor count and liquid identity. No saved format was added.
+Native geometry/interaction, concurrency, persistence and event tests plus shared
+client/browser probes cover this increment. Current Quest acceptance is pending;
+full release, persistent fields, fluid forces and bare-hand scooping remain open.
+See [the contract](QUEST_CONTAINERS.md#physical-vessel-scooping-2026-10-04).
+
+
+Remaining template metadata cleanup before release: the existing pinned Cup source
+still contains the historical phrase that physical pouring is not enabled. The
+runtime capability descriptions and container contract are current. Correct that
+library description through an explicit template revision/identity decision,
+retaining supported exact choices; do not silently replace a pinned source.
+
+
+Additional liquid acceptance case before release: emptying and refilling a vessel
+with a different liquid identity during one continuous live episode. The current
+counters accumulate across the episode and the event reports the final liquid
+identifier. Verify and delimit identity changes before treating those counters as
+per-liquid totals in user-authored games. This does not affect quantity conservation
+or the single-liquid bucket/basin checks.

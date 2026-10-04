@@ -1,7 +1,7 @@
 # Shared liquid containers
 
 The container component is a **measured, saved liquid store**. Explicit authoring
-and logical transfers use the same quantities as bounded native pouring. The
+and logical transfers use the same quantities as bounded native pouring and vessel scooping. The
 implementation uses the contract below; desktop checks do not establish
 headset acceptance. Drinking, mixing, buoyancy, fluid
 forces, fluid mass and persistent pools remain unfinished. No provider or paid
@@ -35,7 +35,7 @@ generation is involved.
 - `object.container` returns configuration, quantity and revision. Missing
   components return configured=false with inert editable defaults. Reads have
   no effect. Programs can read accepted quantities or the separate live fact below
-  and subscribe to successful physical-pour publication.
+  and subscribe to successful physical-flow publication.
 
 The included cup starts empty with an editable 500 ml capacity and a cavity
 inside its existing open collision walls. Its exact template hash changes; existing
@@ -51,9 +51,9 @@ Temporary changes stay temporary until accepted. Workspace export/import and
 backup operate on the same room data. Unfinished episodes and their events never replay after reload. Pouring can
 resume from accepted contents and current placement after physics is started.
 
-Room format 10 now protects extrusion as well as saved components from older
-readers. Clean room formats 1–5 and 7–9 still load; version 6 remains unsupported.
-Snapshot intent format 9 and archive manifest 9 carry room.v10.json. Unknown component versions
+Room format 11 protects sweep/extrusion geometry and saved components from older
+readers. Clean room formats 1–5 and 7–10 still load; version 6 remains unsupported.
+Snapshot intent format 10 and archive manifest 10 carry room.v11.json. Unknown component versions
 preserve the original saved file and use the existing recovery path. No migration
 of uncertain old transaction evidence and no automatic data reset is added.
 
@@ -109,7 +109,55 @@ before publication, never fires for failed saves, and never replays on reload.
 The same fact/event are available to user-authored programs and Maestro.
 
 The stream is a visual strip with no per-drop rigidbodies. There is no splash,
-wetness, momentum exchange, hand scooping, fluid pressure or mass calculation.
+wetness, momentum exchange, bare-hand scooping, fluid pressure or mass calculation.
 Changing visual scale does not change the authored logical millilitre capacity.
 Device readability, sustained performance and real-hand pouring acceptance are
 still required before release.
+
+## Physical vessel scooping (2026-10-04)
+
+`containerScooping.v1` lets users dip a held, configured open vessel into a larger
+one while room physics runs. Included **Bucket** (empty, 2 litres) and **Water
+basin** (32 litres in an editable 40 litre capacity) use this ordinary component.
+They are editable procedural templates, not special-case toys. Creating either
+does not start physics. A cup can receive water from a bucket using existing
+pouring; compatible imported objects can use the same configured cavities.
+
+Both openings must face upward. The smaller receiving cavity must fit wholly
+inside the donor, clear of its bottom and walls, with its entire opening below
+the donor's current liquid plane. This intentionally conservative model does not
+infer hollow interiors from visible meshes. At most five candidate paths sample
+the opening; any accepted path must have clear endpoints and an unobstructed
+segment from the free surface. A solid lid, blocked ray origin or saturated
+collision query cannot establish that path. A handle across the centre can leave
+another sampled path open.
+
+The simulation shares the existing 20 Hz liquid episode, lifecycle, grip handling,
+publication, rollback and one Undo. Each source's total outflow is bounded to
+75% of its capacity per second, shared by pouring and all dipping recipients;
+receivers have the same intake limit and never exceed capacity. When several
+donors qualify, the smallest containing donor wins, with stable object-ID order
+for ties and receiver contention. This is deterministic admission, not a pressure
+or equalisation calculation. Quantities are conserved: source loss equals intake.
+Lifting the vessel out stops scooping. Surface depletion also stops intake when
+the full opening is no longer submerged.
+
+`object.container.live` keeps its existing wire shape and reports current and
+accepted quantities; its transfer/spill counters remain **outgoing pouring only**.
+The new `object.container.scooping` fact reports incoming `scoopedMl`, outgoing
+`drawnMl`, distinct `donors` and `recipients` for the current episode. Counters reset
+after publication or rollback. `object.container.scooped` fires for each receiving
+vessel only after successful publication, with its ID as source/value and typed
+`scoopedMl`, `donors`, `liquid`, and `temporary` fields. Failed saves, Undo and
+reload do not emit it. Programs can wait for this ordinary event and branch on its
+fields; no separate per-container program runtime is used. There are no new saved
+fields or room-format changes in this addition.
+
+Native checks exercise real template collision, grip/lift, concurrent recipients,
+capacity/rate bounds, conservation, obstruction, scoop-to-pour, successful and
+failed saves, temporary discard, Undo and an actual typed event program. Full-app
+and browser probes separately verify shared creation, read-only inspection and
+matching catalog calls. These remain desktop evidence: Quest hand/controller
+comfort, visibility, sustained frame time and tracking loss still need acceptance.
+There is no displacement, trapped air, fluid mass, buoyancy, finger scooping,
+persistent pool or snow field in this model.

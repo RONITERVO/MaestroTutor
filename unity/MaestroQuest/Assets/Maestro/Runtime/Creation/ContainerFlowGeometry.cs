@@ -12,6 +12,12 @@ namespace Maestro.Quest.Creation {
             else cdf=a*(Integral((level+b)/a)-Integral((level-b)/a))/(2*b);
             return Math.Clamp(cdf,0,1);
         }
+        // Shared free-surface plane for display and immersion. Quantities remain doubles.
+        internal static float Level(Vector3 normal,float radius,float height,double fraction){
+            double extent=radius*Math.Sqrt(normal.x*normal.x+normal.z*normal.z)+height*.5*Math.Abs(normal.y),low=-extent,high=extent;
+            for(int pass=0;pass<24;pass++){double mid=(low+high)*.5;if(FractionBelow(normal,radius,height,mid)<fraction)low=mid;else high=mid;}
+            return (float)((low+high)*.5);
+        }
         static double Disk(double x){if(x<=-1)return 0;if(x>=1)return 1;return .5+(Math.Asin(x)+x*Math.Sqrt(1-x*x))/Math.PI;}
         static double Integral(double x){if(x<=-1)return 0;if(x>=1)return x;double root=Math.Sqrt(1-x*x);return x*.5+(x*Math.Asin(x)+root-root*root*root/3)/Math.PI;}
         internal static double Excess(RoomContainer container,Quaternion worldRotation,Vector3 up) {
