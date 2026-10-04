@@ -203,7 +203,12 @@ provider route does not enable this fixture. This is not a captured room scan.
 
 The journey creates a recipe socket and ball, discovers `object.physics.catch`,
 checks its refusal with physics paused and readiness after starting, and observes
-its waiting fact. A separate shared launch sends the free ball into the socket.
+its waiting fact. Before starting the catch, the probe observes the ball settling
+on the synthetic floor for longer than one periodic placement capture. This
+prevents normal gravity and physics autosave from invalidating the fixture before
+its one launch; stale-target guards remain unchanged. A separate shared launch
+sends the free ball into the socket. Refused commands stop the journey without
+retry, retaining `refused-command.json` and `journey-failure.json`.
 The app must physically catch, hold and drop it and retain both named resources
 in the completed receipt. Replaying that exact receipt cannot start another catch.
 The journey pauses physics and removes its creations afterwards.
@@ -289,3 +294,16 @@ Playwright 1.62.1's injected service-worker blocker reads a getter that throws i
 opaque sandbox frames, so this runner uses an equivalent registration blocker
 that catches only that SecurityError. App sandbox permissions and the requirement
 for no uncaught page errors are unchanged.
+
+
+## Resting-ball launch regression (2026-10-04)
+
+The full native catch probe now waits for a settled ball before its single throw,
+retaining command/observation evidence on refusal instead of retrying effects.
+This exposed a padded-sweep contact at distance zero on the supporting floor.
+The native trajectory check permits only an initial separating contact with a
+convex collider: the unpadded volume must already clear penetration checks and
+its motion must move outward from the closest supporting plane. Every other hit,
+later segment, endpoint and head-clearance check remains active. A real settled
+PhysX ball now exercises the launch test; adjacent walls, penetration and downward
+flight have explicit refusal coverage. Concave surfaces retain conservative checks.

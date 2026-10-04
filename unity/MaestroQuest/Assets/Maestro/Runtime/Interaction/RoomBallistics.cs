@@ -51,11 +51,23 @@ namespace Maestro.Quest.Interaction
                 float pad=Physics.gravity.magnitude*Mathf.Pow(stride*dt,2)/8;
                 int n=delta.sqrMagnitude<.00000001f?0:Physics.SphereCastNonAlloc(previous,Radius+pad,delta.normalized,hits,delta.magnitude,Mask,QueryTriggerInteraction.Ignore);
                 if(n==hits.Length){error="Too many nearby colliders to verify the planned throw";return false;}
-                for(int j=0;j<n;j++)if(Obstacle(hits[j].collider,item)){error="The planned throw is blocked by a room surface or object";return false;}
+                for(int j=0;j<n;j++)if(Obstacle(hits[j].collider,item)){
+                    // The padded sweep can report distance zero at a resting contact.
+                    // A separating ray stays outside a convex collider's supporting
+                    // plane. Only permit that first contact; never skip another hit,
+                    // penetration, a concave mesh or any later part of the trajectory.
+                    if(i==stride&&hits[j].distance<=.001f&&SeparatingContact(hits[j].collider,previous,point,Radius))continue;
+                    error="The planned throw is blocked by a room surface or object";return false;
+                }
                 if(!ClearPoint(item,point,Radius,out error))return false;
                 previous=point;
             }
             return true;
+        }
+        static bool SeparatingContact(Collider collider,Vector3 from,Vector3 to,float radius){
+            if(!(collider is BoxCollider||collider is SphereCollider||collider is CapsuleCollider||collider is MeshCollider mesh&&mesh.convex))return false;
+            var outward=from-collider.ClosestPoint(from);float distance=outward.magnitude;
+            return distance>.000001f&&distance>=radius-.001f&&Vector3.Dot(to-from,outward)>0;
         }
         bool ClearPoint(RoomItem item,Vector3 point,float radius,out string error){
             error=null;int count=Physics.OverlapSphereNonAlloc(point,radius,overlaps,Mask,QueryTriggerInteraction.Ignore);

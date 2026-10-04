@@ -18,7 +18,10 @@ try{
  const lease=transport.lease();const initial=structuredClone(lease.state());
  const execute=async(commands:RoomCommand[])=>{
   const state=lease.state();const result=await lease.execute(commands,state.sceneRevision,state.objects);observations.push(structuredClone(result));
-  if(!result.ok)throw new Error('Native action refused: '+result.status);return result;
+  if(!result.ok){
+   await writeFile(join(directory,'refused-command.json'),JSON.stringify({commands,expectedSceneRevision:state.sceneRevision,expectedObjects:state.objects,result},null,2));
+   throw new Error('Native action refused: '+result.status);
+  }return result;
  };
  let outcome:unknown;
  if(prompt){
@@ -673,6 +676,20 @@ try{
   const physicsBefore=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'physics.simulation',version:1}}]);
   const physicsState=physicsBefore.catalog?.value as {stateId:string;ready:boolean};if(!physicsState?.ready)throw new Error('The explicitly synthetic probe floor is unavailable');
   await execute([{action:'execution',execution:{operation:'start',call:{id:'physics.simulation.set',version:1,arguments:{operation:'start',stateId:physicsState.stateId}}}}]);
+  // Let ordinary gravity finish before preparing a direct throw. Physics autosave
+  // advances object revisions too; a still-falling ball is not a stable fixture.
+  // Observe over a full placement-capture interval; never retry a refused launch.
+  const catchSettling=[];const settleDeadline=Date.now()+15000;let quietSince=Date.now();
+  let previousBall=lease.state().objects.find(o=>o.id===catchTarget)!;
+  while(Date.now()<settleDeadline){
+   await new Promise(r=>setTimeout(r,150));
+   const sample=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.position',version:1,arguments:{target:catchTarget}}}]);
+   catchSettling.push(sample);const ball=sample.objects.find(o=>o.id===catchTarget)!;
+   if(!ball?.simulating)throw new Error('The catch fixture ball is not simulating');
+   if(ball.objectRevision!==previousBall.objectRevision||Math.hypot(ball.position.x-previousBall.position.x,ball.position.y-previousBall.position.y,ball.position.z-previousBall.position.z)>.0001)quietSince=Date.now();
+   previousBall=ball;if(Date.now()-quietSince>=1250)break;
+  }
+  if(Date.now()-quietSince<1250)throw new Error('The catch fixture ball did not settle on the synthetic floor');
   const catchReadyDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.physics.catch',version:1}}]);
   const catchReadyCheck=await execute([{action:'catalog',catalog:{operation:'check',call:catchCall}}]);if(catchReadyCheck.catalog?.available!==true)throw new Error('Native catch readiness differs from the active world');
   const catchWaiting=await execute([{action:'execution',execution:{operation:'start',call:catchCall}}]);const catchRun=catchWaiting.execution?.selected?.id;if(!catchRun||catchWaiting.execution?.selected?.phase!=='preparing')throw new Error('Native catch did not wait for physical contact');
@@ -686,7 +703,7 @@ try{
   const catchReplay=await execute([{action:'execution',execution:{operation:'start',runId:catchRun,call:catchCall}}]);if(catchReplay.execution?.selected?.phase!=='completed'||catchReplay.rules?.running?.some(r=>r.id===catchRun))throw new Error('Catch receipt replay restarted a physical attempt');
   const physicsAfter=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'physics.simulation',version:1}}]);
   await execute([{action:'execution',execution:{operation:'start',call:{id:'physics.simulation.set',version:1,arguments:{operation:'pause',stateId:(physicsAfter.catalog!.value as {stateId:string}).stateId}}}}]);
-  await writeFile(join(directory,'physical-catching.json'),JSON.stringify({boundary:'Real full-app shared-client capture and drop with ordinary PhysX against a synthetic probe floor. Includes the real command result and duplicate receipt; no headset, scan, browser physics or provider proof.',search:catchSearch,definition:catchDefinition,readyDefinition:catchReadyDefinition,readyCheck:catchReadyCheck,call:catchCall,blocked:catchBlocked,waiting:catchWaiting,fact:catchFact,launch:catchLaunch,after:catchAfter,replay:catchReplay},null,2));
+  await writeFile(join(directory,'physical-catching.json'),JSON.stringify({boundary:'Real full-app shared-client capture and drop with ordinary PhysX against a synthetic probe floor. Includes the real command result and duplicate receipt; no headset, scan, browser physics or provider proof.',search:catchSearch,definition:catchDefinition,readyDefinition:catchReadyDefinition,readyCheck:catchReadyCheck,call:catchCall,blocked:catchBlocked,settling:catchSettling,waiting:catchWaiting,fact:catchFact,launch:catchLaunch,after:catchAfter,replay:catchReplay},null,2));
   await execute([{action:'undo'}]);await execute([{action:'undo'}]);
   outcome={physicalCatching:{syntheticFloor:true,sharedLaunchCatchDropAndReplayVerified:true},constructionMovement:{sharedHandleTransformAndOneUndoVerified:true},constructionSelection:{sharedStateFactLocateCaptureAndPruneVerified:true},currentMembers:{visibleReadsAndIndexedGuardsVerified:true,program:currentCaptureId},constructionCapture:{hash:capturedHash,survivedOriginalRemovalAndInternalHingeAndUndoVerified:true},connectedBlueprint:{identitiesInternalHingeAndSingleUndoVerified:true},leverModule:{hash:leverHash,program:leverId,includedSourceAndNativeCreationVerified:true},drawingTip:{tipHash,configurationReadbackAndUndoVerified:true},surface:{chalkHash,stroke,toolAndInkReadEraseUndoVerified:true},watch:{moduleHash,program:watcherId,includedSourceAndNativeRearmVerified:true},composition:{program:compositionId,outcome:compositionOutcome,buildCaptureMoveResetAndUndoVerified:true},structures:{captureReceipt:structureAfter.execution?.selected,liveDisplacementResetAndUndoVerified:true},batch:{createReceipt:batchAfter.execution?.selected,identitiesAndSingleUndoVerified:true},layout:{applyReceipt:layoutAfter.execution?.selected,liveReadAndSingleUndoVerified:true},template:{hash:templateArgs.templateHash,createReceipt:templateAfter.execution?.selected,componentsAndSingleUndoVerified:true},createdId:target,createReceipt:selected,paintVerified:true,undoPaintVerified:true,undoCreateVerified:true,diagnostics:diagnostic.catalog.value,lathe:{createReceipt:lathe.execution?.selected,profile:value,editAndUndoVerified:true},collision:{summary:summaryValue,editAndUndoVerified:true},latheCycles:cycle+1};
   }
@@ -707,4 +724,7 @@ try{
  await writeFile(join(directory,'grip-snapping.json'),JSON.stringify({boundary:'Real Unity shared configuration and preview facts. Actual grip matching, save, cancellation and Undo are tested separately in PlayMode; no headset proof.',before:gripBefore,search:gripSearch,definition:gripDefinition,read:gripRead,arguments:gripArguments,after:gripAfter,preview:gripPreview,reset:gripReset},null,2));
  await writeFile(join(directory,'journey.json'),JSON.stringify({version:1,boundary:'Real Unity Editor app and shared room protocol; no Quest input, WebView, scan or Store proof',providerUsed:!!prompt,initial,observations,outcome},null,2));
  console.log(JSON.stringify({providerUsed:!!prompt,observations:observations.length,output:join(directory,'journey.json')}));
-}catch(error){transport.checkHealth();throw error;}finally{await transport.close();}
+}catch(error){
+ await writeFile(join(directory,'journey-failure.json'),JSON.stringify({error:error instanceof Error?error.stack:String(error),observations},null,2));
+ transport.checkHealth();throw error;
+}finally{await transport.close();}

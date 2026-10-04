@@ -76,11 +76,22 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator BallCanLaunchFromTheFloorAndTheProgramUsesTheSamePhysicsAction(){
             var args=AimSetup(.5f);var body=ball.GetComponent<Rigidbody>();var collider=ball.GetComponentInChildren<SphereCollider>();Assert.That(collider,Is.Not.Null);
-            ball.transform.position=new Vector3(2,collider.radius*collider.transform.lossyScale.y+.002f,0);ball.GetComponent<RigidRoomItem>().Teleported();
+            ball.transform.position=new Vector3(2,collider.radius*collider.transform.lossyScale.y,0);ball.GetComponent<RigidRoomItem>().Teleported();
+            for(int i=0;i<12;i++)yield return new WaitForFixedUpdate();
+            Assert.That(body.linearVelocity.magnitude,Is.LessThan(.01f),"Use a real resting contact, not an elevated launch fixture");
             var preview=AimPreview(args);Assert.That((bool)preview["ready"],Is.True,preview.ToString());
             var source=BehaviourProgram.FromInvocation(AimCall(args));var sequence=new RuleSequence{id=Guid.NewGuid().ToString("N"),name="Toss the ball",program=source};runtime.Scheduler.Configure(new RuleDocument{sequences=new[]{sequence}});
             Assert.That(runtime.Scheduler.Trigger(sequence.id,Time.unscaledTime),Is.True,runtime.Scheduler.LastError);Assert.That(body.linearVelocity.x,Is.GreaterThan(1));
             yield return null;Assert.That(runtime.Scheduler.Outcomes.Last().phase,Is.EqualTo("completed"),runtime.Scheduler.LastError);yield return new WaitForFixedUpdate();yield return new WaitForFixedUpdate();Assert.That(body.position.y,Is.GreaterThan(.1f));
+        }
+        [UnityTest] public IEnumerator AimedThrowFloorContactStillRejectsWallsPenetrationAndDownwardFlight(){
+            var args=AimSetup(.5f);var collider=ball.GetComponentInChildren<SphereCollider>();float radius=collider.radius*collider.transform.lossyScale.y;
+            void Place(float height){ball.transform.position=new Vector3(2,height,0);ball.GetComponent<RigidRoomItem>().Teleported();}
+            Place(radius);Assert.That((bool)AimPreview(args)["ready"],Is.True);
+            var wall=AimWall(new Vector3(2.15f,1,0));Assert.That((string)AimPreview(args)["reason"],Does.Contain("blocked"));wall.SetActive(false);
+            Place(radius-.004f);Assert.That((string)AimPreview(args)["reason"],Does.Contain("blocked"));
+            Place(radius);args["destination"]["position"]=new JObject{["x"]=2.1,["y"]=-1,["z"]=0};Assert.That((string)AimPreview(args)["reason"],Does.Contain("blocked"));
+            yield return null;
         }
         [UnityTest] public IEnumerator BallisticEstimateTracksGravityAtBothDesktopAndQuestFixedSteps(){
             var args=AimSetup(.65f);var body=ball.GetComponent<Rigidbody>();float original=Time.fixedDeltaTime;var gravity=Physics.gravity;
