@@ -50,7 +50,7 @@ namespace Maestro.Quest.Tests
         [UnityTest] public IEnumerator ModelSaveFailureKeepsCurrentVisualAndCanRetryAfterStorageRecovers()
         {
             AuthorRuntime();var asset=ModelLibrary.Inspect("Good.vrm",ModelFixture.Create(avatar:true));yield return SaveModelAsset(asset);editor.SaveNow();editor.SendMessage("OnApplicationPause",true);editor.SendMessage("OnApplicationPause",false);yield return null;
-            string file=Path.Combine(directory,"room.v14.json");if(File.Exists(file))File.Delete(file);Directory.CreateDirectory(file);int revision=editor.ObjectRevision("maestro");
+            string file=Path.Combine(directory,"room.v15.json");if(File.Exists(file))File.Delete(file);Directory.CreateDirectory(file);int revision=editor.ObjectRevision("maestro");
             Assert.That(authorActions.Execute(ModelRequest(asset.Hash),out var error),Is.True,error);yield return ModelFinished("failed");Assert.That(avatar.ModelHash,Is.Empty);Assert.That(avatar.CustomModel,Is.Null);Assert.That(editor.Read("maestro").modelHash,Is.Null);Assert.That(editor.ObjectRevision("maestro"),Is.EqualTo(revision));Directory.Delete(file);
             Assert.That(authorActions.Execute(ModelRequest(asset.Hash),out error),Is.True,error);yield return ModelFinished();Assert.That(avatar.ModelHash,Is.EqualTo(asset.Hash));
             File.Delete(file);Directory.CreateDirectory(file);var imports=root.AddComponent<ImportWorkshop>();imports.Initialize(editor,workshop);imports.DefaultMaestro();yield return null;
@@ -80,7 +80,7 @@ namespace Maestro.Quest.Tests
         [UnityTest] public IEnumerator PhysicalSwitchCannotDiscardAFailedRecording()
         {
             AuthorRuntime();editor.Select(avatarItem);workshop.ToggleRecord();yield return new WaitForSeconds(.12f);editor.SaveNow();yield return null;
-            string file=Path.Combine(directory,"room.v14.json");if(File.Exists(file))File.Delete(file);Directory.CreateDirectory(file);
+            string file=Path.Combine(directory,"room.v15.json");if(File.Exists(file))File.Delete(file);Directory.CreateDirectory(file);
             Assert.That(editor.SetMaestroModel(null),Is.False);Assert.That(workshop.HasUnsavedRecording,Is.True);Assert.That(avatar.ModelBusy,Is.False);workshop.DiscardTake();Directory.Delete(file);
         }
     }

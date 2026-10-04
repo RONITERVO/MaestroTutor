@@ -57,6 +57,10 @@ namespace Maestro.Quest.Programs
                         var ids=((JArray)obj["strokes"]).Values<string>().ToArray();if(ids.Distinct().Count()!=ids.Length){error=path+" needs unique stroke identities";return false;}
                     } else if((string)schema["format"]=="drawingSurface") {
                         if(!DrawingSurfaceGeometry.Valid(JsonUtility.FromJson<DrawingSurface>(obj.ToString()))){error=path+" needs a plane or bounded cylindrical/spherical patch";return false;}
+                    } else if((string)schema["format"]=="heightFieldReset") {
+                        if((double)obj["fillHeight"]>(double)obj["definition"]["maxHeight"]){error=path+" needs fillHeight within maxHeight";return false;}
+                    } else if((string)schema["format"]=="heightFieldDefinition"||(string)schema["format"]=="heightFieldSaved") {
+                        var field=JsonUtility.FromJson<RoomHeightField>(obj.ToString());if((string)schema["format"]=="heightFieldDefinition")field.heights=new float[(field.cells+1)*(field.cells+1)];if(!field.Validate(out error))return false;
                     } else if((string)schema["format"]=="containerDefinition") {
                         if(!JsonUtility.FromJson<RoomContainer>(obj.ToString()).Validate(out error))return false;
                     } else if((string)schema["format"]=="containerTransfer") {

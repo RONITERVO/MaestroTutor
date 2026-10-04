@@ -8,13 +8,14 @@ type Q=V&{w:number};
 interface Frame {time:number;position:V;rotation:Q;scale:number}
 interface Surface extends SurfaceGeometry {version:number;id:string;part:string;position:V;width:number;height:number;strokes:{id:string;radius:number;points:V[]}[]}
 export interface CreationPrototype {
+ physics:{mode:string};heightFields?:unknown[];
  geometry:{kind:string;recipe?:{playing:boolean;parts:{id:string}[]};points?:V[];radius?:number};
  snapPoints?:{id:string;frame:{position:V}}[];surfaces:Surface[];drawingTips:{version:number;mode?:string;part:string;position:V}[];motion?:{loop:boolean;frames:Frame[]};
 }
 const hasLength=(p:V[])=>p.some(v=>(v.x-p[0].x)**2+(v.y-p[0].y)**2+(v.z-p[0].z)**2>.000001);
 export function validCreationPrototypeGeometry(value:Record<string,unknown>):boolean {
  const p=value as unknown as CreationPrototype,g=p.geometry;
- if(g.recipe?.playing)return false;
+ if(g.recipe?.playing||(p.heightFields?.length??0)>0&&p.physics.mode!=='fixed')return false;
  if(g.kind==='drawing'&&(!hasLength(g.points!)||g.points!.some(v=>length2(v)>100)))return false;
  const part=(name:string)=>name===''||!!g.recipe?.parts.some(x=>x.id===name);
  if(new Set(p.surfaces.map(s=>s.id)).size!==p.surfaces.length)return false;

@@ -23,6 +23,7 @@ namespace Maestro.Quest.Creation
         public RoomConnection[] connections=Array.Empty<RoomConnection>();
         public RoomSnapPoint[] snapPoints=Array.Empty<RoomSnapPoint>();
         public RoomContainer[] containers=Array.Empty<RoomContainer>();
+        public RoomHeightField[] heightFields=Array.Empty<RoomHeightField>();
         public RoomObjectKind kind;
         public Vector3 position;
         public Quaternion rotation = Quaternion.identity;
@@ -42,13 +43,13 @@ namespace Maestro.Quest.Creation
         public int walkClip;
         public string walkMotionId;
         public bool IsBuiltIn => kind == RoomObjectKind.Book || kind == RoomObjectKind.Maestro;
-        public RoomObjectData Copy() => new() { id = id, name = name, recipe = recipe?.Copy(), collision=collision?.Copy(), surfaces=surfaces?.Select(s=>s?.Copy()).ToArray(), drawingTips=drawingTips?.Select(t=>t?.Copy()).ToArray(), connections=connections?.Select(h=>h?.Copy()).ToArray(), snapPoints=snapPoints?.Select(p=>p?.Copy()).ToArray(), containers=containers?.Select(c=>c?.Copy()).ToArray(), kind = kind, position = position, rotation = rotation, scale = scale, color = color, radius = radius, points = points == null ? null : (Vector3[])points.Clone(), joints = MotionFrame.CopyJoints(joints), motion = motion?.Copy(), modelHash = modelHash, physics = physics, mass = mass, collisionShape = collisionShape, followDistance = followDistance, walkSpeed = walkSpeed, walkClip = walkClip, walkMotionId = walkMotionId };
+        public RoomObjectData Copy() => new() { id = id, name = name, recipe = recipe?.Copy(), collision=collision?.Copy(), surfaces=surfaces?.Select(s=>s?.Copy()).ToArray(), drawingTips=drawingTips?.Select(t=>t?.Copy()).ToArray(), connections=connections?.Select(h=>h?.Copy()).ToArray(), snapPoints=snapPoints?.Select(p=>p?.Copy()).ToArray(), containers=containers?.Select(c=>c?.Copy()).ToArray(), heightFields=heightFields?.Select(f=>f?.Copy()).ToArray(), kind = kind, position = position, rotation = rotation, scale = scale, color = color, radius = radius, points = points == null ? null : (Vector3[])points.Clone(), joints = MotionFrame.CopyJoints(joints), motion = motion?.Copy(), modelHash = modelHash, physics = physics, mass = mass, collisionShape = collisionShape, followDistance = followDistance, walkSpeed = walkSpeed, walkClip = walkClip, walkMotionId = walkMotionId };
     }
 
     [Serializable]
     public sealed class RoomDocument
     {
-        public const int CurrentVersion=14;
+        public const int CurrentVersion=15;
         public const int MaximumObjects = 64;
         public const int MaximumStrokePoints = 2048;
         public const int MaximumTotalPoints = 32768;
@@ -63,7 +64,7 @@ namespace Maestro.Quest.Creation
         public bool Validate(out string error)
         {
             error = null;
-            if (version != 1 && version != 2 && version != 3 && version != 4 && version != 5 && version != 7 && version != 8 && version != 9 && version != 10 && version != 11 && version != 12 && version != 13 && version != CurrentVersion || objects == null || objects.Length < 2 || objects.Length > MaximumObjects + 2)
+            if (version != 1 && version != 2 && version != 3 && version != 4 && version != 5 && version != 7 && version != 8 && version != 9 && version != 10 && version != 11 && version != 12 && version != 13 && version != 14 && version != CurrentVersion || objects == null || objects.Length < 2 || objects.Length > MaximumObjects + 2)
                 return Fail("This room file has an unsupported version or object count.", out error);
             var ids = new HashSet<string>(); int partCount = 0; int pointCount = 0, builtIns = 0, frameCount = 0, jointCount = 0;
             foreach (var item in objects)
@@ -86,6 +87,8 @@ namespace Maestro.Quest.Creation
                 if(!RoomSnapPoint.ValidateCollection(item,out error))return false;
                 if(version<9&&(item.containers?.Length??0)>0)return Fail("Liquid containers require the current room format.",out error);
                 if(!RoomContainer.ValidateCollection(item,out error))return false;
+                if(version<15&&(item.heightFields?.Length??0)>0)return Fail("Height surfaces require the current room format.",out error);
+                if(!RoomHeightField.ValidateCollection(item,out error))return false;
                 if(version<7&&(item.connections?.Length??0)>0)return Fail("Physical connections require the current room format.",out error);
                 pointCount+=DrawingSurface.PointCount(item);
                 bool mayHaveModel = item.kind == RoomObjectKind.ImportedModel || item.kind == RoomObjectKind.Maestro;
@@ -132,6 +135,7 @@ namespace Maestro.Quest.Creation
             if(objects.Sum(item=>RecipeGeometry.VertexCost(item.recipe))>RecipeGeometry.MaximumRoomVertices)return Fail("Generated recipe geometry exceeds the room vertex budget.",out error);
             if(objects.Sum(CollisionRecipe.ReservedPieces)>CollisionRecipe.MaximumRoomPieces)return Fail("This room has reached its collision-piece budget.",out error);
             if(objects.Sum(x=>x.containers?.Length??0)>RoomContainer.MaximumPerRoom)return Fail("Keep at most 16 liquid containers in this room.",out error);
+            if(objects.Sum(x=>x.heightFields?.Length??0)>RoomHeightField.MaximumPerRoom)return Fail("Keep at most four height surfaces in this room.",out error);
             if (partCount > 256) return Fail("Keep at most 256 recipe parts in this room.",out error);
             if(objects.Sum(x=>x.snapPoints?.Length??0)>RoomSnapPoint.MaximumPerRoom)return Fail("This room has reached its snap-point budget.",out error);
             if(objects.Sum(x=>x.surfaces?.Length??0)>DrawingSurface.MaximumRoomSurfaces||objects.Sum(DrawingSurface.StrokeCount)>DrawingSurface.MaximumRoomStrokes)return Fail("This room has reached its surface drawing budget.",out error);

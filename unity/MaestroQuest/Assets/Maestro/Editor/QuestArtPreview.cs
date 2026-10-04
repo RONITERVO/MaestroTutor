@@ -48,7 +48,8 @@ namespace Maestro.Quest.Editor
             foreach(var entry in CreationTemplates.All) {
                 root=new GameObject(entry.Name);geometry=root.AddComponent<RecipeObject>();geometry.Apply(entry.Recipe);
                 if(entry.Containers.Length>0)root.AddComponent<ContainerFillView>().Apply(entry.Containers);
-                var bounds=geometry.LocalBounds;var centre=bounds.center;float radius=Mathf.Max(bounds.size.x,Mathf.Max(bounds.size.y,bounds.size.z));
+                if(entry.HeightFields.Length>0)root.AddComponent<HeightFieldView>().Apply(entry.HeightFields);
+                var bounds=geometry.LocalBounds;foreach(var renderer in root.GetComponentsInChildren<Renderer>())bounds.Encapsulate(renderer.bounds);var centre=bounds.center;float radius=Mathf.Max(bounds.size.x,Mathf.Max(bounds.size.y,bounds.size.z));
                 camera=new GameObject("Template preview",typeof(Camera)).GetComponent<Camera>();camera.clearFlags=CameraClearFlags.SolidColor;camera.backgroundColor=new Color(.944f,.929f,.887f,1);camera.orthographic=true;camera.orthographicSize=radius*.72f;camera.nearClipPlane=.001f;
                 camera.transform.position=centre+(entry.Surfaces.Length>0?new Vector3(.5f,.4f,-1.8f):new Vector3(.7f,1.1f,1.8f))*radius;camera.transform.LookAt(centre);
                 Capture(camera,Path.Combine(output,"template-"+entry.Hash+".png"),512,512);

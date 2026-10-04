@@ -9020,6 +9020,7 @@
                   "0d4f8af08ffa09f3cc332f1f3f805db4f87204a4b48388d5f4d0e89694375761",
                   "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71",
                   "f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae",
+                  "78ac47258c47968b7b69bdf8144e0e2076e40ffbd32f171317ce81883526f78c",
                   "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45"
                 ],
                 "x-enum-labels": {
@@ -9044,6 +9045,7 @@
                   "0d4f8af08ffa09f3cc332f1f3f805db4f87204a4b48388d5f4d0e89694375761": "Queen",
                   "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71": "Box robot",
                   "f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae": "Rook",
+                  "78ac47258c47968b7b69bdf8144e0e2076e40ffbd32f171317ce81883526f78c": "Snow patch",
                   "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "Spoon"
                 },
                 "x-enum-images": {
@@ -9068,6 +9070,7 @@
                   "0d4f8af08ffa09f3cc332f1f3f805db4f87204a4b48388d5f4d0e89694375761": "quest/templates/0d4f8af08ffa09f3cc332f1f3f805db4f87204a4b48388d5f4d0e89694375761.png",
                   "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71": "quest/templates/7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71.png",
                   "f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae": "quest/templates/f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae.png",
+                  "78ac47258c47968b7b69bdf8144e0e2076e40ffbd32f171317ce81883526f78c": "quest/templates/78ac47258c47968b7b69bdf8144e0e2076e40ffbd32f171317ce81883526f78c.png",
                   "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "quest/templates/f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45.png"
                 }
               },
@@ -9314,6 +9317,7 @@
                                 "0d4f8af08ffa09f3cc332f1f3f805db4f87204a4b48388d5f4d0e89694375761",
                                 "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71",
                                 "f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae",
+                                "78ac47258c47968b7b69bdf8144e0e2076e40ffbd32f171317ce81883526f78c",
                                 "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45"
                               ],
                               "x-enum-labels": {
@@ -9338,6 +9342,7 @@
                                 "0d4f8af08ffa09f3cc332f1f3f805db4f87204a4b48388d5f4d0e89694375761": "Queen",
                                 "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71": "Box robot",
                                 "f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae": "Rook",
+                                "78ac47258c47968b7b69bdf8144e0e2076e40ffbd32f171317ce81883526f78c": "Snow patch",
                                 "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "Spoon"
                               },
                               "x-enum-images": {
@@ -9362,6 +9367,7 @@
                                 "0d4f8af08ffa09f3cc332f1f3f805db4f87204a4b48388d5f4d0e89694375761": "quest/templates/0d4f8af08ffa09f3cc332f1f3f805db4f87204a4b48388d5f4d0e89694375761.png",
                                 "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71": "quest/templates/7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71.png",
                                 "f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae": "quest/templates/f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae.png",
+                                "78ac47258c47968b7b69bdf8144e0e2076e40ffbd32f171317ce81883526f78c": "quest/templates/78ac47258c47968b7b69bdf8144e0e2076e40ffbd32f171317ce81883526f78c.png",
                                 "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "quest/templates/f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45.png"
                               }
                             }
@@ -12733,6 +12739,173 @@
                                     "format": "containerDefinition",
                                     "x-features": [
                                       "containers.v1"
+                                    ]
+                                  },
+                                  "minItems": 0,
+                                  "maxItems": 1
+                                },
+                                "heightFields": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "frame": {
+                                        "type": "object",
+                                        "properties": {
+                                          "position": {
+                                            "type": "object",
+                                            "properties": {
+                                              "x": {
+                                                "type": "number",
+                                                "minimum": -10.0,
+                                                "maximum": 10.0
+                                              },
+                                              "y": {
+                                                "type": "number",
+                                                "minimum": -10.0,
+                                                "maximum": 10.0
+                                              },
+                                              "z": {
+                                                "type": "number",
+                                                "minimum": -10.0,
+                                                "maximum": 10.0
+                                              }
+                                            },
+                                            "required": [
+                                              "x",
+                                              "y",
+                                              "z"
+                                            ],
+                                            "additionalProperties": false
+                                          },
+                                          "rotation": {
+                                            "type": "object",
+                                            "properties": {
+                                              "x": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              },
+                                              "y": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              },
+                                              "z": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              },
+                                              "w": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              }
+                                            },
+                                            "required": [
+                                              "x",
+                                              "y",
+                                              "z",
+                                              "w"
+                                            ],
+                                            "additionalProperties": false,
+                                            "format": "unitQuaternion"
+                                          }
+                                        },
+                                        "required": [
+                                          "position",
+                                          "rotation"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      "width": {
+                                        "type": "number",
+                                        "minimum": 0.1,
+                                        "maximum": 4.0
+                                      },
+                                      "depth": {
+                                        "type": "number",
+                                        "minimum": 0.1,
+                                        "maximum": 4.0
+                                      },
+                                      "cells": {
+                                        "type": "integer",
+                                        "minimum": 4.0,
+                                        "maximum": 16.0
+                                      },
+                                      "maxHeight": {
+                                        "type": "number",
+                                        "minimum": 0.005,
+                                        "maximum": 0.5
+                                      },
+                                      "material": {
+                                        "type": "string",
+                                        "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+                                        "maxLength": 32
+                                      },
+                                      "color": {
+                                        "type": "object",
+                                        "properties": {
+                                          "r": {
+                                            "type": "number",
+                                            "minimum": 0.0,
+                                            "maximum": 1.0
+                                          },
+                                          "g": {
+                                            "type": "number",
+                                            "minimum": 0.0,
+                                            "maximum": 1.0
+                                          },
+                                          "b": {
+                                            "type": "number",
+                                            "minimum": 0.0,
+                                            "maximum": 1.0
+                                          },
+                                          "a": {
+                                            "type": "number",
+                                            "minimum": 1.0,
+                                            "maximum": 1.0
+                                          }
+                                        },
+                                        "required": [
+                                          "r",
+                                          "g",
+                                          "b",
+                                          "a"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      "version": {
+                                        "type": "integer",
+                                        "minimum": 1.0,
+                                        "maximum": 1.0
+                                      },
+                                      "heights": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "number",
+                                          "minimum": 0.0,
+                                          "maximum": 0.5
+                                        },
+                                        "minItems": 25,
+                                        "maxItems": 289
+                                      }
+                                    },
+                                    "required": [
+                                      "frame",
+                                      "width",
+                                      "depth",
+                                      "cells",
+                                      "maxHeight",
+                                      "material",
+                                      "color",
+                                      "version",
+                                      "heights"
+                                    ],
+                                    "additionalProperties": false,
+                                    "format": "heightFieldSaved",
+                                    "x-features": [
+                                      "heightFields.v1"
                                     ]
                                   },
                                   "minItems": 0,
@@ -16301,6 +16474,445 @@
         },
         "required": [
           "transferredMl"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "object.field.edit",
+      "version": 1,
+      "label": "Configure or reset a sculptable surface",
+      "input": {
+        "type": "object",
+        "x-discriminators": [
+          "operation"
+        ],
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "configure"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              },
+              "definition": {
+                "type": "object",
+                "properties": {
+                  "frame": {
+                    "type": "object",
+                    "properties": {
+                      "position": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number",
+                            "minimum": -10.0,
+                            "maximum": 10.0
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": -10.0,
+                            "maximum": 10.0
+                          },
+                          "z": {
+                            "type": "number",
+                            "minimum": -10.0,
+                            "maximum": 10.0
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y",
+                          "z"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "rotation": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number",
+                            "minimum": -1.0,
+                            "maximum": 1.0
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": -1.0,
+                            "maximum": 1.0
+                          },
+                          "z": {
+                            "type": "number",
+                            "minimum": -1.0,
+                            "maximum": 1.0
+                          },
+                          "w": {
+                            "type": "number",
+                            "minimum": -1.0,
+                            "maximum": 1.0
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y",
+                          "z",
+                          "w"
+                        ],
+                        "additionalProperties": false,
+                        "format": "unitQuaternion"
+                      }
+                    },
+                    "required": [
+                      "position",
+                      "rotation"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "width": {
+                    "type": "number",
+                    "minimum": 0.1,
+                    "maximum": 4.0
+                  },
+                  "depth": {
+                    "type": "number",
+                    "minimum": 0.1,
+                    "maximum": 4.0
+                  },
+                  "cells": {
+                    "type": "integer",
+                    "minimum": 4.0,
+                    "maximum": 16.0
+                  },
+                  "maxHeight": {
+                    "type": "number",
+                    "minimum": 0.005,
+                    "maximum": 0.5
+                  },
+                  "material": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+                    "maxLength": 32
+                  },
+                  "color": {
+                    "type": "object",
+                    "properties": {
+                      "r": {
+                        "type": "number",
+                        "minimum": 0.0,
+                        "maximum": 1.0
+                      },
+                      "g": {
+                        "type": "number",
+                        "minimum": 0.0,
+                        "maximum": 1.0
+                      },
+                      "b": {
+                        "type": "number",
+                        "minimum": 0.0,
+                        "maximum": 1.0
+                      },
+                      "a": {
+                        "type": "number",
+                        "minimum": 1.0,
+                        "maximum": 1.0
+                      }
+                    },
+                    "required": [
+                      "r",
+                      "g",
+                      "b",
+                      "a"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "frame",
+                  "width",
+                  "depth",
+                  "cells",
+                  "maxHeight",
+                  "material",
+                  "color"
+                ],
+                "additionalProperties": false,
+                "format": "heightFieldDefinition"
+              },
+              "fillHeight": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 0.5
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "revision",
+              "definition",
+              "fillHeight"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "object.field",
+              "version": 1,
+              "arguments": {
+                "target": "target"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
+            "format": "heightFieldReset",
+            "title": "Configure / reset heights",
+            "x-features": [
+              "heightFields.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "remove"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "revision"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "object.field",
+              "version": 1,
+              "arguments": {
+                "target": "target"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
+            "title": "Remove height surface",
+            "x-features": [
+              "heightFields.v1"
+            ]
+          }
+        ]
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.created",
+        "target.unheld",
+        "source.revision.current",
+        "storage.writable",
+        "target.physics.fixed"
+      ],
+      "description": "Configure one saved height surface on a fixed created object, or remove it. Configure replaces all heights with fillHeight: it is an explicit reset, not a conserving simulation. Frame is root-local; +Y is height and X/Z span width/depth. Choose 4, 8 or 16 cells per side, up to four fields per room. The mesh and its nonconvex collision use the same saved heights; the owner must remain fixed while the field exists. Existing object collision remains separate and can intersect the surface if authored that way. Snow, sand and similar appearance use an editable colour/material label, not different simulators. Fields support shared sculpting, exact paged heights, copy/prototypes, Undo and temporary rooms. There is no gravity flow, melting, fluid pressure, mass, bare-hand sculpting or material transfer in this capability. Moving/scaling the owner moves/scales the surface. Authored local volume is geometric, not conserved physical quantity.",
+      "example": {
+        "operation": "configure",
+        "target": "00000000000000000000000000000000",
+        "revision": 1,
+        "definition": {
+          "cells": 16,
+          "frame": {
+            "position": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            "rotation": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0,
+              "w": 1.0
+            }
+          },
+          "width": 1.0,
+          "depth": 1.0,
+          "maxHeight": 0.25,
+          "material": "Snow",
+          "color": {
+            "r": 0.93999999761581421,
+            "g": 0.97000002861022949,
+            "b": 1.0,
+            "a": 1.0
+          }
+        },
+        "fillHeight": 0.08
+      }
+    },
+    {
+      "id": "object.field.sculpt",
+      "version": 1,
+      "label": "Sculpt a surface path",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "raise",
+              "lower",
+              "level"
+            ]
+          },
+          "radius": {
+            "type": "number",
+            "minimum": 0.005,
+            "maximum": 2.0
+          },
+          "height": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 0.5
+          },
+          "path": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": -2.0,
+                  "maximum": 2.0
+                },
+                "z": {
+                  "type": "number",
+                  "minimum": -2.0,
+                  "maximum": 2.0
+                }
+              },
+              "required": [
+                "x",
+                "z"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 32
+          }
+        },
+        "required": [
+          "target",
+          "revision",
+          "mode",
+          "radius",
+          "height",
+          "path"
+        ],
+        "additionalProperties": false,
+        "x-current": {
+          "fact": "object.field",
+          "version": 1,
+          "arguments": {
+            "target": "target"
+          },
+          "fields": {
+            "revision": [
+              "revision"
+            ]
+          },
+          "guards": [
+            "revision"
+          ]
+        },
+        "x-features": [
+          "heightFields.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.created",
+        "target.unheld",
+        "source.revision.current",
+        "storage.writable",
+        "target.physics.fixed"
+      ],
+      "description": "Raise, lower or level a configured surface along one swept local X/Z path. radius is in local metres; height is the maximum raise/lower amount or the target level. Smooth falloff reaches zero at the brush rim. Every grid vertex is affected at most once by the union of the path, so duplicate points or self-crossings do not multiply strength. Values clamp to 0..maxHeight. All path points must be inside the configured rectangle. A sub-grid brush can miss every vertex and is refused without saving. One action is one saved edit and one Undo, with the same rebuilt mesh/collision. Authoring can add/remove geometric volume; it is not conserved snow transfer. Current revision and exclusive object ownership are required. No playback, physics start or delayed repetition is implied.",
+      "example": {
+        "target": "00000000000000000000000000000000",
+        "revision": 1,
+        "mode": "lower",
+        "radius": 0.08,
+        "height": 0.03,
+        "path": [
+          {
+            "x": -0.25,
+            "z": 0
+          },
+          {
+            "x": 0.25,
+            "z": 0
+          }
+        ]
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "changedVertices": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 289.0
+          }
+        },
+        "required": [
+          "changedVertices"
         ],
         "additionalProperties": false
       }
@@ -26349,6 +26961,132 @@
       ]
     },
     {
+      "id": "object.field",
+      "version": 1,
+      "type": {
+        "record": {
+          "revision": "number",
+          "configured": "boolean",
+          "definition": {
+            "record": {
+              "frame": {
+                "record": {
+                  "position": {
+                    "record": {
+                      "x": "number",
+                      "y": "number",
+                      "z": "number"
+                    }
+                  },
+                  "rotation": {
+                    "record": {
+                      "x": "number",
+                      "y": "number",
+                      "z": "number",
+                      "w": "number"
+                    }
+                  }
+                }
+              },
+              "width": "number",
+              "depth": "number",
+              "cells": "number",
+              "maxHeight": "number",
+              "material": "text",
+              "color": {
+                "record": {
+                  "r": "number",
+                  "g": "number",
+                  "b": "number",
+                  "a": "number"
+                }
+              }
+            }
+          },
+          "count": "number",
+          "minimum": "number",
+          "maximum": "number",
+          "volumeLitres": "number"
+        }
+      },
+      "label": "Sculptable surface",
+      "description": "Saved field geometry, local geometric volume, height range and current object revision. Missing fields return inert editable defaults with configured=false/count=0. Exact heights are paged through object.field.samples. Volume is in unscaled local litres; prop scale does not rewrite heights. Read-only; no reset or simulation.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1",
+        "heightFields.v1"
+      ]
+    },
+    {
+      "id": "object.field.samples",
+      "version": 1,
+      "type": {
+        "record": {
+          "revision": "number",
+          "offset": "number",
+          "count": "number",
+          "heights": {
+            "list": "number"
+          }
+        }
+      },
+      "label": "Exact surface heights",
+      "description": "Read at most 16 saved grid-vertex heights in row-major order, X first then Z, in local metres along frame +Y. Matching revision required. Offset equal to count returns an empty page; later offsets, missing fields or stale revisions are unavailable. Read all pages to reconstruct the exact source; this never sculpts or advances a revision.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 289.0
+          }
+        },
+        "required": [
+          "target",
+          "revision",
+          "offset"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000",
+        "revision": 1,
+        "offset": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "heightFields.v1"
+      ]
+    },
+    {
       "id": "object.container.live",
       "version": 1,
       "type": {
@@ -29592,7 +30330,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "fca7b9a25fbb4d1cd425477e2e1d877879d59e3bba7b1de6b0775c534447f1af"
+      "sha256": "49906d8613b6d134e8bb6fcc7ce93d4fdf3233bc1ef8e1a2a1c5f0482c799438"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -29612,7 +30350,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "4f4e783d123426ffc9dee7a2cf21ba425289aae1d14ffeb152a330879969a9e9"
+      "sha256": "9a393d57b58610412cf87a1d08d56aa339c2d7f05f7fcc9bc0480e527168804d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -29644,7 +30382,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "5c8309d960df565758d30010d2dfaf167125e9dc9f855b964979870a697501ef"
+      "sha256": "0d9bfcd908cc9cd2724dd1ca9011f89d9c9cda97faccf6551b0af37d90cfa19c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -29668,11 +30406,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "28c8b9b32bf79287a358734dfb5e61ca4ecbbca0f809a731414af61e4f6324c8"
+      "sha256": "a3fa002812815541712f99ae42a4dfa17bba7cad77063db74371af0d1bbeb317"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
-      "sha256": "a25825f2980a42b692d015dab5f59c10146ea48a67c7564b2200464a1b87fb3c"
+      "sha256": "f27cc75e7e7c9c87887129625ddf31d634fe8db98d1d65fd1351b5d6bbe6a736"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleMemory.cs",
@@ -29688,11 +30426,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveCapture.cs",
-      "sha256": "ce9fe5fb67d24ff37437e4ecd411d360852b5831ba3007c969ae12d1c1f57de6"
+      "sha256": "ba446d580cde469d381d428f39091b91b840ee7a49c929b693cb1b9b7df203e0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveSnapshot.cs",
-      "sha256": "042a8e2defe8005734a7eaaa0d7f12152f363db417e3b2c1b2f3fe1805163b50"
+      "sha256": "eefc8b090190da99444b558e7460f2359171ce4474982f0cdcb22a8752b542d4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.Retention.cs",
@@ -29860,7 +30598,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomBallistics.cs",
-      "sha256": "dde050796725fb17fc7e7ca5706025c4e2eba55f05e79fc0c3410e22053e8849"
+      "sha256": "7ef510d48924c2589d2d95b4551759c7ab3f9626e0196aa495ab845f38602fa3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.cs",
@@ -29896,7 +30634,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "3357886d55327bf5aa8339f4b4114cf72102851ba329633f0332bb6b72986172"
+      "sha256": "e66cc64d998e248dd0658f5ee647e946ce0b60a457fcb7ce37bc482590a7d593"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomToolTray.cs",
@@ -29947,6 +30685,26 @@
       "sha256": "b8f4ede0b5bf90957e8fdb597ac8bc7b703bc9e5ac7657e48d638af11d2c6a2f"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationPrototype.cs",
+      "sha256": "30fcd1ecfedc3344a9f78bf06dbd10b1515bb970897e434ba61cac141cc744c3"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomComponentEdits.cs",
+      "sha256": "81be326bff6cf4007a38a4f8a80c43a73642435ce7206ca6ab142513a4dd6fea"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomHeightFieldEdits.cs",
+      "sha256": "0fe46ad724f591d7a92d91b5a97e1557713086c0e707a9f9fe8ee3263dd26ac6"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/HeightFieldView.cs",
+      "sha256": "46f43a72fd03888a550ba7b2bf41c1c42779438fe8c6cba62def821684d192b2"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomHeightField.cs",
+      "sha256": "c85607807e072a96be84f5521bf05bb628db407ce6e8710f7566e76e253e45fe"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ContainerFillView.cs",
       "sha256": "a16b6948fb43c3887a5020b2fe751fd75d33ebfcc2aac780c2959d7a25fd1c41"
     },
@@ -29960,11 +30718,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLiquidEdits.cs",
-      "sha256": "1654a68359259e8357bd062630e20cb24c23123d4b9f5cc4ea9d5cf52de3f4e8"
+      "sha256": "d80bc001e5bd6fefb73b5e90f2915937ef107b11a13f6c0e31aac0d5b1b99d7f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomContainerEdits.cs",
-      "sha256": "6da4b9cec11e6a3cc86dcace1634ceed82192ae7a17d51b5d3ad117f4a20f60a"
+      "sha256": "cefff47550b8d7bf8a237f5f4945b0b3669979c1ad637d6da754f56cc0e9ccea"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSnapEdits.cs",
@@ -30020,7 +30778,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "4935de5d65fb3cff0dab5253894c205f96a49990dae969764752fcc001223228"
+      "sha256": "021d6ae7a4769bb1aa26bcec286a2b1249300606017a3a8bf64f900cb36e93ec"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedDrawing.cs",
@@ -30032,7 +30790,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedRoomObject.cs",
-      "sha256": "e57c1b886084d7d7907beb7c62a581773167e2fafd5732ef75e481c7dd0920fb"
+      "sha256": "c8803de81049d40c969587eec84868150cbf04e3645e4ebf0620bd7af9630928"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectSettings.cs",
@@ -30164,7 +30922,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationTemplates.cs",
-      "sha256": "508687b7886bab83d2c8502f9dba6fc7ecd4163e8a6d73575c99bee84e0f46e8"
+      "sha256": "23c2ab9d6257e215271a722ff383fb03ebc57343afa5136ea3d46c39acfc5b13"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLayout.cs",
@@ -30172,7 +30930,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationBatch.cs",
-      "sha256": "b2f31092e595c04ad37cc5381470b28c6487e1b7a1ce55f3ca73b7dea77c4158"
+      "sha256": "269b364b62d621f15531d47b2ac65a3d5c0b07dfd2b266911083f689a4a8729d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructure.cs",
@@ -30220,7 +30978,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "bff467762fa7265a718b7adc3a4418553b3da6049b06e9a8644ec69985621da2"
+      "sha256": "10d706d43e535479b5742a5c7bd66d3864df3cda09b3ff6380f8cf6436e19ed1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -30284,11 +31042,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreateTemplateCapability.cs",
-      "sha256": "ce50c60f294216ca6155527252eca7599e1210ddca51a43110355c2b5a498b12"
+      "sha256": "06b29ca3c266aa38fc8b829fe1f4af4a3b64d23030522691a216abd05ddcddf7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreationPrototypeSchema.cs",
-      "sha256": "da89a5b8e9da528a5ba6e0ed8d031d694e8974f0a72427b33d0433d19e8b205a"
+      "sha256": "2698b44aca69f6f4db8864b00c077d04ccd3dfc2538f9fbb3da23e43593f5e25"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingCapabilities.cs",
@@ -30325,6 +31083,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/GroupTransformCapability.cs",
       "sha256": "4c1e57e03038ee9ed1a91b58499199fe3a323e4ad6129c238ad3f80f514584be"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/HeightFieldCapability.cs",
+      "sha256": "9151a66db95d31e67a58cc61d8762f8a9079c42f443b10dcc2538087b8c5f0ae"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/HoldObjectCapability.cs",
@@ -30573,6 +31335,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/rook.json",
       "sha256": "f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/snow-patch.json",
+      "sha256": "78ac47258c47968b7b69bdf8144e0e2076e40ffbd32f171317ce81883526f78c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/spoon.json",

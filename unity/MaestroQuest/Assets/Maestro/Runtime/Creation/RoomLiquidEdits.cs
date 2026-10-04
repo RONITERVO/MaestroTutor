@@ -17,7 +17,7 @@ namespace Maestro.Quest.Creation {
                 if(data==null||!item||!original.TryGetValue(pair.Key,out var before)||data.containers?.Length!=1||JsonUtility.ToJson(data.containers[0])!=JsonUtility.ToJson(before))return false;
                 data=Pose(data,item.transform);data.containers=new[]{pair.Value.Copy()};replacements.Add(data);
             }
-            var changes=replacements.ToArray();return CommitPersisted(changes,Array.Empty<string>(),"Liquid flow saved — Undo restores its quantities",false,out error,ContainerBefore(changes));
+            var changes=replacements.ToArray();return CommitPersisted(changes,Array.Empty<string>(),"Liquid flow saved — Undo restores its quantities",false,out error,ComponentBefore(changes));
         }
         internal void Scooped(string destination,double amount,int donors,string liquid)=>ContainerScooped?.Invoke(destination,amount,donors,liquid);
         internal void Poured(string source,double received,double spilled,int receivers,string liquid)=>ContainerPoured?.Invoke(source,received,spilled,receivers,liquid);

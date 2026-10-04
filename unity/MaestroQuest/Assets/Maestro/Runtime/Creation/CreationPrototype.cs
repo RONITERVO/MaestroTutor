@@ -30,6 +30,7 @@ namespace Maestro.Quest.Creation
         public DrawingTip[] drawingTips=Array.Empty<DrawingTip>();
         public RoomSnapPoint[] snapPoints=Array.Empty<RoomSnapPoint>();
         public RoomContainer[] containers=Array.Empty<RoomContainer>();
+        public RoomHeightField[] heightFields=Array.Empty<RoomHeightField>();
         public Vector3[] points;
         public float radius=.003f;
         // Root-motion positions/rotations/scales are relative to the captured object's pose.
@@ -40,7 +41,7 @@ namespace Maestro.Quest.Creation
         internal RoomObjectData Instantiate(string name,Vector3 position,Quaternion rotation,float scale) {
             var data=new RoomObjectData {id=Guid.NewGuid().ToString("N"),name=name,kind=Kind(kind).Value,position=position,rotation=rotation,scale=scale,
                 color=color,recipe=recipe?.Copy(),collision=collision?.Copy(),surfaces=surfaces.Select(s=>s.Copy()).ToArray(),drawingTips=drawingTips.Select(t=>t.Copy()).ToArray(),snapPoints=snapPoints?.Select(p=>p.Copy()).ToArray()??Array.Empty<RoomSnapPoint>(),
-                containers=containers?.Select(c=>c.Copy()).ToArray()??Array.Empty<RoomContainer>(),points=points?.ToArray(),radius=radius,modelHash=modelHash};
+                heightFields=heightFields?.Select(f=>f.Copy()).ToArray()??Array.Empty<RoomHeightField>(),containers=containers?.Select(c=>c.Copy()).ToArray()??Array.Empty<RoomContainer>(),points=points?.ToArray(),radius=radius,modelHash=modelHash};
             RoomControls.SetPhysics(data,physics,out _);
             if(motion!=null)data.motion=new RoomMotion {loop=motion.loop,frames=motion.frames.Select(f=>new MotionFrame {
                 time=f.time,position=position+rotation*(f.position*scale),rotation=(rotation*f.rotation).normalized,scale=scale*f.scale}).ToArray()};
@@ -60,8 +61,8 @@ namespace Maestro.Quest.Creation
             if(version!=1||Kind(kind)==null||!RoomControls.ValidPhysics(physics)||surfaces==null||drawingTips==null||surfaces.Any(s=>s==null)||drawingTips.Any(t=>t==null)||
                 recipe?.playing==true||motion!=null&&!motion.Valid)return false;
             if(recipe!=null&&!recipe.Validate(out error)||collision!=null&&!collision.Validate(out error))return false;
-            var shallow=new RoomObjectData {kind=Kind(kind).Value,recipe=recipe,surfaces=surfaces,drawingTips=drawingTips,snapPoints=snapPoints,containers=containers};
-            if(!DrawingSurface.ValidateCollection(shallow,out error)||!DrawingTip.ValidateCollection(shallow,out error)||!RoomSnapPoint.ValidateCollection(shallow,out error)||!RoomContainer.ValidateCollection(shallow,out error))return false;
+            var shallow=new RoomObjectData {kind=Kind(kind).Value,recipe=recipe,surfaces=surfaces,drawingTips=drawingTips,snapPoints=snapPoints,containers=containers,heightFields=heightFields};
+            if(!DrawingSurface.ValidateCollection(shallow,out error)||!DrawingTip.ValidateCollection(shallow,out error)||!RoomSnapPoint.ValidateCollection(shallow,out error)||!RoomContainer.ValidateCollection(shallow,out error)||!RoomHeightField.ValidateCollection(shallow,out error))return false;
             var data=Instantiate("Prototype",Vector3.zero,Quaternion.identity,1);data.motion=null;
             return ValidateObjects(new[]{data},out error);
         }
@@ -72,7 +73,7 @@ namespace Maestro.Quest.Creation
             if(data==null||data.IsBuiltIn)throw new ArgumentException("Choose a created object");
             var copy=data.Copy();var q=Quaternion.Inverse(copy.rotation);
             return new CreationPrototype {kind=copy.kind switch {RoomObjectKind.ImportedModel=>"model",RoomObjectKind.Assembly=>"recipe",_=>copy.kind.ToString().ToLowerInvariant()},
-                color=copy.color,physics=RoomControls.Physics(copy),recipe=copy.recipe,collision=copy.collision,surfaces=copy.surfaces,drawingTips=copy.drawingTips,snapPoints=copy.snapPoints,containers=copy.containers,
+                color=copy.color,physics=RoomControls.Physics(copy),recipe=copy.recipe,collision=copy.collision,surfaces=copy.surfaces,drawingTips=copy.drawingTips,snapPoints=copy.snapPoints,containers=copy.containers,heightFields=copy.heightFields,
                 points=copy.points,radius=copy.radius,modelHash=copy.modelHash,motion=copy.motion==null?null:new PrototypeMotion {loop=copy.motion.loop,frames=copy.motion.frames.Select(f=>new PrototypeFrame {
                     time=f.time,position=q*(f.position-copy.position)/copy.scale,rotation=(q*f.rotation).normalized,scale=f.scale/copy.scale}).ToArray()}};
         }

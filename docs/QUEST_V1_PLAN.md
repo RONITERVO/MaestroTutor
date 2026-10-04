@@ -2964,3 +2964,34 @@ Remaining: the open device QA and provider/billing gates, further reusable
 play-kit coverage, persistent water/snow fields, arbitrary mesh/skin drawing,
 Meta/Firebase integrity/account linking, privacy/payment setup, release signing
 and Store submission. See the creation-template contract and device checklist.
+
+
+### Shared sculptable surface checkpoint — 2026-10-04
+
+A reusable saved height-field component now supports the Snow patch default and
+user-created fixed objects. The book's generated fields, event programs and agent
+use the same configure/reset and raise/lower/level actions, exact revisions and
+paged heights. The native mesh and collision share the accepted source. Surface
+changes wake nearby sleeping free bodies so a ball falls when its support lowers;
+held or animation-owned objects keep their existing ownership. A nonconvex mesh
+also refuses an obstructed aimed throw without unsupported ClosestPoint queries.
+
+Copy, captured prototypes, saved edits, Undo and temporary rooms preserve exact
+independent grids. Room v15 and paired intent/archive v14 protect this source;
+future component versions preserve original data. The room allows four fixed
+fields, each at most 289 heights / 549 rendered vertices / 642 triangles, with one
+additional collider per field. Default content now contains 23 templates and
+seven editable program modules. The shared catalog has 83 actions, 89 facts and
+15 events. This is authored geometry, not conserved material or a fluid solver.
+Finger/tool sculpting, material transfer/packing and sustained Quest performance
+remain open. See the world-authoring contract and device acceptance checklist.
+
+
+Desktop verification passed 2,257 web tests across 251 files, TypeScript, ESLint,
+generated catalog and bundled-asset checks; 776 Unity EditMode and 578 PlayMode
+checks passed, with three optional private-file tests skipped. The complete native
+shared-client journey passed 344 observations. The Chrome surface editor matched
+that run's exact sculpt call, revision and receipt, including oversized-brush
+refusal. Actual native surface/default renders and book controls were inspected.
+These establish desktop behaviour only; the current Quest field/contact/frame-time
+acceptance and wider provider/Store gates remain open.

@@ -20,7 +20,7 @@ namespace Maestro.Quest.Tests
         string BlockPoseSave()
         {
             Assert.That(editor.TryFlush(out var error),Is.True,error);
-            string path=Path.Combine(directory,"room.v14.json");if(File.Exists(path))File.Delete(path);Directory.CreateDirectory(path);return path;
+            string path=Path.Combine(directory,"room.v15.json");if(File.Exists(path))File.Delete(path);Directory.CreateDirectory(path);return path;
         }
         JointPose[] EditHead(float degrees)
         {

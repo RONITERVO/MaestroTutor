@@ -320,3 +320,29 @@ counts and a second pigment. They do not add cells to the scene graph. The norma
 book part editor and agent recipe edits change the same data, with exact fact
 readback. Room format 14 protects this source from older readers. Physical play
 and patterns still require Quest readability and sustained performance acceptance.
+
+
+### Shared sculptable surfaces (2026-10-04)
+
+A bounded height grid is now a saved component on fixed created objects. The
+Snow patch default uses the same component available to user-created recipes and
+imports. `object.field.edit` explicitly configures/resets it; `object.field.sculpt`
+raises, lowers or levels a swept local X/Z path. Book catalog forms, programs and
+the agent share both actions, exact revision guards and paged source observations.
+A repeated/crossing path affects each vertex once, with smooth radial falloff.
+
+One owner can have one field; at most four fields per room, with 4/8/16 cells per
+side. The largest has 289 authored heights, 549 rendered vertices and 642 collision
+triangles, including skirts/backing. One mesh and one additional nonconvex collider
+are rebuilt on accepted edits, with no per-frame terrain cooking or per-cell bodies.
+Changed bounds wake nearby sleeping free bodies once, so lowering support lets
+gravity act. Held/animation-owned objects remain under their existing owner.
+The owner must remain fixed; it can still be moved/resized through existing controls.
+Existing base collision remains independent and can obstruct an authored depression.
+
+Room v15, paired snapshot v14 and archive v14 protect the source. Copying, captured
+prototypes, Undo and temporary rooms retain independent exact height arrays. The
+reported volume integrates the local mesh; it is an authoring measurement, not
+conserved snow. Sculpting can explicitly add/remove volume. Bare-hand/tool gestures,
+material scooping/packing, gravity flow, water behaviour and Quest performance are
+remaining work. This increment is not a fluid or granular solver.

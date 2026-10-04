@@ -24,11 +24,11 @@ namespace Maestro.Quest.Programs
         public override bool Validate(JObject args,out string error) {error="Position must be within 25 metres of the room origin";if(ObjectCapabilityData.Position(args).sqrMagnitude>625)return false;error="The exact creation template is unavailable";if(CreationTemplates.Find((string)args["templateHash"])==null)return false;error=null;return true;}
         public override bool CanRun(CapabilityContext context,JObject args,out string error) {
             var entry=CreationTemplates.Find((string)args["templateHash"]);error="The exact creation template is unavailable";
-            return entry!=null&&context.Editor.CanCreateRecipe(entry.Recipe,entry.Collision,entry.Physics,out error,entry.Surfaces,entry.DrawingTips,entry.SnapPoints,entry.Containers);
+            return entry!=null&&context.Editor.CanCreateRecipe(entry.Recipe,entry.Collision,entry.Physics,out error,entry.Surfaces,entry.DrawingTips,entry.SnapPoints,entry.Containers,entry.HeightFields);
         }
         public override bool Start(CapabilityContext context,string runId,JObject args,out CapabilityOperation operation,out string error) {
             operation=null;if(!CanRun(context,args,out error))return false;var entry=CreationTemplates.Find((string)args["templateHash"]);string name=(string)args["name"];
-            if(!context.Editor.CreateRecipe(string.IsNullOrEmpty(name)?entry.Name:name,ObjectCapabilityData.Position(args),(float)args["scale"],entry.Recipe,entry.Collision,entry.Physics,out var id,out error,entry.Surfaces,entry.DrawingTips,entry.SnapPoints,entry.Containers))return false;
+            if(!context.Editor.CreateRecipe(string.IsNullOrEmpty(name)?entry.Name:name,ObjectCapabilityData.Position(args),(float)args["scale"],entry.Recipe,entry.Collision,entry.Physics,out var id,out error,entry.Surfaces,entry.DrawingTips,entry.SnapPoints,entry.Containers,entry.HeightFields))return false;
             operation=new CompletedCapability(new JObject {["objectId"]=id});return true;
         }
         internal static BehaviourCatalog.FactDefinition Fact()=>new("creation.template",ProgramDataType.Read(JObject.Parse("{\"record\":{\"index\":\"number\",\"total\":\"number\",\"hash\":\"text\",\"id\":\"text\",\"name\":\"text\",\"details\":{\"record\":{\"description\":\"text\",\"tags\":\"text\",\"author\":\"text\",\"license\":\"text\"}},\"cost\":{\"record\":{\"parts\":\"number\",\"tracks\":\"number\",\"generatedVertices\":\"number\",\"collisionPieces\":\"number\"}},\"physics\":{\"record\":{\"mode\":\"text\",\"shape\":\"text\",\"mass\":\"number\"}}}}")),"Starter object template",

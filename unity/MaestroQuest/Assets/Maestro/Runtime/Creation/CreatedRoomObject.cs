@@ -1,6 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 using System.Collections.Generic;
+using System.Linq;
 using Maestro.Quest.Art;
 using Maestro.Quest.Interaction;
 using Maestro.Quest.Imports;
@@ -100,6 +101,7 @@ namespace Maestro.Quest.Creation
                 else {var box=gameObject.AddComponent<BoxCollider>();box.center=geometryBounds.center;box.size=geometryBounds.size;chosenCollider=box;}
                 active=new[]{chosenCollider};
             }
+            var field=GetComponent<HeightFieldView>();if(field&&field.Collision&&field.Collision.gameObject.activeSelf)active=active.Append(field.Collision).ToArray();
             foreach(var collider in active){collider.gameObject.layer=RoomPhysicsLayers.Item;collider.enabled=true;collider.sharedMaterial=originalCollider.sharedMaterial;}
             item.Grab.colliders.Clear();item.Grab.colliders.AddRange(active);item.Grab.enabled=true;
             var body=GetComponent<Rigidbody>();body.ResetCenterOfMass();body.ResetInertiaTensor();
@@ -123,7 +125,7 @@ namespace Maestro.Quest.Creation
             }
             catch (System.Exception error) { if (this) ModelStatus = error is ModelImportException ? error.Message : "This model could not be loaded. Import a compatible GLB or VRM again."; }
         }
-        public void ApplyColor(Color color) { tint = color; if(recipe) recipe.Tint(color); if (pigment) pigment.color = color; if (drawing) drawing.SetColor(color); if (Model && Model.Ready) Model.Instance.GetComponent<PencilModelStyle>()?.Tint(color); }
+        public void ApplyColor(Color color) { tint = color; GetComponent<HeightFieldView>()?.Tint(color); if(recipe) recipe.Tint(color); if (pigment) pigment.color = color; if (drawing) drawing.SetColor(color); if (Model && Model.Ready) Model.Instance.GetComponent<PencilModelStyle>()?.Tint(color); }
         public void SetSelection(bool primary,bool member){primarySelected=primary;constructionSelected=member;SetSelected(primary||member);}
         public void SetSelected(bool value) { if (selection) {selection.SetActive(value);selection.GetComponent<PencilMarks>().SetColor(constructionSelected&&!primarySelected?IllustratedMaterials.Hex("2B8D88"):IllustratedMaterials.Ribbon);} }
 

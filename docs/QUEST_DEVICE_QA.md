@@ -1905,3 +1905,25 @@ Undo restores the pattern, and rotating or animating the part keeps its pattern
 attached. Check distant shimmer and readability while moving the head. Record
 sustained frame time with the full set, book and avatar together before acceptance.
 These checks are not claimed from desktop renders or native test runs.
+
+
+### Shared sculptable surfaces — device acceptance pending
+
+Create Snow patch from the starter library in an open area. In the book action
+catalog, load its current values and lower a path across the surface. Check the
+visible groove and native collision agree, including after moving/resizing the
+fixed owner. Ask Maestro for the equivalent edit and inspect its exact action
+and result. A stale revision, off-surface path or fifth field must refuse cleanly.
+
+With room physics active, drop a ball onto the surface. Lower the support beneath
+the resting ball and verify it falls to the new height. Raise/level another region,
+then Undo, copy, save/reload and exercise temporary Keep/Discard. Confirm nearby
+unheld objects react without taking control of held or animation-owned objects.
+The base object's independent collider can block deeper depressions; this is an
+authorable backing, not conserved snow. Paused physics must remain paused.
+
+Exercise four maximum-size fields with the book, avatar and existing objects.
+Measure sustained frame time, edit/collider rebuild spikes and readability in MR;
+desktop tests do not certify Quest performance. Finger/tool sculpting, gathering
+snow into a vessel or snowball, gravity flow and water forces are not present in
+this increment. Do not record them as accepted from an authored height change.

@@ -66,7 +66,7 @@ namespace Maestro.Quest.Interaction
         bool ClearPoint(RoomItem item,Vector3 point,float radius,out string error){
             error=null;int count=Physics.OverlapSphereNonAlloc(point,radius,overlaps,Mask,QueryTriggerInteraction.Ignore);
             if(count==overlaps.Length){error="Too many nearby colliders to verify the planned throw";return false;}
-            for(int i=0;i<count;i++)if(Obstacle(overlaps[i],item)&&Vector3.Distance(overlaps[i].ClosestPoint(point),point)<radius-.001f){error="The planned throw is blocked by a room surface or object";return false;}
+            for(int i=0;i<count;i++)if(Obstacle(overlaps[i],item)&&(overlaps[i] is MeshCollider mesh&&!mesh.convex||Vector3.Distance(overlaps[i].ClosestPoint(point),point)<radius-.001f)){error="The planned throw is blocked by a room surface or object";return false;}
             return true;
         }
     }
