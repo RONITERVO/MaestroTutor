@@ -140,7 +140,9 @@ now align complete constructions and optionally join them through one shared edi
 Physical construction-handle previews now use the shared snap placement action (see [snap points](QUEST_SNAP_POINTS.md)). Configured cylindrical/spherical patches now extend plane drawing; arbitrary mesh/skin painting and persistent water/snow fields remain unfinished. Bounded physical pouring now uses the shared container component. Bounded sliders and an editable spring-button example now extend the shared connections.
 [Surface drawing](QUEST_SURFACE_DRAWING.md) adds reusable explicit patches,
 shared ink editing/readback, a physical surface pencil/eraser, and configurable
-held drawing tips on ordinary created/imported objects.
+held drawing tips on ordinary created/imported objects. Pencil, Paint brush and
+Eraser defaults now demonstrate that same editable component; held erasing groups
+a contact gesture into one saved edit and Undo.
 
 The complete shipped play kit should demonstrate each accepted reusable component,
 not maximize asset count. Every template needs editable source/configuration,
@@ -280,7 +282,7 @@ The existing part editor, create/edit actions, paged profile facts, collision
 configuration and saved/temporary lifecycle remain the only authoring paths.
 See [recipe authoring](QUEST_RECIPE_AUTHORING.md#editable-outline-extrusion-2026-10-03)
 for bounds, format protection and the separate collision/performance requirements.
-CSG, curved paint, persistent water/snow and device acceptance remain open.
+CSG, arbitrary mesh/skin paint, persistent water/snow and device acceptance remain open.
 
 
 ### Profile sweeps (2026-10-04)

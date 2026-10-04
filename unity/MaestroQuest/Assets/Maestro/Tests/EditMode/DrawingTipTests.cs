@@ -16,7 +16,7 @@ namespace Maestro.Quest.Tests
         [Test] public void TipCopiesAreIndependentAndRejectMissingAnchorsInvalidInkAndFutureVersions()
         {
             var data=Owner();Assert.That(DrawingTip.ValidateCollection(data,out var error),Is.True,error);var copy=data.Copy();copy.drawingTips[0].enabled=false;Assert.That(data.drawingTips[0].enabled,Is.True);
-            foreach(var tip in new[]{new DrawingTip{part="Missing"},new DrawingTip{version=2},new DrawingTip{radius=float.NaN},new DrawingTip{color=new Color(1,1,1,0)},new DrawingTip{position=Vector3.one*10}}){copy.drawingTips=new[]{tip};Assert.That(DrawingTip.ValidateCollection(copy,out _),Is.False);}
+            foreach(var tip in new[]{new DrawingTip{part="Missing"},new DrawingTip{version=3},new DrawingTip{radius=float.NaN},new DrawingTip{color=new Color(1,1,1,0)},new DrawingTip{position=Vector3.one*10}}){copy.drawingTips=new[]{tip};Assert.That(DrawingTip.ValidateCollection(copy,out _),Is.False);}
             copy.drawingTips=new[]{new DrawingTip(),new DrawingTip()};Assert.That(DrawingTip.ValidateCollection(copy,out _),Is.False);copy=data.Copy();copy.kind=RoomObjectKind.Maestro;Assert.That(DrawingTip.ValidateCollection(copy,out _),Is.False);
         }
         [Test] public void SavedTipsRequireNewRoomFormatAndUnknownTipVersionsPreserveTheOriginalFile()
@@ -25,7 +25,7 @@ namespace Maestro.Quest.Tests
             Assert.That(room.Validate(out _),Is.False);room.version=RoomDocument.CurrentVersion;Assert.That(room.Validate(out var error),Is.True,error);
             string directory=Path.Combine(Path.GetTempPath(),"tip-storage-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(directory);
             try {var store=new RoomStorage(directory);Assert.That(store.Save(room,out error),Is.True,error);var restored=store.Load(out error);Assert.That(restored.objects.Last().drawingTips.Single().radius,Is.EqualTo(.003f));
-                room.objects.Last().drawingTips[0].version=2;string text=JsonUtility.ToJson(room),path=Path.Combine(directory,RoomStorage.FileName);File.WriteAllText(path,text);store=new RoomStorage(directory);Assert.That(store.Load(out _),Is.Null);Assert.That(store.ReadOnly,Is.True);Assert.That(File.ReadAllText(path),Is.EqualTo(text));
+                room.objects.Last().drawingTips[0].version=3;string text=JsonUtility.ToJson(room),path=Path.Combine(directory,RoomStorage.FileName);File.WriteAllText(path,text);store=new RoomStorage(directory);Assert.That(store.Load(out _),Is.Null);Assert.That(store.ReadOnly,Is.True);Assert.That(File.ReadAllText(path),Is.EqualTo(text));
             }finally{Directory.Delete(directory,true);}
         }
         [TestCase("Front\n",false)][TestCase("Front",true)] public void SavedSurfaceIdentityMatchesTheSharedActionBoundary(string id,bool valid)

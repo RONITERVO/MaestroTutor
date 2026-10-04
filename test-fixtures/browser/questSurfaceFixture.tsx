@@ -8,7 +8,7 @@ import {CapabilityBrowser} from '../../src/platform/quest/CapabilityBrowser';
 import '../../src/app/index.css';
 import '../../src/platform/quest/roomWorkspace.css';
 if(!import.meta.env.DEV)throw new Error('Development fixture only');
-const capture=new URLSearchParams(location.search).has('curved')?'curvedSurfaceAuthoring.json':'surfaceAuthoring.json';
+const query=new URLSearchParams(location.search);const capture=query.has('erase')?'eraserSurfaceAuthoring.json':query.has('curved')?'curvedSurfaceAuthoring.json':'surfaceAuthoring.json';
 const native=await (await fetch('./'+capture)).json() as Record<string,RoomAgentState>;
 const client=new RoomAgentClient(),requests:unknown[]=[];
 let state=structuredClone(native.before);state.visible=true;let revision=state.revision;

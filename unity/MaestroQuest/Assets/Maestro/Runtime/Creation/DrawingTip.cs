@@ -15,12 +15,14 @@ namespace Maestro.Quest.Creation
         public Color color=Color.white;
         public float radius=.003f;
         public bool enabled=true;
-        public DrawingTip Copy()=>new(){version=version,part=part,position=position,rotation=rotation,color=color,radius=radius,enabled=enabled};
+        public string mode="draw";
+        public string Mode=>string.IsNullOrEmpty(mode)?"draw":mode;
+        public DrawingTip Copy()=>new(){version=version,part=part,position=position,rotation=rotation,color=color,radius=radius,enabled=enabled,mode=mode};
         public bool Validate(RoomObjectData owner,out string error)
         {
             error="Choose a valid drawing tip on an object root or existing recipe part";
             var c=color;
-            if(version!=1||part==null||part!=""&&(owner.recipe?.parts==null||!owner.recipe.parts.Any(p=>p.id==part))||!float.IsFinite(position.sqrMagnitude)||position.sqrMagnitude>100||!MotionFrame.ValidRotation(rotation)||!Unit(c.r)||!Unit(c.g)||!Unit(c.b)||c.a!=1||!float.IsFinite(radius)||radius<.001f||radius>.02f)return false;
+            if((Mode!="draw"&&Mode!="erase")||version!=(Mode=="erase"?2:1)||part==null||part!=""&&(owner.recipe?.parts==null||!owner.recipe.parts.Any(p=>p.id==part))||!float.IsFinite(position.sqrMagnitude)||position.sqrMagnitude>100||!MotionFrame.ValidRotation(rotation)||!Unit(c.r)||!Unit(c.g)||!Unit(c.b)||c.a!=1||!float.IsFinite(radius)||radius<.001f||radius>.02f)return false;
             error=null;return true;
         }
         static bool Unit(float n)=>float.IsFinite(n)&&n>=0&&n<=1;

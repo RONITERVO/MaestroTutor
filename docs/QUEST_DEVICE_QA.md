@@ -1867,3 +1867,23 @@ the hidden backside, patch seam or another solid object. Check copied objects an
 saved/reloaded marks against source, then exercise temporary Keep/Discard. Record
 thin strokes on large curves and sustained high-point drawing performance; desktop
 geometry/render checks do not establish Quest frame-time or contact comfort.
+
+
+### Held eraser and drawing kit acceptance — pending Quest
+
+Create Pencil, Paint brush and Eraser from the same starter library. Grip each and
+contact a configured board; confirm the pencil is narrow/dark and brush wider/blue,
+independently of tray colour and width. Release or separate to finish one stroke.
+A loose tool resting on the board must not draw or erase by itself.
+
+Draw two crossing strokes and a separate distant stroke. Sweep the held Eraser
+across the first two: only touched complete strokes should disappear. Lift it and
+Undo once; both return. Repeat on cylinder/sphere patches, rotated/scaled boards,
+and with a solid object obscuring part of the path. Ink beyond the obstruction
+must remain. Check hand and controller grip, contact readability and sustained
+frame time with the fuller drawing budget; desktop results do not establish these.
+
+Interrupt a held erase by pausing or taking surface ownership. If a retained edit
+is shown, Discard erasing restores its preview, while Retry erasing applies the
+same selected IDs only when the patch remains unchanged. The optional book fields
+must allow switching a tip between draw/erase and inspecting its saved mode.

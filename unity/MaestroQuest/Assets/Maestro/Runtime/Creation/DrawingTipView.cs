@@ -45,7 +45,7 @@ namespace Maestro.Quest.Creation
             if(blockedUntilSeparation)return;
             blockedUntilSeparation=true;
             if(!capture){capture=editor.gameObject.AddComponent<SpatialDrawing>();capture.Editor=editor;}
-            capture.BeginTool(target,ray,data.color,data.radius,role);
+            capture.BeginTool(target,ray,data.color,data.radius,role,data.Mode=="erase");
         }
         void Finish(){if(editor)editor.GetComponent<SpatialDrawing>()?.EndTool(target);}
         void Interrupt(){if(editor)editor.GetComponent<SpatialDrawing>()?.InterruptTool(target);}

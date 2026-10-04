@@ -27,7 +27,7 @@ namespace Maestro.Quest.Tests
             Directory.CreateDirectory(Path.Combine(directory,"room"));File.WriteAllText(Path.Combine(directory,"room","keep.txt"),"Original workspace");File.WriteAllText(Path.Combine(directory,"room","action-receipts.v1.json"),"Original receipts stay private");
             var model=ModelFixture.Mixamo();modelHash=ModelLibrary.Hash(model);
             var docs=new Dictionary<string,byte[]> {
-                ["room.v12.json"]=Json(new RoomDocument {version=RoomDocument.CurrentVersion,objects=new[]{new RoomObjectData {id="book",kind=RoomObjectKind.Book},new RoomObjectData {id="maestro",kind=RoomObjectKind.Maestro,modelHash=modelHash}}}),
+                ["room.v13.json"]=Json(new RoomDocument {version=RoomDocument.CurrentVersion,objects=new[]{new RoomObjectData {id="book",kind=RoomObjectKind.Book},new RoomObjectData {id="maestro",kind=RoomObjectKind.Maestro,modelHash=modelHash}}}),
                 ["behaviours.v2.json"]=Json(new RuleDocument()),["controls.v2.json"]=Json(new ControllerPreferences()),["avatar-activities.v2.json"]=Json(new AvatarActivityDocument()),
                 ["motions/motions.v2.json"]=Encoding.UTF8.GetBytes("{\"version\":2,\"entries\":[],\"sources\":[]}")};
             var assets=new Dictionary<string,Func<Stream>> {["models/"+modelHash+".glb"]=()=>new MemoryStream(model,false)};
@@ -90,7 +90,7 @@ namespace Maestro.Quest.Tests
         public void ChangedPreviewCannotBecomeActive(string part)
         {
             var p=Prepare();string target=Generation(p.Id);
-            if(part=="content")File.WriteAllText(Path.Combine(target,"data","room.v12.json"),"{}");
+            if(part=="content")File.WriteAllText(Path.Combine(target,"data","room.v13.json"),"{}");
             if(part=="inventory")File.WriteAllText(Path.Combine(target,"data","foreign.txt"),"not in preview");
             if(part=="manifest")File.AppendAllText(Path.Combine(target,"manifest.json")," ");
             Assert.Throws<InvalidDataException>(()=>Activate(store,p.Id,p.Receipt.ManifestHash,"initial"));Assert.That(store.Load().Revision,Is.EqualTo("initial"));Assert.That(File.Exists(Path.Combine(target,"activation.v1.json")),Is.False);
@@ -128,7 +128,7 @@ namespace Maestro.Quest.Tests
         public void InterruptedRecoveryKeepsCompleteSelectedWorkspaceAndFreshReviewBoundary(string point,bool committed)
         {
             var p=Prepare();var active=Activate(store,p.Id,p.Receipt.ManifestHash,"initial");var interrupted=new WorkspaceGenerationStore(directory,phase=>{if(phase==point)throw new IOException("Interrupted recovery");});Assert.Throws<IOException>(()=>interrupted.RestorePrevious(active.Revision));
-            var selected=store.Load();Assert.That(selected.Active.Generation,Is.EqualTo(committed?Retained(p.Id).Id:p.Id));Assert.That(selected.Active.ReviewRequired,Is.True);Assert.That(File.Exists(Path.Combine(store.DataDirectory(selected.Active),"room.v12.json")),Is.True);
+            var selected=store.Load();Assert.That(selected.Active.Generation,Is.EqualTo(committed?Retained(p.Id).Id:p.Id));Assert.That(selected.Active.ReviewRequired,Is.True);Assert.That(File.Exists(Path.Combine(store.DataDirectory(selected.Active),"room.v13.json")),Is.True);
             if(committed)Assert.That(selected.Active.ReceiptEpoch,Is.Not.EqualTo("original"));else Assert.That(selected.Revision,Is.EqualTo(active.Revision));
         }
         [Test] public void WriterExclusionAndCancelledPreparationLeaveSelectionUnchanged()
@@ -145,7 +145,7 @@ namespace Maestro.Quest.Tests
         [TestCase("content")] [TestCase("hash")] public void ChangedRetainedSnapshotCannotReplaceTheCurrentWorkspace(string change)
         {
             var imported=Prepare();var saved=Retained(imported.Id);string hash=saved.Receipt.ManifestHash;
-            if(change=="content")File.WriteAllText(Path.Combine(Generation(saved.Id),"data","room.v12.json"),"{}");else hash=new string('a',64);
+            if(change=="content")File.WriteAllText(Path.Combine(Generation(saved.Id),"data","room.v13.json"),"{}");else hash=new string('a',64);
             Assert.Throws<InvalidDataException>(()=>store.Activate(imported.Id,imported.Receipt.ManifestHash,"initial",saved.Id,hash));Assert.That(store.Load().Revision,Is.EqualTo("initial"));
             Assert.That(File.Exists(Path.Combine(Generation(imported.Id),"activation.v1.json")),Is.False);
         }

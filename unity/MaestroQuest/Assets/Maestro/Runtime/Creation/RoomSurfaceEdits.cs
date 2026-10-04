@@ -23,6 +23,11 @@ namespace Maestro.Quest.Creation
                 if(surface==null){error="This drawing surface was removed";return false;}
                 if(op=="removeSurface")list.Remove(surface);
                 else if(op=="clear")surface.strokes=Array.Empty<SurfaceStroke>();
+                else if(op=="removeStrokes") {
+                    var remove=((JArray)args["strokes"]).Values<string>().ToArray();
+                    if(remove.Length<1||remove.Length>32||remove.Distinct().Count()!=remove.Length||remove.Any(id=>!surface.strokes.Any(s=>s.id==id))){error="Choose unique current surface stroke identities";return false;}
+                    surface.strokes=surface.strokes.Where(s=>!remove.Contains(s.id)).ToArray();
+                }
                 else {
                     var strokes=surface.strokes.ToList();strokeId=(string)args["stroke"];
                     string requestedStroke=strokeId;var stroke=strokes.FirstOrDefault(s=>s.id==requestedStroke);

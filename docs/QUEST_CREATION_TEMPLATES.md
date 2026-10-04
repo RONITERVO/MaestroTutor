@@ -29,11 +29,14 @@ animation. Successful receipt replay cannot create it twice.
 | Building brick | Body and four visible studs, single bounded proxy | Loose stacking plus editable Top/Bottom snap points; explicit place/join, no automatic stud interlocking |
 | Pawn | Lathe chess pawn with conservative cylinder collision | Editable/copyable piece; no chessboard or legal-move engine |
 | Ball | Sphere with bouncy physics | Existing throw/roll/contact capabilities |
-| Held chalk | Ordinary editable recipe and configurable drawing tip | Flat configured patches; no arbitrary curved/deforming paint |
+| Held chalk | Ordinary editable recipe and configurable drawing tip | Configured plane/cylinder/sphere patches; no arbitrary mesh/skin paint |
+| Pencil | Yellow barrel, wood/graphite tip and narrow dark ink | Editable tip, same contact and save path as chalk |
+| Paint brush | Purple handle, ferrule and blue bristles with wider ink | Dry surface strokes; no fluid/bristle simulation |
+| Eraser | Pink rubber and purple sleeve with an erase tip | Swept whole-stroke selection, one save/Undo per gesture |
 | Chalkboard | Five editable parts and a drawing patch on the Board part | Flat ink, whole-stroke erase; no curved projection |
 | Box robot | Nineteen parented parts, two wave tracks, initially idle | Fixed whole-body proxy does not follow animated parts |
 
-The first set is deliberately smaller than the complete proposed play kit. Curved
+The sixteen-template set is deliberately smaller than the complete proposed play kit. Arbitrary mesh/skin
 painting, further fidgets, a shipped chess layout, persistent water and snow
 remain separate increments in
 [world authoring](QUEST_WORLD_AUTHORING.md). This set does not fulfill those gates. Existing pieces can now share a

@@ -89,7 +89,7 @@ namespace Maestro.Quest.Creation
             if(!pencilAction||!eraseAction)return;
             if(selectionLabel){var selection=editor.ObserveConstructionSelection();selectionLabel.text=selection.collecting?$"Finish ({selection.members.Length})":"Collect pieces";selectionLabel.GetComponentInParent<PhysicalRoomAction>().AccessibleName=selectionLabel.text;}
             if(moveLabel){moveLabel.text=editor.ObserveConstructionManipulation().visible?"Hide mover":"Move pieces";moveLabel.GetComponentInParent<PhysicalRoomAction>().AccessibleName=moveLabel.text;}
-            bool retained=editor.GetComponent<SpatialDrawing>()?.HasUnsavedStroke==true;pencilLabel.text=retained?"Retry stroke":"Draw";eraseLabel.text=retained?"Discard stroke":editor.DrawingOnSurfaces?"Erase ink":"Erase";
+            var draft=editor.GetComponent<SpatialDrawing>();bool retained=draft?.HasUnsavedStroke==true;bool erasing=draft?.IsErasing==true;pencilLabel.text=retained?(erasing?"Retry erasing":"Retry stroke"):"Draw";eraseLabel.text=retained?(erasing?"Discard erasing":"Discard stroke"):editor.DrawingOnSurfaces?"Erase ink":"Erase";
             if(surfacePaint)surfacePaint.color=editor.DrawingMode&&editor.DrawingOnSurfaces?IllustratedMaterials.Hex("2B8D88"):IllustratedMaterials.Paper;
             pencilAction.AccessibleName=pencilLabel.text;eraseAction.AccessibleName=eraseLabel.text;
             status.text = (editor.TemporaryRoom?"TEMPORARY | ":"SAVED ROOM | ")+editor.Status;

@@ -8281,13 +8281,16 @@
                   "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496",
                   "b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651",
                   "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33",
+                  "791244d43b757f12e7d085fbbff100e5076d981e98038c3ef8cd6d2ee191e79e",
                   "7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca",
                   "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab",
                   "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac",
                   "835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278",
                   "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950",
+                  "9eed7dbf83831c529d199a00ecbee3dc30ccd26892e3cf025dcfcef3a950c347",
                   "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18",
                   "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99",
+                  "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22",
                   "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316",
                   "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71",
                   "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45"
@@ -8296,13 +8299,16 @@
                   "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "Ball",
                   "b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651": "Water basin",
                   "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33": "Building brick",
+                  "791244d43b757f12e7d085fbbff100e5076d981e98038c3ef8cd6d2ee191e79e": "Paint brush",
                   "7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca": "Bucket",
                   "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab": "Chalk",
                   "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "Chalkboard",
                   "835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278": "Cup",
                   "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950": "Domino",
+                  "9eed7dbf83831c529d199a00ecbee3dc30ccd26892e3cf025dcfcef3a950c347": "Eraser",
                   "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18": "Fork",
                   "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99": "Pawn",
+                  "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22": "Pencil",
                   "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316": "Plate",
                   "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71": "Box robot",
                   "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "Spoon"
@@ -8311,13 +8317,16 @@
                   "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "quest/templates/f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496.png",
                   "b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651": "quest/templates/b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651.png",
                   "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33": "quest/templates/5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33.png",
+                  "791244d43b757f12e7d085fbbff100e5076d981e98038c3ef8cd6d2ee191e79e": "quest/templates/791244d43b757f12e7d085fbbff100e5076d981e98038c3ef8cd6d2ee191e79e.png",
                   "7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca": "quest/templates/7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca.png",
                   "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab": "quest/templates/4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab.png",
                   "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "quest/templates/5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac.png",
                   "835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278": "quest/templates/835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278.png",
                   "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950": "quest/templates/4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950.png",
+                  "9eed7dbf83831c529d199a00ecbee3dc30ccd26892e3cf025dcfcef3a950c347": "quest/templates/9eed7dbf83831c529d199a00ecbee3dc30ccd26892e3cf025dcfcef3a950c347.png",
                   "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18": "quest/templates/3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18.png",
                   "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99": "quest/templates/a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99.png",
+                  "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22": "quest/templates/69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22.png",
                   "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316": "quest/templates/e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316.png",
                   "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71": "quest/templates/7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71.png",
                   "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "quest/templates/f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45.png"
@@ -8548,13 +8557,16 @@
                                 "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496",
                                 "b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651",
                                 "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33",
+                                "791244d43b757f12e7d085fbbff100e5076d981e98038c3ef8cd6d2ee191e79e",
                                 "7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca",
                                 "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab",
                                 "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac",
                                 "835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278",
                                 "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950",
+                                "9eed7dbf83831c529d199a00ecbee3dc30ccd26892e3cf025dcfcef3a950c347",
                                 "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18",
                                 "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99",
+                                "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22",
                                 "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316",
                                 "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71",
                                 "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45"
@@ -8563,13 +8575,16 @@
                                 "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "Ball",
                                 "b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651": "Water basin",
                                 "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33": "Building brick",
+                                "791244d43b757f12e7d085fbbff100e5076d981e98038c3ef8cd6d2ee191e79e": "Paint brush",
                                 "7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca": "Bucket",
                                 "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab": "Chalk",
                                 "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "Chalkboard",
                                 "835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278": "Cup",
                                 "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950": "Domino",
+                                "9eed7dbf83831c529d199a00ecbee3dc30ccd26892e3cf025dcfcef3a950c347": "Eraser",
                                 "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18": "Fork",
                                 "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99": "Pawn",
+                                "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22": "Pencil",
                                 "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316": "Plate",
                                 "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71": "Box robot",
                                 "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "Spoon"
@@ -8578,13 +8593,16 @@
                                 "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "quest/templates/f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496.png",
                                 "b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651": "quest/templates/b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651.png",
                                 "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33": "quest/templates/5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33.png",
+                                "791244d43b757f12e7d085fbbff100e5076d981e98038c3ef8cd6d2ee191e79e": "quest/templates/791244d43b757f12e7d085fbbff100e5076d981e98038c3ef8cd6d2ee191e79e.png",
                                 "7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca": "quest/templates/7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca.png",
                                 "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab": "quest/templates/4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab.png",
                                 "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "quest/templates/5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac.png",
                                 "835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278": "quest/templates/835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278.png",
                                 "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950": "quest/templates/4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950.png",
+                                "9eed7dbf83831c529d199a00ecbee3dc30ccd26892e3cf025dcfcef3a950c347": "quest/templates/9eed7dbf83831c529d199a00ecbee3dc30ccd26892e3cf025dcfcef3a950c347.png",
                                 "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18": "quest/templates/3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18.png",
                                 "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99": "quest/templates/a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99.png",
+                                "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22": "quest/templates/69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22.png",
                                 "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316": "quest/templates/e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316.png",
                                 "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71": "quest/templates/7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71.png",
                                 "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "quest/templates/f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45.png"
@@ -11077,6 +11095,16 @@
                                       },
                                       "enabled": {
                                         "type": "boolean"
+                                      },
+                                      "mode": {
+                                        "type": "string",
+                                        "enum": [
+                                          "draw",
+                                          "erase"
+                                        ],
+                                        "x-features": [
+                                          "drawingErasers.v1"
+                                        ]
                                       },
                                       "version": {
                                         "type": "integer",
@@ -13775,6 +13803,16 @@
                   },
                   "enabled": {
                     "type": "boolean"
+                  },
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "draw",
+                      "erase"
+                    ],
+                    "x-features": [
+                      "drawingErasers.v1"
+                    ]
                   }
                 },
                 "required": [
@@ -13876,7 +13914,7 @@
         "source.revision.current",
         "storage.writable"
       ],
-      "description": "Give any created/imported object one saved drawing tip, or remove it. Empty part means its root; otherwise use a stable recipe part. Local +Z points toward the drawing patch. Ink colour and radius are independent of object paint and tray pencil preferences. Radius uses the receiving patch's local metres. The enabled tip draws only while a user or Maestro holds the tool and its tip is within one world centimetre of an enabled flat patch. Loose tools do not draw. No curved-mesh, skin or scanned-wall painting. One room capture at a time; loss of contact ends one saved stroke/Undo. After interruption or a busy/failed capture, separate the tip before starting again. Failed saves retain the draft for explicit retry/discard. Manual holding uses control priority; Maestro holding uses program priority and cannot interrupt a user. Configuration does not itself create ink or move objects. Copy, Undo, temporary rooms and portable workspaces retain the same tip data.",
+      "description": "Give any created/imported object one saved drawing tip, or remove it. Empty part means its root; otherwise use a stable recipe part. Local +Z points toward the drawing patch. Ink colour and radius are independent of object paint and tray pencil preferences. Radius uses the receiving patch's local metres. The enabled tip draws only while a user or Maestro holds the tool and its tip is within one world centimetre of an enabled plane/cylinder/sphere patch. Optional mode is draw (default) or erase. A held eraser sweeps complete strokes within twice its radius (minimum 1 cm) plus ink thickness; contact loss or release saves the selected IDs with one Undo. The preview hides selected ink while accepted source remains unchanged until save. Interrupted or failed erasing is retained for the same explicit retry/discard; no automatic deletion retry. Loose tools do not draw or erase. No arbitrary-mesh, skin or scanned-wall painting. One room capture at a time; loss of contact ends one saved stroke/Undo. After interruption or a busy/failed capture, separate the tip before starting again. Failed saves retain the draft for explicit retry/discard. Manual holding uses control priority; Maestro holding uses program priority and cannot interrupt a user. Configuration does not itself create ink or move objects. Copy, Undo, temporary rooms and portable workspaces retain the same tip data.",
       "example": {
         "operation": "configure",
         "target": "00000000000000000000000000000000",
@@ -16473,6 +16511,73 @@
               "operation": {
                 "type": "string",
                 "enum": [
+                  "removeStrokes"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              },
+              "surface": {
+                "type": "string",
+                "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+                "maxLength": 32
+              },
+              "strokes": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{32}$",
+                  "maxLength": 32
+                },
+                "minItems": 1,
+                "maxItems": 32
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "revision",
+              "surface",
+              "strokes"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "object.surfaces",
+              "version": 1,
+              "arguments": {
+                "target": "target"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
+            "title": "Erase selected strokes",
+            "x-features": [
+              "drawingSurfaces.v1",
+              "drawingErasers.v1"
+            ],
+            "format": "surfaceStrokeSelection"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
                   "clear"
                 ],
                 "x-static": true
@@ -16588,7 +16693,7 @@
         "source.revision.current",
         "storage.writable"
       ],
-      "description": "Configure reusable plane, cylinder or sphere drawing patches on user-created objects or named recipe parts. This is an explicit configured surface, not projection onto collision boxes, imported mesh triangles, skin or the physical room. Position/rotation belong to the object or part; local X/Y are paper coordinates and the front faces local -Z. Width/height are .02–4 local metres. Use empty part for the object root. Existing marks stay in their patch coordinates; moving/reorienting a patch moves them deliberately and shrinking cannot crop them silently. enabled controls new physical/add strokes, not visibility. add supplies 2–64 planar points (z=0) and returns an exact stroke ID; empty stroke generates one. splice exposes up to 512 points per stroke in batches of 64. removeStroke, clear and removeSurface explicitly remove marks with one Undo. Four surfaces per object, 64 surfaces/128 strokes and 32768 drawing points per room including spatial strokes. Failed saves preserve ink. Temporary edits stay in the fork until Keep. Optional shape is plane (default), cylinder or sphere. Curves require curvatureRadius .01–4 local metres, width at most 2*pi*radius; spheres also require height at most .9*pi*radius to avoid poles. Coordinates are arc lengths at the equator: P=(r*sin(x/r), y, r*(1-cos(x/r))) for cylinders and P=(r*cos(y/r)*sin(x/r), r*sin(y/r), r*(1-cos(y/r)*cos(x/r))) for spheres. No seam wrapping: begin another stroke after crossing a patch edge. Plane radius is zero. Curved strokes tessellate at five-degree steps, at most 2048 rendered points each; these count against the shared room point budget. No inferred mesh UVs, skin deformation, physics or drawing-input start is added.",
+      "description": "Configure reusable plane, cylinder or sphere drawing patches on user-created objects or named recipe parts. This is an explicit configured surface, not projection onto collision boxes, imported mesh triangles, skin or the physical room. Position/rotation belong to the object or part; local X/Y are paper coordinates and the front faces local -Z. Width/height are .02–4 local metres. Use empty part for the object root. Existing marks stay in their patch coordinates; moving/reorienting a patch moves them deliberately and shrinking cannot crop them silently. enabled controls new physical/add strokes, not visibility. add supplies 2–64 planar points (z=0) and returns an exact stroke ID; empty stroke generates one. splice exposes up to 512 points per stroke in batches of 64. removeStroke, removeStrokes (1–32 unique current IDs), clear and removeSurface explicitly remove marks with one Undo. Four surfaces per object, 64 surfaces/128 strokes and 32768 drawing points per room including spatial strokes. Failed saves preserve ink. Temporary edits stay in the fork until Keep. Optional shape is plane (default), cylinder or sphere. Curves require curvatureRadius .01–4 local metres, width at most 2*pi*radius; spheres also require height at most .9*pi*radius to avoid poles. Coordinates are arc lengths at the equator: P=(r*sin(x/r), y, r*(1-cos(x/r))) for cylinders and P=(r*cos(y/r)*sin(x/r), r*sin(y/r), r*(1-cos(y/r)*cos(x/r))) for spheres. No seam wrapping: begin another stroke after crossing a patch edge. Plane radius is zero. Curved strokes tessellate at five-degree steps, at most 2048 rendered points each; these count against the shared room point budget. No inferred mesh UVs, skin deformation, physics or drawing-input start is added.",
       "example": {
         "operation": "configure",
         "target": "00000000000000000000000000000000",
@@ -16908,7 +17013,7 @@
         "drawing.retained",
         "drawing.session.current"
       ],
-      "description": "Resolve the same frozen failed physical-pencil draft as the tray's Retry stroke and Discard stroke controls. Read object.drawing.capture and supply its current sessionId. For a configured surface, retry appends ink to that unchanged patch and objectId identifies its owner; read object.surface.strokes for stroke IDs. Changed or missing patches refuse retry. For free-space captures, retry creates exactly that stroke through normal saved creation and Undo, or locally in its original temporary room until Keep; failure retains the points and error for another explicit attempt. Discard removes only the unsaved in-memory draft, never a saved selected object. No live stroke is interrupted, no drawing mode is enabled and no automatic retry occurs. The retained draft blocks workspace/temporary-room changes until resolved. App/room destruction loses unsaved memory; it is not a crash recovery archive. Saved output acknowledges an object, while discarded output has empty objectId. A completed receipt is historical and cannot save/discard a later draft. Neither path starts playback or physics.",
+      "description": "Resolve the same frozen failed physical-pencil draft as the tray's Retry stroke and Discard stroke controls. Read object.drawing.capture and supply its current sessionId. For a held eraser, retry removes its selected complete stroke IDs from the unchanged patch with one Undo; points=0, mode=erase and strokes reports the selected count. For a configured drawing surface, retry appends ink to that unchanged patch and objectId identifies its owner; read object.surface.strokes for stroke IDs. Changed or missing patches refuse retry. For free-space captures, retry creates exactly that stroke through normal saved creation and Undo, or locally in its original temporary room until Keep; failure retains the points and error for another explicit attempt. Discard removes only the unsaved in-memory draft, never a saved selected object. No live stroke is interrupted, no drawing mode is enabled and no automatic retry occurs. The retained draft blocks workspace/temporary-room changes until resolved. App/room destruction loses unsaved memory; it is not a crash recovery archive. Saved output acknowledges an object, while discarded output has empty objectId. A completed receipt is historical and cannot save/discard a later draft. Neither path starts playback or physics.",
       "example": {
         "operation": "retry",
         "sessionId": "00000000000000000000000000000000"
@@ -16935,8 +17040,20 @@
           },
           "points": {
             "type": "integer",
-            "minimum": 2.0,
+            "minimum": 0.0,
             "maximum": 2048.0
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "draw",
+              "erase"
+            ]
+          },
+          "strokes": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 32.0
           },
           "temporary": {
             "type": "boolean"
@@ -23609,7 +23726,8 @@
                 }
               },
               "radius": "number",
-              "enabled": "boolean"
+              "enabled": "boolean",
+              "mode": "text"
             }
           }
         }
@@ -24526,12 +24644,14 @@
           "sessionId": "text",
           "phase": "text",
           "points": "number",
+          "mode": "text",
+          "strokes": "number",
           "temporary": "boolean",
           "error": "text"
         }
       },
       "label": "Physical pencil draft",
-      "description": "Live pencil phase (idle, drawing, unsaved), point count, temporary-room flag and bounded error. Unsaved retains a frozen failed stroke in memory and requires explicit Retry or Discard with this exact identity. Reads do not capture geometry or save it. Completed receipts and a later draft have different identities."
+      "description": "Live pencil phase (idle, drawing, unsaved), point count, mode (none/draw/erase), selected erasure stroke count, temporary-room flag and bounded error. Unsaved retains a frozen failed stroke in memory and requires explicit Retry or Discard with this exact identity. Reads do not capture geometry or save it. Completed receipts and a later draft have different identities."
     },
     {
       "id": "object.recipe",
@@ -26962,7 +27082,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "11d80ab76161358ad0f75e26584f04d87c7f48a97dc19383a8151b27e78efbeb"
+      "sha256": "4f4e783d123426ffc9dee7a2cf21ba425289aae1d14ffeb152a330879969a9e9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -26994,7 +27114,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "478802aa622a9a2e2dab0d69140d5687bf4aa86ecdeb86130b835050f1363379"
+      "sha256": "44c1ca0fdc635a6e04ca96e50cc0f6c2bb1a0c15d6b65eb511030135db389c9b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -27018,11 +27138,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "845b137c15b78d7fe2cdbc85de2839ee41477b207a20e53ff3e5e9b1242c03e6"
+      "sha256": "1dddf519f07f55209d9ee878e92824efadcf9492f6dc56e28923baf0cc0928fe"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
-      "sha256": "478184b72f77714ee8e03fcef1e17fd2983742d357a8be6069f43e258ce08340"
+      "sha256": "7bbe70691797e6bd19f0413eba96e9d61f5cf379e7f53c75a32733725823a6d1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleMemory.cs",
@@ -27038,11 +27158,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveCapture.cs",
-      "sha256": "96b3d500b150ac6a6f80083a98b6593087f78d1f12e52e77ef343ec48b5d2a65"
+      "sha256": "8f81406b2c1eaf2afd056c6aa835b5a02381f66f75cf74b3ea2eb56b4d3eaf93"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveSnapshot.cs",
-      "sha256": "531c5bb54180ef7a395cb4f5ec721297b97c149044722f547403ac44af475eea"
+      "sha256": "f5115c0a40822ad846bb8507a1c061f992d9e8b9e70d3470d731f1eea6abaa8b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.Retention.cs",
@@ -27242,7 +27362,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomToolTray.cs",
-      "sha256": "4639f2318431ce5f58907115fe627626fdd3f331740278148572b0614b30ccc1"
+      "sha256": "d8dee632c5cc6dcd21a5fce6671ae8294ce2a7066637b8ee755fa89ee89aade1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PhysicalRoomAction.cs",
@@ -27269,8 +27389,12 @@
       "sha256": "38c78c1de2fa94d06b14fdfce27466f9a6a286fcfbc4e2da06b4896bfa42b6b0"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SurfaceEraseSelection.cs",
+      "sha256": "52e7981f25b2b6736f7f25ef3fa31184f02eac055d52fae8e591beed93ea9723"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/DrawingTip.cs",
-      "sha256": "d059d317d592b55f1a374ceae83f069fbe79e8e3162918da0f2da3470a4927aa"
+      "sha256": "87377de4b8fcecaf4c2abfa9c2116b879e05e5a087ffdfa38fa38a2c26d899f2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomConnection.cs",
@@ -27334,15 +27458,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/DrawingTipView.cs",
-      "sha256": "9c5d436fa92d2d4c72e7fd4f30f0cb3c506a99c8d71fb6e98de2cf9108c14368"
+      "sha256": "a2b203c4bccaec45a613c0efde0d090a26e64be3b186772b2bc77d0b5814c847"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDrawingTipEdits.cs",
-      "sha256": "4f260161489204b351af06c14b20a75a2a65284072808fbfe4783362553b4805"
+      "sha256": "faba309d3ec26c76a9f8a3f250c935134ba9a7c561fce8be532a556aec44e009"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/DrawingSurfaceView.cs",
-      "sha256": "82d7982b8a66631115fffefc141d29eb6b002c02ac8dd2f31d467b495bdbed6b"
+      "sha256": "f7716ef96d597110f1aedd718377e634be7c0ab7b17692c570f64200fb182d61"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/DrawingSurfaceOcclusion.cs",
@@ -27350,7 +27474,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSurfaceEdits.cs",
-      "sha256": "5e64dda0c35f8d380de45335b4f637e72d326a7d3ea3822615426af014d480cd"
+      "sha256": "21ccccbde9898505fc2be74d1ab8963ce213f18688e2cc267f114b743ee061d7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRecipeEdits.cs",
@@ -27358,7 +27482,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "bafe069699b360ba1c1c326e3b7b82a78d5f324e5c76c359a066fa7605ba1299"
+      "sha256": "0155443f14b750b97c9e6aed5be4d09fc71311136c8b8b9e13cc487432daaff8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedDrawing.cs",
@@ -27366,7 +27490,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SpatialDrawing.cs",
-      "sha256": "c6ed88222a886cf09dec81636bec5f7958639a737fc140a031370b467d2618c1"
+      "sha256": "a6a35cea6c94527921439e105d2b5b174fdae35c9c7f40be2b42e31d72351f31"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedRoomObject.cs",
@@ -27502,7 +27626,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationTemplates.cs",
-      "sha256": "c6ed44e3254d4f29cbeb240175d3019569abca25a5e1f608be6f04fd6ee4a3b9"
+      "sha256": "6a83a96746d6ba6a5769244a1a71103567b30005adb1f6eaf4d142f520cdb3f0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLayout.cs",
@@ -27626,7 +27750,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreationPrototypeSchema.cs",
-      "sha256": "ec6dd39261a1acaffb11b285277025fa5898c048cab68b5234f1a4d3cb167f69"
+      "sha256": "da89a5b8e9da528a5ba6e0ed8d031d694e8974f0a72427b33d0433d19e8b205a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingCapabilities.cs",
@@ -27634,11 +27758,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingResolveCapability.cs",
-      "sha256": "fd61c2dd13a1e8cf51cfa0ad9f256e66960f713cdd13f684943a8b8570e7526d"
+      "sha256": "11bd93bfc5d9786c8c4cbcae96bea989eeb6529f6db75e4333197b11fcc0815a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingSurfaceCapability.cs",
-      "sha256": "e0da398604bd1880caeb84ff0578838a967f5b86921f96035cf97d4758bf8b53"
+      "sha256": "a9341dc22ccbacb0e9ea2a32cd2c2eff48e331e7fb22cd88ff090e4e958a8bd5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingSurfaceFacts.cs",
@@ -27646,7 +27770,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingTipCapability.cs",
-      "sha256": "8e833bbd7aca3eddb468efdde0e66346fa6e22df58c629b76ceec1dbdfc73b9a"
+      "sha256": "896423ecd38876f03f48b61009f74eee39a408496699c7a078b29018c5b38120"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingToolCapability.cs",
@@ -27841,6 +27965,10 @@
       "sha256": "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/brush.json",
+      "sha256": "791244d43b757f12e7d085fbbff100e5076d981e98038c3ef8cd6d2ee191e79e"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/bucket.json",
       "sha256": "7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca"
     },
@@ -27861,12 +27989,20 @@
       "sha256": "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/eraser.json",
+      "sha256": "9eed7dbf83831c529d199a00ecbee3dc30ccd26892e3cf025dcfcef3a950c347"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/fork.json",
       "sha256": "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/pawn.json",
       "sha256": "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/pencil.json",
+      "sha256": "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/plate.json",

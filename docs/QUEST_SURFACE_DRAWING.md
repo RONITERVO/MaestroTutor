@@ -58,8 +58,8 @@ retry or discard. Moving the object while a draft is retained keeps its local in
 ## Persistence and boundaries
 
 Ink is part of copied objects, room Undo, temporary snapshots and portable
-workspaces. Current room files are `room.v12.json`, paired snapshot intents are
-`room-snapshot.v11.json`, and portable archive manifests are version 11. Clean older
+workspaces. Current room files are `room.v13.json`, paired snapshot intents are
+`room-snapshot.v12.json`, and portable archive manifests are version 12. Clean older
 room documents can load through the existing versioned reader; older originals
 remain. Prior in-flight snapshot journals and prior archives are preserved and
 refused instead of being reinterpreted. This is pre-release format work under the
@@ -170,3 +170,38 @@ held chalk, erasing/Undo, scaled frames, failed-save retry, copying and temporar
 Discard. Real Quest contact comfort and maximum-load performance remain open.
 Arbitrary triangle/UV painting, skinned deformation and scanned-wall overlays
 remain separate unfinished capabilities.
+
+## Held erasers and drawing defaults (2026-10-04)
+
+Pencil, Paint brush and Eraser join Chalk as ordinary editable recipe objects.
+Any configured drawing tip can use `mode: "draw"` or `mode: "erase"` through
+`object.drawingTip.edit`; the saved tip and its fact expose that mode. Omission
+retains drawing. Explicit modes and batch erasure require `drawingErasers.v1`.
+Drawing tips retain component version 1; erasing tips use version 2. Room v13,
+paired snapshot v12 and archive v12 protect that distinction from older readers.
+
+A held eraser sweeps over complete strokes on the contacted plane, cylinder or
+sphere patch. Its own radius sets tolerance (twice radius, with a 1 cm minimum),
+plus ink thickness. Samples connect along the configured curved surface. Movement
+over 35 local centimetres ends a gesture instead of erasing across a jump. Solid
+obstructions, contact loss, grip release and ownership follow the same drawing
+path. Loose erasers are inert; Maestro-held tools cannot interrupt a human.
+
+Touched strokes disappear in preview while their accepted saved source remains
+unchanged. Contact loss or release commits all selected IDs as one saved edit and
+one Undo. The existing tap eraser remains one whole-stroke edit per tap. Agents,
+programs and generated book fields can call `object.surface.edit` with operation
+`removeStrokes` and 1–32 unique exact IDs. A stale revision, duplicate or missing ID
+refuses the entire edit without partial removal.
+
+Failed saves and interruptions retain the selected IDs and original patch, with
+**Retry erasing** and **Discard erasing** on the tray. Retry reacquires ownership
+and checks the original patch; it never silently recomputes which strokes to erase.
+Discard restores the visible ink. The shared capture fact and resolution receipt
+report mode and selected-stroke count, with zero point count for erasure. Existing
+room-switch and temporary-room protections apply to this retained edit too.
+
+This is whole-stroke erasure, not cutting individual stroke segments or wet paint.
+Desktop tests cover curved sweeps, physical grip/contact, solid obstruction,
+priority, failed-save recovery, atomic batch editing and Undo. Quest contact feel
+and performance at maximum admitted drawing capacity remain acceptance work.

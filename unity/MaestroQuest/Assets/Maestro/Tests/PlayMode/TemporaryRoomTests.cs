@@ -21,7 +21,7 @@ namespace Maestro.Quest.Tests
         RoomEditor editor;
         RoomInteraction room;
         RoomPhysicsWorld physics;
-        string Primary=>Path.Combine(directory,"room.v12.json");
+        string Primary=>Path.Combine(directory,"room.v13.json");
         [UnitySetUp] public IEnumerator SetUp()
         {
             directory=Path.Combine(Path.GetTempPath(),"MaestroTemporaryTests-"+Guid.NewGuid().ToString("N"));

@@ -225,6 +225,16 @@ try{
   if(typeof curvedStroke!=='string'||typeof curvedRevision!=='number')throw new Error('Curved ink receipt missing');
   const curvedPoints=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.surface.stroke',version:1,arguments:{target:curvedId,surface:'Front',stroke:curvedStroke,revision:curvedRevision,offset:0}}}]);
   if((curvedPoints.catalog?.value as {total:number})?.total!==3)throw new Error('Curved ink source not preserved');
+  const eraseSecond=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.surface.edit',version:1,arguments:{operation:'add',target:curvedId,revision:curvedRevision,surface:'Front',stroke:'',red:.8,green:.2,blue:.1,radius:.003,points:[{x:-.08,y:-.03,z:0},{x:.08,y:-.03,z:0}]}}}}]);
+  const eraseId=eraseSecond.execution?.selected?.output?.stroke;if(typeof eraseId!=='string')throw new Error('Second erase sample missing');
+  const eraseCurrent=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.surfaces',version:1,arguments:{target:curvedId}}}]);
+  const eraseAfter=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.surface.edit',version:1,arguments:{operation:'removeStrokes',target:curvedId,revision:(eraseCurrent.catalog?.value as {revision:number}).revision,surface:'Front',strokes:[curvedStroke,eraseId]}}}}]);
+  const eraseRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.surfaces',version:1,arguments:{target:curvedId}}}]);
+  if((eraseRead.catalog?.value as {surfaces:{strokes:number}[]})?.surfaces[0].strokes!==0)throw new Error('Atomic erasure left ink');
+  await execute([{action:'undo'}]);const eraseUndone=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.surfaces',version:1,arguments:{target:curvedId}}}]);
+  if((eraseUndone.catalog?.value as {surfaces:{strokes:number}[]})?.surfaces[0].strokes!==2)throw new Error('Atomic erasure Undo did not restore both strokes');
+  await writeFile(join(directory,'eraser-surface-authoring.json'),JSON.stringify({boundary:'Actual native atomic stroke-ID erasure and one Undo through the shared client. Physical held erasing has separate interaction tests.',before:eraseSecond,search:curvedSearch,definition:curvedActionDefinition,current:eraseCurrent,after:eraseAfter,read:eraseRead,undone:eraseUndone},null,2));
+  await execute([{action:'undo'}]);
   await execute([{action:'undo'}]);
   const curvedUndone=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.surfaces',version:1,arguments:{target:curvedId}}}]);
   if((curvedUndone.catalog?.value as {surfaces:{strokes:number}[]})?.surfaces[0].strokes!==0)throw new Error('Curved ink Undo failed');
@@ -247,6 +257,23 @@ try{
   if((tipUndo.catalog?.value as typeof tipValue)?.definition.color.b!==1)throw new Error('Drawing-tip Undo failed');
   await execute([{action:'undo'}]);
   await writeFile(join(directory,'drawing-tip-authoring.json'),JSON.stringify({boundary:'Real Unity native configuration/readback/Undo; physical grip tested separately. No headset or provider proof.',before:tipCreated,search:tipSearch,definition:tipDefinition,current:tipCurrent,after:tipEdited,read:tipRead,undo:tipUndo},null,2));
+  const drawingKit=[];
+  for(const name of ['pencil','brush','eraser']){
+   const hash=createHash('sha256').update(await readFile('unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/'+name+'.json')).digest('hex');
+   const created=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'template',templateHash:hash,name:'',x:.4,y:1,z:.6,scale:1}}}}]);
+   const id=created.execution?.selected?.output?.objectId;if(typeof id!=='string')throw new Error('Drawing-kit object missing');
+   const current=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.drawingTip',version:1,arguments:{target:id}}}]);
+   const tip=current.catalog?.value as {revision:number;definition:{mode:string}};if(tip?.definition.mode!==(name==='eraser'?'erase':'draw'))throw new Error('Drawing-kit mode differs');
+   const search=await execute([{action:'catalog',catalog:{operation:'search',query:"Configure an object's drawing tip",offset:0}}]);
+   const definition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.drawingTip.edit',version:1}}]);
+   const edited=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.drawingTip.edit',version:1,arguments:{operation:'configure',target:id,revision:tip.revision,definition:{...tip.definition,mode:name==='eraser'?'draw':'erase'}}}}}]);
+   const read=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.drawingTip',version:1,arguments:{target:id}}}]);
+   if((read.catalog?.value as typeof tip)?.definition.mode==tip.definition.mode)throw new Error('Drawing-tool mode edit failed');
+   await execute([{action:'undo'}]);const undone=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.drawingTip',version:1,arguments:{target:id}}}]);
+   if((undone.catalog?.value as typeof tip)?.definition.mode!==tip.definition.mode)throw new Error('Drawing-tool mode Undo failed');
+   await execute([{action:'undo'}]);drawingKit.push({name,hash,before:created,current,search,definition,after:edited,read,undone});
+  }
+  await writeFile(join(directory,'drawing-kit.json'),JSON.stringify({boundary:'Actual native template creation, shared mode configuration/readback and Undo. Held contact and failed saves have separate native interaction tests.',examples:drawingKit},null,2));
   const layoutIds:string[]=[];let layoutBefore=templateUndo;
   for(let i=0;i<2;i++){
    layoutBefore=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'template',templateHash:brickHash,name:brickSource.name+' '+(i+1),x:.4+i*.25,y:1.2,z:.7,scale:1}}}}]);

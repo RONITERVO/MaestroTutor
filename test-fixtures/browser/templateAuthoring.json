@@ -2,12 +2,12 @@
   "boundary": "Real Unity native states; browser acknowledgements replayed separately. Not headset or provider proof.",
   "before": {
     "version": 1,
-    "revision": 93,
+    "revision": 92,
     "sceneRevision": 19,
     "ack": 38,
-    "session": "6ad682f8d44b4e6f8879b649ff899e16",
+    "session": "1847ab3a2da34a249eb7ae5cddc22612",
     "status": "Undone",
-    "selectedId": "2d8cf1f70689489d84ecc013b583dfd0",
+    "selectedId": "5e7d1144c10d403583e03f2134da367a",
     "ok": true,
     "canUndo": false,
     "canRedo": true,
@@ -15,12 +15,12 @@
     "visible": false,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "d93ed9dedd3f44deb7c950e90f283f4a",
+      "stateId": "a85cc9bd520740f3bfc5dd8b11287049",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "d93ed9dedd3f44deb7c950e90f283f4a",
+      "stateId": "a85cc9bd520740f3bfc5dd8b11287049",
       "error": "",
       "visible": false,
       "holding": false
@@ -93,6 +93,7 @@
       "drawingSurfaces.v1",
       "curvedDrawingSurfaces.v1",
       "drawingTips.v1",
+      "drawingErasers.v1",
       "containers.v1",
       "containerPouring.v1",
       "containerScooping.v1",
@@ -152,7 +153,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "2efb8d35d1534d138d114382589e6b5f",
+      "id": "d39f81fb09374937ad71da0ee887f364",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -275,47 +276,20 @@
     },
     "objects": [
       {
-        "id": "1d93e4f08d414b2599db13d489244d64",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 3,
+        "id": "980ba88ad9814b79a8b4d32d523ac368",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
         "position": {
-          "x": 0.5199999809265137,
+          "x": 0.6899999976158142,
           "y": 1.4500000476837158,
           "z": 0.800000011920929
         },
         "scale": 1,
         "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "3b76a8e1c3f74f3598676f9b404adff2",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
           "a": 1
         },
         "animated": false,
@@ -356,20 +330,47 @@
         "movement": null
       },
       {
-        "id": "f2c096ebc30b403a8d906e1ee6bfebb7",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
+        "id": "c83c97ac8f354969887c0d84a3d40d9b",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 3,
         "position": {
-          "x": 0.6899999976158142,
+          "x": 0.5199999809265137,
           "y": 1.4500000476837158,
           "z": 0.800000011920929
         },
         "scale": 1,
         "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "e82f20ae9d4747d09efce879d9b3b858",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
           "a": 1
         },
         "animated": false,
@@ -415,12 +416,12 @@
     ],
     "created": [],
     "capture": {
-      "captureId": "1965e0c03d8d41bb8e26208d6749d42f",
+      "captureId": "ba59cbfae8e348449a6b1790d080d81e",
       "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
       "mimeType": "image/jpeg",
       "width": 512,
       "height": 384,
-      "capturedAt": "2026-10-04T03:44:00.3396398Z",
+      "capturedAt": "2026-10-04T04:36:03.880158Z",
       "sceneRevision": 3,
       "verticalFov": 60,
       "position": {
@@ -508,7 +509,7 @@
       "status": "Fact value is currently unavailable; do not treat it as false or zero.",
       "category": "facts",
       "arguments": {
-        "target": "2d8cf1f70689489d84ecc013b583dfd0",
+        "target": "5e7d1144c10d403583e03f2134da367a",
         "revision": 18,
         "part": "Handle",
         "offset": 0
@@ -518,16 +519,16 @@
     },
     "execution": {
       "selected": {
-        "id": "5208c5b491a54daebab0575b311f0ebc",
+        "id": "bd10fe7e08ec435e8a103b9652ab8f84",
         "capability": "object.recipe.edit",
         "version": 1,
         "resources": [
-          "2d8cf1f70689489d84ecc013b583dfd0"
+          "5e7d1144c10d403583e03f2134da367a"
         ],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "target": "2d8cf1f70689489d84ecc013b583dfd0",
+          "target": "5e7d1144c10d403583e03f2134da367a",
           "revision": 18,
           "parts": 1,
           "tracks": 0,
@@ -540,7 +541,7 @@
           "id": "object.recipe.edit",
           "version": 1,
           "arguments": {
-            "target": "2d8cf1f70689489d84ecc013b583dfd0",
+            "target": "5e7d1144c10d403583e03f2134da367a",
             "revision": 17,
             "parts": [
               {
@@ -649,30 +650,30 @@
       "running": [],
       "outcomes": [
         {
-          "id": "8847392d5f9d47c98376c65c1945f7c7",
+          "id": "2012c151fd214adeae99ab064ab39d16",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "f22ea2d051514084adbd30d25412ffb1"
+            "objectId": "a46d6e9505cf429383dad20b15612005"
           }
         },
         {
-          "id": "00c56c7791de4ba6bc6327fa167445a7",
+          "id": "a30e12a1e21149e3bc177db4d81b2645",
           "capability": "room.view.capture",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "captureId": "1965e0c03d8d41bb8e26208d6749d42f",
+            "captureId": "ba59cbfae8e348449a6b1790d080d81e",
             "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
             "mimeType": "image/jpeg",
             "width": 512,
             "height": 384,
-            "capturedAt": "2026-10-04T03:44:00.3396398Z",
+            "capturedAt": "2026-10-04T04:36:03.880158Z",
             "sceneRevision": 3,
             "verticalFov": 60,
             "position": {
@@ -689,27 +690,27 @@
           }
         },
         {
-          "id": "0d838b5f51d34daf90f15a03409e67b4",
+          "id": "30fa2975881445e9be80eb205bbacf2e",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "95afba471a84421685a8d7443649095d"
+            "objectId": "fb55cf86efe94c4180cc5c29530a0c38"
           }
         },
         {
-          "id": "9b6487bd7572462b8717f2fc09447195",
+          "id": "0b1618a459d44e9fb9d8ac38c626604f",
           "capability": "object.recipe.edit",
           "version": 1,
           "resources": [
-            "95afba471a84421685a8d7443649095d"
+            "fb55cf86efe94c4180cc5c29530a0c38"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "95afba471a84421685a8d7443649095d",
+            "target": "fb55cf86efe94c4180cc5c29530a0c38",
             "revision": 10,
             "parts": 1,
             "tracks": 0,
@@ -720,16 +721,16 @@
           }
         },
         {
-          "id": "4f70e6a9fb1a41509ea928e202a1e722",
+          "id": "a05ac5db3aa04e798224c2246cbcb3ef",
           "capability": "object.collision.edit",
           "version": 1,
           "resources": [
-            "95afba471a84421685a8d7443649095d"
+            "fb55cf86efe94c4180cc5c29530a0c38"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "95afba471a84421685a8d7443649095d",
+            "target": "fb55cf86efe94c4180cc5c29530a0c38",
             "revision": 12,
             "shapes": 2,
             "pieces": 13,
@@ -738,27 +739,27 @@
           }
         },
         {
-          "id": "f794f32dbea5424ea330663ab8d9756c",
+          "id": "a37ccbabd53b4f13b5b07d7baad0a0e5",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "c89da74f1d3746adb6dd84336c34bef1"
+            "objectId": "e91975db613e4c8aafbc2a95d885647e"
           }
         },
         {
-          "id": "398e02662bae467eac82474ff266ac53",
+          "id": "da5e2089ce20438b9385b81e77a3e074",
           "capability": "object.recipe.edit",
           "version": 1,
           "resources": [
-            "c89da74f1d3746adb6dd84336c34bef1"
+            "e91975db613e4c8aafbc2a95d885647e"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "c89da74f1d3746adb6dd84336c34bef1",
+            "target": "e91975db613e4c8aafbc2a95d885647e",
             "revision": 15,
             "parts": 1,
             "tracks": 0,
@@ -769,27 +770,27 @@
           }
         },
         {
-          "id": "5e77d1d6ed9448e895832eee7531a0e2",
+          "id": "a75a4aaef22a496ba9676fe3deb4df26",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "2d8cf1f70689489d84ecc013b583dfd0"
+            "objectId": "5e7d1144c10d403583e03f2134da367a"
           }
         },
         {
-          "id": "5208c5b491a54daebab0575b311f0ebc",
+          "id": "bd10fe7e08ec435e8a103b9652ab8f84",
           "capability": "object.recipe.edit",
           "version": 1,
           "resources": [
-            "2d8cf1f70689489d84ecc013b583dfd0"
+            "5e7d1144c10d403583e03f2134da367a"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "2d8cf1f70689489d84ecc013b583dfd0",
+            "target": "5e7d1144c10d403583e03f2134da367a",
             "revision": 18,
             "parts": 1,
             "tracks": 0,
@@ -800,14 +801,14 @@
           }
         }
       ],
-      "nextRunId": "68caecd215ef4d2db81077b610b96613",
+      "nextRunId": "9c6f6c3b49f0464a8e6f1dc49b416580",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "cb0ca96bd29a44f695bcb66990a0a875",
+        "nextRunId": "0a8449e83a63432191c30716a4f86e26",
         "storageError": null,
         "recovery": null
       }
@@ -815,12 +816,12 @@
   },
   "search": {
     "version": 1,
-    "revision": 95,
+    "revision": 94,
     "sceneRevision": 19,
     "ack": 39,
-    "session": "6ad682f8d44b4e6f8879b649ff899e16",
+    "session": "1847ab3a2da34a249eb7ae5cddc22612",
     "status": "Found 1 actions. Search does not run or enable anything.",
-    "selectedId": "2d8cf1f70689489d84ecc013b583dfd0",
+    "selectedId": "5e7d1144c10d403583e03f2134da367a",
     "ok": true,
     "canUndo": false,
     "canRedo": true,
@@ -828,12 +829,12 @@
     "visible": false,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "d93ed9dedd3f44deb7c950e90f283f4a",
+      "stateId": "a85cc9bd520740f3bfc5dd8b11287049",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "d93ed9dedd3f44deb7c950e90f283f4a",
+      "stateId": "a85cc9bd520740f3bfc5dd8b11287049",
       "error": "",
       "visible": false,
       "holding": false
@@ -906,6 +907,7 @@
       "drawingSurfaces.v1",
       "curvedDrawingSurfaces.v1",
       "drawingTips.v1",
+      "drawingErasers.v1",
       "containers.v1",
       "containerPouring.v1",
       "containerScooping.v1",
@@ -965,7 +967,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "2efb8d35d1534d138d114382589e6b5f",
+      "id": "d39f81fb09374937ad71da0ee887f364",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -1088,47 +1090,20 @@
     },
     "objects": [
       {
-        "id": "1d93e4f08d414b2599db13d489244d64",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 3,
+        "id": "980ba88ad9814b79a8b4d32d523ac368",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
         "position": {
-          "x": 0.5199999809265137,
+          "x": 0.6899999976158142,
           "y": 1.4500000476837158,
           "z": 0.800000011920929
         },
         "scale": 1,
         "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "3b76a8e1c3f74f3598676f9b404adff2",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
           "a": 1
         },
         "animated": false,
@@ -1169,20 +1144,47 @@
         "movement": null
       },
       {
-        "id": "f2c096ebc30b403a8d906e1ee6bfebb7",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
+        "id": "c83c97ac8f354969887c0d84a3d40d9b",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 3,
         "position": {
-          "x": 0.6899999976158142,
+          "x": 0.5199999809265137,
           "y": 1.4500000476837158,
           "z": 0.800000011920929
         },
         "scale": 1,
         "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "e82f20ae9d4747d09efce879d9b3b858",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
           "a": 1
         },
         "animated": false,
@@ -1228,12 +1230,12 @@
     ],
     "created": [],
     "capture": {
-      "captureId": "1965e0c03d8d41bb8e26208d6749d42f",
+      "captureId": "ba59cbfae8e348449a6b1790d080d81e",
       "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
       "mimeType": "image/jpeg",
       "width": 512,
       "height": 384,
-      "capturedAt": "2026-10-04T03:44:00.3396398Z",
+      "capturedAt": "2026-10-04T04:36:03.880158Z",
       "sceneRevision": 3,
       "verticalFov": 60,
       "position": {
@@ -1265,16 +1267,16 @@
     },
     "execution": {
       "selected": {
-        "id": "5208c5b491a54daebab0575b311f0ebc",
+        "id": "bd10fe7e08ec435e8a103b9652ab8f84",
         "capability": "object.recipe.edit",
         "version": 1,
         "resources": [
-          "2d8cf1f70689489d84ecc013b583dfd0"
+          "5e7d1144c10d403583e03f2134da367a"
         ],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "target": "2d8cf1f70689489d84ecc013b583dfd0",
+          "target": "5e7d1144c10d403583e03f2134da367a",
           "revision": 18,
           "parts": 1,
           "tracks": 0,
@@ -1287,7 +1289,7 @@
           "id": "object.recipe.edit",
           "version": 1,
           "arguments": {
-            "target": "2d8cf1f70689489d84ecc013b583dfd0",
+            "target": "5e7d1144c10d403583e03f2134da367a",
             "revision": 17,
             "parts": [
               {
@@ -1396,30 +1398,30 @@
       "running": [],
       "outcomes": [
         {
-          "id": "8847392d5f9d47c98376c65c1945f7c7",
+          "id": "2012c151fd214adeae99ab064ab39d16",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "f22ea2d051514084adbd30d25412ffb1"
+            "objectId": "a46d6e9505cf429383dad20b15612005"
           }
         },
         {
-          "id": "00c56c7791de4ba6bc6327fa167445a7",
+          "id": "a30e12a1e21149e3bc177db4d81b2645",
           "capability": "room.view.capture",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "captureId": "1965e0c03d8d41bb8e26208d6749d42f",
+            "captureId": "ba59cbfae8e348449a6b1790d080d81e",
             "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
             "mimeType": "image/jpeg",
             "width": 512,
             "height": 384,
-            "capturedAt": "2026-10-04T03:44:00.3396398Z",
+            "capturedAt": "2026-10-04T04:36:03.880158Z",
             "sceneRevision": 3,
             "verticalFov": 60,
             "position": {
@@ -1436,27 +1438,27 @@
           }
         },
         {
-          "id": "0d838b5f51d34daf90f15a03409e67b4",
+          "id": "30fa2975881445e9be80eb205bbacf2e",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "95afba471a84421685a8d7443649095d"
+            "objectId": "fb55cf86efe94c4180cc5c29530a0c38"
           }
         },
         {
-          "id": "9b6487bd7572462b8717f2fc09447195",
+          "id": "0b1618a459d44e9fb9d8ac38c626604f",
           "capability": "object.recipe.edit",
           "version": 1,
           "resources": [
-            "95afba471a84421685a8d7443649095d"
+            "fb55cf86efe94c4180cc5c29530a0c38"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "95afba471a84421685a8d7443649095d",
+            "target": "fb55cf86efe94c4180cc5c29530a0c38",
             "revision": 10,
             "parts": 1,
             "tracks": 0,
@@ -1467,16 +1469,16 @@
           }
         },
         {
-          "id": "4f70e6a9fb1a41509ea928e202a1e722",
+          "id": "a05ac5db3aa04e798224c2246cbcb3ef",
           "capability": "object.collision.edit",
           "version": 1,
           "resources": [
-            "95afba471a84421685a8d7443649095d"
+            "fb55cf86efe94c4180cc5c29530a0c38"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "95afba471a84421685a8d7443649095d",
+            "target": "fb55cf86efe94c4180cc5c29530a0c38",
             "revision": 12,
             "shapes": 2,
             "pieces": 13,
@@ -1485,27 +1487,27 @@
           }
         },
         {
-          "id": "f794f32dbea5424ea330663ab8d9756c",
+          "id": "a37ccbabd53b4f13b5b07d7baad0a0e5",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "c89da74f1d3746adb6dd84336c34bef1"
+            "objectId": "e91975db613e4c8aafbc2a95d885647e"
           }
         },
         {
-          "id": "398e02662bae467eac82474ff266ac53",
+          "id": "da5e2089ce20438b9385b81e77a3e074",
           "capability": "object.recipe.edit",
           "version": 1,
           "resources": [
-            "c89da74f1d3746adb6dd84336c34bef1"
+            "e91975db613e4c8aafbc2a95d885647e"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "c89da74f1d3746adb6dd84336c34bef1",
+            "target": "e91975db613e4c8aafbc2a95d885647e",
             "revision": 15,
             "parts": 1,
             "tracks": 0,
@@ -1516,27 +1518,27 @@
           }
         },
         {
-          "id": "5e77d1d6ed9448e895832eee7531a0e2",
+          "id": "a75a4aaef22a496ba9676fe3deb4df26",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "2d8cf1f70689489d84ecc013b583dfd0"
+            "objectId": "5e7d1144c10d403583e03f2134da367a"
           }
         },
         {
-          "id": "5208c5b491a54daebab0575b311f0ebc",
+          "id": "bd10fe7e08ec435e8a103b9652ab8f84",
           "capability": "object.recipe.edit",
           "version": 1,
           "resources": [
-            "2d8cf1f70689489d84ecc013b583dfd0"
+            "5e7d1144c10d403583e03f2134da367a"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "2d8cf1f70689489d84ecc013b583dfd0",
+            "target": "5e7d1144c10d403583e03f2134da367a",
             "revision": 18,
             "parts": 1,
             "tracks": 0,
@@ -1547,14 +1549,14 @@
           }
         }
       ],
-      "nextRunId": "68caecd215ef4d2db81077b610b96613",
+      "nextRunId": "9c6f6c3b49f0464a8e6f1dc49b416580",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "cb0ca96bd29a44f695bcb66990a0a875",
+        "nextRunId": "0a8449e83a63432191c30716a4f86e26",
         "storageError": null,
         "recovery": null
       }
@@ -1562,12 +1564,12 @@
   },
   "definition": {
     "version": 1,
-    "revision": 97,
+    "revision": 96,
     "sceneRevision": 19,
     "ack": 40,
-    "session": "6ad682f8d44b4e6f8879b649ff899e16",
+    "session": "1847ab3a2da34a249eb7ae5cddc22612",
     "status": "Action definition. Check concrete arguments before running it.",
-    "selectedId": "2d8cf1f70689489d84ecc013b583dfd0",
+    "selectedId": "5e7d1144c10d403583e03f2134da367a",
     "ok": true,
     "canUndo": false,
     "canRedo": true,
@@ -1575,12 +1577,12 @@
     "visible": false,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "d93ed9dedd3f44deb7c950e90f283f4a",
+      "stateId": "a85cc9bd520740f3bfc5dd8b11287049",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "d93ed9dedd3f44deb7c950e90f283f4a",
+      "stateId": "a85cc9bd520740f3bfc5dd8b11287049",
       "error": "",
       "visible": false,
       "holding": false
@@ -1653,6 +1655,7 @@
       "drawingSurfaces.v1",
       "curvedDrawingSurfaces.v1",
       "drawingTips.v1",
+      "drawingErasers.v1",
       "containers.v1",
       "containerPouring.v1",
       "containerScooping.v1",
@@ -1712,7 +1715,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "2efb8d35d1534d138d114382589e6b5f",
+      "id": "d39f81fb09374937ad71da0ee887f364",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -1835,47 +1838,20 @@
     },
     "objects": [
       {
-        "id": "1d93e4f08d414b2599db13d489244d64",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 3,
+        "id": "980ba88ad9814b79a8b4d32d523ac368",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
         "position": {
-          "x": 0.5199999809265137,
+          "x": 0.6899999976158142,
           "y": 1.4500000476837158,
           "z": 0.800000011920929
         },
         "scale": 1,
         "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "3b76a8e1c3f74f3598676f9b404adff2",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
           "a": 1
         },
         "animated": false,
@@ -1916,20 +1892,47 @@
         "movement": null
       },
       {
-        "id": "f2c096ebc30b403a8d906e1ee6bfebb7",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
+        "id": "c83c97ac8f354969887c0d84a3d40d9b",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 3,
         "position": {
-          "x": 0.6899999976158142,
+          "x": 0.5199999809265137,
           "y": 1.4500000476837158,
           "z": 0.800000011920929
         },
         "scale": 1,
         "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "e82f20ae9d4747d09efce879d9b3b858",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
           "a": 1
         },
         "animated": false,
@@ -1975,12 +1978,12 @@
     ],
     "created": [],
     "capture": {
-      "captureId": "1965e0c03d8d41bb8e26208d6749d42f",
+      "captureId": "ba59cbfae8e348449a6b1790d080d81e",
       "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
       "mimeType": "image/jpeg",
       "width": 512,
       "height": 384,
-      "capturedAt": "2026-10-04T03:44:00.3396398Z",
+      "capturedAt": "2026-10-04T04:36:03.880158Z",
       "sceneRevision": 3,
       "verticalFov": 60,
       "position": {
@@ -4644,13 +4647,16 @@
                     "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496",
                     "b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651",
                     "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33",
+                    "791244d43b757f12e7d085fbbff100e5076d981e98038c3ef8cd6d2ee191e79e",
                     "7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca",
                     "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab",
                     "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac",
                     "835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278",
                     "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950",
+                    "9eed7dbf83831c529d199a00ecbee3dc30ccd26892e3cf025dcfcef3a950c347",
                     "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18",
                     "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99",
+                    "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22",
                     "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316",
                     "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71",
                     "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45"
@@ -4659,13 +4665,16 @@
                     "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "Ball",
                     "b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651": "Water basin",
                     "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33": "Building brick",
+                    "791244d43b757f12e7d085fbbff100e5076d981e98038c3ef8cd6d2ee191e79e": "Paint brush",
                     "7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca": "Bucket",
                     "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab": "Chalk",
                     "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "Chalkboard",
                     "835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278": "Cup",
                     "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950": "Domino",
+                    "9eed7dbf83831c529d199a00ecbee3dc30ccd26892e3cf025dcfcef3a950c347": "Eraser",
                     "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18": "Fork",
                     "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99": "Pawn",
+                    "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22": "Pencil",
                     "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316": "Plate",
                     "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71": "Box robot",
                     "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "Spoon"
@@ -4674,13 +4683,16 @@
                     "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "quest/templates/f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496.png",
                     "b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651": "quest/templates/b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651.png",
                     "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33": "quest/templates/5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33.png",
+                    "791244d43b757f12e7d085fbbff100e5076d981e98038c3ef8cd6d2ee191e79e": "quest/templates/791244d43b757f12e7d085fbbff100e5076d981e98038c3ef8cd6d2ee191e79e.png",
                     "7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca": "quest/templates/7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca.png",
                     "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab": "quest/templates/4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab.png",
                     "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "quest/templates/5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac.png",
                     "835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278": "quest/templates/835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278.png",
                     "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950": "quest/templates/4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950.png",
+                    "9eed7dbf83831c529d199a00ecbee3dc30ccd26892e3cf025dcfcef3a950c347": "quest/templates/9eed7dbf83831c529d199a00ecbee3dc30ccd26892e3cf025dcfcef3a950c347.png",
                     "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18": "quest/templates/3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18.png",
                     "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99": "quest/templates/a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99.png",
+                    "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22": "quest/templates/69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22.png",
                     "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316": "quest/templates/e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316.png",
                     "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71": "quest/templates/7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71.png",
                     "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "quest/templates/f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45.png"
@@ -4801,16 +4813,16 @@
     },
     "execution": {
       "selected": {
-        "id": "5208c5b491a54daebab0575b311f0ebc",
+        "id": "bd10fe7e08ec435e8a103b9652ab8f84",
         "capability": "object.recipe.edit",
         "version": 1,
         "resources": [
-          "2d8cf1f70689489d84ecc013b583dfd0"
+          "5e7d1144c10d403583e03f2134da367a"
         ],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "target": "2d8cf1f70689489d84ecc013b583dfd0",
+          "target": "5e7d1144c10d403583e03f2134da367a",
           "revision": 18,
           "parts": 1,
           "tracks": 0,
@@ -4823,7 +4835,7 @@
           "id": "object.recipe.edit",
           "version": 1,
           "arguments": {
-            "target": "2d8cf1f70689489d84ecc013b583dfd0",
+            "target": "5e7d1144c10d403583e03f2134da367a",
             "revision": 17,
             "parts": [
               {
@@ -4932,30 +4944,30 @@
       "running": [],
       "outcomes": [
         {
-          "id": "8847392d5f9d47c98376c65c1945f7c7",
+          "id": "2012c151fd214adeae99ab064ab39d16",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "f22ea2d051514084adbd30d25412ffb1"
+            "objectId": "a46d6e9505cf429383dad20b15612005"
           }
         },
         {
-          "id": "00c56c7791de4ba6bc6327fa167445a7",
+          "id": "a30e12a1e21149e3bc177db4d81b2645",
           "capability": "room.view.capture",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "captureId": "1965e0c03d8d41bb8e26208d6749d42f",
+            "captureId": "ba59cbfae8e348449a6b1790d080d81e",
             "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
             "mimeType": "image/jpeg",
             "width": 512,
             "height": 384,
-            "capturedAt": "2026-10-04T03:44:00.3396398Z",
+            "capturedAt": "2026-10-04T04:36:03.880158Z",
             "sceneRevision": 3,
             "verticalFov": 60,
             "position": {
@@ -4972,27 +4984,27 @@
           }
         },
         {
-          "id": "0d838b5f51d34daf90f15a03409e67b4",
+          "id": "30fa2975881445e9be80eb205bbacf2e",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "95afba471a84421685a8d7443649095d"
+            "objectId": "fb55cf86efe94c4180cc5c29530a0c38"
           }
         },
         {
-          "id": "9b6487bd7572462b8717f2fc09447195",
+          "id": "0b1618a459d44e9fb9d8ac38c626604f",
           "capability": "object.recipe.edit",
           "version": 1,
           "resources": [
-            "95afba471a84421685a8d7443649095d"
+            "fb55cf86efe94c4180cc5c29530a0c38"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "95afba471a84421685a8d7443649095d",
+            "target": "fb55cf86efe94c4180cc5c29530a0c38",
             "revision": 10,
             "parts": 1,
             "tracks": 0,
@@ -5003,16 +5015,16 @@
           }
         },
         {
-          "id": "4f70e6a9fb1a41509ea928e202a1e722",
+          "id": "a05ac5db3aa04e798224c2246cbcb3ef",
           "capability": "object.collision.edit",
           "version": 1,
           "resources": [
-            "95afba471a84421685a8d7443649095d"
+            "fb55cf86efe94c4180cc5c29530a0c38"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "95afba471a84421685a8d7443649095d",
+            "target": "fb55cf86efe94c4180cc5c29530a0c38",
             "revision": 12,
             "shapes": 2,
             "pieces": 13,
@@ -5021,27 +5033,27 @@
           }
         },
         {
-          "id": "f794f32dbea5424ea330663ab8d9756c",
+          "id": "a37ccbabd53b4f13b5b07d7baad0a0e5",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "c89da74f1d3746adb6dd84336c34bef1"
+            "objectId": "e91975db613e4c8aafbc2a95d885647e"
           }
         },
         {
-          "id": "398e02662bae467eac82474ff266ac53",
+          "id": "da5e2089ce20438b9385b81e77a3e074",
           "capability": "object.recipe.edit",
           "version": 1,
           "resources": [
-            "c89da74f1d3746adb6dd84336c34bef1"
+            "e91975db613e4c8aafbc2a95d885647e"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "c89da74f1d3746adb6dd84336c34bef1",
+            "target": "e91975db613e4c8aafbc2a95d885647e",
             "revision": 15,
             "parts": 1,
             "tracks": 0,
@@ -5052,27 +5064,27 @@
           }
         },
         {
-          "id": "5e77d1d6ed9448e895832eee7531a0e2",
+          "id": "a75a4aaef22a496ba9676fe3deb4df26",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "2d8cf1f70689489d84ecc013b583dfd0"
+            "objectId": "5e7d1144c10d403583e03f2134da367a"
           }
         },
         {
-          "id": "5208c5b491a54daebab0575b311f0ebc",
+          "id": "bd10fe7e08ec435e8a103b9652ab8f84",
           "capability": "object.recipe.edit",
           "version": 1,
           "resources": [
-            "2d8cf1f70689489d84ecc013b583dfd0"
+            "5e7d1144c10d403583e03f2134da367a"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "2d8cf1f70689489d84ecc013b583dfd0",
+            "target": "5e7d1144c10d403583e03f2134da367a",
             "revision": 18,
             "parts": 1,
             "tracks": 0,
@@ -5083,14 +5095,14 @@
           }
         }
       ],
-      "nextRunId": "68caecd215ef4d2db81077b610b96613",
+      "nextRunId": "9c6f6c3b49f0464a8e6f1dc49b416580",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "cb0ca96bd29a44f695bcb66990a0a875",
+        "nextRunId": "0a8449e83a63432191c30716a4f86e26",
         "storageError": null,
         "recovery": null
       }
@@ -5101,9 +5113,9 @@
     "revision": 100,
     "sceneRevision": 20,
     "ack": 41,
-    "session": "6ad682f8d44b4e6f8879b649ff899e16",
+    "session": "1847ab3a2da34a249eb7ae5cddc22612",
     "status": "Action completed",
-    "selectedId": "2d8cf1f70689489d84ecc013b583dfd0",
+    "selectedId": "5e7d1144c10d403583e03f2134da367a",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -5111,12 +5123,12 @@
     "visible": false,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "d93ed9dedd3f44deb7c950e90f283f4a",
+      "stateId": "a85cc9bd520740f3bfc5dd8b11287049",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "d93ed9dedd3f44deb7c950e90f283f4a",
+      "stateId": "a85cc9bd520740f3bfc5dd8b11287049",
       "error": "",
       "visible": false,
       "holding": false
@@ -5189,6 +5201,7 @@
       "drawingSurfaces.v1",
       "curvedDrawingSurfaces.v1",
       "drawingTips.v1",
+      "drawingErasers.v1",
       "containers.v1",
       "containerPouring.v1",
       "containerScooping.v1",
@@ -5248,7 +5261,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "2efb8d35d1534d138d114382589e6b5f",
+      "id": "d39f81fb09374937ad71da0ee887f364",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -5371,61 +5384,7 @@
     },
     "objects": [
       {
-        "id": "1d93e4f08d414b2599db13d489244d64",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 3,
-        "position": {
-          "x": 0.5199999809265137,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "3b76a8e1c3f74f3598676f9b404adff2",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "9196f9c65c7f48f4bc55383dfada2359",
+        "id": "4b6ec5199ecc46b6bd26a5fab1c34211",
         "name": "Cup",
         "kind": "Assembly",
         "objectRevision": 20,
@@ -5448,6 +5407,33 @@
           "mode": "solid",
           "shape": "automatic",
           "mass": 0.30000001192092896
+        },
+        "movement": null
+      },
+      {
+        "id": "980ba88ad9814b79a8b4d32d523ac368",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
         },
         "movement": null
       },
@@ -5479,20 +5465,47 @@
         "movement": null
       },
       {
-        "id": "f2c096ebc30b403a8d906e1ee6bfebb7",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
+        "id": "c83c97ac8f354969887c0d84a3d40d9b",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 3,
         "position": {
-          "x": 0.6899999976158142,
+          "x": 0.5199999809265137,
           "y": 1.4500000476837158,
           "z": 0.800000011920929
         },
         "scale": 1,
         "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "e82f20ae9d4747d09efce879d9b3b858",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
           "a": 1
         },
         "animated": false,
@@ -5538,12 +5551,12 @@
     ],
     "created": [],
     "capture": {
-      "captureId": "1965e0c03d8d41bb8e26208d6749d42f",
+      "captureId": "ba59cbfae8e348449a6b1790d080d81e",
       "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
       "mimeType": "image/jpeg",
       "width": 512,
       "height": 384,
-      "capturedAt": "2026-10-04T03:44:00.3396398Z",
+      "capturedAt": "2026-10-04T04:36:03.880158Z",
       "sceneRevision": 3,
       "verticalFov": 60,
       "position": {
@@ -8207,13 +8220,16 @@
                     "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496",
                     "b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651",
                     "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33",
+                    "791244d43b757f12e7d085fbbff100e5076d981e98038c3ef8cd6d2ee191e79e",
                     "7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca",
                     "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab",
                     "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac",
                     "835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278",
                     "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950",
+                    "9eed7dbf83831c529d199a00ecbee3dc30ccd26892e3cf025dcfcef3a950c347",
                     "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18",
                     "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99",
+                    "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22",
                     "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316",
                     "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71",
                     "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45"
@@ -8222,13 +8238,16 @@
                     "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "Ball",
                     "b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651": "Water basin",
                     "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33": "Building brick",
+                    "791244d43b757f12e7d085fbbff100e5076d981e98038c3ef8cd6d2ee191e79e": "Paint brush",
                     "7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca": "Bucket",
                     "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab": "Chalk",
                     "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "Chalkboard",
                     "835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278": "Cup",
                     "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950": "Domino",
+                    "9eed7dbf83831c529d199a00ecbee3dc30ccd26892e3cf025dcfcef3a950c347": "Eraser",
                     "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18": "Fork",
                     "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99": "Pawn",
+                    "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22": "Pencil",
                     "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316": "Plate",
                     "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71": "Box robot",
                     "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "Spoon"
@@ -8237,13 +8256,16 @@
                     "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "quest/templates/f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496.png",
                     "b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651": "quest/templates/b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651.png",
                     "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33": "quest/templates/5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33.png",
+                    "791244d43b757f12e7d085fbbff100e5076d981e98038c3ef8cd6d2ee191e79e": "quest/templates/791244d43b757f12e7d085fbbff100e5076d981e98038c3ef8cd6d2ee191e79e.png",
                     "7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca": "quest/templates/7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca.png",
                     "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab": "quest/templates/4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab.png",
                     "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "quest/templates/5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac.png",
                     "835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278": "quest/templates/835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278.png",
                     "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950": "quest/templates/4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950.png",
+                    "9eed7dbf83831c529d199a00ecbee3dc30ccd26892e3cf025dcfcef3a950c347": "quest/templates/9eed7dbf83831c529d199a00ecbee3dc30ccd26892e3cf025dcfcef3a950c347.png",
                     "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18": "quest/templates/3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18.png",
                     "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99": "quest/templates/a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99.png",
+                    "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22": "quest/templates/69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22.png",
                     "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316": "quest/templates/e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316.png",
                     "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71": "quest/templates/7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71.png",
                     "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "quest/templates/f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45.png"
@@ -8364,14 +8386,14 @@
     },
     "execution": {
       "selected": {
-        "id": "68caecd215ef4d2db81077b610b96613",
+        "id": "9c6f6c3b49f0464a8e6f1dc49b416580",
         "capability": "object.create",
         "version": 1,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "objectId": "9196f9c65c7f48f4bc55383dfada2359"
+          "objectId": "4b6ec5199ecc46b6bd26a5fab1c34211"
         },
         "call": {
           "id": "object.create",
@@ -8390,30 +8412,30 @@
       "running": [],
       "outcomes": [
         {
-          "id": "8847392d5f9d47c98376c65c1945f7c7",
+          "id": "2012c151fd214adeae99ab064ab39d16",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "f22ea2d051514084adbd30d25412ffb1"
+            "objectId": "a46d6e9505cf429383dad20b15612005"
           }
         },
         {
-          "id": "00c56c7791de4ba6bc6327fa167445a7",
+          "id": "a30e12a1e21149e3bc177db4d81b2645",
           "capability": "room.view.capture",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "captureId": "1965e0c03d8d41bb8e26208d6749d42f",
+            "captureId": "ba59cbfae8e348449a6b1790d080d81e",
             "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
             "mimeType": "image/jpeg",
             "width": 512,
             "height": 384,
-            "capturedAt": "2026-10-04T03:44:00.3396398Z",
+            "capturedAt": "2026-10-04T04:36:03.880158Z",
             "sceneRevision": 3,
             "verticalFov": 60,
             "position": {
@@ -8430,27 +8452,27 @@
           }
         },
         {
-          "id": "0d838b5f51d34daf90f15a03409e67b4",
+          "id": "30fa2975881445e9be80eb205bbacf2e",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "95afba471a84421685a8d7443649095d"
+            "objectId": "fb55cf86efe94c4180cc5c29530a0c38"
           }
         },
         {
-          "id": "9b6487bd7572462b8717f2fc09447195",
+          "id": "0b1618a459d44e9fb9d8ac38c626604f",
           "capability": "object.recipe.edit",
           "version": 1,
           "resources": [
-            "95afba471a84421685a8d7443649095d"
+            "fb55cf86efe94c4180cc5c29530a0c38"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "95afba471a84421685a8d7443649095d",
+            "target": "fb55cf86efe94c4180cc5c29530a0c38",
             "revision": 10,
             "parts": 1,
             "tracks": 0,
@@ -8461,16 +8483,16 @@
           }
         },
         {
-          "id": "4f70e6a9fb1a41509ea928e202a1e722",
+          "id": "a05ac5db3aa04e798224c2246cbcb3ef",
           "capability": "object.collision.edit",
           "version": 1,
           "resources": [
-            "95afba471a84421685a8d7443649095d"
+            "fb55cf86efe94c4180cc5c29530a0c38"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "95afba471a84421685a8d7443649095d",
+            "target": "fb55cf86efe94c4180cc5c29530a0c38",
             "revision": 12,
             "shapes": 2,
             "pieces": 13,
@@ -8479,27 +8501,27 @@
           }
         },
         {
-          "id": "f794f32dbea5424ea330663ab8d9756c",
+          "id": "a37ccbabd53b4f13b5b07d7baad0a0e5",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "c89da74f1d3746adb6dd84336c34bef1"
+            "objectId": "e91975db613e4c8aafbc2a95d885647e"
           }
         },
         {
-          "id": "398e02662bae467eac82474ff266ac53",
+          "id": "da5e2089ce20438b9385b81e77a3e074",
           "capability": "object.recipe.edit",
           "version": 1,
           "resources": [
-            "c89da74f1d3746adb6dd84336c34bef1"
+            "e91975db613e4c8aafbc2a95d885647e"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "c89da74f1d3746adb6dd84336c34bef1",
+            "target": "e91975db613e4c8aafbc2a95d885647e",
             "revision": 15,
             "parts": 1,
             "tracks": 0,
@@ -8510,27 +8532,27 @@
           }
         },
         {
-          "id": "5e77d1d6ed9448e895832eee7531a0e2",
+          "id": "a75a4aaef22a496ba9676fe3deb4df26",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "2d8cf1f70689489d84ecc013b583dfd0"
+            "objectId": "5e7d1144c10d403583e03f2134da367a"
           }
         },
         {
-          "id": "5208c5b491a54daebab0575b311f0ebc",
+          "id": "bd10fe7e08ec435e8a103b9652ab8f84",
           "capability": "object.recipe.edit",
           "version": 1,
           "resources": [
-            "2d8cf1f70689489d84ecc013b583dfd0"
+            "5e7d1144c10d403583e03f2134da367a"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "2d8cf1f70689489d84ecc013b583dfd0",
+            "target": "5e7d1144c10d403583e03f2134da367a",
             "revision": 18,
             "parts": 1,
             "tracks": 0,
@@ -8541,25 +8563,25 @@
           }
         },
         {
-          "id": "68caecd215ef4d2db81077b610b96613",
+          "id": "9c6f6c3b49f0464a8e6f1dc49b416580",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "9196f9c65c7f48f4bc55383dfada2359"
+            "objectId": "4b6ec5199ecc46b6bd26a5fab1c34211"
           }
         }
       ],
-      "nextRunId": "ff14735c13e94c11b4909ea178228364",
+      "nextRunId": "9db770ab41cc4036a058d99a043cb6fc",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "cb0ca96bd29a44f695bcb66990a0a875",
+        "nextRunId": "0a8449e83a63432191c30716a4f86e26",
         "storageError": null,
         "recovery": null
       }
@@ -8570,16 +8592,16 @@
     "revision": 102,
     "sceneRevision": 20,
     "ack": 42,
-    "session": "6ad682f8d44b4e6f8879b649ff899e16",
+    "session": "1847ab3a2da34a249eb7ae5cddc22612",
     "status": "Object inspected",
-    "selectedId": "9196f9c65c7f48f4bc55383dfada2359",
+    "selectedId": "4b6ec5199ecc46b6bd26a5fab1c34211",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
     "physicsRunning": false,
     "visible": false,
     "inspection": {
-      "id": "9196f9c65c7f48f4bc55383dfada2359",
+      "id": "4b6ec5199ecc46b6bd26a5fab1c34211",
       "partId": "",
       "objectRevision": 20,
       "recipe": {
@@ -8695,12 +8717,12 @@
       }
     },
     "constructionSelection": {
-      "stateId": "d93ed9dedd3f44deb7c950e90f283f4a",
+      "stateId": "a85cc9bd520740f3bfc5dd8b11287049",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "d93ed9dedd3f44deb7c950e90f283f4a",
+      "stateId": "a85cc9bd520740f3bfc5dd8b11287049",
       "error": "",
       "visible": false,
       "holding": false
@@ -8773,6 +8795,7 @@
       "drawingSurfaces.v1",
       "curvedDrawingSurfaces.v1",
       "drawingTips.v1",
+      "drawingErasers.v1",
       "containers.v1",
       "containerPouring.v1",
       "containerScooping.v1",
@@ -8832,7 +8855,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "2efb8d35d1534d138d114382589e6b5f",
+      "id": "d39f81fb09374937ad71da0ee887f364",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -8955,61 +8978,7 @@
     },
     "objects": [
       {
-        "id": "1d93e4f08d414b2599db13d489244d64",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 3,
-        "position": {
-          "x": 0.5199999809265137,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "3b76a8e1c3f74f3598676f9b404adff2",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "9196f9c65c7f48f4bc55383dfada2359",
+        "id": "4b6ec5199ecc46b6bd26a5fab1c34211",
         "name": "Cup",
         "kind": "Assembly",
         "objectRevision": 20,
@@ -9032,6 +9001,33 @@
           "mode": "solid",
           "shape": "automatic",
           "mass": 0.30000001192092896
+        },
+        "movement": null
+      },
+      {
+        "id": "980ba88ad9814b79a8b4d32d523ac368",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
         },
         "movement": null
       },
@@ -9063,20 +9059,47 @@
         "movement": null
       },
       {
-        "id": "f2c096ebc30b403a8d906e1ee6bfebb7",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
+        "id": "c83c97ac8f354969887c0d84a3d40d9b",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 3,
         "position": {
-          "x": 0.6899999976158142,
+          "x": 0.5199999809265137,
           "y": 1.4500000476837158,
           "z": 0.800000011920929
         },
         "scale": 1,
         "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "e82f20ae9d4747d09efce879d9b3b858",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
           "a": 1
         },
         "animated": false,
@@ -9122,12 +9145,12 @@
     ],
     "created": [],
     "capture": {
-      "captureId": "1965e0c03d8d41bb8e26208d6749d42f",
+      "captureId": "ba59cbfae8e348449a6b1790d080d81e",
       "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
       "mimeType": "image/jpeg",
       "width": 512,
       "height": 384,
-      "capturedAt": "2026-10-04T03:44:00.3396398Z",
+      "capturedAt": "2026-10-04T04:36:03.880158Z",
       "sceneRevision": 3,
       "verticalFov": 60,
       "position": {
@@ -11791,13 +11814,16 @@
                     "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496",
                     "b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651",
                     "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33",
+                    "791244d43b757f12e7d085fbbff100e5076d981e98038c3ef8cd6d2ee191e79e",
                     "7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca",
                     "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab",
                     "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac",
                     "835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278",
                     "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950",
+                    "9eed7dbf83831c529d199a00ecbee3dc30ccd26892e3cf025dcfcef3a950c347",
                     "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18",
                     "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99",
+                    "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22",
                     "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316",
                     "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71",
                     "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45"
@@ -11806,13 +11832,16 @@
                     "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "Ball",
                     "b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651": "Water basin",
                     "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33": "Building brick",
+                    "791244d43b757f12e7d085fbbff100e5076d981e98038c3ef8cd6d2ee191e79e": "Paint brush",
                     "7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca": "Bucket",
                     "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab": "Chalk",
                     "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "Chalkboard",
                     "835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278": "Cup",
                     "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950": "Domino",
+                    "9eed7dbf83831c529d199a00ecbee3dc30ccd26892e3cf025dcfcef3a950c347": "Eraser",
                     "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18": "Fork",
                     "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99": "Pawn",
+                    "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22": "Pencil",
                     "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316": "Plate",
                     "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71": "Box robot",
                     "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "Spoon"
@@ -11821,13 +11850,16 @@
                     "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "quest/templates/f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496.png",
                     "b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651": "quest/templates/b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651.png",
                     "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33": "quest/templates/5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33.png",
+                    "791244d43b757f12e7d085fbbff100e5076d981e98038c3ef8cd6d2ee191e79e": "quest/templates/791244d43b757f12e7d085fbbff100e5076d981e98038c3ef8cd6d2ee191e79e.png",
                     "7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca": "quest/templates/7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca.png",
                     "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab": "quest/templates/4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab.png",
                     "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "quest/templates/5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac.png",
                     "835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278": "quest/templates/835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278.png",
                     "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950": "quest/templates/4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950.png",
+                    "9eed7dbf83831c529d199a00ecbee3dc30ccd26892e3cf025dcfcef3a950c347": "quest/templates/9eed7dbf83831c529d199a00ecbee3dc30ccd26892e3cf025dcfcef3a950c347.png",
                     "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18": "quest/templates/3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18.png",
                     "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99": "quest/templates/a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99.png",
+                    "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22": "quest/templates/69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22.png",
                     "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316": "quest/templates/e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316.png",
                     "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71": "quest/templates/7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71.png",
                     "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "quest/templates/f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45.png"
@@ -11948,14 +11980,14 @@
     },
     "execution": {
       "selected": {
-        "id": "68caecd215ef4d2db81077b610b96613",
+        "id": "9c6f6c3b49f0464a8e6f1dc49b416580",
         "capability": "object.create",
         "version": 1,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "objectId": "9196f9c65c7f48f4bc55383dfada2359"
+          "objectId": "4b6ec5199ecc46b6bd26a5fab1c34211"
         },
         "call": {
           "id": "object.create",
@@ -11974,30 +12006,30 @@
       "running": [],
       "outcomes": [
         {
-          "id": "8847392d5f9d47c98376c65c1945f7c7",
+          "id": "2012c151fd214adeae99ab064ab39d16",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "f22ea2d051514084adbd30d25412ffb1"
+            "objectId": "a46d6e9505cf429383dad20b15612005"
           }
         },
         {
-          "id": "00c56c7791de4ba6bc6327fa167445a7",
+          "id": "a30e12a1e21149e3bc177db4d81b2645",
           "capability": "room.view.capture",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "captureId": "1965e0c03d8d41bb8e26208d6749d42f",
+            "captureId": "ba59cbfae8e348449a6b1790d080d81e",
             "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
             "mimeType": "image/jpeg",
             "width": 512,
             "height": 384,
-            "capturedAt": "2026-10-04T03:44:00.3396398Z",
+            "capturedAt": "2026-10-04T04:36:03.880158Z",
             "sceneRevision": 3,
             "verticalFov": 60,
             "position": {
@@ -12014,27 +12046,27 @@
           }
         },
         {
-          "id": "0d838b5f51d34daf90f15a03409e67b4",
+          "id": "30fa2975881445e9be80eb205bbacf2e",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "95afba471a84421685a8d7443649095d"
+            "objectId": "fb55cf86efe94c4180cc5c29530a0c38"
           }
         },
         {
-          "id": "9b6487bd7572462b8717f2fc09447195",
+          "id": "0b1618a459d44e9fb9d8ac38c626604f",
           "capability": "object.recipe.edit",
           "version": 1,
           "resources": [
-            "95afba471a84421685a8d7443649095d"
+            "fb55cf86efe94c4180cc5c29530a0c38"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "95afba471a84421685a8d7443649095d",
+            "target": "fb55cf86efe94c4180cc5c29530a0c38",
             "revision": 10,
             "parts": 1,
             "tracks": 0,
@@ -12045,16 +12077,16 @@
           }
         },
         {
-          "id": "4f70e6a9fb1a41509ea928e202a1e722",
+          "id": "a05ac5db3aa04e798224c2246cbcb3ef",
           "capability": "object.collision.edit",
           "version": 1,
           "resources": [
-            "95afba471a84421685a8d7443649095d"
+            "fb55cf86efe94c4180cc5c29530a0c38"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "95afba471a84421685a8d7443649095d",
+            "target": "fb55cf86efe94c4180cc5c29530a0c38",
             "revision": 12,
             "shapes": 2,
             "pieces": 13,
@@ -12063,27 +12095,27 @@
           }
         },
         {
-          "id": "f794f32dbea5424ea330663ab8d9756c",
+          "id": "a37ccbabd53b4f13b5b07d7baad0a0e5",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "c89da74f1d3746adb6dd84336c34bef1"
+            "objectId": "e91975db613e4c8aafbc2a95d885647e"
           }
         },
         {
-          "id": "398e02662bae467eac82474ff266ac53",
+          "id": "da5e2089ce20438b9385b81e77a3e074",
           "capability": "object.recipe.edit",
           "version": 1,
           "resources": [
-            "c89da74f1d3746adb6dd84336c34bef1"
+            "e91975db613e4c8aafbc2a95d885647e"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "c89da74f1d3746adb6dd84336c34bef1",
+            "target": "e91975db613e4c8aafbc2a95d885647e",
             "revision": 15,
             "parts": 1,
             "tracks": 0,
@@ -12094,27 +12126,27 @@
           }
         },
         {
-          "id": "5e77d1d6ed9448e895832eee7531a0e2",
+          "id": "a75a4aaef22a496ba9676fe3deb4df26",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "2d8cf1f70689489d84ecc013b583dfd0"
+            "objectId": "5e7d1144c10d403583e03f2134da367a"
           }
         },
         {
-          "id": "5208c5b491a54daebab0575b311f0ebc",
+          "id": "bd10fe7e08ec435e8a103b9652ab8f84",
           "capability": "object.recipe.edit",
           "version": 1,
           "resources": [
-            "2d8cf1f70689489d84ecc013b583dfd0"
+            "5e7d1144c10d403583e03f2134da367a"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "2d8cf1f70689489d84ecc013b583dfd0",
+            "target": "5e7d1144c10d403583e03f2134da367a",
             "revision": 18,
             "parts": 1,
             "tracks": 0,
@@ -12125,25 +12157,25 @@
           }
         },
         {
-          "id": "68caecd215ef4d2db81077b610b96613",
+          "id": "9c6f6c3b49f0464a8e6f1dc49b416580",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "9196f9c65c7f48f4bc55383dfada2359"
+            "objectId": "4b6ec5199ecc46b6bd26a5fab1c34211"
           }
         }
       ],
-      "nextRunId": "ff14735c13e94c11b4909ea178228364",
+      "nextRunId": "9db770ab41cc4036a058d99a043cb6fc",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "cb0ca96bd29a44f695bcb66990a0a875",
+        "nextRunId": "0a8449e83a63432191c30716a4f86e26",
         "storageError": null,
         "recovery": null
       }
@@ -12154,16 +12186,16 @@
     "revision": 104,
     "sceneRevision": 20,
     "ack": 43,
-    "session": "6ad682f8d44b4e6f8879b649ff899e16",
+    "session": "1847ab3a2da34a249eb7ae5cddc22612",
     "status": "Current fact value. Reading does not change the room.",
-    "selectedId": "9196f9c65c7f48f4bc55383dfada2359",
+    "selectedId": "4b6ec5199ecc46b6bd26a5fab1c34211",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
     "physicsRunning": false,
     "visible": false,
     "inspection": {
-      "id": "9196f9c65c7f48f4bc55383dfada2359",
+      "id": "4b6ec5199ecc46b6bd26a5fab1c34211",
       "partId": "",
       "objectRevision": 20,
       "recipe": {
@@ -12279,12 +12311,12 @@
       }
     },
     "constructionSelection": {
-      "stateId": "d93ed9dedd3f44deb7c950e90f283f4a",
+      "stateId": "a85cc9bd520740f3bfc5dd8b11287049",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "d93ed9dedd3f44deb7c950e90f283f4a",
+      "stateId": "a85cc9bd520740f3bfc5dd8b11287049",
       "error": "",
       "visible": false,
       "holding": false
@@ -12357,6 +12389,7 @@
       "drawingSurfaces.v1",
       "curvedDrawingSurfaces.v1",
       "drawingTips.v1",
+      "drawingErasers.v1",
       "containers.v1",
       "containerPouring.v1",
       "containerScooping.v1",
@@ -12416,7 +12449,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "2efb8d35d1534d138d114382589e6b5f",
+      "id": "d39f81fb09374937ad71da0ee887f364",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -12539,61 +12572,7 @@
     },
     "objects": [
       {
-        "id": "1d93e4f08d414b2599db13d489244d64",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 3,
-        "position": {
-          "x": 0.5199999809265137,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "3b76a8e1c3f74f3598676f9b404adff2",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "9196f9c65c7f48f4bc55383dfada2359",
+        "id": "4b6ec5199ecc46b6bd26a5fab1c34211",
         "name": "Cup",
         "kind": "Assembly",
         "objectRevision": 20,
@@ -12616,6 +12595,33 @@
           "mode": "solid",
           "shape": "automatic",
           "mass": 0.30000001192092896
+        },
+        "movement": null
+      },
+      {
+        "id": "980ba88ad9814b79a8b4d32d523ac368",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
         },
         "movement": null
       },
@@ -12647,20 +12653,47 @@
         "movement": null
       },
       {
-        "id": "f2c096ebc30b403a8d906e1ee6bfebb7",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
+        "id": "c83c97ac8f354969887c0d84a3d40d9b",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 3,
         "position": {
-          "x": 0.6899999976158142,
+          "x": 0.5199999809265137,
           "y": 1.4500000476837158,
           "z": 0.800000011920929
         },
         "scale": 1,
         "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "e82f20ae9d4747d09efce879d9b3b858",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
           "a": 1
         },
         "animated": false,
@@ -12706,12 +12739,12 @@
     ],
     "created": [],
     "capture": {
-      "captureId": "1965e0c03d8d41bb8e26208d6749d42f",
+      "captureId": "ba59cbfae8e348449a6b1790d080d81e",
       "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
       "mimeType": "image/jpeg",
       "width": 512,
       "height": 384,
-      "capturedAt": "2026-10-04T03:44:00.3396398Z",
+      "capturedAt": "2026-10-04T04:36:03.880158Z",
       "sceneRevision": 3,
       "verticalFov": 60,
       "position": {
@@ -12771,11 +12804,11 @@
       "status": "Current fact value. Reading does not change the room.",
       "category": "facts",
       "arguments": {
-        "target": "9196f9c65c7f48f4bc55383dfada2359"
+        "target": "4b6ec5199ecc46b6bd26a5fab1c34211"
       },
       "available": true,
       "value": {
-        "target": "9196f9c65c7f48f4bc55383dfada2359",
+        "target": "4b6ec5199ecc46b6bd26a5fab1c34211",
         "revision": 20,
         "shapes": 3,
         "pieces": 21,
@@ -12785,14 +12818,14 @@
     },
     "execution": {
       "selected": {
-        "id": "68caecd215ef4d2db81077b610b96613",
+        "id": "9c6f6c3b49f0464a8e6f1dc49b416580",
         "capability": "object.create",
         "version": 1,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "objectId": "9196f9c65c7f48f4bc55383dfada2359"
+          "objectId": "4b6ec5199ecc46b6bd26a5fab1c34211"
         },
         "call": {
           "id": "object.create",
@@ -12811,30 +12844,30 @@
       "running": [],
       "outcomes": [
         {
-          "id": "8847392d5f9d47c98376c65c1945f7c7",
+          "id": "2012c151fd214adeae99ab064ab39d16",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "f22ea2d051514084adbd30d25412ffb1"
+            "objectId": "a46d6e9505cf429383dad20b15612005"
           }
         },
         {
-          "id": "00c56c7791de4ba6bc6327fa167445a7",
+          "id": "a30e12a1e21149e3bc177db4d81b2645",
           "capability": "room.view.capture",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "captureId": "1965e0c03d8d41bb8e26208d6749d42f",
+            "captureId": "ba59cbfae8e348449a6b1790d080d81e",
             "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
             "mimeType": "image/jpeg",
             "width": 512,
             "height": 384,
-            "capturedAt": "2026-10-04T03:44:00.3396398Z",
+            "capturedAt": "2026-10-04T04:36:03.880158Z",
             "sceneRevision": 3,
             "verticalFov": 60,
             "position": {
@@ -12851,27 +12884,27 @@
           }
         },
         {
-          "id": "0d838b5f51d34daf90f15a03409e67b4",
+          "id": "30fa2975881445e9be80eb205bbacf2e",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "95afba471a84421685a8d7443649095d"
+            "objectId": "fb55cf86efe94c4180cc5c29530a0c38"
           }
         },
         {
-          "id": "9b6487bd7572462b8717f2fc09447195",
+          "id": "0b1618a459d44e9fb9d8ac38c626604f",
           "capability": "object.recipe.edit",
           "version": 1,
           "resources": [
-            "95afba471a84421685a8d7443649095d"
+            "fb55cf86efe94c4180cc5c29530a0c38"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "95afba471a84421685a8d7443649095d",
+            "target": "fb55cf86efe94c4180cc5c29530a0c38",
             "revision": 10,
             "parts": 1,
             "tracks": 0,
@@ -12882,16 +12915,16 @@
           }
         },
         {
-          "id": "4f70e6a9fb1a41509ea928e202a1e722",
+          "id": "a05ac5db3aa04e798224c2246cbcb3ef",
           "capability": "object.collision.edit",
           "version": 1,
           "resources": [
-            "95afba471a84421685a8d7443649095d"
+            "fb55cf86efe94c4180cc5c29530a0c38"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "95afba471a84421685a8d7443649095d",
+            "target": "fb55cf86efe94c4180cc5c29530a0c38",
             "revision": 12,
             "shapes": 2,
             "pieces": 13,
@@ -12900,27 +12933,27 @@
           }
         },
         {
-          "id": "f794f32dbea5424ea330663ab8d9756c",
+          "id": "a37ccbabd53b4f13b5b07d7baad0a0e5",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "c89da74f1d3746adb6dd84336c34bef1"
+            "objectId": "e91975db613e4c8aafbc2a95d885647e"
           }
         },
         {
-          "id": "398e02662bae467eac82474ff266ac53",
+          "id": "da5e2089ce20438b9385b81e77a3e074",
           "capability": "object.recipe.edit",
           "version": 1,
           "resources": [
-            "c89da74f1d3746adb6dd84336c34bef1"
+            "e91975db613e4c8aafbc2a95d885647e"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "c89da74f1d3746adb6dd84336c34bef1",
+            "target": "e91975db613e4c8aafbc2a95d885647e",
             "revision": 15,
             "parts": 1,
             "tracks": 0,
@@ -12931,27 +12964,27 @@
           }
         },
         {
-          "id": "5e77d1d6ed9448e895832eee7531a0e2",
+          "id": "a75a4aaef22a496ba9676fe3deb4df26",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "2d8cf1f70689489d84ecc013b583dfd0"
+            "objectId": "5e7d1144c10d403583e03f2134da367a"
           }
         },
         {
-          "id": "5208c5b491a54daebab0575b311f0ebc",
+          "id": "bd10fe7e08ec435e8a103b9652ab8f84",
           "capability": "object.recipe.edit",
           "version": 1,
           "resources": [
-            "2d8cf1f70689489d84ecc013b583dfd0"
+            "5e7d1144c10d403583e03f2134da367a"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "2d8cf1f70689489d84ecc013b583dfd0",
+            "target": "5e7d1144c10d403583e03f2134da367a",
             "revision": 18,
             "parts": 1,
             "tracks": 0,
@@ -12962,25 +12995,25 @@
           }
         },
         {
-          "id": "68caecd215ef4d2db81077b610b96613",
+          "id": "9c6f6c3b49f0464a8e6f1dc49b416580",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "9196f9c65c7f48f4bc55383dfada2359"
+            "objectId": "4b6ec5199ecc46b6bd26a5fab1c34211"
           }
         }
       ],
-      "nextRunId": "ff14735c13e94c11b4909ea178228364",
+      "nextRunId": "9db770ab41cc4036a058d99a043cb6fc",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "cb0ca96bd29a44f695bcb66990a0a875",
+        "nextRunId": "0a8449e83a63432191c30716a4f86e26",
         "storageError": null,
         "recovery": null
       }
@@ -12988,19 +13021,19 @@
   },
   "physics": {
     "version": 1,
-    "revision": 107,
+    "revision": 106,
     "sceneRevision": 20,
     "ack": 44,
-    "session": "6ad682f8d44b4e6f8879b649ff899e16",
+    "session": "1847ab3a2da34a249eb7ae5cddc22612",
     "status": "Current fact value. Reading does not change the room.",
-    "selectedId": "9196f9c65c7f48f4bc55383dfada2359",
+    "selectedId": "4b6ec5199ecc46b6bd26a5fab1c34211",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
     "physicsRunning": false,
     "visible": false,
     "inspection": {
-      "id": "9196f9c65c7f48f4bc55383dfada2359",
+      "id": "4b6ec5199ecc46b6bd26a5fab1c34211",
       "partId": "",
       "objectRevision": 20,
       "recipe": {
@@ -13116,12 +13149,12 @@
       }
     },
     "constructionSelection": {
-      "stateId": "d93ed9dedd3f44deb7c950e90f283f4a",
+      "stateId": "a85cc9bd520740f3bfc5dd8b11287049",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "d93ed9dedd3f44deb7c950e90f283f4a",
+      "stateId": "a85cc9bd520740f3bfc5dd8b11287049",
       "error": "",
       "visible": false,
       "holding": false
@@ -13194,6 +13227,7 @@
       "drawingSurfaces.v1",
       "curvedDrawingSurfaces.v1",
       "drawingTips.v1",
+      "drawingErasers.v1",
       "containers.v1",
       "containerPouring.v1",
       "containerScooping.v1",
@@ -13253,7 +13287,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "2efb8d35d1534d138d114382589e6b5f",
+      "id": "d39f81fb09374937ad71da0ee887f364",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -13376,61 +13410,7 @@
     },
     "objects": [
       {
-        "id": "1d93e4f08d414b2599db13d489244d64",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 3,
-        "position": {
-          "x": 0.5199999809265137,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "3b76a8e1c3f74f3598676f9b404adff2",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "9196f9c65c7f48f4bc55383dfada2359",
+        "id": "4b6ec5199ecc46b6bd26a5fab1c34211",
         "name": "Cup",
         "kind": "Assembly",
         "objectRevision": 20,
@@ -13453,6 +13433,33 @@
           "mode": "solid",
           "shape": "automatic",
           "mass": 0.30000001192092896
+        },
+        "movement": null
+      },
+      {
+        "id": "980ba88ad9814b79a8b4d32d523ac368",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
         },
         "movement": null
       },
@@ -13484,20 +13491,47 @@
         "movement": null
       },
       {
-        "id": "f2c096ebc30b403a8d906e1ee6bfebb7",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
+        "id": "c83c97ac8f354969887c0d84a3d40d9b",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 3,
         "position": {
-          "x": 0.6899999976158142,
+          "x": 0.5199999809265137,
           "y": 1.4500000476837158,
           "z": 0.800000011920929
         },
         "scale": 1,
         "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "e82f20ae9d4747d09efce879d9b3b858",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
           "a": 1
         },
         "animated": false,
@@ -13543,12 +13577,12 @@
     ],
     "created": [],
     "capture": {
-      "captureId": "1965e0c03d8d41bb8e26208d6749d42f",
+      "captureId": "ba59cbfae8e348449a6b1790d080d81e",
       "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
       "mimeType": "image/jpeg",
       "width": 512,
       "height": 384,
-      "capturedAt": "2026-10-04T03:44:00.3396398Z",
+      "capturedAt": "2026-10-04T04:36:03.880158Z",
       "sceneRevision": 3,
       "verticalFov": 60,
       "position": {
@@ -13607,11 +13641,11 @@
       "status": "Current fact value. Reading does not change the room.",
       "category": "facts",
       "arguments": {
-        "target": "9196f9c65c7f48f4bc55383dfada2359"
+        "target": "4b6ec5199ecc46b6bd26a5fab1c34211"
       },
       "available": true,
       "value": {
-        "target": "9196f9c65c7f48f4bc55383dfada2359",
+        "target": "4b6ec5199ecc46b6bd26a5fab1c34211",
         "revision": 20,
         "mode": "solid",
         "shape": "automatic",
@@ -13621,14 +13655,14 @@
     },
     "execution": {
       "selected": {
-        "id": "68caecd215ef4d2db81077b610b96613",
+        "id": "9c6f6c3b49f0464a8e6f1dc49b416580",
         "capability": "object.create",
         "version": 1,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "objectId": "9196f9c65c7f48f4bc55383dfada2359"
+          "objectId": "4b6ec5199ecc46b6bd26a5fab1c34211"
         },
         "call": {
           "id": "object.create",
@@ -13647,30 +13681,30 @@
       "running": [],
       "outcomes": [
         {
-          "id": "8847392d5f9d47c98376c65c1945f7c7",
+          "id": "2012c151fd214adeae99ab064ab39d16",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "f22ea2d051514084adbd30d25412ffb1"
+            "objectId": "a46d6e9505cf429383dad20b15612005"
           }
         },
         {
-          "id": "00c56c7791de4ba6bc6327fa167445a7",
+          "id": "a30e12a1e21149e3bc177db4d81b2645",
           "capability": "room.view.capture",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "captureId": "1965e0c03d8d41bb8e26208d6749d42f",
+            "captureId": "ba59cbfae8e348449a6b1790d080d81e",
             "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
             "mimeType": "image/jpeg",
             "width": 512,
             "height": 384,
-            "capturedAt": "2026-10-04T03:44:00.3396398Z",
+            "capturedAt": "2026-10-04T04:36:03.880158Z",
             "sceneRevision": 3,
             "verticalFov": 60,
             "position": {
@@ -13687,27 +13721,27 @@
           }
         },
         {
-          "id": "0d838b5f51d34daf90f15a03409e67b4",
+          "id": "30fa2975881445e9be80eb205bbacf2e",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "95afba471a84421685a8d7443649095d"
+            "objectId": "fb55cf86efe94c4180cc5c29530a0c38"
           }
         },
         {
-          "id": "9b6487bd7572462b8717f2fc09447195",
+          "id": "0b1618a459d44e9fb9d8ac38c626604f",
           "capability": "object.recipe.edit",
           "version": 1,
           "resources": [
-            "95afba471a84421685a8d7443649095d"
+            "fb55cf86efe94c4180cc5c29530a0c38"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "95afba471a84421685a8d7443649095d",
+            "target": "fb55cf86efe94c4180cc5c29530a0c38",
             "revision": 10,
             "parts": 1,
             "tracks": 0,
@@ -13718,16 +13752,16 @@
           }
         },
         {
-          "id": "4f70e6a9fb1a41509ea928e202a1e722",
+          "id": "a05ac5db3aa04e798224c2246cbcb3ef",
           "capability": "object.collision.edit",
           "version": 1,
           "resources": [
-            "95afba471a84421685a8d7443649095d"
+            "fb55cf86efe94c4180cc5c29530a0c38"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "95afba471a84421685a8d7443649095d",
+            "target": "fb55cf86efe94c4180cc5c29530a0c38",
             "revision": 12,
             "shapes": 2,
             "pieces": 13,
@@ -13736,27 +13770,27 @@
           }
         },
         {
-          "id": "f794f32dbea5424ea330663ab8d9756c",
+          "id": "a37ccbabd53b4f13b5b07d7baad0a0e5",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "c89da74f1d3746adb6dd84336c34bef1"
+            "objectId": "e91975db613e4c8aafbc2a95d885647e"
           }
         },
         {
-          "id": "398e02662bae467eac82474ff266ac53",
+          "id": "da5e2089ce20438b9385b81e77a3e074",
           "capability": "object.recipe.edit",
           "version": 1,
           "resources": [
-            "c89da74f1d3746adb6dd84336c34bef1"
+            "e91975db613e4c8aafbc2a95d885647e"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "c89da74f1d3746adb6dd84336c34bef1",
+            "target": "e91975db613e4c8aafbc2a95d885647e",
             "revision": 15,
             "parts": 1,
             "tracks": 0,
@@ -13767,27 +13801,27 @@
           }
         },
         {
-          "id": "5e77d1d6ed9448e895832eee7531a0e2",
+          "id": "a75a4aaef22a496ba9676fe3deb4df26",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "2d8cf1f70689489d84ecc013b583dfd0"
+            "objectId": "5e7d1144c10d403583e03f2134da367a"
           }
         },
         {
-          "id": "5208c5b491a54daebab0575b311f0ebc",
+          "id": "bd10fe7e08ec435e8a103b9652ab8f84",
           "capability": "object.recipe.edit",
           "version": 1,
           "resources": [
-            "2d8cf1f70689489d84ecc013b583dfd0"
+            "5e7d1144c10d403583e03f2134da367a"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "2d8cf1f70689489d84ecc013b583dfd0",
+            "target": "5e7d1144c10d403583e03f2134da367a",
             "revision": 18,
             "parts": 1,
             "tracks": 0,
@@ -13798,25 +13832,25 @@
           }
         },
         {
-          "id": "68caecd215ef4d2db81077b610b96613",
+          "id": "9c6f6c3b49f0464a8e6f1dc49b416580",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "9196f9c65c7f48f4bc55383dfada2359"
+            "objectId": "4b6ec5199ecc46b6bd26a5fab1c34211"
           }
         }
       ],
-      "nextRunId": "ff14735c13e94c11b4909ea178228364",
+      "nextRunId": "9db770ab41cc4036a058d99a043cb6fc",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "cb0ca96bd29a44f695bcb66990a0a875",
+        "nextRunId": "0a8449e83a63432191c30716a4f86e26",
         "storageError": null,
         "recovery": null
       }
@@ -13824,12 +13858,12 @@
   },
   "undo": {
     "version": 1,
-    "revision": 109,
+    "revision": 110,
     "sceneRevision": 21,
     "ack": 45,
-    "session": "6ad682f8d44b4e6f8879b649ff899e16",
+    "session": "1847ab3a2da34a249eb7ae5cddc22612",
     "status": "Undone",
-    "selectedId": "9196f9c65c7f48f4bc55383dfada2359",
+    "selectedId": "4b6ec5199ecc46b6bd26a5fab1c34211",
     "ok": true,
     "canUndo": false,
     "canRedo": true,
@@ -13837,12 +13871,12 @@
     "visible": false,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "d93ed9dedd3f44deb7c950e90f283f4a",
+      "stateId": "a85cc9bd520740f3bfc5dd8b11287049",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "d93ed9dedd3f44deb7c950e90f283f4a",
+      "stateId": "a85cc9bd520740f3bfc5dd8b11287049",
       "error": "",
       "visible": false,
       "holding": false
@@ -13915,6 +13949,7 @@
       "drawingSurfaces.v1",
       "curvedDrawingSurfaces.v1",
       "drawingTips.v1",
+      "drawingErasers.v1",
       "containers.v1",
       "containerPouring.v1",
       "containerScooping.v1",
@@ -13974,7 +14009,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "2efb8d35d1534d138d114382589e6b5f",
+      "id": "d39f81fb09374937ad71da0ee887f364",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -14097,47 +14132,20 @@
     },
     "objects": [
       {
-        "id": "1d93e4f08d414b2599db13d489244d64",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 3,
+        "id": "980ba88ad9814b79a8b4d32d523ac368",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
         "position": {
-          "x": 0.5199999809265137,
+          "x": 0.6899999976158142,
           "y": 1.4500000476837158,
           "z": 0.800000011920929
         },
         "scale": 1,
         "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "3b76a8e1c3f74f3598676f9b404adff2",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
           "a": 1
         },
         "animated": false,
@@ -14178,20 +14186,47 @@
         "movement": null
       },
       {
-        "id": "f2c096ebc30b403a8d906e1ee6bfebb7",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
+        "id": "c83c97ac8f354969887c0d84a3d40d9b",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 3,
         "position": {
-          "x": 0.6899999976158142,
+          "x": 0.5199999809265137,
           "y": 1.4500000476837158,
           "z": 0.800000011920929
         },
         "scale": 1,
         "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "e82f20ae9d4747d09efce879d9b3b858",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
           "a": 1
         },
         "animated": false,
@@ -14237,12 +14272,12 @@
     ],
     "created": [],
     "capture": {
-      "captureId": "1965e0c03d8d41bb8e26208d6749d42f",
+      "captureId": "ba59cbfae8e348449a6b1790d080d81e",
       "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
       "mimeType": "image/jpeg",
       "width": 512,
       "height": 384,
-      "capturedAt": "2026-10-04T03:44:00.3396398Z",
+      "capturedAt": "2026-10-04T04:36:03.880158Z",
       "sceneRevision": 3,
       "verticalFov": 60,
       "position": {
@@ -14301,21 +14336,21 @@
       "status": "Fact value is currently unavailable; do not treat it as false or zero.",
       "category": "facts",
       "arguments": {
-        "target": "9196f9c65c7f48f4bc55383dfada2359"
+        "target": "4b6ec5199ecc46b6bd26a5fab1c34211"
       },
       "available": false,
       "value": null
     },
     "execution": {
       "selected": {
-        "id": "68caecd215ef4d2db81077b610b96613",
+        "id": "9c6f6c3b49f0464a8e6f1dc49b416580",
         "capability": "object.create",
         "version": 1,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "objectId": "9196f9c65c7f48f4bc55383dfada2359"
+          "objectId": "4b6ec5199ecc46b6bd26a5fab1c34211"
         },
         "call": {
           "id": "object.create",
@@ -14334,30 +14369,30 @@
       "running": [],
       "outcomes": [
         {
-          "id": "8847392d5f9d47c98376c65c1945f7c7",
+          "id": "2012c151fd214adeae99ab064ab39d16",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "f22ea2d051514084adbd30d25412ffb1"
+            "objectId": "a46d6e9505cf429383dad20b15612005"
           }
         },
         {
-          "id": "00c56c7791de4ba6bc6327fa167445a7",
+          "id": "a30e12a1e21149e3bc177db4d81b2645",
           "capability": "room.view.capture",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "captureId": "1965e0c03d8d41bb8e26208d6749d42f",
+            "captureId": "ba59cbfae8e348449a6b1790d080d81e",
             "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
             "mimeType": "image/jpeg",
             "width": 512,
             "height": 384,
-            "capturedAt": "2026-10-04T03:44:00.3396398Z",
+            "capturedAt": "2026-10-04T04:36:03.880158Z",
             "sceneRevision": 3,
             "verticalFov": 60,
             "position": {
@@ -14374,27 +14409,27 @@
           }
         },
         {
-          "id": "0d838b5f51d34daf90f15a03409e67b4",
+          "id": "30fa2975881445e9be80eb205bbacf2e",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "95afba471a84421685a8d7443649095d"
+            "objectId": "fb55cf86efe94c4180cc5c29530a0c38"
           }
         },
         {
-          "id": "9b6487bd7572462b8717f2fc09447195",
+          "id": "0b1618a459d44e9fb9d8ac38c626604f",
           "capability": "object.recipe.edit",
           "version": 1,
           "resources": [
-            "95afba471a84421685a8d7443649095d"
+            "fb55cf86efe94c4180cc5c29530a0c38"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "95afba471a84421685a8d7443649095d",
+            "target": "fb55cf86efe94c4180cc5c29530a0c38",
             "revision": 10,
             "parts": 1,
             "tracks": 0,
@@ -14405,16 +14440,16 @@
           }
         },
         {
-          "id": "4f70e6a9fb1a41509ea928e202a1e722",
+          "id": "a05ac5db3aa04e798224c2246cbcb3ef",
           "capability": "object.collision.edit",
           "version": 1,
           "resources": [
-            "95afba471a84421685a8d7443649095d"
+            "fb55cf86efe94c4180cc5c29530a0c38"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "95afba471a84421685a8d7443649095d",
+            "target": "fb55cf86efe94c4180cc5c29530a0c38",
             "revision": 12,
             "shapes": 2,
             "pieces": 13,
@@ -14423,27 +14458,27 @@
           }
         },
         {
-          "id": "f794f32dbea5424ea330663ab8d9756c",
+          "id": "a37ccbabd53b4f13b5b07d7baad0a0e5",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "c89da74f1d3746adb6dd84336c34bef1"
+            "objectId": "e91975db613e4c8aafbc2a95d885647e"
           }
         },
         {
-          "id": "398e02662bae467eac82474ff266ac53",
+          "id": "da5e2089ce20438b9385b81e77a3e074",
           "capability": "object.recipe.edit",
           "version": 1,
           "resources": [
-            "c89da74f1d3746adb6dd84336c34bef1"
+            "e91975db613e4c8aafbc2a95d885647e"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "c89da74f1d3746adb6dd84336c34bef1",
+            "target": "e91975db613e4c8aafbc2a95d885647e",
             "revision": 15,
             "parts": 1,
             "tracks": 0,
@@ -14454,27 +14489,27 @@
           }
         },
         {
-          "id": "5e77d1d6ed9448e895832eee7531a0e2",
+          "id": "a75a4aaef22a496ba9676fe3deb4df26",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "2d8cf1f70689489d84ecc013b583dfd0"
+            "objectId": "5e7d1144c10d403583e03f2134da367a"
           }
         },
         {
-          "id": "5208c5b491a54daebab0575b311f0ebc",
+          "id": "bd10fe7e08ec435e8a103b9652ab8f84",
           "capability": "object.recipe.edit",
           "version": 1,
           "resources": [
-            "2d8cf1f70689489d84ecc013b583dfd0"
+            "5e7d1144c10d403583e03f2134da367a"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "2d8cf1f70689489d84ecc013b583dfd0",
+            "target": "5e7d1144c10d403583e03f2134da367a",
             "revision": 18,
             "parts": 1,
             "tracks": 0,
@@ -14485,25 +14520,25 @@
           }
         },
         {
-          "id": "68caecd215ef4d2db81077b610b96613",
+          "id": "9c6f6c3b49f0464a8e6f1dc49b416580",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "9196f9c65c7f48f4bc55383dfada2359"
+            "objectId": "4b6ec5199ecc46b6bd26a5fab1c34211"
           }
         }
       ],
-      "nextRunId": "ff14735c13e94c11b4909ea178228364",
+      "nextRunId": "9db770ab41cc4036a058d99a043cb6fc",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "cb0ca96bd29a44f695bcb66990a0a875",
+        "nextRunId": "0a8449e83a63432191c30716a4f86e26",
         "storageError": null,
         "recovery": null
       }

@@ -2897,3 +2897,35 @@ now use their declared types while preserving stale-revision rejection. Current
 Quest acceptance remains pending.
 Arbitrary mesh/skin painting, scan overlays, remaining play kit, persistent
 water/snow and wider release gates are still open.
+
+
+### Shared drawing kit and held erasers (2026-10-04)
+
+Pencil, Paint brush and Eraser extend the editable default library to sixteen
+objects. Their shapes, collision, physics and draw/erase tips are ordinary source;
+users and the agent can configure the same component on created/imported roots or
+recipe parts. Held erasing previews complete selected strokes and commits a contact
+gesture as one saved edit/Undo. Shared `removeStrokes` accepts exact unique IDs;
+invalid or missing selections refuse atomically. Recovery retains that selection,
+checks the original patch on retry and restores ink on discard.
+
+The capture fact and result distinguish drawing/erasing. Explicit tip modes and
+batch erasing require `drawingErasers.v1`. Erasing tips use component v2, room v13,
+paired snapshot v12 and archive v12; clean prior room files remain readable and
+older originals are preserved. See QUEST_SURFACE_DRAWING.md. Desktop verification passed 2,203 web tests across 249 files, TypeScript and
+ESLint, 766 Unity EditMode tests and 571 PlayMode tests (three optional private-file
+checks skipped). The real shared-client native journey passed 315 observations;
+eleven Chrome journeys matched recorded native calls and receipts, including
+duplicate-ID refusal and configurable erasing. Actual Unity starter renders and
+generated controls were visually inspected. Package evidence is recorded separately.
+Quest contact feel and maximum-load performance remain pending; this increment
+does not complete the wider play kit, persistent water/snow, provider or Store gates.
+
+
+Drawing-kit package checkpoint: `MaestroQuest-drawing-kit-576FED7F.apk`, SHA-256
+`576FED7FECD9FA8793EF400AF9AE12B689B430C3ECBF90DEACD2DCCA479712A7`.
+Production web build, Android lint, 76 Android unit tests (two optional skips),
+IL2CPP packaging, signature and 16 KiB alignment passed. The package audit matched
+1,764 frozen native inputs, 137 web files and exact default-avatar/motion/template/
+module bytes. The local development APK is not installed; no provider, paid
+asset-generation, deployment, release signing or Store submission occurred.

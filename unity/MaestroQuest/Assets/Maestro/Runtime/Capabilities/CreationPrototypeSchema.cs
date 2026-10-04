@@ -20,7 +20,7 @@ namespace Maestro.Quest.Programs
             var fields=(JObject)new CreateRecipeCapability().InputSchema["properties"];
             var tip=(JObject)DrawingTipCapability.DefinitionSchema()["properties"];tip["version"]=Number(1,2,true);
             var common=new JObject {["version"]=Number(1,1,true),["color"]=Color(),["physics"]=fields["physics"].DeepClone(),
-                ["collision"]=fields["collision"].DeepClone(),["surfaces"]=List(Surface(),0,4),["drawingTips"]=List(Object(tip),0,1),["snapPoints"]=List(SnapPointCapability.SavedSchema(),0,64),["containers"]=List(ContainerCapability.SavedSchema(),0,1),
+                ["collision"]=fields["collision"].DeepClone(),["surfaces"]=List(Surface(),0,4),["drawingTips"]=List(Object(tip,"mode"),0,1),["snapPoints"]=List(SnapPointCapability.SavedSchema(),0,64),["containers"]=List(ContainerCapability.SavedSchema(),0,1),
                 ["motion"]=Object(new JObject {["loop"]=new JObject {["type"]="boolean"},["frames"]=List(Object(new JObject {
                     ["time"]=Number(0,30),["position"]=Point(500.001),["rotation"]=Vector(true),["scale"]=Number(.024999,40.00001)}),1,301)})};
             var variants=new JArray();
@@ -45,6 +45,7 @@ namespace Maestro.Quest.Programs
             }
             value["geometry"]=geometry;
             foreach(var surface in ((JArray)value["surfaces"]).OfType<JObject>())if((int)surface["version"]==1){surface.Remove("shape");surface.Remove("curvatureRadius");}
+            foreach(var tip in ((JArray)value["drawingTips"]).OfType<JObject>())if((int)tip["version"]==1)tip.Remove("mode");
             if((prototype.containers?.Length??0)==0)value.Remove("containers");
             if((prototype.snapPoints?.Length??0)==0)value.Remove("snapPoints");
             if(prototype.collision==null)value.Remove("collision");if(prototype.motion==null)value.Remove("motion");

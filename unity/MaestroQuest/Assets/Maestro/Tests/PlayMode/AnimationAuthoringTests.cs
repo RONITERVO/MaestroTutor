@@ -94,7 +94,7 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator FailedDurableAnimationSaveLeavesPoseRevisionAndUndoUnchanged()
         {
-            AuthorRuntime();int revision=editor.ObjectRevision("maestro");bool undo=editor.CanUndo;editor.SaveNow();yield return null;string file=Path.Combine(directory,"room.v12.json");if(File.Exists(file))File.Delete(file);Directory.CreateDirectory(file);
+            AuthorRuntime();int revision=editor.ObjectRevision("maestro");bool undo=editor.CanUndo;editor.SaveNow();yield return null;string file=Path.Combine(directory,"room.v13.json");if(File.Exists(file))File.Delete(file);Directory.CreateDirectory(file);
             var args=AuthorArgs("frames");args["replace"]=true;args["frames"]=new JArray(FrameJson("maestro",0),FrameJson("maestro",1));Assert.That(authorActions.Execute(AuthorCall(args),out _),Is.False);Assert.That(editor.ObjectRevision("maestro"),Is.EqualTo(revision));Assert.That(editor.Read("maestro").motion,Is.Null);Assert.That(editor.CanUndo,Is.EqualTo(undo));
             Assert.That(editor.SaveAnimation("maestro",new RoomMotion {frames=new[]{new MotionFrame()}},null,false),Is.False);Assert.That(editor.Read("maestro").motion,Is.Null);
         }

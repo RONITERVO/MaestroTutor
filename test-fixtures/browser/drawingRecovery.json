@@ -1,8 +1,10 @@
 {
   "before": {
-    "sessionId": "c91a8e0700f248949d3caa91f4410a0f",
+    "sessionId": "b3d302e7d1534607b5ce56e69fcb6091",
     "phase": "unsaved",
     "points": 2,
+    "mode": "draw",
+    "strokes": 0,
     "temporary": false,
     "error": "Could not save room; the previous save is retained. Check available storage and try again."
   },
@@ -11,22 +13,24 @@
     "version": 1,
     "arguments": {
       "operation": "retry",
-      "sessionId": "c91a8e0700f248949d3caa91f4410a0f"
+      "sessionId": "b3d302e7d1534607b5ce56e69fcb6091"
     }
   },
   "receipt": {
     "selected": {
-      "id": "f784f9998e2f44be8dd39ace9cc2cc42",
+      "id": "2560209c7ca14956afebf690c26f86a1",
       "capability": "object.drawing.resolve",
       "version": 1,
       "resources": [],
       "phase": "completed",
       "status": "Action completed",
       "output": {
-        "sessionId": "c91a8e0700f248949d3caa91f4410a0f",
+        "sessionId": "b3d302e7d1534607b5ce56e69fcb6091",
         "phase": "saved",
-        "objectId": "3f215671f09f46f9a295e9534a248974",
+        "objectId": "871e4f778dc44cd3aeafd1a137953d17",
         "points": 2,
+        "mode": "draw",
+        "strokes": 0,
         "temporary": false
       },
       "call": {
@@ -34,36 +38,40 @@
         "version": 1,
         "arguments": {
           "operation": "retry",
-          "sessionId": "c91a8e0700f248949d3caa91f4410a0f"
+          "sessionId": "b3d302e7d1534607b5ce56e69fcb6091"
         }
       }
     },
     "running": [],
     "outcomes": [
       {
-        "id": "f784f9998e2f44be8dd39ace9cc2cc42",
+        "id": "2560209c7ca14956afebf690c26f86a1",
         "capability": "object.drawing.resolve",
         "version": 1,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "sessionId": "c91a8e0700f248949d3caa91f4410a0f",
+          "sessionId": "b3d302e7d1534607b5ce56e69fcb6091",
           "phase": "saved",
-          "objectId": "3f215671f09f46f9a295e9534a248974",
+          "objectId": "871e4f778dc44cd3aeafd1a137953d17",
           "points": 2,
+          "mode": "draw",
+          "strokes": 0,
           "temporary": false
         }
       }
     ],
-    "nextRunId": "4b59cac19cb24d0d9fb2c1a2befd670a",
+    "nextRunId": "8385ec3b84934936af63383b34f732d9",
     "storageError": null,
     "recovery": null
   },
   "after": {
-    "sessionId": "67308eeb76704ea8b6f84562659aa15e",
+    "sessionId": "6981d7dadd78400a9f161c23bc0b3a85",
     "phase": "idle",
     "points": 0,
+    "mode": "none",
+    "strokes": 0,
     "temporary": false,
     "error": ""
   }

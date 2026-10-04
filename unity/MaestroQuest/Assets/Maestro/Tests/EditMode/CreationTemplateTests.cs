@@ -13,7 +13,7 @@ namespace Maestro.Quest.Tests
     public sealed class CreationTemplateTests
     {
         [Test] public void EveryBundledTemplatePinsItsBytesAndExpandsToValidDetachedComponents() {
-            Assert.That(CreationTemplates.All.Count,Is.EqualTo(13));
+            Assert.That(CreationTemplates.All.Count,Is.EqualTo(16));
             foreach(var entry in CreationTemplates.All) {
                 var bytes=File.ReadAllBytes(Path.Combine(Application.dataPath,"Maestro/Resources/Creation/Templates",entry.Id+".json"));Assert.That(entry.Hash,Is.EqualTo(ModelLibrary.Hash(bytes)));
                 var recipe=entry.Recipe;Assert.That(recipe.Validate(out var error),Is.True,error);Assert.That(entry.Collision.Validate(out error),Is.True,error);Assert.That(RoomControls.ValidPhysics(entry.Physics),Is.True);Assert.That(recipe.playing,Is.False);
