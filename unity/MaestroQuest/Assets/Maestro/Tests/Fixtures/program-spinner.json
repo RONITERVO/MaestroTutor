@@ -5,7 +5,7 @@
   "imports": [
     {
       "alias": "kit",
-      "hash": "9289e32de9e68a203d610cb94cd82bc4f3f4b4a8a9cdb8c4e5e6dd48d9114c6f",
+      "hash": "f341bf2c733285613eebf1cb9518f9a64663c30a5af3b06fb4432526864d3bb8",
       "module": {
         "version": 1,
         "name": "Passive spinner",
@@ -195,7 +195,7 @@
                                   },
                                   "size": {
                                     "x": 0.06,
-                                    "y": 0.025,
+                                    "y": 0.04,
                                     "z": 0.06
                                   },
                                   "rotation": {
