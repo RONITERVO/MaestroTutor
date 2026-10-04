@@ -10,6 +10,15 @@ const own=(v:object,k:string)=>Object.prototype.hasOwnProperty.call(v,k);
 const name=(v:unknown):v is string=>typeof v==='string'&&/^[a-zA-Z0-9_]{1,32}$/.test(v)&&!['__proto__','constructor','prototype'].includes(v);
 const need=(v:unknown,message:string)=>{if(!v)throw new Error(message);};
 const scalar=(schema:CapabilitySchema|undefined)=>schema?.type==='string'?'text':schema?.type==='integer'?'number':schema?.type;
+/** A non-null fixed fact may fill a nullable/optional input record. Values still
+ * pass the complete native argument validator before use. No variants are inferred. */
+function acceptsCurrentType(schema:CapabilitySchema|undefined,type:DataType|undefined,depth=0):boolean {
+ if(!schema||type===undefined||depth>4||schema.oneOf||schema['x-static'])return false;
+ if(typeof type==='string')return type===scalar(schema);
+ if('list' in type)return schema.type==='array'&&acceptsCurrentType(schema.items,type.list,depth+1);
+ const fields=schema.properties;
+ return schema.type==='object'&&!!fields&&Object.keys(fields).length===Object.keys(type.record).length&&Object.entries(type.record).every(([key,child])=>own(fields,key)&&acceptsCurrentType(fields[key],child,depth+1));
+}
 /** Metadata is shipped in the native manifest. Validate references as well as shape in CI. */
 export function validateCurrentInputMapping(schema:CapabilitySchema):void {
  const m=schema['x-current'];if(!m)return;
@@ -28,7 +37,7 @@ export function validateCurrentInputMapping(schema:CapabilitySchema):void {
   need(Array.isArray(path)&&path.length>0&&path.length<=4&&path.every(name),'Invalid current-input fact path');
   let type:DataType|undefined=fact!.type;
   for(const part of path)type=typeof type==='object'&&'record' in type&&own(type.record,part)?type.record[part]:undefined;
-  need(type!==undefined&&typeof type==='string'&&type===scalar(schema.properties![key]),'Current-input fact type differs');
+  need(acceptsCurrentType(schema.properties![key],type),'Current-input fact type differs');
  }
  need(m.guards.length<=8&&new Set(m.guards).size===m.guards.length&&m.guards.every(key=>name(key)&&own(m.fields,key)),'Unknown current-input guard');
 }
@@ -55,7 +64,7 @@ export function applyCurrentInputs(schema:CapabilitySchema,value:unknown,view:Ca
   let entry:unknown=view.value;
   for(const part of path)entry=record(entry)&&own(entry,part)?entry[part]:undefined;
   need(validateCapabilityValue(entry,selected.properties![key])===null,'Current '+key+' cannot be used for this action.');
-  next[key]=entry;
+  next[key]=structuredClone(entry);
  }
  return next;
 }
@@ -104,7 +113,7 @@ export function applyCurrentInputSnapshots(schema:CapabilitySchema,value:unknown
  const locations=currentInputLocations(schema,value);need(record(value)&&locations.length>0&&locations.length===views.length,'Current-input responses do not match this draft');
  const replacements=locations.map((l,i)=>({path:l.path,value:applyCurrentInputs(l.schema,l.value,views[i])}));
  const next=structuredClone(value) as Record<string,unknown>;
- // Mappings replace their own scalar fields only, preserving nested replacements and edited preferences.
+ // Mappings replace only their declared fields, preserving nested replacements and edited preferences.
  for(let i=0;i<replacements.length;i++){
   let target:unknown=next;for(const part of replacements[i].path)target=typeof part==='number'&&Array.isArray(target)?target[part]:record(target)?target[part]:undefined;
   need(record(target),'Current-input location is no longer present');

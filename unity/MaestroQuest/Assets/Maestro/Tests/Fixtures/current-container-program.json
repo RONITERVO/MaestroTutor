@@ -1,0 +1,360 @@
+{
+  "version": 3,
+  "entry": "main",
+  "resources": [
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  ],
+  "functions": [
+    {
+      "name": "main",
+      "returns": "void",
+      "parameters": [],
+      "locals": [
+        {
+          "name": "current_1",
+          "type": {
+            "record": {
+              "revision": "number",
+              "configured": "boolean",
+              "definition": {
+                "record": {
+                  "frame": {
+                    "record": {
+                      "position": {
+                        "record": {
+                          "x": "number",
+                          "y": "number",
+                          "z": "number"
+                        }
+                      },
+                      "rotation": {
+                        "record": {
+                          "x": "number",
+                          "y": "number",
+                          "z": "number",
+                          "w": "number"
+                        }
+                      }
+                    }
+                  },
+                  "radius": "number",
+                  "rectangle": {
+                    "record": {
+                      "width": "number",
+                      "depth": "number"
+                    }
+                  },
+                  "height": "number",
+                  "capacityMl": "number",
+                  "amountMl": "number",
+                  "liquid": "text",
+                  "color": {
+                    "record": {
+                      "r": "number",
+                      "g": "number",
+                      "b": "number",
+                      "a": "number"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "initial": {
+            "revision": 0,
+            "configured": false,
+            "definition": {
+              "frame": {
+                "position": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0,
+                  "w": 0
+                }
+              },
+              "radius": 0,
+              "rectangle": {
+                "width": 0,
+                "depth": 0
+              },
+              "height": 0,
+              "capacityMl": 0,
+              "amountMl": 0,
+              "liquid": "",
+              "color": {
+                "r": 0,
+                "g": 0,
+                "b": 0,
+                "a": 0
+              }
+            }
+          }
+        }
+      ],
+      "body": [
+        {
+          "id": "read_current_1",
+          "op": "set",
+          "variable": "current_1",
+          "value": {
+            "fact": "object.container",
+            "version": 1,
+            "arguments": {
+              "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "bindings": {}
+          }
+        },
+        {
+          "id": "action_1",
+          "op": "invoke",
+          "capability": "object.container.edit",
+          "version": 1,
+          "arguments": {
+            "operation": "configure",
+            "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "revision": 1,
+            "definition": {
+              "frame": {
+                "position": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0,
+                  "w": 1
+                }
+              },
+              "radius": 0.03999999910593033,
+              "height": 0.10000000149011612,
+              "capacityMl": 250,
+              "amountMl": 200,
+              "liquid": "Water",
+              "color": {
+                "r": 0.1599999964237213,
+                "g": 0.550000011920929,
+                "b": 0.8500000238418579,
+                "a": 1
+              },
+              "rectangle": {
+                "width": 0,
+                "depth": 0
+              }
+            }
+          },
+          "bindings": {
+            "revision": {
+              "op": "field",
+              "args": [
+                {
+                  "var": "current_1"
+                },
+                {
+                  "value": "revision"
+                }
+              ]
+            },
+            "definition.frame": {
+              "op": "field",
+              "args": [
+                {
+                  "op": "field",
+                  "args": [
+                    {
+                      "var": "current_1"
+                    },
+                    {
+                      "value": "definition"
+                    }
+                  ]
+                },
+                {
+                  "value": "frame"
+                }
+              ]
+            },
+            "definition.radius": {
+              "op": "field",
+              "args": [
+                {
+                  "op": "field",
+                  "args": [
+                    {
+                      "var": "current_1"
+                    },
+                    {
+                      "value": "definition"
+                    }
+                  ]
+                },
+                {
+                  "value": "radius"
+                }
+              ]
+            },
+            "definition.rectangle.width": {
+              "op": "field",
+              "args": [
+                {
+                  "op": "field",
+                  "args": [
+                    {
+                      "op": "field",
+                      "args": [
+                        {
+                          "var": "current_1"
+                        },
+                        {
+                          "value": "definition"
+                        }
+                      ]
+                    },
+                    {
+                      "value": "rectangle"
+                    }
+                  ]
+                },
+                {
+                  "value": "width"
+                }
+              ]
+            },
+            "definition.rectangle.depth": {
+              "op": "field",
+              "args": [
+                {
+                  "op": "field",
+                  "args": [
+                    {
+                      "op": "field",
+                      "args": [
+                        {
+                          "var": "current_1"
+                        },
+                        {
+                          "value": "definition"
+                        }
+                      ]
+                    },
+                    {
+                      "value": "rectangle"
+                    }
+                  ]
+                },
+                {
+                  "value": "depth"
+                }
+              ]
+            },
+            "definition.height": {
+              "op": "field",
+              "args": [
+                {
+                  "op": "field",
+                  "args": [
+                    {
+                      "var": "current_1"
+                    },
+                    {
+                      "value": "definition"
+                    }
+                  ]
+                },
+                {
+                  "value": "height"
+                }
+              ]
+            },
+            "definition.capacityMl": {
+              "op": "field",
+              "args": [
+                {
+                  "op": "field",
+                  "args": [
+                    {
+                      "var": "current_1"
+                    },
+                    {
+                      "value": "definition"
+                    }
+                  ]
+                },
+                {
+                  "value": "capacityMl"
+                }
+              ]
+            },
+            "definition.amountMl": {
+              "op": "field",
+              "args": [
+                {
+                  "op": "field",
+                  "args": [
+                    {
+                      "var": "current_1"
+                    },
+                    {
+                      "value": "definition"
+                    }
+                  ]
+                },
+                {
+                  "value": "amountMl"
+                }
+              ]
+            },
+            "definition.liquid": {
+              "op": "field",
+              "args": [
+                {
+                  "op": "field",
+                  "args": [
+                    {
+                      "var": "current_1"
+                    },
+                    {
+                      "value": "definition"
+                    }
+                  ]
+                },
+                {
+                  "value": "liquid"
+                }
+              ]
+            },
+            "definition.color": {
+              "op": "field",
+              "args": [
+                {
+                  "op": "field",
+                  "args": [
+                    {
+                      "var": "current_1"
+                    },
+                    {
+                      "value": "definition"
+                    }
+                  ]
+                },
+                {
+                  "value": "color"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "dataVersion": 1,
+  "state": [],
+  "events": []
+}

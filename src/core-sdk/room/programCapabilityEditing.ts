@@ -1,9 +1,9 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {behaviourFact} from '../../../shared/behaviourCatalog';
-import {capabilityDefinition,capabilityResources,validateCapabilityArguments,type CapabilityInvocation} from '../../../shared/capabilities';
+import {argumentValue,capabilityParameterType,capabilityDefinition,capabilityResources,validateCapabilityArguments,type CapabilityInvocation} from '../../../shared/capabilities';
 import {currentInputLocations,currentInputFields,currentInputFieldPath,currentInputRequest} from '../../../shared/currentCapabilityInputs';
-import {defaultDataValue} from '../../../shared/programValues';
+import {defaultDataValue,sameDataType,type DataType} from '../../../shared/programValues';
 import {parseProgram,type BehaviourProgram,type Expression,type ProgramNode} from './programs';
 import {visitProgramNodes} from './programTraversal';
 export type ProgramCapabilityInputs={kind:'snapshot'}|{kind:'current';fields:string[]};
@@ -33,7 +33,20 @@ export function insertProgramCapability(source:string,call:CapabilityInvocation,
    entry.locals.push({name:local,type:fact.type,initial:defaultDataValue(fact.type)});
    const read:Expression=query.arguments?{fact:fact.id,version:query.version,arguments:structuredClone(query.arguments),bindings:{}}:{fact:fact.id};
    nodes.push({id:fresh('read_current_',ids),op:'set',variable:local,value:read});
-   for(const key of chosen){let value:Expression={var:local};for(const field of location.mapping.fields[key])value={op:'field',args:[value,{value:field}]};invoke.bindings[currentInputFieldPath(location,key)]=value;}
+   // Optional input records have no single fixed binding type. Expand their
+   // known fact fields into ordinary typed bindings; no hidden read or executor.
+   const bind=(path:string,type:DataType,value:Expression):void=>{
+    const accepted=capabilityParameterType(call.id,path,invoke.arguments);
+    if(accepted&&sameDataType(accepted,type)){invoke.bindings[path]=value;return;}
+    if(typeof type==='string'||!('record' in type))throw new Error('This current field has no supported binding type.');
+    const placeholder=argumentValue(invoke.arguments,path);
+    if(!placeholder||typeof placeholder!=='object'||Array.isArray(placeholder)){
+     const parts=path.split('.'),parent=parts.length===1?invoke.arguments:argumentValue(invoke.arguments,parts.slice(0,-1).join('.'));
+     (parent as Record<string,unknown>)[parts[parts.length-1]]=defaultDataValue(type);
+    }
+    for(const [field,child] of Object.entries(type.record))bind(path+'.'+field,child,{op:'field',args:[value,{value:field}]});
+   };
+   for(const key of chosen){let value:Expression={var:local},type:DataType=fact.type;for(const field of location.mapping.fields[key]){value={op:'field',args:[value,{value:field}]};if(typeof type==='string'||!('record' in type))throw new Error('Invalid current fact path.');type=type.record[field];}bind(currentInputFieldPath(location,key),type,value);}
   }
  }
  nodes.push(invoke);entry.body.unshift(...nodes);

@@ -207,3 +207,14 @@ store and version-2 scoop tip demonstrate the shared measured transfer kernel.
 Configure the same components through the generated action form or an agent task;
 contact uses the physical adapter described in [material tools](QUEST_MATERIAL_PACKING.md#physical-material-tools).
 It adds no dedicated shovel action, simulator or external generation dependency.
+
+
+## Shallow pool example
+
+**Shallow pool** is the 26th editable template: five ordinary box parts, matching
+open collision walls, and a rectangular saved liquid cavity. It starts fixed and
+84% full; it neither starts physics nor infers a room-sized water boundary.
+The existing Bucket and Cup can collect its water by dipping and pour it back.
+Users and agents can edit all parts and the same reusable container component.
+See [rectangular cavities](QUEST_CONTAINERS.md#rectangular-cavities-and-shallow-pools-2026-10-04)
+for dimensions, quantities, authoring semantics and the pending device checks.

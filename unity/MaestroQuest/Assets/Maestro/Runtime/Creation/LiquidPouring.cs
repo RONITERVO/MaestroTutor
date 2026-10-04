@@ -70,8 +70,8 @@ namespace Maestro.Quest.Creation {
                 Vessel donor=null;float smallest=float.PositiveInfinity;
                 foreach(var candidate in vessels.Values){
                     if(candidate==recipient||!candidate.Ready||candidate.DipBudget<=.000001)continue;
-                    if(!ContainerScoopingGeometry.TryContact(candidate.Live,candidate.Item.transform,recipient.Live,recipient.Item.transform,up,out var contact)||contact.DonorRadius>=smallest||!ClearScoopPath(contact))continue;
-                    donor=candidate;smallest=contact.DonorRadius;
+                    if(!ContainerScoopingGeometry.TryContact(candidate.Live,candidate.Item.transform,recipient.Live,recipient.Item.transform,up,out var contact)||contact.DonorFootprint>=smallest||!ClearScoopPath(contact))continue;
+                    donor=candidate;smallest=contact.DonorFootprint;
                 }
                 if(donor==null)continue;
                 double requested=Math.Min(donor.DipBudget,Math.Min(donor.Live.amountMl,Math.Min(recipient.Live.capacityMl-recipient.Live.amountMl,recipient.Live.capacityMl*.75*seconds)));

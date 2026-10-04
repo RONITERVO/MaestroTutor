@@ -322,6 +322,23 @@ try{
     scoopTemplates.push({template,hash,before,created,contents,undone});
   }
   await writeFile(join(directory,'scooping-templates.json'),JSON.stringify({boundary:'Ordinary shared creation, accepted quantities and one Undo; physical scooping is tested separately.',templates:scoopTemplates},null,2));
+  const poolHash=createHash('sha256').update(await readFile('unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/shallow-pool.json')).digest('hex');
+  const poolCreated=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'template',templateHash:poolHash,name:'Shallow pool',x:.4,y:1,z:.6,scale:1}}}}]);
+  const poolId=poolCreated.execution?.selected?.output?.objectId;if(typeof poolId!=='string')throw new Error('Pool creation returned no object identity');
+  const rectangleBefore=structuredClone(lease.state());
+  const rectangleSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Configure or fill a liquid container',offset:0}}]);
+  const rectangleDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',category:'actions',capability:'object.container.edit',version:1}}]);
+  const rectangleCurrent=await liquidRead(poolId);
+  const poolValue=rectangleCurrent.catalog?.value as {revision:number;configured:boolean;definition:Record<string,unknown>&{rectangle:{width:number;depth:number};amountMl:number}};
+  if(!poolValue.configured||Math.abs(poolValue.definition.rectangle.width-1.18)>.0001||poolValue.definition.amountMl!==224209.44)throw new Error('Pool did not expose its actual rectangular saved cavity');
+  const rectangleCall={id:'object.container.edit',version:1,arguments:{operation:'configure',target:poolId,revision:poolValue.revision,definition:{...poolValue.definition,rectangle:{width:1.16,depth:.78}}}};
+  const rectangleAfter=await execute([{action:'execution',execution:{operation:'start',call:rectangleCall}}]);
+  const rectangleRead=await liquidRead(poolId);const changedPool=(rectangleRead.catalog?.value as typeof poolValue).definition;
+  if(Math.abs(changedPool.rectangle.width-1.16)>.0001||changedPool.amountMl!==poolValue.definition.amountMl)throw new Error('Shared rectangular edit changed contents or did not publish width');
+  const rectangleUndo=await execute([{action:'undo'}]),rectangleRestored=await liquidRead(poolId);
+  if(Math.abs((rectangleRestored.catalog?.value as typeof poolValue).definition.rectangle.width-1.18)>.0001)throw new Error('Pool rectangle Undo did not restore the previous shape');
+  await writeFile(join(directory,'rectangular-container-authoring.json'),JSON.stringify({boundary:'Actual full native app template, current fact, exact shared edit/receipt and Undo. Physical dipping/pouring are verified separately in PlayMode; not headset acceptance.',before:rectangleBefore,created:poolCreated,search:rectangleSearch,definition:rectangleDefinition,current:rectangleCurrent,call:rectangleCall,after:rectangleAfter,read:rectangleRead,undo:rectangleUndo,restored:rectangleRestored},null,2));
+  await execute([{action:'undo'}]);
   const chalkSource=JSON.parse(await readFile('unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/chalkboard.json','utf8'));
   const chalkHash=createHash('sha256').update(await readFile('unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/chalkboard.json')).digest('hex');
   const chalkCreated=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'template',templateHash:chalkHash,name:'',x:.4,y:1,z:.6,scale:1}}}}]);

@@ -106,8 +106,9 @@ namespace Maestro.Quest.Tests
             finally{release.Set();worker.GetAwaiter().GetResult();}
             Assert.That(RoomSnapshotTransaction.Capture(directory).Identity,Is.EqualTo(after.Identity));
         }
+        static string[] FutureSnapshotRoomFiles=>new[]{"room.v"+(RoomDocument.CurrentVersion+1)+".json","room.v"+(RoomDocument.CurrentVersion+1)+".json.backup"};
         [TestCase("room-snapshot.v17.json")][TestCase(RoomSnapshotTransaction.FileName+".snapshot.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")][TestCase("program-memory.v1.json.snapshot.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")]
-        [TestCase("room.v19.json")][TestCase("room.v19.json.backup")][TestCase(RoomStorage.FileName+".pending")]
+        [TestCaseSource(nameof(FutureSnapshotRoomFiles))][TestCase(RoomStorage.FileName+".pending")]
         [TestCase("program-memory.v2.json")][TestCase("program-memory.v1.json.pending.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")]
         public void UnrecognizedOrStagedEvidenceIsPreserved(string name)
         {

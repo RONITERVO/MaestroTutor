@@ -408,7 +408,8 @@ runtime or a hidden quantity ledger. See [surface transfer](QUEST_SURFACE_TRANSF
 
 Ordinary sculpting remains a deliberate shape edit. The transfer action alone
 does not imply physical capture, carrying or packing. The later components below
-add those bounded behaviours; persistent pools and Quest profiling remain open.
+add those bounded behaviours. The later rectangular-container addition provides
+an authored shallow pool; uncontained water fields and Quest profiling remain open.
 
 ## Measured carried material and packing (2026-10-04)
 
@@ -461,3 +462,18 @@ The solid tray has a Pack ball control; original chat remains the default interf
 See [material packing](QUEST_MATERIAL_PACKING.md#physical-hand-and-controller-packing).
 This closes the desktop hand-packing adapter, not Quest acceptance, persistent
 water or a full fluid/granular simulation.
+
+
+### Shared rectangular reservoirs (2026-10-04)
+
+The liquid component now accepts a rectangular cavity in addition to a cylinder.
+The editable Shallow pool is one reusable example: users can dip ordinary buckets
+and cups into it and pour back. Shape, accepted quantities, current live quantities,
+publication events and atomic Undo use the existing shared container system.
+Room v19 and paired intent/archive v18 preserve its dimensions. No additional
+pool-specific action, agent tool or simulation is introduced. The generated editor
+loads current shape and contents together; program authoring turns current record
+preferences into visible typed bindings from one read. See
+[containers](QUEST_CONTAINERS.md#rectangular-cavities-and-shallow-pools-2026-10-04).
+Uncontained puddles, water/snow particle solvers and buoyancy remain outside this
+increment, and actual Quest acceptance is still required.

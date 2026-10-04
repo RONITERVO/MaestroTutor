@@ -25,11 +25,16 @@ namespace Maestro.Quest.Creation {
             if(data==null||!surface||data.amountMl<=0)return;
             nextRefresh=Time.unscaledTime+.1f;lastRotation=surface.transform.rotation;dirty=false;
             Vector3 normal=surface.transform.InverseTransformDirection(Vector3.up).normalized;
-            float level=Level(normal,data.radius,data.height,(float)(data.amountMl/data.capacityMl));
-            for(int i=0;i<Segments;i++){float angle=i*Mathf.PI*2/Segments;bottom[i]=new Vector3(Mathf.Cos(angle)*data.radius,-data.height*.5f,Mathf.Sin(angle)*data.radius);top[i]=bottom[i]+Vector3.up*data.height;}
-            float minimum=float.PositiveInfinity,maximum=float.NegativeInfinity;for(int i=0;i<Segments;i++){minimum=Mathf.Min(minimum,Mathf.Min(Vector3.Dot(normal,bottom[i]),Vector3.Dot(normal,top[i])));maximum=Mathf.Max(maximum,Mathf.Max(Vector3.Dot(normal,bottom[i]),Vector3.Dot(normal,top[i])));}
+            float level=ContainerFlowGeometry.Level(data,normal,data.amountMl/data.capacityMl);
+            int count=data.IsRectangular?4:Segments;
+            for(int i=0;i<count;i++){
+                if(data.IsRectangular)bottom[i]=new Vector3((i==0||i==3?-1:1)*data.rectangle.width*.5f,-data.height*.5f,(i<2?-1:1)*data.rectangle.depth*.5f);
+                else {float angle=i*Mathf.PI*2/Segments;bottom[i]=new Vector3(Mathf.Cos(angle)*data.radius,-data.height*.5f,Mathf.Sin(angle)*data.radius);}
+                top[i]=bottom[i]+Vector3.up*data.height;
+            }
+            float minimum=float.PositiveInfinity,maximum=float.NegativeInfinity;for(int i=0;i<count;i++){minimum=Mathf.Min(minimum,Mathf.Min(Vector3.Dot(normal,bottom[i]),Vector3.Dot(normal,top[i])));maximum=Mathf.Max(maximum,Mathf.Max(Vector3.Dot(normal,bottom[i]),Vector3.Dot(normal,top[i])));}
             float inset=(maximum-minimum)*.000001f;level=Mathf.Clamp(level,minimum+inset,maximum-inset);
-            rim.Clear();for(int i=0;i<Segments;i++){int j=(i+1)%Segments;Edge(bottom[i],top[i],normal,level);Edge(bottom[i],bottom[j],normal,level);Edge(top[i],top[j],normal,level);}
+            rim.Clear();for(int i=0;i<count;i++){int j=(i+1)%count;Edge(bottom[i],top[i],normal,level);Edge(bottom[i],bottom[j],normal,level);Edge(top[i],top[j],normal,level);}
             Vector3 axis=Vector3.Cross(normal,Mathf.Abs(normal.y)<.9f?Vector3.up:Vector3.right).normalized,other=Vector3.Cross(normal,axis),centre=Vector3.zero;
             foreach(var point in rim)centre+=point;if(rim.Count>0)centre/=rim.Count;
             rim.Sort((a,b)=>Mathf.Atan2(Vector3.Dot(a-centre,other),Vector3.Dot(a-centre,axis)).CompareTo(Mathf.Atan2(Vector3.Dot(b-centre,other),Vector3.Dot(b-centre,axis))));

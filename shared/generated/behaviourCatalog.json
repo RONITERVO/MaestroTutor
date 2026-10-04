@@ -9022,6 +9022,7 @@
                   "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71",
                   "f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae",
                   "b02ef81da57efdea6e530abe268e89caf7a38ecae739b43d1664c148dc11d42e",
+                  "eaf70ab2071fd07f4ea555da3d0fdc326cef0cea1bec6a8d834b2337f34d4b0a",
                   "78ac47258c47968b7b69bdf8144e0e2076e40ffbd32f171317ce81883526f78c",
                   "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45"
                 ],
@@ -9049,6 +9050,7 @@
                   "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71": "Box robot",
                   "f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae": "Rook",
                   "b02ef81da57efdea6e530abe268e89caf7a38ecae739b43d1664c148dc11d42e": "Sculpt brush",
+                  "eaf70ab2071fd07f4ea555da3d0fdc326cef0cea1bec6a8d834b2337f34d4b0a": "Shallow pool",
                   "78ac47258c47968b7b69bdf8144e0e2076e40ffbd32f171317ce81883526f78c": "Snow patch",
                   "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "Spoon"
                 },
@@ -9076,6 +9078,7 @@
                   "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71": "quest/templates/7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71.png",
                   "f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae": "quest/templates/f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae.png",
                   "b02ef81da57efdea6e530abe268e89caf7a38ecae739b43d1664c148dc11d42e": "quest/templates/b02ef81da57efdea6e530abe268e89caf7a38ecae739b43d1664c148dc11d42e.png",
+                  "eaf70ab2071fd07f4ea555da3d0fdc326cef0cea1bec6a8d834b2337f34d4b0a": "quest/templates/eaf70ab2071fd07f4ea555da3d0fdc326cef0cea1bec6a8d834b2337f34d4b0a.png",
                   "78ac47258c47968b7b69bdf8144e0e2076e40ffbd32f171317ce81883526f78c": "quest/templates/78ac47258c47968b7b69bdf8144e0e2076e40ffbd32f171317ce81883526f78c.png",
                   "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "quest/templates/f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45.png"
                 }
@@ -9325,6 +9328,7 @@
                                 "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71",
                                 "f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae",
                                 "b02ef81da57efdea6e530abe268e89caf7a38ecae739b43d1664c148dc11d42e",
+                                "eaf70ab2071fd07f4ea555da3d0fdc326cef0cea1bec6a8d834b2337f34d4b0a",
                                 "78ac47258c47968b7b69bdf8144e0e2076e40ffbd32f171317ce81883526f78c",
                                 "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45"
                               ],
@@ -9352,6 +9356,7 @@
                                 "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71": "Box robot",
                                 "f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae": "Rook",
                                 "b02ef81da57efdea6e530abe268e89caf7a38ecae739b43d1664c148dc11d42e": "Sculpt brush",
+                                "eaf70ab2071fd07f4ea555da3d0fdc326cef0cea1bec6a8d834b2337f34d4b0a": "Shallow pool",
                                 "78ac47258c47968b7b69bdf8144e0e2076e40ffbd32f171317ce81883526f78c": "Snow patch",
                                 "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "Spoon"
                               },
@@ -9379,6 +9384,7 @@
                                 "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71": "quest/templates/7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71.png",
                                 "f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae": "quest/templates/f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae.png",
                                 "b02ef81da57efdea6e530abe268e89caf7a38ecae739b43d1664c148dc11d42e": "quest/templates/b02ef81da57efdea6e530abe268e89caf7a38ecae739b43d1664c148dc11d42e.png",
+                                "eaf70ab2071fd07f4ea555da3d0fdc326cef0cea1bec6a8d834b2337f34d4b0a": "quest/templates/eaf70ab2071fd07f4ea555da3d0fdc326cef0cea1bec6a8d834b2337f34d4b0a.png",
                                 "78ac47258c47968b7b69bdf8144e0e2076e40ffbd32f171317ce81883526f78c": "quest/templates/78ac47258c47968b7b69bdf8144e0e2076e40ffbd32f171317ce81883526f78c.png",
                                 "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "quest/templates/f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45.png"
                               }
@@ -12679,6 +12685,37 @@
                                         "minimum": 0.005,
                                         "maximum": 1.0
                                       },
+                                      "rectangle": {
+                                        "type": "object",
+                                        "properties": {
+                                          "width": {
+                                            "type": "number",
+                                            "minimum": 0.0,
+                                            "maximum": 2.0
+                                          },
+                                          "depth": {
+                                            "type": "number",
+                                            "minimum": 0.0,
+                                            "maximum": 2.0
+                                          }
+                                        },
+                                        "required": [
+                                          "width",
+                                          "depth"
+                                        ],
+                                        "additionalProperties": false,
+                                        "nullable": true,
+                                        "title": "Rectangular cavity",
+                                        "examples": [
+                                          {
+                                            "width": 0.2,
+                                            "depth": 0.2
+                                          }
+                                        ],
+                                        "x-features": [
+                                          "rectangularContainers.v1"
+                                        ]
+                                      },
                                       "height": {
                                         "type": "number",
                                         "minimum": 0.01,
@@ -12734,7 +12771,7 @@
                                       "version": {
                                         "type": "integer",
                                         "minimum": 1.0,
-                                        "maximum": 1.0
+                                        "maximum": 2.0
                                       }
                                     },
                                     "required": [
@@ -16486,6 +16523,37 @@
                     "minimum": 0.005,
                     "maximum": 1.0
                   },
+                  "rectangle": {
+                    "type": "object",
+                    "properties": {
+                      "width": {
+                        "type": "number",
+                        "minimum": 0.0,
+                        "maximum": 2.0
+                      },
+                      "depth": {
+                        "type": "number",
+                        "minimum": 0.0,
+                        "maximum": 2.0
+                      }
+                    },
+                    "required": [
+                      "width",
+                      "depth"
+                    ],
+                    "additionalProperties": false,
+                    "nullable": true,
+                    "title": "Rectangular cavity",
+                    "examples": [
+                      {
+                        "width": 0.2,
+                        "depth": 0.2
+                      }
+                    ],
+                    "x-features": [
+                      "rectangularContainers.v1"
+                    ]
+                  },
                   "height": {
                     "type": "number",
                     "minimum": 0.01,
@@ -16568,6 +16636,9 @@
               "fields": {
                 "revision": [
                   "revision"
+                ],
+                "definition": [
+                  "definition"
                 ]
               },
               "guards": [
@@ -16640,7 +16711,7 @@
         "source.revision.current",
         "storage.writable"
       ],
-      "description": "Configure one saved cylindrical liquid store on any created object, or remove it. definition includes its contents: this authoring action can create, replace or empty liquid. Use object.container.transfer to conserve contents instead. The frame is the root-local bottom centre; +Y points toward the opening. Geometry describes the cavity and does not infer or modify mesh/colliders. Capacity is a logical game-rule value in millilitres, independent of visual scale; resizing a prop neither creates liquid nor changes capacity. One liquid identity and opaque display colour at a time, up to 16 containers per room. The shared saved amount survives Undo, duplication, prototypes, temporary rooms and archives. Room physics also runs bounded open-vessel pouring and immersion filling; inspect object.container.live, object.container.scooping, object.container.poured and object.container.scooped. Splashes, drinking, fluid forces and liquid mass remain unsupported. Imported bowls require explicit cavity configuration.",
+      "description": "Configure one saved cylindrical or rectangular liquid store on any created object, or remove it. definition includes its contents: this authoring action can create, replace or empty liquid. Use object.container.transfer to conserve contents instead. The frame is the root-local bottom centre; +Y points toward the opening. An optional rectangle (width/depth) replaces the circular radius; removing it returns to the configured radius. Geometry describes the cavity and does not infer or modify mesh/colliders. Capacity is a logical game-rule value in millilitres, independent of visual scale; resizing a prop neither creates liquid nor changes capacity. One liquid identity and opaque display colour at a time, up to 16 containers per room. The shared saved amount survives Undo, duplication, prototypes, temporary rooms and archives. Room physics also runs bounded open-vessel pouring and immersion filling; inspect object.container.live, object.container.scooping, object.container.poured and object.container.scooped. Splashes, drinking, fluid forces and liquid mass remain unsupported. Imported bowls require explicit cavity configuration.",
       "example": {
         "operation": "configure",
         "target": "00000000000000000000000000000000",
@@ -29112,6 +29183,12 @@
                 }
               },
               "radius": "number",
+              "rectangle": {
+                "record": {
+                  "width": "number",
+                  "depth": "number"
+                }
+              },
               "height": "number",
               "capacityMl": "number",
               "amountMl": "number",
@@ -29129,7 +29206,7 @@
         }
       },
       "label": "Liquid container and contents",
-      "description": "Saved cavity, capacity, exact contents and current object revision. configured=false returns editable defaults, without creating a component. Amount/capacity use millilitres, independent of prop scale. Reads do not refill, transfer or simulate liquid.",
+      "description": "Saved cavity, capacity, exact contents and current object revision. configured=false returns editable defaults, without creating a component. Both rectangle dimensions are zero for a cylinder; positive dimensions replace radius for a rectangular cavity. Amount/capacity use millilitres, independent of prop scale. Reads do not refill, transfer or simulate liquid.",
       "input": {
         "type": "object",
         "properties": {
@@ -32822,7 +32899,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "937583814719e15e86ccc15bba64e8b5ba8e265b563a766f9ff34bc1f20a5ee8"
+      "sha256": "38c8e3b8b33851175fdf3ee737c6e0c5d7c732c01e1fc816cc6e63699dd9cbab"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -32854,7 +32931,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "bb6d18f0feac346e3395488c58df2fbbca08fc96fa53a88def626ec23851e3c5"
+      "sha256": "2112c8788564558d39282bdc17976d744017add0af7df3da58e53722d8335a42"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -32878,11 +32955,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "6be6bcfd0b64e3e615634a0517f3c17c3a7a6fd4f94a2b66553f47c93a544127"
+      "sha256": "1c8ff2bdfea06ea7c8328dcdb19d61b556261d31effdf0e4bcad8b825e848741"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
-      "sha256": "930ffc488d77e8b4de9df842e3c0d672b5d3a5207caf207164e8c7c07f545159"
+      "sha256": "ba8384d8eca870d40e4816e46c30aada951ec96550d9e4df6ccf6f9d763d31d1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleMemory.cs",
@@ -33174,7 +33251,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomContainer.cs",
-      "sha256": "b8f4ede0b5bf90957e8fdb597ac8bc7b703bc9e5ac7657e48d638af11d2c6a2f"
+      "sha256": "acb26e9c5c2811511d6f2921913d3c09e65e632bb44670e8bc7066bc118c7eb1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationPrototype.cs",
@@ -33254,15 +33331,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ContainerFillView.cs",
-      "sha256": "a16b6948fb43c3887a5020b2fe751fd75d33ebfcc2aac780c2959d7a25fd1c41"
+      "sha256": "31443208651b735087aa6791de0f72e37800b0cf6eb2788d70f7d1189e9a0711"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ContainerFlowGeometry.cs",
-      "sha256": "ad703fae68181793ca1a45b66f03041b967465c666c513babe8038974174ec35"
+      "sha256": "4e0a1f1542e2446f4734df37d488f2318c93158a260f13f436289bfb6ba31329"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidPouring.cs",
-      "sha256": "ad59ea651a0b0f79b0019a1a60e3a31a7417a515184ec7d9de96a374571a0b01"
+      "sha256": "43bf53dd01c80b046ab17503694e0c05ae33a016a53ef914c66003385613f816"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLiquidEdits.cs",
@@ -33326,7 +33403,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "3faeaf87e96b49872fb6cd816115dd2f3f802dbea6da9e4d7f830571eab60d91"
+      "sha256": "638bb14231cbd2a5a416d2427326600ac8e51d7d489f7556556150071b6c41eb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedDrawing.cs",
@@ -33566,7 +33643,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContainerCapability.cs",
-      "sha256": "9ca07b4c41b42032105063620300c0055fc9ae895122321f257d7914ad3c8bc3"
+      "sha256": "5f681804979589cf66b32e256a74f0ef84fc8ec4b768f9fc3d0dbf2541034024"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContainerPouringFacts.cs",
@@ -33923,6 +34000,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/sculpt-brush.json",
       "sha256": "b02ef81da57efdea6e530abe268e89caf7a38ecae739b43d1664c148dc11d42e"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/shallow-pool.json",
+      "sha256": "eaf70ab2071fd07f4ea555da3d0fdc326cef0cea1bec6a8d834b2337f34d4b0a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/snow-patch.json",

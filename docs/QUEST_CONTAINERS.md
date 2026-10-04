@@ -4,15 +4,18 @@ The container component is a **measured, saved liquid store**. Explicit authorin
 and logical transfers use the same quantities as bounded native pouring and vessel scooping. The
 implementation uses the contract below; desktop checks do not establish
 headset acceptance. Drinking, mixing, buoyancy, fluid
-forces, fluid mass and persistent pools remain unfinished. No provider or paid
+forces, fluid mass and uncontained puddles remain unfinished. Authored shallow
+pools use the same saved vessel component. No provider or paid
 generation is involved.
 
 ## Contract
 
-- One version-1 `RoomContainer` per created object, at most 16 in a room. Imported
+- One `RoomContainer` per created object, at most 16 in a room. Version 1 is
+  cylindrical; version 2 has a rectangular footprint. Imported
   objects can be configured explicitly. The included book and Maestro cannot be containers.
 - Cavity: root-local bottom centre and normalized rotation, with +Y toward the
-  opening; cylinder radius 0.005–1 m and height 0.01–2 m. This does not infer,
+  opening; cylinder radius 0.005–1 m or rectangular width/depth 0.01–2 m;
+  height 0.01–2 m for both. This does not infer,
   replace or validate the object's visual mesh or collision interior.
 - Capacity: 1–1,000,000 millilitres; amount: finite double precision, 0–capacity.
   Capacity is an explicit game-rule value. Scaling a prop changes its visual
@@ -51,21 +54,23 @@ Temporary changes stay temporary until accepted. Workspace export/import and
 backup operate on the same room data. Unfinished episodes and their events never replay after reload. Pouring can
 resume from accepted contents and current placement after physics is started.
 
-Room format 11 protects sweep/extrusion geometry and saved components from older
-readers. Clean room formats 1–5 and 7–10 still load; version 6 remains unsupported.
-Snapshot intent format 12 and archive manifest 12 carry room.v13.json. Unknown component versions
+Room format 19 protects rectangular cavities from older readers. Clean room
+formats 1–5 and 7–18 still load; version 6 remains unsupported. Snapshot intent
+format 18 and archive manifest 18 carry room.v19.json. Unknown component versions
 preserve the original saved file and use the existing recovery path. No migration
 of uncertain old transaction evidence and no automatic data reset is added.
 
 ## Presentation and performance boundaries
 
-Each nonempty vessel has one 24-segment surface mesh, no new collider or
-Rigidbody, and one material. A bounded analytic cylinder-volume calculation locates a
-horizontal fill plane inside the authored cylinder. This is a visual approximation;
+Each nonempty vessel has one surface mesh, no new collider or Rigidbody, and one
+material. A bounded analytic cylinder/box-volume calculation locates a horizontal
+fill plane inside the authored cavity. Cylinders use 24 segments; rectangles use
+four corners. This is a visual approximation;
 double-precision millilitres determine transfers. The mesh refreshes
 on content changes (including 20 Hz live flow), or at most 10 Hz for orientation alone. It has at most
-74 vertices and 72 upward-facing triangles. There are no per-drop particles or rigidbodies.
-The display and pouring use the same cylinder-volume calculation. This bounded
+74 vertices and 72 upward-facing triangles for cylinders, or 7 vertices and
+6 triangles for rectangles. There are no per-drop particles or rigidbodies.
+The display and pouring use the same cavity-volume calculation. This bounded
 approximation is not a general liquid solver.
 
 Desktop tests cover conservation, full/empty and incompatible cases, stale
@@ -86,7 +91,7 @@ suspension and workspace recovery stop the simulation.
 At 20 Hz, the lowest opening rim determines how much lies above the spill plane.
 A bounded flow rate removes that excess. A gravity trajectory has at most 32
 segments per source, with 64-hit bounded collision queries. The nearest solid
-surface clips the stream. A downward crossing through another cylinder's opening
+surface clips the stream. A downward crossing through another cavity's opening
 can receive compatible liquid, capped by its free capacity. Misses, full or
 incompatible recipients count as uncollected spill. Spilled millilitres leave this
 container model: there is no persistent puddle, snow/water field or buoyancy yet.
@@ -161,7 +166,7 @@ and browser probes separately verify shared creation, read-only inspection and
 matching catalog calls. These remain desktop evidence: Quest hand/controller
 comfort, visibility, sustained frame time and tracking loss still need acceptance.
 There is no displacement, trapped air, fluid mass, buoyancy, finger scooping,
-persistent pool or snow field in this model.
+uncontained puddle or snow field in this liquid model.
 
 
 ## Identity changes between refills (2026-10-04)
@@ -185,3 +190,47 @@ Real native tests reproduce empty/refill through both physical paths, failed
 boundary publication, colour-only changes, matching refills, conserved quantities
 and separate Undo/event outcomes. These checks supplement the pending Quest
 interaction and sustained-performance acceptance.
+
+
+## Rectangular cavities and shallow pools (2026-10-04)
+
+`rectangularContainers.v1` extends the existing component, not the action list.
+The optional `rectangle: {width, depth}` replaces radius when both dimensions
+are positive. Omitting it, setting it to null or setting both dimensions to zero
+selects the cylinder. Partial-zero dimensions refuse. Native saved components
+use version 2 only for rectangles, and version 1 for cylinders. The radius stays
+editable as the fallback when removing the rectangular footprint. Cavity sizing
+never alters the visual recipe or collision proxies automatically.
+
+The included **Shallow pool** is an editable five-part fixed vessel. Its cavity is
+1.18 × 0.78 × 0.29 m, capacity 266.916 litres, initially 84% full (224.20944 litres).
+The visible walls and physical interior are ordinary recipe/collision parts.
+It occupies one of the same 16 container slots. Creation does not start physics.
+A bucket or cup can dip below the water line, collect conserved quantity, and
+pour back through the opening. Contents survive save/reload, Undo/Redo and
+temporary-room discard. This is a bounded authored reservoir, not flooding,
+arbitrary puddles, fluid pressure, buoyancy or a room-wide water field. The water
+surface has no collision; the vessel supplies floor/wall collision.
+
+The same free-surface plane drives rendering, overflow and immersion. Box volume
+uses an analytic plane fraction with bounded inversion, including near-axis
+orientations. Receiving streams use the actual rectangular opening, not a circular
+bounding proxy. Dipping checks the complete receiving cavity against donor walls,
+floor and the liquid surface; circle/rectangle combinations share that path.
+Competing donors sort by world footprint area and then stable identity.
+
+`object.container` returns a fixed typed record: cylinder rectangles have both
+width and depth zero. **Load current values** now loads the complete definition
+as well as its revision, so changing shape does not silently reset contents.
+The generated editor and agent both submit the same ordinary configure action.
+For a reusable behaviour, a visible Read block takes one fact snapshot; structured
+preferences use explicit typed member bindings when an optional input record has
+no whole-record binding type. Unavailable reads fail before the action. A user
+can instead keep the edited definition fixed and read only its current revision.
+
+Desktop acceptance covers shape/version admission, independent copies, analytic
+volume against numerical integration, tilted fills, real pool/bucket scooping and
+pour-back, failed publication, saved quantities and temporary-room discard.
+The shared fixture exercises the generated program in both runtimes. Quest
+reachability, real scan alignment, surface clarity and sustained performance
+remain device gates; no fluid-performance claim follows from desktop checks.

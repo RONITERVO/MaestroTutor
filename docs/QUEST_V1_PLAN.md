@@ -2,6 +2,15 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
+Rectangular liquid cavities and an editable Shallow pool now extend the shared
+container model. Ordinary buckets and cups can dip and pour back; the catalog,
+book form, agent, saved quantities and Undo remain shared. Current-record inputs
+load shape and contents together and expand into explicit typed program bindings.
+Room v19 and paired intent/archive v18 protect the new shape data. See
+[the contract](QUEST_CONTAINERS.md#rectangular-cavities-and-shallow-pools-2026-10-04).
+This is a bounded authored reservoir, not room flooding or a general fluid solver;
+Quest interaction and sustained performance still require device acceptance.
+
 The release audit separates ready source from outstanding device/provider/account
 acceptance in [release packaging](QUEST_RELEASE_BUILD.md#release-audit-2026-10-04).
 Quest checkout is now refused by the shared client service and managed HTTP route,
@@ -3165,3 +3174,44 @@ on hold. Physical shovel capture, hand-packing gestures, shared liquid/material
 adapters, arbitrary mesh/skin painting, provider/device acceptance and account,
 payment/privacy/signing/Store gates remain open. This checkpoint does not complete
 v1 or claim granular simulation or physical mass conservation across authored edits.
+
+
+### Rectangular containers and shallow pool checkpoint — 2026-10-04
+
+The existing container component now supports rectangular cavities. The 26th
+editable template, Shallow pool, shares ordinary dipping, pouring, accepted/live
+quantities, events, failed-save rollback and one atomic Undo. Its box-volume plane
+is shared by display, overflow and immersion. No pool-specific action or separate
+simulation was added. Room v19 and paired snapshot/archive v18 protect the shape.
+
+Loading current action inputs now copies a complete typed record without aliasing
+the fact snapshot. Reusable program authoring expands optional input records into
+explicit typed member bindings from one visible read. Both cylinders and rectangles
+use current quantities and revisions; unavailable facts fail before the action.
+The native and web fixture checks cover this shared generation path.
+
+Verification: **2,367 web tests in 259 files**, **814 Unity EditMode / 624 PlayMode**
+passes, with three optional private-model skips. Full application and driver type
+checking, lint, catalog provenance and all bundled assets pass. The complete native
+journey passed **473 observations**; the original book/chat journey passed **72**
+with scripted offline provider responses. The Chrome form matched the real native
+edit and completion receipt, preserved loaded contents and refused incomplete
+rectangle dimensions. Pool and book renders were inspected. Tests also cover
+wall/floor immersion refusal, conserved scoop/pour-back, failed saves, Undo and
+temporary discard. These are desktop checks, not headset acceptance.
+
+Production web, Android lint, **76 Android tests** (two optional skips) and IL2CPP
+packaging passed. The package audit matched **2,794 frozen inputs**, **336 runtime /
+208 test / 15 editor C# files**, 66 fixture payloads, the AAR and **147 web files**.
+The catalog contains **92 actions / 98 facts / 16 events** and 291 provenance
+sources. Exact packaged assets match the included avatar, 178 motions, 26 templates
+and seven modules. Development manifest, arm64-only libraries, v2 signature and
+16 KiB alignment passed.
+
+Checkpoint: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-shallow-pool-71DC12CA.apk`.
+SHA-256: `71DC12CA18A6BEC2A2B75310986FBA4E6A32B4C1823347D4FE42AE7D8441B94D`. **Not installed**; device work remains on hold.
+Evidence: `.quest-evidence/rectangular-containers`. No paid generation, real-provider
+calls, deployment, release signing or Store submission occurred. Uncontained
+puddles/flooding, buoyancy and a general fluid solver are not implemented by this
+bounded reservoir. Quest comfort/performance, provider/account/payment/privacy,
+signing and Store gates remain open; the v1 goal is still active.

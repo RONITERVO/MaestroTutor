@@ -62,3 +62,13 @@ it('invalidates a reviewed nested snapshot when an ancestor variant changes',()=
  const schema:CapabilitySchema={type:'object',oneOf:[branch('first'),branch('second')],'x-discriminators':['kind']},child=construction().members[0];
  expect(currentInputsIdentity(schema,{kind:'first',child},'session')).not.toBe(currentInputsIdentity(schema,{kind:'second',child},'session'));
 });
+
+it('copies a complete typed container record without aliasing the native snapshot',()=>{
+ const s=capabilityDefinition('object.container.edit')!.input,definition={frame:{position:{x:0,y:0,z:0},rotation:{x:0,y:0,z:0,w:1}},radius:.04,rectangle:{width:1.18,depth:.78},height:.29,capacityMl:266916,amountMl:224209.44,liquid:'Water',color:{r:.1,g:.4,b:.9,a:1}};
+ const args={operation:'configure',target:'a'.repeat(32),revision:1,definition:capabilityDefinition('object.container.edit')!.example!.definition};
+ const snapshot:CatalogView={operation:'inspect',category:'facts',capability:'object.container',version:1,definition:behaviourFact('object.container')!,arguments:{target:args.target},available:true,value:{revision:12,configured:true,definition},status:'Available'};
+ const loaded=applyCurrentInputs(s,args,snapshot);expect(loaded).toEqual({...args,revision:12,definition});
+ const key=currentInputIdentity(s,loaded,'session');(loaded.definition as typeof definition).rectangle.width=1;
+ expect(definition.rectangle.width).toBe(1.18);expect(currentInputIdentity(s,loaded,'session')).toBe(key);
+ const bad=structuredClone(s);bad.oneOf![0].properties!.definition.properties!.rectangle.properties!.width.type='string';expect(()=>validateCurrentInputMapping(bad.oneOf![0])).toThrow('type differs');
+});

@@ -78,13 +78,19 @@ namespace Maestro.Quest.Tests
                     Assert.That(props.ContainsKey(field.Name),Is.True);JToken type=fact.ToJson()["type"];
                     Assert.That(field.Value.Count(),Is.InRange(1,4));
                     foreach(var part in (JArray)field.Value)type=type?["record"]?[(string)part];
-                    string expected=(string)props[field.Name]["type"];if(expected=="integer")expected="number";if(expected=="string")expected="text";
-                    Assert.That((string)type,Is.EqualTo(expected),action.Id+"."+field.Name);
+                    Assert.That(AcceptsCurrentType((JObject)props[field.Name],type),Is.True,action.Id+"."+field.Name);
                     Assert.That(args.Properties().Any(x=>(string)x.Value==field.Name),Is.False,"A query cannot overwrite its input target");
                 }
                 foreach(var guard in (JArray)mapping["guards"])Assert.That(mapping["fields"][(string)guard],Is.Not.Null);
             }
             Assert.That(count,Is.EqualTo(70));
+        }
+        static bool AcceptsCurrentType(JObject schema,JToken type,int depth=0){
+            if(schema==null||type==null||depth>4||schema["oneOf"]!=null||(bool?)schema["x-static"]==true)return false;
+            string expected=(string)schema["type"];if(expected=="integer")expected="number";if(expected=="string")expected="text";
+            if(type.Type==JTokenType.String)return (string)type==expected;
+            if(type["list"]!=null)return expected=="array"&&AcceptsCurrentType(schema["items"] as JObject,type["list"],depth+1);
+            return expected=="object"&&schema["properties"] is JObject fields&&type["record"] is JObject record&&fields.Count==record.Count&&record.Properties().All(p=>AcceptsCurrentType(fields[p.Name] as JObject,p.Value,depth+1));
         }
         sealed class ChangingCurrentInputs:IProgramFacts
         {

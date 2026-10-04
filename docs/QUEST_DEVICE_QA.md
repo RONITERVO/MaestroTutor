@@ -2,6 +2,25 @@
 
 
 
+## Rectangular pool and vessel dipping (headset acceptance pending)
+
+Create Shallow pool and Bucket in a clear reachable scanned area. Use the original
+chat or optional book editor to inspect their exact contents, then start physics.
+With controllers and hands, dip the empty upright bucket until its whole mouth
+is below the water line. Lift it: the pool must lose exactly the amount received.
+Pour it back inside the pool, then repeat over an outer corner so missed water is
+reported as uncollected spill. Check visible water alignment after moving, scaling
+and tilting the pool. No water collision, buoyancy or persistent outside puddle is
+expected. A bucket crossing the floor/wall, covered by a solid lid or not submerged
+must not fill through the obstruction.
+
+Pause physics and use Load current values before editing the rectangle width.
+Existing quantity and depth must load rather than reset. Undo the edit and one
+scoop episode; save/restart and check accepted balances and dimensions. Repeat
+inside a temporary room and discard it. Record the APK hash and sustained frame
+measurements with normal and budget-heavy container counts; desktop geometry and
+conservation tests do not establish Quest comfort or real tracking acceptance.
+
 ## Physical material packing (headset acceptance pending)
 
 Enable Pack ball by asking Maestro or using the solid tray control. With hands,

@@ -36,3 +36,11 @@ it('shares physical scooping events without changing the existing pouring contra
  expect(parseProgram(JSON.stringify(program)).program).toBeNull();
  expect(behaviourEvent('object.container.poured')?.features).not.toContain('containerScooping.v1');
 });
+
+
+it('requires rectangular native support only when the optional footprint is supplied',()=>{
+ const rectangular=cases.find(r=>r.name==='rectangular cavity')!;
+ expect(capabilityFeatures(rectangular.capability,rectangular.arguments)).toContain('rectangularContainers.v1');
+ const cylinder=cases.find(r=>r.valid&&r.capability==='object.container.edit'&&r.arguments.operation==='configure'&&!Object.prototype.hasOwnProperty.call(r.arguments.definition,'rectangle'))!;
+ expect(capabilityFeatures(cylinder.capability,cylinder.arguments)).not.toContain('rectangularContainers.v1');
+});
