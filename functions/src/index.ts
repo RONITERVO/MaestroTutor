@@ -10,6 +10,7 @@ import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { deleteManagedAccount, submitAiContentReport } from './account';
 import { type AuthContext, applyCors, getOptionalAuthContext, requireAuthContext } from './auth';
 import { appConfig, getJsonBodyLimitBytes } from './config';
+import { assertStripeCheckoutAllowed } from './checkoutPolicy';
 import { adminDb } from './firebase';
 import { generateManagedContent, streamManagedContent, generateManagedMusic, uploadManagedMedia, getManagedFileStatuses, deleteManagedFile, clearManagedFiles, createManagedLiveToken, releaseManagedLiveLease, retryManagedFileCleanupJobs } from './gemini';
 import { createHttpError, getErrorMessage, getHttpErrorCode, getHttpStatus } from './http';
@@ -215,6 +216,7 @@ app.post('/account/delete', asyncRoute('required', async (_req, res, auth) => {
 }));
 
 app.post('/billing/stripe/checkout', asyncRoute('required', async (req, res, auth) => {
+  assertStripeCheckoutAllowed(req.headers.origin, auth!.appCheckAppId, appConfig.questFirebaseAppId);
   const result = await createManagedCheckoutSession({
     uid: auth!.uid,
     user: auth!.user,

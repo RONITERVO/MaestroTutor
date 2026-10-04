@@ -116,6 +116,9 @@ export const appConfig = {
   stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET?.trim() || '',
   managedCreditsPerUsd: Math.max(1, parseInteger(process.env.MANAGED_CREDITS_PER_USD, 1000)),
   requireAppCheck: parseBoolean(process.env.REQUIRE_APPCHECK, true),
+  // Same public registration used to mint Quest App Check proofs. Keep configured
+  // even when temporarily disabling new attestation/linking: issued proofs live on.
+  questFirebaseAppId: process.env.QUEST_FIREBASE_APP_ID?.trim() || '',
   // One reserved lease authorizes exactly one connection, including legacy direct tokens.
   geminiLiveTokenUses: 1,
   managedLiveTokenLifetimeSeconds: Math.min(120, Math.max(30, parseInteger(process.env.MANAGED_LIVE_TOKEN_LIFETIME_SECONDS, 120))),

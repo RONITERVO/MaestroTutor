@@ -2,6 +2,15 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
+The release audit separates ready source from outstanding device/provider/account
+acceptance in [release packaging](QUEST_RELEASE_BUILD.md#release-audit-2026-10-04).
+Quest checkout is now refused by the shared client service and managed HTTP route,
+using the verified Quest Firebase app identity, in addition to the existing hidden
+UI. Shared balances and original web checkout remain available. These later source
+changes are not in the last development APK or deployed backend. The Store purchase
+model still needs a decision; the existing-service policy's interactivity limit
+makes an assumed exception inappropriate. See [managed access](QUEST_MANAGED_ACCESS.md).
+
 Physical hand/controller packing now adapts the existing measured-material kernel:
 one contact previews one ball, lift/release saves it with the source change, and
 one Undo restores both. Shared settings, capture/recovery facts, pinch-grabbing

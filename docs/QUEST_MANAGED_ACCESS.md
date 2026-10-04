@@ -136,10 +136,41 @@ The development package targets API 34 with minimum API 32. Current Quest
 manifest guidance supports that selection; Google Play's target policy should
 not be substituted for Meta's. [Meta manifest guidance](https://developers.meta.com/vr/resources/publish-mobile-manifest/).
 
-Meta's payment rules include an exception for windows into an existing service.
-Maestro's existing subscription may fit that category, but this is an inference,
-not approval of a purchase UI. Confirm the intended Quest purchase flow before
-exposing checkout. [Meta app policies](https://developers.meta.com/vr/policy/app-policies/).
+Payment-policy audit, 2026-10-04: Meta's existing-service exception has an
+interactivity limit. Our substantial room creation and play make eligibility
+uncertain; sharing Maestro's existing backend alone does not establish it.
+Obtain a decision on the actual product and purchase flow before enabling Quest
+commerce. No Meta IAP or subscription implementation is implied by shared credits.
+[Meta app policies, sections 1.1 and 4.1](https://developers.meta.com/vr/policy/app-policies/).
+
+The Quest purchase boundary is enforced in three places: the account UI hides
+checkout, the browser service refuses direct checkout calls before credentials or
+network use, and the managed HTTP route rejects the server-verified Quest Firebase
+app ID. The local book origin can also deny a request; it can never authorize one.
+Omitting/changing Origin or claiming a different app ID in JSON does not override
+the verified proof. The backend refuses before creating a Stripe session/customer.
+Original web checkout and Quest account/balance access retain the shared account.
+This boundary is not a claim that the remaining access model has Store approval.
+
+Configure `QUEST_FIREBASE_APP_ID` on the **main api function as well as the bootstrap
+functions**, with distinct web and Quest registrations. Keep that public ID set
+when disabling new attestation or linking: previously minted proofs can still be
+valid. While the Quest ID is configured, `REQUIRE_APPCHECK=false` also closes checkout
+for every client until verification is restored; it cannot silently weaken this
+purchase boundary. Other existing managed-service rollback behavior is unchanged.
+No production deployment has occurred. The last packaged development APK at
+`c7298f4e` predates the client-service guard; include it in the next package.
+
+Offline acceptance exercises the real HTTP route with verified-token, Firebase
+identity, rate-limit and Stripe/Firestore adapters replaced by local fakes. It
+checks absent/forged origins, forged body app IDs, missing/invalid proofs, disabled
+issuance, incident rollback, and preserved account/web behavior. It makes no provider
+calls and is not proof of real Meta/Firebase configuration or a settled payment.
+
+Local verification for the purchase-boundary increment: 2,359 web tests across
+259 files, app lint/type checking, and 96 Functions checks passed (including the
+13 HTTP purchase/account cases and their parent test). No native code changed;
+Unity/Android/device tests were not rerun for this source-only boundary change.
 
 ## Verification for this checkpoint
 

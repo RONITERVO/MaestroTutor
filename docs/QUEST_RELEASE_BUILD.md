@@ -114,3 +114,26 @@ time for predictable artifacts. Do not rewrite a signed APK with a generic ZIP
 utility: that would invalidate its signature/alignment. Check the fresh package's
 manifest, live file hashes, size and signature through the normal pipeline.
 [Unity clean builds](https://docs.unity3d.com/6000.3/Documentation/ScriptReference/BuildOptions.CleanBuildCache.html).
+
+## Release audit, 2026-10-04
+
+This separates implementation from evidence needed to ship. It is not a new
+feature backlog or permission to use credentials, deploy or submit.
+
+| Gate | Current implementation/evidence | What closes it |
+| --- | --- | --- |
+| Reproducible package | Audited ARM64 development APK; release profile/signing pipeline with offline refusal tests. | Owner's real public profile, backed-up release key, authorized signing and audited signed candidate. |
+| Account and managed AI | Shared book, browser pairing and Meta-to-App-Check endpoints; offline/native tests. Endpoints disabled/undeployed. | Matching Firebase registrations and certificate, actual ingress config, authorized deployment, real Store-channel entitlement/integrity and account round trip. |
+| Purchase model | Quest checkout hidden and refused by client/server; existing balances remain shared. No Meta commerce integration. | Review the interactive product against Meta's policy and settle any required store billing/exception before commerce. |
+| Familiar book and provider parity | Original components and real desktop chat-to-native journey with scripted provider responses. | Current Quest texture, keyboard, microphone, Live, artifacts, interruption/recovery and managed/BYOK tests with real providers. |
+| Physical play and resource limits | Automated room/physics/material/creation tests plus earlier user-confirmed headset basics. | Current APK hands/controllers, room scans, representative busy rooms, save stress and sustained performance/comfort on supported hardware. |
+| Audience and data | Owner chose 18+; book self-confirmation, prepared privacy/data map and local/cloud deletion paths. | Truthful Store audience/IARC setup, provider eligibility, published privacy/support/deletion details and actual deletion/consent QA. |
+| Content and listing | Included avatar/motion/template inventories and provenance checks. | Final content acceptance, real-app screenshots/store metadata, dashboard review and authorized submission. |
+
+Manual editor work can be evaluated without activating paid AI. Desktop simulated
+identity/provider results do not satisfy production access tests, and an unsigned
+or development-signed intermediate cannot satisfy Store-channel integrity. Device
+work remains on hold until the owner's pending availability question is answered.
+The latest audit's browser/service checkout change has not been repackaged or
+deployed; `MaestroQuest-hand-pack-AAE4D77F.apk` is the earlier physical-packing
+checkpoint, not a package of this later source.

@@ -18,6 +18,7 @@ import {
 import { firebaseAuthBridgeService, type ManagedAuthIdentity } from '../auth/firebaseAuthBridgeService';
 import { maestroFirebaseService } from '../firebase/maestroFirebaseService';
 import { ServiceHttpError } from '../shared/serviceErrors';
+import { isNativeQuestBook } from '../../platform/quest/questIntegrityBridge';
 
 /**
  * Every managed route is behind App Check, so a request that leaves without the
@@ -92,11 +93,23 @@ const getManagedHeaders = async (): Promise<Record<string, string>> => {
   return { Authorization: `Bearer ${token}`, ...await requireAppCheckHeader() };
 };
 
-export const maestroBackendService = createManagedBackendClient({
+const backendClient = createManagedBackendClient({
   baseUrl: MAESTRO_INTEGRATION_CONFIG.backendBaseUrl,
   credentials: { getManagedHeaders, getOptionalHeaders },
   session: { update: updateStoredSession },
 });
+
+export const maestroBackendService = {
+  ...backendClient,
+  async createStripeCheckoutSession(packId: string) {
+    // All UI/payment/controller callers share this adapter. Refuse before even
+    // loading credentials; hiding the button alone is not the purchase policy.
+    if (isNativeQuestBook()) {
+      throw new ServiceHttpError('Credit purchases are not available in the Quest app.', 403, 'billing/checkout-unavailable');
+    }
+    return backendClient.createStripeCheckoutSession(packId);
+  },
+};
 
 // Preserve this browser-adapter helper for tests and diagnostics. Production
 // generation uses the same Core SDK parser through generateContentStream.
