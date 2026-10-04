@@ -17,7 +17,7 @@ namespace Maestro.Quest.Creation
             data=Pose(Read(target),Find(target).transform);var list=(data.surfaces??Array.Empty<DrawingSurface>()).ToList();string id=(string)args["surface"],op=(string)args["operation"];
             var surface=list.FirstOrDefault(s=>s.id==id);
             if(op=="configure") {
-                var replacement=JsonUtility.FromJson<DrawingSurface>(args["definition"].ToString());replacement.id=id;replacement.version=1;replacement.strokes=surface?.strokes??Array.Empty<SurfaceStroke>();
+                var replacement=JsonUtility.FromJson<DrawingSurface>(args["definition"].ToString());replacement.id=id;replacement.version=replacement.Kind=="plane"?1:2;replacement.strokes=surface?.strokes??Array.Empty<SurfaceStroke>();
                 if(surface!=null)list[list.IndexOf(surface)]=replacement;else list.Add(replacement);
             }else {
                 if(surface==null){error="This drawing surface was removed";return false;}
@@ -54,9 +54,11 @@ namespace Maestro.Quest.Creation
         {
             var patch=Read(target)?.surfaces?.FirstOrDefault(s=>s.id==surface);if(patch==null){SetStatus("The drawing patch was removed");return;}
             float nearest=Mathf.Max(.01f,DrawingRadius*2);string stroke=null;
-            foreach(var mark in patch.strokes)for(int i=1;i<mark.points.Length;i++) {
-                var a=mark.points[i-1];var delta=mark.points[i]-a;float along=delta.sqrMagnitude<.00000001f?0:Mathf.Clamp01(Vector3.Dot(point-a,delta)/delta.sqrMagnitude);
+            point=DrawingSurfaceGeometry.Point(patch,point);
+            foreach(var mark in patch.strokes) {var path=DrawingSurfaceGeometry.Path(patch,mark.points,mark.radius,false);for(int i=1;i<path.Length;i++) {
+                var a=path[i-1];var delta=path[i]-a;float along=delta.sqrMagnitude<.00000001f?0:Mathf.Clamp01(Vector3.Dot(point-a,delta)/delta.sqrMagnitude);
                 float distance=Vector3.Distance(point,a+along*delta);if(distance<=nearest){nearest=distance;stroke=mark.id;}
+            }
             }
             if(stroke==null){SetStatus("Tap a surface stroke to erase it");return;}
             if(!Ownership.TryAcquire("surface-eraser", "Your surface eraser",RoomActorRole.Control,new[]{new Maestro.Quest.Programs.BehaviourCatalog.Claim(target,"wholeTarget")},null,out var lease,out var error,preservePlacement:true)){SetStatus(error);return;}

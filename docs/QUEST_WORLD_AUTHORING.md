@@ -47,7 +47,7 @@ parented rotations and bounded tracks. The lathe increment is described in
 Recipe parts are visual joints, not independent rigid bodies. The object can now
 use an editable compound collision recipe; see
 [collision authoring](QUEST_COLLISION_AUTHORING.md). Shared attachment and aimed throws exist; automatic IK catching,
-hit reactions, curved/deforming paintable surfaces and
+hit reactions, arbitrary mesh/deforming paintable surfaces and
 liquids/snow are not completed by those features. Persistent structure baselines and typed member-list bindings now let one program
 create a small build, capture it, displace pieces and reset them; see
 [structures](QUEST_STRUCTURES.md). The current
@@ -137,8 +137,8 @@ users and Maestro collect, highlight and order pieces through the same state; se
 [construction handle](QUEST_CONSTRUCTION_MOVEMENT.md) now arranges those pieces
 with one save/Undo while physics is paused. [Saved snap points](QUEST_SNAP_POINTS.md)
 now align complete constructions and optionally join them through one shared edit.
-Physical construction-handle previews now use the shared snap placement action (see [snap points](QUEST_SNAP_POINTS.md)). Curved/deforming painting and persistent water/snow fields remain unfinished. Bounded physical pouring now uses the shared container component. Bounded sliders and an editable spring-button example now extend the shared connections.
-[Planar surface drawing](QUEST_SURFACE_DRAWING.md) adds reusable explicit patches,
+Physical construction-handle previews now use the shared snap placement action (see [snap points](QUEST_SNAP_POINTS.md)). Configured cylindrical/spherical patches now extend plane drawing; arbitrary mesh/skin painting and persistent water/snow fields remain unfinished. Bounded physical pouring now uses the shared container component. Bounded sliders and an editable spring-button example now extend the shared connections.
+[Surface drawing](QUEST_SURFACE_DRAWING.md) adds reusable explicit patches,
 shared ink editing/readback, a physical surface pencil/eraser, and configurable
 held drawing tips on ordinary created/imported objects.
 

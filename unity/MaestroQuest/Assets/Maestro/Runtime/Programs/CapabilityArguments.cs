@@ -53,6 +53,8 @@ namespace Maestro.Quest.Programs
                         if(!JsonUtility.FromJson<RoomGroupTransform>(obj.ToString()).Validate(out error))return false;
                     } else if((string)schema["format"]=="snapPointDefinition") {
                         var point=JsonUtility.FromJson<RoomSnapPoint>(obj.ToString());if(!obj.ContainsKey("id"))point.id="Point";if(!point.Validate(out error))return false;
+                    } else if((string)schema["format"]=="drawingSurface") {
+                        if(!DrawingSurfaceGeometry.Valid(JsonUtility.FromJson<DrawingSurface>(obj.ToString()))){error=path+" needs a plane or bounded cylindrical/spherical patch";return false;}
                     } else if((string)schema["format"]=="containerDefinition") {
                         if(!JsonUtility.FromJson<RoomContainer>(obj.ToString()).Validate(out error))return false;
                     } else if((string)schema["format"]=="containerTransfer") {

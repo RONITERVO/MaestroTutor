@@ -26,7 +26,7 @@ namespace Maestro.Quest.Creation
                 try {
                     foreach(var stroke in surface.strokes) {
                         var ink=new GameObject("Ink "+stroke.id).transform;ink.SetParent(root,false);var marks=ink.gameObject.AddComponent<PencilMarks>();
-                        marks.SetPaths(new[]{stroke.points.Select(p=>p-Vector3.forward*stroke.radius).ToArray()},stroke.radius);marks.SetColor(stroke.color);
+                        marks.SetPaths(new[]{DrawingSurfaceGeometry.Path(surface,stroke.points,stroke.radius)},stroke.radius);marks.SetColor(stroke.color);
                     }
                 }catch{ArtResources.Release(root.gameObject);throw;}
                 patches.Add(surface.id,new Patch {Data=surface.Copy(),Root=root,Anchor=anchor,Encoded=encoded});
@@ -42,10 +42,8 @@ namespace Maestro.Quest.Creation
             foreach(var patch in patches.Values) {
                 if(!patch.Data.enabled||!patch.Root||!patch.Root.gameObject.activeInHierarchy)continue;
                 var origin=patch.Root.InverseTransformPoint(ray.origin);var direction=patch.Root.InverseTransformVector(ray.direction);
-                if(direction.z<=.00001f||origin.z>0)continue;float t=-origin.z/direction.z;if(t<0||t>distance)continue;
-                var point=origin+direction*t;
-                if(Mathf.Abs(point.x)+radius>patch.Data.width*.5f||Mathf.Abs(point.y)+radius>patch.Data.height*.5f)continue;
-                id=patch.Data.id;local=new Vector3(point.x,point.y,0);distance=t;
+                if(!DrawingSurfaceGeometry.Hit(patch.Data,origin,direction,distance,radius,out var point,out float t))continue;
+                id=patch.Data.id;local=point;distance=t;
             }
             return id!=null;
         }

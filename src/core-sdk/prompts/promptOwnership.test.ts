@@ -76,11 +76,11 @@ describe('prompt ownership', () => {
     const source = readFileSync(new URL('../../../shared/capabilities.ts', import.meta.url), 'utf8');
     const ast = ts.createSourceFile('capabilities.ts', source, ts.ScriptTarget.Latest, true);
     const imports = ast.statements.filter(ts.isImportDeclaration).map(node => (node.moduleSpecifier as ts.StringLiteral).text);
-    expect(imports).toEqual(['./roomConnection','./creationPrototype','./creationBatch','./programValues','./collisionRecipe','./programModuleIdentity','./roomRecipe','./behaviourCatalog']);
-    for (const name of ['creationBatch', 'creationPrototype', 'programValues', 'roomConnection']) {
+    expect(imports).toEqual(['./surfaceGeometry','./roomConnection','./creationPrototype','./creationBatch','./programValues','./collisionRecipe','./programModuleIdentity','./roomRecipe','./behaviourCatalog']);
+    for (const name of ['creationBatch', 'creationPrototype', 'programValues', 'roomConnection', 'surfaceGeometry']) {
       const dependency = readFileSync(new URL('../../../shared/' + name + '.ts', import.meta.url), 'utf8');
       const dependencyAst = ts.createSourceFile(name + '.ts', dependency, ts.ScriptTarget.Latest, true);
-      expect(dependencyAst.statements.filter(ts.isImportDeclaration).map(node=>(node.moduleSpecifier as ts.StringLiteral).text)).toEqual(name==='creationBatch'?['./roomConnection','./creationPrototype']:name==='creationPrototype'?['./roomConnection']:[]);
+      expect(dependencyAst.statements.filter(ts.isImportDeclaration).map(node=>(node.moduleSpecifier as ts.StringLiteral).text)).toEqual(name==='creationBatch'?['./roomConnection','./creationPrototype']:name==='creationPrototype'?['./surfaceGeometry','./roomConnection']:[]);
       expect(catalogueRuntimeViolations(dependency, name + '.ts')).toEqual([]);
     }
     const identity = readFileSync(new URL('../../../shared/programModuleIdentity.ts', import.meta.url), 'utf8');

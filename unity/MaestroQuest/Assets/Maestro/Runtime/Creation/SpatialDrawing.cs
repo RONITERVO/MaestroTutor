@@ -15,7 +15,7 @@ namespace Maestro.Quest.Creation
     {
         public RoomEditor Editor;
         readonly List<Vector3> points=new();
-        int owner=-1;
+        int owner=-1,renderedPoints;
         IDisposable write;
         PencilMarks preview;
         Color color;
@@ -26,6 +26,7 @@ namespace Maestro.Quest.Creation
         string roomSession,errorText="",surfaceTarget,surfaceId,surfaceBefore;
         RoomOwnership.Lease surfaceOwner;
         bool attached;
+        DrawingSurface captureSurface;
         public string SessionId {get;private set;}=Guid.NewGuid().ToString("N");
         public bool IsDrawing=>owner!=-1;
         public bool HasUnsavedStroke=>retained!=null;
@@ -49,13 +50,13 @@ namespace Maestro.Quest.Creation
             if(Editor.Ownership.Suspended||Editor.WriteGate.Frozen)return;
             if(HasUnsavedStroke){Editor.ReportStatus("Save or discard the retained stroke first");return;}
             write=Editor.WriteGate.TryWrite(out var blocked);if(write==null){Editor.ReportStatus(blocked);return;}
-            SessionId=Guid.NewGuid().ToString("N");roomSession=Editor.TemporarySessionId;owner=id;color=ink;radius=size;contactDistance=maximum;toolTarget=tool;captureRole=role;points.Clear();nextPreview=0;errorText="";
+            SessionId=Guid.NewGuid().ToString("N");roomSession=Editor.TemporarySessionId;owner=id;color=ink;radius=size;contactDistance=maximum;toolTarget=tool;captureRole=role;points.Clear();renderedPoints=0;nextPreview=0;errorText="";
             Vector3 initialPoint=default;attached=surfaceMode&&Editor.FindDrawingSurface(ray,maximum,out surfaceTarget,out surfaceId,out initialPoint,out _,radius,toolTarget);
             if(surfaceMode&&!attached){Editor.ReportStatus("Point at an enabled drawing patch within 25 cm");Clear();return;}
             if(attached) {
                 if(!Editor.CanEditObject(surfaceTarget,true,out var error)){Editor.ReportStatus(error);Clear();return;}
                 if(erase){Editor.EraseSurfaceAt(surfaceTarget,surfaceId,initialPoint);Clear();return;}
-                surfaceBefore=JsonUtility.ToJson(Editor.Read(surfaceTarget).surfaces.First(s=>s.id==surfaceId));
+                captureSurface=Editor.Read(surfaceTarget).surfaces.First(s=>s.id==surfaceId).Copy();surfaceBefore=JsonUtility.ToJson(captureSurface);
                 if(!Editor.Ownership.TryAcquire("surface-pencil:"+SessionId,toolTarget==null?"Your surface pencil":"Held drawing tool",captureRole,new[]{new BehaviourCatalog.Claim(surfaceTarget,"wholeTarget")},_=>End(id,false),out surfaceOwner,out error,preservePlacement:true)){Editor.ReportStatus(error);Clear();return;}
             }
             var go=new GameObject("Pencil stroke in progress");go.transform.SetParent(transform,false);preview=go.AddComponent<PencilMarks>();if(attached)go.transform.SetParent(Editor.Find(surfaceTarget).GetComponent<DrawingSurfaceView>().Surface(surfaceId),false);Move(id,ray);
@@ -69,6 +70,7 @@ namespace Maestro.Quest.Creation
             if(!float.IsFinite(point.x)||!float.IsFinite(point.y)||!float.IsFinite(point.z)){End(id);return;}
             if(points.Count>0&&Vector3.Distance(points[^1],point)<.005f)return;
             if(points.Count>0&&Vector3.Distance(points[^1],point)>.35f){End(id);return;}
+            if(attached){int extra=points.Count==0?1:DrawingSurfaceGeometry.Segments(captureSurface,points[^1],point,radius);if(renderedPoints+extra>DrawingSurfaceGeometry.MaximumRenderedPoints){End(id);return;}renderedPoints+=extra;}
             points.Add(point);if(points.Count>=(attached?DrawingSurface.MaximumPoints:RoomDocument.MaximumStrokePoints)){End(id);return;}
             if(points.Count<2||Time.unscaledTime<nextPreview)return;nextPreview=Time.unscaledTime+1f/30;
             preview.SetPaths(new[]{PreviewPoints()},radius);preview.SetColor(color);
@@ -78,7 +80,7 @@ namespace Maestro.Quest.Creation
             ray.direction=ray.direction.normalized;
             return Editor&&Editor.DrawingOnSurfaces&&Editor.FindDrawingSurface(ray,.25f,out _,out _,out _,out var distance)?ray.GetPoint(distance):ray.GetPoint(.12f);
         }
-        Vector3[] PreviewPoints()=>attached?points.Select(p=>p-Vector3.forward*radius).ToArray():points.Select(preview.transform.InverseTransformPoint).ToArray();
+        Vector3[] PreviewPoints()=>attached?DrawingSurfaceGeometry.Path(captureSurface,points.ToArray(),radius):points.Select(preview.transform.InverseTransformPoint).ToArray();
         public void End(int id)=>End(id,true);
         void End(int id,bool save)
         {
@@ -125,7 +127,7 @@ namespace Maestro.Quest.Creation
             }
             return Editor.CreateDrawing("",retained.position,1,retained.color,retained.radius,retained.points,out id,out error);
         }
-        void Clear(){surfaceOwner?.Dispose();surfaceOwner=null;attached=false;surfaceTarget=surfaceId=surfaceBefore=toolTarget=null;retained=null;points.Clear();owner=-1;errorText="";SessionId=Guid.NewGuid().ToString("N");if(preview)Destroy(preview.gameObject);preview=null;write?.Dispose();write=null;}
+        void Clear(){surfaceOwner?.Dispose();surfaceOwner=null;attached=false;captureSurface=null;surfaceTarget=surfaceId=surfaceBefore=toolTarget=null;retained=null;points.Clear();owner=-1;errorText="";SessionId=Guid.NewGuid().ToString("N");if(preview)Destroy(preview.gameObject);preview=null;write?.Dispose();write=null;}
         public void Cancel(int id)=>End(id);
         void OnApplicationPause(bool paused){if(paused&&IsDrawing)End(owner);}
         void OnApplicationFocus(bool focused){if(!focused&&IsDrawing)End(owner);}

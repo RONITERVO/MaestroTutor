@@ -1856,3 +1856,14 @@ the refill belongs to a new episode. Undo restores those episodes separately.
 Repeat using poured intake. A matching refill should remain in the same episode.
 Also verify a failed save at the transition stops intake and requires a physics
 restart after storage recovery.
+
+
+### Curved drawing acceptance
+
+Configure cylinder and sphere patches on matching objects. With controllers and
+hands, draw across the visible curve, lift/release, move and resize the object,
+erase a stroke and Undo. Repeat with a held drawing object. Confirm no ink crosses
+the hidden backside, patch seam or another solid object. Check copied objects and
+saved/reloaded marks against source, then exercise temporary Keep/Discard. Record
+thin strokes on large curves and sustained high-point drawing performance; desktop
+geometry/render checks do not establish Quest frame-time or contact comfort.

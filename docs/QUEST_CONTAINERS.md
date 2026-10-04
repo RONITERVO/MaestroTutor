@@ -53,7 +53,7 @@ resume from accepted contents and current placement after physics is started.
 
 Room format 11 protects sweep/extrusion geometry and saved components from older
 readers. Clean room formats 1–5 and 7–10 still load; version 6 remains unsupported.
-Snapshot intent format 10 and archive manifest 10 carry room.v11.json. Unknown component versions
+Snapshot intent format 10 and archive manifest 10 carry room.v12.json. Unknown component versions
 preserve the original saved file and use the existing recovery path. No migration
 of uncertain old transaction evidence and no automatic data reset is added.
 

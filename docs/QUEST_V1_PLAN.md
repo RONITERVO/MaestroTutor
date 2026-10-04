@@ -2877,3 +2877,23 @@ scooping. Geometry/components are unchanged; its new exact hash is an explicit
 pre-release revision, with no alias or silent replacement of an old draft choice.
 Existing expanded objects keep their source. Release template identities remain
 immutable. Current Quest acceptance and broader v1/Store gates are still open.
+
+
+### Shared curved drawing patches (2026-10-04)
+
+The existing drawing component now supports explicit cylindrical and spherical
+patches. Surface-local source, shared capability fields, controller/hand pencils,
+held drawing objects and rendered ink use one geometry mapping. Adaptive bounded
+subdivision counts against the shared drawing budget. Erasing, failed-save retry,
+copy/capture, Undo and temporary rooms retain the existing paths. See
+[the drawing contract](QUEST_SURFACE_DRAWING.md#curved-patches-2026-10-04).
+
+This uses surface version 2 only for curves, room v12, paired snapshot intents v11
+and archive v11. Planes and clean prior rooms remain readable; older builds must
+not fall back past current saves. Native suites (761 EditMode and 564 PlayMode,
+with three optional private-file skips), the full shared-client journey, 2,197 web
+tests and eight browser checks passed. Empty patch lists and end-of-page reads
+now use their declared types while preserving stale-revision rejection. Current
+Quest acceptance remains pending.
+Arbitrary mesh/skin painting, scan overlays, remaining play kit, persistent
+water/snow and wider release gates are still open.

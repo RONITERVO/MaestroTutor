@@ -81,7 +81,7 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator FailedObjectSaveRetainsPreviewAndAllowsAnExplicitRetry()
         {
-            ImportRuntime();yield return ChooseModel(ModelFixture.Create());Assert.That(editor.TryFlush(out var flush),Is.True,flush);string file=Path.Combine(directory,"room.v11.json");if(File.Exists(file))File.Delete(file);Directory.CreateDirectory(file);
+            ImportRuntime();yield return ChooseModel(ModelFixture.Create());Assert.That(editor.TryFlush(out var flush),Is.True,flush);string file=Path.Combine(directory,"room.v12.json");if(File.Exists(file))File.Delete(file);Directory.CreateDirectory(file);
             Assert.That(authorActions.Execute(ImportRequest(ImportAccept("object")),out var error),Is.True,error);yield return ModelFinished("failed");Assert.That(imports.HasPreview,Is.True);Assert.That(editor.Snapshot().objects.Count(x=>x.kind==RoomObjectKind.ImportedModel),Is.Zero);Assert.That(editor.WriteGate.CanFreeze(out _),Is.False);
             Directory.Delete(file);var accept=imports.AcceptAsync();yield return new WaitUntil(()=>accept.IsCompleted);Assert.That(accept.Result,Is.True,imports.Status);Assert.That((string)ImportFact()["phase"],Is.EqualTo("completed"));Assert.That(editor.WriteGate.CanFreeze(out _),Is.True);
         }

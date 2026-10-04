@@ -28,11 +28,11 @@ namespace Maestro.Quest.Tests
         }
         [Test] public void RetainedExportUsesNewerSavedContentAndLeavesExcludedRecoveryMaterialAlone()
         {
-            var p=Prepare();string data=Path.Combine(Generation(p.Id),"data"),room=Path.Combine(data,"room.v11.json");var doc=JObject.Parse(File.ReadAllText(room));doc["objects"][1]["name"]="Latest saved Maestro";File.WriteAllText(room,doc.ToString());File.WriteAllText(Path.Combine(data,"action-receipts.v1.json"),"private evidence");File.WriteAllText(Path.Combine(Generation(p.Id),"preserved.bin"),"private outer evidence");
+            var p=Prepare();string data=Path.Combine(Generation(p.Id),"data"),room=Path.Combine(data,"room.v12.json");var doc=JObject.Parse(File.ReadAllText(room));doc["objects"][1]["name"]="Latest saved Maestro";File.WriteAllText(room,doc.ToString());File.WriteAllText(Path.Combine(data,"action-receipts.v1.json"),"private evidence");File.WriteAllText(Path.Combine(Generation(p.Id),"preserved.bin"),"private outer evidence");
             Assert.Throws<InvalidDataException>(()=>store.InspectPrepared(p.Id,p.Receipt.ManifestHash));
             using var export=Export(p);Assert.That(export.Receipt.ManifestHash,Is.Not.EqualTo(p.Receipt.ManifestHash));Assert.That(export.ExcludedFiles,Is.EqualTo(1));
             Directory.CreateDirectory(Path.Combine(directory,"portable-check"));
-            using var input=File.OpenRead(export.Path);using var imported=WorkspaceArchive.Stage(input,Path.Combine(directory,"portable-check"));Assert.That(imported.Receipt.ManifestHash,Is.EqualTo(export.Receipt.ManifestHash));Assert.That(File.ReadAllText(Path.Combine(imported.DirectoryPath,"room.v11.json")),Does.Contain("Latest saved Maestro"));Assert.That(File.Exists(Path.Combine(imported.DirectoryPath,"action-receipts.v1.json")),Is.False);Assert.That(File.ReadAllText(Path.Combine(data,"action-receipts.v1.json")),Is.EqualTo("private evidence"));Assert.That(File.ReadAllText(Path.Combine(Generation(p.Id),"preserved.bin")),Is.EqualTo("private outer evidence"));Assert.That(store.Load().Revision,Is.EqualTo("initial"));
+            using var input=File.OpenRead(export.Path);using var imported=WorkspaceArchive.Stage(input,Path.Combine(directory,"portable-check"));Assert.That(imported.Receipt.ManifestHash,Is.EqualTo(export.Receipt.ManifestHash));Assert.That(File.ReadAllText(Path.Combine(imported.DirectoryPath,"room.v12.json")),Does.Contain("Latest saved Maestro"));Assert.That(File.Exists(Path.Combine(imported.DirectoryPath,"action-receipts.v1.json")),Is.False);Assert.That(File.ReadAllText(Path.Combine(data,"action-receipts.v1.json")),Is.EqualTo("private evidence"));Assert.That(File.ReadAllText(Path.Combine(Generation(p.Id),"preserved.bin")),Is.EqualTo("private outer evidence"));Assert.That(store.Load().Revision,Is.EqualTo("initial"));
         }
         [Test] public void UntouchedRetainedExportHasTheSamePortableManifestAndNeverConsumesARetentionSlot()
         {
@@ -40,7 +40,7 @@ namespace Maestro.Quest.Tests
         }
         [TestCase("document")] [TestCase("asset")] public void InvalidRetainedBytesCannotBeReplacedByOldOrEmptyContent(string damage)
         {
-            var p=Prepare();string path=Path.Combine(Generation(p.Id),"data",damage=="document"?"room.v11.json":"models/"+modelHash+".glb");File.WriteAllText(path,"broken");Assert.That(()=>Export(p),Throws.Exception);Assert.That(File.ReadAllText(path),Is.EqualTo("broken"));if(Directory.Exists(RetentionCache))Assert.That(Directory.GetFiles(RetentionCache),Is.Empty);
+            var p=Prepare();string path=Path.Combine(Generation(p.Id),"data",damage=="document"?"room.v12.json":"models/"+modelHash+".glb");File.WriteAllText(path,"broken");Assert.That(()=>Export(p),Throws.Exception);Assert.That(File.ReadAllText(path),Is.EqualTo("broken"));if(Directory.Exists(RetentionCache))Assert.That(Directory.GetFiles(RetentionCache),Is.Empty);
         }
         [Test] public void RetainedExportRejectsActiveLiveAndStaleSelectionIdentities()
         {
@@ -49,10 +49,10 @@ namespace Maestro.Quest.Tests
         }
         [Test] public void RetainedExportDetectsChangesAndCleansOnlyItsPrivateOutput()
         {
-            var p=Prepare();string path=Path.Combine(Generation(p.Id),"data","room.v11.json");var changed=new WorkspaceGenerationStore(directory,point=>{if(point=="retention.captured")File.AppendAllText(path," ");});Assert.Throws<InvalidDataException>(()=>Export(p,changed));Assert.That(File.ReadAllText(path),Does.EndWith(" "));Assert.That(Directory.GetFiles(RetentionCache),Is.Empty);
+            var p=Prepare();string path=Path.Combine(Generation(p.Id),"data","room.v12.json");var changed=new WorkspaceGenerationStore(directory,point=>{if(point=="retention.captured")File.AppendAllText(path," ");});Assert.Throws<InvalidDataException>(()=>Export(p,changed));Assert.That(File.ReadAllText(path),Does.EndWith(" "));Assert.That(Directory.GetFiles(RetentionCache),Is.Empty);
             using var cancellation=new CancellationTokenSource();var cancelled=new WorkspaceGenerationStore(directory,point=>{if(point=="retention.captured")cancellation.Cancel();});Assert.Throws<OperationCanceledException>(()=>cancelled.ExportRetained(Origin(),p.Id,p.Receipt.ManifestHash,"original",RetentionCache,cancellation.Token));Assert.That(Directory.GetFiles(RetentionCache),Is.Empty);Assert.That(Directory.Exists(Generation(p.Id)),Is.True);
         }
-        [TestCase("room.v12.json")] [TestCase("controls.v3.json.backup")] [TestCase("motions/motions.v3.json.pending")]
+        [TestCase("room.v13.json")] [TestCase("controls.v3.json.backup")] [TestCase("motions/motions.v3.json.pending")]
         public void RetainedExportNeverTreatsAnOlderPrimaryAsCurrentWhenNewerVersionEvidenceExists(string name)
         {
             var p=Prepare();string path=Path.Combine(Generation(p.Id),"data",name);File.WriteAllText(path,"newer data must survive");Assert.Throws<InvalidDataException>(()=>Export(p));Assert.That(File.ReadAllText(path),Is.EqualTo("newer data must survive"));Assert.That(Directory.Exists(RetentionCache),Is.False);

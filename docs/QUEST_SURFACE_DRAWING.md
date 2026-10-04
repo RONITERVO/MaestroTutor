@@ -1,4 +1,4 @@
-# Reusable planar surface drawing
+# Reusable surface drawing
 
 The `drawingSurfaces.v1` increment adds explicit drawing patches to user-created
 objects, including imported model roots and named recipe parts. The Chalkboard
@@ -17,10 +17,12 @@ edit and one Undo, or one edit in the current temporary fork. Keep/Discard retai
 the existing room semantics. Failed storage does not publish partial ink.
 
 `object.surfaces` reads patch IDs, anchors, enabled state, stroke counts and object
-revision. `object.surface` reads the complete plane configuration. Revision-bound
+revision. `object.surface` reads the complete patch configuration. Revision-bound
 `object.surface.strokes` and `object.surface.stroke` return six identities or six
 points per page, respectively. IDs, colour, radius and exact points remain
-inspectable. The same catalog drives agent calls, program blocks and generated
+inspectable. Objects with no patches and end-of-list stroke/point pages return
+typed empty lists; stale revisions and offsets beyond the end still refuse the
+read. The same catalog drives agent calls, program blocks and generated
 book fields. Reading current inputs refreshes revision without changing the
 chosen operation or stroke geometry.
 
@@ -56,17 +58,17 @@ retry or discard. Moving the object while a draft is retained keeps its local in
 ## Persistence and boundaries
 
 Ink is part of copied objects, room Undo, temporary snapshots and portable
-workspaces. Current room files are `room.v11.json`, paired snapshot intents are
-`room-snapshot.v10.json`, and portable archive manifests are version 10. Clean older
+workspaces. Current room files are `room.v12.json`, paired snapshot intents are
+`room-snapshot.v11.json`, and portable archive manifests are version 11. Clean older
 room documents can load through the existing versioned reader; older originals
 remain. Prior in-flight snapshot journals and prior archives are preserved and
 refused instead of being reinterpreted. This is pre-release format work under the
 owner's reset permission; it does not authorize breaking future released saves.
 
-This increment is explicitly planar. It does not project paint onto arbitrary
-curved meshes, animated skin, scanned real-world walls or clothing; drawing tips do not follow imported bones. Created/imported roots and recipe parts
+Configured plane, cylinder and sphere patches are supported. This does not project paint onto arbitrary
+other curved meshes, animated skin, scanned real-world walls or clothing; drawing tips do not follow imported bones. Created/imported roots and recipe parts
 can be configured as drawing tools as described below. Configured planes can be
-positioned independently of the visual/collision mesh. Physical drawing selects the nearest eligible plane and checks the path against
+positioned independently of the visual/collision mesh. Physical drawing selects the nearest eligible patch and checks the path against
 solid collision proxies, including scanned-room colliders. This is not a pixel-level
 visibility test; a coarse proxy can block a visible opening. The receiving object
 and held drawing tool ignore their own proxies because configured planes and tips
@@ -102,7 +104,7 @@ surface ownership. Tips never draw onto their own object's patches. Manual edits
 or reconfiguring a tool retains its draft instead of saving during reconciliation.
 Copy, archive, temporary Keep/Discard and Undo carry the same component and ink data.
 
-This does not add a brush-fluid simulator, curved-mesh painting or automatic robot
+This does not add a brush-fluid simulator, arbitrary curved-mesh painting or automatic robot
 handwriting planning. An agent can author exact ink directly with surface edits,
 or use existing hold/movement/animation capabilities with a configured tool.
 Physical contact and maximum-load performance still require Quest acceptance.
@@ -129,3 +131,42 @@ Seven PlayMode scenarios exercise real physics queries, partial-stroke saving,
 eraser protection, explicit source edits, moved/disabled colliders, both wall sides,
 held chalk, saturated buffers and transformed surfaces. Device latency, contact
 comfort and maximum-load performance remain pending headset acceptance.
+
+## Curved patches (2026-10-04)
+
+The same `object.surface.edit` definition accepts optional `shape` and
+`curvatureRadius`. Omitting both retains a plane. Use `cylinder` or `sphere`
+with radius 0.01–4 local metres. Plane radius is zero. Width is arc length,
+at most one circumference; sphere height is meridian arc length capped at
+0.9*pi*radius to avoid the poles. Shapes remain explicit authored geometry;
+they are not inferred from an imported mesh. A patch still follows the object
+root or a named recipe part, including rotation and scaling.
+
+At local coordinate (0,0) the surface is tangent to z=0 and faces -Z. Its
+curvature centre is (0,0,r). For cylinder points, x/r is angle around Y and y
+is height. Sphere points use longitude x/r and latitude y/r; horizontal lengths
+shrink away from the equator. Stored stroke coordinates remain exact (x,y,0).
+A seam or patch edge ends physical capture; continue with another stroke.
+Changing curvature deliberately remaps existing ink, subject to validation.
+
+Saved ink and live previews map to the same surface. Subdivision is at most
+five degrees and adapts further to keep chord sag below a quarter of the ink
+radius. Each stroke admits at most 2,048 rendered points; the room's 32,768-point
+budget now counts those rendered points, including spatial strokes. Source stays
+limited to 512 editable points per surface stroke. Physical erasing measures
+against the curved centreline. Back-facing or inside-shell rays do not paint;
+other solid obstructions retain the shared drawing policy.
+
+`curvedDrawingSurfaces.v1` is required for explicit geometry fields. The existing
+surface definition fact exposes `geometry: {shape, curvatureRadius}` alongside
+its prior fields, within the bounded program value size. Human fields, agent calls,
+physical pencils and held tips edit the same source. Copies and captured
+construction modules preserve curvature and ink. Curves use surface version 2;
+planes retain surface version 1. Room v12, paired intent v11 and archive v11
+prevent older builds from falling back past these new saved surfaces.
+
+Native acceptance covers analytic contact, source/budget limits, actual drawing,
+held chalk, erasing/Undo, scaled frames, failed-save retry, copying and temporary
+Discard. Real Quest contact comfort and maximum-load performance remain open.
+Arbitrary triangle/UV painting, skinned deformation and scanned-wall overlays
+remain separate unfinished capabilities.

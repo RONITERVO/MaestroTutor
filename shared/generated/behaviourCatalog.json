@@ -10831,10 +10831,31 @@
                                       "enabled": {
                                         "type": "boolean"
                                       },
+                                      "shape": {
+                                        "type": "string",
+                                        "enum": [
+                                          "plane",
+                                          "cylinder",
+                                          "sphere"
+                                        ],
+                                        "title": "Surface shape",
+                                        "x-features": [
+                                          "curvedDrawingSurfaces.v1"
+                                        ]
+                                      },
+                                      "curvatureRadius": {
+                                        "type": "number",
+                                        "minimum": 0.0,
+                                        "maximum": 4.0,
+                                        "title": "Curvature radius",
+                                        "x-features": [
+                                          "curvedDrawingSurfaces.v1"
+                                        ]
+                                      },
                                       "version": {
                                         "type": "integer",
                                         "minimum": 1.0,
-                                        "maximum": 1.0
+                                        "maximum": 2.0
                                       },
                                       "id": {
                                         "type": "string",
@@ -11060,7 +11081,7 @@
                                       "version": {
                                         "type": "integer",
                                         "minimum": 1.0,
-                                        "maximum": 1.0
+                                        "maximum": 2.0
                                       }
                                     },
                                     "required": [
@@ -16103,6 +16124,27 @@
                   },
                   "enabled": {
                     "type": "boolean"
+                  },
+                  "shape": {
+                    "type": "string",
+                    "enum": [
+                      "plane",
+                      "cylinder",
+                      "sphere"
+                    ],
+                    "title": "Surface shape",
+                    "x-features": [
+                      "curvedDrawingSurfaces.v1"
+                    ]
+                  },
+                  "curvatureRadius": {
+                    "type": "number",
+                    "minimum": 0.0,
+                    "maximum": 4.0,
+                    "title": "Curvature radius",
+                    "x-features": [
+                      "curvedDrawingSurfaces.v1"
+                    ]
                   }
                 },
                 "required": [
@@ -16113,7 +16155,8 @@
                   "height",
                   "enabled"
                 ],
-                "additionalProperties": false
+                "additionalProperties": false,
+                "format": "drawingSurface"
               }
             },
             "required": [
@@ -16139,7 +16182,7 @@
                 "revision"
               ]
             },
-            "title": "Configure a flat drawing patch",
+            "title": "Configure a drawing patch",
             "x-features": [
               "drawingSurfaces.v1"
             ]
@@ -16545,7 +16588,7 @@
         "source.revision.current",
         "storage.writable"
       ],
-      "description": "Configure reusable flat drawing patches on user-created objects or named recipe parts. This is an explicit plane, not projection onto collision boxes, imported mesh triangles, skin or the physical room. Position/rotation belong to the object or part; local X/Y are paper coordinates and the front faces local -Z. Width/height are .02–4 local metres. Use empty part for the object root. Existing marks stay in their patch coordinates; moving/reorienting a patch moves them deliberately and shrinking cannot crop them silently. enabled controls new physical/add strokes, not visibility. add supplies 2–64 planar points (z=0) and returns an exact stroke ID; empty stroke generates one. splice exposes up to 512 points per stroke in batches of 64. removeStroke, clear and removeSurface explicitly remove marks with one Undo. Four surfaces per object, 64 surfaces/128 strokes and 32768 drawing points per room including spatial strokes. Failed saves preserve ink. Temporary edits stay in the fork until Keep. No UVs, physics, animation or drawing-input start is added.",
+      "description": "Configure reusable plane, cylinder or sphere drawing patches on user-created objects or named recipe parts. This is an explicit configured surface, not projection onto collision boxes, imported mesh triangles, skin or the physical room. Position/rotation belong to the object or part; local X/Y are paper coordinates and the front faces local -Z. Width/height are .02–4 local metres. Use empty part for the object root. Existing marks stay in their patch coordinates; moving/reorienting a patch moves them deliberately and shrinking cannot crop them silently. enabled controls new physical/add strokes, not visibility. add supplies 2–64 planar points (z=0) and returns an exact stroke ID; empty stroke generates one. splice exposes up to 512 points per stroke in batches of 64. removeStroke, clear and removeSurface explicitly remove marks with one Undo. Four surfaces per object, 64 surfaces/128 strokes and 32768 drawing points per room including spatial strokes. Failed saves preserve ink. Temporary edits stay in the fork until Keep. Optional shape is plane (default), cylinder or sphere. Curves require curvatureRadius .01–4 local metres, width at most 2*pi*radius; spheres also require height at most .9*pi*radius to avoid poles. Coordinates are arc lengths at the equator: P=(r*sin(x/r), y, r*(1-cos(x/r))) for cylinders and P=(r*cos(y/r)*sin(x/r), r*sin(y/r), r*(1-cos(y/r)*cos(x/r))) for spheres. No seam wrapping: begin another stroke after crossing a patch edge. Plane radius is zero. Curved strokes tessellate at five-degree steps, at most 2048 rendered points each; these count against the shared room point budget. No inferred mesh UVs, skin deformation, physics or drawing-input start is added.",
       "example": {
         "operation": "configure",
         "target": "00000000000000000000000000000000",
@@ -24148,7 +24191,7 @@
         }
       },
       "label": "Object drawing surfaces",
-      "description": "All configured flat drawing patches (at most four), with the current object revision. Reads do not infer surfaces from a mesh or collider. part is empty for object-local coordinates. Mark counts remain when drawing is disabled. Read object.surface and object.surface.strokes for exact editable definitions.",
+      "description": "All configured drawing patches (at most four), with the current object revision. Reads do not infer surfaces from a mesh or collider. part is empty for object-local coordinates. Mark counts remain when drawing is disabled. Read object.surface and object.surface.strokes for exact editable definitions.",
       "input": {
         "type": "object",
         "properties": {
@@ -24196,11 +24239,17 @@
           },
           "width": "number",
           "height": "number",
-          "enabled": "boolean"
+          "enabled": "boolean",
+          "geometry": {
+            "record": {
+              "shape": "text",
+              "curvatureRadius": "number"
+            }
+          }
         }
       },
       "label": "Drawing surface definition",
-      "description": "Exact plane configuration in its object's or recipe part's local axes. Front faces -Z. This is saved configuration, not the current animated world pose; a patch does not follow skin deformation or imported bones.",
+      "description": "Exact plane/cylinder/sphere configuration in its object's or recipe part's local axes. The tangent origin faces -Z; shape and curvatureRadius define the same editable surface mapping. This is saved configuration, not the current animated world pose; a patch does not follow skin deformation or imported bones.",
       "input": {
         "type": "object",
         "properties": {
@@ -24325,7 +24374,7 @@
         }
       },
       "label": "Surface stroke point page",
-      "description": "Read colour, radius and up to six exact planar points. Points and radius use patch-local metres; z=0, X/Y remain inside the patch including radius. Paged reads refuse stale object revisions. No projection, simplification or ownership is implied.",
+      "description": "Read colour, radius and up to six exact surface-coordinate points. Points use patch-local arc metres (equatorial X on spheres); radius uses geometric local metres; z=0, X/Y remain inside the patch including radius. Paged reads refuse stale object revisions. No projection, simplification or ownership is implied.",
       "input": {
         "type": "object",
         "properties": {
@@ -26913,7 +26962,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "6bde0198a0e0feb77cd5275b97ad95e2df257eae1ba3efaeb3b145adf275767b"
+      "sha256": "11d80ab76161358ad0f75e26584f04d87c7f48a97dc19383a8151b27e78efbeb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -26945,7 +26994,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "db1b7148619d27983a58a4669d95b891d2aa7c83a0b1c96366a673cfd91f6cc4"
+      "sha256": "478802aa622a9a2e2dab0d69140d5687bf4aa86ecdeb86130b835050f1363379"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -26969,11 +27018,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "ffcf511ff918d04cef560e27f583565f975bfd6005c64b2284a6528bf074c9da"
+      "sha256": "845b137c15b78d7fe2cdbc85de2839ee41477b207a20e53ff3e5e9b1242c03e6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
-      "sha256": "648f1f1955f6bc6f331930c0ca57532161d8c2add65cefd0a9621a8ac987e4f1"
+      "sha256": "478184b72f77714ee8e03fcef1e17fd2983742d357a8be6069f43e258ce08340"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleMemory.cs",
@@ -26989,11 +27038,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveCapture.cs",
-      "sha256": "2e2defba8f0094fa3e744f46fab2d7d83d721ca7023a61e89e95aad32fdebe0b"
+      "sha256": "96b3d500b150ac6a6f80083a98b6593087f78d1f12e52e77ef343ec48b5d2a65"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveSnapshot.cs",
-      "sha256": "733869bc8116238f4db10e6a38be31d865e7018c3a90d5b2f9508129c1212e96"
+      "sha256": "531c5bb54180ef7a395cb4f5ec721297b97c149044722f547403ac44af475eea"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.Retention.cs",
@@ -27213,7 +27262,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/DrawingSurface.cs",
-      "sha256": "0a79fa8452f051e9ec3bec939dbd6ee2882d98860a375c7f235e94764bb5f550"
+      "sha256": "cc0fdeee368cba1fd7a210eedd6092c18e2b8508186cc32d3ab8e8cc2e91af5b"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/DrawingSurfaceGeometry.cs",
+      "sha256": "38c78c1de2fa94d06b14fdfce27466f9a6a286fcfbc4e2da06b4896bfa42b6b0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/DrawingTip.cs",
@@ -27289,7 +27342,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/DrawingSurfaceView.cs",
-      "sha256": "14893472cab212ce19d40683af394fb8d076e3eac96f6f64ec238f7dc01cc2b0"
+      "sha256": "82d7982b8a66631115fffefc141d29eb6b002c02ac8dd2f31d467b495bdbed6b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/DrawingSurfaceOcclusion.cs",
@@ -27297,7 +27350,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSurfaceEdits.cs",
-      "sha256": "789d1a39686802f41d3cb6acaee6fc6c268dd7a2f2c3b976ad24a28d6eea108c"
+      "sha256": "5e64dda0c35f8d380de45335b4f637e72d326a7d3ea3822615426af014d480cd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRecipeEdits.cs",
@@ -27305,7 +27358,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "7fa04953f4d75a527a5bd22f79573ea61f88f0baebf6098dec4818c6bee82853"
+      "sha256": "bafe069699b360ba1c1c326e3b7b82a78d5f324e5c76c359a066fa7605ba1299"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedDrawing.cs",
@@ -27313,7 +27366,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SpatialDrawing.cs",
-      "sha256": "bf50fdba3f6418f9ba12e8230e1cd2dea9ba1f7b68794b6ef98e8e67ecf5b16c"
+      "sha256": "c6ed88222a886cf09dec81636bec5f7958639a737fc140a031370b467d2618c1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedRoomObject.cs",
@@ -27573,7 +27626,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreationPrototypeSchema.cs",
-      "sha256": "97e5884669cd7083a897569b2ff8334f6068014ce8543aaa9a963bc0df817c80"
+      "sha256": "ec6dd39261a1acaffb11b285277025fa5898c048cab68b5234f1a4d3cb167f69"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingCapabilities.cs",
@@ -27585,11 +27638,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingSurfaceCapability.cs",
-      "sha256": "a6843bcaad68587f84336d8d3cbeb1ba7a704136be9dd7b721c04bce1e69b1f7"
+      "sha256": "e0da398604bd1880caeb84ff0578838a967f5b86921f96035cf97d4758bf8b53"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingSurfaceFacts.cs",
-      "sha256": "d38fa0a97f11ba49e7f24c779dbec17fe3cd22ce578c4eb93db5c0297daf0e3a"
+      "sha256": "6a41f37a4789c7c90d7a6bd2bcc17fc498b16ef3cb6f068fa2157195292fdc73"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingTipCapability.cs",

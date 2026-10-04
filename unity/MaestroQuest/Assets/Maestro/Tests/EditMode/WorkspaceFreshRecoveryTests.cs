@@ -18,7 +18,7 @@ namespace Maestro.Quest.Tests
             Assert.That(File.ReadAllBytes(Pointer),Is.EqualTo(original));Assert.That(preview.Receipt.Summary.Files,Is.EqualTo(5));Assert.That(preview.Receipt.Summary.Models,Is.Zero);
             var proof=JObject.Parse(File.ReadAllText(Path.Combine(Generation(preview.Id),"damaged-recovery.v1.json")));Assert.That((string)proof["source"]["kind"],Is.EqualTo("fresh"));Assert.That((JArray)proof["protectedGenerations"],Is.Empty);
             var selected=store.CommitDamagedRecovery(preview.Id,preview.Receipt.ManifestHash,origin,PreserveFor(preview,origin));Assert.That(selected.Active.ReviewRequired,Is.True);Assert.That(selected.Previous,Is.Null);
-            var data=store.DataDirectory(selected.Active);var room=JObject.Parse(File.ReadAllText(Path.Combine(data,"room.v11.json")));Assert.That(room["objects"].Select(x=>(string)x["id"]),Is.EquivalentTo(new[]{"book","maestro"}));
+            var data=store.DataDirectory(selected.Active);var room=JObject.Parse(File.ReadAllText(Path.Combine(data,"room.v12.json")));Assert.That(room["objects"].Select(x=>(string)x["id"]),Is.EquivalentTo(new[]{"book","maestro"}));
             Assert.That(room["objects"].All(x=>string.IsNullOrEmpty((string)x["modelHash"])),Is.True);Assert.That(File.ReadAllText(Path.Combine(directory,"room","keep.txt")),Is.EqualTo("Original workspace"));
             Assert.That(File.ReadAllBytes(Path.Combine(Generation(preview.Id),"origin-current.bin")),Is.EqualTo(original));Assert.That(store.CommittedDamagedRecovery(preview.Id,preview.Receipt.ManifestHash,origin).Revision,Is.EqualTo(selected.Revision));
         }

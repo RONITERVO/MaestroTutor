@@ -1,0 +1,274 @@
+[
+  {
+    "name": "legacy plane",
+    "definition": {
+      "part": "",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": -0.065
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "width": 0.25,
+      "height": 0.12,
+      "enabled": true
+    },
+    "valid": true
+  },
+  {
+    "name": "explicit plane",
+    "definition": {
+      "part": "",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": -0.065
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "width": 0.25,
+      "height": 0.12,
+      "enabled": true,
+      "shape": "plane",
+      "curvatureRadius": 0
+    },
+    "valid": true
+  },
+  {
+    "name": "cylinder",
+    "definition": {
+      "part": "",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": -0.065
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "width": 0.25,
+      "height": 0.12,
+      "enabled": true,
+      "shape": "cylinder",
+      "curvatureRadius": 0.065
+    },
+    "valid": true
+  },
+  {
+    "name": "sphere",
+    "definition": {
+      "part": "",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": -0.065
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "width": 0.25,
+      "height": 0.12,
+      "enabled": true,
+      "shape": "sphere",
+      "curvatureRadius": 0.065
+    },
+    "valid": true
+  },
+  {
+    "name": "missing radius",
+    "definition": {
+      "part": "",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": -0.065
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "width": 0.25,
+      "height": 0.12,
+      "enabled": true,
+      "shape": "sphere"
+    },
+    "valid": false
+  },
+  {
+    "name": "flat nonzero radius",
+    "definition": {
+      "part": "",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": -0.065
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "width": 0.25,
+      "height": 0.12,
+      "enabled": true,
+      "curvatureRadius": 0.06
+    },
+    "valid": false
+  },
+  {
+    "name": "pole overlap",
+    "definition": {
+      "part": "",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": -0.065
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "width": 0.25,
+      "height": 0.12,
+      "enabled": true,
+      "shape": "sphere",
+      "curvatureRadius": 0.03
+    },
+    "valid": false
+  },
+  {
+    "name": "seam overlap",
+    "definition": {
+      "part": "",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": -0.065
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "width": 0.25,
+      "height": 0.12,
+      "enabled": true,
+      "shape": "cylinder",
+      "curvatureRadius": 0.03
+    },
+    "valid": false
+  },
+  {
+    "name": "zero radius",
+    "definition": {
+      "part": "",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": -0.065
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "width": 0.25,
+      "height": 0.12,
+      "enabled": true,
+      "shape": "sphere",
+      "curvatureRadius": 0
+    },
+    "valid": false
+  },
+  {
+    "name": "negative radius",
+    "definition": {
+      "part": "",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": -0.065
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "width": 0.25,
+      "height": 0.12,
+      "enabled": true,
+      "shape": "cylinder",
+      "curvatureRadius": -0.1
+    },
+    "valid": false
+  },
+  {
+    "name": "unknown shape",
+    "definition": {
+      "part": "",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": -0.065
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "width": 0.25,
+      "height": 0.12,
+      "enabled": true,
+      "shape": "mesh",
+      "curvatureRadius": 0.1
+    },
+    "valid": false
+  },
+  {
+    "name": "large valid cylinder",
+    "definition": {
+      "part": "",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": -0.065
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "width": 4,
+      "height": 4,
+      "enabled": true,
+      "shape": "cylinder",
+      "curvatureRadius": 4
+    },
+    "valid": true
+  }
+]
