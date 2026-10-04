@@ -1887,3 +1887,21 @@ Interrupt a held erase by pausing or taking surface ownership. If a retained edi
 is shown, Discard erasing restores its preview, while Retry erasing applies the
 same selected IDs only when the patch remains unchanged. The optional book fields
 must allow switching a tip between draw/erase and inspecting its saved mode.
+
+
+### Chess kit and patterned parts (2026-10-04; device acceptance pending)
+
+On the next authorized headset session, create the Chessboard and call both
+included chess constructors at its position, yaw and scale. Check 64 readable
+squares and 32 distinct movable pieces, especially rook/knight/bishop/queen/king
+recognition at normal reach. Enable scanned-room physics and test moving, dropping
+and gently bumping pieces; verify the board supports them and room obstacles still
+apply. Place a pawn through the shared Foot-to-square snap action, including E2 to
+E4, then Undo and reload. There is no automatic turn or legal-move enforcement.
+
+In the book recipe editor, change checker to stripes, projection, cell counts and
+secondary pigment. Verify invalid counts remain drafts, Apply gives one saved edit,
+Undo restores the pattern, and rotating or animating the part keeps its pattern
+attached. Check distant shimmer and readability while moving the head. Record
+sustained frame time with the full set, book and avatar together before acceptance.
+These checks are not claimed from desktop renders or native test runs.

@@ -111,6 +111,17 @@ try{
   const sweepUndo=await execute([{action:'undo'}]);const sweepRestored=await execute([{action:'inspect',target:sweepId}]);if(sweepRestored.inspection?.recipe?.parts[0].path?.[2].z!==0)throw new Error('Sweep Undo did not restore source');
   await writeFile(join(directory,'sweep-authoring.json'),JSON.stringify({boundary:'Real full-app native recipe creation, editing, path readback and Undo. Browser replays these exact acknowledgements; no headset performance proof.',before:sweepBefore,after:sweepAfter,read:sweepRead,undo:sweepUndo,restored:sweepRestored},null,2));
   await execute([{action:'undo'}]);
+  const patternCases=JSON.parse(await readFile('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/pattern-contract.json','utf8'));
+  const patternCreated=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'recipe',name:'Pattern panel',x:.2,y:1,z:.5,scale:1,recipe:patternCases[1].recipe}}}}]);
+  const patternId=patternCreated.execution?.selected?.output?.objectId;if(typeof patternId!=='string')throw new Error('Pattern creation failed');
+  const patternBefore=await execute([{action:'inspect',target:patternId}]);if(!patternBefore.inspection?.recipe)throw new Error('Pattern source missing');
+  const patternPart=structuredClone(patternBefore.inspection.recipe.parts[0]);patternPart.pattern={kind:'stripes',plane:'xz',columns:4,rows:8,secondary:'#eeddcc'};
+  const patternAfter=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.recipe.edit',version:1,arguments:{target:patternId,revision:patternBefore.inspection.objectRevision,parts:[patternPart],removeParts:[],tracks:[],removeTracks:[],duration:2,loop:patternBefore.inspection.recipe.loop}}}}]);
+  const patternRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.recipe.part',version:1,arguments:{target:patternId,revision:patternAfter.objects.find(o=>o.id===patternId)!.objectRevision,index:0}}}]);
+  if(!isDeepStrictEqual((patternRead.catalog?.value as {part:{pattern:unknown}}).part.pattern,patternPart.pattern))throw new Error('Pattern readback differs from accepted edit');
+  const patternUndo=await execute([{action:'undo'}]);const patternRestored=await execute([{action:'inspect',target:patternId}]);if(patternRestored.inspection?.recipe?.parts[0].pattern?.kind!=='checker')throw new Error('Pattern Undo failed');
+  await writeFile(join(directory,'pattern-authoring.json'),JSON.stringify({boundary:'Real full-app native pattern creation, edit, fact readback and Undo; browser replays native acknowledgements. No headset/provider proof.',before:patternBefore,after:patternAfter,read:patternRead,undo:patternUndo,restored:patternRestored},null,2));
+  await execute([{action:'undo'}]);
   const templateBefore=structuredClone(lease.state());
   const templateSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'object.create',offset:0}}]);
   const templateDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.create',version:1}}]);
@@ -481,7 +492,7 @@ try{
   // Included play-kit constructors use the same module lookup, program save/run,
   // native receipt and Undo path as a user's or the agent's own construction.
   const playKitEvidence=[];
-  for(const [fixture,label,count] of [['small-fort','Small fort',16],['spinner','Passive spinner',2]] as const){
+  for(const [fixture,label,count] of [['small-fort','Small fort',16],['spinner','Passive spinner',2],['chess-white','Chess pieces white',16],['chess-black','Chess pieces black',16]] as const){
    const source=JSON.parse(await readFile('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-'+fixture+'.json','utf8'));
    const inspected=await execute([{action:'catalog',catalog:{operation:'inspect',category:'modules',capability:source.imports[0].hash,version:1}}]);
    if(!inspected.catalog?.included||!isDeepStrictEqual(inspected.catalog.definition,source.imports[0].module))throw new Error(label+' is not the exact included module');

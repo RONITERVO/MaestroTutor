@@ -2929,3 +2929,38 @@ IL2CPP packaging, signature and 16 KiB alignment passed. The package audit match
 1,764 frozen native inputs, 137 web files and exact default-avatar/motion/template/
 module bytes. The local development APK is not installed; no provider, paid
 asset-generation, deployment, release signing or Store submission occurred.
+
+
+### Editable chess kit and patterned recipes checkpoint — 2026-10-04
+
+The default library now ships a 64-square board and six editable chess piece
+types, with two ordinary 16-piece construction modules. The complete physical set
+uses 33 room objects. Existing physics, gripping, Foot-to-square snapping, saved
+programs, temporary rooms and Undo remain shared. No chess rules or occupancy
+system is hidden in native code. Pattern fields (solid/checker/stripes, projection,
+counts and second pigment) extend recipe source, facts and the book part editor.
+They add no individual square meshes or colliders.
+
+Validation: 2,233 web cases across 250 files; 771 Unity EditMode and 575 PlayMode
+passes (three optional private-file skips); 335 full-app native observations; twelve
+Chrome journeys; 76 Android unit passes (two optional skips), Android lint and
+IL2CPP development packaging. The full set settled under real native physics,
+E2-to-E4 snapping and Undo passed, and all 64 checker squares passed rendered
+pixel sampling after rotation. Whole chat-envelope sizes are now checked for
+included constructors. The final book controls use wrapping fields with 44 px
+inputs, and exact native edit/receipt matching passed after the layout change.
+
+APK: `MaestroQuest-chess-kit-0876C981.apk`; SHA256
+`0876C9818AB8004B8458165584551F21CB24E12251C9B069F4E883BCFE811475`. Package audit matched 1,805 frozen inputs,
+304 runtime files, 191 test files, 15 editor files, 60 fixture payloads, all
+143 web files, the AAR, default avatar, 178 motions, 22 templates and seven
+modules. Signature, development manifest, arm64 ABI and 16 KiB alignment passed.
+Room format 14 and paired intent/archive format 13 preserve patterned source.
+This is a development checkpoint, not a release approval or headset acceptance.
+The APK remains uninstalled; device work is on hold. No paid generation/provider
+calls, deployment, release signing or Store submission occurred.
+
+Remaining: the open device QA and provider/billing gates, further reusable
+play-kit coverage, persistent water/snow fields, arbitrary mesh/skin drawing,
+Meta/Firebase integrity/account linking, privacy/payment setup, release signing
+and Store submission. See the creation-template contract and device checklist.

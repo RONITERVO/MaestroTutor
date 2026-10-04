@@ -304,3 +304,19 @@ provide typed live observations and accepted events to both users and Maestro.
 The existing pouring counters retain their meaning. This does not implement
 finger scooping, displacement, fluid forces or persistent water/snow fields;
 see [containers](QUEST_CONTAINERS.md#physical-vessel-scooping-2026-10-04).
+
+
+### Editable chess kit and reusable pigment patterns (2026-10-04)
+
+The default library now includes a board, all six piece types and ordinary white/
+black construction modules. Full setup uses 33 independent room objects. Users
+and Maestro share the same source, snap points, world poses, physics and Undo;
+no hidden chess-only state is introduced. Rules remain optional authored programs.
+See [starter templates](QUEST_CREATION_TEMPLATES.md#chess-construction-and-reusable-patterns)
+for setup, origins, budgets and transaction boundaries.
+
+Checker/stripe materials are a reusable recipe field, including explicit projection,
+counts and a second pigment. They do not add cells to the scene graph. The normal
+book part editor and agent recipe edits change the same data, with exact fact
+readback. Room format 14 protects this source from older readers. Physical play
+and patterns still require Quest readability and sustained performance acceptance.

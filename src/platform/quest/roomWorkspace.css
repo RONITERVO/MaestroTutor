@@ -90,3 +90,8 @@
 .room-sweep-point>span {align-self:center;font-size:14px;font-weight:600;}
 .room-sweep-point>button:nth-last-child(2) {grid-column:2;}
 @media(max-width:700px){.room-sweep-point {grid-template-columns:repeat(3,minmax(55px,1fr));}.room-sweep-point>span {grid-column:1/-1;}.room-sweep-point>button:nth-last-child(2){grid-column:1;}}
+
+.room-pattern-fields {display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;}
+.room-pattern-fields label {display:flex;flex-direction:column;gap:6px;min-width:0;font-size:14px;}
+.room-pattern-fields input,.room-pattern-fields select {box-sizing:border-box;width:100%;min-width:0;min-height:44px;padding:8px;border:1px solid #bdaf95;border-radius:6px;background:#fffaf0;color:inherit;font:inherit;}
+.room-pattern-fields input[type="color"] {padding:4px;}

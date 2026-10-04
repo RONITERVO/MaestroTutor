@@ -89,3 +89,12 @@ it('edits swept profiles and paths through one shared patch without resetting a 
  const invocation=client.snapshot().request!.commands[0].execution!;if(invocation.operation!=='start')throw new Error('Expected shared patch');const part=(invocation.call.arguments.parts as NonNullable<ReturnType<typeof parseRecipe>>['parts'])[0];expect(part.shape).toBe('sweep');expect(part.path).toHaveLength(6);expect(part.path![2].z).toBe(.05);expect(part.profile).toHaveLength(8);
  await act(async()=>{client.receive(state({revision:2,ack:1}));});
 });
+
+it('edits shared pattern source and retains invalid counts without submitting',async()=>{
+ const client=new RoomAgentClient();client.receive(state({capabilities:[...state().capabilities!,'recipePatterns.v1']}));const screen=render(<RoomWorkspace client={client}/>);
+ fireEvent.change(screen.getByLabelText('Part pattern style'),{target:{value:'checker'}});fireEvent.change(screen.getByLabelText('Part pattern projection'),{target:{value:'xz'}});
+ fireEvent.change(screen.getByLabelText('Part pattern columns'),{target:{value:'33'}});fireEvent.click(screen.getByRole('button',{name:'Apply changes'}));expect(client.snapshot().request).toBeNull();
+ fireEvent.change(screen.getByLabelText('Part pattern columns'),{target:{value:'8'}});fireEvent.change(screen.getByLabelText('Part pattern rows'),{target:{value:'8'}});fireEvent.change(screen.getByLabelText('Part pattern alternate colour'),{target:{value:'#eeddcc'}});fireEvent.click(screen.getByRole('button',{name:'Apply changes'}));
+ const invocation=client.snapshot().request!.commands[0].execution!;if(invocation.operation!=='start')throw new Error('Expected shared patch');const part=(invocation.call.arguments.parts as NonNullable<ReturnType<typeof parseRecipe>>['parts'])[0];expect(part.pattern).toEqual({kind:'checker',plane:'xz',columns:8,rows:8,secondary:'#eeddcc'});
+ await act(async()=>{client.receive(state({revision:2,ack:1}));});
+});

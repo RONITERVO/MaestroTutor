@@ -54,6 +54,14 @@ namespace Maestro.Quest.Programs
             var part=Object(new JObject {["id"]=Text("^[a-zA-Z0-9_]{1,32}$",32),["parent"]=parent,["shape"]=Choice("box","sphere","cylinder"),
                 ["position"]=Triple(-2,2),["size"]=Triple(.005,2),["rotation"]=Vector(true),
                 ["color"]=Object(new JObject {["r"]=Number(0,1),["g"]=Number(0,1),["b"]=Number(0,1),["a"]=Number(1,1)})});
+            var patterns=new JArray();
+            foreach(var kind in new[]{"solid","checker","stripes"}) {
+                var pattern=Object(new JObject {["kind"]=Choice(kind),["plane"]=Choice("uv","xy","xz","yz"),["columns"]=Number(1,32,true),["rows"]=Number(1,32,true),["secondary"]=Text("^#[a-fA-F0-9]{6}$",7)});
+                pattern["title"]=kind=="solid"?"Solid pigment":kind=="checker"?"Checker pattern":"Stripes";
+                if(kind!="solid")pattern["x-features"]=new JArray(Maestro.Quest.Creation.RecipePattern.Feature);
+                patterns.Add(pattern);
+            }
+            part["properties"]["pattern"]=new JObject {["type"]="object",["oneOf"]=patterns,["x-discriminators"]=new JArray("kind"),["description"]="Two pigments in bounded repeated cells. UV uses the generated mesh coordinates; XY/XZ/YZ use normalized part coordinates (-0.5 to 0.5). The first cell uses the part colour. Stripes alternate along columns; checker also alternates rows. This changes appearance only, without extra geometry, collision or occupancy."};
             part["properties"]["path"]=List(Triple(-.5,.5),0,0);
             var profilePoint=Object(new JObject {["x"]=Number(0,.5),["y"]=Number(-.5,.5)});
             var lathe=(JObject)part.DeepClone();lathe["properties"]["shape"]=Choice("lathe");

@@ -34,14 +34,14 @@
   },
   "creation": {
     "selected": {
-      "id": "29fc88403e0b43dd83cb6f6d42c3c5fc",
+      "id": "081d7613632e4e9283c2084e32c5ef99",
       "capability": "object.create",
       "version": 1,
       "resources": [],
       "phase": "completed",
       "status": "Action completed",
       "output": {
-        "objectId": "1e8b43dcf23d431bb9a36c9f8f4cc31a"
+        "objectId": "a15d424a5feb44c78ac7dc32a54956fc"
       },
       "call": {
         "id": "object.create",
@@ -80,23 +80,23 @@
     "running": [],
     "outcomes": [
       {
-        "id": "29fc88403e0b43dd83cb6f6d42c3c5fc",
+        "id": "081d7613632e4e9283c2084e32c5ef99",
         "capability": "object.create",
         "version": 1,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "objectId": "1e8b43dcf23d431bb9a36c9f8f4cc31a"
+          "objectId": "a15d424a5feb44c78ac7dc32a54956fc"
         }
       }
     ],
-    "nextRunId": "396c2cbd88be4735b6313e2073499d7a",
+    "nextRunId": "3fe0a6a1141d40a096984a639dc43d92",
     "storageError": null,
     "recovery": null
   },
   "before": {
-    "target": "1e8b43dcf23d431bb9a36c9f8f4cc31a",
+    "target": "a15d424a5feb44c78ac7dc32a54956fc",
     "revision": 7,
     "points": 3,
     "radius": 0.003
@@ -106,7 +106,7 @@
     "version": 1,
     "arguments": {
       "operation": "splice",
-      "target": "1e8b43dcf23d431bb9a36c9f8f4cc31a",
+      "target": "a15d424a5feb44c78ac7dc32a54956fc",
       "revision": 7,
       "index": 3,
       "deleteCount": 0,
@@ -121,16 +121,16 @@
   },
   "edit": {
     "selected": {
-      "id": "396c2cbd88be4735b6313e2073499d7a",
+      "id": "3fe0a6a1141d40a096984a639dc43d92",
       "capability": "object.drawing.edit",
       "version": 1,
       "resources": [
-        "1e8b43dcf23d431bb9a36c9f8f4cc31a"
+        "a15d424a5feb44c78ac7dc32a54956fc"
       ],
       "phase": "completed",
       "status": "Action completed",
       "output": {
-        "target": "1e8b43dcf23d431bb9a36c9f8f4cc31a",
+        "target": "a15d424a5feb44c78ac7dc32a54956fc",
         "revision": 8,
         "points": 4,
         "radius": 0.003
@@ -140,7 +140,7 @@
         "version": 1,
         "arguments": {
           "operation": "splice",
-          "target": "1e8b43dcf23d431bb9a36c9f8f4cc31a",
+          "target": "a15d424a5feb44c78ac7dc32a54956fc",
           "revision": 7,
           "index": 3,
           "deleteCount": 0,
@@ -157,39 +157,39 @@
     "running": [],
     "outcomes": [
       {
-        "id": "29fc88403e0b43dd83cb6f6d42c3c5fc",
+        "id": "081d7613632e4e9283c2084e32c5ef99",
         "capability": "object.create",
         "version": 1,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "objectId": "1e8b43dcf23d431bb9a36c9f8f4cc31a"
+          "objectId": "a15d424a5feb44c78ac7dc32a54956fc"
         }
       },
       {
-        "id": "396c2cbd88be4735b6313e2073499d7a",
+        "id": "3fe0a6a1141d40a096984a639dc43d92",
         "capability": "object.drawing.edit",
         "version": 1,
         "resources": [
-          "1e8b43dcf23d431bb9a36c9f8f4cc31a"
+          "a15d424a5feb44c78ac7dc32a54956fc"
         ],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "target": "1e8b43dcf23d431bb9a36c9f8f4cc31a",
+          "target": "a15d424a5feb44c78ac7dc32a54956fc",
           "revision": 8,
           "points": 4,
           "radius": 0.003
         }
       }
     ],
-    "nextRunId": "8d622aa6f90d41e4bba2097cd7b6cae1",
+    "nextRunId": "4ef0fda918474234bcbc8e17ff8c4db8",
     "storageError": null,
     "recovery": null
   },
   "after": {
-    "target": "1e8b43dcf23d431bb9a36c9f8f4cc31a",
+    "target": "a15d424a5feb44c78ac7dc32a54956fc",
     "revision": 8,
     "points": 4,
     "radius": 0.003

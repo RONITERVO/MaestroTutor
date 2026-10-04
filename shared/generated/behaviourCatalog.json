@@ -5920,6 +5920,153 @@
                               ],
                               "additionalProperties": false
                             },
+                            "pattern": {
+                              "type": "object",
+                              "oneOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "kind": {
+                                      "type": "string",
+                                      "enum": [
+                                        "solid"
+                                      ]
+                                    },
+                                    "plane": {
+                                      "type": "string",
+                                      "enum": [
+                                        "uv",
+                                        "xy",
+                                        "xz",
+                                        "yz"
+                                      ]
+                                    },
+                                    "columns": {
+                                      "type": "integer",
+                                      "minimum": 1.0,
+                                      "maximum": 32.0
+                                    },
+                                    "rows": {
+                                      "type": "integer",
+                                      "minimum": 1.0,
+                                      "maximum": 32.0
+                                    },
+                                    "secondary": {
+                                      "type": "string",
+                                      "pattern": "^#[a-fA-F0-9]{6}$",
+                                      "maxLength": 7
+                                    }
+                                  },
+                                  "required": [
+                                    "kind",
+                                    "plane",
+                                    "columns",
+                                    "rows",
+                                    "secondary"
+                                  ],
+                                  "additionalProperties": false,
+                                  "title": "Solid pigment"
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "kind": {
+                                      "type": "string",
+                                      "enum": [
+                                        "checker"
+                                      ]
+                                    },
+                                    "plane": {
+                                      "type": "string",
+                                      "enum": [
+                                        "uv",
+                                        "xy",
+                                        "xz",
+                                        "yz"
+                                      ]
+                                    },
+                                    "columns": {
+                                      "type": "integer",
+                                      "minimum": 1.0,
+                                      "maximum": 32.0
+                                    },
+                                    "rows": {
+                                      "type": "integer",
+                                      "minimum": 1.0,
+                                      "maximum": 32.0
+                                    },
+                                    "secondary": {
+                                      "type": "string",
+                                      "pattern": "^#[a-fA-F0-9]{6}$",
+                                      "maxLength": 7
+                                    }
+                                  },
+                                  "required": [
+                                    "kind",
+                                    "plane",
+                                    "columns",
+                                    "rows",
+                                    "secondary"
+                                  ],
+                                  "additionalProperties": false,
+                                  "title": "Checker pattern",
+                                  "x-features": [
+                                    "recipePatterns.v1"
+                                  ]
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "kind": {
+                                      "type": "string",
+                                      "enum": [
+                                        "stripes"
+                                      ]
+                                    },
+                                    "plane": {
+                                      "type": "string",
+                                      "enum": [
+                                        "uv",
+                                        "xy",
+                                        "xz",
+                                        "yz"
+                                      ]
+                                    },
+                                    "columns": {
+                                      "type": "integer",
+                                      "minimum": 1.0,
+                                      "maximum": 32.0
+                                    },
+                                    "rows": {
+                                      "type": "integer",
+                                      "minimum": 1.0,
+                                      "maximum": 32.0
+                                    },
+                                    "secondary": {
+                                      "type": "string",
+                                      "pattern": "^#[a-fA-F0-9]{6}$",
+                                      "maxLength": 7
+                                    }
+                                  },
+                                  "required": [
+                                    "kind",
+                                    "plane",
+                                    "columns",
+                                    "rows",
+                                    "secondary"
+                                  ],
+                                  "additionalProperties": false,
+                                  "title": "Stripes",
+                                  "x-features": [
+                                    "recipePatterns.v1"
+                                  ]
+                                }
+                              ],
+                              "x-discriminators": [
+                                "kind"
+                              ],
+                              "description": "Two pigments in bounded repeated cells. UV uses the generated mesh coordinates; XY/XZ/YZ use normalized part coordinates (-0.5 to 0.5). The first cell uses the part colour. Stripes alternate along columns; checker also alternates rows. This changes appearance only, without extra geometry, collision or occupancy."
+                            },
                             "path": {
                               "type": "array",
                               "items": {
@@ -6129,6 +6276,153 @@
                                 "a"
                               ],
                               "additionalProperties": false
+                            },
+                            "pattern": {
+                              "type": "object",
+                              "oneOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "kind": {
+                                      "type": "string",
+                                      "enum": [
+                                        "solid"
+                                      ]
+                                    },
+                                    "plane": {
+                                      "type": "string",
+                                      "enum": [
+                                        "uv",
+                                        "xy",
+                                        "xz",
+                                        "yz"
+                                      ]
+                                    },
+                                    "columns": {
+                                      "type": "integer",
+                                      "minimum": 1.0,
+                                      "maximum": 32.0
+                                    },
+                                    "rows": {
+                                      "type": "integer",
+                                      "minimum": 1.0,
+                                      "maximum": 32.0
+                                    },
+                                    "secondary": {
+                                      "type": "string",
+                                      "pattern": "^#[a-fA-F0-9]{6}$",
+                                      "maxLength": 7
+                                    }
+                                  },
+                                  "required": [
+                                    "kind",
+                                    "plane",
+                                    "columns",
+                                    "rows",
+                                    "secondary"
+                                  ],
+                                  "additionalProperties": false,
+                                  "title": "Solid pigment"
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "kind": {
+                                      "type": "string",
+                                      "enum": [
+                                        "checker"
+                                      ]
+                                    },
+                                    "plane": {
+                                      "type": "string",
+                                      "enum": [
+                                        "uv",
+                                        "xy",
+                                        "xz",
+                                        "yz"
+                                      ]
+                                    },
+                                    "columns": {
+                                      "type": "integer",
+                                      "minimum": 1.0,
+                                      "maximum": 32.0
+                                    },
+                                    "rows": {
+                                      "type": "integer",
+                                      "minimum": 1.0,
+                                      "maximum": 32.0
+                                    },
+                                    "secondary": {
+                                      "type": "string",
+                                      "pattern": "^#[a-fA-F0-9]{6}$",
+                                      "maxLength": 7
+                                    }
+                                  },
+                                  "required": [
+                                    "kind",
+                                    "plane",
+                                    "columns",
+                                    "rows",
+                                    "secondary"
+                                  ],
+                                  "additionalProperties": false,
+                                  "title": "Checker pattern",
+                                  "x-features": [
+                                    "recipePatterns.v1"
+                                  ]
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "kind": {
+                                      "type": "string",
+                                      "enum": [
+                                        "stripes"
+                                      ]
+                                    },
+                                    "plane": {
+                                      "type": "string",
+                                      "enum": [
+                                        "uv",
+                                        "xy",
+                                        "xz",
+                                        "yz"
+                                      ]
+                                    },
+                                    "columns": {
+                                      "type": "integer",
+                                      "minimum": 1.0,
+                                      "maximum": 32.0
+                                    },
+                                    "rows": {
+                                      "type": "integer",
+                                      "minimum": 1.0,
+                                      "maximum": 32.0
+                                    },
+                                    "secondary": {
+                                      "type": "string",
+                                      "pattern": "^#[a-fA-F0-9]{6}$",
+                                      "maxLength": 7
+                                    }
+                                  },
+                                  "required": [
+                                    "kind",
+                                    "plane",
+                                    "columns",
+                                    "rows",
+                                    "secondary"
+                                  ],
+                                  "additionalProperties": false,
+                                  "title": "Stripes",
+                                  "x-features": [
+                                    "recipePatterns.v1"
+                                  ]
+                                }
+                              ],
+                              "x-discriminators": [
+                                "kind"
+                              ],
+                              "description": "Two pigments in bounded repeated cells. UV uses the generated mesh coordinates; XY/XZ/YZ use normalized part coordinates (-0.5 to 0.5). The first cell uses the part colour. Stripes alternate along columns; checker also alternates rows. This changes appearance only, without extra geometry, collision or occupancy."
                             },
                             "path": {
                               "type": "array",
@@ -6348,6 +6642,153 @@
                               ],
                               "additionalProperties": false
                             },
+                            "pattern": {
+                              "type": "object",
+                              "oneOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "kind": {
+                                      "type": "string",
+                                      "enum": [
+                                        "solid"
+                                      ]
+                                    },
+                                    "plane": {
+                                      "type": "string",
+                                      "enum": [
+                                        "uv",
+                                        "xy",
+                                        "xz",
+                                        "yz"
+                                      ]
+                                    },
+                                    "columns": {
+                                      "type": "integer",
+                                      "minimum": 1.0,
+                                      "maximum": 32.0
+                                    },
+                                    "rows": {
+                                      "type": "integer",
+                                      "minimum": 1.0,
+                                      "maximum": 32.0
+                                    },
+                                    "secondary": {
+                                      "type": "string",
+                                      "pattern": "^#[a-fA-F0-9]{6}$",
+                                      "maxLength": 7
+                                    }
+                                  },
+                                  "required": [
+                                    "kind",
+                                    "plane",
+                                    "columns",
+                                    "rows",
+                                    "secondary"
+                                  ],
+                                  "additionalProperties": false,
+                                  "title": "Solid pigment"
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "kind": {
+                                      "type": "string",
+                                      "enum": [
+                                        "checker"
+                                      ]
+                                    },
+                                    "plane": {
+                                      "type": "string",
+                                      "enum": [
+                                        "uv",
+                                        "xy",
+                                        "xz",
+                                        "yz"
+                                      ]
+                                    },
+                                    "columns": {
+                                      "type": "integer",
+                                      "minimum": 1.0,
+                                      "maximum": 32.0
+                                    },
+                                    "rows": {
+                                      "type": "integer",
+                                      "minimum": 1.0,
+                                      "maximum": 32.0
+                                    },
+                                    "secondary": {
+                                      "type": "string",
+                                      "pattern": "^#[a-fA-F0-9]{6}$",
+                                      "maxLength": 7
+                                    }
+                                  },
+                                  "required": [
+                                    "kind",
+                                    "plane",
+                                    "columns",
+                                    "rows",
+                                    "secondary"
+                                  ],
+                                  "additionalProperties": false,
+                                  "title": "Checker pattern",
+                                  "x-features": [
+                                    "recipePatterns.v1"
+                                  ]
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "kind": {
+                                      "type": "string",
+                                      "enum": [
+                                        "stripes"
+                                      ]
+                                    },
+                                    "plane": {
+                                      "type": "string",
+                                      "enum": [
+                                        "uv",
+                                        "xy",
+                                        "xz",
+                                        "yz"
+                                      ]
+                                    },
+                                    "columns": {
+                                      "type": "integer",
+                                      "minimum": 1.0,
+                                      "maximum": 32.0
+                                    },
+                                    "rows": {
+                                      "type": "integer",
+                                      "minimum": 1.0,
+                                      "maximum": 32.0
+                                    },
+                                    "secondary": {
+                                      "type": "string",
+                                      "pattern": "^#[a-fA-F0-9]{6}$",
+                                      "maxLength": 7
+                                    }
+                                  },
+                                  "required": [
+                                    "kind",
+                                    "plane",
+                                    "columns",
+                                    "rows",
+                                    "secondary"
+                                  ],
+                                  "additionalProperties": false,
+                                  "title": "Stripes",
+                                  "x-features": [
+                                    "recipePatterns.v1"
+                                  ]
+                                }
+                              ],
+                              "x-discriminators": [
+                                "kind"
+                              ],
+                              "description": "Two pigments in bounded repeated cells. UV uses the generated mesh coordinates; XY/XZ/YZ use normalized part coordinates (-0.5 to 0.5). The first cell uses the part colour. Stripes alternate along columns; checker also alternates rows. This changes appearance only, without extra geometry, collision or occupancy."
+                            },
                             "path": {
                               "type": "array",
                               "items": {
@@ -6564,6 +7005,153 @@
                                 "a"
                               ],
                               "additionalProperties": false
+                            },
+                            "pattern": {
+                              "type": "object",
+                              "oneOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "kind": {
+                                      "type": "string",
+                                      "enum": [
+                                        "solid"
+                                      ]
+                                    },
+                                    "plane": {
+                                      "type": "string",
+                                      "enum": [
+                                        "uv",
+                                        "xy",
+                                        "xz",
+                                        "yz"
+                                      ]
+                                    },
+                                    "columns": {
+                                      "type": "integer",
+                                      "minimum": 1.0,
+                                      "maximum": 32.0
+                                    },
+                                    "rows": {
+                                      "type": "integer",
+                                      "minimum": 1.0,
+                                      "maximum": 32.0
+                                    },
+                                    "secondary": {
+                                      "type": "string",
+                                      "pattern": "^#[a-fA-F0-9]{6}$",
+                                      "maxLength": 7
+                                    }
+                                  },
+                                  "required": [
+                                    "kind",
+                                    "plane",
+                                    "columns",
+                                    "rows",
+                                    "secondary"
+                                  ],
+                                  "additionalProperties": false,
+                                  "title": "Solid pigment"
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "kind": {
+                                      "type": "string",
+                                      "enum": [
+                                        "checker"
+                                      ]
+                                    },
+                                    "plane": {
+                                      "type": "string",
+                                      "enum": [
+                                        "uv",
+                                        "xy",
+                                        "xz",
+                                        "yz"
+                                      ]
+                                    },
+                                    "columns": {
+                                      "type": "integer",
+                                      "minimum": 1.0,
+                                      "maximum": 32.0
+                                    },
+                                    "rows": {
+                                      "type": "integer",
+                                      "minimum": 1.0,
+                                      "maximum": 32.0
+                                    },
+                                    "secondary": {
+                                      "type": "string",
+                                      "pattern": "^#[a-fA-F0-9]{6}$",
+                                      "maxLength": 7
+                                    }
+                                  },
+                                  "required": [
+                                    "kind",
+                                    "plane",
+                                    "columns",
+                                    "rows",
+                                    "secondary"
+                                  ],
+                                  "additionalProperties": false,
+                                  "title": "Checker pattern",
+                                  "x-features": [
+                                    "recipePatterns.v1"
+                                  ]
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "kind": {
+                                      "type": "string",
+                                      "enum": [
+                                        "stripes"
+                                      ]
+                                    },
+                                    "plane": {
+                                      "type": "string",
+                                      "enum": [
+                                        "uv",
+                                        "xy",
+                                        "xz",
+                                        "yz"
+                                      ]
+                                    },
+                                    "columns": {
+                                      "type": "integer",
+                                      "minimum": 1.0,
+                                      "maximum": 32.0
+                                    },
+                                    "rows": {
+                                      "type": "integer",
+                                      "minimum": 1.0,
+                                      "maximum": 32.0
+                                    },
+                                    "secondary": {
+                                      "type": "string",
+                                      "pattern": "^#[a-fA-F0-9]{6}$",
+                                      "maxLength": 7
+                                    }
+                                  },
+                                  "required": [
+                                    "kind",
+                                    "plane",
+                                    "columns",
+                                    "rows",
+                                    "secondary"
+                                  ],
+                                  "additionalProperties": false,
+                                  "title": "Stripes",
+                                  "x-features": [
+                                    "recipePatterns.v1"
+                                  ]
+                                }
+                              ],
+                              "x-discriminators": [
+                                "kind"
+                              ],
+                              "description": "Two pigments in bounded repeated cells. UV uses the generated mesh coordinates; XY/XZ/YZ use normalized part coordinates (-0.5 to 0.5). The first cell uses the part colour. Stripes alternate along columns; checker also alternates rows. This changes appearance only, without extra geometry, collision or occupancy."
                             },
                             "path": {
                               "type": "array",
@@ -7359,6 +7947,13 @@
                         "g": 0.64999997615814209,
                         "b": 0.62999999523162842,
                         "a": 1.0
+                      },
+                      "pattern": {
+                        "kind": "solid",
+                        "plane": "uv",
+                        "secondary": "#FFFFFF",
+                        "columns": 1,
+                        "rows": 1
                       }
                     },
                     {
@@ -7389,6 +7984,13 @@
                         "g": 0.64999997615814209,
                         "b": 0.62999999523162842,
                         "a": 1.0
+                      },
+                      "pattern": {
+                        "kind": "solid",
+                        "plane": "uv",
+                        "secondary": "#FFFFFF",
+                        "columns": 1,
+                        "rows": 1
                       }
                     },
                     {
@@ -7419,6 +8021,13 @@
                         "g": 0.64999997615814209,
                         "b": 0.62999999523162842,
                         "a": 1.0
+                      },
+                      "pattern": {
+                        "kind": "solid",
+                        "plane": "uv",
+                        "secondary": "#FFFFFF",
+                        "columns": 1,
+                        "rows": 1
                       }
                     },
                     {
@@ -7449,6 +8058,13 @@
                         "g": 0.64999997615814209,
                         "b": 0.62999999523162842,
                         "a": 1.0
+                      },
+                      "pattern": {
+                        "kind": "solid",
+                        "plane": "uv",
+                        "secondary": "#FFFFFF",
+                        "columns": 1,
+                        "rows": 1
                       }
                     },
                     {
@@ -7479,6 +8095,13 @@
                         "g": 0.64999997615814209,
                         "b": 0.62999999523162842,
                         "a": 1.0
+                      },
+                      "pattern": {
+                        "kind": "solid",
+                        "plane": "uv",
+                        "secondary": "#FFFFFF",
+                        "columns": 1,
+                        "rows": 1
                       }
                     },
                     {
@@ -7509,6 +8132,13 @@
                         "g": 0.64999997615814209,
                         "b": 0.62999999523162842,
                         "a": 1.0
+                      },
+                      "pattern": {
+                        "kind": "solid",
+                        "plane": "uv",
+                        "secondary": "#FFFFFF",
+                        "columns": 1,
+                        "rows": 1
                       }
                     },
                     {
@@ -7539,6 +8169,13 @@
                         "g": 0.64999997615814209,
                         "b": 0.62999999523162842,
                         "a": 1.0
+                      },
+                      "pattern": {
+                        "kind": "solid",
+                        "plane": "uv",
+                        "secondary": "#FFFFFF",
+                        "columns": 1,
+                        "rows": 1
                       }
                     },
                     {
@@ -7569,6 +8206,13 @@
                         "g": 0.64999997615814209,
                         "b": 0.62999999523162842,
                         "a": 1.0
+                      },
+                      "pattern": {
+                        "kind": "solid",
+                        "plane": "uv",
+                        "secondary": "#FFFFFF",
+                        "columns": 1,
+                        "rows": 1
                       }
                     },
                     {
@@ -7599,6 +8243,13 @@
                         "g": 0.64999997615814209,
                         "b": 0.62999999523162842,
                         "a": 1.0
+                      },
+                      "pattern": {
+                        "kind": "solid",
+                        "plane": "uv",
+                        "secondary": "#FFFFFF",
+                        "columns": 1,
+                        "rows": 1
                       }
                     },
                     {
@@ -7629,6 +8280,13 @@
                         "g": 0.64999997615814209,
                         "b": 0.62999999523162842,
                         "a": 1.0
+                      },
+                      "pattern": {
+                        "kind": "solid",
+                        "plane": "uv",
+                        "secondary": "#FFFFFF",
+                        "columns": 1,
+                        "rows": 1
                       }
                     },
                     {
@@ -7659,6 +8317,13 @@
                         "g": 0.64999997615814209,
                         "b": 0.62999999523162842,
                         "a": 1.0
+                      },
+                      "pattern": {
+                        "kind": "solid",
+                        "plane": "uv",
+                        "secondary": "#FFFFFF",
+                        "columns": 1,
+                        "rows": 1
                       }
                     },
                     {
@@ -7689,6 +8354,13 @@
                         "g": 0.079999998211860657,
                         "b": 0.11999999731779099,
                         "a": 1.0
+                      },
+                      "pattern": {
+                        "kind": "solid",
+                        "plane": "uv",
+                        "secondary": "#FFFFFF",
+                        "columns": 1,
+                        "rows": 1
                       }
                     },
                     {
@@ -7719,6 +8391,13 @@
                         "g": 0.64999997615814209,
                         "b": 0.62999999523162842,
                         "a": 1.0
+                      },
+                      "pattern": {
+                        "kind": "solid",
+                        "plane": "uv",
+                        "secondary": "#FFFFFF",
+                        "columns": 1,
+                        "rows": 1
                       }
                     },
                     {
@@ -7749,6 +8428,13 @@
                         "g": 0.64999997615814209,
                         "b": 0.62999999523162842,
                         "a": 1.0
+                      },
+                      "pattern": {
+                        "kind": "solid",
+                        "plane": "uv",
+                        "secondary": "#FFFFFF",
+                        "columns": 1,
+                        "rows": 1
                       }
                     },
                     {
@@ -7779,6 +8465,13 @@
                         "g": 0.64999997615814209,
                         "b": 0.62999999523162842,
                         "a": 1.0
+                      },
+                      "pattern": {
+                        "kind": "solid",
+                        "plane": "uv",
+                        "secondary": "#FFFFFF",
+                        "columns": 1,
+                        "rows": 1
                       }
                     },
                     {
@@ -7809,6 +8502,13 @@
                         "g": 0.64999997615814209,
                         "b": 0.62999999523162842,
                         "a": 1.0
+                      },
+                      "pattern": {
+                        "kind": "solid",
+                        "plane": "uv",
+                        "secondary": "#FFFFFF",
+                        "columns": 1,
+                        "rows": 1
                       }
                     },
                     {
@@ -7839,6 +8539,13 @@
                         "g": 0.64999997615814209,
                         "b": 0.62999999523162842,
                         "a": 1.0
+                      },
+                      "pattern": {
+                        "kind": "solid",
+                        "plane": "uv",
+                        "secondary": "#FFFFFF",
+                        "columns": 1,
+                        "rows": 1
                       }
                     },
                     {
@@ -7869,6 +8576,13 @@
                         "g": 0.64999997615814209,
                         "b": 0.62999999523162842,
                         "a": 1.0
+                      },
+                      "pattern": {
+                        "kind": "solid",
+                        "plane": "uv",
+                        "secondary": "#FFFFFF",
+                        "columns": 1,
+                        "rows": 1
                       }
                     },
                     {
@@ -7899,6 +8613,13 @@
                         "g": 0.079999998211860657,
                         "b": 0.11999999731779099,
                         "a": 1.0
+                      },
+                      "pattern": {
+                        "kind": "solid",
+                        "plane": "uv",
+                        "secondary": "#FFFFFF",
+                        "columns": 1,
+                        "rows": 1
                       }
                     }
                   ],
@@ -8280,55 +9001,73 @@
                 "enum": [
                   "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496",
                   "b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651",
+                  "ad4a8ef2cae463029e7ea2a10751fae9ddc63331688e3c26cbeee7aaa1d7e4eb",
                   "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33",
                   "791244d43b757f12e7d085fbbff100e5076d981e98038c3ef8cd6d2ee191e79e",
                   "7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca",
                   "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab",
                   "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac",
+                  "842cc9890967c28f53e00821b2d3ef665d094c834d671c1acabeb67c34831469",
                   "835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278",
                   "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950",
                   "9eed7dbf83831c529d199a00ecbee3dc30ccd26892e3cf025dcfcef3a950c347",
                   "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18",
-                  "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99",
+                  "9e6a5394252e6192cc5aaa18aa782d2d55e89c2180aa54325580308ce608d43c",
+                  "2bad6cdc8c706a17ffee8926ef50ff3152d095f32566f2ab3489b3a6a069981f",
+                  "57489e508a5e05219e5f787c7c002dda1946e85704af0c0dc74984c10a56a382",
                   "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22",
                   "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316",
+                  "0d4f8af08ffa09f3cc332f1f3f805db4f87204a4b48388d5f4d0e89694375761",
                   "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71",
+                  "f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae",
                   "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45"
                 ],
                 "x-enum-labels": {
                   "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "Ball",
                   "b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651": "Water basin",
+                  "ad4a8ef2cae463029e7ea2a10751fae9ddc63331688e3c26cbeee7aaa1d7e4eb": "Bishop",
                   "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33": "Building brick",
                   "791244d43b757f12e7d085fbbff100e5076d981e98038c3ef8cd6d2ee191e79e": "Paint brush",
                   "7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca": "Bucket",
                   "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab": "Chalk",
                   "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "Chalkboard",
+                  "842cc9890967c28f53e00821b2d3ef665d094c834d671c1acabeb67c34831469": "Chessboard",
                   "835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278": "Cup",
                   "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950": "Domino",
                   "9eed7dbf83831c529d199a00ecbee3dc30ccd26892e3cf025dcfcef3a950c347": "Eraser",
                   "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18": "Fork",
-                  "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99": "Pawn",
+                  "9e6a5394252e6192cc5aaa18aa782d2d55e89c2180aa54325580308ce608d43c": "King",
+                  "2bad6cdc8c706a17ffee8926ef50ff3152d095f32566f2ab3489b3a6a069981f": "Knight",
+                  "57489e508a5e05219e5f787c7c002dda1946e85704af0c0dc74984c10a56a382": "Pawn",
                   "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22": "Pencil",
                   "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316": "Plate",
+                  "0d4f8af08ffa09f3cc332f1f3f805db4f87204a4b48388d5f4d0e89694375761": "Queen",
                   "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71": "Box robot",
+                  "f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae": "Rook",
                   "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "Spoon"
                 },
                 "x-enum-images": {
                   "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "quest/templates/f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496.png",
                   "b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651": "quest/templates/b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651.png",
+                  "ad4a8ef2cae463029e7ea2a10751fae9ddc63331688e3c26cbeee7aaa1d7e4eb": "quest/templates/ad4a8ef2cae463029e7ea2a10751fae9ddc63331688e3c26cbeee7aaa1d7e4eb.png",
                   "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33": "quest/templates/5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33.png",
                   "791244d43b757f12e7d085fbbff100e5076d981e98038c3ef8cd6d2ee191e79e": "quest/templates/791244d43b757f12e7d085fbbff100e5076d981e98038c3ef8cd6d2ee191e79e.png",
                   "7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca": "quest/templates/7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca.png",
                   "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab": "quest/templates/4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab.png",
                   "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "quest/templates/5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac.png",
+                  "842cc9890967c28f53e00821b2d3ef665d094c834d671c1acabeb67c34831469": "quest/templates/842cc9890967c28f53e00821b2d3ef665d094c834d671c1acabeb67c34831469.png",
                   "835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278": "quest/templates/835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278.png",
                   "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950": "quest/templates/4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950.png",
                   "9eed7dbf83831c529d199a00ecbee3dc30ccd26892e3cf025dcfcef3a950c347": "quest/templates/9eed7dbf83831c529d199a00ecbee3dc30ccd26892e3cf025dcfcef3a950c347.png",
                   "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18": "quest/templates/3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18.png",
-                  "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99": "quest/templates/a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99.png",
+                  "9e6a5394252e6192cc5aaa18aa782d2d55e89c2180aa54325580308ce608d43c": "quest/templates/9e6a5394252e6192cc5aaa18aa782d2d55e89c2180aa54325580308ce608d43c.png",
+                  "2bad6cdc8c706a17ffee8926ef50ff3152d095f32566f2ab3489b3a6a069981f": "quest/templates/2bad6cdc8c706a17ffee8926ef50ff3152d095f32566f2ab3489b3a6a069981f.png",
+                  "57489e508a5e05219e5f787c7c002dda1946e85704af0c0dc74984c10a56a382": "quest/templates/57489e508a5e05219e5f787c7c002dda1946e85704af0c0dc74984c10a56a382.png",
                   "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22": "quest/templates/69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22.png",
                   "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316": "quest/templates/e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316.png",
+                  "0d4f8af08ffa09f3cc332f1f3f805db4f87204a4b48388d5f4d0e89694375761": "quest/templates/0d4f8af08ffa09f3cc332f1f3f805db4f87204a4b48388d5f4d0e89694375761.png",
                   "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71": "quest/templates/7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71.png",
+                  "f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae": "quest/templates/f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae.png",
                   "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "quest/templates/f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45.png"
                 }
               },
@@ -8556,55 +9295,73 @@
                               "enum": [
                                 "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496",
                                 "b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651",
+                                "ad4a8ef2cae463029e7ea2a10751fae9ddc63331688e3c26cbeee7aaa1d7e4eb",
                                 "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33",
                                 "791244d43b757f12e7d085fbbff100e5076d981e98038c3ef8cd6d2ee191e79e",
                                 "7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca",
                                 "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab",
                                 "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac",
+                                "842cc9890967c28f53e00821b2d3ef665d094c834d671c1acabeb67c34831469",
                                 "835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278",
                                 "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950",
                                 "9eed7dbf83831c529d199a00ecbee3dc30ccd26892e3cf025dcfcef3a950c347",
                                 "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18",
-                                "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99",
+                                "9e6a5394252e6192cc5aaa18aa782d2d55e89c2180aa54325580308ce608d43c",
+                                "2bad6cdc8c706a17ffee8926ef50ff3152d095f32566f2ab3489b3a6a069981f",
+                                "57489e508a5e05219e5f787c7c002dda1946e85704af0c0dc74984c10a56a382",
                                 "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22",
                                 "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316",
+                                "0d4f8af08ffa09f3cc332f1f3f805db4f87204a4b48388d5f4d0e89694375761",
                                 "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71",
+                                "f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae",
                                 "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45"
                               ],
                               "x-enum-labels": {
                                 "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "Ball",
                                 "b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651": "Water basin",
+                                "ad4a8ef2cae463029e7ea2a10751fae9ddc63331688e3c26cbeee7aaa1d7e4eb": "Bishop",
                                 "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33": "Building brick",
                                 "791244d43b757f12e7d085fbbff100e5076d981e98038c3ef8cd6d2ee191e79e": "Paint brush",
                                 "7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca": "Bucket",
                                 "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab": "Chalk",
                                 "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "Chalkboard",
+                                "842cc9890967c28f53e00821b2d3ef665d094c834d671c1acabeb67c34831469": "Chessboard",
                                 "835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278": "Cup",
                                 "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950": "Domino",
                                 "9eed7dbf83831c529d199a00ecbee3dc30ccd26892e3cf025dcfcef3a950c347": "Eraser",
                                 "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18": "Fork",
-                                "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99": "Pawn",
+                                "9e6a5394252e6192cc5aaa18aa782d2d55e89c2180aa54325580308ce608d43c": "King",
+                                "2bad6cdc8c706a17ffee8926ef50ff3152d095f32566f2ab3489b3a6a069981f": "Knight",
+                                "57489e508a5e05219e5f787c7c002dda1946e85704af0c0dc74984c10a56a382": "Pawn",
                                 "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22": "Pencil",
                                 "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316": "Plate",
+                                "0d4f8af08ffa09f3cc332f1f3f805db4f87204a4b48388d5f4d0e89694375761": "Queen",
                                 "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71": "Box robot",
+                                "f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae": "Rook",
                                 "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "Spoon"
                               },
                               "x-enum-images": {
                                 "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "quest/templates/f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496.png",
                                 "b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651": "quest/templates/b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651.png",
+                                "ad4a8ef2cae463029e7ea2a10751fae9ddc63331688e3c26cbeee7aaa1d7e4eb": "quest/templates/ad4a8ef2cae463029e7ea2a10751fae9ddc63331688e3c26cbeee7aaa1d7e4eb.png",
                                 "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33": "quest/templates/5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33.png",
                                 "791244d43b757f12e7d085fbbff100e5076d981e98038c3ef8cd6d2ee191e79e": "quest/templates/791244d43b757f12e7d085fbbff100e5076d981e98038c3ef8cd6d2ee191e79e.png",
                                 "7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca": "quest/templates/7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca.png",
                                 "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab": "quest/templates/4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab.png",
                                 "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "quest/templates/5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac.png",
+                                "842cc9890967c28f53e00821b2d3ef665d094c834d671c1acabeb67c34831469": "quest/templates/842cc9890967c28f53e00821b2d3ef665d094c834d671c1acabeb67c34831469.png",
                                 "835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278": "quest/templates/835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278.png",
                                 "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950": "quest/templates/4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950.png",
                                 "9eed7dbf83831c529d199a00ecbee3dc30ccd26892e3cf025dcfcef3a950c347": "quest/templates/9eed7dbf83831c529d199a00ecbee3dc30ccd26892e3cf025dcfcef3a950c347.png",
                                 "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18": "quest/templates/3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18.png",
-                                "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99": "quest/templates/a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99.png",
+                                "9e6a5394252e6192cc5aaa18aa782d2d55e89c2180aa54325580308ce608d43c": "quest/templates/9e6a5394252e6192cc5aaa18aa782d2d55e89c2180aa54325580308ce608d43c.png",
+                                "2bad6cdc8c706a17ffee8926ef50ff3152d095f32566f2ab3489b3a6a069981f": "quest/templates/2bad6cdc8c706a17ffee8926ef50ff3152d095f32566f2ab3489b3a6a069981f.png",
+                                "57489e508a5e05219e5f787c7c002dda1946e85704af0c0dc74984c10a56a382": "quest/templates/57489e508a5e05219e5f787c7c002dda1946e85704af0c0dc74984c10a56a382.png",
                                 "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22": "quest/templates/69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22.png",
                                 "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316": "quest/templates/e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316.png",
+                                "0d4f8af08ffa09f3cc332f1f3f805db4f87204a4b48388d5f4d0e89694375761": "quest/templates/0d4f8af08ffa09f3cc332f1f3f805db4f87204a4b48388d5f4d0e89694375761.png",
                                 "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71": "quest/templates/7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71.png",
+                                "f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae": "quest/templates/f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae.png",
                                 "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "quest/templates/f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45.png"
                               }
                             }
@@ -8776,6 +9533,153 @@
                                               "a"
                                             ],
                                             "additionalProperties": false
+                                          },
+                                          "pattern": {
+                                            "type": "object",
+                                            "oneOf": [
+                                              {
+                                                "type": "object",
+                                                "properties": {
+                                                  "kind": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "solid"
+                                                    ]
+                                                  },
+                                                  "plane": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "uv",
+                                                      "xy",
+                                                      "xz",
+                                                      "yz"
+                                                    ]
+                                                  },
+                                                  "columns": {
+                                                    "type": "integer",
+                                                    "minimum": 1.0,
+                                                    "maximum": 32.0
+                                                  },
+                                                  "rows": {
+                                                    "type": "integer",
+                                                    "minimum": 1.0,
+                                                    "maximum": 32.0
+                                                  },
+                                                  "secondary": {
+                                                    "type": "string",
+                                                    "pattern": "^#[a-fA-F0-9]{6}$",
+                                                    "maxLength": 7
+                                                  }
+                                                },
+                                                "required": [
+                                                  "kind",
+                                                  "plane",
+                                                  "columns",
+                                                  "rows",
+                                                  "secondary"
+                                                ],
+                                                "additionalProperties": false,
+                                                "title": "Solid pigment"
+                                              },
+                                              {
+                                                "type": "object",
+                                                "properties": {
+                                                  "kind": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "checker"
+                                                    ]
+                                                  },
+                                                  "plane": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "uv",
+                                                      "xy",
+                                                      "xz",
+                                                      "yz"
+                                                    ]
+                                                  },
+                                                  "columns": {
+                                                    "type": "integer",
+                                                    "minimum": 1.0,
+                                                    "maximum": 32.0
+                                                  },
+                                                  "rows": {
+                                                    "type": "integer",
+                                                    "minimum": 1.0,
+                                                    "maximum": 32.0
+                                                  },
+                                                  "secondary": {
+                                                    "type": "string",
+                                                    "pattern": "^#[a-fA-F0-9]{6}$",
+                                                    "maxLength": 7
+                                                  }
+                                                },
+                                                "required": [
+                                                  "kind",
+                                                  "plane",
+                                                  "columns",
+                                                  "rows",
+                                                  "secondary"
+                                                ],
+                                                "additionalProperties": false,
+                                                "title": "Checker pattern",
+                                                "x-features": [
+                                                  "recipePatterns.v1"
+                                                ]
+                                              },
+                                              {
+                                                "type": "object",
+                                                "properties": {
+                                                  "kind": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "stripes"
+                                                    ]
+                                                  },
+                                                  "plane": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "uv",
+                                                      "xy",
+                                                      "xz",
+                                                      "yz"
+                                                    ]
+                                                  },
+                                                  "columns": {
+                                                    "type": "integer",
+                                                    "minimum": 1.0,
+                                                    "maximum": 32.0
+                                                  },
+                                                  "rows": {
+                                                    "type": "integer",
+                                                    "minimum": 1.0,
+                                                    "maximum": 32.0
+                                                  },
+                                                  "secondary": {
+                                                    "type": "string",
+                                                    "pattern": "^#[a-fA-F0-9]{6}$",
+                                                    "maxLength": 7
+                                                  }
+                                                },
+                                                "required": [
+                                                  "kind",
+                                                  "plane",
+                                                  "columns",
+                                                  "rows",
+                                                  "secondary"
+                                                ],
+                                                "additionalProperties": false,
+                                                "title": "Stripes",
+                                                "x-features": [
+                                                  "recipePatterns.v1"
+                                                ]
+                                              }
+                                            ],
+                                            "x-discriminators": [
+                                              "kind"
+                                            ],
+                                            "description": "Two pigments in bounded repeated cells. UV uses the generated mesh coordinates; XY/XZ/YZ use normalized part coordinates (-0.5 to 0.5). The first cell uses the part colour. Stripes alternate along columns; checker also alternates rows. This changes appearance only, without extra geometry, collision or occupancy."
                                           },
                                           "path": {
                                             "type": "array",
@@ -8986,6 +9890,153 @@
                                               "a"
                                             ],
                                             "additionalProperties": false
+                                          },
+                                          "pattern": {
+                                            "type": "object",
+                                            "oneOf": [
+                                              {
+                                                "type": "object",
+                                                "properties": {
+                                                  "kind": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "solid"
+                                                    ]
+                                                  },
+                                                  "plane": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "uv",
+                                                      "xy",
+                                                      "xz",
+                                                      "yz"
+                                                    ]
+                                                  },
+                                                  "columns": {
+                                                    "type": "integer",
+                                                    "minimum": 1.0,
+                                                    "maximum": 32.0
+                                                  },
+                                                  "rows": {
+                                                    "type": "integer",
+                                                    "minimum": 1.0,
+                                                    "maximum": 32.0
+                                                  },
+                                                  "secondary": {
+                                                    "type": "string",
+                                                    "pattern": "^#[a-fA-F0-9]{6}$",
+                                                    "maxLength": 7
+                                                  }
+                                                },
+                                                "required": [
+                                                  "kind",
+                                                  "plane",
+                                                  "columns",
+                                                  "rows",
+                                                  "secondary"
+                                                ],
+                                                "additionalProperties": false,
+                                                "title": "Solid pigment"
+                                              },
+                                              {
+                                                "type": "object",
+                                                "properties": {
+                                                  "kind": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "checker"
+                                                    ]
+                                                  },
+                                                  "plane": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "uv",
+                                                      "xy",
+                                                      "xz",
+                                                      "yz"
+                                                    ]
+                                                  },
+                                                  "columns": {
+                                                    "type": "integer",
+                                                    "minimum": 1.0,
+                                                    "maximum": 32.0
+                                                  },
+                                                  "rows": {
+                                                    "type": "integer",
+                                                    "minimum": 1.0,
+                                                    "maximum": 32.0
+                                                  },
+                                                  "secondary": {
+                                                    "type": "string",
+                                                    "pattern": "^#[a-fA-F0-9]{6}$",
+                                                    "maxLength": 7
+                                                  }
+                                                },
+                                                "required": [
+                                                  "kind",
+                                                  "plane",
+                                                  "columns",
+                                                  "rows",
+                                                  "secondary"
+                                                ],
+                                                "additionalProperties": false,
+                                                "title": "Checker pattern",
+                                                "x-features": [
+                                                  "recipePatterns.v1"
+                                                ]
+                                              },
+                                              {
+                                                "type": "object",
+                                                "properties": {
+                                                  "kind": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "stripes"
+                                                    ]
+                                                  },
+                                                  "plane": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "uv",
+                                                      "xy",
+                                                      "xz",
+                                                      "yz"
+                                                    ]
+                                                  },
+                                                  "columns": {
+                                                    "type": "integer",
+                                                    "minimum": 1.0,
+                                                    "maximum": 32.0
+                                                  },
+                                                  "rows": {
+                                                    "type": "integer",
+                                                    "minimum": 1.0,
+                                                    "maximum": 32.0
+                                                  },
+                                                  "secondary": {
+                                                    "type": "string",
+                                                    "pattern": "^#[a-fA-F0-9]{6}$",
+                                                    "maxLength": 7
+                                                  }
+                                                },
+                                                "required": [
+                                                  "kind",
+                                                  "plane",
+                                                  "columns",
+                                                  "rows",
+                                                  "secondary"
+                                                ],
+                                                "additionalProperties": false,
+                                                "title": "Stripes",
+                                                "x-features": [
+                                                  "recipePatterns.v1"
+                                                ]
+                                              }
+                                            ],
+                                            "x-discriminators": [
+                                              "kind"
+                                            ],
+                                            "description": "Two pigments in bounded repeated cells. UV uses the generated mesh coordinates; XY/XZ/YZ use normalized part coordinates (-0.5 to 0.5). The first cell uses the part colour. Stripes alternate along columns; checker also alternates rows. This changes appearance only, without extra geometry, collision or occupancy."
                                           },
                                           "path": {
                                             "type": "array",
@@ -9205,6 +10256,153 @@
                                             ],
                                             "additionalProperties": false
                                           },
+                                          "pattern": {
+                                            "type": "object",
+                                            "oneOf": [
+                                              {
+                                                "type": "object",
+                                                "properties": {
+                                                  "kind": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "solid"
+                                                    ]
+                                                  },
+                                                  "plane": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "uv",
+                                                      "xy",
+                                                      "xz",
+                                                      "yz"
+                                                    ]
+                                                  },
+                                                  "columns": {
+                                                    "type": "integer",
+                                                    "minimum": 1.0,
+                                                    "maximum": 32.0
+                                                  },
+                                                  "rows": {
+                                                    "type": "integer",
+                                                    "minimum": 1.0,
+                                                    "maximum": 32.0
+                                                  },
+                                                  "secondary": {
+                                                    "type": "string",
+                                                    "pattern": "^#[a-fA-F0-9]{6}$",
+                                                    "maxLength": 7
+                                                  }
+                                                },
+                                                "required": [
+                                                  "kind",
+                                                  "plane",
+                                                  "columns",
+                                                  "rows",
+                                                  "secondary"
+                                                ],
+                                                "additionalProperties": false,
+                                                "title": "Solid pigment"
+                                              },
+                                              {
+                                                "type": "object",
+                                                "properties": {
+                                                  "kind": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "checker"
+                                                    ]
+                                                  },
+                                                  "plane": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "uv",
+                                                      "xy",
+                                                      "xz",
+                                                      "yz"
+                                                    ]
+                                                  },
+                                                  "columns": {
+                                                    "type": "integer",
+                                                    "minimum": 1.0,
+                                                    "maximum": 32.0
+                                                  },
+                                                  "rows": {
+                                                    "type": "integer",
+                                                    "minimum": 1.0,
+                                                    "maximum": 32.0
+                                                  },
+                                                  "secondary": {
+                                                    "type": "string",
+                                                    "pattern": "^#[a-fA-F0-9]{6}$",
+                                                    "maxLength": 7
+                                                  }
+                                                },
+                                                "required": [
+                                                  "kind",
+                                                  "plane",
+                                                  "columns",
+                                                  "rows",
+                                                  "secondary"
+                                                ],
+                                                "additionalProperties": false,
+                                                "title": "Checker pattern",
+                                                "x-features": [
+                                                  "recipePatterns.v1"
+                                                ]
+                                              },
+                                              {
+                                                "type": "object",
+                                                "properties": {
+                                                  "kind": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "stripes"
+                                                    ]
+                                                  },
+                                                  "plane": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "uv",
+                                                      "xy",
+                                                      "xz",
+                                                      "yz"
+                                                    ]
+                                                  },
+                                                  "columns": {
+                                                    "type": "integer",
+                                                    "minimum": 1.0,
+                                                    "maximum": 32.0
+                                                  },
+                                                  "rows": {
+                                                    "type": "integer",
+                                                    "minimum": 1.0,
+                                                    "maximum": 32.0
+                                                  },
+                                                  "secondary": {
+                                                    "type": "string",
+                                                    "pattern": "^#[a-fA-F0-9]{6}$",
+                                                    "maxLength": 7
+                                                  }
+                                                },
+                                                "required": [
+                                                  "kind",
+                                                  "plane",
+                                                  "columns",
+                                                  "rows",
+                                                  "secondary"
+                                                ],
+                                                "additionalProperties": false,
+                                                "title": "Stripes",
+                                                "x-features": [
+                                                  "recipePatterns.v1"
+                                                ]
+                                              }
+                                            ],
+                                            "x-discriminators": [
+                                              "kind"
+                                            ],
+                                            "description": "Two pigments in bounded repeated cells. UV uses the generated mesh coordinates; XY/XZ/YZ use normalized part coordinates (-0.5 to 0.5). The first cell uses the part colour. Stripes alternate along columns; checker also alternates rows. This changes appearance only, without extra geometry, collision or occupancy."
+                                          },
                                           "path": {
                                             "type": "array",
                                             "items": {
@@ -9421,6 +10619,153 @@
                                               "a"
                                             ],
                                             "additionalProperties": false
+                                          },
+                                          "pattern": {
+                                            "type": "object",
+                                            "oneOf": [
+                                              {
+                                                "type": "object",
+                                                "properties": {
+                                                  "kind": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "solid"
+                                                    ]
+                                                  },
+                                                  "plane": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "uv",
+                                                      "xy",
+                                                      "xz",
+                                                      "yz"
+                                                    ]
+                                                  },
+                                                  "columns": {
+                                                    "type": "integer",
+                                                    "minimum": 1.0,
+                                                    "maximum": 32.0
+                                                  },
+                                                  "rows": {
+                                                    "type": "integer",
+                                                    "minimum": 1.0,
+                                                    "maximum": 32.0
+                                                  },
+                                                  "secondary": {
+                                                    "type": "string",
+                                                    "pattern": "^#[a-fA-F0-9]{6}$",
+                                                    "maxLength": 7
+                                                  }
+                                                },
+                                                "required": [
+                                                  "kind",
+                                                  "plane",
+                                                  "columns",
+                                                  "rows",
+                                                  "secondary"
+                                                ],
+                                                "additionalProperties": false,
+                                                "title": "Solid pigment"
+                                              },
+                                              {
+                                                "type": "object",
+                                                "properties": {
+                                                  "kind": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "checker"
+                                                    ]
+                                                  },
+                                                  "plane": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "uv",
+                                                      "xy",
+                                                      "xz",
+                                                      "yz"
+                                                    ]
+                                                  },
+                                                  "columns": {
+                                                    "type": "integer",
+                                                    "minimum": 1.0,
+                                                    "maximum": 32.0
+                                                  },
+                                                  "rows": {
+                                                    "type": "integer",
+                                                    "minimum": 1.0,
+                                                    "maximum": 32.0
+                                                  },
+                                                  "secondary": {
+                                                    "type": "string",
+                                                    "pattern": "^#[a-fA-F0-9]{6}$",
+                                                    "maxLength": 7
+                                                  }
+                                                },
+                                                "required": [
+                                                  "kind",
+                                                  "plane",
+                                                  "columns",
+                                                  "rows",
+                                                  "secondary"
+                                                ],
+                                                "additionalProperties": false,
+                                                "title": "Checker pattern",
+                                                "x-features": [
+                                                  "recipePatterns.v1"
+                                                ]
+                                              },
+                                              {
+                                                "type": "object",
+                                                "properties": {
+                                                  "kind": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "stripes"
+                                                    ]
+                                                  },
+                                                  "plane": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "uv",
+                                                      "xy",
+                                                      "xz",
+                                                      "yz"
+                                                    ]
+                                                  },
+                                                  "columns": {
+                                                    "type": "integer",
+                                                    "minimum": 1.0,
+                                                    "maximum": 32.0
+                                                  },
+                                                  "rows": {
+                                                    "type": "integer",
+                                                    "minimum": 1.0,
+                                                    "maximum": 32.0
+                                                  },
+                                                  "secondary": {
+                                                    "type": "string",
+                                                    "pattern": "^#[a-fA-F0-9]{6}$",
+                                                    "maxLength": 7
+                                                  }
+                                                },
+                                                "required": [
+                                                  "kind",
+                                                  "plane",
+                                                  "columns",
+                                                  "rows",
+                                                  "secondary"
+                                                ],
+                                                "additionalProperties": false,
+                                                "title": "Stripes",
+                                                "x-features": [
+                                                  "recipePatterns.v1"
+                                                ]
+                                              }
+                                            ],
+                                            "x-discriminators": [
+                                              "kind"
+                                            ],
+                                            "description": "Two pigments in bounded repeated cells. UV uses the generated mesh coordinates; XY/XZ/YZ use normalized part coordinates (-0.5 to 0.5). The first cell uses the part colour. Stripes alternate along columns; checker also alternates rows. This changes appearance only, without extra geometry, collision or occupancy."
                                           },
                                           "path": {
                                             "type": "array",
@@ -11730,6 +13075,153 @@
                                                         ],
                                                         "additionalProperties": false
                                                       },
+                                                      "pattern": {
+                                                        "type": "object",
+                                                        "oneOf": [
+                                                          {
+                                                            "type": "object",
+                                                            "properties": {
+                                                              "kind": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                  "solid"
+                                                                ]
+                                                              },
+                                                              "plane": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                  "uv",
+                                                                  "xy",
+                                                                  "xz",
+                                                                  "yz"
+                                                                ]
+                                                              },
+                                                              "columns": {
+                                                                "type": "integer",
+                                                                "minimum": 1.0,
+                                                                "maximum": 32.0
+                                                              },
+                                                              "rows": {
+                                                                "type": "integer",
+                                                                "minimum": 1.0,
+                                                                "maximum": 32.0
+                                                              },
+                                                              "secondary": {
+                                                                "type": "string",
+                                                                "pattern": "^#[a-fA-F0-9]{6}$",
+                                                                "maxLength": 7
+                                                              }
+                                                            },
+                                                            "required": [
+                                                              "kind",
+                                                              "plane",
+                                                              "columns",
+                                                              "rows",
+                                                              "secondary"
+                                                            ],
+                                                            "additionalProperties": false,
+                                                            "title": "Solid pigment"
+                                                          },
+                                                          {
+                                                            "type": "object",
+                                                            "properties": {
+                                                              "kind": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                  "checker"
+                                                                ]
+                                                              },
+                                                              "plane": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                  "uv",
+                                                                  "xy",
+                                                                  "xz",
+                                                                  "yz"
+                                                                ]
+                                                              },
+                                                              "columns": {
+                                                                "type": "integer",
+                                                                "minimum": 1.0,
+                                                                "maximum": 32.0
+                                                              },
+                                                              "rows": {
+                                                                "type": "integer",
+                                                                "minimum": 1.0,
+                                                                "maximum": 32.0
+                                                              },
+                                                              "secondary": {
+                                                                "type": "string",
+                                                                "pattern": "^#[a-fA-F0-9]{6}$",
+                                                                "maxLength": 7
+                                                              }
+                                                            },
+                                                            "required": [
+                                                              "kind",
+                                                              "plane",
+                                                              "columns",
+                                                              "rows",
+                                                              "secondary"
+                                                            ],
+                                                            "additionalProperties": false,
+                                                            "title": "Checker pattern",
+                                                            "x-features": [
+                                                              "recipePatterns.v1"
+                                                            ]
+                                                          },
+                                                          {
+                                                            "type": "object",
+                                                            "properties": {
+                                                              "kind": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                  "stripes"
+                                                                ]
+                                                              },
+                                                              "plane": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                  "uv",
+                                                                  "xy",
+                                                                  "xz",
+                                                                  "yz"
+                                                                ]
+                                                              },
+                                                              "columns": {
+                                                                "type": "integer",
+                                                                "minimum": 1.0,
+                                                                "maximum": 32.0
+                                                              },
+                                                              "rows": {
+                                                                "type": "integer",
+                                                                "minimum": 1.0,
+                                                                "maximum": 32.0
+                                                              },
+                                                              "secondary": {
+                                                                "type": "string",
+                                                                "pattern": "^#[a-fA-F0-9]{6}$",
+                                                                "maxLength": 7
+                                                              }
+                                                            },
+                                                            "required": [
+                                                              "kind",
+                                                              "plane",
+                                                              "columns",
+                                                              "rows",
+                                                              "secondary"
+                                                            ],
+                                                            "additionalProperties": false,
+                                                            "title": "Stripes",
+                                                            "x-features": [
+                                                              "recipePatterns.v1"
+                                                            ]
+                                                          }
+                                                        ],
+                                                        "x-discriminators": [
+                                                          "kind"
+                                                        ],
+                                                        "description": "Two pigments in bounded repeated cells. UV uses the generated mesh coordinates; XY/XZ/YZ use normalized part coordinates (-0.5 to 0.5). The first cell uses the part colour. Stripes alternate along columns; checker also alternates rows. This changes appearance only, without extra geometry, collision or occupancy."
+                                                      },
                                                       "path": {
                                                         "type": "array",
                                                         "items": {
@@ -11939,6 +13431,153 @@
                                                           "a"
                                                         ],
                                                         "additionalProperties": false
+                                                      },
+                                                      "pattern": {
+                                                        "type": "object",
+                                                        "oneOf": [
+                                                          {
+                                                            "type": "object",
+                                                            "properties": {
+                                                              "kind": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                  "solid"
+                                                                ]
+                                                              },
+                                                              "plane": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                  "uv",
+                                                                  "xy",
+                                                                  "xz",
+                                                                  "yz"
+                                                                ]
+                                                              },
+                                                              "columns": {
+                                                                "type": "integer",
+                                                                "minimum": 1.0,
+                                                                "maximum": 32.0
+                                                              },
+                                                              "rows": {
+                                                                "type": "integer",
+                                                                "minimum": 1.0,
+                                                                "maximum": 32.0
+                                                              },
+                                                              "secondary": {
+                                                                "type": "string",
+                                                                "pattern": "^#[a-fA-F0-9]{6}$",
+                                                                "maxLength": 7
+                                                              }
+                                                            },
+                                                            "required": [
+                                                              "kind",
+                                                              "plane",
+                                                              "columns",
+                                                              "rows",
+                                                              "secondary"
+                                                            ],
+                                                            "additionalProperties": false,
+                                                            "title": "Solid pigment"
+                                                          },
+                                                          {
+                                                            "type": "object",
+                                                            "properties": {
+                                                              "kind": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                  "checker"
+                                                                ]
+                                                              },
+                                                              "plane": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                  "uv",
+                                                                  "xy",
+                                                                  "xz",
+                                                                  "yz"
+                                                                ]
+                                                              },
+                                                              "columns": {
+                                                                "type": "integer",
+                                                                "minimum": 1.0,
+                                                                "maximum": 32.0
+                                                              },
+                                                              "rows": {
+                                                                "type": "integer",
+                                                                "minimum": 1.0,
+                                                                "maximum": 32.0
+                                                              },
+                                                              "secondary": {
+                                                                "type": "string",
+                                                                "pattern": "^#[a-fA-F0-9]{6}$",
+                                                                "maxLength": 7
+                                                              }
+                                                            },
+                                                            "required": [
+                                                              "kind",
+                                                              "plane",
+                                                              "columns",
+                                                              "rows",
+                                                              "secondary"
+                                                            ],
+                                                            "additionalProperties": false,
+                                                            "title": "Checker pattern",
+                                                            "x-features": [
+                                                              "recipePatterns.v1"
+                                                            ]
+                                                          },
+                                                          {
+                                                            "type": "object",
+                                                            "properties": {
+                                                              "kind": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                  "stripes"
+                                                                ]
+                                                              },
+                                                              "plane": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                  "uv",
+                                                                  "xy",
+                                                                  "xz",
+                                                                  "yz"
+                                                                ]
+                                                              },
+                                                              "columns": {
+                                                                "type": "integer",
+                                                                "minimum": 1.0,
+                                                                "maximum": 32.0
+                                                              },
+                                                              "rows": {
+                                                                "type": "integer",
+                                                                "minimum": 1.0,
+                                                                "maximum": 32.0
+                                                              },
+                                                              "secondary": {
+                                                                "type": "string",
+                                                                "pattern": "^#[a-fA-F0-9]{6}$",
+                                                                "maxLength": 7
+                                                              }
+                                                            },
+                                                            "required": [
+                                                              "kind",
+                                                              "plane",
+                                                              "columns",
+                                                              "rows",
+                                                              "secondary"
+                                                            ],
+                                                            "additionalProperties": false,
+                                                            "title": "Stripes",
+                                                            "x-features": [
+                                                              "recipePatterns.v1"
+                                                            ]
+                                                          }
+                                                        ],
+                                                        "x-discriminators": [
+                                                          "kind"
+                                                        ],
+                                                        "description": "Two pigments in bounded repeated cells. UV uses the generated mesh coordinates; XY/XZ/YZ use normalized part coordinates (-0.5 to 0.5). The first cell uses the part colour. Stripes alternate along columns; checker also alternates rows. This changes appearance only, without extra geometry, collision or occupancy."
                                                       },
                                                       "path": {
                                                         "type": "array",
@@ -12158,6 +13797,153 @@
                                                         ],
                                                         "additionalProperties": false
                                                       },
+                                                      "pattern": {
+                                                        "type": "object",
+                                                        "oneOf": [
+                                                          {
+                                                            "type": "object",
+                                                            "properties": {
+                                                              "kind": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                  "solid"
+                                                                ]
+                                                              },
+                                                              "plane": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                  "uv",
+                                                                  "xy",
+                                                                  "xz",
+                                                                  "yz"
+                                                                ]
+                                                              },
+                                                              "columns": {
+                                                                "type": "integer",
+                                                                "minimum": 1.0,
+                                                                "maximum": 32.0
+                                                              },
+                                                              "rows": {
+                                                                "type": "integer",
+                                                                "minimum": 1.0,
+                                                                "maximum": 32.0
+                                                              },
+                                                              "secondary": {
+                                                                "type": "string",
+                                                                "pattern": "^#[a-fA-F0-9]{6}$",
+                                                                "maxLength": 7
+                                                              }
+                                                            },
+                                                            "required": [
+                                                              "kind",
+                                                              "plane",
+                                                              "columns",
+                                                              "rows",
+                                                              "secondary"
+                                                            ],
+                                                            "additionalProperties": false,
+                                                            "title": "Solid pigment"
+                                                          },
+                                                          {
+                                                            "type": "object",
+                                                            "properties": {
+                                                              "kind": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                  "checker"
+                                                                ]
+                                                              },
+                                                              "plane": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                  "uv",
+                                                                  "xy",
+                                                                  "xz",
+                                                                  "yz"
+                                                                ]
+                                                              },
+                                                              "columns": {
+                                                                "type": "integer",
+                                                                "minimum": 1.0,
+                                                                "maximum": 32.0
+                                                              },
+                                                              "rows": {
+                                                                "type": "integer",
+                                                                "minimum": 1.0,
+                                                                "maximum": 32.0
+                                                              },
+                                                              "secondary": {
+                                                                "type": "string",
+                                                                "pattern": "^#[a-fA-F0-9]{6}$",
+                                                                "maxLength": 7
+                                                              }
+                                                            },
+                                                            "required": [
+                                                              "kind",
+                                                              "plane",
+                                                              "columns",
+                                                              "rows",
+                                                              "secondary"
+                                                            ],
+                                                            "additionalProperties": false,
+                                                            "title": "Checker pattern",
+                                                            "x-features": [
+                                                              "recipePatterns.v1"
+                                                            ]
+                                                          },
+                                                          {
+                                                            "type": "object",
+                                                            "properties": {
+                                                              "kind": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                  "stripes"
+                                                                ]
+                                                              },
+                                                              "plane": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                  "uv",
+                                                                  "xy",
+                                                                  "xz",
+                                                                  "yz"
+                                                                ]
+                                                              },
+                                                              "columns": {
+                                                                "type": "integer",
+                                                                "minimum": 1.0,
+                                                                "maximum": 32.0
+                                                              },
+                                                              "rows": {
+                                                                "type": "integer",
+                                                                "minimum": 1.0,
+                                                                "maximum": 32.0
+                                                              },
+                                                              "secondary": {
+                                                                "type": "string",
+                                                                "pattern": "^#[a-fA-F0-9]{6}$",
+                                                                "maxLength": 7
+                                                              }
+                                                            },
+                                                            "required": [
+                                                              "kind",
+                                                              "plane",
+                                                              "columns",
+                                                              "rows",
+                                                              "secondary"
+                                                            ],
+                                                            "additionalProperties": false,
+                                                            "title": "Stripes",
+                                                            "x-features": [
+                                                              "recipePatterns.v1"
+                                                            ]
+                                                          }
+                                                        ],
+                                                        "x-discriminators": [
+                                                          "kind"
+                                                        ],
+                                                        "description": "Two pigments in bounded repeated cells. UV uses the generated mesh coordinates; XY/XZ/YZ use normalized part coordinates (-0.5 to 0.5). The first cell uses the part colour. Stripes alternate along columns; checker also alternates rows. This changes appearance only, without extra geometry, collision or occupancy."
+                                                      },
                                                       "path": {
                                                         "type": "array",
                                                         "items": {
@@ -12374,6 +14160,153 @@
                                                           "a"
                                                         ],
                                                         "additionalProperties": false
+                                                      },
+                                                      "pattern": {
+                                                        "type": "object",
+                                                        "oneOf": [
+                                                          {
+                                                            "type": "object",
+                                                            "properties": {
+                                                              "kind": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                  "solid"
+                                                                ]
+                                                              },
+                                                              "plane": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                  "uv",
+                                                                  "xy",
+                                                                  "xz",
+                                                                  "yz"
+                                                                ]
+                                                              },
+                                                              "columns": {
+                                                                "type": "integer",
+                                                                "minimum": 1.0,
+                                                                "maximum": 32.0
+                                                              },
+                                                              "rows": {
+                                                                "type": "integer",
+                                                                "minimum": 1.0,
+                                                                "maximum": 32.0
+                                                              },
+                                                              "secondary": {
+                                                                "type": "string",
+                                                                "pattern": "^#[a-fA-F0-9]{6}$",
+                                                                "maxLength": 7
+                                                              }
+                                                            },
+                                                            "required": [
+                                                              "kind",
+                                                              "plane",
+                                                              "columns",
+                                                              "rows",
+                                                              "secondary"
+                                                            ],
+                                                            "additionalProperties": false,
+                                                            "title": "Solid pigment"
+                                                          },
+                                                          {
+                                                            "type": "object",
+                                                            "properties": {
+                                                              "kind": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                  "checker"
+                                                                ]
+                                                              },
+                                                              "plane": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                  "uv",
+                                                                  "xy",
+                                                                  "xz",
+                                                                  "yz"
+                                                                ]
+                                                              },
+                                                              "columns": {
+                                                                "type": "integer",
+                                                                "minimum": 1.0,
+                                                                "maximum": 32.0
+                                                              },
+                                                              "rows": {
+                                                                "type": "integer",
+                                                                "minimum": 1.0,
+                                                                "maximum": 32.0
+                                                              },
+                                                              "secondary": {
+                                                                "type": "string",
+                                                                "pattern": "^#[a-fA-F0-9]{6}$",
+                                                                "maxLength": 7
+                                                              }
+                                                            },
+                                                            "required": [
+                                                              "kind",
+                                                              "plane",
+                                                              "columns",
+                                                              "rows",
+                                                              "secondary"
+                                                            ],
+                                                            "additionalProperties": false,
+                                                            "title": "Checker pattern",
+                                                            "x-features": [
+                                                              "recipePatterns.v1"
+                                                            ]
+                                                          },
+                                                          {
+                                                            "type": "object",
+                                                            "properties": {
+                                                              "kind": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                  "stripes"
+                                                                ]
+                                                              },
+                                                              "plane": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                  "uv",
+                                                                  "xy",
+                                                                  "xz",
+                                                                  "yz"
+                                                                ]
+                                                              },
+                                                              "columns": {
+                                                                "type": "integer",
+                                                                "minimum": 1.0,
+                                                                "maximum": 32.0
+                                                              },
+                                                              "rows": {
+                                                                "type": "integer",
+                                                                "minimum": 1.0,
+                                                                "maximum": 32.0
+                                                              },
+                                                              "secondary": {
+                                                                "type": "string",
+                                                                "pattern": "^#[a-fA-F0-9]{6}$",
+                                                                "maxLength": 7
+                                                              }
+                                                            },
+                                                            "required": [
+                                                              "kind",
+                                                              "plane",
+                                                              "columns",
+                                                              "rows",
+                                                              "secondary"
+                                                            ],
+                                                            "additionalProperties": false,
+                                                            "title": "Stripes",
+                                                            "x-features": [
+                                                              "recipePatterns.v1"
+                                                            ]
+                                                          }
+                                                        ],
+                                                        "x-discriminators": [
+                                                          "kind"
+                                                        ],
+                                                        "description": "Two pigments in bounded repeated cells. UV uses the generated mesh coordinates; XY/XZ/YZ use normalized part coordinates (-0.5 to 0.5). The first cell uses the part colour. Stripes alternate along columns; checker also alternates rows. This changes appearance only, without extra geometry, collision or occupancy."
                                                       },
                                                       "path": {
                                                         "type": "array",
@@ -17230,6 +19163,153 @@
                       ],
                       "additionalProperties": false
                     },
+                    "pattern": {
+                      "type": "object",
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "solid"
+                              ]
+                            },
+                            "plane": {
+                              "type": "string",
+                              "enum": [
+                                "uv",
+                                "xy",
+                                "xz",
+                                "yz"
+                              ]
+                            },
+                            "columns": {
+                              "type": "integer",
+                              "minimum": 1.0,
+                              "maximum": 32.0
+                            },
+                            "rows": {
+                              "type": "integer",
+                              "minimum": 1.0,
+                              "maximum": 32.0
+                            },
+                            "secondary": {
+                              "type": "string",
+                              "pattern": "^#[a-fA-F0-9]{6}$",
+                              "maxLength": 7
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "plane",
+                            "columns",
+                            "rows",
+                            "secondary"
+                          ],
+                          "additionalProperties": false,
+                          "title": "Solid pigment"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "checker"
+                              ]
+                            },
+                            "plane": {
+                              "type": "string",
+                              "enum": [
+                                "uv",
+                                "xy",
+                                "xz",
+                                "yz"
+                              ]
+                            },
+                            "columns": {
+                              "type": "integer",
+                              "minimum": 1.0,
+                              "maximum": 32.0
+                            },
+                            "rows": {
+                              "type": "integer",
+                              "minimum": 1.0,
+                              "maximum": 32.0
+                            },
+                            "secondary": {
+                              "type": "string",
+                              "pattern": "^#[a-fA-F0-9]{6}$",
+                              "maxLength": 7
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "plane",
+                            "columns",
+                            "rows",
+                            "secondary"
+                          ],
+                          "additionalProperties": false,
+                          "title": "Checker pattern",
+                          "x-features": [
+                            "recipePatterns.v1"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "stripes"
+                              ]
+                            },
+                            "plane": {
+                              "type": "string",
+                              "enum": [
+                                "uv",
+                                "xy",
+                                "xz",
+                                "yz"
+                              ]
+                            },
+                            "columns": {
+                              "type": "integer",
+                              "minimum": 1.0,
+                              "maximum": 32.0
+                            },
+                            "rows": {
+                              "type": "integer",
+                              "minimum": 1.0,
+                              "maximum": 32.0
+                            },
+                            "secondary": {
+                              "type": "string",
+                              "pattern": "^#[a-fA-F0-9]{6}$",
+                              "maxLength": 7
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "plane",
+                            "columns",
+                            "rows",
+                            "secondary"
+                          ],
+                          "additionalProperties": false,
+                          "title": "Stripes",
+                          "x-features": [
+                            "recipePatterns.v1"
+                          ]
+                        }
+                      ],
+                      "x-discriminators": [
+                        "kind"
+                      ],
+                      "description": "Two pigments in bounded repeated cells. UV uses the generated mesh coordinates; XY/XZ/YZ use normalized part coordinates (-0.5 to 0.5). The first cell uses the part colour. Stripes alternate along columns; checker also alternates rows. This changes appearance only, without extra geometry, collision or occupancy."
+                    },
                     "path": {
                       "type": "array",
                       "items": {
@@ -17439,6 +19519,153 @@
                         "a"
                       ],
                       "additionalProperties": false
+                    },
+                    "pattern": {
+                      "type": "object",
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "solid"
+                              ]
+                            },
+                            "plane": {
+                              "type": "string",
+                              "enum": [
+                                "uv",
+                                "xy",
+                                "xz",
+                                "yz"
+                              ]
+                            },
+                            "columns": {
+                              "type": "integer",
+                              "minimum": 1.0,
+                              "maximum": 32.0
+                            },
+                            "rows": {
+                              "type": "integer",
+                              "minimum": 1.0,
+                              "maximum": 32.0
+                            },
+                            "secondary": {
+                              "type": "string",
+                              "pattern": "^#[a-fA-F0-9]{6}$",
+                              "maxLength": 7
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "plane",
+                            "columns",
+                            "rows",
+                            "secondary"
+                          ],
+                          "additionalProperties": false,
+                          "title": "Solid pigment"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "checker"
+                              ]
+                            },
+                            "plane": {
+                              "type": "string",
+                              "enum": [
+                                "uv",
+                                "xy",
+                                "xz",
+                                "yz"
+                              ]
+                            },
+                            "columns": {
+                              "type": "integer",
+                              "minimum": 1.0,
+                              "maximum": 32.0
+                            },
+                            "rows": {
+                              "type": "integer",
+                              "minimum": 1.0,
+                              "maximum": 32.0
+                            },
+                            "secondary": {
+                              "type": "string",
+                              "pattern": "^#[a-fA-F0-9]{6}$",
+                              "maxLength": 7
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "plane",
+                            "columns",
+                            "rows",
+                            "secondary"
+                          ],
+                          "additionalProperties": false,
+                          "title": "Checker pattern",
+                          "x-features": [
+                            "recipePatterns.v1"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "stripes"
+                              ]
+                            },
+                            "plane": {
+                              "type": "string",
+                              "enum": [
+                                "uv",
+                                "xy",
+                                "xz",
+                                "yz"
+                              ]
+                            },
+                            "columns": {
+                              "type": "integer",
+                              "minimum": 1.0,
+                              "maximum": 32.0
+                            },
+                            "rows": {
+                              "type": "integer",
+                              "minimum": 1.0,
+                              "maximum": 32.0
+                            },
+                            "secondary": {
+                              "type": "string",
+                              "pattern": "^#[a-fA-F0-9]{6}$",
+                              "maxLength": 7
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "plane",
+                            "columns",
+                            "rows",
+                            "secondary"
+                          ],
+                          "additionalProperties": false,
+                          "title": "Stripes",
+                          "x-features": [
+                            "recipePatterns.v1"
+                          ]
+                        }
+                      ],
+                      "x-discriminators": [
+                        "kind"
+                      ],
+                      "description": "Two pigments in bounded repeated cells. UV uses the generated mesh coordinates; XY/XZ/YZ use normalized part coordinates (-0.5 to 0.5). The first cell uses the part colour. Stripes alternate along columns; checker also alternates rows. This changes appearance only, without extra geometry, collision or occupancy."
                     },
                     "path": {
                       "type": "array",
@@ -17658,6 +19885,153 @@
                       ],
                       "additionalProperties": false
                     },
+                    "pattern": {
+                      "type": "object",
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "solid"
+                              ]
+                            },
+                            "plane": {
+                              "type": "string",
+                              "enum": [
+                                "uv",
+                                "xy",
+                                "xz",
+                                "yz"
+                              ]
+                            },
+                            "columns": {
+                              "type": "integer",
+                              "minimum": 1.0,
+                              "maximum": 32.0
+                            },
+                            "rows": {
+                              "type": "integer",
+                              "minimum": 1.0,
+                              "maximum": 32.0
+                            },
+                            "secondary": {
+                              "type": "string",
+                              "pattern": "^#[a-fA-F0-9]{6}$",
+                              "maxLength": 7
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "plane",
+                            "columns",
+                            "rows",
+                            "secondary"
+                          ],
+                          "additionalProperties": false,
+                          "title": "Solid pigment"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "checker"
+                              ]
+                            },
+                            "plane": {
+                              "type": "string",
+                              "enum": [
+                                "uv",
+                                "xy",
+                                "xz",
+                                "yz"
+                              ]
+                            },
+                            "columns": {
+                              "type": "integer",
+                              "minimum": 1.0,
+                              "maximum": 32.0
+                            },
+                            "rows": {
+                              "type": "integer",
+                              "minimum": 1.0,
+                              "maximum": 32.0
+                            },
+                            "secondary": {
+                              "type": "string",
+                              "pattern": "^#[a-fA-F0-9]{6}$",
+                              "maxLength": 7
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "plane",
+                            "columns",
+                            "rows",
+                            "secondary"
+                          ],
+                          "additionalProperties": false,
+                          "title": "Checker pattern",
+                          "x-features": [
+                            "recipePatterns.v1"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "stripes"
+                              ]
+                            },
+                            "plane": {
+                              "type": "string",
+                              "enum": [
+                                "uv",
+                                "xy",
+                                "xz",
+                                "yz"
+                              ]
+                            },
+                            "columns": {
+                              "type": "integer",
+                              "minimum": 1.0,
+                              "maximum": 32.0
+                            },
+                            "rows": {
+                              "type": "integer",
+                              "minimum": 1.0,
+                              "maximum": 32.0
+                            },
+                            "secondary": {
+                              "type": "string",
+                              "pattern": "^#[a-fA-F0-9]{6}$",
+                              "maxLength": 7
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "plane",
+                            "columns",
+                            "rows",
+                            "secondary"
+                          ],
+                          "additionalProperties": false,
+                          "title": "Stripes",
+                          "x-features": [
+                            "recipePatterns.v1"
+                          ]
+                        }
+                      ],
+                      "x-discriminators": [
+                        "kind"
+                      ],
+                      "description": "Two pigments in bounded repeated cells. UV uses the generated mesh coordinates; XY/XZ/YZ use normalized part coordinates (-0.5 to 0.5). The first cell uses the part colour. Stripes alternate along columns; checker also alternates rows. This changes appearance only, without extra geometry, collision or occupancy."
+                    },
                     "path": {
                       "type": "array",
                       "items": {
@@ -17874,6 +20248,153 @@
                         "a"
                       ],
                       "additionalProperties": false
+                    },
+                    "pattern": {
+                      "type": "object",
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "solid"
+                              ]
+                            },
+                            "plane": {
+                              "type": "string",
+                              "enum": [
+                                "uv",
+                                "xy",
+                                "xz",
+                                "yz"
+                              ]
+                            },
+                            "columns": {
+                              "type": "integer",
+                              "minimum": 1.0,
+                              "maximum": 32.0
+                            },
+                            "rows": {
+                              "type": "integer",
+                              "minimum": 1.0,
+                              "maximum": 32.0
+                            },
+                            "secondary": {
+                              "type": "string",
+                              "pattern": "^#[a-fA-F0-9]{6}$",
+                              "maxLength": 7
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "plane",
+                            "columns",
+                            "rows",
+                            "secondary"
+                          ],
+                          "additionalProperties": false,
+                          "title": "Solid pigment"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "checker"
+                              ]
+                            },
+                            "plane": {
+                              "type": "string",
+                              "enum": [
+                                "uv",
+                                "xy",
+                                "xz",
+                                "yz"
+                              ]
+                            },
+                            "columns": {
+                              "type": "integer",
+                              "minimum": 1.0,
+                              "maximum": 32.0
+                            },
+                            "rows": {
+                              "type": "integer",
+                              "minimum": 1.0,
+                              "maximum": 32.0
+                            },
+                            "secondary": {
+                              "type": "string",
+                              "pattern": "^#[a-fA-F0-9]{6}$",
+                              "maxLength": 7
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "plane",
+                            "columns",
+                            "rows",
+                            "secondary"
+                          ],
+                          "additionalProperties": false,
+                          "title": "Checker pattern",
+                          "x-features": [
+                            "recipePatterns.v1"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "stripes"
+                              ]
+                            },
+                            "plane": {
+                              "type": "string",
+                              "enum": [
+                                "uv",
+                                "xy",
+                                "xz",
+                                "yz"
+                              ]
+                            },
+                            "columns": {
+                              "type": "integer",
+                              "minimum": 1.0,
+                              "maximum": 32.0
+                            },
+                            "rows": {
+                              "type": "integer",
+                              "minimum": 1.0,
+                              "maximum": 32.0
+                            },
+                            "secondary": {
+                              "type": "string",
+                              "pattern": "^#[a-fA-F0-9]{6}$",
+                              "maxLength": 7
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "plane",
+                            "columns",
+                            "rows",
+                            "secondary"
+                          ],
+                          "additionalProperties": false,
+                          "title": "Stripes",
+                          "x-features": [
+                            "recipePatterns.v1"
+                          ]
+                        }
+                      ],
+                      "x-discriminators": [
+                        "kind"
+                      ],
+                      "description": "Two pigments in bounded repeated cells. UV uses the generated mesh coordinates; XY/XZ/YZ use normalized part coordinates (-0.5 to 0.5). The first cell uses the part colour. Stripes alternate along columns; checker also alternates rows. This changes appearance only, without extra geometry, collision or occupancy."
                     },
                     "path": {
                       "type": "array",
@@ -24734,13 +27255,22 @@
                   "b": "number",
                   "a": "number"
                 }
+              },
+              "pattern": {
+                "record": {
+                  "kind": "text",
+                  "plane": "text",
+                  "columns": "number",
+                  "rows": "number",
+                  "secondary": "text"
+                }
               }
             }
           }
         }
       },
       "label": "Recipe part",
-      "description": "Read one exact saved part by index and revision. Root parent is empty text. Coordinates/dimensions are local metres; rotation is a unit quaternion. All 32 base part records remain readable without simplification. For lathe, extrusion or sweep geometry also read object.recipe.profile; sweeps additionally use object.recipe.path, all at the same revision. This base record omits profile, segments and path. Missing targets, stale revisions and later indexes are unavailable.",
+      "description": "Read one exact saved part by index and revision. Root parent is empty text. Coordinates/dimensions are local metres; rotation is a unit quaternion. All 32 base part records remain readable without simplification. For lathe, extrusion or sweep geometry also read object.recipe.profile; sweeps additionally use object.recipe.path, all at the same revision. The pattern record includes the exact saved kind, plane, column/row counts and alternate pigment hex colour; absent patterns read as solid UV with 1x1 cells and white alternate pigment. This base record omits profile, segments and path. Missing targets, stale revisions and later indexes are unavailable.",
       "input": {
         "type": "object",
         "properties": {
@@ -27114,7 +29644,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "44c1ca0fdc635a6e04ca96e50cc0f6c2bb1a0c15d6b65eb511030135db389c9b"
+      "sha256": "5c8309d960df565758d30010d2dfaf167125e9dc9f855b964979870a697501ef"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -27138,11 +29668,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "1dddf519f07f55209d9ee878e92824efadcf9492f6dc56e28923baf0cc0928fe"
+      "sha256": "28c8b9b32bf79287a358734dfb5e61ca4ecbbca0f809a731414af61e4f6324c8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
-      "sha256": "7bbe70691797e6bd19f0413eba96e9d61f5cf379e7f53c75a32733725823a6d1"
+      "sha256": "a25825f2980a42b692d015dab5f59c10146ea48a67c7564b2200464a1b87fb3c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleMemory.cs",
@@ -27158,11 +29688,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveCapture.cs",
-      "sha256": "8f81406b2c1eaf2afd056c6aa835b5a02381f66f75cf74b3ea2eb56b4d3eaf93"
+      "sha256": "ce9fe5fb67d24ff37437e4ecd411d360852b5831ba3007c969ae12d1c1f57de6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveSnapshot.cs",
-      "sha256": "f5115c0a40822ad846bb8507a1c061f992d9e8b9e70d3470d731f1eea6abaa8b"
+      "sha256": "042a8e2defe8005734a7eaaa0d7f12152f363db417e3b2c1b2f3fe1805163b50"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.Retention.cs",
@@ -27270,7 +29800,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRecipe.cs",
-      "sha256": "d8ef912ce38d5ee8688a858f7a33c32e0c8a2e27cd155e2164d9f6465d7f60b2"
+      "sha256": "a442d272f4d097c7d637cec37a7da5183753560bdc8d7867baae09c0837ea864"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeLathe.cs",
@@ -27293,6 +29823,14 @@
       "sha256": "57992b0fb6f119c3b8fdcda99d34b484356c3d2982070326c0fee9c4a5c24403"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipePattern.cs",
+      "sha256": "88aaec3f57bfb5d83124cd4bcaac54a589a9a372f7c623b1b4a2ac4a66e3ba06"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/Watercolor.shader",
+      "sha256": "be87d4cecc283cf498e3b075343fb81b72afae567f4a354b994915824fb9e590"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomViewCapture.cs",
       "sha256": "1a6093e6f18c1ad57d190773f94026e82941926c1fbe2631efe0774dcb312973"
     },
@@ -27310,7 +29848,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeObject.cs",
-      "sha256": "f52c8d3b2e8849a5e073c729eea367eabf6dbd8ef7b531ce97beabeb02c0eef2"
+      "sha256": "4dae660f1517a0a9c8332e71c04d880c1fd77267550e56a7987583dd87ad05a7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipePartPlayback.cs",
@@ -27482,7 +30020,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "0155443f14b750b97c9e6aed5be4d09fc71311136c8b8b9e13cc487432daaff8"
+      "sha256": "4935de5d65fb3cff0dab5253894c205f96a49990dae969764752fcc001223228"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedDrawing.cs",
@@ -27626,7 +30164,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationTemplates.cs",
-      "sha256": "6a83a96746d6ba6a5769244a1a71103567b30005adb1f6eaf4d142f520cdb3f0"
+      "sha256": "508687b7886bab83d2c8502f9dba6fc7ecd4163e8a6d73575c99bee84e0f46e8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLayout.cs",
@@ -27686,7 +30224,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
-      "sha256": "2801ab2417cf4dd926577030c41af75b3dbd0ceae0055e87082b773f72fb2637"
+      "sha256": "327e90e503b353e3347c006a4f59338c5d61e3163daa29e7be70516306b71f09"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityStepAdapter.cs",
@@ -27850,7 +30388,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RecipeEditFacts.cs",
-      "sha256": "725d667330467915766be7a366c5cfaee754a5db1e0e780fb8dc7f21a32c716c"
+      "sha256": "8e6cae6de1fd96558f30978d8cb3015a5b70bb70fcf99649a9245932a0621d52"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RecipePartAnimationCapability.cs",
@@ -27961,6 +30499,10 @@
       "sha256": "b1e07cfb3c94b1711784d6625b2fd26907de465b578033949173057f7bf63651"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/bishop.json",
+      "sha256": "ad4a8ef2cae463029e7ea2a10751fae9ddc63331688e3c26cbeee7aaa1d7e4eb"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/brick.json",
       "sha256": "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33"
     },
@@ -27981,6 +30523,10 @@
       "sha256": "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/chessboard.json",
+      "sha256": "842cc9890967c28f53e00821b2d3ef665d094c834d671c1acabeb67c34831469"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/cup.json",
       "sha256": "835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278"
     },
@@ -27997,8 +30543,16 @@
       "sha256": "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/king.json",
+      "sha256": "9e6a5394252e6192cc5aaa18aa782d2d55e89c2180aa54325580308ce608d43c"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/knight.json",
+      "sha256": "2bad6cdc8c706a17ffee8926ef50ff3152d095f32566f2ab3489b3a6a069981f"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/pawn.json",
-      "sha256": "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99"
+      "sha256": "57489e508a5e05219e5f787c7c002dda1946e85704af0c0dc74984c10a56a382"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/pencil.json",
@@ -28009,12 +30563,28 @@
       "sha256": "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/queen.json",
+      "sha256": "0d4f8af08ffa09f3cc332f1f3f805db4f87204a4b48388d5f4d0e89694375761"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/robot.json",
       "sha256": "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/rook.json",
+      "sha256": "f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/spoon.json",
       "sha256": "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Resources/Programs/Modules/ChessBlack.json",
+      "sha256": "5fb8b0b4d1c6d4dd144c4e87ff414fa01b60fdc2eac28e14602557ea0305de93"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Resources/Programs/Modules/ChessWhite.json",
+      "sha256": "6a3173cb4095c00c459d6d922dd894a30d99e4b0831119fa161a978ca2e1eb90"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Programs/Modules/SmallFort.json",

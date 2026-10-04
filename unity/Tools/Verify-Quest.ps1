@@ -97,8 +97,8 @@ $nativeCatalog = Join-Path $logRoot 'behaviour-catalog.json'
 $sharedCatalog = Join-Path $repoRoot 'shared/generated/behaviourCatalog.json'
 if (!(Test-Path -LiteralPath $nativeCatalog)) { throw 'Native behaviour catalog was not exported.' }
 if ($UpdateBehaviourCatalog) { Copy-Item -LiteralPath $nativeCatalog -Destination $sharedCatalog -Force }
-$nativeJson = Get-Content -LiteralPath $nativeCatalog -Raw | ConvertFrom-Json | ConvertTo-Json -Depth 30 -Compress
-$sharedJson = Get-Content -LiteralPath $sharedCatalog -Raw | ConvertFrom-Json | ConvertTo-Json -Depth 30 -Compress
+$nativeJson = Get-Content -LiteralPath $nativeCatalog -Raw | ConvertFrom-Json | ConvertTo-Json -Depth 100 -Compress
+$sharedJson = Get-Content -LiteralPath $sharedCatalog -Raw | ConvertFrom-Json | ConvertTo-Json -Depth 100 -Compress
 if ($nativeJson -cne $sharedJson) { throw 'Behaviour catalog drift. Review registrations, then run Verify-Quest.ps1 with -UpdateBehaviourCatalog.' }
 $env:MAESTRO_BEHAVIOUR_CATALOG = $sharedCatalog
 $env:MAESTRO_RECEIPT_EVIDENCE = Join-Path $logRoot 'receipt-evidence'

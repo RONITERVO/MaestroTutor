@@ -3,7 +3,7 @@
   "version": 1,
   "id": "pawn",
   "name": "Pawn",
-  "description": "Simple editable chess pawn. No board or chess-specific rules are attached.",
+  "description": "Editable chess pawn. Grip to move; Foot aligns with board squares. Game rules are optional programs.",
   "tags": [
     "game",
     "chess",
@@ -21,13 +21,13 @@
           "shape": "lathe",
           "position": {
             "x": 0,
-            "y": 0,
+            "y": 0.0375,
             "z": 0
           },
           "size": {
-            "x": 0.08,
-            "y": 0.14,
-            "z": 0.08
+            "x": 0.048,
+            "y": 0.075,
+            "z": 0.048
           },
           "rotation": {
             "x": 0.0,
@@ -37,9 +37,9 @@
           },
           "parent": null,
           "color": {
-            "r": 0.92,
-            "g": 0.6,
-            "b": 0.12,
+            "r": 1,
+            "g": 1,
+            "b": 1,
             "a": 1
           },
           "profile": [
@@ -96,19 +96,19 @@
           "shape": "cylinder",
           "position": {
             "x": 0,
-            "y": 0,
+            "y": 0.0375,
             "z": 0
           },
           "size": {
-            "x": 0.08,
-            "y": 0.14,
-            "z": 0.08
+            "x": 0.052,
+            "y": 0.075,
+            "z": 0.052
           },
           "rotation": {
-            "x": 0.0,
+            "x": 0,
             "y": 0,
-            "z": 0.0,
-            "w": 1.0
+            "z": 0,
+            "w": 1
           },
           "segments": 12
         }
@@ -117,7 +117,28 @@
     "physics": {
       "mode": "solid",
       "shape": "automatic",
-      "mass": 0.1
-    }
+      "mass": 0.06
+    },
+    "snapPoints": [
+      {
+        "version": 1,
+        "id": "Foot",
+        "name": "Foot",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      }
+    ]
   }
 }

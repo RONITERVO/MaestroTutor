@@ -4,12 +4,12 @@
   "hash": "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22",
   "before": {
     "version": 1,
-    "revision": 300,
-    "sceneRevision": 54,
-    "ack": 122,
-    "session": "1847ab3a2da34a249eb7ae5cddc22612",
+    "revision": 320,
+    "sceneRevision": 58,
+    "ack": 129,
+    "session": "f0299e7b03c048e59f9d43a5144d488e",
     "status": "Action completed",
-    "selectedId": "4b6ec5199ecc46b6bd26a5fab1c34211",
+    "selectedId": "10d4a7c230344df0bc5727a2aca01167",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -17,12 +17,12 @@
     "visible": false,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "a85cc9bd520740f3bfc5dd8b11287049",
+      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "a85cc9bd520740f3bfc5dd8b11287049",
+      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
       "error": "",
       "visible": false,
       "holding": false
@@ -109,6 +109,7 @@
       "latheGeometry.v1",
       "extrusionGeometry.v1",
       "sweepGeometry.v1",
+      "recipePatterns.v1",
       "roomViewCapture.v1",
       "collisionShapes.v1",
       "recipePartPlayback.v1",
@@ -155,7 +156,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "d39f81fb09374937ad71da0ee887f364",
+      "id": "e3fd8f9ad43140cdb26fa91642552d54",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -278,88 +279,7 @@
     },
     "objects": [
       {
-        "id": "2b15f2d163a5477b8d903bf332b5e949",
-        "name": "Pencil",
-        "kind": "Assembly",
-        "objectRevision": 48,
-        "position": {
-          "x": 0.4000000059604645,
-          "y": 1,
-          "z": 0.6000000238418579
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "solid",
-          "shape": "automatic",
-          "mass": 0.05999999865889549
-        },
-        "movement": null
-      },
-      {
-        "id": "980ba88ad9814b79a8b4d32d523ac368",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "book",
-        "name": "Book",
-        "kind": "Book",
-        "objectRevision": 1,
-        "position": {
-          "x": 0,
-          "y": 1.159999966621399,
-          "z": 0.6499999761581421
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "c83c97ac8f354969887c0d84a3d40d9b",
+        "id": "6395fdba3fd448818e0db9cb72b74470",
         "name": "Block",
         "kind": "Block",
         "objectRevision": 3,
@@ -386,7 +306,7 @@
         "movement": null
       },
       {
-        "id": "e82f20ae9d4747d09efce879d9b3b858",
+        "id": "97482e27f08b4fcca0a0ca7691c04771",
         "name": "Cylinder",
         "kind": "Cylinder",
         "objectRevision": 5,
@@ -400,6 +320,87 @@
           "r": 0.16862745583057404,
           "g": 0.5529412031173706,
           "b": 0.5333333611488342,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "a454a7680201495185792eec7eb0d376",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "b4ace2c0a2024b0cbbc681510f49e117",
+        "name": "Pencil",
+        "kind": "Assembly",
+        "objectRevision": 51,
+        "position": {
+          "x": 0.4000000059604645,
+          "y": 1,
+          "z": 0.6000000238418579
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.05999999865889549
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0,
+          "y": 1.159999966621399,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
           "a": 1
         },
         "animated": false,
@@ -445,12 +446,12 @@
     ],
     "created": [],
     "capture": {
-      "captureId": "ba59cbfae8e348449a6b1790d080d81e",
+      "captureId": "30cd4ed53b3b476d9f092b596d56fe4a",
       "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
       "mimeType": "image/jpeg",
       "width": 512,
       "height": 384,
-      "capturedAt": "2026-10-04T04:36:03.880158Z",
+      "capturedAt": "2026-10-04T06:07:37.2155527Z",
       "sceneRevision": 3,
       "verticalFov": 60,
       "position": {
@@ -537,21 +538,21 @@
       "status": "Fact value is currently unavailable; do not treat it as false or zero.",
       "category": "facts",
       "arguments": {
-        "target": "664d67ec68224d7eb81a6c26a03dc50b"
+        "target": "6c44d54c1c5c4e19b021336f9a086825"
       },
       "available": false,
       "value": null
     },
     "execution": {
       "selected": {
-        "id": "e4179876b8c44621ade31cd7df1689bf",
+        "id": "a4d7164069c94b738d9a5f236a8e828c",
         "capability": "object.create",
         "version": 1,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "objectId": "2b15f2d163a5477b8d903bf332b5e949"
+          "objectId": "b4ace2c0a2024b0cbbc681510f49e117"
         },
         "call": {
           "id": "object.create",
@@ -570,12 +571,12 @@
       "running": [],
       "outcomes": [
         {
-          "id": "ba1e57a01a8042f291d96b35e12d802f",
+          "id": "b697d32df1be4aa3806354d2c68f9a68",
           "capability": "object.container.transfer",
           "version": 1,
           "resources": [
-            "c35743ad6e1749f0b32c92aedd8eb80a",
-            "51c6ca772f46417abc640bf523a4200f"
+            "79cffbc68e5f4d85af01411db45bb4a5",
+            "0c98c1501e154b88a35114fffeca69c5"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -584,40 +585,40 @@
           }
         },
         {
-          "id": "a4e1e7ad4f9b43609585566431746753",
+          "id": "e3095f70b3ef40f8b5bbf41ded516ac8",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "d83d4dbc339f439288af9c377f4c6820"
+            "objectId": "470224b5d7804039b54d7e4ffbb386a1"
           }
         },
         {
-          "id": "f0a48c9bbf114335818ce70e3be842c3",
+          "id": "ca571c6ddc0c452ba336c65901245797",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "5c327f8a9a3c493c82648e6e96cd383b"
+            "objectId": "f1a0ae20bd7f4cc29395044ef63ae811"
           }
         },
         {
-          "id": "1d6d657647954521982dbd823d707c49",
+          "id": "f5c13a7ae98c4750a149982897d1a023",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "3c2dc4c5b4e14536aa1f330f6787a294"
+            "objectId": "a41eebcb796544adae6d3985142033a1"
           }
         },
         {
-          "id": "d5d5945e3ae6409eb8194676bde88cf4",
+          "id": "2224086730974e17819a7fe086016b5f",
           "capability": "drawing.tool.set",
           "version": 1,
           "resources": [],
@@ -625,39 +626,39 @@
           "status": "Action completed"
         },
         {
-          "id": "6a56cd0f0bea4713a07d2e004ab9982c",
+          "id": "38bffb3159bb4f3ba2b578629d3598d9",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "3c2dc4c5b4e14536aa1f330f6787a294"
+            "a41eebcb796544adae6d3985142033a1"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "3c2dc4c5b4e14536aa1f330f6787a294",
-            "revision": 32,
+            "target": "a41eebcb796544adae6d3985142033a1",
+            "revision": 35,
             "surface": "Front",
-            "stroke": "ebaccbd4f68348bc8c4ed6c2af2e2e01"
+            "stroke": "7f99022c15824ea7b61ec542724e0029"
           }
         },
         {
-          "id": "7cd218b2cc934384aa759baa5966c1c9",
+          "id": "6da1904adaf14d24a698a5b29035f019",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "3c2dc4c5b4e14536aa1f330f6787a294"
+            "a41eebcb796544adae6d3985142033a1"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "3c2dc4c5b4e14536aa1f330f6787a294",
-            "revision": 33,
+            "target": "a41eebcb796544adae6d3985142033a1",
+            "revision": 36,
             "surface": "Front",
-            "stroke": "ebaccbd4f68348bc8c4ed6c2af2e2e01"
+            "stroke": "7f99022c15824ea7b61ec542724e0029"
           }
         },
         {
-          "id": "738830ba5d684dafbf2492841648dc20",
+          "id": "2fd5508daed944dd9d396919aba7739d",
           "capability": "drawing.tool.set",
           "version": 1,
           "resources": [],
@@ -665,121 +666,121 @@
           "status": "Action completed"
         },
         {
-          "id": "058c3fadc0364d3880c8cfb0a8d072d1",
+          "id": "6718c49eedb047a88948a461b0dc2098",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "958f3894f3144af3b1315c87d4c217ac"
+            "objectId": "dd6deeb4830b4ffd8ccbbd2f52911258"
           }
         },
         {
-          "id": "463e7a0770f74eddb059d2a79e639dd6",
+          "id": "6b66a6ec6e69450088a3294da6200336",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "958f3894f3144af3b1315c87d4c217ac"
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "958f3894f3144af3b1315c87d4c217ac",
-            "revision": 37,
-            "surface": "Front",
-            "stroke": ""
-          }
-        },
-        {
-          "id": "ab9ad73ba4cc4a4ca7d5c715b3934f1a",
-          "capability": "object.surface.edit",
-          "version": 1,
-          "resources": [
-            "958f3894f3144af3b1315c87d4c217ac"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "958f3894f3144af3b1315c87d4c217ac",
-            "revision": 38,
-            "surface": "Front",
-            "stroke": "251c8bbbb67043d5a45b880322729e85"
-          }
-        },
-        {
-          "id": "c8447b94f4f54098910dbf3437ae576e",
-          "capability": "object.surface.edit",
-          "version": 1,
-          "resources": [
-            "958f3894f3144af3b1315c87d4c217ac"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "958f3894f3144af3b1315c87d4c217ac",
-            "revision": 39,
-            "surface": "Front",
-            "stroke": "9419390af8c54b2c91b7161d11812862"
-          }
-        },
-        {
-          "id": "60bd224d05fc490c886b9f2b66fc0145",
-          "capability": "object.surface.edit",
-          "version": 1,
-          "resources": [
-            "958f3894f3144af3b1315c87d4c217ac"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "958f3894f3144af3b1315c87d4c217ac",
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
             "revision": 40,
             "surface": "Front",
             "stroke": ""
           }
         },
         {
-          "id": "27ef05663f8b493a80f854c9b3d48e11",
+          "id": "e90f59516fd3491787f5f1c08725d796",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 41,
+            "surface": "Front",
+            "stroke": "237d1b1a7b5048419d962166e6ba3e33"
+          }
+        },
+        {
+          "id": "a69f8a2dcec54339a09f5c5ae33fe413",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 42,
+            "surface": "Front",
+            "stroke": "fda5b64e5e124df8bb36a7e6640ec394"
+          }
+        },
+        {
+          "id": "a48671770a854e058b40b645e220993b",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 43,
+            "surface": "Front",
+            "stroke": ""
+          }
+        },
+        {
+          "id": "1c9c989710454e86aa0163028f26b394",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "664d67ec68224d7eb81a6c26a03dc50b"
+            "objectId": "6c44d54c1c5c4e19b021336f9a086825"
           }
         },
         {
-          "id": "1fc96e6dfa30478aa84db6d35b139582",
+          "id": "1d60d00aad284521bcc993d56ba316ed",
           "capability": "object.drawingTip.edit",
           "version": 1,
           "resources": [
-            "664d67ec68224d7eb81a6c26a03dc50b"
+            "6c44d54c1c5c4e19b021336f9a086825"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "e4179876b8c44621ade31cd7df1689bf",
+          "id": "a4d7164069c94b738d9a5f236a8e828c",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "2b15f2d163a5477b8d903bf332b5e949"
+            "objectId": "b4ace2c0a2024b0cbbc681510f49e117"
           }
         }
       ],
-      "nextRunId": "b128aa4ef606404489722e3bffa3bfa4",
+      "nextRunId": "d66df6488e964d4e9e465920892fe796",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "0a8449e83a63432191c30716a4f86e26",
+        "nextRunId": "53a8d0b0fa7e43d6991e6240fe7f58b3",
         "storageError": null,
         "recovery": null
       }
@@ -787,12 +788,12 @@
   },
   "current": {
     "version": 1,
-    "revision": 302,
-    "sceneRevision": 54,
-    "ack": 123,
-    "session": "1847ab3a2da34a249eb7ae5cddc22612",
+    "revision": 323,
+    "sceneRevision": 58,
+    "ack": 130,
+    "session": "f0299e7b03c048e59f9d43a5144d488e",
     "status": "Current fact value. Reading does not change the room.",
-    "selectedId": "4b6ec5199ecc46b6bd26a5fab1c34211",
+    "selectedId": "10d4a7c230344df0bc5727a2aca01167",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -800,12 +801,12 @@
     "visible": false,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "a85cc9bd520740f3bfc5dd8b11287049",
+      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "a85cc9bd520740f3bfc5dd8b11287049",
+      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
       "error": "",
       "visible": false,
       "holding": false
@@ -892,6 +893,7 @@
       "latheGeometry.v1",
       "extrusionGeometry.v1",
       "sweepGeometry.v1",
+      "recipePatterns.v1",
       "roomViewCapture.v1",
       "collisionShapes.v1",
       "recipePartPlayback.v1",
@@ -938,7 +940,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "d39f81fb09374937ad71da0ee887f364",
+      "id": "e3fd8f9ad43140cdb26fa91642552d54",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -1061,88 +1063,7 @@
     },
     "objects": [
       {
-        "id": "2b15f2d163a5477b8d903bf332b5e949",
-        "name": "Pencil",
-        "kind": "Assembly",
-        "objectRevision": 48,
-        "position": {
-          "x": 0.4000000059604645,
-          "y": 1,
-          "z": 0.6000000238418579
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "solid",
-          "shape": "automatic",
-          "mass": 0.05999999865889549
-        },
-        "movement": null
-      },
-      {
-        "id": "980ba88ad9814b79a8b4d32d523ac368",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "book",
-        "name": "Book",
-        "kind": "Book",
-        "objectRevision": 1,
-        "position": {
-          "x": 0,
-          "y": 1.159999966621399,
-          "z": 0.6499999761581421
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "c83c97ac8f354969887c0d84a3d40d9b",
+        "id": "6395fdba3fd448818e0db9cb72b74470",
         "name": "Block",
         "kind": "Block",
         "objectRevision": 3,
@@ -1169,7 +1090,7 @@
         "movement": null
       },
       {
-        "id": "e82f20ae9d4747d09efce879d9b3b858",
+        "id": "97482e27f08b4fcca0a0ca7691c04771",
         "name": "Cylinder",
         "kind": "Cylinder",
         "objectRevision": 5,
@@ -1183,6 +1104,87 @@
           "r": 0.16862745583057404,
           "g": 0.5529412031173706,
           "b": 0.5333333611488342,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "a454a7680201495185792eec7eb0d376",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "b4ace2c0a2024b0cbbc681510f49e117",
+        "name": "Pencil",
+        "kind": "Assembly",
+        "objectRevision": 51,
+        "position": {
+          "x": 0.4000000059604645,
+          "y": 1,
+          "z": 0.6000000238418579
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.05999999865889549
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0,
+          "y": 1.159999966621399,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
           "a": 1
         },
         "animated": false,
@@ -1228,12 +1230,12 @@
     ],
     "created": [],
     "capture": {
-      "captureId": "ba59cbfae8e348449a6b1790d080d81e",
+      "captureId": "30cd4ed53b3b476d9f092b596d56fe4a",
       "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
       "mimeType": "image/jpeg",
       "width": 512,
       "height": 384,
-      "capturedAt": "2026-10-04T04:36:03.880158Z",
+      "capturedAt": "2026-10-04T06:07:37.2155527Z",
       "sceneRevision": 3,
       "verticalFov": 60,
       "position": {
@@ -1320,11 +1322,11 @@
       "status": "Current fact value. Reading does not change the room.",
       "category": "facts",
       "arguments": {
-        "target": "2b15f2d163a5477b8d903bf332b5e949"
+        "target": "b4ace2c0a2024b0cbbc681510f49e117"
       },
       "available": true,
       "value": {
-        "revision": 48,
+        "revision": 51,
         "configured": true,
         "definition": {
           "part": "",
@@ -1353,14 +1355,14 @@
     },
     "execution": {
       "selected": {
-        "id": "e4179876b8c44621ade31cd7df1689bf",
+        "id": "a4d7164069c94b738d9a5f236a8e828c",
         "capability": "object.create",
         "version": 1,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "objectId": "2b15f2d163a5477b8d903bf332b5e949"
+          "objectId": "b4ace2c0a2024b0cbbc681510f49e117"
         },
         "call": {
           "id": "object.create",
@@ -1379,12 +1381,12 @@
       "running": [],
       "outcomes": [
         {
-          "id": "ba1e57a01a8042f291d96b35e12d802f",
+          "id": "b697d32df1be4aa3806354d2c68f9a68",
           "capability": "object.container.transfer",
           "version": 1,
           "resources": [
-            "c35743ad6e1749f0b32c92aedd8eb80a",
-            "51c6ca772f46417abc640bf523a4200f"
+            "79cffbc68e5f4d85af01411db45bb4a5",
+            "0c98c1501e154b88a35114fffeca69c5"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -1393,40 +1395,40 @@
           }
         },
         {
-          "id": "a4e1e7ad4f9b43609585566431746753",
+          "id": "e3095f70b3ef40f8b5bbf41ded516ac8",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "d83d4dbc339f439288af9c377f4c6820"
+            "objectId": "470224b5d7804039b54d7e4ffbb386a1"
           }
         },
         {
-          "id": "f0a48c9bbf114335818ce70e3be842c3",
+          "id": "ca571c6ddc0c452ba336c65901245797",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "5c327f8a9a3c493c82648e6e96cd383b"
+            "objectId": "f1a0ae20bd7f4cc29395044ef63ae811"
           }
         },
         {
-          "id": "1d6d657647954521982dbd823d707c49",
+          "id": "f5c13a7ae98c4750a149982897d1a023",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "3c2dc4c5b4e14536aa1f330f6787a294"
+            "objectId": "a41eebcb796544adae6d3985142033a1"
           }
         },
         {
-          "id": "d5d5945e3ae6409eb8194676bde88cf4",
+          "id": "2224086730974e17819a7fe086016b5f",
           "capability": "drawing.tool.set",
           "version": 1,
           "resources": [],
@@ -1434,39 +1436,39 @@
           "status": "Action completed"
         },
         {
-          "id": "6a56cd0f0bea4713a07d2e004ab9982c",
+          "id": "38bffb3159bb4f3ba2b578629d3598d9",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "3c2dc4c5b4e14536aa1f330f6787a294"
+            "a41eebcb796544adae6d3985142033a1"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "3c2dc4c5b4e14536aa1f330f6787a294",
-            "revision": 32,
+            "target": "a41eebcb796544adae6d3985142033a1",
+            "revision": 35,
             "surface": "Front",
-            "stroke": "ebaccbd4f68348bc8c4ed6c2af2e2e01"
+            "stroke": "7f99022c15824ea7b61ec542724e0029"
           }
         },
         {
-          "id": "7cd218b2cc934384aa759baa5966c1c9",
+          "id": "6da1904adaf14d24a698a5b29035f019",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "3c2dc4c5b4e14536aa1f330f6787a294"
+            "a41eebcb796544adae6d3985142033a1"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "3c2dc4c5b4e14536aa1f330f6787a294",
-            "revision": 33,
+            "target": "a41eebcb796544adae6d3985142033a1",
+            "revision": 36,
             "surface": "Front",
-            "stroke": "ebaccbd4f68348bc8c4ed6c2af2e2e01"
+            "stroke": "7f99022c15824ea7b61ec542724e0029"
           }
         },
         {
-          "id": "738830ba5d684dafbf2492841648dc20",
+          "id": "2fd5508daed944dd9d396919aba7739d",
           "capability": "drawing.tool.set",
           "version": 1,
           "resources": [],
@@ -1474,121 +1476,121 @@
           "status": "Action completed"
         },
         {
-          "id": "058c3fadc0364d3880c8cfb0a8d072d1",
+          "id": "6718c49eedb047a88948a461b0dc2098",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "958f3894f3144af3b1315c87d4c217ac"
+            "objectId": "dd6deeb4830b4ffd8ccbbd2f52911258"
           }
         },
         {
-          "id": "463e7a0770f74eddb059d2a79e639dd6",
+          "id": "6b66a6ec6e69450088a3294da6200336",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "958f3894f3144af3b1315c87d4c217ac"
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "958f3894f3144af3b1315c87d4c217ac",
-            "revision": 37,
-            "surface": "Front",
-            "stroke": ""
-          }
-        },
-        {
-          "id": "ab9ad73ba4cc4a4ca7d5c715b3934f1a",
-          "capability": "object.surface.edit",
-          "version": 1,
-          "resources": [
-            "958f3894f3144af3b1315c87d4c217ac"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "958f3894f3144af3b1315c87d4c217ac",
-            "revision": 38,
-            "surface": "Front",
-            "stroke": "251c8bbbb67043d5a45b880322729e85"
-          }
-        },
-        {
-          "id": "c8447b94f4f54098910dbf3437ae576e",
-          "capability": "object.surface.edit",
-          "version": 1,
-          "resources": [
-            "958f3894f3144af3b1315c87d4c217ac"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "958f3894f3144af3b1315c87d4c217ac",
-            "revision": 39,
-            "surface": "Front",
-            "stroke": "9419390af8c54b2c91b7161d11812862"
-          }
-        },
-        {
-          "id": "60bd224d05fc490c886b9f2b66fc0145",
-          "capability": "object.surface.edit",
-          "version": 1,
-          "resources": [
-            "958f3894f3144af3b1315c87d4c217ac"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "958f3894f3144af3b1315c87d4c217ac",
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
             "revision": 40,
             "surface": "Front",
             "stroke": ""
           }
         },
         {
-          "id": "27ef05663f8b493a80f854c9b3d48e11",
+          "id": "e90f59516fd3491787f5f1c08725d796",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 41,
+            "surface": "Front",
+            "stroke": "237d1b1a7b5048419d962166e6ba3e33"
+          }
+        },
+        {
+          "id": "a69f8a2dcec54339a09f5c5ae33fe413",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 42,
+            "surface": "Front",
+            "stroke": "fda5b64e5e124df8bb36a7e6640ec394"
+          }
+        },
+        {
+          "id": "a48671770a854e058b40b645e220993b",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 43,
+            "surface": "Front",
+            "stroke": ""
+          }
+        },
+        {
+          "id": "1c9c989710454e86aa0163028f26b394",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "664d67ec68224d7eb81a6c26a03dc50b"
+            "objectId": "6c44d54c1c5c4e19b021336f9a086825"
           }
         },
         {
-          "id": "1fc96e6dfa30478aa84db6d35b139582",
+          "id": "1d60d00aad284521bcc993d56ba316ed",
           "capability": "object.drawingTip.edit",
           "version": 1,
           "resources": [
-            "664d67ec68224d7eb81a6c26a03dc50b"
+            "6c44d54c1c5c4e19b021336f9a086825"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "e4179876b8c44621ade31cd7df1689bf",
+          "id": "a4d7164069c94b738d9a5f236a8e828c",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "2b15f2d163a5477b8d903bf332b5e949"
+            "objectId": "b4ace2c0a2024b0cbbc681510f49e117"
           }
         }
       ],
-      "nextRunId": "b128aa4ef606404489722e3bffa3bfa4",
+      "nextRunId": "d66df6488e964d4e9e465920892fe796",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "0a8449e83a63432191c30716a4f86e26",
+        "nextRunId": "53a8d0b0fa7e43d6991e6240fe7f58b3",
         "storageError": null,
         "recovery": null
       }
@@ -1596,12 +1598,12 @@
   },
   "search": {
     "version": 1,
-    "revision": 304,
-    "sceneRevision": 54,
-    "ack": 124,
-    "session": "1847ab3a2da34a249eb7ae5cddc22612",
+    "revision": 325,
+    "sceneRevision": 58,
+    "ack": 131,
+    "session": "f0299e7b03c048e59f9d43a5144d488e",
     "status": "Found 1 actions. Search does not run or enable anything.",
-    "selectedId": "4b6ec5199ecc46b6bd26a5fab1c34211",
+    "selectedId": "10d4a7c230344df0bc5727a2aca01167",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -1609,12 +1611,12 @@
     "visible": false,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "a85cc9bd520740f3bfc5dd8b11287049",
+      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "a85cc9bd520740f3bfc5dd8b11287049",
+      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
       "error": "",
       "visible": false,
       "holding": false
@@ -1701,6 +1703,7 @@
       "latheGeometry.v1",
       "extrusionGeometry.v1",
       "sweepGeometry.v1",
+      "recipePatterns.v1",
       "roomViewCapture.v1",
       "collisionShapes.v1",
       "recipePartPlayback.v1",
@@ -1747,7 +1750,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "d39f81fb09374937ad71da0ee887f364",
+      "id": "e3fd8f9ad43140cdb26fa91642552d54",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -1870,88 +1873,7 @@
     },
     "objects": [
       {
-        "id": "2b15f2d163a5477b8d903bf332b5e949",
-        "name": "Pencil",
-        "kind": "Assembly",
-        "objectRevision": 48,
-        "position": {
-          "x": 0.4000000059604645,
-          "y": 1,
-          "z": 0.6000000238418579
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "solid",
-          "shape": "automatic",
-          "mass": 0.05999999865889549
-        },
-        "movement": null
-      },
-      {
-        "id": "980ba88ad9814b79a8b4d32d523ac368",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "book",
-        "name": "Book",
-        "kind": "Book",
-        "objectRevision": 1,
-        "position": {
-          "x": 0,
-          "y": 1.159999966621399,
-          "z": 0.6499999761581421
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "c83c97ac8f354969887c0d84a3d40d9b",
+        "id": "6395fdba3fd448818e0db9cb72b74470",
         "name": "Block",
         "kind": "Block",
         "objectRevision": 3,
@@ -1978,7 +1900,7 @@
         "movement": null
       },
       {
-        "id": "e82f20ae9d4747d09efce879d9b3b858",
+        "id": "97482e27f08b4fcca0a0ca7691c04771",
         "name": "Cylinder",
         "kind": "Cylinder",
         "objectRevision": 5,
@@ -1992,6 +1914,87 @@
           "r": 0.16862745583057404,
           "g": 0.5529412031173706,
           "b": 0.5333333611488342,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "a454a7680201495185792eec7eb0d376",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "b4ace2c0a2024b0cbbc681510f49e117",
+        "name": "Pencil",
+        "kind": "Assembly",
+        "objectRevision": 51,
+        "position": {
+          "x": 0.4000000059604645,
+          "y": 1,
+          "z": 0.6000000238418579
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.05999999865889549
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0,
+          "y": 1.159999966621399,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
           "a": 1
         },
         "animated": false,
@@ -2037,12 +2040,12 @@
     ],
     "created": [],
     "capture": {
-      "captureId": "ba59cbfae8e348449a6b1790d080d81e",
+      "captureId": "30cd4ed53b3b476d9f092b596d56fe4a",
       "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
       "mimeType": "image/jpeg",
       "width": 512,
       "height": 384,
-      "capturedAt": "2026-10-04T04:36:03.880158Z",
+      "capturedAt": "2026-10-04T06:07:37.2155527Z",
       "sceneRevision": 3,
       "verticalFov": 60,
       "position": {
@@ -2074,14 +2077,14 @@
     },
     "execution": {
       "selected": {
-        "id": "e4179876b8c44621ade31cd7df1689bf",
+        "id": "a4d7164069c94b738d9a5f236a8e828c",
         "capability": "object.create",
         "version": 1,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "objectId": "2b15f2d163a5477b8d903bf332b5e949"
+          "objectId": "b4ace2c0a2024b0cbbc681510f49e117"
         },
         "call": {
           "id": "object.create",
@@ -2100,12 +2103,12 @@
       "running": [],
       "outcomes": [
         {
-          "id": "ba1e57a01a8042f291d96b35e12d802f",
+          "id": "b697d32df1be4aa3806354d2c68f9a68",
           "capability": "object.container.transfer",
           "version": 1,
           "resources": [
-            "c35743ad6e1749f0b32c92aedd8eb80a",
-            "51c6ca772f46417abc640bf523a4200f"
+            "79cffbc68e5f4d85af01411db45bb4a5",
+            "0c98c1501e154b88a35114fffeca69c5"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -2114,40 +2117,40 @@
           }
         },
         {
-          "id": "a4e1e7ad4f9b43609585566431746753",
+          "id": "e3095f70b3ef40f8b5bbf41ded516ac8",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "d83d4dbc339f439288af9c377f4c6820"
+            "objectId": "470224b5d7804039b54d7e4ffbb386a1"
           }
         },
         {
-          "id": "f0a48c9bbf114335818ce70e3be842c3",
+          "id": "ca571c6ddc0c452ba336c65901245797",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "5c327f8a9a3c493c82648e6e96cd383b"
+            "objectId": "f1a0ae20bd7f4cc29395044ef63ae811"
           }
         },
         {
-          "id": "1d6d657647954521982dbd823d707c49",
+          "id": "f5c13a7ae98c4750a149982897d1a023",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "3c2dc4c5b4e14536aa1f330f6787a294"
+            "objectId": "a41eebcb796544adae6d3985142033a1"
           }
         },
         {
-          "id": "d5d5945e3ae6409eb8194676bde88cf4",
+          "id": "2224086730974e17819a7fe086016b5f",
           "capability": "drawing.tool.set",
           "version": 1,
           "resources": [],
@@ -2155,39 +2158,39 @@
           "status": "Action completed"
         },
         {
-          "id": "6a56cd0f0bea4713a07d2e004ab9982c",
+          "id": "38bffb3159bb4f3ba2b578629d3598d9",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "3c2dc4c5b4e14536aa1f330f6787a294"
+            "a41eebcb796544adae6d3985142033a1"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "3c2dc4c5b4e14536aa1f330f6787a294",
-            "revision": 32,
+            "target": "a41eebcb796544adae6d3985142033a1",
+            "revision": 35,
             "surface": "Front",
-            "stroke": "ebaccbd4f68348bc8c4ed6c2af2e2e01"
+            "stroke": "7f99022c15824ea7b61ec542724e0029"
           }
         },
         {
-          "id": "7cd218b2cc934384aa759baa5966c1c9",
+          "id": "6da1904adaf14d24a698a5b29035f019",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "3c2dc4c5b4e14536aa1f330f6787a294"
+            "a41eebcb796544adae6d3985142033a1"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "3c2dc4c5b4e14536aa1f330f6787a294",
-            "revision": 33,
+            "target": "a41eebcb796544adae6d3985142033a1",
+            "revision": 36,
             "surface": "Front",
-            "stroke": "ebaccbd4f68348bc8c4ed6c2af2e2e01"
+            "stroke": "7f99022c15824ea7b61ec542724e0029"
           }
         },
         {
-          "id": "738830ba5d684dafbf2492841648dc20",
+          "id": "2fd5508daed944dd9d396919aba7739d",
           "capability": "drawing.tool.set",
           "version": 1,
           "resources": [],
@@ -2195,121 +2198,121 @@
           "status": "Action completed"
         },
         {
-          "id": "058c3fadc0364d3880c8cfb0a8d072d1",
+          "id": "6718c49eedb047a88948a461b0dc2098",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "958f3894f3144af3b1315c87d4c217ac"
+            "objectId": "dd6deeb4830b4ffd8ccbbd2f52911258"
           }
         },
         {
-          "id": "463e7a0770f74eddb059d2a79e639dd6",
+          "id": "6b66a6ec6e69450088a3294da6200336",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "958f3894f3144af3b1315c87d4c217ac"
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "958f3894f3144af3b1315c87d4c217ac",
-            "revision": 37,
-            "surface": "Front",
-            "stroke": ""
-          }
-        },
-        {
-          "id": "ab9ad73ba4cc4a4ca7d5c715b3934f1a",
-          "capability": "object.surface.edit",
-          "version": 1,
-          "resources": [
-            "958f3894f3144af3b1315c87d4c217ac"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "958f3894f3144af3b1315c87d4c217ac",
-            "revision": 38,
-            "surface": "Front",
-            "stroke": "251c8bbbb67043d5a45b880322729e85"
-          }
-        },
-        {
-          "id": "c8447b94f4f54098910dbf3437ae576e",
-          "capability": "object.surface.edit",
-          "version": 1,
-          "resources": [
-            "958f3894f3144af3b1315c87d4c217ac"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "958f3894f3144af3b1315c87d4c217ac",
-            "revision": 39,
-            "surface": "Front",
-            "stroke": "9419390af8c54b2c91b7161d11812862"
-          }
-        },
-        {
-          "id": "60bd224d05fc490c886b9f2b66fc0145",
-          "capability": "object.surface.edit",
-          "version": 1,
-          "resources": [
-            "958f3894f3144af3b1315c87d4c217ac"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "958f3894f3144af3b1315c87d4c217ac",
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
             "revision": 40,
             "surface": "Front",
             "stroke": ""
           }
         },
         {
-          "id": "27ef05663f8b493a80f854c9b3d48e11",
+          "id": "e90f59516fd3491787f5f1c08725d796",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 41,
+            "surface": "Front",
+            "stroke": "237d1b1a7b5048419d962166e6ba3e33"
+          }
+        },
+        {
+          "id": "a69f8a2dcec54339a09f5c5ae33fe413",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 42,
+            "surface": "Front",
+            "stroke": "fda5b64e5e124df8bb36a7e6640ec394"
+          }
+        },
+        {
+          "id": "a48671770a854e058b40b645e220993b",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 43,
+            "surface": "Front",
+            "stroke": ""
+          }
+        },
+        {
+          "id": "1c9c989710454e86aa0163028f26b394",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "664d67ec68224d7eb81a6c26a03dc50b"
+            "objectId": "6c44d54c1c5c4e19b021336f9a086825"
           }
         },
         {
-          "id": "1fc96e6dfa30478aa84db6d35b139582",
+          "id": "1d60d00aad284521bcc993d56ba316ed",
           "capability": "object.drawingTip.edit",
           "version": 1,
           "resources": [
-            "664d67ec68224d7eb81a6c26a03dc50b"
+            "6c44d54c1c5c4e19b021336f9a086825"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "e4179876b8c44621ade31cd7df1689bf",
+          "id": "a4d7164069c94b738d9a5f236a8e828c",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "2b15f2d163a5477b8d903bf332b5e949"
+            "objectId": "b4ace2c0a2024b0cbbc681510f49e117"
           }
         }
       ],
-      "nextRunId": "b128aa4ef606404489722e3bffa3bfa4",
+      "nextRunId": "d66df6488e964d4e9e465920892fe796",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "0a8449e83a63432191c30716a4f86e26",
+        "nextRunId": "53a8d0b0fa7e43d6991e6240fe7f58b3",
         "storageError": null,
         "recovery": null
       }
@@ -2317,12 +2320,12 @@
   },
   "definition": {
     "version": 1,
-    "revision": 307,
-    "sceneRevision": 54,
-    "ack": 125,
-    "session": "1847ab3a2da34a249eb7ae5cddc22612",
+    "revision": 327,
+    "sceneRevision": 58,
+    "ack": 132,
+    "session": "f0299e7b03c048e59f9d43a5144d488e",
     "status": "Action definition. Check concrete arguments before running it.",
-    "selectedId": "4b6ec5199ecc46b6bd26a5fab1c34211",
+    "selectedId": "10d4a7c230344df0bc5727a2aca01167",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -2330,12 +2333,12 @@
     "visible": false,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "a85cc9bd520740f3bfc5dd8b11287049",
+      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "a85cc9bd520740f3bfc5dd8b11287049",
+      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
       "error": "",
       "visible": false,
       "holding": false
@@ -2422,6 +2425,7 @@
       "latheGeometry.v1",
       "extrusionGeometry.v1",
       "sweepGeometry.v1",
+      "recipePatterns.v1",
       "roomViewCapture.v1",
       "collisionShapes.v1",
       "recipePartPlayback.v1",
@@ -2468,7 +2472,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "d39f81fb09374937ad71da0ee887f364",
+      "id": "e3fd8f9ad43140cdb26fa91642552d54",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -2591,88 +2595,7 @@
     },
     "objects": [
       {
-        "id": "2b15f2d163a5477b8d903bf332b5e949",
-        "name": "Pencil",
-        "kind": "Assembly",
-        "objectRevision": 48,
-        "position": {
-          "x": 0.4000000059604645,
-          "y": 1,
-          "z": 0.6000000238418579
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "solid",
-          "shape": "automatic",
-          "mass": 0.05999999865889549
-        },
-        "movement": null
-      },
-      {
-        "id": "980ba88ad9814b79a8b4d32d523ac368",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "book",
-        "name": "Book",
-        "kind": "Book",
-        "objectRevision": 1,
-        "position": {
-          "x": 0,
-          "y": 1.159999966621399,
-          "z": 0.6499999761581421
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "c83c97ac8f354969887c0d84a3d40d9b",
+        "id": "6395fdba3fd448818e0db9cb72b74470",
         "name": "Block",
         "kind": "Block",
         "objectRevision": 3,
@@ -2699,7 +2622,7 @@
         "movement": null
       },
       {
-        "id": "e82f20ae9d4747d09efce879d9b3b858",
+        "id": "97482e27f08b4fcca0a0ca7691c04771",
         "name": "Cylinder",
         "kind": "Cylinder",
         "objectRevision": 5,
@@ -2713,6 +2636,87 @@
           "r": 0.16862745583057404,
           "g": 0.5529412031173706,
           "b": 0.5333333611488342,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "a454a7680201495185792eec7eb0d376",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "b4ace2c0a2024b0cbbc681510f49e117",
+        "name": "Pencil",
+        "kind": "Assembly",
+        "objectRevision": 51,
+        "position": {
+          "x": 0.4000000059604645,
+          "y": 1,
+          "z": 0.6000000238418579
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.05999999865889549
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0,
+          "y": 1.159999966621399,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
           "a": 1
         },
         "animated": false,
@@ -2758,12 +2762,12 @@
     ],
     "created": [],
     "capture": {
-      "captureId": "ba59cbfae8e348449a6b1790d080d81e",
+      "captureId": "30cd4ed53b3b476d9f092b596d56fe4a",
       "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
       "mimeType": "image/jpeg",
       "width": 512,
       "height": 384,
-      "capturedAt": "2026-10-04T04:36:03.880158Z",
+      "capturedAt": "2026-10-04T06:07:37.2155527Z",
       "sceneRevision": 3,
       "verticalFov": 60,
       "position": {
@@ -3063,14 +3067,14 @@
     },
     "execution": {
       "selected": {
-        "id": "e4179876b8c44621ade31cd7df1689bf",
+        "id": "a4d7164069c94b738d9a5f236a8e828c",
         "capability": "object.create",
         "version": 1,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "objectId": "2b15f2d163a5477b8d903bf332b5e949"
+          "objectId": "b4ace2c0a2024b0cbbc681510f49e117"
         },
         "call": {
           "id": "object.create",
@@ -3089,12 +3093,12 @@
       "running": [],
       "outcomes": [
         {
-          "id": "ba1e57a01a8042f291d96b35e12d802f",
+          "id": "b697d32df1be4aa3806354d2c68f9a68",
           "capability": "object.container.transfer",
           "version": 1,
           "resources": [
-            "c35743ad6e1749f0b32c92aedd8eb80a",
-            "51c6ca772f46417abc640bf523a4200f"
+            "79cffbc68e5f4d85af01411db45bb4a5",
+            "0c98c1501e154b88a35114fffeca69c5"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -3103,40 +3107,40 @@
           }
         },
         {
-          "id": "a4e1e7ad4f9b43609585566431746753",
+          "id": "e3095f70b3ef40f8b5bbf41ded516ac8",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "d83d4dbc339f439288af9c377f4c6820"
+            "objectId": "470224b5d7804039b54d7e4ffbb386a1"
           }
         },
         {
-          "id": "f0a48c9bbf114335818ce70e3be842c3",
+          "id": "ca571c6ddc0c452ba336c65901245797",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "5c327f8a9a3c493c82648e6e96cd383b"
+            "objectId": "f1a0ae20bd7f4cc29395044ef63ae811"
           }
         },
         {
-          "id": "1d6d657647954521982dbd823d707c49",
+          "id": "f5c13a7ae98c4750a149982897d1a023",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "3c2dc4c5b4e14536aa1f330f6787a294"
+            "objectId": "a41eebcb796544adae6d3985142033a1"
           }
         },
         {
-          "id": "d5d5945e3ae6409eb8194676bde88cf4",
+          "id": "2224086730974e17819a7fe086016b5f",
           "capability": "drawing.tool.set",
           "version": 1,
           "resources": [],
@@ -3144,39 +3148,39 @@
           "status": "Action completed"
         },
         {
-          "id": "6a56cd0f0bea4713a07d2e004ab9982c",
+          "id": "38bffb3159bb4f3ba2b578629d3598d9",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "3c2dc4c5b4e14536aa1f330f6787a294"
+            "a41eebcb796544adae6d3985142033a1"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "3c2dc4c5b4e14536aa1f330f6787a294",
-            "revision": 32,
+            "target": "a41eebcb796544adae6d3985142033a1",
+            "revision": 35,
             "surface": "Front",
-            "stroke": "ebaccbd4f68348bc8c4ed6c2af2e2e01"
+            "stroke": "7f99022c15824ea7b61ec542724e0029"
           }
         },
         {
-          "id": "7cd218b2cc934384aa759baa5966c1c9",
+          "id": "6da1904adaf14d24a698a5b29035f019",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "3c2dc4c5b4e14536aa1f330f6787a294"
+            "a41eebcb796544adae6d3985142033a1"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "3c2dc4c5b4e14536aa1f330f6787a294",
-            "revision": 33,
+            "target": "a41eebcb796544adae6d3985142033a1",
+            "revision": 36,
             "surface": "Front",
-            "stroke": "ebaccbd4f68348bc8c4ed6c2af2e2e01"
+            "stroke": "7f99022c15824ea7b61ec542724e0029"
           }
         },
         {
-          "id": "738830ba5d684dafbf2492841648dc20",
+          "id": "2fd5508daed944dd9d396919aba7739d",
           "capability": "drawing.tool.set",
           "version": 1,
           "resources": [],
@@ -3184,121 +3188,121 @@
           "status": "Action completed"
         },
         {
-          "id": "058c3fadc0364d3880c8cfb0a8d072d1",
+          "id": "6718c49eedb047a88948a461b0dc2098",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "958f3894f3144af3b1315c87d4c217ac"
+            "objectId": "dd6deeb4830b4ffd8ccbbd2f52911258"
           }
         },
         {
-          "id": "463e7a0770f74eddb059d2a79e639dd6",
+          "id": "6b66a6ec6e69450088a3294da6200336",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "958f3894f3144af3b1315c87d4c217ac"
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "958f3894f3144af3b1315c87d4c217ac",
-            "revision": 37,
-            "surface": "Front",
-            "stroke": ""
-          }
-        },
-        {
-          "id": "ab9ad73ba4cc4a4ca7d5c715b3934f1a",
-          "capability": "object.surface.edit",
-          "version": 1,
-          "resources": [
-            "958f3894f3144af3b1315c87d4c217ac"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "958f3894f3144af3b1315c87d4c217ac",
-            "revision": 38,
-            "surface": "Front",
-            "stroke": "251c8bbbb67043d5a45b880322729e85"
-          }
-        },
-        {
-          "id": "c8447b94f4f54098910dbf3437ae576e",
-          "capability": "object.surface.edit",
-          "version": 1,
-          "resources": [
-            "958f3894f3144af3b1315c87d4c217ac"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "958f3894f3144af3b1315c87d4c217ac",
-            "revision": 39,
-            "surface": "Front",
-            "stroke": "9419390af8c54b2c91b7161d11812862"
-          }
-        },
-        {
-          "id": "60bd224d05fc490c886b9f2b66fc0145",
-          "capability": "object.surface.edit",
-          "version": 1,
-          "resources": [
-            "958f3894f3144af3b1315c87d4c217ac"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "958f3894f3144af3b1315c87d4c217ac",
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
             "revision": 40,
             "surface": "Front",
             "stroke": ""
           }
         },
         {
-          "id": "27ef05663f8b493a80f854c9b3d48e11",
+          "id": "e90f59516fd3491787f5f1c08725d796",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 41,
+            "surface": "Front",
+            "stroke": "237d1b1a7b5048419d962166e6ba3e33"
+          }
+        },
+        {
+          "id": "a69f8a2dcec54339a09f5c5ae33fe413",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 42,
+            "surface": "Front",
+            "stroke": "fda5b64e5e124df8bb36a7e6640ec394"
+          }
+        },
+        {
+          "id": "a48671770a854e058b40b645e220993b",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 43,
+            "surface": "Front",
+            "stroke": ""
+          }
+        },
+        {
+          "id": "1c9c989710454e86aa0163028f26b394",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "664d67ec68224d7eb81a6c26a03dc50b"
+            "objectId": "6c44d54c1c5c4e19b021336f9a086825"
           }
         },
         {
-          "id": "1fc96e6dfa30478aa84db6d35b139582",
+          "id": "1d60d00aad284521bcc993d56ba316ed",
           "capability": "object.drawingTip.edit",
           "version": 1,
           "resources": [
-            "664d67ec68224d7eb81a6c26a03dc50b"
+            "6c44d54c1c5c4e19b021336f9a086825"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "e4179876b8c44621ade31cd7df1689bf",
+          "id": "a4d7164069c94b738d9a5f236a8e828c",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "2b15f2d163a5477b8d903bf332b5e949"
+            "objectId": "b4ace2c0a2024b0cbbc681510f49e117"
           }
         }
       ],
-      "nextRunId": "b128aa4ef606404489722e3bffa3bfa4",
+      "nextRunId": "d66df6488e964d4e9e465920892fe796",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "0a8449e83a63432191c30716a4f86e26",
+        "nextRunId": "53a8d0b0fa7e43d6991e6240fe7f58b3",
         "storageError": null,
         "recovery": null
       }
@@ -3306,12 +3310,12 @@
   },
   "after": {
     "version": 1,
-    "revision": 310,
-    "sceneRevision": 55,
-    "ack": 126,
-    "session": "1847ab3a2da34a249eb7ae5cddc22612",
+    "revision": 329,
+    "sceneRevision": 59,
+    "ack": 133,
+    "session": "f0299e7b03c048e59f9d43a5144d488e",
     "status": "Action completed",
-    "selectedId": "4b6ec5199ecc46b6bd26a5fab1c34211",
+    "selectedId": "10d4a7c230344df0bc5727a2aca01167",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -3319,12 +3323,12 @@
     "visible": false,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "a85cc9bd520740f3bfc5dd8b11287049",
+      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "a85cc9bd520740f3bfc5dd8b11287049",
+      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
       "error": "",
       "visible": false,
       "holding": false
@@ -3411,6 +3415,7 @@
       "latheGeometry.v1",
       "extrusionGeometry.v1",
       "sweepGeometry.v1",
+      "recipePatterns.v1",
       "roomViewCapture.v1",
       "collisionShapes.v1",
       "recipePartPlayback.v1",
@@ -3457,7 +3462,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "d39f81fb09374937ad71da0ee887f364",
+      "id": "e3fd8f9ad43140cdb26fa91642552d54",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -3580,88 +3585,7 @@
     },
     "objects": [
       {
-        "id": "2b15f2d163a5477b8d903bf332b5e949",
-        "name": "Pencil",
-        "kind": "Assembly",
-        "objectRevision": 49,
-        "position": {
-          "x": 0.4000000059604645,
-          "y": 1,
-          "z": 0.6000000238418579
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "solid",
-          "shape": "automatic",
-          "mass": 0.05999999865889549
-        },
-        "movement": null
-      },
-      {
-        "id": "980ba88ad9814b79a8b4d32d523ac368",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "book",
-        "name": "Book",
-        "kind": "Book",
-        "objectRevision": 1,
-        "position": {
-          "x": 0,
-          "y": 1.159999966621399,
-          "z": 0.6499999761581421
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "c83c97ac8f354969887c0d84a3d40d9b",
+        "id": "6395fdba3fd448818e0db9cb72b74470",
         "name": "Block",
         "kind": "Block",
         "objectRevision": 3,
@@ -3688,7 +3612,7 @@
         "movement": null
       },
       {
-        "id": "e82f20ae9d4747d09efce879d9b3b858",
+        "id": "97482e27f08b4fcca0a0ca7691c04771",
         "name": "Cylinder",
         "kind": "Cylinder",
         "objectRevision": 5,
@@ -3702,6 +3626,87 @@
           "r": 0.16862745583057404,
           "g": 0.5529412031173706,
           "b": 0.5333333611488342,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "a454a7680201495185792eec7eb0d376",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "b4ace2c0a2024b0cbbc681510f49e117",
+        "name": "Pencil",
+        "kind": "Assembly",
+        "objectRevision": 52,
+        "position": {
+          "x": 0.4000000059604645,
+          "y": 1,
+          "z": 0.6000000238418579
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.05999999865889549
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0,
+          "y": 1.159999966621399,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
           "a": 1
         },
         "animated": false,
@@ -3747,12 +3752,12 @@
     ],
     "created": [],
     "capture": {
-      "captureId": "ba59cbfae8e348449a6b1790d080d81e",
+      "captureId": "30cd4ed53b3b476d9f092b596d56fe4a",
       "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
       "mimeType": "image/jpeg",
       "width": 512,
       "height": 384,
-      "capturedAt": "2026-10-04T04:36:03.880158Z",
+      "capturedAt": "2026-10-04T06:07:37.2155527Z",
       "sceneRevision": 3,
       "verticalFov": 60,
       "position": {
@@ -4052,11 +4057,11 @@
     },
     "execution": {
       "selected": {
-        "id": "b128aa4ef606404489722e3bffa3bfa4",
+        "id": "d66df6488e964d4e9e465920892fe796",
         "capability": "object.drawingTip.edit",
         "version": 1,
         "resources": [
-          "2b15f2d163a5477b8d903bf332b5e949"
+          "b4ace2c0a2024b0cbbc681510f49e117"
         ],
         "phase": "completed",
         "status": "Action completed",
@@ -4065,8 +4070,8 @@
           "version": 1,
           "arguments": {
             "operation": "configure",
-            "target": "2b15f2d163a5477b8d903bf332b5e949",
-            "revision": 48,
+            "target": "b4ace2c0a2024b0cbbc681510f49e117",
+            "revision": 51,
             "definition": {
               "part": "",
               "position": {
@@ -4096,40 +4101,40 @@
       "running": [],
       "outcomes": [
         {
-          "id": "a4e1e7ad4f9b43609585566431746753",
+          "id": "e3095f70b3ef40f8b5bbf41ded516ac8",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "d83d4dbc339f439288af9c377f4c6820"
+            "objectId": "470224b5d7804039b54d7e4ffbb386a1"
           }
         },
         {
-          "id": "f0a48c9bbf114335818ce70e3be842c3",
+          "id": "ca571c6ddc0c452ba336c65901245797",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "5c327f8a9a3c493c82648e6e96cd383b"
+            "objectId": "f1a0ae20bd7f4cc29395044ef63ae811"
           }
         },
         {
-          "id": "1d6d657647954521982dbd823d707c49",
+          "id": "f5c13a7ae98c4750a149982897d1a023",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "3c2dc4c5b4e14536aa1f330f6787a294"
+            "objectId": "a41eebcb796544adae6d3985142033a1"
           }
         },
         {
-          "id": "d5d5945e3ae6409eb8194676bde88cf4",
+          "id": "2224086730974e17819a7fe086016b5f",
           "capability": "drawing.tool.set",
           "version": 1,
           "resources": [],
@@ -4137,39 +4142,39 @@
           "status": "Action completed"
         },
         {
-          "id": "6a56cd0f0bea4713a07d2e004ab9982c",
+          "id": "38bffb3159bb4f3ba2b578629d3598d9",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "3c2dc4c5b4e14536aa1f330f6787a294"
+            "a41eebcb796544adae6d3985142033a1"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "3c2dc4c5b4e14536aa1f330f6787a294",
-            "revision": 32,
+            "target": "a41eebcb796544adae6d3985142033a1",
+            "revision": 35,
             "surface": "Front",
-            "stroke": "ebaccbd4f68348bc8c4ed6c2af2e2e01"
+            "stroke": "7f99022c15824ea7b61ec542724e0029"
           }
         },
         {
-          "id": "7cd218b2cc934384aa759baa5966c1c9",
+          "id": "6da1904adaf14d24a698a5b29035f019",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "3c2dc4c5b4e14536aa1f330f6787a294"
+            "a41eebcb796544adae6d3985142033a1"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "3c2dc4c5b4e14536aa1f330f6787a294",
-            "revision": 33,
+            "target": "a41eebcb796544adae6d3985142033a1",
+            "revision": 36,
             "surface": "Front",
-            "stroke": "ebaccbd4f68348bc8c4ed6c2af2e2e01"
+            "stroke": "7f99022c15824ea7b61ec542724e0029"
           }
         },
         {
-          "id": "738830ba5d684dafbf2492841648dc20",
+          "id": "2fd5508daed944dd9d396919aba7739d",
           "capability": "drawing.tool.set",
           "version": 1,
           "resources": [],
@@ -4177,131 +4182,131 @@
           "status": "Action completed"
         },
         {
-          "id": "058c3fadc0364d3880c8cfb0a8d072d1",
+          "id": "6718c49eedb047a88948a461b0dc2098",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "958f3894f3144af3b1315c87d4c217ac"
+            "objectId": "dd6deeb4830b4ffd8ccbbd2f52911258"
           }
         },
         {
-          "id": "463e7a0770f74eddb059d2a79e639dd6",
+          "id": "6b66a6ec6e69450088a3294da6200336",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "958f3894f3144af3b1315c87d4c217ac"
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "958f3894f3144af3b1315c87d4c217ac",
-            "revision": 37,
-            "surface": "Front",
-            "stroke": ""
-          }
-        },
-        {
-          "id": "ab9ad73ba4cc4a4ca7d5c715b3934f1a",
-          "capability": "object.surface.edit",
-          "version": 1,
-          "resources": [
-            "958f3894f3144af3b1315c87d4c217ac"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "958f3894f3144af3b1315c87d4c217ac",
-            "revision": 38,
-            "surface": "Front",
-            "stroke": "251c8bbbb67043d5a45b880322729e85"
-          }
-        },
-        {
-          "id": "c8447b94f4f54098910dbf3437ae576e",
-          "capability": "object.surface.edit",
-          "version": 1,
-          "resources": [
-            "958f3894f3144af3b1315c87d4c217ac"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "958f3894f3144af3b1315c87d4c217ac",
-            "revision": 39,
-            "surface": "Front",
-            "stroke": "9419390af8c54b2c91b7161d11812862"
-          }
-        },
-        {
-          "id": "60bd224d05fc490c886b9f2b66fc0145",
-          "capability": "object.surface.edit",
-          "version": 1,
-          "resources": [
-            "958f3894f3144af3b1315c87d4c217ac"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "958f3894f3144af3b1315c87d4c217ac",
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
             "revision": 40,
             "surface": "Front",
             "stroke": ""
           }
         },
         {
-          "id": "27ef05663f8b493a80f854c9b3d48e11",
+          "id": "e90f59516fd3491787f5f1c08725d796",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 41,
+            "surface": "Front",
+            "stroke": "237d1b1a7b5048419d962166e6ba3e33"
+          }
+        },
+        {
+          "id": "a69f8a2dcec54339a09f5c5ae33fe413",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 42,
+            "surface": "Front",
+            "stroke": "fda5b64e5e124df8bb36a7e6640ec394"
+          }
+        },
+        {
+          "id": "a48671770a854e058b40b645e220993b",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 43,
+            "surface": "Front",
+            "stroke": ""
+          }
+        },
+        {
+          "id": "1c9c989710454e86aa0163028f26b394",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "664d67ec68224d7eb81a6c26a03dc50b"
+            "objectId": "6c44d54c1c5c4e19b021336f9a086825"
           }
         },
         {
-          "id": "1fc96e6dfa30478aa84db6d35b139582",
+          "id": "1d60d00aad284521bcc993d56ba316ed",
           "capability": "object.drawingTip.edit",
           "version": 1,
           "resources": [
-            "664d67ec68224d7eb81a6c26a03dc50b"
+            "6c44d54c1c5c4e19b021336f9a086825"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "e4179876b8c44621ade31cd7df1689bf",
+          "id": "a4d7164069c94b738d9a5f236a8e828c",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "2b15f2d163a5477b8d903bf332b5e949"
+            "objectId": "b4ace2c0a2024b0cbbc681510f49e117"
           }
         },
         {
-          "id": "b128aa4ef606404489722e3bffa3bfa4",
+          "id": "d66df6488e964d4e9e465920892fe796",
           "capability": "object.drawingTip.edit",
           "version": 1,
           "resources": [
-            "2b15f2d163a5477b8d903bf332b5e949"
+            "b4ace2c0a2024b0cbbc681510f49e117"
           ],
           "phase": "completed",
           "status": "Action completed"
         }
       ],
-      "nextRunId": "5b99212349f5405f8cb0be1abf156586",
+      "nextRunId": "cec3502f4deb4c53a9131133a87e40f0",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "0a8449e83a63432191c30716a4f86e26",
+        "nextRunId": "53a8d0b0fa7e43d6991e6240fe7f58b3",
         "storageError": null,
         "recovery": null
       }
@@ -4309,12 +4314,12 @@
   },
   "read": {
     "version": 1,
-    "revision": 312,
-    "sceneRevision": 55,
-    "ack": 127,
-    "session": "1847ab3a2da34a249eb7ae5cddc22612",
+    "revision": 331,
+    "sceneRevision": 59,
+    "ack": 134,
+    "session": "f0299e7b03c048e59f9d43a5144d488e",
     "status": "Current fact value. Reading does not change the room.",
-    "selectedId": "4b6ec5199ecc46b6bd26a5fab1c34211",
+    "selectedId": "10d4a7c230344df0bc5727a2aca01167",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -4322,12 +4327,12 @@
     "visible": false,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "a85cc9bd520740f3bfc5dd8b11287049",
+      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "a85cc9bd520740f3bfc5dd8b11287049",
+      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
       "error": "",
       "visible": false,
       "holding": false
@@ -4414,6 +4419,7 @@
       "latheGeometry.v1",
       "extrusionGeometry.v1",
       "sweepGeometry.v1",
+      "recipePatterns.v1",
       "roomViewCapture.v1",
       "collisionShapes.v1",
       "recipePartPlayback.v1",
@@ -4460,7 +4466,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "d39f81fb09374937ad71da0ee887f364",
+      "id": "e3fd8f9ad43140cdb26fa91642552d54",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -4583,88 +4589,7 @@
     },
     "objects": [
       {
-        "id": "2b15f2d163a5477b8d903bf332b5e949",
-        "name": "Pencil",
-        "kind": "Assembly",
-        "objectRevision": 49,
-        "position": {
-          "x": 0.4000000059604645,
-          "y": 1,
-          "z": 0.6000000238418579
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "solid",
-          "shape": "automatic",
-          "mass": 0.05999999865889549
-        },
-        "movement": null
-      },
-      {
-        "id": "980ba88ad9814b79a8b4d32d523ac368",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "book",
-        "name": "Book",
-        "kind": "Book",
-        "objectRevision": 1,
-        "position": {
-          "x": 0,
-          "y": 1.159999966621399,
-          "z": 0.6499999761581421
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "c83c97ac8f354969887c0d84a3d40d9b",
+        "id": "6395fdba3fd448818e0db9cb72b74470",
         "name": "Block",
         "kind": "Block",
         "objectRevision": 3,
@@ -4691,7 +4616,7 @@
         "movement": null
       },
       {
-        "id": "e82f20ae9d4747d09efce879d9b3b858",
+        "id": "97482e27f08b4fcca0a0ca7691c04771",
         "name": "Cylinder",
         "kind": "Cylinder",
         "objectRevision": 5,
@@ -4705,6 +4630,87 @@
           "r": 0.16862745583057404,
           "g": 0.5529412031173706,
           "b": 0.5333333611488342,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "a454a7680201495185792eec7eb0d376",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "b4ace2c0a2024b0cbbc681510f49e117",
+        "name": "Pencil",
+        "kind": "Assembly",
+        "objectRevision": 52,
+        "position": {
+          "x": 0.4000000059604645,
+          "y": 1,
+          "z": 0.6000000238418579
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.05999999865889549
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0,
+          "y": 1.159999966621399,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
           "a": 1
         },
         "animated": false,
@@ -4750,12 +4756,12 @@
     ],
     "created": [],
     "capture": {
-      "captureId": "ba59cbfae8e348449a6b1790d080d81e",
+      "captureId": "30cd4ed53b3b476d9f092b596d56fe4a",
       "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
       "mimeType": "image/jpeg",
       "width": 512,
       "height": 384,
-      "capturedAt": "2026-10-04T04:36:03.880158Z",
+      "capturedAt": "2026-10-04T06:07:37.2155527Z",
       "sceneRevision": 3,
       "verticalFov": 60,
       "position": {
@@ -4842,11 +4848,11 @@
       "status": "Current fact value. Reading does not change the room.",
       "category": "facts",
       "arguments": {
-        "target": "2b15f2d163a5477b8d903bf332b5e949"
+        "target": "b4ace2c0a2024b0cbbc681510f49e117"
       },
       "available": true,
       "value": {
-        "revision": 49,
+        "revision": 52,
         "configured": true,
         "definition": {
           "part": "",
@@ -4875,11 +4881,11 @@
     },
     "execution": {
       "selected": {
-        "id": "b128aa4ef606404489722e3bffa3bfa4",
+        "id": "d66df6488e964d4e9e465920892fe796",
         "capability": "object.drawingTip.edit",
         "version": 1,
         "resources": [
-          "2b15f2d163a5477b8d903bf332b5e949"
+          "b4ace2c0a2024b0cbbc681510f49e117"
         ],
         "phase": "completed",
         "status": "Action completed",
@@ -4888,8 +4894,8 @@
           "version": 1,
           "arguments": {
             "operation": "configure",
-            "target": "2b15f2d163a5477b8d903bf332b5e949",
-            "revision": 48,
+            "target": "b4ace2c0a2024b0cbbc681510f49e117",
+            "revision": 51,
             "definition": {
               "part": "",
               "position": {
@@ -4919,40 +4925,40 @@
       "running": [],
       "outcomes": [
         {
-          "id": "a4e1e7ad4f9b43609585566431746753",
+          "id": "e3095f70b3ef40f8b5bbf41ded516ac8",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "d83d4dbc339f439288af9c377f4c6820"
+            "objectId": "470224b5d7804039b54d7e4ffbb386a1"
           }
         },
         {
-          "id": "f0a48c9bbf114335818ce70e3be842c3",
+          "id": "ca571c6ddc0c452ba336c65901245797",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "5c327f8a9a3c493c82648e6e96cd383b"
+            "objectId": "f1a0ae20bd7f4cc29395044ef63ae811"
           }
         },
         {
-          "id": "1d6d657647954521982dbd823d707c49",
+          "id": "f5c13a7ae98c4750a149982897d1a023",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "3c2dc4c5b4e14536aa1f330f6787a294"
+            "objectId": "a41eebcb796544adae6d3985142033a1"
           }
         },
         {
-          "id": "d5d5945e3ae6409eb8194676bde88cf4",
+          "id": "2224086730974e17819a7fe086016b5f",
           "capability": "drawing.tool.set",
           "version": 1,
           "resources": [],
@@ -4960,39 +4966,39 @@
           "status": "Action completed"
         },
         {
-          "id": "6a56cd0f0bea4713a07d2e004ab9982c",
+          "id": "38bffb3159bb4f3ba2b578629d3598d9",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "3c2dc4c5b4e14536aa1f330f6787a294"
+            "a41eebcb796544adae6d3985142033a1"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "3c2dc4c5b4e14536aa1f330f6787a294",
-            "revision": 32,
+            "target": "a41eebcb796544adae6d3985142033a1",
+            "revision": 35,
             "surface": "Front",
-            "stroke": "ebaccbd4f68348bc8c4ed6c2af2e2e01"
+            "stroke": "7f99022c15824ea7b61ec542724e0029"
           }
         },
         {
-          "id": "7cd218b2cc934384aa759baa5966c1c9",
+          "id": "6da1904adaf14d24a698a5b29035f019",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "3c2dc4c5b4e14536aa1f330f6787a294"
+            "a41eebcb796544adae6d3985142033a1"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "3c2dc4c5b4e14536aa1f330f6787a294",
-            "revision": 33,
+            "target": "a41eebcb796544adae6d3985142033a1",
+            "revision": 36,
             "surface": "Front",
-            "stroke": "ebaccbd4f68348bc8c4ed6c2af2e2e01"
+            "stroke": "7f99022c15824ea7b61ec542724e0029"
           }
         },
         {
-          "id": "738830ba5d684dafbf2492841648dc20",
+          "id": "2fd5508daed944dd9d396919aba7739d",
           "capability": "drawing.tool.set",
           "version": 1,
           "resources": [],
@@ -5000,131 +5006,131 @@
           "status": "Action completed"
         },
         {
-          "id": "058c3fadc0364d3880c8cfb0a8d072d1",
+          "id": "6718c49eedb047a88948a461b0dc2098",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "958f3894f3144af3b1315c87d4c217ac"
+            "objectId": "dd6deeb4830b4ffd8ccbbd2f52911258"
           }
         },
         {
-          "id": "463e7a0770f74eddb059d2a79e639dd6",
+          "id": "6b66a6ec6e69450088a3294da6200336",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "958f3894f3144af3b1315c87d4c217ac"
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "958f3894f3144af3b1315c87d4c217ac",
-            "revision": 37,
-            "surface": "Front",
-            "stroke": ""
-          }
-        },
-        {
-          "id": "ab9ad73ba4cc4a4ca7d5c715b3934f1a",
-          "capability": "object.surface.edit",
-          "version": 1,
-          "resources": [
-            "958f3894f3144af3b1315c87d4c217ac"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "958f3894f3144af3b1315c87d4c217ac",
-            "revision": 38,
-            "surface": "Front",
-            "stroke": "251c8bbbb67043d5a45b880322729e85"
-          }
-        },
-        {
-          "id": "c8447b94f4f54098910dbf3437ae576e",
-          "capability": "object.surface.edit",
-          "version": 1,
-          "resources": [
-            "958f3894f3144af3b1315c87d4c217ac"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "958f3894f3144af3b1315c87d4c217ac",
-            "revision": 39,
-            "surface": "Front",
-            "stroke": "9419390af8c54b2c91b7161d11812862"
-          }
-        },
-        {
-          "id": "60bd224d05fc490c886b9f2b66fc0145",
-          "capability": "object.surface.edit",
-          "version": 1,
-          "resources": [
-            "958f3894f3144af3b1315c87d4c217ac"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "958f3894f3144af3b1315c87d4c217ac",
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
             "revision": 40,
             "surface": "Front",
             "stroke": ""
           }
         },
         {
-          "id": "27ef05663f8b493a80f854c9b3d48e11",
+          "id": "e90f59516fd3491787f5f1c08725d796",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 41,
+            "surface": "Front",
+            "stroke": "237d1b1a7b5048419d962166e6ba3e33"
+          }
+        },
+        {
+          "id": "a69f8a2dcec54339a09f5c5ae33fe413",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 42,
+            "surface": "Front",
+            "stroke": "fda5b64e5e124df8bb36a7e6640ec394"
+          }
+        },
+        {
+          "id": "a48671770a854e058b40b645e220993b",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 43,
+            "surface": "Front",
+            "stroke": ""
+          }
+        },
+        {
+          "id": "1c9c989710454e86aa0163028f26b394",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "664d67ec68224d7eb81a6c26a03dc50b"
+            "objectId": "6c44d54c1c5c4e19b021336f9a086825"
           }
         },
         {
-          "id": "1fc96e6dfa30478aa84db6d35b139582",
+          "id": "1d60d00aad284521bcc993d56ba316ed",
           "capability": "object.drawingTip.edit",
           "version": 1,
           "resources": [
-            "664d67ec68224d7eb81a6c26a03dc50b"
+            "6c44d54c1c5c4e19b021336f9a086825"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "e4179876b8c44621ade31cd7df1689bf",
+          "id": "a4d7164069c94b738d9a5f236a8e828c",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "2b15f2d163a5477b8d903bf332b5e949"
+            "objectId": "b4ace2c0a2024b0cbbc681510f49e117"
           }
         },
         {
-          "id": "b128aa4ef606404489722e3bffa3bfa4",
+          "id": "d66df6488e964d4e9e465920892fe796",
           "capability": "object.drawingTip.edit",
           "version": 1,
           "resources": [
-            "2b15f2d163a5477b8d903bf332b5e949"
+            "b4ace2c0a2024b0cbbc681510f49e117"
           ],
           "phase": "completed",
           "status": "Action completed"
         }
       ],
-      "nextRunId": "5b99212349f5405f8cb0be1abf156586",
+      "nextRunId": "cec3502f4deb4c53a9131133a87e40f0",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "0a8449e83a63432191c30716a4f86e26",
+        "nextRunId": "53a8d0b0fa7e43d6991e6240fe7f58b3",
         "storageError": null,
         "recovery": null
       }
@@ -5132,12 +5138,12 @@
   },
   "undone": {
     "version": 1,
-    "revision": 316,
-    "sceneRevision": 56,
-    "ack": 129,
-    "session": "1847ab3a2da34a249eb7ae5cddc22612",
+    "revision": 337,
+    "sceneRevision": 60,
+    "ack": 136,
+    "session": "f0299e7b03c048e59f9d43a5144d488e",
     "status": "Current fact value. Reading does not change the room.",
-    "selectedId": "4b6ec5199ecc46b6bd26a5fab1c34211",
+    "selectedId": "10d4a7c230344df0bc5727a2aca01167",
     "ok": true,
     "canUndo": true,
     "canRedo": true,
@@ -5145,12 +5151,12 @@
     "visible": false,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "a85cc9bd520740f3bfc5dd8b11287049",
+      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "a85cc9bd520740f3bfc5dd8b11287049",
+      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
       "error": "",
       "visible": false,
       "holding": false
@@ -5237,6 +5243,7 @@
       "latheGeometry.v1",
       "extrusionGeometry.v1",
       "sweepGeometry.v1",
+      "recipePatterns.v1",
       "roomViewCapture.v1",
       "collisionShapes.v1",
       "recipePartPlayback.v1",
@@ -5283,7 +5290,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "d39f81fb09374937ad71da0ee887f364",
+      "id": "e3fd8f9ad43140cdb26fa91642552d54",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -5406,88 +5413,7 @@
     },
     "objects": [
       {
-        "id": "2b15f2d163a5477b8d903bf332b5e949",
-        "name": "Pencil",
-        "kind": "Assembly",
-        "objectRevision": 50,
-        "position": {
-          "x": 0.4000000059604645,
-          "y": 1,
-          "z": 0.6000000238418579
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "solid",
-          "shape": "automatic",
-          "mass": 0.05999999865889549
-        },
-        "movement": null
-      },
-      {
-        "id": "980ba88ad9814b79a8b4d32d523ac368",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "book",
-        "name": "Book",
-        "kind": "Book",
-        "objectRevision": 1,
-        "position": {
-          "x": 0,
-          "y": 1.159999966621399,
-          "z": 0.6499999761581421
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "c83c97ac8f354969887c0d84a3d40d9b",
+        "id": "6395fdba3fd448818e0db9cb72b74470",
         "name": "Block",
         "kind": "Block",
         "objectRevision": 3,
@@ -5514,7 +5440,7 @@
         "movement": null
       },
       {
-        "id": "e82f20ae9d4747d09efce879d9b3b858",
+        "id": "97482e27f08b4fcca0a0ca7691c04771",
         "name": "Cylinder",
         "kind": "Cylinder",
         "objectRevision": 5,
@@ -5528,6 +5454,87 @@
           "r": 0.16862745583057404,
           "g": 0.5529412031173706,
           "b": 0.5333333611488342,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "a454a7680201495185792eec7eb0d376",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "b4ace2c0a2024b0cbbc681510f49e117",
+        "name": "Pencil",
+        "kind": "Assembly",
+        "objectRevision": 53,
+        "position": {
+          "x": 0.4000000059604645,
+          "y": 1,
+          "z": 0.6000000238418579
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.05999999865889549
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0,
+          "y": 1.159999966621399,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
           "a": 1
         },
         "animated": false,
@@ -5573,12 +5580,12 @@
     ],
     "created": [],
     "capture": {
-      "captureId": "ba59cbfae8e348449a6b1790d080d81e",
+      "captureId": "30cd4ed53b3b476d9f092b596d56fe4a",
       "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
       "mimeType": "image/jpeg",
       "width": 512,
       "height": 384,
-      "capturedAt": "2026-10-04T04:36:03.880158Z",
+      "capturedAt": "2026-10-04T06:07:37.2155527Z",
       "sceneRevision": 3,
       "verticalFov": 60,
       "position": {
@@ -5665,11 +5672,11 @@
       "status": "Current fact value. Reading does not change the room.",
       "category": "facts",
       "arguments": {
-        "target": "2b15f2d163a5477b8d903bf332b5e949"
+        "target": "b4ace2c0a2024b0cbbc681510f49e117"
       },
       "available": true,
       "value": {
-        "revision": 50,
+        "revision": 53,
         "configured": true,
         "definition": {
           "part": "",
@@ -5698,11 +5705,11 @@
     },
     "execution": {
       "selected": {
-        "id": "b128aa4ef606404489722e3bffa3bfa4",
+        "id": "d66df6488e964d4e9e465920892fe796",
         "capability": "object.drawingTip.edit",
         "version": 1,
         "resources": [
-          "2b15f2d163a5477b8d903bf332b5e949"
+          "b4ace2c0a2024b0cbbc681510f49e117"
         ],
         "phase": "completed",
         "status": "Action completed",
@@ -5711,8 +5718,8 @@
           "version": 1,
           "arguments": {
             "operation": "configure",
-            "target": "2b15f2d163a5477b8d903bf332b5e949",
-            "revision": 48,
+            "target": "b4ace2c0a2024b0cbbc681510f49e117",
+            "revision": 51,
             "definition": {
               "part": "",
               "position": {
@@ -5742,40 +5749,40 @@
       "running": [],
       "outcomes": [
         {
-          "id": "a4e1e7ad4f9b43609585566431746753",
+          "id": "e3095f70b3ef40f8b5bbf41ded516ac8",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "d83d4dbc339f439288af9c377f4c6820"
+            "objectId": "470224b5d7804039b54d7e4ffbb386a1"
           }
         },
         {
-          "id": "f0a48c9bbf114335818ce70e3be842c3",
+          "id": "ca571c6ddc0c452ba336c65901245797",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "5c327f8a9a3c493c82648e6e96cd383b"
+            "objectId": "f1a0ae20bd7f4cc29395044ef63ae811"
           }
         },
         {
-          "id": "1d6d657647954521982dbd823d707c49",
+          "id": "f5c13a7ae98c4750a149982897d1a023",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "3c2dc4c5b4e14536aa1f330f6787a294"
+            "objectId": "a41eebcb796544adae6d3985142033a1"
           }
         },
         {
-          "id": "d5d5945e3ae6409eb8194676bde88cf4",
+          "id": "2224086730974e17819a7fe086016b5f",
           "capability": "drawing.tool.set",
           "version": 1,
           "resources": [],
@@ -5783,39 +5790,39 @@
           "status": "Action completed"
         },
         {
-          "id": "6a56cd0f0bea4713a07d2e004ab9982c",
+          "id": "38bffb3159bb4f3ba2b578629d3598d9",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "3c2dc4c5b4e14536aa1f330f6787a294"
+            "a41eebcb796544adae6d3985142033a1"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "3c2dc4c5b4e14536aa1f330f6787a294",
-            "revision": 32,
+            "target": "a41eebcb796544adae6d3985142033a1",
+            "revision": 35,
             "surface": "Front",
-            "stroke": "ebaccbd4f68348bc8c4ed6c2af2e2e01"
+            "stroke": "7f99022c15824ea7b61ec542724e0029"
           }
         },
         {
-          "id": "7cd218b2cc934384aa759baa5966c1c9",
+          "id": "6da1904adaf14d24a698a5b29035f019",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "3c2dc4c5b4e14536aa1f330f6787a294"
+            "a41eebcb796544adae6d3985142033a1"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "3c2dc4c5b4e14536aa1f330f6787a294",
-            "revision": 33,
+            "target": "a41eebcb796544adae6d3985142033a1",
+            "revision": 36,
             "surface": "Front",
-            "stroke": "ebaccbd4f68348bc8c4ed6c2af2e2e01"
+            "stroke": "7f99022c15824ea7b61ec542724e0029"
           }
         },
         {
-          "id": "738830ba5d684dafbf2492841648dc20",
+          "id": "2fd5508daed944dd9d396919aba7739d",
           "capability": "drawing.tool.set",
           "version": 1,
           "resources": [],
@@ -5823,131 +5830,131 @@
           "status": "Action completed"
         },
         {
-          "id": "058c3fadc0364d3880c8cfb0a8d072d1",
+          "id": "6718c49eedb047a88948a461b0dc2098",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "958f3894f3144af3b1315c87d4c217ac"
+            "objectId": "dd6deeb4830b4ffd8ccbbd2f52911258"
           }
         },
         {
-          "id": "463e7a0770f74eddb059d2a79e639dd6",
+          "id": "6b66a6ec6e69450088a3294da6200336",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "958f3894f3144af3b1315c87d4c217ac"
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "958f3894f3144af3b1315c87d4c217ac",
-            "revision": 37,
-            "surface": "Front",
-            "stroke": ""
-          }
-        },
-        {
-          "id": "ab9ad73ba4cc4a4ca7d5c715b3934f1a",
-          "capability": "object.surface.edit",
-          "version": 1,
-          "resources": [
-            "958f3894f3144af3b1315c87d4c217ac"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "958f3894f3144af3b1315c87d4c217ac",
-            "revision": 38,
-            "surface": "Front",
-            "stroke": "251c8bbbb67043d5a45b880322729e85"
-          }
-        },
-        {
-          "id": "c8447b94f4f54098910dbf3437ae576e",
-          "capability": "object.surface.edit",
-          "version": 1,
-          "resources": [
-            "958f3894f3144af3b1315c87d4c217ac"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "958f3894f3144af3b1315c87d4c217ac",
-            "revision": 39,
-            "surface": "Front",
-            "stroke": "9419390af8c54b2c91b7161d11812862"
-          }
-        },
-        {
-          "id": "60bd224d05fc490c886b9f2b66fc0145",
-          "capability": "object.surface.edit",
-          "version": 1,
-          "resources": [
-            "958f3894f3144af3b1315c87d4c217ac"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "958f3894f3144af3b1315c87d4c217ac",
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
             "revision": 40,
             "surface": "Front",
             "stroke": ""
           }
         },
         {
-          "id": "27ef05663f8b493a80f854c9b3d48e11",
+          "id": "e90f59516fd3491787f5f1c08725d796",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 41,
+            "surface": "Front",
+            "stroke": "237d1b1a7b5048419d962166e6ba3e33"
+          }
+        },
+        {
+          "id": "a69f8a2dcec54339a09f5c5ae33fe413",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 42,
+            "surface": "Front",
+            "stroke": "fda5b64e5e124df8bb36a7e6640ec394"
+          }
+        },
+        {
+          "id": "a48671770a854e058b40b645e220993b",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 43,
+            "surface": "Front",
+            "stroke": ""
+          }
+        },
+        {
+          "id": "1c9c989710454e86aa0163028f26b394",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "664d67ec68224d7eb81a6c26a03dc50b"
+            "objectId": "6c44d54c1c5c4e19b021336f9a086825"
           }
         },
         {
-          "id": "1fc96e6dfa30478aa84db6d35b139582",
+          "id": "1d60d00aad284521bcc993d56ba316ed",
           "capability": "object.drawingTip.edit",
           "version": 1,
           "resources": [
-            "664d67ec68224d7eb81a6c26a03dc50b"
+            "6c44d54c1c5c4e19b021336f9a086825"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "e4179876b8c44621ade31cd7df1689bf",
+          "id": "a4d7164069c94b738d9a5f236a8e828c",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "2b15f2d163a5477b8d903bf332b5e949"
+            "objectId": "b4ace2c0a2024b0cbbc681510f49e117"
           }
         },
         {
-          "id": "b128aa4ef606404489722e3bffa3bfa4",
+          "id": "d66df6488e964d4e9e465920892fe796",
           "capability": "object.drawingTip.edit",
           "version": 1,
           "resources": [
-            "2b15f2d163a5477b8d903bf332b5e949"
+            "b4ace2c0a2024b0cbbc681510f49e117"
           ],
           "phase": "completed",
           "status": "Action completed"
         }
       ],
-      "nextRunId": "5b99212349f5405f8cb0be1abf156586",
+      "nextRunId": "cec3502f4deb4c53a9131133a87e40f0",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "0a8449e83a63432191c30716a4f86e26",
+        "nextRunId": "53a8d0b0fa7e43d6991e6240fe7f58b3",
         "storageError": null,
         "recovery": null
       }

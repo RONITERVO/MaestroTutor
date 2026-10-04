@@ -3,7 +3,9 @@
 export interface Vec3 {x:number;y:number;z:number}
 export interface Rotation extends Vec3 {w:number}
 export interface Pigment {r:number;g:number;b:number;a:number}
-export interface RecipePart {id:string;parent:string|null;shape:'box'|'sphere'|'cylinder'|'lathe'|'extrude'|'sweep';path?:Vec3[];profile?:{x:number;y:number}[];segments?:number;position:Vec3;rotation:Rotation;size:Vec3;color:Pigment}
+export interface RecipePattern {kind:'solid'|'checker'|'stripes';plane:'uv'|'xy'|'xz'|'yz';columns:number;rows:number;secondary:string}
+export const defaultRecipePattern=():RecipePattern=>({kind:'solid',plane:'uv',columns:1,rows:1,secondary:'#FFFFFF'});
+export interface RecipePart {pattern?:RecipePattern;id:string;parent:string|null;shape:'box'|'sphere'|'cylinder'|'lathe'|'extrude'|'sweep';path?:Vec3[];profile?:{x:number;y:number}[];segments?:number;position:Vec3;rotation:Rotation;size:Vec3;color:Pigment}
 export interface RecipeTrack {part:string;keys:{time:number;rotation:Rotation}[]}
 export interface RoomRecipe {version:1;parts:RecipePart[];tracks:RecipeTrack[];duration:number;playing:boolean;loop:boolean}
 const record=(v:unknown):v is Record<string,unknown>=>v!==null && typeof v==='object' && !Array.isArray(v);
@@ -11,6 +13,7 @@ const finite=(v:unknown):v is number=>typeof v==='number' && Number.isFinite(v);
 export const validVector=(v:unknown):v is Vec3=>record(v)&&['x','y','z'].every(k=>finite(v[k]));
 export const validRotation=(v:unknown):v is Rotation=>record(v)&&['x','y','z','w'].every(k=>finite(v[k]))&&Math.abs(['x','y','z','w'].reduce((sum,k)=>sum+Number(v[k])**2,0)-1)<.01;
 export const validPigment=(v:unknown):v is Pigment=>record(v)&&['r','g','b'].every(k=>finite(v[k])&&Number(v[k])>=0&&Number(v[k])<=1)&&v.a===1;
+export const validRecipePattern=(v:unknown):boolean=>v===undefined||v===null||record(v)&&typeof v.kind==='string'&&['solid','checker','stripes'].includes(v.kind)&&typeof v.plane==='string'&&['uv','xy','xz','yz'].includes(v.plane)&&['columns','rows'].every(k=>Number.isInteger(v[k])&&Number(v[k])>=1&&Number(v[k])<=32)&&typeof v.secondary==='string'&&v.secondary.length===7&&/^#[a-fA-F0-9]{6}$/.test(v.secondary);
 const id=(v:unknown):v is string=>typeof v==='string'&&/^[a-zA-Z0-9_]{1,32}$/.test(v);
 /** A simple closed cross section, radius x and height y, counter-clockwise. */
 export function validLathePart(part:Record<string,unknown>):boolean {
@@ -103,7 +106,7 @@ export function parseRecipe(v:unknown):RoomRecipe|null {
  if(!record(v)||v.version!==1||!Array.isArray(v.parts)||v.parts.length<1||v.parts.length>32||!Array.isArray(v.tracks)||v.tracks.length>17||!finite(v.duration)||v.duration<.1||v.duration>30||typeof v.playing!=='boolean'||typeof v.loop!=='boolean')return null;
  const ids=new Map<string,number>();
  for(const p of v.parts) {
-  if(!record(p)||!id(p.id)||ids.has(p.id)||!['box','sphere','cylinder','lathe','extrude','sweep'].includes(p.shape as string)||!(p.shape==='sweep'?validSweptPart(p):(p.path===undefined||p.path===null||Array.isArray(p.path)&&p.path.length===0)&&(p.shape==='extrude'?validExtrudedPart(p):validLathePart(p)))||!validVector(p.position)||!validVector(p.size)||!validRotation(p.rotation)||!validPigment(p.color)||![p.size.x,p.size.y,p.size.z].every(n=>n>=.005&&n<=2))return null;
+  if(!record(p)||!id(p.id)||ids.has(p.id)||!['box','sphere','cylinder','lathe','extrude','sweep'].includes(p.shape as string)||!(p.shape==='sweep'?validSweptPart(p):(p.path===undefined||p.path===null||Array.isArray(p.path)&&p.path.length===0)&&(p.shape==='extrude'?validExtrudedPart(p):validLathePart(p)))||!validVector(p.position)||!validVector(p.size)||!validRotation(p.rotation)||!validPigment(p.color)||!validRecipePattern(p.pattern)||![p.size.x,p.size.y,p.size.z].every(n=>n>=.005&&n<=2))return null;
   if(p.parent!==null&&p.parent!==''&&(typeof p.parent!=='string'||!ids.has(p.parent)))return null;
   const length=Math.hypot(p.position.x,p.position.y,p.position.z),reach=(ids.get(p.parent as string)??0)+length;
   if(length>2||reach+Math.hypot(p.size.x,p.size.y,p.size.z)/2>3)return null;ids.set(p.id,reach);

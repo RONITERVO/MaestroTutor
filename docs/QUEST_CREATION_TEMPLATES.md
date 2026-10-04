@@ -27,7 +27,8 @@ animation. Successful receipt replay cannot create it twice.
 | Fork | Handle, crossbar and four solid prongs | Simple rigid cutlery |
 | Domino | Upright two-three piece and one simple proxy | Copy/place/topple; no domino game rules |
 | Building brick | Body and four visible studs, single bounded proxy | Loose stacking plus editable Top/Bottom snap points; explicit place/join, no automatic stud interlocking |
-| Pawn | Lathe chess pawn with conservative cylinder collision | Editable/copyable piece; no chessboard or legal-move engine |
+| Pawn, rook, knight, bishop, queen, king | Six distinct editable recipes with conservative cylinder collision and Foot snap points | Independently movable; no legal-move engine |
+| Chessboard | Two recipe parts, 8 by 8 material pattern, 64 named square snap points | Fixed board by default; no occupancy locks |
 | Ball | Sphere with bouncy physics | Existing throw/roll/contact capabilities |
 | Held chalk | Ordinary editable recipe and configurable drawing tip | Configured plane/cylinder/sphere patches; no arbitrary mesh/skin paint |
 | Pencil | Yellow barrel, wood/graphite tip and narrow dark ink | Editable tip, same contact and save path as chalk |
@@ -36,8 +37,8 @@ animation. Successful receipt replay cannot create it twice.
 | Chalkboard | Five editable parts and a drawing patch on the Board part | Flat ink, whole-stroke erase; no curved projection |
 | Box robot | Nineteen parented parts, two wave tracks, initially idle | Fixed whole-body proxy does not follow animated parts |
 
-The sixteen-template set is deliberately smaller than the complete proposed play kit. Arbitrary mesh/skin
-painting, further fidgets, a shipped chess layout, persistent water and snow
+The twenty-two-template set is deliberately smaller than the complete proposed play kit. Arbitrary mesh/skin
+painting, further fidgets, persistent water and snow
 remain separate increments in
 [world authoring](QUEST_WORLD_AUTHORING.md). This set does not fulfill those gates. Existing pieces can now share a
 [layout reset](QUEST_LAYOUT_AUTHORING.md) with one Undo; this does not connect
@@ -157,3 +158,39 @@ owner's approved development-reset policy, not a migration or alias. Already
 expanded objects retain their editable data. A draft pinned to the earlier hash
 must explicitly choose the revised template; unsupported hashes never substitute.
 The immutable-source policy above applies to published release choices.
+
+## Chess construction and reusable patterns
+
+Create the Chessboard template, then call `create(position, rotation, scale)` on
+**Chess pieces white** and **Chess pieces black** at the same board origin and
+scale. The defaults use a horizontal board; apply the same yaw to each constructor.
+These are ordinary pinned, editable modules: two 16-member prototype batches,
+with no new chess action or numeric kind. Board creation and each side add one Undo
+entry; a full set is three transactions. An agent should inspect available room
+capacity before creating all 33 objects and report any partial completion. Use an
+existing temporary-room session when the whole setup needs Keep/Discard review.
+The constructors never start physics or the game automatically.
+
+At scale 1 the board is 68.8 cm wide, with 8 cm squares. Local negative Z is the
+white side. A1 is dark, H1 is light, queens start on D1/D8 and kings on E1/E8.
+Each square has an explicit `ChessSquare` alignment frame, and each piece has a
+matching `Foot`. Existing gripping, placement, snapping, collision and object
+facts apply. Snapping does not enforce turn order, exclusive occupancy, captures
+or check. The agent can read named squares and piece poses; image capture remains
+an optional visual aid. Users can author additional rules using shared programs.
+
+`recipePatterns.v1` adds an optional `pattern` to any recipe part: solid, checker
+or stripes; UV/XY/XZ/YZ projection; 1–32 columns and rows; and one `#RRGGBB`
+secondary pigment. The part colour is the first pigment, and object tint affects
+both. The source is shared by native rendering, recipe editing, blocks, agent
+calls and `object.recipe.part` facts. It adds no mesh cells, colliders or drawing
+surface. Planar coordinates follow the part during movement and animation;
+UV follows its generated mesh. Pixel-footprint filtering reduces distant shimmer.
+
+The book's recipe workspace edits these fields through `object.recipe.edit` and
+keeps invalid drafts. Missing patterns retain solid appearance. Patterned objects
+use room format 14 (snapshot intent and archive 13), so older readers preserve
+rather than silently flatten new appearance. The previous pawn was an unreleased
+starter: its current dimensions, neutral pigment and foot origin intentionally
+replace that draft; its content hash and native preview change. Existing expanded
+objects retain their copied source. Released definitions must remain immutable.

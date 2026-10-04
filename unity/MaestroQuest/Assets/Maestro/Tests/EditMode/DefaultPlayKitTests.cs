@@ -13,10 +13,14 @@ namespace Maestro.Quest.Tests
     {
         [TestCase("SmallFort", "small-fort", 16)]
         [TestCase("Spinner", "spinner", 2)]
+        [TestCase("ChessWhite", "chess-white", 16)]
+        [TestCase("ChessBlack", "chess-black", 16)]
         public void IncludedConstructionIsPinnedEditableSourceWithFreshMembers(string resource, string fixture, int count)
         {
             var source = JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath, "Maestro/Tests/Fixtures/program-" + fixture + ".json")));
-            var module = JObject.Parse(Resources.Load<TextAsset>("Programs/Modules/" + resource).text);
+            var asset = Resources.Load<TextAsset>("Programs/Modules/" + resource);
+            Assert.That(asset.bytes.Length, Is.LessThanOrEqualTo(ProgramModuleLibrary.MaximumBytes), "Bundled whitespace must fit the same file budget");
+            var module = JObject.Parse(asset.text);
             ProgramModuleLibrary.Validate(module);
             Assert.That(JToken.DeepEquals(module, source["imports"][0]["module"]), Is.True);
             Assert.That((string)source["imports"][0]["hash"], Is.EqualTo(ProgramModules.Hash(module)));
@@ -26,7 +30,7 @@ namespace Maestro.Quest.Tests
             Assert.That(call.Definition.Id, Is.EqualTo("object.batch.create"));
             Assert.That(call.Resources, Is.Empty);
             var args = module["program"]["functions"][1]["body"][0]["arguments"];
-            var batch = JsonUtility.FromJson<CreationBatch>(args.ToString());
+            var batch = CreationBatch.Read((JObject)args);
             Assert.That(batch.Prepare(out var first, out error), Is.True, error);
             Assert.That(batch.Prepare(out var second, out error), Is.True, error);
             Assert.That(first.Length, Is.EqualTo(count));

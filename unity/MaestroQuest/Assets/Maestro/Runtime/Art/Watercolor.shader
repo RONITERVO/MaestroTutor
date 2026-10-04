@@ -5,6 +5,11 @@ Shader "Maestro/Watercolor"
     Properties
     {
         _Color ("Pigment", Color) = (1,.94,.82,1)
+        _PatternMode ("Pattern: solid/checker/stripes", Float) = 0
+        _PatternPlane ("Pattern: UV/XY/XZ/YZ", Float) = 0
+        _PatternColor ("Alternate pigment", Color) = (1,1,1,1)
+        _PatternCounts ("Pattern columns and rows", Vector) = (1,1,0,0)
+        _PatternCoordinates ("Normalized part coordinates", Vector) = (1,1,1,0)
         _MainTex ("Page image", 2D) = "white" {}
         _Grain ("Paper grain", Range(0,.2)) = .07
         _PigmentTex ("Dry watercolor", 2D) = "white" {}
@@ -67,6 +72,8 @@ Shader "Maestro/Watercolor"
             sampler2D _PigmentTex;
             float4 _MainTex_ST;
             float4 _Color;
+            float _PatternMode, _PatternPlane;
+            float4 _PatternColor, _PatternCounts, _PatternCoordinates;
             float _Grain;
             float _Shading;
             float _HasRestCoordinates;
@@ -99,7 +106,19 @@ Shader "Maestro/Watercolor"
                 float dry = dot(weights, float3(tex2D(_PigmentTex,input.local.yz*1.8).r, tex2D(_PigmentTex,input.local.xz*1.8).r, tex2D(_PigmentTex,input.local.xy*1.8).r));
                 float pigment = lerp(1, dry, saturate(_Grain * 8));
                 float face = 1 - _Shading * (1 - saturate(dot(normalize(input.normal), normalize(float3(-.3,.8,-.5)))));
-                return fixed4(surface.rgb * _Color.rgb * input.color.rgb * pigment * face, 1);
+                float3 color = _Color.rgb;
+                if (_PatternMode > .5) {
+                    float3 local = input.local * _PatternCoordinates.xyz + .5;
+                    float2 uv = _PatternPlane < .5 ? input.uv : _PatternPlane < 1.5 ? local.xy : _PatternPlane < 2.5 ? local.xz : local.yz;
+                    float2 cells = uv * _PatternCounts.xy;
+                    // Integrate alternating cells over the pixel footprint. Distant fine
+                    // patterns average instead of producing hard binary shimmer.
+                    float2 width = max(fwidth(cells), .0001);
+                    float2 wave = 2 * (abs(frac((cells - width * .5) * .5) - .5) - abs(frac((cells + width * .5) * .5) - .5)) / width;
+                    float alternate = _PatternMode < 1.5 ? .5 - .5 * wave.x * wave.y : .5 - .5 * wave.x;
+                    color = lerp(color, _PatternColor.rgb, saturate(alternate));
+                }
+                return fixed4(surface.rgb * color * input.color.rgb * pigment * face, 1);
             }
             ENDCG
         }

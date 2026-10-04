@@ -38,7 +38,8 @@ namespace Maestro.Quest.Creation
                 if(bytes==null||bytes.Length>131072)throw new InvalidOperationException("Invalid bundled template size");
                 using var reader=new Newtonsoft.Json.JsonTextReader(new System.IO.StringReader(new UTF8Encoding(false,true).GetString(bytes))) {MaxDepth=24,DateParseHandling=Newtonsoft.Json.DateParseHandling.None};
                 source=JObject.Load(reader,new JsonLoadSettings {DuplicatePropertyNameHandling=DuplicatePropertyNameHandling.Error});
-                if(reader.Read()||!CapabilityArguments.Validate(source,Schema(),out _))throw new InvalidOperationException("Invalid bundled creation template");
+                if(reader.Read())throw new InvalidOperationException("Unexpected trailing creation-template data");
+                if(!CapabilityArguments.Validate(source,Schema(),out var error))throw new InvalidOperationException("Invalid bundled creation template " + (string)source["id"] + ": " + error);
                 Hash=ModelLibrary.Hash(bytes);
             }
             public JObject Summary(int index,int total)=>new() {

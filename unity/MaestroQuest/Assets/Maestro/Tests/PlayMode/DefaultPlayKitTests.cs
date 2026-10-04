@@ -20,7 +20,7 @@ namespace Maestro.Quest.Tests
             var module = JObject.Parse(Resources.Load<TextAsset>("Programs/Modules/" + resource).text);
             var args = (JObject)module["program"]["functions"][1]["body"][0]["arguments"].DeepClone();
             args["position"] = new JObject { ["x"] = 4, ["y"] = 2, ["z"] = 4 };
-            return JsonUtility.FromJson<CreationBatch>(args.ToString());
+            return CreationBatch.Read(args);
         }
         [UnityTest] public IEnumerator DefaultPlayKitFortProgramCreatesOneEditableSavedBatchAndUndoRemovesAll()
         {

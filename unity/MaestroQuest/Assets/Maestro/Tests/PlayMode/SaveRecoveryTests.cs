@@ -22,7 +22,7 @@ namespace Maestro.Quest.Tests
         RoomEditor editor;
         RuleWorkshop rules;
         string directory,id;
-        string RoomPath=>Path.Combine(directory,"room.v13.json");
+        string RoomPath=>Path.Combine(directory,"room.v14.json");
         string RulesPath=>Path.Combine(directory,"behaviours.v2.json");
         const BindingFlags Private=BindingFlags.Instance|BindingFlags.NonPublic;
         static Task<string> Pending(MonoBehaviour owner)=>(Task<string>)owner.GetType().GetField("saveTask",Private).GetValue(owner);

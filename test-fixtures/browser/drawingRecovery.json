@@ -1,6 +1,6 @@
 {
   "before": {
-    "sessionId": "b3d302e7d1534607b5ce56e69fcb6091",
+    "sessionId": "f22c642f157042698a2be4fbc3994d66",
     "phase": "unsaved",
     "points": 2,
     "mode": "draw",
@@ -13,21 +13,21 @@
     "version": 1,
     "arguments": {
       "operation": "retry",
-      "sessionId": "b3d302e7d1534607b5ce56e69fcb6091"
+      "sessionId": "f22c642f157042698a2be4fbc3994d66"
     }
   },
   "receipt": {
     "selected": {
-      "id": "2560209c7ca14956afebf690c26f86a1",
+      "id": "b211ccf5ae444eb49f4b7a0576575373",
       "capability": "object.drawing.resolve",
       "version": 1,
       "resources": [],
       "phase": "completed",
       "status": "Action completed",
       "output": {
-        "sessionId": "b3d302e7d1534607b5ce56e69fcb6091",
+        "sessionId": "f22c642f157042698a2be4fbc3994d66",
         "phase": "saved",
-        "objectId": "871e4f778dc44cd3aeafd1a137953d17",
+        "objectId": "df2345bf10ec43c7b258a1c9a24507b7",
         "points": 2,
         "mode": "draw",
         "strokes": 0,
@@ -38,23 +38,23 @@
         "version": 1,
         "arguments": {
           "operation": "retry",
-          "sessionId": "b3d302e7d1534607b5ce56e69fcb6091"
+          "sessionId": "f22c642f157042698a2be4fbc3994d66"
         }
       }
     },
     "running": [],
     "outcomes": [
       {
-        "id": "2560209c7ca14956afebf690c26f86a1",
+        "id": "b211ccf5ae444eb49f4b7a0576575373",
         "capability": "object.drawing.resolve",
         "version": 1,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "sessionId": "b3d302e7d1534607b5ce56e69fcb6091",
+          "sessionId": "f22c642f157042698a2be4fbc3994d66",
           "phase": "saved",
-          "objectId": "871e4f778dc44cd3aeafd1a137953d17",
+          "objectId": "df2345bf10ec43c7b258a1c9a24507b7",
           "points": 2,
           "mode": "draw",
           "strokes": 0,
@@ -62,12 +62,12 @@
         }
       }
     ],
-    "nextRunId": "8385ec3b84934936af63383b34f732d9",
+    "nextRunId": "084a1b3d6867401b9c579cd3f47afcbe",
     "storageError": null,
     "recovery": null
   },
   "after": {
-    "sessionId": "6981d7dadd78400a9f161c23bc0b3a85",
+    "sessionId": "28d5b38e30f541ae84f94b39f141833b",
     "phase": "idle",
     "points": 0,
     "mode": "none",
