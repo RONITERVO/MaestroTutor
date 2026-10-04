@@ -168,8 +168,8 @@ prevent older builds from falling back past these new saved surfaces.
 Native acceptance covers analytic contact, source/budget limits, actual drawing,
 held chalk, erasing/Undo, scaled frames, failed-save retry, copying and temporary
 Discard. Real Quest contact comfort and maximum-load performance remain open.
-Arbitrary triangle/UV painting, skinned deformation and scanned-wall overlays
-remain separate unfinished capabilities.
+Arbitrary triangle/UV painting and skinned deformation remain unfinished.
+The scanned-plane ink increment below adds explicit saved overlays.
 
 ## Held erasers and drawing defaults (2026-10-04)
 
@@ -205,3 +205,55 @@ This is whole-stroke erasure, not cutting individual stroke segments or wet pain
 Desktop tests cover curved sweeps, physical grip/contact, solid obstruction,
 priority, failed-save recovery, atomic batch editing and Undo. Quest contact feel
 and performance at maximum admitted drawing capacity remain acceptance work.
+
+
+## Saved scanned ink layers (2026-10-05)
+
+`scanDrawingLayers.v1` adds `drawing.layer.edit` and `object.scanDrawing`.
+A layer is a saved Drawing object with no free-space stroke, exactly one root
+plane named Canvas, and one versioned `scanAnchors` binding. The binding holds
+exact Meta room and anchor IDs plus plane-local x/y and roll. It adds no panel
+or solid collider; ink uses the existing surface renderer, pencil, held tips,
+eraser, editable stroke records and Undo. No new model provider is involved.
+
+Read `room.scan` for its current stateId. `atGaze` creates on the tracked viewer's
+first front-facing scanned plane within four metres. It refuses a first hit that
+is too small rather than selecting a farther plane. `create` chooses the exact
+anchorId and placement. Width/height are 0.02–4 metres; all corners and edges must
+fit the loaded rectangle and available polygon outline. The native scan adapter
+admits at most 256 polygon points per surface and 4,096 total. Outlines are used
+locally for fit, not added to the shared layout facts. Openings absent from the
+scan remain unknown. This is an overlay, not triangle/UV painting or a guarantee
+that a real wall is intact, unobstructed or accurately aligned.
+
+The plane faces the scan's +Z outward normal, 6 mm above it, converting to the
+existing ink convention of local -Z. Exact matching anchors update its live pose.
+Unavailable tracking, a missing anchor, a different room or a boundary that no
+longer fits hides the layer and disables physical contact without deleting ink.
+A matching anchor can restore it. No label or proximity substitution occurs.
+`object.scanDrawing` exposes saved placement, current revision/stateId, size and
+live visibility/reason. The scan ID is empty while unavailable.
+
+`rebind` is an explicit saved edit with the current scan ID and layer revision.
+It preserves all ink and adds one Undo. Generated controls refresh those guards
+from one fact, while create refreshes room.scan. Existing `object.surface.edit`
+can edit strokes, enable drawing, clear ink or change dimensions, but Canvas must
+remain one root plane. Resizing beyond a current scan hides it until it fits or is
+rebound. Delete removes the whole layer with Undo. Loose movement, grabbing,
+scaling, physics, prop attachment and object animation are refused; Recall leaves
+layers on their anchors. Free-space stroke facts remain for ordinary 3D strokes.
+
+A changed or lost anchor interrupts physical capture and retains the draft.
+Retry requires available tracking, the same saved binding and unchanged ink
+patch; Discard is always available. Creation, rebind and stroke edits use the
+ordinary saved transaction/temporary-room path. Room v20, paired snapshot v19 and
+workspace archive v19 keep old readers from dropping bindings. Exports contain
+saved IDs, placement and user ink, not scan meshes or polygon outlines.
+
+Native geometry, persistence, failed-save recovery, physical capture/eraser,
+missing-anchor recovery, rebind, Undo, temporary Discard and legacy-command guards
+passed desktop tests. Shared-client tests validate the real native receipt/fact and
+generated input guards. The audited development APK is recorded in
+[the delivery record](QUEST_V1_PLAN.md). Real Quest alignment,
+contact feel, scan reload/rescan recovery and sustained-load performance remain
+required before release.

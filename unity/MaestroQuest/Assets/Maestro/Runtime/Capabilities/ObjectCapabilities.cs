@@ -146,7 +146,7 @@ namespace Maestro.Quest.Programs
         public override JObject InputSchema=>Object(new JObject {["target"]=Resource(Text("^[a-fA-F0-9]{32}$",32))});
         public override bool CanRun(CapabilityContext context,JObject arguments,out string error) {
             if(!context.Target(arguments,out _,out error))return false;
-            return context.Editor.CanEditObject((string)arguments["target"],true,out error);
+            return context.Editor.CanEditObject((string)arguments["target"],true,out error,true);
         }
         public override bool Start(CapabilityContext context,string runId,JObject arguments,out CapabilityOperation operation,out string error) {
             operation=null;if(!context.Editor.DeleteObject((string)arguments["target"],out error))return false;operation=new CompletedCapability();return true;

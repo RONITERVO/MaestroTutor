@@ -14,17 +14,18 @@ namespace Maestro.Quest.Interaction
         public Vector3 Position;
         public Quaternion Rotation=Quaternion.identity;
         public Rect? Plane;
+        public Vector2[] Boundary=Array.Empty<Vector2>();
         public Bounds? Volume;
         public bool Valid=>Guid.TryParseExact(Id,"N",out var id)&&id!=Guid.Empty&&Label!=null&&Label.Length<=96&&!Label.Any(char.IsControl)&&
             Coordinate(Position)&&float.IsFinite(Rotation.x)&&float.IsFinite(Rotation.y)&&float.IsFinite(Rotation.z)&&float.IsFinite(Rotation.w)&&
             Mathf.Abs(Quaternion.Dot(Rotation,Rotation)-1)<.001f&&(Plane.HasValue||Volume.HasValue)&&
             (!Plane.HasValue||Coordinate(new Vector3(Plane.Value.center.x,Plane.Value.center.y,0))&&Size(new Vector3(Plane.Value.width,Plane.Value.height,1)))&&
-            (!Volume.HasValue||Coordinate(Volume.Value.center)&&Size(Volume.Value.size));
+            (!Volume.HasValue||Coordinate(Volume.Value.center)&&Size(Volume.Value.size))&&Boundary!=null&&Boundary.Length<=256&&(Boundary.Length==0||Boundary.Length>=3)&&Boundary.All(p=>Coordinate(new Vector3(p.x,p.y,0)));
         static bool Coordinate(Vector3 v)=>float.IsFinite(v.x)&&float.IsFinite(v.y)&&float.IsFinite(v.z)&&Mathf.Abs(v.x)<=1000&&Mathf.Abs(v.y)<=1000&&Mathf.Abs(v.z)<=1000;
         static bool Size(Vector3 v)=>Coordinate(v)&&v.x>0&&v.y>0&&v.z>0;
         internal static ScannedSurface FromFrame(string id,string label,Transform anchor,Transform frame,Rect? plane,Bounds? volume)=>new(){Id=id,Label=label,Position=frame.InverseTransformPoint(anchor.position),Rotation=Quaternion.Inverse(frame.rotation)*anchor.rotation,Plane=plane,Volume=volume};
-        public ScannedSurface Copy()=>new(){Id=Id,Label=Label,Position=Position,Rotation=Rotation,Plane=Plane,Volume=Volume};
-        public bool Same(ScannedSurface other)=>other!=null&&Id==other.Id&&Label==other.Label&&Position.Equals(other.Position)&&Rotation.Equals(other.Rotation)&&Nullable.Equals(Plane,other.Plane)&&Nullable.Equals(Volume,other.Volume);
+        public ScannedSurface Copy()=>new(){Id=Id,Label=Label,Position=Position,Rotation=Rotation,Plane=Plane,Volume=Volume,Boundary=Boundary?.ToArray()};
+        public bool Same(ScannedSurface other)=>other!=null&&Id==other.Id&&Label==other.Label&&Position.Equals(other.Position)&&Rotation.Equals(other.Rotation)&&Nullable.Equals(Plane,other.Plane)&&Nullable.Equals(Volume,other.Volume)&&Boundary.SequenceEqual(other.Boundary);
         public JObject Summary()=>new(){["id"]=Id,["label"]=Label,["plane"]=Plane.HasValue,["volume"]=Volume.HasValue};
         public JObject Detail()=>new(){["id"]=Id,["label"]=Label,["pose"]=new JObject{["position"]=ScannedRoom.Triple(Position),["rotation"]=new JObject{["x"]=Rotation.x,["y"]=Rotation.y,["z"]=Rotation.z,["w"]=Rotation.w}},
             ["plane"]=new JObject{["present"]=Plane.HasValue,["center"]=ScannedRoom.Triple(Plane.HasValue?new Vector3(Plane.Value.center.x,Plane.Value.center.y,0):Vector3.zero),["size"]=ScannedRoom.Triple(Plane.HasValue?new Vector3(Plane.Value.width,Plane.Value.height,0):Vector3.zero)},
@@ -56,7 +57,7 @@ namespace Maestro.Quest.Interaction
             try {
                 layoutSource??=new DeviceLayoutSource(this);
                 if(!layoutSource.TryRead(frame,out var roomId,out var entries,out var omitted,out reason))return RejectLayout(reason??"Room layout is unavailable");
-                if(!Guid.TryParseExact(roomId,"N",out var id)||id==Guid.Empty||entries==null||entries.Length>MaximumLayoutSurfaces||omitted<0||omitted>256||entries.Any(x=>x==null||!x.Valid)||entries.Select(x=>x.Id).Distinct(StringComparer.Ordinal).Count()!=entries.Length)
+                if(!Guid.TryParseExact(roomId,"N",out var id)||id==Guid.Empty||entries==null||entries.Length>MaximumLayoutSurfaces||omitted<0||omitted>256||entries.Any(x=>x==null||!x.Valid)||entries.Sum(x=>x.Boundary.Length)>4096||entries.Select(x=>x.Id).Distinct(StringComparer.Ordinal).Count()!=entries.Length)
                     return RejectLayout("Room layout exceeds limits or contains invalid surfaces");
                 var ordered=entries.OrderBy(x=>x.Id,StringComparer.Ordinal).ToArray();
                 if(setupChanged||layout==null||layoutRoom!=roomId||layoutOmitted!=omitted||layout.Length!=ordered.Length||!layout.Zip(ordered,(a,b)=>a.Same(b)).All(same=>same)){
@@ -85,12 +86,14 @@ namespace Maestro.Quest.Interaction
                 roomId=null;entries=null;omitted=0;reason="No current Meta room is loaded";
                 var room=owner.current;if(!room||!owner.mruk||!owner.mruk.IsWorldLockActive)return false;
                 var anchors=room.Anchors;if(anchors==null||anchors.Count>256){reason="Room layout exceeds its anchor limit";return false;}
-                var result=new List<ScannedSurface>();
+                var result=new List<ScannedSurface>();int boundaryPoints=0;
                 foreach(var anchor in anchors){
                     if(!anchor){reason="Room anchors changed while reading";return false;}
                     if(!anchor.PlaneRect.HasValue&&!anchor.VolumeBounds.HasValue){omitted++;continue;}
                     if(!RigidFrame(anchor.transform)){reason="A scanned surface has unsupported scale";return false;}
-                    result.Add(ScannedSurface.FromFrame(anchor.Anchor.Uuid.ToString("N"),anchor.Label.ToString(),anchor.transform,frame,anchor.PlaneRect,anchor.VolumeBounds));
+                    int pointCount=anchor.PlaneBoundary2D?.Count??0;boundaryPoints+=pointCount;if(pointCount>256||boundaryPoints>4096){reason="Room plane boundaries exceed their point limit";return false;}
+                    var entry=ScannedSurface.FromFrame(anchor.Anchor.Uuid.ToString("N"),anchor.Label.ToString(),anchor.transform,frame,anchor.PlaneRect,anchor.VolumeBounds);
+                    entry.Boundary=anchor.PlaneBoundary2D?.ToArray()??Array.Empty<Vector2>();result.Add(entry);
                     if(result.Count>MaximumLayoutSurfaces){reason="Room layout exceeds its surface limit";return false;}
                 }
                 roomId=room.Anchor.Uuid.ToString("N");entries=result.ToArray();reason=null;return true;

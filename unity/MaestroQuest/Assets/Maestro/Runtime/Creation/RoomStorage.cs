@@ -7,13 +7,13 @@ namespace Maestro.Quest.Creation
 {
     public sealed class RoomStorage
     {
-        public const string FileName="room.v19.json";
+        public const string FileName="room.v20.json";
         readonly VersionedRoomFile<RoomDocument> file;
         readonly string directory;
         volatile string coordinationError;
         public bool ReadOnly => coordinationError!=null||file.ReadOnly;
         public RoomStorage(string directory) {
-            this.directory=directory;file=new VersionedRoomFile<RoomDocument>(directory,"room",4*1024*1024,x => x.Validate(out _),x => x.Copy(),Normalize,x => x.version = RoomDocument.CurrentVersion,version:RoomDocument.CurrentVersion,newerDocument:x=>x.structures?.Any(s=>s!=null&&s.version>1)==true||x.objects?.Any(o=>o?.surfaces?.Any(s=>s!=null&&s.version>2)==true||o?.drawingTips?.Any(t=>t!=null&&t.version>2)==true||o?.connections?.Any(h=>h!=null&&h.version>1)==true||o?.snapPoints?.Any(p=>p!=null&&p.version>1)==true||o?.containers?.Any(c=>c!=null&&c.version>2)==true||o?.heightFields?.Any(f=>f!=null&&f.version>1)==true||o?.sculptTips?.Any(t=>t!=null&&t.version>2)==true||o?.materialStores?.Any(s=>s!=null&&s.version>1)==true)==true);
+            this.directory=directory;file=new VersionedRoomFile<RoomDocument>(directory,"room",4*1024*1024,x => x.Validate(out _),x => x.Copy(),Normalize,x => x.version = RoomDocument.CurrentVersion,version:RoomDocument.CurrentVersion,newerDocument:x=>x.structures?.Any(s=>s!=null&&s.version>1)==true||x.objects?.Any(o=>o?.scanAnchors?.Any(a=>a!=null&&a.version>1)==true||o?.surfaces?.Any(s=>s!=null&&s.version>2)==true||o?.drawingTips?.Any(t=>t!=null&&t.version>2)==true||o?.connections?.Any(h=>h!=null&&h.version>1)==true||o?.snapPoints?.Any(p=>p!=null&&p.version>1)==true||o?.containers?.Any(c=>c!=null&&c.version>2)==true||o?.heightFields?.Any(f=>f!=null&&f.version>1)==true||o?.sculptTips?.Any(t=>t!=null&&t.version>2)==true||o?.materialStores?.Any(s=>s!=null&&s.version>1)==true)==true);
         }
         public RoomDocument Load(out string message) {
             try {using var owner=RoomSnapshotTransaction.Enter(directory,recover:true,initialize:false);return file.Load(out message);}

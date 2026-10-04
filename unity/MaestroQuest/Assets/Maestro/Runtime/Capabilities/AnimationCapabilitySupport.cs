@@ -48,7 +48,8 @@ namespace Maestro.Quest.Programs
             return claims.ToArray();
         }
         public override bool CanRun(CapabilityContext context,JObject arguments,out string error)=>
-            context.Target(arguments,out _,out error)&&AnimationTargets.PropReady(context,arguments,out error);
+            context.Target(arguments,out var item,out error)&&Movable(item,out error)&&AnimationTargets.PropReady(context,arguments,out error);
+        static bool Movable(RoomItem item,out string error){error=item.PoseLocked?"A scanned ink layer follows its room anchor and cannot play object animations":null;return error==null;}
     }
     /// <summary>Releases exactly the resources acquired by one full-body execution.</summary>
     internal abstract class FullBodyOperation : CapabilityOperation

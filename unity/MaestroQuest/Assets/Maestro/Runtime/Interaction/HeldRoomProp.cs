@@ -49,6 +49,7 @@ namespace Maestro.Quest.Interaction
             // including adding a parent above an already active attachment.
             if(holder.GetComponents<HeldRoomProp>().Any(p=>p.Holding)||editor.GetComponentsInChildren<HeldRoomProp>(true).Any(p=>p.Holding&&p.HolderId==attachment.ObjectId))
             {error="Finish the existing attachment before nesting held objects";return false;}
+            if(item&&item.PoseLocked){error="A scanned ink layer cannot be carried";return false;}
             var rigid=item ? item.GetComponent<RigidRoomItem>() : null;
             if (!item || editor.Read(attachment.ObjectId)?.IsBuiltIn != false || !rigid || !rigid.GeometryReady || item.Grab.isSelected)
             { error="Select a loaded creation and release it before using it as a prop"; return false; }

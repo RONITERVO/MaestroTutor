@@ -23,7 +23,7 @@ namespace Maestro.Quest.Creation
         string toolTarget;
         RoomActorRole captureRole=RoomActorRole.Control;
         RoomObjectData retained;
-        string roomSession,errorText="",surfaceTarget,surfaceId,surfaceBefore;
+        string roomSession,errorText="",surfaceTarget,surfaceId,surfaceBefore,surfaceBinding;
         RoomOwnership.Lease surfaceOwner;
         bool attached;
         DrawingSurface captureSurface;
@@ -45,6 +45,7 @@ namespace Maestro.Quest.Creation
             BeginCapture(-2,ray,ink,size,true,erase,.02f,target,role);
         }
         internal void MoveTool(string target,Ray ray){if(IsToolDrawing(target))Move(-2,ray);}
+        internal void InterruptSurface(string target){if(IsDrawing&&attached&&surfaceTarget==target)End(owner,false);}
         internal void InterruptTool(string target){if(IsToolDrawing(target))End(-2,false);}
         internal void EndTool(string target){if(IsToolDrawing(target))End(-2);}
         void BeginCapture(int id,Ray ray,Color ink,float size,bool surfaceMode,bool erase,float maximum,string tool,RoomActorRole role)
@@ -56,9 +57,9 @@ namespace Maestro.Quest.Creation
             Vector3 initialPoint=default;attached=surfaceMode&&Editor.FindDrawingSurface(ray,maximum,out surfaceTarget,out surfaceId,out initialPoint,out _,radius,toolTarget);
             if(surfaceMode&&!attached){Editor.ReportStatus("Point at an enabled drawing patch within 25 cm");Clear();return;}
             if(attached) {
-                if(!Editor.CanEditObject(surfaceTarget,true,out var error)){Editor.ReportStatus(error);Clear();return;}
+                if(!Editor.CanEditObject(surfaceTarget,true,out var error,true)){Editor.ReportStatus(error);Clear();return;}
                 if(erase&&tool==null){Editor.EraseSurfaceAt(surfaceTarget,surfaceId,initialPoint);Clear();return;}
-                captureSurface=Editor.Read(surfaceTarget).surfaces.First(s=>s.id==surfaceId).Copy();surfaceBefore=JsonUtility.ToJson(captureSurface);
+                captureSurface=Editor.Read(surfaceTarget).surfaces.First(s=>s.id==surfaceId).Copy();surfaceBefore=JsonUtility.ToJson(captureSurface);surfaceBinding=Editor.Find(surfaceTarget).GetComponent<ScannedDrawingView>()?.BindingSignature;
                 if(!Editor.Ownership.TryAcquire("surface-pencil:"+SessionId,toolTarget==null?"Your surface pencil":"Held drawing tool",captureRole,new[]{new BehaviourCatalog.Claim(surfaceTarget,"wholeTarget")},_=>End(id,false),out surfaceOwner,out error,preservePlacement:true)){Editor.ReportStatus(error);Clear();return;}
             }
             if(erase){erasure=new SurfaceEraseSelection(captureSurface,radius);Move(id,ray);return;}
@@ -102,6 +103,8 @@ namespace Maestro.Quest.Creation
             if(discard)return true;
             if(!Editor||roomSession!=Editor.TemporarySessionId){error="The stroke belongs to a different room session";return false;}
             if(attached) {
+                var layer=Editor.Find(surfaceTarget)?.GetComponent<ScannedDrawingView>();
+                if(layer){layer.Sync();if(!layer.Visible||layer.BindingSignature!=surfaceBinding){error="The scanned ink anchor is unavailable or changed; keep the draft until it returns or discard it";return false;}}
                 var now=Editor.Read(surfaceTarget)?.surfaces?.FirstOrDefault(s=>s.id==surfaceId);
                 if(now==null||JsonUtility.ToJson(now)!=surfaceBefore){error="The surface changed; discard this retained stroke instead of applying it to a different patch";return false;}
                 if(!Editor.Ownership.CanAcquire("surface-pencil:"+SessionId,captureRole,new[]{new BehaviourCatalog.Claim(surfaceTarget,"wholeTarget")},out error))return false;

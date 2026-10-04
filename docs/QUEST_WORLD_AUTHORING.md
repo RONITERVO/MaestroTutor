@@ -477,3 +477,15 @@ preferences into visible typed bindings from one read. See
 [containers](QUEST_CONTAINERS.md#rectangular-cavities-and-shallow-pools-2026-10-04).
 Uncontained puddles, water/snow particle solvers and buoyancy remain outside this
 increment, and actual Quest acceptance is still required.
+
+
+### Scanned ink as a reusable component (2026-10-05)
+
+Saved wall drawings now extend the existing Drawing object and surface-ink path.
+An exact scanned-plane binding supplies placement; ordinary ink supplies source,
+physical tools, agent edits and Undo. The layer has no background panel and stays
+saved but hidden when its room or anchor is unavailable. Explicit rebind is a
+reviewable edit, not automatic guessing. See [surface drawing](QUEST_SURFACE_DRAWING.md#saved-scanned-ink-layers-2026-10-05).
+This increment is desktop-verified and packaged, with headset acceptance pending; it
+does not add general scene-object anchoring, triangle painting or a new scripting
+runtime. Native recipes and shared components remain the expansion mechanism.

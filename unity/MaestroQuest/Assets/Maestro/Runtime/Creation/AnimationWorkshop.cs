@@ -34,6 +34,7 @@ namespace Maestro.Quest.Creation
         readonly string ownershipId="authoring:"+Guid.NewGuid().ToString("N");
         RoomOwnership.Lease ownershipLease;
         bool TakeControl(bool allowsGrab=false,bool notify=true) {
+            if(target&&target.PoseLocked){Say("Scanned ink layers follow their room anchors; edit the layer or ink instead");return false;}
             if(HasUnsavedPose){Say(RetainedPosePrompt);return false;}
             if(editor.RuntimeGate.Held){Say(editor.RuntimeGate.Reason);return false;}
             if(ownershipLease?.Held!=true&&!editor.Ownership.TryAcquire(ownershipId,"Animation authoring",RoomActorRole.Control,

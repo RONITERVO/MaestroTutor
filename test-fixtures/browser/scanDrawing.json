@@ -1,0 +1,73 @@
+{
+  "receipt": {
+    "selected": {
+      "id": "8325f177f50b4fe6a59d7e1798410d9e",
+      "capability": "drawing.layer.edit",
+      "version": 1,
+      "resources": [],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "objectId": "61874d167ace4aa4964ec0722c20a58d",
+        "revision": 6,
+        "surface": "Canvas",
+        "roomId": "ce20c1dc2e9d4bda81b1ee0d78e90095",
+        "anchorId": "00000000000000000000000000000001",
+        "temporary": false
+      },
+      "call": {
+        "id": "drawing.layer.edit",
+        "version": 1,
+        "arguments": {
+          "operation": "create",
+          "stateId": "a4cf1337edaf4607931348ae4deb4763",
+          "name": "Wall ink",
+          "width": 0.6,
+          "height": 0.4,
+          "angle": 0,
+          "anchorId": "00000000000000000000000000000001",
+          "x": 0.1,
+          "y": 0
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "8325f177f50b4fe6a59d7e1798410d9e",
+        "capability": "drawing.layer.edit",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "objectId": "61874d167ace4aa4964ec0722c20a58d",
+          "revision": 6,
+          "surface": "Canvas",
+          "roomId": "ce20c1dc2e9d4bda81b1ee0d78e90095",
+          "anchorId": "00000000000000000000000000000001",
+          "temporary": false
+        }
+      }
+    ],
+    "nextRunId": "e4d95b24abc94b7b8324128fb3620b32",
+    "storageError": null,
+    "recovery": null
+  },
+  "layer": {
+    "stateId": "a4cf1337edaf4607931348ae4deb4763",
+    "revision": 6,
+    "anchor": {
+      "roomId": "ce20c1dc2e9d4bda81b1ee0d78e90095",
+      "anchorId": "00000000000000000000000000000001",
+      "x": 0.1,
+      "y": 0.0,
+      "angle": 0.0
+    },
+    "width": 0.6,
+    "height": 0.4,
+    "visible": true,
+    "reason": "Ink follows its exact scanned plane; check physical alignment"
+  },
+  "boundary": "Synthetic SDK source; native persistence, actions and rendering components. No headset or provider."
+}

@@ -61,3 +61,13 @@ Sources checked 2026-10-02:
 [Gemini terms](https://ai.google.dev/gemini-api/terms),
 [Meta audience guidance](https://developers.meta.com/vr/resources/age-groups/),
 [Meta DUC](https://developers.meta.com/vr/resources/publish-data-use/).
+
+
+Saved scanned ink layers retain the selected Meta room/anchor identities,
+plane-local placement, dimensions and user-authored ink in the native room and
+workspace export. Exact identities are used to restore or explicitly rebind the
+layer. Local boundary outlines validate placement but are not saved in the layer
+or included in layout facts. Explicit agent inspection can include these saved
+identities and current availability through the existing Maestro request path.
+Deleting a layer removes its current source; ordinary Undo and retained workspace
+backups may still contain it under the documented retention controls.

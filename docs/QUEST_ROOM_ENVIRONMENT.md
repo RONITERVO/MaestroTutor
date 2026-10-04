@@ -96,6 +96,8 @@ tracking/lifecycle loss and malformed or oversized scan data make it unavailable
 Unavailable zero counts and empty IDs are placeholders, not an empty real room.
 At most 128 bounded surfaces from 256 SDK anchors are accepted; exceeding either
 limit refuses the whole layout rather than returning a seemingly complete subset.
+The scanned-ink extension also admits at most 256 outline points per surface
+and 4,096 total for local fit checks; they are never returned by these facts.
 Each returned program value stays within the existing 1,024-character cost limit.
 Non-unit coordinate frames or anchor scale are unsupported.
 
@@ -104,8 +106,8 @@ Maestro drawing patches face **-Z**. Bounds remain in the anchor's local metres;
 apply its returned pose to use them in room coordinates. Rectangles and boxes do
 not describe polygon boundaries, holes, cutouts, raw global meshes, moving objects,
 free space or verified alignment. These facts do not implement persistent drawing
-attachments or certify a safe placement. Those need their own explicit attachment,
-missing-anchor and lifecycle rules.
+attachments or certify a safe placement. The separate [scanned ink layer](QUEST_SURFACE_DRAWING.md#saved-scanned-ink-layers-2026-10-05) capability supplies
+explicit attachment, missing-anchor and lifecycle rules.
 
 When a task explicitly queries layout, the existing Maestro AI connection can
 receive it, with the same task-history/backup retention. It can reveal room size
@@ -121,4 +123,5 @@ native result fixture is also validated by three shared-client/program tests. Th
 full native-app desktop journey reads these catalog definitions and verifies that
 no physical layout is invented on desktop. The SDK source is controlled in tests;
 real Meta room data, headset alignment and performance remain unverified for this
-increment. It is not yet included in a development APK.
+increment. Layout inspection and saved ink are now included in the audited
+development APK recorded in [the delivery record](QUEST_V1_PLAN.md), not installed.

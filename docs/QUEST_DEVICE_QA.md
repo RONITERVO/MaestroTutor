@@ -2037,3 +2037,29 @@ the retained session. Test save/reload and temporary-room discard. Check heap
 readability, orientation threshold, contact comfort and mesh/collider publication
 latency with other active objects. Desktop results do not establish these device
 outcomes. Headset work remains on hold.
+
+
+## Saved scanned ink layers — pending Quest acceptance
+
+Use a build advertising `scanDrawingLayers.v1`. Load the intended room and check
+its displayed alignment first; layer creation must not start scanning or physics.
+Keep the existing device-work hold until the owner confirms availability.
+
+1. Look at a clear wall and ask Maestro for a 60 × 40 cm drawing area. Check that
+   the layer has no background panel and faces the room. Draw with the controller,
+   hand and held pencil; erase, Undo and Redo. Check readability, contact and depth.
+2. Restart and load the same scan: saved ink should return to the exact surface.
+   Lose tracking or switch to virtual view during a stroke: capture must stop,
+   retain the draft and refuse Retry while unavailable. Restore the same room and
+   retry or discard explicitly. Recall must leave saved wall ink in place.
+3. Load a different room or rescan so old identities disappear: ink must be hidden,
+   retained and inspectable, never moved to a similarly named nearby wall. Rebind
+   explicitly through the book/agent, check preserved ink, then Undo the rebind.
+4. Try too-large and rotated areas near wall corners and known cutouts. Refusal
+   must not create a partial layer or choose a farther wall. Openings omitted by
+   Meta's scan are outside the app's knowledge; check actual overlay alignment.
+5. Try edits in a temporary room and Discard; export/import a workspace containing
+   layers. Check that saved IDs and ink survive, and missing anchors stay hidden.
+6. Measure sustained frame time and allocation/load with the maximum admitted ink
+   and several visible layers while tracked anchors update. Desktop pass counts
+   do not establish Quest performance or contact comfort.

@@ -17,6 +17,7 @@ namespace Maestro.Quest.Creation
         public string id;
         public string name;
         public RoomRecipe recipe;
+        public ScanDrawingAnchor[] scanAnchors=Array.Empty<ScanDrawingAnchor>();
         public CollisionRecipe collision;
         public DrawingSurface[] surfaces=Array.Empty<DrawingSurface>();
         public DrawingTip[] drawingTips=Array.Empty<DrawingTip>();
@@ -45,13 +46,13 @@ namespace Maestro.Quest.Creation
         public int walkClip;
         public string walkMotionId;
         public bool IsBuiltIn => kind == RoomObjectKind.Book || kind == RoomObjectKind.Maestro;
-        public RoomObjectData Copy() => new() { id = id, name = name, recipe = recipe?.Copy(), collision=collision?.Copy(), surfaces=surfaces?.Select(s=>s?.Copy()).ToArray(), drawingTips=drawingTips?.Select(t=>t?.Copy()).ToArray(), connections=connections?.Select(h=>h?.Copy()).ToArray(), snapPoints=snapPoints?.Select(p=>p?.Copy()).ToArray(), containers=containers?.Select(c=>c?.Copy()).ToArray(), heightFields=heightFields?.Select(f=>f?.Copy()).ToArray(), sculptTips=sculptTips?.Select(t=>t?.Copy()).ToArray(), materialStores=materialStores?.Select(s=>s?.Copy()).ToArray(), kind = kind, position = position, rotation = rotation, scale = scale, color = color, radius = radius, points = points == null ? null : (Vector3[])points.Clone(), joints = MotionFrame.CopyJoints(joints), motion = motion?.Copy(), modelHash = modelHash, physics = physics, mass = mass, collisionShape = collisionShape, followDistance = followDistance, walkSpeed = walkSpeed, walkClip = walkClip, walkMotionId = walkMotionId };
+        public RoomObjectData Copy() => new() { id = id, name = name, scanAnchors=scanAnchors?.Select(a=>a?.Copy()).ToArray(), recipe = recipe?.Copy(), collision=collision?.Copy(), surfaces=surfaces?.Select(s=>s?.Copy()).ToArray(), drawingTips=drawingTips?.Select(t=>t?.Copy()).ToArray(), connections=connections?.Select(h=>h?.Copy()).ToArray(), snapPoints=snapPoints?.Select(p=>p?.Copy()).ToArray(), containers=containers?.Select(c=>c?.Copy()).ToArray(), heightFields=heightFields?.Select(f=>f?.Copy()).ToArray(), sculptTips=sculptTips?.Select(t=>t?.Copy()).ToArray(), materialStores=materialStores?.Select(s=>s?.Copy()).ToArray(), kind = kind, position = position, rotation = rotation, scale = scale, color = color, radius = radius, points = points == null ? null : (Vector3[])points.Clone(), joints = MotionFrame.CopyJoints(joints), motion = motion?.Copy(), modelHash = modelHash, physics = physics, mass = mass, collisionShape = collisionShape, followDistance = followDistance, walkSpeed = walkSpeed, walkClip = walkClip, walkMotionId = walkMotionId };
     }
 
     [Serializable]
     public sealed class RoomDocument
     {
-        public const int CurrentVersion=19;
+        public const int CurrentVersion=20;
         public const int MaximumObjects = 64;
         public const int MaximumStrokePoints = 2048;
         public const int MaximumTotalPoints = 32768;
@@ -66,7 +67,7 @@ namespace Maestro.Quest.Creation
         public bool Validate(out string error)
         {
             error = null;
-            if (version != 1 && version != 2 && version != 3 && version != 4 && version != 5 && version != 7 && version != 8 && version != 9 && version != 10 && version != 11 && version != 12 && version != 13 && version != 14 && version != 15 && version != 16 && version != 17 && version != 18 && version != CurrentVersion || objects == null || objects.Length < 2 || objects.Length > MaximumObjects + 2)
+            if (version != 1 && version != 2 && version != 3 && version != 4 && version != 5 && version != 7 && version != 8 && version != 9 && version != 10 && version != 11 && version != 12 && version != 13 && version != 14 && version != 15 && version != 16 && version != 17 && version != 18 && version != 19 && version != CurrentVersion || objects == null || objects.Length < 2 || objects.Length > MaximumObjects + 2)
                 return Fail("This room file has an unsupported version or object count.", out error);
             var ids = new HashSet<string>(); int partCount = 0; int pointCount = 0, builtIns = 0, frameCount = 0, jointCount = 0;
             foreach (var item in objects)
@@ -128,7 +129,9 @@ namespace Maestro.Quest.Creation
                 var c = item.color;
                 if (!Unit(c.r) || !Unit(c.g) || !Unit(c.b) || !float.IsFinite(c.a) || Mathf.Abs(c.a - 1) > .001f)
                     return Fail("An object has an invalid paint color.", out error);
-                if (item.kind == RoomObjectKind.Drawing)
+                if(version<20&&ScanDrawingAnchor.Has(item))return Fail("Scanned ink layers require the current room format.",out error);
+                if(!ScanDrawingAnchor.ValidateOwner(item,out error))return false;
+                if (item.kind == RoomObjectKind.Drawing&&!ScanDrawingAnchor.Has(item))
                 {
                     if(!ValidateDrawing(item.points,item.radius,out error))return false;
                     pointCount+=item.points.Length;

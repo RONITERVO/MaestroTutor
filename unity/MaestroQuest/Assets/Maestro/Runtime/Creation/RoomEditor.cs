@@ -198,7 +198,7 @@ namespace Maestro.Quest.Creation
             if(!CommitPersisted(new[]{item},Array.Empty<string>(),item.kind+" added",false,out error))return false;
             id=item.id;return true;
         }
-        public bool CanEditObject(string id,bool creationOnly,out string error) {
+        public bool CanEditObject(string id,bool creationOnly,out string error,bool allowScanLayer=false) {
             error=null;
             if(WriteGate.Frozen){error=Maestro.Quest.Persistence.WorkspaceWriteGate.FrozenReason;return false;}
             if(journal==null){error="Room editor is not ready";return false;}
@@ -207,6 +207,7 @@ namespace Maestro.Quest.Creation
             if(storage.ReadOnly){error="This room was saved by a newer app and is read-only";return false;}
             var data=Read(id);var item=Find(id);
             if(data==null||!item){error="This object was removed; inspect the room first";return false;}
+            if(ScanDrawingAnchor.Has(data)&&!allowScanLayer){error="Use the scanned layer controls to change its anchor, or edit its Canvas ink";return false;}
             if(creationOnly&&data.IsBuiltIn){error="Choose a user-created object";return false;}
             if(item.Grab.isSelected){error="Release this object before editing it";return false;}
             if(item.GetComponent<RigidRoomItem>()?.AnimationOwned==true){error="An animation or carried prop owns this object";return false;}
@@ -217,7 +218,7 @@ namespace Maestro.Quest.Creation
         public bool ResizeObject(string id,float scale,out string error)=>EditObject(id,false,data=>data.scale=scale,"Object resized",true,out error);
         public bool PaintObject(string id,Color color,out string error)=>EditObject(id,true,data=>data.color=color,"Object painted",false,out error);
         public bool DeleteObject(string id,out string error) {
-            if(!CanEditObject(id,true,out error))return false;
+            if(!CanEditObject(id,true,out error,true))return false;
             return CommitPersisted(Array.Empty<RoomObjectData>(),new[]{id},"Object deleted — Undo restores it",false,out error);
         }
         bool EditObject(string id,bool creationOnly,Action<RoomObjectData> change,string message,bool applyPose,out string error) {
@@ -426,7 +427,9 @@ namespace Maestro.Quest.Creation
                 if(created || changed==null || changed.Contains(data.id)) {
                 item.GetComponent<CreatedRoomObject>()?.ApplyRecipe(data.recipe);
                 item.GetComponent<CreatedRoomObject>()?.ApplyDrawing(data);
+                item.GetComponent<CreatedRoomObject>()?.ApplyScanLayer(data);
                 var surfaces=item.GetComponent<DrawingSurfaceView>();if(!surfaces&&(data.surfaces?.Length??0)>0)surfaces=item.gameObject.AddComponent<DrawingSurfaceView>();if(surfaces)surfaces.Apply(data.surfaces);
+                if(ScanDrawingAnchor.Has(data)){var layer=item.GetComponent<ScannedDrawingView>()??item.gameObject.AddComponent<ScannedDrawingView>();layer.Apply(this,data);}
                 var tip=item.GetComponent<DrawingTipView>();if(!tip&&(data.drawingTips?.Length??0)>0)tip=item.gameObject.AddComponent<DrawingTipView>();if(tip)tip.Apply(this,data.id,data.drawingTips);
                 var liquid=item.GetComponent<ContainerFillView>();if(!liquid&&(data.containers?.Length??0)>0)liquid=item.gameObject.AddComponent<ContainerFillView>();if(liquid)liquid.Apply(data.containers);
                 var field=ApplyHeightFields(item,data.heightFields);
@@ -452,11 +455,12 @@ namespace Maestro.Quest.Creation
 
         static void ApplyPose(RoomItem item, RoomObjectData data)
         {
+            if(ScanDrawingAnchor.Has(data))return;
             item.transform.SetLocalPositionAndRotation(data.position,data.rotation); item.transform.localScale = Vector3.one * data.scale;
             item.GetComponent<RigidRoomItem>()?.Teleported();
         }
         static RoomObjectData Pose(RoomObjectData data, Transform pose)
-        { data.position = pose.localPosition; data.rotation = pose.localRotation.normalized; data.scale = pose.localScale.x; return data; }
+        { if(ScanDrawingAnchor.Has(data))return data;data.position = pose.localPosition; data.rotation = pose.localRotation.normalized; data.scale = pose.localScale.x; return data; }
 
         void UpdateSelection()
         {
@@ -477,7 +481,7 @@ namespace Maestro.Quest.Creation
         {
             using var write=WriteGate.TryWrite(out _);if(write==null)return;
             var item = Find(id);
-            if (item && journal.UpdatePlacement(id,item.transform.localPosition,item.transform.localRotation.normalized)) MarkDirty();
+            if (item && !item.PoseLocked && journal.UpdatePlacement(id,item.transform.localPosition,item.transform.localRotation.normalized)) MarkDirty();
         }
         public void SetAvatarMovement(float distance, float speed)
         {
@@ -525,6 +529,7 @@ namespace Maestro.Quest.Creation
         float captureAt;
         void Update()
         {
+            foreach(var item in objects.Values)if(item)item.GetComponent<ScannedDrawingView>()?.Sync();
             CompleteTemporarySave();
             if (Time.unscaledTime >= captureAt) { captureAt = Time.unscaledTime + 1; CapturePhysicsPlacements(); }
             CompleteSave();

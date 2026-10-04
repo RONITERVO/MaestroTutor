@@ -2,14 +2,32 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
-The shared catalog now exposes on-demand loaded scan layout: exact surface IDs,
-semantic labels, room-local poses and anchor-local plane/box bounds. The same
-queries serve the book inspector, programs and agent without a background layout
-broadcast. Changed or unavailable scans refuse stale detail reads. Prepared privacy
-copy describes task-requested layout sharing. See
+Saved scanned ink layers now extend the existing Drawing object and Canvas ink
+component. The shared catalog, generated book fields, agent and physical drawing
+tools use the same persisted source and Undo. Creation selects an exact loaded
+plane or the viewer's current gaze; explicit rebind preserves the ink. Missing,
+wrong-room or unfit anchors hide the layer without deleting it, and interrupted
+strokes remain for Retry/Discard. No panel, loose-object movement, automatic
+relocation, scan startup or provider client is added. Room v20 and paired
+intent/archive v19 preserve exact bindings. See
+[the ink contract](QUEST_SURFACE_DRAWING.md#saved-scanned-ink-layers-2026-10-05).
+Verified development checkpoint: **831 EditMode / 634 PlayMode** tests (three
+optional private-model skips), **474 native-room / 77 original-book observations**
+with offline scripted providers, production web build, Android lint and **76 Android
+tests** (two optional skips). Shared-client fixture/current-input checks, app/driver
+types and lint passed. The audit matched 2,998 frozen inputs, 147 packaged web files,
+all included content, ARM64 libraries, the development manifest, v2 signature and
+16 KiB alignment. APK: `MaestroQuest-scanned-ink-45468330.apk` (188,156,179 bytes), SHA-256
+`454683300229BAA24AB9F8210308AC46B44270AD9DA0A905462966E91EAED9C8`. It includes scan-layout inspection and saved ink,
+and has **not been installed**. Quest work remains on hold. CI evidence is linked
+from draft PR #248; these offline checks are not real-provider or Store acceptance.
+
+Loaded scan layout also has shared on-demand exact surface IDs, semantic labels,
+room-local poses and anchor-local plane/box bounds. Changed or unavailable scans
+refuse stale detail reads. Native outlines are bounded and used locally for layer
+fit; they are not sent through the layout facts. Prepared privacy copy describes
+explicit layout inspection and saved layer identities. See
 [the scan contract](QUEST_ROOM_ENVIRONMENT.md#shared-scanned-layout-inspection-2026-10-04).
-This source increment is separate from the last pool APK. Persistent scanned-wall
-drawing attachments and actual Quest acceptance remain unfinished.
 
 Rectangular liquid cavities and an editable Shallow pool now extend the shared
 container model. Ordinary buckets and cups can dip and pour back; the catalog,

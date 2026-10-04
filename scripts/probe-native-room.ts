@@ -67,6 +67,11 @@ try{
   if(scanValue.available||scanValue.stateId!==''||scanValue.count!==0)throw new Error('Desktop scan facts must not invent a physical room.');
   const scanDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'room.scan.surface',version:1}}]);
   if(!scanDefinition.catalog?.definition)throw new Error('Shared scanned surface schema is unavailable.');
+  const scanInkDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',category:'actions',capability:'drawing.layer.edit',version:1}}]);
+  if(!scanInkDefinition.catalog?.definition||!lease.state().capabilities?.includes('scanDrawingLayers.v1'))throw new Error('Shared scanned ink capability is unavailable.');
+  const inkState=lease.state();const deniedInk=await lease.execute([{action:'execution',execution:{operation:'start',call:{id:'drawing.layer.edit',version:1,arguments:capabilityDefinition('drawing.layer.edit')!.example!}}}],inkState.sceneRevision,inkState.objects);
+  observations.push(structuredClone(deniedInk));
+  if(deniedInk.ok||lease.state().objects.length!==inkState.objects.length)throw new Error('Desktop ink placement must refuse an unavailable scan without creating a layer.');
   const repeat=Number(process.env.MAESTRO_ROOM_PROBE_REPEATS??1);if(!Number.isInteger(repeat)||repeat<1||repeat>32)throw new Error('Probe repeats must be 1–32.');
   for(let cycle=0;cycle<repeat;cycle++){
   const cases=JSON.parse(await readFile('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/lathe-contract.json','utf8'));

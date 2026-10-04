@@ -32,7 +32,11 @@ namespace Maestro.Quest.Creation
         {
             Bounds bounds;
             Collider collider;
-            if (data.kind == RoomObjectKind.Assembly)
+            if(ScanDrawingAnchor.Has(data)) {
+                bounds=new Bounds(Vector3.zero,new Vector3(data.surfaces[0].width,data.surfaces[0].height,.002f));
+                var box=gameObject.AddComponent<BoxCollider>();box.size=bounds.size;box.isTrigger=true;collider=box;
+            }
+            else if (data.kind == RoomObjectKind.Assembly)
             {
                 recipe=gameObject.AddComponent<RecipeObject>(); recipe.ConfigureRuntime(runtimeGate);recipe.Apply(data.recipe); bounds=recipe.LocalBounds;
                 var box=gameObject.AddComponent<BoxCollider>(); box.center=bounds.center; box.size=bounds.size; collider=box;
@@ -56,7 +60,7 @@ namespace Maestro.Quest.Creation
             ApplyColor(data.color);
             BuildSelection(bounds);
             var item = gameObject.AddComponent<RoomItem>(); var limits = RoomDocument.ScaleLimits(data.kind);
-            item.Configure(new[] { collider }, limits.minimum, limits.maximum);
+            item.Configure(new[] { collider }, limits.minimum, limits.maximum);item.PoseLocked=ScanDrawingAnchor.Has(data);
             geometryBounds = bounds; originalCollider = chosenCollider = collider;
             var rigid = gameObject.AddComponent<RigidRoomItem>(); rigid.Initialize(item);
             collider.gameObject.layer = RoomPhysicsLayers.Item;
@@ -64,6 +68,11 @@ namespace Maestro.Quest.Creation
             if (data.kind == RoomObjectKind.ImportedModel && library != null) LoadModel(data.modelHash, library, collider);
             ApplyCollision(data.collision);SetCollisionShape(data.collisionShape);
             return item;
+        }
+        internal void ApplyScanLayer(RoomObjectData data) {
+            if(!ScanDrawingAnchor.Has(data))return;var size=new Vector3(data.surfaces[0].width,data.surfaces[0].height,.002f);if(geometryBounds.size==size)return;
+            geometryBounds=new Bounds(Vector3.zero,size);((BoxCollider)originalCollider).size=size;
+            bool selected=selection&&selection.activeSelf;if(selection){selection.SetActive(false);Destroy(selection);}BuildSelection(geometryBounds);SetSelected(selected);
         }
         public void ApplyRecipe(RoomRecipe value)
         {

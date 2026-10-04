@@ -15,9 +15,10 @@ namespace Maestro.Quest.Interaction
     public sealed class RoomItem : MonoBehaviour, IXRSelectFilter
     {
         public XRGrabInteractable Grab { get; private set; }
+        internal bool PoseLocked {get;set;}
         WorkspaceWriteGate writes;
         public bool canProcess=>isActiveAndEnabled;
-        public bool Process(IXRSelectInteractor interactor,IXRSelectInteractable interactable)=>writes?.Frozen!=true;
+        public bool Process(IXRSelectInteractor interactor,IXRSelectInteractable interactable)=>!PoseLocked&&writes?.Frozen!=true;
         internal void ConfigureWrites(WorkspaceWriteGate gate){writes=gate;}
         internal void DetachWrites(WorkspaceWriteGate gate){if(ReferenceEquals(writes,gate))writes=null;}
         public event Action<RoomItem> GrabStarted, GrabFinished;
@@ -61,6 +62,7 @@ namespace Maestro.Quest.Interaction
 
         public void RestoreHome()
         {
+            if(PoseLocked)return;
             // Disabling first lets XRI cancel all hands before changing the pose.
             if (Grab) Grab.enabled = false;
             transform.SetLocalPositionAndRotation(homePosition, homeRotation);

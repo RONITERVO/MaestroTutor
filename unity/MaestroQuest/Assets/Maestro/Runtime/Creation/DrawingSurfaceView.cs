@@ -38,6 +38,7 @@ namespace Maestro.Quest.Creation
         public Transform Surface(string id)=>patches.TryGetValue(id,out var p)&&p.Root?p.Root:null;
         public bool Hit(Ray ray,float maximum,out string id,out Vector3 local,out float distance,float radius=.003f)
         {
+            GetComponent<ScannedDrawingView>()?.Sync();
             id=null;local=default;distance=maximum;
             if(!float.IsFinite(ray.origin.sqrMagnitude)||!float.IsFinite(ray.direction.sqrMagnitude)||ray.direction.sqrMagnitude<.00001f)return false;
             ray.direction=ray.direction.normalized;

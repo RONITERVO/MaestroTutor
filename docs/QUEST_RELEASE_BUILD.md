@@ -134,8 +134,18 @@ Manual editor work can be evaluated without activating paid AI. Desktop simulate
 identity/provider results do not satisfy production access tests, and an unsigned
 or development-signed intermediate cannot satisfy Store-channel integrity. Device
 work remains on hold until the owner's pending availability question is answered.
-The checkout client restriction is included in the audited
-`MaestroQuest-shallow-pool-71DC12CA.apk` checkpoint (source `1ba6a427`,
-SHA-256 `71DC12CA18A6BEC2A2B75310986FBA4E6A32B4C1823347D4FE42AE7D8441B94D`).
-The backend restriction remains undeployed. This development APK has not been
-installed or accepted on the headset; later source work is identified separately.
+The checkout client restriction remains included in the audited development APK.
+The backend restriction remains undeployed.
+
+### Development checkpoint, 2026-10-05
+
+`MaestroQuest-scanned-ink-45468330.apk` adds shared scan-layout inspection and persistent
+scanned ink layers. SHA-256: `454683300229BAA24AB9F8210308AC46B44270AD9DA0A905462966E91EAED9C8`.
+The package audit matched 2,998 frozen source/asset inputs, 147 web files and all
+included content, with ARM64-only libraries, a development manifest, v2 signature
+and 16 KiB alignment. Verification: 831 EditMode / 634 PlayMode tests (three
+optional private-model skips), 474 native-room and 77 original-book observations
+with scripted offline providers, production web, Android lint and 76 Android tests
+(two optional skips). This is **development-signed and not installed**. Physical
+Quest, real-provider, signing/account/payment and Store acceptance gates above
+remain open; the full v1 goal is active.

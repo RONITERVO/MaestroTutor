@@ -199,6 +199,7 @@ namespace Maestro.Quest.Creation
                 if(target==null || removed.Contains(target)) {status="The target no longer exists"; return false;}
                 var data=changes.TryGetValue(target,out var pending) ? pending : editor.Read(target);
                 if(data==null) {status="The target no longer exists";return false;}
+                if(ScanDrawingAnchor.Has(data)&&command.action!="delete"){status="Scanned ink uses layer/ink controls; explicitly rebind its anchor instead of loose-object edits";return false;}
                 switch(command.action)
                 {
                     case "physicsSettings": if(!RoomControls.SetPhysics(data,command.physics,out status))return false;break;

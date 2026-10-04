@@ -25598,6 +25598,306 @@
       }
     },
     {
+      "id": "drawing.layer.edit",
+      "version": 1,
+      "label": "Create or rebind scanned ink",
+      "input": {
+        "type": "object",
+        "x-discriminators": [
+          "operation"
+        ],
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "create"
+                ]
+              },
+              "stateId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "angle": {
+                "type": "number",
+                "minimum": -180.0,
+                "maximum": 180.0
+              },
+              "name": {
+                "type": "string",
+                "pattern": "^.{0,80}$",
+                "maxLength": 80
+              },
+              "width": {
+                "type": "number",
+                "minimum": 0.02,
+                "maximum": 4.0
+              },
+              "height": {
+                "type": "number",
+                "minimum": 0.02,
+                "maximum": 4.0
+              },
+              "anchorId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "x": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "y": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              }
+            },
+            "required": [
+              "operation",
+              "stateId",
+              "angle",
+              "name",
+              "width",
+              "height",
+              "anchorId",
+              "x",
+              "y"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "room.scan",
+              "version": 1,
+              "arguments": {},
+              "fields": {
+                "stateId": [
+                  "stateId"
+                ]
+              },
+              "guards": [
+                "stateId"
+              ]
+            },
+            "x-features": [
+              "scanDrawingLayers.v1"
+            ],
+            "title": "Create on an exact plane"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "atGaze"
+                ]
+              },
+              "stateId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "angle": {
+                "type": "number",
+                "minimum": -180.0,
+                "maximum": 180.0
+              },
+              "name": {
+                "type": "string",
+                "pattern": "^.{0,80}$",
+                "maxLength": 80
+              },
+              "width": {
+                "type": "number",
+                "minimum": 0.02,
+                "maximum": 4.0
+              },
+              "height": {
+                "type": "number",
+                "minimum": 0.02,
+                "maximum": 4.0
+              }
+            },
+            "required": [
+              "operation",
+              "stateId",
+              "angle",
+              "name",
+              "width",
+              "height"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "room.scan",
+              "version": 1,
+              "arguments": {},
+              "fields": {
+                "stateId": [
+                  "stateId"
+                ]
+              },
+              "guards": [
+                "stateId"
+              ]
+            },
+            "x-features": [
+              "scanDrawingLayers.v1"
+            ],
+            "title": "Create where you look"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "rebind"
+                ]
+              },
+              "stateId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "angle": {
+                "type": "number",
+                "minimum": -180.0,
+                "maximum": 180.0
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              },
+              "anchorId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "x": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "y": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              }
+            },
+            "required": [
+              "operation",
+              "stateId",
+              "angle",
+              "target",
+              "revision",
+              "anchorId",
+              "x",
+              "y"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "object.scanDrawing",
+              "version": 1,
+              "arguments": {
+                "target": "target"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ],
+                "stateId": [
+                  "stateId"
+                ]
+              },
+              "guards": [
+                "revision",
+                "stateId"
+              ]
+            },
+            "x-features": [
+              "scanDrawingLayers.v1"
+            ],
+            "title": "Rebind saved ink"
+          }
+        ]
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "room.scan.current",
+        "room.active",
+        "storage.writable",
+        "drawing.inactive"
+      ],
+      "description": "Create an ink-only drawing layer on an exact loaded scanned plane, or explicitly rebind a saved layer. Read room.scan for stateId. create selects anchorId and plane-local x/y; atGaze samples the tracked viewer's current ray and picks its first front-facing scanned plane within 4 m, never skipping a hit that is too small to find a farther wall. The user should look at the desired wall when invoking it. Width/height are .02–4 metres; angle is roll about the scan's outward normal. The layer faces outward 6 mm above the plane and must fit the loaded rectangle/polygon boundary. This is a virtual overlay, not exact paint on arbitrary triangles, glass, doors, moving surfaces or openings absent from the scan. It creates no background panel or solid collision surface. Use object.surface.edit on its Canvas surface for the same drawing, erasing, clear, dimensions and Undo as other ink. The Canvas stays a root plane. Scanned layers cannot be moved/grabbed/scaled/animated as loose objects or configured for physics; use rebind to change exact anchor/x/y/angle and object.delete to remove a layer. Unknown/missing/wrong-room anchors hide ink and disable contact while preserving saved source. Loaded matching anchors restore visibility if the whole layer still fits; no label/proximity substitution. Active drawing is retained on anchor loss or changed geometry. Rebind preserves ink, requires the exact object revision and adds one saved Undo; create also adds one Undo. No permission, scanning, physics startup or provider request occurs. Temporary edits stay in the fork. Success means source saved, not verified real-room alignment or future tracking.",
+      "example": {
+        "operation": "atGaze",
+        "stateId": "00000000000000000000000000000000",
+        "name": "Wall drawing",
+        "width": 0.6,
+        "height": 0.4,
+        "angle": 0
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "objectId": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "surface": {
+            "type": "string",
+            "enum": [
+              "Canvas"
+            ]
+          },
+          "roomId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "anchorId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "objectId",
+          "revision",
+          "surface",
+          "roomId",
+          "anchorId",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "object.surface.place",
       "version": 1,
       "label": "Place on a detected surface",
@@ -30364,7 +30664,7 @@
         }
       },
       "label": "Saved pencil stroke",
-      "description": "Current saved stroke revision, count and object-local radius; reads the temporary fork when active. Does not sample the live pencil or alter geometry. Missing/non-drawing targets are unavailable. Use the exact revision for edits and paged point reads.",
+      "description": "Current saved stroke revision, count and object-local radius; reads the temporary fork when active. Does not sample the live pencil or alter geometry. Missing/non-drawing targets are unavailable. Use the exact revision for edits and paged point reads. Scanned ink layers use object.surfaces instead.",
       "input": {
         "type": "object",
         "properties": {
@@ -30407,7 +30707,7 @@
         }
       },
       "label": "Saved stroke point page",
-      "description": "Read at most eight exact object-local points at offset, with the current saved revision. Total is the complete stroke count. Offset equal to total returns an empty page; a later offset, stale revision or missing/non-drawing target is unavailable. No simplification, coordinate conversion or ownership is implied.",
+      "description": "Read at most eight exact object-local points at offset, with the current saved revision. Total is the complete stroke count. Offset equal to total returns an empty page; a later offset, stale revision or missing/non-drawing target is unavailable. Scanned ink layers use object.surfaces instead. No simplification, coordinate conversion or ownership is implied.",
       "input": {
         "type": "object",
         "properties": {
@@ -32653,6 +32953,53 @@
       "description": "Native room request and visibility state; readiness never verifies physical alignment. busy includes a cancelled platform worker until it drains. canLoad/canScan need an active MR room, available platform and no workspace hold. canCancel identifies an uncancelled worker, not permission to bypass lifecycle gates. A completed action receipt only acknowledges intent; inspect this fact for progress. No room geometry is included."
     },
     {
+      "id": "object.scanDrawing",
+      "version": 1,
+      "type": {
+        "record": {
+          "stateId": "text",
+          "revision": "number",
+          "anchor": {
+            "record": {
+              "roomId": "text",
+              "anchorId": "text",
+              "x": "number",
+              "y": "number",
+              "angle": "number"
+            }
+          },
+          "width": "number",
+          "height": "number",
+          "visible": "boolean",
+          "reason": "text"
+        }
+      },
+      "label": "Saved scanned ink anchor",
+      "description": "Current scan stateId (empty when unavailable), exact saved Meta identities and plane-local placement, layer size, current object revision and live availability. Missing/wrong-room/untracked anchors hide ink without deleting it. visible means the view is attached, not proof of headset rendering, physical alignment, no occlusion or intact real walls. Only explicit rebind changes saved identities. Ordinary drawings are unavailable for this fact; use object.surfaces for their ink.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1",
+        "scanDrawingLayers.v1"
+      ]
+    },
+    {
       "id": "room.scan",
       "version": 1,
       "type": {
@@ -33039,7 +33386,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "c57b208f0c39e592abf387992d415e36a98da41e94f7d2ec02fa243548f125d1"
+      "sha256": "77a5440c0cfac494f6bdec4935ab2465155a45e1ffd41435d7b063284e284fbb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -33091,7 +33438,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "a75195e8fd1b7cbbacc32d0f7b23980f94ac60a48b2fd01ad40757f501225c1a"
+      "sha256": "e8fc8e9c8dce967f191a642ebed86879d9c4659beeeeff53c6ab6e327f709cbf"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -33099,7 +33446,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgent.cs",
-      "sha256": "8d4f9a61ee36400ffd758d2045ab5f23e4b23471768a935f0c66eff65231e1f0"
+      "sha256": "011dffa3021ec98275d41ae02fbfee4c1ef7b81d25befccfe72417a824c9f814"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceRecoveryHold.cs",
@@ -33115,11 +33462,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "1c8ff2bdfea06ea7c8328dcdb19d61b556261d31effdf0e4bcad8b825e848741"
+      "sha256": "787f3a4c13c1d417d660bb4dcadcfd697238b02caf7c4c659b0934fac8ff15b3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
-      "sha256": "ba8384d8eca870d40e4816e46c30aada951ec96550d9e4df6ccf6f9d763d31d1"
+      "sha256": "214433e4dddcd9d39044c4b2bb793ab05e5f102d432417e060090275e5d66459"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleMemory.cs",
@@ -33303,7 +33650,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/HeldRoomProp.cs",
-      "sha256": "2f33c389d7068e60501279b49e76e5a50e6a6db582c87671315d7aa4aebaa314"
+      "sha256": "fb8006114b356bfa91e1ea04be4f4a286e2e3eea92e5e62ab892fac1c5aab1e5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomBallistics.cs",
@@ -33347,11 +33694,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationRecording.cs",
-      "sha256": "d8a900429139f97ab82f4e8a57409164c6aee12b9b58c2733f16745b7b269303"
+      "sha256": "7f12801237d7d89814e496ac68bf06279ebded2e8c87c801b52698afc9296c23"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationWorkshop.cs",
-      "sha256": "bdcb62adbf594da7a82956dd1a24e958a892747427f63785b763640895213ed2"
+      "sha256": "69b56ae4f8c4a831e63a40b41eb1486cd7d3ba02d5c443fa249333ab7d52a430"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationPoseRetention.cs",
@@ -33363,7 +33710,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "fd3bb608bc24087be4d61cbe74c39302356da0da5878717fae59c376aa6cec4d"
+      "sha256": "f3f6025569e5a8cc8300351c57fe00ed4aff2ef1cef59adc2600e8a84d83e7ea"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomToolTray.cs",
@@ -33547,7 +33894,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/DrawingSurfaceView.cs",
-      "sha256": "f7716ef96d597110f1aedd718377e634be7c0ab7b17692c570f64200fb182d61"
+      "sha256": "f157232990c1f7c29986edd9f5632e4e65485287ab5258a0a53c21cd319468a6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/DrawingSurfaceOcclusion.cs",
@@ -33555,7 +33902,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSurfaceEdits.cs",
-      "sha256": "21ccccbde9898505fc2be74d1ab8963ce213f18688e2cc267f114b743ee061d7"
+      "sha256": "c0734e6925f4da48de92c004d546f7ee45b863860cbaf30417207218b6e746a1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRecipeEdits.cs",
@@ -33563,7 +33910,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "638bb14231cbd2a5a416d2427326600ac8e51d7d489f7556556150071b6c41eb"
+      "sha256": "54d513ff5ef493a31b0f8291d5358aa83eff12a31f34ca282f78a4561140c06b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedDrawing.cs",
@@ -33571,11 +33918,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SpatialDrawing.cs",
-      "sha256": "5482d16c7d5d30ac09980c365600f2a2a68e14c2c0129b0c7ff1f030e9a5188a"
+      "sha256": "be669487b1f688473be8d5426b5695e29e25f73c96462a26030d174b7881ad08"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedRoomObject.cs",
-      "sha256": "c8803de81049d40c969587eec84868150cbf04e3645e4ebf0620bd7af9630928"
+      "sha256": "1ee270a9b969e28c8b6e3180343638e6e020b8f361f2f1049a9a425ec8abd0d7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectSettings.cs",
@@ -33659,7 +34006,23 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ScannedRoomLayout.cs",
-      "sha256": "1eee53f9295009d0856a2fa0e7e9fe3ea05cc3e79872074ec1f489ebfddda599"
+      "sha256": "cc56b25d4719cf5877343c090d42c90e382f9dfbc885f6af3ea26f145147d668"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ScannedRoomDrawing.cs",
+      "sha256": "3090764ccce95a3c14c5f5aebd786c4999f117911927d891192f6c31690045cd"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ScanDrawingAnchor.cs",
+      "sha256": "1984fcc8d87f7b9971b701d2f281ac0f380045c836d2756721cabfa6aa6f15e5"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ScannedDrawingView.cs",
+      "sha256": "fbe913261a96a5c882afc73383b410f39f56df5aeffae98382340ad2a40787dd"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomScannedDrawing.cs",
+      "sha256": "fae607ee6898f4173ebe6cbf14f769177ef73fc057c84a4a7186a8b726df0b07"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportAcceptance.cs",
@@ -33739,7 +34102,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationCapabilitySupport.cs",
-      "sha256": "c63cfcb0f7467e5db0dea85dc3838b9ee737c031758b1e56a002078da968c857"
+      "sha256": "92bd71427789d574890b437ca459cc4484fac3bf5cc25164ebd1c4ebcb2de1a2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationPlayCapability.cs",
@@ -33767,7 +34130,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "fc10bea2d4af19392800afb5f0bd5fbe9d0650c18b33dfbd7e179125142c8f61"
+      "sha256": "9db715e0ef16617787b2233e8791208f98bb125c53798d28f3e910cd478faa47"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -33843,7 +34206,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingCapabilities.cs",
-      "sha256": "b49b748338ff9d390a469455f9b287edf0a8d1ca50ea4149edff8e5d94ba9e81"
+      "sha256": "7c4de79fbe806c3e3d5ea6962d2b5b2c2cb534bc562df0c5752f877b35c41aea"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingResolveCapability.cs",
@@ -33939,7 +34302,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectCapabilities.cs",
-      "sha256": "188869e2efc3729667ac375b7fc77059468fc70bdbaf0d53a311f211f04284aa"
+      "sha256": "fffc1ec8894cacc47949219370a2c4bec765ae094c89999264d400f9e44c95f0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicalSculptCapability.cs",
@@ -34004,6 +34367,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RuntimeDiagnosticFacts.cs",
       "sha256": "627c44fa4a267eebfafe2f82445c8cb01c32940805336dc776a94d9b439824b4"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ScanDrawingCapability.cs",
+      "sha256": "936da98015f29f7debbbb439ae6368653b74752b5f49645ebe3c285a2ec9b18e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SculptTipCapability.cs",
