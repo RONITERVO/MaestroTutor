@@ -375,3 +375,23 @@ check all three pose components. Equivalent quaternion signs and small floating-
 point round-off are accepted. Focused regressions include missing rotations and
 rotation-only changes. These checks verify the native world; they do not add a
 second simulation or replace physical Quest acceptance.
+
+
+## Physical packing settings and gestures (2026-10-04)
+
+The full native journey now discovers `material.pack.tool.set`, enables a bounded
+amount/radius/mass, reads the actual settings and confirms no ball or gesture was
+created merely by choosing them, then disables the tool. The exact native requests
+and acknowledgements are in `physical-packing-authoring.json`.
+`probe-physical-packing-authoring.mjs` replays those replies through the normal
+book capability form, rejects an oversized dose and zero mass, and matches the
+emitted call and receipt. This is not a browser physics simulation.
+
+Eight Unity PlayMode scenarios cover actual finger/trigger capture, one measured
+ball, accepted collision during preview, atomic save/Undo, replay, obstruction at
+start/publication, rotated/scaled surfaces, capacity, human ownership, tracking/
+pause recovery, moved-source refusal, real XRI grabbing and temporary discard.
+Native preview/result and solid-tray renders are inspected separately. Full native
+suites passed 805 EditMode and 620 PlayMode cases, with three optional private-file
+skips. The shared-client room journey passed 462 observations. These checks do not
+certify Quest tracking feel, scanned-room alignment or sustained performance.

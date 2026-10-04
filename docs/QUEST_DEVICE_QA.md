@@ -2,6 +2,23 @@
 
 
 
+## Physical material packing (headset acceptance pending)
+
+Enable Pack ball by asking Maestro or using the solid tray control. With hands,
+first lift clear of the snow patch, touch with an index fingertip, then lift.
+With controllers, hold trigger near the patch and release. Check one visible
+preview and exactly one saved ball; holding/dragging must not multiply material.
+Pinch-grab the ball with hands, then release/throw it under existing room physics.
+Check ball size, reachable placement, surface collision and that a single Undo
+removes the ball and restores the field. Repeat on a moved/scaled/tilted patch.
+
+Place a solid prop or scanned obstruction where the ball would appear. Packing
+must refuse. Interrupt a preview using the Quest system screen or tracking loss:
+returning must not silently create a ball. Inspect the retained draft and explicitly
+Retry/Discard. Test the same options from original chat and the optional book
+workshop. Record APK hash, room setup and frame/profiler evidence; desktop tests
+cannot certify tracking feel, real scan alignment or comfort.
+
 ## Physical drawing obstruction (headset acceptance pending)
 
 With a chalkboard patch enabled, place a solid object between the surface pencil

@@ -35,12 +35,13 @@ animation. Successful receipt replay cannot create it twice.
 | Paint brush | Purple handle, ferrule and blue bristles with wider ink | Dry surface strokes; no fluid/bristle simulation |
 | Eraser | Pink rubber and purple sleeve with an erase tip | Swept whole-stroke selection, one save/Undo per gesture |
 | Chalkboard | Five editable parts and a drawing patch on the Board part | Flat ink, whole-stroke erase; no curved projection |
-| Snow patch | Fixed backing and one editable 16-cell height field | Shared raise/lower/level paths and matching collision; physical trigger/fingertip/tool gestures; no conserved snow or flow |
+| Snow patch | Fixed backing and one editable 16-cell height field | Shared raise/lower/level paths and matching collision; physical sculpting/packing and measured tool transfer; no granular flow |
 | Sculpt brush | Teal handle and wide gold head with a saved sculpt tip | Held-only local raise/lower/level; one save/Undo on lift, no conserved material |
+| Material scoop | Editable handle/blade, measured store and scoop tip | One bounded held dose per contact; invert to deposit, one save/Undo |
 | Box robot | Nineteen parented parts, two wave tracks, initially idle | Fixed whole-body proxy does not follow animated parts |
 
-The twenty-four-template set is deliberately smaller than the complete proposed play kit. Arbitrary mesh/skin
-painting, further fidgets, persistent water and physical snow transfer
+The twenty-five-template set is deliberately smaller than the complete proposed play kit. Arbitrary mesh/skin
+painting, further fidgets and persistent water
 remain separate increments in
 [world authoring](QUEST_WORLD_AUTHORING.md). This set does not fulfill those gates. Existing pieces can now share a
 [layout reset](QUEST_LAYOUT_AUTHORING.md) with one Undo; this does not connect

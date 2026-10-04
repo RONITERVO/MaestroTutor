@@ -55,8 +55,7 @@ the book form; the feature is discoverable without adding a bespoke agent tool.
 
 Packing is an explicit authoring action at a requested room position. It does not
 move a shovel or avatar hand, check reach, automatically catch a throw, melt snow,
-mix materials, connect to liquid containers or simulate grains. Physical shovel capture is described below; hand-packing gestures remain further
-work using this same component.
+mix materials, connect to liquid containers or simulate grains. Physical shovel capture is described below; physical hand/controller packing is described below using the same component.
 The completed ball can already be handled as an ordinary prop. Existing liquid
 containers still own their millilitre balance and cavity/pour geometry. A future
 shared scoop/pour adapter must select one authoritative balance and convert units
@@ -96,7 +95,7 @@ preserve both component types, so this adds no stored fields or migration. Featu
 authoring action requires both objects released. Fields remain fixed. Transferring
 contents does not change store geometry, world scale, mass or liquid-container
 balances. The physical scoop below adapts this same kernel for held contact and carrying
-visuals. Hand packing remains unfinished; the explicit action itself implies no gesture.
+visuals. Physical hand/controller packing is described below; the explicit transfer action itself implies no gesture.
 
 
 ## Physical material tools
@@ -141,3 +140,42 @@ v17 and archive v17 preserve the new semantics. Unknown newer components and
 uncertain prior snapshot evidence remain protected. Feature:
 `physicalMaterialTools.v1`. Native, shared-client and browser verification are
 recorded in the PR checkpoint; physical Quest acceptance remains pending.
+
+
+## Physical hand and controller packing
+
+`material.pack.tool.set` configures session-local enable, footprint radius,
+requested local litres and explicit ball mass. Voice/delegated tasks, saved
+programs, generated book fields and the solid **Pack ball** tray control use the
+same settings. Enabling puts away drawing/sculpting and construction selection;
+it creates nothing and does not start physics. `material.pack.tool` reads them.
+
+With tracked hands, separate from the accepted surface after enabling, touch its
+top with an index fingertip, then lift. With controllers, hold trigger with the
+pointer within 25 cm of the surface and release or move off it. The first contact
+fixes one footprint and one quantity; dragging or waiting cannot accumulate more.
+The surface and a noninteractive ball preview are visible while accepted collision
+and saved data stay unchanged. The ball is placed above the original contact with
+25 mm clearance. A bounded solid-overlap query refuses occupied space, including
+scanned surfaces. It checks again on publication/retry.
+
+The ordinary `object.material.pack` evaluator supplies exact source loss, sphere
+size, collision, measured store and explicit mass. Successful publication saves
+both sides atomically with one Undo. The ball is an ordinary prop: grab/release,
+throw, gravity and animation apply. It is not automatically attached to a hand or
+launched. The gesture does not claim finger deformation or compaction physics.
+
+`material.pack.capture` exposes the frozen amount, position, session and phase.
+The shared `object.field.capture.path` gives its single local contact point.
+Tracking/focus loss, ownership interruption or a failed save retains the draft;
+`object.field.resolve` retries/discards that exact session. Retry requires the
+original field and world pose, current capacity/ownership and clear ball space.
+Discard restores accepted visuals. No automatic retry occurs after resume.
+`lastSaved` is the most recent successful physical packing session and object ID
+in this live room, not proof that the ball still exists after Undo/deletion.
+Explicit agent packing calls use their normal result instead.
+
+No room/archive format changes: the resulting field and ball use existing saved
+components. Feature: `physicalMaterialPacking.v1`. Native gesture, shared-client,
+book-form and Quest acceptance evidence must be recorded separately. This addition
+does not complete persistent water, granular simulation or headset acceptance.

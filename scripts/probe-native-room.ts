@@ -240,6 +240,18 @@ try{
   const scoopHash=createHash('sha256').update(await readFile('unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/material-scoop.json')).digest('hex');
   const scoopCreated=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{...templateArgs,templateHash:scoopHash,name:'Editable material scoop'}}}}]);
   const scoopId=(scoopCreated.execution?.selected?.output as {objectId?:unknown}|undefined)?.objectId;if(typeof scoopId!=='string')throw new Error('Material scoop was not created');
+  const physicalPackingSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'physical material packing tool',offset:0}}]);
+  const physicalPackingDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'material.pack.tool.set',version:1}}]);
+  const physicalPackingSettings={enabled:true,radius:.15,amountLitres:.1,mass:.2};
+  const physicalPackingSet=await execute([{action:'execution',execution:{operation:'start',call:{id:'material.pack.tool.set',version:1,arguments:physicalPackingSettings}}}]);
+  const physicalPackingRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'material.pack.tool',version:1}}]);
+  const physicalPackingValues=factReply(physicalPackingRead).value as typeof physicalPackingSettings;
+  if(!physicalPackingValues.enabled||Math.abs(physicalPackingValues.radius-.15)>.000001||Math.abs(physicalPackingValues.amountLitres-.1)>.000001||Math.abs(physicalPackingValues.mass-.2)>.000001)throw new Error('Physical packing settings differ from the shared accepted call');
+  const physicalPackingIdle=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'material.pack.capture',version:1}}]);
+  const physicalPackingCapture=factReply(physicalPackingIdle).value as {phase:string;lastSaved:{objectId:string}};
+  if(physicalPackingCapture.phase!=='idle'||physicalPackingCapture.lastSaved.objectId!=='')throw new Error('Configuring physical packing unexpectedly created a ball or gesture');
+  const physicalPackingDisabled=await execute([{action:'execution',execution:{operation:'start',call:{id:'material.pack.tool.set',version:1,arguments:{...physicalPackingSettings,enabled:false}}}}]);
+  await writeFile(join(directory,'physical-packing-authoring.json'),JSON.stringify({boundary:'Actual native shared configuration and readback only. Physical touch/trigger gestures have separate PlayMode evidence; no headset/provider proof.',created:scoopCreated,search:physicalPackingSearch,definition:physicalPackingDefinition,call:{id:'material.pack.tool.set',version:1,arguments:physicalPackingSettings},set:physicalPackingSet,read:physicalPackingRead,idle:physicalPackingIdle,disabled:physicalPackingDisabled},null,2));
   const scoopSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'sculpt tip',offset:0}}]);
   const scoopDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.sculptTip.edit',version:1}}]);
   const readScoop=()=>execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.sculptTip',version:1,arguments:{target:scoopId}}}]);

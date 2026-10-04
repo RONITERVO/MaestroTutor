@@ -68,8 +68,8 @@ namespace Maestro.Quest.Creation
                 if(sessionTools[i]==RoomTool.MovePieces){moveLabel=tool.GetComponentInChildren<TextMesh>();Part(tool,PrimitiveType.Cube,Vector3.zero,new Vector3(.015f,.065f,.02f),paper);}
                 if(sessionTools[i]==RoomTool.CollectPieces){selectionLabel=tool.GetComponentInChildren<TextMesh>();Part(tool,PrimitiveType.Cube,new Vector3(.016f,.013f,-.014f),Vector3.one*.025f,paper);}
             }
-            var sculptTools=new[]{RoomTool.SculptLower,RoomTool.SculptRaise,RoomTool.SculptLevel};var sculptModes=new[]{"lower","raise","level"};
-            for(int i=0;i<3;i++){var tool=Tool(sculptTools[i],new Vector3(-.24f+i*.24f,-.36f,-.035f),"Sculpt "+sculptModes[i],14);var pigment=Material(IllustratedMaterials.Paper);sculptPaint[sculptModes[i]]=pigment;Part(tool,PrimitiveType.Cylinder,Vector3.zero,new Vector3(.047f,.009f,.047f),pigment);Part(tool,PrimitiveType.Cube,new Vector3(0,.018f,0),new Vector3(.012f,.045f,.018f),teal);}
+            var sculptTools=new[]{RoomTool.SculptLower,RoomTool.SculptRaise,RoomTool.SculptLevel,RoomTool.PackMaterial};var sculptModes=new[]{"lower","raise","level","pack"};
+            for(int i=0;i<4;i++){var tool=Tool(sculptTools[i],new Vector3(-.27f+i*.18f,-.36f,-.035f),i==3?"Pack ball":"Sculpt "+sculptModes[i],14);var pigment=Material(IllustratedMaterials.Paper);sculptPaint[sculptModes[i]]=pigment;Part(tool,PrimitiveType.Cylinder,Vector3.zero,new Vector3(.047f,.009f,.047f),pigment);Part(tool,PrimitiveType.Cube,new Vector3(0,.018f,0),new Vector3(.012f,.045f,.018f),teal);}
             status = Label(transform,new Vector3(0,-.445f,-.020f),"",.0038f);
             editor.Changed += Refresh; Refresh();
         }
@@ -94,8 +94,8 @@ namespace Maestro.Quest.Creation
             if(moveLabel){moveLabel.text=editor.ObserveConstructionManipulation().visible?"Hide mover":"Move pieces";moveLabel.GetComponentInParent<PhysicalRoomAction>().AccessibleName=moveLabel.text;moveLabel.text=Mark(moveLabel.text);}
             var draft=editor.GetComponent<SpatialDrawing>();bool retained=draft?.HasUnsavedStroke==true;bool erasing=draft?.IsErasing==true;pencilLabel.text=retained?(erasing?"Retry erasing":"Retry stroke"):"Draw";eraseLabel.text=retained?(erasing?"Discard erasing":"Discard stroke"):editor.DrawingOnSurfaces?"Erase ink":"Erase";
             var sculpt=editor.GetComponent<SpatialSculpting>();bool sculptDraft=sculpt?.Retained==true;
-            if(sculptDraft){retained=true;pencilLabel.text="Retry sculpt";eraseLabel.text="Discard sculpt";}
-            foreach(var paint in sculptPaint)paint.Value.color=sculpt&&sculpt.Mode==paint.Key?IllustratedMaterials.Hex("2B8D88"):IllustratedMaterials.Paper;
+            if(sculptDraft){retained=true;pencilLabel.text=sculpt.PackingDraft?"Retry packing":"Retry sculpt";eraseLabel.text=sculpt.PackingDraft?"Discard packing":"Discard sculpt";}
+            foreach(var paint in sculptPaint)paint.Value.color=sculpt&&(paint.Key=="pack"?sculpt.PackingEnabled:sculpt.Mode==paint.Key)?IllustratedMaterials.Hex("2B8D88"):IllustratedMaterials.Paper;
             if(surfacePaint)surfacePaint.color=editor.DrawingMode&&editor.DrawingOnSurfaces?IllustratedMaterials.Hex("2B8D88"):IllustratedMaterials.Paper;
             pencilAction.AccessibleName=pencilLabel.text;eraseAction.AccessibleName=eraseLabel.text;pencilLabel.text=Mark(pencilLabel.text);eraseLabel.text=Mark(eraseLabel.text);
             status.text = (editor.TemporaryRoom?"TEMPORARY | ":"SAVED ROOM | ")+editor.Status;

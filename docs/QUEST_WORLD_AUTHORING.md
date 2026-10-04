@@ -448,3 +448,16 @@ retry/discard reuse the existing surface capture lifecycle. The Material scoop
 template demonstrates these components; it adds no snow-specific scripting
 engine. See [the contract](QUEST_MATERIAL_PACKING.md#physical-material-tools).
 Full fluid/granular simulation and physical Quest acceptance remain separate.
+
+
+### Physical hand/controller packing (2026-10-04)
+
+Hands and controller triggers now adapt the same measured material packing action
+already available to the agent. A single touch-and-lift contact previews and saves
+one ordinary ball with its field removal and one Undo. Shared tool settings,
+retained-draft recovery and exact last-created identity keep human/program/agent
+observations together. Pinch-grabbing props remains available in packing mode.
+The solid tray has a Pack ball control; original chat remains the default interface.
+See [material packing](QUEST_MATERIAL_PACKING.md#physical-hand-and-controller-packing).
+This closes the desktop hand-packing adapter, not Quest acceptance, persistent
+water or a full fluid/granular simulation.

@@ -15,7 +15,7 @@ namespace Maestro.Quest.Creation {
         public string Mode {get;private set;}="off";
         public float Radius {get;private set;}=.08f;
         public float Height {get;private set;}=.03f;
-        public bool Enabled=>Mode!="off";
+        public bool Enabled=>Mode!="off"||PackingEnabled;
         public string SessionId {get;private set;}=Guid.NewGuid().ToString("N");
         public bool Active=>owner!=-1;
         public bool Retained {get;private set;}
@@ -34,12 +34,12 @@ namespace Maestro.Quest.Creation {
             if(!CanConfigure(out error))return false;
             if(!new[]{"off","raise","lower","level"}.Contains(operation)||!float.IsFinite(size)||size<.005f||size>2||!float.IsFinite(amount)||amount<0||amount>.5f){error="Choose off/raise/lower/level, radius 0.005–2 m and height 0–0.5 m";return false;}
             if(operation!="off"){if(!Editor.ConfigureDrawing("off",Editor.Paint,Editor.DrawingRadius,out error))return false;Editor.SuspendConstructionPicking();}
-            Mode=operation;Radius=size;Height=amount;fingerBlocked[0]=fingerBlocked[1]=true;
+            PackingEnabled=false;Mode=operation;Radius=size;Height=amount;fingerBlocked[0]=fingerBlocked[1]=true;
             Editor.ReportStatus(operation=="off"?"Sculpt tool put away":"Sculpt "+operation+": trigger near the surface, or touch it with an index fingertip; release/lift to save");return true;
         }
-        internal void PutAway(){Mode="off";fingerBlocked[0]=fingerBlocked[1]=true;}
-        public void Begin(int id,Ray ray){if(Enabled&&Editor.FindHeightField(ray,.25f,null,out var at,out var p,out _))BeginAt(id,at,p,null,Mode,Radius,Height,.25f,RoomActorRole.Control);}
-        public void Move(int id,Ray ray){if(!Owns(id))return;if(!Editor.FindHeightField(ray,maximum,tool,out var at,out var p,out _)||at!=target){End(id);return;}Sample(p);}
+        internal void PutAway(){PackingEnabled=false;Mode="off";fingerBlocked[0]=fingerBlocked[1]=true;}
+        public void Begin(int id,Ray ray){if(Enabled&&Editor.FindHeightField(ray,.25f,null,out var at,out var p,out _)){if(PackingEnabled)BeginPacking(id,at,p);else BeginAt(id,at,p,null,Mode,Radius,Height,.25f,RoomActorRole.Control);}}
+        public void Move(int id,Ray ray){if(!Owns(id))return;if(!Editor.FindHeightField(ray,Packing ? .25f : maximum,tool,out var at,out var p,out _)||at!=target){End(id);return;}Sample(p);}
         public void End(int id){if(Owns(id))Finish(true);}
         public void Cancel(int id,IXRSelectInteractor lost=null){if(Owns(id)||Active&&tool!=null&&lost!=null&&Editor.Find(tool)?.Grab.interactorsSelecting.Any(i=>ReferenceEquals(i,lost))==true)Finish(false);if(id>=0&&id<2)fingerBlocked[id]=true;}
         internal void Finger(int id,Vector3? point){
@@ -47,7 +47,7 @@ namespace Maestro.Quest.Creation {
             string at=null;Vector2 p=default;bool contact=Enabled&&Editor.FindHeightFieldNear(point.Value,null,out at,out p);
             if(!contact){End(id);fingerBlocked[id]=false;return;}
             if(Owns(id)){if(at!=target){End(id);fingerBlocked[id]=true;}else Sample(p);return;}
-            if(fingerBlocked[id])return;fingerBlocked[id]=true;BeginAt(id,at,p,null,Mode,Radius,Height,.03f,RoomActorRole.Control);
+            if(fingerBlocked[id])return;fingerBlocked[id]=true;if(PackingEnabled)BeginPacking(id,at,p);else BeginAt(id,at,p,null,Mode,Radius,Height,.03f,RoomActorRole.Control);
         }
         internal void BeginTool(string id,Ray ray,string operation,float size,float amount,RoomActorRole actor){if(Editor.FindHeightField(ray,.02f,id,out var at,out var p,out _))BeginAt(-2,at,p,id,operation,size,amount,.02f,actor);}
         internal void MoveTool(string id,Ray ray){if(OwnsTool(id))Move(-2,ray);}
@@ -65,11 +65,12 @@ namespace Maestro.Quest.Creation {
         }
         bool Unchanged(out string error){
             error=null;var now=Editor?Editor.Read(target)?.heightFields?.FirstOrDefault():null;
-            if(!Editor||roomSession!=Editor.TemporarySessionId||now==null||JsonUtility.ToJson(now)!=before){error="The surface or room changed; discard this sculpt draft";return false;}return MaterialUnchanged(out error);
+            if(!Editor||roomSession!=Editor.TemporarySessionId||now==null||JsonUtility.ToJson(now)!=before){error="The surface or room changed; discard this sculpt draft";return false;}return MaterialUnchanged(out error)&&PackingUnchanged(out error);
         }
         void Sample(Vector2 point,bool force=false){
             if(!Active)return;
             if(!Unchanged(out var error)||Editor.Ownership.Suspended||lease?.Held!=true){errorText=error??"Sculpting interrupted";Finish(false);return;}
+            if(Packing)return;
             if(points.Count>0){float distance=Vector2.Distance(points[^1],point);if(distance<Mathf.Max(.003f,radius*.12f))return;if(distance>.35f){Finish(true);return;}}
             points.Add(point);draft=source.Copy();draft.Sculpt(mode,points.ToArray(),radius,height,out _,out _);
             if(force||Time.unscaledTime>=nextPreview){nextPreview=Time.unscaledTime+1f/20;Editor.Find(target)?.GetComponent<HeightFieldView>()?.Preview(draft);}
@@ -84,6 +85,7 @@ namespace Maestro.Quest.Creation {
         internal bool CanResolve(string session,bool discard,out string error){
             error=null;if(!Retained||session!=SessionId){error="Inspect the current retained sculpt draft first";return false;}if(discard)return true;
             if(!Unchanged(out error)||!Editor.Ownership.CanAcquire("sculpt:"+SessionId,role,new[]{new BehaviourCatalog.Claim(target,"wholeTarget")},out error))return false;
+            if(Packing)return PreparePacking(out error);
             if(Material)return PrepareMaterial(out _,out error);
             return Editor.PrepareSculpt(target,Editor.ObjectRevision(target),mode,points.ToArray(),radius,height,out _,out _,out error);
         }
@@ -93,16 +95,16 @@ namespace Maestro.Quest.Creation {
             if(!discard){
                 if(lease?.Held!=true&&!Editor.Ownership.TryAcquire("sculpt:"+SessionId,tool==null?"Your sculpt tool":"Held sculpt tool",role,new[]{new BehaviourCatalog.Claim(target,"wholeTarget")},_=>{},out lease,out error,preservePlacement:true))return Failed(error);
                 if(!CanResolve(session,false,out error))return Failed(error);
-                if(Material?!CommitMaterial(out changed,out error):!Editor.SculptHeightField(target,Editor.ObjectRevision(target),mode,points.ToArray(),radius,height,out changed,out error))return Failed(error);
+                if(Packing?!CommitPacking(out changed,out error):Material?!CommitMaterial(out changed,out error):!Editor.SculptHeightField(target,Editor.ObjectRevision(target),mode,points.ToArray(),radius,height,out changed,out error))return Failed(error);
             }
-            result=new JObject{["sessionId"]=session,["phase"]=discard?"discarded":"saved",["target"]=discard?"":target,["points"]=points.Count,["changedVertices"]=changed,["temporary"]=Editor.TemporaryRoom};bool material=Material;Clear();Editor.ReportStatus(discard?"Surface draft discarded":material?"Material gesture saved — Undo restores both balances":"Sculpt gesture saved — Undo restores the surface");return true;
+            result=new JObject{["sessionId"]=session,["phase"]=discard?"discarded":"saved",["target"]=discard?"":target,["points"]=points.Count,["changedVertices"]=changed,["temporary"]=Editor.TemporaryRoom};bool packing=Packing,material=Material;Clear();Editor.ReportStatus(discard?"Surface draft discarded":packing?"Ball packed — grab it normally; Undo restores the surface and removes it":material?"Material gesture saved — Undo restores both balances":"Sculpt gesture saved — Undo restores the surface");return true;
         }
-        bool Failed(string error){errorText=error;Editor?.ReportStatus("Sculpt not saved: "+error+". Retry sculpt or Discard sculpt.");return false;}
+        bool Failed(string error){errorText=error;Editor?.ReportStatus((Packing?"Packing not saved: ":"Sculpt not saved: ")+error+(Packing?". Retry packing or Discard packing.":". Retry sculpt or Discard sculpt."));return false;}
         internal void ResolveManual(bool discard)=>Resolve(SessionId,discard,out _,out _);
         public Vector3 PointerPoint(Ray ray)=>Editor&&Editor.FindHeightField(ray,.25f,null,out _,out _,out var distance)?ray.GetPoint(distance):ray.GetPoint(.12f);
         internal JObject Observe()=>new(){["sessionId"]=SessionId,["phase"]=Active?"sculpting":Retained?"unsaved":"idle",["target"]=target??"",["brush"]=new JObject{["mode"]=mode??"none",["radius"]=Busy?radius:0,["height"]=Busy?height:0},["points"]=points.Count,["temporary"]=Editor&&Editor.TemporaryRoom,["error"]=Maestro.Quest.Imports.ImportObservation.Text(errorText)};
         internal JObject PathPage(string session,int offset){if(!Busy||session!=SessionId||offset<0||offset>points.Count)return null;return new JObject{["sessionId"]=SessionId,["offset"]=offset,["count"]=points.Count,["points"]=new JArray(points.Skip(offset).Take(8).Select(p=>new JObject{["x"]=p.x,["z"]=p.y}))};}
-        void Clear(){ClearMaterial();if(Editor)Editor.Find(target)?.GetComponent<HeightFieldView>()?.Preview(null);lease?.Dispose();lease=null;write?.Dispose();write=null;owner=-1;Retained=false;target=tool=mode=before=roomSession=null;source=draft=null;points.Clear();errorText="";SessionId=Guid.NewGuid().ToString("N");}
+        void Clear(){ClearPacking();ClearMaterial();if(Editor)Editor.Find(target)?.GetComponent<HeightFieldView>()?.Preview(null);lease?.Dispose();lease=null;write?.Dispose();write=null;owner=-1;Retained=false;target=tool=mode=before=roomSession=null;source=draft=null;points.Clear();errorText="";SessionId=Guid.NewGuid().ToString("N");}
         void OnApplicationPause(bool paused){if(paused&&Active)Finish(false);}
         void OnApplicationFocus(bool focused){if(!focused&&Active)Finish(false);}
         void OnDisable(){if(Active)Finish(false);}

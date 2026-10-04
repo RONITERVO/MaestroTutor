@@ -143,7 +143,9 @@ namespace Maestro.Quest.Book
             bool hitSomething = Physics.Raycast(ray, out var hit, Router.MaximumDistance, Router.InteractionLayers, QueryTriggerInteraction.Ignore);
             bool page = hitSomething && (hit.collider.GetComponent<BookPageTarget>() || hit.collider.GetComponentInParent<PhysicalAction>());
             bool item = hitSomething && hit.collider.GetComponentInParent<RoomItem>();
-            var pointed = page ? GestureTarget.Page : Editor && (Editor.DrawingMode||Editor.SculptMode) ? GestureTarget.Drawing : item ? (usingHand ? GestureTarget.Object : GestureTarget.Page) : GestureTarget.None;
+            // Packing leaves ordinary props available for pinch-grab; only height surfaces own packing contact.
+            bool packingGrip=usingHand&&item&&Editor&&Editor.GetComponent<SpatialSculpting>()?.CanGripWhilePacking(hit.collider.GetComponentInParent<RoomItem>())==true;
+            var pointed = page ? GestureTarget.Page : packingGrip ? GestureTarget.Object : Editor && (Editor.DrawingMode||Editor.SculptMode) ? GestureTarget.Drawing : item ? (usingHand ? GestureTarget.Object : GestureTarget.Page) : GestureTarget.None;
             bool pressed = usingHand ? hand.indexPressed.isPressed : input.Press.IsPressed();
             var trigger = input.Trigger.Update(pressed, pointed);
             var squeeze = input.Squeeze.Update(!usingHand && input.Grip.IsPressed(), GestureTarget.Object);

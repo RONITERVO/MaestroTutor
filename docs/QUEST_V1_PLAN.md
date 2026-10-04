@@ -2,6 +2,14 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
+Physical hand/controller packing now adapts the existing measured-material kernel:
+one contact previews one ball, lift/release saves it with the source change, and
+one Undo restores both. Shared settings, capture/recovery facts, pinch-grabbing
+and a solid Pack ball tray control use the same native path. Desktop native,
+shared-client and browser verification are recorded in
+[material packing](QUEST_MATERIAL_PACKING.md#physical-hand-and-controller-packing).
+Real Quest interaction/performance acceptance remains open.
+
 The native room and real-book integration drivers now share a strict TypeScript
 gate in CI and before a native journey starts. Catalog replies must match the
 actual request. Joining and snap Undo verify native placement facts, fixing two
@@ -12,7 +20,7 @@ Physical material tools now adapt the shared field/store transfer kernel. The
 editable Material scoop takes one bounded dose on contact and deposits it when
 inverted, with a carried preview, one atomic save/Undo and explicit retained-draft
 recovery. The same saved tip is configurable from the book or agent. Device
-acceptance and hand packing remain open; see
+acceptance remains open; see
 [physical material tools](QUEST_MATERIAL_PACKING.md#physical-material-tools).
 
 The original chat/Live handoff and result guidance now defer supported room work
@@ -58,8 +66,7 @@ uses ordinary recipes and condition waits for press/release. Saved snap points n
 support explicit construction placement or fixed joining with shared current
 revisions and one Undo; see QUEST_SNAP_POINTS.md. Physical grip snap previews
 and bounded liquid containers/pouring/vessel scooping now extend those components. Sculptable snow fields, measured snowball packing and 25 editable templates plus
-seven reusable modules now cover part of the proposed kit. Persistent liquid fields,
-hand-packing gestures and complete device acceptance remain unfinished.
+seven reusable modules now cover part of the proposed kit. Persistent liquid fields and complete device acceptance remain unfinished.
 See QUEST_RECIPE_AUTHORING.md and QUEST_NATIVE_ROOM_PROBE.md.
 
 The October 2 notebook scope and current review assessment are recorded in

@@ -18173,6 +18173,58 @@
       }
     },
     {
+      "id": "material.pack.tool.set",
+      "version": 1,
+      "label": "Choose the physical material packing tool",
+      "input": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "radius": {
+            "type": "number",
+            "minimum": 0.005,
+            "maximum": 2.0
+          },
+          "amountLitres": {
+            "type": "number",
+            "minimum": 0.001,
+            "maximum": 20.0
+          },
+          "mass": {
+            "type": "number",
+            "minimum": 0.05,
+            "maximum": 20.0
+          }
+        },
+        "required": [
+          "enabled",
+          "radius",
+          "amountLitres",
+          "mass"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "physicalMaterialPacking.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [
+        "authoring.idle",
+        "room.active"
+      ],
+      "description": "Enable/disable touch-and-lift material packing with a local footprint radius, requested local litres and explicit ball mass. Hands: separate from the accepted surface after enabling, touch with an index fingertip, then lift. Controller: hold trigger with its pointer within 25 cm, then release or leave the surface. One contact previews one ball; dragging/waiting cannot multiply material. Uses the same object.material.pack evaluator, saved measured store, sphere recipe/collision and atomic Undo. Ball appears above the original contact with 25 mm clearance; solid obstructions refuse, including scanned geometry. It is not automatically held or thrown. Grab it normally after successful publication. Choosing settings changes no objects and never starts physics. Enabling puts away drawing, sculpting and construction selection. Failed saves/tracking loss retain the draft; inspect material.pack.capture and use object.field.resolve to retry/discard. Retry requires the original source/pose and clear ball space. Settings are session-local, quantities independent of world scale. No finger/granular/compaction physics.",
+      "example": {
+        "enabled": true,
+        "radius": 0.12,
+        "amountLitres": 0.25,
+        "mass": 0.15
+      }
+    },
+    {
       "id": "object.sculptTip.edit",
       "version": 1,
       "label": "Configure an object's sculpt tip",
@@ -18640,7 +18692,7 @@
         "sculpt.retained",
         "sculpt.session.current"
       ],
-      "description": "Read object.field.capture and resolve its exact retained sessionId. Retry uses the same frozen sampled path and object.field.sculpt evaluator, with one saved edit/Undo; the saved field must still match the original and ownership must be reacquired. Discard restores the accepted visual and removes only the in-memory draft. Collision has remained on the accepted mesh throughout preview. Changed/missing fields and a different room session refuse retry. A successful receipt cannot resolve a later draft. Active gestures cannot be resolved. Retained drafts block workspace/temporary-room changes; destroying the app/room loses unsaved memory. For a material scoop/deposit, retry instead publishes the frozen field and carrier balance together after verifying both originals and the saved tip. Both are restored by one Undo. Inspect object.material.capture for amounts. This does not enable a tool, start physics or play an animation.",
+      "description": "Read object.field.capture and resolve its exact retained sessionId. Retry uses the same frozen sampled path and object.field.sculpt evaluator, with one saved edit/Undo; the saved field must still match the original and ownership must be reacquired. Discard restores the accepted visual and removes only the in-memory draft. Collision has remained on the accepted mesh throughout preview. Changed/missing fields and a different room session refuse retry. A successful receipt cannot resolve a later draft. Active gestures cannot be resolved. Retained drafts block workspace/temporary-room changes; destroying the app/room loses unsaved memory. For a material scoop/deposit, retry instead publishes the frozen field and carrier balance together after verifying both originals and the saved tip. Both are restored by one Undo. For hand/controller packing, retry invokes object.material.pack with the frozen footprint, quantity and position; the source pose must match and the ball space must still be clear. One Undo restores the field and removes the ball. Inspect material.pack.capture for its last saved session/object identity; inspect object.material.capture for scoop amounts. This does not enable a tool, start physics or play an animation.",
       "example": {
         "operation": "retry",
         "sessionId": "00000000000000000000000000000000"
@@ -29352,6 +29404,56 @@
       ]
     },
     {
+      "id": "material.pack.tool",
+      "version": 1,
+      "type": {
+        "record": {
+          "enabled": "boolean",
+          "radius": "number",
+          "amountLitres": "number",
+          "mass": "number"
+        }
+      },
+      "label": "Current physical material packing tool",
+      "description": "Session-local touch-and-lift/trigger packing settings. Enabling does not create a ball or start physics. Reads do not enable input.",
+      "features": [
+        "physicalMaterialPacking.v1"
+      ]
+    },
+    {
+      "id": "material.pack.capture",
+      "version": 1,
+      "type": {
+        "record": {
+          "sessionId": "text",
+          "phase": "text",
+          "field": "text",
+          "requestedLitres": "number",
+          "amountLitres": "number",
+          "position": {
+            "record": {
+              "x": "number",
+              "y": "number",
+              "z": "number"
+            }
+          },
+          "lastSaved": {
+            "record": {
+              "sessionId": "text",
+              "objectId": "text",
+              "amountLitres": "number"
+            }
+          },
+          "error": "text"
+        }
+      },
+      "label": "Physical material packing draft",
+      "description": "Frozen preview amount/ball position and exact capture session. Use object.field.capture.path for its single local footprint and object.field.resolve for explicit Retry/Discard. lastSaved records the most recent successful physical packing in this live room, not current existence: Undo/deletion may remove that ball. Explicit object.material.pack calls do not set this physical observation. Reads have no effect.",
+      "features": [
+        "physicalMaterialPacking.v1"
+      ]
+    },
+    {
       "id": "object.field.capture",
       "version": 1,
       "type": {
@@ -29372,7 +29474,7 @@
         }
       },
       "label": "Physical sculpt draft",
-      "description": "Current shared shape or material gesture, field target, brush settings, sampled point count and bounded error. Material take/deposit has one point and zero height; inspect object.material.capture for quantities. Preview is visible only; collision/saved heights remain accepted. Unsaved needs explicit Retry/Discard. Read object.field.capture.path for exact points. Reads do not change the draft.",
+      "description": "Current shared shape or material gesture, field target, brush settings, sampled point count and bounded error. Material take/deposit/pack has one point and zero height; inspect object.material.capture or material.pack.capture for quantities and the last packed ball identity. Preview is visible only; collision/saved heights remain accepted. Unsaved needs explicit Retry/Discard. Read object.field.capture.path for exact points. Reads do not change the draft.",
       "features": [
         "physicalSculpting.v1"
       ]
@@ -32700,7 +32802,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "e5254a018aa0df2767b894b81aa0645a76adf7dd69a5701b8929e4584fc292d6"
+      "sha256": "083514b071c3563bc49f2db7736b837231d6b2eba33d3804c566057bf2684149"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -32752,7 +32854,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "6a8697decadf9a08775ff9570c472bc16519abe26c400bb8478b358f01cb7d22"
+      "sha256": "bb6d18f0feac346e3395488c58df2fbbca08fc96fa53a88def626ec23851e3c5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -33028,15 +33130,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomToolTray.cs",
-      "sha256": "32b9306a3c9a27bde16e29db0381dd87bb49fd57b0c59619b4970c6b532089f3"
+      "sha256": "fe8189ce3abd235987e3ea8a71eba061233134c321261a434061bb11296f7d15"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PhysicalRoomAction.cs",
-      "sha256": "5d7959440f61d40207e3fcd574a6b70c03fe1ecf25913d602f155d5bb149b2d9"
+      "sha256": "dbe62e8f1976aff8ca029171ec9795870d7664ca83fa5c03f77fba67fe5db73f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/BookControllerInput.cs",
-      "sha256": "295a229085c47949cb9a4209f1bc3908e6aab3bcff6791370f8c15194b05aa38"
+      "sha256": "bbb1635d3d99d18a0f7e2ba0378e100b7e4962db1d1a382b3a08669ff12aac6b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectCopy.cs",
@@ -33120,11 +33222,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SpatialSculpting.cs",
-      "sha256": "51c0aa2619c91b5393dd618a4db350871c585ce2f1886ed3824510e5eca3d863"
+      "sha256": "71e8aaf3e4a2be4e304e4fa941717b786a50bc8b91a12e9118bf49892a1b21a2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SpatialSculpting.Material.cs",
       "sha256": "a3d22250389b0cfa3118cd14ee6d2081c426066c4e59be09fc1eb0ccac765333"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SpatialSculpting.Packing.cs",
+      "sha256": "e77a4c494a6eca90087f7b5ee884c5fe0fa67fb1c2e147eafea913fff0b1bc16"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomMaterialScoop.cs",
@@ -33420,7 +33526,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "aa3c3ec3bdcc49d2c0c78ab0a92b33bf453ecbd737268d20767e78cf298f8b3b"
+      "sha256": "fc10bea2d4af19392800afb5f0bd5fbe9d0650c18b33dfbd7e179125142c8f61"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -33563,6 +33669,10 @@
       "sha256": "201d2d9de494d6308386d4cffca6f104d7bd1450dbec8ccd43021f9adad3b9bf"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/MaterialPackToolCapability.cs",
+      "sha256": "346578cba659197171f5d24f6723d954b78671ec59870a0468ae822cc47bb83f"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/MaterialScoopFacts.cs",
       "sha256": "d2f9a74b551dfb91c417f4a3fae0d89d15f70e0da6ffe3995f1f1c178cf8e00b"
     },
@@ -33592,7 +33702,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicalSculptCapability.cs",
-      "sha256": "a01b96779acd6695d5e29d90d253c7ef9492414777ee8f4564aa324656149522"
+      "sha256": "0ebadc4b48e57c545197f7d6f49c5f6efda67c6ebc7595f6fed906279d33ed3e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsSimulationCapability.cs",
