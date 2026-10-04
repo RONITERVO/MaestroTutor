@@ -17039,6 +17039,218 @@
       }
     },
     {
+      "id": "object.field.transfer",
+      "version": 1,
+      "label": "Transfer surface volume",
+      "input": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "object",
+            "properties": {
+              "target": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              },
+              "centre": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number",
+                    "minimum": -2.0,
+                    "maximum": 2.0
+                  },
+                  "z": {
+                    "type": "number",
+                    "minimum": -2.0,
+                    "maximum": 2.0
+                  }
+                },
+                "required": [
+                  "x",
+                  "z"
+                ],
+                "additionalProperties": false
+              },
+              "radius": {
+                "type": "number",
+                "minimum": 0.005,
+                "maximum": 2.0
+              }
+            },
+            "required": [
+              "target",
+              "revision",
+              "centre",
+              "radius"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "object.field",
+              "version": 1,
+              "arguments": {
+                "target": "target"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            }
+          },
+          "destination": {
+            "type": "object",
+            "properties": {
+              "target": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              },
+              "centre": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number",
+                    "minimum": -2.0,
+                    "maximum": 2.0
+                  },
+                  "z": {
+                    "type": "number",
+                    "minimum": -2.0,
+                    "maximum": 2.0
+                  }
+                },
+                "required": [
+                  "x",
+                  "z"
+                ],
+                "additionalProperties": false
+              },
+              "radius": {
+                "type": "number",
+                "minimum": 0.005,
+                "maximum": 2.0
+              }
+            },
+            "required": [
+              "target",
+              "revision",
+              "centre",
+              "radius"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "object.field",
+              "version": 1,
+              "arguments": {
+                "target": "target"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            }
+          },
+          "amountLitres": {
+            "type": "number",
+            "minimum": 0.001,
+            "maximum": 8000.0
+          }
+        },
+        "required": [
+          "source",
+          "destination",
+          "amountLitres"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "heightFields.v1",
+          "heightFieldTransfer.v1"
+        ],
+        "format": "heightFieldTransfer"
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "targets.created",
+        "targets.unheld",
+        "source.revision.current",
+        "storage.writable",
+        "targets.physics.fixed"
+      ],
+      "description": "Move up to amountLitres between two distinct fixed height surfaces with identical material labels and colours. Each endpoint selects a local X/Z disk; smooth radial falloff bounds removal by available height and addition by headroom. Triangulated footprint support extends to adjacent grid vertices. Result reports actual removedLitres, addedLitres and signed roundingLitres. These are unscaled local geometric litres, like object.field.volumeLitres; resizing objects changes displayed geometry, not this measure. Both current revisions and exclusive ownership are required. One atomic saved edit and one Undo updates both meshes and collisions, or neither on failure. Maximum rounding difference is max(0.000001 litre, removedLitres * 0.000001); transfers below representable resolution refuse. Empty/full or missed footprints refuse. This instantaneous authoring operation does not check distance, move a shovel, start physics, simulate grains or convert to containers/snowballs. Programs can combine it with existing movement and event conditions. Stop does not retract completed edits; Undo does. No automatic replay.",
+      "example": {
+        "source": {
+          "target": "00000000000000000000000000000000",
+          "revision": 1,
+          "centre": {
+            "x": 0,
+            "z": 0
+          },
+          "radius": 0.2
+        },
+        "destination": {
+          "target": "11111111111111111111111111111111",
+          "revision": 1,
+          "centre": {
+            "x": 0,
+            "z": 0
+          },
+          "radius": 0.2
+        },
+        "amountLitres": 1
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "removedLitres": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 8000.0
+          },
+          "addedLitres": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 8000.0
+          },
+          "roundingLitres": {
+            "type": "number",
+            "minimum": -0.008,
+            "maximum": 0.008
+          }
+        },
+        "required": [
+          "removedLitres",
+          "addedLitres",
+          "roundingLitres"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "object.sculptTip.edit",
       "version": 1,
       "label": "Configure an object's sculpt tip",
@@ -31016,7 +31228,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "936facab34ae190fcffa74e58598b4862781ff660e44624fd5f6f654bd19e6d1"
+      "sha256": "c1ef24c2baabd82a239d20ee867e79690a2d5d3499d433c11b25959aff1e3f2d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -31048,7 +31260,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "83fa1b2d70e34c4df59dcd202b7d6604cb326ffaae4f28db9aee4295ef736ae6"
+      "sha256": "a209c4c1a5bdc9fe24381f298004a44c01662562fee088ff63ccf22d6d80481a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -31368,7 +31580,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomHeightField.cs",
-      "sha256": "2c9d0bfe7baaaf8fd073c53698a8a4ec137a552ab4255c61eb69601ba9d55987"
+      "sha256": "6d673d97223f185fa2884df91dba4f3a97db733349edc643d02b9a84ad3dd58d"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/HeightFieldTransfer.cs",
+      "sha256": "0c9aa993cb9e8ae31a84cee800ed581102660a65f759fdee0c2548930edb017a"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomHeightFieldTransfer.cs",
+      "sha256": "6a9090732e98c3e808d0d1479e9abd1a48b3e78b941c762070fda04ae6502dee"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SpatialSculpting.cs",
@@ -31660,7 +31880,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "9f4feb5c513bec5d1cc5569d4f24ae1f954c89fdccfe80ecdb2a00db3ddb8b44"
+      "sha256": "b144b26358ab6b6ec9b24e9246a6a90b41515cfda377e898584632cbef3b8319"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -31769,6 +31989,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/HeightFieldCapability.cs",
       "sha256": "9151a66db95d31e67a58cc61d8762f8a9079c42f443b10dcc2538087b8c5f0ae"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/HeightFieldTransferCapability.cs",
+      "sha256": "3f20d6f6bac34e61595b3abbfb7ecea2fd7ba9088d4e00b0cddfe172fa54cae0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/HoldObjectCapability.cs",

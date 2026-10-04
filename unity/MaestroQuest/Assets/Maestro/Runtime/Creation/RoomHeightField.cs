@@ -35,7 +35,7 @@ namespace Maestro.Quest.Creation {
         }
         // Integrate the same two triangles per cell as the visual/collision mesh.
         // This is authored local volume, not physical mass or conserved simulated snow.
-        internal double VolumeLitres {get{double sum=0;for(int z=0;z<cells;z++)for(int x=0;x<cells;x++){int a=z*(cells+1)+x,b=a+1,c=a+cells+1,d=c+1;sum+=heights[a]+2*heights[b]+2*heights[c]+heights[d];}return sum*width*depth/(6.0*cells*cells)*1000;}}
+        internal double VolumeLitres {get{double sum=0;for(int z=0;z<cells;z++)for(int x=0;x<cells;x++){int a=z*(cells+1)+x,b=a+1,c=a+cells+1,d=c+1;sum+=(double)heights[a]+2.0*heights[b]+2.0*heights[c]+heights[d];}return sum*width*depth/(6.0*cells*cells)*1000;}}
         internal bool Sculpt(string mode,Vector2[] path,float radius,float height,out int changed,out string error){
             changed=0;error="Choose raise, lower or level; one to 32 in-bounds local X/Z points, radius 0.005–2 m and height 0–0.5 m";
             if(!Validate(out _)||mode!="raise"&&mode!="lower"&&mode!="level"||path==null||path.Length<1||path.Length>32||!Bound(radius,.005f,2)||!Bound(height,0,.5f)||path.Any(p=>!float.IsFinite(p.sqrMagnitude)||Mathf.Abs(p.x)>width*.5f||Mathf.Abs(p.y)>depth*.5f))return false;

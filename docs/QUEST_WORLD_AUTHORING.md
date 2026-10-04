@@ -386,3 +386,17 @@ Room v16, paired snapshot v15 and archive v15 preserve sculpt-tip source through
 copy, captured prototypes and workspace saves. The book and agent discover the
 same capability definitions, generated forms, feature requirements and facts.
 This does not implement material transfer/packing, granular snow or flowing water.
+
+
+## Shared surface transfer (2026-10-04)
+
+`object.field.transfer` now moves bounded local geometric volume between two
+compatible fixed height fields. It uses the shared catalog, per-endpoint current
+revisions, atomic room edits and one Undo for both meshes/colliders. The receipt
+reports measured source loss, destination gain and bounded rounding error; an
+unrepresentable transfer refuses. This extends authoring without another snow-only
+runtime or a hidden quantity ledger. See [surface transfer](QUEST_SURFACE_TRANSFER.md).
+
+Ordinary sculpting remains a deliberate shape edit. Physical shovel capture,
+carried snow, packing snowballs, persistent pools and real Quest profiling remain
+unfinished. The transfer action does not imply any of those outcomes.

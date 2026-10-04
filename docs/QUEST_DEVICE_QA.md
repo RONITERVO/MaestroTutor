@@ -1951,3 +1951,16 @@ is understandable and stable; measure frame timing for four 16-cell fields while
 sculpting with other active physics. Desktop tests do not certify Quest comfort,
 hand tracking quality, latency or sustained performance. This update has not been
 installed while the headset hold remains active.
+
+
+### Shared surface transfer
+
+On two configured snow patches, ask Maestro to transfer one local litre from the
+centre of the first patch to the second. Verify the first dips and the second
+rises, and compare the returned removed/added volumes with `object.field`.
+One Undo must restore both. Repeat with an edge footprint and differently sized
+grids. The book form must load both current revisions; stale or identical targets
+must refuse. Resizing a patch changes its displayed size, not the local litre
+measure. This is an explicit saved edit; it is not a physical shovel or granular
+simulation. Check frame time during maximum-size edits and collisions on the
+accepted surface. Desktop results do not complete this device check.

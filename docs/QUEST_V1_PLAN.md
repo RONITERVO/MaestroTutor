@@ -3038,3 +3038,37 @@ Evidence: `.quest-evidence/physical-sculpt`. The package remains uninstalled; de
 work is on hold. No paid generation/provider calls, deployment, release signing or
 Store submission occurred. Remaining device/provider/Store gates, broader play-kit
 coverage, material transfer and arbitrary mesh/skin painting remain open.
+
+
+### Shared surface-volume transfer checkpoint — 2026-10-04
+
+User/agent programs and the generated book form now use `object.field.transfer`
+to move local geometric volume between two compatible fixed height fields.
+Footprints respect actual grid triangle weights, availability and headroom.
+The result exposes measured removal/addition and bounded rounding error;
+unrepresentable amounts refuse. Both accepted meshes/colliders save atomically
+with one Undo, current revisions, shared ownership and receipt replay protection.
+No new saved fields or format bump. See QUEST_SURFACE_TRANSFER.md.
+
+Verification: **2,276 web tests in 253 files**, **784 Unity EditMode** and **588
+PlayMode tests** passed; three optional private-file tests skipped. TypeScript,
+ESLint, catalog provenance and included-asset integrity checks passed. The full-app
+shared-client journey passed **367 observations**, including both volume readbacks
+and Undo. The real Chrome book editor matched the exact native call/receipt,
+required both current revisions and refused an oversized quantity. Both page
+screenshots were inspected; headset legibility remains unverified.
+
+Production web, Android lint, **76 Android tests** (two optional skips) and IL2CPP
+packaging passed. The package audit matched **1,853 frozen native inputs**, **318
+runtime / 197 test / 15 editor C# files**, **62 fixture payloads**, the native AAR
+and **145 web files**. The catalog has **87 actions / 93 facts / 15 events**. Exact
+packaged bytes match the default avatar, 178 motions, 24 templates and seven modules.
+ARM64-only libraries, development manifest, v2 signature and 16 KiB alignment passed.
+
+Checkpoint: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-field-transfer-D728260E.apk`.
+SHA-256: `D728260E5590F3E8E9659BD1BE26043CFB7A3316FE31E81239680ADFB76045D3`.
+Development signing; **not installed**. No provider, paid generation, deployment,
+release signing or Store submission occurred. Physical shovelling/carried snow,
+snowball packing, real Quest performance/comfort and the existing provider,
+account/payment/privacy and Store gates remain open. This checkpoint does not
+complete the v1 goal or claim exact physical mass conservation.
