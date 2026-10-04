@@ -2,6 +2,13 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
+The original chat/Live handoff and result guidance now defer supported room work
+to the native catalog, including existing model/motion imports. System file choice
+and permissions remain explicit user steps. Planner reads and actions use their
+own allowances within the existing nine-call ceiling, so discovery can lead to
+edits and started actions can still be inspected. See
+[catalog-based workflow](QUEST_UNIFIED_AGENT.md#catalog-based-handoff-narration-and-independent-allowances-2026-10-04).
+
 The live book now has a required desktop integration journey against the actual
 Unity app. It exercises the original chat's verified handoff, native creation,
 concurrent human editing, stale-agent refusal, Undo, native image delivery and

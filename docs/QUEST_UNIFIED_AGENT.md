@@ -380,7 +380,7 @@ The normal tutor context and scene help interpret a clarification answer. The fo
 request lineage is bounded to 64,000 characters; exceeding that limit asks for a
 self-contained request without silently dropping constraints. Stop does not need
 to forward that lineage and is not blocked by its size. Native action
-limits are three action batches of up to eight commands plus six standalone read-only discovery/inspection batches per new user request; reaching either limit stops planning.
+limits are three action batches of up to eight commands plus six standalone read-only discovery/inspection batches per new user request, within nine planner calls. Each category remains usable when the other is exhausted; an over-budget proposal is refused before durable intent or dispatch. The final planner call may still report that no commands remain. Reaching the call ceiling with further work returns a limited task.
 
 Earlier unconfirmed actions propagate uncertainty. Follow-ups may inspect, but
 further mutations are refused until the user reviews the room and makes a fresh
@@ -514,3 +514,39 @@ No provider request, production deployment, APK rebuild or headset operation was
 performed for this backend increment. Real-provider accounting, Quest acceptance
 and the remaining v1 gates remain open. Development evidence is retained privately
 under `.quest-evidence/managed-stream-lifecycle`.
+
+
+## Catalog-based handoff, narration and independent allowances (2026-10-04)
+
+The original chat and Live instructions now hand off supported native model/motion
+import and workspace requests as ordinary room work. They do not carry the full
+capability list. The delegated agent discovers definitions and prerequisites in
+the native catalog. System file choice and platform permissions remain user steps;
+there is no arbitrary path access, account editing or runtime code execution.
+Opening a picker is request acceptance, not a completed import.
+
+Result narration uses the same catalog/evidence model instead of an obsolete fixed
+list followed by a manual-only restriction. It distinguishes query success,
+request acceptance, running work and completed operations. A typed result such as
+a missed catch, zero accepted quantity or partial transfer cannot be narrated as
+the requested physical outcome. Exact run identity and current observations matter:
+a later selected action is not proof of an earlier completion, and a historical
+receipt does not undo subsequent human changes. Program definitions, playback,
+trigger dispatch and the triggered work also remain distinct.
+
+`shared/roomTaskBudget.ts` is the pure owner of the existing ceilings: nine planner
+calls, six read batches and three action batches. Both the planner and its prompt
+use it. Each HTTP planner input carries the remaining counts, including the call
+being made. After six reads, remaining actions can use the discovered definitions;
+after three actions, remaining reads can inspect outcomes. An exhausted category
+cannot borrow from the other, write an intent or dispatch a native call. Ordinary
+cancellation, stale-state guards and uncertain-action restrictions still apply.
+There is no automatic budget renewal or background model loop.
+
+Regression coverage checks both category boundaries, the total call ceiling,
+pre-dispatch/journal refusal and cancellation immediately after the sixth receipt.
+The real-book journey now makes six actual native catalog reads before creating a
+ball and exercising the human-edit/stale-agent refusal boundary. Its ninth planner
+call returns no commands. All provider responses remain explicitly scripted offline;
+this proves routing, budget accounting and native integration, not LLM quality,
+voice/device behavior or actual system-file-picker completion.

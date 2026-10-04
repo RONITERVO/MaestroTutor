@@ -4,7 +4,8 @@ import {sequenceProgram} from './programs';
 // SPDX-License-Identifier: Apache-2.0
 import {describe,expect,it,vi} from 'vitest';
 import {parseRoomCommands,runRoomActionTask,runRoomTutorTurn,type RoomAgentState,type RoomCommand} from './roomAgent';
-import {ROOM_AGENT_SCHEMA} from '../../../shared/prompts';
+import {ROOM_AGENT_SCHEMA,ROOM_HANDOFF_TUTOR_INSTRUCTION,ROOM_HANDOFF_LIVE_INSTRUCTION} from '../../../shared/prompts';
+import {ROOM_TASK_LIMITS} from '../../../shared/roomTaskBudget';
 const scene:RoomAgentState={version:1,session:'a'.repeat(32),revision:1,sceneRevision:4,ack:0,ok:true,status:'Ready',objects:[],created:[],canUndo:false,canRedo:false,physicsRunning:false};
 const input={model:'gemini-3.8-flash',prompt:'Make a robot and have it wave.',history:[],nativeLanguageCode:'en',systemInstruction:'Tutor fixture'};
 function client(outputs:string[]) {
@@ -146,12 +147,14 @@ it('discovers and checks a capability before saving while keeping a separate bou
  expect(execute).toHaveBeenCalledTimes(4);expect(result.budgetExhausted).toBe(false);
  expect(execute.mock.calls[3][0]).toEqual([save]);
 });
-it('stops repetitive discovery at six acknowledged queries and saved actions at three',async()=>{
+it('refuses a proposal over either allowance before journaling or dispatch',async()=>{
  for(const action of [{action:'catalog',catalog:{operation:'search',query:'',offset:0}},{action:'workspace',visible:true}]){
   const ai=client(Array.from({length:10},()=>JSON.stringify({commands:[action]}))),current={...scene,capabilities:['catalog.v1']};
-  const execute=vi.fn(async(_commands:RoomCommand[])=>({...current,ack:1}));
-  const result=await runRoomActionTask(input,{aiClient:ai},{state:()=>current,valid:()=>true,execute},()=>{});
-  expect(result.budgetExhausted).toBe(true);expect(execute).toHaveBeenCalledTimes(action.action==='catalog'?6:3);
+  const execute=vi.fn(async(_commands:RoomCommand[])=>({...current,ack:1})),beforeDispatch=vi.fn(),onReceipt=vi.fn();
+  const result=await runRoomActionTask(input,{aiClient:ai},{state:()=>current,valid:()=>true,execute},()=>{},{beforeDispatch,onReceipt});
+  const accepted=action.action==='catalog'?6:3;
+  expect(result.budgetExhausted).toBe(true);expect(execute).toHaveBeenCalledTimes(accepted);expect(beforeDispatch).toHaveBeenCalledTimes(accepted);expect(onReceipt).toHaveBeenCalledTimes(accepted);
+  expect(ai.models.generateContentStream).toHaveBeenCalledTimes(accepted+1);
  }
 });
 
@@ -287,4 +290,75 @@ it.each([objectFactProgram,conditionProgram])('passes queried object records bac
  expect(JSON.parse(requests[1][0].contents[0].parts[0].text).scene.catalog.definition.type).toEqual({record:{x:'number',y:'number',z:'number'}});
  expect(JSON.parse(requests[2][0].contents[0].parts[0].text).scene.catalog).toMatchObject({arguments:{target:'book'},available:true,value:{x:0,y:1.2,z:-.4}});
  expect(result.scene.status).toBe('Saved without starting');expect(ai.live.connect).not.toHaveBeenCalled();
+});
+
+
+it('can use discovered capabilities after six queries without increasing the total planning budget',async()=>{
+ const query:RoomCommand={action:'catalog',catalog:{operation:'inspect',capability:'object.create',version:1}};
+ const create:RoomCommand={action:'create',reference:'ball',name:'Ball',kind:'ball'};
+ const paint:RoomCommand={action:'paint',target:'a'.repeat(32),color:{r:0,g:1,b:0,a:1}};
+ const commands=[...Array.from({length:6},()=>query),create,paint];
+ const ai=client([...commands.map(command=>JSON.stringify({commands:[command]})),'{"commands":[]}']);
+ let current={...scene,capabilities:['catalog.v1']};
+ const execute=vi.fn(async(_commands:RoomCommand[])=>{current={...current,revision:current.revision+1,ack:current.ack+1};return current;});
+ const result=await runRoomActionTask(input,{aiClient:ai},{state:()=>current,valid:()=>true,execute},()=>{});
+ expect(execute.mock.calls.map(call=>call[0])).toEqual(commands.map(command=>[command]));expect(result.budgetExhausted).toBe(false);
+ const requests=ai.models.generateContentStream.mock.calls as unknown as [any][];
+ expect(requests).toHaveLength(ROOM_TASK_LIMITS.planningCalls);
+ const payload=(index:number)=>JSON.parse(requests[index][0].contents[0].parts[0].text);
+ expect(payload(0).budget).toEqual({planningCalls:9,queryBatches:6,actionBatches:3});
+ expect(payload(6).budget).toEqual({planningCalls:3,queryBatches:0,actionBatches:3});
+ expect(payload(8).budget).toEqual({planningCalls:1,queryBatches:0,actionBatches:1});
+ expect(payload(8).receipts).toHaveLength(8);expect(payload(8).scene.ack).toBe(8);
+});
+
+it('can inspect the actual result after its third action instead of returning an unchecked start',async()=>{
+ const runId='b'.repeat(32),call={id:'time.wait',version:1,arguments:{seconds:1}};
+ const commands:RoomCommand[]=[{action:'workspace',visible:true},{action:'workspace',visible:false},
+  {action:'execution',execution:{operation:'start',call}}, {action:'execution',execution:{operation:'inspect',runId}}];
+ const ai=client([...commands.map(command=>JSON.stringify({commands:[command]})),'{"commands":[]}']);
+ let current:RoomAgentState={...scene,capabilities:['execution.v1']};
+ const execute=vi.fn(async(batch:RoomCommand[])=>{
+  const operation=batch[0].execution?.operation;
+  const summary={id:runId,capability:call.id,version:1,phase:operation==='inspect'?'completed' as const:'running' as const,status:operation==='inspect'?'Finished waiting':'Waiting',resources:[]};
+  current={...current,revision:current.revision+1,ack:current.ack+1,...(operation?{execution:{selected:{...summary,call},running:operation==='inspect'?[]:[summary],outcomes:operation==='inspect'?[summary]:[]}}:{})};return current;
+ });
+ const result=await runRoomActionTask(input,{aiClient:ai},{state:()=>current,valid:()=>true,execute},()=>{});
+ expect(execute).toHaveBeenCalledTimes(4);expect(result.budgetExhausted).toBe(false);
+ expect(result.receipts[2].execution!.selected!.phase).toBe('running');expect(result.scene.execution!.selected!.phase).toBe('completed');
+ const fourth:any=(ai.models.generateContentStream.mock.calls as any)[3][0];
+ expect(JSON.parse(fourth.contents[0].parts[0].text).budget).toEqual({planningCalls:6,queryBatches:6,actionBatches:0});
+});
+
+it('ends at nine planning calls even when both batch allowances are used exactly',async()=>{
+ const query:RoomCommand={action:'catalog',catalog:{operation:'search',query:'create',offset:0}};
+ const action:RoomCommand={action:'workspace',visible:true};
+ const commands=[query,action,query,action,query,action,query,query,query];
+ const ai=client([...commands.map(command=>JSON.stringify({commands:[command]})),'{"commands":[]}']);
+ const execute=vi.fn(async()=>({...scene,capabilities:['catalog.v1'],ack:1}));
+ const result=await runRoomActionTask(input,{aiClient:ai},{state:()=>({...scene,capabilities:['catalog.v1']}),valid:()=>true,execute},()=>{});
+ expect(result.receipts).toHaveLength(9);expect(result.budgetExhausted).toBe(true);expect(ai.models.generateContentStream).toHaveBeenCalledTimes(9);
+});
+
+it('honours cancellation at the discovery boundary before using the remaining action allowance',async()=>{
+ const query={action:'catalog',catalog:{operation:'search',query:'create',offset:0}};
+ const ai=client([...Array.from({length:6},()=>JSON.stringify({commands:[query]})),'{"commands":[{"action":"workspace","visible":true}]}']);
+ const controller=new AbortController(),current={...scene,capabilities:['catalog.v1']};let acknowledged=0;
+ const execute=vi.fn(async()=>current);
+ await expect(runRoomActionTask(input,{aiClient:ai},{state:()=>current,valid:()=>true,execute},()=>{},{signal:controller.signal,onReceipt:()=>{if(++acknowledged===6)controller.abort();}})).rejects.toMatchObject({name:'AbortError'});
+ expect(execute).toHaveBeenCalledTimes(6);expect(ai.models.generateContentStream).toHaveBeenCalledTimes(6);
+});
+
+it('uses catalog-based narration and native import handoffs without promising picker completion',async()=>{
+ const ai=client(['{"commands":[]}','Hola.\n[EN]Hello.']);
+ await runRoomTutorTurn(input,{aiClient:ai},{state:()=>scene,valid:()=>true,execute:vi.fn()},()=>{});
+ const request:any=(ai.models.generateContentStream.mock.calls as any)[1][0];
+ expect(request.config.systemInstruction).toContain('advertised native catalog');
+ expect(request.config.systemInstruction).toContain('typed output determines the actual result');
+ expect(request.config.systemInstruction).toContain('File-picker selection and platform permission screens require the user');
+ expect(request.config.systemInstruction).not.toContain('Other room tools remain manual for now');
+ for(const guide of [ROOM_HANDOFF_TUTOR_INSTRUCTION,ROOM_HANDOFF_LIVE_INSTRUCTION]){
+  expect(guide).toContain('shared native catalog');expect(guide).toContain('system');expect(guide).toContain('file paths');expect(guide).toContain('Only one room task');
+  expect(guide).not.toMatch(/(?:Importing files|File import, account changes).*not (?:available|supported)/);
+ }
 });

@@ -1,6 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {roomCaptureImages} from '../../../shared/prompts/room';
+import {ROOM_TASK_LIMITS,remainingRoomTaskBudget} from '../../../shared/roomTaskBudget';
 import {validRoomCaptureImage,validRoomCaptureMetadata,sameRoomCapture,type RoomCaptureImage,type RoomCaptureMetadata} from '../../../shared/roomViewCapture';
 import type {ConstructionSelection,ConstructionManipulation} from '../../../shared/roomSelection';
 import type {RoomOwnershipView} from '../../../shared/roomOwnership';
@@ -101,10 +102,10 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
   const receipts:RoomAgentState[]=[],snapshots:RoomCaptureImage[]=[];
   const active=()=>{if(control.signal?.aborted||control.isCurrent?.()===false||!lease.valid())throw new DOMException('The room request was interrupted. No further actions will run.','AbortError');};
   let queries=0,actions=0;
-  for(let step=0;step<9;step++) {
+  for(let step=0;step<ROOM_TASK_LIMITS.planningCalls;step++) {
     active();await control.beforePlan?.();active();
-    const scene=copy(lease.state());
-    const response=await generateGeminiResponse(input.model,buildRoomAgentPrompt(input.prompt,scene,receipts,{systemInstruction:input.systemInstruction,nativeLanguageCode:input.nativeLanguageCode,relatedTask:control.relatedTask}),input.history,{
+    const scene=copy(lease.state()),budget=remainingRoomTaskBudget(step,queries,actions);
+    const response=await generateGeminiResponse(input.model,buildRoomAgentPrompt(input.prompt,scene,receipts,{systemInstruction:input.systemInstruction,nativeLanguageCode:input.nativeLanguageCode,relatedTask:control.relatedTask},budget),input.history,{
       ...pickGeminiClientSource(options),systemInstruction:ROOM_AGENT_INSTRUCTION,currentFileParts:input.currentFileParts,
       currentImages:[...(input.currentImages??[]),...roomCaptureImages(snapshots)],
       ...(input.liveInputMedia ? {liveInputMedia:input.liveInputMedia} : {}),
@@ -117,6 +118,11 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
     // An unconfirmed earlier action is evidence of uncertainty, never permission to retry it.
     if (control.relatedTask?.unconfirmed && commands.some(command => !isRoomQuery(command)))
       return { ...(snapshots.length?{snapshots}:{}), receipts, scene: copy(lease.state()), budgetExhausted: false, relatedTask: control.relatedTask, needsReview: true };
+    // A used discovery allowance must not discard the remaining action allowance,
+    // and used actions must still permit observing their actual outcomes. Refuse
+    // an over-budget proposal before the durable intent or any native dispatch.
+    const query=commands.every(isRoomQuery);
+    if((query?budget.queryBatches:budget.actionBatches)===0)break;
     requireRoomCapabilities(commands,scene);
     if(scene.capabilities?.includes('executionReceipts.v1'))commands=commands.map(c=>c.action==='execution'&&c.execution?{...c,execution:identifyExecution(c.execution,scene.execution)}:c);
     await control.beforeDispatch?.(commands,scene);active();
@@ -124,7 +130,7 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
       ? lease.execute(commands,scene.sceneRevision,scene.objects,control.signal)
       : lease.execute(commands,scene.sceneRevision,scene.objects));
     receipts.push(copy(receipt));
-    if(commands.every(isRoomQuery))queries++;else actions++;
+    if(query)queries++;else actions++;
     // Cancellation may race an acknowledgement. Preserve that evidence before
     // checking the turn fence; never relabel a completed edit as rolled back.
     await control.onReceipt?.(copy(receipt));
@@ -137,7 +143,6 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
       if(!validRoomCaptureMetadata(completed.output)||!validRoomCaptureImage(image)||!sameRoomCapture(image.capture,completed.output))throw new Error('The room snapshot does not match its completed capture receipt.');
       snapshots.push(image);await control.onSnapshot?.(copy(image));active();
     }
-    if(queries>=6||actions>=3)break;
   }
   active();return {...(snapshots.length?{snapshots}:{}),receipts,scene:copy(lease.state()),budgetExhausted:true,relatedTask:control.relatedTask};
 }

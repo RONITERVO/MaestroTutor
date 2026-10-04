@@ -278,3 +278,14 @@ cover old-document states, invalid/oversized requests and overlapping writers.
 Web CI checks those transport contracts. Local Unity verification additionally
 requires both real-app journeys; it still does not replace the remaining device,
 real-provider, signing or Store acceptance gates.
+
+
+The catalog-workflow increment extends the live-book task through six actual
+native discovery/check queries, creation, stale paint refusal and a ninth final
+planner call. Its assertions read remaining budgets from the real HTTP prompt.
+The earlier 19-request run remains historical evidence; current run counts are
+recorded with each checkpoint. The harness retains full browser exception stacks.
+Playwright 1.62.1's injected service-worker blocker reads a getter that throws in
+opaque sandbox frames, so this runner uses an equivalent registration blocker
+that catches only that SecurityError. App sandbox permissions and the requirement
+for no uncaught page errors are unchanged.

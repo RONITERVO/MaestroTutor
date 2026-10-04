@@ -49,8 +49,12 @@ saves, and changing arguments clears the previous availability result.
 
 Chat remains the default workflow. The existing agent can progressively search,
 inspect and check instead of receiving every action signature in its prompt.
-A turn has up to three action batches and six read-only discovery/inspection
-batches; reaching either limit returns budget exhaustion. Receipts survive
+A turn has up to nine planning calls, three action batches and six read-only
+discovery/inspection batches. The query and action allowances are independent:
+used queries do not prevent remaining actions, and used actions do not prevent
+inspecting their outcomes. Each planner input carries the remaining allowances.
+A proposal over its allowance is refused before journaling or native dispatch;
+exhausting planning calls returns a limited task. Receipts survive
 cancellation and the original app still owns Gemini, managed usage and BYOK.
 This is a finite allowance, not arbitrary autonomous task continuation.
 

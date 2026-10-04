@@ -106,6 +106,13 @@ describe('prompt ownership', () => {
     expect(catalogueRuntimeViolations(source, 'behaviourEvents.ts')).toEqual([]);
   });
 
+  it('keeps shared room task ceilings free of runtime-specific dependencies', () => {
+    const source = readFileSync(new URL('../../../shared/roomTaskBudget.ts', import.meta.url), 'utf8');
+    const ast = ts.createSourceFile('roomTaskBudget.ts', source, ts.ScriptTarget.Latest, true);
+    expect(ast.statements.filter(node => ts.isImportDeclaration(node) || ts.isExportDeclaration(node))).toEqual([]);
+    expect(catalogueRuntimeViolations(source, 'roomTaskBudget.ts')).toEqual([]);
+  });
+
   it('keeps the catalogue runtime-independent and usable by Functions', () => {
     const rootDirectory = new URL('../../../shared/prompts/', import.meta.url);
     for (const file of readdirSync(rootDirectory).filter(name => name.endsWith('.ts'))) {
@@ -114,7 +121,7 @@ describe('prompt ownership', () => {
       for (const statement of ast.statements) {
         if (ts.isImportDeclaration(statement) || ts.isExportDeclaration(statement)) {
           if (ts.isImportDeclaration(statement) && statement.importClause?.isTypeOnly && (statement.moduleSpecifier as ts.StringLiteral).text === '../roomViewCapture') continue;
-          if (statement.moduleSpecifier) expect((statement.moduleSpecifier as ts.StringLiteral).text).toMatch(/^(?:\.\/[a-z]+|\.\.\/(?:behaviourCatalog|behaviourEvents|capabilities))$/);
+          if (statement.moduleSpecifier) expect((statement.moduleSpecifier as ts.StringLiteral).text).toMatch(/^(?:\.\/[a-z]+|\.\.\/(?:behaviourCatalog|behaviourEvents|capabilities|roomTaskBudget))$/);
         }
       }
       expect(catalogueRuntimeViolations(source, file)).toEqual([]);
