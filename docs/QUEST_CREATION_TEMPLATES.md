@@ -98,3 +98,46 @@ recipe. Hold its forward end against an enabled drawing patch, then lift to fini
 a stroke. The ink settings can be changed through `object.drawingTip.edit`; the
 same component works on other created/imported roots and named recipe parts.
 See [drawing tools](QUEST_SURFACE_DRAWING.md#configurable-held-drawing-objects-2026-10-03).
+
+## Editable construction examples (2026-10-04)
+
+The included program library also contains **Small fort** and **Passive spinner**.
+Both export `create(position, rotation, scale) -> list<text>` and use ordinary
+`object.batch.create` source. They are original Apache-2.0 examples in
+`Resources/Programs/Modules`, with no external generated-asset dependency.
+The book's module search, source inspection, editable copies and the in-app agent
+all use that same source and exact module hash. Saving/importing a module does not
+run it. A successful constructor run is one saved batch and one Undo; it does not
+start physics or install a behaviour.
+
+- **Small fort:** sixteen independent editable objects: one fixed 68 cm square
+  base, twelve Building brick copies in four three-brick towers, and three loose
+  walls with an open entrance. The bricks retain the existing template's snap
+  points, but are not joined. They can be picked up, rearranged or knocked down.
+  The fixed platform supports a tabletop-height build. Moving that platform alone
+  does not relocate the whole fort; use the existing multi-object layout tools.
+- **Passive spinner:** a fixed mount and a separate three-lobed rotor joined by a
+  vertical, unlimited passive hinge. Tangential physical contact turns the rotor;
+  there is no motor or automatic spin. The hinge settings, recipe parts, colours
+  and collision proxies are editable. Capturing the construction produces a
+  reusable module whose copies connect their own fresh member IDs.
+
+For example, ask Maestro to build a small fort in an open area, capture its
+settled layout as a structure, and create a separate ball. Those are visible
+ordinary operations. The fort consumes all sixteen creations allowed in one
+program run; create the ball in a separate operation. Start room physics after
+room setup, then throw or roll the ball at a tower. The structure's displacement
+facts and the included **Structure state waits** module can trigger a user-chosen
+reaction when pieces move. The ball should not be a member of the watched fort.
+Before resetting, move the ball clear or include its resting position in a
+separate reset layout, so it cannot immediately knock the rebuilt fort down.
+Capturing a baseline and resetting it each have their own explicit save/Undo.
+
+Native tests exercise the actual exported fort program, one-batch persistence and
+Undo/Redo, stable stacks, ball contact, a shared structure reset, spinner contact,
+anchor retention, and recapturing/copying a passive hinge. Shared fixtures check
+web/native source and hash parity. The full native app journey discovers each
+included module, saves and runs its caller, checks its created members and undoes
+that batch. Unity-rendered previews show actual geometry. These checks establish
+desktop behaviour, not current Quest hand/controller feel, performance or comfort;
+those remain device acceptance items. No room format or capability was added.

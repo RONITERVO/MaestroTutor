@@ -57,6 +57,12 @@ thresholds using the existing condition interpreter and exact pinned source,
 shared by library inspection, editable drafts and agent-created programs; see
 [included modules](QUEST_PROGRAM_MODULES.md#included-modules-2026-10-03).
 
+The default library now includes a sixteen-piece **Small fort** and a two-piece
+**Passive spinner**, both editable ordinary construction modules. Fort knockdown
+and reset reuse the shared structure model; the spinner uses a passive hinge.
+See [starter constructions](QUEST_CREATION_TEMPLATES.md#editable-construction-examples-2026-10-04).
+These are bounded playable examples, not completion of the entire proposed kit.
+
 ## Geometry implementation
 
 Extend the recipe with typed, bounded geometry operations, retaining stable part

@@ -261,8 +261,8 @@ is implied by these checks.
 The second included definition, **Spring lever**, exports
 `create(position: {x,y,z}, rotation: {x,y,z,w}, scale: number) -> list<text>`.
 Its exact source hash is
-`4cc6359c622644c36a3d533aed998d010eccec2cdeee9c9e6c0898520a303858`.
-The function uses ordinary `object.batch.create` version-2 blueprint data and
+`26693f5460acb81b524a441341bc58bc54d93aab8d3c75fdf5fa656d6942dd9b`.
+The function uses ordinary `object.batch.create` version-3 blueprint data and
 returns `[mountId, handleId]`. The entry is empty: inspection/import/Start of that
 empty entry cannot create objects. Call `create` from a caller program, such as
 `program-spring-lever.json`, or copy and edit the module in the book.
@@ -280,3 +280,16 @@ Undo/Redo, temporary discard and real PhysX displacement/return after a push.
 The full-app transport exercises the same module through save/start/readback/Undo;
 the Chrome form replays captured native acknowledgements. These do not substitute
 for Quest grip, touch, scan alignment, comfort or performance acceptance.
+
+### Included Small fort and Passive spinner
+
+These constructor modules export the same `create(position, rotation, scale)`
+signature and return their fresh member IDs. Their standalone entries are empty;
+call the exported constructor from a program. **Small fort** uses a sixteen-piece
+independent blueprint. **Passive spinner** uses two members and one unrestricted
+passive hinge. Their source remains inspectable and editable without new runtime
+verbs. See [the construction guide](QUEST_CREATION_TEMPLATES.md#editable-construction-examples-2026-10-04)
+for setup, physical play, structure watching/reset and verification boundaries.
+The shared `program-small-fort.json` and `program-spinner.json` fixtures contain
+complete pinned caller examples; serialize programs compactly when sending them
+through the existing 24,000-character program boundary.

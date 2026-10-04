@@ -15,7 +15,7 @@ namespace Maestro.Quest.Tests
     public sealed partial class RoomRulesTests
     {
         [UnityTest] public IEnumerator CapturePublishesOnceAndItsConstructorSurvivesDeletingOriginals() {
-            for(int i=0;i<120&&!workshop.Modules.Ready;i++)yield return null;
+            yield return WaitForModuleLibrary();
             Assert.That(editor.CreatePrimitive(RoomObjectKind.Ball,"My ball",new Vector3(.3f,1,.7f),1,Color.red,out var original,out var error),Is.True,error);
             int count=editor.Snapshot().objects.Length;
             var call=new JObject {["id"]="program.module.captureConstruction",["version"]=1,["arguments"]=new JObject {["name"]="My reusable ball",["members"]=new JArray(new JObject {["target"]=original,["slot"]="ball",["revision"]=editor.ObjectRevision(original)})}};

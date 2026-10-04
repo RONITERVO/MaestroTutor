@@ -27722,6 +27722,14 @@
       "sha256": "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Resources/Programs/Modules/SmallFort.json",
+      "sha256": "43982ea5eca4bdd08d1f2eaffbc2b4c71d09678764d06ef086d7a27192191610"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Resources/Programs/Modules/Spinner.json",
+      "sha256": "420089942a0a7e149d0b6bf776dadb54d41c40ff0df6b75ecbe60b2f30a4bac3"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Programs/Modules/SpringButton.json",
       "sha256": "cf64b929749f849950b5075647258fcec72ffc2196e4cafc5308df82eb31d656"
     },

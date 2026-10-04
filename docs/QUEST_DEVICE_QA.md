@@ -1805,3 +1805,24 @@ not upload stale frames or retake an expired receipt. Profile CPU/GPU frame cost
 readback/encoding stalls, memory and thermal behavior on Quest 3. Also test the
 shared image request through the actual managed and BYOK provider routes; mocked
 provider transport is not model-interpretation acceptance.
+
+## Included fort and spinner: device acceptance pending
+
+Through the existing chat/module library, create Small fort in a clear area and
+Passive spinner within reach. Confirm both constructors leave physics stopped
+until explicitly started. With a valid room scan, verify the four towers settle
+and stand, individual bricks can be grabbed, and a thrown ball knocks pieces away.
+Capture the fort as a structure after settling; verify a displacement-driven
+program reacts and a reset restores it after the projectile has been moved clear.
+Check one Undo removes a newly created construction as a whole. Confirm the fixed
+base is independently movable and does not imply all loose pieces move with it.
+
+For the spinner, verify tangential contact from a held object turns the rotor
+without translating its mount or detaching the hinge. Test rotor gripping with
+controllers and hands; direct finger-flick support is not established by desktop
+contact tests. Check grip release,
+tracking loss, app pause and explicit physics restart. Inspect/copy the
+construction and verify the new rotor connects to its new mount. Evaluate hand
+reach, small-collider tunnelling, readability and frame time with the full kit.
+Desktop ball-contact tests are not hand/controller device acceptance. Do not
+mark this section passed from Editor tests or renders.

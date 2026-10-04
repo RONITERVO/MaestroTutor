@@ -408,6 +408,28 @@ try{
   if(!connectedValue.configured||connectedValue.connected!==connectedIds[0])throw new Error('Blueprint did not bind its hinge to its own mount');
   const connectedUndo=await execute([{action:'undo'}]);if(connectedIds.some(id=>connectedUndo.objects.some(o=>o.id===id))||connectedUndo.objects.length!==connectedBefore.objects.length)throw new Error('Connected blueprint was not one Undo');
   await writeFile(join(directory,'connected-blueprint-authoring.json'),JSON.stringify({boundary:'Real Unity native states; browser acknowledgements replayed separately. Physics tested in PlayMode; no headset or provider proof.',arguments:connectedArgs,before:connectedBefore,search:connectedSearch,definition:connectedDefinition,after:connectedAfter,read:connectedRead,undo:connectedUndo},null,2));
+  // Included play-kit constructors use the same module lookup, program save/run,
+  // native receipt and Undo path as a user's or the agent's own construction.
+  const playKitEvidence=[];
+  for(const [fixture,label,count] of [['small-fort','Small fort',16],['spinner','Passive spinner',2]] as const){
+   const source=JSON.parse(await readFile('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-'+fixture+'.json','utf8'));
+   const inspected=await execute([{action:'catalog',catalog:{operation:'inspect',category:'modules',capability:source.imports[0].hash,version:1}}]);
+   if(!inspected.catalog?.included||!isDeepStrictEqual(inspected.catalog.definition,source.imports[0].module))throw new Error(label+' is not the exact included module');
+   const before=await execute([{action:'rules',rule:{action:'inspect'}}]);
+   const saved=await execute([{action:'rules',rule:{action:'edit',revision:before.rules!.revision,edits:[{kind:'save',reference:'kit',sequence:{id:'',name:'Native '+label+' probe',interruption:0,repeat:false,program:JSON.stringify(source)}}]}}]);
+   const sequenceId=saved.rules?.sequences.find(s=>s.name==='Native '+label+' probe')?.id;
+   if(!sequenceId||saved.objects.length!==before.objects.length)throw new Error(label+' save unexpectedly built objects');
+   let after=await execute([{action:'rules',rule:{action:'play',revision:saved.rules!.revision,target:sequenceId}}]);
+   const deadline=Date.now()+15000;
+   while(!after.rules?.outcomes?.some(o=>o.sequenceId===sequenceId)&&Date.now()<deadline){await new Promise(r=>setTimeout(r,100));after=await execute([{action:'rules',rule:{action:'inspect',target:sequenceId}}]);}
+   const outcome=after.rules?.outcomes?.find(o=>o.sequenceId===sequenceId),members=after.objects.filter(o=>!before.objects.some(b=>b.id===o.id)).map(o=>o.id);
+   if(outcome?.phase!=='completed'||members.length!==count||after.physicsRunning!==before.physicsRunning)throw new Error(label+' did not complete with exactly its members: '+JSON.stringify(outcome));
+   const undone=await execute([{action:'undo'}]);
+   if(members.some(id=>undone.objects.some(o=>o.id===id))||undone.objects.length!==before.objects.length)throw new Error(label+' did not undo atomically');
+   await execute([{action:'rules',rule:{action:'edit',revision:lease.state().rules!.revision,edits:[{kind:'delete',target:sequenceId}]}}]);
+   playKitEvidence.push({label,hash:source.imports[0].hash,inspected,before,saved,after,undone,members});
+  }
+  await writeFile(join(directory,'default-play-kit.json'),JSON.stringify({boundary:'Actual native catalog, program, persistence and Undo journey. Physical play tested in PlayMode; Quest acceptance remains open.',examples:playKitEvidence},null,2));
   const leverHash=leverSource.imports[0].hash;
   const leverModule=await execute([{action:'catalog',catalog:{operation:'inspect',category:'modules',capability:leverHash,version:1}}]);
   if(!leverModule.catalog?.included||JSON.stringify(leverModule.catalog.definition)!==JSON.stringify(leverSource.imports[0].module))throw new Error('Included spring lever source differs from its pinned fixture');

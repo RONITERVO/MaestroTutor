@@ -2822,3 +2822,23 @@ No Gemini client, camera permission or physical-camera integration is added to
 Unity. Native facts and receipts still determine exact state and outcomes.
 See [virtual-room view](QUEST_ROOM_VIEW.md) for scope, retention and limits.
 Quest render/readback performance and live-provider interpretation remain open.
+
+## Editable default constructions (2026-10-04)
+
+Added Small fort and Passive spinner to the included pinned program library.
+The fort creates sixteen independently editable bodies: a fixed base, twelve
+bricks in four towers and three loose walls. The spinner creates a fixed mount
+and a three-lobed passive-hinge rotor. Both are ordinary constructor source,
+with no new capability, interpreter, room format or auto-started physics.
+
+The shared web/native fixtures cover exact pins and editable copies. Native
+acceptance coverage exercises the real fort program, one-batch save/Undo/Redo, stable
+stacking, ball knockdown and structure reset, plus spinner contact/anchor
+retention and capture/copy with fresh internal hinge identities. The full-app
+verification journey inspects both included sources, saves and runs callers, verifies exact
+member counts and undoes each batch. Unity previews show the real geometry.
+
+Quest grip/direct-touch feel, stability at other scales and sustained performance
+remain device acceptance items. The wider play kit, provider and Store gates
+remain open. No device installation, provider call, paid generation, deployment,
+release signing or submission was performed for this increment.

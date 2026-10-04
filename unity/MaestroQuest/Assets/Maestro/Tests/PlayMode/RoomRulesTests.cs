@@ -606,9 +606,22 @@ namespace Maestro.Quest.Tests
             ray.selectInput = new XRInputButtonReader { inputSourceMode = XRInputButtonReader.InputSourceMode.ManualValue,manualPerformed = true,manualValue = 1 };
             hand.SetActive(true); return ray;
         }
+        IEnumerator WaitForModuleLibrary()
+        {
+            // Editor frame count is not elapsed I/O/validation time. Included
+            // definitions and private files are deliberately loaded off-thread.
+            float deadline = Time.realtimeSinceStartup + 10;
+            while (!workshop.Modules.Ready && Time.realtimeSinceStartup < deadline)
+            {
+                workshop.Modules.Poll();
+                yield return null;
+            }
+            Assert.That(workshop.Modules.Ready, Is.True, "Module library did not finish loading");
+            Assert.That(workshop.Modules.Error, Is.Null);
+        }
         [UnityTest] public IEnumerator ModuleLibraryPublishesInspectsAndRemovesWithoutChangingPinnedRuns()
         {
-            for(int i=0;i<120&&!workshop.Modules.Ready;i++)yield return null;
+            yield return WaitForModuleLibrary();
             Assert.That(workshop.Modules.Ready,Is.True);
             var executor=new RoomAgentExecutor(editor);var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);
             bool Rule(RuleRequest rule,out string error)=>executor.Execute(new RoomAgentRequest {version=2,commands=new[]{new RoomAgentCommand {action="rules",rule=rule}}},out error,out _);
@@ -651,7 +664,7 @@ namespace Maestro.Quest.Tests
 
         [UnityTest] public IEnumerator PortableModuleImportUsesReceiptsWithoutStartingTheImportedProgram()
         {
-            for(int i=0;i<120&&!workshop.Modules.Ready;i++)yield return null;
+            yield return WaitForModuleLibrary();
             Assert.That(workshop.Modules.Ready,Is.True);
             var executor=new RoomAgentExecutor(editor);
             var module=Maestro.Quest.Programs.ProgramModuleLibrary.Definition("{\"version\":3,\"entry\":\"main\",\"resources\":[],\"state\":[],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[],\"body\":[{\"id\":\"sleep\",\"op\":\"sleep\",\"seconds\":{\"value\":10}}]}]}","Portable counter",new[]{"main"});
