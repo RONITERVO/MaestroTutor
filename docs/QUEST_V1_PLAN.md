@@ -2,6 +2,15 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
+The live book now has a required desktop integration journey against the actual
+Unity app. It exercises the original chat's verified handoff, native creation,
+concurrent human editing, stale-agent refusal, Undo, native image delivery and
+reload without replay. Provider responses are explicitly scripted offline; Chrome
+and the local server are disposable and owned by verification. This closes a gap
+between separate browser replays and native CLI checks, while real-provider,
+Android book texture/input and headset acceptance remain open. See
+[the live-book boundary](QUEST_NATIVE_ROOM_PROBE.md#live-book-and-original-chat-journey-2026-10-04).
+
 Native physical catching passed desktop verification through the shared capability path.
 It includes bounded contact capture, avatar arm reaching, root/recipe sockets and
 a typed caught event; see [physical catching](QUEST_PHYSICAL_CATCHING.md).

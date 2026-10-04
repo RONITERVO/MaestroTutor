@@ -5,7 +5,7 @@ import {mkdtemp,readFile,writeFile,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {randomUUID} from 'node:crypto';
-import {HeadlessRoomTransport,publishRoomProbeFile} from './roomTransport';
+import {HeadlessRoomTransport,RoomProbeChannel,publishRoomProbeFile} from './roomTransport';
 vi.mock('node:fs/promises',async importOriginal=>{
  const original=await importOriginal<typeof import('node:fs/promises')>();return {...original,readFile:vi.fn(original.readFile)};
 });
@@ -76,4 +76,23 @@ it('bounds a persistent read lock and cancels pending work with no fabricated ac
  });
  const lease=transport.lease(),initial=lease.state();await expect(lease.execute([{action:'undo'}],initial.sceneRevision,initial.objects)).rejects.toThrow('interrupted');
  expect(()=>transport.checkHealth()).toThrow('Persistent sharing violation');expect(reads).toBe(8);expect(native.received()).toBe(1);
+});
+
+it('does not deliver a previous browser document observation to a new client',async()=>{
+ const native=await boundary();native.freeze();const channel=await RoomProbeChannel.connect(native.directory,3000);
+ const owner=JSON.parse(await readFile(join(native.directory,'owner.json'),'utf8'));
+ await publishRoomProbeFile(join(native.directory,'state.json'),JSON.stringify({version:1,id:owner.id,clientId:'a'.repeat(32),state:{version:1}}));
+ expect((await channel.exchange({clientId:'b'.repeat(32),session:'',request:null})).state).toBeUndefined();
+ await channel.stop();
+});
+it('rejects oversized or invalid client envelopes before publishing a request',async()=>{
+ const native=await boundary(),channel=await RoomProbeChannel.connect(native.directory,3000);
+ await expect(channel.exchange({clientId:'bad',session:'',request:null})).rejects.toThrow('identity');
+ await expect(channel.exchange({clientId:'a'.repeat(32),session:'a'.repeat(40001),request:null})).rejects.toThrow('byte limit');
+ await expect(readFile(join(native.directory,'request.json'))).rejects.toMatchObject({code:'ENOENT'});await channel.stop();
+});
+it('refuses overlapping writers and closes without accepting further exchanges',async()=>{
+ const native=await boundary(),channel=await RoomProbeChannel.connect(native.directory,3000),snapshot={clientId:'a'.repeat(32),session:'',request:null};
+ const pending=channel.exchange(snapshot);await expect(channel.exchange(snapshot)).rejects.toThrow('already pending');await pending;
+ await channel.stop();await expect(channel.exchange(snapshot)).rejects.toThrow('closed');
 });

@@ -8,8 +8,8 @@ There is no replacement scene simulation or mock action executor in this journey
 
 ## Run and evidence
 
-`unity/Tools/Verify-Quest.ps1` now runs the full-room journey after EditMode and
-PlayMode tests. Both development and release package helpers use that verification.
+`unity/Tools/Verify-Quest.ps1` runs the full-room headless and live-book journeys
+after EditMode and PlayMode tests. Both development and release package helpers use that verification.
 A standalone rerun after verification is available with:
 
 ```powershell
@@ -25,7 +25,7 @@ avatar, native catalog, workspace services and action executor.
 
 The file protocol is Editor-only, explicitly started, session-bound and bounded.
 It exposes exchange and stop operations through the production client rather than
-accepting scripts or arbitrary paths. No socket/server is opened, and the Editor
+accepting scripts or arbitrary paths. The file adapter opens no socket/server, and the Editor
 adapter and its storage override are excluded from the Android player. Atomic
 replacement tolerates transient Windows file contention. Repeated state files do
 not refresh the client's native-observation freshness. Client IDs prevent a
@@ -216,3 +216,65 @@ The browser replays those observations; native PlayMode separately verifies the
 shipped Meshy rig's actual flight interception, rotation-only reaching, human
 priority, obstruction, timeout, cancellation and typed event delivery. No provider
 or Quest acceptance is inferred from desktop success.
+
+
+## Live book and original-chat journey (2026-10-04)
+
+`Run-QuestRoomProbe.ps1 -Journey Book` starts a separate fresh native app and runs
+`scripts/probe-native-book.ts`. The runner owns a headless Chrome context and a
+loopback Vite server with an ephemeral port, isolated optimizer cache and no file
+watcher. It requires installed Chrome and repository npm dependencies. It needs no
+already-open browser tab or dev server. Vite and Chrome close before the owned
+Editor shuts down; success still requires both processes and the terminal receipt.
+
+The development-only `quest-native-book.html` fixture mounts the production
+QuestBookSurface, ChatInterface and useTutorConversation. The same raw file channel
+used by HeadlessRoomTransport carries its actual bridge snapshots, native states
+and separate image payloads. It introduces no second RoomAgentClient, native scene,
+action executor, simulated acknowledgement or replay fixture. Only the owned
+fixture's top-level frame may call the runner's native binding. The fixture refuses
+to start without that binding or outside development mode.
+
+The real UI journey:
+
+1. Open the workshop, create a multipart robot, change its part colour through the
+   inspector, then Undo the edit and creation. Check the native recipe and object ID.
+2. Type an ordinary chat request. Original tutor response, tool verification,
+   delegated planning, task journal and result narration use the existing browser
+   provider client and chat coordinator.
+3. Discover the creation capability and create a ball through the native catalog.
+   Hold the next planner response while the user changes that same ball in the
+   book. Assert chat input remains available while the agent is working.
+4. Deliver the now-stale paint plan. Require Unity's refusal, retain the user's
+   colour, and inspect the recorded refusal in the original chat's task details.
+   Verify the original request and native receipts reached the planner HTTP input.
+5. Run `room.view.capture` through the generated book form. The displayed JPEG's
+   SHA-256 must match the actual native receipt; preserve pixels separately.
+6. Reload the page with the same disposable IndexedDB. The saved result must
+   return without new room commands or another planner request.
+
+Every provider response is explicitly scripted local SSE at the browser network
+boundary. A deliberately invalid fixture token is used; no real credentials or
+provider requests are needed. All other external requests are blocked. This tests
+handoff and coediting mechanics, not model reasoning, account eligibility, managed
+billing or provider access. Voice, camera and hardware hooks are inactive. The
+snapshot is the virtual room at the Editor viewer pose, not passthrough or proof
+that an agent understands the picture.
+
+`book-journey.json` retains native observations, requests, task operations and
+scripted-provider request bodies. Screenshots show the original book editors and
+chat result; `book-native-view.jpg` preserves the actual image. `book-failure.json`
+and a screenshot retain failed runs. The successful desktop run recorded 19 room
+requests and 63 distinct native observations, with all seven provider responses
+scripted. Its native runtime is the previously verified physical-catching runtime;
+this verification increment does not require or claim a new installed APK.
+
+The first self-contained server attempt timed out during a real browser click.
+The fixture server was then isolated from development file watching and optimizer
+cache sharing, and the full journey passed. This is a test-harness change, not a
+claim that device input timing is resolved. Raw-channel regression tests also
+cover old-document states, invalid/oversized requests and overlapping writers.
+
+Web CI checks those transport contracts. Local Unity verification additionally
+requires both real-app journeys; it still does not replace the remaining device,
+real-provider, signing or Store acceptance gates.

@@ -5,9 +5,11 @@ param(
  [Parameter(Mandatory)][string]$Editor,
  [Parameter(Mandatory)][string]$BuildMirror,
  [string]$Prompt,
- [string]$Profile = 'quest-probe'
+ [string]$Profile = 'quest-probe',
+ [ValidateSet('Headless','Book')][string]$Journey = 'Headless'
 )
 $ErrorActionPreference='Stop'
+if($Journey -eq 'Book' -and ![string]::IsNullOrWhiteSpace($Prompt)){throw 'The deterministic book journey does not accept a provider prompt.'}
 . (Join-Path $PSScriptRoot 'QuestBuildProcesses.ps1')
 $repoRoot=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
 $mirror=(Resolve-Path -LiteralPath $BuildMirror).Path
@@ -35,7 +37,10 @@ $previousPrompt=$env:MAESTRO_ROOM_PROBE_PROMPT;$previousProfile=$env:MAESTRO_ROO
 try{
  $env:MAESTRO_ROOM_PROBE_PROMPT=$Prompt;$env:MAESTRO_ROOM_PROBE_PROFILE=$Profile
  Push-Location $repoRoot
- try{& $runner scripts/probe-native-room.ts $directory *> (Join-Path $directory 'client.log');$clientExit=$LASTEXITCODE}finally{Pop-Location}
+ try{
+  $clientScript=$(if($Journey -eq 'Book'){'scripts/probe-native-book.ts'}else{'scripts/probe-native-room.ts'})
+  & $runner $clientScript $directory *> (Join-Path $directory 'client.log');$clientExit=$LASTEXITCODE
+ }finally{Pop-Location}
  if($clientExit -ne 0 -and !$process.HasExited){
   $stop=@{version=1;id=$id;operation='stop'} | ConvertTo-Json -Compress
   $pending=Join-Path $directory 'request.json.shutdown'
@@ -49,7 +54,7 @@ try{
  }
  $terminal=Get-Content -LiteralPath (Join-Path $directory 'terminal.json') -Raw | ConvertFrom-Json
  if($clientExit -ne 0 -or $process.ExitCode -ne 0 -or $terminal.exitCode -ne 0 -or $terminal.id -ne $id){throw "Native room probe failed. Evidence: $directory"}
- @{version=1;id=$id;clientExit=$clientExit;editorExit=$process.ExitCode;directory=$directory;providerUsed=![string]::IsNullOrWhiteSpace($Prompt)} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'verified.json')
+ @{version=1;id=$id;clientExit=$clientExit;editorExit=$process.ExitCode;directory=$directory;providerUsed=![string]::IsNullOrWhiteSpace($Prompt);journey=$Journey} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'verified.json')
  Write-Output "Native room probe passed: $directory"
 }finally{
  $env:MAESTRO_ROOM_PROBE_PROMPT=$previousPrompt;$env:MAESTRO_ROOM_PROBE_PROFILE=$previousProfile

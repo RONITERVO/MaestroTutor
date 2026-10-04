@@ -64,6 +64,13 @@ and reset reuse the shared structure model; the spinner uses a passive hinge.
 See [starter constructions](QUEST_CREATION_TEMPLATES.md#editable-construction-examples-2026-10-04).
 These are bounded playable examples, not completion of the entire proposed kit.
 
+The developer parity check now connects the real book and original chat flow to
+an isolated real Unity app. It verifies both actors editing one object, a stale
+agent plan preserving the human edit, shared native image delivery, receipts and
+reload without replay. Only provider responses are scripted offline. This provides
+a reusable integration check as the kit expands; it does not prove arbitrary games
+or model reasoning. See [the live book journey](QUEST_NATIVE_ROOM_PROBE.md#live-book-and-original-chat-journey-2026-10-04).
+
 ## Geometry implementation
 
 Extend the recipe with typed, bounded geometry operations, retaining stable part
