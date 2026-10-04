@@ -2,6 +2,12 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
+The native room and real-book integration drivers now share a strict TypeScript
+gate in CI and before a native journey starts. Catalog replies must match the
+actual request. Joining and snap Undo verify native placement facts, fixing two
+old checks that compared absent rotation fields. See
+[typed integration evidence](QUEST_NATIVE_ROOM_PROBE.md#typed-integration-drivers-and-complete-placement-evidence-2026-10-04).
+
 Physical material tools now adapt the shared field/store transfer kernel. The
 editable Material scoop takes one bounded dose on contact and deposits it when
 inverted, with a carried preview, one atomic save/Undo and explicit retained-draft

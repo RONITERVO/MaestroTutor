@@ -55,6 +55,8 @@ jobs:
         run: npm run verify:behaviour-catalog
       - name: Verify included Quest avatar integrity
         run: npm run verify:quest-assets
+      - name: Type-check native integration drivers
+        run: npm run verify:quest-probes
       - name: Test app and shared core
         run: npm test
       - name: Lint app

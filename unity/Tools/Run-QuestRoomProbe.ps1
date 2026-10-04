@@ -17,6 +17,9 @@ $editorPath=(Resolve-Path -LiteralPath $Editor).Path
 $source=Join-Path $repoRoot 'unity/MaestroQuest'
 $runner=Join-Path $repoRoot 'node_modules/.bin/tsx.cmd'
 if(!(Test-Path -LiteralPath $runner)){throw 'Install the repository npm dependencies before starting a room probe.'}
+$typeChecker=Join-Path $repoRoot 'node_modules/.bin/tsc.cmd'
+& $typeChecker -p (Join-Path $repoRoot 'tsconfig.quest-probes.json') --pretty false
+if($LASTEXITCODE -ne 0){throw 'Native integration drivers failed type checking; no Editor was started.'}
 $owner=Get-Content -LiteralPath (Join-Path $mirror '.maestro-build-mirror.json') -Raw | ConvertFrom-Json
 if($owner.source -ne $source){throw 'The mirror is not owned by this checkout. Run Verify-Quest first.'}
 # Refuse stale C# in a reused mirror. This tool does not sync, reconfigure or overwrite a checkout.

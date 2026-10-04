@@ -22,6 +22,7 @@
     "verify:prompt-ownership": "node scripts/prompt-ownership.mjs",
     "verify:behaviour-catalog": "node scripts/verify-behaviour-catalog.mjs",
     "verify:quest-assets": "node scripts/verify-quest-assets.mjs",
+    "verify:quest-probes": "tsc -p tsconfig.quest-probes.json",
     "verify:core-boundaries": "node scripts/core-boundaries.mjs",
     "test:live:ui": "node scripts/run-live-ui-replay.mjs",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",

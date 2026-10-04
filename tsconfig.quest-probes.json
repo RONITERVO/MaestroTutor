@@ -1,0 +1,22 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": [
+      "node"
+    ],
+    "noEmit": true,
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ]
+  },
+  "include": [
+    "scripts/probe-native-room.ts",
+    "scripts/probe-native-book.ts",
+    "test-fixtures/browser/questNativeBookFixture.tsx",
+    "src/vite-env.d.ts",
+    "scripts/native-probe-contract.test.ts"
+  ],
+  "references": []
+}

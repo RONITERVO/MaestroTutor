@@ -16,8 +16,8 @@ A standalone rerun after verification is available with:
 ./unity/Tools/Run-QuestRoomProbe.ps1 -Editor '<Unity.exe>' -BuildMirror '<owned mirror>'
 ```
 
-The wrapper checks mirror ownership, matching native source files and absence of
-another Editor using that mirror. It starts one hidden Editor and uses a fresh
+The wrapper first runs the same strict driver type-check as CI, then checks mirror
+ownership, matching native source files and absence of another Editor using that mirror. It starts one hidden Editor and uses a fresh
 `.quest-evidence/native-room/<id>` directory. The entire workspace and global
 room preferences use that directory. Existing user rooms are not read or changed.
 The scene starts empty and composes the actual MaestroRoom, including the bundled
@@ -347,3 +347,31 @@ configuration neither creates material nor starts contact, and undoes the edit.
 Chrome form replay. Real held take/deposit, obstruction, manual takeover, stale
 drafts, save failure, temporary discard and paired Undo use Unity PlayMode tests.
 A replay is a form/contract check, not a browser physics simulation or headset test.
+
+
+## Typed integration drivers and complete placement evidence (2026-10-04)
+
+`npm run verify:quest-probes` type-checks both native journey drivers, their shared
+assertions and the real book fixture against the production client and browser
+contracts. It inherits the app's strict compiler settings; ES2022 library types
+cover the Node runner. The release-gate workflow runs this check, and the native
+wrapper refuses to start its Editor if it fails. The fixture's actual declarations
+provide the browser evidence types; no second browser bridge interface is maintained.
+
+The initial check found 118 room-driver and 31 book-driver diagnostics. Catalog
+queries now retain their request-specific reply type. Before narrowing, the driver
+checks the operation, category, identity/version and fact arguments, search page or
+complete checked action. This follows the production client's wire validation and
+cannot turn a missing/unavailable fact into a successful observation. Dynamic fact
+helpers check the reply category; captured construction programs pass the shared
+program parser before extracting their creation action.
+
+Two old rotation assertions compared a nonexistent summary field on both sides,
+so they could pass with two undefined values. Fixed joining and snap Undo now read
+`object.placement` for each member and retain the actual before/after facts in
+`connection-authoring.json` and `snap-authoring.json`. Comparisons require finite
+position/scale and a normalized quaternion, reject missing/mismatched targets and
+check all three pose components. Equivalent quaternion signs and small floating-
+point round-off are accepted. Focused regressions include missing rotations and
+rotation-only changes. These checks verify the native world; they do not add a
+second simulation or replace physical Quest acceptance.
