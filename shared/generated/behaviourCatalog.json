@@ -32653,6 +32653,166 @@
       "description": "Native room request and visibility state; readiness never verifies physical alignment. busy includes a cancelled platform worker until it drains. canLoad/canScan need an active MR room, available platform and no workspace hold. canCancel identifies an uncancelled worker, not permission to bypass lifecycle gates. A completed action receipt only acknowledges intent; inspect this fact for progress. No room geometry is included."
     },
     {
+      "id": "room.scan",
+      "version": 1,
+      "type": {
+        "record": {
+          "available": "boolean",
+          "stateId": "text",
+          "roomId": "text",
+          "count": "number",
+          "omitted": "number",
+          "reason": "text"
+        }
+      },
+      "label": "Loaded scanned-room layout",
+      "description": "On-demand bounded Meta scan layout in current room coordinates. available=false means counts are placeholders, not an empty physical room. Requires a loaded tracked MR room with colliders, no setup/workspace hold and an unscaled room frame. Read stateId before room.scan.surfaces or room.scan.surface. Identity changes with observed geometry, room frame or setup; snapshots are cached only within one Unity frame. At most 128 surfaces from 256 anchors; larger or malformed scans are unavailable, never silently truncated. omitted counts anchors without plane/volume bounds (including mesh-only geometry). Bounds are not full polygons, openings, current obstacles, free space, physical alignment or persistence guarantees. Reads never scan, request permission, start physics or save. Detailed geometry is queried explicitly, not added to background room observations.",
+      "features": [
+        "roomScanLayout.v1"
+      ]
+    },
+    {
+      "id": "room.scan.surfaces",
+      "version": 1,
+      "type": {
+        "list": {
+          "record": {
+            "id": "text",
+            "label": "text",
+            "plane": "boolean",
+            "volume": "boolean"
+          }
+        }
+      },
+      "label": "Scanned surface identities",
+      "description": "Four stable Meta anchor IDs and semantic labels per page, sorted by ID. Use the exact stateId from room.scan; changed/unavailable layouts refuse reads. offset=count returns an empty typed list; beyond count refuses. plane and volume describe available bounds, not proof that a surface is safe, visible or current. No raw mesh or camera image.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "stateId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 128.0
+          }
+        },
+        "required": [
+          "stateId",
+          "offset"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "stateId": "00000000000000000000000000000000",
+        "offset": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "roomScanLayout.v1"
+      ]
+    },
+    {
+      "id": "room.scan.surface",
+      "version": 1,
+      "type": {
+        "record": {
+          "id": "text",
+          "label": "text",
+          "pose": {
+            "record": {
+              "position": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number"
+                }
+              },
+              "rotation": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number",
+                  "w": "number"
+                }
+              }
+            }
+          },
+          "plane": {
+            "record": {
+              "present": "boolean",
+              "center": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number"
+                }
+              },
+              "size": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number"
+                }
+              }
+            }
+          },
+          "volume": {
+            "record": {
+              "present": "boolean",
+              "center": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number"
+                }
+              },
+              "size": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number"
+                }
+              }
+            }
+          }
+        }
+      },
+      "label": "Scanned surface pose and bounds",
+      "description": "Read one exact anchor using current stateId and ID from room.scan.surfaces. pose is room-local position and quaternion. Plane/volume center and size are anchor-local metres; transform by pose to use room coordinates. Meta planes lie in XY at z=0 and face local +Z, unlike drawing patches' -Z. Absent bounds have present=false and zero placeholders. Rectangles/boxes are bounds only: no polygon, cutouts, global mesh or moving obstacle detection. A new scan may replace UUIDs; never silently attach saved content to a similar-looking surface. No placement, drawing attachment or save occurs.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "stateId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "stateId",
+          "id"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "stateId": "00000000000000000000000000000000",
+        "id": "11111111111111111111111111111111"
+      },
+      "features": [
+        "factQueries.v1",
+        "roomScanLayout.v1"
+      ]
+    },
+    {
       "id": "physics.simulation",
       "version": 1,
       "type": {
@@ -32879,7 +33039,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "083514b071c3563bc49f2db7736b837231d6b2eba33d3804c566057bf2684149"
+      "sha256": "c57b208f0c39e592abf387992d415e36a98da41e94f7d2ec02fa243548f125d1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -32931,7 +33091,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "2112c8788564558d39282bdc17976d744017add0af7df3da58e53722d8335a42"
+      "sha256": "a75195e8fd1b7cbbacc32d0f7b23980f94ac60a48b2fd01ad40757f501225c1a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -33491,11 +33651,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ScannedRoomRequests.cs",
-      "sha256": "dd5cb943596fe015dc3e80f3d634f234003dd246671d711d613fa0a60a9bc774"
+      "sha256": "c54f254aa1c5e34323ab1f8b5a485452965065d3ec5d5d682402236973f3aa60"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ScannedRoomPlacement.cs",
       "sha256": "7b52fd703d9d9e4ec504155ce97ed41577040000703e759c4a1d8ac586fa8a55"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ScannedRoomLayout.cs",
+      "sha256": "1eee53f9295009d0856a2fa0e7e9fe3ea05cc3e79872074ec1f489ebfddda599"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportAcceptance.cs",
@@ -33820,6 +33984,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RoomEnvironmentCapability.cs",
       "sha256": "f0ee8b95058044fadc99ea54bb091d5677ddf3b68b842897629db177e7a9c47d"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RoomScanFacts.cs",
+      "sha256": "ef909e8b2a4175fd423070cb1c344c26ce2d797ea76e031c13d7c89aae43154e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RoomSessionCapability.cs",

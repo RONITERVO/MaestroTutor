@@ -2,6 +2,15 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
+The shared catalog now exposes on-demand loaded scan layout: exact surface IDs,
+semantic labels, room-local poses and anchor-local plane/box bounds. The same
+queries serve the book inspector, programs and agent without a background layout
+broadcast. Changed or unavailable scans refuse stale detail reads. Prepared privacy
+copy describes task-requested layout sharing. See
+[the scan contract](QUEST_ROOM_ENVIRONMENT.md#shared-scanned-layout-inspection-2026-10-04).
+This source increment is separate from the last pool APK. Persistent scanned-wall
+drawing attachments and actual Quest acceptance remain unfinished.
+
 Rectangular liquid cavities and an editable Shallow pool now extend the shared
 container model. Ordinary buckets and cups can dip and pour back; the catalog,
 book form, agent, saved quantities and Undo remain shared. Current-record inputs
@@ -15,8 +24,8 @@ The release audit separates ready source from outstanding device/provider/accoun
 acceptance in [release packaging](QUEST_RELEASE_BUILD.md#release-audit-2026-10-04).
 Quest checkout is now refused by the shared client service and managed HTTP route,
 using the verified Quest Firebase app identity, in addition to the existing hidden
-UI. Shared balances and original web checkout remain available. These later source
-changes are not in the last development APK or deployed backend. The Store purchase
+UI. Shared balances and original web checkout remain available. The client change
+is included in the shallow-pool development APK; the backend is still undeployed. The Store purchase
 model still needs a decision; the existing-service policy's interactivity limit
 makes an assumed exception inappropriate. See [managed access](QUEST_MANAGED_ACCESS.md).
 

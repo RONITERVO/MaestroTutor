@@ -67,3 +67,58 @@ are validated in the web contract and replayed through the book's typed controls
 Browser replay cannot prove Meta OS permission UI, actual scene capture, tracking
 alignment or device latency. Those remain physical Quest acceptance work; device
 installation/testing remains on hold.
+
+## Shared scanned layout inspection (2026-10-04)
+
+`roomScanLayout.v1` adds three read-only facts to the same catalog used by the
+book's inspector, agent and programs:
+
+- `room.scan`: availability, current snapshot `stateId`, stable Meta `roomId`,
+  supported surface count, omitted mesh-only/non-bounded anchor count and reason.
+- `room.scan.surfaces {stateId, offset}`: four exact anchor IDs, semantic labels
+  and plane/volume-presence flags, ordered by ID. The exact end is an empty list;
+  an offset past it is unavailable.
+- `room.scan.surface {stateId, id}`: room-local position/quaternion and anchor-local
+  plane rectangle and volume-box center/size, each with a `present` flag.
+
+Read status before details. State IDs are ephemeral and change when observed
+geometry, room identity, setup or the coordinate frame changes. Meta UUIDs are
+stable identifiers for the loaded scan, not a promise they survive a new scan.
+Missing surfaces never match by label, proximity or array index. Snapshots are
+captured on demand and shared only within one Unity frame. Changes detected on
+subsequent reads invalidate old page/detail requests. Background room observations
+do not contain these details, and reading does not request permissions, load a
+scan, start physics, move objects, save or create an Undo entry.
+
+The service requires an active tracked mixed-reality room with accepted loaded
+geometry, ready floor/wall colliders and no setup or workspace hold. Virtual view,
+tracking/lifecycle loss and malformed or oversized scan data make it unavailable.
+Unavailable zero counts and empty IDs are placeholders, not an empty real room.
+At most 128 bounded surfaces from 256 SDK anchors are accepted; exceeding either
+limit refuses the whole layout rather than returning a seemingly complete subset.
+Each returned program value stays within the existing 1,024-character cost limit.
+Non-unit coordinate frames or anchor scale are unsupported.
+
+Coordinates matter: Meta planes lie in local XY at z=0 and face local **+Z**;
+Maestro drawing patches face **-Z**. Bounds remain in the anchor's local metres;
+apply its returned pose to use them in room coordinates. Rectangles and boxes do
+not describe polygon boundaries, holes, cutouts, raw global meshes, moving objects,
+free space or verified alignment. These facts do not implement persistent drawing
+attachments or certify a safe placement. Those need their own explicit attachment,
+missing-anchor and lifecycle rules.
+
+When a task explicitly queries layout, the existing Maestro AI connection can
+receive it, with the same task-history/backup retention. It can reveal room size
+and arrangement even without raw meshes or camera frames. Prepared privacy
+copy now describes this; it is not yet deployed. Native local reads alone do not
+send information to a provider. No real scans or provider calls are used in the
+offline verification.
+
+Verification: five native PlayMode cases cover detached snapshots, sorted/empty
+pages, bounds, transformed coordinate frames, stale identities, lifecycle/runtime
+holds, malformed/oversized scans and no setup/physics/save side effects. The real
+native result fixture is also validated by three shared-client/program tests. The
+full native-app desktop journey reads these catalog definitions and verifies that
+no physical layout is invented on desktop. The SDK source is controlled in tests;
+real Meta room data, headset alignment and performance remain unverified for this
+increment. It is not yet included in a development APK.

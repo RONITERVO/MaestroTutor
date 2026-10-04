@@ -62,6 +62,11 @@ try{
   if(undoCreate.objects.some(object=>object.id===target)||undoCreate.objects.length!==initial.objects.length)throw new Error('Native Undo did not remove the created object.');
   const diagnostic=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'runtime.modelBudget',version:1}}]);
   if(!diagnostic.catalog?.available)throw new Error('Native resource diagnostics are unavailable.');
+  const scanLayout=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'room.scan',version:1}}]);
+  const scanValue=factReply(scanLayout).value as {available:boolean;stateId:string;count:number};
+  if(scanValue.available||scanValue.stateId!==''||scanValue.count!==0)throw new Error('Desktop scan facts must not invent a physical room.');
+  const scanDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'room.scan.surface',version:1}}]);
+  if(!scanDefinition.catalog?.definition)throw new Error('Shared scanned surface schema is unavailable.');
   const repeat=Number(process.env.MAESTRO_ROOM_PROBE_REPEATS??1);if(!Number.isInteger(repeat)||repeat<1||repeat>32)throw new Error('Probe repeats must be 1–32.');
   for(let cycle=0;cycle<repeat;cycle++){
   const cases=JSON.parse(await readFile('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/lathe-contract.json','utf8'));

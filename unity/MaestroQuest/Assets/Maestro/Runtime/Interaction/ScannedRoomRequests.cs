@@ -37,7 +37,7 @@ namespace Maestro.Quest.Interaction
         public string SetupStatus {get;private set;}="Load a saved room or request a new scan";
         bool SetupActive=>isActiveAndEnabled&&!setupPaused&&setupFocused;
         internal void SetSourceForTests(IRoomSceneSource value,int timeout=0){if(timeout<0)throw new ArgumentOutOfRangeException(nameof(timeout));if(Busy)throw new InvalidOperationException("A room request is still draining");testTimeout=timeout;source=value;NotifySetup();}
-        void NotifySetup(){setupId=Guid.NewGuid().ToString("N");Changed?.Invoke();}
+        void NotifySetup(){InvalidateLayout();setupId=Guid.NewGuid().ToString("N");Changed?.Invoke();}
         bool Current(Request request)=>this&&worker==request&&!request.Cancelled&&isActiveAndEnabled&&world&&!world.RuntimeHeld&&!virtualView;
         void Phase(string value,string message){phase=value;SetupStatus=message;NotifySetup();}
         void WorldChanged(){if(world.RuntimeHeld)CancelRequest(world.RuntimeHoldReason??"Room setup cancelled by workspace change");NotifySetup();}
