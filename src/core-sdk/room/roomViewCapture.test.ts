@@ -65,3 +65,26 @@ it.each(['stop','access','mismatch','unavailable'] as const)('never uploads pixe
  expect(saved).toHaveBeenCalledOnce();expect(persist).not.toHaveBeenCalled();expect(generate).toHaveBeenCalledOnce();
  expect(JSON.stringify(generate.mock.calls)).not.toContain(image.data);
 });
+
+
+it.each([
+ ['2026-10-04T01:43:36.2508960Z','2026-10-04T01:43:36.250896Z'],
+ ['2026-10-04T01:43:36.1200000Z','2026-10-04T01:43:36.12Z'],
+ ['2026-10-04T01:43:36.0000000Z','2026-10-04T01:43:36Z'],
+ ['2026-10-04T01:43:36.1000000Z','2026-10-04T01:43:36.1Z'],
+])('matches equivalent native capture timestamps %s and %s without rounding',(a,b)=>{
+ const left={...image.capture,capturedAt:a},right={...image.capture,capturedAt:b};
+ expect(validRoomCaptureMetadata(left)).toBe(true);expect(validRoomCaptureMetadata(right)).toBe(true);
+ expect(sameRoomCapture(left,right)).toBe(true);expect(sameRoomCapture(right,left)).toBe(true);
+});
+it('rejects a different capture instant even inside the same JavaScript millisecond',()=>{
+ const a={...image.capture,capturedAt:'2026-10-04T01:43:36.2508960Z'},b={...image.capture,capturedAt:'2026-10-04T01:43:36.2508961Z'};
+ expect(Date.parse(a.capturedAt)).toBe(Date.parse(b.capturedAt));expect(sameRoomCapture(a,b)).toBe(false);
+});
+it('delivers native pixels when observation serialization trimmed timestamp zeroes',async()=>{
+ const client=new RoomAgentClient(),capture={...image.capture,capturedAt:'2026-10-04T01:43:36.2508960Z'};
+ expect(client.receive({...base,capture:{...capture,capturedAt:'2026-10-04T01:43:36.250896Z'}})).toBe(true);
+ const waiting=client.lease()!.capture!(capture.captureId);
+ expect(client.receiveCapture({...native,capture})).toBe(true);
+ expect(await waiting).toEqual({capture,data:image.data});expect(client.snapshot().captureAck).toBe(capture.captureId);
+});

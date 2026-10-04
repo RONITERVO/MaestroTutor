@@ -14,6 +14,9 @@ export function validRoomCaptureImage(v:unknown):v is RoomCaptureImage {
  if(!object(v)||!validRoomCaptureMetadata(v.capture)||typeof v.data!=='string'||!v.data.length||v.data.length>ROOM_CAPTURE_BYTES*4/3||v.data.length%4!==0||!/^[A-Za-z0-9+/]+={0,2}$/.test(v.data))return false;
  try{const bytes=Uint8Array.from(atob(v.data),c=>c.charCodeAt(0));if(bytes.length>ROOM_CAPTURE_BYTES)return false;const size=jpegDimensions(bytes);return size?.width===512&&size.height===384&&Array.from(sha256(bytes),b=>b.toString(16).padStart(2,'0')).join('')===v.capture.sha256;}catch{return false;}
 }
+// Native JSON paths may trim fractional trailing zeroes. Preserve sub-millisecond
+// precision while comparing the same UTC instant; Date.parse would lose it.
+const captureInstant=(value:string)=>value.replace(/(\.\d*?)0+Z$/,'$1Z').replace(/\.Z$/,'Z');
 export function sameRoomCapture(a:RoomCaptureMetadata,b:RoomCaptureMetadata):boolean {
- return ['captureId','sha256','mimeType','width','height','capturedAt','sceneRevision','verticalFov'].every(k=>a[k as keyof RoomCaptureMetadata]===b[k as keyof RoomCaptureMetadata])&&(['x','y','z'] as const).every(k=>a.position[k]===b.position[k])&&(['x','y','z','w'] as const).every(k=>a.rotation[k]===b.rotation[k]);
+ return captureInstant(a.capturedAt)===captureInstant(b.capturedAt)&&['captureId','sha256','mimeType','width','height','sceneRevision','verticalFov'].every(k=>a[k as keyof RoomCaptureMetadata]===b[k as keyof RoomCaptureMetadata])&&(['x','y','z'] as const).every(k=>a.position[k]===b.position[k])&&(['x','y','z','w'] as const).every(k=>a.rotation[k]===b.rotation[k]);
 }
