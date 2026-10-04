@@ -1847,3 +1847,12 @@ failure recovery. Measure sustained frame time at the supported container limit.
 Record visual fill-plane clarity and grip comfort separately from measured
 quantities. This model has no fluid forces, displacement or persistent spill field.
 No current headset installation or acceptance is claimed by desktop checks.
+
+
+For liquid identity transitions, configure a second basin with a different liquid
+identifier (then with just a different colour). Scoop, empty and refill promptly.
+The first saved event must name the earlier liquid and only its own quantities;
+the refill belongs to a new episode. Undo restores those episodes separately.
+Repeat using poured intake. A matching refill should remain in the same episode.
+Also verify a failed save at the transition stops intake and requires a physics
+restart after storage recovery.

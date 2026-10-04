@@ -70,6 +70,15 @@ namespace Maestro.Quest.Tests
             avatar.SpatialWalk(.4f);Assert.That(avatar.IsImportedClipPlaying,Is.True);yield return new WaitForSeconds(.1f);avatar.SpatialWalk(0);Assert.That(avatar.IsImportedClipPlaying,Is.False);
             Assert.That(File.ReadAllBytes(Path.Combine(directory,"saved","models",included.Hash+".glb")),Is.EqualTo(included.Read().Bytes));
         }
-        [UnityTearDown]public IEnumerator TearDown(){UnityEngine.Object.Destroy(root);yield return null;if(Directory.Exists(directory))Directory.Delete(directory,true);}
+        [UnityTearDown]public IEnumerator TearDown(){
+            var modelLoad=avatar?avatar.ModelLoad:null;var includedCopy=editor?editor.Motions?.IncludedInitialization:null;
+            UnityEngine.Object.Destroy(root);yield return null;
+            // Destroy requests disposal; an in-flight atomic copy still owns its
+            // file until the background task exits. Never delete its workspace early.
+            float until=Time.realtimeSinceStartup+20;
+            while((modelLoad!=null&&!modelLoad.IsCompleted||includedCopy!=null&&!includedCopy.IsCompleted)&&Time.realtimeSinceStartup<until)yield return null;
+            Assert.That(modelLoad?.IsCompleted??true,Is.True,"Avatar load did not finish after disposal");Assert.That(includedCopy?.IsCompleted??true,Is.True,"Included motion copy did not finish after disposal");
+            if(Directory.Exists(directory))Directory.Delete(directory,true);
+        }
     }
 }

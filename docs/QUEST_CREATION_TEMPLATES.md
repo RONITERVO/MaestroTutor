@@ -143,3 +143,14 @@ included module, saves and runs its caller, checks its created members and undoe
 that batch. Unity-rendered previews show actual geometry. These checks establish
 desktop behaviour, not current Quest hand/controller feel, performance or comfort;
 those remain device acceptance items. No room format or capability was added.
+
+
+### Pre-release Cup metadata revision (2026-10-04)
+
+The Cup description now accurately advertises pouring and vessel dipping. Its
+recipe, components and rendered preview are identical; changing the source text
+creates a new exact template hash. This is a pre-release revision under the
+owner's approved development-reset policy, not a migration or alias. Already
+expanded objects retain their editable data. A draft pinned to the earlier hash
+must explicitly choose the revised template; unsupported hashes never substitute.
+The immutable-source policy above applies to published release choices.

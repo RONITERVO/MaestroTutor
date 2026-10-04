@@ -94,7 +94,8 @@ The conservation check is source loss = received + uncollected spill.
 
 One room-wide episode combines simultaneous flows. It publishes after 0.3 seconds
 without flow, a grip release, physics pause, explicit Save, or a ten-second
-checkpoint. One atomic room edit and one Undo restore the episode's quantities;
+checkpoint, and before an empty participating vessel changes liquid identity or
+colour. One atomic room edit and one Undo restore the episode's quantities;
 current placements are retained. No replayable transfer commands are queued by
 the simulation. Temporary-room flow remains in its fork until explicitly kept.
 If saving fails, all episode quantities return to their accepted values; physical
@@ -161,3 +162,26 @@ matching catalog calls. These remain desktop evidence: Quest hand/controller
 comfort, visibility, sustained frame time and tracking loss still need acceptance.
 There is no displacement, trapped air, fluid mass, buoyancy, finger scooping,
 persistent pool or snow field in this model.
+
+
+## Identity changes between refills (2026-10-04)
+
+An empty vessel can adopt a new liquid identifier or colour. If it already
+participated in the current live episode, both pouring and scooping publish that
+episode **before** the new intake. Its outgoing and scooped event totals therefore
+retain the old liquid identifier. The next tick reevaluates current poses,
+geometry and capacity before transferring new contents; no pending transfer is
+saved or replayed. A failed boundary save reverts the old episode and blocks flow
+until physics restarts, without taking any of the new liquid.
+
+A refill with the same identifier and colour continues the existing episode.
+The boundary closes the room-wide episode, including other participating vessels,
+and has its own Undo. Consecutive unlike refills therefore produce separate saved
+operations and correctly attributed events. Colours still cannot mix; the event's
+`liquid` field remains the authored identifier, not a new colour field. Contracts,
+features and saved formats are unchanged.
+
+Real native tests reproduce empty/refill through both physical paths, failed
+boundary publication, colour-only changes, matching refills, conserved quantities
+and separate Undo/event outcomes. These checks supplement the pending Quest
+interaction and sustained-performance acceptance.

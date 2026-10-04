@@ -2863,16 +2863,17 @@ full release, persistent fields, fluid forces and bare-hand scooping remain open
 See [the contract](QUEST_CONTAINERS.md#physical-vessel-scooping-2026-10-04).
 
 
-Remaining template metadata cleanup before release: the existing pinned Cup source
-still contains the historical phrase that physical pouring is not enabled. The
-runtime capability descriptions and container contract are current. Correct that
-library description through an explicit template revision/identity decision,
-retaining supported exact choices; do not silently replace a pinned source.
+### Liquid identity boundaries and Cup metadata cleanup (2026-10-04)
 
+Empty/refill now publishes the current physical-flow episode before a different
+liquid identity or colour can enter a participating vessel. Both scooping and
+pouring retain correctly attributed event totals; matching refills stay in one
+episode. Failed boundary saves restore the old quantities and block further flow.
+Five native regressions cover both physical intake paths, matching and colour-only
+refills, conservation, failed publication and separate Undo/event outcomes.
 
-Additional liquid acceptance case before release: emptying and refilling a vessel
-with a different liquid identity during one continuous live episode. The current
-counters accumulate across the episode and the event reports the final liquid
-identifier. Verify and delimit identity changes before treating those counters as
-per-liquid totals in user-authored games. This does not affect quantity conservation
-or the single-liquid bucket/basin checks.
+The unreleased Cup template description now reflects implemented pouring and
+scooping. Geometry/components are unchanged; its new exact hash is an explicit
+pre-release revision, with no alias or silent replacement of an old draft choice.
+Existing expanded objects keep their source. Release template identities remain
+immutable. Current Quest acceptance and broader v1/Store gates are still open.

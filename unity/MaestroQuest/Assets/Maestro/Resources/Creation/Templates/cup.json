@@ -3,7 +3,7 @@
   "version": 1,
   "id": "cup",
   "name": "Cup",
-  "description": "Open cup with a handle, compound walls and an editable 500 ml logical liquid store. Physical pouring is not yet enabled.",
+  "description": "Open handled cup with an editable 500 ml liquid store. Tilt to pour or dip its opening into a larger vessel to fill.",
   "tags": [
     "tableware",
     "container",

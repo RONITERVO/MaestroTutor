@@ -56,6 +56,7 @@ namespace Maestro.Quest.Creation {
                 var origin=ContainerFlowGeometry.Lip(v.Live,v.Item.transform,up,out var outward);if(!physics.CanSimulate(origin))continue;var velocity=outward*.15f;
                 var body=v.Body;if(body&&!body.isKinematic)velocity+=Vector3.ClampMagnitude(body.GetPointVelocity(origin),3);
                 if(!Trace(v,origin,velocity,gravity,up,out var receiver,out int count))continue;
+                if(receiver!=null&&ChangesEpisodeIdentity(v,receiver)){Finish(out _);return;}
                 if(!Begin(out var issue)){error=issue;blocked=true;editor.ReportStatus(issue);return;}
                 Touch(v);double moved=0;
                 if(receiver!=null){Touch(receiver);RoomContainer.Transfer(v.Live,receiver.Live,requested,out moved,out _);if(moved>0){v.Received+=moved;v.Receivers.Add(receiver.Id);Preview(receiver);}}
@@ -75,6 +76,7 @@ namespace Maestro.Quest.Creation {
                 if(donor==null)continue;
                 double requested=Math.Min(donor.DipBudget,Math.Min(donor.Live.amountMl,Math.Min(recipient.Live.capacityMl-recipient.Live.amountMl,recipient.Live.capacityMl*.75*seconds)));
                 if(requested<=.000001)continue;
+                if(ChangesEpisodeIdentity(donor,recipient)){Finish(out _);return;}
                 if(!Begin(out var issue)){error=issue;blocked=true;editor.ReportStatus(issue);return;}
                 Touch(donor);Touch(recipient);
                 if(!RoomContainer.Transfer(donor.Live,recipient.Live,requested,out var moved,out _))continue;
@@ -84,6 +86,10 @@ namespace Maestro.Quest.Creation {
             if(!Active)return;elapsed+=seconds;quiet=flowing?0:quiet+seconds;
             if(quiet>=.3f||elapsed>=10)Finish(out _);
         }
+        // An empty vessel may adopt new contents, but prior episode counters and
+        // events must retain the old identity. Publish first and retry geometry
+        // next tick; a failed publication rolls back and blocks all further flow.
+        bool ChangesEpisodeIdentity(Vessel source,Vessel receiver)=>Owns(receiver.Id)&&receiver.Live.amountMl==0&&(source.Live.liquid!=receiver.Live.liquid||!source.Live.color.Equals(receiver.Live.color));
         bool ClearScoopPath(ContainerScoopingGeometry.Contact contact){
             for(int sample=0;sample<5;sample++){
                 if(!contact.Path(sample,out var from,out var to)||!world.CanSimulate(from)||!world.CanSimulate(to))continue;

@@ -8284,7 +8284,7 @@
                   "7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca",
                   "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab",
                   "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac",
-                  "22b5810eeed904680847631faf04ee3797f56bffdf3beb031f82609ed49c3ec1",
+                  "835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278",
                   "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950",
                   "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18",
                   "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99",
@@ -8299,7 +8299,7 @@
                   "7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca": "Bucket",
                   "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab": "Chalk",
                   "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "Chalkboard",
-                  "22b5810eeed904680847631faf04ee3797f56bffdf3beb031f82609ed49c3ec1": "Cup",
+                  "835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278": "Cup",
                   "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950": "Domino",
                   "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18": "Fork",
                   "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99": "Pawn",
@@ -8314,7 +8314,7 @@
                   "7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca": "quest/templates/7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca.png",
                   "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab": "quest/templates/4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab.png",
                   "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "quest/templates/5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac.png",
-                  "22b5810eeed904680847631faf04ee3797f56bffdf3beb031f82609ed49c3ec1": "quest/templates/22b5810eeed904680847631faf04ee3797f56bffdf3beb031f82609ed49c3ec1.png",
+                  "835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278": "quest/templates/835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278.png",
                   "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950": "quest/templates/4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950.png",
                   "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18": "quest/templates/3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18.png",
                   "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99": "quest/templates/a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99.png",
@@ -8370,7 +8370,7 @@
             "description": "Expand an exact bundled template hash into ordinary editable recipe, collision, physics and optional flat drawing-surface, drawing-tip, snap-point and logical liquid-container data. Read creation.template for descriptions and cost counts; names and tags are display metadata, never executable instructions. Empty name keeps its template name. Creates one object and one Undo through the same recipe creation path; later template changes cannot alter existing objects. Templates start idle, do not start physics, install behaviours, snap bricks or simulate liquids. Robot tracks can be played explicitly with animation.play source.kind recipe. The hash is an exact choice: missing versions fail, never substitute by name. Optional user template publishing is not part of this bundled library.",
             "examples": [
               {
-                "templateHash": "22b5810eeed904680847631faf04ee3797f56bffdf3beb031f82609ed49c3ec1",
+                "templateHash": "835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278",
                 "name": "",
                 "x": 0.3,
                 "y": 1.3,
@@ -8551,7 +8551,7 @@
                                 "7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca",
                                 "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab",
                                 "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac",
-                                "22b5810eeed904680847631faf04ee3797f56bffdf3beb031f82609ed49c3ec1",
+                                "835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278",
                                 "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950",
                                 "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18",
                                 "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99",
@@ -8566,7 +8566,7 @@
                                 "7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca": "Bucket",
                                 "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab": "Chalk",
                                 "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "Chalkboard",
-                                "22b5810eeed904680847631faf04ee3797f56bffdf3beb031f82609ed49c3ec1": "Cup",
+                                "835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278": "Cup",
                                 "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950": "Domino",
                                 "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18": "Fork",
                                 "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99": "Pawn",
@@ -8581,7 +8581,7 @@
                                 "7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca": "quest/templates/7146044d8bf7d619ec9f95f13956016d5620fe89ebf8d7312f87472332e36bca.png",
                                 "4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab": "quest/templates/4165594acb4c906f67f602a9e2e7922f41474ba06dea0a93131780948fe8deab.png",
                                 "5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac": "quest/templates/5d7ae135aae334b1eea36979b98c4d3737d8e79f24847b7e9610566af89c30ac.png",
-                                "22b5810eeed904680847631faf04ee3797f56bffdf3beb031f82609ed49c3ec1": "quest/templates/22b5810eeed904680847631faf04ee3797f56bffdf3beb031f82609ed49c3ec1.png",
+                                "835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278": "quest/templates/835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278.png",
                                 "4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950": "quest/templates/4b3327159bc0303640d28f65ed860384ecb8d8b07fb933b3736d455745484950.png",
                                 "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18": "quest/templates/3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18.png",
                                 "a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99": "quest/templates/a4565608ee600bc4d65b40fc7bd2fc5127ae257257d965047c2ea1c0f437ba99.png",
@@ -21871,7 +21871,7 @@
       "activity": null,
       "objectEvent": true,
       "valueType": "text",
-      "description": "A native pouring episode was accepted by the shared room journal (or temporary fork). Value/source is the outgoing vessel ID. transferredMl is the total received by containers; spilledMl left the bounded container model, and does not imply a persistent puddle. receivers counts distinct receiving containers. Emitted after successful publication only; failed saves, cancellation, Undo and reload do not emit/replay it. A long continuous flow publishes at most once per ten-second checkpoint. Paused lifecycle listeners may miss the event; inspect current contents instead.",
+      "description": "A native pouring episode was accepted by the shared room journal (or temporary fork). Value/source is the outgoing vessel ID. transferredMl is the total received by containers; spilledMl left the bounded container model, and does not imply a persistent puddle. receivers counts distinct receiving containers. Emitted after successful publication only; failed saves, cancellation, Undo and reload do not emit/replay it. Continuous flow checkpoints after ten seconds. Before an empty participating vessel changes liquid identity or colour, the prior episode publishes first; new intake is reconsidered next tick. Each outgoing total therefore retains its own liquid identity. Paused lifecycle listeners may miss the event; inspect current contents instead.",
       "features": [
         "eventPrograms.v1",
         "eventFields.v1",
@@ -21921,7 +21921,7 @@
       "activity": null,
       "objectEvent": true,
       "valueType": "text",
-      "description": "A physical liquid-flow episode containing scooping was accepted by the room journal or temporary fork. Value/source is the receiving vessel ID; scoopedMl is its total intake and donors counts distinct source vessels. Emitted only after successful publication; failed saves, Undo and reload do not emit it. Pouring retains its separate object.container.poured event. A continuous episode checkpoints after ten seconds. Lifecycle-paused listeners may miss an event; inspect current contents instead.",
+      "description": "A physical liquid-flow episode containing scooping was accepted by the room journal or temporary fork. Value/source is the receiving vessel ID; scoopedMl is its total intake and donors counts distinct source vessels. Emitted only after successful publication; failed saves, Undo and reload do not emit it. Pouring retains its separate object.container.poured event. A continuous episode checkpoints after ten seconds, or earlier before an empty participating vessel adopts a different liquid identity or colour. Intake is reconsidered next tick only after the prior episode saves, so reported quantities retain the correct liquid identity. Lifecycle-paused listeners may miss an event; inspect current contents instead.",
       "features": [
         "eventPrograms.v1",
         "eventFields.v1",
@@ -23687,7 +23687,7 @@
         }
       },
       "label": "Live container contents",
-      "description": "Current native liquid quantity during physical pouring or scooping, separate from the last accepted object.container definition. Flowing contents are published together after 0.3 seconds without flow, at grip release, pause or Save, and at bounded ten-second checkpoints; one Undo restores that episode. Failed publication reverts all episode quantities and stops further pouring until physics is restarted. transferredMl/spilledMl are outgoing pouring totals for this source in the current episode, reset after publication. Scooping has separate object.container.scooping counters. No per-drop rigidbodies, pools, fluid mass, mixing or buoyancy. Amounts use logical millilitres independent of visual resizing.",
+      "description": "Current native liquid quantity during physical pouring or scooping, separate from the last accepted object.container definition. Flowing contents are published together after 0.3 seconds without flow, at grip release, pause or Save, at bounded ten-second checkpoints, and before an empty participating vessel adopts a different liquid identity or colour; one Undo restores that episode. Failed publication reverts all episode quantities and stops further pouring until physics is restarted. transferredMl/spilledMl are outgoing pouring totals for this source in the current episode, reset after publication. Scooping has separate object.container.scooping counters. No per-drop rigidbodies, pools, fluid mass, mixing or buoyancy. Amounts use logical millilitres independent of visual resizing.",
       "input": {
         "type": "object",
         "properties": {
@@ -23725,7 +23725,7 @@
         }
       },
       "label": "Live liquid scooping",
-      "description": "Current physical-flow episode: scoopedMl entered this vessel through its submerged opening; drawnMl was taken from it by other vessels. donors/recipients count distinct counterpart vessels. These counters reset on publication or rollback. Read object.container.live for current and accepted quantities. An upward-facing smaller open cavity must fit inside the donor with its entire opening below the measured surface, with a clear bounded path. The same conserved quantities, physics pause, grips, save/Undo and temporary-room episode are used for pouring and scooping. No fluid forces, displacement, air simulation or persistent pools.",
+      "description": "Current physical-flow episode: scoopedMl entered this vessel through its submerged opening; drawnMl was taken from it by other vessels. donors/recipients count distinct counterpart vessels. These counters reset on publication or rollback. An empty participating vessel changing liquid identity or colour first closes its prior episode. Read object.container.live for current and accepted quantities. An upward-facing smaller open cavity must fit inside the donor with its entire opening below the measured surface, with a clear bounded path. The same conserved quantities, physics pause, grips, save/Undo and temporary-room episode are used for pouring and scooping. No fluid forces, displacement, air simulation or persistent pools.",
       "input": {
         "type": "object",
         "properties": {
@@ -27241,7 +27241,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidPouring.cs",
-      "sha256": "55b4afa3ba62b94b653cac276204ee3c3e49b99cb3d565e883acd23d7ca71af4"
+      "sha256": "ad59ea651a0b0f79b0019a1a60e3a31a7417a515184ec7d9de96a374571a0b01"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLiquidEdits.cs",
@@ -27545,11 +27545,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContainerPouringFacts.cs",
-      "sha256": "d02c9780b85350843b494744b744be7b44dfd8d1db42f79455bb554055d83c7c"
+      "sha256": "67bc42a6179e0a3ace5e1d6e89d9fd06a5bde243e85e3af0920416409cbde777"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContainerScoopingFacts.cs",
-      "sha256": "7e5f749c7490c7b87b2e959316e3cdc7a8b346b98fdc1335b253e5992610fd4b"
+      "sha256": "28179c0e6656b64de9d7b8b6281448305325ed81a5bc77f96d5543839bc640fd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ControllerConfigurationCapability.cs",
@@ -27801,7 +27801,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/cup.json",
-      "sha256": "22b5810eeed904680847631faf04ee3797f56bffdf3beb031f82609ed49c3ec1"
+      "sha256": "835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/domino.json",
