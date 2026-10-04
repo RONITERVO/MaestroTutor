@@ -53,7 +53,7 @@ namespace Maestro.Quest.Tests
             var p=Prepare();string path=Path.Combine(Generation(p.Id),"data",RoomStorage.FileName);var changed=new WorkspaceGenerationStore(directory,point=>{if(point=="retention.captured")File.AppendAllText(path," ");});Assert.Throws<InvalidDataException>(()=>Export(p,changed));Assert.That(File.ReadAllText(path),Does.EndWith(" "));Assert.That(Directory.GetFiles(RetentionCache),Is.Empty);
             using var cancellation=new CancellationTokenSource();var cancelled=new WorkspaceGenerationStore(directory,point=>{if(point=="retention.captured")cancellation.Cancel();});Assert.Throws<OperationCanceledException>(()=>cancelled.ExportRetained(Origin(),p.Id,p.Receipt.ManifestHash,"original",RetentionCache,cancellation.Token));Assert.That(Directory.GetFiles(RetentionCache),Is.Empty);Assert.That(Directory.Exists(Generation(p.Id)),Is.True);
         }
-        [TestCase("room.v18.json")] [TestCase("controls.v3.json.backup")] [TestCase("motions/motions.v3.json.pending")]
+        [TestCase("room.v19.json")] [TestCase("controls.v3.json.backup")] [TestCase("motions/motions.v3.json.pending")]
         public void RetainedExportNeverTreatsAnOlderPrimaryAsCurrentWhenNewerVersionEvidenceExists(string name)
         {
             var p=Prepare();string path=Path.Combine(Generation(p.Id),"data",name);File.WriteAllText(path,"newer data must survive");Assert.Throws<InvalidDataException>(()=>Export(p));Assert.That(File.ReadAllText(path),Is.EqualTo("newer data must survive"));Assert.That(Directory.Exists(RetentionCache),Is.False);

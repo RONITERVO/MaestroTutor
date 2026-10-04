@@ -336,3 +336,14 @@ the room's periodic capture can still publish the last dropped pose. The
 `paused` and `pausedSettling` observations preserve that boundary. A stale refusal
 still fails the journey and is never retried. This closes a harness race exposed
 by a correctly refused global Undo; native revision guards are unchanged.
+
+
+### Material scoop authoring
+
+The native journey now creates the editable Material scoop template, reads its
+saved tip, edits the measured dose through `object.sculptTip.edit`, checks that
+configuration neither creates material nor starts contact, and undoes the edit.
+`material-scoop-authoring.json` contains those actual native observations for the
+Chrome form replay. Real held take/deposit, obstruction, manual takeover, stale
+drafts, save failure, temporary discard and paired Undo use Unity PlayMode tests.
+A replay is a form/contract check, not a browser physics simulation or headset test.

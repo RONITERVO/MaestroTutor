@@ -10,7 +10,7 @@ using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
 namespace Maestro.Quest.Creation {
     /// <summary>One bounded visual draft; release publishes the ordinary sculpt action once.</summary>
-    public sealed class SpatialSculpting:MonoBehaviour {
+    public sealed partial class SpatialSculpting:MonoBehaviour {
         public RoomEditor Editor;
         public string Mode {get;private set;}="off";
         public float Radius {get;private set;}=.08f;
@@ -65,7 +65,7 @@ namespace Maestro.Quest.Creation {
         }
         bool Unchanged(out string error){
             error=null;var now=Editor?Editor.Read(target)?.heightFields?.FirstOrDefault():null;
-            if(!Editor||roomSession!=Editor.TemporarySessionId||now==null||JsonUtility.ToJson(now)!=before){error="The surface or room changed; discard this sculpt draft";return false;}return true;
+            if(!Editor||roomSession!=Editor.TemporarySessionId||now==null||JsonUtility.ToJson(now)!=before){error="The surface or room changed; discard this sculpt draft";return false;}return MaterialUnchanged(out error);
         }
         void Sample(Vector2 point,bool force=false){
             if(!Active)return;
@@ -84,6 +84,7 @@ namespace Maestro.Quest.Creation {
         internal bool CanResolve(string session,bool discard,out string error){
             error=null;if(!Retained||session!=SessionId){error="Inspect the current retained sculpt draft first";return false;}if(discard)return true;
             if(!Unchanged(out error)||!Editor.Ownership.CanAcquire("sculpt:"+SessionId,role,new[]{new BehaviourCatalog.Claim(target,"wholeTarget")},out error))return false;
+            if(Material)return PrepareMaterial(out _,out error);
             return Editor.PrepareSculpt(target,Editor.ObjectRevision(target),mode,points.ToArray(),radius,height,out _,out _,out error);
         }
         internal bool Resolve(string session,bool discard,out JObject result,out string error){
@@ -91,16 +92,17 @@ namespace Maestro.Quest.Creation {
             int changed=0;
             if(!discard){
                 if(lease?.Held!=true&&!Editor.Ownership.TryAcquire("sculpt:"+SessionId,tool==null?"Your sculpt tool":"Held sculpt tool",role,new[]{new BehaviourCatalog.Claim(target,"wholeTarget")},_=>{},out lease,out error,preservePlacement:true))return Failed(error);
-                if(!CanResolve(session,false,out error)||!Editor.SculptHeightField(target,Editor.ObjectRevision(target),mode,points.ToArray(),radius,height,out changed,out error))return Failed(error);
+                if(!CanResolve(session,false,out error))return Failed(error);
+                if(Material?!CommitMaterial(out changed,out error):!Editor.SculptHeightField(target,Editor.ObjectRevision(target),mode,points.ToArray(),radius,height,out changed,out error))return Failed(error);
             }
-            result=new JObject{["sessionId"]=session,["phase"]=discard?"discarded":"saved",["target"]=discard?"":target,["points"]=points.Count,["changedVertices"]=changed,["temporary"]=Editor.TemporaryRoom};Clear();Editor.ReportStatus(discard?"Sculpt draft discarded":"Sculpt gesture saved — Undo restores the surface");return true;
+            result=new JObject{["sessionId"]=session,["phase"]=discard?"discarded":"saved",["target"]=discard?"":target,["points"]=points.Count,["changedVertices"]=changed,["temporary"]=Editor.TemporaryRoom};bool material=Material;Clear();Editor.ReportStatus(discard?"Surface draft discarded":material?"Material gesture saved — Undo restores both balances":"Sculpt gesture saved — Undo restores the surface");return true;
         }
         bool Failed(string error){errorText=error;Editor?.ReportStatus("Sculpt not saved: "+error+". Retry sculpt or Discard sculpt.");return false;}
         internal void ResolveManual(bool discard)=>Resolve(SessionId,discard,out _,out _);
         public Vector3 PointerPoint(Ray ray)=>Editor&&Editor.FindHeightField(ray,.25f,null,out _,out _,out var distance)?ray.GetPoint(distance):ray.GetPoint(.12f);
         internal JObject Observe()=>new(){["sessionId"]=SessionId,["phase"]=Active?"sculpting":Retained?"unsaved":"idle",["target"]=target??"",["brush"]=new JObject{["mode"]=mode??"none",["radius"]=Busy?radius:0,["height"]=Busy?height:0},["points"]=points.Count,["temporary"]=Editor&&Editor.TemporaryRoom,["error"]=Maestro.Quest.Imports.ImportObservation.Text(errorText)};
         internal JObject PathPage(string session,int offset){if(!Busy||session!=SessionId||offset<0||offset>points.Count)return null;return new JObject{["sessionId"]=SessionId,["offset"]=offset,["count"]=points.Count,["points"]=new JArray(points.Skip(offset).Take(8).Select(p=>new JObject{["x"]=p.x,["z"]=p.y}))};}
-        void Clear(){if(Editor)Editor.Find(target)?.GetComponent<HeightFieldView>()?.Preview(null);lease?.Dispose();lease=null;write?.Dispose();write=null;owner=-1;Retained=false;target=tool=mode=before=roomSession=null;source=draft=null;points.Clear();errorText="";SessionId=Guid.NewGuid().ToString("N");}
+        void Clear(){ClearMaterial();if(Editor)Editor.Find(target)?.GetComponent<HeightFieldView>()?.Preview(null);lease?.Dispose();lease=null;write?.Dispose();write=null;owner=-1;Retained=false;target=tool=mode=before=roomSession=null;source=draft=null;points.Clear();errorText="";SessionId=Guid.NewGuid().ToString("N");}
         void OnApplicationPause(bool paused){if(paused&&Active)Finish(false);}
         void OnApplicationFocus(bool focused){if(!focused&&Active)Finish(false);}
         void OnDisable(){if(Active)Finish(false);}

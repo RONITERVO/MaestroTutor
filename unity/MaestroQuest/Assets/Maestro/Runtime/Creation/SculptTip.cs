@@ -7,11 +7,13 @@ namespace Maestro.Quest.Creation {
     [Serializable] public sealed class SculptTip {
         public int version=1;public string part="",mode="lower";
         public Vector3 position;public Quaternion rotation=Quaternion.identity;
-        public float radius=.08f,height=.03f;public bool enabled=true;
-        public SculptTip Copy()=>new(){version=version,part=part,mode=mode,position=position,rotation=rotation,radius=radius,height=height,enabled=enabled};
+        public float radius=.08f,height=.03f;public double amountLitres;public bool enabled=true;
+        public bool IsMaterial=>version==2&&mode=="scoop";
+        public SculptTip Copy()=>new(){version=version,part=part,mode=mode,position=position,rotation=rotation,radius=radius,height=height,amountLitres=amountLitres,enabled=enabled};
         public bool Validate(RoomObjectData owner,out string error){
             error="Choose a sculpt tip on the root or an existing recipe part, a normalized rotation, radius 0.005–2 m and height 0–0.5 m";
-            if(version!=1||part==null||part!=""&&owner.recipe?.parts?.Any(p=>p.id==part)!=true||!float.IsFinite(position.sqrMagnitude)||position.sqrMagnitude>100||!MotionFrame.ValidRotation(rotation)||!new[]{"raise","lower","level"}.Contains(mode)||!float.IsFinite(radius)||radius<.005f||radius>2||!float.IsFinite(height)||height<0||height>.5f)return false;
+            if(part==null||part!=""&&owner.recipe?.parts?.Any(p=>p.id==part)!=true||!float.IsFinite(position.sqrMagnitude)||position.sqrMagnitude>100||!MotionFrame.ValidRotation(rotation)||!float.IsFinite(radius)||radius<.005f||radius>2||!float.IsFinite(height)||height<0||height>.5f)return false;
+            if(IsMaterial?height!=0||!double.IsFinite(amountLitres)||amountLitres<.001||amountLitres>20:version!=1||!new[]{"raise","lower","level"}.Contains(mode)||amountLitres!=0){error="Choose a shape tip, or a version-2 scoop with 0.001–20 litres per contact and zero height";return false;}
             error=null;return true;
         }
         public static bool ValidateCollection(RoomObjectData owner,out string error){

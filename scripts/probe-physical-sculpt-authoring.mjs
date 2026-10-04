@@ -24,6 +24,7 @@ try{
  await page.getByLabel('Action inputs definition mode',{exact:true}).selectOption(a.definition.mode);
  for(const key of ['radius','height','part'])await page.getByLabel('Action inputs definition '+key,{exact:true}).fill(String(a.definition[key]));
  for(const field of ['position','rotation'])for(const [axis,value] of Object.entries(a.definition[field]))await page.getByLabel('Action inputs definition '+field+' '+axis,{exact:true}).fill(String(value));
+ if('amountLitres' in a.definition){await page.getByLabel('Include Action inputs definition amountLitres',{exact:true}).check();await page.getByLabel('Action inputs definition amountLitres',{exact:true}).fill(String(a.definition.amountLitres));}
  await page.getByLabel('Action inputs definition enabled',{exact:true}).selectOption(String(a.definition.enabled));
  await page.getByLabel('Action inputs definition radius',{exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:resolve(out,'book-sculpt-tip-editor.png')});
  await page.getByRole('button',{name:'Run action now',exact:true}).click();await page.waitForFunction(()=>window.maestroPhysicalSculptRequests.some(r=>r.commands[0].action==='execution')&&!window.maestroPhysicalSculptSnapshot().request);

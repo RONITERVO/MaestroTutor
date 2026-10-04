@@ -203,6 +203,7 @@ namespace Maestro.Quest.Creation
             if(WriteGate.Frozen){error=Maestro.Quest.Persistence.WorkspaceWriteGate.FrozenReason;return false;}
             if(journal==null){error="Room editor is not ready";return false;}
             if(Liquids?.Owns(id)==true){error="Finish pouring or pause room physics before editing this container";return false;}
+            if(GetComponent<SpatialSculpting>()?.OwnsMaterial(id)==true){error="Finish or discard the material gesture before editing its carrier";return false;}
             if(storage.ReadOnly){error="This room was saved by a newer app and is read-only";return false;}
             var data=Read(id);var item=Find(id);
             if(data==null||!item){error="This object was removed; inspect the room first";return false;}
@@ -430,6 +431,7 @@ namespace Maestro.Quest.Creation
                 var liquid=item.GetComponent<ContainerFillView>();if(!liquid&&(data.containers?.Length??0)>0)liquid=item.gameObject.AddComponent<ContainerFillView>();if(liquid)liquid.Apply(data.containers);
                 var field=ApplyHeightFields(item,data.heightFields);
                 var sculpt=item.GetComponent<SculptTipView>();if(!sculpt&&(data.sculptTips?.Length??0)>0)sculpt=item.gameObject.AddComponent<SculptTipView>();if(sculpt)sculpt.Apply(this,data.id,data.sculptTips);
+                var materialContents=item.GetComponent<MaterialToolContentsView>();if(!materialContents&&data.sculptTips?.Any(t=>t.IsMaterial)==true)materialContents=item.gameObject.AddComponent<MaterialToolContentsView>();if(materialContents)materialContents.Apply(data.sculptTips?.FirstOrDefault(),data.materialStores?.FirstOrDefault());
                 item.GetComponent<CreatedRoomObject>()?.ApplyCollision(data.collision);
                 item.GetComponent<CreatedRoomObject>()?.SetCollisionShape(data.collisionShape,field!=null);
                 item.GetComponent<RigidRoomItem>()?.Configure(PhysicsWorld,data.physics,data.mass);

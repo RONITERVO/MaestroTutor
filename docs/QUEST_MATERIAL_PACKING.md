@@ -55,8 +55,8 @@ the book form; the feature is discoverable without adding a bespoke agent tool.
 
 Packing is an explicit authoring action at a requested room position. It does not
 move a shovel or avatar hand, check reach, automatically catch a throw, melt snow,
-mix materials, connect to liquid containers or simulate grains. Physical shovel
-capture and hand-packing gestures remain further work using this same component.
+mix materials, connect to liquid containers or simulate grains. Physical shovel capture is described below; hand-packing gestures remain further
+work using this same component.
 The completed ball can already be handled as an ordinary prop. Existing liquid
 containers still own their millilitre balance and cavity/pour geometry. A future
 shared scoop/pour adapter must select one authoritative balance and convert units
@@ -95,5 +95,49 @@ preserve both component types, so this adds no stored fields or migration. Featu
 `materialTransfer.v1`. Stores can belong to movable rigid objects, but this explicit
 authoring action requires both objects released. Fields remain fixed. Transferring
 contents does not change store geometry, world scale, mass or liquid-container
-balances. Physical shovel contact, carrying visuals and hand packing remain the
-next adapters over this shared operation; this action does not claim those gestures.
+balances. The physical scoop below adapts this same kernel for held contact and carrying
+visuals. Hand packing remains unfinished; the explicit action itself implies no gesture.
+
+
+## Physical material tools
+
+The version-2 `sculptTips` component adds `mode: scoop`, a requested
+`amountLitres` (0.001–20), and zero inactive shape height. It uses the carrier's
+ordinary `materialStores` component; matching material label and colour are
+required. No second inventory is maintained. Old raise/lower/level tips retain
+version 1, shape height and zero inactive quantity. The shared
+`object.sculptTip.edit` action configures both variants; `object.sculptTip`
+returns a fixed record with both parameters for programs.
+
+While the user or a program holds a tool, contact within 15 world millimetres of
+an accepted field starts one bounded transfer preview. The tip's local +Z is the
+opening normal: aligned with field-up by at least 0.6 takes material; aligned
+oppositely deposits it. Sideways contact does neither. Dragging or waiting cannot
+multiply the dose. Lift, contact loss or release commits both quantities with one
+save and Undo. Loose tools are inert. Contact uses the same solid obstruction
+checks as physical sculpting. Saved tip radius uses field-local metres; quantities
+remain local litres independent of scale or rigid-body mass.
+
+Visible field geometry and the carrier's bounded heap show the draft; collision
+continues to use accepted heights until publication. The heap is presentation,
+with no collider, per-grain physics, inferred density or airborne spilling. Its
+size indicates fraction of capacity, not a second measurement of material.
+`object.material.capture` exposes tool, field, direction and a `balance` record
+with saved/preview/requested/removed/added/rounding litres. The shared field
+capture exposes its one exact centre.
+
+Save failure, tracking/focus interruption and actor takeover retain the draft.
+`object.field.resolve` explicitly retries/discards that exact session; retries
+verify both original components, the tip and room session, and reacquire surface
+ownership. A retained draft prevents editing the carrier or switching workspaces.
+Moving a held carrier is allowed; successful publication saves its current pose.
+No interruption automatically repeats a transfer. Discard restores accepted
+visuals. Destroying the app loses an unsaved in-memory draft.
+
+The editable **Material scoop** template includes a handle/blade recipe, simple
+compound collision, a 0.25-litre store and a 0.25-litre scoop tip. Users can change
+those same components or add them to imported models. Room v18, paired snapshot
+v17 and archive v17 preserve the new semantics. Unknown newer components and
+uncertain prior snapshot evidence remain protected. Feature:
+`physicalMaterialTools.v1`. Native, shared-client and browser verification are
+recorded in the PR checkpoint; physical Quest acceptance remains pending.

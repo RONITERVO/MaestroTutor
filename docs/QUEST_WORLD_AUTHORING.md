@@ -351,9 +351,9 @@ Existing base collision remains independent and can obstruct an authored depress
 Room v15, paired snapshot v14 and archive v14 protect the source. Copying, captured
 prototypes, Undo and temporary rooms retain independent exact height arrays. The
 reported volume integrates the local mesh; it is an authoring measurement, not
-conserved snow. Sculpting can explicitly add/remove volume. Physical gestures are described below. Material scooping/packing, gravity flow,
-water behaviour and Quest performance remain unfinished. This component is not
-a fluid or granular solver.
+conserved snow. Sculpting can explicitly add/remove volume. Physical gestures are described below. The geometry component alone does not implement material scooping/packing,
+gravity flow or water behaviour. Later measured-material increments are described
+below; Quest performance remains unverified. This is not a fluid or granular solver.
 
 
 ### Physical sculpting and reusable tools (2026-10-04)
@@ -393,7 +393,8 @@ The physical tray's Retry/Discard controls use the same resolution path.
 Room v16, paired snapshot v15 and archive v15 preserve sculpt-tip source through
 copy, captured prototypes and workspace saves. The book and agent discover the
 same capability definitions, generated forms, feature requirements and facts.
-This does not implement material transfer/packing, granular snow or flowing water.
+The shape gesture does not itself transfer material. Later measured-material
+components are described below; granular snow and flowing water remain excluded.
 
 
 ## Shared surface transfer (2026-10-04)
@@ -405,9 +406,9 @@ reports measured source loss, destination gain and bounded rounding error; an
 unrepresentable transfer refuses. This extends authoring without another snow-only
 runtime or a hidden quantity ledger. See [surface transfer](QUEST_SURFACE_TRANSFER.md).
 
-Ordinary sculpting remains a deliberate shape edit. Physical shovel capture,
-carried snow, packing snowballs, persistent pools and real Quest profiling remain
-unfinished. The transfer action does not imply any of those outcomes.
+Ordinary sculpting remains a deliberate shape edit. The transfer action alone
+does not imply physical capture, carrying or packing. The later components below
+add those bounded behaviours; persistent pools and Quest profiling remain open.
 
 ## Measured carried material and packing (2026-10-04)
 
@@ -419,11 +420,11 @@ uses one save/Undo; failed saves and ownership/capacity refusals preserve the pa
 future scoops and vessels can retain the same quantity model. See
 [material packing](QUEST_MATERIAL_PACKING.md) for units, persistence and limits.
 
-The ball uses ordinary grabbing, release, gravity and collision. This increment
-does not add physical shovel capture or a hand-packing gesture. Those remain
-outstanding, alongside full-app Quest acceptance and release work. The latest
-format is room v17 with paired intent/archive v16; earlier checkpoints above retain
-their original format and evidence numbers.
+The ball uses ordinary grabbing, release, gravity and collision. Hand-packing
+gestures, full-app Quest acceptance and release work remain outstanding. The
+packing increment used room v17 with paired intent/archive v16; held material tools
+below use room v18 and paired intent/archive v17. Earlier checkpoints retain their
+original format and evidence numbers.
 
 ## Physical catching
 
@@ -434,3 +435,16 @@ remains available for human pickup/throw until contact. Per-channel/reflex owner
 ordinary physics and explicit missed/caught outcomes support user-authored games
 without giving the LLM responsibility for frame timing. See
 [physical catching](QUEST_PHYSICAL_CATCHING.md) for limits and acceptance boundaries.
+
+
+### Held material tools (2026-10-04)
+
+The shared transfer kernel now has a held contact adapter on the existing sculpt
+component. Users and Maestro can configure the same tip and material store on
+ordinary objects. One upward-facing contact previews a take; inverted contact
+previews a deposit. Lift publishes both balances once. A small carried heap uses
+the same accepted/draft quantity. Retained failures, ownership and explicit
+retry/discard reuse the existing surface capture lifecycle. The Material scoop
+template demonstrates these components; it adds no snow-specific scripting
+engine. See [the contract](QUEST_MATERIAL_PACKING.md#physical-material-tools).
+Full fluid/granular simulation and physical Quest acceptance remain separate.

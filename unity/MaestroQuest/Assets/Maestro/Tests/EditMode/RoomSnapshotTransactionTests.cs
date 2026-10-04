@@ -107,7 +107,7 @@ namespace Maestro.Quest.Tests
             Assert.That(RoomSnapshotTransaction.Capture(directory).Identity,Is.EqualTo(after.Identity));
         }
         [TestCase("room-snapshot.v17.json")][TestCase(RoomSnapshotTransaction.FileName+".snapshot.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")][TestCase("program-memory.v1.json.snapshot.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")]
-        [TestCase("room.v18.json")][TestCase("room.v18.json.backup")][TestCase(RoomStorage.FileName+".pending")]
+        [TestCase("room.v19.json")][TestCase("room.v19.json.backup")][TestCase(RoomStorage.FileName+".pending")]
         [TestCase("program-memory.v2.json")][TestCase("program-memory.v1.json.pending.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")]
         public void UnrecognizedOrStagedEvidenceIsPreserved(string name)
         {

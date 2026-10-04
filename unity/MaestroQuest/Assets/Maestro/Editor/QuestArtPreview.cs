@@ -53,6 +53,10 @@ namespace Maestro.Quest.Editor
                 camera=new GameObject("Template preview",typeof(Camera)).GetComponent<Camera>();camera.clearFlags=CameraClearFlags.SolidColor;camera.backgroundColor=new Color(.944f,.929f,.887f,1);camera.orthographic=true;camera.orthographicSize=radius*.72f;camera.nearClipPlane=.001f;
                 camera.transform.position=centre+(entry.Surfaces.Length>0?new Vector3(.5f,.4f,-1.8f):new Vector3(.7f,1.1f,1.8f))*radius;camera.transform.LookAt(centre);
                 Capture(camera,Path.Combine(output,"template-"+entry.Hash+".png"),512,512);
+                if(entry.SculptTips.FirstOrDefault()?.IsMaterial==true&&entry.MaterialStores.Length==1){
+                    var contents=entry.MaterialStores[0];contents.amountLitres=contents.capacityLitres;root.AddComponent<MaterialToolContentsView>().Apply(entry.SculptTips[0],contents);
+                    Capture(camera,Path.Combine(output,"material-tool-filled-"+entry.Hash+".png"),512,512);
+                }
                 if(entry.Surfaces.Length>0) {
                     var surfaces=entry.Surfaces;surfaces[0].strokes=new[]{new SurfaceStroke {id=new string('a',32),color=Color.white,radius=.006f,points=new[]{new Vector3(-.2f,0,0),new Vector3(0,.15f,0),new Vector3(.2f,0,0)}}};
                     root.AddComponent<DrawingSurfaceView>().Apply(surfaces);Capture(camera,Path.Combine(output,"surface-ink-unity.png"),1024,768);

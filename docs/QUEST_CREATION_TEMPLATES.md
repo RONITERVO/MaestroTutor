@@ -196,3 +196,13 @@ rather than silently flatten new appearance. The previous pawn was an unreleased
 starter: its current dimensions, neutral pigment and foot origin intentionally
 replace that draft; its content hash and native preview change. Existing expanded
 objects retain their copied source. Released definitions must remain immutable.
+
+
+## Measured scoop example
+
+**Material scoop** is the 25th editable template. Its handle and blade use ordinary
+recipe parts, two collision boxes and a 0.12 kg solid body. A 0.25-litre Snow
+store and version-2 scoop tip demonstrate the shared measured transfer kernel.
+Configure the same components through the generated action form or an agent task;
+contact uses the physical adapter described in [material tools](QUEST_MATERIAL_PACKING.md#physical-material-tools).
+It adds no dedicated shovel action, simulator or external generation dependency.

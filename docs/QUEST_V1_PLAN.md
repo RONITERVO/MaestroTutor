@@ -2,12 +2,12 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
-Measured material can now transfer between existing height fields and carried
-stores through one native capability, shared book form and program/agent path.
-Both endpoints use current revisions and one atomic save/Undo. This closes the
-balance bridge needed by a reusable shovel; physical contact/gesture adapters and
-carried-material visuals remain open. See
-[material transfers](QUEST_MATERIAL_PACKING.md#surface-and-carried-store-transfer).
+Physical material tools now adapt the shared field/store transfer kernel. The
+editable Material scoop takes one bounded dose on contact and deposits it when
+inverted, with a carried preview, one atomic save/Undo and explicit retained-draft
+recovery. The same saved tip is configurable from the book or agent. Device
+acceptance and hand packing remain open; see
+[physical material tools](QUEST_MATERIAL_PACKING.md#physical-material-tools).
 
 The original chat/Live handoff and result guidance now defer supported room work
 to the native catalog, including existing model/motion imports. System file choice
@@ -51,9 +51,9 @@ and construction capture preserve all three kinds. An editable spring-button mod
 uses ordinary recipes and condition waits for press/release. Saved snap points now
 support explicit construction placement or fixed joining with shared current
 revisions and one Undo; see QUEST_SNAP_POINTS.md. Physical grip snap previews
-and bounded liquid containers/pouring/vessel scooping now extend those components. Sculptable snow fields, measured snowball packing and 24 editable templates plus
+and bounded liquid containers/pouring/vessel scooping now extend those components. Sculptable snow fields, measured snowball packing and 25 editable templates plus
 seven reusable modules now cover part of the proposed kit. Persistent liquid fields,
-physical shovel/packing gestures and complete device acceptance remain unfinished.
+hand-packing gestures and complete device acceptance remain unfinished.
 See QUEST_RECIPE_AUTHORING.md and QUEST_NATIVE_ROOM_PROBE.md.
 
 The October 2 notebook scope and current review assessment are recorded in

@@ -9014,6 +9014,7 @@
                   "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18",
                   "9e6a5394252e6192cc5aaa18aa782d2d55e89c2180aa54325580308ce608d43c",
                   "2bad6cdc8c706a17ffee8926ef50ff3152d095f32566f2ab3489b3a6a069981f",
+                  "7e2d4e5a90a2d5408dc34766fde83249c9ae611b4bcad8b536a8b755fee69a6d",
                   "57489e508a5e05219e5f787c7c002dda1946e85704af0c0dc74984c10a56a382",
                   "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22",
                   "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316",
@@ -9040,6 +9041,7 @@
                   "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18": "Fork",
                   "9e6a5394252e6192cc5aaa18aa782d2d55e89c2180aa54325580308ce608d43c": "King",
                   "2bad6cdc8c706a17ffee8926ef50ff3152d095f32566f2ab3489b3a6a069981f": "Knight",
+                  "7e2d4e5a90a2d5408dc34766fde83249c9ae611b4bcad8b536a8b755fee69a6d": "Material scoop",
                   "57489e508a5e05219e5f787c7c002dda1946e85704af0c0dc74984c10a56a382": "Pawn",
                   "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22": "Pencil",
                   "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316": "Plate",
@@ -9066,6 +9068,7 @@
                   "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18": "quest/templates/3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18.png",
                   "9e6a5394252e6192cc5aaa18aa782d2d55e89c2180aa54325580308ce608d43c": "quest/templates/9e6a5394252e6192cc5aaa18aa782d2d55e89c2180aa54325580308ce608d43c.png",
                   "2bad6cdc8c706a17ffee8926ef50ff3152d095f32566f2ab3489b3a6a069981f": "quest/templates/2bad6cdc8c706a17ffee8926ef50ff3152d095f32566f2ab3489b3a6a069981f.png",
+                  "7e2d4e5a90a2d5408dc34766fde83249c9ae611b4bcad8b536a8b755fee69a6d": "quest/templates/7e2d4e5a90a2d5408dc34766fde83249c9ae611b4bcad8b536a8b755fee69a6d.png",
                   "57489e508a5e05219e5f787c7c002dda1946e85704af0c0dc74984c10a56a382": "quest/templates/57489e508a5e05219e5f787c7c002dda1946e85704af0c0dc74984c10a56a382.png",
                   "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22": "quest/templates/69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22.png",
                   "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316": "quest/templates/e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316.png",
@@ -9314,6 +9317,7 @@
                                 "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18",
                                 "9e6a5394252e6192cc5aaa18aa782d2d55e89c2180aa54325580308ce608d43c",
                                 "2bad6cdc8c706a17ffee8926ef50ff3152d095f32566f2ab3489b3a6a069981f",
+                                "7e2d4e5a90a2d5408dc34766fde83249c9ae611b4bcad8b536a8b755fee69a6d",
                                 "57489e508a5e05219e5f787c7c002dda1946e85704af0c0dc74984c10a56a382",
                                 "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22",
                                 "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316",
@@ -9340,6 +9344,7 @@
                                 "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18": "Fork",
                                 "9e6a5394252e6192cc5aaa18aa782d2d55e89c2180aa54325580308ce608d43c": "King",
                                 "2bad6cdc8c706a17ffee8926ef50ff3152d095f32566f2ab3489b3a6a069981f": "Knight",
+                                "7e2d4e5a90a2d5408dc34766fde83249c9ae611b4bcad8b536a8b755fee69a6d": "Material scoop",
                                 "57489e508a5e05219e5f787c7c002dda1946e85704af0c0dc74984c10a56a382": "Pawn",
                                 "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22": "Pencil",
                                 "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316": "Plate",
@@ -9366,6 +9371,7 @@
                                 "3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18": "quest/templates/3ec2c2a32055554e266dc6db35d54e7652d1650dbee620a68414c719bee3af18.png",
                                 "9e6a5394252e6192cc5aaa18aa782d2d55e89c2180aa54325580308ce608d43c": "quest/templates/9e6a5394252e6192cc5aaa18aa782d2d55e89c2180aa54325580308ce608d43c.png",
                                 "2bad6cdc8c706a17ffee8926ef50ff3152d095f32566f2ab3489b3a6a069981f": "quest/templates/2bad6cdc8c706a17ffee8926ef50ff3152d095f32566f2ab3489b3a6a069981f.png",
+                                "7e2d4e5a90a2d5408dc34766fde83249c9ae611b4bcad8b536a8b755fee69a6d": "quest/templates/7e2d4e5a90a2d5408dc34766fde83249c9ae611b4bcad8b536a8b755fee69a6d.png",
                                 "57489e508a5e05219e5f787c7c002dda1946e85704af0c0dc74984c10a56a382": "quest/templates/57489e508a5e05219e5f787c7c002dda1946e85704af0c0dc74984c10a56a382.png",
                                 "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22": "quest/templates/69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22.png",
                                 "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316": "quest/templates/e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316.png",
@@ -12921,112 +12927,240 @@
                                   "type": "array",
                                   "items": {
                                     "type": "object",
-                                    "properties": {
-                                      "part": {
-                                        "type": "string",
-                                        "pattern": "^[a-zA-Z0-9_]{0,32}$",
-                                        "maxLength": 32
-                                      },
-                                      "position": {
+                                    "x-discriminators": [
+                                      "mode"
+                                    ],
+                                    "oneOf": [
+                                      {
                                         "type": "object",
                                         "properties": {
-                                          "x": {
-                                            "type": "number",
-                                            "minimum": -10.0,
-                                            "maximum": 10.0
+                                          "part": {
+                                            "type": "string",
+                                            "pattern": "^[a-zA-Z0-9_]{0,32}$",
+                                            "maxLength": 32
                                           },
-                                          "y": {
-                                            "type": "number",
-                                            "minimum": -10.0,
-                                            "maximum": 10.0
+                                          "position": {
+                                            "type": "object",
+                                            "properties": {
+                                              "x": {
+                                                "type": "number",
+                                                "minimum": -10.0,
+                                                "maximum": 10.0
+                                              },
+                                              "y": {
+                                                "type": "number",
+                                                "minimum": -10.0,
+                                                "maximum": 10.0
+                                              },
+                                              "z": {
+                                                "type": "number",
+                                                "minimum": -10.0,
+                                                "maximum": 10.0
+                                              }
+                                            },
+                                            "required": [
+                                              "x",
+                                              "y",
+                                              "z"
+                                            ],
+                                            "additionalProperties": false
                                           },
-                                          "z": {
+                                          "rotation": {
+                                            "type": "object",
+                                            "properties": {
+                                              "x": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              },
+                                              "y": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              },
+                                              "z": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              },
+                                              "w": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              }
+                                            },
+                                            "required": [
+                                              "x",
+                                              "y",
+                                              "z",
+                                              "w"
+                                            ],
+                                            "additionalProperties": false,
+                                            "format": "unitQuaternion"
+                                          },
+                                          "mode": {
+                                            "type": "string",
+                                            "enum": [
+                                              "raise",
+                                              "lower",
+                                              "level"
+                                            ]
+                                          },
+                                          "radius": {
                                             "type": "number",
-                                            "minimum": -10.0,
-                                            "maximum": 10.0
+                                            "minimum": 0.005,
+                                            "maximum": 2.0
+                                          },
+                                          "enabled": {
+                                            "type": "boolean"
+                                          },
+                                          "height": {
+                                            "type": "number",
+                                            "minimum": 0.0,
+                                            "maximum": 0.5
+                                          },
+                                          "version": {
+                                            "type": "integer",
+                                            "minimum": 1.0,
+                                            "maximum": 1.0
+                                          },
+                                          "amountLitres": {
+                                            "type": "number",
+                                            "minimum": 0.0,
+                                            "maximum": 0.0
                                           }
                                         },
                                         "required": [
-                                          "x",
-                                          "y",
-                                          "z"
-                                        ],
-                                        "additionalProperties": false
-                                      },
-                                      "rotation": {
-                                        "type": "object",
-                                        "properties": {
-                                          "x": {
-                                            "type": "number",
-                                            "minimum": -1.0,
-                                            "maximum": 1.0
-                                          },
-                                          "y": {
-                                            "type": "number",
-                                            "minimum": -1.0,
-                                            "maximum": 1.0
-                                          },
-                                          "z": {
-                                            "type": "number",
-                                            "minimum": -1.0,
-                                            "maximum": 1.0
-                                          },
-                                          "w": {
-                                            "type": "number",
-                                            "minimum": -1.0,
-                                            "maximum": 1.0
-                                          }
-                                        },
-                                        "required": [
-                                          "x",
-                                          "y",
-                                          "z",
-                                          "w"
+                                          "part",
+                                          "position",
+                                          "rotation",
+                                          "mode",
+                                          "radius",
+                                          "enabled",
+                                          "height",
+                                          "version"
                                         ],
                                         "additionalProperties": false,
-                                        "format": "unitQuaternion"
-                                      },
-                                      "mode": {
-                                        "type": "string",
-                                        "enum": [
-                                          "raise",
-                                          "lower",
-                                          "level"
+                                        "format": "sculptTip",
+                                        "title": "Shape a surface",
+                                        "x-features": [
+                                          "physicalSculpting.v1"
                                         ]
                                       },
-                                      "radius": {
-                                        "type": "number",
-                                        "minimum": 0.005,
-                                        "maximum": 2.0
-                                      },
-                                      "height": {
-                                        "type": "number",
-                                        "minimum": 0.0,
-                                        "maximum": 0.5
-                                      },
-                                      "enabled": {
-                                        "type": "boolean"
-                                      },
-                                      "version": {
-                                        "type": "integer",
-                                        "minimum": 1.0,
-                                        "maximum": 1.0
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "part": {
+                                            "type": "string",
+                                            "pattern": "^[a-zA-Z0-9_]{0,32}$",
+                                            "maxLength": 32
+                                          },
+                                          "position": {
+                                            "type": "object",
+                                            "properties": {
+                                              "x": {
+                                                "type": "number",
+                                                "minimum": -10.0,
+                                                "maximum": 10.0
+                                              },
+                                              "y": {
+                                                "type": "number",
+                                                "minimum": -10.0,
+                                                "maximum": 10.0
+                                              },
+                                              "z": {
+                                                "type": "number",
+                                                "minimum": -10.0,
+                                                "maximum": 10.0
+                                              }
+                                            },
+                                            "required": [
+                                              "x",
+                                              "y",
+                                              "z"
+                                            ],
+                                            "additionalProperties": false
+                                          },
+                                          "rotation": {
+                                            "type": "object",
+                                            "properties": {
+                                              "x": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              },
+                                              "y": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              },
+                                              "z": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              },
+                                              "w": {
+                                                "type": "number",
+                                                "minimum": -1.0,
+                                                "maximum": 1.0
+                                              }
+                                            },
+                                            "required": [
+                                              "x",
+                                              "y",
+                                              "z",
+                                              "w"
+                                            ],
+                                            "additionalProperties": false,
+                                            "format": "unitQuaternion"
+                                          },
+                                          "mode": {
+                                            "type": "string",
+                                            "enum": [
+                                              "scoop"
+                                            ]
+                                          },
+                                          "radius": {
+                                            "type": "number",
+                                            "minimum": 0.005,
+                                            "maximum": 2.0
+                                          },
+                                          "enabled": {
+                                            "type": "boolean"
+                                          },
+                                          "amountLitres": {
+                                            "type": "number",
+                                            "minimum": 0.001,
+                                            "maximum": 20.0
+                                          },
+                                          "version": {
+                                            "type": "integer",
+                                            "minimum": 2.0,
+                                            "maximum": 2.0
+                                          },
+                                          "height": {
+                                            "type": "number",
+                                            "minimum": 0.0,
+                                            "maximum": 0.0
+                                          }
+                                        },
+                                        "required": [
+                                          "part",
+                                          "position",
+                                          "rotation",
+                                          "mode",
+                                          "radius",
+                                          "enabled",
+                                          "amountLitres",
+                                          "version"
+                                        ],
+                                        "additionalProperties": false,
+                                        "format": "sculptTip",
+                                        "title": "Scoop measured material",
+                                        "x-features": [
+                                          "physicalMaterialTools.v1"
+                                        ]
                                       }
-                                    },
-                                    "required": [
-                                      "part",
-                                      "position",
-                                      "rotation",
-                                      "mode",
-                                      "radius",
-                                      "height",
-                                      "enabled",
-                                      "version"
-                                    ],
-                                    "additionalProperties": false,
-                                    "format": "sculptTip",
-                                    "x-features": [
-                                      "physicalSculpting.v1"
                                     ]
                                   },
                                   "minItems": 0,
@@ -18071,104 +18205,226 @@
               },
               "definition": {
                 "type": "object",
-                "properties": {
-                  "part": {
-                    "type": "string",
-                    "pattern": "^[a-zA-Z0-9_]{0,32}$",
-                    "maxLength": 32
-                  },
-                  "position": {
+                "x-discriminators": [
+                  "mode"
+                ],
+                "oneOf": [
+                  {
                     "type": "object",
                     "properties": {
-                      "x": {
-                        "type": "number",
-                        "minimum": -10.0,
-                        "maximum": 10.0
+                      "part": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z0-9_]{0,32}$",
+                        "maxLength": 32
                       },
-                      "y": {
-                        "type": "number",
-                        "minimum": -10.0,
-                        "maximum": 10.0
+                      "position": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number",
+                            "minimum": -10.0,
+                            "maximum": 10.0
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": -10.0,
+                            "maximum": 10.0
+                          },
+                          "z": {
+                            "type": "number",
+                            "minimum": -10.0,
+                            "maximum": 10.0
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y",
+                          "z"
+                        ],
+                        "additionalProperties": false
                       },
-                      "z": {
+                      "rotation": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number",
+                            "minimum": -1.0,
+                            "maximum": 1.0
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": -1.0,
+                            "maximum": 1.0
+                          },
+                          "z": {
+                            "type": "number",
+                            "minimum": -1.0,
+                            "maximum": 1.0
+                          },
+                          "w": {
+                            "type": "number",
+                            "minimum": -1.0,
+                            "maximum": 1.0
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y",
+                          "z",
+                          "w"
+                        ],
+                        "additionalProperties": false,
+                        "format": "unitQuaternion"
+                      },
+                      "mode": {
+                        "type": "string",
+                        "enum": [
+                          "raise",
+                          "lower",
+                          "level"
+                        ]
+                      },
+                      "radius": {
                         "type": "number",
-                        "minimum": -10.0,
-                        "maximum": 10.0
+                        "minimum": 0.005,
+                        "maximum": 2.0
+                      },
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "height": {
+                        "type": "number",
+                        "minimum": 0.0,
+                        "maximum": 0.5
+                      },
+                      "amountLitres": {
+                        "type": "number",
+                        "minimum": 0.0,
+                        "maximum": 0.0
                       }
                     },
                     "required": [
-                      "x",
-                      "y",
-                      "z"
-                    ],
-                    "additionalProperties": false
-                  },
-                  "rotation": {
-                    "type": "object",
-                    "properties": {
-                      "x": {
-                        "type": "number",
-                        "minimum": -1.0,
-                        "maximum": 1.0
-                      },
-                      "y": {
-                        "type": "number",
-                        "minimum": -1.0,
-                        "maximum": 1.0
-                      },
-                      "z": {
-                        "type": "number",
-                        "minimum": -1.0,
-                        "maximum": 1.0
-                      },
-                      "w": {
-                        "type": "number",
-                        "minimum": -1.0,
-                        "maximum": 1.0
-                      }
-                    },
-                    "required": [
-                      "x",
-                      "y",
-                      "z",
-                      "w"
+                      "part",
+                      "position",
+                      "rotation",
+                      "mode",
+                      "radius",
+                      "enabled",
+                      "height"
                     ],
                     "additionalProperties": false,
-                    "format": "unitQuaternion"
+                    "format": "sculptTip",
+                    "title": "Shape a surface"
                   },
-                  "mode": {
-                    "type": "string",
-                    "enum": [
-                      "raise",
-                      "lower",
-                      "level"
+                  {
+                    "type": "object",
+                    "properties": {
+                      "part": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z0-9_]{0,32}$",
+                        "maxLength": 32
+                      },
+                      "position": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number",
+                            "minimum": -10.0,
+                            "maximum": 10.0
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": -10.0,
+                            "maximum": 10.0
+                          },
+                          "z": {
+                            "type": "number",
+                            "minimum": -10.0,
+                            "maximum": 10.0
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y",
+                          "z"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "rotation": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number",
+                            "minimum": -1.0,
+                            "maximum": 1.0
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": -1.0,
+                            "maximum": 1.0
+                          },
+                          "z": {
+                            "type": "number",
+                            "minimum": -1.0,
+                            "maximum": 1.0
+                          },
+                          "w": {
+                            "type": "number",
+                            "minimum": -1.0,
+                            "maximum": 1.0
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y",
+                          "z",
+                          "w"
+                        ],
+                        "additionalProperties": false,
+                        "format": "unitQuaternion"
+                      },
+                      "mode": {
+                        "type": "string",
+                        "enum": [
+                          "scoop"
+                        ]
+                      },
+                      "radius": {
+                        "type": "number",
+                        "minimum": 0.005,
+                        "maximum": 2.0
+                      },
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "amountLitres": {
+                        "type": "number",
+                        "minimum": 0.001,
+                        "maximum": 20.0
+                      },
+                      "height": {
+                        "type": "number",
+                        "minimum": 0.0,
+                        "maximum": 0.0
+                      }
+                    },
+                    "required": [
+                      "part",
+                      "position",
+                      "rotation",
+                      "mode",
+                      "radius",
+                      "enabled",
+                      "amountLitres"
+                    ],
+                    "additionalProperties": false,
+                    "format": "sculptTip",
+                    "title": "Scoop measured material",
+                    "x-features": [
+                      "physicalMaterialTools.v1"
                     ]
-                  },
-                  "radius": {
-                    "type": "number",
-                    "minimum": 0.005,
-                    "maximum": 2.0
-                  },
-                  "height": {
-                    "type": "number",
-                    "minimum": 0.0,
-                    "maximum": 0.5
-                  },
-                  "enabled": {
-                    "type": "boolean"
                   }
-                },
-                "required": [
-                  "part",
-                  "position",
-                  "rotation",
-                  "mode",
-                  "radius",
-                  "height",
-                  "enabled"
-                ],
-                "additionalProperties": false,
-                "format": "sculptTip"
+                ]
               }
             },
             "required": [
@@ -18259,7 +18515,7 @@
         "source.revision.current",
         "storage.writable"
       ],
-      "description": "Give a created/imported object one saved sculpt tip on its root (empty part) or a stable recipe part. Local +Z points toward the surface. The enabled tip works only while the user or Maestro holds it and it contacts the accepted top surface within one world centimetre. Loose objects are inert. Radius/height use the receiving field's local metres. Choose raise/lower/level; the same object.field.sculpt operation applies its swept path once, not per frame. Live previews change visible geometry only; release/contact loss publishes matching collision and source with one save/Undo. Physics keeps the accepted surface until then. At most 32 path samples; reaching the limit ends the gesture and requires separating the tool before another. Failed or interrupted saves retain the draft for explicit object.field.resolve retry/discard. Pause/tracking loss never retries automatically. Manual holding has control priority; Maestro-held tools use program priority and cannot take over a user's surface. Only one shared sculpt capture runs, and drawing and sculpt captures cannot overlap. Disable an object's drawing tip before enabling its sculpt tip. Copy/prototypes, saved/temporary rooms and archives retain the exact configuration. This is shape authoring, not conserved material or snow transfer.",
+      "description": "Give a created/imported object one saved sculpt tip on its root (empty part) or a stable recipe part. Local +Z points toward the surface. The enabled tip works only while the user or Maestro holds it and it contacts the accepted top surface within one world centimetre. Loose objects are inert. Radius/height use the receiving field's local metres. Choose raise/lower/level; the same object.field.sculpt operation applies its swept path once, not per frame. Live previews change visible geometry only; release/contact loss publishes matching collision and source with one save/Undo. Physics keeps the accepted surface until then. At most 32 path samples; reaching the limit ends the gesture and requires separating the tool before another. Failed or interrupted saves retain the draft for explicit object.field.resolve retry/discard. Pause/tracking loss never retries automatically. Manual holding has control priority; Maestro-held tools use program priority and cannot take over a user's surface. Only one shared sculpt capture runs, and drawing and sculpt captures cannot overlap. Disable an object's drawing tip before enabling its sculpt tip. Copy/prototypes, saved/temporary rooms and archives retain the exact configuration. Scoop mode uses a configured material store with the same material label and colour as the field. Its local +Z is the opening normal: face it up to take material or down to deposit. Touch within 15 mm, then lift to save one bounded amount (0.001–20 local litres); remaining capacity and available material limit it. Stationary contact and dragging never multiply the amount. Both the surface and carried balance publish in one save/Undo. The carried heap is a bounded visual; no loose grains or airborne spilling are simulated. Inspect object.material.capture for the exact preview and measured balance. Configure the store separately or create a template containing both components.",
       "example": {
         "operation": "configure",
         "target": "00000000000000000000000000000000",
@@ -18384,7 +18640,7 @@
         "sculpt.retained",
         "sculpt.session.current"
       ],
-      "description": "Read object.field.capture and resolve its exact retained sessionId. Retry uses the same frozen sampled path and object.field.sculpt evaluator, with one saved edit/Undo; the saved field must still match the original and ownership must be reacquired. Discard restores the accepted visual and removes only the in-memory draft. Collision has remained on the accepted mesh throughout preview. Changed/missing fields and a different room session refuse retry. A successful receipt cannot resolve a later draft. Active gestures cannot be resolved. Retained drafts block workspace/temporary-room changes; destroying the app/room loses unsaved memory. This does not enable a tool, start physics or play an animation.",
+      "description": "Read object.field.capture and resolve its exact retained sessionId. Retry uses the same frozen sampled path and object.field.sculpt evaluator, with one saved edit/Undo; the saved field must still match the original and ownership must be reacquired. Discard restores the accepted visual and removes only the in-memory draft. Collision has remained on the accepted mesh throughout preview. Changed/missing fields and a different room session refuse retry. A successful receipt cannot resolve a later draft. Active gestures cannot be resolved. Retained drafts block workspace/temporary-room changes; destroying the app/room loses unsaved memory. For a material scoop/deposit, retry instead publishes the frozen field and carrier balance together after verifying both originals and the saved tip. Both are restored by one Undo. Inspect object.material.capture for amounts. This does not enable a tool, start physics or play an animation.",
       "example": {
         "operation": "retry",
         "sessionId": "00000000000000000000000000000000"
@@ -29047,14 +29303,15 @@
               },
               "mode": "text",
               "radius": "number",
+              "enabled": "boolean",
               "height": "number",
-              "enabled": "boolean"
+              "amountLitres": "number"
             }
           }
         }
       },
       "label": "Object sculpt tip",
-      "description": "Saved sculpt-tip configuration and current object revision. Missing tips return inert editable defaults, configured=false. Reads never begin a gesture or modify geometry. Use object.field.capture for live/retained gestures.",
+      "description": "Saved sculpt-tip configuration and current object revision. Missing tips return inert editable defaults, configured=false. Shape modes have amountLitres=0; scoop has height=0. Reads never begin a gesture or modify geometry. Use object.field.capture for live/retained gestures.",
       "input": {
         "type": "object",
         "properties": {
@@ -29115,7 +29372,7 @@
         }
       },
       "label": "Physical sculpt draft",
-      "description": "Current shared sculpt gesture, target, brush settings, sampled point count and bounded error. Preview is visible only; collision/saved heights remain accepted. Unsaved needs explicit Retry/Discard. Read object.field.capture.path for exact points. Reads do not change the draft.",
+      "description": "Current shared shape or material gesture, field target, brush settings, sampled point count and bounded error. Material take/deposit has one point and zero height; inspect object.material.capture for quantities. Preview is visible only; collision/saved heights remain accepted. Unsaved needs explicit Retry/Discard. Read object.field.capture.path for exact points. Reads do not change the draft.",
       "features": [
         "physicalSculpting.v1"
       ]
@@ -29167,6 +29424,36 @@
       "features": [
         "factQueries.v1",
         "physicalSculpting.v1"
+      ]
+    },
+    {
+      "id": "object.material.capture",
+      "version": 1,
+      "type": {
+        "record": {
+          "sessionId": "text",
+          "phase": "text",
+          "tool": "text",
+          "field": "text",
+          "direction": "text",
+          "balance": {
+            "record": {
+              "requestedLitres": "number",
+              "savedLitres": "number",
+              "previewLitres": "number",
+              "removedLitres": "number",
+              "addedLitres": "number",
+              "roundingLitres": "number"
+            }
+          },
+          "temporary": "boolean",
+          "error": "text"
+        }
+      },
+      "label": "Physical material draft",
+      "description": "Current contact or retained measured scoop/deposit, exact session and both saved/preview carrier amounts. Field geometry and carried heap preview one bounded transfer. No volume is published until contact ends and one atomic save succeeds. Use object.field.resolve with this sessionId to retry/discard an interrupted draft; read object.field.capture.path for its one local centre. Reads do not begin, retry or repeat a gesture. Local litres do not imply world-space volume or rigid mass.",
+      "features": [
+        "physicalMaterialTools.v1"
       ]
     },
     {
@@ -32413,7 +32700,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "8f6619b64670560266af010285271ec03f603a8a7c0e09d8470b3d4e014ece25"
+      "sha256": "e5254a018aa0df2767b894b81aa0645a76adf7dd69a5701b8929e4584fc292d6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -32465,7 +32752,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "ce955f4de5ec4f6c757944de24d5254c7c427dca87a612b71e44dc39bd854a39"
+      "sha256": "6a8697decadf9a08775ff9570c472bc16519abe26c400bb8478b358f01cb7d22"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -32489,11 +32776,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "def0db367177e6fcee7f1890a91d6b65003157eadfd620402409b8e95f2bfbea"
+      "sha256": "6be6bcfd0b64e3e615634a0517f3c17c3a7a6fd4f94a2b66553f47c93a544127"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
-      "sha256": "c451ade294417638e9c3c12d3f2e851a63531dacc13357590eb8882644b4d4c5"
+      "sha256": "930ffc488d77e8b4de9df842e3c0d672b5d3a5207caf207164e8c7c07f545159"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleMemory.cs",
@@ -32737,7 +33024,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "03e6849e59357822b4ed89c78b0bf23e11175c8456da080629ffeb25e6121ff3"
+      "sha256": "fd3bb608bc24087be4d61cbe74c39302356da0da5878717fae59c376aa6cec4d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomToolTray.cs",
@@ -32833,15 +33120,27 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SpatialSculpting.cs",
-      "sha256": "51380893cbfeaeabf5298a546909bc5c56a682092b3ba14097c420246d24bf6b"
+      "sha256": "51c0aa2619c91b5393dd618a4db350871c585ce2f1886ed3824510e5eca3d863"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SpatialSculpting.Material.cs",
+      "sha256": "a3d22250389b0cfa3118cd14ee6d2081c426066c4e59be09fc1eb0ccac765333"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomMaterialScoop.cs",
+      "sha256": "f458635e2a099e935c0d7fe53c28c04a334eb84dd8548f8c78cb0fdd37104652"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/MaterialToolContentsView.cs",
+      "sha256": "6509c85f7652fe84d3980f469e7960fa5401c681419656c06caa583985294b65"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SculptTip.cs",
-      "sha256": "56331ada8f2e56da60c3636701323caec1d8eee51b867a245bf53eca6e49ea56"
+      "sha256": "b6de748d373f05713e69c128553f02f81362fbcb4287b70f0c384167613f192e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SculptTipView.cs",
-      "sha256": "3131cf7f8efda9305cb9e6450e7dba1ac3c69747544a803f65e618c8a5e00ff6"
+      "sha256": "d651c300b719d2946161d474b06b693704b76248b268db9850096f3ebbf6658c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomHeightFieldContact.cs",
@@ -32921,7 +33220,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "4444aa26950ddefbd7fe33653a069ae6e4f513644682f396b42a3e818682672b"
+      "sha256": "3faeaf87e96b49872fb6cd816115dd2f3f802dbea6da9e4d7f830571eab60d91"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedDrawing.cs",
@@ -33264,6 +33563,10 @@
       "sha256": "201d2d9de494d6308386d4cffca6f104d7bd1450dbec8ccd43021f9adad3b9bf"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/MaterialScoopFacts.cs",
+      "sha256": "d2f9a74b551dfb91c417f4a3fae0d89d15f70e0da6ffe3995f1f1c178cf8e00b"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/MaterialStoreCapability.cs",
       "sha256": "3c98d737037f81a50f3670a97f6e6027f9ae2c53986b984dea62d051261dd5f2"
     },
@@ -33289,7 +33592,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicalSculptCapability.cs",
-      "sha256": "fe0129556dbf525a344de8ec621947a058cd42cd8e84fd7039d0ca49414b0aa0"
+      "sha256": "a01b96779acd6695d5e29d90d253c7ef9492414777ee8f4564aa324656149522"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsSimulationCapability.cs",
@@ -33349,7 +33652,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SculptTipCapability.cs",
-      "sha256": "e46d0d162604c8ef7508338201a85aa0f8ae413f4fbb00b38036c4149b95e273"
+      "sha256": "96dc7328346ddd5ac0354c6c7fd731d9f8044eeae610ff1be785c300a109aa48"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SnapConstructionCapability.cs",
@@ -33478,6 +33781,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/knight.json",
       "sha256": "2bad6cdc8c706a17ffee8926ef50ff3152d095f32566f2ab3489b3a6a069981f"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/material-scoop.json",
+      "sha256": "7e2d4e5a90a2d5408dc34766fde83249c9ae611b4bcad8b536a8b755fee69a6d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/pawn.json",

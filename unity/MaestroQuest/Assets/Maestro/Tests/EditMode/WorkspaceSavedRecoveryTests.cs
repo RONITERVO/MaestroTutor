@@ -29,7 +29,7 @@ namespace Maestro.Quest.Tests
             ChangeSavedName(data,"Edited after preview");var selected=store.CommitDamagedRecovery(preview.Id,preview.Receipt.ManifestHash,origin,PreserveFor(preview,origin));
             Assert.That(selected.Active.ReviewRequired,Is.True);Assert.That(File.ReadAllText(Path.Combine(copied,RoomStorage.FileName)),Does.Contain("Saved after import"));Assert.That(File.ReadAllText(Path.Combine(data,RoomStorage.FileName)),Does.Contain("Edited after preview"));Assert.That(File.ReadAllBytes(Path.Combine(Generation(source.Id),"manifest.json")),Is.EqualTo(originalManifest));Assert.That(File.ReadAllText(Path.Combine(data,"private-receipts.json")),Is.EqualTo("Keep private history"));
         }
-        [TestCase(RoomStorage.FileName)] [TestCase("room.v18.json")] [TestCase("program-memory.v1.json.backup")] [TestCase("room-snapshot.v16.json")]
+        [TestCase(RoomStorage.FileName)] [TestCase("room.v19.json")] [TestCase("program-memory.v1.json.backup")] [TestCase("room-snapshot.v16.json")]
         public void SavedRecoveryNeverDefaultsDamagedMissingOrUnfinishedSavedContent(string name)
         {
             var source=Prepare();string data=Path.Combine(Generation(source.Id),"data"),path=Path.Combine(data,name);File.WriteAllText(path,"Preserve unavailable content");DamageSelection();string origin=DamageOrigin();

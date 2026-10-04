@@ -1983,3 +1983,21 @@ retained must refuse. This is an explicit action, not a physical hand-scoop or
 shovel gesture. Record frame time and interaction comfort alongside other active
 props; desktop tests do not establish headset acceptance. Headset work remains on
 hold until resumed by the user.
+
+
+### Physical material scoop — device acceptance pending
+
+Create a Snow patch and Material scoop. Grip the tool, face its opening up, touch
+the field and lift. Check that one bounded quantity leaves the field and appears
+on the blade. Holding contact still or dragging must not repeatedly fill it.
+Invert the tool, touch a different part of the field and lift to deposit. Inspect
+the shared material/capture facts and verify one Undo restores both sides.
+
+Repeat with controllers, tracked hands and a program-held tool. Check solid
+obstructions, a full store, an empty source and incompatible material. Loose
+contact must do nothing. Pause/lose tracking or take over a program-held tool
+mid-contact: no automatic save/restart; explicit Retry/Discard must affect only
+the retained session. Test save/reload and temporary-room discard. Check heap
+readability, orientation threshold, contact comfort and mesh/collider publication
+latency with other active objects. Desktop results do not establish these device
+outcomes. Headset work remains on hold.

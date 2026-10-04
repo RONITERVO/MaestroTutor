@@ -57,6 +57,10 @@ namespace Maestro.Quest.Tests
             var room=JsonUtility.FromJson<RoomDocument>(Encoding.UTF8.GetString(documents[RoomStorage.FileName]));var ball=new RoomObjectData{id=new string('d',32),kind=RoomObjectKind.Ball,materialStores=new[]{new RoomMaterialStore{capacityLitres=.5,amountLitres=.32123456789}}};room.objects=room.objects.Append(ball).ToArray();documents[RoomStorage.FileName]=Document(room);
             using var input=new MemoryStream(Archive());using var staged=WorkspaceArchive.Stage(input,directory);var restored=new RoomStorage(staged.DirectoryPath).Load(out var error);Assert.That(restored,Is.Not.Null,error);Assert.That(restored.objects.Single(o=>o.id==ball.id).materialStores[0].amountLitres,Is.EqualTo(.32123456789));
         }
+        [Test] public void MeasuredScoopAndItsCarriedContentsSurvivePortableArchive(){
+            var room=JsonUtility.FromJson<RoomDocument>(Encoding.UTF8.GetString(documents[RoomStorage.FileName]));var entry=CreationTemplates.All.Single(t=>t.Id=="material-scoop");var scoop=new RoomObjectData{id=new string('d',32),kind=RoomObjectKind.Assembly,recipe=entry.Recipe,sculptTips=entry.SculptTips,materialStores=entry.MaterialStores};scoop.materialStores[0].amountLitres=.12345;room.objects=room.objects.Append(scoop).ToArray();documents[RoomStorage.FileName]=Document(room);
+            using var input=new MemoryStream(Archive());using var staged=WorkspaceArchive.Stage(input,directory);var restored=new RoomStorage(staged.DirectoryPath).Load(out var error);Assert.That(restored,Is.Not.Null,error);var value=restored.objects.Single(o=>o.id==scoop.id);Assert.That(JsonUtility.ToJson(value.sculptTips[0]),Is.EqualTo(JsonUtility.ToJson(scoop.sculptTips[0])));Assert.That(value.materialStores[0].amountLitres,Is.EqualTo(.12345));
+        }
         [Test] public void IncludedModuleCopiesAndEmbeddedWatcherSurviveWithoutAnyInstalledDefaults()
         {
             var module=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Resources/Programs/Modules/StructureWatch.json")));string hash=ProgramModules.Hash(module);

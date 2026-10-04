@@ -1,10 +1,10 @@
 {
-  "boundary": "Real full-app shared-client/native sculpt-tip edit, settings, facts and Undo. Physical gestures are separate PlayMode tests; no headset/provider proof.",
+  "boundary": "Full native app template, shared sculpt-tip action, material/capture facts and Undo. Physical contact is separately verified in Unity PlayMode; no headset/provider proof.",
   "created": {
     "version": 1,
-    "revision": 251,
-    "sceneRevision": 44,
-    "ack": 103,
+    "revision": 283,
+    "sceneRevision": 48,
+    "ack": 116,
     "session": "981d3826b3de452fa7108b888a77d56c",
     "status": "Action completed",
     "selectedId": "9682a4123b6341dcad1d32069f8a5f84",
@@ -339,6 +339,33 @@
         "movement": null
       },
       {
+        "id": "b2ccf913f5594282af5551cd87ce3202",
+        "name": "Editable material scoop",
+        "kind": "Assembly",
+        "objectRevision": 49,
+        "position": {
+          "x": 0.30000001192092896,
+          "y": 1.2999999523162842,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.11999999731779099
+        },
+        "movement": null
+      },
+      {
         "id": "b646f9a9b06d47bd80ccad2189591242",
         "name": "Cylinder",
         "kind": "Cylinder",
@@ -389,33 +416,6 @@
           "mode": "fixed",
           "shape": "automatic",
           "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "f3b73cd371a741bf86105309bf1469c9",
-        "name": "Editable sculpt brush",
-        "kind": "Assembly",
-        "objectRevision": 46,
-        "position": {
-          "x": 0.30000001192092896,
-          "y": 1.2999999523162842,
-          "z": 0.6499999761581421
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "solid",
-          "shape": "automatic",
-          "mass": 0.05999999865889549
         },
         "movement": null
       },
@@ -474,82 +474,68 @@
     },
     "catalog": {
       "operation": "inspect",
-      "capability": "object.material",
+      "capability": "object.field.capture",
       "version": 1,
       "definition": {
-        "id": "object.material",
+        "id": "object.field.capture",
         "version": 1,
         "type": {
           "record": {
-            "revision": "number",
-            "configured": "boolean",
-            "definition": {
+            "sessionId": "text",
+            "phase": "text",
+            "target": "text",
+            "brush": {
               "record": {
-                "capacityLitres": "number",
-                "amountLitres": "number",
-                "material": "text",
-                "color": {
-                  "record": {
-                    "r": "number",
-                    "g": "number",
-                    "b": "number",
-                    "a": "number"
-                  }
-                }
+                "mode": "text",
+                "radius": "number",
+                "height": "number"
               }
-            }
+            },
+            "points": "number",
+            "temporary": "boolean",
+            "error": "text"
           }
         },
-        "label": "Measured carried material",
-        "description": "Saved logical local litres, capacity, material identity and colour. Quantity stays unchanged on resize and does not set mass or infer geometry. Missing stores return inert editable defaults with configured=false. Reading never creates material or starts simulation.",
-        "input": {
-          "type": "object",
-          "properties": {
-            "target": {
-              "type": "string",
-              "pattern": "^[a-fA-F0-9]{32}$",
-              "maxLength": 32,
-              "x-resource": "object"
-            }
-          },
-          "required": [
-            "target"
-          ],
-          "additionalProperties": false
-        },
-        "example": {
-          "target": "00000000000000000000000000000000"
-        },
+        "label": "Physical sculpt draft",
+        "description": "Current shared shape or material gesture, field target, brush settings, sampled point count and bounded error. Material take/deposit has one point and zero height; inspect object.material.capture for quantities. Preview is visible only; collision/saved heights remain accepted. Unsaved needs explicit Retry/Discard. Read object.field.capture.path for exact points. Reads do not change the draft.",
         "features": [
-          "factQueries.v1",
-          "materialStores.v1"
+          "physicalSculpting.v1"
         ]
       },
-      "status": "Fact value is currently unavailable; do not treat it as false or zero.",
+      "status": "Current fact value. Reading does not change the room.",
       "category": "facts",
-      "arguments": {
-        "target": "ef6bf19f81ba4de98e125dbd05a68eb9"
-      },
-      "available": false,
-      "value": null
+      "available": true,
+      "value": {
+        "sessionId": "585584e9b4f94511b1d07f01856ddbc7",
+        "phase": "idle",
+        "target": "",
+        "brush": {
+          "mode": "none",
+          "radius": 0,
+          "height": 0
+        },
+        "points": 0,
+        "temporary": false,
+        "error": ""
+      }
     },
     "execution": {
       "selected": {
-        "id": "5d50f6044ff146ee80c811459ecf537c",
+        "id": "3a39385063ac4b54abda7e1f0b88c709",
         "capability": "object.create",
         "version": 1,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "objectId": "f3b73cd371a741bf86105309bf1469c9"
+          "objectId": "b2ccf913f5594282af5551cd87ce3202"
         },
         "call": {
           "id": "object.create",
           "version": 1,
           "arguments": {
-            "templateHash": "b02ef81da57efdea6e530abe268e89caf7a38ecae739b43d1664c148dc11d42e",
-            "name": "Editable sculpt brush",
+            "templateHash": "7e2d4e5a90a2d5408dc34766fde83249c9ae611b4bcad8b536a8b755fee69a6d",
+            "name": "Editable material scoop",
             "x": 0.3,
             "y": 1.3,
             "z": 0.65,
@@ -560,68 +546,6 @@
       },
       "running": [],
       "outcomes": [
-        {
-          "id": "6065517dc0704e3a95b133f212cef735",
-          "capability": "object.recipe.edit",
-          "version": 1,
-          "resources": [
-            "c8343585366d42ed9f4d74303001f01f"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "c8343585366d42ed9f4d74303001f01f",
-            "revision": 15,
-            "parts": 1,
-            "tracks": 0,
-            "duration": 2,
-            "loop": false,
-            "playing": false,
-            "autoplay": false
-          }
-        },
-        {
-          "id": "e42d52c9ebdc4daf96c71c616f20d30a",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "cda8b314c677420787153262dff4d7ac"
-          }
-        },
-        {
-          "id": "62ae6ea773034294b484b6aab163fd6b",
-          "capability": "object.recipe.edit",
-          "version": 1,
-          "resources": [
-            "cda8b314c677420787153262dff4d7ac"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "cda8b314c677420787153262dff4d7ac",
-            "revision": 18,
-            "parts": 1,
-            "tracks": 0,
-            "duration": 2,
-            "loop": false,
-            "playing": false,
-            "autoplay": false
-          }
-        },
-        {
-          "id": "c6f5bd22bede4ed4985c25a3e3be6bcf",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "f742acd43a454d738677c3573f40f1aa"
-          }
-        },
         {
           "id": "e5673125b6f04d949b0449c979d30b14",
           "capability": "object.recipe.edit",
@@ -781,9 +705,46 @@
           "output": {
             "objectId": "f3b73cd371a741bf86105309bf1469c9"
           }
+        },
+        {
+          "id": "8b3aec428d0d45c9ac8499f8ef078743",
+          "capability": "object.sculptTip.edit",
+          "version": 1,
+          "resources": [
+            "f3b73cd371a741bf86105309bf1469c9"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "0054cd74bb6b4515b28c959b026b846b",
+          "capability": "field.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "0fff8c98dca24c64a65d55f0ead9f51a",
+          "capability": "field.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "3a39385063ac4b54abda7e1f0b88c709",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "b2ccf913f5594282af5551cd87ce3202"
+          }
         }
       ],
-      "nextRunId": "8b3aec428d0d45c9ac8499f8ef078743",
+      "nextRunId": "6000810a8f6043a6a974abd039b0b4f5",
       "storageError": null,
       "recovery": null,
       "workspace": {
@@ -798,9 +759,9 @@
   },
   "search": {
     "version": 1,
-    "revision": 255,
-    "sceneRevision": 44,
-    "ack": 104,
+    "revision": 285,
+    "sceneRevision": 48,
+    "ack": 117,
     "session": "981d3826b3de452fa7108b888a77d56c",
     "status": "Found 5 actions. Search does not run or enable anything.",
     "selectedId": "9682a4123b6341dcad1d32069f8a5f84",
@@ -1135,6 +1096,33 @@
         "movement": null
       },
       {
+        "id": "b2ccf913f5594282af5551cd87ce3202",
+        "name": "Editable material scoop",
+        "kind": "Assembly",
+        "objectRevision": 49,
+        "position": {
+          "x": 0.30000001192092896,
+          "y": 1.2999999523162842,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.11999999731779099
+        },
+        "movement": null
+      },
+      {
         "id": "b646f9a9b06d47bd80ccad2189591242",
         "name": "Cylinder",
         "kind": "Cylinder",
@@ -1185,33 +1173,6 @@
           "mode": "fixed",
           "shape": "automatic",
           "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "f3b73cd371a741bf86105309bf1469c9",
-        "name": "Editable sculpt brush",
-        "kind": "Assembly",
-        "objectRevision": 46,
-        "position": {
-          "x": 0.30000001192092896,
-          "y": 1.2999999523162842,
-          "z": 0.6499999761581421
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "solid",
-          "shape": "automatic",
-          "mass": 0.05999999865889549
         },
         "movement": null
       },
@@ -1305,21 +1266,21 @@
     },
     "execution": {
       "selected": {
-        "id": "5d50f6044ff146ee80c811459ecf537c",
+        "id": "3a39385063ac4b54abda7e1f0b88c709",
         "capability": "object.create",
         "version": 1,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "objectId": "f3b73cd371a741bf86105309bf1469c9"
+          "objectId": "b2ccf913f5594282af5551cd87ce3202"
         },
         "call": {
           "id": "object.create",
           "version": 1,
           "arguments": {
-            "templateHash": "b02ef81da57efdea6e530abe268e89caf7a38ecae739b43d1664c148dc11d42e",
-            "name": "Editable sculpt brush",
+            "templateHash": "7e2d4e5a90a2d5408dc34766fde83249c9ae611b4bcad8b536a8b755fee69a6d",
+            "name": "Editable material scoop",
             "x": 0.3,
             "y": 1.3,
             "z": 0.65,
@@ -1330,68 +1291,6 @@
       },
       "running": [],
       "outcomes": [
-        {
-          "id": "6065517dc0704e3a95b133f212cef735",
-          "capability": "object.recipe.edit",
-          "version": 1,
-          "resources": [
-            "c8343585366d42ed9f4d74303001f01f"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "c8343585366d42ed9f4d74303001f01f",
-            "revision": 15,
-            "parts": 1,
-            "tracks": 0,
-            "duration": 2,
-            "loop": false,
-            "playing": false,
-            "autoplay": false
-          }
-        },
-        {
-          "id": "e42d52c9ebdc4daf96c71c616f20d30a",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "cda8b314c677420787153262dff4d7ac"
-          }
-        },
-        {
-          "id": "62ae6ea773034294b484b6aab163fd6b",
-          "capability": "object.recipe.edit",
-          "version": 1,
-          "resources": [
-            "cda8b314c677420787153262dff4d7ac"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "cda8b314c677420787153262dff4d7ac",
-            "revision": 18,
-            "parts": 1,
-            "tracks": 0,
-            "duration": 2,
-            "loop": false,
-            "playing": false,
-            "autoplay": false
-          }
-        },
-        {
-          "id": "c6f5bd22bede4ed4985c25a3e3be6bcf",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "f742acd43a454d738677c3573f40f1aa"
-          }
-        },
         {
           "id": "e5673125b6f04d949b0449c979d30b14",
           "capability": "object.recipe.edit",
@@ -1551,9 +1450,46 @@
           "output": {
             "objectId": "f3b73cd371a741bf86105309bf1469c9"
           }
+        },
+        {
+          "id": "8b3aec428d0d45c9ac8499f8ef078743",
+          "capability": "object.sculptTip.edit",
+          "version": 1,
+          "resources": [
+            "f3b73cd371a741bf86105309bf1469c9"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "0054cd74bb6b4515b28c959b026b846b",
+          "capability": "field.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "0fff8c98dca24c64a65d55f0ead9f51a",
+          "capability": "field.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "3a39385063ac4b54abda7e1f0b88c709",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "b2ccf913f5594282af5551cd87ce3202"
+          }
         }
       ],
-      "nextRunId": "8b3aec428d0d45c9ac8499f8ef078743",
+      "nextRunId": "6000810a8f6043a6a974abd039b0b4f5",
       "storageError": null,
       "recovery": null,
       "workspace": {
@@ -1568,9 +1504,9 @@
   },
   "definition": {
     "version": 1,
-    "revision": 257,
-    "sceneRevision": 44,
-    "ack": 105,
+    "revision": 287,
+    "sceneRevision": 48,
+    "ack": 118,
     "session": "981d3826b3de452fa7108b888a77d56c",
     "status": "Action definition. Check concrete arguments before running it.",
     "selectedId": "9682a4123b6341dcad1d32069f8a5f84",
@@ -1905,6 +1841,33 @@
         "movement": null
       },
       {
+        "id": "b2ccf913f5594282af5551cd87ce3202",
+        "name": "Editable material scoop",
+        "kind": "Assembly",
+        "objectRevision": 49,
+        "position": {
+          "x": 0.30000001192092896,
+          "y": 1.2999999523162842,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.11999999731779099
+        },
+        "movement": null
+      },
+      {
         "id": "b646f9a9b06d47bd80ccad2189591242",
         "name": "Cylinder",
         "kind": "Cylinder",
@@ -1955,33 +1918,6 @@
           "mode": "fixed",
           "shape": "automatic",
           "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "f3b73cd371a741bf86105309bf1469c9",
-        "name": "Editable sculpt brush",
-        "kind": "Assembly",
-        "objectRevision": 46,
-        "position": {
-          "x": 0.30000001192092896,
-          "y": 1.2999999523162842,
-          "z": 0.6499999761581421
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "solid",
-          "shape": "automatic",
-          "mass": 0.05999999865889549
         },
         "movement": null
       },
@@ -2414,21 +2350,21 @@
     },
     "execution": {
       "selected": {
-        "id": "5d50f6044ff146ee80c811459ecf537c",
+        "id": "3a39385063ac4b54abda7e1f0b88c709",
         "capability": "object.create",
         "version": 1,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "objectId": "f3b73cd371a741bf86105309bf1469c9"
+          "objectId": "b2ccf913f5594282af5551cd87ce3202"
         },
         "call": {
           "id": "object.create",
           "version": 1,
           "arguments": {
-            "templateHash": "b02ef81da57efdea6e530abe268e89caf7a38ecae739b43d1664c148dc11d42e",
-            "name": "Editable sculpt brush",
+            "templateHash": "7e2d4e5a90a2d5408dc34766fde83249c9ae611b4bcad8b536a8b755fee69a6d",
+            "name": "Editable material scoop",
             "x": 0.3,
             "y": 1.3,
             "z": 0.65,
@@ -2439,68 +2375,6 @@
       },
       "running": [],
       "outcomes": [
-        {
-          "id": "6065517dc0704e3a95b133f212cef735",
-          "capability": "object.recipe.edit",
-          "version": 1,
-          "resources": [
-            "c8343585366d42ed9f4d74303001f01f"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "c8343585366d42ed9f4d74303001f01f",
-            "revision": 15,
-            "parts": 1,
-            "tracks": 0,
-            "duration": 2,
-            "loop": false,
-            "playing": false,
-            "autoplay": false
-          }
-        },
-        {
-          "id": "e42d52c9ebdc4daf96c71c616f20d30a",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "cda8b314c677420787153262dff4d7ac"
-          }
-        },
-        {
-          "id": "62ae6ea773034294b484b6aab163fd6b",
-          "capability": "object.recipe.edit",
-          "version": 1,
-          "resources": [
-            "cda8b314c677420787153262dff4d7ac"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "cda8b314c677420787153262dff4d7ac",
-            "revision": 18,
-            "parts": 1,
-            "tracks": 0,
-            "duration": 2,
-            "loop": false,
-            "playing": false,
-            "autoplay": false
-          }
-        },
-        {
-          "id": "c6f5bd22bede4ed4985c25a3e3be6bcf",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "f742acd43a454d738677c3573f40f1aa"
-          }
-        },
         {
           "id": "e5673125b6f04d949b0449c979d30b14",
           "capability": "object.recipe.edit",
@@ -2660,9 +2534,46 @@
           "output": {
             "objectId": "f3b73cd371a741bf86105309bf1469c9"
           }
+        },
+        {
+          "id": "8b3aec428d0d45c9ac8499f8ef078743",
+          "capability": "object.sculptTip.edit",
+          "version": 1,
+          "resources": [
+            "f3b73cd371a741bf86105309bf1469c9"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "0054cd74bb6b4515b28c959b026b846b",
+          "capability": "field.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "0fff8c98dca24c64a65d55f0ead9f51a",
+          "capability": "field.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "3a39385063ac4b54abda7e1f0b88c709",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "b2ccf913f5594282af5551cd87ce3202"
+          }
         }
       ],
-      "nextRunId": "8b3aec428d0d45c9ac8499f8ef078743",
+      "nextRunId": "6000810a8f6043a6a974abd039b0b4f5",
       "storageError": null,
       "recovery": null,
       "workspace": {
@@ -2677,9 +2588,9 @@
   },
   "before": {
     "version": 1,
-    "revision": 259,
-    "sceneRevision": 44,
-    "ack": 106,
+    "revision": 289,
+    "sceneRevision": 48,
+    "ack": 119,
     "session": "981d3826b3de452fa7108b888a77d56c",
     "status": "Current fact value. Reading does not change the room.",
     "selectedId": "9682a4123b6341dcad1d32069f8a5f84",
@@ -3014,6 +2925,33 @@
         "movement": null
       },
       {
+        "id": "b2ccf913f5594282af5551cd87ce3202",
+        "name": "Editable material scoop",
+        "kind": "Assembly",
+        "objectRevision": 49,
+        "position": {
+          "x": 0.30000001192092896,
+          "y": 1.2999999523162842,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.11999999731779099
+        },
+        "movement": null
+      },
+      {
         "id": "b646f9a9b06d47bd80ccad2189591242",
         "name": "Cylinder",
         "kind": "Cylinder",
@@ -3064,33 +3002,6 @@
           "mode": "fixed",
           "shape": "automatic",
           "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "f3b73cd371a741bf86105309bf1469c9",
-        "name": "Editable sculpt brush",
-        "kind": "Assembly",
-        "objectRevision": 46,
-        "position": {
-          "x": 0.30000001192092896,
-          "y": 1.2999999523162842,
-          "z": 0.6499999761581421
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "solid",
-          "shape": "automatic",
-          "mass": 0.05999999865889549
         },
         "movement": null
       },
@@ -3213,50 +3124,50 @@
       "status": "Current fact value. Reading does not change the room.",
       "category": "facts",
       "arguments": {
-        "target": "f3b73cd371a741bf86105309bf1469c9"
+        "target": "b2ccf913f5594282af5551cd87ce3202"
       },
       "available": true,
       "value": {
-        "revision": 46,
+        "revision": 49,
         "configured": true,
         "definition": {
           "part": "",
-          "mode": "lower",
+          "mode": "scoop",
           "position": {
             "x": 0,
-            "y": 0,
-            "z": 0.10999999940395355
+            "y": 0.007000000216066837,
+            "z": 0.09000000357627869
           },
           "rotation": {
-            "x": 0,
+            "x": -0.7071067690849304,
             "y": 0,
             "z": 0,
-            "w": 1
+            "w": 0.7071067690849304
           },
           "radius": 0.07999999821186066,
-          "height": 0.029999999329447746,
-          "amountLitres": 0,
+          "height": 0,
+          "amountLitres": 0.25,
           "enabled": true
         }
       }
     },
     "execution": {
       "selected": {
-        "id": "5d50f6044ff146ee80c811459ecf537c",
+        "id": "3a39385063ac4b54abda7e1f0b88c709",
         "capability": "object.create",
         "version": 1,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "objectId": "f3b73cd371a741bf86105309bf1469c9"
+          "objectId": "b2ccf913f5594282af5551cd87ce3202"
         },
         "call": {
           "id": "object.create",
           "version": 1,
           "arguments": {
-            "templateHash": "b02ef81da57efdea6e530abe268e89caf7a38ecae739b43d1664c148dc11d42e",
-            "name": "Editable sculpt brush",
+            "templateHash": "7e2d4e5a90a2d5408dc34766fde83249c9ae611b4bcad8b536a8b755fee69a6d",
+            "name": "Editable material scoop",
             "x": 0.3,
             "y": 1.3,
             "z": 0.65,
@@ -3267,68 +3178,6 @@
       },
       "running": [],
       "outcomes": [
-        {
-          "id": "6065517dc0704e3a95b133f212cef735",
-          "capability": "object.recipe.edit",
-          "version": 1,
-          "resources": [
-            "c8343585366d42ed9f4d74303001f01f"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "c8343585366d42ed9f4d74303001f01f",
-            "revision": 15,
-            "parts": 1,
-            "tracks": 0,
-            "duration": 2,
-            "loop": false,
-            "playing": false,
-            "autoplay": false
-          }
-        },
-        {
-          "id": "e42d52c9ebdc4daf96c71c616f20d30a",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "cda8b314c677420787153262dff4d7ac"
-          }
-        },
-        {
-          "id": "62ae6ea773034294b484b6aab163fd6b",
-          "capability": "object.recipe.edit",
-          "version": 1,
-          "resources": [
-            "cda8b314c677420787153262dff4d7ac"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "cda8b314c677420787153262dff4d7ac",
-            "revision": 18,
-            "parts": 1,
-            "tracks": 0,
-            "duration": 2,
-            "loop": false,
-            "playing": false,
-            "autoplay": false
-          }
-        },
-        {
-          "id": "c6f5bd22bede4ed4985c25a3e3be6bcf",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "f742acd43a454d738677c3573f40f1aa"
-          }
-        },
         {
           "id": "e5673125b6f04d949b0449c979d30b14",
           "capability": "object.recipe.edit",
@@ -3488,9 +3337,46 @@
           "output": {
             "objectId": "f3b73cd371a741bf86105309bf1469c9"
           }
+        },
+        {
+          "id": "8b3aec428d0d45c9ac8499f8ef078743",
+          "capability": "object.sculptTip.edit",
+          "version": 1,
+          "resources": [
+            "f3b73cd371a741bf86105309bf1469c9"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "0054cd74bb6b4515b28c959b026b846b",
+          "capability": "field.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "0fff8c98dca24c64a65d55f0ead9f51a",
+          "capability": "field.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "3a39385063ac4b54abda7e1f0b88c709",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "b2ccf913f5594282af5551cd87ce3202"
+          }
         }
       ],
-      "nextRunId": "8b3aec428d0d45c9ac8499f8ef078743",
+      "nextRunId": "6000810a8f6043a6a974abd039b0b4f5",
       "storageError": null,
       "recovery": null,
       "workspace": {
@@ -3503,11 +3389,39 @@
       }
     }
   },
+  "call": {
+    "id": "object.sculptTip.edit",
+    "version": 1,
+    "arguments": {
+      "operation": "configure",
+      "target": "b2ccf913f5594282af5551cd87ce3202",
+      "revision": 49,
+      "definition": {
+        "part": "",
+        "mode": "scoop",
+        "position": {
+          "x": 0,
+          "y": 0.007000000216066837,
+          "z": 0.09000000357627869
+        },
+        "rotation": {
+          "x": -0.7071067690849304,
+          "y": 0,
+          "z": 0,
+          "w": 0.7071067690849304
+        },
+        "radius": 0.12,
+        "height": 0,
+        "amountLitres": 0.1,
+        "enabled": true
+      }
+    }
+  },
   "after": {
     "version": 1,
-    "revision": 261,
-    "sceneRevision": 45,
-    "ack": 107,
+    "revision": 293,
+    "sceneRevision": 49,
+    "ack": 120,
     "session": "981d3826b3de452fa7108b888a77d56c",
     "status": "Action completed",
     "selectedId": "9682a4123b6341dcad1d32069f8a5f84",
@@ -3842,6 +3756,33 @@
         "movement": null
       },
       {
+        "id": "b2ccf913f5594282af5551cd87ce3202",
+        "name": "Editable material scoop",
+        "kind": "Assembly",
+        "objectRevision": 50,
+        "position": {
+          "x": 0.30000001192092896,
+          "y": 1.2999999523162842,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.11999999731779099
+        },
+        "movement": null
+      },
+      {
         "id": "b646f9a9b06d47bd80ccad2189591242",
         "name": "Cylinder",
         "kind": "Cylinder",
@@ -3892,33 +3833,6 @@
           "mode": "fixed",
           "shape": "automatic",
           "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "f3b73cd371a741bf86105309bf1469c9",
-        "name": "Editable sculpt brush",
-        "kind": "Assembly",
-        "objectRevision": 47,
-        "position": {
-          "x": 0.30000001192092896,
-          "y": 1.2999999523162842,
-          "z": 0.6499999761581421
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "solid",
-          "shape": "automatic",
-          "mass": 0.05999999865889549
         },
         "movement": null
       },
@@ -4041,40 +3955,40 @@
       "status": "Current fact value. Reading does not change the room.",
       "category": "facts",
       "arguments": {
-        "target": "f3b73cd371a741bf86105309bf1469c9"
+        "target": "b2ccf913f5594282af5551cd87ce3202"
       },
       "available": true,
       "value": {
-        "revision": 47,
+        "revision": 50,
         "configured": true,
         "definition": {
           "part": "",
-          "mode": "level",
+          "mode": "scoop",
           "position": {
             "x": 0,
-            "y": 0,
-            "z": 0.10999999940395355
+            "y": 0.007000000216066837,
+            "z": 0.09000000357627869
           },
           "rotation": {
-            "x": 0,
+            "x": -0.7071067690849304,
             "y": 0,
             "z": 0,
-            "w": 1
+            "w": 0.7071067690849304
           },
-          "radius": 0.10000000149011612,
-          "height": 0.11999999731779099,
-          "amountLitres": 0,
+          "radius": 0.11999999731779099,
+          "height": 0,
+          "amountLitres": 0.1,
           "enabled": true
         }
       }
     },
     "execution": {
       "selected": {
-        "id": "8b3aec428d0d45c9ac8499f8ef078743",
+        "id": "6000810a8f6043a6a974abd039b0b4f5",
         "capability": "object.sculptTip.edit",
         "version": 1,
         "resources": [
-          "f3b73cd371a741bf86105309bf1469c9"
+          "b2ccf913f5594282af5551cd87ce3202"
         ],
         "phase": "completed",
         "status": "Action completed",
@@ -4083,25 +3997,25 @@
           "version": 1,
           "arguments": {
             "operation": "configure",
-            "target": "f3b73cd371a741bf86105309bf1469c9",
-            "revision": 46,
+            "target": "b2ccf913f5594282af5551cd87ce3202",
+            "revision": 49,
             "definition": {
               "part": "",
-              "mode": "level",
+              "mode": "scoop",
               "position": {
                 "x": 0,
-                "y": 0,
-                "z": 0.10999999940395355
+                "y": 0.007000000216066837,
+                "z": 0.09000000357627869
               },
               "rotation": {
-                "x": 0,
+                "x": -0.7071067690849304,
                 "y": 0,
                 "z": 0,
-                "w": 1
+                "w": 0.7071067690849304
               },
-              "radius": 0.1,
-              "height": 0.12,
-              "amountLitres": 0,
+              "radius": 0.12,
+              "height": 0,
+              "amountLitres": 0.1,
               "enabled": true
             }
           }
@@ -4109,68 +4023,6 @@
       },
       "running": [],
       "outcomes": [
-        {
-          "id": "e42d52c9ebdc4daf96c71c616f20d30a",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "cda8b314c677420787153262dff4d7ac"
-          }
-        },
-        {
-          "id": "62ae6ea773034294b484b6aab163fd6b",
-          "capability": "object.recipe.edit",
-          "version": 1,
-          "resources": [
-            "cda8b314c677420787153262dff4d7ac"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "cda8b314c677420787153262dff4d7ac",
-            "revision": 18,
-            "parts": 1,
-            "tracks": 0,
-            "duration": 2,
-            "loop": false,
-            "playing": false,
-            "autoplay": false
-          }
-        },
-        {
-          "id": "c6f5bd22bede4ed4985c25a3e3be6bcf",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "f742acd43a454d738677c3573f40f1aa"
-          }
-        },
-        {
-          "id": "e5673125b6f04d949b0449c979d30b14",
-          "capability": "object.recipe.edit",
-          "version": 1,
-          "resources": [
-            "f742acd43a454d738677c3573f40f1aa"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "f742acd43a454d738677c3573f40f1aa",
-            "revision": 21,
-            "parts": 1,
-            "tracks": 0,
-            "duration": 2,
-            "loop": false,
-            "playing": false,
-            "autoplay": false
-          }
-        },
         {
           "id": "b66a42a54dc0436b82982de6882e9bcb",
           "capability": "object.create",
@@ -4320,9 +4172,46 @@
           ],
           "phase": "completed",
           "status": "Action completed"
+        },
+        {
+          "id": "0054cd74bb6b4515b28c959b026b846b",
+          "capability": "field.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "0fff8c98dca24c64a65d55f0ead9f51a",
+          "capability": "field.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "3a39385063ac4b54abda7e1f0b88c709",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "b2ccf913f5594282af5551cd87ce3202"
+          }
+        },
+        {
+          "id": "6000810a8f6043a6a974abd039b0b4f5",
+          "capability": "object.sculptTip.edit",
+          "version": 1,
+          "resources": [
+            "b2ccf913f5594282af5551cd87ce3202"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
         }
       ],
-      "nextRunId": "0054cd74bb6b4515b28c959b026b846b",
+      "nextRunId": "e1ad970340954d5bb1f9f3db8cd5d345",
       "storageError": null,
       "recovery": null,
       "workspace": {
@@ -4337,9 +4226,9 @@
   },
   "read": {
     "version": 1,
-    "revision": 263,
-    "sceneRevision": 45,
-    "ack": 108,
+    "revision": 295,
+    "sceneRevision": 49,
+    "ack": 121,
     "session": "981d3826b3de452fa7108b888a77d56c",
     "status": "Current fact value. Reading does not change the room.",
     "selectedId": "9682a4123b6341dcad1d32069f8a5f84",
@@ -4674,6 +4563,33 @@
         "movement": null
       },
       {
+        "id": "b2ccf913f5594282af5551cd87ce3202",
+        "name": "Editable material scoop",
+        "kind": "Assembly",
+        "objectRevision": 50,
+        "position": {
+          "x": 0.30000001192092896,
+          "y": 1.2999999523162842,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.11999999731779099
+        },
+        "movement": null
+      },
+      {
         "id": "b646f9a9b06d47bd80ccad2189591242",
         "name": "Cylinder",
         "kind": "Cylinder",
@@ -4724,33 +4640,6 @@
           "mode": "fixed",
           "shape": "automatic",
           "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "f3b73cd371a741bf86105309bf1469c9",
-        "name": "Editable sculpt brush",
-        "kind": "Assembly",
-        "objectRevision": 47,
-        "position": {
-          "x": 0.30000001192092896,
-          "y": 1.2999999523162842,
-          "z": 0.6499999761581421
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "solid",
-          "shape": "automatic",
-          "mass": 0.05999999865889549
         },
         "movement": null
       },
@@ -4873,40 +4762,40 @@
       "status": "Current fact value. Reading does not change the room.",
       "category": "facts",
       "arguments": {
-        "target": "f3b73cd371a741bf86105309bf1469c9"
+        "target": "b2ccf913f5594282af5551cd87ce3202"
       },
       "available": true,
       "value": {
-        "revision": 47,
+        "revision": 50,
         "configured": true,
         "definition": {
           "part": "",
-          "mode": "level",
+          "mode": "scoop",
           "position": {
             "x": 0,
-            "y": 0,
-            "z": 0.10999999940395355
+            "y": 0.007000000216066837,
+            "z": 0.09000000357627869
           },
           "rotation": {
-            "x": 0,
+            "x": -0.7071067690849304,
             "y": 0,
             "z": 0,
-            "w": 1
+            "w": 0.7071067690849304
           },
-          "radius": 0.10000000149011612,
-          "height": 0.11999999731779099,
-          "amountLitres": 0,
+          "radius": 0.11999999731779099,
+          "height": 0,
+          "amountLitres": 0.1,
           "enabled": true
         }
       }
     },
     "execution": {
       "selected": {
-        "id": "8b3aec428d0d45c9ac8499f8ef078743",
+        "id": "6000810a8f6043a6a974abd039b0b4f5",
         "capability": "object.sculptTip.edit",
         "version": 1,
         "resources": [
-          "f3b73cd371a741bf86105309bf1469c9"
+          "b2ccf913f5594282af5551cd87ce3202"
         ],
         "phase": "completed",
         "status": "Action completed",
@@ -4915,25 +4804,25 @@
           "version": 1,
           "arguments": {
             "operation": "configure",
-            "target": "f3b73cd371a741bf86105309bf1469c9",
-            "revision": 46,
+            "target": "b2ccf913f5594282af5551cd87ce3202",
+            "revision": 49,
             "definition": {
               "part": "",
-              "mode": "level",
+              "mode": "scoop",
               "position": {
                 "x": 0,
-                "y": 0,
-                "z": 0.10999999940395355
+                "y": 0.007000000216066837,
+                "z": 0.09000000357627869
               },
               "rotation": {
-                "x": 0,
+                "x": -0.7071067690849304,
                 "y": 0,
                 "z": 0,
-                "w": 1
+                "w": 0.7071067690849304
               },
-              "radius": 0.1,
-              "height": 0.12,
-              "amountLitres": 0,
+              "radius": 0.12,
+              "height": 0,
+              "amountLitres": 0.1,
               "enabled": true
             }
           }
@@ -4941,68 +4830,6 @@
       },
       "running": [],
       "outcomes": [
-        {
-          "id": "e42d52c9ebdc4daf96c71c616f20d30a",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "cda8b314c677420787153262dff4d7ac"
-          }
-        },
-        {
-          "id": "62ae6ea773034294b484b6aab163fd6b",
-          "capability": "object.recipe.edit",
-          "version": 1,
-          "resources": [
-            "cda8b314c677420787153262dff4d7ac"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "cda8b314c677420787153262dff4d7ac",
-            "revision": 18,
-            "parts": 1,
-            "tracks": 0,
-            "duration": 2,
-            "loop": false,
-            "playing": false,
-            "autoplay": false
-          }
-        },
-        {
-          "id": "c6f5bd22bede4ed4985c25a3e3be6bcf",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "f742acd43a454d738677c3573f40f1aa"
-          }
-        },
-        {
-          "id": "e5673125b6f04d949b0449c979d30b14",
-          "capability": "object.recipe.edit",
-          "version": 1,
-          "resources": [
-            "f742acd43a454d738677c3573f40f1aa"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "f742acd43a454d738677c3573f40f1aa",
-            "revision": 21,
-            "parts": 1,
-            "tracks": 0,
-            "duration": 2,
-            "loop": false,
-            "playing": false,
-            "autoplay": false
-          }
-        },
         {
           "id": "b66a42a54dc0436b82982de6882e9bcb",
           "capability": "object.create",
@@ -5152,9 +4979,1604 @@
           ],
           "phase": "completed",
           "status": "Action completed"
+        },
+        {
+          "id": "0054cd74bb6b4515b28c959b026b846b",
+          "capability": "field.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "0fff8c98dca24c64a65d55f0ead9f51a",
+          "capability": "field.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "3a39385063ac4b54abda7e1f0b88c709",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "b2ccf913f5594282af5551cd87ce3202"
+          }
+        },
+        {
+          "id": "6000810a8f6043a6a974abd039b0b4f5",
+          "capability": "object.sculptTip.edit",
+          "version": 1,
+          "resources": [
+            "b2ccf913f5594282af5551cd87ce3202"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
         }
       ],
-      "nextRunId": "0054cd74bb6b4515b28c959b026b846b",
+      "nextRunId": "e1ad970340954d5bb1f9f3db8cd5d345",
+      "storageError": null,
+      "recovery": null,
+      "workspace": {
+        "selected": null,
+        "running": [],
+        "outcomes": [],
+        "nextRunId": "0a61eaa83b0c4ca58121b71455b1e391",
+        "storageError": null,
+        "recovery": null
+      }
+    }
+  },
+  "store": {
+    "version": 1,
+    "revision": 297,
+    "sceneRevision": 49,
+    "ack": 122,
+    "session": "981d3826b3de452fa7108b888a77d56c",
+    "status": "Current fact value. Reading does not change the room.",
+    "selectedId": "9682a4123b6341dcad1d32069f8a5f84",
+    "ok": true,
+    "canUndo": true,
+    "canRedo": false,
+    "physicsRunning": false,
+    "visible": false,
+    "inspection": null,
+    "constructionSelection": {
+      "stateId": "9cca08000f76451f81a32dbfa9e51639",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "9cca08000f76451f81a32dbfa9e51639",
+      "error": "",
+      "visible": false,
+      "holding": false
+    },
+    "workspaceView": "objects",
+    "rules": {
+      "revision": 1,
+      "bindingPage": 0,
+      "bindingCount": 0,
+      "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
+      "canUndo": false,
+      "canRedo": false,
+      "readOnly": false,
+      "status": "Create an action sequence, then add triggers or buttons",
+      "selectedError": "",
+      "sequences": [],
+      "selected": null,
+      "memory": null,
+      "bindings": [],
+      "buttons": [],
+      "running": [],
+      "outcomes": []
+    },
+    "motions": null,
+    "capabilities": [
+      "physicsSettings.v1",
+      "avatarSettings.v1",
+      "physicsRun.v1",
+      "avatarMotion.v1",
+      "avatarWalk.v1",
+      "motions.v1",
+      "avatarActivities.v1",
+      "catalog.v1",
+      "catalogVocabulary.v1",
+      "roomOwnership.v1",
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "eventFields.v1",
+      "eventSubscriptions.v1",
+      "factQueries.v1",
+      "conditionWaits.v1",
+      "parallelPrograms.v1",
+      "rememberedVariables.v1",
+      "temporaryMemory.v1",
+      "structuredValues.v1",
+      "programModules.v1",
+      "moduleLibrary.v1",
+      "moduleLibraryFiles.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
+      "objectEdits.v1",
+      "objectCopy.v1",
+      "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "curvedDrawingSurfaces.v1",
+      "drawingTips.v1",
+      "drawingErasers.v1",
+      "containers.v1",
+      "heightFields.v1",
+      "heightFieldTransfer.v1",
+      "materialStores.v1",
+      "materialTransfer.v1",
+      "materialPacking.v1",
+      "physicalSculpting.v1",
+      "physicalMaterialTools.v1",
+      "containerPouring.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
+      "recipeEdits.v1",
+      "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "recipePatterns.v1",
+      "roomViewCapture.v1",
+      "collisionShapes.v1",
+      "recipePartPlayback.v1",
+      "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
+      "objectLaunch.v1",
+      "physicalCatching.v1",
+      "calendarSchedules.v1",
+      "animationAuthoring.v1",
+      "animationRecording.v1",
+      "animationPosing.v1",
+      "avatarModels.v1",
+      "modelImport.v1",
+      "modelArchiveImport.v1",
+      "motionBatchImport.v1",
+      "includedMotions.v1",
+      "authoredMotion.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1",
+      "temporaryRoom.v1",
+      "spatialSettings.v1",
+      "physicsSimulation.v1",
+      "roomEnvironment.v1",
+      "surfacePlacement.v1",
+      "controllerConfiguration.v1",
+      "controllerModes.v1",
+      "runtimeDiagnostics.v1",
+      "workspaceMaintenance.v1",
+      "workspaceArchiveActivation.v1",
+      "workspaceReview.v1",
+      "workspacePrevious.v1",
+      "workspaceRecovery.v1",
+      "workspaceSavedRecovery.v1",
+      "workspaceHistory.v1",
+      "workspaceEvidence.v1",
+      "workspaceRetention.v1",
+      "workspaceDisposal.v1"
+    ],
+    "physics": {
+      "ready": true,
+      "running": false,
+      "status": "Probe-only synthetic floor; no real scan or alignment proof"
+    },
+    "temporaryRoom": {
+      "active": false,
+      "pending": false,
+      "id": "22885dab7950408aa37ce23773e9ac40",
+      "saveId": "",
+      "phase": "idle",
+      "error": "",
+      "savedRevision": 0
+    },
+    "ownership": {
+      "suspended": false,
+      "error": "",
+      "owners": [
+        {
+          "id": "ambient:maestro",
+          "label": "Maestro tutor activity",
+          "role": "ambient",
+          "allowsGrab": false,
+          "claims": [
+            {
+              "target": "maestro",
+              "channel": "wholeTarget"
+            }
+          ]
+        }
+      ]
+    },
+    "avatar": {
+      "active": false,
+      "canLook": true,
+      "canFollow": false,
+      "mode": "stopped",
+      "status": "Choose Look at me or Follow me",
+      "lookReason": "",
+      "followReason": "Load the room, check its alignment, then Start physics before walking",
+      "distance": 1.3,
+      "speed": 0.65
+    },
+    "walk": {
+      "source": "embedded",
+      "motionId": "",
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "name": "Walking",
+      "status": "Embedded walking clip is available",
+      "playbackStatus": "",
+      "clipIndex": 0,
+      "available": true
+    },
+    "activityProfile": {
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "status": "Uses included animations where no state motion is assigned",
+      "revision": 1,
+      "canAssign": true,
+      "readOnly": false,
+      "canUndo": false,
+      "canRedo": false,
+      "roles": [
+        {
+          "role": 0,
+          "choices": [
+            {
+              "motionId": "21da54acb5c38d147ad297bf7ef22977",
+              "name": "Idle_4",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 1,
+          "choices": [
+            {
+              "motionId": "bd0bf1a849d86d785e00c3a392639359",
+              "name": "Listening_Gesture",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 2,
+          "choices": [
+            {
+              "motionId": "9a66ea13d9ba08b954b9a0cbdc7d89dc",
+              "name": "Idle_12",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 3,
+          "choices": [
+            {
+              "motionId": "b56ece79da8e21bac89927310921d734",
+              "name": "Talk_with_Hands_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            },
+            {
+              "motionId": "852ac885964d693deb8d3d3ba835acec",
+              "name": "Talk_with_Right_Hand_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            }
+          ]
+        }
+      ]
+    },
+    "objects": [
+      {
+        "id": "6084b7381b7247d4be910406673502c8",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "adc2f5c77a854f9babeee4a08c575ff9",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 3,
+        "position": {
+          "x": 0.5199999809265137,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "b2ccf913f5594282af5551cd87ce3202",
+        "name": "Editable material scoop",
+        "kind": "Assembly",
+        "objectRevision": 50,
+        "position": {
+          "x": 0.30000001192092896,
+          "y": 1.2999999523162842,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.11999999731779099
+        },
+        "movement": null
+      },
+      {
+        "id": "b646f9a9b06d47bd80ccad2189591242",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0,
+          "y": 1.159999966621399,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "maestro",
+        "name": "Maestro",
+        "kind": "Maestro",
+        "objectRevision": 2,
+        "position": {
+          "x": -0.7799999713897705,
+          "y": 0,
+          "z": 1.399999976158142
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": {
+          "distance": 1.3,
+          "speed": 0.65
+        }
+      }
+    ],
+    "created": [],
+    "capture": {
+      "captureId": "4166264e10644f85bc9b492df466b13b",
+      "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
+      "mimeType": "image/jpeg",
+      "width": 512,
+      "height": 384,
+      "capturedAt": "2026-10-04T16:28:45.9069317Z",
+      "sceneRevision": 3,
+      "verticalFov": 60,
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      }
+    },
+    "catalog": {
+      "operation": "inspect",
+      "capability": "object.material",
+      "version": 1,
+      "definition": {
+        "id": "object.material",
+        "version": 1,
+        "type": {
+          "record": {
+            "revision": "number",
+            "configured": "boolean",
+            "definition": {
+              "record": {
+                "capacityLitres": "number",
+                "amountLitres": "number",
+                "material": "text",
+                "color": {
+                  "record": {
+                    "r": "number",
+                    "g": "number",
+                    "b": "number",
+                    "a": "number"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "label": "Measured carried material",
+        "description": "Saved logical local litres, capacity, material identity and colour. Quantity stays unchanged on resize and does not set mass or infer geometry. Missing stores return inert editable defaults with configured=false. Reading never creates material or starts simulation.",
+        "input": {
+          "type": "object",
+          "properties": {
+            "target": {
+              "type": "string",
+              "pattern": "^[a-fA-F0-9]{32}$",
+              "maxLength": 32,
+              "x-resource": "object"
+            }
+          },
+          "required": [
+            "target"
+          ],
+          "additionalProperties": false
+        },
+        "example": {
+          "target": "00000000000000000000000000000000"
+        },
+        "features": [
+          "factQueries.v1",
+          "materialStores.v1"
+        ]
+      },
+      "status": "Current fact value. Reading does not change the room.",
+      "category": "facts",
+      "arguments": {
+        "target": "b2ccf913f5594282af5551cd87ce3202"
+      },
+      "available": true,
+      "value": {
+        "revision": 50,
+        "configured": true,
+        "definition": {
+          "capacityLitres": 0.25,
+          "amountLitres": 0,
+          "material": "Snow",
+          "color": {
+            "r": 0.9399999976158142,
+            "g": 0.9700000286102295,
+            "b": 1,
+            "a": 1
+          }
+        }
+      }
+    },
+    "execution": {
+      "selected": {
+        "id": "6000810a8f6043a6a974abd039b0b4f5",
+        "capability": "object.sculptTip.edit",
+        "version": 1,
+        "resources": [
+          "b2ccf913f5594282af5551cd87ce3202"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "call": {
+          "id": "object.sculptTip.edit",
+          "version": 1,
+          "arguments": {
+            "operation": "configure",
+            "target": "b2ccf913f5594282af5551cd87ce3202",
+            "revision": 49,
+            "definition": {
+              "part": "",
+              "mode": "scoop",
+              "position": {
+                "x": 0,
+                "y": 0.007000000216066837,
+                "z": 0.09000000357627869
+              },
+              "rotation": {
+                "x": -0.7071067690849304,
+                "y": 0,
+                "z": 0,
+                "w": 0.7071067690849304
+              },
+              "radius": 0.12,
+              "height": 0,
+              "amountLitres": 0.1,
+              "enabled": true
+            }
+          }
+        }
+      },
+      "running": [],
+      "outcomes": [
+        {
+          "id": "b66a42a54dc0436b82982de6882e9bcb",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "dc93ac70529c4dba9095597acbca13bc"
+          }
+        },
+        {
+          "id": "b859229c56ee47d0b927a9dafa76ed82",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "21268385fa1542e090f0d02d1cdcdd79"
+          }
+        },
+        {
+          "id": "308cfec7b00146f2a0d446a7f4ed2ec8",
+          "capability": "object.field.sculpt",
+          "version": 1,
+          "resources": [
+            "21268385fa1542e090f0d02d1cdcdd79"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "changedVertices": 63
+          }
+        },
+        {
+          "id": "ace2c1ca09854a34b4681dbf7df5be75",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "369ebc6ea880409282f8dec8d03f4f02"
+          }
+        },
+        {
+          "id": "321a20ae4d1144aab13ffc699be9ad26",
+          "capability": "object.field.transfer",
+          "version": 1,
+          "resources": [
+            "21268385fa1542e090f0d02d1cdcdd79",
+            "369ebc6ea880409282f8dec8d03f4f02"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "removedLitres": 1.0000001930166034,
+            "addedLitres": 1.0000003094319252,
+            "roundingLitres": 1.1641532182693481e-7
+          }
+        },
+        {
+          "id": "a3f0d69c42884d018f307d1b6f49fb86",
+          "capability": "object.material.pack",
+          "version": 1,
+          "resources": [
+            "21268385fa1542e090f0d02d1cdcdd79"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "9682a4123b6341dcad1d32069f8a5f84",
+            "amountLitres": 0.4999998782295733
+          }
+        },
+        {
+          "id": "ba4c3df5a57f4b0fa7fb55d158f0432f",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "ef6bf19f81ba4de98e125dbd05a68eb9"
+          }
+        },
+        {
+          "id": "b35b90851c5842118bf056f94c8a41f1",
+          "capability": "object.material.edit",
+          "version": 1,
+          "resources": [
+            "ef6bf19f81ba4de98e125dbd05a68eb9"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "f07792db2869494a98a6b78823eeb53f",
+          "capability": "object.material.transfer",
+          "version": 1,
+          "resources": [
+            "21268385fa1542e090f0d02d1cdcdd79",
+            "ef6bf19f81ba4de98e125dbd05a68eb9"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "removedLitres": 0.19999913638457656,
+            "addedLitres": 0.19999913638457653,
+            "roundingLitres": -2.7755575615628914e-17
+          }
+        },
+        {
+          "id": "4b83367a0a6b4c2c86868391ccb150d1",
+          "capability": "object.material.transfer",
+          "version": 1,
+          "resources": [
+            "ef6bf19f81ba4de98e125dbd05a68eb9",
+            "21268385fa1542e090f0d02d1cdcdd79"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "removedLitres": 0.09999965550377964,
+            "addedLitres": 0.09999965550377965,
+            "roundingLitres": 1.3877787807814457e-17
+          }
+        },
+        {
+          "id": "5d50f6044ff146ee80c811459ecf537c",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "f3b73cd371a741bf86105309bf1469c9"
+          }
+        },
+        {
+          "id": "8b3aec428d0d45c9ac8499f8ef078743",
+          "capability": "object.sculptTip.edit",
+          "version": 1,
+          "resources": [
+            "f3b73cd371a741bf86105309bf1469c9"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "0054cd74bb6b4515b28c959b026b846b",
+          "capability": "field.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "0fff8c98dca24c64a65d55f0ead9f51a",
+          "capability": "field.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "3a39385063ac4b54abda7e1f0b88c709",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "b2ccf913f5594282af5551cd87ce3202"
+          }
+        },
+        {
+          "id": "6000810a8f6043a6a974abd039b0b4f5",
+          "capability": "object.sculptTip.edit",
+          "version": 1,
+          "resources": [
+            "b2ccf913f5594282af5551cd87ce3202"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        }
+      ],
+      "nextRunId": "e1ad970340954d5bb1f9f3db8cd5d345",
+      "storageError": null,
+      "recovery": null,
+      "workspace": {
+        "selected": null,
+        "running": [],
+        "outcomes": [],
+        "nextRunId": "0a61eaa83b0c4ca58121b71455b1e391",
+        "storageError": null,
+        "recovery": null
+      }
+    }
+  },
+  "idle": {
+    "version": 1,
+    "revision": 299,
+    "sceneRevision": 49,
+    "ack": 123,
+    "session": "981d3826b3de452fa7108b888a77d56c",
+    "status": "Current fact value. Reading does not change the room.",
+    "selectedId": "9682a4123b6341dcad1d32069f8a5f84",
+    "ok": true,
+    "canUndo": true,
+    "canRedo": false,
+    "physicsRunning": false,
+    "visible": false,
+    "inspection": null,
+    "constructionSelection": {
+      "stateId": "9cca08000f76451f81a32dbfa9e51639",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "9cca08000f76451f81a32dbfa9e51639",
+      "error": "",
+      "visible": false,
+      "holding": false
+    },
+    "workspaceView": "objects",
+    "rules": {
+      "revision": 1,
+      "bindingPage": 0,
+      "bindingCount": 0,
+      "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
+      "canUndo": false,
+      "canRedo": false,
+      "readOnly": false,
+      "status": "Create an action sequence, then add triggers or buttons",
+      "selectedError": "",
+      "sequences": [],
+      "selected": null,
+      "memory": null,
+      "bindings": [],
+      "buttons": [],
+      "running": [],
+      "outcomes": []
+    },
+    "motions": null,
+    "capabilities": [
+      "physicsSettings.v1",
+      "avatarSettings.v1",
+      "physicsRun.v1",
+      "avatarMotion.v1",
+      "avatarWalk.v1",
+      "motions.v1",
+      "avatarActivities.v1",
+      "catalog.v1",
+      "catalogVocabulary.v1",
+      "roomOwnership.v1",
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "eventFields.v1",
+      "eventSubscriptions.v1",
+      "factQueries.v1",
+      "conditionWaits.v1",
+      "parallelPrograms.v1",
+      "rememberedVariables.v1",
+      "temporaryMemory.v1",
+      "structuredValues.v1",
+      "programModules.v1",
+      "moduleLibrary.v1",
+      "moduleLibraryFiles.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
+      "objectEdits.v1",
+      "objectCopy.v1",
+      "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "curvedDrawingSurfaces.v1",
+      "drawingTips.v1",
+      "drawingErasers.v1",
+      "containers.v1",
+      "heightFields.v1",
+      "heightFieldTransfer.v1",
+      "materialStores.v1",
+      "materialTransfer.v1",
+      "materialPacking.v1",
+      "physicalSculpting.v1",
+      "physicalMaterialTools.v1",
+      "containerPouring.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
+      "recipeEdits.v1",
+      "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "recipePatterns.v1",
+      "roomViewCapture.v1",
+      "collisionShapes.v1",
+      "recipePartPlayback.v1",
+      "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
+      "objectLaunch.v1",
+      "physicalCatching.v1",
+      "calendarSchedules.v1",
+      "animationAuthoring.v1",
+      "animationRecording.v1",
+      "animationPosing.v1",
+      "avatarModels.v1",
+      "modelImport.v1",
+      "modelArchiveImport.v1",
+      "motionBatchImport.v1",
+      "includedMotions.v1",
+      "authoredMotion.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1",
+      "temporaryRoom.v1",
+      "spatialSettings.v1",
+      "physicsSimulation.v1",
+      "roomEnvironment.v1",
+      "surfacePlacement.v1",
+      "controllerConfiguration.v1",
+      "controllerModes.v1",
+      "runtimeDiagnostics.v1",
+      "workspaceMaintenance.v1",
+      "workspaceArchiveActivation.v1",
+      "workspaceReview.v1",
+      "workspacePrevious.v1",
+      "workspaceRecovery.v1",
+      "workspaceSavedRecovery.v1",
+      "workspaceHistory.v1",
+      "workspaceEvidence.v1",
+      "workspaceRetention.v1",
+      "workspaceDisposal.v1"
+    ],
+    "physics": {
+      "ready": true,
+      "running": false,
+      "status": "Probe-only synthetic floor; no real scan or alignment proof"
+    },
+    "temporaryRoom": {
+      "active": false,
+      "pending": false,
+      "id": "22885dab7950408aa37ce23773e9ac40",
+      "saveId": "",
+      "phase": "idle",
+      "error": "",
+      "savedRevision": 0
+    },
+    "ownership": {
+      "suspended": false,
+      "error": "",
+      "owners": [
+        {
+          "id": "ambient:maestro",
+          "label": "Maestro tutor activity",
+          "role": "ambient",
+          "allowsGrab": false,
+          "claims": [
+            {
+              "target": "maestro",
+              "channel": "wholeTarget"
+            }
+          ]
+        }
+      ]
+    },
+    "avatar": {
+      "active": false,
+      "canLook": true,
+      "canFollow": false,
+      "mode": "stopped",
+      "status": "Choose Look at me or Follow me",
+      "lookReason": "",
+      "followReason": "Load the room, check its alignment, then Start physics before walking",
+      "distance": 1.3,
+      "speed": 0.65
+    },
+    "walk": {
+      "source": "embedded",
+      "motionId": "",
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "name": "Walking",
+      "status": "Embedded walking clip is available",
+      "playbackStatus": "",
+      "clipIndex": 0,
+      "available": true
+    },
+    "activityProfile": {
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "status": "Uses included animations where no state motion is assigned",
+      "revision": 1,
+      "canAssign": true,
+      "readOnly": false,
+      "canUndo": false,
+      "canRedo": false,
+      "roles": [
+        {
+          "role": 0,
+          "choices": [
+            {
+              "motionId": "21da54acb5c38d147ad297bf7ef22977",
+              "name": "Idle_4",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 1,
+          "choices": [
+            {
+              "motionId": "bd0bf1a849d86d785e00c3a392639359",
+              "name": "Listening_Gesture",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 2,
+          "choices": [
+            {
+              "motionId": "9a66ea13d9ba08b954b9a0cbdc7d89dc",
+              "name": "Idle_12",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 3,
+          "choices": [
+            {
+              "motionId": "b56ece79da8e21bac89927310921d734",
+              "name": "Talk_with_Hands_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            },
+            {
+              "motionId": "852ac885964d693deb8d3d3ba835acec",
+              "name": "Talk_with_Right_Hand_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            }
+          ]
+        }
+      ]
+    },
+    "objects": [
+      {
+        "id": "6084b7381b7247d4be910406673502c8",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "adc2f5c77a854f9babeee4a08c575ff9",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 3,
+        "position": {
+          "x": 0.5199999809265137,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "b2ccf913f5594282af5551cd87ce3202",
+        "name": "Editable material scoop",
+        "kind": "Assembly",
+        "objectRevision": 50,
+        "position": {
+          "x": 0.30000001192092896,
+          "y": 1.2999999523162842,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.11999999731779099
+        },
+        "movement": null
+      },
+      {
+        "id": "b646f9a9b06d47bd80ccad2189591242",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0,
+          "y": 1.159999966621399,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "maestro",
+        "name": "Maestro",
+        "kind": "Maestro",
+        "objectRevision": 2,
+        "position": {
+          "x": -0.7799999713897705,
+          "y": 0,
+          "z": 1.399999976158142
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": {
+          "distance": 1.3,
+          "speed": 0.65
+        }
+      }
+    ],
+    "created": [],
+    "capture": {
+      "captureId": "4166264e10644f85bc9b492df466b13b",
+      "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
+      "mimeType": "image/jpeg",
+      "width": 512,
+      "height": 384,
+      "capturedAt": "2026-10-04T16:28:45.9069317Z",
+      "sceneRevision": 3,
+      "verticalFov": 60,
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      }
+    },
+    "catalog": {
+      "operation": "inspect",
+      "capability": "object.material.capture",
+      "version": 1,
+      "definition": {
+        "id": "object.material.capture",
+        "version": 1,
+        "type": {
+          "record": {
+            "sessionId": "text",
+            "phase": "text",
+            "tool": "text",
+            "field": "text",
+            "direction": "text",
+            "balance": {
+              "record": {
+                "requestedLitres": "number",
+                "savedLitres": "number",
+                "previewLitres": "number",
+                "removedLitres": "number",
+                "addedLitres": "number",
+                "roundingLitres": "number"
+              }
+            },
+            "temporary": "boolean",
+            "error": "text"
+          }
+        },
+        "label": "Physical material draft",
+        "description": "Current contact or retained measured scoop/deposit, exact session and both saved/preview carrier amounts. Field geometry and carried heap preview one bounded transfer. No volume is published until contact ends and one atomic save succeeds. Use object.field.resolve with this sessionId to retry/discard an interrupted draft; read object.field.capture.path for its one local centre. Reads do not begin, retry or repeat a gesture. Local litres do not imply world-space volume or rigid mass.",
+        "features": [
+          "physicalMaterialTools.v1"
+        ]
+      },
+      "status": "Current fact value. Reading does not change the room.",
+      "category": "facts",
+      "available": true,
+      "value": {
+        "sessionId": "585584e9b4f94511b1d07f01856ddbc7",
+        "phase": "idle",
+        "tool": "",
+        "field": "",
+        "direction": "none",
+        "balance": {
+          "requestedLitres": 0,
+          "savedLitres": 0,
+          "previewLitres": 0,
+          "removedLitres": 0,
+          "addedLitres": 0,
+          "roundingLitres": 0
+        },
+        "temporary": false,
+        "error": ""
+      }
+    },
+    "execution": {
+      "selected": {
+        "id": "6000810a8f6043a6a974abd039b0b4f5",
+        "capability": "object.sculptTip.edit",
+        "version": 1,
+        "resources": [
+          "b2ccf913f5594282af5551cd87ce3202"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "call": {
+          "id": "object.sculptTip.edit",
+          "version": 1,
+          "arguments": {
+            "operation": "configure",
+            "target": "b2ccf913f5594282af5551cd87ce3202",
+            "revision": 49,
+            "definition": {
+              "part": "",
+              "mode": "scoop",
+              "position": {
+                "x": 0,
+                "y": 0.007000000216066837,
+                "z": 0.09000000357627869
+              },
+              "rotation": {
+                "x": -0.7071067690849304,
+                "y": 0,
+                "z": 0,
+                "w": 0.7071067690849304
+              },
+              "radius": 0.12,
+              "height": 0,
+              "amountLitres": 0.1,
+              "enabled": true
+            }
+          }
+        }
+      },
+      "running": [],
+      "outcomes": [
+        {
+          "id": "b66a42a54dc0436b82982de6882e9bcb",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "dc93ac70529c4dba9095597acbca13bc"
+          }
+        },
+        {
+          "id": "b859229c56ee47d0b927a9dafa76ed82",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "21268385fa1542e090f0d02d1cdcdd79"
+          }
+        },
+        {
+          "id": "308cfec7b00146f2a0d446a7f4ed2ec8",
+          "capability": "object.field.sculpt",
+          "version": 1,
+          "resources": [
+            "21268385fa1542e090f0d02d1cdcdd79"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "changedVertices": 63
+          }
+        },
+        {
+          "id": "ace2c1ca09854a34b4681dbf7df5be75",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "369ebc6ea880409282f8dec8d03f4f02"
+          }
+        },
+        {
+          "id": "321a20ae4d1144aab13ffc699be9ad26",
+          "capability": "object.field.transfer",
+          "version": 1,
+          "resources": [
+            "21268385fa1542e090f0d02d1cdcdd79",
+            "369ebc6ea880409282f8dec8d03f4f02"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "removedLitres": 1.0000001930166034,
+            "addedLitres": 1.0000003094319252,
+            "roundingLitres": 1.1641532182693481e-7
+          }
+        },
+        {
+          "id": "a3f0d69c42884d018f307d1b6f49fb86",
+          "capability": "object.material.pack",
+          "version": 1,
+          "resources": [
+            "21268385fa1542e090f0d02d1cdcdd79"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "9682a4123b6341dcad1d32069f8a5f84",
+            "amountLitres": 0.4999998782295733
+          }
+        },
+        {
+          "id": "ba4c3df5a57f4b0fa7fb55d158f0432f",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "ef6bf19f81ba4de98e125dbd05a68eb9"
+          }
+        },
+        {
+          "id": "b35b90851c5842118bf056f94c8a41f1",
+          "capability": "object.material.edit",
+          "version": 1,
+          "resources": [
+            "ef6bf19f81ba4de98e125dbd05a68eb9"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "f07792db2869494a98a6b78823eeb53f",
+          "capability": "object.material.transfer",
+          "version": 1,
+          "resources": [
+            "21268385fa1542e090f0d02d1cdcdd79",
+            "ef6bf19f81ba4de98e125dbd05a68eb9"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "removedLitres": 0.19999913638457656,
+            "addedLitres": 0.19999913638457653,
+            "roundingLitres": -2.7755575615628914e-17
+          }
+        },
+        {
+          "id": "4b83367a0a6b4c2c86868391ccb150d1",
+          "capability": "object.material.transfer",
+          "version": 1,
+          "resources": [
+            "ef6bf19f81ba4de98e125dbd05a68eb9",
+            "21268385fa1542e090f0d02d1cdcdd79"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "removedLitres": 0.09999965550377964,
+            "addedLitres": 0.09999965550377965,
+            "roundingLitres": 1.3877787807814457e-17
+          }
+        },
+        {
+          "id": "5d50f6044ff146ee80c811459ecf537c",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "f3b73cd371a741bf86105309bf1469c9"
+          }
+        },
+        {
+          "id": "8b3aec428d0d45c9ac8499f8ef078743",
+          "capability": "object.sculptTip.edit",
+          "version": 1,
+          "resources": [
+            "f3b73cd371a741bf86105309bf1469c9"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "0054cd74bb6b4515b28c959b026b846b",
+          "capability": "field.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "0fff8c98dca24c64a65d55f0ead9f51a",
+          "capability": "field.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "3a39385063ac4b54abda7e1f0b88c709",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "b2ccf913f5594282af5551cd87ce3202"
+          }
+        },
+        {
+          "id": "6000810a8f6043a6a974abd039b0b4f5",
+          "capability": "object.sculptTip.edit",
+          "version": 1,
+          "resources": [
+            "b2ccf913f5594282af5551cd87ce3202"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        }
+      ],
+      "nextRunId": "e1ad970340954d5bb1f9f3db8cd5d345",
       "storageError": null,
       "recovery": null,
       "workspace": {
@@ -5169,9 +6591,9 @@
   },
   "undo": {
     "version": 1,
-    "revision": 265,
-    "sceneRevision": 46,
-    "ack": 109,
+    "revision": 301,
+    "sceneRevision": 50,
+    "ack": 124,
     "session": "981d3826b3de452fa7108b888a77d56c",
     "status": "Undone",
     "selectedId": "9682a4123b6341dcad1d32069f8a5f84",
@@ -5506,6 +6928,33 @@
         "movement": null
       },
       {
+        "id": "b2ccf913f5594282af5551cd87ce3202",
+        "name": "Editable material scoop",
+        "kind": "Assembly",
+        "objectRevision": 51,
+        "position": {
+          "x": 0.30000001192092896,
+          "y": 1.2999999523162842,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.11999999731779099
+        },
+        "movement": null
+      },
+      {
         "id": "b646f9a9b06d47bd80ccad2189591242",
         "name": "Cylinder",
         "kind": "Cylinder",
@@ -5556,33 +7005,6 @@
           "mode": "fixed",
           "shape": "automatic",
           "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "f3b73cd371a741bf86105309bf1469c9",
-        "name": "Editable sculpt brush",
-        "kind": "Assembly",
-        "objectRevision": 48,
-        "position": {
-          "x": 0.30000001192092896,
-          "y": 1.2999999523162842,
-          "z": 0.6499999761581421
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "solid",
-          "shape": "automatic",
-          "mass": 0.05999999865889549
         },
         "movement": null
       },
@@ -5641,104 +7063,66 @@
     },
     "catalog": {
       "operation": "inspect",
-      "capability": "object.sculptTip",
+      "capability": "object.material.capture",
       "version": 1,
       "definition": {
-        "id": "object.sculptTip",
+        "id": "object.material.capture",
         "version": 1,
         "type": {
           "record": {
-            "revision": "number",
-            "configured": "boolean",
-            "definition": {
+            "sessionId": "text",
+            "phase": "text",
+            "tool": "text",
+            "field": "text",
+            "direction": "text",
+            "balance": {
               "record": {
-                "part": "text",
-                "position": {
-                  "record": {
-                    "x": "number",
-                    "y": "number",
-                    "z": "number"
-                  }
-                },
-                "rotation": {
-                  "record": {
-                    "x": "number",
-                    "y": "number",
-                    "z": "number",
-                    "w": "number"
-                  }
-                },
-                "mode": "text",
-                "radius": "number",
-                "enabled": "boolean",
-                "height": "number",
-                "amountLitres": "number"
+                "requestedLitres": "number",
+                "savedLitres": "number",
+                "previewLitres": "number",
+                "removedLitres": "number",
+                "addedLitres": "number",
+                "roundingLitres": "number"
               }
-            }
+            },
+            "temporary": "boolean",
+            "error": "text"
           }
         },
-        "label": "Object sculpt tip",
-        "description": "Saved sculpt-tip configuration and current object revision. Missing tips return inert editable defaults, configured=false. Shape modes have amountLitres=0; scoop has height=0. Reads never begin a gesture or modify geometry. Use object.field.capture for live/retained gestures.",
-        "input": {
-          "type": "object",
-          "properties": {
-            "target": {
-              "type": "string",
-              "pattern": "^[a-fA-F0-9]{32}$",
-              "maxLength": 32,
-              "x-resource": "object"
-            }
-          },
-          "required": [
-            "target"
-          ],
-          "additionalProperties": false
-        },
-        "example": {
-          "target": "00000000000000000000000000000000"
-        },
+        "label": "Physical material draft",
+        "description": "Current contact or retained measured scoop/deposit, exact session and both saved/preview carrier amounts. Field geometry and carried heap preview one bounded transfer. No volume is published until contact ends and one atomic save succeeds. Use object.field.resolve with this sessionId to retry/discard an interrupted draft; read object.field.capture.path for its one local centre. Reads do not begin, retry or repeat a gesture. Local litres do not imply world-space volume or rigid mass.",
         "features": [
-          "factQueries.v1",
-          "physicalSculpting.v1"
+          "physicalMaterialTools.v1"
         ]
       },
       "status": "Current fact value. Reading does not change the room.",
       "category": "facts",
-      "arguments": {
-        "target": "f3b73cd371a741bf86105309bf1469c9"
-      },
       "available": true,
       "value": {
-        "revision": 48,
-        "configured": true,
-        "definition": {
-          "part": "",
-          "mode": "lower",
-          "position": {
-            "x": 0,
-            "y": 0,
-            "z": 0.10999999940395355
-          },
-          "rotation": {
-            "x": 0,
-            "y": 0,
-            "z": 0,
-            "w": 1
-          },
-          "radius": 0.07999999821186066,
-          "height": 0.029999999329447746,
-          "amountLitres": 0,
-          "enabled": true
-        }
+        "sessionId": "585584e9b4f94511b1d07f01856ddbc7",
+        "phase": "idle",
+        "tool": "",
+        "field": "",
+        "direction": "none",
+        "balance": {
+          "requestedLitres": 0,
+          "savedLitres": 0,
+          "previewLitres": 0,
+          "removedLitres": 0,
+          "addedLitres": 0,
+          "roundingLitres": 0
+        },
+        "temporary": false,
+        "error": ""
       }
     },
     "execution": {
       "selected": {
-        "id": "8b3aec428d0d45c9ac8499f8ef078743",
+        "id": "6000810a8f6043a6a974abd039b0b4f5",
         "capability": "object.sculptTip.edit",
         "version": 1,
         "resources": [
-          "f3b73cd371a741bf86105309bf1469c9"
+          "b2ccf913f5594282af5551cd87ce3202"
         ],
         "phase": "completed",
         "status": "Action completed",
@@ -5747,25 +7131,25 @@
           "version": 1,
           "arguments": {
             "operation": "configure",
-            "target": "f3b73cd371a741bf86105309bf1469c9",
-            "revision": 46,
+            "target": "b2ccf913f5594282af5551cd87ce3202",
+            "revision": 49,
             "definition": {
               "part": "",
-              "mode": "level",
+              "mode": "scoop",
               "position": {
                 "x": 0,
-                "y": 0,
-                "z": 0.10999999940395355
+                "y": 0.007000000216066837,
+                "z": 0.09000000357627869
               },
               "rotation": {
-                "x": 0,
+                "x": -0.7071067690849304,
                 "y": 0,
                 "z": 0,
-                "w": 1
+                "w": 0.7071067690849304
               },
-              "radius": 0.1,
-              "height": 0.12,
-              "amountLitres": 0,
+              "radius": 0.12,
+              "height": 0,
+              "amountLitres": 0.1,
               "enabled": true
             }
           }
@@ -5773,68 +7157,6 @@
       },
       "running": [],
       "outcomes": [
-        {
-          "id": "e42d52c9ebdc4daf96c71c616f20d30a",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "cda8b314c677420787153262dff4d7ac"
-          }
-        },
-        {
-          "id": "62ae6ea773034294b484b6aab163fd6b",
-          "capability": "object.recipe.edit",
-          "version": 1,
-          "resources": [
-            "cda8b314c677420787153262dff4d7ac"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "cda8b314c677420787153262dff4d7ac",
-            "revision": 18,
-            "parts": 1,
-            "tracks": 0,
-            "duration": 2,
-            "loop": false,
-            "playing": false,
-            "autoplay": false
-          }
-        },
-        {
-          "id": "c6f5bd22bede4ed4985c25a3e3be6bcf",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "f742acd43a454d738677c3573f40f1aa"
-          }
-        },
-        {
-          "id": "e5673125b6f04d949b0449c979d30b14",
-          "capability": "object.recipe.edit",
-          "version": 1,
-          "resources": [
-            "f742acd43a454d738677c3573f40f1aa"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "f742acd43a454d738677c3573f40f1aa",
-            "revision": 21,
-            "parts": 1,
-            "tracks": 0,
-            "duration": 2,
-            "loop": false,
-            "playing": false,
-            "autoplay": false
-          }
-        },
         {
           "id": "b66a42a54dc0436b82982de6882e9bcb",
           "capability": "object.create",
@@ -5984,9 +7306,46 @@
           ],
           "phase": "completed",
           "status": "Action completed"
+        },
+        {
+          "id": "0054cd74bb6b4515b28c959b026b846b",
+          "capability": "field.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "0fff8c98dca24c64a65d55f0ead9f51a",
+          "capability": "field.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "3a39385063ac4b54abda7e1f0b88c709",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "b2ccf913f5594282af5551cd87ce3202"
+          }
+        },
+        {
+          "id": "6000810a8f6043a6a974abd039b0b4f5",
+          "capability": "object.sculptTip.edit",
+          "version": 1,
+          "resources": [
+            "b2ccf913f5594282af5551cd87ce3202"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
         }
       ],
-      "nextRunId": "0054cd74bb6b4515b28c959b026b846b",
+      "nextRunId": "e1ad970340954d5bb1f9f3db8cd5d345",
       "storageError": null,
       "recovery": null,
       "workspace": {
@@ -6001,9 +7360,9 @@
   },
   "restored": {
     "version": 1,
-    "revision": 268,
-    "sceneRevision": 46,
-    "ack": 110,
+    "revision": 305,
+    "sceneRevision": 50,
+    "ack": 125,
     "session": "981d3826b3de452fa7108b888a77d56c",
     "status": "Current fact value. Reading does not change the room.",
     "selectedId": "9682a4123b6341dcad1d32069f8a5f84",
@@ -6338,6 +7697,33 @@
         "movement": null
       },
       {
+        "id": "b2ccf913f5594282af5551cd87ce3202",
+        "name": "Editable material scoop",
+        "kind": "Assembly",
+        "objectRevision": 51,
+        "position": {
+          "x": 0.30000001192092896,
+          "y": 1.2999999523162842,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.11999999731779099
+        },
+        "movement": null
+      },
+      {
         "id": "b646f9a9b06d47bd80ccad2189591242",
         "name": "Cylinder",
         "kind": "Cylinder",
@@ -6388,33 +7774,6 @@
           "mode": "fixed",
           "shape": "automatic",
           "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "f3b73cd371a741bf86105309bf1469c9",
-        "name": "Editable sculpt brush",
-        "kind": "Assembly",
-        "objectRevision": 48,
-        "position": {
-          "x": 0.30000001192092896,
-          "y": 1.2999999523162842,
-          "z": 0.6499999761581421
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "solid",
-          "shape": "automatic",
-          "mass": 0.05999999865889549
         },
         "movement": null
       },
@@ -6537,40 +7896,40 @@
       "status": "Current fact value. Reading does not change the room.",
       "category": "facts",
       "arguments": {
-        "target": "f3b73cd371a741bf86105309bf1469c9"
+        "target": "b2ccf913f5594282af5551cd87ce3202"
       },
       "available": true,
       "value": {
-        "revision": 48,
+        "revision": 51,
         "configured": true,
         "definition": {
           "part": "",
-          "mode": "lower",
+          "mode": "scoop",
           "position": {
             "x": 0,
-            "y": 0,
-            "z": 0.10999999940395355
+            "y": 0.007000000216066837,
+            "z": 0.09000000357627869
           },
           "rotation": {
-            "x": 0,
+            "x": -0.7071067690849304,
             "y": 0,
             "z": 0,
-            "w": 1
+            "w": 0.7071067690849304
           },
           "radius": 0.07999999821186066,
-          "height": 0.029999999329447746,
-          "amountLitres": 0,
+          "height": 0,
+          "amountLitres": 0.25,
           "enabled": true
         }
       }
     },
     "execution": {
       "selected": {
-        "id": "8b3aec428d0d45c9ac8499f8ef078743",
+        "id": "6000810a8f6043a6a974abd039b0b4f5",
         "capability": "object.sculptTip.edit",
         "version": 1,
         "resources": [
-          "f3b73cd371a741bf86105309bf1469c9"
+          "b2ccf913f5594282af5551cd87ce3202"
         ],
         "phase": "completed",
         "status": "Action completed",
@@ -6579,25 +7938,25 @@
           "version": 1,
           "arguments": {
             "operation": "configure",
-            "target": "f3b73cd371a741bf86105309bf1469c9",
-            "revision": 46,
+            "target": "b2ccf913f5594282af5551cd87ce3202",
+            "revision": 49,
             "definition": {
               "part": "",
-              "mode": "level",
+              "mode": "scoop",
               "position": {
                 "x": 0,
-                "y": 0,
-                "z": 0.10999999940395355
+                "y": 0.007000000216066837,
+                "z": 0.09000000357627869
               },
               "rotation": {
-                "x": 0,
+                "x": -0.7071067690849304,
                 "y": 0,
                 "z": 0,
-                "w": 1
+                "w": 0.7071067690849304
               },
-              "radius": 0.1,
-              "height": 0.12,
-              "amountLitres": 0,
+              "radius": 0.12,
+              "height": 0,
+              "amountLitres": 0.1,
               "enabled": true
             }
           }
@@ -6606,804 +7965,6 @@
       "running": [],
       "outcomes": [
         {
-          "id": "e42d52c9ebdc4daf96c71c616f20d30a",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "cda8b314c677420787153262dff4d7ac"
-          }
-        },
-        {
-          "id": "62ae6ea773034294b484b6aab163fd6b",
-          "capability": "object.recipe.edit",
-          "version": 1,
-          "resources": [
-            "cda8b314c677420787153262dff4d7ac"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "cda8b314c677420787153262dff4d7ac",
-            "revision": 18,
-            "parts": 1,
-            "tracks": 0,
-            "duration": 2,
-            "loop": false,
-            "playing": false,
-            "autoplay": false
-          }
-        },
-        {
-          "id": "c6f5bd22bede4ed4985c25a3e3be6bcf",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "f742acd43a454d738677c3573f40f1aa"
-          }
-        },
-        {
-          "id": "e5673125b6f04d949b0449c979d30b14",
-          "capability": "object.recipe.edit",
-          "version": 1,
-          "resources": [
-            "f742acd43a454d738677c3573f40f1aa"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "f742acd43a454d738677c3573f40f1aa",
-            "revision": 21,
-            "parts": 1,
-            "tracks": 0,
-            "duration": 2,
-            "loop": false,
-            "playing": false,
-            "autoplay": false
-          }
-        },
-        {
-          "id": "b66a42a54dc0436b82982de6882e9bcb",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "dc93ac70529c4dba9095597acbca13bc"
-          }
-        },
-        {
-          "id": "b859229c56ee47d0b927a9dafa76ed82",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "21268385fa1542e090f0d02d1cdcdd79"
-          }
-        },
-        {
-          "id": "308cfec7b00146f2a0d446a7f4ed2ec8",
-          "capability": "object.field.sculpt",
-          "version": 1,
-          "resources": [
-            "21268385fa1542e090f0d02d1cdcdd79"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "changedVertices": 63
-          }
-        },
-        {
-          "id": "ace2c1ca09854a34b4681dbf7df5be75",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "369ebc6ea880409282f8dec8d03f4f02"
-          }
-        },
-        {
-          "id": "321a20ae4d1144aab13ffc699be9ad26",
-          "capability": "object.field.transfer",
-          "version": 1,
-          "resources": [
-            "21268385fa1542e090f0d02d1cdcdd79",
-            "369ebc6ea880409282f8dec8d03f4f02"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "removedLitres": 1.0000001930166034,
-            "addedLitres": 1.0000003094319252,
-            "roundingLitres": 1.1641532182693481e-7
-          }
-        },
-        {
-          "id": "a3f0d69c42884d018f307d1b6f49fb86",
-          "capability": "object.material.pack",
-          "version": 1,
-          "resources": [
-            "21268385fa1542e090f0d02d1cdcdd79"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "9682a4123b6341dcad1d32069f8a5f84",
-            "amountLitres": 0.4999998782295733
-          }
-        },
-        {
-          "id": "ba4c3df5a57f4b0fa7fb55d158f0432f",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "ef6bf19f81ba4de98e125dbd05a68eb9"
-          }
-        },
-        {
-          "id": "b35b90851c5842118bf056f94c8a41f1",
-          "capability": "object.material.edit",
-          "version": 1,
-          "resources": [
-            "ef6bf19f81ba4de98e125dbd05a68eb9"
-          ],
-          "phase": "completed",
-          "status": "Action completed"
-        },
-        {
-          "id": "f07792db2869494a98a6b78823eeb53f",
-          "capability": "object.material.transfer",
-          "version": 1,
-          "resources": [
-            "21268385fa1542e090f0d02d1cdcdd79",
-            "ef6bf19f81ba4de98e125dbd05a68eb9"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "removedLitres": 0.19999913638457656,
-            "addedLitres": 0.19999913638457653,
-            "roundingLitres": -2.7755575615628914e-17
-          }
-        },
-        {
-          "id": "4b83367a0a6b4c2c86868391ccb150d1",
-          "capability": "object.material.transfer",
-          "version": 1,
-          "resources": [
-            "ef6bf19f81ba4de98e125dbd05a68eb9",
-            "21268385fa1542e090f0d02d1cdcdd79"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "removedLitres": 0.09999965550377964,
-            "addedLitres": 0.09999965550377965,
-            "roundingLitres": 1.3877787807814457e-17
-          }
-        },
-        {
-          "id": "5d50f6044ff146ee80c811459ecf537c",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "f3b73cd371a741bf86105309bf1469c9"
-          }
-        },
-        {
-          "id": "8b3aec428d0d45c9ac8499f8ef078743",
-          "capability": "object.sculptTip.edit",
-          "version": 1,
-          "resources": [
-            "f3b73cd371a741bf86105309bf1469c9"
-          ],
-          "phase": "completed",
-          "status": "Action completed"
-        }
-      ],
-      "nextRunId": "0054cd74bb6b4515b28c959b026b846b",
-      "storageError": null,
-      "recovery": null,
-      "workspace": {
-        "selected": null,
-        "running": [],
-        "outcomes": [],
-        "nextRunId": "0a61eaa83b0c4ca58121b71455b1e391",
-        "storageError": null,
-        "recovery": null
-      }
-    }
-  },
-  "tool": {
-    "version": 1,
-    "revision": 273,
-    "sceneRevision": 46,
-    "ack": 112,
-    "session": "981d3826b3de452fa7108b888a77d56c",
-    "status": "Current fact value. Reading does not change the room.",
-    "selectedId": "9682a4123b6341dcad1d32069f8a5f84",
-    "ok": true,
-    "canUndo": true,
-    "canRedo": true,
-    "physicsRunning": false,
-    "visible": false,
-    "inspection": null,
-    "constructionSelection": {
-      "stateId": "9cca08000f76451f81a32dbfa9e51639",
-      "collecting": false,
-      "members": []
-    },
-    "constructionManipulation": {
-      "stateId": "9cca08000f76451f81a32dbfa9e51639",
-      "error": "",
-      "visible": false,
-      "holding": false
-    },
-    "workspaceView": "objects",
-    "rules": {
-      "revision": 1,
-      "bindingPage": 0,
-      "bindingCount": 0,
-      "queued": 0,
-      "eventQueue": 0,
-      "eventsDropped": 0,
-      "canUndo": false,
-      "canRedo": false,
-      "readOnly": false,
-      "status": "Create an action sequence, then add triggers or buttons",
-      "selectedError": "",
-      "sequences": [],
-      "selected": null,
-      "memory": null,
-      "bindings": [],
-      "buttons": [],
-      "running": [],
-      "outcomes": []
-    },
-    "motions": null,
-    "capabilities": [
-      "physicsSettings.v1",
-      "avatarSettings.v1",
-      "physicsRun.v1",
-      "avatarMotion.v1",
-      "avatarWalk.v1",
-      "motions.v1",
-      "avatarActivities.v1",
-      "catalog.v1",
-      "catalogVocabulary.v1",
-      "roomOwnership.v1",
-      "behaviourPrograms.v3",
-      "eventPrograms.v1",
-      "eventFields.v1",
-      "eventSubscriptions.v1",
-      "factQueries.v1",
-      "conditionWaits.v1",
-      "parallelPrograms.v1",
-      "rememberedVariables.v1",
-      "temporaryMemory.v1",
-      "structuredValues.v1",
-      "programModules.v1",
-      "moduleLibrary.v1",
-      "moduleLibraryFiles.v1",
-      "execution.v1",
-      "executionReceipts.v1",
-      "actionResults.v1",
-      "recipeCreation.v1",
-      "creationComponents.v1",
-      "creationTemplates.v1",
-      "layoutEdits.v1",
-      "structures.v1",
-      "batchCreation.v1",
-      "structuredResults.v1",
-      "structuredInputs.v1",
-      "indexedInputs.v1",
-      "constructionSelection.v1",
-      "groupTransforms.v1",
-      "constructionManipulation.v1",
-      "constructionSnapping.v1",
-      "objectEdits.v1",
-      "objectCopy.v1",
-      "drawingEdits.v1",
-      "drawingSurfaces.v1",
-      "curvedDrawingSurfaces.v1",
-      "drawingTips.v1",
-      "drawingErasers.v1",
-      "containers.v1",
-      "heightFields.v1",
-      "heightFieldTransfer.v1",
-      "materialStores.v1",
-      "materialTransfer.v1",
-      "materialPacking.v1",
-      "physicalSculpting.v1",
-      "physicalMaterialTools.v1",
-      "containerPouring.v1",
-      "containerScooping.v1",
-      "physicalConnections.v1",
-      "physicalSliders.v1",
-      "snapPoints.v1",
-      "connectedBlueprints.v2",
-      "creationPrototypes.v1",
-      "constructionCapture.v1",
-      "recipeEdits.v1",
-      "latheGeometry.v1",
-      "extrusionGeometry.v1",
-      "sweepGeometry.v1",
-      "recipePatterns.v1",
-      "roomViewCapture.v1",
-      "collisionShapes.v1",
-      "recipePartPlayback.v1",
-      "objectAttachments.v1",
-      "anchorZones.v1",
-      "channelWaits.v1",
-      "objectLaunch.v1",
-      "physicalCatching.v1",
-      "calendarSchedules.v1",
-      "animationAuthoring.v1",
-      "animationRecording.v1",
-      "animationPosing.v1",
-      "avatarModels.v1",
-      "modelImport.v1",
-      "modelArchiveImport.v1",
-      "motionBatchImport.v1",
-      "includedMotions.v1",
-      "authoredMotion.v1",
-      "unavailablePrograms.v1",
-      "actionRecovery.v1",
-      "temporaryRoom.v1",
-      "spatialSettings.v1",
-      "physicsSimulation.v1",
-      "roomEnvironment.v1",
-      "surfacePlacement.v1",
-      "controllerConfiguration.v1",
-      "controllerModes.v1",
-      "runtimeDiagnostics.v1",
-      "workspaceMaintenance.v1",
-      "workspaceArchiveActivation.v1",
-      "workspaceReview.v1",
-      "workspacePrevious.v1",
-      "workspaceRecovery.v1",
-      "workspaceSavedRecovery.v1",
-      "workspaceHistory.v1",
-      "workspaceEvidence.v1",
-      "workspaceRetention.v1",
-      "workspaceDisposal.v1"
-    ],
-    "physics": {
-      "ready": true,
-      "running": false,
-      "status": "Probe-only synthetic floor; no real scan or alignment proof"
-    },
-    "temporaryRoom": {
-      "active": false,
-      "pending": false,
-      "id": "22885dab7950408aa37ce23773e9ac40",
-      "saveId": "",
-      "phase": "idle",
-      "error": "",
-      "savedRevision": 0
-    },
-    "ownership": {
-      "suspended": false,
-      "error": "",
-      "owners": [
-        {
-          "id": "ambient:maestro",
-          "label": "Maestro tutor activity",
-          "role": "ambient",
-          "allowsGrab": false,
-          "claims": [
-            {
-              "target": "maestro",
-              "channel": "wholeTarget"
-            }
-          ]
-        }
-      ]
-    },
-    "avatar": {
-      "active": false,
-      "canLook": true,
-      "canFollow": false,
-      "mode": "stopped",
-      "status": "Choose Look at me or Follow me",
-      "lookReason": "",
-      "followReason": "Load the room, check its alignment, then Start physics before walking",
-      "distance": 1.3,
-      "speed": 0.65
-    },
-    "walk": {
-      "source": "embedded",
-      "motionId": "",
-      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
-      "name": "Walking",
-      "status": "Embedded walking clip is available",
-      "playbackStatus": "",
-      "clipIndex": 0,
-      "available": true
-    },
-    "activityProfile": {
-      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
-      "status": "Uses included animations where no state motion is assigned",
-      "revision": 1,
-      "canAssign": true,
-      "readOnly": false,
-      "canUndo": false,
-      "canRedo": false,
-      "roles": [
-        {
-          "role": 0,
-          "choices": [
-            {
-              "motionId": "21da54acb5c38d147ad297bf7ef22977",
-              "name": "Idle_4",
-              "weight": 1,
-              "speed": 1,
-              "cooldown": 0,
-              "loop": true,
-              "available": true
-            }
-          ]
-        },
-        {
-          "role": 1,
-          "choices": [
-            {
-              "motionId": "bd0bf1a849d86d785e00c3a392639359",
-              "name": "Listening_Gesture",
-              "weight": 1,
-              "speed": 1,
-              "cooldown": 0,
-              "loop": true,
-              "available": true
-            }
-          ]
-        },
-        {
-          "role": 2,
-          "choices": [
-            {
-              "motionId": "9a66ea13d9ba08b954b9a0cbdc7d89dc",
-              "name": "Idle_12",
-              "weight": 1,
-              "speed": 1,
-              "cooldown": 0,
-              "loop": true,
-              "available": true
-            }
-          ]
-        },
-        {
-          "role": 3,
-          "choices": [
-            {
-              "motionId": "b56ece79da8e21bac89927310921d734",
-              "name": "Talk_with_Hands_Open",
-              "weight": 1,
-              "speed": 1,
-              "cooldown": 2,
-              "loop": false,
-              "available": true
-            },
-            {
-              "motionId": "852ac885964d693deb8d3d3ba835acec",
-              "name": "Talk_with_Right_Hand_Open",
-              "weight": 1,
-              "speed": 1,
-              "cooldown": 2,
-              "loop": false,
-              "available": true
-            }
-          ]
-        }
-      ]
-    },
-    "objects": [
-      {
-        "id": "6084b7381b7247d4be910406673502c8",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "adc2f5c77a854f9babeee4a08c575ff9",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 3,
-        "position": {
-          "x": 0.5199999809265137,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "b646f9a9b06d47bd80ccad2189591242",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "book",
-        "name": "Book",
-        "kind": "Book",
-        "objectRevision": 1,
-        "position": {
-          "x": 0,
-          "y": 1.159999966621399,
-          "z": 0.6499999761581421
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "f3b73cd371a741bf86105309bf1469c9",
-        "name": "Editable sculpt brush",
-        "kind": "Assembly",
-        "objectRevision": 48,
-        "position": {
-          "x": 0.30000001192092896,
-          "y": 1.2999999523162842,
-          "z": 0.6499999761581421
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "solid",
-          "shape": "automatic",
-          "mass": 0.05999999865889549
-        },
-        "movement": null
-      },
-      {
-        "id": "maestro",
-        "name": "Maestro",
-        "kind": "Maestro",
-        "objectRevision": 2,
-        "position": {
-          "x": -0.7799999713897705,
-          "y": 0,
-          "z": 1.399999976158142
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": {
-          "distance": 1.3,
-          "speed": 0.65
-        }
-      }
-    ],
-    "created": [],
-    "capture": {
-      "captureId": "4166264e10644f85bc9b492df466b13b",
-      "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
-      "mimeType": "image/jpeg",
-      "width": 512,
-      "height": 384,
-      "capturedAt": "2026-10-04T16:28:45.9069317Z",
-      "sceneRevision": 3,
-      "verticalFov": 60,
-      "position": {
-        "x": 0,
-        "y": 0,
-        "z": 0
-      },
-      "rotation": {
-        "x": 0,
-        "y": 0,
-        "z": 0,
-        "w": 1
-      }
-    },
-    "catalog": {
-      "operation": "inspect",
-      "capability": "field.tool",
-      "version": 1,
-      "definition": {
-        "id": "field.tool",
-        "version": 1,
-        "type": {
-          "record": {
-            "mode": "text",
-            "radius": "number",
-            "height": "number"
-          }
-        },
-        "label": "Current physical sculpt tool",
-        "description": "Session-local trigger/fingertip sculpt settings shared with the tray. Reads do not enable input or modify a surface.",
-        "features": [
-          "physicalSculpting.v1"
-        ]
-      },
-      "status": "Current fact value. Reading does not change the room.",
-      "category": "facts",
-      "available": true,
-      "value": {
-        "mode": "lower",
-        "radius": 0.08,
-        "height": 0.03
-      }
-    },
-    "execution": {
-      "selected": {
-        "id": "0054cd74bb6b4515b28c959b026b846b",
-        "capability": "field.tool.set",
-        "version": 1,
-        "resources": [],
-        "phase": "completed",
-        "status": "Action completed",
-        "call": {
-          "id": "field.tool.set",
-          "version": 1,
-          "arguments": {
-            "mode": "lower",
-            "radius": 0.08,
-            "height": 0.03
-          }
-        }
-      },
-      "running": [],
-      "outcomes": [
-        {
-          "id": "62ae6ea773034294b484b6aab163fd6b",
-          "capability": "object.recipe.edit",
-          "version": 1,
-          "resources": [
-            "cda8b314c677420787153262dff4d7ac"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "cda8b314c677420787153262dff4d7ac",
-            "revision": 18,
-            "parts": 1,
-            "tracks": 0,
-            "duration": 2,
-            "loop": false,
-            "playing": false,
-            "autoplay": false
-          }
-        },
-        {
-          "id": "c6f5bd22bede4ed4985c25a3e3be6bcf",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "f742acd43a454d738677c3573f40f1aa"
-          }
-        },
-        {
-          "id": "e5673125b6f04d949b0449c979d30b14",
-          "capability": "object.recipe.edit",
-          "version": 1,
-          "resources": [
-            "f742acd43a454d738677c3573f40f1aa"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "f742acd43a454d738677c3573f40f1aa",
-            "revision": 21,
-            "parts": 1,
-            "tracks": 0,
-            "duration": 2,
-            "loop": false,
-            "playing": false,
-            "autoplay": false
-          }
-        },
-        {
           "id": "b66a42a54dc0436b82982de6882e9bcb",
           "capability": "object.create",
           "version": 1,
@@ -7560,771 +8121,38 @@
           "resources": [],
           "phase": "completed",
           "status": "Action completed"
-        }
-      ],
-      "nextRunId": "0fff8c98dca24c64a65d55f0ead9f51a",
-      "storageError": null,
-      "recovery": null,
-      "workspace": {
-        "selected": null,
-        "running": [],
-        "outcomes": [],
-        "nextRunId": "0a61eaa83b0c4ca58121b71455b1e391",
-        "storageError": null,
-        "recovery": null
-      }
-    }
-  },
-  "idle": {
-    "version": 1,
-    "revision": 275,
-    "sceneRevision": 46,
-    "ack": 113,
-    "session": "981d3826b3de452fa7108b888a77d56c",
-    "status": "Current fact value. Reading does not change the room.",
-    "selectedId": "9682a4123b6341dcad1d32069f8a5f84",
-    "ok": true,
-    "canUndo": true,
-    "canRedo": true,
-    "physicsRunning": false,
-    "visible": false,
-    "inspection": null,
-    "constructionSelection": {
-      "stateId": "9cca08000f76451f81a32dbfa9e51639",
-      "collecting": false,
-      "members": []
-    },
-    "constructionManipulation": {
-      "stateId": "9cca08000f76451f81a32dbfa9e51639",
-      "error": "",
-      "visible": false,
-      "holding": false
-    },
-    "workspaceView": "objects",
-    "rules": {
-      "revision": 1,
-      "bindingPage": 0,
-      "bindingCount": 0,
-      "queued": 0,
-      "eventQueue": 0,
-      "eventsDropped": 0,
-      "canUndo": false,
-      "canRedo": false,
-      "readOnly": false,
-      "status": "Create an action sequence, then add triggers or buttons",
-      "selectedError": "",
-      "sequences": [],
-      "selected": null,
-      "memory": null,
-      "bindings": [],
-      "buttons": [],
-      "running": [],
-      "outcomes": []
-    },
-    "motions": null,
-    "capabilities": [
-      "physicsSettings.v1",
-      "avatarSettings.v1",
-      "physicsRun.v1",
-      "avatarMotion.v1",
-      "avatarWalk.v1",
-      "motions.v1",
-      "avatarActivities.v1",
-      "catalog.v1",
-      "catalogVocabulary.v1",
-      "roomOwnership.v1",
-      "behaviourPrograms.v3",
-      "eventPrograms.v1",
-      "eventFields.v1",
-      "eventSubscriptions.v1",
-      "factQueries.v1",
-      "conditionWaits.v1",
-      "parallelPrograms.v1",
-      "rememberedVariables.v1",
-      "temporaryMemory.v1",
-      "structuredValues.v1",
-      "programModules.v1",
-      "moduleLibrary.v1",
-      "moduleLibraryFiles.v1",
-      "execution.v1",
-      "executionReceipts.v1",
-      "actionResults.v1",
-      "recipeCreation.v1",
-      "creationComponents.v1",
-      "creationTemplates.v1",
-      "layoutEdits.v1",
-      "structures.v1",
-      "batchCreation.v1",
-      "structuredResults.v1",
-      "structuredInputs.v1",
-      "indexedInputs.v1",
-      "constructionSelection.v1",
-      "groupTransforms.v1",
-      "constructionManipulation.v1",
-      "constructionSnapping.v1",
-      "objectEdits.v1",
-      "objectCopy.v1",
-      "drawingEdits.v1",
-      "drawingSurfaces.v1",
-      "curvedDrawingSurfaces.v1",
-      "drawingTips.v1",
-      "drawingErasers.v1",
-      "containers.v1",
-      "heightFields.v1",
-      "heightFieldTransfer.v1",
-      "materialStores.v1",
-      "materialTransfer.v1",
-      "materialPacking.v1",
-      "physicalSculpting.v1",
-      "physicalMaterialTools.v1",
-      "containerPouring.v1",
-      "containerScooping.v1",
-      "physicalConnections.v1",
-      "physicalSliders.v1",
-      "snapPoints.v1",
-      "connectedBlueprints.v2",
-      "creationPrototypes.v1",
-      "constructionCapture.v1",
-      "recipeEdits.v1",
-      "latheGeometry.v1",
-      "extrusionGeometry.v1",
-      "sweepGeometry.v1",
-      "recipePatterns.v1",
-      "roomViewCapture.v1",
-      "collisionShapes.v1",
-      "recipePartPlayback.v1",
-      "objectAttachments.v1",
-      "anchorZones.v1",
-      "channelWaits.v1",
-      "objectLaunch.v1",
-      "physicalCatching.v1",
-      "calendarSchedules.v1",
-      "animationAuthoring.v1",
-      "animationRecording.v1",
-      "animationPosing.v1",
-      "avatarModels.v1",
-      "modelImport.v1",
-      "modelArchiveImport.v1",
-      "motionBatchImport.v1",
-      "includedMotions.v1",
-      "authoredMotion.v1",
-      "unavailablePrograms.v1",
-      "actionRecovery.v1",
-      "temporaryRoom.v1",
-      "spatialSettings.v1",
-      "physicsSimulation.v1",
-      "roomEnvironment.v1",
-      "surfacePlacement.v1",
-      "controllerConfiguration.v1",
-      "controllerModes.v1",
-      "runtimeDiagnostics.v1",
-      "workspaceMaintenance.v1",
-      "workspaceArchiveActivation.v1",
-      "workspaceReview.v1",
-      "workspacePrevious.v1",
-      "workspaceRecovery.v1",
-      "workspaceSavedRecovery.v1",
-      "workspaceHistory.v1",
-      "workspaceEvidence.v1",
-      "workspaceRetention.v1",
-      "workspaceDisposal.v1"
-    ],
-    "physics": {
-      "ready": true,
-      "running": false,
-      "status": "Probe-only synthetic floor; no real scan or alignment proof"
-    },
-    "temporaryRoom": {
-      "active": false,
-      "pending": false,
-      "id": "22885dab7950408aa37ce23773e9ac40",
-      "saveId": "",
-      "phase": "idle",
-      "error": "",
-      "savedRevision": 0
-    },
-    "ownership": {
-      "suspended": false,
-      "error": "",
-      "owners": [
-        {
-          "id": "ambient:maestro",
-          "label": "Maestro tutor activity",
-          "role": "ambient",
-          "allowsGrab": false,
-          "claims": [
-            {
-              "target": "maestro",
-              "channel": "wholeTarget"
-            }
-          ]
-        }
-      ]
-    },
-    "avatar": {
-      "active": false,
-      "canLook": true,
-      "canFollow": false,
-      "mode": "stopped",
-      "status": "Choose Look at me or Follow me",
-      "lookReason": "",
-      "followReason": "Load the room, check its alignment, then Start physics before walking",
-      "distance": 1.3,
-      "speed": 0.65
-    },
-    "walk": {
-      "source": "embedded",
-      "motionId": "",
-      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
-      "name": "Walking",
-      "status": "Embedded walking clip is available",
-      "playbackStatus": "",
-      "clipIndex": 0,
-      "available": true
-    },
-    "activityProfile": {
-      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
-      "status": "Uses included animations where no state motion is assigned",
-      "revision": 1,
-      "canAssign": true,
-      "readOnly": false,
-      "canUndo": false,
-      "canRedo": false,
-      "roles": [
-        {
-          "role": 0,
-          "choices": [
-            {
-              "motionId": "21da54acb5c38d147ad297bf7ef22977",
-              "name": "Idle_4",
-              "weight": 1,
-              "speed": 1,
-              "cooldown": 0,
-              "loop": true,
-              "available": true
-            }
-          ]
         },
         {
-          "role": 1,
-          "choices": [
-            {
-              "motionId": "bd0bf1a849d86d785e00c3a392639359",
-              "name": "Listening_Gesture",
-              "weight": 1,
-              "speed": 1,
-              "cooldown": 0,
-              "loop": true,
-              "available": true
-            }
-          ]
-        },
-        {
-          "role": 2,
-          "choices": [
-            {
-              "motionId": "9a66ea13d9ba08b954b9a0cbdc7d89dc",
-              "name": "Idle_12",
-              "weight": 1,
-              "speed": 1,
-              "cooldown": 0,
-              "loop": true,
-              "available": true
-            }
-          ]
-        },
-        {
-          "role": 3,
-          "choices": [
-            {
-              "motionId": "b56ece79da8e21bac89927310921d734",
-              "name": "Talk_with_Hands_Open",
-              "weight": 1,
-              "speed": 1,
-              "cooldown": 2,
-              "loop": false,
-              "available": true
-            },
-            {
-              "motionId": "852ac885964d693deb8d3d3ba835acec",
-              "name": "Talk_with_Right_Hand_Open",
-              "weight": 1,
-              "speed": 1,
-              "cooldown": 2,
-              "loop": false,
-              "available": true
-            }
-          ]
-        }
-      ]
-    },
-    "objects": [
-      {
-        "id": "6084b7381b7247d4be910406673502c8",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "adc2f5c77a854f9babeee4a08c575ff9",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 3,
-        "position": {
-          "x": 0.5199999809265137,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "b646f9a9b06d47bd80ccad2189591242",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "book",
-        "name": "Book",
-        "kind": "Book",
-        "objectRevision": 1,
-        "position": {
-          "x": 0,
-          "y": 1.159999966621399,
-          "z": 0.6499999761581421
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "f3b73cd371a741bf86105309bf1469c9",
-        "name": "Editable sculpt brush",
-        "kind": "Assembly",
-        "objectRevision": 48,
-        "position": {
-          "x": 0.30000001192092896,
-          "y": 1.2999999523162842,
-          "z": 0.6499999761581421
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "solid",
-          "shape": "automatic",
-          "mass": 0.05999999865889549
-        },
-        "movement": null
-      },
-      {
-        "id": "maestro",
-        "name": "Maestro",
-        "kind": "Maestro",
-        "objectRevision": 2,
-        "position": {
-          "x": -0.7799999713897705,
-          "y": 0,
-          "z": 1.399999976158142
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": {
-          "distance": 1.3,
-          "speed": 0.65
-        }
-      }
-    ],
-    "created": [],
-    "capture": {
-      "captureId": "4166264e10644f85bc9b492df466b13b",
-      "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
-      "mimeType": "image/jpeg",
-      "width": 512,
-      "height": 384,
-      "capturedAt": "2026-10-04T16:28:45.9069317Z",
-      "sceneRevision": 3,
-      "verticalFov": 60,
-      "position": {
-        "x": 0,
-        "y": 0,
-        "z": 0
-      },
-      "rotation": {
-        "x": 0,
-        "y": 0,
-        "z": 0,
-        "w": 1
-      }
-    },
-    "catalog": {
-      "operation": "inspect",
-      "capability": "object.field.capture",
-      "version": 1,
-      "definition": {
-        "id": "object.field.capture",
-        "version": 1,
-        "type": {
-          "record": {
-            "sessionId": "text",
-            "phase": "text",
-            "target": "text",
-            "brush": {
-              "record": {
-                "mode": "text",
-                "radius": "number",
-                "height": "number"
-              }
-            },
-            "points": "number",
-            "temporary": "boolean",
-            "error": "text"
-          }
-        },
-        "label": "Physical sculpt draft",
-        "description": "Current shared shape or material gesture, field target, brush settings, sampled point count and bounded error. Material take/deposit has one point and zero height; inspect object.material.capture for quantities. Preview is visible only; collision/saved heights remain accepted. Unsaved needs explicit Retry/Discard. Read object.field.capture.path for exact points. Reads do not change the draft.",
-        "features": [
-          "physicalSculpting.v1"
-        ]
-      },
-      "status": "Current fact value. Reading does not change the room.",
-      "category": "facts",
-      "available": true,
-      "value": {
-        "sessionId": "585584e9b4f94511b1d07f01856ddbc7",
-        "phase": "idle",
-        "target": "",
-        "brush": {
-          "mode": "none",
-          "radius": 0,
-          "height": 0
-        },
-        "points": 0,
-        "temporary": false,
-        "error": ""
-      }
-    },
-    "execution": {
-      "selected": {
-        "id": "0054cd74bb6b4515b28c959b026b846b",
-        "capability": "field.tool.set",
-        "version": 1,
-        "resources": [],
-        "phase": "completed",
-        "status": "Action completed",
-        "call": {
-          "id": "field.tool.set",
-          "version": 1,
-          "arguments": {
-            "mode": "lower",
-            "radius": 0.08,
-            "height": 0.03
-          }
-        }
-      },
-      "running": [],
-      "outcomes": [
-        {
-          "id": "62ae6ea773034294b484b6aab163fd6b",
-          "capability": "object.recipe.edit",
-          "version": 1,
-          "resources": [
-            "cda8b314c677420787153262dff4d7ac"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "cda8b314c677420787153262dff4d7ac",
-            "revision": 18,
-            "parts": 1,
-            "tracks": 0,
-            "duration": 2,
-            "loop": false,
-            "playing": false,
-            "autoplay": false
-          }
-        },
-        {
-          "id": "c6f5bd22bede4ed4985c25a3e3be6bcf",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "f742acd43a454d738677c3573f40f1aa"
-          }
-        },
-        {
-          "id": "e5673125b6f04d949b0449c979d30b14",
-          "capability": "object.recipe.edit",
-          "version": 1,
-          "resources": [
-            "f742acd43a454d738677c3573f40f1aa"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "target": "f742acd43a454d738677c3573f40f1aa",
-            "revision": 21,
-            "parts": 1,
-            "tracks": 0,
-            "duration": 2,
-            "loop": false,
-            "playing": false,
-            "autoplay": false
-          }
-        },
-        {
-          "id": "b66a42a54dc0436b82982de6882e9bcb",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "dc93ac70529c4dba9095597acbca13bc"
-          }
-        },
-        {
-          "id": "b859229c56ee47d0b927a9dafa76ed82",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "21268385fa1542e090f0d02d1cdcdd79"
-          }
-        },
-        {
-          "id": "308cfec7b00146f2a0d446a7f4ed2ec8",
-          "capability": "object.field.sculpt",
-          "version": 1,
-          "resources": [
-            "21268385fa1542e090f0d02d1cdcdd79"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "changedVertices": 63
-          }
-        },
-        {
-          "id": "ace2c1ca09854a34b4681dbf7df5be75",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "369ebc6ea880409282f8dec8d03f4f02"
-          }
-        },
-        {
-          "id": "321a20ae4d1144aab13ffc699be9ad26",
-          "capability": "object.field.transfer",
-          "version": 1,
-          "resources": [
-            "21268385fa1542e090f0d02d1cdcdd79",
-            "369ebc6ea880409282f8dec8d03f4f02"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "removedLitres": 1.0000001930166034,
-            "addedLitres": 1.0000003094319252,
-            "roundingLitres": 1.1641532182693481e-7
-          }
-        },
-        {
-          "id": "a3f0d69c42884d018f307d1b6f49fb86",
-          "capability": "object.material.pack",
-          "version": 1,
-          "resources": [
-            "21268385fa1542e090f0d02d1cdcdd79"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "9682a4123b6341dcad1d32069f8a5f84",
-            "amountLitres": 0.4999998782295733
-          }
-        },
-        {
-          "id": "ba4c3df5a57f4b0fa7fb55d158f0432f",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "ef6bf19f81ba4de98e125dbd05a68eb9"
-          }
-        },
-        {
-          "id": "b35b90851c5842118bf056f94c8a41f1",
-          "capability": "object.material.edit",
-          "version": 1,
-          "resources": [
-            "ef6bf19f81ba4de98e125dbd05a68eb9"
-          ],
-          "phase": "completed",
-          "status": "Action completed"
-        },
-        {
-          "id": "f07792db2869494a98a6b78823eeb53f",
-          "capability": "object.material.transfer",
-          "version": 1,
-          "resources": [
-            "21268385fa1542e090f0d02d1cdcdd79",
-            "ef6bf19f81ba4de98e125dbd05a68eb9"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "removedLitres": 0.19999913638457656,
-            "addedLitres": 0.19999913638457653,
-            "roundingLitres": -2.7755575615628914e-17
-          }
-        },
-        {
-          "id": "4b83367a0a6b4c2c86868391ccb150d1",
-          "capability": "object.material.transfer",
-          "version": 1,
-          "resources": [
-            "ef6bf19f81ba4de98e125dbd05a68eb9",
-            "21268385fa1542e090f0d02d1cdcdd79"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "removedLitres": 0.09999965550377964,
-            "addedLitres": 0.09999965550377965,
-            "roundingLitres": 1.3877787807814457e-17
-          }
-        },
-        {
-          "id": "5d50f6044ff146ee80c811459ecf537c",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "f3b73cd371a741bf86105309bf1469c9"
-          }
-        },
-        {
-          "id": "8b3aec428d0d45c9ac8499f8ef078743",
-          "capability": "object.sculptTip.edit",
-          "version": 1,
-          "resources": [
-            "f3b73cd371a741bf86105309bf1469c9"
-          ],
-          "phase": "completed",
-          "status": "Action completed"
-        },
-        {
-          "id": "0054cd74bb6b4515b28c959b026b846b",
+          "id": "0fff8c98dca24c64a65d55f0ead9f51a",
           "capability": "field.tool.set",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed"
+        },
+        {
+          "id": "3a39385063ac4b54abda7e1f0b88c709",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "b2ccf913f5594282af5551cd87ce3202"
+          }
+        },
+        {
+          "id": "6000810a8f6043a6a974abd039b0b4f5",
+          "capability": "object.sculptTip.edit",
+          "version": 1,
+          "resources": [
+            "b2ccf913f5594282af5551cd87ce3202"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
         }
       ],
-      "nextRunId": "0fff8c98dca24c64a65d55f0ead9f51a",
+      "nextRunId": "e1ad970340954d5bb1f9f3db8cd5d345",
       "storageError": null,
       "recovery": null,
       "workspace": {
