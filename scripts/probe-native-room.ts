@@ -704,17 +704,21 @@ try{
   // Let ordinary gravity finish before preparing a direct throw. Physics autosave
   // advances object revisions too; a still-falling ball is not a stable fixture.
   // Observe over a full placement-capture interval; never retry a refused launch.
-  const catchSettling=[];const settleDeadline=Date.now()+15000;let quietSince=Date.now();
-  let previousBall=lease.state().objects.find(o=>o.id===catchTarget)!;
-  while(Date.now()<settleDeadline){
-   await new Promise(r=>setTimeout(r,150));
-   const sample=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.position',version:1,arguments:{target:catchTarget}}}]);
-   catchSettling.push(sample);const ball=sample.objects.find(o=>o.id===catchTarget)!;
-   if(!ball?.simulating)throw new Error('The catch fixture ball is not simulating');
-   if(ball.objectRevision!==previousBall.objectRevision||Math.hypot(ball.position.x-previousBall.position.x,ball.position.y-previousBall.position.y,ball.position.z-previousBall.position.z)>.0001)quietSince=Date.now();
-   previousBall=ball;if(Date.now()-quietSince>=1250)break;
-  }
-  if(Date.now()-quietSince<1250)throw new Error('The catch fixture ball did not settle on the synthetic floor');
+  const waitForCatchPlacement=async(simulating:boolean,wholeRoom=false)=>{
+   const samples:RoomAgentState[]=[];const deadline=Date.now()+15000;let quietSince=Date.now();
+   const signature=(state:RoomAgentState)=>JSON.stringify(state.objects.filter(o=>wholeRoom||o.id===catchTarget).map(o=>[o.id,o.objectRevision,o.position]));
+   let previous=signature(lease.state());
+   while(Date.now()<deadline){
+    await new Promise(r=>setTimeout(r,150));
+    const sample=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.position',version:1,arguments:{target:catchTarget}}}]);
+    samples.push(sample);const ball=sample.objects.find(o=>o.id===catchTarget);
+    if(!ball||ball.simulating!==simulating)throw new Error('The catch fixture has the wrong physics state');
+    const current=signature(sample);if(current!==previous)quietSince=Date.now();previous=current;
+    if(Date.now()-quietSince>=1250)return samples;
+   }
+   throw new Error('The catch fixture placement did not stabilize within the bounded observation window');
+  };
+  const catchSettling=await waitForCatchPlacement(true);
   const catchReadyDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.physics.catch',version:1}}]);
   const catchReadyCheck=await execute([{action:'catalog',catalog:{operation:'check',call:catchCall}}]);if(catchReadyCheck.catalog?.available!==true)throw new Error('Native catch readiness differs from the active world');
   const catchWaiting=await execute([{action:'execution',execution:{operation:'start',call:catchCall}}]);const catchRun=catchWaiting.execution?.selected?.id;if(!catchRun||catchWaiting.execution?.selected?.phase!=='preparing')throw new Error('Native catch did not wait for physical contact');
@@ -727,8 +731,11 @@ try{
   if(catchAfter.execution?.selected?.phase!=='completed'||catchAfter.execution.selected.output?.caught!==true||catchAfter.execution.selected.output?.dropped!==true)throw new Error('Physical catch did not complete: '+JSON.stringify(catchAfter.execution?.selected));
   const catchReplay=await execute([{action:'execution',execution:{operation:'start',runId:catchRun,call:catchCall}}]);if(catchReplay.execution?.selected?.phase!=='completed'||catchReplay.rules?.running?.some(r=>r.id===catchRun))throw new Error('Catch receipt replay restarted a physical attempt');
   const physicsAfter=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'physics.simulation',version:1}}]);
-  await execute([{action:'execution',execution:{operation:'start',call:{id:'physics.simulation.set',version:1,arguments:{operation:'pause',stateId:(physicsAfter.catalog!.value as {stateId:string}).stateId}}}}]);
-  await writeFile(join(directory,'physical-catching.json'),JSON.stringify({boundary:'Real full-app shared-client capture and drop with ordinary PhysX against a synthetic probe floor. Includes the real command result and duplicate receipt; no headset, scan, browser physics or provider proof.',search:catchSearch,definition:catchDefinition,readyDefinition:catchReadyDefinition,readyCheck:catchReadyCheck,call:catchCall,blocked:catchBlocked,settling:catchSettling,waiting:catchWaiting,fact:catchFact,launch:catchLaunch,after:catchAfter,replay:catchReplay},null,2));
+  const catchPaused=await execute([{action:'execution',execution:{operation:'start',call:{id:'physics.simulation.set',version:1,arguments:{operation:'pause',stateId:(physicsAfter.catalog!.value as {stateId:string}).stateId}}}}]);
+  // Pausing freezes bodies; the periodic placement capture can still publish their last pose.
+  // Observe the whole room for one capture interval before one-shot global Undo.
+  const catchPausedSettling=await waitForCatchPlacement(false,true);
+  await writeFile(join(directory,'physical-catching.json'),JSON.stringify({boundary:'Real full-app shared-client capture and drop with ordinary PhysX against a synthetic probe floor. Includes the real command result and duplicate receipt; no headset, scan, browser physics or provider proof.',search:catchSearch,definition:catchDefinition,readyDefinition:catchReadyDefinition,readyCheck:catchReadyCheck,call:catchCall,blocked:catchBlocked,settling:catchSettling,waiting:catchWaiting,fact:catchFact,launch:catchLaunch,after:catchAfter,replay:catchReplay,paused:catchPaused,pausedSettling:catchPausedSettling},null,2));
   await execute([{action:'undo'}]);await execute([{action:'undo'}]);
   outcome={physicalCatching:{syntheticFloor:true,sharedLaunchCatchDropAndReplayVerified:true},constructionMovement:{sharedHandleTransformAndOneUndoVerified:true},constructionSelection:{sharedStateFactLocateCaptureAndPruneVerified:true},currentMembers:{visibleReadsAndIndexedGuardsVerified:true,program:currentCaptureId},constructionCapture:{hash:capturedHash,survivedOriginalRemovalAndInternalHingeAndUndoVerified:true},connectedBlueprint:{identitiesInternalHingeAndSingleUndoVerified:true},leverModule:{hash:leverHash,program:leverId,includedSourceAndNativeCreationVerified:true},drawingTip:{tipHash,configurationReadbackAndUndoVerified:true},surface:{chalkHash,stroke,toolAndInkReadEraseUndoVerified:true},watch:{moduleHash,program:watcherId,includedSourceAndNativeRearmVerified:true},composition:{program:compositionId,outcome:compositionOutcome,buildCaptureMoveResetAndUndoVerified:true},structures:{captureReceipt:structureAfter.execution?.selected,liveDisplacementResetAndUndoVerified:true},batch:{createReceipt:batchAfter.execution?.selected,identitiesAndSingleUndoVerified:true},layout:{applyReceipt:layoutAfter.execution?.selected,liveReadAndSingleUndoVerified:true},template:{hash:templateArgs.templateHash,createReceipt:templateAfter.execution?.selected,componentsAndSingleUndoVerified:true},createdId:target,createReceipt:selected,paintVerified:true,undoPaintVerified:true,undoCreateVerified:true,diagnostics:diagnostic.catalog.value,lathe:{createReceipt:lathe.execution?.selected,profile:value,editAndUndoVerified:true},collision:{summary:summaryValue,editAndUndoVerified:true},latheCycles:cycle+1};
   }

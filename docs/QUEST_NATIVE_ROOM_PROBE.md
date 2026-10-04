@@ -325,3 +325,14 @@ same-object and oversized-amount refusal, and the exact emitted call and native
 result. It does not run a browser material simulation. This authoring check does
 not claim physical shovel contact, carrying visuals, hand packing, provider
 reasoning or headset acceptance; those are separate adapters and release gates.
+
+
+## Paused-physics cleanup boundary (2026-10-04)
+
+After the catch/drop cycle, the probe explicitly pauses physics and observes all
+object revisions/poses for a full placement-capture interval before its single
+cleanup Undo. Pause freezes bodies but intentionally does not save placements;
+the room's periodic capture can still publish the last dropped pose. The
+`paused` and `pausedSettling` observations preserve that boundary. A stale refusal
+still fails the journey and is never retried. This closes a harness race exposed
+by a correctly refused global Undo; native revision guards are unchanged.
