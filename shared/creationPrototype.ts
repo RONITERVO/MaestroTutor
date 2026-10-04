@@ -8,9 +8,9 @@ type Q=V&{w:number};
 interface Frame {time:number;position:V;rotation:Q;scale:number}
 interface Surface extends SurfaceGeometry {version:number;id:string;part:string;position:V;width:number;height:number;strokes:{id:string;radius:number;points:V[]}[]}
 export interface CreationPrototype {
- physics:{mode:string};heightFields?:unknown[];
+ physics:{mode:string};heightFields?:unknown[];sculptTips?:{part:string;enabled:boolean}[];
  geometry:{kind:string;recipe?:{playing:boolean;parts:{id:string}[]};points?:V[];radius?:number};
- snapPoints?:{id:string;frame:{position:V}}[];surfaces:Surface[];drawingTips:{version:number;mode?:string;part:string;position:V}[];motion?:{loop:boolean;frames:Frame[]};
+ snapPoints?:{id:string;frame:{position:V}}[];surfaces:Surface[];drawingTips:{enabled:boolean;version:number;mode?:string;part:string;position:V}[];motion?:{loop:boolean;frames:Frame[]};
 }
 const hasLength=(p:V[])=>p.some(v=>(v.x-p[0].x)**2+(v.y-p[0].y)**2+(v.z-p[0].z)**2>.000001);
 export function validCreationPrototypeGeometry(value:Record<string,unknown>):boolean {
@@ -28,6 +28,7 @@ export function validCreationPrototypeGeometry(value:Record<string,unknown>):boo
  }
  if(p.snapPoints&&(new Set(p.snapPoints.map(s=>s.id)).size!==p.snapPoints.length||p.snapPoints.some(s=>length2(s.frame.position)>100)))return false;
  if(points>32768||p.drawingTips.some(t=>!part(t.part)||length2(t.position)>100||!['draw','erase'].includes(t.mode??'draw')||t.version!==((t.mode??'draw')==='erase'?2:1)))return false;
+ if(p.sculptTips?.some(t=>!part(t.part))||p.sculptTips?.some(t=>t.enabled)&&p.drawingTips.some(t=>t.enabled))return false;
  if(p.motion?.frames.some((f,i)=>i===0?f.time!==0||length2(f.position)>250001:f.time<=p.motion!.frames[i-1].time||length2(f.position)>250001))return false;
  return true;
 }

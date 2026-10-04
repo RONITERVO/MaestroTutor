@@ -37,7 +37,7 @@ namespace Maestro.Quest.Tests
             string id=RoomSnapshotTransaction.Publish(directory,empty,first);Assert.That(id.Length,Is.EqualTo(32));
             Assert.That(RoomSnapshotTransaction.Capture(directory).Identity,Is.EqualTo(first.Identity));
             var next=Pair(2);RoomSnapshotTransaction.Publish(directory,first,next);
-            Assert.That(File.ReadAllBytes(PathFor("room.v15.json.backup")),Is.EqualTo(first.Room));
+            Assert.That(File.ReadAllBytes(PathFor("room.v16.json.backup")),Is.EqualTo(first.Room));
             Assert.That(File.ReadAllBytes(PathFor(ProgramMemoryStore.FileName+".backup")),Is.EqualTo(first.Memory));
             Assert.That(File.Exists(PathFor(RoomSnapshotTransaction.FileName)),Is.False);
             Assert.That(RoomSnapshotTransaction.Capture(directory).Identity,Is.EqualTo(next.Identity));
@@ -51,7 +51,7 @@ namespace Maestro.Quest.Tests
             var recovered=RoomSnapshotTransaction.Capture(directory,out var outcome);
             Assert.That(recovered.Identity,Is.EqualTo((committed?after:before).Identity));
             Assert.That(outcome?.Committed,Is.EqualTo(stage=="before-journal"?(bool?)null:committed));
-            Assert.That(File.ReadAllBytes(PathFor("room.v15.json.backup")),Is.EqualTo((committed?before:earlier).Room));
+            Assert.That(File.ReadAllBytes(PathFor("room.v16.json.backup")),Is.EqualTo((committed?before:earlier).Room));
             Assert.That(File.ReadAllBytes(PathFor(ProgramMemoryStore.FileName+".backup")),Is.EqualTo((committed?before:earlier).Memory));
             Assert.That(RoomSnapshotTransaction.Capture(directory,out outcome).Identity,Is.EqualTo(recovered.Identity));Assert.That(outcome,Is.Null);
         }
@@ -62,7 +62,7 @@ namespace Maestro.Quest.Tests
             Assert.Throws<IOException>(()=>RoomSnapshotTransaction.Publish(directory,before,after,StopAt(stage)));
             var recovered=RoomSnapshotTransaction.Capture(directory);
             Assert.That(recovered.Identity,Is.EqualTo((committed?after:before).Identity));
-            Assert.That(File.Exists(PathFor("room.v15.json.backup")),Is.False);Assert.That(File.Exists(PathFor(ProgramMemoryStore.FileName+".backup")),Is.False);
+            Assert.That(File.Exists(PathFor("room.v16.json.backup")),Is.False);Assert.That(File.Exists(PathFor(ProgramMemoryStore.FileName+".backup")),Is.False);
         }
         [TestCase("room",false)][TestCase("committed",true)]
         public void RecoveryCanItselfBeInterruptedAndRepeated(string stage,bool committed)
@@ -73,7 +73,7 @@ namespace Maestro.Quest.Tests
             Assert.That(File.Exists(PathFor(RoomSnapshotTransaction.FileName)),Is.True);
             Assert.That(RoomSnapshotTransaction.Capture(directory).Identity,Is.EqualTo((committed?after:before).Identity));
         }
-        [TestCase("room.v15.json",false)][TestCase("program-memory.v1.json",false)][TestCase("room.v15.json.backup",true)][TestCase("program-memory.v1.json.backup",true)]
+        [TestCase("room.v16.json",false)][TestCase("program-memory.v1.json",false)][TestCase("room.v16.json.backup",true)][TestCase("program-memory.v1.json.backup",true)]
         public void RecoveryPreservesUnexpectedPrimariesAndBackupsBeforeAnyFurtherWrite(string file,bool backup)
         {
             var before=Seed();var after=Pair(2);var outside=Pair(7);
@@ -106,8 +106,8 @@ namespace Maestro.Quest.Tests
             finally{release.Set();worker.GetAwaiter().GetResult();}
             Assert.That(RoomSnapshotTransaction.Capture(directory).Identity,Is.EqualTo(after.Identity));
         }
-        [TestCase("room-snapshot.v15.json")][TestCase("room-snapshot.v14.json.snapshot.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")][TestCase("program-memory.v1.json.snapshot.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")]
-        [TestCase("room.v16.json")][TestCase("room.v16.json.backup")][TestCase(RoomStorage.FileName+".pending")]
+        [TestCase("room-snapshot.v16.json")][TestCase("room-snapshot.v15.json.snapshot.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")][TestCase("program-memory.v1.json.snapshot.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")]
+        [TestCase("room.v17.json")][TestCase("room.v17.json.backup")][TestCase(RoomStorage.FileName+".pending")]
         [TestCase("program-memory.v2.json")][TestCase("program-memory.v1.json.pending.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")]
         public void UnrecognizedOrStagedEvidenceIsPreserved(string name)
         {

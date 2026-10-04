@@ -28,6 +28,11 @@ namespace Maestro.Quest.Creation {
             if(fields.Length==1)return fields[0].Validate(out error);error=null;return true;
         }
         internal Vector3 Vertex(int x,int z)=>new((float)x/cells*width-width*.5f,heights[z*(cells+1)+x],(float)z/cells*depth-depth*.5f);
+        internal float HeightAt(Vector2 point){
+            float x=Mathf.Clamp((point.x/width+.5f)*cells,0,cells),z=Mathf.Clamp((point.y/depth+.5f)*cells,0,cells);
+            int ix=Mathf.Min((int)x,cells-1),iz=Mathf.Min((int)z,cells-1),a=iz*(cells+1)+ix;float u=x-ix,v=z-iz;
+            return u+v<=1?heights[a]*(1-u-v)+heights[a+1]*u+heights[a+cells+1]*v:heights[a+1]*(1-v)+heights[a+cells+1]*(1-u)+heights[a+cells+2]*(u+v-1);
+        }
         // Integrate the same two triangles per cell as the visual/collision mesh.
         // This is authored local volume, not physical mass or conserved simulated snow.
         internal double VolumeLitres {get{double sum=0;for(int z=0;z<cells;z++)for(int x=0;x<cells;x++){int a=z*(cells+1)+x,b=a+1,c=a+cells+1,d=c+1;sum+=heights[a]+2*heights[b]+2*heights[c]+heights[d];}return sum*width*depth/(6.0*cells*cells)*1000;}}

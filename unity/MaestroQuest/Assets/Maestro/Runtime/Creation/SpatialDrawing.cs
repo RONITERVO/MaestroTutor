@@ -49,7 +49,7 @@ namespace Maestro.Quest.Creation
         internal void EndTool(string target){if(IsToolDrawing(target))End(-2);}
         void BeginCapture(int id,Ray ray,Color ink,float size,bool surfaceMode,bool erase,float maximum,string tool,RoomActorRole role)
         {
-            if(Editor.Ownership.Suspended||Editor.WriteGate.Frozen)return;
+            if(Editor.Ownership.Suspended||Editor.WriteGate.Frozen||Editor.SculptingInProgress)return;
             if(HasUnsavedStroke){Editor.ReportStatus("Save or discard the retained stroke first");return;}
             write=Editor.WriteGate.TryWrite(out var blocked);if(write==null){Editor.ReportStatus(blocked);return;}
             SessionId=Guid.NewGuid().ToString("N");roomSession=Editor.TemporarySessionId;owner=id;color=ink;radius=size;contactDistance=maximum;toolTarget=tool;captureRole=role;points.Clear();renderedPoints=0;nextPreview=0;errorText="";

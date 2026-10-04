@@ -156,8 +156,8 @@ namespace Maestro.Quest.Editor
             var tray = new GameObject("Solid creation tools"); tray.AddComponent<RoomToolTray>().Build(editor,room);
             var camera = new GameObject("Verification camera",typeof(Camera)).GetComponent<Camera>();
             camera.clearFlags = CameraClearFlags.SolidColor; camera.backgroundColor = new Color(.93f,.91f,.87f,1);
-            camera.orthographic = true; camera.orthographicSize = .36f; camera.nearClipPlane = .01f;
-            camera.transform.position = new Vector3(.03f,-.055f,-1); camera.transform.LookAt(new Vector3(0,-.055f,0));
+            camera.orthographic = true; camera.orthographicSize = .40f; camera.nearClipPlane = .01f;
+            camera.transform.position = new Vector3(.03f,-.125f,-1); camera.transform.LookAt(new Vector3(0,-.125f,0));
             Capture(camera,Path.Combine(output,"creation-tools-unity.png"),1500,1050);
             Debug.Log("MAESTRO_CREATION_TOOLS_RENDERED");
         }

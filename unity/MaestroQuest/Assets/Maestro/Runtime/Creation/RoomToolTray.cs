@@ -15,13 +15,14 @@ namespace Maestro.Quest.Creation
         RoomInteraction room;
         TextMesh status,pencilLabel,eraseLabel,selectionLabel,moveLabel;
         Material pencilPaint,surfacePaint;
+        readonly Dictionary<string,Material> sculptPaint=new();
         public void Build(RoomEditor editor, RoomInteraction room)
         {
             this.editor = editor; this.room = room;
             var wood = Material(IllustratedMaterials.Hex("C89D65")); var paper = Material(IllustratedMaterials.Paper);
             var teal = Material(IllustratedMaterials.Hex("2B8D88")); var ink = Material(IllustratedMaterials.Ink);
-            Part(transform,PrimitiveType.Cube,new Vector3(0,-.06f,0),new Vector3(.74f,.56f,.025f),wood);
-            var handle = gameObject.AddComponent<BoxCollider>(); handle.center = new Vector3(0,-.06f,.007f); handle.size = new Vector3(.74f,.56f,.025f);
+            Part(transform,PrimitiveType.Cube,new Vector3(0,-.125f,0),new Vector3(.74f,.69f,.025f),wood);
+            var handle = gameObject.AddComponent<BoxCollider>(); handle.center = new Vector3(0,-.125f,.007f); handle.size = new Vector3(.74f,.69f,.025f);
             var movable = gameObject.AddComponent<RoomItem>(); movable.Configure(new Collider[] { handle },1,1); room.Register(movable);
             var kinds = new[] { RoomTool.Block, RoomTool.Ball, RoomTool.Cylinder };
             var primitives = new[] { PrimitiveType.Cube, PrimitiveType.Sphere, PrimitiveType.Cylinder };
@@ -67,16 +68,18 @@ namespace Maestro.Quest.Creation
                 if(sessionTools[i]==RoomTool.MovePieces){moveLabel=tool.GetComponentInChildren<TextMesh>();Part(tool,PrimitiveType.Cube,Vector3.zero,new Vector3(.015f,.065f,.02f),paper);}
                 if(sessionTools[i]==RoomTool.CollectPieces){selectionLabel=tool.GetComponentInChildren<TextMesh>();Part(tool,PrimitiveType.Cube,new Vector3(.016f,.013f,-.014f),Vector3.one*.025f,paper);}
             }
-            status = Label(transform,new Vector3(0,-.32f,-.020f),"",.0048f);
+            var sculptTools=new[]{RoomTool.SculptLower,RoomTool.SculptRaise,RoomTool.SculptLevel};var sculptModes=new[]{"lower","raise","level"};
+            for(int i=0;i<3;i++){var tool=Tool(sculptTools[i],new Vector3(-.24f+i*.24f,-.36f,-.035f),"Sculpt "+sculptModes[i],14);var pigment=Material(IllustratedMaterials.Paper);sculptPaint[sculptModes[i]]=pigment;Part(tool,PrimitiveType.Cylinder,Vector3.zero,new Vector3(.047f,.009f,.047f),pigment);Part(tool,PrimitiveType.Cube,new Vector3(0,.018f,0),new Vector3(.012f,.045f,.018f),teal);}
+            status = Label(transform,new Vector3(0,-.445f,-.020f),"",.0038f);
             editor.Changed += Refresh; Refresh();
         }
 
-        Transform Tool(RoomTool kind, Vector3 position, string label)
+        Transform Tool(RoomTool kind, Vector3 position, string label,int wrapAt=9)
         {
             var root = new GameObject(label); root.transform.SetParent(transform,false); root.transform.localPosition = position;
             var collider = root.AddComponent<BoxCollider>(); collider.size = new Vector3(.085f,.082f,.08f);
             var action = root.AddComponent<PhysicalRoomAction>(); action.Tool = kind; action.Editor = editor; action.Room = room; action.AccessibleName = label;
-            Label(root.transform,new Vector3(0,-.05f,-.023f),label,.006f);
+            Label(root.transform,new Vector3(0,-.05f,-.023f),Mark(label,wrapAt),.0055f);
             return root.transform;
         }
 
@@ -87,15 +90,21 @@ namespace Maestro.Quest.Creation
             if(!isActiveAndEnabled||!editor||!status||!pencilLabel||!eraseLabel||!pencilPaint)return;
             var pencilAction=pencilLabel.GetComponentInParent<PhysicalRoomAction>();var eraseAction=eraseLabel.GetComponentInParent<PhysicalRoomAction>();
             if(!pencilAction||!eraseAction)return;
-            if(selectionLabel){var selection=editor.ObserveConstructionSelection();selectionLabel.text=selection.collecting?$"Finish ({selection.members.Length})":"Collect pieces";selectionLabel.GetComponentInParent<PhysicalRoomAction>().AccessibleName=selectionLabel.text;}
-            if(moveLabel){moveLabel.text=editor.ObserveConstructionManipulation().visible?"Hide mover":"Move pieces";moveLabel.GetComponentInParent<PhysicalRoomAction>().AccessibleName=moveLabel.text;}
+            if(selectionLabel){var selection=editor.ObserveConstructionSelection();selectionLabel.text=selection.collecting?$"Finish ({selection.members.Length})":"Collect pieces";selectionLabel.GetComponentInParent<PhysicalRoomAction>().AccessibleName=selectionLabel.text;selectionLabel.text=Mark(selectionLabel.text);}
+            if(moveLabel){moveLabel.text=editor.ObserveConstructionManipulation().visible?"Hide mover":"Move pieces";moveLabel.GetComponentInParent<PhysicalRoomAction>().AccessibleName=moveLabel.text;moveLabel.text=Mark(moveLabel.text);}
             var draft=editor.GetComponent<SpatialDrawing>();bool retained=draft?.HasUnsavedStroke==true;bool erasing=draft?.IsErasing==true;pencilLabel.text=retained?(erasing?"Retry erasing":"Retry stroke"):"Draw";eraseLabel.text=retained?(erasing?"Discard erasing":"Discard stroke"):editor.DrawingOnSurfaces?"Erase ink":"Erase";
+            var sculpt=editor.GetComponent<SpatialSculpting>();bool sculptDraft=sculpt?.Retained==true;
+            if(sculptDraft){retained=true;pencilLabel.text="Retry sculpt";eraseLabel.text="Discard sculpt";}
+            foreach(var paint in sculptPaint)paint.Value.color=sculpt&&sculpt.Mode==paint.Key?IllustratedMaterials.Hex("2B8D88"):IllustratedMaterials.Paper;
             if(surfacePaint)surfacePaint.color=editor.DrawingMode&&editor.DrawingOnSurfaces?IllustratedMaterials.Hex("2B8D88"):IllustratedMaterials.Paper;
-            pencilAction.AccessibleName=pencilLabel.text;eraseAction.AccessibleName=eraseLabel.text;
+            pencilAction.AccessibleName=pencilLabel.text;eraseAction.AccessibleName=eraseLabel.text;pencilLabel.text=Mark(pencilLabel.text);eraseLabel.text=Mark(eraseLabel.text);
             status.text = (editor.TemporaryRoom?"TEMPORARY | ":"SAVED ROOM | ")+editor.Status;
             if (status.text.Length > 70) status.text = status.text.Substring(0,70) + "…";
+            if(status.text.Length>38){int split=status.text.LastIndexOf(' ',38);if(split>0)status.text=status.text.Substring(0,split)+"\n"+status.text.Substring(split+1);}
             pencilPaint.color = retained ? IllustratedMaterials.Hex("D99B43") : editor.DrawingMode&&!editor.DrawingOnSurfaces ? IllustratedMaterials.Hex("2B8D88") : IllustratedMaterials.Ribbon;
         }
+        // Keep physical action names intact while fitting the printed marking.
+        static string Mark(string text,int wrapAt=9){int split=text.LastIndexOf(' ');return text.Length>wrapAt&&split>0?text.Substring(0,split)+"\n"+text.Substring(split+1):text;}
         static TextMesh Label(Transform parent, Vector3 position, string text, float size)
         {
             var label = new GameObject("Tool marking",typeof(TextMesh)); label.transform.SetParent(parent,false); label.transform.localPosition = position;

@@ -83,7 +83,7 @@ namespace Maestro.Quest.Creation
             journal = new RoomJournal(loaded ?? StarterDocument(book, maestro, includedAvatar));
             maestro.GetComponent<MaestroAvatar>()?.ConfigureRuntime(RuntimeGate);
             maestro.GetComponent<MaestroAvatar>()?.ConfigureOwnership(Ownership,"maestro");
-            Liquids=gameObject.AddComponent<LiquidPouring>();Liquids.Initialize(this);
+            Liquids=gameObject.AddComponent<LiquidPouring>();Liquids.Initialize(this);Sculpting.Editor=this;
             Reconcile();
             room.Restoring += BeforeRestore; room.Restored += AfterRestore;
             if (message != null) SetStatus(message);
@@ -162,10 +162,11 @@ namespace Maestro.Quest.Creation
             return CommitCreatedObject(item,out id,out error);
         }
         public bool CanCreateRecipe(RoomRecipe recipe,out string error)=>CanCreateRecipe(recipe,null,null,out error);
-        public bool CanCreateRecipe(RoomRecipe recipe,CollisionRecipe collision,ObjectPhysicsSettings physics,out string error,DrawingSurface[] surfaces=null,DrawingTip[] drawingTips=null,RoomSnapPoint[] snapPoints=null,RoomContainer[] containers=null,RoomHeightField[] heightFields=null) {
+        public bool CanCreateRecipe(RoomRecipe recipe,CollisionRecipe collision,ObjectPhysicsSettings physics,out string error,DrawingSurface[] surfaces=null,DrawingTip[] drawingTips=null,RoomSnapPoint[] snapPoints=null,RoomContainer[] containers=null,RoomHeightField[] heightFields=null,SculptTip[] sculptTips=null) {
             if(!CanCreatePrimitive(out error))return false;
             if(recipe==null) {error="Provide a construction recipe";return false;}
             if(!recipe.Validate(out error))return false;
+            if(!SculptTip.ValidateCollection(new RoomObjectData{kind=RoomObjectKind.Assembly,recipe=recipe,sculptTips=sculptTips,drawingTips=drawingTips},out error))return false;
             if(!DrawingSurface.ValidateCollection(new RoomObjectData {kind=RoomObjectKind.Assembly,recipe=recipe,surfaces=surfaces},out error))return false;
             if(Snapshot().objects.Sum(x=>x.surfaces?.Length??0)+(surfaces?.Length??0)>DrawingSurface.MaximumRoomSurfaces){error="This room has reached its drawing-surface limit";return false;}
             if(!DrawingTip.ValidateCollection(new RoomObjectData {kind=RoomObjectKind.Assembly,recipe=recipe,drawingTips=drawingTips},out error))return false;
@@ -183,9 +184,9 @@ namespace Maestro.Quest.Creation
             return true;
         }
         public bool CreateRecipe(string name,Vector3 position,float scale,RoomRecipe recipe,out string id,out string error)=>CreateRecipe(name,position,scale,recipe,null,null,out id,out error);
-        public bool CreateRecipe(string name,Vector3 position,float scale,RoomRecipe recipe,CollisionRecipe collision,ObjectPhysicsSettings physics,out string id,out string error,DrawingSurface[] surfaces=null,DrawingTip[] drawingTips=null,RoomSnapPoint[] snapPoints=null,RoomContainer[] containers=null,RoomHeightField[] heightFields=null) {
-            id=null;if(!CanCreateRecipe(recipe,collision,physics,out error,surfaces,drawingTips,snapPoints,containers,heightFields))return false;
-            if(!PrepareRecipeObject(name,position,scale,recipe,collision,physics,out var item,out error,surfaces,drawingTips,snapPoints,containers,heightFields))return false;
+        public bool CreateRecipe(string name,Vector3 position,float scale,RoomRecipe recipe,CollisionRecipe collision,ObjectPhysicsSettings physics,out string id,out string error,DrawingSurface[] surfaces=null,DrawingTip[] drawingTips=null,RoomSnapPoint[] snapPoints=null,RoomContainer[] containers=null,RoomHeightField[] heightFields=null,SculptTip[] sculptTips=null) {
+            id=null;if(!CanCreateRecipe(recipe,collision,physics,out error,surfaces,drawingTips,snapPoints,containers,heightFields,sculptTips))return false;
+            if(!PrepareRecipeObject(name,position,scale,recipe,collision,physics,out var item,out error,surfaces,drawingTips,snapPoints,containers,heightFields,sculptTips))return false;
             return CommitCreatedObject(item,out id,out error);
         }
         bool CommitCreatedObject(RoomObjectData item,out string id,out string error) {
@@ -288,19 +289,19 @@ namespace Maestro.Quest.Creation
 
         public void Undo() { if(!FinishLiquidPour(out var liquidError)){SetStatus(liquidError);return;} using var write=WriteGate.TryWrite(out var blocked);if(write==null){SetStatus(blocked);return;} Editing?.Invoke(); if (Busy()) return; if (journal.Undo()) { Reconcile(); MarkDirty(); SetStatus("Undone"); } else SetStatus("Nothing to undo"); }
         public void Redo() { if(!FinishLiquidPour(out var liquidError)){SetStatus(liquidError);return;} using var write=WriteGate.TryWrite(out var blocked);if(write==null){SetStatus(blocked);return;} Editing?.Invoke(); if (Busy()) return; if (journal.Redo()) { Reconcile(); MarkDirty(); SetStatus("Redone"); } else SetStatus("Nothing to redo"); }
-        internal bool DrawingInProgress=>GetComponent<SpatialDrawing>() is SpatialDrawing drawing&&(drawing.IsDrawing||drawing.HasUnsavedStroke);
+        internal bool DrawingInProgress=>(GetComponent<SpatialDrawing>() is SpatialDrawing drawing&&(drawing.IsDrawing||drawing.HasUnsavedStroke))||SculptingInProgress;
         internal bool PutPencilAwayForPose(out string error)
         {
             error=null;if(DrawingInProgress){error="Finish the current stroke before posing";return false;}
             // The pose caller already coordinates its target. The manual global
             // Editing signal would cancel its own invocation and unrelated actors.
-            DrawingMode=false;DrawingOnSurfaces=false;SurfaceErasing=false;SetStatus("Pencil put away");return true;
+            DrawingMode=false;DrawingOnSurfaces=false;SurfaceErasing=false;GetComponent<SpatialSculpting>()?.PutAway();SetStatus("Pencil put away");return true;
         }
         internal bool CanConfigureDrawing(out string error){error=DrawingInProgress?"Finish or discard the current stroke first":WriteGate.Frozen?"Finish the workspace operation first":Ownership.Suspended?"Room actions are paused":null;return error==null;}
         internal bool ConfigureDrawing(string mode,Color color,float radius,out string error) {
             if(!CanConfigureDrawing(out error))return false;
             if(!new[]{"off","space","surface","surfaceErase"}.Contains(mode)||!float.IsFinite(radius)||radius<.001f||radius>.02f||new[]{color.r,color.g,color.b}.Any(n=>!float.IsFinite(n)||n<0||n>1)){error="Choose a supported pencil mode, colour and thickness";return false;}
-            if(mode!="off")SuspendConstructionPicking();
+            if(mode!="off"){SuspendConstructionPicking();GetComponent<SpatialSculpting>()?.PutAway();}
             DrawingMode=mode!="off";DrawingOnSurfaces=mode=="surface"||mode=="surfaceErase";SurfaceErasing=mode=="surfaceErase";DrawingRadius=radius;Paint=new Color(color.r,color.g,color.b,1);
             SetStatus(mode=="off"?"Pencil put away":mode=="surfaceErase"?"Surface eraser: tap a stroke to remove it":mode=="surface"?"Surface pencil: draw on an enabled patch within 25 cm":"Space pencil: hold trigger or pinch to draw");return true;
         }
@@ -424,6 +425,7 @@ namespace Maestro.Quest.Creation
                 var tip=item.GetComponent<DrawingTipView>();if(!tip&&(data.drawingTips?.Length??0)>0)tip=item.gameObject.AddComponent<DrawingTipView>();if(tip)tip.Apply(this,data.id,data.drawingTips);
                 var liquid=item.GetComponent<ContainerFillView>();if(!liquid&&(data.containers?.Length??0)>0)liquid=item.gameObject.AddComponent<ContainerFillView>();if(liquid)liquid.Apply(data.containers);
                 var field=ApplyHeightFields(item,data.heightFields);
+                var sculpt=item.GetComponent<SculptTipView>();if(!sculpt&&(data.sculptTips?.Length??0)>0)sculpt=item.gameObject.AddComponent<SculptTipView>();if(sculpt)sculpt.Apply(this,data.id,data.sculptTips);
                 item.GetComponent<CreatedRoomObject>()?.ApplyCollision(data.collision);
                 item.GetComponent<CreatedRoomObject>()?.SetCollisionShape(data.collisionShape,field!=null);
                 item.GetComponent<RigidRoomItem>()?.Configure(PhysicsWorld,data.physics,data.mass);

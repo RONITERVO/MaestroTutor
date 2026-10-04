@@ -1927,3 +1927,27 @@ Measure sustained frame time, edit/collider rebuild spikes and readability in MR
 desktop tests do not certify Quest performance. Finger/tool sculpting, gathering
 snow into a vessel or snowball, gravity flow and water forces are not present in
 this increment. Do not record them as accepted from an authored height change.
+
+
+### Physical sculpt gestures — device acceptance pending
+
+Use a Snow patch with adequate real space. Enable Lower on the 3D tray, hold a
+controller trigger close to the surface, move and release. Confirm one Undo
+restores the whole path. Repeat with tracked index contact: separate once after
+enabling, touch, move and lift. Try both hands, hand/controller transitions,
+tracking loss and headset pause. Interruption must offer Retry/Discard and never
+silently save or start again. Check the tray labels, tool reach and mode highlights.
+
+Create the Sculpt brush. Loose contact must do nothing; grip it, touch its gold
+head to the field and lift to save. Its saved radius/height must remain independent
+of the tray mode. Try a program-held tool and verify that a human edit takes
+priority. Reach the path limit and confirm contact must separate before restarting.
+Place a solid obstruction between tool and field and confirm no stroke passes
+through it. Repeat on moved/rotated/resized fields.
+
+During a gesture only the visible mesh previews the change. Balls and controllers
+still collide with the accepted surface until publication. Verify this distinction
+is understandable and stable; measure frame timing for four 16-cell fields while
+sculpting with other active physics. Desktop tests do not certify Quest comfort,
+hand tracking quality, latency or sustained performance. This update has not been
+installed while the headset hold remains active.

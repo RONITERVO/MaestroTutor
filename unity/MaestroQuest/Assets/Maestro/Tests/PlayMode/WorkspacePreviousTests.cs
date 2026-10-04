@@ -61,7 +61,7 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator ChangedPreviousDataReportsFailureAndPreservesTheCurrentOwners()
         {
-            yield return ReadyForPrevious();var content=host.Current;string revision=host.Selection.Revision;string path=Path.Combine(store.DataDirectory(host.Selection.Previous),"room.v15.json");File.WriteAllText(path,"{broken");
+            yield return ReadyForPrevious();var content=host.Current;string revision=host.Selection.Revision;string path=Path.Combine(store.DataDirectory(host.Selection.Previous),"room.v16.json");File.WriteAllText(path,"{broken");
             Assert.That((bool)host.Import.ReadPrevious()["available"],Is.True,"Metadata is not asset verification");var (id,_)=BeginPrevious();yield return FinishPrevious(id,"failed");
             Assert.That(host.Current,Is.SameAs(content));Assert.That(host.Selection.Revision,Is.EqualTo(revision));Assert.That(File.ReadAllText(path),Is.EqualTo("{broken"));Assert.That(host.Current.Editor.WriteGate.Frozen,Is.False);
         }

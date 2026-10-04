@@ -33,7 +33,7 @@ namespace Maestro.Quest.Creation
         internal bool GroupSources(TransformMember[] members,out RoomLayout before,out string error){
             before=null;var request=new RoomGroupTransform {members=members};if(!request.Validate(out error))return false;
             if(RuntimeGate.Held||Ownership.Suspended||WriteGate.Frozen||PhysicsWorld&&PhysicsWorld.Running){error="Pause room physics before arranging a construction";return false;}
-            if(DrawingMode||DrawingInProgress){error="Put drawing tools away before arranging a construction";return false;}
+            if(DrawingMode||SculptMode||DrawingInProgress){error="Put drawing tools away before arranging a construction";return false;}
             var selected=members.Select(m=>m.target).ToHashSet();var poses=new ObjectPlacement[members.Length];
             for(int i=0;i<members.Length;i++){
                 var m=members[i];if(!CanEditObject(m.target,true,out error))return false;

@@ -343,6 +343,46 @@ Existing base collision remains independent and can obstruct an authored depress
 Room v15, paired snapshot v14 and archive v14 protect the source. Copying, captured
 prototypes, Undo and temporary rooms retain independent exact height arrays. The
 reported volume integrates the local mesh; it is an authoring measurement, not
-conserved snow. Sculpting can explicitly add/remove volume. Bare-hand/tool gestures,
-material scooping/packing, gravity flow, water behaviour and Quest performance are
-remaining work. This increment is not a fluid or granular solver.
+conserved snow. Sculpting can explicitly add/remove volume. Physical gestures are described below. Material scooping/packing, gravity flow,
+water behaviour and Quest performance remain unfinished. This component is not
+a fluid or granular solver.
+
+
+### Physical sculpting and reusable tools (2026-10-04)
+
+`physicalSculpting.v1` connects controller, index-fingertip and held-tool gestures
+to the existing height-field evaluator. `field.tool.set` and the physical tray
+choose raise/lower/level plus radius and height. A controller trigger works within
+25 cm of the accepted surface; a tracked index fingertip uses a 15 mm contact
+band and must first separate after enabling or interruption. This is deliberate
+shape authoring: a stationary contact does not repeatedly add/remove height.
+
+Each gesture samples at most 32 local X/Z points. The renderer previews its draft
+at up to 20 Hz; collision and saved source stay on the accepted mesh until one
+successful save/Undo at release, lift or the sample limit. Large discontinuities
+end the current path rather than carving through the skipped space. Solid
+obstructions block physical contact. Tool settings are in field-local metres;
+contact distances are world metres. Preview/collision separation needs explicit
+headset acceptance, particularly while other objects rest on the field.
+
+The Sculpt brush default is ordinary editable recipe data. Any created/imported
+object can receive one `object.sculptTip.edit` component on its root or a stable
+recipe part, with its own settings and local +Z contact direction. It activates
+only while held by the user or an existing Maestro/program attachment; loose
+objects are inert. An enabled drawing tip and sculpt tip cannot share one object.
+Manual tools use control ownership, while program-held tools cannot preempt a
+human surface edit. No animation or physics starts from configuring a tip.
+
+`object.field.capture` reports the gesture/session, target, brush settings and
+bounded error; `object.field.capture.path` pages its exact points. A failed save,
+tracking interruption or pause retains the visual draft in memory and blocks
+workspace/temporary-room changes. `object.field.resolve` explicitly retries or
+discards the exact retained session. Retry requires the original field, room
+session and ownership; successful receipt replay cannot apply the same gesture
+twice. Discard restores the accepted visual. App destruction loses unsaved drafts.
+The physical tray's Retry/Discard controls use the same resolution path.
+
+Room v16, paired snapshot v15 and archive v15 preserve sculpt-tip source through
+copy, captured prototypes and workspace saves. The book and agent discover the
+same capability definitions, generated forms, feature requirements and facts.
+This does not implement material transfer/packing, granular snow or flowing water.

@@ -51,7 +51,7 @@ namespace Maestro.Quest.Creation
         internal bool StartPose(string session,int revision,out JObject result,out string error,bool manual=false,JointPose[] initial=null)
         {
             result=null;if(!CanStartPose(session,revision,out error,manual))return false;
-            editor.Select(editor.Find("maestro"));SelectionChanged();if(editor.DrawingMode&&!editor.PutPencilAwayForPose(out error))return false;
+            editor.Select(editor.Find("maestro"));SelectionChanged();if((editor.DrawingMode||editor.SculptMode)&&!editor.PutPencilAwayForPose(out error))return false;
             if(!TakeControl(notify:manual)){error=Status;return false;}
             avatar.SetEditing(true);avatar.PoseRig.SetManual(true);avatar.PoseRig.Apply(initial);avatar.PoseRig.SetPosing(true);
             avatar.PoseRig.PoseChanged+=SavePose;avatar.PoseRig.PoseEdited+=PoseEdited;

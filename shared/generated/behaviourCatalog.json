@@ -9020,6 +9020,7 @@
                   "0d4f8af08ffa09f3cc332f1f3f805db4f87204a4b48388d5f4d0e89694375761",
                   "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71",
                   "f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae",
+                  "b02ef81da57efdea6e530abe268e89caf7a38ecae739b43d1664c148dc11d42e",
                   "78ac47258c47968b7b69bdf8144e0e2076e40ffbd32f171317ce81883526f78c",
                   "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45"
                 ],
@@ -9045,6 +9046,7 @@
                   "0d4f8af08ffa09f3cc332f1f3f805db4f87204a4b48388d5f4d0e89694375761": "Queen",
                   "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71": "Box robot",
                   "f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae": "Rook",
+                  "b02ef81da57efdea6e530abe268e89caf7a38ecae739b43d1664c148dc11d42e": "Sculpt brush",
                   "78ac47258c47968b7b69bdf8144e0e2076e40ffbd32f171317ce81883526f78c": "Snow patch",
                   "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "Spoon"
                 },
@@ -9070,6 +9072,7 @@
                   "0d4f8af08ffa09f3cc332f1f3f805db4f87204a4b48388d5f4d0e89694375761": "quest/templates/0d4f8af08ffa09f3cc332f1f3f805db4f87204a4b48388d5f4d0e89694375761.png",
                   "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71": "quest/templates/7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71.png",
                   "f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae": "quest/templates/f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae.png",
+                  "b02ef81da57efdea6e530abe268e89caf7a38ecae739b43d1664c148dc11d42e": "quest/templates/b02ef81da57efdea6e530abe268e89caf7a38ecae739b43d1664c148dc11d42e.png",
                   "78ac47258c47968b7b69bdf8144e0e2076e40ffbd32f171317ce81883526f78c": "quest/templates/78ac47258c47968b7b69bdf8144e0e2076e40ffbd32f171317ce81883526f78c.png",
                   "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "quest/templates/f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45.png"
                 }
@@ -9317,6 +9320,7 @@
                                 "0d4f8af08ffa09f3cc332f1f3f805db4f87204a4b48388d5f4d0e89694375761",
                                 "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71",
                                 "f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae",
+                                "b02ef81da57efdea6e530abe268e89caf7a38ecae739b43d1664c148dc11d42e",
                                 "78ac47258c47968b7b69bdf8144e0e2076e40ffbd32f171317ce81883526f78c",
                                 "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45"
                               ],
@@ -9342,6 +9346,7 @@
                                 "0d4f8af08ffa09f3cc332f1f3f805db4f87204a4b48388d5f4d0e89694375761": "Queen",
                                 "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71": "Box robot",
                                 "f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae": "Rook",
+                                "b02ef81da57efdea6e530abe268e89caf7a38ecae739b43d1664c148dc11d42e": "Sculpt brush",
                                 "78ac47258c47968b7b69bdf8144e0e2076e40ffbd32f171317ce81883526f78c": "Snow patch",
                                 "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "Spoon"
                               },
@@ -9367,6 +9372,7 @@
                                 "0d4f8af08ffa09f3cc332f1f3f805db4f87204a4b48388d5f4d0e89694375761": "quest/templates/0d4f8af08ffa09f3cc332f1f3f805db4f87204a4b48388d5f4d0e89694375761.png",
                                 "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71": "quest/templates/7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71.png",
                                 "f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae": "quest/templates/f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae.png",
+                                "b02ef81da57efdea6e530abe268e89caf7a38ecae739b43d1664c148dc11d42e": "quest/templates/b02ef81da57efdea6e530abe268e89caf7a38ecae739b43d1664c148dc11d42e.png",
                                 "78ac47258c47968b7b69bdf8144e0e2076e40ffbd32f171317ce81883526f78c": "quest/templates/78ac47258c47968b7b69bdf8144e0e2076e40ffbd32f171317ce81883526f78c.png",
                                 "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "quest/templates/f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45.png"
                               }
@@ -12906,6 +12912,121 @@
                                     "format": "heightFieldSaved",
                                     "x-features": [
                                       "heightFields.v1"
+                                    ]
+                                  },
+                                  "minItems": 0,
+                                  "maxItems": 1
+                                },
+                                "sculptTips": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "part": {
+                                        "type": "string",
+                                        "pattern": "^[a-zA-Z0-9_]{0,32}$",
+                                        "maxLength": 32
+                                      },
+                                      "position": {
+                                        "type": "object",
+                                        "properties": {
+                                          "x": {
+                                            "type": "number",
+                                            "minimum": -10.0,
+                                            "maximum": 10.0
+                                          },
+                                          "y": {
+                                            "type": "number",
+                                            "minimum": -10.0,
+                                            "maximum": 10.0
+                                          },
+                                          "z": {
+                                            "type": "number",
+                                            "minimum": -10.0,
+                                            "maximum": 10.0
+                                          }
+                                        },
+                                        "required": [
+                                          "x",
+                                          "y",
+                                          "z"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      "rotation": {
+                                        "type": "object",
+                                        "properties": {
+                                          "x": {
+                                            "type": "number",
+                                            "minimum": -1.0,
+                                            "maximum": 1.0
+                                          },
+                                          "y": {
+                                            "type": "number",
+                                            "minimum": -1.0,
+                                            "maximum": 1.0
+                                          },
+                                          "z": {
+                                            "type": "number",
+                                            "minimum": -1.0,
+                                            "maximum": 1.0
+                                          },
+                                          "w": {
+                                            "type": "number",
+                                            "minimum": -1.0,
+                                            "maximum": 1.0
+                                          }
+                                        },
+                                        "required": [
+                                          "x",
+                                          "y",
+                                          "z",
+                                          "w"
+                                        ],
+                                        "additionalProperties": false,
+                                        "format": "unitQuaternion"
+                                      },
+                                      "mode": {
+                                        "type": "string",
+                                        "enum": [
+                                          "raise",
+                                          "lower",
+                                          "level"
+                                        ]
+                                      },
+                                      "radius": {
+                                        "type": "number",
+                                        "minimum": 0.005,
+                                        "maximum": 2.0
+                                      },
+                                      "height": {
+                                        "type": "number",
+                                        "minimum": 0.0,
+                                        "maximum": 0.5
+                                      },
+                                      "enabled": {
+                                        "type": "boolean"
+                                      },
+                                      "version": {
+                                        "type": "integer",
+                                        "minimum": 1.0,
+                                        "maximum": 1.0
+                                      }
+                                    },
+                                    "required": [
+                                      "part",
+                                      "position",
+                                      "rotation",
+                                      "mode",
+                                      "radius",
+                                      "height",
+                                      "enabled",
+                                      "version"
+                                    ],
+                                    "additionalProperties": false,
+                                    "format": "sculptTip",
+                                    "x-features": [
+                                      "physicalSculpting.v1"
                                     ]
                                   },
                                   "minItems": 0,
@@ -16913,6 +17034,402 @@
         },
         "required": [
           "changedVertices"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "object.sculptTip.edit",
+      "version": 1,
+      "label": "Configure an object's sculpt tip",
+      "input": {
+        "type": "object",
+        "x-discriminators": [
+          "operation"
+        ],
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "configure"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              },
+              "definition": {
+                "type": "object",
+                "properties": {
+                  "part": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9_]{0,32}$",
+                    "maxLength": 32
+                  },
+                  "position": {
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "type": "number",
+                        "minimum": -10.0,
+                        "maximum": 10.0
+                      },
+                      "y": {
+                        "type": "number",
+                        "minimum": -10.0,
+                        "maximum": 10.0
+                      },
+                      "z": {
+                        "type": "number",
+                        "minimum": -10.0,
+                        "maximum": 10.0
+                      }
+                    },
+                    "required": [
+                      "x",
+                      "y",
+                      "z"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "rotation": {
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      },
+                      "y": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      },
+                      "z": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      },
+                      "w": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      }
+                    },
+                    "required": [
+                      "x",
+                      "y",
+                      "z",
+                      "w"
+                    ],
+                    "additionalProperties": false,
+                    "format": "unitQuaternion"
+                  },
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "raise",
+                      "lower",
+                      "level"
+                    ]
+                  },
+                  "radius": {
+                    "type": "number",
+                    "minimum": 0.005,
+                    "maximum": 2.0
+                  },
+                  "height": {
+                    "type": "number",
+                    "minimum": 0.0,
+                    "maximum": 0.5
+                  },
+                  "enabled": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "part",
+                  "position",
+                  "rotation",
+                  "mode",
+                  "radius",
+                  "height",
+                  "enabled"
+                ],
+                "additionalProperties": false,
+                "format": "sculptTip"
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "revision",
+              "definition"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "object.sculptTip",
+              "version": 1,
+              "arguments": {
+                "target": "target"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
+            "title": "Configure the sculpt tip",
+            "x-features": [
+              "physicalSculpting.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "remove"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "revision"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "object.sculptTip",
+              "version": 1,
+              "arguments": {
+                "target": "target"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
+            "title": "Remove the sculpt tip",
+            "x-features": [
+              "physicalSculpting.v1"
+            ]
+          }
+        ]
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.created",
+        "target.unheld",
+        "source.revision.current",
+        "storage.writable"
+      ],
+      "description": "Give a created/imported object one saved sculpt tip on its root (empty part) or a stable recipe part. Local +Z points toward the surface. The enabled tip works only while the user or Maestro holds it and it contacts the accepted top surface within one world centimetre. Loose objects are inert. Radius/height use the receiving field's local metres. Choose raise/lower/level; the same object.field.sculpt operation applies its swept path once, not per frame. Live previews change visible geometry only; release/contact loss publishes matching collision and source with one save/Undo. Physics keeps the accepted surface until then. At most 32 path samples; reaching the limit ends the gesture and requires separating the tool before another. Failed or interrupted saves retain the draft for explicit object.field.resolve retry/discard. Pause/tracking loss never retries automatically. Manual holding has control priority; Maestro-held tools use program priority and cannot take over a user's surface. Only one shared sculpt capture runs, and drawing and sculpt captures cannot overlap. Disable an object's drawing tip before enabling its sculpt tip. Copy/prototypes, saved/temporary rooms and archives retain the exact configuration. This is shape authoring, not conserved material or snow transfer.",
+      "example": {
+        "operation": "configure",
+        "target": "00000000000000000000000000000000",
+        "revision": 1,
+        "definition": {
+          "part": "",
+          "mode": "lower",
+          "position": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.15999999642372131
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0,
+            "w": 1.0
+          },
+          "radius": 0.079999998211860657,
+          "height": 0.029999999329447746,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "id": "field.tool.set",
+      "version": 1,
+      "label": "Choose the physical sculpt tool",
+      "input": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "off",
+              "raise",
+              "lower",
+              "level"
+            ]
+          },
+          "radius": {
+            "type": "number",
+            "minimum": 0.005,
+            "maximum": 2.0
+          },
+          "height": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 0.5
+          }
+        },
+        "required": [
+          "mode",
+          "radius",
+          "height"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "physicalSculpting.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [
+        "authoring.idle",
+        "room.active"
+      ],
+      "description": "Choose off/raise/lower/level plus local brush radius and height for the next physical gesture. Controller: hold trigger with its pointer within 25 cm of the accepted field. Tracked hands: touch the accepted top with an index fingertip (15 mm contact band), move, and lift to finish; first separate after enabling or interruption. These use the same object.field.sculpt evaluator and one save/Undo per gesture, at most 32 sampled points. A stationary contact does not repeatedly add/remove height. Visible geometry previews the draft; collision and saved data update together only after successful publication. Failed or interrupted drafts require explicit Retry/Discard; no automatic retry after pause or tracking loss. Solid obstructions block physical contact. Settings are session-local and independent of saved object sculpt tips. Enabling sculpting puts away the pencil and construction selection; changing modes requires finishing/discarding an active draft. No shape changes, physics start or playback happen merely from choosing a mode. These controls are the same as the physical tray.",
+      "example": {
+        "mode": "lower",
+        "radius": 0.08,
+        "height": 0.03
+      }
+    },
+    {
+      "id": "object.field.resolve",
+      "version": 1,
+      "label": "Retry or discard an unsaved sculpt gesture",
+      "input": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "enum": [
+              "retry",
+              "discard"
+            ]
+          },
+          "sessionId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "operation",
+          "sessionId"
+        ],
+        "additionalProperties": false,
+        "x-current": {
+          "fact": "object.field.capture",
+          "version": 1,
+          "arguments": {},
+          "fields": {
+            "sessionId": [
+              "sessionId"
+            ]
+          },
+          "guards": [
+            "sessionId"
+          ]
+        },
+        "x-features": [
+          "physicalSculpting.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [
+        "sculpt.retained",
+        "sculpt.session.current"
+      ],
+      "description": "Read object.field.capture and resolve its exact retained sessionId. Retry uses the same frozen sampled path and object.field.sculpt evaluator, with one saved edit/Undo; the saved field must still match the original and ownership must be reacquired. Discard restores the accepted visual and removes only the in-memory draft. Collision has remained on the accepted mesh throughout preview. Changed/missing fields and a different room session refuse retry. A successful receipt cannot resolve a later draft. Active gestures cannot be resolved. Retained drafts block workspace/temporary-room changes; destroying the app/room loses unsaved memory. This does not enable a tool, start physics or play an animation.",
+      "example": {
+        "operation": "retry",
+        "sessionId": "00000000000000000000000000000000"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "phase": {
+            "type": "string",
+            "enum": [
+              "saved",
+              "discarded"
+            ]
+          },
+          "target": {
+            "type": "string",
+            "pattern": "^(|[a-f0-9]{32})$",
+            "maxLength": 32
+          },
+          "points": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 32.0
+          },
+          "changedVertices": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 289.0
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "sessionId",
+          "phase",
+          "target",
+          "points",
+          "changedVertices",
+          "temporary"
         ],
         "additionalProperties": false
       }
@@ -27087,6 +27604,155 @@
       ]
     },
     {
+      "id": "object.sculptTip",
+      "version": 1,
+      "type": {
+        "record": {
+          "revision": "number",
+          "configured": "boolean",
+          "definition": {
+            "record": {
+              "part": "text",
+              "position": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number"
+                }
+              },
+              "rotation": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number",
+                  "w": "number"
+                }
+              },
+              "mode": "text",
+              "radius": "number",
+              "height": "number",
+              "enabled": "boolean"
+            }
+          }
+        }
+      },
+      "label": "Object sculpt tip",
+      "description": "Saved sculpt-tip configuration and current object revision. Missing tips return inert editable defaults, configured=false. Reads never begin a gesture or modify geometry. Use object.field.capture for live/retained gestures.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1",
+        "physicalSculpting.v1"
+      ]
+    },
+    {
+      "id": "field.tool",
+      "version": 1,
+      "type": {
+        "record": {
+          "mode": "text",
+          "radius": "number",
+          "height": "number"
+        }
+      },
+      "label": "Current physical sculpt tool",
+      "description": "Session-local trigger/fingertip sculpt settings shared with the tray. Reads do not enable input or modify a surface.",
+      "features": [
+        "physicalSculpting.v1"
+      ]
+    },
+    {
+      "id": "object.field.capture",
+      "version": 1,
+      "type": {
+        "record": {
+          "sessionId": "text",
+          "phase": "text",
+          "target": "text",
+          "brush": {
+            "record": {
+              "mode": "text",
+              "radius": "number",
+              "height": "number"
+            }
+          },
+          "points": "number",
+          "temporary": "boolean",
+          "error": "text"
+        }
+      },
+      "label": "Physical sculpt draft",
+      "description": "Current shared sculpt gesture, target, brush settings, sampled point count and bounded error. Preview is visible only; collision/saved heights remain accepted. Unsaved needs explicit Retry/Discard. Read object.field.capture.path for exact points. Reads do not change the draft.",
+      "features": [
+        "physicalSculpting.v1"
+      ]
+    },
+    {
+      "id": "object.field.capture.path",
+      "version": 1,
+      "type": {
+        "record": {
+          "sessionId": "text",
+          "offset": "number",
+          "count": "number",
+          "points": {
+            "list": {
+              "record": {
+                "x": "number",
+                "z": "number"
+              }
+            }
+          }
+        }
+      },
+      "label": "Exact sculpt gesture path",
+      "description": "Read eight local X/Z points of the active or retained sculpt draft. Exact sessionId required; offset=count is an empty page and later offsets are unavailable. A live path can grow; freeze it by finishing the gesture before reconstructing a retained failed draft. No sampled path can exceed 32 points.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 32.0
+          }
+        },
+        "required": [
+          "sessionId",
+          "offset"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "sessionId": "00000000000000000000000000000000",
+        "offset": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "physicalSculpting.v1"
+      ]
+    },
+    {
       "id": "object.container.live",
       "version": 1,
       "type": {
@@ -30330,7 +30996,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "49906d8613b6d134e8bb6fcc7ce93d4fdf3233bc1ef8e1a2a1c5f0482c799438"
+      "sha256": "9b5ddcd801868a51d2f9fbd562eab647895bd170e997740a0f058a8cb2d2824a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -30350,7 +31016,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "9a393d57b58610412cf87a1d08d56aa339c2d7f05f7fcc9bc0480e527168804d"
+      "sha256": "936facab34ae190fcffa74e58598b4862781ff660e44624fd5f6f654bd19e6d1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -30382,7 +31048,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "0d9bfcd908cc9cd2724dd1ca9011f89d9c9cda97faccf6551b0af37d90cfa19c"
+      "sha256": "83fa1b2d70e34c4df59dcd202b7d6604cb326ffaae4f28db9aee4295ef736ae6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -30406,11 +31072,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "a3fa002812815541712f99ae42a4dfa17bba7cad77063db74371af0d1bbeb317"
+      "sha256": "799f1bd303bbfbf5772c7b6d1e8142c7c1bbad2fd1fa3359ba6eaca40db82439"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
-      "sha256": "f27cc75e7e7c9c87887129625ddf31d634fe8db98d1d65fd1351b5d6bbe6a736"
+      "sha256": "47843d20d9610de732c302b90bf7f7fe67f44fdccf56cb0d710a32eb1335cd74"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleMemory.cs",
@@ -30426,11 +31092,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveCapture.cs",
-      "sha256": "ba446d580cde469d381d428f39091b91b840ee7a49c929b693cb1b9b7df203e0"
+      "sha256": "8bee6daf2024e0345901bfb17fea562d7c729e5a2724d3619e8a5cfc4b0fb678"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveSnapshot.cs",
-      "sha256": "eefc8b090190da99444b558e7460f2359171ce4474982f0cdcb22a8752b542d4"
+      "sha256": "2890a0324b92a7af15e67bc04f0f08f1407de5a81a995cb9477659263bebcbc2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.Retention.cs",
@@ -30630,23 +31296,23 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationPosing.cs",
-      "sha256": "247a26687004e7743cd42646488c06a991d8c496931d07354af7c512e8dd18ee"
+      "sha256": "95d0bcff9c7abcb4e32bdbc9b55f26c16fea1febe6a72da36972569cb5ac7ea0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "e66cc64d998e248dd0658f5ee647e946ce0b60a457fcb7ce37bc482590a7d593"
+      "sha256": "0e359b972602474a88390b9494ad47cd086768d9d41ee302405b89d90e4f3e1a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomToolTray.cs",
-      "sha256": "d8dee632c5cc6dcd21a5fce6671ae8294ce2a7066637b8ee755fa89ee89aade1"
+      "sha256": "32b9306a3c9a27bde16e29db0381dd87bb49fd57b0c59619b4970c6b532089f3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PhysicalRoomAction.cs",
-      "sha256": "34ca74889194a71bc5541f63e0914dba364eac1c08438f0b76a27aab48ee3382"
+      "sha256": "5d7959440f61d40207e3fcd574a6b70c03fe1ecf25913d602f155d5bb149b2d9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/BookControllerInput.cs",
-      "sha256": "77960a5459442755d74dd61347579f986a601256e712a6bba14e2f98e7d3544c"
+      "sha256": "295a229085c47949cb9a4209f1bc3908e6aab3bcff6791370f8c15194b05aa38"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectCopy.cs",
@@ -30686,7 +31352,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationPrototype.cs",
-      "sha256": "30fcd1ecfedc3344a9f78bf06dbd10b1515bb970897e434ba61cac141cc744c3"
+      "sha256": "d20de5ca1d632056f2c01805f06b29d49550476a944ff4ffc4a54c962aefc364"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomComponentEdits.cs",
@@ -30698,11 +31364,27 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/HeightFieldView.cs",
-      "sha256": "46f43a72fd03888a550ba7b2bf41c1c42779438fe8c6cba62def821684d192b2"
+      "sha256": "7fcd12fbf9325ccdd006117be6d0bb5a94eec81678ed50c185ff7c41d392a8bc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomHeightField.cs",
-      "sha256": "c85607807e072a96be84f5521bf05bb628db407ce6e8710f7566e76e253e45fe"
+      "sha256": "2c9d0bfe7baaaf8fd073c53698a8a4ec137a552ab4255c61eb69601ba9d55987"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SpatialSculpting.cs",
+      "sha256": "51380893cbfeaeabf5298a546909bc5c56a682092b3ba14097c420246d24bf6b"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SculptTip.cs",
+      "sha256": "56331ada8f2e56da60c3636701323caec1d8eee51b867a245bf53eca6e49ea56"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SculptTipView.cs",
+      "sha256": "3131cf7f8efda9305cb9e6450e7dba1ac3c69747544a803f65e618c8a5e00ff6"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomHeightFieldContact.cs",
+      "sha256": "29de07d4467e4bef558cb57862ff9eee38f397cffded8ab51e0b3f6401210137"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ContainerFillView.cs",
@@ -30734,15 +31416,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ConstructionManipulator.cs",
-      "sha256": "c3253602bf353965f5fb9d7a843b3bb5edba80bd25925f5637cacf7d12a4029b"
+      "sha256": "b62c901cdbcac7c825c139d1063a74b9a66498188e136abeb48e4c9f96fedffc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ConstructionSelection.cs",
-      "sha256": "7ca8263e654b058f77b8e226e26d682e23f692083ac262f6296e991e45117842"
+      "sha256": "f83926f252c7d469da2bc2e4433b9b12a788dcd7213ab86aa60482ec4f44fa81"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomGroupTransform.cs",
-      "sha256": "b8be140e223cebd8c78bed9509a938a7289a131ad87f01e6d7670eefa20ca422"
+      "sha256": "086112376420be1116eacc8985617083afdcb34086efe4a3115f6499d1d20fd1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomConnectionEdits.cs",
@@ -30778,7 +31460,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "021d6ae7a4769bb1aa26bcec286a2b1249300606017a3a8bf64f900cb36e93ec"
+      "sha256": "7b33ee3671d6e6810d3d1a0ac7b3c0177c33759fb0409227d668db095399eb19"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedDrawing.cs",
@@ -30786,7 +31468,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SpatialDrawing.cs",
-      "sha256": "a6a35cea6c94527921439e105d2b5b174fdae35c9c7f40be2b42e31d72351f31"
+      "sha256": "5482d16c7d5d30ac09980c365600f2a2a68e14c2c0129b0c7ff1f030e9a5188a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedRoomObject.cs",
@@ -30922,7 +31604,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationTemplates.cs",
-      "sha256": "23c2ab9d6257e215271a722ff383fb03ebc57343afa5136ea3d46c39acfc5b13"
+      "sha256": "a56ce52a77d2f63b33c188d57c3c205623d6ee71b421ec901c0b4cb6afceafb1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLayout.cs",
@@ -30930,7 +31612,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationBatch.cs",
-      "sha256": "269b364b62d621f15531d47b2ac65a3d5c0b07dfd2b266911083f689a4a8729d"
+      "sha256": "55ac93adbe544b2f7672f18d31043ed374aa58d0a009fa914371c7ae03dded30"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructure.cs",
@@ -30978,7 +31660,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "10d706d43e535479b5742a5c7bd66d3864df3cda09b3ff6380f8cf6436e19ed1"
+      "sha256": "9f4feb5c513bec5d1cc5569d4f24ae1f954c89fdccfe80ecdb2a00db3ddb8b44"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -31042,11 +31724,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreateTemplateCapability.cs",
-      "sha256": "06b29ca3c266aa38fc8b829fe1f4af4a3b64d23030522691a216abd05ddcddf7"
+      "sha256": "f32388a25530a9062e0e5d6b9bcbf3693835f5e9936c054f9a7ec549b7e24c85"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreationPrototypeSchema.cs",
-      "sha256": "2698b44aca69f6f4db8864b00c077d04ccd3dfc2538f9fbb3da23e43593f5e25"
+      "sha256": "e3263cb7ce245c1f8e88ad3056e495a22ebc4a68c2f821161baaf108302b018b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingCapabilities.cs",
@@ -31129,6 +31811,10 @@
       "sha256": "188869e2efc3729667ac375b7fc77059468fc70bdbaf0d53a311f211f04284aa"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicalSculptCapability.cs",
+      "sha256": "fe0129556dbf525a344de8ec621947a058cd42cd8e84fd7039d0ca49414b0aa0"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsSimulationCapability.cs",
       "sha256": "ad4a77a798294faf02926da628a46ce0ad7bbaf8077e723e99bf176ac3974dc4"
     },
@@ -31183,6 +31869,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RuntimeDiagnosticFacts.cs",
       "sha256": "627c44fa4a267eebfafe2f82445c8cb01c32940805336dc776a94d9b439824b4"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SculptTipCapability.cs",
+      "sha256": "e46d0d162604c8ef7508338201a85aa0f8ae413f4fbb00b38036c4149b95e273"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SnapConstructionCapability.cs",
@@ -31335,6 +32025,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/rook.json",
       "sha256": "f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/sculpt-brush.json",
+      "sha256": "b02ef81da57efdea6e530abe268e89caf7a38ecae739b43d1664c148dc11d42e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/snow-patch.json",

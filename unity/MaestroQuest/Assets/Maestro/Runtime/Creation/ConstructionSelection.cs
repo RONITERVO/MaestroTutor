@@ -21,7 +21,7 @@ namespace Maestro.Quest.Creation
             if(stateId!=constructionSelectionId){error="Construction selection changed; read it again";return false;}
             if(members==null||members.Length>16||members.Distinct().Count()!=members.Length){error="Choose at most 16 distinct creations";return false;}
             foreach(string id in members)if(string.IsNullOrEmpty(id)||journal?.Read(id)?.IsBuiltIn!=false||!Find(id)||!Find(id).isActiveAndEnabled){error="Choose existing creations, without the book or Maestro";return false;}
-            if(collecting&&(DrawingMode||DrawingInProgress)){error="Finish drawing and put the pencil away before collecting pieces";return false;}
+            if(collecting&&(DrawingMode||SculptMode||DrawingInProgress)){error="Finish drawing and put the pencil away before collecting pieces";return false;}
             return true;
         }
         public bool SetConstructionSelection(string stateId,string[] members,bool collecting,out string error) {
@@ -38,7 +38,7 @@ namespace Maestro.Quest.Creation
             var current=constructionMembers.Where(id=>objects.ContainsKey(id)&&journal.Read(id)?.IsBuiltIn==false).ToArray();
             if(!constructionMembers.SequenceEqual(current)){constructionMembers=current;constructionSelectionId=Guid.NewGuid().ToString("N");}
         }
-        void SuspendConstructionPicking() {
+        internal void SuspendConstructionPicking() {
             if(!collectingConstruction)return;collectingConstruction=false;constructionSelectionId=Guid.NewGuid().ToString("N");Changed?.Invoke();
         }
         internal bool ConstructionTap(RoomItem item) {

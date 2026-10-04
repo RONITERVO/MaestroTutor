@@ -15,7 +15,7 @@ namespace Maestro.Quest.Creation
             batch=null;error="Choose 1–16 distinct created objects and slots";
             if(members==null||members.Length<1||members.Length>16||members.Any(m=>m==null)||members.Select(m=>m.target).Distinct().Count()!=members.Length||members.Select(m=>m.slot).Distinct().Count()!=members.Length)return false;
             if(RuntimeGate.Held||PhysicsWorld&&PhysicsWorld.Running){error="Pause room physics before capturing a construction";return false;}
-            var drawing=GetComponent<SpatialDrawing>();if(drawing&&(drawing.IsDrawing||drawing.HasUnsavedStroke)){error="Finish or discard the drawing draft before capturing";return false;}
+            if(DrawingInProgress){error="Finish or discard the drawing draft before capturing";return false;}
             var selected=members.Select(m=>m.target).ToHashSet();var objects=new RoomObjectData[members.Length];
             for(int i=0;i<members.Length;i++){
                 var member=members[i];if(!CanEditObject(member.target,true,out error))return false;

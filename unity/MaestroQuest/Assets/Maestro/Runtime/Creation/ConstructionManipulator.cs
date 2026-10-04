@@ -63,7 +63,7 @@ namespace Maestro.Quest.Creation {
         void Follow(){if(!Visible||Holding||!Handle||ids.Length==0)return;var first=editor.Find(ids[0]);if(!first){Close();return;}Handle.transform.SetLocalPositionAndRotation(first.transform.localPosition+first.transform.localRotation*offset,first.transform.localRotation);Handle.transform.localScale=Vector3.one;Handle.SetHome(Handle.transform.localPosition,Handle.transform.localRotation,Vector3.one);}
         void Changed(){
             if(busy||!Visible)return;var selection=editor.ObserveConstructionSelection();
-            if(selection.stateId!=selectionId||selection.collecting||editor.DrawingMode||editor.DrawingInProgress||ids.Any(id=>!editor.Find(id))||Holding&&request.members.Any(m=>editor.ObjectRevision(m.target)!=m.revision)){Close();return;}
+            if(selection.stateId!=selectionId||selection.collecting||editor.DrawingMode||editor.SculptMode||editor.DrawingInProgress||ids.Any(id=>!editor.Find(id))||Holding&&request.members.Any(m=>editor.ObjectRevision(m.target)!=m.revision)){Close();return;}
             if(Holding)snapping?.Refresh();Follow();
         }
         void GateChanged(){if(editor.RuntimeGate.Held||editor.Ownership.Suspended||editor.WriteGate.Frozen||editor.PhysicsWorld&&editor.PhysicsWorld.Running)Close();}

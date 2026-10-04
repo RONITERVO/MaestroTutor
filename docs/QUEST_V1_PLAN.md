@@ -2995,3 +2995,46 @@ that run's exact sculpt call, revision and receipt, including oversized-brush
 refusal. Actual native surface/default renders and book controls were inspected.
 These establish desktop behaviour only; the current Quest field/contact/frame-time
 acceptance and wider provider/Store gates remain open.
+
+
+### Physical sculpting checkpoint — 2026-10-04
+
+Controller triggers, tracked index fingertips and held tools now use the same
+bounded height-field evaluator as book/agent actions. A reusable saved sculpt tip
+works on any supported created/imported object root or recipe part. The Sculpt
+brush default is ordinary editable source. Its settings are independent of the
+tray; loose tools are inert, solids block contact, and program-held tools cannot
+preempt a user's edit. Physical controls remain 3D objects outside the book.
+
+A gesture samples at most 32 points and saves as one edit/Undo. Visible geometry
+previews the draft; collision/source stay accepted until successful publication.
+Tracking loss, pause and failed saves retain the exact in-memory draft for explicit
+Retry/Discard through shared facts/actions or the tray. Retry requires the original
+field, session and ownership. Workspace/temporary-room changes remain blocked
+while a draft is active/retained. App destruction loses unsaved draft memory.
+
+Room v16 and paired intent/archive v15 preserve sculpt tips through copies,
+prototypes and workspace saves. The catalog has 86 actions, 93 facts and 15 events;
+the included content has 24 templates and seven modules. This is shape authoring,
+not conserved snow, material transfer/packing or a general fluid solver.
+
+Verification: 2,265 web tests across 252 files, TypeScript, ESLint, catalog and
+asset checks passed. Full native suites passed 779 EditMode and 585 PlayMode tests,
+with three optional private-file skips. Visual review then corrected long tray
+label wrapping and preview framing; focused native checks and final renders passed.
+The final full-app shared-client journey passed 355 observations. Chrome matched
+its exact sculpt-tip call, revision and successful receipt. Native brush/tray and
+book controls were visually inspected; physical Quest acceptance remains pending.
+
+Production web build, 76 Android unit tests (two optional skips), Android lint and
+IL2CPP development packaging passed. The APK audit matched 1,841 frozen inputs,
+315 runtime files, 195 test files, 15 editor files, 61 fixture payloads, the Android
+AAR and all 145 web files. The bundled avatar and all 178 motions matched exactly.
+The development manifest, arm64-only payload, signature and 16 KiB alignment passed.
+
+Checkpoint: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-physical-sculpt-3F822003.apk`.
+SHA-256: `3F822003749152EF6D52B5DC4901298B444C632365CA2F7E9812E82B3069F0F3`.
+Evidence: `.quest-evidence/physical-sculpt`. The package remains uninstalled; device
+work is on hold. No paid generation/provider calls, deployment, release signing or
+Store submission occurred. Remaining device/provider/Store gates, broader play-kit
+coverage, material transfer and arbitrary mesh/skin painting remain open.

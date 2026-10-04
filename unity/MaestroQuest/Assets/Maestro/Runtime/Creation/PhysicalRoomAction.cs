@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Maestro.Quest.Creation
 {
-    public enum RoomTool { Block, Ball, Cylinder, Pencil, Paint, Duplicate, Erase, Undo, Redo, Save, Recall, BeginTemporary, KeepTemporary, DiscardTemporary, SurfacePencil, CollectPieces, MovePieces }
+    public enum RoomTool { Block, Ball, Cylinder, Pencil, Paint, Duplicate, Erase, Undo, Redo, Save, Recall, BeginTemporary, KeepTemporary, DiscardTemporary, SurfacePencil, CollectPieces, MovePieces, SculptLower, SculptRaise, SculptLevel }
     public sealed class PhysicalRoomAction : PhysicalAction
     {
         public RoomEditor Editor;
@@ -16,8 +16,13 @@ namespace Maestro.Quest.Creation
         protected override void OnActivate()
         {
             if (!Editor) return;
+            var sculpt=Editor.GetComponent<SpatialSculpting>();
+            if(sculpt&&sculpt.Retained){if(Tool==RoomTool.Pencil||Tool==RoomTool.SurfacePencil||Tool==RoomTool.Save){sculpt.ResolveManual(false);return;}if(Tool==RoomTool.Erase){sculpt.ResolveManual(true);return;}}
             switch (Tool)
             {
+                case RoomTool.SculptLower: case RoomTool.SculptRaise: case RoomTool.SculptLevel:
+                    string mode=Tool==RoomTool.SculptLower?"lower":Tool==RoomTool.SculptRaise?"raise":"level";var tool=Editor.Sculpting;
+                    if(!tool.Configure(tool.Mode==mode?"off":mode,tool.Radius,tool.Height,out var sculptError))Editor.ReportStatus(sculptError);break;
                 case RoomTool.Block: Editor.Create(RoomObjectKind.Block); break;
                 case RoomTool.Ball: Editor.Create(RoomObjectKind.Ball); break;
                 case RoomTool.Cylinder: Editor.Create(RoomObjectKind.Cylinder); break;
