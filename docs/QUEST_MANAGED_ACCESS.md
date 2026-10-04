@@ -158,8 +158,9 @@ when disabling new attestation or linking: previously minted proofs can still be
 valid. While the Quest ID is configured, `REQUIRE_APPCHECK=false` also closes checkout
 for every client until verification is restored; it cannot silently weaken this
 purchase boundary. Other existing managed-service rollback behavior is unchanged.
-No production deployment has occurred. The last packaged development APK at
-`c7298f4e` predates the client-service guard; include it in the next package.
+No production deployment has occurred. The client-service guard is included in
+the audited `049188fd` development APK, `MaestroQuest-scanned-ink-45468330.apk`;
+the server guard remains undeployed. See [packaging evidence](QUEST_RELEASE_BUILD.md#development-checkpoint-2026-10-05).
 
 Offline acceptance exercises the real HTTP route with verified-token, Firebase
 identity, rate-limit and Stripe/Firestore adapters replaced by local fakes. It
@@ -171,6 +172,80 @@ Local verification for the purchase-boundary increment: 2,359 web tests across
 259 files, app lint/type checking, and 96 Functions checks passed (including the
 13 HTTP purchase/account cases and their parent test). No native code changed;
 Unity/Android/device tests were not rerun for this source-only boundary change.
+
+## Purchase-model decision and prepared Meta request (2026-10-05)
+
+The current implementation sells **prepaid managed-credit packs**, not recurring
+subscriptions: `functions/src/stripeBilling.ts` creates Stripe Checkout with
+`mode: 'payment'`, and only its verified webhook grants the shared balance.
+[Stripe-only billing](STRIPE_ONLY_BILLING.md) is the authoritative contract.
+BYOK is a separate existing access mode; native editing and local programs do
+not create a second AI connection. A request to Meta must describe these actual
+flows rather than calling the product a subscription wrapper.
+
+Meta's published Payments section 1.1.2 describes the existing-service exception
+in terms of off-platform subscription content. Section 4.1 also limits the role
+of interaction. Room creation, physics, playable objects and delegated AI room
+actions mean eligibility cannot be inferred from using the original Maestro
+backend or hiding checkout. This is an unresolved eligibility assessment, not a
+claim that Meta has rejected or approved this product.
+[Policy checked 2026-10-05](https://developers.meta.com/vr/policy/app-policies/).
+
+Recommended next step: obtain a written answer describing both shared prepaid
+credits and BYOK before changing the billing architecture. The owner has been
+asked whether to pursue that route first or plan Meta purchases credited to the
+same Maestro account. Neither choice is recorded yet. Adding a Meta grant path
+would be a new reviewed architecture decision under the existing billing
+contract; it must retain the original account and exactly-once ledger semantics.
+No purchase route has been added or enabled by this review.
+
+### Draft for the owner to review and send
+
+Subject: Quest app 1763835394893209 — existing Maestro credits and BYOK access
+
+We are preparing Maestro for Quest, for an adult 18+ audience. It uses the same
+Maestro account and AI service as our existing web/phone app. The familiar chat
+and artifacts are displayed on an animated book in mixed reality. Users can also
+create/import objects and avatars, draw, animate, build playable structures and
+ask Maestro's AI agent to perform room actions. These are substantial interactive
+features, not only a viewing environment.
+
+Our implemented managed-access model uses prepaid credit packs purchased through
+Stripe in the existing web service. These are one-time purchases, not recurring
+subscriptions. The proposed Quest experience uses the same account balance for
+AI requests, including room-agent requests. Users may alternatively supply their
+own Gemini API key. Native room editing and local programs do not purchase or
+consume managed AI credits by themselves.
+
+The Quest UI has no credit purchase button or checkout link. The client and
+prepared server code also refuse Quest Stripe-checkout requests. The original
+web purchase flow remains separate. There is no Meta IAP integration yet, and
+we are not assuming that the existing-service exception applies.
+
+Please confirm:
+
+1. May this interactive Quest app use the user's existing shared prepaid Maestro
+   balance and BYOK access as described, without offering purchases in Quest?
+   If written approval or an exception is required, what review should we submit?
+2. If Meta purchases are required, may their credit grants feed the same Maestro
+   account and balance used on web/phone? What restrictions apply to consuming
+   credits originally purchased outside Quest and to the BYOK alternative?
+3. Which payment configuration and platform-feature approvals are required for
+   the permitted model, so our submission and Data Use Checkup describe its
+   actual implementation?
+
+Public Meta app ID: `1763835394893209`. Proposed Android package:
+`com.maestro.quest` (availability still to be confirmed). We can provide a current
+build and a recording of these flows for review when requested.
+
+### Evidence and release boundary
+
+This is a prepared draft, **not a sent request or approval**. Do not send keys,
+signing material, private chats or account identifiers with it. Record Meta's
+case/reference, exact reviewed product scope and written outcome here when
+available. A generic payments FAQ or approval of a less interactive app does not
+close this gate. Then implement any required changes, verify the real account/
+payment flow and update the release profile and disclosures before submission.
 
 ## Verification for this checkpoint
 
