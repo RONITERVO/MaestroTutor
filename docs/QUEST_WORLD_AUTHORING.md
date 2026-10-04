@@ -400,3 +400,19 @@ runtime or a hidden quantity ledger. See [surface transfer](QUEST_SURFACE_TRANSF
 Ordinary sculpting remains a deliberate shape edit. Physical shovel capture,
 carried snow, packing snowballs, persistent pools and real Quest profiling remain
 unfinished. The transfer action does not imply any of those outcomes.
+
+## Measured carried material and packing (2026-10-04)
+
+`object.material.pack` now removes measured local volume from a height surface and
+creates one editable sphere with matching collision and a saved material store.
+The book form, Maestro and programs share that action and typed result. Packing
+uses one save/Undo; failed saves and ownership/capacity refusals preserve the patch.
+`object.material.edit` and `object.material` expose the reusable component so
+future scoops and vessels can retain the same quantity model. See
+[material packing](QUEST_MATERIAL_PACKING.md) for units, persistence and limits.
+
+The ball uses ordinary grabbing, release, gravity and collision. This increment
+does not add physical shovel capture or a hand-packing gesture. Those remain
+outstanding, alongside full-app Quest acceptance and release work. The latest
+format is room v17 with paired intent/archive v16; earlier checkpoints above retain
+their original format and evidence numbers.

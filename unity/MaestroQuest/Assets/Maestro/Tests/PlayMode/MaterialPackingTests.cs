@@ -1,0 +1,37 @@
+// Copyright 2026 Roni Tervo
+// SPDX-License-Identifier: Apache-2.0
+using System;using System.Collections;using System.IO;using System.Linq;
+using Maestro.Quest.Creation;using Maestro.Quest.Interaction;using Maestro.Quest.Programs;
+using Newtonsoft.Json.Linq;using NUnit.Framework;using UnityEngine;using UnityEngine.TestTools;
+using UnityEngine.XR.Interaction.Toolkit.Interactors;
+namespace Maestro.Quest.Tests {public sealed partial class RoomRulesTests {
+ JObject PackCall(string source)=>new(){["id"]="object.material.pack",["version"]=1,["arguments"]=new JObject{["source"]=SurfaceEndpoint(source),["amountLitres"]=.5,["name"]="Packed snowball",["position"]=new JObject{["x"]=4,["y"]=2.6,["z"]=4},["mass"]=.15}};
+ [UnityTest] public IEnumerator MaterialPackingPersistsExactQuantityAndOrdinaryObjectWithOneUndoAndReplay(){
+  var ex=new RoomAgentExecutor(editor);string source=Snow(ex);var before=editor.Read(source).heightFields[0];int count=editor.Snapshot().objects.Length;var request=ContainerRequest(PackCall(source));Assert.That(ex.Execute(request,out var error,out _),Is.True,error);var output=ex.Executions.Observe()["selected"]["output"];string id=(string)output["objectId"];double amount=(double)output["amountLitres"];var ball=editor.Read(id);var after=editor.Read(source).heightFields[0];
+  Assert.That(before.VolumeLitres-after.VolumeLitres,Is.EqualTo(amount).Within(1e-10));Assert.That(amount,Is.LessThanOrEqualTo(.5));Assert.That(ball.materialStores.Single().amountLitres,Is.EqualTo(amount));Assert.That(ball.recipe.parts.Single().shape,Is.EqualTo("sphere"));Assert.That(ball.collision.shapes.Single().size,Is.EqualTo(ball.recipe.parts.Single().size));Assert.That(ball.mass,Is.EqualTo(.15f));
+  Assert.That(SculptFact("object.material",new JObject{["target"]=id})["definition"]["amountLitres"].Value<double>(),Is.EqualTo(amount));Assert.That(ex.Execute(request,out error,out _),Is.True,error);Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count+1));
+  var saved=new RoomStorage(directory).Load(out error);Assert.That(saved,Is.Not.Null,error);Assert.That(saved.objects.Single(o=>o.id==id).materialStores[0].amountLitres,Is.EqualTo(amount));Assert.That(saved.objects.Single(o=>o.id==source).heightFields[0].heights,Is.EqualTo(after.heights));
+  editor.Undo();Assert.That(editor.Read(id),Is.Null);Assert.That(editor.Read(source).heightFields[0].heights,Is.EqualTo(before.heights));editor.Redo();Assert.That(editor.Read(id).materialStores[0].amountLitres,Is.EqualTo(amount));Assert.That(editor.Read(source).heightFields[0].heights,Is.EqualTo(after.heights));
+  Assert.That(editor.CopyObject(id,editor.ObjectRevision(id),"Snowball copy",new Vector3(6,2,4),out var copy,out error),Is.True,error);Assert.That(editor.Read(copy).materialStores[0].amountLitres,Is.EqualTo(amount));yield return null;
+ }
+ [UnityTest] public IEnumerator MaterialPackingRefusalsNeverConsumeSnowOrCreatePartialObjects(){
+  var ex=new RoomAgentExecutor(editor);string source=Snow(ex);var stale=PackCall(source);ContainerRun(ex,FieldCall(source));var before=editor.Read(source).heightFields[0].heights;int count=editor.Snapshot().objects.Length;
+  Assert.That(ex.Execute(ContainerRequest(stale),out _,out _),Is.False);var view=editor.Find(source).GetComponent<HeightFieldView>();Assert.That(editor.Sculpting.Configure("lower",.12f,.03f,out var error),Is.True,error);editor.Sculpting.Begin(0,SculptRay(view));Assert.That(editor.Sculpting.Active,Is.True);Assert.That(ex.Execute(ContainerRequest(PackCall(source)),out _,out _),Is.False);editor.Sculpting.Cancel(0);editor.Sculpting.ResolveManual(true);
+  string pending=Path.Combine(directory,RoomStorage.FileName+".pending");Directory.CreateDirectory(pending);try{Assert.That(ex.Execute(ContainerRequest(PackCall(source)),out _,out _),Is.False);}finally{Directory.Delete(pending);}Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count));Assert.That(editor.Read(source).heightFields[0].heights,Is.EqualTo(before));yield return null;
+ }
+ [UnityTest] public IEnumerator MaterialPackingTemporaryDiscardRestoresBothSidesAndCapacityRefusesAtomically(){
+  var ex=new RoomAgentExecutor(editor);string source=Snow(ex);var before=editor.Read(source).heightFields[0].heights;int count=editor.Snapshot().objects.Length;
+  Assert.That(editor.BeginTemporaryRoom(out var error),Is.True,error);while(editor.TemporarySavePending)yield return null;ContainerRun(ex,PackCall(source));Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count+1));Assert.That(editor.DiscardTemporaryRoom(out error),Is.True,error);Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count));Assert.That(editor.Read(source).heightFields[0].heights,Is.EqualTo(before));
+  for(int i=0;i<16;i++){Assert.That(editor.CreatePrimitive(RoomObjectKind.Ball,"Store "+i,new Vector3(8,2,4),1,Color.white,out var id,out error),Is.True,error);Assert.That(editor.EditMaterialStore(id,editor.ObjectRevision(id),new RoomMaterialStore(),out error),Is.True,error);}
+  count=editor.Snapshot().objects.Length;Assert.That(ex.Execute(ContainerRequest(PackCall(source)),out _,out _),Is.False);Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count));Assert.That(editor.Read(source).heightFields[0].heights,Is.EqualTo(before));
+ }
+ [UnityTest] public IEnumerator MaterialPackingBallUsesRealGripReleaseGravityAndSurfaceCollision(){
+  var ex=new RoomAgentExecutor(editor);string source=Snow(ex);string id=(string)ContainerRun(ex,PackCall(source))["selected"]["output"]["objectId"];var item=editor.Find(id);var body=item.GetComponent<Rigidbody>();double amount=editor.Read(id).materialStores[0].amountLitres;
+  var hand=Hand(1,item.transform.position);manager.SelectEnter((IXRSelectInteractor)hand,item.Grab);Assert.That(item.Grab.isSelected,Is.True);manager.SelectExit((IXRSelectInteractor)hand,item.Grab);Assert.That(item.Grab.isSelected,Is.False);
+  physics.SetSurfaces(true,"Synthetic packed-material collision setup");physics.StartPhysics();Assert.That(body.isKinematic,Is.False);for(int i=0;i<160;i++)yield return new WaitForFixedUpdate();float radius=editor.Read(id).recipe.parts.Single().size.x*.5f;float height=editor.Read(source).heightFields[0].HeightAt(Vector2.zero);Assert.That(item.transform.position.y,Is.EqualTo(2+height+radius).Within(.015f));Assert.That(editor.Read(id).materialStores[0].amountLitres,Is.EqualTo(amount));physics.PausePhysics();
+  string output=Environment.GetEnvironmentVariable("MAESTRO_MATERIAL_PACKING_PREVIEW");if(!string.IsNullOrEmpty(output)){
+   var camera=new GameObject("Packed material acceptance",typeof(Camera)).GetComponent<Camera>();camera.orthographic=true;camera.orthographicSize=.6f;camera.nearClipPlane=.01f;camera.farClipPlane=5;camera.clearFlags=CameraClearFlags.SolidColor;camera.backgroundColor=new Color(.16f,.22f,.27f);camera.transform.position=editor.Find(source).transform.position+new Vector3(1,1.2f,-1.3f);camera.transform.LookAt(editor.Find(source).transform.position);
+   var render=new RenderTexture(1024,1024,24);var pixels=new Texture2D(1024,1024,TextureFormat.RGB24,false);var prior=RenderTexture.active;try{camera.targetTexture=render;camera.Render();RenderTexture.active=render;pixels.ReadPixels(new Rect(0,0,1024,1024),0,0);pixels.Apply();File.WriteAllBytes(output,pixels.EncodeToPNG());}finally{RenderTexture.active=prior;camera.targetTexture=null;render.Release();UnityEngine.Object.Destroy(render);UnityEngine.Object.Destroy(pixels);UnityEngine.Object.Destroy(camera.gameObject);}
+  }
+ }
+}}

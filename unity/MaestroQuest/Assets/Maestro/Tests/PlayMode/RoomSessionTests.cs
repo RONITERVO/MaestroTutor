@@ -51,7 +51,7 @@ namespace Maestro.Quest.Tests
     Assert.That(editor.ObserveTemporaryRoom().phase,Is.EqualTo("starting"));
     Assert.That(editor.CreatePrimitive(RoomObjectKind.Block,"While starting",Vector3.up,1,Color.white,out id,out var error),Is.True,error);
     int frame=Time.frameCount;yield return null;yield return null;Assert.That(Time.frameCount,Is.GreaterThan(frame));
-    Assert.That(editor.TemporarySavePending,Is.True);Assert.That(File.Exists(Path.Combine(directory,"room.v16.json")),Is.False);
+    Assert.That(editor.TemporarySavePending,Is.True);Assert.That(File.Exists(Path.Combine(directory,RoomStorage.FileName)),Is.False);
     Assert.That(runtime.Scheduler.CancelInvocation(run,out error),Is.True,error);
     Assert.That((string)runtime.Scheduler.Invocation(run)["status"],Does.Contain("temporary mode"));
     Assert.That(editor.DiscardTemporaryRoom(out _),Is.False,"Cannot retract a dispatched baseline write");

@@ -34,7 +34,7 @@ namespace Maestro.Quest.Tests
             byte[] model=ModelFixture.Mixamo();modelHash=ModelLibrary.Hash(model);payloads["models/"+modelHash+".glb"]=model;
             using var motions=new MotionLibrary(Path.Combine(directory,"source-motions"));var motion=motions.ImportAsync("Wave.glb",model,"gestures").GetAwaiter().GetResult().Single();motionId=motion.id;motionPath="motions/"+motion.hash+".motion.glb";
             payloads[motionPath]=File.ReadAllBytes(Path.Combine(directory,"source-motions",motion.hash+".motion.glb"));documents["motions/motions.v2.json"]=File.ReadAllBytes(Path.Combine(directory,"source-motions","motions.v2.json"));
-            documents["room.v16.json"]=Document(new RoomDocument {version=RoomDocument.CurrentVersion,objects=new[]{new RoomObjectData {id="book",kind=RoomObjectKind.Book},new RoomObjectData {id="maestro",kind=RoomObjectKind.Maestro,modelHash=modelHash,walkMotionId=motion.id}}});
+            documents[RoomStorage.FileName]=Document(new RoomDocument {version=RoomDocument.CurrentVersion,objects=new[]{new RoomObjectData {id="book",kind=RoomObjectKind.Book},new RoomObjectData {id="maestro",kind=RoomObjectKind.Maestro,modelHash=modelHash,walkMotionId=motion.id}}});
             documents["behaviours.v2.json"]=Document(new RuleDocument());documents["controls.v2.json"]=Document(new ControllerPreferences());documents["avatar-activities.v2.json"]=Document(new AvatarActivityDocument());
             documents["models/"+modelHash+".txt"]=Bytes("Maestro äö\nOriginal attribution kept");
             var module=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-modules-nested.json")))["imports"][0]["module"] as JObject;moduleHash=ProgramModules.Hash(module);documents["program-modules.v1/"+moduleHash+".json"]=Bytes(module.ToString(Formatting.None));
@@ -51,6 +51,11 @@ namespace Maestro.Quest.Tests
             var room=JsonUtility.FromJson<RoomDocument>(Encoding.UTF8.GetString(documents[RoomStorage.FileName]));var entry=CreationTemplates.All.First(x=>x.Id=="chalkboard");
             var board=new RoomObjectData {id=new string('d',32),kind=RoomObjectKind.Assembly,recipe=entry.Recipe,surfaces=entry.Surfaces,drawingTips=new[]{new DrawingTip{part="Board",enabled=false,color=Color.yellow}}};board.surfaces[0].strokes=new[]{new SurfaceStroke {id=new string('e',32),color=Color.cyan,points=new[]{Vector3.left*.05f,Vector3.up*.03f,Vector3.right*.05f}}};room.objects=room.objects.Append(board).ToArray();documents[RoomStorage.FileName]=Document(room);
             using var input=new MemoryStream(Archive());using var staged=WorkspaceArchive.Stage(input,directory);var restored=new RoomStorage(staged.DirectoryPath).Load(out var error);Assert.That(restored,Is.Not.Null,error);var ink=restored.objects.Single(o=>o.id==board.id).surfaces[0].strokes.Single();Assert.That(ink.id,Is.EqualTo(new string('e',32)));Assert.That(ink.color,Is.EqualTo(Color.cyan));Assert.That(ink.points,Is.EqualTo(board.surfaces[0].strokes[0].points));Assert.That(JsonUtility.ToJson(restored.objects.Single(o=>o.id==board.id).drawingTips.Single()),Is.EqualTo(JsonUtility.ToJson(board.drawingTips.Single())));
+        }
+        [Test] public void PackedMaterialSurvivesPortableArchiveWithExactQuantityAndIdentity()
+        {
+            var room=JsonUtility.FromJson<RoomDocument>(Encoding.UTF8.GetString(documents[RoomStorage.FileName]));var ball=new RoomObjectData{id=new string('d',32),kind=RoomObjectKind.Ball,materialStores=new[]{new RoomMaterialStore{capacityLitres=.5,amountLitres=.32123456789}}};room.objects=room.objects.Append(ball).ToArray();documents[RoomStorage.FileName]=Document(room);
+            using var input=new MemoryStream(Archive());using var staged=WorkspaceArchive.Stage(input,directory);var restored=new RoomStorage(staged.DirectoryPath).Load(out var error);Assert.That(restored,Is.Not.Null,error);Assert.That(restored.objects.Single(o=>o.id==ball.id).materialStores[0].amountLitres,Is.EqualTo(.32123456789));
         }
         [Test] public void IncludedModuleCopiesAndEmbeddedWatcherSurviveWithoutAnyInstalledDefaults()
         {
@@ -106,10 +111,10 @@ namespace Maestro.Quest.Tests
         }
         [Test] public void SnapshotDetachesDocumentsAndDoesNotRebindMissingModels()
         {
-            string missing=new string('c',64);var room=JObject.Parse(Encoding.UTF8.GetString(documents["room.v16.json"]));room["objects"][1]["modelHash"]=missing;documents["room.v16.json"]=Bytes(room.ToString(Formatting.None));
-            var snapshot=Snapshot();Array.Fill(documents["room.v16.json"],(byte)'x');documents.Clear();using var output=new MemoryStream();var receipt=WorkspaceArchive.Write(output,snapshot);
+            string missing=new string('c',64);var room=JObject.Parse(Encoding.UTF8.GetString(documents[RoomStorage.FileName]));room["objects"][1]["modelHash"]=missing;documents[RoomStorage.FileName]=Bytes(room.ToString(Formatting.None));
+            var snapshot=Snapshot();Array.Fill(documents[RoomStorage.FileName],(byte)'x');documents.Clear();using var output=new MemoryStream();var receipt=WorkspaceArchive.Write(output,snapshot);
             Assert.That(receipt.Summary.MissingModels,Is.EqualTo(new[]{missing}));using var staged=WorkspaceArchive.Stage(new MemoryStream(output.ToArray()),directory);Assert.That(staged.Receipt.Summary.MissingModels,Is.EqualTo(new[]{missing}));
-            Assert.That(JObject.Parse(File.ReadAllText(Path.Combine(staged.DirectoryPath,"room.v16.json")))["objects"][1]["modelHash"].Value<string>(),Is.EqualTo(missing));
+            Assert.That(JObject.Parse(File.ReadAllText(Path.Combine(staged.DirectoryPath,RoomStorage.FileName)))["objects"][1]["modelHash"].Value<string>(),Is.EqualTo(missing));
         }
         [Test] public void UnavailableBehaviourSourceSurvivesWithoutExecutingOrBlockingOtherStores()
         {
@@ -122,7 +127,7 @@ namespace Maestro.Quest.Tests
             payloads.Remove(motionPath);Assert.Throws<InvalidDataException>(()=>Snapshot());var motions=JObject.Parse(Encoding.UTF8.GetString(documents["motions/motions.v2.json"]));motions["entries"][0]["removed"]=true;motions["entries"][0]["archived"]=true;documents["motions/motions.v2.json"]=Bytes(motions.ToString());
             using var stage=WorkspaceArchive.Stage(new MemoryStream(Archive()),directory);using var restored=new MotionLibrary(Path.Combine(stage.DirectoryPath,"motions"));Assert.That(restored.Inspect(motionId).removed,Is.True);Assert.That(restored.Inspect(motionId).id,Is.EqualTo(motionId));Assert.That(restored.PayloadPresent(motionId),Is.False);Assert.That(stage.Receipt.Summary.MissingMotions,Is.EqualTo(new[]{motionId}));
         }
-        [TestCase("../outside.json")][TestCase("/room.v16.json")][TestCase("models/../../outside.glb")][TestCase("room.v16.json.backup")][TestCase("action-receipts.v1.json")][TestCase("MODELS/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.glb")]
+        [TestCase("../outside.json")][TestCase("/"+RoomStorage.FileName)][TestCase("models/../../outside.glb")][TestCase(RoomStorage.FileName+".backup")][TestCase("action-receipts.v1.json")][TestCase("MODELS/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.glb")]
         public void UnknownOrUnsafePathsAreRejectedBeforeStaging(string path)
         {
             var entries=Entries(Archive());entries[path]=Bytes("not accepted");Assert.Throws<InvalidDataException>(()=>WorkspaceArchive.Stage(new MemoryStream(Zip(entries)),directory));NoStages();

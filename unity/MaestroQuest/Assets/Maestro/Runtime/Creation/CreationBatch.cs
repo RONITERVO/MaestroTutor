@@ -26,7 +26,7 @@ namespace Maestro.Quest.Creation
             }
             if(!Resolve(out var recipe,out var collision,out var physics,out var defaultName,out error))return false;
             if(!RoomEditor.PrepareRecipeObject(string.IsNullOrEmpty(name)?defaultName:name,position,scale,recipe,collision,physics,out data,out error))return false;
-            if(kind=="template"){var entry=CreationTemplates.Find(templateHash);data.surfaces=entry.Surfaces;data.drawingTips=entry.DrawingTips;data.snapPoints=entry.SnapPoints;data.containers=entry.Containers;data.heightFields=entry.HeightFields;data.sculptTips=entry.SculptTips;}
+            if(kind=="template"){var entry=CreationTemplates.Find(templateHash);data.surfaces=entry.Surfaces;data.drawingTips=entry.DrawingTips;data.snapPoints=entry.SnapPoints;data.containers=entry.Containers;data.heightFields=entry.HeightFields;data.sculptTips=entry.SculptTips;data.materialStores=entry.MaterialStores;}
             data.rotation=rotation;return true;
         }
         internal bool Validate(out string error) {
@@ -125,12 +125,12 @@ namespace Maestro.Quest.Creation
     public sealed partial class RoomEditor
     {
         // Both single-object and multi-object creation expand into the same components.
-        internal static bool PrepareRecipeObject(string name,Vector3 position,float scale,RoomRecipe recipe,CollisionRecipe collision,ObjectPhysicsSettings physics,out RoomObjectData item,out string error,DrawingSurface[] surfaces=null,DrawingTip[] drawingTips=null,RoomSnapPoint[] snapPoints=null,RoomContainer[] containers=null,RoomHeightField[] heightFields=null,SculptTip[] sculptTips=null) {
+        internal static bool PrepareRecipeObject(string name,Vector3 position,float scale,RoomRecipe recipe,CollisionRecipe collision,ObjectPhysicsSettings physics,out RoomObjectData item,out string error,DrawingSurface[] surfaces=null,DrawingTip[] drawingTips=null,RoomSnapPoint[] snapPoints=null,RoomContainer[] containers=null,RoomHeightField[] heightFields=null,SculptTip[] sculptTips=null,RoomMaterialStore[] materialStores=null) {
             item=null;error="Provide a valid construction recipe";if(recipe==null||!recipe.Validate(out error))return false;
             if(collision!=null&&!collision.Validate(out error))return false;
-            var data=new RoomObjectData {id=Guid.NewGuid().ToString("N"),name=name,kind=RoomObjectKind.Assembly,position=position,scale=scale,color=Color.white,physics=ItemPhysics.Fixed,recipe=recipe.Copy(),heightFields=heightFields?.Select(f=>f.Copy()).ToArray()??Array.Empty<RoomHeightField>(),sculptTips=sculptTips?.Select(t=>t.Copy()).ToArray()??Array.Empty<SculptTip>(),containers=containers?.Select(c=>c.Copy()).ToArray()??Array.Empty<RoomContainer>(),snapPoints=snapPoints?.Select(p=>p.Copy()).ToArray()??Array.Empty<RoomSnapPoint>(),drawingTips=drawingTips?.Select(t=>t.Copy()).ToArray()??Array.Empty<DrawingTip>(),surfaces=surfaces?.Select(s=>s.Copy()).ToArray()??Array.Empty<DrawingSurface>(),collision=collision?.shapes.Length>0?collision.Copy():null};
+            var data=new RoomObjectData {id=Guid.NewGuid().ToString("N"),name=name,kind=RoomObjectKind.Assembly,position=position,scale=scale,color=Color.white,physics=ItemPhysics.Fixed,recipe=recipe.Copy(),heightFields=heightFields?.Select(f=>f.Copy()).ToArray()??Array.Empty<RoomHeightField>(),sculptTips=sculptTips?.Select(t=>t.Copy()).ToArray()??Array.Empty<SculptTip>(),materialStores=materialStores?.Select(s=>s.Copy()).ToArray()??Array.Empty<RoomMaterialStore>(),containers=containers?.Select(c=>c.Copy()).ToArray()??Array.Empty<RoomContainer>(),snapPoints=snapPoints?.Select(p=>p.Copy()).ToArray()??Array.Empty<RoomSnapPoint>(),drawingTips=drawingTips?.Select(t=>t.Copy()).ToArray()??Array.Empty<DrawingTip>(),surfaces=surfaces?.Select(s=>s.Copy()).ToArray()??Array.Empty<DrawingSurface>(),collision=collision?.shapes.Length>0?collision.Copy():null};
             if(physics!=null&&!RoomControls.SetPhysics(data,physics,out error))return false;
-            if(!DrawingSurface.ValidateCollection(data,out error)||!DrawingTip.ValidateCollection(data,out error)||!RoomSnapPoint.ValidateCollection(data,out error)||!RoomContainer.ValidateCollection(data,out error))return false;item=data;error=null;return true;
+            if(!DrawingSurface.ValidateCollection(data,out error)||!DrawingTip.ValidateCollection(data,out error)||!RoomSnapPoint.ValidateCollection(data,out error)||!RoomContainer.ValidateCollection(data,out error)||!RoomMaterialStore.ValidateCollection(data,out error))return false;item=data;error=null;return true;
         }
         bool PrepareCreationBatch(CreationBatch batch,out RoomObjectData[] objects,out string error) {
             objects=null;error="Provide a creation batch";if(batch==null||!CanCreatePrimitive(out error)||!batch.Prepare(out objects,out error))return false;

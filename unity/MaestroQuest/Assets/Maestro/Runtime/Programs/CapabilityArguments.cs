@@ -59,6 +59,8 @@ namespace Maestro.Quest.Programs
                         if(!DrawingSurfaceGeometry.Valid(JsonUtility.FromJson<DrawingSurface>(obj.ToString()))){error=path+" needs a plane or bounded cylindrical/spherical patch";return false;}
                     } else if((string)schema["format"]=="sculptTip") {
                         var p=obj["position"];if((double)p["x"]*(double)p["x"]+(double)p["y"]*(double)p["y"]+(double)p["z"]*(double)p["z"]>100){error="Keep a sculpt tip within ten local metres";return false;}
+                    } else if((string)schema["format"]=="materialStore") {
+                        var store=JsonUtility.FromJson<RoomMaterialStore>(obj.ToString());if(!store.Validate(out error))return false;
                     } else if((string)schema["format"]=="heightFieldReset") {
                         if((double)obj["fillHeight"]>(double)obj["definition"]["maxHeight"]){error=path+" needs fillHeight within maxHeight";return false;}
                     } else if((string)schema["format"]=="heightFieldDefinition"||(string)schema["format"]=="heightFieldSaved") {

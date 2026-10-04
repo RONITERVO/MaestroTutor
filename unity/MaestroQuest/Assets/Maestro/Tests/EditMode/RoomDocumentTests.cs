@@ -139,13 +139,13 @@ namespace Maestro.Quest.Tests
                 journal.Apply(new[] { changed },Array.Empty<string>(),out _);
                 Assert.That(storage.Save(journal.Snapshot(),out error),Is.True,error);
                 Assert.That(storage.Load(out _).objects.Single(x => x.id == drawing.id).position,Is.EqualTo(Vector3.right));
-                File.WriteAllText(Path.Combine(directory,"room.v16.json"),"broken");
+                File.WriteAllText(Path.Combine(directory,RoomStorage.FileName),"broken");
                 var recovered = storage.Load(out var message);
                 Assert.That(message,Does.Contain("backup"));
                 Assert.That(recovered.objects.Single(x => x.id == drawing.id).points,Is.EqualTo(drawing.points));
                 Assert.That(recovered.objects.Single(x => x.id == drawing.id).position,Is.EqualTo(Vector3.zero));
                 Assert.That(storage.Save(recovered,out error),Is.True,error);
-                Assert.That(File.ReadAllText(Path.Combine(directory,"room.v16.json.unreadable")),Is.EqualTo("broken"));
+                Assert.That(File.ReadAllText(Path.Combine(directory,RoomStorage.FileName+".unreadable")),Is.EqualTo("broken"));
                 Assert.That(storage.Load(out message),Is.Not.Null); Assert.That(message,Is.Null);
                 var invalid = recovered.Copy(); invalid.version = RoomDocument.CurrentVersion+1;
                 Assert.That(storage.Save(invalid,out _),Is.False);

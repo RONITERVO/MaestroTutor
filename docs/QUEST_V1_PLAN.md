@@ -3072,3 +3072,44 @@ release signing or Store submission occurred. Physical shovelling/carried snow,
 snowball packing, real Quest performance/comfort and the existing provider,
 account/payment/privacy and Store gates remain open. This checkpoint does not
 complete the v1 goal or claim exact physical mass conservation.
+
+### Measured material and snowball packing checkpoint — 2026-10-04
+
+`object.material.pack` removes measured local volume from a fixed surface and
+creates one editable sphere with matching collision and saved contents. The book,
+agent and programs share its generated schema, current-source check and typed
+result. `object.material.edit` and `object.material` expose the reusable carried
+quantity component. Source loss and object creation save atomically; one Undo
+restores the patch and removes the ball. Copies/prototypes, archives and temporary
+rooms retain the component. Room v17 and paired intent/archive v16 preserve the
+new data; current-room paths now use the native filename constant.
+
+Tests exposed and fixed the shared journal's baseline rule for mixed edits and
+new objects. Persistence now validates that baseline before writing, and Undo
+uses observed poses for existing members without inventing a prior new-object pose.
+See QUEST_MATERIAL_PACKING.md for quantities, lifecycle and extension boundaries.
+
+Verification: **2,289 web tests in 254 files**, **791 Unity EditMode** and **592
+PlayMode tests** passed, with three optional private-file skips. TypeScript,
+ESLint, catalog provenance, bundled assets, production web, Android lint and **76
+Android tests** (two optional skips) passed. The packaged-build full-app native
+shared-client journey passed **377 observations**, without a provider. Chrome
+matched that journey's exact packing call and receipt, required the current source
+revision and refused oversized quantity. Native ball/surface rendering and the
+two-page form/result were inspected. Real XRI grip/release, gravity, surface contact,
+quantity/save consistency, Undo/Redo, receipt replay, sculpt ownership, save failure,
+capacity, temporary discard and archive retention passed desktop checks.
+
+The APK audit matched **1,865 frozen native inputs**, **321 runtime / 199 test /
+15 editor C# files**, **63 fixture payloads**, the native AAR and all **145 web
+files**. Catalog: **89 actions / 94 facts / 15 events**. Exact packaged assets match
+the default avatar, 178 motions, 24 templates and seven modules. Development
+manifest, arm64-only libraries, v2 signature and 16 KiB alignment passed.
+
+Checkpoint: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-material-packing-7602FD63.apk`.
+SHA-256: `7602FD6348144C46FFE3E621E3A85198C8671B2456110D77C332DAE2BCE0A9F0`.
+Evidence: `.quest-evidence/material-packing`. **Not installed**; headset work remains
+on hold. Physical shovel capture, hand-packing gestures, shared liquid/material
+adapters, arbitrary mesh/skin painting, provider/device acceptance and account,
+payment/privacy/signing/Store gates remain open. This checkpoint does not complete
+v1 or claim granular simulation or physical mass conservation across authored edits.

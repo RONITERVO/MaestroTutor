@@ -162,7 +162,7 @@ namespace Maestro.Quest.Creation
             return CommitCreatedObject(item,out id,out error);
         }
         public bool CanCreateRecipe(RoomRecipe recipe,out string error)=>CanCreateRecipe(recipe,null,null,out error);
-        public bool CanCreateRecipe(RoomRecipe recipe,CollisionRecipe collision,ObjectPhysicsSettings physics,out string error,DrawingSurface[] surfaces=null,DrawingTip[] drawingTips=null,RoomSnapPoint[] snapPoints=null,RoomContainer[] containers=null,RoomHeightField[] heightFields=null,SculptTip[] sculptTips=null) {
+        public bool CanCreateRecipe(RoomRecipe recipe,CollisionRecipe collision,ObjectPhysicsSettings physics,out string error,DrawingSurface[] surfaces=null,DrawingTip[] drawingTips=null,RoomSnapPoint[] snapPoints=null,RoomContainer[] containers=null,RoomHeightField[] heightFields=null,SculptTip[] sculptTips=null,RoomMaterialStore[] materialStores=null) {
             if(!CanCreatePrimitive(out error))return false;
             if(recipe==null) {error="Provide a construction recipe";return false;}
             if(!recipe.Validate(out error))return false;
@@ -174,6 +174,8 @@ namespace Maestro.Quest.Creation
             if(Snapshot().objects.Sum(x=>x.snapPoints?.Length??0)+(snapPoints?.Length??0)>RoomSnapPoint.MaximumPerRoom){error="This room has reached its snap-point limit";return false;}
             if(!RoomContainer.ValidateCollection(new RoomObjectData{kind=RoomObjectKind.Assembly,containers=containers},out error))return false;
             if(Snapshot().objects.Sum(x=>x.containers?.Length??0)+(containers?.Length??0)>RoomContainer.MaximumPerRoom){error="Keep at most 16 liquid containers in this room";return false;}
+            if(!RoomMaterialStore.ValidateCollection(new RoomObjectData{kind=RoomObjectKind.Assembly,materialStores=materialStores},out error))return false;
+            if(Snapshot().objects.Sum(x=>x.materialStores?.Length??0)+(materialStores?.Length??0)>RoomMaterialStore.MaximumPerRoom){error="Keep at most 16 measured material stores in this room";return false;}
             if(collision!=null&&!collision.Validate(out error))return false;
             if(!RoomHeightField.ValidateCollection(new RoomObjectData{kind=RoomObjectKind.Assembly,heightFields=heightFields,physics=physics==null||physics.mode=="fixed"?ItemPhysics.Fixed:ItemPhysics.Solid},out error))return false;
             if(Snapshot().objects.Sum(x=>x.heightFields?.Length??0)+(heightFields?.Length??0)>RoomHeightField.MaximumPerRoom){error="Keep at most four height surfaces in this room";return false;}
@@ -184,9 +186,9 @@ namespace Maestro.Quest.Creation
             return true;
         }
         public bool CreateRecipe(string name,Vector3 position,float scale,RoomRecipe recipe,out string id,out string error)=>CreateRecipe(name,position,scale,recipe,null,null,out id,out error);
-        public bool CreateRecipe(string name,Vector3 position,float scale,RoomRecipe recipe,CollisionRecipe collision,ObjectPhysicsSettings physics,out string id,out string error,DrawingSurface[] surfaces=null,DrawingTip[] drawingTips=null,RoomSnapPoint[] snapPoints=null,RoomContainer[] containers=null,RoomHeightField[] heightFields=null,SculptTip[] sculptTips=null) {
-            id=null;if(!CanCreateRecipe(recipe,collision,physics,out error,surfaces,drawingTips,snapPoints,containers,heightFields,sculptTips))return false;
-            if(!PrepareRecipeObject(name,position,scale,recipe,collision,physics,out var item,out error,surfaces,drawingTips,snapPoints,containers,heightFields,sculptTips))return false;
+        public bool CreateRecipe(string name,Vector3 position,float scale,RoomRecipe recipe,CollisionRecipe collision,ObjectPhysicsSettings physics,out string id,out string error,DrawingSurface[] surfaces=null,DrawingTip[] drawingTips=null,RoomSnapPoint[] snapPoints=null,RoomContainer[] containers=null,RoomHeightField[] heightFields=null,SculptTip[] sculptTips=null,RoomMaterialStore[] materialStores=null) {
+            id=null;if(!CanCreateRecipe(recipe,collision,physics,out error,surfaces,drawingTips,snapPoints,containers,heightFields,sculptTips,materialStores))return false;
+            if(!PrepareRecipeObject(name,position,scale,recipe,collision,physics,out var item,out error,surfaces,drawingTips,snapPoints,containers,heightFields,sculptTips,materialStores))return false;
             return CommitCreatedObject(item,out id,out error);
         }
         bool CommitCreatedObject(RoomObjectData item,out string id,out string error) {
@@ -229,7 +231,7 @@ namespace Maestro.Quest.Creation
             candidate.objects=candidate.objects.Where(x=>!changed.Contains(x.id)).Concat(replacements).ToArray();
             if(structureEdits!=null)candidate.structures=structureEdits.Apply(candidate.structures);
             if(!candidate.Validate(out error))return false;
-            if(observedBefore!=null&&!journal.PlacementBaseline(observedBefore,out _,out error))return false;
+            if(observedBefore!=null&&!journal.EditBaseline(replacements,removals,observedBefore,out _,out error))return false;
             if(TemporaryRoom) {
                 if(!Commit(replacements,removals,message,true,applyPose,observedBefore,structureEdits)){error=Status;return false;}
                 return true;

@@ -53,7 +53,8 @@ movement, contact or manual triggers. The native runtime advertises
 
 This operation does not move a shovel, require proximity, start physics, simulate
 grains, turn a field into a rigid snowball or transfer contents into a liquid
-container. Physical scooping/packing and a compatible carried-material component
-remain further work. Ordinary reset/sculpt/copy actions can intentionally create
+container. A separate [shared packing action](QUEST_MATERIAL_PACKING.md) now creates a rigid
+ball with measured carried material. Physical shovel/hand capture remains further
+work. Ordinary reset/sculpt/copy actions can intentionally create
 or remove geometric volume. Full-room granular/fluid simulation stays outside the
 initial v1 boundary. Desktop checks do not establish Quest performance or comfort.

@@ -1,6 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 using System;
+using Maestro.Quest.Creation;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -44,7 +45,7 @@ namespace Maestro.Quest.Tests
             var included=BundledAvatarFixture.Write(Path.Combine(directory,"package"),bytes);var store=new WorkspaceGenerationStore(Path.Combine(directory,"app"));string origin=(string)store.InspectRecovery()["originHash"];
             var preview=store.PrepareFreshRecovery(origin,includedAvatar:included);Assert.That(preview.Receipt.Summary.Models,Is.EqualTo(1));Assert.That(preview.Receipt.Summary.MissingModels,Is.Empty);Assert.That((string)store.InspectRecovery()["originHash"],Is.EqualTo(origin));
             var copy=store.InspectDamagedPreview(preview.Id,preview.Receipt.ManifestHash,origin);Assert.That(copy.Receipt.ManifestHash,Is.EqualTo(preview.Receipt.ManifestHash));
-            var snapshot=WorkspaceDefaults.Snapshot(included);Assert.That(JObject.Parse(System.Text.Encoding.UTF8.GetString(snapshot.Documents["room.v16.json"]))["objects"].Single(x=>(string)x["id"]=="maestro")["modelHash"].Value<string>(),Is.EqualTo(included.Hash));
+            var snapshot=WorkspaceDefaults.Snapshot(included);Assert.That(JObject.Parse(System.Text.Encoding.UTF8.GetString(snapshot.Documents[RoomStorage.FileName]))["objects"].Single(x=>(string)x["id"]=="maestro")["modelHash"].Value<string>(),Is.EqualTo(included.Hash));
             File.Delete(Path.Combine(directory,"package",BundledAvatar.RelativePath));using var output=new MemoryStream();var receipt=WorkspaceArchive.Write(output,snapshot);Assert.That(receipt.Summary.Models,Is.EqualTo(1));Assert.That(receipt.Summary.MissingModels,Is.Empty);
         }
     }

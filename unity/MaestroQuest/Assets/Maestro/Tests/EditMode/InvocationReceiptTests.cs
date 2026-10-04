@@ -1,6 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 using System;
+using Maestro.Quest.Creation;
 using System.IO;
 using System.Linq;
 using Maestro.Quest.Rules;
@@ -182,7 +183,7 @@ namespace Maestro.Quest.Tests
         {
             Directory.CreateDirectory(directory);string marker=Path.Combine(directory,"action-recovery.pending.json");
             string raw=new JObject {["version"]=1,["id"]="../outside",["files"]=new JArray("../room.v16.json")}.ToString();
-            File.WriteAllText(marker,raw);string room=Path.Combine(directory,"room.v16.json");File.WriteAllText(room,"keep this room");
+            File.WriteAllText(marker,raw);string room=Path.Combine(directory,RoomStorage.FileName);File.WriteAllText(room,"keep this room");
             var receipts=new InvocationReceipts(directory);Assert.That(receipts.Recover((string)receipts.RecoveryView["id"],out var error),Is.True,error);
             string archive=Directory.GetDirectories(Path.Combine(directory,"action-receipt-archives")).Single();
             Assert.That(File.ReadAllText(Path.Combine(archive,"previous-marker.json")),Is.EqualTo(raw));Assert.That(File.ReadAllText(room),Is.EqualTo("keep this room"));

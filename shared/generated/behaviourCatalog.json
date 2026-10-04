@@ -13032,6 +13032,80 @@
                                   "minItems": 0,
                                   "maxItems": 1
                                 },
+                                "materialStores": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "capacityLitres": {
+                                        "type": "number",
+                                        "minimum": 0.001,
+                                        "maximum": 8000.0
+                                      },
+                                      "amountLitres": {
+                                        "type": "number",
+                                        "minimum": 0.0,
+                                        "maximum": 8000.0
+                                      },
+                                      "material": {
+                                        "type": "string",
+                                        "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+                                        "maxLength": 32
+                                      },
+                                      "color": {
+                                        "type": "object",
+                                        "properties": {
+                                          "r": {
+                                            "type": "number",
+                                            "minimum": 0.0,
+                                            "maximum": 1.0
+                                          },
+                                          "g": {
+                                            "type": "number",
+                                            "minimum": 0.0,
+                                            "maximum": 1.0
+                                          },
+                                          "b": {
+                                            "type": "number",
+                                            "minimum": 0.0,
+                                            "maximum": 1.0
+                                          },
+                                          "a": {
+                                            "type": "number",
+                                            "minimum": 1.0,
+                                            "maximum": 1.0
+                                          }
+                                        },
+                                        "required": [
+                                          "r",
+                                          "g",
+                                          "b",
+                                          "a"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      "version": {
+                                        "type": "integer",
+                                        "minimum": 1.0,
+                                        "maximum": 1.0
+                                      }
+                                    },
+                                    "required": [
+                                      "capacityLitres",
+                                      "amountLitres",
+                                      "material",
+                                      "color",
+                                      "version"
+                                    ],
+                                    "additionalProperties": false,
+                                    "format": "materialStore",
+                                    "x-features": [
+                                      "materialStores.v1"
+                                    ]
+                                  },
+                                  "minItems": 0,
+                                  "maxItems": 1
+                                },
                                 "motion": {
                                   "type": "object",
                                   "properties": {
@@ -17246,6 +17320,385 @@
           "removedLitres",
           "addedLitres",
           "roundingLitres"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "object.material.edit",
+      "version": 1,
+      "label": "Configure a measured material store",
+      "input": {
+        "type": "object",
+        "x-discriminators": [
+          "operation"
+        ],
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "configure"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              },
+              "definition": {
+                "type": "object",
+                "properties": {
+                  "capacityLitres": {
+                    "type": "number",
+                    "minimum": 0.001,
+                    "maximum": 8000.0
+                  },
+                  "amountLitres": {
+                    "type": "number",
+                    "minimum": 0.0,
+                    "maximum": 8000.0
+                  },
+                  "material": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+                    "maxLength": 32
+                  },
+                  "color": {
+                    "type": "object",
+                    "properties": {
+                      "r": {
+                        "type": "number",
+                        "minimum": 0.0,
+                        "maximum": 1.0
+                      },
+                      "g": {
+                        "type": "number",
+                        "minimum": 0.0,
+                        "maximum": 1.0
+                      },
+                      "b": {
+                        "type": "number",
+                        "minimum": 0.0,
+                        "maximum": 1.0
+                      },
+                      "a": {
+                        "type": "number",
+                        "minimum": 1.0,
+                        "maximum": 1.0
+                      }
+                    },
+                    "required": [
+                      "r",
+                      "g",
+                      "b",
+                      "a"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "capacityLitres",
+                  "amountLitres",
+                  "material",
+                  "color"
+                ],
+                "additionalProperties": false,
+                "format": "materialStore"
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "revision",
+              "definition"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "object.material",
+              "version": 1,
+              "arguments": {
+                "target": "target"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
+            "title": "Configure / fill",
+            "x-features": [
+              "materialStores.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "remove"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "revision"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "object.material",
+              "version": 1,
+              "arguments": {
+                "target": "target"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
+            "title": "Remove material store",
+            "x-features": [
+              "materialStores.v1"
+            ]
+          }
+        ]
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.created",
+        "target.unheld",
+        "source.revision.current",
+        "storage.writable"
+      ],
+      "description": "Configure or remove one measured material store on a created object. Up to 16 stores per room. Capacity and contents are logical local litres, independent of visual size and rigid-body mass. Configuration is an explicit authoring edit and can add or discard material. It does not change the object's geometry, colour, collider, mass or motion, and supplies no fluid/granular solver. A packed ball uses the same component. Copy/prototypes explicitly duplicate contents; Undo, temporary rooms and archives retain them. No bare-hand scoop, automatic pour, compaction density, melting or mixing is inferred. Use the current object.material revision and exclusive ownership.",
+      "example": {
+        "operation": "configure",
+        "target": "00000000000000000000000000000000",
+        "revision": 1,
+        "definition": {
+          "capacityLitres": 1.0,
+          "amountLitres": 0.0,
+          "material": "Snow",
+          "color": {
+            "r": 0.93999999761581421,
+            "g": 0.97000002861022949,
+            "b": 1.0,
+            "a": 1.0
+          }
+        }
+      }
+    },
+    {
+      "id": "object.material.pack",
+      "version": 1,
+      "label": "Pack surface material into a ball",
+      "input": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "object",
+            "properties": {
+              "target": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              },
+              "centre": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number",
+                    "minimum": -2.0,
+                    "maximum": 2.0
+                  },
+                  "z": {
+                    "type": "number",
+                    "minimum": -2.0,
+                    "maximum": 2.0
+                  }
+                },
+                "required": [
+                  "x",
+                  "z"
+                ],
+                "additionalProperties": false
+              },
+              "radius": {
+                "type": "number",
+                "minimum": 0.005,
+                "maximum": 2.0
+              }
+            },
+            "required": [
+              "target",
+              "revision",
+              "centre",
+              "radius"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "object.field",
+              "version": 1,
+              "arguments": {
+                "target": "target"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            }
+          },
+          "amountLitres": {
+            "type": "number",
+            "minimum": 0.001,
+            "maximum": 20.0
+          },
+          "name": {
+            "type": "string",
+            "pattern": "^.{1,80}$",
+            "maxLength": 80
+          },
+          "position": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "y": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "z": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "additionalProperties": false
+          },
+          "mass": {
+            "type": "number",
+            "minimum": 0.05,
+            "maximum": 20.0
+          }
+        },
+        "required": [
+          "source",
+          "amountLitres",
+          "name",
+          "position",
+          "mass"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "materialStores.v1",
+          "heightFields.v1",
+          "materialPacking.v1",
+          "actionResults.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "source.created",
+        "source.unheld",
+        "source.revision.current",
+        "storage.writable",
+        "room.capacity"
+      ],
+      "description": "Remove up to amountLitres from a local disk on a fixed height surface and create one editable, grabbable solid ball at the requested room position. Smooth footprint weights bound available volume; a grid-missing or less-than-0.001-litre footprint refuses. Stored amount is the measured actual loss, never more than requested. The new sphere recipe and sphere collider have matching diameter derived from that local volume; material label and colour are copied into its measured store. Rigid mass is explicitly supplied, not inferred density. One atomic save/Undo updates the patch and creates/removes the ball; failed saves or capacity limits leave neither partial removal nor partial object. Returns exact objectId and amountLitres. Ordinary grip, hold, launch, collision, animation and copy apply. Consumes one program creation allowance. Both geometry and quantity remain editable: resizing or deforming later does not rewrite the store. Does not start physics, move a hand/shovel, check reach, auto-catch or simulate grains. Stop cannot retract a completed edit; receipt replay cannot create a second ball.",
+      "example": {
+        "source": {
+          "target": "00000000000000000000000000000000",
+          "revision": 1,
+          "centre": {
+            "x": 0,
+            "z": 0
+          },
+          "radius": 0.2
+        },
+        "amountLitres": 0.5,
+        "name": "Snowball",
+        "position": {
+          "x": 0.3,
+          "y": 1,
+          "z": 0.7
+        },
+        "mass": 0.15
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "objectId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "amountLitres": {
+            "type": "number",
+            "minimum": 0.001,
+            "maximum": 20.0
+          }
+        },
+        "required": [
+          "objectId",
+          "amountLitres"
         ],
         "additionalProperties": false
       }
@@ -27690,6 +28143,55 @@
       ]
     },
     {
+      "id": "object.material",
+      "version": 1,
+      "type": {
+        "record": {
+          "revision": "number",
+          "configured": "boolean",
+          "definition": {
+            "record": {
+              "capacityLitres": "number",
+              "amountLitres": "number",
+              "material": "text",
+              "color": {
+                "record": {
+                  "r": "number",
+                  "g": "number",
+                  "b": "number",
+                  "a": "number"
+                }
+              }
+            }
+          }
+        }
+      },
+      "label": "Measured carried material",
+      "description": "Saved logical local litres, capacity, material identity and colour. Quantity stays unchanged on resize and does not set mass or infer geometry. Missing stores return inert editable defaults with configured=false. Reading never creates material or starts simulation.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1",
+        "materialStores.v1"
+      ]
+    },
+    {
       "id": "object.field",
       "version": 1,
       "type": {
@@ -31208,7 +31710,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "9b5ddcd801868a51d2f9fbd562eab647895bd170e997740a0f058a8cb2d2824a"
+      "sha256": "95ed4e12b993bb522953a094e295faf6148a785e19a6afc357d375ae5b4b8635"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -31228,7 +31730,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "c1ef24c2baabd82a239d20ee867e79690a2d5d3499d433c11b25959aff1e3f2d"
+      "sha256": "755b5d3870f77cb729f9e8a883d2904224bd373619da480d81afda485522a079"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -31260,7 +31762,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "a209c4c1a5bdc9fe24381f298004a44c01662562fee088ff63ccf22d6d80481a"
+      "sha256": "637562ea0f148f72e129a800b49f7afd055ac62a1a97d1258c052a8ec9f145b7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -31284,11 +31786,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "799f1bd303bbfbf5772c7b6d1e8142c7c1bbad2fd1fa3359ba6eaca40db82439"
+      "sha256": "def0db367177e6fcee7f1890a91d6b65003157eadfd620402409b8e95f2bfbea"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
-      "sha256": "47843d20d9610de732c302b90bf7f7fe67f44fdccf56cb0d710a32eb1335cd74"
+      "sha256": "c451ade294417638e9c3c12d3f2e851a63531dacc13357590eb8882644b4d4c5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleMemory.cs",
@@ -31304,11 +31806,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveCapture.cs",
-      "sha256": "8bee6daf2024e0345901bfb17fea562d7c729e5a2724d3619e8a5cfc4b0fb678"
+      "sha256": "cb6c2198859b52ff9f8b2da62ef1ee8e7ca4e9a6b27f61bf7231a3dbc7fb0101"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveSnapshot.cs",
-      "sha256": "2890a0324b92a7af15e67bc04f0f08f1407de5a81a995cb9477659263bebcbc2"
+      "sha256": "6eee9694fc22c339bc74e9b1a565007ee3954f5d3a8d4aa854658ea9fbae6ac4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.Retention.cs",
@@ -31512,7 +32014,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "0e359b972602474a88390b9494ad47cd086768d9d41ee302405b89d90e4f3e1a"
+      "sha256": "7f8dca000e4f28710f9868aea8b2519b14cde49a47e888e51921d9aaf1610a4e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomToolTray.cs",
@@ -31564,7 +32066,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationPrototype.cs",
-      "sha256": "d20de5ca1d632056f2c01805f06b29d49550476a944ff4ffc4a54c962aefc364"
+      "sha256": "32c145bd7a5ba220a474a39d24853461f07871908809d42c9e2aafcdadc88abe"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomComponentEdits.cs",
@@ -31584,11 +32086,19 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/HeightFieldTransfer.cs",
-      "sha256": "0c9aa993cb9e8ae31a84cee800ed581102660a65f759fdee0c2548930edb017a"
+      "sha256": "ca21c22ebf6d2b909dcc9dfc5f5a441cd0a1ec92320a964eff6e9c6a50afcaa4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomHeightFieldTransfer.cs",
       "sha256": "6a9090732e98c3e808d0d1479e9abd1a48b3e78b941c762070fda04ae6502dee"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomMaterialStore.cs",
+      "sha256": "32f39bbd0e87ad266ab462b9576c6e2d9502c954b29b330ec911615b2e2a90a2"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomMaterialEdits.cs",
+      "sha256": "45bc28c6167e37f3a216ab927088b710af161c7f0f95e5d176d1a833e574207f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SpatialSculpting.cs",
@@ -31680,7 +32190,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "7b33ee3671d6e6810d3d1a0ac7b3c0177c33759fb0409227d668db095399eb19"
+      "sha256": "4444aa26950ddefbd7fe33653a069ae6e4f513644682f396b42a3e818682672b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedDrawing.cs",
@@ -31824,7 +32334,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationTemplates.cs",
-      "sha256": "a56ce52a77d2f63b33c188d57c3c205623d6ee71b421ec901c0b4cb6afceafb1"
+      "sha256": "99ee78d1607a5c08205227bbd772af871aea4d1240055ff9e50081d281994b97"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLayout.cs",
@@ -31832,7 +32342,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationBatch.cs",
-      "sha256": "55ac93adbe544b2f7672f18d31043ed374aa58d0a009fa914371c7ae03dded30"
+      "sha256": "df3f3f59082f343cd068db4d3e55b21f54897a872d5e6fdf3e084054a0426085"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructure.cs",
@@ -31880,7 +32390,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "b144b26358ab6b6ec9b24e9246a6a90b41515cfda377e898584632cbef3b8319"
+      "sha256": "29d99e53d0f5e9d4090cbf825bde2684b2eef3fa97b8d9ee704eb9e7e7ab6d28"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -31944,11 +32454,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreateTemplateCapability.cs",
-      "sha256": "f32388a25530a9062e0e5d6b9bcbf3693835f5e9936c054f9a7ec549b7e24c85"
+      "sha256": "213afb95820002167ce0b6b16f17b7681d11a4a5b69b04f39aa581b36f79cdc0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreationPrototypeSchema.cs",
-      "sha256": "e3263cb7ce245c1f8e88ad3056e495a22ebc4a68c2f821161baaf108302b018b"
+      "sha256": "89f45c2e181df2e5de8d9be588ba3cc28d2d75651942d4acddf77c2f4df9c8a7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingCapabilities.cs",
@@ -32017,6 +32527,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/LibraryAnimationCapability.cs",
       "sha256": "201d2d9de494d6308386d4cffca6f104d7bd1450dbec8ccd43021f9adad3b9bf"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/MaterialStoreCapability.cs",
+      "sha256": "3c98d737037f81a50f3670a97f6e6027f9ae2c53986b984dea62d051261dd5f2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ModelImportCapability.cs",

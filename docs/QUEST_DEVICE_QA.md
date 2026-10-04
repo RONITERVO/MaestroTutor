@@ -1964,3 +1964,22 @@ must refuse. Resizing a patch changes its displayed size, not the local litre
 measure. This is an explicit saved edit; it is not a physical shovel or granular
 simulation. Check frame time during maximum-size edits and collisions on the
 accepted surface. Desktop results do not complete this device check.
+
+### Measured material packing — device acceptance pending
+
+On the current native build, create a snow patch and ask Maestro to pack half a
+litre from its centre into a snowball at a visible reachable room position. The
+manual fallback is the book capability form: **Pack surface material into a ball**,
+select the patch, load current values, review quantity/position/mass, then Run.
+The returned amount may be slightly below the request because field heights are
+floats. Confirm the ball appears and the centre patch changes. With room physics
+ready, grab/release it and throw it gently at the scanned floor. It should behave
+as an ordinary solid prop and remain readable/selectable.
+
+Undo once must remove the ball and restore the patch; Redo restores the same ball.
+Save/restart should retain its measured contents. Resizing it must not silently
+change those contents. Packing while a source sculpt gesture is active or
+retained must refuse. This is an explicit action, not a physical hand-scoop or
+shovel gesture. Record frame time and interaction comfort alongside other active
+props; desktop tests do not establish headset acceptance. Headset work remains on
+hold until resumed by the user.

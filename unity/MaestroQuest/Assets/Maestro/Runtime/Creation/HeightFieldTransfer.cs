@@ -35,6 +35,15 @@ namespace Maestro.Quest.Creation {
             if(added<=0||Math.Abs(added-removed)>Tolerance(removed))return false;
             source.heights=taken;destination.heights=deposited;result=new Result(removed,added);error=null;return true;
         }
+        internal static bool Extract(RoomHeightField field,Vector2 centre,float radius,double requested,out double removed,out string error){
+            removed=0;error="Choose a valid surface, in-bounds local footprint and 0.001–8000 local litres";
+            if(field==null||!field.Validate(out _)||!FootprintValid(field,centre,radius)||!double.IsFinite(requested)||requested<.001||requested>8000)return false;
+            var footprint=new Footprint(field,centre,radius,false);
+            var next=footprint.FitAtMost(Math.Min(requested,footprint.Capacity),out removed);
+            error="The footprint contains less than 0.001 transferable litre; enlarge it or choose another place";
+            if(removed<.001){removed=0;return false;}
+            field.heights=next;error=null;return true;
+        }
         static bool FootprintValid(RoomHeightField f,Vector2 p,float r)=>float.IsFinite(p.x)&&float.IsFinite(p.y)&&
             Mathf.Abs(p.x)<=f.width*.5f&&Mathf.Abs(p.y)<=f.depth*.5f&&float.IsFinite(r)&&r>=.005f&&r<=2;
         sealed class Footprint {
@@ -66,6 +75,17 @@ namespace Maestro.Quest.Creation {
                     moved+=(adding?(double)heights[i]-old:(double)old-heights[i])*coefficients[i];
                 }
                 return heights;
+            }
+            public float[] FitAtMost(double amount,out double moved){
+                var candidate=Sample(amount,out double actual);
+                if(actual<=amount){moved=actual;return candidate;}
+                var best=Sample(0,out moved);double low=0,high=amount;
+                for(int step=0;step<40;step++){
+                    double mid=(low+high)*.5;candidate=Sample(mid,out actual);
+                    if(actual<=amount){if(actual>moved){best=candidate;moved=actual;}low=mid;}else high=mid;
+                    if(amount-moved<=Tolerance(amount))break;
+                }
+                return best;
             }
             public float[] Fit(double amount,out double moved){
                 var best=Sample(amount,out moved);double distance=Math.Abs(moved-amount);
