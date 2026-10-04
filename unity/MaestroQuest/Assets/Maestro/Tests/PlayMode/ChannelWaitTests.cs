@@ -48,7 +48,10 @@ namespace Maestro.Quest.Tests
    var seq=new RuleSequence {id=Guid.NewGuid().ToString("N"),name="Nearby pickup",program=p.ToString()};runtime.Scheduler.Configure(new RuleDocument {sequences=new[]{seq}});
    Assert.That(runtime.Scheduler.Invoke(first,Time.unscaledTime,out var carrying,out var error),Is.True,error);Assert.That(runtime.Trigger(seq.id),Is.True);Assert.That(runtime.Scheduler.ObserveRuns().Single().waiting,Is.True);
    editor.Find(robot).transform.position+=Vector3.right*.5f;yield return Until(()=>runtime.Scheduler.RunningCount==0);
-   Assert.That((string)runtime.Scheduler.Invocation(carrying)["phase"],Is.EqualTo("completed"));Assert.That(runtime.Scheduler.Outcomes.Last().phase,Is.EqualTo("failed"));Assert.That(runtime.Scheduler.LastError,Does.Contain("reach"));Assert.That(ball.GetComponent<HeldRoomProp>(),Is.Null,"A completed hold releases its component; the failed pickup must not attach another");Assert.That(Vector3.Distance(ball.transform.position,original),Is.LessThan(.01f));
+   Assert.That((string)runtime.Scheduler.Invocation(carrying)["phase"],Is.EqualTo("completed"));Assert.That(runtime.Scheduler.Outcomes.Last().phase,Is.EqualTo("failed"));Assert.That(runtime.Scheduler.LastError,Does.Contain("reach"));Assert.That(ball.GetComponents<HeldRoomProp>().Any(hold=>hold.Holding),Is.False,"The completed hold and failed pickup must leave no active attachment");Assert.That(Vector3.Distance(ball.transform.position,original),Is.LessThan(.01f));
+   // Destroy is deferred until the end of the frame; release itself must already be complete.
+   yield return null;
+   Assert.That(ball.GetComponent<HeldRoomProp>(),Is.Null,"The released component must be removed and the failed pickup must not attach another");
   }
  }
 }

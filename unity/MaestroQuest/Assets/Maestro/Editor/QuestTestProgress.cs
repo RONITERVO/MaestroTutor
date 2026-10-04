@@ -19,7 +19,11 @@ namespace Maestro.Quest.Editor
             public void RunStarted(ITestAdaptor test) {}
             public void RunFinished(ITestResultAdaptor result) {}
             public void TestStarted(ITestAdaptor test) {if(!test.IsSuite)Debug.Log("MAESTRO_TEST_STARTED "+test.FullName);}
-            public void TestFinished(ITestResultAdaptor result) {if(!result.Test.IsSuite)Debug.Log("MAESTRO_TEST_FINISHED "+result.Test.FullName+" "+result.TestStatus);}
+            public void TestFinished(ITestResultAdaptor result) {
+                if(result.Test.IsSuite)return;
+                Debug.Log("MAESTRO_TEST_FINISHED "+result.Test.FullName+" "+result.TestStatus);
+                if(result.TestStatus==TestStatus.Failed)Debug.Log("MAESTRO_TEST_FAILURE "+result.Test.FullName+"\n"+result.Message+"\n"+result.StackTrace);
+            }
         }
     }
 }
