@@ -22,6 +22,7 @@ namespace Maestro.Quest.Interaction
         int placementRevision,placementGeneration;
         bool preparingPlacement;
         public bool Placing => placementId != null;
+        public bool Busy => Placing || preparingPlacement;
         public void Build(RoomEditor source, RoomPhysicsWorld physics, ScannedRoom environment, RoomInteraction room)
         {
             editor = source; world = physics; scan = environment;
@@ -69,8 +70,10 @@ namespace Maestro.Quest.Interaction
             editor.PrepareAgentEdit();
             if(!scan.PlaceObject(editor,id,placementRevision,placementSetup,ray,out _,out var error))status.text=error;
         }
+        void OnEnable()=>Refresh();
         void Refresh()
         {
+            if(!isActiveAndEnabled||!status||!editor)return;
             if (!status || !editor) return;
             var data = editor.Read(editor.SelectedId);
             selection.text = data == null ? "Select a creation to set physics" : data.kind + " · " + data.physics + " · " + data.mass.ToString("0.##") + " kg\nCollision: " + data.collisionShape;

@@ -78,6 +78,27 @@ try{
  console.log('Actual native book handshake received.');
  const initial=await page.evaluate(()=>window.nativeBookEvidence!().state!);
  await page.evaluate(()=>window.maestroBook!.command({version:1,type:'workspace.open'}));
+ // Optional physical tools use the actual generated form and native receipt path.
+ await page.getByRole('button',{name:'Physical tools',exact:true}).click();
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();
+ await page.waitForFunction(()=>{const c=window.nativeBookEvidence!().state!.catalog;return c?.operation==='inspect'&&c.category==='facts'&&c.capability==='room.tools'&&c.available===true;});
+ const toolsBefore=await page.evaluate(()=>{const c=window.nativeBookEvidence!().state!.catalog;if(c?.operation!=='inspect'||c.category!=='facts')throw new Error('Tool fact missing');return c.value as {stateId:string;visible:Record<string,boolean>};});
+ assert.equal(Object.values(toolsBefore.visible).some(Boolean),false,'Fresh workspace exposed physical trays');
+ await page.getByRole('button',{name:'Run action now',exact:true}).click();
+ await page.waitForFunction(()=>{const r=window.nativeBookEvidence!().state!.execution?.selected;return r?.capability==='room.tools.set'&&r.phase==='completed'&&r.output?.visible&&typeof r.output.visible==='object'&&!Array.isArray(r.output.visible)&&(r.output.visible as Record<string,unknown>).creation===true;});
+ const toolsShown=await page.evaluate(()=>window.nativeBookEvidence!().state!.execution!.selected!);
+ await page.screenshot({path:join(directory,'book-tools-shown.png')});
+ await page.getByText('Edit action fields',{exact:true}).click();
+ await page.getByLabel('Action inputs tray',{exact:true}).selectOption('all');
+ await page.getByLabel('Action inputs visible',{exact:true}).selectOption('false');
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();
+ await page.getByRole('button',{name:'Run action now',exact:true}).click();
+ await page.waitForFunction(previous=>{const r=window.nativeBookEvidence!().state!.execution?.selected;return r?.id!==previous&&r?.capability==='room.tools.set'&&r.phase==='completed';},toolsShown.id);
+ const toolsHidden=await page.evaluate(()=>window.nativeBookEvidence!().state!.execution!.selected!);
+ assert.equal(Object.values(toolsHidden.output!.visible as Record<string,boolean>).some(Boolean),false);
+ assert.equal((await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision)),initial.sceneRevision,'Tool visibility changed saved scene data');
+ await writeFile(join(directory,'book-physical-tools.json'),JSON.stringify({before:toolsBefore,shown:toolsShown,hidden:toolsHidden,sharedFormAndNativeReceipts:true},null,2));
+ await page.getByRole('button',{name:'Back to workshop',exact:true}).click();
  await page.getByRole('button',{name:'+ Box robot',exact:true}).click();
  await page.getByRole('heading',{name:'Practice robot',exact:true}).waitFor();
  const robot=await page.evaluate(()=>window.nativeBookEvidence!().state!.inspection!);
@@ -138,7 +159,7 @@ try{
  await page.reload();await page.waitForFunction(()=>!!window.nativeBookEvidence?.().state);
  await page.getByText('The ball keeps your colour.',{exact:true}).waitFor();
  assert.equal(requests.size,commandCount,'Reload replayed a room command');assert.equal(plannerCalls,9);assert.deepEqual(errors,[]);assert.deepEqual((await page.evaluate(()=>window.nativeBookEvidence!())).errors,[]);
- const evidence={boundary:'Real QuestBookSurface, ChatInterface/useTutorConversation, verifier, task service/IndexedDB and Unity app; provider SSE responses are explicitly scripted offline, no real provider, Android texture, headset or scan acceptance.',providerUsed:false,providerRequests,manual:true,capture,capturePixelsVerified:true,humanEditPreserved:true,staleAgentPaintRefused:true,discoveryBudgetPreservedActions:true,planningCalls:plannerCalls,reloadWithoutReplay:true,initial,working,human,completed,task,requests:[...requests.values()],observations,errors};
+ const evidence={boundary:'Real QuestBookSurface, ChatInterface/useTutorConversation, verifier, task service/IndexedDB and Unity app; provider SSE responses are explicitly scripted offline, no real provider, Android texture, headset or scan acceptance.',providerUsed:false,providerRequests,manual:true,physicalTools:{shownAndHiddenViaSharedForm:true,savedSceneUnchanged:true},capture,capturePixelsVerified:true,humanEditPreserved:true,staleAgentPaintRefused:true,discoveryBudgetPreservedActions:true,planningCalls:plannerCalls,reloadWithoutReplay:true,initial,working,human,completed,task,requests:[...requests.values()],observations,errors};
  await writeFile(join(directory,'book-journey.json'),JSON.stringify(evidence,null,2));
  console.log('Real native book and original-chat handoff journey passed.');
 }catch(error){

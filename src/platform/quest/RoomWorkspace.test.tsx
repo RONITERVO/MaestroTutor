@@ -98,3 +98,18 @@ it('edits shared pattern source and retains invalid counts without submitting',a
  const invocation=client.snapshot().request!.commands[0].execution!;if(invocation.operation!=='start')throw new Error('Expected shared patch');const part=(invocation.call.arguments.parts as NonNullable<ReturnType<typeof parseRecipe>>['parts'])[0];expect(part.pattern).toEqual({kind:'checker',plane:'xz',columns:8,rows:8,secondary:'#eeddcc'});
  await act(async()=>{client.receive(state({revision:2,ack:1}));});
 });
+
+
+it('opens optional physical tools through catalog discovery and preserves dirty object drafts',async()=>{
+ const client=new RoomAgentClient();const current=state({capabilities:[...state().capabilities!,'catalog.v1','physicalTools.v1']});client.receive(current);const screen=render(<RoomWorkspace client={client}/>);
+ fireEvent.click(screen.getByRole('button',{name:'Size x plus'}));expect((screen.getByRole('button',{name:'Physical tools'}) as HTMLButtonElement).disabled).toBe(true);
+ fireEvent.click(screen.getByRole('button',{name:'Discard draft'}));fireEvent.click(screen.getByRole('button',{name:'Physical tools'}));
+ expect(client.snapshot().request?.commands).toEqual([{action:'catalog',catalog:{operation:'inspect',capability:'room.tools.set',version:1}}]);
+ // Opening the optional editor must not itself invoke a tray or mutate the scene.
+ await act(async()=>{client.receive({...current,ack:1,revision:2,catalog:{operation:'inspect',capability:'room.tools.set',version:1,status:'Unavailable',definition:null}});});
+ expect(client.snapshot().request).toBeNull();
+});
+
+it('does not expose physical tool controls when the native service is absent',()=>{
+ const client=new RoomAgentClient();client.receive(state());const screen=render(<RoomWorkspace client={client}/>);expect(screen.queryByRole('button',{name:'Physical tools'})).toBeNull();
+});

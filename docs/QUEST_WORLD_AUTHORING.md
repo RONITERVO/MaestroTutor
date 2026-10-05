@@ -489,3 +489,36 @@ reviewable edit, not automatic guessing. See [surface drawing](QUEST_SURFACE_DRA
 This increment is desktop-verified and packaged, with headset acceptance pending; it
 does not add general scene-object anchoring, triangle painting or a new scripting
 runtime. Native recipes and shared components remain the expansion mechanism.
+
+
+### Optional physical authoring trays (2026-10-06)
+
+A workspace now starts with the familiar book and Maestro, with its seven physical
+authoring trays hidden. Existing creations and configured user buttons keep their
+normal visibility. The 3D **Workshop** blocks beside the book open the workshop
+without an AI provider. **Physical tools** opens the shared generated controls. Choose creation, animation, behaviours, imports,
+physics, avatar movement or controller bindings; show only the tools needed, or
+explicitly show/hide all. These remain movable solid 3D controls outside the book.
+
+The agent and event programs use the same `room.tools.set` catalog action. Its
+`tray` and `visible` fields use the exact `stateId` read from `room.tools`, whose
+visible/held flags describe each tray. The native service rechecks real grip
+ownership. Stale visibility intent is refused; hiding all is atomic when a tray
+is held or physical surface placement still needs finishing/cancelling. Duplicate
+receipts do not reopen tools. There is no second agent tool or execution path.
+
+Visibility is transient presentation state, with no room save, migration or Undo.
+A new workspace/relaunch starts hidden; within a workspace, showing a tray keeps
+its position. Existing Recall retrieves it without reopening hidden trays. The
+book and palm recovery controls remain available. Showing a tray refreshes its
+labels; hidden trays stop updating labels and remove their visible/input surfaces.
+Their underlying import, animation, drawing and behaviour services stay active.
+Hiding a tray does not erase drafts, stop a drawing mode, pause physics or stop a
+program. Those actions retain their own explicit controls and shared capabilities.
+
+Full native validation passed: 837 EditMode and 647 PlayMode tests, with three
+optional private-file skips. The real book journey showed and hid trays through
+the generated form and native receipts without changing the saved scene revision.
+The audited development APK is ready; installation, physical interaction and
+performance acceptance wait for the headset to finish charging. See the
+[package and QA record](QUEST_DEVICE_QA.md#optional-physical-tool-trays--2026-10-06).

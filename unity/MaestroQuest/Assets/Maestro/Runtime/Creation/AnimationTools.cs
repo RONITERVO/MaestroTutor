@@ -69,8 +69,10 @@ namespace Maestro.Quest.Creation
             status = Label(transform,new Vector3(0,-.215f,-.029f),"",.0048f);
             workshop.Changed += Refresh; Refresh();
         }
+        void OnEnable()=>Refresh();
         void Refresh()
         {
+            if(!isActiveAndEnabled||!workshop||!status||!recordPaint||!posePaint)return;
             status.text = workshop.Status.Length > 80 ? workshop.Status.Substring(0,80) + "…" : workshop.Status;
             recordPaint.color = IllustratedMaterials.Hex(workshop.IsRecording ? "F04C42" : workshop.HasUnsavedRecording ? "E5A42A" : "B8644E");
             posePaint.color = IllustratedMaterials.Hex(workshop.HasUnsavedPose ? "E5A42A" : workshop.IsPosing ? "2B8D88" : "73534E");

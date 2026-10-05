@@ -61,8 +61,10 @@ namespace Maestro.Quest.Avatar
             if (next < choices.Count) editor.SetAvatarWalkClip(choices[next]); else editor.SetAvatarWalkMotion(saved[next-choices.Count].id);
         }
         void PreviewWalk() { motion.Stop(); rules?.Scheduler.StopTarget("maestro",true); animations.PreviewWalk(); Refresh(); }
+        void OnEnable()=>Refresh();
         void Refresh()
         {
+            if(!isActiveAndEnabled||!motion||!preferences||!status)return;
             preferences.text = "Maestro · Distance " + motion.Distance.ToString("0.0") + " m · Walk " + motion.Speed.ToString("0.00") + " m/s · Size " + (editor ? editor.Read("maestro").scale : 1f).ToString("0.00") + "×";
             status.text = string.Join("\n",ModelText.Wrap((animations && animations.ControlsTarget("maestro") ? animations.Status : motion.Status) + " · " + (avatar ? avatar.WalkClipName : "Included walk") + (avatar && avatar.WalkMotionStatus != null ? " · "+avatar.WalkMotionStatus : ""),62).Take(3));
         }

@@ -96,7 +96,7 @@ namespace Maestro.Quest.Tests
                 Assert.That(host.Current.Editor.Snapshot().objects.Single(x=>!x.IsBuiltIn).name,Is.EqualTo("Replacement robot"));Assert.That(host.Current.Editor.RuntimeGate.Held,Is.True);
                 Assert.That(agent.Observe().session,Is.Not.EqualTo(beforeSession));Assert.That(book.GetInstanceID(),Is.EqualTo(bookId));Assert.That(browser.GetInstanceID(),Is.EqualTo(browserId));
                 Assert.That(root.GetComponentsInChildren<RoomEditor>().Length,Is.EqualTo(1));Assert.That(root.GetComponentsInChildren<MovementControls>().Length,Is.EqualTo(1));Assert.That(root.GetComponentsInChildren<SpatialDrawing>().Length,Is.EqualTo(1));
-                Assert.That(room.RegisteredCount,Is.EqualTo(root.GetComponentsInChildren<RoomItem>().Length));Assert.That(router.Editor,Is.SameAs(host.Current.Editor));Assert.That(input.Drawing,Is.SameAs(host.Current.GetComponent<SpatialDrawing>()));
+                Assert.That(room.RegisteredCount,Is.EqualTo(root.GetComponentsInChildren<RoomItem>(true).Length));Assert.That(router.Editor,Is.SameAs(host.Current.Editor));Assert.That(input.Drawing,Is.SameAs(host.Current.GetComponent<SpatialDrawing>()));
                 Assert.That(new RoomStorage(store.DataDirectory(selected.Previous)).Load(out error).objects.Single(x=>x.id==objectData.id).name,Is.EqualTo(objectData.name));Assert.That(error,Is.Null);
                 Assert.That(host.TryOpenSelected(out _),Is.False,"A retry must not replace a live editor without retention");
                 Assert.That(host.Import.GetInstanceID(),Is.EqualTo(importOwner));Assert.That(host.Runtime.GetInstanceID(),Is.EqualTo(runtimeOwner));

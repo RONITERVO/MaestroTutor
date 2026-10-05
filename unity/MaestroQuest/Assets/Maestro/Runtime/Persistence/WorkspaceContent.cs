@@ -64,6 +64,12 @@ namespace Maestro.Quest.Persistence
             var controlTools=new GameObject("Movement and controller bindings"); controlTools.transform.SetParent(content.transform,false);
             controlTools.transform.localPosition=new Vector3(-1.15f,.4f,1.25f); controlTools.transform.localRotation=Quaternion.Euler(40,-30,0);
             controlTools.AddComponent<MovementTools>().Build(movementControls,room);
+            content.AddComponent<RoomToolVisibility>().Initialize(editor,new System.Collections.Generic.Dictionary<string,RoomItem> {
+                ["creation"]=tray.GetComponent<RoomItem>(),["animation"]=animationTools.GetComponent<RoomItem>(),
+                ["behaviours"]=ruleTools.GetComponent<RoomItem>(),["imports"]=importTools.GetComponent<RoomItem>(),
+                ["physics"]=physicsTools.GetComponent<RoomItem>(),["avatar"]=movementTools.GetComponent<RoomItem>(),
+                ["controllers"]=controlTools.GetComponent<RoomItem>()
+            });
         }
         internal void Detach(bool preserveBookLock=false)
         {

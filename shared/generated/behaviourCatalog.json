@@ -3017,6 +3017,161 @@
       }
     },
     {
+      "id": "room.tools.set",
+      "version": 1,
+      "label": "Show or hide physical tools",
+      "input": {
+        "type": "object",
+        "properties": {
+          "stateId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "tray": {
+            "type": "string",
+            "enum": [
+              "creation",
+              "animation",
+              "behaviours",
+              "imports",
+              "physics",
+              "avatar",
+              "controllers",
+              "all"
+            ]
+          },
+          "visible": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "stateId",
+          "tray",
+          "visible"
+        ],
+        "additionalProperties": false,
+        "x-current": {
+          "fact": "room.tools",
+          "version": 1,
+          "arguments": {},
+          "fields": {
+            "stateId": [
+              "stateId"
+            ]
+          },
+          "guards": [
+            "stateId"
+          ]
+        },
+        "x-features": [
+          "physicalTools.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [
+        "tools.state.current",
+        "workspace.available",
+        "tools.released"
+      ],
+      "description": "Show or hide a named solid 3D authoring tray, or all trays, using the exact stateId from room.tools. Creation, animation, behaviours, imports, physics, avatar movement and controller bindings start hidden so conversation stays central. Showing retains the tray's current position; use the existing book/palm Recall if it is out of reach. Hiding changes only the tray's presentation and input surfaces: room objects, drawing modes, poses, animations, programs, imports and physics continue. Release a held tray and finish/cancel armed physical surface placement before hiding it; hide-all refuses atomically if any requested tray cannot hide. Book controls and palm Recall stay available. This is transient workspace view state, not a room edit: no save or Undo, no automatic action on show, and a new workspace/relaunch starts hidden. A completed receipt describes that moment; Stop does not reverse a completed visibility change. Replayed receipts never reopen tools. Discover/run the same action from chat, book or a program; no separate provider tool is needed.",
+      "example": {
+        "stateId": "00000000000000000000000000000000",
+        "tray": "creation",
+        "visible": true
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "stateId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "visible": {
+            "type": "object",
+            "properties": {
+              "creation": {
+                "type": "boolean"
+              },
+              "animation": {
+                "type": "boolean"
+              },
+              "behaviours": {
+                "type": "boolean"
+              },
+              "imports": {
+                "type": "boolean"
+              },
+              "physics": {
+                "type": "boolean"
+              },
+              "avatar": {
+                "type": "boolean"
+              },
+              "controllers": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "creation",
+              "animation",
+              "behaviours",
+              "imports",
+              "physics",
+              "avatar",
+              "controllers"
+            ],
+            "additionalProperties": false
+          },
+          "held": {
+            "type": "object",
+            "properties": {
+              "creation": {
+                "type": "boolean"
+              },
+              "animation": {
+                "type": "boolean"
+              },
+              "behaviours": {
+                "type": "boolean"
+              },
+              "imports": {
+                "type": "boolean"
+              },
+              "physics": {
+                "type": "boolean"
+              },
+              "avatar": {
+                "type": "boolean"
+              },
+              "controllers": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "creation",
+              "animation",
+              "behaviours",
+              "imports",
+              "physics",
+              "avatar",
+              "controllers"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "stateId",
+          "visible",
+          "held"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "room.session",
       "version": 1,
       "label": "Temporary room",
@@ -32953,6 +33108,42 @@
       "description": "Native room request and visibility state; readiness never verifies physical alignment. busy includes a cancelled platform worker until it drains. canLoad/canScan need an active MR room, available platform and no workspace hold. canCancel identifies an uncancelled worker, not permission to bypass lifecycle gates. A completed action receipt only acknowledges intent; inspect this fact for progress. No room geometry is included."
     },
     {
+      "id": "room.tools",
+      "version": 1,
+      "type": {
+        "record": {
+          "stateId": "text",
+          "visible": {
+            "record": {
+              "creation": "boolean",
+              "animation": "boolean",
+              "behaviours": "boolean",
+              "imports": "boolean",
+              "physics": "boolean",
+              "avatar": "boolean",
+              "controllers": "boolean"
+            }
+          },
+          "held": {
+            "record": {
+              "creation": "boolean",
+              "animation": "boolean",
+              "behaviours": "boolean",
+              "imports": "boolean",
+              "physics": "boolean",
+              "avatar": "boolean",
+              "controllers": "boolean"
+            }
+          }
+        }
+      },
+      "label": "Physical tool visibility",
+      "description": "Read the current visibility and actual grip ownership of the seven optional authoring trays. This read does not open tools or start their actions. stateId protects visibility intent, not future grip state; native execution checks holding and placement again. Visibility is transient and independent of room/program data.",
+      "features": [
+        "physicalTools.v1"
+      ]
+    },
+    {
       "id": "object.scanDrawing",
       "version": 1,
       "type": {
@@ -33386,7 +33577,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "37e9621bf8c3f2c7b0c1d2773e3180588a78ad1c558e98f0af2d86b4579c89da"
+      "sha256": "ad4140d25b585032ad9e265b8e7af1adaf3f7414b32aeb60bb9dd855933187b4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -33438,7 +33629,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "e8fc8e9c8dce967f191a642ebed86879d9c4659beeeeff53c6ab6e327f709cbf"
+      "sha256": "239afa80ab3664643fb73e883a9da80c869f410e50f0c26b61de4d07cde7c6da"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -33731,6 +33922,38 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomToolTray.cs",
       "sha256": "fe8189ce3abd235987e3ea8a71eba061233134c321261a434061bb11296f7d15"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomToolVisibility.cs",
+      "sha256": "23f0df8e3bb19ea9bd44f9ef7393a316946eeff83a7efb932dbd167ce8f46ded"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationTools.cs",
+      "sha256": "7664a79862a0b82dc532902313935fcf8ad77b84fed0254d7720f60aa0559694"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleTools.cs",
+      "sha256": "65c7fa78dc8fca44f0ee4ae73287c503595d4d60db3d50ffd9eea960fff06b06"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportTools.cs",
+      "sha256": "be2284a0ac960ade29f7c08d13e0225be57dab96fb46df4200f85bcbb43e4388"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/PhysicsTools.cs",
+      "sha256": "07ae914700038d14018efa9ffa171bf11761edad583a4dbf064a9398ebc025f5"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarSpatialTools.cs",
+      "sha256": "b81ce5547d8acaa50a84611b131d9510392994904b68ddb680e6775612f12a17"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MovementTools.cs",
+      "sha256": "c0a15175ae7d9ec37880b3228bdd9c34a930df44b319300017b0eced8a8691bc"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceContent.cs",
+      "sha256": "7dbbd3df4bf72f2495f75e8f6f963d6f38c8c8cf06147addea509d95087b6470"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PhysicalRoomAction.cs",
@@ -34146,7 +34369,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "9db715e0ef16617787b2233e8791208f98bb125c53798d28f3e910cd478faa47"
+      "sha256": "74f70bc239dc03b38e90ed2ed80ea0d24569d13a4cc91915f5579a2e640b9361"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -34371,6 +34594,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RoomSessionCapability.cs",
       "sha256": "5a809c3ffcbd36910e36052558d4caf20328f51615816ebbaf4a4766bc60a6a0"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RoomToolsCapability.cs",
+      "sha256": "6f47173d08f6d69ac0aef16bc43707ecc3729f50c499041f7488d43ae9acd35e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RoomViewCapability.cs",

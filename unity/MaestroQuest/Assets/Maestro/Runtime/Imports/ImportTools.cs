@@ -58,8 +58,10 @@ namespace Maestro.Quest.Imports
             }
             for (int i=0;i<buttons.Count;i++) { buttons[i].gameObject.SetActive(batches||!owner.HasArchive||owner.HasPreview||i<6); buttons[i].Command=commands[i]; buttons[i].AccessibleName=labels[i]; markings[i].text=labels[i]; }
         }
+        void OnEnable()=>Refresh();
         void Refresh()
         {
+            if(!isActiveAndEnabled||!workshop||!details||!status||!footer)return;
             BindButtons();
             details.text=batches ? workshop.Batches.Details : workshop.Details;
             status.text=string.Join("\n",ModelText.Wrap(batches ? workshop.Batches.Status : workshop.Status,65).Take(3));

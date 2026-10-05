@@ -41,8 +41,10 @@ namespace Maestro.Quest.Interaction
         void Command() { var current=controls.Preferences.buttons[selectedButton].command; controls.BindButton(selectedButton,(ControllerCommand)(((int)current+1)%3)); }
         void Speed() { var next=controls.Preferences; next.userSpeed=next.userSpeed < .64f ? .65f : next.userSpeed < .99f ? 1 : .35f; controls.Apply(next); }
         void DeadZone() { var next=controls.Preferences; next.deadZone=next.deadZone < .19f ? .2f : next.deadZone < .29f ? .3f : .1f; controls.Apply(next); }
+        void OnEnable()=>Refresh();
         void Refresh()
         {
+            if(!isActiveAndEnabled||!controls||!summary||!status)return;
             var prefs=controls.Preferences;
             summary.text="Maestro "+prefs.avatarStick+" / "+(controls.AvatarEnabled ? "ON" : "off")+" · You "+prefs.userStick+" / "+(controls.UserEnabled ? "ON" : "off")+" · "+(controls.Virtual ? "Virtual" : "MR")+
                 "\nYour speed "+prefs.userSpeed.ToString("0.00")+" m/s · Dead zone "+prefs.deadZone.ToString("0.0")+

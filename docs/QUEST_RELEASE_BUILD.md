@@ -388,3 +388,19 @@ sustained performance or an end-to-end frame-rate improvement. The original save
 room/behaviours remained byte-identical; the app is stopped for charging. Package
 counts, measurements and limits are in [device QA](QUEST_DEVICE_QA.md#quest-chat-layout-feedback-fix--2026-10-06).
 All production/provider, signing and Store gates above remain open.
+
+
+## Optional tool-tray candidate (2026-10-06)
+
+`MaestroQuest-optional-tools-C43EBC56.apk` (**188,198,291 bytes**;
+SHA-256 `C43EBC566BF86F98135EB2497379CCC84A877C6925488FC6ADD8756200DA2B17`)
+is the latest audited development package. The seven physical authoring trays
+start hidden and use a shared catalog action to show/hide them. The permanent
+3D Workshop control and book/palm recovery stay available; room activity and
+saved data are independent of visibility.
+
+Full native, original-book/room integration, web, Android and exact package
+checks passed. The owner is charging the headset, so this candidate is not yet
+installed or measured. **FD9AEBDE** remains installed. No sustained-performance,
+real-provider or Store acceptance is added. [Counts and evidence limits](QUEST_DEVICE_QA.md#optional-physical-tool-trays--2026-10-06).
+All production/provider, signing and Store gates above remain open.

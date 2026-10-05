@@ -9,6 +9,11 @@ Hz**; sustained performance remains open. Saved room/behaviour files were
 preserved byte-for-byte and the app is stopped for charging. Earlier checkpoint
 results below remain historical; full Store/provider/comfort acceptance is open.
 
+Latest packaged candidate: **C43EBC56**, with optional physical tool trays hidden
+by default. Full native/book/web/Android/package validation passed. It is not
+installed yet; the owner is fast-charging the headset. No new device performance
+result is claimed. [Candidate evidence](#optional-physical-tool-trays--2026-10-06).
+
 ## On-device automation resumed — 2026-10-05
 
 The owner reconnected Quest 3 and authorized testing. This supersedes the earlier
@@ -3261,3 +3266,44 @@ Package/diagnostic evidence is in `.quest-evidence/book-layout-20261005/`;
 backups, raw device logs, exact counters, images and verified cleanup are in
 `.quest-evidence/book-layout-performance-20261005/`. Sustained performance,
 human/provider and Store gates remain open.
+
+
+## Optional physical tool trays — 2026-10-06
+
+The seven authoring trays now start hidden, leaving the book, Maestro and existing
+creations visible. The permanent 3D Workshop blocks beside the book still open
+manual authoring without an AI provider. Its Physical tools entry uses the same
+`room.tools.set` action/fact as the agent and event programs. Hiding trays leaves
+underlying drawing, imports, animations, behaviours and physics running.
+
+The development candidate is `MaestroQuest-optional-tools-C43EBC56.apk` (**188,198,291 bytes**),
+SHA-256 `C43EBC566BF86F98135EB2497379CCC84A877C6925488FC6ADD8756200DA2B17`.
+It has not been installed or measured on Quest; the previous **FD9AEBDE** package
+and saved room remain untouched while the owner fast-charges the headset.
+
+Validation for these exact packaged inputs:
+
+- 837 EditMode and 647 PlayMode tests passed; three optional external-model/motion
+  probes skipped. All 94 targeted workspace tests also passed. New cases cover
+  hidden defaults, exact receipt replay, continuing room work, actual XRI grip
+  ownership, atomic hide-all refusal, Recall, workspace holds and reopening labels.
+- 475 real native-room observations and 79 original-book observations passed with
+  scripted offline provider responses. The book opened Creation through its actual
+  generated form and native receipt, then hid all tools; its saved scene revision
+  was unchanged. Existing create/edit/Undo and chat handoff still passed.
+- 105 focused web tests across six files, application/probe type checks, targeted
+  lint, production web compilation, Android lint and 82 Android tests passed;
+  two optional Android tests skipped.
+- The audit matched all 3,034 frozen inputs, 349 runtime / 218 test / 16 Editor
+  C# files and metas, 66 fixture payloads, 147 packaged web files, the native AAR,
+  included avatar, 178 motions, 26 templates and seven modules. Catalog counts
+  are 94 actions / 103 facts / 16 events / 311 source identities.
+- ARM64-only libraries, development identity, v2 signature and 16 KiB alignment
+  passed. All ten unrelated dirty files retained their original hashes.
+
+Evidence remains local in `.quest-evidence/optional-tools-20261006/`; the fresh
+native room and book runs are `7cafce87dce942efba7875e19fcb84df` and
+`cb7b859ff9e04eb491004272a688dae3`. No real provider, deployment, release signing
+or Store upload occurred. Headset grip/hand input, readability and sustained
+performance still need acceptance on this candidate. A source-level reduction
+in visible tool geometry/label updates does not establish a frame-rate gain.

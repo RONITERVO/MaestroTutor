@@ -100,7 +100,9 @@ namespace Maestro.Quest.Rules
             else Draft.Say("The book workspace is unavailable");
             Refresh();
         }
+        void OnEnable()=>Refresh();
         void Refresh() {
+            if(!isActiveAndEnabled||Draft==null||!summary||!status)return;
             if(Draft==null||!summary||!status)return;Draft.Refresh();
             summary.text=PropsVisible&&workshop.SelectLiteralNode(Draft.NodeId)?workshop.Summary:Draft.Summary+"\n"+workshop.TriggerSummary;
             if(precisionLabel)precisionLabel.text="Step\n"+Draft.PrecisionLabel;
