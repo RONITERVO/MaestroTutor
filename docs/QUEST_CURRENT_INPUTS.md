@@ -6,7 +6,7 @@ fields copied from the action draft, action fields copied from fact paths, and
 concurrency guards. This metadata reaches both the book and agent through the same
 catalog. No action-specific React map, extra tool or new catalog operation is used.
 
-Twelve actions currently declare it (22 resolved variants): object copying, drawing edits,
+Actions using this metadata include object copying, drawing edits,
 retained-stroke resolution, recipe editing, object physics settings,
 Maestro distance/speed, walking-animation selection, controller configuration,
 controller live modes, physics Start/Pause, room setup/visibility, and surface
@@ -21,8 +21,8 @@ Controller configuration reads its identity, plus speed/dead zone for movement
 variants. The desired stick assignment, button and program stay explicit because a
 current assignment may conflict with the newly selected variant.
 
-`Load current values` is a read-only, explicit snapshot. The page lists precisely
-which draft values it will replace. A missing target, unavailable fact, different
+`Load current values` is a read-only, explicit snapshot. The collapsed Argument
+reference lists precisely which draft values it will replace. A missing target, unavailable fact, different
 query response, invalid value or value outside the action's bounds leaves the draft
 unchanged. Copied values are checked atomically. The editor never starts an action,
 saves settings, advances a guard from a later observation, or retries a rejected
@@ -31,7 +31,8 @@ operation by silently reading a new guard.
 The initial example cannot be checked, run or added until a snapshot is loaded.
 Users can then change preference values while preserving the revision. A changed
 query target, variant, guard or native session requires another snapshot. Guards
-are read-only in simple fields; advanced JSON permits explicitly supplied snapshots.
+are read-only under Current room references in simple fields; advanced JSON permits
+explicitly supplied snapshots.
 The native availability check and execution remain authoritative. Load again after
 a stale-edit error, review the intended change, and run explicitly.
 This one-off execution path always uses the reviewed snapshot; program authoring
@@ -50,3 +51,19 @@ facts, variant selection, dependency changes, expert snapshots and late response
 The four existing spatial/controller/simulation browser probes now press Load
 current values and verify the resulting native identities before replaying recorded
 native receipts. These browser probes do not run headset physics or provider calls.
+
+## Manual editor presentation
+
+The normal action fields start expanded. Editable settings come first; read-only
+concurrency guards stay in the collapsed Current room references section. The
+Argument reference contains the full capability description, exact identity and
+current-value mappings. Advanced action arguments, below the normal Check/Run
+controls, provides the same JSON editor when explicitly opened. These disclosures
+only change presentation: loading, checking, confirming and running remain separate
+operations, and required snapshots cannot be bypassed by hiding their fields.
+
+This remains the optional manual path beside the original chat. The real
+native-book browser journey verifies readable controls without horizontal overflow
+at 1,024 by 768 and 819 by 614 pixels, opens the references to verify the guard is
+read-only, and checks that resizing or inspecting fields sends no room commands.
+Desktop viewport checks do not replace Quest readability and hand-input acceptance.

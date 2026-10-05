@@ -80,6 +80,30 @@ try{
  await page.evaluate(()=>window.maestroBook!.command({version:1,type:'workspace.open'}));
  // Optional physical tools use the actual generated form and native receipt path.
  await page.getByRole('button',{name:'Physical tools',exact:true}).click();
+ await page.getByText('Edit action fields',{exact:true}).waitFor();
+ assert.equal(await page.getByLabel('Action arguments',{exact:true}).isVisible(),false,'Source must be optional');
+ assert.equal(await page.getByLabel('Action inputs stateId',{exact:true}).isVisible(),false,'Read-only state references must be optional');
+ assert.equal(await page.getByText('Argument reference',{exact:true}).evaluate(e=>(e.parentElement as HTMLDetailsElement).open),false);
+ const formRequests=requests.size,manualForm:unknown[]=[];
+ for(const size of [{width:1024,height:768},{width:819,height:614}]){
+  await page.setViewportSize(size);
+  const tray=page.getByRole('combobox',{name:'Action inputs tray',exact:true});await tray.scrollIntoViewIfNeeded();
+  assert.equal(await tray.isVisible(),true);const trayBox=await tray.boundingBox();assert.ok(trayBox&&trayBox.height>=44&&trayBox.x>=size.width/2&&trayBox.x+trayBox.width<=size.width);
+  const run=page.getByRole('button',{name:'Run action now',exact:true});assert.equal(await run.isDisabled(),true,'Opening fields must not bypass current-value guards');await run.scrollIntoViewIfNeeded();
+  const runBox=await run.boundingBox();assert.ok(runBox&&runBox.height>=44&&runBox.y>=0&&runBox.y+runBox.height<=size.height);
+  const widths=await page.getByLabel('Action details',{exact:true}).evaluate(e=>({visible:e.clientWidth,content:e.scrollWidth}));assert.ok(widths.content<=widths.visible+1,'Manual controls overflow the book page');
+  await page.screenshot({path:join(directory,`book-action-form-${size.width}x${size.height}.png`)});manualForm.push({size,trayBox,runBox,widths});
+ }
+ await page.getByText('Argument reference',{exact:true}).click();
+ assert.equal(await page.getByText('Argument reference',{exact:true}).evaluate(e=>(e.parentElement as HTMLDetailsElement).open),true);
+ await page.getByText('Argument reference',{exact:true}).click();
+ await page.getByText('Current room references',{exact:true}).click();
+ assert.equal(await page.getByLabel('Action inputs stateId',{exact:true}).isVisible(),true);
+ assert.equal(await page.getByLabel('Action inputs stateId',{exact:true}).getAttribute('readonly'),'');
+ await page.getByText('Current room references',{exact:true}).click();
+ assert.equal(requests.size,formRequests,'Reading the manual fields/reference dispatched a room command');
+ await page.setViewportSize({width:1440,height:1080});
+ await page.getByLabel('Action details',{exact:true}).evaluate(e=>{e.scrollTop=0;});
  await page.getByRole('button',{name:'Load current values',exact:true}).click();
  await page.waitForFunction(()=>{const c=window.nativeBookEvidence!().state!.catalog;return c?.operation==='inspect'&&c.category==='facts'&&c.capability==='room.tools'&&c.available===true;});
  const toolsBefore=await page.evaluate(()=>{const c=window.nativeBookEvidence!().state!.catalog;if(c?.operation!=='inspect'||c.category!=='facts')throw new Error('Tool fact missing');return c.value as {stateId:string;visible:Record<string,boolean>};});
@@ -88,7 +112,7 @@ try{
  await page.waitForFunction(()=>{const r=window.nativeBookEvidence!().state!.execution?.selected;return r?.capability==='room.tools.set'&&r.phase==='completed'&&r.output?.visible&&typeof r.output.visible==='object'&&!Array.isArray(r.output.visible)&&(r.output.visible as Record<string,unknown>).creation===true;});
  const toolsShown=await page.evaluate(()=>window.nativeBookEvidence!().state!.execution!.selected!);
  await page.screenshot({path:join(directory,'book-tools-shown.png')});
- await page.getByText('Edit action fields',{exact:true}).click();
+ assert.equal(await page.getByText('Edit action fields',{exact:true}).evaluate(e=>(e.parentElement as HTMLDetailsElement).open),true,'Normal fields must start open');
  await page.getByLabel('Action inputs tray',{exact:true}).selectOption('all');
  await page.getByLabel('Action inputs visible',{exact:true}).selectOption('false');
  await page.getByRole('button',{name:'Load current values',exact:true}).click();
@@ -159,7 +183,7 @@ try{
  await page.reload();await page.waitForFunction(()=>!!window.nativeBookEvidence?.().state);
  await page.getByText('The ball keeps your colour.',{exact:true}).waitFor();
  assert.equal(requests.size,commandCount,'Reload replayed a room command');assert.equal(plannerCalls,9);assert.deepEqual(errors,[]);assert.deepEqual((await page.evaluate(()=>window.nativeBookEvidence!())).errors,[]);
- const evidence={boundary:'Real QuestBookSurface, ChatInterface/useTutorConversation, verifier, task service/IndexedDB and Unity app; provider SSE responses are explicitly scripted offline, no real provider, Android texture, headset or scan acceptance.',providerUsed:false,providerRequests,manual:true,physicalTools:{shownAndHiddenViaSharedForm:true,savedSceneUnchanged:true},capture,capturePixelsVerified:true,humanEditPreserved:true,staleAgentPaintRefused:true,discoveryBudgetPreservedActions:true,planningCalls:plannerCalls,reloadWithoutReplay:true,initial,working,human,completed,task,requests:[...requests.values()],observations,errors};
+ const evidence={boundary:'Real QuestBookSurface, ChatInterface/useTutorConversation, verifier, task service/IndexedDB and Unity app; provider SSE responses are explicitly scripted offline, no real provider, Android texture, headset or scan acceptance.',providerUsed:false,providerRequests,manual:true,physicalTools:{shownAndHiddenViaSharedForm:true,savedSceneUnchanged:true},manualForm,capture,capturePixelsVerified:true,humanEditPreserved:true,staleAgentPaintRefused:true,discoveryBudgetPreservedActions:true,planningCalls:plannerCalls,reloadWithoutReplay:true,initial,working,human,completed,task,requests:[...requests.values()],observations,errors};
  await writeFile(join(directory,'book-journey.json'),JSON.stringify(evidence,null,2));
  console.log('Real native book and original-chat handoff journey passed.');
 }catch(error){

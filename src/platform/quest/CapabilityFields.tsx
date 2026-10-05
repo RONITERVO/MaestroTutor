@@ -61,7 +61,8 @@ export function CapabilityFields({schema,value,onChange,label,objects,depth=0,lo
   const optionalNull=schema.nullable&&<button onClick={()=>onChange(null)}>Clear {label}</button>;
   if(schema.type==='object') {
     const fields=(value??{}) as Record<string,unknown>;
-    return <fieldset><legend>{label}</legend>{Object.entries(schema.properties??{}).map(([key,child])=>{
+    const entries=Object.entries(schema.properties??{}),references=entries.filter(([key])=>locked?.includes(key));
+    const field=([key,child]:[string,CapabilitySchema])=>{
       const required=schema.required?.includes(key),present=Object.prototype.hasOwnProperty.call(fields,key),name=label+' '+key;
       return <div key={key}>
         {!required&&<label className="rule-checkbox"><input type="checkbox" aria-label={'Include '+name} checked={present} onChange={e=>{
@@ -69,7 +70,9 @@ export function CapabilityFields({schema,value,onChange,label,objects,depth=0,lo
         }}/>Include {key}</label>}
         {(required||present)&&<CapabilityFields readOnly={locked?.includes(key)} locked={locked?.filter(p=>p.startsWith(key+'.')).map(p=>p.slice(key.length+1))} schema={child} value={fields[key]} label={name} objects={objects} depth={depth+1} onChange={next=>onChange({...fields,[key]:next})}/>}
       </div>;
-    })}{optionalNull}</fieldset>;
+    };
+    return <fieldset><legend>{label}</legend>{entries.filter(([key])=>!locked?.includes(key)).map(field)}
+      {references.length>0&&<details><summary>Current room references</summary>{references.map(field)}</details>}{optionalNull}</fieldset>;
   }
   if(schema.type==='array') {
     const values=Array.isArray(value)?value:[];

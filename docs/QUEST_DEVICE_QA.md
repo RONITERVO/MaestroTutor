@@ -3307,3 +3307,78 @@ native room and book runs are `7cafce87dce942efba7875e19fcb84df` and
 or Store upload occurred. Headset grip/hand input, readability and sustained
 performance still need acceptance on this candidate. A source-level reduction
 in visible tool geometry/label updates does not establish a frame-rate gain.
+
+## Manual book action forms — 2026-10-06
+
+The optional action editor now starts with editable settings expanded. Internal
+read-only guards are grouped in Current room references; JSON arguments and the
+full capability reference stay collapsed below the normal Check/Run controls.
+Loading current values, snapshot guards, permanent-action confirmation and native
+execution remain unchanged. The original chat remains the main interface.
+
+The development candidate is `MaestroQuest-book-action-forms-A8D296E4.apk` (**188,198,583 bytes**),
+SHA-256 `A8D296E40395E889FE86497EF739E6C8D9DF6F696ECD971970E13C60F6E7F63D`. It includes the previous optional physical tool trays.
+The initial package audit preceded installation. The subsequent installation and
+limited development performance result are recorded below.
+
+Verification of these exact packaged inputs:
+
+- 837 EditMode / 647 PlayMode tests passed, with three optional private-file skips.
+- 471 native-room and 82 original-book observations passed with scripted
+  offline provider responses. The book journey checks normal fields, collapsed
+  source/reference sections, read-only guards and no commands on inspection. At
+  1,024 by 768 and 819 by 614 pixels, the tray selector and Run button are visible
+  and at least 44 pixels high; the form has no horizontal overflow. Existing tool visibility,
+  create/edit/Undo, chat handoff and no-replay checks also passed.
+- 66 focused web tests, application/probe type checks, targeted lint, production
+  web compilation, Android lint and 82 Android tests passed; two optional Android
+  tests skipped.
+- The audit matched all 3,034 frozen inputs, native sources/metas, AAR,
+  147 web files, the included avatar, 178 motions, 26 templates and seven modules.
+  ARM64-only libraries, development manifest, v2 signature and 16 KiB alignment
+  passed. All ten unrelated dirty files retained their hashes.
+
+Local evidence: `.quest-evidence/book-action-forms-20261006/`. Fresh room/book run
+IDs: `9c3f8eae889c431ab0e0fbed6c43ab87` / `a442e62e9a2c42cf900d499ed4a926c5`. Desktop viewport checks
+do not establish headset readability or physical input acceptance. Real-provider,
+sustained performance, storage-stress and Store release gates remain open.
+
+### On-device acceptance and ten-minute measurement
+
+The same **A8D296E4** APK was subsequently installed on the reconnected Quest 3
+without resetting app data. Installed bytes matched the audited package. The
+book verified hidden defaults, Creation alone, all seven trays shown, then all
+hidden; its normal fields and read-only references worked. Room snapshots were
+recorded for each visibility state. The permanent 3D Workshop blocks were then
+activated through actual controller trigger input and opened the normal book
+workspace with every tray hidden. All simulated inputs were released. Human
+comfort and readability still require acceptance.
+
+A temporary room used the existing 32-brick construction, board, 19-part recipe
+robot, included Maestro and scanned-room physics workload. Parallel program
+branches looped both animations; native facts and live traces verified both were
+active before and after the capture. Results from 600.32 seconds
+and 600 VrApi samples:
+
+- FPS mean **71.20 at 72 Hz**, range 68–74.
+- App GPU mean/p95/max **5.93/6.40/6.83 ms**.
+- Stale-frame counter mean/p95/max **6.13/8/11**; CPU utilization mean **0.842**.
+- Browser texture copies **29.89/s**, render callbacks **72.00/s**.
+- PSS **1,704,506 → 1,677,746 KB**; battery **90% → 85%**, VrApi
+  temperature range **40–42°C**, power-level counter **0**. No early stop.
+
+This is a development diagnostic with a fixed tilted headset view, inactive
+controller/hand inputs, the initial API-key dialog in the book and partially
+visible/overlapping workload geometry. The room-view and final stereo images
+retain those limits. It is not a controlled comparison with FD9AEBDE and does
+not establish a frame-rate gain from hiding trays, human comfort or sustained
+72 FPS acceptance. No real provider call was made.
+
+The QA behaviour was stopped and deleted through the normal book; the temporary
+room was discarded. The original room and behaviour files matched the fresh
+pre-install backup byte-for-byte, including the saved custom-avatar selection.
+The app was stopped; original debug properties and empty ADB forwards were
+verified restored. Battery was 83% after the remaining checks. Evidence is in
+the same local checkpoint directory, including `metrics-summary.json`,
+`device-tools.json`, `workshop-controller-verified.json`, saved-file verification
+and cleanup receipts.

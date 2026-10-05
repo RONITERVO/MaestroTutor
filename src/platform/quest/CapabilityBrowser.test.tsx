@@ -469,7 +469,7 @@ it('authors motion from typed book fields and shows the native receipt without s
  await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Found animation authoring'});
  fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));
  await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Authoring contract'});
- fireEvent.click(screen.getByText('Edit action fields'));
+ expect((screen.getByText('Edit action fields').closest('details') as HTMLDetailsElement).open).toBe(true);
  fireEvent.change(screen.getByLabelText('Animation edit'),{target:{value:'0'}});
  fireEvent.change(screen.getByLabelText('Action inputs revision'),{target:{value:2}});
  fireEvent.change(screen.getByLabelText('Action inputs replace'),{target:{value:'true'}});
@@ -506,7 +506,7 @@ it('starts and finishes an exact recording session from typed fields while disti
  const definition=capabilityDefinition('animation.record')!;
  await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Found recorder'});
  fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Recorder definition'});
- fireEvent.click(screen.getByText('Edit action fields'));
+ expect((screen.getByText('Edit action fields').closest('details') as HTMLDetailsElement).open).toBe(true);
  fireEvent.change(screen.getByLabelText('Action inputs sessionId'),{target:{value:nativeRecording.before.sessionId}});
  fireEvent.change(screen.getByLabelText('Action inputs revision'),{target:{value:nativeRecording.start.selected.call.arguments.revision}});
  fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
@@ -532,7 +532,7 @@ it('chooses an exact Maestro model from typed book fields and displays the ready
  const definition=capabilityDefinition('avatar.model.select')!;
  await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Found model selection'});
  fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Model contract'});
- fireEvent.click(screen.getByText('Edit action fields'));
+ expect((screen.getByText('Edit action fields').closest('details') as HTMLDetailsElement).open).toBe(true);
  expect(Array.from((screen.getByLabelText('Action inputs target') as HTMLSelectElement).options).map(x=>x.value)).toEqual(['maestro']);
  fireEvent.change(screen.getByLabelText('Action inputs modelHash'),{target:{value:nativeAvatar.library.selected.output.entries[0].modelHash}});
  fireEvent.change(screen.getByLabelText('Action inputs revision'),{target:{value:nativeAvatar.before.revision}});
@@ -554,7 +554,7 @@ it('shares native pose identities and versions through typed joint fields and a 
  const definition=capabilityDefinition('animation.pose')!;
  await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Found posing'});
  fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Pose definition'});
- fireEvent.click(screen.getByText('Edit action fields'));
+ expect((screen.getByText('Edit action fields').closest('details') as HTMLDetailsElement).open).toBe(true);
  fireEvent.change(screen.getByLabelText('Action inputs sessionId'),{target:{value:nativePosing.before.sessionId}});
  fireEvent.change(screen.getByLabelText('Action inputs revision'),{target:{value:nativePosing.before.revision}});
  fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
@@ -578,7 +578,7 @@ it('chooses and accepts the exact native model preview through typed book fields
  const definition=capabilityDefinition('model.import')!;
  await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Import definition'});
  fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Import definition'});
- fireEvent.click(screen.getByText('Edit action fields'));fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
+ expect((screen.getByText('Edit action fields').closest('details') as HTMLDetailsElement).open).toBe(true);fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
  expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:nativeModelImport.select.selected.call,runId:nativeModelImport.select.selected.id}});
  await receive(undefined,false,{execution:nativeModelImport.select as RoomAgentState['execution']});
  fireEvent.change(screen.getByLabelText('Import operation'),{target:{value:(screen.getByRole('option',{name:'Add model object'}) as HTMLOptionElement).value}});
@@ -597,7 +597,7 @@ it('shares animation batch selection, category and start through generated book 
  await receive(undefined,false,{execution:{...nativeMotionBatch.select,selected:null,running:[],outcomes:[],nextRunId:nativeMotionBatch.select.selected.id} as RoomAgentState['execution']});
  fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:/^Search$/}));const definition=capabilityDefinition('motion.import.batch')!;
  await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Batch definition'});fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));
- await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Batch definition'});fireEvent.click(screen.getByText('Edit action fields'));
+ await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Batch definition'});expect((screen.getByText('Edit action fields').closest('details') as HTMLDetailsElement).open).toBe(true);
  fireEvent.click(screen.getByRole('button',{name:'Run action now'}));expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:nativeMotionBatch.select.selected.call,runId:nativeMotionBatch.select.selected.id}});
  await receive(undefined,false,{execution:nativeMotionBatch.select as RoomAgentState['execution']});fireEvent.change(screen.getByLabelText('Batch operation'),{target:{value:'1'}});
  fireEvent.change(screen.getByLabelText('Action inputs requestId'),{target:{value:nativeMotionBatch.ready.requestId}});fireEvent.change(screen.getByLabelText('Action inputs version'),{target:{value:nativeMotionBatch.ready.version}});fireEvent.change(screen.getByLabelText('Action inputs category'),{target:{value:'gesture'}});
@@ -637,7 +637,7 @@ it('edits independent sticks and binds a saved program through generated control
  await receive(undefined,false,{execution:{...nativeController.movement,selected:null,running:[],outcomes:[],nextRunId:nativeController.movement.selected.id} as RoomAgentState['execution']});
  fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:/^Search$/}));const definition=capabilityDefinition('controller.configure')!;
  await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Controller definition'});
- fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Controller definition'});fireEvent.click(screen.getByText('Edit action fields'));
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Controller definition'});expect((screen.getByText('Edit action fields').closest('details') as HTMLDetailsElement).open).toBe(true);
  fireEvent.change(screen.getByLabelText('Controller settings'),{target:{value:'1'}});
  await loadCurrentDraft(screen,receive,definition,nativeController.before);
  for(const key of ['deadZone','userSpeed','userStick'] as const)fireEvent.change(screen.getByLabelText('Action inputs '+key),{target:{value:nativeController.movement.selected.call.arguments[key]}});
@@ -657,7 +657,7 @@ it('uses generated live-mode fields and each current native identity without inj
  await receive(undefined,false,{execution:{...nativeModes.enable,selected:null,running:[],outcomes:[],nextRunId:nativeModes.enable.selected.id} as RoomAgentState['execution']});
  fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:/^Search$/}));const definition=capabilityDefinition('controller.mode.set')!;
  await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Live mode definition'});
- fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Live mode definition'});fireEvent.click(screen.getByText('Edit action fields'));
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Live mode definition'});expect((screen.getByText('Edit action fields').closest('details') as HTMLDetailsElement).open).toBe(true);
  let current=nativeModes.before;
  for(const view of [nativeModes.enable,nativeModes.virtualView,nativeModes.user,nativeModes.mixed]){
   await loadCurrentDraft(screen,receive,definition,current);
@@ -682,7 +682,7 @@ it.each([
  await receive(undefined,false,{objects:[...state.objects,object]});fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));
  await receive(undefined,false,{execution:{...view,selected:null,running:[],outcomes:[],nextRunId:view.selected.id} as RoomAgentState['execution']});
    const definition=capabilityDefinition(view.selected.call.id)!;fireEvent.click(screen.getByRole('button',{name:/^Search$/}));await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Settings definition'});
-   fireEvent.click(screen.getByRole('button',{name:new RegExp('^'+definition.label+'\\s*'+definition.id+' · v1$')}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Settings definition'});fireEvent.click(screen.getByText('Edit action fields'));
+   fireEvent.click(screen.getByRole('button',{name:new RegExp('^'+definition.label+'\\s*'+definition.id+' · v1$')}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Settings definition'});expect((screen.getByText('Edit action fields').closest('details') as HTMLDetailsElement).open).toBe(true);
    const args=view.selected.call.arguments;if('source' in args)fireEvent.change(screen.getByLabelText('Walking animation source'),{target:{value:String(['included','library','embedded'].indexOf(args.source))}});
    if('target' in args)fireEvent.change(screen.getByLabelText('Action inputs target'),{target:{value:args.target}});
    const before=view===nativeSpatial.physics?nativeSpatial.beforePhysics:view===nativeSpatial.movement?nativeSpatial.beforeMovement:view===nativeSpatial.walk?nativeSpatial.walkBeforeSave:{...nativeWalkSettings.before,revision:args.revision};
@@ -699,7 +699,7 @@ it('uses generated physics start and pause fields with each current native ident
  await receive(undefined,false,{execution:{...nativeSimulation.start,selected:null,running:[],outcomes:[],nextRunId:nativeSimulation.start.selected.id} as RoomAgentState['execution']});
  fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:/^Search$/}));const definition=capabilityDefinition('physics.simulation.set')!;
  await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Physics definition'});
- fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Physics definition'});fireEvent.click(screen.getByText('Edit action fields'));
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Physics definition'});expect((screen.getByText('Edit action fields').closest('details') as HTMLDetailsElement).open).toBe(true);
  let current=nativeSimulation.before;
  for(const view of [nativeSimulation.start,nativeSimulation.pause]){
   await loadCurrentDraft(screen,receive,definition,current);
@@ -717,7 +717,7 @@ it('requires an explicit settings snapshot, preserves edits, invalidates changed
  fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:'Search'}));
  await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Found'});
  fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Action'});
- fireEvent.click(screen.getByText('Edit action fields'));
+ expect((screen.getByText('Edit action fields').closest('details') as HTMLDetailsElement).open).toBe(true);
  expect((screen.getByRole('button',{name:'Run action now'}) as HTMLButtonElement).disabled).toBe(true);
  fireEvent.change(screen.getByLabelText('Action inputs target'),{target:{value:before.target}});
  await loadCurrentDraft(screen,receive,definition,before);
@@ -751,7 +751,7 @@ it('adds visible current-value reads with live unedited preferences and fixed us
  fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:'Search'}));
  await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Found'});
  fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Action'});
- fireEvent.click(screen.getByText('Edit action fields'));await loadCurrentDraft(screen,receive,definition,nativeSpatial.beforeMovement);
+ expect((screen.getByText('Edit action fields').closest('details') as HTMLDetailsElement).open).toBe(true);await loadCurrentDraft(screen,receive,definition,nativeSpatial.beforeMovement);
  expect((screen.getByLabelText('Keep current distance when running') as HTMLInputElement).checked).toBe(true);
  expect((screen.getByLabelText('Keep current speed when running') as HTMLInputElement).checked).toBe(true);
  fireEvent.change(screen.getByLabelText('Action inputs speed'),{target:{value:.9}});
@@ -784,7 +784,7 @@ it('loads native room setup guards and displays acceptance without claiming the 
  await receive(undefined,false,{execution:{...view,selected:null,running:[],outcomes:[],nextRunId:view.selected.id} as RoomAgentState['execution']});
  fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:'Search'}));
  await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Room setup'});
- fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Room setup'});fireEvent.click(screen.getByText('Edit action fields'));
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Room setup'});expect((screen.getByText('Edit action fields').closest('details') as HTMLDetailsElement).open).toBe(true);
  expect((screen.getByRole('button',{name:'Run action now'}) as HTMLButtonElement).disabled).toBe(true);await loadCurrentDraft(screen,receive,definition,nativeEnvironment.before);
  expect((screen.getByLabelText('Action inputs stateId') as HTMLInputElement).readOnly).toBe(true);fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
  expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:nativeEnvironment.loadRequest.call,runId:view.selected.id}});
@@ -793,7 +793,7 @@ it('loads native room setup guards and displays acceptance without claiming the 
 it('keeps both native guards read-only for cancelling the current setup request',async()=>{
  const {client,screen,receive}=setup(true,['roomEnvironment.v1','execution.v1']);const definition=capabilityDefinition('room.environment.set')!;
  fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:'Search'}));await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Room setup'});
- fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Room setup'});fireEvent.click(screen.getByText('Edit action fields'));
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Room setup'});expect((screen.getByText('Edit action fields').closest('details') as HTMLDetailsElement).open).toBe(true);
  fireEvent.change(screen.getByLabelText('Variant'),{target:{value:'1'}});await loadCurrentDraft(screen,receive,definition,nativeEnvironment.loading);
  for(const field of ['stateId','requestId'] as const){const input=screen.getByLabelText('Action inputs '+field) as HTMLInputElement;expect(input.readOnly).toBe(true);expect(input.value).toBe(nativeEnvironment.loading[field]);}
  expect(JSON.parse((screen.getByLabelText('Action arguments') as HTMLTextAreaElement).value)).toEqual({operation:'cancel',stateId:nativeEnvironment.loading.stateId,requestId:nativeEnvironment.loading.requestId});expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
@@ -804,7 +804,7 @@ it('runs surface placement from native room guards and displays its actual saved
  const {client,screen,receive,state}=setup(true,['surfacePlacement.v1','execution.v1','actionResults.v1']);const view=nativeSurface.receipt,definition=capabilityDefinition('object.surface.place')!;
  await receive(undefined,false,{objects:[...state.objects,{id:nativeSurface.request.call.arguments.target,objectRevision:nativeSurface.beforeRevision,name:'Placement block',kind:'Block',position:nativeSurface.before,scale:1,color:{r:1,g:1,b:1,a:1},animated:false}],execution:{...view,selected:null,running:[],outcomes:[],nextRunId:view.selected.id} as RoomAgentState['execution']});
  fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:'Search'}));await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Placement'});
- fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Placement'});fireEvent.click(screen.getByText('Edit action fields'));
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Placement'});expect((screen.getByText('Edit action fields').closest('details') as HTMLDetailsElement).open).toBe(true);
  fireEvent.change(screen.getByLabelText('Action inputs target'),{target:{value:nativeSurface.request.call.arguments.target}});expect((screen.getByRole('button',{name:'Run action now'}) as HTMLButtonElement).disabled).toBe(true);
  await loadCurrentDraft(screen,receive,definition,nativeSurface.environment);expect((screen.getByLabelText('Action inputs stateId') as HTMLInputElement).readOnly).toBe(true);
  fireEvent.click(screen.getByRole('button',{name:'Run action now'}));expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:nativeSurface.request.call,runId:view.selected.id}});
@@ -816,7 +816,7 @@ it('copies an existing drawing through generic creation fields and the native so
  const {client,screen,receive,state}=setup(true,['objectCopy.v1','execution.v1','actionResults.v1']);const view=nativeCopy.receipt,definition=capabilityDefinition('object.create')!;
  await receive(undefined,false,{objects:[...state.objects,{id:nativeCopy.before.target,objectRevision:nativeCopy.before.revision,name:'Drawing source',kind:'Drawing',position:nativeCopy.before.position,scale:1,color:{r:1,g:1,b:1,a:1},animated:true}],execution:{...view,selected:null,running:[],outcomes:[],nextRunId:view.selected.id} as RoomAgentState['execution']});
  fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:'Search'}));await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Creation'});
- fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Creation'});fireEvent.click(screen.getByText('Edit action fields'));fireEvent.change(screen.getByLabelText('Creation kind'),{target:{value:'2'}});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Creation'});expect((screen.getByText('Edit action fields').closest('details') as HTMLDetailsElement).open).toBe(true);fireEvent.change(screen.getByLabelText('Creation kind'),{target:{value:'2'}});
  fireEvent.change(screen.getByLabelText('Action inputs target'),{target:{value:nativeCopy.before.target}});expect((screen.getByRole('button',{name:'Run action now'}) as HTMLButtonElement).disabled).toBe(true);
  await loadCurrentDraft(screen,receive,definition,nativeCopy.before);expect((screen.getByLabelText('Action inputs revision') as HTMLInputElement).readOnly).toBe(true);
  for(const key of ['name','x','y','z'] as const)fireEvent.change(screen.getByLabelText('Action inputs '+key),{target:{value:nativeCopy.call.arguments[key]}});
@@ -829,10 +829,10 @@ it('authors and reshapes a real captured stroke through generic typed fields',as
  const {client,screen,receive,state}=setup(true,['drawingEdits.v1','execution.v1','actionResults.v1']);const create=capabilityDefinition('object.create')!,edit=capabilityDefinition('object.drawing.edit')!;
  await receive(undefined,false,{execution:{...nativeDrawing.creation,selected:null,running:[],outcomes:[],nextRunId:nativeDrawing.creation.selected.id} as RoomAgentState['execution']});
  fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:'Search'}));await receive({operation:'search',query:'',offset:0,total:2,pageSize:6,entries:[create,edit].map(d=>({id:d.id,version:1,label:d.label})),status:'Drawing'});
- fireEvent.click(screen.getByRole('button',{name:new RegExp(create.label)}));await receive({operation:'inspect',capability:create.id,version:1,definition:create,status:'Creation'});fireEvent.click(screen.getByText('Edit action fields'));fireEvent.change(screen.getByLabelText('Creation kind'),{target:{value:'3'}});fireEvent.change(screen.getByLabelText('Action inputs name'),{target:{value:nativeDrawing.createCall.arguments.name}});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(create.label)}));await receive({operation:'inspect',capability:create.id,version:1,definition:create,status:'Creation'});expect((screen.getByText('Edit action fields').closest('details') as HTMLDetailsElement).open).toBe(true);fireEvent.change(screen.getByLabelText('Creation kind'),{target:{value:'3'}});fireEvent.change(screen.getByLabelText('Action inputs name'),{target:{value:nativeDrawing.createCall.arguments.name}});
  fireEvent.click(screen.getByRole('button',{name:'Run action now'}));expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:nativeDrawing.createCall,runId:nativeDrawing.creation.selected.id}});
  await receive(undefined,false,{execution:nativeDrawing.creation as RoomAgentState['execution'],objects:[...state.objects,{id:nativeDrawing.before.target,objectRevision:nativeDrawing.before.revision,name:'Pencil arch',kind:'Drawing',position:{x:.3,y:1.3,z:.65},scale:1,color:{r:.2,g:.6,b:.9,a:1},animated:false}]});expect(screen.getByLabelText('Action result').textContent).toContain(nativeDrawing.before.target);
- fireEvent.click(screen.getByRole('button',{name:new RegExp(edit.label)}));await receive({operation:'inspect',capability:edit.id,version:1,definition:edit,status:'Stroke edit'});fireEvent.click(screen.getByText('Edit action fields'));fireEvent.change(screen.getByLabelText('Drawing edit'),{target:{value:'0'}});fireEvent.change(screen.getByLabelText('Action inputs target'),{target:{value:nativeDrawing.before.target}});await loadCurrentDraft(screen,receive,edit,nativeDrawing.before);
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(edit.label)}));await receive({operation:'inspect',capability:edit.id,version:1,definition:edit,status:'Stroke edit'});expect((screen.getByText('Edit action fields').closest('details') as HTMLDetailsElement).open).toBe(true);fireEvent.change(screen.getByLabelText('Drawing edit'),{target:{value:'0'}});fireEvent.change(screen.getByLabelText('Action inputs target'),{target:{value:nativeDrawing.before.target}});await loadCurrentDraft(screen,receive,edit,nativeDrawing.before);
  fireEvent.change(screen.getByLabelText('Action inputs index'),{target:{value:3}});fireEvent.click(screen.getByText('Action inputs points · 0 entries'));fireEvent.click(screen.getByRole('button',{name:'Add Action inputs points entry'}));for(const k of ['x','y','z'] as const)fireEvent.change(screen.getByLabelText('Action inputs points 1 '+k),{target:{value:nativeDrawing.editCall.arguments.points[0][k]}});
  fireEvent.click(screen.getByRole('button',{name:'Run action now'}));expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:nativeDrawing.editCall,runId:nativeDrawing.edit.selected.id}});await receive(undefined,false,{execution:nativeDrawing.edit as RoomAgentState['execution']});expect(screen.getByLabelText('Action result').textContent).toContain('"points": 4');act(()=>client.cancel());
 });
@@ -842,7 +842,7 @@ it('retries a retained physical stroke through current native identity and shows
  const {client,screen,receive}=setup(true,['drawingEdits.v1','execution.v1','actionResults.v1']);const definition=capabilityDefinition('object.drawing.resolve')!,view=nativeDrawingRecovery.receipt;
  await receive(undefined,false,{execution:{...view,selected:null,running:[],outcomes:[],nextRunId:view.selected.id} as RoomAgentState['execution']});
  fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:'Search'}));await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Retained stroke'});
- fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Retained stroke'});fireEvent.click(screen.getByText('Edit action fields'));
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Retained stroke'});expect((screen.getByText('Edit action fields').closest('details') as HTMLDetailsElement).open).toBe(true);
  expect((screen.getByRole('button',{name:'Run action now'}) as HTMLButtonElement).disabled).toBe(true);
  await loadCurrentDraft(screen,receive,definition,nativeDrawingRecovery.before);expect((screen.getByLabelText('Action inputs sessionId') as HTMLInputElement).readOnly).toBe(true);
  fireEvent.click(screen.getByRole('button',{name:'Run action now'}));expect(client.snapshot().request?.commands).toEqual([{action:'execution',execution:{operation:'start',call:nativeDrawingRecovery.call,runId:view.selected.id}}]);
@@ -903,7 +903,7 @@ it('shows the offline included-avatar identity and the exact saved result of cho
  const definition=capabilityDefinition('avatar.model.select')!;
  await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Default selection'});
  fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Model contract'});
- fireEvent.click(screen.getByText('Edit action fields'));
+ expect((screen.getByText('Edit action fields').closest('details') as HTMLDetailsElement).open).toBe(true);
  fireEvent.change(screen.getByLabelText('Action inputs revision'),{target:{value:bundledAvatar.execution.selected.call.arguments.revision}});
  expect((screen.getByLabelText('Action inputs modelHash') as HTMLInputElement).value).toBe('');
  fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
@@ -918,7 +918,7 @@ it('previews one ZIP member through the same versioned native choice as the phys
  await receive(undefined,false,{execution:{...receipt,selected:null,running:[],outcomes:[],nextRunId:receipt.selected.id} as RoomAgentState['execution']});
  fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:/^Search$/}));const definition=capabilityDefinition('model.import')!;
  await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Model ZIP import'});
- fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Model ZIP import'});fireEvent.click(screen.getByText('Edit action fields'));
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Model ZIP import'});expect((screen.getByText('Edit action fields').closest('details') as HTMLDetailsElement).open).toBe(true);
  fireEvent.change(screen.getByLabelText('Import operation'),{target:{value:(screen.getByRole('option',{name:'Preview a ZIP model'}) as HTMLOptionElement).value}});
  for(const field of ['requestId','version','index'] as const)fireEvent.change(screen.getByLabelText('Action inputs '+field),{target:{value:receipt.selected.call.arguments[field]}});
  fireEvent.click(screen.getByRole('button',{name:'Run action now'}));expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:receipt.selected.call,runId:receipt.selected.id}});
@@ -931,7 +931,7 @@ it('loads the included package identity and runs the same explicit installation 
  await receive(undefined,false,{execution:{...receipt,selected:null,running:[],outcomes:[],nextRunId:receipt.selected.id} as RoomAgentState['execution']});
  fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:'Search'}));
  await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Included animations'});
- fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Included animations'});fireEvent.click(screen.getByText('Edit action fields'));
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Included animations'});expect((screen.getByText('Edit action fields').closest('details') as HTMLDetailsElement).open).toBe(true);
  expect((screen.getByRole('button',{name:'Run action now'}) as HTMLButtonElement).disabled).toBe(true);await loadCurrentDraft(screen,receive,definition,nativeIncludedMotions.before);
  expect((screen.getByLabelText('Action inputs manifestHash') as HTMLInputElement).readOnly).toBe(true);expect(client.snapshot().request).toBeNull();
  fireEvent.click(screen.getByRole('button',{name:'Run action now'}));expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:receipt.selected.call,runId:receipt.selected.id}});
@@ -945,7 +945,7 @@ it('offers authored travel in the generated book form and sends the exact shared
  await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Animation search'});
  fireEvent.click(screen.getByRole('button',{name:/Play animation/}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Animation definition'});
  const args={source:{kind:'embedded',modelHash:'a'.repeat(64),clipIndex:0},target:'maestro',channel:'wholeTarget',seconds:2,loop:false};
- fireEvent.change(screen.getByLabelText('Action arguments'),{target:{value:JSON.stringify(args)}});fireEvent.click(screen.getByText('Edit action fields'));
+ fireEvent.change(screen.getByLabelText('Action arguments'),{target:{value:JSON.stringify(args)}});expect((screen.getByText('Edit action fields').closest('details') as HTMLDetailsElement).open).toBe(true);
  expect(screen.queryByLabelText('Action inputs movement')).toBeNull();
  fireEvent.click(screen.getByLabelText('Include Action inputs movement'));fireEvent.change(screen.getByLabelText('Action inputs movement'),{target:{value:'authored'}});
  expect(JSON.parse((screen.getByLabelText('Action arguments') as HTMLTextAreaElement).value)).toEqual({...args,movement:'authored'});
@@ -961,7 +961,7 @@ async function captureDraft(extraFeatures:string[]=[]){
  fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:'Search'}));
  await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Found'});
  fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Capture'});
- fireEvent.change(screen.getByLabelText('Action arguments'),{target:{value:JSON.stringify({name:'Pieces',members})}});fireEvent.click(screen.getByText('Edit action fields'));
+ fireEvent.change(screen.getByLabelText('Action arguments'),{target:{value:JSON.stringify({name:'Pieces',members})}});expect((screen.getByText('Edit action fields').closest('details') as HTMLDetailsElement).open).toBe(true);
  const args=()=>JSON.parse((screen.getByLabelText('Action arguments') as HTMLTextAreaElement).value);
  const fact=(i:number):CatalogView=>({operation:'inspect',category:'facts',capability:'object.definition',version:1,definition:behaviourFact('object.definition')!,arguments:{target:members[i].target},available:true,status:'Available',value:{target:members[i].target,revision:100+i,kind:'block',name:'Piece',position:{x:0,y:0,z:0},rotation:{x:0,y:0,z:0,w:1},scale:1,content:{points:0,parts:0,frames:0,modelHash:'',recipePlaying:false}}});
  const expectQuery=(i:number)=>expect(client.snapshot().request?.commands[0]).toEqual({action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.definition',version:1,arguments:{target:members[i].target}}});

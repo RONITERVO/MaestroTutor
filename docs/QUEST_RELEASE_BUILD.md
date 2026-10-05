@@ -1,7 +1,8 @@
 # Quest release packaging
 
-This is a packaging path, not Store acceptance. No real release profile, release
-key, production deployment or Store upload has been created by this checkpoint.
+This is a packaging path, not Store acceptance. A dedicated release key has been
+prepared locally at the owner's request; its independent backup is still pending.
+No complete production profile, production deployment or Store upload is verified.
 The existing development command still produces `com.maestro.quest.development`.
 The release command prepares a non-development IL2CPP/ARM64 APK from the same
 source, web app, native browser, included avatar and motions.
@@ -101,8 +102,8 @@ A local successful package is not proof of Store package availability, accepted
 signing identity, entitlement/offline behavior, Meta attestation, Firebase minting,
 original-browser approval, managed/BYOK parity, device behavior, frame rate,
 comfort, audience/privacy/payment configuration or Store compliance. Those remain
-separate gates in [the delivery record](QUEST_V1_PLAN.md). This checkpoint has not
-used a real release key or submitted a build.
+separate gates in [the delivery record](QUEST_V1_PLAN.md). No APK has been signed
+with the new release key and no build has been submitted.
 
 
 Packaged development and release builds pass `BuildOptions.CleanBuildCache` to
@@ -126,7 +127,7 @@ feature backlog or permission to use credentials, deploy or submit.
 | Account and managed AI | Shared book, browser pairing and Meta-to-App-Check endpoints; offline/native tests. Endpoints disabled/undeployed. | Matching Firebase registrations and certificate, actual ingress config, authorized deployment, real Store-channel entitlement/integrity and account round trip. |
 | Purchase model | Quest checkout hidden and refused by client/server; existing prepaid credit balances remain shared. BYOK remains available. No Meta commerce integration. | Resolve eligibility for the actual prepaid-credit/BYOK and interactive model using the [prepared Meta review request](QUEST_MANAGED_ACCESS.md#purchase-model-decision-and-prepared-meta-request-2026-10-05), then implement and verify any required payment changes. |
 | Familiar book and provider parity | Original components, desktop chat-to-native journeys with scripted responses, and on-device book texture/page input/field focus checks. | Human virtual-key selection, microphone, Live, artifacts, interruption/recovery and managed/BYOK tests with real providers. |
-| Physical play and resource limits | Automated native suites and current Quest controller/hand grip, Recall, chalk/ink, measured packing and submerged-vessel checks; earlier user-confirmed basics. | Remaining interactions/room-scan alignment, Android mid-byte-write/low-disk/prolonged save stress and sustained performance/comfort on supported hardware. Transaction-boundary recovery has both the [desktop matrix](QUEST_DEVICE_QA.md#reproducible-process-termination-storage-probe) and a [13-case / 15-kill Android diagnostic](QUEST_DEVICE_QA.md#android-process-termination-storage-probe--2026-10-05). Completed-save recovery now has [three device restarts](QUEST_DEVICE_QA.md#saved-room-and-action-history-across-restart--2026-10-05). The current animated 32-brick development run stopped at the battery limit after five minutes, averaging 70.81 FPS at 72 Hz; steady 72 FPS remains unmet. See the [chat layout fix and shortened candidate measurement](QUEST_DEVICE_QA.md#quest-chat-layout-feedback-fix--2026-10-06) and earlier ten-minute comparison. |
+| Physical play and resource limits | Automated native suites and current Quest controller/hand grip, Recall, chalk/ink, measured packing and submerged-vessel checks; earlier user-confirmed basics. | Remaining interactions/room-scan alignment, Android mid-byte-write/low-disk/prolonged save stress and sustained performance/comfort on supported hardware. Transaction-boundary recovery has both the [desktop matrix](QUEST_DEVICE_QA.md#reproducible-process-termination-storage-probe) and a [13-case / 15-kill Android diagnostic](QUEST_DEVICE_QA.md#android-process-termination-storage-probe--2026-10-05). Completed-save recovery now has [three device restarts](QUEST_DEVICE_QA.md#saved-room-and-action-history-across-restart--2026-10-05). The latest animated 32-brick development run completed ten minutes, averaging 71.20 FPS at 72 Hz; steady 72 FPS remains unmet. See [the current device measurement and its limits](QUEST_DEVICE_QA.md#manual-book-action-forms--2026-10-06). See the [chat layout fix and shortened candidate measurement](QUEST_DEVICE_QA.md#quest-chat-layout-feedback-fix--2026-10-06) and earlier ten-minute comparison. |
 | Audience and data | Owner chose 18+; book self-confirmation, prepared privacy/data map and local/cloud deletion paths. | Truthful Store audience/IARC setup, provider eligibility, published privacy/support/deletion details and actual deletion/consent QA. |
 | Content and listing | Included avatar/motion/template inventories and provenance checks. | Final content acceptance, real-app screenshots/store metadata, dashboard review and authorized submission. |
 
@@ -394,7 +395,7 @@ All production/provider, signing and Store gates above remain open.
 
 `MaestroQuest-optional-tools-C43EBC56.apk` (**188,198,291 bytes**;
 SHA-256 `C43EBC566BF86F98135EB2497379CCC84A877C6925488FC6ADD8756200DA2B17`)
-is the latest audited development package. The seven physical authoring trays
+was the audited development package at that checkpoint. The seven physical authoring trays
 start hidden and use a shared catalog action to show/hide them. The permanent
 3D Workshop control and book/palm recovery stay available; room activity and
 saved data are independent of visibility.
@@ -404,3 +405,44 @@ checks passed. The owner is charging the headset, so this candidate is not yet
 installed or measured. **FD9AEBDE** remains installed. No sustained-performance,
 real-provider or Store acceptance is added. [Counts and evidence limits](QUEST_DEVICE_QA.md#optional-physical-tool-trays--2026-10-06).
 All production/provider, signing and Store gates above remain open.
+
+## Dedicated release key prepared — 2026-10-06
+
+The owner selected a new Quest-specific signing key. A local PKCS#12 keystore
+with alias `maestro-quest-release` contains an RSA-3072 key and SHA-256 certificate
+valid until 2076-10-05. Its public certificate SHA-256 fingerprint is:
+
+`EDD758283DB1A2A2D033119E25C0312332421B154250AC6C7F38003B84AA92A9`
+
+The keystore and password are outside the repository in the current Windows
+user's local application data, under `Maestro/QuestReleaseSigning`. The directory
+has a verified user-only ACL; the password is protected with Windows DPAPI.
+Recovering the password and using the resulting private key to sign and verify
+an in-memory challenge passed. No app was signed during this check.
+
+This is local recoverability, not a portable backup: the DPAPI password file
+depends on the current Windows account. At the owner's explicit direction, the
+password-encrypted keystore was copied to
+`E:/MaestroQuestSigningBackup/maestro-quest-release.p12`. Its byte hash, certificate
+and a signature from the copied private key were verified. Drive encryption was
+not verified; no password was copied to USB or written as plaintext.
+
+Independent password recovery still remains required before release signing.
+The USB copy alone cannot be opened on another PC without that password. Do not
+regenerate or replace this key while completing recovery storage. Production
+certificate allowlists, Firebase/Meta configuration and package availability are
+still unverified.
+
+The ignored public release-profile draft now contains the verified certificate
+fingerprint. Production web/account fields remain blank; this draft intentionally
+fails release-profile validation until the real settings are supplied.
+
+## Manual book controls checkpoint — 2026-10-06
+
+`MaestroQuest-book-action-forms-A8D296E4.apk` is the newest audited development candidate,
+SHA-256 `A8D296E40395E889FE86497EF739E6C8D9DF6F696ECD971970E13C60F6E7F63D`. Full native, original-book, web, Android,
+source/content/signature/alignment checks passed; exact counts and limits are in
+[device QA](QUEST_DEVICE_QA.md#manual-book-action-forms--2026-10-06). The same audited
+APK is installed; book/tool/controller checks and a ten-minute development
+measurement are recorded there. It was not signed with the new release key. Quest performance, independent password
+recovery, production configuration and Store gates remain open.

@@ -128,18 +128,16 @@ export function CapabilityBrowser({client,onClose,onInsert,initialCall}:{client:
     <button disabled={busy||Boolean(factError)||Boolean(inspection.definition.input)&&!state?.capabilities?.includes('factQueries.v1')} onClick={()=>void inspect(inspection.capability,inspection.version,factArgs)}>{inspection.definition.input?'Read fact':'Refresh fact'}</button>
     <p className="room-workspace-intro">Choose this fact as a condition or calculation input in a program. This reading is a snapshot; it does not subscribe to changes or run a behaviour.</p>
    </section>}
-   {definition&&<><p>{definition.id} · version {definition.version}</p>{definition.description&&<p>{definition.description}</p>}
+   {definition&&<>
     <fieldset disabled={busy} className="capability-input-editor">
     {definition.input.oneOf&&<CapabilityVariant schema={definition.input} value={parsedArgs} objects={state?.objects??[]} onChange={editActionInputs}/>}
     {resolveCapabilitySchema(definition.input,call?.arguments)?.description&&<p>{resolveCapabilitySchema(definition.input,call?.arguments)?.description}</p>}
-    {hasCurrent&&<section aria-label="Current action inputs"><p>Load {mappedFields.map(f=>currentInputFieldLabel(f.path)).join(', ')} from the room. This replaces those draft values; other inputs stay as you chose them.</p>
+    {hasCurrent&&<section aria-label="Current action inputs"><p>Load the linked room settings, then review your changes below.</p>
      <button disabled={busy||!currentQueries.length||Boolean(currentError)||currentLocations.some(l=>Object.keys(l.mapping.arguments).length>0)&&!state?.capabilities?.includes('factQueries.v1')} onClick={()=>void loadCurrent()}>Load current values</button>
      {currentError&&<p>{currentError}</p>}{loaded&&<p role="status">{loaded}</p>}
-     {!snapshotReady&&<p>Load current values before checking, running or adding this action. Advanced arguments can supply an explicit snapshot.</p>}
-     <p>Revision and state identifiers protect this snapshot. They are never silently refreshed when you run. Load again after a stale-edit error.</p>
+     {!snapshotReady&&<p>Load current values before checking, running or adding this action.</p>}
     </section>}
-    <details><summary>Edit action fields</summary><CapabilityFields locked={mappedFields.filter(f=>f.guard).map(f=>f.path)} schema={selectedSchema??definition.input} value={parsedArgs} label="Action inputs" objects={state?.objects??[]} onChange={editActionInputs}/></details>
-    <details open={!hasCurrent}><summary>Advanced action arguments</summary><label>Action arguments<textarea aria-label="Action arguments" rows={12} spellCheck={false} value={args} disabled={busy} onChange={e=>{setArgs(e.target.value);setLoadedInputs(null);setCurrentChoices({});setChecked('');setConfirming('');try{setAcceptedSnapshot(currentInputsIdentity(definition.input,JSON.parse(e.target.value),state?.session??''));}catch{setAcceptedSnapshot('');}}}/></label></details>
+    <details open key={definition.id+':fields'}><summary>Edit action fields</summary><CapabilityFields locked={mappedFields.filter(f=>f.guard).map(f=>f.path)} schema={selectedSchema??definition.input} value={parsedArgs} label="Action inputs" objects={state?.objects??[]} onChange={editActionInputs}/></details>
     </fieldset>
     {invalid&&<p className="room-message room-message-warning">{invalid}</p>}
     {onInsert&&hasCurrent&&definition.domain!=='workspace'&&<section aria-label="Behaviour input choices"><h3>Behaviour inputs</h3>
@@ -154,7 +152,10 @@ export function CapabilityBrowser({client,onClose,onInsert,initialCall}:{client:
      {onInsert&&definition.domain!=='workspace'&&<button disabled={busy||!call||!snapshotReady} onClick={()=>{if(call){const error=onInsert(call,reusable?{kind:'current',fields:currentFields}:{kind:'snapshot'});if(error)setError(error);else onClose();}}}>{reusable?'Add read and action to draft':'Add first block to draft'}</button>}</div>
     {confirmation&&call&&confirming===key&&<section aria-label="Confirm permanent action" className="room-message room-message-warning"><p>{confirmation}</p><pre>{JSON.stringify(call.arguments,null,2)}</pre><button disabled={busy} onClick={()=>setConfirming('')}>Cancel confirmation</button><button disabled={busy||Boolean(execution?.storageError)} onClick={()=>{setConfirming('');void execute({operation:'start',call});}}>Confirm permanent action</button></section>}
     <p className="room-workspace-intro">{definition.domain==='workspace'?'Workspace maintenance runs once and cannot be added to a room behaviour.':onInsert?'Adding a block changes your draft. Apply it in the workshop when ready.':'Choose a behaviour in the workshop to add an action block.'} Availability can change before execution.</p>
-    <details><summary>Argument reference</summary><p>Duration: {definition.duration}. Uses: {(resolveCapabilitySchema(definition.input,call?.arguments)?.['x-channels']??definition.channels).join(', ')||'no animation channel'}.</p><p>Needs: {(resolveCapabilitySchema(definition.input,call?.arguments)?.['x-requirements']??definition.requirements).join(', ')||'no additional requirements'}.</p><pre>{JSON.stringify(definition.input,null,2)}</pre></details>
+    <details key={definition.id+':source'}><summary>Advanced action arguments</summary><label>Action arguments<textarea aria-label="Action arguments" rows={12} spellCheck={false} value={args} disabled={busy} onChange={e=>{setArgs(e.target.value);setLoadedInputs(null);setCurrentChoices({});setChecked('');setConfirming('');try{setAcceptedSnapshot(currentInputsIdentity(definition.input,JSON.parse(e.target.value),state?.session??''));}catch{setAcceptedSnapshot('');}}}/></label></details>
+    <details key={definition.id+':reference'}><summary>Argument reference</summary><p>{definition.id} · version {definition.version}</p>{definition.description&&<p>{definition.description}</p>}
+     {hasCurrent&&<><p>Load current values replaces {mappedFields.map(f=>currentInputFieldLabel(f.path)).join(', ')} from the room; other fields stay as you chose them.</p><p>Revision and state identifiers protect this snapshot. They are never silently refreshed when you run. Load again after a stale-edit error.</p></>}
+     <p>Duration: {definition.duration}. Uses: {(resolveCapabilitySchema(definition.input,call?.arguments)?.['x-channels']??definition.channels).join(', ')||'no animation channel'}.</p><p>Needs: {(resolveCapabilitySchema(definition.input,call?.arguments)?.['x-requirements']??definition.requirements).join(', ')||'no additional requirements'}.</p><pre>{JSON.stringify(definition.input,null,2)}</pre></details>
    </>}
    {definition?.id==='room.view.capture'&&state?.capture&&(viewImage?<RoomCapturePreview image={viewImage}/>:<p>Snapshot pixels are loading or are no longer available. Capture again if needed.</p>)}
    {category==='actions'&&state?.execution&&<>

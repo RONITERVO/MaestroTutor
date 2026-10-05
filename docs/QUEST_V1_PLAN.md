@@ -2,13 +2,22 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
-The current installed development checkpoint is **FD9AEBDE**, including the
-Quest chat scrollbar fix and prior rendering/navigation/interaction fixes.
-Authoritative package and device results are in [device QA](QUEST_DEVICE_QA.md).
-The fix reduced browser layout/style work while preserving the tested screen's
-pixels. Its animated 32-brick development run stopped at the battery limit after
-five minutes, averaging 70.81 FPS at 72 Hz; sustained performance remains open.
-Saved room/behaviour files were preserved and the app is stopped for charging.
+The current installed development checkpoint is **A8D296E4**, with optional
+physical tool trays and simpler manual book action forms. Native book controls,
+actual controller activation of the permanent 3D Workshop blocks and saved-file
+restoration passed. Its ten-minute animated 32-brick development run averaged
+71.20 FPS at 72 Hz; sustained performance remains open. See
+[the exact package, device evidence and limits](QUEST_DEVICE_QA.md#manual-book-action-forms--2026-10-06).
+The app is stopped, test inputs/properties/forwards are restored, and saved room
+and behaviour files match the pre-install backup byte-for-byte.
+
+The dedicated release key is prepared locally, with a verified encrypted USB copy.
+Independent password recovery and production configuration remain open.
+
+The preceding FD9AEBDE checkpoint fixed Quest chat scrollbar layout feedback.
+Its animated development run stopped at the battery limit after five minutes,
+averaging 70.81 FPS at 72 Hz. Different charge, view and workload conditions mean
+the latest run does not establish a controlled improvement over that measurement.
 
 The preceding 496EC9BB same-package comparison reduced texture copies by about
 60% and mean GPU time by roughly 0.5 ms; its ten-minute run averaged 70.90 FPS.
