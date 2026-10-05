@@ -126,7 +126,7 @@ feature backlog or permission to use credentials, deploy or submit.
 | Account and managed AI | Shared book, browser pairing and Meta-to-App-Check endpoints; offline/native tests. Endpoints disabled/undeployed. | Matching Firebase registrations and certificate, actual ingress config, authorized deployment, real Store-channel entitlement/integrity and account round trip. |
 | Purchase model | Quest checkout hidden and refused by client/server; existing prepaid credit balances remain shared. BYOK remains available. No Meta commerce integration. | Resolve eligibility for the actual prepaid-credit/BYOK and interactive model using the [prepared Meta review request](QUEST_MANAGED_ACCESS.md#purchase-model-decision-and-prepared-meta-request-2026-10-05), then implement and verify any required payment changes. |
 | Familiar book and provider parity | Original components, desktop chat-to-native journeys with scripted responses, and on-device book texture/page input/field focus checks. | Human virtual-key selection, microphone, Live, artifacts, interruption/recovery and managed/BYOK tests with real providers. |
-| Physical play and resource limits | Automated native suites and current Quest controller/hand grip, Recall, chalk/ink, measured packing and submerged-vessel checks; earlier user-confirmed basics. | Remaining interactions/room-scan alignment, Android mid-byte-write/low-disk/prolonged save stress and sustained performance/comfort on supported hardware. Transaction-boundary recovery has both the [desktop matrix](QUEST_DEVICE_QA.md#reproducible-process-termination-storage-probe) and a [13-case / 15-kill Android diagnostic](QUEST_DEVICE_QA.md#android-process-termination-storage-probe--2026-10-05). Completed-save recovery now has [three device restarts](QUEST_DEVICE_QA.md#saved-room-and-action-history-across-restart--2026-10-05). The current ten-minute animated 32-brick development workload averaged 70.90 FPS at 72 Hz and did not pass steady 72 FPS; see the [same-package comparison and separate browser profile](QUEST_DEVICE_QA.md#same-package-book-copy-comparison--2026-10-05). |
+| Physical play and resource limits | Automated native suites and current Quest controller/hand grip, Recall, chalk/ink, measured packing and submerged-vessel checks; earlier user-confirmed basics. | Remaining interactions/room-scan alignment, Android mid-byte-write/low-disk/prolonged save stress and sustained performance/comfort on supported hardware. Transaction-boundary recovery has both the [desktop matrix](QUEST_DEVICE_QA.md#reproducible-process-termination-storage-probe) and a [13-case / 15-kill Android diagnostic](QUEST_DEVICE_QA.md#android-process-termination-storage-probe--2026-10-05). Completed-save recovery now has [three device restarts](QUEST_DEVICE_QA.md#saved-room-and-action-history-across-restart--2026-10-05). The current animated 32-brick development run stopped at the battery limit after five minutes, averaging 70.81 FPS at 72 Hz; steady 72 FPS remains unmet. See the [chat layout fix and shortened candidate measurement](QUEST_DEVICE_QA.md#quest-chat-layout-feedback-fix--2026-10-06) and earlier ten-minute comparison. |
 | Audience and data | Owner chose 18+; book self-confirmation, prepared privacy/data map and local/cloud deletion paths. | Truthful Store audience/IARC setup, provider eligibility, published privacy/support/deletion details and actual deletion/consent QA. |
 | Content and listing | Included avatar/motion/template inventories and provenance checks. | Final content acceptance, real-app screenshots/store metadata, dashboard review and authorized submission. |
 
@@ -295,7 +295,7 @@ No performance gain is claimed for this navigation-only update.
 
 ## Book frame-copy checkpoint (2026-10-05)
 
-`MaestroQuest-frame-copy-496EC9BB.apk` is the current installed development
+`MaestroQuest-frame-copy-496EC9BB.apk` is an earlier installed development
 checkpoint. The hardware-buffer renderer retains valid book content between
 browser frames and avoids duplicate GPU copies; capture rate, resolution and
 visual effects are unchanged. Six renderer regressions and full Unity,
@@ -369,3 +369,22 @@ and development-build limits are recorded in [device QA](QUEST_DEVICE_QA.md#same
 Both animations and room physics remained active. Ordinary book cleanup restored
 original room/behaviour bytes and avatar; the app is stopped for charging with
 test properties and forwards restored. No new APK or production service changed.
+
+
+## Quest chat layout checkpoint (2026-10-06)
+
+The current installed development APK is `MaestroQuest-book-layout-FD9AEBDE.apk`
+(**188,178,107 bytes**; SHA-256
+`FD9AEBDE5B88A78142542F57AFEED998F485EAC4966D10D1FEE0584E2729FD69`).
+A Quest-only stable scrollbar gutter removes repeated chat layout/style feedback
+without disabling animations. Controlled Android screenshots were byte-identical;
+scrolling, page/bookmark navigation and adult entry passed. Full Unity, shared
+native/book integration, web, Android and exact package checks passed, followed
+by in-place installation and installed-hash verification.
+
+The animated 32-brick workload stopped at its battery limit after 300.31 seconds,
+with mean **70.81 FPS at 72 Hz**. This shortened development run does not establish
+sustained performance or an end-to-end frame-rate improvement. The original saved
+room/behaviours remained byte-identical; the app is stopped for charging. Package
+counts, measurements and limits are in [device QA](QUEST_DEVICE_QA.md#quest-chat-layout-feedback-fix--2026-10-06).
+All production/provider, signing and Store gates above remain open.

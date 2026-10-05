@@ -1,12 +1,13 @@
-# Quest 3 development verification — updated 2026-10-05
+# Quest 3 development verification — updated 2026-10-06
 
-Current installed development checkpoint: **496EC9BB**, including browser-frame
-copy gating and the earlier navigation/interaction fixes below. The same-package
-comparison reduced copies by about 60% and app GPU time by roughly 0.5 ms, but
-the ten-minute new-frame run averaged 70.90 FPS at 72 Hz. Steady 72 FPS remains
-unmet; the tracking warning cleared and normal book save-refusal/retry passed.
-A separate Android storage diagnostic passed the transaction-boundary crash matrix below and was
-removed afterwards. Full Store/provider/comfort acceptance remains open.
+Current installed development checkpoint: **FD9AEBDE**. A Quest-only stable
+chat scrollbar gutter removes repeated Android text-layout/style invalidation,
+with identical pixels in the controlled initial-screen comparison. Full native,
+book, Android and package checks passed. Its animated 32-brick device workload
+stopped at the battery limit after five minutes and averaged **70.81 FPS at 72
+Hz**; sustained performance remains open. Saved room/behaviour files were
+preserved byte-for-byte and the app is stopped for charging. Earlier checkpoint
+results below remain historical; full Store/provider/comfort acceptance is open.
 
 ## On-device automation resumed — 2026-10-05
 
@@ -3160,3 +3161,103 @@ three original debug properties verified. The ten unrelated dirty files retained
 their original hashes. No source, installed APK, provider or production service
 changed. Backups, raw logs, counters, profile, images and verified cleanup remain
 in `.quest-evidence/book-copy-comparison-20261005/`.
+
+
+## Quest chat layout feedback fix — 2026-10-06
+
+Device profiling of the preceding **496EC9BB** build narrowed repeated style
+invalidation to the chat scroller: its automatic scrollbar width interacted
+with animated content and container-relative text sizing. Trace events included
+scrollbar changes and repeated language-text style invalidations. Pausing SVG
+animation removed the layout work; removing container sizing alone did not.
+The final change keeps all animation and reserves the chat scrollbar gutter,
+scoped to `.quest-book-surface [data-quest-chat-scroll]`.
+
+A reversible, metrics-only experiment in the same Android WebView process
+compared five-second windows, with all page animations running:
+
+| Chat scroller | Task seconds | Layout seconds | Style seconds | Layouts / style recalculations |
+| --- | --- | --- | --- | --- |
+| Original | 4.922 | 1.623 | 1.953 | 112 / 784 |
+| Stable gutter | 1.958 | 0.182 | 0.234 | 361 / 361 |
+| Original restored | 4.899 | 1.648 | 1.905 | 125 / 875 |
+
+These browser counters establish substantially less layout/style work in this
+screen, not compositor performance. Repeated style recalculations fell from
+seven per layout to one, while more layout passes completed in the fixed interval. The broader trace/desktop
+experiments are separate from these metrics-only windows. All temporary styles
+and animation overrides were removed before the diagnostic process stopped.
+
+For appearance comparison only, animations were held at the same phase. Before
+and after PNG bytes were identical (SHA-256
+`ac3b22c0ed1818b82dcf0058c7b2b8133deea9fa0db13802af0b4d3624ab66f2`).
+Chat width remained 402 CSS pixels, height 614, content height 680 and language
+font 16 px. This verifies the tested initial screen; it is not universal image
+parity. Actual wheel scrolling, no horizontal overflow, earlier-page navigation
+and bookmark return passed with seeded chat/artifacts at 1024 x 768, 819 x 614
+and 800 x 600. The built-app adult-entry checks also passed.
+
+The full candidate pipeline passed **837 EditMode / 644 PlayMode tests** with
+three optional private-model skips, **475 native-room observations** and
+**73 original-book observations**, production web compilation, Android lint and
+**82 Android tests** with two optional skips. Both integration journeys used
+scripted responses without real providers. The package audit matched **3,028
+frozen inputs**, native source/metas, AAR, all 147 packaged web files, the included
+avatar, 178 motions, 26 templates and 7 modules. ARM64-only libraries, development
+manifest, APK v2 signature and 16 KiB alignment passed.
+
+`MaestroQuest-book-layout-FD9AEBDE.apk` is **188,178,107 bytes**, SHA-256
+`FD9AEBDE5B88A78142542F57AFEED998F485EAC4966D10D1FEE0584E2729FD69`.
+It was installed in place after fresh private/external backups; installed bytes
+matched. The owner-authorized adult confirmation, book navigation and avatar
+read passed without browser errors. The installed computed gutter is `stable`
+and the chat dimensions above are retained. A stereo screenshot showed the live
+book, included Maestro and recipe robot without a tracking warning.
+
+
+### Candidate workload and cleanup
+
+The candidate ran in one Quest process (PID 6644) with the same kind of temporary
+workload: 32 bricks, a board, the 19-part robot, included Maestro and scanned-room
+physics. A Forever program cycled parallel 30-second robot/Maestro motions,
+retaining the exact included Maestro motion ID used above. Both branches, robot
+playback and physics were active before and after; the motion cache stayed at
+one clip / 76,540 curve values. Invocation boundaries remain possible.
+
+The requested ten-minute window **stopped at the battery limit after 300.31
+seconds / 300 VrApi samples**. Battery fell from 17% to 14% despite external
+power. Temperature was 42–43 C and reported power level ranged from 0 to 1.
+No browser profiling, inspection or UI navigation occurred during this window.
+Minute battery/memory checks and bracketing renderer counters were retained.
+
+| Metric | Result |
+| --- | --- |
+| FPS at 72 Hz | Mean 70.81; minimum 68; maximum 74 (sampling variation) |
+| App GPU time | Mean 6.81 ms; p95 7.35 ms; maximum 7.85 ms |
+| Stale frames | Mean 6.09; p95 8; maximum 12 |
+| Reported CPU utilization | Mean 0.917 |
+| Browser copies / draw calls per second | 29.57 / 71.98 |
+| Process PSS, before / after | 1,577,377 / 1,553,102 KB |
+
+This is a shortened development diagnostic, **not** a completed ten-minute run,
+steady 72 FPS pass, leak test or controlled old/new APK comparison. The view
+remained fixed and tilted, hands/controllers inactive, with the initial API-key
+screen and partly occluded construction. No synthetic pose/input or real provider
+was used. The browser layout improvement is established separately above; an
+end-to-end frame-rate improvement is not established here.
+
+Final readback confirmed an unpaused, focused app and valid book content with
+new-frame copying retained. Stereo screenshots showed the live book and changed
+character poses without a tracking warning. Ordinary book controls stopped and
+deleted only the QA behaviour, paused physics and discarded the temporary room.
+The saved original custom avatar selection was preserved. `room.v20.json` and
+`behaviours.v2.json` matched the fresh backup byte-for-byte, with the same hashes
+recorded in the preceding comparison. The ten unrelated dirty files retained
+their original hashes. Test receipts/Undo history remain expected activity.
+The app was stopped at 14%, owned forwards removed and all three original debug
+properties verified. No data reset, provider call or production change occurred.
+
+Package/diagnostic evidence is in `.quest-evidence/book-layout-20261005/`;
+backups, raw device logs, exact counters, images and verified cleanup are in
+`.quest-evidence/book-layout-performance-20261005/`. Sustained performance,
+human/provider and Store gates remain open.

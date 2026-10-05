@@ -4,6 +4,8 @@
 .quest-chat-document { position: absolute; inset: 0; overflow: hidden; }
 .quest-chat-document > div { height: 100%; min-height: 0; }
 .quest-chat-document main { min-height: 0; }
+/* Keep animated content from repeatedly toggling scrollbar width and cqw text layout in WebView. */
+.quest-book-surface [data-quest-chat-scroll] { scrollbar-gutter: stable; }
 .quest-layout-conversation .quest-chat-page { left: auto; right: 0; }
 .quest-earlier-page { position: absolute; inset: 0 auto 0 0; width: var(--quest-page-width); display: flex; flex-direction: column; overflow: hidden; background: var(--page-bg-color); container-type: inline-size; transform: translateZ(0); }
 .quest-earlier-messages { flex: 1; min-height: 0; overflow: auto; padding: 16px; }
