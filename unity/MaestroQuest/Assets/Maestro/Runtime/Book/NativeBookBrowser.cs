@@ -25,7 +25,7 @@ namespace Maestro.Quest.Book
         public QuestIntegrityRequest integrityRequest;
     }
 
-    public sealed class NativeBookBrowser : FragmentCapture, IBookBrowser
+    public sealed partial class NativeBookBrowser : FragmentCapture, IBookBrowser
     {
         public override string package => "com.maestro.quest.browser.BookWebView";
         public Texture Surface => m_contentView;
@@ -66,6 +66,9 @@ namespace Maestro.Quest.Book
             m_rawImage.enabled = false;
 #if UNITY_ANDROID && !UNITY_EDITOR
             Init();
+#if DEVELOPMENT_BUILD
+            StartCoroutine(RegisterRenderingDiagnostics());
+#endif
 #else
             Error = "The native browser is available in the Android build. Use the web book fixture to test page presentation on desktop.";
 #endif

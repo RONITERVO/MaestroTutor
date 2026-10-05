@@ -282,7 +282,7 @@ All production access, provider, signing and Store gates above remain open.
 
 ## Objects navigation checkpoint (2026-10-05)
 
-`MaestroQuest-objects-navigation-CB3309AB.apk` is the current installed development
+`MaestroQuest-objects-navigation-CB3309AB.apk` is the previous development
 checkpoint. It fixes returning from Behaviours when the selected object is empty
 or gone, and corrects the catalog's room-session identity description. Full Unity,
 shared book/room, web, Android and package audits passed. Actual Quest navigation
@@ -291,3 +291,22 @@ the original saved room remained byte-identical. See [device QA](QUEST_DEVICE_QA
 for package identity and evidence limits. The ten-minute animated workload on
 previous 3FB9A8AF averaged 70.96 FPS at 72 Hz; sustained performance remains open.
 No performance gain is claimed for this navigation-only update.
+
+
+## Book frame-copy checkpoint (2026-10-05)
+
+`MaestroQuest-frame-copy-496EC9BB.apk` is the current installed development
+checkpoint. The hardware-buffer renderer retains valid book content between
+browser frames and avoids duplicate GPU copies; capture rate, resolution and
+visual effects are unchanged. Six renderer regressions and full Unity,
+integration, Android and package audits passed. Actual stereo screenshots showed
+chat and workshop updating on the 3D pages, and native counters confirmed the gate.
+
+The sleep/wake check reached Quest's **Finding position in room** warning.
+Same-process browser controls recovered, but full 3D resume and the planned
+same-APK performance comparison await normal headset tracking. The warning was
+not bypassed for a benchmark. No frame-rate improvement or sustained 72 Hz pass
+is claimed. Temporary objects were discarded and both saved room and behaviour
+files remained byte-identical; the app is stopped for charging. Exact package
+identity, counts and limits are in [device QA](QUEST_DEVICE_QA.md#book-hardware-buffer-copies--2026-10-05).
+The production/provider, physical comfort, signing and Store gates remain open.

@@ -8,6 +8,8 @@ import com.robot9.shared.SharedTexture;
 
 public class ViewToHWBRenderer extends ViewToBufferRenderer {
 
+    public ViewToHWBRenderer() { setCopyOnNewFrame(true); }
+
     private HardwareBuffer mSharedBuffer;
 
     private SharedTexture mSharedTexture;

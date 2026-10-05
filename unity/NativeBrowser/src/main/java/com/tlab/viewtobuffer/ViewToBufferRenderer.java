@@ -68,6 +68,26 @@ public class ViewToBufferRenderer implements GLSurfaceView.Renderer {
     protected boolean mInitialized;
 
     protected boolean mFrameAvailable = false;
+    private boolean mFramePending;
+    private boolean mCopyOnNewFrame;
+    private long mDrawCount, mReceivedFrameCount, mCopyCount;
+
+    // Hardware-buffer copies can retain the last valid image between producer frames.
+    // Byte-buffer renderers keep their continuous PBO drain path.
+    public synchronized void setCopyOnNewFrame(boolean enabled) { mCopyOnNewFrame = enabled; }
+
+    public synchronized long[] frameCopyStatistics() {
+        return new long[] {mDrawCount, mReceivedFrameCount, mCopyCount,
+                mCopyOnNewFrame ? 1 : 0, mContentExists ? 1 : 0};
+    }
+
+    protected synchronized void onFrameAvailable(SurfaceTexture source) {
+        if (!mSurfaceEnabled || source != mSurfaceTexture) return;
+        mFramePending = true;
+        mReceivedFrameCount++;
+    }
+
+    protected void updateSurfaceTexture() { mSurfaceTexture.updateTexImage(); }
 
     public void initSamplerShader() {
         //@formatter:off
@@ -127,7 +147,10 @@ public class ViewToBufferRenderer implements GLSurfaceView.Renderer {
 
     }
 
-    public void releaseSurfaceAndSurfaceTexture() {
+    public synchronized void releaseSurfaceAndSurfaceTexture() {
+        mFramePending = false;
+        mFrameAvailable = false;
+        mContentExists = false;
         if (mSurface != null) {
             mSurface.release();
             mSurface = null;
@@ -151,7 +174,7 @@ public class ViewToBufferRenderer implements GLSurfaceView.Renderer {
         }
     }
 
-    public boolean contentExists() {
+    public synchronized boolean contentExists() {
         return mContentExists;
     }
 
@@ -185,9 +208,7 @@ public class ViewToBufferRenderer implements GLSurfaceView.Renderer {
         mSurfaceTexture.setOnFrameAvailableListener(new SurfaceTexture.OnFrameAvailableListener() {
             @Override
             public void onFrameAvailable(SurfaceTexture surfaceTexture) {
-                synchronized (this) {
-                    mFrameAvailable = true;
-                }
+                ViewToBufferRenderer.this.onFrameAvailable(surfaceTexture);
             }
         });
         mSurface = new Surface(mSurfaceTexture);
@@ -282,7 +303,7 @@ public class ViewToBufferRenderer implements GLSurfaceView.Renderer {
      * @param height
      */
     @Override
-    public void onSurfaceChanged(GL10 gl, int width, int height) {
+    public synchronized void onSurfaceChanged(GL10 gl, int width, int height) {
         Log.d(TAG, "onSurfaceChanged (gl, width, height) " + width + ", " + height);
 
         // In case of GeckoView, onSurfaceChanged was called too many times after onResume and it caused HardwareBuffer's null pointer reference error.
@@ -315,6 +336,9 @@ public class ViewToBufferRenderer implements GLSurfaceView.Renderer {
     @Override
     public void onDrawFrame(GL10 gl) {
         synchronized (this) {
+            mDrawCount++;
+            if (!mInitialized || !mSurfaceEnabled || mSurfaceTexture == null) return;
+            boolean resized = mForceResizeTex;
             if (mForceResizeTex) {
                 destroyBuffer();
                 initBuffer();
@@ -322,8 +346,14 @@ public class ViewToBufferRenderer implements GLSurfaceView.Renderer {
                 mForceResizeTex = false;
             }
 
-            mSurfaceTexture.updateTexImage();
+            if (mCopyOnNewFrame && !mFramePending && !(resized && mFrameAvailable)) return;
+            if (mFramePending || !mCopyOnNewFrame) {
+                updateSurfaceTexture();
+                if (mFramePending) mFrameAvailable = true;
+                mFramePending = false;
+            }
             CopySurfaceTextureToBuffer();
+            mCopyCount++;
             mContentExists = mSurfaceEnabled && mFrameAvailable;
         }
     }
@@ -361,6 +391,7 @@ public class ViewToBufferRenderer implements GLSurfaceView.Renderer {
         synchronized (this) {
             mContentExists = false;
             mFrameAvailable = false;
+            mFramePending = false;
             mSurfaceEnabled = false;
         }
     }

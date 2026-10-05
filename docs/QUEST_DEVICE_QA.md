@@ -2812,3 +2812,66 @@ of the previous checkpoint's CPU cost. The ten-minute profile above remains tied
 to **3FB9A8AF**; no performance improvement is claimed for this navigation update.
 Physical-input/comfort, real providers, production access, signing and Store gates
 remain open. No app-data reset, paid generation, deployment or Store submission occurred.
+
+
+## Book hardware-buffer copies — 2026-10-05
+
+The hardware-buffer renderer now copies only when the browser's SurfaceTexture
+has a new frame, or once when a resized buffer needs the last latched image.
+Idle render calls retain the existing page image. The callback and render path
+share the renderer lock; callbacks from disabled/replaced surfaces are ignored.
+The byte-buffer/PBO path keeps its continuous drain. The GLSurfaceView render
+loop still runs continuously: this change avoids duplicate GPU copies, not
+render-thread wakeups. Browser capture rate, texture resolution, globe and CSS
+animations are unchanged. Android's [SurfaceTexture contract](https://developer.android.com/reference/android/graphics/SurfaceTexture)
+requires updateTexImage on the owning GL thread; the callback only marks a frame
+pending, and the GL render callback performs the update/copy.
+
+A development-only Operator tool, `maestro_book_rendering`, reports received-frame,
+render-call and copy counters. Its session-only `continuous` / `newFrames` modes
+permit comparison in one APK; `observe` changes nothing. The Unity registration
+is excluded from production, Android rejects non-debuggable applications, and
+this JNI method is not exposed to page JavaScript.
+
+Six new Android regressions cover idle retention, coalesced producer bursts,
+resizing with/before a valid frame, stale callbacks after disable/recreation and
+continuous/PBO compatibility. Full verification passed **837 EditMode / 644
+PlayMode tests** (three optional private-model skips), **472 native-room / 71
+original-book observations** with offline scripted providers, production web,
+Android lint and **82 Android tests** (two optional skips). The package audit
+matched **3,021 frozen inputs**, native source/metas, AAR, **147 web files**, the
+included avatar / 178 motions / 26 templates / 7 modules, ARM64-only libraries,
+development manifest, v2 signature and 16 KiB alignment. The catalog remains
+93 actions / 102 facts / 16 events with 302 checked sources.
+
+`MaestroQuest-frame-copy-496EC9BB.apk` is **188,178,035 bytes**, SHA-256
+`496EC9BBD0272B54A1DE1512823B67C0087FBF899EA6B4D8BEE12E1B16AA0462`.
+It was installed in place on Quest 3 and the installed hash matched. The owner's
+authorized 18+ confirmation and actual book navigation passed with no page errors.
+Stereo device screenshots were inspected: the 3D book changed from original chat
+to the workshop on both pages. At the workshop readback, cumulative counters were
+5,536 render calls, 2,252 received frames and 2,251 copies, with valid content.
+One pending producer frame can separate those last two counters. This confirms
+the copy gate is operating, not a frame-rate or energy improvement.
+
+An Android Home key attempt exited the original process cleanly (EXIT_SELF,
+status 0); relaunch restored the book. A subsequent sleep/wake retained process
+12338. The first Operator callback timed out while Unity was paused; returning
+the activity to the foreground recovered its counters and ordinary book
+navigation. However, Quest displayed **Finding position in room** over the app.
+The same-process browser recovery is therefore not a complete 3D resume or
+tracking acceptance. The owner has been asked to restore tracking. No same-build
+FPS comparison or new ten-minute workload result is claimed for this package.
+
+The prepared temporary board, robot and 32 bricks were discarded through the
+book before timed animation/physics capture began. The original five objects and
+custom avatar were restored. Both `room.v20.json` and `behaviours.v2.json` remained
+byte-identical to the pre-install backup; the room hash remains
+`1d1551b164ae44a1db16b81d0d8bd4ed7eee1187de65d45d65ee8d6668c25e93`.
+The app was stopped, both owned forwards removed and all original debug
+properties verified. Battery was 34%, charging, at 45 C at cleanup. Local backups,
+screenshots, package audits and the prepared comparison helpers are in
+`.quest-evidence/book-frame-copy-20261005/`; private room imagery is not committed.
+No real provider call, paid generation, data reset, deployment, release signing
+or Store submission occurred. Sustained performance and the other release gates
+remain open.

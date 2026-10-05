@@ -343,6 +343,25 @@ public final class BookWebView extends OffscreenBrowser {
         });
     }
 
+    // Called only by the development-only Unity Operator tool. Never exposed to page JavaScript.
+    public String RenderingDiagnostics(String mode) {
+        Activity activity = UnityPlayer.currentActivity;
+        if (activity == null || (activity.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) == 0
+                || disposed || !(mViewToBufferRenderer instanceof com.tlab.viewtobuffer.ViewToHWBRenderer))
+            return "{\"available\":false}";
+        if ("newFrames".equals(mode)) mViewToBufferRenderer.setCopyOnNewFrame(true);
+        else if ("continuous".equals(mode)) mViewToBufferRenderer.setCopyOnNewFrame(false);
+        else if (!"observe".equals(mode)) return "{\"available\":false,\"error\":\"Unknown comparison mode\"}";
+        long[] counts = mViewToBufferRenderer.frameCopyStatistics();
+        try {
+            JSONObject result = new JSONObject();
+            result.put("available", true); result.put("atNanos", System.nanoTime());
+            result.put("draws", counts[0]); result.put("receivedFrames", counts[1]); result.put("copies", counts[2]);
+            result.put("copyOnNewFrame", counts[3] == 1); result.put("contentExists", counts[4] == 1);
+            return result.toString();
+        } catch (org.json.JSONException impossible) { throw new IllegalStateException(impossible); }
+    }
+
     @Override public void Dispose() {
         if (disposed) return;
         disposed = true;
