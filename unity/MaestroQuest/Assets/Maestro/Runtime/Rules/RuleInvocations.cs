@@ -41,12 +41,13 @@ namespace Maestro.Quest.Rules
             if(Receipts==null)return LiveInvocation(runId);
             var retained=Receipts.Find(runId);return retained==null?null:LiveInvocation(runId)??retained;
         }
-        JObject LiveInvocation(string runId)
+        JObject LiveInvocation(string runId)=>LiveInvocation(runId,true);
+        JObject LiveInvocation(string runId,bool includeCall)
         {
             var active=running.FirstOrDefault(x=>x.Id==runId&&x.Invocation!=null);
-            if(active!=null) {var value=Summary(active);value["call"]=active.Invocation.DeepClone();return value;}
+            if(active!=null) {var value=Summary(active);if(includeCall)value["call"]=active.Invocation.DeepClone();return value;}
             var done=outcomes.FirstOrDefault(x=>x.Outcome.id==runId&&x.Invocation!=null);
-            if(done==null)return null;var result=Summary(done);result["call"]=done.Invocation.DeepClone();return result;
+            if(done==null)return null;var result=Summary(done);if(includeCall)result["call"]=done.Invocation.DeepClone();return result;
         }
         public JObject ObserveInvocations(string selectedId)=>Receipts?.Observe(selectedId,LiveInvocation)??new JObject {
             ["selected"]=Invocation(selectedId)??(JToken)JValue.CreateNull(),

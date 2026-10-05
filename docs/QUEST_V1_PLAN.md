@@ -2,13 +2,13 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
-The current installed development build is `11B4972E`: 831 EditMode / 641 PlayMode
-checks, both integration journeys and all package checks passed. Held chalk was
-verified with controller and hand input. Fingertip packing now survives distant
-button hover and stays at its world preview after Recall moves the room. Quest
-checks confirm measured source loss, atomic Undo and exact Redo; the final packed
-sphere matched its preview exactly. The shared book/catalog tests passed 189 cases.
-[Current device evidence](QUEST_DEVICE_QA.md#recalled-material-packing-placement--2026-10-05).
+The current installed checkpoint and authoritative test/device results are in
+[device QA](QUEST_DEVICE_QA.md). Installed checkpoint 6A7C780E also avoids copying
+hidden recipe arguments into periodic receipt summaries. Full native, web,
+Android and package verification passed. The busy-room development measurement
+was 71.18 FPS paused / 70.89 FPS with physics at 72 Hz; sustained performance
+acceptance remains open. The checkpoint narratives
+below retain their historical scope; they are not new acceptance claims.
 
 On-device verification resumed on 2026-10-05. Controller tests exposed and fixed
 book-page/tray-button colliders blocking their movable owner. Development build

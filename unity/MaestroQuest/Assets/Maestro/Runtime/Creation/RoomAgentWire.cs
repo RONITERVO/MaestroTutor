@@ -15,9 +15,6 @@ namespace Maestro.Quest.Creation
             var json=JObject.Parse(JsonUtility.ToJson(state));
             if(state.inspection==null)json["inspection"]=JValue.CreateNull();
             else if(state.inspection.recipe==null)json["inspection"]["recipe"]=JValue.CreateNull();
-            json["capture"]=state.capture?.DeepClone()??JValue.CreateNull();
-            json["catalog"]=state.catalog?.DeepClone()??JValue.CreateNull();
-            json["execution"]=state.execution?.DeepClone()??JValue.CreateNull();
             if(state.motions==null)json["motions"]=JValue.CreateNull();
             if(state.rules==null)json["rules"]=JValue.CreateNull();
             else {
@@ -36,7 +33,17 @@ namespace Maestro.Quest.Creation
                 if(item.movement==null)wire["movement"]=JValue.CreateNull();
                 else Movement(wire["movement"],item.movement.distance,item.movement.speed);
             }
-            return json.ToString(Formatting.None);
+            // Structured payloads are already detached observations. Write them
+            // directly without attaching/cloning their trees into another JObject.
+            using var output=new System.IO.StringWriter(System.Globalization.CultureInfo.InvariantCulture);
+            using var writer=new JsonTextWriter(output) {Formatting=Formatting.None};
+            writer.WriteStartObject();foreach(var property in json.Properties())property.WriteTo(writer);
+            WritePayload(writer,"capture",state.capture);WritePayload(writer,"catalog",state.catalog);WritePayload(writer,"execution",state.execution);
+            writer.WriteEndObject();writer.Flush();return output.ToString();
+        }
+        static void WritePayload(JsonWriter writer,string name,JToken value)
+        {
+            writer.WritePropertyName(name);if(value==null)writer.WriteNull();else value.WriteTo(writer);
         }
         // JsonUtility cannot hydrate arbitrary typed JSON arguments. Only the validated
         // structured catalog payload is copied from the original raw request.

@@ -95,7 +95,7 @@ namespace Maestro.Quest.Tests
                 var done=receipts.Find(id);done["phase"]="completed";done["status"]="Action completed";receipts.Update(done);
             }
             var result=receipts.Find(longRun);result["phase"]="completed";result["status"]="Action completed";receipts.Update(result);
-            Assert.That(receipts.Find(longRun),Is.Not.Null);Assert.That(receipts.Observe(longRun,_=>null)["outcomes"].Last()["id"].Value<string>(),Is.EqualTo(longRun));
+            Assert.That(receipts.Find(longRun),Is.Not.Null);Assert.That(receipts.Observe(longRun,(_,_)=>null)["outcomes"].Last()["id"].Value<string>(),Is.EqualTo(longRun));
             Assert.That((string)new InvocationReceipts(directory).Find(longRun)["phase"],Is.EqualTo("completed"));
         }
         [Test] public void RecoveryKeepsUnfinishedCallsAheadOfOlderCompletedHistory()
@@ -108,7 +108,7 @@ namespace Maestro.Quest.Tests
             }
             var recovered=new InvocationReceipts(directory);
             Assert.That((string)recovered.Find(unfinished)["phase"],Is.EqualTo("interrupted"));
-            Assert.That(recovered.Observe(unfinished,_=>null)["outcomes"].Count(),Is.EqualTo(16));
+            Assert.That(recovered.Observe(unfinished,(_,_)=>null)["outcomes"].Count(),Is.EqualTo(16));
         }
         [TestCase("action-receipts.v1.json")] [TestCase("action-receipts.v7.json")] [TestCase("action-receipts.v7.json.pending")]
         public void ExplicitRecoveryArchivesUnknownEvidenceAndNeverReusesOldStartIds(string name)
@@ -127,7 +127,7 @@ namespace Maestro.Quest.Tests
             Assert.That(scheduler.RunningCount,Is.EqualTo(1));Assert.That(actions.Stops,Is.Zero);
             Assert.That(scheduler.Invoke(Call(),1,out _,out _,Guid.NewGuid().ToString("N")),Is.False);
             Assert.That(new InvocationReceipts(directory).Find(run)["phase"].Value<string>(),Is.EqualTo("interrupted"));
-            Evidence("history-recovered",receipts.Observe(run,_=>null));
+            Evidence("history-recovered",receipts.Observe(run,(_,_)=>null));
         }
         [Test] public void RecoveryStopsOnlyOneOffActionsAndCanRetryAfterARealDiskFailure()
         {

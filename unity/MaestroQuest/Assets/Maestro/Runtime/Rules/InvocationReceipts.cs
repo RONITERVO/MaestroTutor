@@ -105,14 +105,21 @@ namespace Maestro.Quest.Rules
             if(index<0)return;
             entries.RemoveAt(index);entries.Add((JObject)detail.DeepClone());Trim();Save();
         }
-        public JObject Observe(string selectedId,Func<string,JObject> live)
+        public JObject Observe(string selectedId,Func<string,bool,JObject> live)
         {
-            var values=entries.Select(x=>live((string)x["id"])??(JObject)x.DeepClone()).ToArray();
-            static JObject Summary(JObject value) {var result=(JObject)value.DeepClone();result.Remove("call");return result;}
+            JToken selected=JValue.CreateNull();var active=new JArray();var outcomes=new JArray();
+            foreach(var entry in entries) {
+                string id=(string)entry["id"];bool detail=id==selectedId;
+                var value=live(id,detail)??entry;
+                if(detail)selected=value.DeepClone();
+                // Calls can contain complete creation recipes. Summaries never expose
+                // them, so project the visible fields instead of cloning then removing.
+                var summary=new JObject();
+                foreach(var property in value.Properties())if(property.Name!="call")summary.Add(property.Name,property.Value.DeepClone());
+                (Active(value)?active:outcomes).Add(summary);
+            }
             return new JObject {
-                ["selected"]=values.FirstOrDefault(x=>(string)x["id"]==selectedId)?.DeepClone()??JValue.CreateNull(),
-                ["running"]=new JArray(values.Where(Active).Select(Summary)),
-                ["outcomes"]=new JArray(values.Where(x=>!Active(x)).Select(Summary)),
+                ["selected"]=selected,["running"]=active,["outcomes"]=outcomes,
                 ["nextRunId"]=NextId,["storageError"]=Error,["recovery"]=RecoveryView
             };
         }

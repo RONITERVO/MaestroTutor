@@ -1,8 +1,8 @@
 # Quest 3 development verification — updated 2026-10-05
 
-Current installed development checkpoint: **76F97F56**, including shared recipe
-materials and the grip, submerged-vessel, fingertip-hover, post-Recall packing and
-room-observation fixes below.
+Current installed development checkpoint: **6A7C780E**, including receipt publication,
+shared recipe materials and the grip, submerged-vessel, fingertip-hover,
+post-Recall packing and room-observation fixes below.
 Full Store/provider/comfort acceptance remains open.
 
 ## On-device automation resumed — 2026-10-05
@@ -2500,3 +2500,78 @@ were restored and the app stopped for charging. The raw device profile was
 removed only after its local copy matched SHA-256. No synthetic input, proximity
 override, saved-data reset, real provider request, release signing, deployment or
 Store upload occurred. The ten unrelated dirty files retained their exact hashes.
+
+
+## Receipt publication cost — 2026-10-05
+
+The shared-material checkpoint's CPU profile still showed receipt observation
+and JSON tree copying. Periodic receipt summaries cloned complete creation calls
+and then removed their `call` field. The current candidate projects only the
+summary's visible fields; the selected receipt still includes its exact call.
+Live and restarted receipts retain detached resources, results and status.
+Saved evidence, invocation IDs, recovery, replay refusal, publication cadence and
+the human/agent contract do not change. Structured capture/catalog/execution
+payloads are written directly to the JSON writer without cloning or reparenting
+them into another JSON tree. Unity's existing vector/color layout and null fixes
+remain in place.
+
+Four focused EditMode cases pass: live and restarted hidden-recipe allocation,
+selected/output detachment plus completion/restart, and structured-wire values,
+nulls, escaping and parent ownership. In the four-creation receipt fixture,
+Unity's GC.Alloc recorder measured these allocations per observation:
+
+| Receipt source | 1-part calls, before | 32-part calls, before | 1-part calls, after | 32-part calls, after |
+| --- | ---: | ---: | ---: | ---: |
+| Restarted durable history | 2,737 | 47,401 | 236 | 236 |
+| Live history plus a running wait | 2,839 | 47,503 | 478 | 478 |
+
+These are allocation counts, not bytes or headset frame-time savings. Selected
+calls and legitimate result payloads still require copying. The persisted receipt
+assertion compares exact published JSON across restart; it does not equate CLR
+float32 and parsed double object representations. The original implementation
+failed both hidden-detail allocation assertions. Local evidence is in
+`.quest-evidence/receipt-publication-20261005/`.
+
+The 129 catalog/bridge/book web tests and source-drift check passed. Both receipt
+helpers are now covered by the native exporter and web verifier (302 sources),
+with unchanged 93 actions / 102 facts / 16 events. The full build passed **837
+EditMode / 644 PlayMode tests** (three optional private-model skips), **474
+native-room / 69 original-book observations** with offline scripted providers,
+production web, Android lint and **76 Android tests** (two optional skips). The
+final audit matched **3,017 frozen inputs**, native source/metas, AAR, 147 web
+files, the included avatar / 178 motions / 26 templates / 7 modules, ARM64-only
+libraries, development manifest, v2 signature and 16 KiB alignment.
+
+Development APK `MaestroQuest-receipt-publication-6A7C780E.apk` is 188,184,431
+bytes, SHA-256
+`6A7C780E423DABD82244BB7EA4E350DA08C7EE1A45070FF09EB636A4E927FC0C`.
+It was installed in place on Quest 3, the device's APK hash matched, and the
+owner-authorized adult confirmation was completed.
+
+The same temporary 32-brick construction, chessboard and looping robot ran
+through ordinary book catalog controls. Each capture lasted 45 seconds at 72 Hz;
+VrApi emitted 44 original-room samples and 45 in each construction window:
+
+| Scene | Mean FPS | Mean stale count | Mean app GPU ms |
+| --- | ---: | ---: | ---: |
+| Original room | 72.02 | 4.89 | 6.62 |
+| Construction, physics paused | 71.18 | 5.91 | 6.93 |
+| Construction, scanned-room physics running | 70.89 | 6.27 | 7.08 |
+
+The preceding shared-material checkpoint measured 69.56 / 70.51 FPS for the
+paused/running construction. Separate native 30-second frame-interval facts
+reported 2,097 / 2,114 samples, mean 14.31 / 14.19 ms, p95 23.13 / 22.33 ms and
+maximum 54.09 / 40.07 ms; preceding p95 values were 28.52 / 27.74 ms. These short
+sequential windows do not establish causality, sustained performance or human
+comfort. Temperature was 42–43 C, and each busy-room capture contained six
+power-save-level-1 samples (none in the original-room capture). VrApi values are
+one-second aggregates; a reported value above refresh is measurement variation,
+not a higher headset refresh rate. The busy room still does not hold steady 72 FPS.
+
+Temporary actions were stopped, physics paused and the test room discarded.
+All three original object IDs were verified. The app was stopped, owned ADB
+forwards removed and all three temporary debug properties matched their original
+empty values. Battery was 34%, charging. No new CPU profile or visual/comfort
+acceptance was taken, and no synthetic input, data reset, real provider call,
+release signing, deployment or Store upload occurred. The ten unrelated dirty
+files retained their exact hashes.

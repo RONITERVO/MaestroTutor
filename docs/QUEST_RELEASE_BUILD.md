@@ -126,7 +126,7 @@ feature backlog or permission to use credentials, deploy or submit.
 | Account and managed AI | Shared book, browser pairing and Meta-to-App-Check endpoints; offline/native tests. Endpoints disabled/undeployed. | Matching Firebase registrations and certificate, actual ingress config, authorized deployment, real Store-channel entitlement/integrity and account round trip. |
 | Purchase model | Quest checkout hidden and refused by client/server; existing prepaid credit balances remain shared. BYOK remains available. No Meta commerce integration. | Resolve eligibility for the actual prepaid-credit/BYOK and interactive model using the [prepared Meta review request](QUEST_MANAGED_ACCESS.md#purchase-model-decision-and-prepared-meta-request-2026-10-05), then implement and verify any required payment changes. |
 | Familiar book and provider parity | Original components, desktop chat-to-native journeys with scripted responses, and on-device book texture/page input/field focus checks. | Human virtual-key selection, microphone, Live, artifacts, interruption/recovery and managed/BYOK tests with real providers. |
-| Physical play and resource limits | Automated native suites and current Quest controller/hand grip, Recall, chalk/ink, measured packing and submerged-vessel checks; earlier user-confirmed basics. | Remaining interactions/room-scan alignment, save stress and sustained performance/comfort on supported hardware. The 32-brick development workload measured about 68 FPS at 72 Hz after the observation optimization; see the [workload evidence](QUEST_DEVICE_QA.md#construction-workload-and-room-observation-cost--2026-10-05). |
+| Physical play and resource limits | Automated native suites and current Quest controller/hand grip, Recall, chalk/ink, measured packing and submerged-vessel checks; earlier user-confirmed basics. | Remaining interactions/room-scan alignment, save stress and sustained performance/comfort on supported hardware. The current 32-brick development workload measured 71.18 / 70.89 FPS at 72 Hz with physics paused/running; see the [workload evidence and limits](QUEST_DEVICE_QA.md#receipt-publication-cost--2026-10-05). |
 | Audience and data | Owner chose 18+; book self-confirmation, prepared privacy/data map and local/cloud deletion paths. | Truthful Store audience/IARC setup, provider eligibility, published privacy/support/deletion details and actual deletion/consent QA. |
 | Content and listing | Included avatar/motion/template inventories and provenance checks. | Final content acceptance, real-app screenshots/store metadata, dashboard review and authorized submission. |
 
@@ -218,7 +218,7 @@ This remains development evidence, not sustained-performance or Store acceptance
 
 ## Shared recipe materials checkpoint (2026-10-05)
 
-Current installed development APK: `MaestroQuest-recipe-materials-76F97F56.apk`
+Development APK at this checkpoint: `MaestroQuest-recipe-materials-76F97F56.apk`
 (188,167,871 bytes), SHA-256
 `76F97F56A3EB76AC20A284AD3F0E2EE77DE8D406770D4910B9498967739C8124`.
 Recipes share immutable materials through bounded ownership; repaint, rebuild
@@ -230,3 +230,23 @@ previous checkpoint; steady 72 FPS remains unmet. Full evidence, thermal/profile
 limits, the workshop-transition check and cleanup are in
 [device QA](QUEST_DEVICE_QA.md#shared-recipe-materials--2026-10-05).
 Release/provider/comfort/Store gates remain open.
+
+
+## Receipt publication checkpoint (2026-10-05)
+
+Current installed development APK: `MaestroQuest-receipt-publication-6A7C780E.apk`
+(188,184,431 bytes), SHA-256
+`6A7C780E423DABD82244BB7EA4E350DA08C7EE1A45070FF09EB636A4E927FC0C`.
+Periodic receipt summaries omit large call arguments before copying; selected
+receipts retain their exact calls. Structured observations serialize without a
+second JSON-tree clone. Four new native regressions verify allocation scaling,
+detachment, completion/restart and wire ownership/values.
+
+837 EditMode / 644 PlayMode tests, 129 web tests, 474 native-room / 69 book
+observations, Android lint / 76 tests and the complete 3,017-input package audit
+passed. The catalog remains 93 actions / 102 facts / 16 events with 302 checked
+sources. Installation bytes matched. The same temporary construction measured
+71.18 / 70.89 FPS paused/running; native frame-interval p95 was 23.13 / 22.33 ms.
+The room and device settings were restored and the app stopped for charging.
+These short warm development measurements do not establish sustained 72 Hz or
+release acceptance. Details are in [device QA](QUEST_DEVICE_QA.md#receipt-publication-cost--2026-10-05).
