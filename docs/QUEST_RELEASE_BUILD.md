@@ -126,7 +126,7 @@ feature backlog or permission to use credentials, deploy or submit.
 | Account and managed AI | Shared book, browser pairing and Meta-to-App-Check endpoints; offline/native tests. Endpoints disabled/undeployed. | Matching Firebase registrations and certificate, actual ingress config, authorized deployment, real Store-channel entitlement/integrity and account round trip. |
 | Purchase model | Quest checkout hidden and refused by client/server; existing prepaid credit balances remain shared. BYOK remains available. No Meta commerce integration. | Resolve eligibility for the actual prepaid-credit/BYOK and interactive model using the [prepared Meta review request](QUEST_MANAGED_ACCESS.md#purchase-model-decision-and-prepared-meta-request-2026-10-05), then implement and verify any required payment changes. |
 | Familiar book and provider parity | Original components, desktop chat-to-native journeys with scripted responses, and on-device book texture/page input/field focus checks. | Human virtual-key selection, microphone, Live, artifacts, interruption/recovery and managed/BYOK tests with real providers. |
-| Physical play and resource limits | Automated native suites and current Quest controller/hand grip, Recall, chalk/ink, measured packing and submerged-vessel checks; earlier user-confirmed basics. | Remaining interactions/room-scan alignment, mid-write/low-disk/prolonged save stress and sustained performance/comfort on supported hardware. Completed-save recovery now has [three device restarts](QUEST_DEVICE_QA.md#saved-room-and-action-history-across-restart--2026-10-05). The current 32-brick development workload measured 71.18 / 70.89 FPS at 72 Hz with physics paused/running; see the [workload evidence and limits](QUEST_DEVICE_QA.md#receipt-publication-cost--2026-10-05). |
+| Physical play and resource limits | Automated native suites and current Quest controller/hand grip, Recall, chalk/ink, measured packing and submerged-vessel checks; earlier user-confirmed basics. | Remaining interactions/room-scan alignment, mid-write/low-disk/prolonged save stress and sustained performance/comfort on supported hardware. Completed-save recovery now has [three device restarts](QUEST_DEVICE_QA.md#saved-room-and-action-history-across-restart--2026-10-05). The ten-minute animated 32-brick development workload averaged 70.96 FPS at 72 Hz and did not pass steady 72 FPS; see the [workload and separate CPU trace](QUEST_DEVICE_QA.md#ten-minute-animated-workload-and-cpu-trace--2026-10-05). |
 | Audience and data | Owner chose 18+; book self-confirmation, prepared privacy/data map and local/cloud deletion paths. | Truthful Store audience/IARC setup, provider eligibility, published privacy/support/deletion details and actual deletion/consent QA. |
 | Content and listing | Included avatar/motion/template inventories and provenance checks. | Final content acceptance, real-app screenshots/store metadata, dashboard review and authorized submission. |
 
@@ -270,7 +270,7 @@ workload performance; see the [benchmark correction](QUEST_DEVICE_QA.md#workload
 
 ## Workshop startup checkpoint (2026-10-05)
 
-`MaestroQuest-workshop-startup-3FB9A8AF.apk` is the current installed development checkpoint.
+`MaestroQuest-workshop-startup-3FB9A8AF.apk` is the earlier startup checkpoint.
 It retains a workshop-open request through initial native room binding, while
 navigation cancellation and mutation session guards remain intact. Three single-open
 cold launches and a fourth cancellation/reopen check passed on Quest 3. Full
@@ -279,3 +279,15 @@ remained byte-identical. Exact package identity, test counts and evidence limits
 are in [device QA](QUEST_DEVICE_QA.md#workshop-opening-during-native-startup--2026-10-05).
 The earlier performance measurements were not repeated for this navigation change.
 All production access, provider, signing and Store gates above remain open.
+
+## Objects navigation checkpoint (2026-10-05)
+
+`MaestroQuest-objects-navigation-CB3309AB.apk` is the current installed development
+checkpoint. It fixes returning from Behaviours when the selected object is empty
+or gone, and corrects the catalog's room-session identity description. Full Unity,
+shared book/room, web, Android and package audits passed. Actual Quest navigation
+passed after empty selection, valid Maestro selection and temporary-object discard;
+the original saved room remained byte-identical. See [device QA](QUEST_DEVICE_QA.md#objects-navigation-after-selection-disappears--2026-10-05)
+for package identity and evidence limits. The ten-minute animated workload on
+previous 3FB9A8AF averaged 70.96 FPS at 72 Hz; sustained performance remains open.
+No performance gain is claimed for this navigation-only update.

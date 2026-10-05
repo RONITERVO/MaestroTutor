@@ -13,6 +13,26 @@ afterEach(cleanup);
 const id='b'.repeat(32),step='c'.repeat(32);
 const rules=():RuleView=>({revision:4,canUndo:true,canRedo:false,readOnly:false,status:'Ready',sequences:[{id,name:'Wave',steps:2,repeat:false}],selected:{id,name:'Wave',interruption:0,repeat:false,program:JSON.stringify(sequenceProgram([{...newRuleStep(1),id:step},{...newRuleStep(),id:'d'.repeat(32)}]))},bindings:[],buttons:[],bindingPage:0,bindingCount:0,running:[],queued:0});
 const state=(more:Partial<RoomAgentState>={}):RoomAgentState=>({version:1,capabilities:['behaviourPrograms.v3'],session:'a'.repeat(32),revision:1,sceneRevision:4,ack:0,ok:true,status:'Ready',canUndo:false,canRedo:false,physicsRunning:false,visible:true,workspaceView:'rules',created:[],objects:[{id:'maestro',objectRevision:3,name:'Maestro',kind:'Maestro',position:{x:0,y:0,z:0},scale:1,color:{r:1,g:1,b:1,a:1},animated:false}],rules:rules(),...more});
+describe('behaviour workspace navigation',()=>{
+ it.each([
+  ['empty selection','',false,'maestro'],
+  ['removed selection','e'.repeat(32),false,'maestro'],
+  ['existing selection','e'.repeat(32),true,'e'.repeat(32)],
+  ['missing selection',undefined,false,'maestro'],
+ ])('opens Objects with an existing target after %s',async(_label,selectedId,addSelected,expected)=>{
+  const initial=state({selectedId});
+  if(addSelected)initial.objects.push({...initial.objects[0],id:'e'.repeat(32),name:'Ball',kind:'Ball'});
+  const client=new RoomAgentClient();expect(client.receive(initial)).toBe(true);
+  const screen=render(<RuleWorkspace client={client}/>);
+  fireEvent.click(screen.getByRole('button',{name:'Objects'}));
+  try {
+   await waitFor(()=>expect(client.snapshot().request?.commands).toEqual([{action:'inspect',target:expected}]));
+   await act(async()=>{client.receive({...initial,revision:2,ack:1,workspaceView:'objects',selectedId:expected});});
+   expect(screen.getByRole('status').textContent).not.toContain('Invalid room target');
+  }finally{act(()=>client.cancel());}
+ });
+});
+
 describe('shared behaviour blocks',()=>{
  it('reorders stable steps through one revision-checked native operation',async()=>{
   const client=new RoomAgentClient();expect(client.receive(state())).toBe(true);const screen=render(<RuleWorkspace client={client}/>);

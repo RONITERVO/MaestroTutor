@@ -32909,7 +32909,7 @@
       "version": 1,
       "type": "text",
       "label": "Current room session",
-      "description": "Current explicit temporary-room session ID, or empty when using the saved room. Reading it does not begin, keep or discard a room."
+      "description": "Current room session ID, including while using the saved room. Begin and Discard replace this identity. Read scene.temporaryRoom.active to distinguish temporary play from the saved room. Reading this ID does not begin, keep or discard a room."
     },
     {
       "id": "maestro.state",
@@ -33386,7 +33386,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "77a5440c0cfac494f6bdec4935ab2465155a45e1ffd41435d7b063284e284fbb"
+      "sha256": "37e9621bf8c3f2c7b0c1d2773e3180588a78ad1c558e98f0af2d86b4579c89da"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",

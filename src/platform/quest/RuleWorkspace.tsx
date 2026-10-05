@@ -48,7 +48,7 @@ export function RuleWorkspace({client,onCatalog}:{client:RoomAgentClient;onCatal
    setDraft({...draft,sequence:{...draft.sequence,program:JSON.stringify(program)}});setDirty(true);setEditorReset(value=>value+1);return null;
   }catch(e){return e instanceof Error?e.message:'The action could not be added to this draft.';}
  }:undefined);
- const exit=async(objects:boolean)=>{try {const result=await client.request(objects?[{action:'inspect',target:state.selectedId??state.objects[0]?.id??'maestro'}]:[{action:'workspace',visible:false}]);if(!result.ok)setError(result.status);else setDirty(false);}catch(e){setError(e instanceof Error?e.message:'The book is unavailable.');}};
+ const exit=async(objects:boolean)=>{try {const result=await client.request(objects?[{action:'inspect',target:state.objects.find(object=>object.id===state.selectedId)?.id??state.objects[0]?.id??'maestro'}]:[{action:'workspace',visible:false}]);if(!result.ok)setError(result.status);else setDirty(false);}catch(e){setError(e instanceof Error?e.message:'The book is unavailable.');}};
  return <div className="room-workspace rule-workspace" aria-label="Behaviour workspace">
   <section className="room-workspace-page room-hierarchy" aria-label="Behaviours and triggers">
    <div className="room-workspace-heading"><div><span className="room-eyebrow">WHEN THIS HAPPENS</span><h1>Behaviours</h1></div><button disabled={pending} onClick={()=>void exit(false)}>{dirty?'Discard & return':'Back to chat'}</button></div>

@@ -3,11 +3,17 @@
 Status: active implementation. Nothing in this document claims store readiness.
 
 The current installed checkpoint and authoritative test/device results are in
-[device QA](QUEST_DEVICE_QA.md). Checkpoint **3FB9A8AF** fixes early workshop
-opening across native startup. Three single-command cold launches (one with an
-observed session replacement) and a cancellation/reopen check passed on Quest 3;
-Back to chat stayed effective and the saved room remained byte-identical. Full
-native, web, Android and package verification passed.
+[device QA](QUEST_DEVICE_QA.md). Checkpoint **CB3309AB** fixes returning from
+Behaviours to Objects when selection is empty or removed. Actual Quest book checks
+passed for empty, valid and discarded selections, with saved room bytes and avatar
+retained. Full native, web, Android and package verification passed. Earlier
+3FB9A8AF startup/cancellation checks remain recorded in device QA.
+
+A ten-minute workload on 3FB9A8AF kept included Maestro and recipe-robot
+animations cycling while scanned-room physics ran with 32 construction bricks.
+It averaged 70.96 FPS at 72 Hz; sustained performance remains an open release
+gate. The separate CPU trace points to book rendering and state publication as
+investigation targets. See device QA for the exact workload and measurement limits.
 
 Earlier checkpoint 6A7C780E also avoids copying hidden recipe arguments into
 periodic receipt summaries. Its busy-room development measurement was 71.18 FPS

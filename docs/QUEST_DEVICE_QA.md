@@ -1,8 +1,8 @@
 # Quest 3 development verification — updated 2026-10-05
 
-Current installed development checkpoint: **6A7C780E**, including receipt publication,
-shared recipe materials and the grip, submerged-vessel, fingertip-hover,
-post-Recall packing and room-observation fixes below.
+Current installed development checkpoint: **CB3309AB**, including the Objects
+navigation correction and earlier interaction/observation fixes below. The animated
+ten-minute workload on previous checkpoint 3FB9A8AF did not meet steady 72 FPS.
 Full Store/provider/comfort acceptance remains open.
 
 ## On-device automation resumed — 2026-10-05
@@ -2701,3 +2701,114 @@ comfort or sustained-performance acceptance. The previous 6A7C780E performance
 and save-recovery measurements remain historical evidence for that checkpoint.
 No real provider call, paid generation, app-data reset, deployment, release signing
 or Store submission occurred. The other release gates remain open.
+
+## Ten-minute animated workload and CPU trace — 2026-10-05
+
+The installed **3FB9A8AF** development package ran a 600.61-second Quest 3
+measurement at 72 Hz, with the original chat book, loaded scanned-room physics,
+32 construction bricks on a chessboard, the 19-part recipe robot and the included
+Maestro avatar. All additions and the avatar change were in explicit temporary
+play. A saved program authored through the ordinary book editor ran two parallel
+branches: the robot's recipe motion and exact included motion
+`0cec277765100728f5433405ab3e0f7e` (Big_Wave_Hello). Each invoked 30-second looped
+playback inside Forever; brief scheduler boundaries between invocations remain
+possible. This corrects the finite two-second clip limitation of earlier windows.
+
+Warm-up, midpoint and final observations showed both branches running, the robot
+playing, physics running and the included avatar ready. Changing execution IDs
+confirmed later cycles. The motion cache stayed at one clip / 76,540 curve values.
+A virtual-only capture showed the waving avatar and construction scene; robot
+occlusion and partial board cropping limit visual coverage. One normal book
+inspection occurred during the timed window. No synthetic native state or
+provider response was used for these device observations.
+
+| Measurement | Observed |
+| --- | --- |
+| VrApi samples | 599 one-second samples; no process change or interruption |
+| FPS | Mean **70.96**, minimum 66; configured refresh 72 Hz |
+| Stale frames | Mean 5.46 per sample, p95 10, maximum 13 |
+| App GPU time | Mean 7.04 ms, p95 7.75 ms, maximum 8.92 ms |
+| Process PSS | 1,524,906 KB before / 1,519,098 KB after |
+| Temperature / battery | 42–43 C / 34% to 32%, charging |
+| Power level | Level 1 in eight samples; level 0 otherwise |
+| Native final 30-second window | 2,103 intervals; mean 14.27 ms, p95 23.68 ms, maximum 48.34 ms |
+
+Raw one-second FPS reached 75 because of sampling variation; refresh remained
+72 Hz. PSS was approximately stable in this window, which is not a long-session
+leak test. This warm, charging development run **does not pass steady 72 FPS**
+and does not certify human comfort, tracked movement, provider usage or release
+build performance. It is not a controlled comparison against earlier packages.
+
+A separate 19.97-second `simpleperf` CPU trace followed the clean capture in the
+same process: 64,704 samples, zero lost, 1,000 Hz, no Unity Deep Profiling.
+WebView threads contributed substantial self samples: Chrome_InProcRe in
+libmonochrome 19.90%, VizWebView 6.49%, Compositor 5.65%, and RenderThread in
+libmonochrome 5.13%. These are sampled CPU-cycle shares, not frame times or
+battery attribution. Matching IL2CPP symbols were verified by build ID
+`2b1d00dd542d601ecf1b2238a85fcc2f1fba94a2`. Within UnityMain, inclusive samples
+were 28.28% in Camera.CustomRender and 13.12% in RoomAgent.Update, including
+4.93% in room-state serialization. Nested inclusive percentages must not be
+added. OVRPlugin, vendor EGL and kernel symbol coverage remains incomplete.
+The next investigation should isolate book rendering and state publication;
+this trace does not by itself prove which change will improve frame pacing.
+
+The QA behaviour was stopped and deleted through the book. The temporary room
+was discarded through its catalog action after the Objects navigation defect
+below was found. The original custom avatar was restored, physics paused and
+`room.v20.json` remained byte-identical to the pre-test backup (SHA-256
+`1d1551b164ae44a1db16b81d0d8bd4ed7eee1187de65d45d65ee8d6668c25e93`).
+The app was stopped, the owned forward removed and all three original debug
+properties verified. Local backups, raw metrics, program/readback evidence and
+profile files remain in `.quest-evidence/animated-workload-20261005/`.
+
+## Objects navigation after selection disappears — 2026-10-05
+
+Returning from Behaviours used an empty native selected ID as the inspection
+target, producing “Invalid room target.” The button now retains the selected
+object only when it exists in the observed list, otherwise inspecting the first
+available object. Missing and stale selections cannot strand the user in the
+behaviour editor. Four regressions cover empty, removed, valid and absent IDs;
+the empty and removed cases failed against the old implementation.
+
+The catalog description for `room.sessionId` also now matches native behaviour:
+an identity exists in saved mode, Begin/Discard replace it, and
+`scene.temporaryRoom.active` identifies temporary mode. No session semantics or
+storage format changed. Native export equality and source hashes were checked.
+
+Validation passed **229 Quest web tests / 24 files**, TypeScript and focused lint;
+**837 EditMode / 644 PlayMode** tests (three optional private-model skips);
+**470 native-room / 74 original-book observations** with scripted offline providers;
+production web, Android lint and **76 Android tests** (two optional skips).
+The package audit matched 3,018 frozen inputs, native sources/metas, AAR,
+147 web files and the included avatar / 178 motions / 26 templates / 7 modules.
+The catalog remains 93 actions / 102 facts / 16 events and 302 checked sources.
+ARM64-only libraries, development manifest, v2 signature and 16 KiB alignment passed.
+
+`MaestroQuest-objects-navigation-CB3309AB.apk` is 188,185,287 bytes, SHA-256
+`CB3309AB7DF600EC4BC5485AA074C44B43E23D781AF375819CFD15E6878ED1C3`. It was installed in place on Quest 3; the installed APK hash matched.
+The authorized 18+ confirmation was completed. Real packaged book controls passed:
+
+- Initial empty selection: Behaviours → Objects inspected the first saved object.
+- Existing Maestro selection: the same transition retained Maestro.
+- Selected temporary robot: after stopping its animation and discarding the fork,
+  the transition inspected an existing saved object and showed the original five.
+
+Discard first refused while the newly created robot was playing, as designed.
+The test stopped it through the Animation tab and continued from the same process;
+it did not restart the scenario or bypass the ownership guard. Back to chat passed,
+no page errors occurred and the WebView screenshot was inspected. No native state
+was injected. A saved-mode catalog read returned a nonempty session ID, confirming
+the corrected description.
+
+The original custom avatar and empty behaviour definitions were retained;
+`room.v20.json` stayed byte-identical to its pre-test backup. All ten unrelated
+working files retained their hashes. The app is stopped, the test forward removed
+and original debug properties verified; battery was 33%, charging, at cleanup.
+Evidence is in `.quest-evidence/animated-workload-20261005/`.
+
+A read-only idle-book inventory on this package found an active globe canvas and
+CSS animations, with no playing video. That is a follow-up clue, not an attribution
+of the previous checkpoint's CPU cost. The ten-minute profile above remains tied
+to **3FB9A8AF**; no performance improvement is claimed for this navigation update.
+Physical-input/comfort, real providers, production access, signing and Store gates
+remain open. No app-data reset, paid generation, deployment or Store submission occurred.
