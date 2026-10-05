@@ -126,7 +126,7 @@ feature backlog or permission to use credentials, deploy or submit.
 | Account and managed AI | Shared book, browser pairing and Meta-to-App-Check endpoints; offline/native tests. Endpoints disabled/undeployed. | Matching Firebase registrations and certificate, actual ingress config, authorized deployment, real Store-channel entitlement/integrity and account round trip. |
 | Purchase model | Quest checkout hidden and refused by client/server; existing prepaid credit balances remain shared. BYOK remains available. No Meta commerce integration. | Resolve eligibility for the actual prepaid-credit/BYOK and interactive model using the [prepared Meta review request](QUEST_MANAGED_ACCESS.md#purchase-model-decision-and-prepared-meta-request-2026-10-05), then implement and verify any required payment changes. |
 | Familiar book and provider parity | Original components, desktop chat-to-native journeys with scripted responses, and on-device book texture/page input/field focus checks. | Human virtual-key selection, microphone, Live, artifacts, interruption/recovery and managed/BYOK tests with real providers. |
-| Physical play and resource limits | Automated native suites and current Quest controller/hand grip, Recall, chalk/ink, measured packing and submerged-vessel checks; earlier user-confirmed basics. | Remaining interactions/room-scan alignment, busy rooms, save stress and sustained performance/comfort on supported hardware. |
+| Physical play and resource limits | Automated native suites and current Quest controller/hand grip, Recall, chalk/ink, measured packing and submerged-vessel checks; earlier user-confirmed basics. | Remaining interactions/room-scan alignment, save stress and sustained performance/comfort on supported hardware. The 32-brick development workload measured about 68 FPS at 72 Hz after the observation optimization; see the [workload evidence](QUEST_DEVICE_QA.md#construction-workload-and-room-observation-cost--2026-10-05). |
 | Audience and data | Owner chose 18+; book self-confirmation, prepared privacy/data map and local/cloud deletion paths. | Truthful Store audience/IARC setup, provider eligibility, published privacy/support/deletion details and actual deletion/consent QA. |
 | Content and listing | Included avatar/motion/template inventories and provenance checks. | Final content acceptance, real-app screenshots/store metadata, dashboard review and authorized submission. |
 
@@ -205,3 +205,12 @@ See [device evidence](QUEST_DEVICE_QA.md#recalled-material-packing-placement--20
 The development package contains both hand-hover and Recall fixes. Production
 services, real-provider acceptance, human comfort/performance and Store gates
 remain open.
+
+
+Development checkpoint `5C50CD1F` removes whole-room copies from periodic object
+observations and one Android JSON serialization pass. It passed 833 EditMode /
+641 PlayMode checks, 129 focused web tests, both native-room/original-book journeys,
+Android tests/lint and the exact-input/content/signature/alignment audit. It was
+installed in place and measured on Quest; the 32-brick workload improved modestly
+but still missed 72 Hz. See [workload and limits](QUEST_DEVICE_QA.md#construction-workload-and-room-observation-cost--2026-10-05).
+This remains development evidence, not sustained-performance or Store acceptance.

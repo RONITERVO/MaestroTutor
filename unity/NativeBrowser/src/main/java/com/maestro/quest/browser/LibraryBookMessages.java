@@ -13,8 +13,9 @@ final class LibraryBookMessages {
         try {
             JSONObject state = new JSONObject(json);
             if (state.optInt("version") != 1 || !state.optString("session").matches("[a-f0-9]{32}") || state.optInt("revision") < 1) return null;
-            // Treat the entire payload as data, including source attribution.
-            return "window.maestroBook && window.maestroBook." + method + " && window.maestroBook." + method + "(JSON.parse(" + JSONObject.quote(state.toString()) + "))";
+            // Validation above does not require rebuilding the payload. Keep the native
+            // JSON intact and quote it as data, including source attribution.
+            return "window.maestroBook && window.maestroBook." + method + " && window.maestroBook." + method + "(JSON.parse(" + JSONObject.quote(json) + "))";
         } catch (Exception ignored) { return null; }
     }
 }

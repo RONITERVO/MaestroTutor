@@ -1,7 +1,7 @@
 # Quest 3 development verification — updated 2026-10-05
 
-Current installed development checkpoint: **11B4972E**, including the grip,
-submerged-vessel, fingertip-hover and post-Recall packing fixes below.
+Current installed development checkpoint: **5C50CD1F**, including the grip,
+submerged-vessel, fingertip-hover, post-Recall packing and room-observation fixes below.
 Full Store/provider/comfort acceptance remains open.
 
 ## On-device automation resumed — 2026-10-05
@@ -2316,3 +2316,95 @@ forwards and debug/proximity overrides were released. Evidence remains local in
 reports, package audit and `device-acceptance.json`. These are automated device
 input/transform observations, not human ergonomics, real-provider or sustained
 performance acceptance.
+
+
+## Construction workload and room observation cost — 2026-10-05
+
+Quest 3 was measured on the development APK `11B4972E`, using VrApi statistics,
+a 72 Hz display and 45 one-second observations per condition. The temporary
+workload added 32 building bricks, a fixed chessboard and a looping recipe robot
+to the original three creations: 37 creations plus the book and Maestro, with
+181 new recipe parts. The book showed the original chat between measurements.
+The scanned room was loaded for the physics-running condition.
+
+| Condition | Mean reported FPS | Mean stale count | Mean app GPU time |
+| --- | ---: | ---: | ---: |
+| Original room | 71.98 | 5.22 | 6.69 ms |
+| Construction, physics paused | 66.89 | 9.78 | 8.31 ms |
+| Construction, physics running | 67.20 | 9.22 | 8.05 ms |
+
+This workload missed the 72 Hz target. The app's frame-interval fact reported
+approximately 33.40 ms p95 while paused and 31.34 ms with physics, versus
+18.54 ms before construction. These app intervals and one-second compositor
+statistics are different measurements; the latter are not per-frame latency
+percentiles. Temperature was 42–43 C; six physics-running samples reported
+power-save level 1, with all other samples at 0. This was a warm development build
+with Operator enabled, not release performance acceptance. See Meta's
+[VrApi statistics definitions](https://developers.meta.com/vr/documentation/unity/ts-ovrstats/).
+
+A 20-second `simpleperf` sample, resolved against the matching IL2CPP build,
+identified scene rendering and book updates as CPU costs. Among UnityMain samples,
+`RoomJournal.Snapshot` accounted for about 4.14% cumulatively, reached from the
+room observer. Android `PublishRoomAgentState` accounted for about 6.45%, including
+JSON parsing and reserialization. These are sampled CPU shares, not frame times;
+parent/child percentages overlap and must not be added together.
+
+The object-list publisher now projects only the fields it sends from the journal
+into detached observations, then fills live positions and interaction flags from
+the room. It no longer deep-copies recipes, strokes, stored motions and other
+hidden components four times per second. Android still checks the envelope and
+quotes the entire payload as data, but avoids serializing the parsed JSON again.
+Update frequency and the human/agent contract are unchanged; inspection and
+persistence still own complete copies where needed.
+
+The allocation regression uses Unity's `GC.Alloc` recorder and rejects an
+unavailable recorder. With the original copy path, an observation allocated 75
+objects for a one-part recipe and 292 for a 32-part recipe; the projection makes
+47 in either case. A second test verifies detached settings, ordering, placement
+revisions, edits and Undo/Redo. An initial test draft used a .NET allocation
+counter that returned zero; those results are not performance evidence. The
+supported-counter regression failed before the fix and passed afterwards.
+
+The animation was stopped, physics paused and temporary content discarded. All
+three original creation identities were checked before closing the app for
+charging. Owned forwards and the profiler sample-rate property were restored.
+Private raw profiles, logs, source freeze and regression results remain local in
+`.quest-evidence/performance-20261005/`. Allocation savings alone do not establish
+a frame-rate improvement or close the sustained-performance gate.
+
+The audited development package passed **833 EditMode / 641 PlayMode tests**
+(three optional private-model skips), **129 focused catalog/book web tests**,
+**473 native-room / 65 original-book observations**, the production web build,
+Android lint and **76 Android tests** (two optional skips). The audit matched
+all **3,010 frozen inputs**, source/metas, 147 packaged web files and included
+content; ARM64, development manifest, v2 signing and 16 KiB alignment passed.
+APK `MaestroQuest-room-observation-5C50CD1F.apk` is 188,158,039 bytes, SHA-256
+`5C50CD1F5D221E022320DC15DD9F53ED76F681B8C541491F79AB8E50C6A6BF01`.
+It was installed in place, its device hash matched and the owner's authorized
+18+ session confirmation was completed. The same workload on this package measured:
+
+| Condition | Samples | Mean reported FPS | Mean stale count | Mean app GPU time |
+| --- | ---: | ---: | ---: | ---: |
+| Original room | 46 | 71.78 | 5.17 | 6.78 ms |
+| Construction, physics paused | 45 | 68.18 | 7.56 | 8.14 ms |
+| Construction, physics running | 45 | 68.11 | 7.60 | 8.13 ms |
+
+The paused/running frame-interval p95 values were 29.41/27.88 ms. Temperature
+remained 42–43 C and all three post-fix windows included some power-save-level-1
+samples. These short sequential warm-device windows show a modest improvement,
+not a controlled thermal comparison or sustained 72 Hz acceptance. The workload
+still misses the target and retains long frame intervals.
+
+A separate 20-second post-fix profile no longer listed `RoomJournal.Snapshot`
+among the entries above 1% of sampled UnityMain CPU. Android room-state publication
+fell from about 6.45% to 4.16%; rendering remained prominent (about 42.09% cumulative
+in `Camera::CustomRender`). These shares overlap with callers and do not establish
+absolute savings in frame time. Rendering/material submission and the remaining
+browser work need further measurement before changing their implementation.
+
+Temporary content was again discarded and all original IDs checked. No synthetic
+input or proximity override was used for this comparison. The app was stopped,
+owned forwards removed, debug/sample-rate properties restored, and the two raw
+device profiles removed after their local copies passed hash comparison.
+`device-cleanup.json` records this cleanup. No release signing, deployment,
+provider request, Store upload or saved-data reset occurred.
