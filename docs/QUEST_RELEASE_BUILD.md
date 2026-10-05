@@ -227,6 +227,6 @@ tests, both native-room/book journeys, Android checks and the full package audit
 passed. Installation bytes matched. The construction comparison measured
 69.56 / 70.51 FPS with physics paused/running, with lower GPU time than the
 previous checkpoint; steady 72 FPS remains unmet. Full evidence, thermal/profile
-limits, the workshop-transition follow-up and cleanup are in
+limits, the workshop-transition check and cleanup are in
 [device QA](QUEST_DEVICE_QA.md#shared-recipe-materials--2026-10-05).
 Release/provider/comfort/Store gates remain open.

@@ -2479,9 +2479,13 @@ steady 72 FPS. Headset rendering was captured locally; human comfort and final
 visual acceptance remain open.
 
 One immediate scripted workshop close/reopen timed out at a disabled catalog
-button before physics setup. A later normal reopen succeeded; scan load and
-Start physics completed before the physics measurement. Rapid close/reopen
-acknowledgement remains a follow-up, and no native state guard was bypassed.
+button before physics setup. The helper treated the still-closing workshop as
+open and tried to click its pending controls. A later normal reopen succeeded;
+scan load and Start physics completed before the physics measurement. The local
+helper now waits for the native close acknowledgement (catalog controls detached)
+before reopening. Five consecutive open/read-fact/close cycles passed on the same
+installed app without product changes or bypassing native state guards. Cleanup
+was rechecked afterward.
 
 A separate 20-second CPU profile shows instanced rendering in use and rendering
 still prominent (26.55% cumulative Camera::CustomRender, 4.70% ApplyMaterialPass).
