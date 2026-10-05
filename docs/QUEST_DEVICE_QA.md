@@ -1,9 +1,11 @@
 # Quest 3 development verification — updated 2026-10-05
 
-Current installed development checkpoint: **CB3309AB**, including the Objects
-navigation correction and earlier interaction/observation fixes below. The animated
-ten-minute workload on previous checkpoint 3FB9A8AF did not meet steady 72 FPS.
-Full Store/provider/comfort acceptance remains open.
+Current installed development checkpoint: **496EC9BB**, including browser-frame
+copy gating and the earlier navigation/interaction fixes below. Its controlled
+performance comparison awaits restored Quest tracking. The ten-minute workload
+on previous checkpoint 3FB9A8AF did not meet steady 72 FPS. A separate Android
+storage diagnostic passed the transaction-boundary crash matrix below and was
+removed afterwards. Full Store/provider/comfort acceptance remains open.
 
 ## On-device automation resumed — 2026-10-05
 
@@ -2951,3 +2953,95 @@ in `.quest-evidence/storage-refusal-20261005/`. Android interrupted-write,
 low-storage and prolonged-save stress, physical tracking/resume and the
 performance comparison remain open. No provider call, deployment, signing or
 Store submission occurred.
+
+
+## Android process-termination storage probe — 2026-10-05
+
+The paired room/memory transaction now has **13 passing cases / 15 forced
+terminations on Quest 3**, using **Unity 6000.3.24f1 IL2CPP / Android**. This is
+additional platform evidence from a separate diagnostic package; it does not
+replace the installed Maestro application or establish full in-app recovery UX.
+No production runtime source or saved-data format changed.
+
+The diagnostic compiles the unchanged production runtime plus a small runner
+copied only into a receipt-owned build mirror. All **709 runtime files** matched
+before/after packaging and in an independent audit. Templates live outside Unity's
+source Assets tree; the build removes its injected files and scene and restores
+backed-up project/XR settings. The diagnostic uses its own synthetic data under
+`com.maestro.quest.storageprobe`, an empty scene, disabled XR startup, and no
+network, camera, microphone or scene permissions. Platform access remains disabled.
+
+The APK manifest/ARM64/signature audit passed before installation; the installed
+APK hash matched. Diagnostic APK: **145,289,960 bytes**, SHA-256
+`7217A1B14DCEE9B768006185F22A55E388F13B7DB9F8412033490B5F5BD6BE8F`.
+It has no VR launch category or required VR feature. The SDK's optional experimental
+feature declaration remains, but no tracking override or Operator command is used.
+The main app remained stopped throughout.
+
+Seven replacement cases stop before-journal, prepared, room, memory, committed,
+room-backup and memory-backup. Four first-save cases stop at prepared, room, memory
+and committed. Two more stop recovery itself after recovered-room, once for
+rollback and once for roll-forward. The host verifies the intermediate pair and
+journal, checks the live PID and package identity, sends SIGKILL as the diagnostic
+UID, and confirms the process is absent before relaunching. It never retries a
+still-running case merely because an observation timed out.
+
+Each fresh verifier runs production recovery, checks exact room/memory bytes and
+retained backups, retires the journal and repeats Capture to verify idempotence.
+The host separately reads the archived files and checks both exact bytes and
+numeric room/memory values. All 13 scenarios and 15 distinct killed PIDs were
+independently audited. There was no mixed pair after recovery; interrupted first
+saves correctly left both primaries absent. Verification completion is recorded
+before stopping the diagnostic; a normal Android process exit is not claimed.
+
+Evidence:
+
+- Build/audit: `.quest-evidence/android-storage-build/08dd693c38474e56b1f5ad8979d8e253/`.
+- Complete device matrix: `.quest-evidence/android-storage/eef3fd7f2f53485293e06f787ec360b7/`.
+- Independent audit, original-app identities and archived synthetic files:
+  `.quest-evidence/android-storage-20261005/`.
+
+An earlier candidate was refused by the manifest audit before installation.
+An initial host polling attempt then stopped before reaching a save because
+`adb exec-out` did not propagate a missing-file exit status. Switching JSON reads
+to the shell protocol fixed the runner; the complete matrix above ran fresh.
+Failed build/attempt evidence was retained. No production storage defect was
+observed in these attempts.
+
+The original **496EC9BB** Maestro APK and saved room remained byte-identical.
+After archiving all synthetic evidence, the owned diagnostic package was removed.
+The headset still needs tracking recovery before the regular VR/performance tests.
+This covers Android termination at transaction milestones; it does **not** cover
+interruption during a byte write/fsync, physical power loss, full disk, prolonged
+write stress, or the normal book's error/recovery interaction.
+
+### Reproduce the isolated Android check
+
+First run the normal `Verify-Quest.ps1` to synchronize and verify the owned mirror.
+Then use PowerShell 7 and Python 3:
+
+```powershell
+./unity/Tools/Build-QuestAndroidStorageProbe.ps1 `
+  -Editor 'D:/Tools/Unity/6000.3.24f1/Editor/Unity.exe' `
+  -BuildMirror 'D:/Projects/Builds/MaestroQuestVerify' `
+  -AndroidSdk 'C:/Users/ronit/AppData/Local/Android/Sdk' `
+  -AndroidJdk 'C:/Program Files/Eclipse Adoptium/jdk-17.0.16.8-hotspot'
+
+./unity/Tools/Audit-QuestAndroidStorageProbe.ps1 `
+  -Receipt '<reported-evidence-directory>/build-receipt.json' `
+  -AndroidSdk 'C:/Users/ronit/AppData/Local/Android/Sdk' `
+  -AndroidJdk 'C:/Program Files/Eclipse Adoptium/jdk-17.0.16.8-hotspot'
+
+python ./unity/Tools/test-quest-android-storage.py `
+  --adb 'C:/Users/ronit/AppData/Local/Android/Sdk/platform-tools/adb.exe' `
+  --serial '<connected-Quest-serial>' `
+  --audit '<reported-evidence-directory>/audit.json'
+```
+
+The runner uses ADB port **5041**, installs only the audited diagnostic identity,
+refuses to replace a different installed diagnostic APK, retains every case and
+stops only its own package. It leaves that package stopped for inspection/repeat
+runs; after retaining evidence it may be removed with `adb -P 5041 -s <serial>
+uninstall com.maestro.quest.storageprobe`. Never use the production package name
+in that cleanup command. No paid/provider call, release signing, deployment or
+Store submission is part of this procedure.

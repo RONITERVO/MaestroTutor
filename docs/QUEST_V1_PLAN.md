@@ -2,12 +2,13 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
-The current installed checkpoint and authoritative test/device results are in
-[device QA](QUEST_DEVICE_QA.md). Checkpoint **CB3309AB** fixes returning from
-Behaviours to Objects when selection is empty or removed. Actual Quest book checks
-passed for empty, valid and discarded selections, with saved room bytes and avatar
-retained. Full native, web, Android and package verification passed. Earlier
-3FB9A8AF startup/cancellation checks remain recorded in device QA.
+The current installed development checkpoint is **496EC9BB**, with browser-frame
+copy gating and earlier navigation/interaction fixes. Authoritative package and
+device results are in [device QA](QUEST_DEVICE_QA.md). Its controlled performance
+comparison awaits restored Quest tracking. A separate, removed Android diagnostic
+now verifies 13 paired-storage transaction-boundary crash cases with 15 forced
+terminations, using unchanged production IL2CPP code and synthetic data. This does
+not establish full-disk, mid-byte-write or normal book recovery acceptance.
 
 A ten-minute workload on 3FB9A8AF kept included Maestro and recipe-robot
 animations cycling while scanned-room physics ran with 32 construction bricks.

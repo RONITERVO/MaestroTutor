@@ -126,7 +126,7 @@ feature backlog or permission to use credentials, deploy or submit.
 | Account and managed AI | Shared book, browser pairing and Meta-to-App-Check endpoints; offline/native tests. Endpoints disabled/undeployed. | Matching Firebase registrations and certificate, actual ingress config, authorized deployment, real Store-channel entitlement/integrity and account round trip. |
 | Purchase model | Quest checkout hidden and refused by client/server; existing prepaid credit balances remain shared. BYOK remains available. No Meta commerce integration. | Resolve eligibility for the actual prepaid-credit/BYOK and interactive model using the [prepared Meta review request](QUEST_MANAGED_ACCESS.md#purchase-model-decision-and-prepared-meta-request-2026-10-05), then implement and verify any required payment changes. |
 | Familiar book and provider parity | Original components, desktop chat-to-native journeys with scripted responses, and on-device book texture/page input/field focus checks. | Human virtual-key selection, microphone, Live, artifacts, interruption/recovery and managed/BYOK tests with real providers. |
-| Physical play and resource limits | Automated native suites and current Quest controller/hand grip, Recall, chalk/ink, measured packing and submerged-vessel checks; earlier user-confirmed basics. | Remaining interactions/room-scan alignment, Android interrupted-write/low-disk/prolonged save stress and sustained performance/comfort on supported hardware. Desktop transaction-boundary recovery now has a [13-case forced-termination matrix](QUEST_DEVICE_QA.md#reproducible-process-termination-storage-probe). Completed-save recovery now has [three device restarts](QUEST_DEVICE_QA.md#saved-room-and-action-history-across-restart--2026-10-05). The ten-minute animated 32-brick development workload averaged 70.96 FPS at 72 Hz and did not pass steady 72 FPS; see the [workload and separate CPU trace](QUEST_DEVICE_QA.md#ten-minute-animated-workload-and-cpu-trace--2026-10-05). |
+| Physical play and resource limits | Automated native suites and current Quest controller/hand grip, Recall, chalk/ink, measured packing and submerged-vessel checks; earlier user-confirmed basics. | Remaining interactions/room-scan alignment, Android mid-byte-write/low-disk/prolonged save stress and sustained performance/comfort on supported hardware. Transaction-boundary recovery has both the [desktop matrix](QUEST_DEVICE_QA.md#reproducible-process-termination-storage-probe) and a [13-case / 15-kill Android diagnostic](QUEST_DEVICE_QA.md#android-process-termination-storage-probe--2026-10-05). Completed-save recovery now has [three device restarts](QUEST_DEVICE_QA.md#saved-room-and-action-history-across-restart--2026-10-05). The ten-minute animated 32-brick development workload averaged 70.96 FPS at 72 Hz and did not pass steady 72 FPS; see the [workload and separate CPU trace](QUEST_DEVICE_QA.md#ten-minute-animated-workload-and-cpu-trace--2026-10-05). |
 | Audience and data | Owner chose 18+; book self-confirmation, prepared privacy/data map and local/cloud deletion paths. | Truthful Store audience/IARC setup, provider eligibility, published privacy/support/deletion details and actual deletion/consent QA. |
 | Content and listing | Included avatar/motion/template inventories and provenance checks. | Final content acceptance, real-app screenshots/store metadata, dashboard review and authorized submission. |
 
@@ -327,3 +327,20 @@ power-loss acceptance. The device save-refusal attempt did not reach the app whi
 the Guardian tracking prompt remained present; no test edit or obstruction was
 applied. See [procedure, evidence and limits](QUEST_DEVICE_QA.md#reproducible-process-termination-storage-probe).
 The installed frame-copy checkpoint and remaining release gates are unchanged.
+
+
+## Android storage diagnostic evidence (2026-10-05)
+
+A separate ARM64 development diagnostic passed 13 transaction-boundary crash
+cases with 15 SIGKILL terminations on Quest 3 under Unity IL2CPP. Production
+runtime sources matched all 709 recorded inputs. Exact recovered room/memory
+bytes, numeric values, backups, retired journals and repeat Capture passed;
+rollback and roll-forward also survived interruption during recovery itself.
+The diagnostic had its own package/data and no network or VR requirement.
+Its installed hash was verified, synthetic evidence archived, and the package
+removed. The actual Maestro APK/room remained unchanged.
+
+This closes Android transaction-boundary evidence for the paired storage kernel,
+not mid-byte-write/full-disk/power-loss testing, sustained save stress, or the
+normal book recovery UX. The installed **496EC9BB** development checkpoint and
+other release gates are unchanged. [Procedure and retained evidence](QUEST_DEVICE_QA.md#android-process-termination-storage-probe--2026-10-05).
