@@ -3,18 +3,21 @@
 Status: active implementation. Nothing in this document claims store readiness.
 
 The current installed checkpoint and authoritative test/device results are in
-[device QA](QUEST_DEVICE_QA.md). Installed checkpoint 6A7C780E also avoids copying
-hidden recipe arguments into periodic receipt summaries. Full native, web,
-Android and package verification passed. The busy-room development measurement
-was 71.18 FPS paused / 70.89 FPS with physics at 72 Hz; sustained performance
-acceptance remains open. Those construction windows include robot geometry,
-but do not establish continuously animated workload performance (the helper
-requested its two-second clip). Three process restarts on the same package now
-verify completed saves, temporary-edit discard, exact ink/anchor recovery and
-interrupted actions staying stopped. Cleanup restored the original saved room
-byte for byte. Mid-write/low-disk stress and early workshop-opening usability
-remain open. The checkpoint narratives
-below retain their historical scope; they are not new acceptance claims.
+[device QA](QUEST_DEVICE_QA.md). Checkpoint **3FB9A8AF** fixes early workshop
+opening across native startup. Three single-command cold launches (one with an
+observed session replacement) and a cancellation/reopen check passed on Quest 3;
+Back to chat stayed effective and the saved room remained byte-identical. Full
+native, web, Android and package verification passed.
+
+Earlier checkpoint 6A7C780E also avoids copying hidden recipe arguments into
+periodic receipt summaries. Its busy-room development measurement was 71.18 FPS
+paused / 70.89 FPS with physics at 72 Hz; sustained performance acceptance remains
+open. Those windows include robot geometry but do not establish continuously
+animated workload performance (the helper requested its two-second clip). Three
+restarts on that package verified completed saves, temporary-edit discard, exact
+ink/anchor recovery and interrupted actions staying stopped. Mid-write/low-disk
+stress remains open. The checkpoint narratives below retain their historical scope;
+they are not new acceptance claims.
 
 On-device verification resumed on 2026-10-05. Controller tests exposed and fixed
 book-page/tray-button colliders blocking their movable owner. Development build

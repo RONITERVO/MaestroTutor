@@ -266,3 +266,16 @@ startup opening remains a usability follow-up. See [device QA](QUEST_DEVICE_QA.m
 Earlier construction performance windows included the robot geometry but only
 requested its two-second saved clip. They do not demonstrate continuously animated
 workload performance; see the [benchmark correction](QUEST_DEVICE_QA.md#workload-animation-correction--2026-10-05).
+
+
+## Workshop startup checkpoint (2026-10-05)
+
+`MaestroQuest-workshop-startup-3FB9A8AF.apk` is the current installed development checkpoint.
+It retains a workshop-open request through initial native room binding, while
+navigation cancellation and mutation session guards remain intact. Three single-open
+cold launches and a fourth cancellation/reopen check passed on Quest 3. Full
+native, book/web, Android and package audits passed; the original saved room
+remained byte-identical. Exact package identity, test counts and evidence limits
+are in [device QA](QUEST_DEVICE_QA.md#workshop-opening-during-native-startup--2026-10-05).
+The earlier performance measurements were not repeated for this navigation change.
+All production access, provider, signing and Store gates above remain open.

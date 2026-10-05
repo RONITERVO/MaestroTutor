@@ -2647,3 +2647,57 @@ not cover killing an in-flight file publication, storage exhaustion, prolonged
 write stress, real-provider parity, actual ink contact/alignment or user comfort.
 No real provider call, paid generation, app-data reset, deployment, release signing
 or Store submission occurred.
+
+
+## Workshop opening during native startup — 2026-10-05
+
+The book now retains an explicit workshop-open request while the initial native
+maintenance session is replaced by the loaded room. Opening settles when the
+native view is visible and contains the book. Only visibility intent crosses
+that handoff: object edits retain the original room lease and are never replayed.
+Conversation navigation, a later library choice, Back to chat and suspension
+cancel the intent. Refusals/timeouts stop it; it is not a background retry loop.
+A late open acknowledgement after conversation navigation is closed without
+hiding chat again.
+
+Three focused cases failed against the previous implementation. The correction
+passes **225 Quest web tests in 24 files**, including 12 new navigation regressions,
+plus TypeScript and focused lint. Full packaging passed **837 EditMode / 644
+PlayMode tests** (three optional private-model skips), **475 native-room / 72
+original-book observations** with scripted offline providers, production web,
+Android lint and **76 Android tests** (two optional skips). The final audit matched
+**3,018 frozen inputs**, native sources/metas, AAR, **147 web files**, the included
+avatar / 178 motions / 26 templates / 7 modules, ARM64-only libraries, development
+manifest, v2 signature and 16 KiB alignment. The catalog remains 93 actions / 102
+facts / 16 events with 302 checked sources.
+
+Development APK `MaestroQuest-workshop-startup-3FB9A8AF.apk` is 188,185,167
+bytes, SHA-256
+`3FB9A8AFC83FFF7E1951C46480EA2B603FD7890C990BA28B0640B99BA3A89FC9`.
+It was installed in place on Quest 3 and its installed hash matched. The owner's
+18+ confirmation was completed as authorized on each launch.
+
+Three cold launches each received exactly **one** `workspace.open` command as
+soon as the real book bridge became available, without the previous helper's
+retry workaround or injected native state. All opened the five original objects
+and returned to chat through the visible Back to chat control. The second run
+observed a real native session replacement between its initial snapshot and the
+ready workshop. The fourth launch immediately chose the latest conversation
+page after opening: chat remained visible through the late acknowledgement and
+for the 15-second observation window. A later, explicit open still worked.
+Device WebView screenshots were inspected; no browser script errors occurred.
+This resolves the early-opening follow-up recorded in the preceding section.
+
+Private/external app backups and all local traces remain under
+`.quest-evidence/workshop-startup-20261005/`. The original `room.v20.json` retained
+all five definitions **byte for byte**, SHA-256
+`1d1551b164ae44a1db16b81d0d8bd4ed7eee1187de65d45d65ee8d6668c25e93`.
+The app is stopped, the owned test forward removed and original debug properties
+restored. Battery was 34%, charging, at cleanup. All ten unrelated dirty files
+retain their exact hashes.
+
+These are real-device book/navigation checks, not a new physical-input, 3D visual,
+comfort or sustained-performance acceptance. The previous 6A7C780E performance
+and save-recovery measurements remain historical evidence for that checkpoint.
+No real provider call, paid generation, app-data reset, deployment, release signing
+or Store submission occurred. The other release gates remain open.

@@ -10,6 +10,7 @@ import { selectIsAgentWorking, selectIsListening, selectIsSending, selectIsSpeak
 import './questBook.css';
 import { LibraryBookClient } from './libraryBookBridge';
 import { RoomAgentClient } from './roomAgentBridge';
+import { useWorkspaceNavigation } from './useWorkspaceNavigation';
 import { RoomWorkspace } from './RoomWorkspace';
 import { LibraryBookView } from './LibraryBookView';
 import { sessionActivity } from '../browser/sessionActivity';
@@ -22,21 +23,21 @@ export function QuestBookSurface({ children }: React.PropsWithChildren) {
   const [room] = useState(() => new RoomAgentClient());
   const roomView = useSyncExternalStore(room.subscribe,room.getSnapshot);
   const workspaceOpen = roomView.state?.visible ?? false;
+  const {request:requestWorkspace,suppressOpen}=useWorkspaceNavigation(room,roomView);
   const [library] = useState(() => new LibraryBookClient());
   const libraryOpen = useSyncExternalStore(library.subscribe, library.getSnapshot).state?.visible ?? false;
   const [overlay,setOverlay] = useState<'library'|'workspace'|null>(null);
   const previousOpen=useRef({library:false,workspace:false});
   useEffect(()=>{
     const previous=previousOpen.current;
-    if(workspaceOpen&&!previous.workspace)setOverlay('workspace');
-    else if(libraryOpen&&!previous.library)setOverlay('library');
+    if(libraryOpen&&!previous.library){requestWorkspace(false);setOverlay('library');}
+    else if(workspaceOpen&&!previous.workspace&&!suppressOpen)setOverlay('workspace');
     else if(overlay==='workspace'&&!workspaceOpen||overlay==='library'&&!libraryOpen)setOverlay(null);
     previousOpen.current={library:libraryOpen,workspace:workspaceOpen};
-  },[libraryOpen,workspaceOpen,overlay]);
+  },[libraryOpen,workspaceOpen,overlay,suppressOpen,requestWorkspace]);
   useEffect(()=>{
     if(overlay==='workspace'&&libraryOpen)library.close();
-    if(overlay==='library'&&workspaceOpen&&!roomView.pending)void room.request([{action:'workspace',visible:false}]).catch(()=>{});
-  },[overlay,libraryOpen,workspaceOpen,roomView.pending,library,room]);
+  },[overlay,libraryOpen,library]);
   const spreadRoot = useRef<HTMLDivElement>(null);
   const [earlierPageTarget, setEarlierPageTarget] = useState<HTMLDivElement | null>(null);
   useEffect(() => { try { window.localStorage.setItem(BOOK_LAYOUT_STORAGE_KEY, layout); } catch { /* Session choice still works if storage is unavailable. */ } }, [layout]);
@@ -68,9 +69,9 @@ export function QuestBookSurface({ children }: React.PropsWithChildren) {
   const presentation = useMemo(() => ({ layout, spreadRoot, earlierPageTarget, earlierMessageIds, visibleMessageIds, historyPageKey, isLatestPage: page.isLatest, selectedId: selected?.id ?? null, selectArtifact: setSelectedId, posters }), [layout, earlierPageTarget, earlierMessageIds, selected?.id, posters, visibleMessageIds, historyPageKey, page.isLatest]);
   const command = (value: BookCommand) => {
     if (value.type !== 'session.resume') library.close();
-    if (value.type !== 'session.resume' && value.type !== 'workspace.open' && workspaceOpen) void room.request([{action:'workspace',visible:false}]).catch(()=>{});
+    if (value.type !== 'session.resume' && value.type !== 'workspace.open') {requestWorkspace(false);setOverlay(null);}
     switch (value.type) {
-      case 'workspace.open': setOverlay('workspace'); void room.request([{action:'workspace',visible:true}]).catch(()=>{}); break;
+      case 'workspace.open': requestWorkspace(true); if(workspaceOpen)setOverlay('workspace'); break;
       case 'session.resume': sessionActivity.resume(); break;
       case 'layout.set': setLayout(value.layout); break;
       case 'history.step':
