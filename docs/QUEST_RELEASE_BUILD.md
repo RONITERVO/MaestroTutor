@@ -125,8 +125,8 @@ feature backlog or permission to use credentials, deploy or submit.
 | Reproducible package | Audited ARM64 development APK; release profile/signing pipeline with offline refusal tests. | Owner's real public profile, backed-up release key, authorized signing and audited signed candidate. |
 | Account and managed AI | Shared book, browser pairing and Meta-to-App-Check endpoints; offline/native tests. Endpoints disabled/undeployed. | Matching Firebase registrations and certificate, actual ingress config, authorized deployment, real Store-channel entitlement/integrity and account round trip. |
 | Purchase model | Quest checkout hidden and refused by client/server; existing prepaid credit balances remain shared. BYOK remains available. No Meta commerce integration. | Resolve eligibility for the actual prepaid-credit/BYOK and interactive model using the [prepared Meta review request](QUEST_MANAGED_ACCESS.md#purchase-model-decision-and-prepared-meta-request-2026-10-05), then implement and verify any required payment changes. |
-| Familiar book and provider parity | Original components and real desktop chat-to-native journey with scripted provider responses. | Current Quest texture, keyboard, microphone, Live, artifacts, interruption/recovery and managed/BYOK tests with real providers. |
-| Physical play and resource limits | Automated room/physics/material/creation tests plus earlier user-confirmed headset basics. | Current APK hands/controllers, room scans, representative busy rooms, save stress and sustained performance/comfort on supported hardware. |
+| Familiar book and provider parity | Original components, desktop chat-to-native journeys with scripted responses, and on-device book texture/page input/field focus checks. | Human virtual-key selection, microphone, Live, artifacts, interruption/recovery and managed/BYOK tests with real providers. |
+| Physical play and resource limits | Automated native suites and current Quest controller/hand grip, Recall, chalk/ink, measured packing and submerged-vessel checks; earlier user-confirmed basics. | Remaining interactions/room-scan alignment, busy rooms, save stress and sustained performance/comfort on supported hardware. |
 | Audience and data | Owner chose 18+; book self-confirmation, prepared privacy/data map and local/cloud deletion paths. | Truthful Store audience/IARC setup, provider eligibility, published privacy/support/deletion details and actual deletion/consent QA. |
 | Content and listing | Included avatar/motion/template inventories and provenance checks. | Final content acceptance, real-app screenshots/store metadata, dashboard review and authorized submission. |
 
@@ -180,7 +180,7 @@ comfort or virtual-key placement/selection. Exact evidence and cleanup are in
 
 ## Fingertip contact checkpoint (2026-10-05)
 
-Current installed development APK: `MaestroQuest-hand-contact-F4A5B4B4.apk`,
+Development APK at this checkpoint: `MaestroQuest-hand-contact-F4A5B4B4.apk`,
 SHA-256 `F4A5B4B478D6B7FF7EDFCCE62BCF0FD405BB7759E275011960A124757A652473`.
 It fixes distant page/button hover canceling physical fingertip packing/sculpting.
 831 EditMode / 639 PlayMode tests, both integration journeys and the complete
@@ -189,3 +189,19 @@ confirmed contact, one measured ball on lift, and exact physical Undo/Redo.
 A separate post-Recall placement error remains open in this checkpoint; see
 [the device result](QUEST_DEVICE_QA.md#post-fix-package-and-device-result).
 This is development-signed, not Store/provider/performance acceptance.
+
+
+## Post-Recall packing checkpoint (2026-10-05)
+
+Current installed development APK: `MaestroQuest-recalled-packing-11B4972E.apk` (188,154,895 bytes),
+SHA-256 `11B4972E0DA36A1DDA7ACEBFC3D29F0831CEC63B4D32BEFD09BD3A1BE8A56B1B`.
+Physical packing now converts between world contact/clearance and saved room-local
+placement. It uses the existing shared operation and storage format. 831 EditMode /
+641 PlayMode tests, 189 targeted catalog/book tests, both integration journeys and
+the complete web/Android/source/content/signature/alignment audit passed. On Quest,
+the packed sphere exactly matched its preview after Recall; material conservation
+and physical Undo/Redo passed. Installed-package bytes matched the audit.
+See [device evidence](QUEST_DEVICE_QA.md#recalled-material-packing-placement--2026-10-05).
+The development package contains both hand-hover and Recall fixes. Production
+services, real-provider acceptance, human comfort/performance and Store gates
+remain open.

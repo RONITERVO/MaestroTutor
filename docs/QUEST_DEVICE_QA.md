@@ -1,7 +1,8 @@
 # Quest 3 development verification — updated 2026-10-05
 
-Current installed development checkpoint: **0EC7EC29**, including the grip and
-submerged-vessel fixes below. Full Store/provider/comfort acceptance remains open.
+Current installed development checkpoint: **11B4972E**, including the grip,
+submerged-vessel, fingertip-hover and post-Recall packing fixes below.
+Full Store/provider/comfort acceptance remains open.
 
 ## On-device automation resumed — 2026-10-05
 
@@ -2274,3 +2275,44 @@ correct post-Recall packing placement. Correction and regression checks follow.
 Temporary content was discarded, original IDs and tool settings restored, and
 synthetic input/debug/proximity overrides released. Detailed assertions are in
 `.quest-evidence/held-tools-20261005/post-fix-acceptance.json`.
+
+
+## Recalled material packing placement — 2026-10-05
+
+The physical gesture now converts its world-space contact/preview position into
+room-local coordinates before invoking the shared packing evaluator. Publication
+and retry transform the saved candidate back into world space for obstruction
+checks. The shared capture fact explicitly describes its position as room-local.
+No second packing implementation or saved-data format is introduced.
+
+Two focused tests first reproduced the error with a room translated by (3, 0.4,
+-2) m and rotated 63 degrees, then passed after the correction. They cover the
+preview/published position, exact source loss, physical Undo/Redo placement, an
+obstruction arriving before publication, retained drafts and explicit retry after
+the obstruction is removed. The 189 targeted shared-catalog/book tests also pass.
+Full verification passed **831 EditMode / 641 PlayMode tests** (three optional
+private-model skips), **474 native-room / 74 original-book observations**, the
+production web build, Android lint and **76 Android tests** (two optional skips).
+The audit matched all **3,006 frozen inputs**, source/metas, 147 packaged web files,
+included content, ARM64 libraries, the development manifest, v2 signing and
+16 KiB alignment. APK: `MaestroQuest-recalled-packing-11B4972E.apk` (188,154,895 bytes),
+SHA-256 `11B4972E0DA36A1DDA7ACEBFC3D29F0831CEC63B4D32BEFD09BD3A1BE8A56B1B`.
+It was installed in place and its device APK hash matched the audited package.
+
+On Quest, actual controller B/Recall moved the room origin about 70.2 mm upward.
+The book moved the temporary snow field clear through `object.layout.apply`.
+Tracked-hand fingertip contact kept the saved field unchanged during the preview;
+lift created one ball. The unique `Recipe geometry/packed` transform exactly
+matched the recorded world preview (0.0 m difference), and the room-local capture
+fact independently transformed to that same position. The source lost
+0.24999905144795773 local litre, matching the ball's store. Physical hand-pinch Undo
+restored the source and removed the ball; Redo restored its exact identity and
+quantity. The initial test command was retried after the freshly opened book was
+ready; no application error was found in the inspected startup log.
+
+Original room IDs and tool preferences were restored; synthetic input, test
+forwards and debug/proximity overrides were released. Evidence remains local in
+`.quest-evidence/recalled-packing-20261005/`, including the before/after regression
+reports, package audit and `device-acceptance.json`. These are automated device
+input/transform observations, not human ergonomics, real-provider or sustained
+performance acceptance.

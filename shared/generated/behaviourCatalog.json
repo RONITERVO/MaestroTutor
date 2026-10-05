@@ -29825,7 +29825,7 @@
         }
       },
       "label": "Physical material packing draft",
-      "description": "Frozen preview amount/ball position and exact capture session. Use object.field.capture.path for its single local footprint and object.field.resolve for explicit Retry/Discard. lastSaved records the most recent successful physical packing in this live room, not current existence: Undo/deletion may remove that ball. Explicit object.material.pack calls do not set this physical observation. Reads have no effect.",
+      "description": "Frozen preview amount and room-local ball position and exact capture session. Use object.field.capture.path for its single local footprint and object.field.resolve for explicit Retry/Discard. lastSaved records the most recent successful physical packing in this live room, not current existence: Undo/deletion may remove that ball. Explicit object.material.pack calls do not set this physical observation. Reads have no effect.",
       "features": [
         "physicalMaterialPacking.v1"
       ]
@@ -33814,7 +33814,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SpatialSculpting.Packing.cs",
-      "sha256": "e77a4c494a6eca90087f7b5ee884c5fe0fa67fb1c2e147eafea913fff0b1bc16"
+      "sha256": "52445a42ee48c2fb706fe57a24492086f8f21ff4b17c641e50edda900db3921a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomMaterialScoop.cs",
@@ -34274,7 +34274,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/MaterialPackToolCapability.cs",
-      "sha256": "346578cba659197171f5d24f6723d954b78671ec59870a0468ae822cc47bb83f"
+      "sha256": "486930f2f4fa118be503ff07fcfb971989d8be0bd883104bb748edb29bd8b5c8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/MaterialScoopFacts.cs",

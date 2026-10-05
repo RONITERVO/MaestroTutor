@@ -167,7 +167,10 @@ both sides atomically with one Undo. The ball is an ordinary prop: grab/release,
 throw, gravity and animation apply. It is not automatically attached to a hand or
 launched. The gesture does not claim finger deformation or compaction physics.
 
-`material.pack.capture` exposes the frozen amount, position, session and phase.
+`material.pack.capture` exposes the frozen amount, room-local position, session and phase.
+Physical contact, the preview and obstruction checks use world coordinates; saved
+ball placement uses the editor's room coordinates, including after Recall moves
+or rotates the room.
 The shared `object.field.capture.path` gives its single local contact point.
 Tracking/focus loss, ownership interruption or a failed save retains the draft;
 `object.field.resolve` retries/discards that exact session. Retry requires the

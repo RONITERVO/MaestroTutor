@@ -40,12 +40,12 @@ namespace Maestro.Quest.Creation {
             if(!Editor.Ownership.TryAcquire("sculpt:"+SessionId,"Your material packing tool",role,new[]{new BehaviourCatalog.Claim(target,"wholeTarget")},_=>Finish(false),out lease,out error,preservePlacement:true)||!Unchanged(out error)){Editor.ReportStatus(error);Clear();return;}
             var item=Editor.Find(at);var view=item.GetComponent<HeightFieldView>();
             packingPosition=item.transform.position;packingRotation=item.transform.rotation;packingScale=item.transform.lossyScale;
-            // Derive the preview and accepted ball from the ordinary packing evaluator.
+            // Physical contact/clearance use world space; the shared evaluator saves room-local poses.
             var position=view.Surface.TransformPoint(new Vector3(point.x,source.HeightAt(point),point.y));
-            packingArgs=new JObject{["source"]=new JObject{["target"]=at,["revision"]=Editor.ObjectRevision(at),["centre"]=new JObject{["x"]=point.x,["z"]=point.y},["radius"]=radius},["amountLitres"]=PackingLitres,["mass"]=PackingMass,["name"]="Packed "+source.material,["position"]=JObject.Parse(JsonUtility.ToJson(position))};
+            packingArgs=new JObject{["source"]=new JObject{["target"]=at,["revision"]=Editor.ObjectRevision(at),["centre"]=new JObject{["x"]=point.x,["z"]=point.y},["radius"]=radius},["amountLitres"]=PackingLitres,["mass"]=PackingMass,["name"]="Packed "+source.material,["position"]=JObject.Parse(JsonUtility.ToJson(Editor.transform.InverseTransformPoint(position)))};
             if(!Editor.PrepareMaterialPack(packingArgs,out var field,out var ball,out packingAmount,out error)){Editor.ReportStatus(error);Clear();return;}
             float ballRadius=ball.recipe.parts[0].size.x/2;
-            position+=view.Surface.up*(ballRadius+.025f);packingArgs["position"]=JObject.Parse(JsonUtility.ToJson(position));
+            position+=view.Surface.up*(ballRadius+.025f);packingArgs["position"]=JObject.Parse(JsonUtility.ToJson(Editor.transform.InverseTransformPoint(position)));
             if(!Editor.PrepareMaterialPack(packingArgs,out _,out _,out _,out error)||!PackingSpaceClear(position,ballRadius,out error)){Editor.ReportStatus(error);Clear();return;}
             draft=field.heightFields[0].Copy();owner=id;points.Clear();points.Add(point);errorText="";
             packingPreview=GameObject.CreatePrimitive(PrimitiveType.Sphere);packingPreview.name="Material packing preview (unsaved)";
@@ -69,7 +69,7 @@ namespace Maestro.Quest.Creation {
             var args=(JObject)packingArgs.DeepClone();args["source"]["revision"]=Editor.ObjectRevision(target);
             if(!Editor.PrepareMaterialPack(args,out var field,out var ball,out var amount,out error))return false;
             if(amount!=packingAmount||!field.heightFields[0].heights.SequenceEqual(draft.heights)){error="The packing result changed; discard this draft";return false;}
-            return PackingSpaceClear(ball.position,ball.recipe.parts[0].size.x/2,out error);
+            return PackingSpaceClear(Editor.transform.TransformPoint(ball.position),ball.recipe.parts[0].size.x/2,out error);
         }
         bool CommitPacking(out int changed,out string error){
             changed=0;if(!PreparePacking(out error))return false;
