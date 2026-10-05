@@ -1,5 +1,8 @@
 # Quest 3 development verification — updated 2026-10-05
 
+Current installed development checkpoint: **0EC7EC29**, including the grip and
+submerged-vessel fixes below. Full Store/provider/comfort acceptance remains open.
+
 ## On-device automation resumed — 2026-10-05
 
 The owner reconnected Quest 3 and authorized testing. This supersedes the earlier
@@ -77,9 +80,42 @@ checks, not ergonomic/hand-comfort acceptance. Raw evidence stays local and igno
 A temporary pool/bucket trial filled the held bucket. A full, slightly tilted
 submerged bucket then repeatedly spilled/refilled, so this trial does not close
 liquid conservation acceptance. The original room was restored and physics/input
-released. This is a separate shared-simulation follow-up.
+released. The shared-simulation follow-up is resolved by the next checkpoint below.
 
-## Rectangular pool and vessel dipping (headset acceptance pending)
+## Submerged vessel stability — 2026-10-05
+
+A small tilt in a full submerged bucket produced repeated spill/refill below the
+reservoir's surface. The controlled regression reproduced the loss. Pouring now
+uses the same bounded immersion/clear-path proof as scooping, including for full
+vessels, and resumes after lifting. No storage format or new tool is introduced.
+The regression checks conserved submerged quantities, normal pouring back after
+lifting, and ordinary uncollected spill outside the reservoir.
+
+Development checkpoint `MaestroQuest-submerged-vessel-0EC7EC29.apk` (188,152,667
+bytes), SHA-256 `0EC7EC2971037FC1CDC3FBC3EC2321196F6DF31EC1A4FB665F0CB701339BCBAD`,
+was audited and installed. Checks passed: 831 EditMode / 637 PlayMode tests (three
+optional private-model skips), both native-room and original-book journeys,
+production web, Android lint and 76 Android tests (two optional skips). The audit
+matched 3,002 frozen inputs, 147 web files, all included avatar/motion/template
+content, ARM64, development manifest, v2 signing and 16 KiB alignment.
+
+On Quest 3, the original book created a fresh temporary pool and bucket, loaded
+the saved scan and started physics. Actual controller grip moved the bucket into
+the pool. Readbacks showed exactly 2,000 mL received and 2,000 mL removed, with zero
+difference. A later reading while still submerged remained identical, covering
+stability after the flow episode had published. Lifting retained selection and
+read back 1,999.977 mL in the bucket (0.023 mL less than the pool's total loss);
+this does not close all pouring/obstruction acceptance. No AI provider was used.
+
+Physics was paused, simulated input released, temporary content discarded and
+all three original creation IDs verified in the restored book Workshop. The book
+returned to the original chat after the authorized adult confirmation. This local
+book has no configured AI access, so real-provider acceptance remains separate.
+Temporary experimental/capture properties were restored, owned ADB forwards
+removed and the proximity override removed. Device evidence remains ignored in
+`.quest-evidence/submerged-vessel-20261005/`.
+
+## Rectangular pool and vessel dipping (partial headset acceptance)
 
 Create Shallow pool and Bucket in a clear reachable scanned area. Use the original
 chat or optional book editor to inspect their exact contents, then start physics.

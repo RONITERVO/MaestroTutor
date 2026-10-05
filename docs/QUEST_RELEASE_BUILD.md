@@ -160,3 +160,13 @@ read-only development input diagnostics. Exact package identity, full checks,
 actual controller/page acceptance and the separate liquid follow-up are recorded
 in [device QA](QUEST_DEVICE_QA.md#gripping-through-book-pages-and-tray-buttons--2026-10-05).
 No release signing, provider acceptance, deployment or Store upload is implied.
+
+## Submerged vessel checkpoint (2026-10-05)
+
+`MaestroQuest-submerged-vessel-0EC7EC29.apk` is the current installed development
+checkpoint. It includes the grip fix and prevents a full, tilted submerged vessel
+from repeatedly spilling/refilling. Full checks passed (831 EditMode / 637
+PlayMode, native/book journeys, web and Android), and the headset trial verified
+stable 2,000 mL transfer through actual controller input. Exact package identity,
+cleanup and remaining acceptance limits are in
+[device QA](QUEST_DEVICE_QA.md#submerged-vessel-stability--2026-10-05).

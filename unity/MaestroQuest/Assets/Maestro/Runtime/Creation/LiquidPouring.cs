@@ -52,7 +52,7 @@ namespace Maestro.Quest.Creation {
                 if(v.Stream)v.Stream.enabled=false;
                 if(!v.Ready||v.Live.amountMl<=0)continue;
                 double excess=ContainerFlowGeometry.Excess(v.Live,v.Item.transform.rotation,up);
-                double requested=Math.Min(excess,v.Live.capacityMl*.75*seconds*Math.Sqrt(excess/v.Live.capacityMl));if(requested<.000001)continue;
+                double requested=Math.Min(excess,v.Live.capacityMl*.75*seconds*Math.Sqrt(excess/v.Live.capacityMl));if(requested<.000001||Immersed(v,up))continue;
                 var origin=ContainerFlowGeometry.Lip(v.Live,v.Item.transform,up,out var outward);if(!physics.CanSimulate(origin))continue;var velocity=outward*.15f;
                 var body=v.Body;if(body&&!body.isKinematic)velocity+=Vector3.ClampMagnitude(body.GetPointVelocity(origin),3);
                 if(!Trace(v,origin,velocity,gravity,up,out var receiver,out int count))continue;
@@ -90,6 +90,16 @@ namespace Maestro.Quest.Creation {
         // events must retain the old identity. Publish first and retry geometry
         // next tick; a failed publication rolls back and blocks all further flow.
         bool ChangesEpisodeIdentity(Vessel source,Vessel receiver)=>Owns(receiver.Id)&&receiver.Live.amountMl==0&&(source.Live.liquid!=receiver.Live.liquid||!source.Live.color.Equals(receiver.Live.color));
+        bool Immersed(Vessel vessel,Vector3 up){
+            // An immersed full bucket must not endlessly pour below the reservoir's
+            // surface and refill. Reuse the same bounded, unobstructed cavity proof;
+            // lifting restores normal gravity-driven pouring on the next tick.
+            foreach(var reservoir in vessels.Values){
+                if(reservoir==vessel||!reservoir.Ready)continue;
+                if(ContainerScoopingGeometry.TryImmersion(reservoir.Live,reservoir.Item.transform,vessel.Live,vessel.Item.transform,up,out var contact)&&ClearScoopPath(contact))return true;
+            }
+            return false;
+        }
         bool ClearScoopPath(ContainerScoopingGeometry.Contact contact){
             for(int sample=0;sample<5;sample++){
                 if(!contact.Path(sample,out var from,out var to)||!world.CanSimulate(from)||!world.CanSimulate(to))continue;

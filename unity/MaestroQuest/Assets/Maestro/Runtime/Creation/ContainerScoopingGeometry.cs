@@ -29,7 +29,12 @@ namespace Maestro.Quest.Creation {
         }
         internal static bool TryContact(RoomContainer source,Transform sourceRoot,RoomContainer destination,Transform destinationRoot,Vector3 up,out Contact contact){
             contact=default;
-            if(source==null||destination==null||!sourceRoot||!destinationRoot||source.amountMl<=0||destination.amountMl>=destination.capacityMl)return false;
+            return destination!=null&&destination.amountMl<destination.capacityMl&&TryImmersion(source,sourceRoot,destination,destinationRoot,up,out contact);
+        }
+        // Full vessels still have an immersion relationship even though they cannot take more.
+        internal static bool TryImmersion(RoomContainer source,Transform sourceRoot,RoomContainer destination,Transform destinationRoot,Vector3 up,out Contact contact){
+            contact=default;
+            if(source==null||destination==null||!sourceRoot||!destinationRoot||source.amountMl<=0)return false;
             if(destination.amountMl>0&&(source.liquid!=destination.liquid||!source.color.Equals(destination.color)))return false;
             var sourceRotation=sourceRoot.rotation*source.frame.rotation;var destinationRotation=destinationRoot.rotation*destination.frame.rotation;
             if(Vector3.Dot(sourceRotation*Vector3.up,up)<.15f||Vector3.Dot(destinationRotation*Vector3.up,up)<.15f)return false;

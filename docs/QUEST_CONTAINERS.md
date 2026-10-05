@@ -145,6 +145,15 @@ receivers have the same intake limit and never exceed capacity. When several
 donors qualify, the smallest containing donor wins, with stable object-ID order
 for ties and receiver contention. This is deterministic admission, not a pressure
 or equalisation calculation. Quantities are conserved: source loss equals intake.
+A full vessel completely immersed in a compatible larger reservoir does not pour
+back out under gravity while the same bounded geometry and unobstructed path
+prove immersion. This prevents small controller/grab tilt from causing an endless
+spill/refill cycle below the water surface. The check also applies after the live
+episode finishes, so a full resting vessel stays stable. Lifting restores normal
+pouring, including any excess caused by tilt. This is a bounded immersion rule,
+not pressure, displacement or a general fluid solver. A regression covers a tilted
+full bucket, lifting and pouring back, and uncollected spill outside the reservoir.
+
 Lifting the vessel out stops scooping. Surface depletion also stops intake when
 the full opening is no longer submerged.
 

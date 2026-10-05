@@ -7,8 +7,12 @@ book-page/tray-button colliders blocking their movable owner. Development build
 `FD2C7B15` is installed with 831 EditMode / 636 PlayMode tests, both native
 integration journeys and Android/web/package checks passed. Both page grips,
 tray grip, release, Recall and page/physical-button clicks passed on Quest 3.
-A separate full submerged-bucket spill/refill issue found during device testing
-remains under investigation. See [current device QA](QUEST_DEVICE_QA.md).
+The same device testing exposed a full submerged-bucket spill/refill loop. That
+shared-simulation fix is now installed as `0EC7EC29`, with 831 EditMode / 637
+PlayMode tests and full integration/web/Android/package checks passed. Actual
+controller dipping gained exactly 2,000 mL while the pool lost 2,000 mL, remaining
+stable underwater. Original content/input were restored; full hand, pouring,
+performance and provider acceptance remain open. See [current device QA](QUEST_DEVICE_QA.md).
 
 Saved scanned ink layers now extend the existing Drawing object and Canvas ink
 component. The shared catalog, generated book fields, agent and physical drawing

@@ -22,6 +22,26 @@ namespace Maestro.Quest.Tests {
             physics.SetSurfaces(true,"Synthetic room ready");physics.StartPhysics();return(executor,basin,bucket);
         }
         double Liquid(string id)=>(double)editor.Liquids.Observe(id)["contents"]["amountMl"];
+        [UnityTest] public IEnumerator FullSubmergedTiltedBucketDoesNotDrainTheReservoirByRefillingItsOwnSpill(){
+            var(_,basin,bucket)=ScoopingVessels();var item=editor.Find(bucket);double spilled=0;
+            editor.ContainerPoured+=(_,_,amount,_,_)=>spilled+=amount;
+            item.transform.rotation=Quaternion.Euler(.5f,0,.1f);item.GetComponent<RigidRoomItem>().Teleported();
+            for(int i=0;i<100;i++)editor.Liquids.Tick(.05f);
+            physics.PausePhysics();
+            Assert.That(Liquid(bucket),Is.EqualTo(2000).Within(1e-8));
+            Assert.That(Liquid(basin)+Liquid(bucket),Is.EqualTo(32000).Within(1e-8),"A submerged full bucket must not repeatedly spill and refill");
+            Assert.That(spilled,Is.Zero);
+            // Lifting restores the ordinary gravity-driven pour into the basin.
+            item.transform.position+=Vector3.up*.4f;item.GetComponent<RigidRoomItem>().Teleported();physics.StartPhysics();
+            for(int i=0;i<20;i++)editor.Liquids.Tick(.05f);physics.PausePhysics();
+            Assert.That(Liquid(bucket),Is.LessThan(2000));
+            Assert.That(Liquid(basin)+Liquid(bucket),Is.EqualTo(32000).Within(1e-8));
+            Assert.That(spilled,Is.Zero);
+            // Outside the reservoir, ordinary uncollected spill still applies.
+            item.transform.SetPositionAndRotation(new Vector3(6,3,0),Quaternion.Euler(0,0,90));item.GetComponent<RigidRoomItem>().Teleported();
+            physics.StartPhysics();editor.Liquids.Tick(.1f);physics.PausePhysics();
+            Assert.That(spilled,Is.GreaterThan(0));yield return null;
+        }
         [UnityTest] public IEnumerator ScoopingPhysicalBucketConservesBothStoresAndPublishesOneUndo(){
             var(_,basin,bucket)=ScoopingVessels();int scoops=0,pours=0;double reported=0;
             editor.ContainerScooped+=(id,amount,donors,liquid)=>{Assert.That(id,Is.EqualTo(bucket));Assert.That(donors,Is.EqualTo(1));scoops++;reported=amount;};editor.ContainerPoured+=(_,_,_,_,_)=>pours++;
