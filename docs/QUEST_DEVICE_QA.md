@@ -1,10 +1,11 @@
 # Quest 3 development verification — updated 2026-10-05
 
 Current installed development checkpoint: **496EC9BB**, including browser-frame
-copy gating and the earlier navigation/interaction fixes below. Its controlled
-performance comparison remains pending; the tracking warning subsequently cleared. The ten-minute workload
-on previous checkpoint 3FB9A8AF did not meet steady 72 FPS. A separate Android
-storage diagnostic passed the transaction-boundary crash matrix below and was
+copy gating and the earlier navigation/interaction fixes below. The same-package
+comparison reduced copies by about 60% and app GPU time by roughly 0.5 ms, but
+the ten-minute new-frame run averaged 70.90 FPS at 72 Hz. Steady 72 FPS remains
+unmet; the tracking warning cleared and normal book save-refusal/retry passed.
+A separate Android storage diagnostic passed the transaction-boundary crash matrix below and was
 removed afterwards. Full Store/provider/comfort acceptance remains open.
 
 ## On-device automation resumed — 2026-10-05
@@ -3083,3 +3084,79 @@ removed and original test properties verified. This is an on-device failed-save
 and explicit-retry check. It is **not** a full-disk simulation, paired-memory Keep
 failure, a mid-write kill or power-loss test. No provider was used and no runtime
 or installed APK changed. Sustained performance and other release gates remain.
+
+
+## Same-package book-copy comparison — 2026-10-05
+
+The unchanged **496EC9BB** development APK ran in one Quest process (PID 28896)
+with normal tracking restored. A temporary room contained 32 bricks on a board,
+the 19-part recipe robot, the included Maestro and loaded scanned-room physics.
+The saved QA program cycled two parallel 30-second looped animations inside
+Forever, using exact included motion `0cec277765100728f5433405ab3e0f7e` for Maestro.
+Before and after readbacks confirmed both branches, robot playback and physics
+running; the motion cache remained one clip / 76,540 curve values. Scheduler
+boundaries between invocations remain possible.
+
+Only the development copy-mode switch changed between windows. Each had ten
+seconds of warm-up; the app, view, workload, texture size and capture cadence
+were retained. No profiling or UI navigation occurred during the timed windows.
+Battery/memory were read once per minute; renderer counters bracketed each
+window, with their own slightly longer timestamp interval. Sequential windows
+have idle gaps and are not a randomized thermal experiment.
+
+| Window | Seconds / VrApi samples | Copies/s | Mean FPS at 72 Hz | App GPU mean / p95 ms | Stale mean / p95 |
+| --- | --- | --- | --- | --- | --- |
+| Continuous A | 120.38 / 120 | 71.82 | 70.72 | 7.10 / 7.96 | 5.44 / 10 |
+| New frames B | 120.37 / 120 | 28.02 | 70.81 | 6.51 / 7.12 | 5.41 / 9 |
+| Continuous C | 120.35 / 120 | 71.86 | 70.80 | 7.03 / 7.66 | 5.69 / 10 |
+| New frames D | 600.35 / 600 | 28.47 | 70.90 | 6.55 / 7.25 | 5.73 / 9 |
+
+The two new-frame windows copied exactly once per received producer frame,
+reducing copies by about 60%. Their mean app GPU time was roughly 0.5 ms lower
+than either adjacent continuous-copy baseline. Mean FPS changed little. This
+supports reduced GPU copying in this setup; it does **not** demonstrate steady
+72 FPS, an energy saving, or release performance. The GL draw loop still ran
+about 71.8 times per second, with 28.0–29.0 received browser frames per second.
+
+The ten-minute window had 600 samples, mean **70.90 FPS**, minimum 65, maximum
+75 (one-second sampling variation; refresh stayed 72 Hz). GPU time peaked at
+7.92 ms; stale frames averaged 5.73, with a maximum of 13. Reported CPU utilization
+averaged 0.978. Power level remained zero; temperature was 42–43 C and battery
+fell from 23% to 21% while charging. Process PSS was 1,429,846 KB before and
+1,438,822 KB after. This short window is not a long-session leak test.
+
+The headset rested at a fixed tilted view with inactive hands/controllers; no
+synthetic input, pose or proximity override was applied. Stereo screenshots
+showed the book and animated characters without a tracking warning. The board
+and brick assembly were partly occluded by the book/trays. The chat page showed
+the initial API-key screen, not a live provider conversation, streaming artifacts
+or microphone use. These limits prevent treating the run as human movement,
+comfort or representative provider acceptance.
+
+A **separate** browser profile followed all timed windows. Over 15.94 seconds,
+CDP reported 15.59 seconds of task duration, 0.36 of script execution, 5.17 of
+layout and 5.75 of style recalculation (305 layouts / 1,525 style recalculations).
+Its 1,405 samples mostly fell in the generic `(program)` category, so the profile
+does not identify an individual native browser function. The animation snapshot
+listed twelve running decorative CSS/SVG animations and one finished animation.
+This is evidence to investigate layout/style invalidation and rendering next,
+not proof that removing any particular animation will fix frame pacing. Profiler
+and page-inspection overhead are excluded from the comparison above.
+
+Two setup/inspection helpers initially timed out by retaining the outgoing hidden
+panel's Back to chat button during navigation. The actual program remained
+running. Scoping the helper to the now-visible Objects panel resolved this; the
+final readback/navigation passed without any product change or workload restart.
+
+Cleanup stopped/deleted only the QA behaviour, paused physics and discarded the
+temporary room through ordinary book controls. The original avatar selection
+was preserved; `room.v20.json` and `behaviours.v2.json` matched the pre-launch backup byte-for-byte.
+Their SHA-256 values are respectively
+`1d1551b164ae44a1db16b81d0d8bd4ed7eee1187de65d45d65ee8d6668c25e93` and
+`3fa8b960dca6286231e161c600a7c1b7c8f099ccda5b7a2182e388695e19173d`.
+Receipts/Undo history remain expected test activity. New-frame mode remained
+selected; the app was stopped at 20% battery, owned forwards removed and all
+three original debug properties verified. The ten unrelated dirty files retained
+their original hashes. No source, installed APK, provider or production service
+changed. Backups, raw logs, counters, profile, images and verified cleanup remain
+in `.quest-evidence/book-copy-comparison-20261005/`.

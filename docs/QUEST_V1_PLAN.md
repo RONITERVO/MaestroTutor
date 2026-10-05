@@ -4,14 +4,15 @@ Status: active implementation. Nothing in this document claims store readiness.
 
 The current installed development checkpoint is **496EC9BB**, with browser-frame
 copy gating and earlier navigation/interaction fixes. Authoritative package and
-device results are in [device QA](QUEST_DEVICE_QA.md). Its controlled performance
-comparison remains pending; tracking subsequently recovered and the normal book
-passed a staging-refusal/explicit-retry check. A separate, removed Android diagnostic
-now verifies 13 paired-storage transaction-boundary crash cases with 15 forced
+device results are in [device QA](QUEST_DEVICE_QA.md). Its same-package comparison
+cut texture copies by about 60% and mean app GPU time by roughly 0.5 ms; the
+ten-minute run averaged 70.90 FPS at 72 Hz, so sustained performance remains open.
+Tracking recovered and the normal book passed a staging-refusal/explicit-retry
+check. A separate, removed Android diagnostic now verifies 13 paired-storage transaction-boundary crash cases with 15 forced
 terminations, using unchanged production IL2CPP code and synthetic data. This does
 not establish full-disk, mid-byte-write or normal book recovery acceptance.
 
-A ten-minute workload on 3FB9A8AF kept included Maestro and recipe-robot
+An earlier ten-minute workload on 3FB9A8AF kept included Maestro and recipe-robot
 animations cycling while scanned-room physics ran with 32 construction bricks.
 It averaged 70.96 FPS at 72 Hz; sustained performance remains an open release
 gate. The separate CPU trace points to book rendering and state publication as

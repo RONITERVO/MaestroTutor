@@ -126,7 +126,7 @@ feature backlog or permission to use credentials, deploy or submit.
 | Account and managed AI | Shared book, browser pairing and Meta-to-App-Check endpoints; offline/native tests. Endpoints disabled/undeployed. | Matching Firebase registrations and certificate, actual ingress config, authorized deployment, real Store-channel entitlement/integrity and account round trip. |
 | Purchase model | Quest checkout hidden and refused by client/server; existing prepaid credit balances remain shared. BYOK remains available. No Meta commerce integration. | Resolve eligibility for the actual prepaid-credit/BYOK and interactive model using the [prepared Meta review request](QUEST_MANAGED_ACCESS.md#purchase-model-decision-and-prepared-meta-request-2026-10-05), then implement and verify any required payment changes. |
 | Familiar book and provider parity | Original components, desktop chat-to-native journeys with scripted responses, and on-device book texture/page input/field focus checks. | Human virtual-key selection, microphone, Live, artifacts, interruption/recovery and managed/BYOK tests with real providers. |
-| Physical play and resource limits | Automated native suites and current Quest controller/hand grip, Recall, chalk/ink, measured packing and submerged-vessel checks; earlier user-confirmed basics. | Remaining interactions/room-scan alignment, Android mid-byte-write/low-disk/prolonged save stress and sustained performance/comfort on supported hardware. Transaction-boundary recovery has both the [desktop matrix](QUEST_DEVICE_QA.md#reproducible-process-termination-storage-probe) and a [13-case / 15-kill Android diagnostic](QUEST_DEVICE_QA.md#android-process-termination-storage-probe--2026-10-05). Completed-save recovery now has [three device restarts](QUEST_DEVICE_QA.md#saved-room-and-action-history-across-restart--2026-10-05). The ten-minute animated 32-brick development workload averaged 70.96 FPS at 72 Hz and did not pass steady 72 FPS; see the [workload and separate CPU trace](QUEST_DEVICE_QA.md#ten-minute-animated-workload-and-cpu-trace--2026-10-05). |
+| Physical play and resource limits | Automated native suites and current Quest controller/hand grip, Recall, chalk/ink, measured packing and submerged-vessel checks; earlier user-confirmed basics. | Remaining interactions/room-scan alignment, Android mid-byte-write/low-disk/prolonged save stress and sustained performance/comfort on supported hardware. Transaction-boundary recovery has both the [desktop matrix](QUEST_DEVICE_QA.md#reproducible-process-termination-storage-probe) and a [13-case / 15-kill Android diagnostic](QUEST_DEVICE_QA.md#android-process-termination-storage-probe--2026-10-05). Completed-save recovery now has [three device restarts](QUEST_DEVICE_QA.md#saved-room-and-action-history-across-restart--2026-10-05). The current ten-minute animated 32-brick development workload averaged 70.90 FPS at 72 Hz and did not pass steady 72 FPS; see the [same-package comparison and separate browser profile](QUEST_DEVICE_QA.md#same-package-book-copy-comparison--2026-10-05). |
 | Audience and data | Owner chose 18+; book self-confirmation, prepared privacy/data map and local/cloud deletion paths. | Truthful Store audience/IARC setup, provider eligibility, published privacy/support/deletion details and actual deletion/consent QA. |
 | Content and listing | Included avatar/motion/template inventories and provenance checks. | Final content acceptance, real-app screenshots/store metadata, dashboard review and authorized submission. |
 
@@ -355,3 +355,17 @@ owned obstruction and explicitly retrying saved the exact returned object ID;
 deleting that QA object restored the original room bytes. Test receipts/history
 remain ordinary action history. No full-disk or paired Keep-failure claim is made.
 The app is stopped with properties/forwards restored. [Evidence and limits](QUEST_DEVICE_QA.md#normal-book-save-refusal-and-retry--2026-10-05).
+
+
+## Same-package rendering measurement (2026-10-05)
+
+The unchanged **496EC9BB** app completed continuous/new-frame/continuous copy
+windows and a ten-minute new-frame window in the same process/workload. New-frame
+copying reduced texture copies by about 60% and mean app GPU time by roughly
+0.5 ms. The long window averaged **70.90 FPS at 72 Hz**, so sustained performance
+remains unmet. A separate browser profile showed substantial layout/style work;
+it does not identify the exact cause yet. Fixed view, initial API setup screen
+and development-build limits are recorded in [device QA](QUEST_DEVICE_QA.md#same-package-book-copy-comparison--2026-10-05).
+Both animations and room physics remained active. Ordinary book cleanup restored
+original room/behaviour bytes and avatar; the app is stopped for charging with
+test properties and forwards restored. No new APK or production service changed.
