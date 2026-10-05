@@ -2875,3 +2875,79 @@ screenshots, package audits and the prepared comparison helpers are in
 No real provider call, paid generation, data reset, deployment, release signing
 or Store submission occurred. Sustained performance and the other release gates
 remain open.
+
+
+## Reproducible process-termination storage probe
+
+`unity/Tools/Test-QuestStorageCrash.ps1` exercises the native paired room/memory
+transaction used when keeping a temporary room. It runs only in a dedicated
+Unity Editor build mirror, with fresh synthetic data under
+`.quest-evidence/storage-crash/<run-id>/`. It does not read the owner's saved room,
+start a provider, connect to a headset or compile into the Quest player.
+
+After syncing and verifying the mirror with `unity/Tools/Verify-Quest.ps1`,
+run with PowerShell 7:
+
+```powershell
+./unity/Tools/Test-QuestStorageCrash.ps1 `
+  -Editor 'D:/Tools/Unity/6000.3.24f1/Editor/Unity.exe' `
+  -BuildMirror 'D:/Projects/Builds/MaestroQuestVerify'
+```
+
+The writer stops at an existing transaction milestone and publishes a flushed
+readiness record. The orchestrator verifies the child PID, start time and case
+identity before forcibly terminating that process with
+[Process.Kill](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.process.kill),
+then waits for its exit. A new Editor process invokes
+the production recovery implementation and checks the exact room and memory
+bytes, expected retained backups, journal retirement and a second idempotent
+startup. Normal verifier exit is also required. Sources must match the owned
+mirror before and after the run; all logs and interrupted files are retained.
+
+The 13 cases cover seven replacement milestones, four first-save milestones and
+two interrupted recoveries. They distinguish uncommitted rollback from committed
+roll-forward. The two recovery cases kill a second process after its first
+recovery step, so a retry must safely finish from partially recovered files.
+This differs from throwing a test exception: no transaction finally or graceful
+shutdown executes in a killed writer. The probe remains a desktop filesystem
+check at transaction boundaries. It does not kill during a byte write/fsync,
+simulate physical power loss or full storage, or prove Android filesystem/device
+behaviour. Those release checks remain separate.
+
+### Execution evidence — 2026-10-05
+
+All **13 cases passed**, with **15 forced terminations** (13 writers and two
+recoveries), under Unity **6000.3.24f1 / WindowsEditor**. Every verifier exited
+normally. The seven replacement cases covered before-journal, prepared, room,
+memory, committed, room-backup and memory-backup. First-save cases covered
+prepared, room, memory and committed. The recovery-interruption cases covered
+both rollback and roll-forward, stopping after recovered-room.
+
+An independent read of the retained files checked the numeric room and memory
+values, the expected backup values or absence, all case identities, forced exits,
+retired journals and **1,165 matching C#/meta/assembly-definition source files**.
+The first-save cases verified that an uncommitted initial save leaves both
+primaries absent. No mixed old/new pair remained after recovery. The complete
+run is `.quest-evidence/storage-crash/92375f94ff2d4f0fb775679ec87c4ded/`;
+its independent audit is `.quest-evidence/storage-crash-20261005/crash-audit.json`.
+An initial probe run stopped on its own typed-string-null versus JSON-null
+comparison; the files were correctly absent. Only the probe comparison was
+corrected, and the complete matrix above ran fresh. The failed evidence remains
+in `27207da2d23146568a7b098214d56875` rather than being overwritten.
+
+During this work the existing verification passed **837 EditMode / 644 PlayMode
+tests** (three optional private-model skips), **474 native-room / 81 original-book
+observations** with offline scripted provider responses. The final probe compiled
+in its fresh batch processes. No runtime/storage-format change or new APK was
+needed; the installed **496EC9BB** development package remains the preceding
+checkpoint. All ten unrelated dirty files retained their exact hashes.
+
+A separate planned Quest staging-refusal test did **not** execute: launch never
+reached a browser socket, no app process remained on inspection, and Guardian's
+room-tracking dialog was visible. No staging obstruction was created and no test
+edit was sent. The app remained stopped, test properties/forwards were restored,
+and the saved room stayed byte-identical. Local backups and prepared helpers are
+in `.quest-evidence/storage-refusal-20261005/`. Android interrupted-write,
+low-storage and prolonged-save stress, physical tracking/resume and the
+performance comparison remain open. No provider call, deployment, signing or
+Store submission occurred.

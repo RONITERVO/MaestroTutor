@@ -126,7 +126,7 @@ feature backlog or permission to use credentials, deploy or submit.
 | Account and managed AI | Shared book, browser pairing and Meta-to-App-Check endpoints; offline/native tests. Endpoints disabled/undeployed. | Matching Firebase registrations and certificate, actual ingress config, authorized deployment, real Store-channel entitlement/integrity and account round trip. |
 | Purchase model | Quest checkout hidden and refused by client/server; existing prepaid credit balances remain shared. BYOK remains available. No Meta commerce integration. | Resolve eligibility for the actual prepaid-credit/BYOK and interactive model using the [prepared Meta review request](QUEST_MANAGED_ACCESS.md#purchase-model-decision-and-prepared-meta-request-2026-10-05), then implement and verify any required payment changes. |
 | Familiar book and provider parity | Original components, desktop chat-to-native journeys with scripted responses, and on-device book texture/page input/field focus checks. | Human virtual-key selection, microphone, Live, artifacts, interruption/recovery and managed/BYOK tests with real providers. |
-| Physical play and resource limits | Automated native suites and current Quest controller/hand grip, Recall, chalk/ink, measured packing and submerged-vessel checks; earlier user-confirmed basics. | Remaining interactions/room-scan alignment, mid-write/low-disk/prolonged save stress and sustained performance/comfort on supported hardware. Completed-save recovery now has [three device restarts](QUEST_DEVICE_QA.md#saved-room-and-action-history-across-restart--2026-10-05). The ten-minute animated 32-brick development workload averaged 70.96 FPS at 72 Hz and did not pass steady 72 FPS; see the [workload and separate CPU trace](QUEST_DEVICE_QA.md#ten-minute-animated-workload-and-cpu-trace--2026-10-05). |
+| Physical play and resource limits | Automated native suites and current Quest controller/hand grip, Recall, chalk/ink, measured packing and submerged-vessel checks; earlier user-confirmed basics. | Remaining interactions/room-scan alignment, Android interrupted-write/low-disk/prolonged save stress and sustained performance/comfort on supported hardware. Desktop transaction-boundary recovery now has a [13-case forced-termination matrix](QUEST_DEVICE_QA.md#reproducible-process-termination-storage-probe). Completed-save recovery now has [three device restarts](QUEST_DEVICE_QA.md#saved-room-and-action-history-across-restart--2026-10-05). The ten-minute animated 32-brick development workload averaged 70.96 FPS at 72 Hz and did not pass steady 72 FPS; see the [workload and separate CPU trace](QUEST_DEVICE_QA.md#ten-minute-animated-workload-and-cpu-trace--2026-10-05). |
 | Audience and data | Owner chose 18+; book self-confirmation, prepared privacy/data map and local/cloud deletion paths. | Truthful Store audience/IARC setup, provider eligibility, published privacy/support/deletion details and actual deletion/consent QA. |
 | Content and listing | Included avatar/motion/template inventories and provenance checks. | Final content acceptance, real-app screenshots/store metadata, dashboard review and authorized submission. |
 
@@ -310,3 +310,20 @@ is claimed. Temporary objects were discarded and both saved room and behaviour
 files remained byte-identical; the app is stopped for charging. Exact package
 identity, counts and limits are in [device QA](QUEST_DEVICE_QA.md#book-hardware-buffer-copies--2026-10-05).
 The production/provider, physical comfort, signing and Store gates remain open.
+
+
+## Desktop process-termination storage evidence (2026-10-05)
+
+The new opt-in `Test-QuestStorageCrash.ps1` passed 13 cases with 15 forced Unity
+process terminations. Fresh processes recovered exact paired room/memory state,
+kept the expected backups and completed a second idempotent startup. Cases cover
+replacement saves, first saves and interruption during recovery. An independent
+file audit verified the expected numeric values and all 1,165 source identities.
+The ordinary Unity and shared book/room checks also passed.
+
+This adds Editor-only verification tooling and changes no production storage or
+APK. It is Windows transaction-boundary evidence, not Android/full-disk/physical
+power-loss acceptance. The device save-refusal attempt did not reach the app while
+the Guardian tracking prompt remained present; no test edit or obstruction was
+applied. See [procedure, evidence and limits](QUEST_DEVICE_QA.md#reproducible-process-termination-storage-probe).
+The installed frame-copy checkpoint and remaining release gates are unchanged.
