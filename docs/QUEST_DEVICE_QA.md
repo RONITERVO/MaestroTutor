@@ -29,7 +29,8 @@ Observed on the headset through the packaged WebView and native runtime:
   three-point stroke through `object.surface.edit`, and verified zero strokes
   after Undo and the same stroke ID after Redo. Anchor readback reported visible
   and retained the exact room/anchor IDs. Temporary Discard restored the original
-  room. Physical pencil/hand drawing and restart recovery still need acceptance.
+  room. Physical pencil/hand drawing still needs acceptance. Later restart checks
+  below verify saved source and exact-anchor recovery; they do not certify alignment.
 - `runtime.frameIntervals` returned a real-device 30-second window with 2,062
   samples: mean 14.55 ms, p95 22.29 ms and maximum 32.82 ms. This small static room
   with a playing robot is diagnostic evidence, not GPU/compositor FPS or comfort
@@ -2323,7 +2324,7 @@ performance acceptance.
 
 Quest 3 was measured on the development APK `11B4972E`, using VrApi statistics,
 a 72 Hz display and 45 one-second observations per condition. The temporary
-workload added 32 building bricks, a fixed chessboard and a looping recipe robot
+workload added 32 building bricks, a fixed chessboard and a recipe robot
 to the original three creations: 37 creations plus the book and Maestro, with
 181 new recipe parts. The book showed the original chat between measurements.
 The scanned room was loaded for the physics-running condition.
@@ -2458,7 +2459,7 @@ and metas, AAR, 147 web files, included avatar / 178 motions / 26 templates /
 It was installed in place, its device bytes matched, and the owner's authorized
 adult confirmation was completed.
 
-The same temporary 32-brick construction, chessboard and looping robot was
+The same temporary 32-brick construction, chessboard and recipe robot was
 created through the book's catalog controls. Each completed capture contains 45
 one-second VrApi samples at 72 Hz, separate from profiler recording:
 
@@ -2501,6 +2502,19 @@ removed only after its local copy matched SHA-256. No synthetic input, proximity
 override, saved-data reset, real provider request, release signing, deployment or
 Store upload occurred. The ten unrelated dirty files retained their exact hashes.
 
+
+## Workload animation correction — 2026-10-05
+
+The restart checks below exposed a benchmark-helper assumption: the construction
+helper requested `animation.play` with `seconds: 0` and `loop: true`. Zero selects
+the saved clip duration (two seconds for the included robot); looping does not
+make a one-off action indefinite. The earlier observation, shared-material and
+receipt-publication comparisons therefore include the robot's geometry, but do
+not establish performance with a continuously animating robot. Raw measurements
+and package hashes remain unchanged. Their descriptions above/below are corrected;
+a representative sustained animated-workload measurement remains open. The
+runtime followed its existing duration contract. The restart test uses an explicit
+30-second action and verifies actual playback immediately before force-stop.
 
 ## Receipt publication cost — 2026-10-05
 
@@ -2548,7 +2562,7 @@ bytes, SHA-256
 It was installed in place on Quest 3, the device's APK hash matched, and the
 owner-authorized adult confirmation was completed.
 
-The same temporary 32-brick construction, chessboard and looping robot ran
+The same temporary 32-brick construction, chessboard and recipe robot ran
 through ordinary book catalog controls. Each capture lasted 45 seconds at 72 Hz;
 VrApi emitted 44 original-room samples and 45 in each construction window:
 
@@ -2575,3 +2589,61 @@ empty values. Battery was 34%, charging. No new CPU profile or visual/comfort
 acceptance was taken, and no synthetic input, data reset, real provider call,
 release signing, deployment or Store upload occurred. The ten unrelated dirty
 files retained their exact hashes.
+
+
+## Saved room and action history across restart — 2026-10-05
+
+Installed package **6A7C780E** was unchanged; its device SHA-256 was rechecked.
+The source commit `e07d6386` passed the [release gate](https://github.com/RONITERVO/MaestroTutor/actions/runs/37327155306).
+No new product code or APK was needed for these checks. Private and external app
+archives were made and hash-checked while the app was stopped; they remain local
+under `.quest-evidence/device-durability-20261005/`.
+
+The ordinary book workshop/catalog performed all room edits and inspections:
+
+- A temporary room added the included 19-part robot and a 30 cm ink layer on an
+  exact saved floor anchor. Two confirmed snapshots retained five three-point
+  strokes. A sixth stroke and an additional block stayed temporary. An explicit
+  30-second robot animation was verified playing immediately before force-stop.
+- First restart: all five saved strokes retained exact IDs, points, colour and
+  radius; the temporary block/stroke did not reload. The original creation
+  receipt retained its exact call and object ID. The animation receipt reported
+  `interrupted`, playback did not resume, and physics stayed paused. Loading the
+  scan resolved the ink to its exact original room/anchor identity.
+- A second temporary session saved the sixth stroke, then left a seventh stroke
+  and a ball unsaved. Another verified active 30-second animation was interrupted
+  by force-stop. Restart retained exactly six strokes and no temporary ball.
+  Before room load the source remained intact while the layer reported hidden;
+  after load its original anchor resolved and visibility returned. The pre-load
+  summary is retained in the local tool evidence; a later verification retry
+  overwrote the full pre-load JSON with the loaded state. No physical-alignment
+  claim is derived from these readbacks.
+- Test ink and robot were deleted through normal saved actions. A third restart
+  confirmed their absence and both exact completed deletion receipts. The final
+  `room.v20.json` matched the original backup **byte for byte**, including all
+  five original definitions and structures. SHA-256:
+  `1d1551b164ae44a1db16b81d0d8bd4ed7eee1187de65d45d65ee8d6668c25e93`.
+
+Recent one-off history intentionally retains 16 terminal receipts. The first
+creation receipt was verified after the first restart and later aged out during
+further edits. The second cycle verified its newly interrupted receipt; the final
+cycle verified newly completed deletions. History eviction is not saved-object
+loss, and these checks do not promise unlimited action-history retention.
+
+The harness also exposed two early workshop-open commands being cancelled while
+native startup changed its room session. Explicit reopen after rebinding worked;
+the final restart opened on its first attempt. The helper now allows a single
+presentational reopen only after observing a changed session with no pending
+request. It never retries a mutation. Early-open usability remains a follow-up;
+the native session guard was not bypassed. Other harness corrections used the
+public outgoing snapshot shape and opened the action-history tab before reading
+receipts. The finite-clip assumption and performance wording are corrected above.
+
+The app is stopped, its test forward removed and original debug properties
+verified. Battery was 32%, charging, at cleanup. The ten unrelated working files
+retain their exact hashes. This verifies completed saves, temporary-edit discard,
+exact source/anchor recovery and interrupted action handling on Quest 3. It does
+not cover killing an in-flight file publication, storage exhaustion, prolonged
+write stress, real-provider parity, actual ink contact/alignment or user comfort.
+No real provider call, paid generation, app-data reset, deployment, release signing
+or Store submission occurred.

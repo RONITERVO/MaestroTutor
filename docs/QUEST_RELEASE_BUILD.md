@@ -126,7 +126,7 @@ feature backlog or permission to use credentials, deploy or submit.
 | Account and managed AI | Shared book, browser pairing and Meta-to-App-Check endpoints; offline/native tests. Endpoints disabled/undeployed. | Matching Firebase registrations and certificate, actual ingress config, authorized deployment, real Store-channel entitlement/integrity and account round trip. |
 | Purchase model | Quest checkout hidden and refused by client/server; existing prepaid credit balances remain shared. BYOK remains available. No Meta commerce integration. | Resolve eligibility for the actual prepaid-credit/BYOK and interactive model using the [prepared Meta review request](QUEST_MANAGED_ACCESS.md#purchase-model-decision-and-prepared-meta-request-2026-10-05), then implement and verify any required payment changes. |
 | Familiar book and provider parity | Original components, desktop chat-to-native journeys with scripted responses, and on-device book texture/page input/field focus checks. | Human virtual-key selection, microphone, Live, artifacts, interruption/recovery and managed/BYOK tests with real providers. |
-| Physical play and resource limits | Automated native suites and current Quest controller/hand grip, Recall, chalk/ink, measured packing and submerged-vessel checks; earlier user-confirmed basics. | Remaining interactions/room-scan alignment, save stress and sustained performance/comfort on supported hardware. The current 32-brick development workload measured 71.18 / 70.89 FPS at 72 Hz with physics paused/running; see the [workload evidence and limits](QUEST_DEVICE_QA.md#receipt-publication-cost--2026-10-05). |
+| Physical play and resource limits | Automated native suites and current Quest controller/hand grip, Recall, chalk/ink, measured packing and submerged-vessel checks; earlier user-confirmed basics. | Remaining interactions/room-scan alignment, mid-write/low-disk/prolonged save stress and sustained performance/comfort on supported hardware. Completed-save recovery now has [three device restarts](QUEST_DEVICE_QA.md#saved-room-and-action-history-across-restart--2026-10-05). The current 32-brick development workload measured 71.18 / 70.89 FPS at 72 Hz with physics paused/running; see the [workload evidence and limits](QUEST_DEVICE_QA.md#receipt-publication-cost--2026-10-05). |
 | Audience and data | Owner chose 18+; book self-confirmation, prepared privacy/data map and local/cloud deletion paths. | Truthful Store audience/IARC setup, provider eligibility, published privacy/support/deletion details and actual deletion/consent QA. |
 | Content and listing | Included avatar/motion/template inventories and provenance checks. | Final content acceptance, real-app screenshots/store metadata, dashboard review and authorized submission. |
 
@@ -250,3 +250,19 @@ sources. Installation bytes matched. The same temporary construction measured
 The room and device settings were restored and the app stopped for charging.
 These short warm development measurements do not establish sustained 72 Hz or
 release acceptance. Details are in [device QA](QUEST_DEVICE_QA.md#receipt-publication-cost--2026-10-05).
+
+
+## Device persistence evidence (2026-10-05)
+
+The unchanged installed `6A7C780E` package passed three real Quest process
+restarts. Exact saved ink and object source survived; unsaved temporary edits
+did not. Interrupted animations remained stopped, matching scan anchors resolved
+saved ink, and creation/deletion receipts retained exact calls and results within
+the 16-terminal-receipt history window. Cleanup restored `room.v20.json` byte for
+byte. This is completed-save evidence, not mid-write power-loss or low-disk stress.
+Two early workshop-open requests were interrupted by native startup rebinding;
+startup opening remains a usability follow-up. See [device QA](QUEST_DEVICE_QA.md#saved-room-and-action-history-across-restart--2026-10-05).
+
+Earlier construction performance windows included the robot geometry but only
+requested its two-second saved clip. They do not demonstrate continuously animated
+workload performance; see the [benchmark correction](QUEST_DEVICE_QA.md#workload-animation-correction--2026-10-05).
