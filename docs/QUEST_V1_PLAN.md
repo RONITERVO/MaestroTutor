@@ -2,6 +2,14 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
+The current installed development build is `F4A5B4B4`: 831 EditMode / 639 PlayMode
+checks, both integration journeys and all package checks passed. Held chalk was
+verified with controller and hand input. Fingertip packing now survives a distant
+button hover; Quest tests confirm measured source loss, atomic Undo and exact
+Redo. Device work also found a separate world/room-coordinate error after Recall
+(about 7 cm in this test); its correction is the next open interaction fix.
+[Device evidence](QUEST_DEVICE_QA.md#held-chalk-and-fingertip-material-contact--2026-10-05).
+
 On-device verification resumed on 2026-10-05. Controller tests exposed and fixed
 book-page/tray-button colliders blocking their movable owner. Development build
 `FD2C7B15` is installed with 831 EditMode / 636 PlayMode tests, both native

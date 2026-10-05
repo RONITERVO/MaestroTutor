@@ -158,7 +158,8 @@ namespace Maestro.Quest.Book
             if(sculpt&&sculpt.Enabled){
                 if(usingHand){
                     if(!TryFingerPoint(index,out var fingertip))sculpt.Cancel(index,input.Interactor);
-                    else if(page||grabbing)sculpt.Cancel(index);
+                    // A ray hovering a distant page does not own physical fingertip contact.
+                    else if(trigger==GestureTarget.Page||grabbing)sculpt.Cancel(index);
                     else {finger=fingertip;sculpt.Finger(index,finger);}
                     drawingHeld=sculpt.Owns(index);
                 }

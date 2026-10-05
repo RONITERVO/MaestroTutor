@@ -9,7 +9,9 @@
     "UniGLTF.Utils",
     "Unity.InputSystem",
     "Unity.XR.OpenXR",
-    "TLab.Capture"
+    "TLab.Capture",
+    "Unity.XR.Hands",
+    "Unity.Collections"
   ],
   "optionalUnityReferences": [
     "TestAssemblies"

@@ -163,7 +163,7 @@ No release signing, provider acceptance, deployment or Store upload is implied.
 
 ## Submerged vessel checkpoint (2026-10-05)
 
-`MaestroQuest-submerged-vessel-0EC7EC29.apk` is the current installed development
+`MaestroQuest-submerged-vessel-0EC7EC29.apk` was installed as a development
 checkpoint. It includes the grip fix and prevents a full, tilted submerged vessel
 from repeatedly spilling/refilling. Full checks passed (831 EditMode / 637
 PlayMode, native/book journeys, web and Android), and the headset trial verified
@@ -176,3 +176,16 @@ ink/Undo/Redo and prop-obstruction checks. Book text focus requested Meta's IME
 and Android key events reached the field. These do not establish human hand
 comfort or virtual-key placement/selection. Exact evidence and cleanup are in
 [hand-input QA](QUEST_DEVICE_QA.md#hand-input-ink-and-text-field-checks--2026-10-05).
+
+
+## Fingertip contact checkpoint (2026-10-05)
+
+Current installed development APK: `MaestroQuest-hand-contact-F4A5B4B4.apk`,
+SHA-256 `F4A5B4B478D6B7FF7EDFCCE62BCF0FD405BB7759E275011960A124757A652473`.
+It fixes distant page/button hover canceling physical fingertip packing/sculpting.
+831 EditMode / 639 PlayMode tests, both integration journeys and the complete
+web/Android/source/content/signature/alignment audit passed. Quest input checks
+confirmed contact, one measured ball on lift, and exact physical Undo/Redo.
+A separate post-Recall placement error remains open in this checkpoint; see
+[the device result](QUEST_DEVICE_QA.md#post-fix-package-and-device-result).
+This is development-signed, not Store/provider/performance acceptance.

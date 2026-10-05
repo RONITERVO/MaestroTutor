@@ -151,7 +151,9 @@ same settings. Enabling puts away drawing/sculpting and construction selection;
 it creates nothing and does not start physics. `material.pack.tool` reads them.
 
 With tracked hands, separate from the accepted surface after enabling, touch its
-top with an index fingertip, then lift. With controllers, hold trigger with the
+top with an index fingertip, then lift. A ray merely hovering a page or tray button
+does not cancel fingertip contact. An actual page pinch or object grab takes
+precedence and retains an interrupted draft; tracking loss does the same. With controllers, hold trigger with the
 pointer within 25 cm of the surface and release or move off it. The first contact
 fixes one footprint and one quantity; dragging or waiting cannot accumulate more.
 The surface and a noninteractive ball preview are visible while accepted collision

@@ -2218,3 +2218,59 @@ Keep the existing device-work hold until the owner confirms availability.
 6. Measure sustained frame time and allocation/load with the maximum admitted ink
    and several visible layers while tracked anchors update. Desktop pass counts
    do not establish Quest performance or contact comfort.
+
+
+## Held chalk and fingertip material contact — 2026-10-05
+
+On development APK `0EC7EC29`, Meta XR Operator delivered actual OpenXR controller
+grip and Meta aim-hand pinch input to a temporary Chalk/Chalkboard pair. With the
+tray pencil disabled, loose chalk touching the board created no stroke. Moving
+held chalk and separating saved a 25-point controller stroke and a separate
+43-point hand stroke, both at the tool's 4 mm radius. The disabled tray pencil
+retained its separate 3 mm setting. The second stroke preserved the first ID;
+neither gesture left an active or retained drawing draft.
+
+Fingertip packing exposed an input conflict: a ray merely hovering the distant
+**Add model** button prevented physical contact with a snow patch. Pointing the
+hand down, so its ray missed the button, produced a preview and then one ball on
+lift. The saved source stayed at 79.99999821186066 local litres during contact;
+lift removed 0.24999908055178818 litre, exactly matching the ball's measured store
+within 0.000001 litre. This is automated device-input evidence, not a claim about
+human tracking quality, visual comfort or sustained performance.
+
+The input correction makes only an actual page/button pinch or object grab take
+precedence over fingertip contact. Two native regressions use an XR Hands joint
+provider and MetaAimHand device through the real book input router: ordinary
+hover allows packing/sculpting, while page pinch and tracking loss retain the
+pending draft. Both fail on the old code and pass after the correction. Full
+package and post-fix headset evidence follow.
+
+Temporary objects were discarded, the original three creation IDs were verified,
+tool preferences were restored and synthetic input was released. Evidence:
+`.quest-evidence/held-tools-20261005/` (`pre-fix-acceptance.json`, chalk input
+journals, packing observations and before/after native test results).
+
+
+### Post-fix package and device result
+
+`MaestroQuest-hand-contact-F4A5B4B4.apk` (188,151,847 bytes), SHA-256
+`F4A5B4B478D6B7FF7EDFCCE62BCF0FD405BB7759E275011960A124757A652473`,
+was audited and installed without resetting app data. Verification passed 831
+EditMode and 639 PlayMode tests (three optional private-model skips), the 475-state
+native-room journey and 71-observation original-book journey, production web and
+Android checks, 76 Android tests (two optional skips), all 3,004 frozen inputs,
+147 packaged web files, included content, ARM64, v2 signing and 16 KiB alignment.
+
+On this APK, fingertip packing stayed active while that hand's ray hovered the
+**Add model** button. Saved field data remained unchanged during the preview;
+lift saved one 0.24999908055178818-litre ball. Physical hand-pinch Undo restored the
+field and removed the ball; Redo restored the exact identity and quantity.
+
+A separate Recall check exposed a placement defect: the finished ball was
+0.07025968 m away from the preview, matching the room's vertical offset applied
+twice. Physical packing was passing world coordinates into the shared room-local
+packing action. This checkpoint fixes the hover conflict but does **not** claim
+correct post-Recall packing placement. Correction and regression checks follow.
+Temporary content was discarded, original IDs and tool settings restored, and
+synthetic input/debug/proximity overrides released. Detailed assertions are in
+`.quest-evidence/held-tools-20261005/post-fix-acceptance.json`.
