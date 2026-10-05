@@ -5,7 +5,8 @@ Status: active implementation. Nothing in this document claims store readiness.
 The current installed development checkpoint is **496EC9BB**, with browser-frame
 copy gating and earlier navigation/interaction fixes. Authoritative package and
 device results are in [device QA](QUEST_DEVICE_QA.md). Its controlled performance
-comparison awaits restored Quest tracking. A separate, removed Android diagnostic
+comparison remains pending; tracking subsequently recovered and the normal book
+passed a staging-refusal/explicit-retry check. A separate, removed Android diagnostic
 now verifies 13 paired-storage transaction-boundary crash cases with 15 forced
 terminations, using unchanged production IL2CPP code and synthetic data. This does
 not establish full-disk, mid-byte-write or normal book recovery acceptance.

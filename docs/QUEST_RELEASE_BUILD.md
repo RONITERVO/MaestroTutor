@@ -344,3 +344,14 @@ This closes Android transaction-boundary evidence for the paired storage kernel,
 not mid-byte-write/full-disk/power-loss testing, sustained save stress, or the
 normal book recovery UX. The installed **496EC9BB** development checkpoint and
 other release gates are unchanged. [Procedure and retained evidence](QUEST_DEVICE_QA.md#android-process-termination-storage-probe--2026-10-05).
+
+
+## In-app save-error acceptance (2026-10-05)
+
+The tracking warning cleared, allowing the unchanged **496EC9BB** app to relaunch.
+Through the normal book catalog, a deliberately unavailable staging path caused
+object creation to fail visibly without changing the saved room. Removing the
+owned obstruction and explicitly retrying saved the exact returned object ID;
+deleting that QA object restored the original room bytes. Test receipts/history
+remain ordinary action history. No full-disk or paired Keep-failure claim is made.
+The app is stopped with properties/forwards restored. [Evidence and limits](QUEST_DEVICE_QA.md#normal-book-save-refusal-and-retry--2026-10-05).

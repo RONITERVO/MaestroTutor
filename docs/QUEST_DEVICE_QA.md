@@ -2,7 +2,7 @@
 
 Current installed development checkpoint: **496EC9BB**, including browser-frame
 copy gating and the earlier navigation/interaction fixes below. Its controlled
-performance comparison awaits restored Quest tracking. The ten-minute workload
+performance comparison remains pending; the tracking warning subsequently cleared. The ten-minute workload
 on previous checkpoint 3FB9A8AF did not meet steady 72 FPS. A separate Android
 storage diagnostic passed the transaction-boundary crash matrix below and was
 removed afterwards. Full Store/provider/comfort acceptance remains open.
@@ -3045,3 +3045,41 @@ runs; after retaining evidence it may be removed with `adb -P 5041 -s <serial>
 uninstall com.maestro.quest.storageprobe`. Never use the production package name
 in that cleanup command. No paid/provider call, release signing, deployment or
 Store submission is part of this procedure.
+
+
+## Normal book save refusal and retry — 2026-10-05
+
+After the isolated diagnostic was removed, the Guardian tracking dialog was no
+longer visible. The unchanged **496EC9BB** Maestro APK relaunched with PID 27459;
+the authorized adult confirmation and chat/workshop navigation passed. An actual
+stereo screenshot showed passthrough, the avatar and book without the tracking
+warning. This supersedes the preceding tracking hold for further automation; it
+does not establish human tracking comfort or the earlier sleep/wake acceptance.
+
+The normal book's shared `object.create` path then handled an unavailable save
+staging path on Quest. The test created an owned empty directory at
+`room.v20.json.pending`, attempted one named QA block through the action catalog,
+and removed that directory immediately afterwards. The action became `failed`
+with the user-facing message that the previous save was retained and storage
+should be checked before retrying. The failed object was absent and the five-object
+room remained byte-identical.
+
+A fresh explicit creation after removing the obstruction completed and saved its
+exact returned object ID, producing six objects. Deleting only that QA object
+through the same catalog restored the original five-object room byte-for-byte
+(SHA-256 `1d1551b164ae44a1db16b81d0d8bd4ed7eee1187de65d45d65ee8d6668c25e93`).
+The failed/create/delete receipts and ordinary save/Undo history are expected test
+activity; this does not claim that all history/backup files stayed unchanged.
+
+An observation helper initially used `innerText` on the collapsed exact-call
+field and failed after the actual action had already failed correctly. The
+existing receipt was then read with `textContent`; the failed creation was not
+replayed. Refusal/retry/removal screenshots, exact calls, file captures and
+`completed.json` are retained in `.quest-evidence/storage-refusal-20261005/`.
+Relaunch/stereo evidence is in `.quest-evidence/quest-resume-20261005/`.
+
+The owned obstruction was removed, the main app stopped, diagnostic forwards
+removed and original test properties verified. This is an on-device failed-save
+and explicit-retry check. It is **not** a full-disk simulation, paired-memory Keep
+failure, a mid-write kill or power-loss test. No provider was used and no runtime
+or installed APK changed. Sustained performance and other release gates remain.
