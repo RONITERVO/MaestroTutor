@@ -11,8 +11,12 @@ The same device testing exposed a full submerged-bucket spill/refill loop. That
 shared-simulation fix is now installed as `0EC7EC29`, with 831 EditMode / 637
 PlayMode tests and full integration/web/Android/package checks passed. Actual
 controller dipping gained exactly 2,000 mL while the pool lost 2,000 mL, remaining
-stable underwater. Original content/input were restored; full hand, pouring,
-performance and provider acceptance remain open. See [current device QA](QUEST_DEVICE_QA.md).
+stable underwater. The same APK now has automated hand-input evidence: book
+pinch/move/release, palm Recall, a 44-point chalkboard stroke, physical Undo/Redo,
+blocked drawing/erasing and restoration. Book focus requested the Quest IME and
+Android key events reached the field. Human tracking/comfort, virtual-key selection,
+full pouring, sustained performance and provider acceptance remain open. Original
+content/input were restored. See [current device QA](QUEST_DEVICE_QA.md).
 
 Saved scanned ink layers now extend the existing Drawing object and Canvas ink
 component. The shared catalog, generated book fields, agent and physical drawing

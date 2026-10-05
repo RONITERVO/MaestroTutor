@@ -170,3 +170,9 @@ PlayMode, native/book journeys, web and Android), and the headset trial verified
 stable 2,000 mL transfer through actual controller input. Exact package identity,
 cleanup and remaining acceptance limits are in
 [device QA](QUEST_DEVICE_QA.md#submerged-vessel-stability--2026-10-05).
+
+The same installed APK also passed automated hand-input, palm Recall, chalkboard
+ink/Undo/Redo and prop-obstruction checks. Book text focus requested Meta's IME
+and Android key events reached the field. These do not establish human hand
+comfort or virtual-key placement/selection. Exact evidence and cleanup are in
+[hand-input QA](QUEST_DEVICE_QA.md#hand-input-ink-and-text-field-checks--2026-10-05).

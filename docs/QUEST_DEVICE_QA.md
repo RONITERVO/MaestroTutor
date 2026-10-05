@@ -115,6 +115,44 @@ Temporary experimental/capture properties were restored, owned ADB forwards
 removed and the proximity override removed. Device evidence remains ignored in
 `.quest-evidence/submerged-vessel-20261005/`.
 
+## Hand input, ink and text-field checks — 2026-10-05
+
+The installed APK hash was read back from Quest 3 and matched `0EC7EC29` above.
+Meta XR Operator supplied OpenXR hand joints and FB aim; the actual input readout
+confirmed `usingHand=true`, gesture ownership, ray hits and XRI selection. The
+published/delivered hand generations matched. This tests the packaged hand-input
+path, not human tracking reliability, reachability or comfort.
+
+- A right-hand pinch on the book checked the owner-authorized 18+ confirmation.
+  WebView readback confirmed the checkbox and enabled Open button. Pinching Open
+  then reached the familiar chat. Both left and right pages received hand input.
+- Pinching the book's exposed cover selected the book, moving the wrist translated
+  it 0.19998 m, and opening the hand cleared selection. A right-hand pinch on the
+  left palm Recall returned the book to its home pose relative to room content.
+- In a temporary room, the shared catalog created Chalkboard and enabled Surface.
+  A moving hand pinch recorded one 44-point, 3 mm-radius stroke. Pinching the solid
+  tray Undo removed it; Redo restored its exact stroke ID, point count and radius.
+- A solid block overlapping the ray path prevented another stroke and prevented
+  surface erasure, leaving the same ink identity and revision. Removing the block
+  with the physical Undo control allowed erasure; another Undo restored the ink.
+  These checks used paused physics, a configured board patch and a created prop,
+  including the ray origin inside its collision volume. Held tools, active scanned
+  obstructions, save/restart and busy-room drawing still need their own checks.
+- Pinching a book search field requested Meta's keyboard service (`mInputShown`
+  changed to true). Android key events entered `ink` into the actual field; the
+  value was cleared and Back dismissed the IME (`mInputShown=false`). The inspected
+  ADB frame showed the focused field but did not establish visible keyboard
+  placement or virtual-key selection; those remain acceptance items.
+
+All checks used the existing APK; no runtime source or package changed. Temporary
+content was discarded, pencil preferences restored, the exact three original
+creation IDs verified, and the familiar chat reopened. Synthetic hand overrides
+were confirmed cleared and selection/page/drawing ownership released. Temporary
+properties, owned forwards and the proximity override were removed. CI for
+`8b335469` passed. No provider was used. Raw room images, input journals and the
+structured acceptance record stay ignored under
+`.quest-evidence/hand-input-20261005/`.
+
 ## Rectangular pool and vessel dipping (partial headset acceptance)
 
 Create Shallow pool and Bucket in a clear reachable scanned area. Use the original
@@ -151,7 +189,10 @@ Retry/Discard. Test the same options from original chat and the optional book
 workshop. Record APK hash, room setup and frame/profiler evidence; desktop tests
 cannot certify tracking feel, real scan alignment or comfort.
 
-## Physical drawing obstruction (headset acceptance pending)
+## Physical drawing obstruction (partial automated headset evidence)
+
+The hand-input checks above cover a created board/block with paused physics.
+Complete the broader checks below before accepting the full interaction.
 
 With a chalkboard patch enabled, place a solid object between the surface pencil
 ray and the board. Trigger and pinch must not begin a stroke through it. Move the
@@ -1790,10 +1831,11 @@ physical performance gates above remain required. Do not use this result to mark
 those gates complete.
 
 
-## Planar ink and chalkboard — pending Quest 3 acceptance
+## Planar ink and chalkboard — partial Quest 3 evidence
 
-The surface-drawing increment is desktop-tested separately. Device work remains
-on hold; these checks are not reported as completed:
+Device work has resumed. The hand-input section above records pinch drawing,
+physical Undo/Redo and prop obstruction on the current installed APK. The broader
+checks below remain the acceptance checklist; the earlier hold is superseded:
 
 - Ask for a Chalkboard, put it within reach and use Surface with controller trigger
   and hand pinch. Confirm the tip follows the visible patch and misses make no ink.
