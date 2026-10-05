@@ -21,7 +21,9 @@ Shader "Maestro/Watercolor"
     }
     SubShader
     {
-        Tags { "RenderType"="Opaque" "Queue"="Geometry" }
+        // Dynamic batching replaces object coordinates with world coordinates.
+        // Keep local pigment/patterns intact; shared meshes can still use GPU instancing.
+        Tags { "RenderType"="Opaque" "Queue"="Geometry" "DisableBatching"="True" }
         Pass
         {
             Name "PENCIL"

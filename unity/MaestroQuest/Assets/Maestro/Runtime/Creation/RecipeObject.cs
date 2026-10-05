@@ -12,10 +12,10 @@ namespace Maestro.Quest.Creation
     {
         readonly Dictionary<string,Transform> nodes = new();
         readonly Dictionary<string,Quaternion> rest = new();
-        readonly List<Material> materials = new();
+        readonly List<RecipeMaterials.Lease> materials = new();
+        readonly List<Renderer> renderers = new();
+        Color appliedTint=Color.white;
         readonly List<Mesh> meshes = new();
-        readonly List<Color> colors = new();
-        readonly List<Color> patternColors = new();
         GameObject geometry,highlight;
         string highlightedPart;
         RoomRecipe recipe;
@@ -41,9 +41,9 @@ namespace Maestro.Quest.Creation
             string json = JsonUtility.ToJson(value); if (encoded == json) return false;
             CancelParts();suppressedParts.Clear();encoded = json; recipe = value.Copy(); time = 0; interrupted = runtimeGate?.Held==true; runtimeLoop=null;
             if (geometry) { geometry.SetActive(false); ArtResources.Release(geometry); }
-            foreach (var material in materials) ArtResources.Release(material);
+            foreach (var material in materials) material.Dispose();
             foreach (var mesh in meshes) ArtResources.Release(mesh);meshes.Clear();
-            nodes.Clear(); rest.Clear(); materials.Clear(); colors.Clear(); patternColors.Clear();
+            nodes.Clear(); rest.Clear(); materials.Clear(); renderers.Clear(); appliedTint=Color.white;
             geometry = new GameObject("Recipe geometry"); geometry.transform.SetParent(transform,false);
             Bounds bounds = default; bool first = true;
             foreach (var part in recipe.parts)
@@ -57,7 +57,8 @@ namespace Maestro.Quest.Creation
                 shape.transform.SetParent(node,false); shape.transform.localScale = Vector3.Scale(part.size,part.shape == "cylinder" ? new Vector3(1,.5f,1) : Vector3.one);
                 // One stable proxy collider belongs to the complete grabbable assembly.
                 var collider = shape.GetComponent<Collider>(); if(collider){collider.enabled = false; ArtResources.Release(collider);}
-                var material = IllustratedMaterials.Create(part.color);var pattern=part.pattern??new RecipePattern();pattern.Apply(material,part.shape);patternColors.Add(pattern.Color); materials.Add(material); colors.Add(part.color); shape.GetComponent<Renderer>().sharedMaterial = material;
+                var material=RecipeMaterials.Acquire(part,Color.white);var renderer=shape.GetComponent<Renderer>();
+                materials.Add(material);renderers.Add(renderer);renderer.sharedMaterial=material.Material;
                 for (int i=0;i<8;i++)
                 {
                     var corner = new Vector3((i&1)==0 ? -.5f : .5f,(i&2)==0 ? -.5f : .5f,(i&4)==0 ? -.5f : .5f);
@@ -79,7 +80,14 @@ namespace Maestro.Quest.Creation
             foreach(float x in new[]{-half.x,half.x})foreach(float y in new[]{-half.y,half.y})paths.Add(new[]{new Vector3(x,y,-half.z),new Vector3(x,y,half.z)});
             var marks=highlight.GetComponent<PencilMarks>();marks.SetPaths(paths,.0015f);marks.SetColor(IllustratedMaterials.Ribbon);
         }
-        public void Tint(Color tint) { for(int i=0;i<materials.Count;i++){materials[i].color=colors[i]*tint;materials[i].SetColor("_PatternColor",patternColors[i]*tint);} }
+        public void Tint(Color tint)
+        {
+            if(appliedTint.Equals(tint))return;appliedTint=tint;
+            for(int i=0;i<materials.Count;i++) {
+                var material=RecipeMaterials.Acquire(recipe.parts[i],tint);renderers[i].sharedMaterial=material.Material;
+                materials[i].Dispose();materials[i]=material;
+            }
+        }
         void Update()
         {
             if (runtimeGate?.Held==true||recipe == null) return;
@@ -92,6 +100,6 @@ namespace Maestro.Quest.Creation
         void OnApplicationPause(bool paused) { if (paused) Stop(); }
         void OnApplicationFocus(bool focused) { if (!focused) Stop(); }
         void OnDisable() {Stop();}
-        void OnDestroy() {CancelParts();if(runtimeGate!=null)runtimeGate.Changed-=RuntimeChanged; foreach (var material in materials) ArtResources.Release(material);foreach(var mesh in meshes)ArtResources.Release(mesh); }
+        void OnDestroy() {CancelParts();if(runtimeGate!=null)runtimeGate.Changed-=RuntimeChanged; foreach (var material in materials) material.Dispose();foreach(var mesh in meshes)ArtResources.Release(mesh); }
     }
 }

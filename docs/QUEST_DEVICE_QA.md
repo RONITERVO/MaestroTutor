@@ -1,7 +1,8 @@
 # Quest 3 development verification — updated 2026-10-05
 
-Current installed development checkpoint: **5C50CD1F**, including the grip,
-submerged-vessel, fingertip-hover, post-Recall packing and room-observation fixes below.
+Current installed development checkpoint: **76F97F56**, including shared recipe
+materials and the grip, submerged-vessel, fingertip-hover, post-Recall packing and
+room-observation fixes below.
 Full Store/provider/comfort acceptance remains open.
 
 ## On-device automation resumed — 2026-10-05
@@ -2408,3 +2409,90 @@ owned forwards removed, debug/sample-rate properties restored, and the two raw
 device profiles removed after their local copies passed hash comparison.
 `device-cleanup.json` records this cleanup. No release signing, deployment,
 provider request, Store upload or saved-data reset occurred.
+
+
+## Shared recipe materials — 2026-10-05
+
+The preceding CPU sample identified rendering/material submission as a remaining
+cost. Recipes previously created one material per part, including identically
+painted copies of the same primitive. Recipe rendering now leases materials by
+exact pigment, alternate pigment, pattern mode/plane/counts and cylinder mapping.
+Repainting acquires a matching replacement for that owner; it never mutates a
+material another object is using. Rebuilding/deleting releases each lease, and
+the final owner releases the Unity material. Historical paint choices are not
+retained in an unbounded cache. Geometry, joints, physics, serialized recipes and
+human/agent actions remain unchanged.
+
+The watercolor shader disables dynamic batching to retain the object coordinates
+used by pigment and patterns. GPU instancing remains enabled; actual benefits
+must be measured on the target hardware. Unity documents the coordinate-related
+[dynamic-batching tag](https://docs.unity3d.com/6000.3/Documentation/Manual/SL-SubShaderTags.html#disablebatching-tag)
+and the same-mesh/material requirement for
+[GPU instancing](https://docs.unity3d.com/6000.3/Documentation/Manual/GPUInstancing.html).
+
+Three focused PlayMode tests cover shared ownership through repaint/rebuild/
+deletion, distinct pattern and cylinder settings, and actual rendered repaint
+isolation and object-space pattern stability. The original implementation failed
+the identical-material sharing assertion; the replacement passes all three.
+The color readback assertion allows a one-millionth floating-point tolerance.
+The three 256×128 rendered PNGs before painting, after painting and after moving
+are byte-for-byte identical to the original implementation's corresponding
+images. These small desktop images do not establish full Quest visual or
+performance acceptance.
+
+Both extracted helpers, `RecipeMaterials` and `RoomObjectObservation`, are now
+included in the native exporter and web source-drift check: 300 source entries,
+with unchanged 93 actions / 102 facts / 16 events. Local evidence is under
+`.quest-evidence/material-sharing-20261005/`.
+
+Full verification passed: 833 EditMode / 644 PlayMode tests (three optional
+private-model skips), 129 focused web tests, 472 shared-client/native-room
+observations and 81 original-book observations using scripted provider responses.
+The production web build, 76 Android tests (two optional skips), lint and IL2CPP
+build passed. The package audit matched all 3,015 frozen inputs, native sources
+and metas, AAR, 147 web files, included avatar / 178 motions / 26 templates /
+7 modules, ARM64 libraries, development manifest, v2 signature and 16 KiB alignment.
+
+`MaestroQuest-recipe-materials-76F97F56.apk` is 188,167,871 bytes, SHA-256
+`76F97F56A3EB76AC20A284AD3F0E2EE77DE8D406770D4910B9498967739C8124`.
+It was installed in place, its device bytes matched, and the owner's authorized
+adult confirmation was completed.
+
+The same temporary 32-brick construction, chessboard and looping robot was
+created through the book's catalog controls. Each completed capture contains 45
+one-second VrApi samples at 72 Hz, separate from profiler recording:
+
+| Scene | Mean FPS | Mean stale count | Mean app GPU ms |
+| --- | ---: | ---: | ---: |
+| Original room | 71.49 | 5.82 | 6.75 |
+| Construction, physics paused | 69.56 | 7.11 | 7.27 |
+| Construction, scanned-room physics running | 70.51 | 6.40 | 7.12 |
+
+The previous observation-only checkpoint measured 68.18 / 68.11 FPS and
+8.14 / 8.13 ms app GPU time for the paused/running construction. Native
+30-second frame-interval facts now report 2,065 / 2,085 samples, mean
+14.53 / 14.39 ms, p95 28.52 / 27.74 ms and max 51.16 / 48.61 ms. This is a
+modest sequential comparison, not a controlled causal or sustained thermal test:
+temperature was 42–43 C, every capture contained four power-save-level-1 samples,
+and a development build with Operator was used. The busy room still misses a
+steady 72 FPS. Headset rendering was captured locally; human comfort and final
+visual acceptance remain open.
+
+One immediate scripted workshop close/reopen timed out at a disabled catalog
+button before physics setup. A later normal reopen succeeded; scan load and
+Start physics completed before the physics measurement. Rapid close/reopen
+acknowledgement remains a follow-up, and no native state guard was bypassed.
+
+A separate 20-second CPU profile shows instanced rendering in use and rendering
+still prominent (26.55% cumulative Camera::CustomRender, 4.70% ApplyMaterialPass).
+The corresponding earlier shares were 42.09% / 10.66%, but overlapping call
+shares cannot establish absolute frame-time savings. The new recording also
+reported 16.03% cut/lost userspace samples, so it is diagnostic only. Matching
+IL2CPP symbols and the record warning are retained with the local evidence.
+
+The temporary scene was discarded, all three original saved object IDs were
+checked, and physics/actions were stopped. Owned forwards and debug properties
+were restored and the app stopped for charging. The raw device profile was
+removed only after its local copy matched SHA-256. No synthetic input, proximity
+override, saved-data reset, real provider request, release signing, deployment or
+Store upload occurred. The ten unrelated dirty files retained their exact hashes.

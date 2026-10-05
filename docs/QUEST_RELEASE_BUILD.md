@@ -193,7 +193,7 @@ This is development-signed, not Store/provider/performance acceptance.
 
 ## Post-Recall packing checkpoint (2026-10-05)
 
-Current installed development APK: `MaestroQuest-recalled-packing-11B4972E.apk` (188,154,895 bytes),
+Development APK at this checkpoint: `MaestroQuest-recalled-packing-11B4972E.apk` (188,154,895 bytes),
 SHA-256 `11B4972E0DA36A1DDA7ACEBFC3D29F0831CEC63B4D32BEFD09BD3A1BE8A56B1B`.
 Physical packing now converts between world contact/clearance and saved room-local
 placement. It uses the existing shared operation and storage format. 831 EditMode /
@@ -214,3 +214,19 @@ Android tests/lint and the exact-input/content/signature/alignment audit. It was
 installed in place and measured on Quest; the 32-brick workload improved modestly
 but still missed 72 Hz. See [workload and limits](QUEST_DEVICE_QA.md#construction-workload-and-room-observation-cost--2026-10-05).
 This remains development evidence, not sustained-performance or Store acceptance.
+
+
+## Shared recipe materials checkpoint (2026-10-05)
+
+Current installed development APK: `MaestroQuest-recipe-materials-76F97F56.apk`
+(188,167,871 bytes), SHA-256
+`76F97F56A3EB76AC20A284AD3F0E2EE77DE8D406770D4910B9498967739C8124`.
+Recipes share immutable materials through bounded ownership; repaint, rebuild
+and deletion preserve other objects. 833 EditMode / 644 PlayMode tests, 129 web
+tests, both native-room/book journeys, Android checks and the full package audit
+passed. Installation bytes matched. The construction comparison measured
+69.56 / 70.51 FPS with physics paused/running, with lower GPU time than the
+previous checkpoint; steady 72 FPS remains unmet. Full evidence, thermal/profile
+limits, the workshop-transition follow-up and cleanup are in
+[device QA](QUEST_DEVICE_QA.md#shared-recipe-materials--2026-10-05).
+Release/provider/comfort/Store gates remain open.

@@ -33449,6 +33449,10 @@
       "sha256": "f2151c8d6c786a76837ff85f4c583d22095999557dbc8f64b136747c51fde5cd"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectObservation.cs",
+      "sha256": "4dc9411bc5afdf42b710acb9ceb28a80c75e2a08b3094dd404450821956ae40f"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceRecoveryHold.cs",
       "sha256": "3ced32ab3e9a64b49ace154f0c8be150beb96475dd8752201b730b9d79da4d70"
     },
@@ -33622,7 +33626,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/Watercolor.shader",
-      "sha256": "be87d4cecc283cf498e3b075343fb81b72afae567f4a354b994915824fb9e590"
+      "sha256": "ac5f646f2393a04cdcf55bc2457c3c27326ba3bb1c7c312b6c89191b769520e0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomViewCapture.cs",
@@ -33642,7 +33646,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeObject.cs",
-      "sha256": "4dae660f1517a0a9c8332e71c04d880c1fd77267550e56a7987583dd87ad05a7"
+      "sha256": "71c0b9533635b0e6510ca0fb31f908d3c58a90347ef83628d2aa65a5014a6632"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeMaterials.cs",
+      "sha256": "47d08147d22d2b834ce223a67756bca0173eb083b25a17ed9bba3ae58203a349"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipePartPlayback.cs",
