@@ -15,7 +15,7 @@ namespace Maestro.Quest.Book
 {
     // Sample the tracked pose and select reader before XRI processes its frame.
     [DefaultExecutionOrder(-200)]
-    public sealed class BookControllerInput : MonoBehaviour
+    public sealed partial class BookControllerInput : MonoBehaviour
     {
         public BookPointerRouter Router;
         public Transform TrackingSpace;
@@ -61,7 +61,7 @@ namespace Maestro.Quest.Book
                 Interactor.maxRaycastDistance = 2;
                 Interactor.raycastMask = RoomPhysicsLayers.InteractionMask;
                 Interactor.referenceFrame = parent;
-                // A grip can reach the cover behind the browser's separate page mesh colliders.
+                // RoomItem registers its page/button surfaces with their movable owner.
                 Interactor.hitClosestOnly = false;
                 Interactor.keepSelectedTargetValid = true;
                 Interactor.useForceGrab = false;

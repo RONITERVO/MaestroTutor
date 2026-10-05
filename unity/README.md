@@ -50,6 +50,14 @@ mirror's `Builds` directory. Never submit this development identity or debug APK
 to the store. `QuestProjectSetup.Configure` enables the XR Hands subsystem,
 Meta aim, passthrough and composition layers explicitly.
 
+Meta XR Operator is available in development APKs with the pinned Meta SDK.
+Forward device port 8720 through an explicitly selected ADB device and connect to
+`http://127.0.0.1:8720/sse` using the SDK's supported MCP client/proxy. Its
+`maestro_get_input_state` tool reads actual input/gesture/XRI state; it is excluded
+from release builds. Always release simulated devices after a test and remove
+owned port forwards/proximity overrides. See [device QA](../docs/QUEST_DEVICE_QA.md)
+for the SDK 207 Android capture-helper limitation and current measured evidence.
+
 Current controls: point and trigger for pages; grip to move/rotate book, Maestro
 or starter objects; two grips to resize within limits; B/Y to restore the room
 in front of the current view. Hand aim uses index pinch on a page for browser

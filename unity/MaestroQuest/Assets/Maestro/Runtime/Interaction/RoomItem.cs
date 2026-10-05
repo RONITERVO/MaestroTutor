@@ -8,6 +8,7 @@ using UnityEngine.XR.Interaction.Toolkit.Transformers;
 using UnityEngine.XR.Interaction.Toolkit.Filtering;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
 using Maestro.Quest.Persistence;
+using Maestro.Quest.Book;
 
 namespace Maestro.Quest.Interaction
 {
@@ -52,6 +53,25 @@ namespace Maestro.Quest.Interaction
             Grab.lastSelectExited.AddListener(OnGrabFinished);
             Grab.selectFilters.Add(this);
             Grab.enabled = true;
+        }
+
+        void Start()
+        {
+            if (!Grab) return;
+            // Book pages and tray buttons are built after Configure. XRI stops at an
+            // unregistered collider, so their pointer surfaces must share the owner’s grab.
+            // Nested movable items keep their own collider registration.
+            bool changed = false;
+            bool enabled = Grab.enabled;
+            foreach (var surface in GetComponentsInChildren<Collider>(true))
+            {
+                if (surface.GetComponentInParent<RoomItem>() != this || Grab.colliders.Contains(surface)) continue;
+                if (!surface.GetComponentInParent<BookPageTarget>() && !surface.GetComponentInParent<PhysicalAction>()) continue;
+                if (!changed) Grab.enabled = false;
+                Grab.colliders.Add(surface);
+                changed = true;
+            }
+            if (changed) Grab.enabled = enabled;
         }
 
         void OnGrabStarted(SelectEnterEventArgs _) => GrabStarted?.Invoke(this);

@@ -1,6 +1,83 @@
-# Quest 3 development verification — 2026-09-30
+# Quest 3 development verification — updated 2026-10-05
 
+## On-device automation resumed — 2026-10-05
 
+The owner reconnected Quest 3 and authorized testing. This supersedes the earlier
+headset holds below; earlier checkpoint installation notes remain historical.
+The scanned-ink checkpoint `45468330` was installed with `adb install -r` after
+backing up the installed APK, private app data and external files. No reset was
+performed. Backups and real-room screenshots stay in the ignored local
+`.quest-evidence/xr-operator-20261005/` directory.
+
+Observed on the headset through the packaged WebView and native runtime:
+
+- Passthrough, included Maestro and both live book pages render. The owner
+  confirmed 18+ and authorized opening the session-only audience screen.
+- The optional book Workshop created the 19-part practice robot in a temporary
+  room. Native joint poses changed during playback. Stopping it allowed Discard
+  to return to the original saved objects.
+- The book loaded the existing Meta room through `room.environment.set`. The
+  subsequent fact reported loaded, no pending worker, colliders ready and physics
+  paused. Explicit layout reads returned 14 bounded surfaces and one omitted
+  mesh-only anchor. This does not certify real floor/wall alignment.
+- The book created a 30 cm ink layer on an exact scanned floor anchor, added one
+  three-point stroke through `object.surface.edit`, and verified zero strokes
+  after Undo and the same stroke ID after Redo. Anchor readback reported visible
+  and retained the exact room/anchor IDs. Temporary Discard restored the original
+  room. Physical pencil/hand drawing and restart recovery still need acceptance.
+- `runtime.frameIntervals` returned a real-device 30-second window with 2,062
+  samples: mean 14.55 ms, p95 22.29 ms and maximum 32.82 ms. This small static room
+  with a playing robot is diagnostic evidence, not GPU/compositor FPS or comfort
+  acceptance. Busy-room sustained measurements remain open.
+
+Meta XR Operator 207 connects to the development APK over its local SSE endpoint.
+Its capture-permission approval crashed the SDK helper on Android 14 with
+`SecurityException: Media projections require a foreground service of type
+ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION`. Capture prompting was
+then disabled for this test and ADB screenshots used with the owner's approval.
+No Android target or application permission was weakened. Keep this separate
+from the application's own book texture and virtual-room capture.
+
+The development-only `maestro_get_input_state` tool reads actual bound controller
+values, gesture ownership, ray hits and XRI selections. It does not dispatch
+commands or read conversation, credentials or camera frames. It and its reader
+are excluded from non-development Android builds. Controller movement/selection
+acceptance must use those observations, not merely a successful Operator setter.
+
+## Gripping through book pages and tray buttons — 2026-10-05
+
+The real controller readout exposed a selection defect: `gripPressed` and the
+Object gesture were active, and the ray hit a page or tray button, but XRI had
+no hovered/selected owner. XRI stops at colliders that are not registered as an
+interactable even when `hitClosestOnly` is false. The cover/wood handles behind
+those surfaces were therefore unreachable from those pointing positions.
+
+`RoomItem` now registers its owned page/action colliders after construction,
+retaining explicit handles and leaving nested movable items with their own
+owner. Trigger/pinch routing still owns page/button clicks. Two regressions first
+failed on the original code and then passed through actual bound OpenXR input:
+page and button grip/move/release, button click, and release on tracking loss.
+The full check passed 831 EditMode and 636 PlayMode tests (three optional
+private-model skips), both native-room/original-book journeys, production web,
+Android lint and 76 Android tests (two optional skips). The audit matched 3,002
+source/asset inputs, 147 packaged web files and all included content; ARM64,
+v2 signing and 16 KiB alignment passed. Development checkpoint
+`MaestroQuest-grip-fix-FD2C7B15.apk` (188,157,155 bytes), SHA-256
+`FD2C7B15DABD454A4A5D617E86055FAF46BCE6821B80E0C434CF0EF25B8A54D1`,
+was installed in place with no data reset.
+
+On that APK, injected OpenXR controller poses/buttons exercised the actual bound
+input and XRI path. Both page grips and the physics tray's Pause-button surface
+selected their movable owner, moved it 0.200 m, released it and returned it with
+B/Recall. The test also tapped the authorized age checkbox and Open button through
+page rays; the WebView confirmed the checked box and opened chat. Triggering the
+physical Workshop token opened the real book Workshop. These are automated device
+checks, not ergonomic/hand-comfort acceptance. Raw evidence stays local and ignored.
+
+A temporary pool/bucket trial filled the held bucket. A full, slightly tilted
+submerged bucket then repeatedly spilled/refilled, so this trial does not close
+liquid conservation acceptance. The original room was restored and physics/input
+released. This is a separate shared-simulation follow-up.
 
 ## Rectangular pool and vessel dipping (headset acceptance pending)
 

@@ -133,7 +133,7 @@ feature backlog or permission to use credentials, deploy or submit.
 Manual editor work can be evaluated without activating paid AI. Desktop simulated
 identity/provider results do not satisfy production access tests, and an unsigned
 or development-signed intermediate cannot satisfy Store-channel integrity. Device
-work remains on hold until the owner's pending availability question is answered.
+work resumed on 2026-10-05 after the owner reconnected Quest 3; see [current device evidence](QUEST_DEVICE_QA.md).
 The checkout client restriction remains included in the audited development APK.
 The backend restriction remains undeployed.
 
@@ -146,6 +146,17 @@ included content, with ARM64-only libraries, a development manifest, v2 signatur
 and 16 KiB alignment. Verification: 831 EditMode / 634 PlayMode tests (three
 optional private-model skips), 474 native-room and 77 original-book observations
 with scripted offline providers, production web, Android lint and 76 Android tests
-(two optional skips). This is **development-signed and not installed**. Physical
+(two optional skips). This is **development-signed and was installed on Quest 3 on 2026-10-05**.
+Book/native creation, animation, scan-layout and anchored-ink checks are recorded
+in [device QA](QUEST_DEVICE_QA.md); these are partial acceptance. Physical
 Quest, real-provider, signing/account/payment and Store acceptance gates above
 remain open; the full v1 goal is active.
+
+## Controller interaction checkpoint (2026-10-05)
+
+`MaestroQuest-grip-fix-FD2C7B15.apk` supersedes the scanned-ink checkpoint for
+current development testing. It fixes page/button collider ownership and adds
+read-only development input diagnostics. Exact package identity, full checks,
+actual controller/page acceptance and the separate liquid follow-up are recorded
+in [device QA](QUEST_DEVICE_QA.md#gripping-through-book-pages-and-tray-buttons--2026-10-05).
+No release signing, provider acceptance, deployment or Store upload is implied.

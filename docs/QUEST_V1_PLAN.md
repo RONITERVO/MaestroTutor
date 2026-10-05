@@ -2,6 +2,14 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
+On-device verification resumed on 2026-10-05. Controller tests exposed and fixed
+book-page/tray-button colliders blocking their movable owner. Development build
+`FD2C7B15` is installed with 831 EditMode / 636 PlayMode tests, both native
+integration journeys and Android/web/package checks passed. Both page grips,
+tray grip, release, Recall and page/physical-button clicks passed on Quest 3.
+A separate full submerged-bucket spill/refill issue found during device testing
+remains under investigation. See [current device QA](QUEST_DEVICE_QA.md).
+
 Saved scanned ink layers now extend the existing Drawing object and Canvas ink
 component. The shared catalog, generated book fields, agent and physical drawing
 tools use the same persisted source and Undo. Creation selects an exact loaded
@@ -19,7 +27,10 @@ types and lint passed. The audit matched 2,998 frozen inputs, 147 packaged web f
 all included content, ARM64 libraries, the development manifest, v2 signature and
 16 KiB alignment. APK: `MaestroQuest-scanned-ink-45468330.apk` (188,156,179 bytes), SHA-256
 `454683300229BAA24AB9F8210308AC46B44270AD9DA0A905462966E91EAED9C8`. It includes scan-layout inspection and saved ink,
-and has **not been installed**. Quest work remains on hold. CI evidence is linked
+and was **installed on Quest 3 on 2026-10-05** after app-data backup. Device work
+has resumed. Book-to-native temporary creation, animation, scan inspection and
+anchored-ink Undo/Redo now have on-device evidence in [device QA](QUEST_DEVICE_QA.md).
+Earlier hold/installation notes below describe their respective checkpoints. CI evidence is linked
 from draft PR #248; these offline checks are not real-provider or Store acceptance.
 
 Loaded scan layout also has shared on-demand exact surface IDs, semantic labels,
