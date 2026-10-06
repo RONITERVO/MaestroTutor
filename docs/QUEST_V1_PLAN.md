@@ -3345,3 +3345,45 @@ calls, deployment, release signing or Store submission occurred. Uncontained
 puddles/flooding, buoyancy and a general fluid solver are not implemented by this
 bounded reservoir. Quest comfort/performance, provider/account/payment/privacy,
 signing and Store gates remain open; the v1 goal is still active.
+
+
+## Selected camera sources (owner clarification, 2026-10-07)
+
+The absence of physical-camera access in the current development APK is an
+implementation gap, not a v1 product restriction. The owner wants the existing
+web/phone camera picker to offer independent Quest sources:
+
+- **Real-world camera:** forward RGB camera using the Passthrough Camera API.
+  Label it as a camera view, not an exact eye view; its field of view differs.
+- **My mixed-reality view:** explicit user-initiated headset screen sharing via
+  MediaProjection, including the real background, virtual content and interface.
+- **Virtual scene:** authored Unity content without physical-room pixels.
+- Keep the existing generated-image and Off choices, and make **audio-only Live**
+  available without any camera or screen-sharing grant.
+
+Route selected sources through the same preview, attachment, visual-context and
+Live input pipeline used by web/phone. Gemini transport, subscription/BYOK,
+conversation history and delegated-agent ownership remain in the shared app.
+Do not add a second Unity Gemini client. Source identity and capture time must
+survive handoff so virtual or generated pictures cannot be described as direct
+physical-camera evidence. Selecting one source must never silently substitute
+another after denial, unavailable hardware or expired screen-sharing consent.
+
+Native capture must own permissions, bounded frame delivery and cleanup on
+source changes, interruption, revocation and shutdown. Preview/frame budgets
+must be measured on Quest; do not stream full-rate pixel payloads through JSON.
+MediaProjection is the user screen-sharing path, not a hidden scene-inspection
+shortcut. Test projection conflicts with developer capture tools explicitly.
+Existing native virtual-room snapshots are not yet selectable video cameras.
+
+Acceptance requires real Quest preview/snapshot/Live checks for each source,
+managed and BYOK provider transport, source switching and permission denial,
+physical/virtual visibility checks, interruption/restart, no retained stale
+frames after Stop, and performance/thermal evidence. Mock and Editor tests do
+not establish physical-camera or compositor capture acceptance.
+
+References verified 2026-10-07:
+[Passthrough Camera API](https://developers.meta.com/vr/documentation/unity/unity-pca-overview/),
+[Unity camera integration](https://developers.meta.com/vr/documentation/unity/unity-pca-documentation/),
+[Headset screen sharing](https://developers.meta.com/vr/documentation/native/native-media-projection/).
+Implementation and device acceptance of these camera sources remain open.

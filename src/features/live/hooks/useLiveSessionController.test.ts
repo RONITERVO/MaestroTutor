@@ -14,6 +14,7 @@ vi.mock('../utils/liveSystemInstruction', () => ({ buildLiveSystemInstruction: a
 vi.mock('../../vision', () => ({ processMediaForUpload: vi.fn() }));
 vi.mock('../../../api/gemini/files', () => ({ uploadMediaToFiles: vi.fn() }));
 
+import { sessionActivity } from '../../../platform/browser/sessionActivity';
 import { initialSettings, allGeneratedLanguagePairs, useMaestroStore } from '../../../store';
 import { useLiveSessionController, type UseLiveSessionControllerConfig } from './useLiveSessionController';
 
@@ -145,4 +146,34 @@ it('does not fetch suggestions or clear the new draft when the conversation chan
   await act(async () => { resolve(); await completing; });
   expect(ports.suggestions).not.toHaveBeenCalled(); expect(ports.clearDrafts).not.toHaveBeenCalled();
   expect(useMaestroStore.getState().messages.map(message => message.id)).toEqual(['new-draft']);
+});
+
+
+it('opens and restarts microphone-only Live without requesting a camera', async () => {
+  const config = createConfig();
+  const callbacks = () => ports.live.mock.calls[ports.live.mock.calls.length - 1][0];
+  ports.start.mockImplementation(async options => callbacks().onStateChange(options.gateInputOnSpeech ? 'armed' : 'active'));
+  const h = renderHook(() => useLiveSessionController(config));
+  sessionActivity.requireResume();
+  await act(async () => { await h.result.current.handleStartLiveSession(); });
+  expect(sessionActivity.isActive()).toBe(true);
+  expect(ports.start).toHaveBeenCalledWith(expect.objectContaining({ stream: null, gateAudioAfterConnect: true }));
+  expect(config.setLiveVideoStream).not.toHaveBeenCalled();
+  await act(async () => { callbacks().onStateChange('idle'); });
+  expect(ports.start).toHaveBeenCalledTimes(2);
+  expect(ports.start.mock.calls[1][0]).toMatchObject({ stream: undefined, gateInputOnSpeech: true });
+  await act(async () => { await h.result.current.handleStopLiveSession(); });
+  expect(ports.stop).toHaveBeenCalled();
+});
+
+it('does not resume Live while the native app is suspended', async () => {
+  const h = renderHook(() => useLiveSessionController(createConfig()));
+  try {
+    sessionActivity.setSuspended(true);
+    await act(async () => { await h.result.current.handleStartLiveSession(); });
+    expect(ports.start).not.toHaveBeenCalled();
+  } finally {
+    await Promise.resolve();
+    sessionActivity.setSuspended(false); sessionActivity.resume();
+  }
 });

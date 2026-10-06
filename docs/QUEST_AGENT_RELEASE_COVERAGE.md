@@ -766,3 +766,33 @@ Release CI [37522598096](https://github.com/RONITERVO/MaestroTutor/actions/runs/
 passed on `dad2ba62`; these native results precede the web-only provenance change.
 Private conversation/room pixels, original failures and the replay remain outside
 version control.
+
+
+### Microphone-only Live entry (2026-10-07)
+
+The next catch request checked two trajectories, both blocked by the scanned
+room or objects. No throw ran; the same apple remained on the table. The next
+natural request to switch to Live incorrectly described a floating Live button.
+Actual book inspection found that the Live button existed only in a working
+camera preview. The public Live-start controller also required video, despite
+the shared audio pipeline supporting microphone-only input. The current Quest
+APK intentionally lacked physical-camera permission, making this an application
+blocker rather than a Gemini transport failure.
+
+The shared composer now offers Start/Stop/Retry Live when no camera preview is
+shown. It reuses an enabled camera but does not implicitly request one; audio-only
+status does not claim Maestro can see the learner. A deliberate start can resume
+an idle foreground lesson while respecting native suspension/shutdown guards.
+Draft text and the existing media-preview controls remain intact.
+
+Validation: **2,500 web tests in 277 files**, application TypeScript and focused
+lint pass. The focused 41 tests include microphone-only start/restart/stop,
+retry/error visibility, duplicate-start suppression and suspended-session gating.
+Release CI [37532033410](https://github.com/RONITERVO/MaestroTutor/actions/runs/37532033410)
+passed the preceding image-provenance commit. A new development APK is being
+verified; physical microphone and final Live object-preservation acceptance
+remain open. The lesson and room have a fresh verified local backup.
+
+The owner also clarified that v1 must support separately selectable physical,
+mixed-reality and virtual-only views. The integration/acceptance requirements
+are recorded in QUEST_V1_PLAN.md; this microphone fix does not implement them.

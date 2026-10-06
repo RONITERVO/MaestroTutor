@@ -1,4 +1,4 @@
-import { acquireUserMedia, sessionActivity } from '../../../platform/browser/sessionActivity';
+import { sessionActivity } from '../../../platform/browser/sessionActivity';
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
@@ -15,7 +15,6 @@ import { acquireUserMedia, sessionActivity } from '../../../platform/browser/ses
  */
 
 import { useCallback, useRef, useMemo } from 'react';
-import { cameraVideoConstraints } from '../../../core-sdk/media/cameraConsent';
 import { mergeInt16Arrays } from '../../../core-sdk/media/audioProcessing';
 import { 
   ChatMessage, 
@@ -743,7 +742,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
    * Start a new Gemini Live conversation session
    */
   const handleStartLiveSession = useCallback(async () => {
-    if (!sessionActivity.isActive()) return;
+    if (!sessionActivity.isActive() && !sessionActivity.resume()) return;
     if (liveSessionState === 'connecting' || liveSessionState === 'active' || liveSessionState === 'armed') return;
 
     const conversationId = useMaestroStore.getState().settings.selectedLanguagePairId;
@@ -751,7 +750,6 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
     setLiveSessionError(null);
 
     let stream: MediaStream | null = liveVideoStream && liveVideoStream.active ? liveVideoStream : null;
-    let createdStream = false;
 
     try {
       if (!stream || !stream.active) {
@@ -761,33 +759,9 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
         }
       }
 
-      if (!stream || !stream.active) {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          throw new Error(t('error.cameraAccessNotSupported'));
-        }
-        const videoConstraints = cameraVideoConstraints(settingsRef.current.selectedCameraId);
-
-        // Request BOTH permissions upfront to avoid double prompts or late mic requests
-        stream = await acquireUserMedia({
-          video: videoConstraints,
-          audio: true
-        });
-
-        // We only use this stream for Video in the session.
-        // The audio handling (Worklet) creates its own dedicated audio stream.
-        // To prevent hardware conflicts or echo, we stop the audio tracks on this "permission-priming" stream.
-        // The permission grant itself persists for the page context.
-        stream.getAudioTracks().forEach(track => track.stop());
-
-        createdStream = true;
-        setLiveVideoStream(stream);
-      }
-
-      if (!stream || !stream.active) {
-        throw new Error(t('error.cameraStreamNotAvailable'));
-      }
-
-      liveSessionCaptureRef.current = { stream, created: createdStream };
+      // A deliberate Live start needs only the microphone. Reuse an already
+      // enabled camera, but never open one implicitly (Quest may have none).
+      liveSessionCaptureRef.current = stream ? { stream, created: false } : null;
       continueLiveRef.current = true;
 
       if (settingsRef.current.stt.enabled) {

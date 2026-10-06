@@ -432,7 +432,8 @@ export const enTranslations: Record<string, string> = {
   // Chat - live session
   "chat.liveSession.stop": "Stop Live",
   "chat.liveSession.retry": "Retry Live",
-  "chat.liveSession.start": "-->Start Live call<--",
+  "chat.liveSession.start": "Start Live",
+  "chat.liveSession.audioOnlyActiveIndicator": "The live call is active. Maestro can hear you.",
   "chat.liveSession.liveBadge": "Live",
   "chat.liveSession.connecting": "Connecting",
   "chat.liveSession.defaultLastMessage": "Hello! How can I help you today?",
