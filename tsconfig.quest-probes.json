@@ -24,7 +24,9 @@
     "test-fixtures/browser/questPhysicalPackingFixture.tsx",
     "test-fixtures/browser/questRectangularContainerFixture.tsx",
     "scripts/probe-provider-book.ts",
-    "scripts/book-provider-evidence.test.ts"
+    "scripts/book-provider-evidence.test.ts",
+    "scripts/probe-agent-physics.ts",
+    "scripts/probe-agent-physics.test.ts"
   ],
   "references": []
 }

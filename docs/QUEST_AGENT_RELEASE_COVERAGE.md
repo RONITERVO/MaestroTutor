@@ -442,3 +442,64 @@ The original offline-provider book regression also passes on these sources: run
 concurrent human edits, stale-plan refusal, manual authoring and persisted reload
 covered independently of the real-provider happy path. It does not count as a
 real-provider run.
+
+## Real-provider native physics proof (2026-10-06)
+
+`PhysicsLaunch` now passes in both modes against actual Unity physics, through
+the original chat, verifier and room-agent path. Explicit fixture setup positions
+the contextual half-size ParityBall, configures its spherical body and creates a
+fixed wall beside the synthetic Editor floor. These setup edits are not agent
+actions or a real room scan. Three conversational tasks start physics, inspect
+and perform one aimed throw, and pause physics.
+
+| Final access mode | Native run | Real provider responses | Peak height |
+| --- | --- | --- | --- |
+| BYOK | `e0f6abbdfe3b42e7a13a4bb1158a354d` | 31 | 0.891657 m |
+| Managed staging | `bd270b26839a43a28db8ba655875c81e` | 29 | 0.891037 m |
+
+Both runs pass twelve semantic gates and all ten pipeline gates for each of the
+three tasks, with clean client and Editor exits and matching source fingerprints.
+Native live-transform samples show gravity, ballistic rise/fall, approach to the
+requested destination, floor support, wall contact without penetration, and
+settling. The final sphere centre is 0.0325 m above the floor, matching its radius.
+Identity/settings and unrelated objects are preserved. Reusing the exact launch
+receipt does not throw again; the provider's subsequent pause disables simulation
+and leaves the settled body still. This does not test braking a moving body.
+
+Managed task windows reconcile separately: start **113 credits / USD 0.109800**
+(7 usage/charge rows), launch **130 / USD 0.126740** (8 rows), and pause
+**121 / USD 0.116879** (7 rows). All end with zero reserved credits. These windows
+exclude the earlier context chat and object-creation task. Response counts in the
+table include that earlier work. BYOK records real provider usage and its payer,
+without claiming independent invoice verification.
+
+Two preceding failures remain recorded. Run
+`f263071ed98643f38f0a2e395375fdc9` started gravity, then emitted incorrect nested
+coordinates which native validation refused, followed by malformed planner JSON.
+No throw occurred. Open-ended catalog arguments now use JSON text only in the
+provider response schema; the shared decoder restores typed objects before the
+unchanged validation, durable intent and native dispatch. Only inspection/check/
+execution argument payloads use this encoding. Programs, catalog definitions,
+native commands and human editing retain their existing formats. Malformed JSON
+may use the existing bounded pre-dispatch correction; oversized or non-object
+payloads fail, and no uncertain native action is replayed.
+
+Run `a719511a8a3d496a9a44d46a19689535` then performed the correct physical throw
+but failed settling when the rolling ball left the finite synthetic floor. The
+fixture now authors a fixed wall and asserts contact with it. App physics and
+collision tolerances were not changed to hide that failure.
+
+Validation: **2,479 app tests in 274 files**, application/probe TypeScript, full
+app lint, production build, prompt ownership and core boundaries pass. The first
+broad local test discovery also found an ignored diagnostic harness without its
+private Express dependency; its failure is retained. The passing rerun excludes
+only `.quest-evidence`, with committed test discovery unchanged. No snapshots or
+C# sources were changed. Each native probe verifies the Editor mirror's sources.
+Only trailing blank-line cleanup and import ordering followed these provider runs.
+
+This proves one sphere/trajectory against a synthetic floor and fixed wall. Real
+room scan permissions/alignment, controller throwing/catching, arbitrary imported
+colliders, contact-driven user programs, headset rendering and Quest performance
+remain separate gates. Earlier scenario passes are historical where shared
+planner sources have since changed; the selected release still requires its
+final paired provider and physical acceptance evidence.

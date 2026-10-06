@@ -428,3 +428,11 @@ result, native workshop Undo/Redo and IndexedDB reload without replay to the Uni
 checks. It uses supplied test credentials; sign-in, attestation, Android texture
 and physical input remain separate gates. The offline book runner still verifies
 deterministic concurrent user edits and refused stale agent commands.
+
+`PhysicsLaunch` adds a provider-authored simulation-start/throw/pause journey.
+Live native transform samples must show gravity, actual flight, approach to the
+requested point, collision support at a synthetic floor, a fixed wall and
+settling. Duplicate launch receipts cannot cause another throw, and a real agent pause must stop
+simulation. Fixture placement/settings are labelled setup, not agent work.
+This does not substitute for real scan/wall alignment, physical controller or Quest
+performance checks. Run evidence is recorded in QUEST_AGENT_RELEASE_COVERAGE.md.

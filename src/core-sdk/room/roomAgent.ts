@@ -1,6 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
-import {roomCaptureImages} from '../../../shared/prompts/room';
+import {ROOM_PLANNER_ARGUMENT_GUIDE,roomCaptureImages} from '../../../shared/prompts/room';
+import {decodeRoomPlannerResponse} from './roomPlannerResponse';
 import {ROOM_TASK_LIMITS,remainingRoomTaskBudget} from '../../../shared/roomTaskBudget';
 import {validRoomCaptureImage,validRoomCaptureMetadata,sameRoomCapture,type RoomCaptureImage,type RoomCaptureMetadata} from '../../../shared/roomViewCapture';
 import type {ConstructionSelection,ConstructionManipulation} from '../../../shared/roomSelection';
@@ -127,7 +128,7 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
     active();await control.beforePlan?.();active();
     const scene=copy(lease.state()),budget=remainingRoomTaskBudget(step,queries,actions);
     const response=await generateGeminiResponse(input.model,buildRoomAgentPrompt(input.prompt,scene,receipts,{systemInstruction:input.systemInstruction,nativeLanguageCode:input.nativeLanguageCode,relatedTask:control.relatedTask,...(planRejection?{planRejection}:{}),...(acceptedProgramStarts.size?{acceptedProgramStarts:[...acceptedProgramStarts.values()]}:{})},budget),input.history,{
-      ...pickGeminiClientSource(options),systemInstruction:ROOM_AGENT_INSTRUCTION,currentFileParts:input.currentFileParts,
+      ...pickGeminiClientSource(options),systemInstruction:ROOM_AGENT_INSTRUCTION+'\n'+ROOM_PLANNER_ARGUMENT_GUIDE,currentFileParts:input.currentFileParts,
       currentImages:[...(input.currentImages??[]),...roomCaptureImages(snapshots)],
       ...(input.liveInputMedia ? {liveInputMedia:input.liveInputMedia} : {}),
       configOverrides:{responseMimeType:'application/json',responseJsonSchema:ROOM_AGENT_RESPONSE_SCHEMA},
@@ -135,7 +136,7 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
     });
     onUsage(response);active();
     let commands:RoomCommand[];
-    try { commands=parseRoomCommands(resolveRoomProgramImports(JSON.parse(response.text||'{}'),[...inspectedModules].map(([hash,definition])=>({hash,definition})))); }
+    try { commands=parseRoomCommands(resolveRoomProgramImports(decodeRoomPlannerResponse(response.text||'{}'),[...inspectedModules].map(([hash,definition])=>({hash,definition})))); }
     catch(error) {
       // This is before durable intent and native dispatch. A new bounded planning
       // call may correct syntax/validation; transport/receipt errors are not caught.

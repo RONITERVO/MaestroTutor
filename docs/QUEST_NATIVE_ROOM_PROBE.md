@@ -81,6 +81,15 @@ and reconciled billing, and the probe checks that starting the same claimed task
 again causes neither additional usage nor a new native revision. Inspect the
 resulting scene for the requested name, shape and colour as well.
 
+The planner's provider schema represents open-ended catalog argument objects as
+JSON text. The shared decoder restores their typed nested objects/arrays before
+the original command validation, durable task intent and native dispatch. Only
+catalog inspection arguments, catalog check call arguments and execution-start
+call arguments use this provider encoding. Catalog definitions, programs, stored
+journals, native wire messages and human editors keep their ordinary object
+format. Malformed inner JSON may use the existing bounded pre-dispatch correction;
+oversized or non-object payloads fail, and no failed dispatch is retried by decoding.
+
 For the repeatable semantic scenario, use
 `-ProviderScenario ContextCreateEdit` instead of `-Prompt`. Set
 MAESTRO_HEADLESS_ACCESS_MODE to managed or byok; BYOK reads only the explicitly
@@ -119,6 +128,35 @@ This proves the common native handlers, not controller input or rendered block
 editing. Parallel/module execution, animation, persistence and physical Quest
 acceptance require their own scenarios. Keep provider transcripts and credentials
 in private ignored evidence, never in committed test fixtures.
+
+### Physical launch provider scenario
+
+`-ProviderScenario PhysicsLaunch` uses the original managed/BYOK chat,
+verifier and task path for simulation start, one aimed launch and a later pause.
+It starts the Editor adapter's explicitly synthetic floor and creates a fixed
+wall using ordinary native object creation. These are labelled test geometry,
+not an invented real scan or proof of room alignment.
+
+The earlier contextual chat creates the half-size ParityBall. Fixture setup moves
+it away from the viewer, sets solid spherical physics and adds the fixed wall
+through ordinary user edit handlers. Those setup edits are not credited to the
+agent. The provider then discovers current readiness, starts physics and lets gravity act; a second
+request discovers trajectory readiness and launches toward the specified point.
+
+The driver samples the existing native observation channel, whose positions are
+actual live transforms. It does not animate, move or apply physics during flight.
+It requires observed rise/fall, approach to the requested destination, floor
+non-penetration, wall contact without penetration and settling. The native launch
+receipt alone cannot pass those checks. Exact target/settings, unrelated objects and one launch are verified.
+Reusing the original run receipt must return the same outcome without another
+throw. A third conversational request pauses physics; the ball must stay still.
+
+`provider-physics.json` preserves samples, native receipts, all three provider
+journeys and their billing. Failed runs retain their error and original evidence.
+The outer verified result also requires clean client/Editor exits and duplicate
+handoff prevention. This is one sphere/trajectory against a flat synthetic floor
+and fixed wall, not real controllers, scan permissions/alignment, imported colliders,
+catching, general contact-driven gameplay or Quest performance proof.
 
 ### Library animation provider scenario
 
