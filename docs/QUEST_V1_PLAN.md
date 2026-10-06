@@ -3480,11 +3480,100 @@ browser unit tests/build/lint, and a verified development-signed Android package
 After the graphics API prerequisite was corrected, the APK stage was rerun with
 all other runtime/test/shader sources hash-matched to the tested mirror. Actual
 Quest stereo pixels show the book, saved lesson reloads, and the read-only device
-diagnostic reports environmentDepthAvailable=true. Moving-real-object masking,
-close hands/controllers, sustained performance and Vulkan interruption recovery
-remain device acceptance checks. The third-party Vulkan copy path has an existing
+diagnostic reports environmentDepthAvailable=true. The owner confirmed on Quest 3
+that a newly moved real object, hands and controllers hide virtual content, and
+that the book pages look unchanged. This is initial physical acceptance; sustained
+performance and wider Vulkan interruption coverage remain device acceptance checks. The third-party Vulkan copy path has an existing
 Unity 6 command-buffer warning; sustained/device validation and any necessary
 native transfer repair are release gates, not implied by a successful APK.
 
 This checkpoint does not yet implement the independent blend/collision/window
 settings described above, or the new selectable physical/composited cameras.
+
+### Native microphone packaging regression
+
+On Quest 3, the shared composer exposed Start Live with Camera Off, and a native
+controller press reached the normal Live controller. Capture failed before the
+provider session with “Could not start audio source”. Android Chromium reported
+that both RECORD_AUDIO and MODIFY_AUDIO_SETTINGS were required; the installed
+APK declared only RECORD_AUDIO even though its runtime grant was already allowed.
+The native browser now declares the missing normal audio-settings permission.
+A test reads the merged manifest through Android's PackageManager: it fails on
+the previous manifest and passes with the correction. All 87 native browser
+tests pass (two additional optional private-import fixtures skipped); AAR build
+and lint pass. Corrected development APK `413FA818` preserves the saved lesson and
+contains the expected ARM64 binaries, web bundle, permissions and development
+signature. Native book input starts microphone-only BYOK Live successfully. The
+physical request to remove the tree while keeping the apple and other objects
+was transcribed correctly, and the owner confirmed hearing Maestro's reply.
+The resulting native task deleted only the tree, preserving the same apple and
+all unrelated objects. Placement first rejected a stale room state, then found
+no suitable live surface; the apple remained on the table. The final task reply
+reported that accurately. The initial spoken reply had claimed floor placement
+before native completion, so this is not a full semantic pass. A natural novice
+follow-up asks for help putting the apple on the floor without catalog coaching.
+
+A real Settings focus interruption on this Vulkan APK kept the same Android
+process alive. Environment depth stopped while unfocused and became available
+again on return. Actual stereo pixels visibly show a newly edited unsent draft
+marker after returning; the marker was then cleared. Microphone/Live stayed
+stopped and media required an explicit resume. This checks one Settings focus
+transition, not sustained performance or every permission/recovery sequence.
+
+## Spatial voice and room acoustics (owner clarification, 2026-10-07)
+
+The owner wants Maestro's audible voice to originate at the avatar's mouth and
+respond to real and virtual surroundings. This is accepted v1 scope; the current
+APK still uses WebView audio output and does not implement spatial voice.
+
+Use one shared speech-output contract for ordinary chat speech, agent narration,
+Live and replay. Original Maestro continues to own provider requests, subscription
+and BYOK access, decoded speech, cancellation, turn ownership and transcript
+history. Quest consumes that speech through one native spatial output; it must
+not simultaneously play a second dry WebView copy. Web/phone keep their existing
+output adapter. Avoid a second Gemini connection or a Quest-specific narrator.
+Preserve bounded buffering, ordered chunks, playback completion and interruption
+semantics across this boundary; native playback completion, not network arrival,
+must drive speaking state and future mouth animation. Verify microphone echo
+handling with native playback: moving output outside Web Audio must not cause
+Maestro to hear and respond to its own speech.
+
+Attach the mono voice emitter to the animated mouth/head transform. Imported
+avatars use their mapped head plus a configurable mouth offset, with an explicit
+fallback when no suitable joint exists. Headset tracking owns the listener.
+Moving, turning, scaling or replacing an avatar must keep its voice attached;
+virtual locomotion and re-centering must use the same physical/virtual coordinate
+contract as rendering and collision. Other speaking characters and authored
+sound objects use their own emitters. Book artifacts, music and ambient audio
+must not all be indiscriminately routed through Maestro's mouth.
+
+Meta XR Audio is the candidate native renderer: its HRTF spatialization supports
+directional sound and room effects. Acoustic Ray Tracing models reflections,
+reverb, obstruction, occlusion and diffraction from supplied acoustic geometry.
+Connect simplified scanned room surfaces and eligible virtual geometry to this
+system, with explicit material presets and bounded update/source budgets. A room
+scan does not establish the true acoustic material of every surface, and live
+visual depth is not automatically an acoustic mesh. Do not promise acoustically
+accurate handling of every newly seen real object. Geometry/material overrides
+and sound settings should remain editable through the shared capability catalog
+and the same human controls/programs as other object properties.
+
+Keep acoustic participation independent of visual opacity and collision enabled
+state. Offer a sensible environment-following default, with explicit overrides;
+changing passthrough blending must not accidentally double the room reverb or
+move physical walls. Prioritize intelligible language learning: modest room
+colour, bounded attenuation and an optional clear-voice mode. No extra mandatory
+controls on the chat pages are needed.
+
+Acceptance: native and headless adapter parity; exact-once ordered playback;
+backpressure/underrun/cancellation; managed/BYOK chat, agent and Live output;
+physical echo/self-trigger checks; both ears while turning the head and walking;
+avatar replacements and custom mouth offsets; room/virtual acoustic blockers;
+blend/locomotion/recenter; pause, stop and reconnection; measured Quest CPU/audio
+latency and a fallback if the spatial renderer is unavailable. Mouth animation
+is related but remains a separate rig/viseme feature, not implied by audio origin.
+
+Official references verified 2026-10-07:
+[Meta XR Audio features](https://developers.meta.com/vr/documentation/unity/meta-xr-audio-sdk-features/),
+[Acoustic Ray Tracing](https://developers.meta.com/vr/documentation/unity/meta-xr-acoustic-ray-tracing-unity-overview/),
+[Acoustic setup](https://developers.meta.com/vr/documentation/unity/meta-xr-acoustic-ray-tracing-unity-getting-started/).

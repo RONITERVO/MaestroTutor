@@ -40,7 +40,9 @@ and does not bypass application consent or managed-access checks.
 Quest 3 settings interruption and deliberately stalled acknowledgment recovery
 have been exercised. Real active Live/microphone sessions still need hardware QA.
 Microphone requests from the bundled app now ask Android for `RECORD_AUDIO` at
-first use. Camera, opaque-frame, remote-origin and unknown-resource requests are
+first use. The library also declares the normal `MODIFY_AUDIO_SETTINGS` permission,
+which Android WebView requires to initialize its WebRTC audio source; it does not
+replace microphone consent. Camera, opaque-frame, remote-origin and unknown-resource requests are
 denied. Cancellation, navigation, disposal and app interruption invalidate the
 pending browser request. A late Android grant never starts capture automatically.
 If the permission dialog interrupts the app, the notice beside the book asks the
@@ -69,8 +71,8 @@ reading have not yet been tested. This is file access infrastructure, not a fini
 GLB/VRM model importer. Renderer recovery currently occurs on returning from an
 application interruption.
 
-Verification: `testReleaseUnitTest assembleRelease lintRelease` discovers 88
-Robolectric tests: 86 pass, with two optional private-import fixtures skipped when
+Verification: `testReleaseUnitTest assembleRelease lintRelease` discovers 89
+Robolectric tests: 87 pass, with two optional private-import fixtures skipped when
 not configured, plus the native build/lint. The development APK build invokes
 these checks and verifies that the expected test suite ran. Web tests exercise
 the gate and existing lifecycle behavior. With a local Vite server on 5178,

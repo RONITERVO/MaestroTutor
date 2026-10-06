@@ -52,6 +52,15 @@ public class BookRequestsTest {
     @Before public void setup() { host=new Host(); host.activity=Robolectric.buildActivity(Activity.class).setup().get(); broker=new BookRequests(host); }
     @After public void close() { broker.close(); host.activity.finish(); }
     private void grantMicrophone() { shadowOf(host.activity.getApplication()).grantPermissions(Manifest.permission.RECORD_AUDIO); }
+    @Test public void packagedBrowserDeclaresBothWebRtcAudioPermissions() throws Exception {
+        String[] requested = host.activity.getPackageManager().getPackageInfo(
+            host.activity.getPackageName(), android.content.pm.PackageManager.GET_PERMISSIONS).requestedPermissions;
+        assertNotNull("Browser manifest must declare WebRTC audio permissions", requested);
+        java.util.List<String> permissions = java.util.Arrays.asList(requested);
+        assertTrue(permissions.contains(Manifest.permission.RECORD_AUDIO));
+        assertTrue("Android WebView cannot open an audio source without MODIFY_AUDIO_SETTINGS",
+            permissions.contains(Manifest.permission.MODIFY_AUDIO_SETTINGS));
+    }
     @Test public void promptsOnlyForAppMicrophoneAndGrantsOnlyAfterAndroidConsent() {
         Request request=new Request(); broker.requestMicrophone(request); assertEquals(1,host.prompts); assertEquals(0,request.granted);
         grantMicrophone(); broker.microphoneResult(); assertEquals(1,request.granted); assertEquals(0,request.denied);
