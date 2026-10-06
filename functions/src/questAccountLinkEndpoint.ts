@@ -1,6 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import express, { type ErrorRequestHandler } from 'express';
+import { verifiedQuestClientIp } from './questIngress';
 import { onRequest } from 'firebase-functions/v2/https';
 import { appConfig, isOriginAllowed } from './config';
 import { adminAppCheck, adminAuth, adminDb } from './firebase';
@@ -41,8 +42,10 @@ export const createQuestAccountLinkApp = (
   for (const operation of ['create', 'status', 'approve', 'redeem', 'cancel'] as const) {
     app.post(`/${operation}`, async (req, res) => {
       try {
+        const client = verifiedQuestClientIp(req);
+        if (!client) throw linkUnavailable();
         const result = await service.run(operation, {
-          ip: req.ip || req.socket.remoteAddress || 'unknown', origin: req.headers.origin,
+          ip: client, origin: req.headers.origin,
           appCheck: req.header('X-Firebase-AppCheck') || '', authorization: req.header('Authorization') || '',
         }, req.body);
         res.json(result);

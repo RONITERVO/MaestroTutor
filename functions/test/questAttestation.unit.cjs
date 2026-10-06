@@ -188,10 +188,10 @@ async function withServer(app, run) {
 }
 
 test('HTTP bootstrap enforces origin, JSON, body limits and no-store without requiring an existing App Check token', async () => {
-  const h = harness(); const app = createQuestAttestationApp(h.service);
+  const h = harness(); const app = createQuestAttestationApp(h.service, ['127.0.0.1/32']);
   await withServer(app, async url => {
     const post = (path, body, headers = {}) => fetch(url + path, { method: 'POST', body,
-      headers: { 'Content-Type': 'application/json', Origin: 'https://appassets.androidplatform.net', ...headers } });
+      headers: { 'Content-Type': 'application/json', Origin: 'https://appassets.androidplatform.net', 'X-Forwarded-For': '203.0.113.9', ...headers } });
     const preflight = await fetch(url + '/challenge', { method: 'OPTIONS', headers: { Origin: 'https://appassets.androidplatform.net' } });
     assert.equal(preflight.status, 204);
     const result = await post('/challenge', '{}'); assert.equal(result.status, 200);
@@ -215,11 +215,12 @@ test('HTTP rechecks Firebase-preparsed raw bodies and hides unexpected errors', 
     const result = await fetch(url + '/challenge', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: ' '.repeat(40000) + '{}' });
     assert.equal(result.status, 413); assert.equal(h.issued.length, 0);
   });
+  let calls = 0;
   await withServer(createQuestAttestationApp({
-    challenge: async () => { throw new Error('sensitive upstream URL'); }, exchange: async () => {},
-  }), async url => {
-    const result = await fetch(url + '/challenge', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
-    assert.equal(result.status, 503); assert.equal((await result.json()).code, 'quest-attestation/unavailable');
+    challenge: async () => { calls++; throw new Error('sensitive upstream URL'); }, exchange: async () => {},
+  }, ['127.0.0.1/32']), async url => {
+    const result = await fetch(url + '/challenge', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Forwarded-For': '203.0.113.9' }, body: '{}' });
+    assert.equal(calls, 1); assert.equal(result.status, 503); assert.equal((await result.json()).code, 'quest-attestation/unavailable');
   });
 });
 
@@ -243,7 +244,8 @@ test('trusted ingress resolves the nearest untrusted IP; caller-prepended values
     assert.deepEqual(subjects.splice(0), ['192.0.2.1', '192.0.2.1']);
   });
   await withServer(createQuestAttestationApp(service), async url => {
-    await post(url, '198.51.100.2'); await post(url, '203.0.113.2');
-    assert.equal(subjects[0], subjects[1]); assert.match(subjects[0], /127\.0\.0\.1/);
+    assert.equal((await post(url, '198.51.100.2')).status, 503);
+    assert.equal((await post(url, '203.0.113.2')).status, 503);
+    assert.deepEqual(subjects, []);
   });
 });

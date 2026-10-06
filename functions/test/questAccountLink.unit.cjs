@@ -192,17 +192,17 @@ test('HTTP routes pass exact headers/body and verified proxy client IP without c
 });
 test('HTTP rejects unknown origins, oversized/preparsed bodies, encoded payloads and hides internal errors', async () => {
   let calls = 0;
-  const linkApp = createQuestAccountLinkApp({ run: async () => { calls++; throw new Error('secret auth token database details'); } });
+  const linkApp = createQuestAccountLinkApp({ run: async () => { calls++; throw new Error('secret auth token database details'); } }, ['127.0.0.1/32']);
   const app = express();
   app.use((req, _res, next) => { if (req.headers['x-test-preparsed']) { req.body = {}; req.rawBody = Buffer.alloc(2049); } next(); });
   app.use(linkApp);
   await serverTest(app, async base => {
-    const post = headers => fetch(`${base}/create`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body: '{}' });
+    const post = headers => fetch(`${base}/create`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Forwarded-For': '203.0.113.9', ...headers }, body: '{}' });
     assert.equal((await post({ Origin: 'https://attacker.example' })).status, 403);
     assert.equal((await post({ 'x-test-preparsed': 'yes' })).status, 413);
     assert.equal((await post({ 'Content-Encoding': 'gzip' })).status, 415);
     assert.equal(calls, 0);
-    const response = await post({}); assert.equal(response.status, 503);
+    const response = await post({}); assert.equal(response.status, 503); assert.equal(calls, 1);
     assert.deepEqual(await response.json(), { error: 'Quest account linking is unavailable. Try again later.', code: 'quest-link/unavailable' });
     const preflight = await fetch(`${base}/create`, { method: 'OPTIONS', headers: { Origin: device.origin } });
     assert.equal(preflight.status, 204); assert.match(preflight.headers.get('access-control-allow-headers'), /X-Firebase-AppCheck/);

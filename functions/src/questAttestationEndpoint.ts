@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import express, { type ErrorRequestHandler } from 'express';
+import { verifiedQuestClientIp } from './questIngress';
 import { defineSecret } from 'firebase-functions/params';
 import { onRequest } from 'firebase-functions/v2/https';
 import { appConfig, isOriginAllowed } from './config';
@@ -46,9 +47,9 @@ export const createQuestAttestationApp = (
   for (const operation of ['challenge', 'exchange'] as const) {
     app.post(`/${operation}`, async (req, res) => {
       try {
-        // Express walks configured trusted ingress hops from right to left.
-        // Untrusted client-supplied entries cannot reset a rate allowance.
-        const result = await service[operation](req.ip || req.socket.remoteAddress || 'unknown', req.body);
+        const client = verifiedQuestClientIp(req);
+        if (!client) throw questUnavailable();
+        const result = await service[operation](client, req.body);
         res.json(result);
       } catch (error) {
         const code = getHttpErrorCode(error);

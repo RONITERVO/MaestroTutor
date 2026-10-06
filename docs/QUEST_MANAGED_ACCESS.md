@@ -79,6 +79,33 @@ The live API and gateway remain unchanged. Evidence is under
 module diff, static dependency inventory and reproducible offline comparison.
 A further production rollout still needs its own concrete plan and approval.
 
+## Routing admission before activation — 2026-10-06
+
+The two Quest HTTP apps now require the request's immediate socket peer to match
+the configured trusted ingress ranges, and the resulting client address to be a
+valid IP outside those trusted ranges. Missing/malformed forwarding information,
+an entirely trusted chain and an unknown immediate proxy return the existing
+503/unavailable response before invoking any bootstrap or pairing service.
+Previously Express could fall back to the unmatched proxy address, collapsing
+all callers into that proxy's rate bucket when the platform routing changed.
+The observed edge case was reproduced over local HTTP before the fix.
+
+The resolver is shared by all seven Quest operations and still uses Express's
+nearest-untrusted-address walk. Spoofed prefixes do not change the selected
+client. **100 Functions tests and CORS checks pass**, including 63 negative and
+84 positive HTTP routing cases covering absent/unknown trust, invalid clients,
+multiple trusted hops, IPv4, IPv6 and IPv4-mapped IPv6. Existing service-error
+sanitization tests explicitly verify that valid routing reaches the service.
+Evidence: `.quest-evidence/quest-ingress-20261006/`.
+
+This change is not deployed and does not approve any production CIDR. It turns
+an unverified routing change into an explicit refusal rather than silently
+sharing a proxy rate allowance. Both deployed Quest endpoints remain disabled;
+verify every exposed route before enabling them. This follows Express's
+[documented trust walk](https://expressjs.com/en/guide/behind-proxies/); Google's
+[header reference](https://docs.cloud.google.com/functions/docs/reference/headers)
+does not establish a stable immediate-proxy address for this deployment.
+
 ## Verified account preparation — 2026-10-06
 
 A dedicated **Maestro Quest** Firebase web registration is now active in the
