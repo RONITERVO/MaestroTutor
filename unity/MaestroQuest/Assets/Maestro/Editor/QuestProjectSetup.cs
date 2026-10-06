@@ -97,12 +97,30 @@ namespace Maestro.Quest.Editor
                     // Browser texture sharing uses GLES. This Meta optimization is Vulkan-only.
                     var serialized = new SerializedObject(feature);
                     var discard = serialized.FindProperty("m_optimizeBufferDiscards");
-                    if (discard != null) { discard.boolValue = false; serialized.ApplyModifiedPropertiesWithoutUndo(); }
+                    if (discard != null) discard.boolValue = false;
+                    // The pinned OpenXR package uses "eureka" internally for Quest 3.
+                    // Do not inherit new device targets when an SDK adds them by default.
+                    var devices = serialized.FindProperty("targetDevices");
+                    if (devices == null || !devices.isArray) throw new InvalidOperationException("Pinned OpenXR target-device schema changed.");
+                    int quest3 = 0;
+                    for (int i = 0; i < devices.arraySize; i++)
+                    {
+                        var device = devices.GetArrayElementAtIndex(i);
+                        bool selected = device.FindPropertyRelative("manifestName").stringValue == "eureka";
+                        device.FindPropertyRelative("enabled").boolValue = selected;
+                        if (selected) quest3++;
+                    }
+                    if (quest3 != 1) throw new InvalidOperationException("Pinned OpenXR Quest 3 target was not found exactly once.");
+                    serialized.ApplyModifiedPropertiesWithoutUndo();
                 }
                 EditorUtility.SetDirty(feature);
             }
             EditorUtility.SetDirty(settings); EditorUtility.SetDirty(xr);
             var metaConfig = OVRProjectConfig.CachedProjectConfig;
+            // Quest 3 is the current verified hardware. Expand only with device QA.
+            // Meta 207 otherwise adds VR Glasses ("stanley"), rejected by its uploader.
+            metaConfig.targetDeviceTypes.Clear();
+            metaConfig.targetDeviceTypes.Add(OVRProjectConfig.DeviceType.Quest3);
             metaConfig.sceneSupport = OVRProjectConfig.FeatureSupport.Supported;
             metaConfig.anchorSupport = OVRProjectConfig.AnchorSupport.Enabled;
             metaConfig.insightPassthroughSupport = OVRProjectConfig.FeatureSupport.Required;

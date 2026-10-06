@@ -5,10 +5,46 @@ prepared locally at the owner's request, with a verified encrypted USB copy.
 Independent paper-password recovery is verified. The public release profile now
 passes strict configuration checks, and the two Quest bootstrap endpoints are
 deployed but disabled. The first owner-approved local candidate is now signed
-and audited. Account/provider acceptance and Store upload remain open; see [the scoped rollout](QUEST_MANAGED_ACCESS.md#scoped-backend-rollout--2026-10-06).
+and audited. Its approved private Alpha draft upload was rejected for an SDK-generated
+unsupported device identifier; the correction is described below. Account/provider
+acceptance and a successful Store upload remain open; see [the scoped rollout](QUEST_MANAGED_ACCESS.md#scoped-backend-rollout--2026-10-06).
 The existing development command still produces `com.maestro.quest.development`.
 The release command prepares a non-development IL2CPP/ARM64 APK from the same
 source, web app, native browser, included avatar and motions.
+
+## Private Alpha packaging rejection and target correction — 2026-10-06
+
+The owner authorized draft-only upload of signed candidate **848FFA51** to app
+`1763835394893209`, private `ALPHA`, with no publication or tester invitations.
+Official Meta CLI sign-in succeeded. The upload command omitted `--publish` and
+terminated with exit 1. Platform Utility 208 rejected the manifest device name
+`stanley`; no accepted build is verified. The four release channels still report
+empty build lists. Channel lists alone do not prove absence of unattached drafts.
+
+The pinned Meta Core SDK 207 enables VR Glasses by default and writes `stanley`
+for that target, while Meta's current uploader/public manifest specification uses
+`vrglasses`. Maestro does not have VR Glasses acceptance evidence. Both Meta and
+OpenXR project configuration now explicitly select **Quest 3 only**, the hardware
+used for current testing, instead of inheriting device additions from SDK defaults.
+No package-cache code is patched. Broader headset targeting requires device QA.
+
+The release packager checks the **final APK's merged manifest**, after both SDK
+writers, for exactly one supported-device entry with value `quest3`. The same
+PowerShell check accepts the valid case and refuses eight missing, duplicate,
+unsupported or broader declarations in release CI. It also rejects the actual
+manifest from 848FFA51. A replacement intermediate is being verified before any
+new key use or upload.
+
+The uploader also warned about Quest 1 and mixed 32/64-bit libraries. The actual
+rejected APK declares neither Quest 1 nor any 32-bit native directory: its 20
+native libraries are all under `lib/arm64-v8a`. Those warnings do not override the
+package inventory. Their cause has not been established.
+
+Evidence: `.quest-evidence/meta-private-alpha-20261006/` contains the guarded
+attempt, redacted uploader error blocks and before/after channel reads. The
+replacement preparation is under `.quest-evidence/quest-device-targets-20261006/`.
+No backend activation, policy certification, channel publication or headset
+installation is part of this correction.
 
 ## Verified real-settings intermediate — 2026-10-06
 
@@ -72,7 +108,8 @@ Public evidence: `.quest-evidence/release-profile-build-20261006/local-signing-r
 `release-entry-inventory.json`, signature results, alignment and manifest. The
 APK also has adjacent `.release.json`, `.sha256`, `.signature.txt` and
 `.manifest.xml` files in the local build directory. This signed APK has not been
-installed or uploaded; the earlier temporary headset check used the intermediate.
+installed. Its later approved draft upload was rejected as recorded below; the
+earlier temporary headset check used the intermediate.
 Real Store entitlement/integrity, account/provider access and device acceptance
 remain separate release gates.
 

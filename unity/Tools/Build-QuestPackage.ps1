@@ -135,6 +135,7 @@ if ($release) {
     [xml]$manifest = $manifestText -join "`n"
     $android = 'http://schemas.android.com/apk/res/android'
     if ($manifest.manifest.package -ne $profile.package -or $manifest.manifest.GetAttribute('versionCode',$android) -ne [string]$profile.versionCode -or $manifest.manifest.GetAttribute('versionName',$android) -ne $profile.versionName -or $manifest.manifest.application.GetAttribute('debuggable',$android) -eq 'true') { throw 'The APK identity/version/debug state does not match the release profile.' }
+    & (Join-Path $PSScriptRoot 'Assert-QuestReleaseManifest.ps1') -Manifest $manifest
     $signature | Set-Content -LiteralPath ($output + '.signature.txt')
     $manifestText | Set-Content -LiteralPath ($output + '.manifest.xml')
     @{ version=1; releaseSigned=(!$PrepareOnly); profileSha256=(Get-FileHash -LiteralPath $ReleaseProfile -Algorithm SHA256).Hash; apkSha256=(Get-FileHash -LiteralPath $output -Algorithm SHA256).Hash; providerAcceptanceVerified=$false; storeAvailabilityVerified=$false } | ConvertTo-Json | Set-Content -LiteralPath ($output + '.release.json')

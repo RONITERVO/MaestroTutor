@@ -55,6 +55,9 @@ jobs:
         run: npm run verify:behaviour-catalog
       - name: Verify included Quest avatar integrity
         run: npm run verify:quest-assets
+      - name: Test Quest release manifest policy
+        shell: pwsh
+        run: ./unity/Tools/Test-QuestReleaseManifest.ps1
       - name: Type-check native integration drivers
         run: npm run verify:quest-probes
       - name: Test app and shared core
