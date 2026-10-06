@@ -96,12 +96,15 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
   onUsage:(response:Awaited<ReturnType<typeof generateGeminiResponse>>)=>void,control:RoomTaskControl={}
 ):Promise<RoomTaskResult> {
   const receipts:RoomAgentState[]=[],snapshots:RoomCaptureImage[]=[];
+  // One task starts a saved program revision once. Accepted preparation/queueing
+  // is already an effect; a repeated model proposal must observe it, not replay it.
+  const acceptedProgramStarts=new Map<string,{target:string;revision:number;receiptIndex:number;runIds:string[]}>();
   const active=()=>{if(control.signal?.aborted||control.isCurrent?.()===false||!lease.valid())throw new DOMException('The room request was interrupted. No further actions will run.','AbortError');};
   let queries=0,actions=0;
   for(let step=0;step<ROOM_TASK_LIMITS.planningCalls;step++) {
     active();await control.beforePlan?.();active();
     const scene=copy(lease.state()),budget=remainingRoomTaskBudget(step,queries,actions);
-    const response=await generateGeminiResponse(input.model,buildRoomAgentPrompt(input.prompt,scene,receipts,{systemInstruction:input.systemInstruction,nativeLanguageCode:input.nativeLanguageCode,relatedTask:control.relatedTask},budget),input.history,{
+    const response=await generateGeminiResponse(input.model,buildRoomAgentPrompt(input.prompt,scene,receipts,{systemInstruction:input.systemInstruction,nativeLanguageCode:input.nativeLanguageCode,relatedTask:control.relatedTask,...(acceptedProgramStarts.size?{acceptedProgramStarts:[...acceptedProgramStarts.values()]}:{})},budget),input.history,{
       ...pickGeminiClientSource(options),systemInstruction:ROOM_AGENT_INSTRUCTION,currentFileParts:input.currentFileParts,
       currentImages:[...(input.currentImages??[]),...roomCaptureImages(snapshots)],
       ...(input.liveInputMedia ? {liveInputMedia:input.liveInputMedia} : {}),
@@ -114,6 +117,11 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
     // An unconfirmed earlier action is evidence of uncertainty, never permission to retry it.
     if (control.relatedTask?.unconfirmed && commands.some(command => !isRoomQuery(command)))
       return { ...(snapshots.length?{snapshots}:{}), receipts, scene: copy(lease.state()), budgetExhausted: false, relatedTask: control.relatedTask, needsReview: true };
+    const proposedStart=commands.length===1&&commands[0].action==='rules'&&commands[0].rule?.action==='play'?commands[0].rule:null;
+    const startKey=proposedStart?JSON.stringify([proposedStart.target,proposedStart.revision]):null;
+    if(startKey&&acceptedProgramStarts.has(startKey))commands=[{action:'rules',rule:{action:'inspect',target:proposedStart!.target}}];
+    // Reconciliation above is an ordinary native read with its own real receipt,
+    // recorded as a read in the task journal and charged to the query allowance.
     // A used discovery allowance must not discard the remaining action allowance,
     // and used actions must still permit observing their actual outcomes. Refuse
     // an over-budget proposal before the durable intent or any native dispatch.
@@ -126,6 +134,8 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
       ? lease.execute(commands,scene.sceneRevision,scene.objects,control.signal)
       : lease.execute(commands,scene.sceneRevision,scene.objects));
     receipts.push(copy(receipt));
+    if(startKey&&proposedStart&&!query&&receipt.ok)acceptedProgramStarts.set(startKey,{target:proposedStart.target!,revision:proposedStart.revision!,receiptIndex:receipts.length-1,
+      runIds:[...new Set([...(receipt.rules?.running??[]),...(receipt.rules?.outcomes??[])].filter(run=>run.sequenceId===proposedStart.target).map(run=>run.id))]});
     if(query)queries++;else actions++;
     // Cancellation may race an acknowledgement. Preserve that evidence before
     // checking the turn fence; never relabel a completed edit as rolled back.

@@ -17,7 +17,7 @@ namespace Maestro.Quest.Editor
     {
         const string Key="Maestro.RoomProbe.Directory";
         static string directory,id,clientId;static RoomAgent agent;static GameObject root;
-        static double started,next;static bool finishing;
+        static double started,next;static bool finishing;static QuestAvatarProbe avatarProbe;
         static QuestRoomProbe(){EditorApplication.playModeStateChanged+=Changed;EditorApplication.update+=Tick;}
         public static void Start()
         {
@@ -39,6 +39,7 @@ namespace Maestro.Quest.Editor
                 try{
                     id=(string)JObject.Parse(File.ReadAllText(Path.Combine(directory,"owner.json")))["id"];
                     started=EditorApplication.timeSinceStartup;next=0;finishing=false;
+                    avatarProbe=Environment.GetEnvironmentVariable("MAESTRO_ROOM_PROBE_AVATAR")=="1"?new QuestAvatarProbe():null;
                     Application.runInBackground=true;Application.targetFrameRate=72;
                     root=new GameObject("Maestro probe app");root.SetActive(false);
                     var room=root.AddComponent<MaestroRoom>();room.ProbeWorkspaceDirectory=Path.Combine(directory,"workspace");root.SetActive(true);
@@ -78,7 +79,11 @@ namespace Maestro.Quest.Editor
                     clientId=(string)request["snapshot"]["clientId"];
                 }
                 if(agent?.CapturePayload is JObject capture)Publish("capture.json",capture);
-                if(agent)Publish("state.json",new JObject {["version"]=1,["id"]=id,["clientId"]=clientId,["state"]=JObject.Parse(RoomAgentWire.Serialize(agent.Observe()))});
+                if(agent){
+                    var observed=agent.Observe();
+                    Publish("state.json",new JObject {["version"]=1,["id"]=id,["clientId"]=clientId,["state"]=JObject.Parse(RoomAgentWire.Serialize(observed))});
+                    var animation=avatarProbe?.Observe(root,id,observed);if(animation!=null)Publish("avatar-playback.json",animation);
+                }
             }catch(InvalidDataException e){Fail(e);}
             catch(IOException){ /* Atomic replacement can briefly contend on Windows. The bounded client times out. */ }
             catch(Exception e){Fail(e);}

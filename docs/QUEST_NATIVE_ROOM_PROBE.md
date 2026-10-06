@@ -120,6 +120,38 @@ editing. Parallel/module execution, animation, persistence and physical Quest
 acceptance require their own scenarios. Keep provider transcripts and credentials
 in private ignored evidence, never in committed test fixtures.
 
+### Library animation provider scenario
+
+`-ProviderScenario AvatarAnimation` uses real chat/verification/agent requests to
+save ParityMotion for the compatible downloaded Agree_Gesture clip, then start
+that exact program. A contextual ParityBall remains in the room as an unrelated
+object. The probe reads the saved source and ordinary native motion search,
+compares exact shipped model/motion/rig identities, and requires one completed
+run with unchanged source, objects, placement, activity and walking preferences.
+
+For this opt-in scenario, the Editor-only adapter records actual displayed skin
+bone transforms and the active library motion/run IDs in `avatar-playback.json`.
+It never samples a clip, starts animation or replaces a provider response. Idle
+identity changes and approximately 10 Hz active observations are retained up to
+512 frames and 512 distinct skin bones; truncation fails the proof. Assertions
+require at least 15 displayed bones, five changing joint rotations, full-duration
+contiguous playback and a subsequent stop. They reject wrong IDs/rigs, frozen
+skins, invalid joints and native playback errors. This checks the actual skin,
+not just an accepted animation command. It is not a frame-rate or headset verdict.
+
+`provider-animation.json` retains save/start journeys, accounting, exact source,
+native final state and the observation summary. The outer `verified.json` also
+requires duplicate prevention and clean client/Editor exits. This shipped-clip
+scenario does not certify every imported rig, all 178 motions, gestures, follow,
+authored room travel or physical joint posing; those need their own evidence.
+
+The shared task runner reconciles repeated play proposals for an already accepted
+program target/revision through native rules.inspect. An accepted Loading/Queued
+receipt already started work. The journal records that real inspection and its
+receipt; it cannot restart a completed or cancelled run to satisfy an agent retry.
+The probe requires exactly one completed run, not merely one accepted play reply.
+A later user task can start the saved program again.
+
 ### Spoken and visual agent scenarios
 
 `-ProviderScenario LiveVisual` and `-ProviderScenario ObserverVisual` run the

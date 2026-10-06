@@ -404,3 +404,59 @@ describe('program save provider schema', () => {
   expect(rules.find((item: any) => item.properties.action.enum[0] === 'signal').required).toEqual(['action', 'revision', 'eventName', 'value']);
  });
 });
+
+
+describe('accepted program starts are observed, never replayed by a planner retry', () => {
+ const target='d'.repeat(32), other='e'.repeat(32);
+ const start=(id=target,revision=2)=>({action:'rules',rule:{action:'play',target:id,revision}});
+ const response=(commands:unknown[])=>JSON.stringify({commands});
+ it('reconciles a duplicate Loading acknowledgement through a real read even after the first run completes',async()=>{
+  const ai=client([response([start()]),response([start()]),response([])]),beforeDispatch=vi.fn();
+  let current={...scene,capabilities:['behaviourPrograms.v3'],rules:{revision:2,running:[],outcomes:[]}} as unknown as RoomAgentState;
+  const execute=vi.fn(async(commands:RoomCommand[])=>{
+   const run={id:'run',sequenceId:target,preparing:true};
+   current=commands[0].rule?.action==='play'
+    ? {...current,ack:1,status:'Loading action motion…',rules:{...current.rules!,running:[run]}}
+    : {...current,ack:2,status:'Program completed',rules:{...current.rules!,running:[],outcomes:[{id:'run',sequenceId:target,phase:'completed',status:'Program completed'}]}};
+   return current;
+  });
+  const result=await runRoomActionTask(input,{aiClient:ai},{state:()=>current,valid:()=>true,execute},()=>{},{beforeDispatch});
+  expect(execute.mock.calls.map(call=>call[0])).toEqual([[start()],[{action:'rules',rule:{action:'inspect',target}}]]);
+  expect(beforeDispatch.mock.calls[1][0]).toEqual([{action:'rules',rule:{action:'inspect',target}}]);
+  expect(result.receipts).toHaveLength(2);expect(result.receipts[1].rules?.outcomes?.[0].phase).toBe('completed');
+  const request:any=(ai.models.generateContentStream.mock.calls as any)[2][0];const prompt=JSON.parse(request.contents[0].parts[0].text);
+  expect(prompt.tutorContext.acceptedProgramStarts).toEqual([{target,revision:2,receiptIndex:0,runIds:['run']}]);
+  expect(prompt.budget).toMatchObject({actionBatches:ROOM_TASK_LIMITS.actionBatches-1,queryBatches:ROOM_TASK_LIMITS.queryBatches-1});
+ });
+ it('allows another target or newly edited program revision and resets the guard for a new user task',async()=>{
+  const ai=client([response([start()]),response([start(other)]),response([start(target,3)]),response([])]);
+  const execute=vi.fn(async()=>({...scene,ack:1,status:'Accepted'}));
+  const lease={state:()=>scene,valid:()=>true,execute};
+  await runRoomActionTask(input,{aiClient:ai},lease,()=>{});
+  expect(execute.mock.calls).toHaveLength(3);
+  const later=client([response([start()]),response([])]);await runRoomActionTask(input,{aiClient:later},lease,()=>{});
+  expect(execute.mock.calls).toHaveLength(4);
+ });
+ it('does not resurrect a cancelled or queued start after its acknowledgement',async()=>{
+  for(const status of ['Queued','Cancelled by user']){
+   const ai=client([response([start()]),response([start()]),response([])]);
+   const execute=vi.fn(async(_commands:RoomCommand[])=>({...scene,status,rules:{revision:2,running:[],outcomes:[]}} as unknown as RoomAgentState));
+   await runRoomActionTask(input,{aiClient:ai},{state:()=>scene,valid:()=>true,execute},()=>{});
+   expect(execute.mock.calls.map(call=>call[0])).toEqual([[start()],[{action:'rules',rule:{action:'inspect',target}}]]);
+  }
+ });
+ it('bounds repeated reconciliation without spending more action batches or dispatching over its query budget',async()=>{
+  const ai=client(Array.from({length:ROOM_TASK_LIMITS.planningCalls},()=>response([start()]))),beforeDispatch=vi.fn();
+  const execute=vi.fn(async(_commands:RoomCommand[])=>({...scene,status:'Loading action motion…'}));
+  const result=await runRoomActionTask(input,{aiClient:ai},{state:()=>scene,valid:()=>true,execute},()=>{},{beforeDispatch});
+  expect(result.budgetExhausted).toBe(true);
+  expect(execute.mock.calls.map(call=>call[0])).toEqual([[start()],...Array.from({length:ROOM_TASK_LIMITS.queryBatches},()=>[{action:'rules',rule:{action:'inspect',target}}])]);
+  expect(beforeDispatch).toHaveBeenCalledTimes(1+ROOM_TASK_LIMITS.queryBatches);
+ });
+ it('does not classify a refused start as accepted',async()=>{
+  const ai=client([response([start()]),response([start()]),response([])]);
+  const execute=vi.fn(async(_commands:RoomCommand[])=>({...scene,ok:false,status:'Target unavailable'}));
+  await runRoomActionTask(input,{aiClient:ai},{state:()=>scene,valid:()=>true,execute},()=>{});
+  expect(execute.mock.calls.map(call=>call[0])).toEqual([[start()],[start()]]);
+ });
+});

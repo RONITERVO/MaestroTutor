@@ -394,9 +394,13 @@ The optional native provider probe now exercises the conversational delegation
 instead of invoking the planner directly. A passed basic creation journey is
 only that scenario's evidence. Paired Live/observer visual runs and an EventProgram
 scenario now add exact media handoff and native event/function/branch/state/timer,
-completion/restart/Stop evidence. The current run IDs, billing and scope limits are
-in the Quest agent coverage matrix. Broader programs, animation, ownership and
-recovery still need semantic assertions and real-provider runs in both modes. Deterministic fixtures, native receipts and provider usage
+completion/restart/Stop evidence. AvatarAnimation adds exact library discovery,
+editable save-only source and later full-duration playback, with actual displayed
+skin-joint observations from the Editor. Its duplicate-start gate exposed a real
+planner replay and now checks the shared accepted-start reconciliation. The current
+run IDs, billing and scope limits are in the Quest agent coverage matrix. Broader
+programs, avatar motion/ownership and recovery still need semantic assertions and
+real-provider runs in both modes. Deterministic fixtures, native receipts and provider usage
 are recorded separately; none implies unobserved headset or Store acceptance.
 
 

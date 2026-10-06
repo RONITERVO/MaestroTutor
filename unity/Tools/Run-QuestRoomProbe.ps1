@@ -6,7 +6,7 @@ param(
  [Parameter(Mandatory)][string]$BuildMirror,
  [string]$Prompt,
  [string]$Profile = 'quest-probe',
- [ValidateSet('ContextCreateEdit','LiveVisual','ObserverVisual','EventProgram')][string]$ProviderScenario,
+ [ValidateSet('ContextCreateEdit','LiveVisual','ObserverVisual','EventProgram','AvatarAnimation')][string]$ProviderScenario,
  [string]$SpeechFixture,
  [ValidateSet('Headless','Book')][string]$Journey = 'Headless'
 )
@@ -45,7 +45,7 @@ New-Item -ItemType Directory -Path $directory | Out-Null
 @{version=1;id=$id} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'owner.json') -Encoding utf8
 $log=Join-Path $directory 'unity.log'
 Stop-QuestBuildHelper
-$process=Start-Process -FilePath $editorPath -WindowStyle Hidden -PassThru -ArgumentList @('-batchmode','-force-d3d11','-buildTarget','Win64','-projectPath',('"'+$mirror+'"'),'-executeMethod','Maestro.Quest.Editor.QuestRoomProbe.Start','-logFile',('"'+$log+'"')) -Environment @{ADB_SERVER_SOCKET='tcp:localhost:5041';MAESTRO_ROOM_PROBE_DIRECTORY=$directory;MAESTRO_ROOM_PROBE_PHYSICS=$(if([string]::IsNullOrWhiteSpace($Prompt)){'1'}else{''});MAESTRO_QUEST_RELEASE_PROFILE='';MAESTRO_QUEST_KEYSTORE='';MAESTRO_QUEST_KEY_ALIAS='';MAESTRO_QUEST_STORE_PASSWORD='';MAESTRO_QUEST_KEY_PASSWORD=''}
+$process=Start-Process -FilePath $editorPath -WindowStyle Hidden -PassThru -ArgumentList @('-batchmode','-force-d3d11','-buildTarget','Win64','-projectPath',('"'+$mirror+'"'),'-executeMethod','Maestro.Quest.Editor.QuestRoomProbe.Start','-logFile',('"'+$log+'"')) -Environment @{ADB_SERVER_SOCKET='tcp:localhost:5041';MAESTRO_ROOM_PROBE_DIRECTORY=$directory;MAESTRO_ROOM_PROBE_AVATAR=$(if($ProviderScenario -eq 'AvatarAnimation'){'1'}else{''});MAESTRO_ROOM_PROBE_PHYSICS=$(if([string]::IsNullOrWhiteSpace($Prompt)){'1'}else{''});MAESTRO_QUEST_RELEASE_PROFILE='';MAESTRO_QUEST_KEYSTORE='';MAESTRO_QUEST_KEY_ALIAS='';MAESTRO_QUEST_STORE_PASSWORD='';MAESTRO_QUEST_KEY_PASSWORD=''}
 $previousPrompt=$env:MAESTRO_ROOM_PROBE_PROMPT;$previousProfile=$env:MAESTRO_ROOM_PROBE_PROFILE;$previousScenario=$env:MAESTRO_ROOM_PROBE_SCENARIO;$previousSpeech=$env:MAESTRO_ROOM_PROBE_SPEECH
 try{
  $env:MAESTRO_ROOM_PROBE_PROMPT=$Prompt;$env:MAESTRO_ROOM_PROBE_PROFILE=$Profile;$env:MAESTRO_ROOM_PROBE_SCENARIO=$ProviderScenario;$env:MAESTRO_ROOM_PROBE_SPEECH=$SpeechFixture

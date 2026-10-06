@@ -19,6 +19,7 @@
     "scripts/native-probe-contract.test.ts",
     "scripts/agent-provider-contract.test.ts",
     "scripts/probe-agent-program.test.ts",
+    "scripts/probe-agent-animation.test.ts",
     "test-fixtures/browser/questPhysicalPackingFixture.tsx",
     "test-fixtures/browser/questRectangularContainerFixture.tsx"
   ],

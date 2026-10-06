@@ -219,3 +219,76 @@ charge rows, with zero reservations. Its no-output test released all 156 reserve
 credits with no usage/charge rows. The handoff test forwarded 60 of the offered
 65 seconds and settled 2 credits/USD 0.001405 with zero reservations. These are
 existing web/provider proofs; they do not substitute for native or headset proof.
+
+## Library animation provider/native proof (2026-10-06)
+
+`AvatarAnimation` extends the same conversational path to a shipped library clip.
+The agent must discover the compatible downloaded Agree_Gesture motion before
+saving its exact ID in an editable ParityMotion program. Saving starts no playback
+and creates no buttons or automatic bindings. A later chat request starts that
+saved source; the native run must complete exactly once without rewriting it.
+
+The Editor-only probe observes actual displayed skin transforms while the provider
+is busy. It does not call clip.SampleAnimation, choose a motion or drive the avatar.
+The gate matches exact model, rig, motion and active run identities, checks full
+13-second playback and subsequent stop, and rejects frozen joints or truncated
+observations. Saved avatar placement, actual world position, walking preferences,
+tutor-state choices and unrelated objects must remain unchanged. This diagnostic
+is not included in the player and does not introduce a second animation system.
+
+Both final runs use the same runtime and probe sources, including the accepted-start
+fix below. Each save/start turn passes all ten conversational handoff, receipt,
+chat-result and provider-usage gates, and both client and Editor exit cleanly.
+
+| Access | Local evidence run | Observed skin playback | Save/start billing |
+| --- | --- | --- | --- |
+| Managed staging | dd4804e242f74b59a847ea66be4f6b16 | 120 active samples; 68 bones; 51 changing; 13.088 seconds | 137/74 credits; USD 0.134045/0.070662; 0 reserved |
+| BYOK | e30b004ce83a4af1b9fda7ed9b58e171 | 121 active samples; 68 bones; 51 changing; 13.062 seconds | Real provider usage; API-key owner pays |
+
+The managed save/start windows contain eight/five matched usage and charge rows.
+Context chat and the earlier sentinel-object creation precede those windows.
+BYOK payer identity is recorded; its external invoice is not independently verified.
+Both providers proposed just one start in these final runs. Deterministic regression
+tests separately force the duplicate proposal and prove native inspection replaces
+replay. Earlier BYOK run `921a59f6a5a04ab19487e321deff9b41` passed before the shared
+start fix; it is retained separately, not used as final paired-source evidence.
+
+Earlier run `91c7c549cdfc4af4afe84a2480eb460c` remains failed. Its animation and
+program completed, but the harness requested creation-only object.placement for
+Maestro. The corrected harness reads supported object.definition and object.position
+facts, validates availability before the next provider request, and compares saved
+rotation/scale/position plus actual world position after playback. A regression
+rejects that unavailable fact and changed positions/rotations. A separate post-hoc
+skin check of the failed run is diagnostic only; it does not turn the run into a pass.
+
+Managed run `1b29d02b3e8d4c51a72c825ac1f94c32` correctly remains failed: the
+provider started the same saved program twice after an accepted Loading receipt.
+Both native runs completed, so command acceptance alone would have missed it.
+Its save/start billing windows settled 142/146 credits (USD 0.137388/0.142460),
+with zero reservations before the corrected run began.
+
+The shared task runner now remembers accepted program target/revision pairs for
+that task. A duplicate play proposal becomes a normal native rules.inspect call,
+recorded truthfully in the journal and charged to the query allowance. Loading,
+preparing, queued, completed or cancelled starts cannot be silently reissued by
+that task. Refused starts remain eligible for correction; another target/revision
+or a later explicit user task can start normally. Requested repetition belongs in
+the editable program. This guard does not fabricate completion or retry uncertain
+effects, and does not suppress unrelated repeated creation commands. Focused tests
+cover native receipts, cancellation/queueing, query exhaustion and task boundaries.
+The final paired runs above include this shared fix.
+
+Validation on this increment: 2,451 app tests in 268 files; 837 Unity EditMode and
+647 PlayMode passes, with only the three documented optional private-file skips.
+Full native-room journey `718b54b0748a45279e1a4c2c3b5babee` and original-book journey
+`c19b054182c64c24bcda8b27d349799e` also exit cleanly. The book journey uses scripted
+provider responses and is not real-provider or headset evidence. The only C#
+changes here are Editor observation code; runtime animation remains unchanged.
+Application/probe TypeScript, production build, full app lint, prompt ownership and
+core boundaries also pass. No snapshots were updated. A test-only mock argument
+type was corrected during the managed run; runtime/probe source hashes stayed fixed.
+
+This covers one exact shipped full-body library motion. It does not certify all
+178 motions, arbitrary imported rigs, live body/cloth physics, gestures, follow,
+obstacle-aware travel, physical joint posing, Android WebView or Quest rendering.
+Those broader acceptance requirements remain open; no release gate is waived.
