@@ -2,8 +2,10 @@
 
 This is a packaging path, not Store acceptance. A dedicated release key has been
 prepared locally at the owner's request, with a verified encrypted USB copy.
-Independent password recovery is still pending.
-No complete production profile, production deployment or Store upload is verified.
+Independent paper-password recovery is verified. The public release profile now
+passes strict configuration checks, and the two Quest bootstrap endpoints are
+deployed but disabled. Account/provider acceptance, authorized release signing
+and Store upload remain open; see [the scoped rollout](QUEST_MANAGED_ACCESS.md#scoped-backend-rollout--2026-10-06).
 The existing development command still produces `com.maestro.quest.development`.
 The release command prepares a non-development IL2CPP/ARM64 APK from the same
 source, web app, native browser, included avatar and motions.
@@ -125,7 +127,7 @@ feature backlog or permission to use credentials, deploy or submit.
 | Gate | Current implementation/evidence | What closes it |
 | --- | --- | --- |
 | Reproducible package | Audited ARM64 development APK; release profile/signing pipeline with offline refusal tests. | Owner's real public profile, backed-up release key, authorized signing and audited signed candidate. |
-| Account and managed AI | Shared book, browser pairing and Meta-to-App-Check endpoints; offline/native tests. Endpoints disabled/undeployed. | Matching Firebase registrations and certificate, actual ingress config, authorized deployment, real Store-channel entitlement/integrity and account round trip. |
+| Account and managed AI | Shared book, browser pairing and Meta-to-App-Check endpoints; offline/native tests. Endpoints deployed but disabled; runtime non-token signing verified. Quest changes to the original API and the approval page remain undeployed. | Matching Firebase registrations and certificate, actual ingress config, authorized deployment, real Store-channel entitlement/integrity and account round trip. |
 | Purchase model | Quest checkout hidden and refused by client/server; existing prepaid credit balances remain shared. BYOK remains available. No Meta commerce integration. | Resolve eligibility for the actual prepaid-credit/BYOK and interactive model using the [prepared Meta review request](QUEST_MANAGED_ACCESS.md#purchase-model-decision-and-prepared-meta-request-2026-10-05), then implement and verify any required payment changes. |
 | Familiar book and provider parity | Original components, desktop chat-to-native journeys with scripted responses, and on-device book texture/page input/field focus checks. | Human virtual-key selection, microphone, Live, artifacts, interruption/recovery and managed/BYOK tests with real providers. |
 | Physical play and resource limits | Automated native suites and current Quest controller/hand grip, Recall, chalk/ink, measured packing and submerged-vessel checks; earlier user-confirmed basics. | Remaining interactions/room-scan alignment, actual full-disk/prolonged save stress and sustained performance/comfort on supported hardware. Four partial-write terminations, six injected ENOSPC recoveries and 256 consecutive saves now pass in the [separate Android diagnostic](QUEST_DEVICE_QA.md#android-partial-write-and-enospc-probe--2026-10-06); this does not establish actual disk exhaustion or prolonged use. Transaction-boundary recovery has both the [desktop matrix](QUEST_DEVICE_QA.md#reproducible-process-termination-storage-probe) and a [13-case / 15-kill Android diagnostic](QUEST_DEVICE_QA.md#android-process-termination-storage-probe--2026-10-05). Completed-save recovery now has [three device restarts](QUEST_DEVICE_QA.md#saved-room-and-action-history-across-restart--2026-10-05). The [controller bucket-to-cup check](QUEST_DEVICE_QA.md#controller-bucket-to-cup-pour--2026-10-06) verifies a 200 mL physical pour and paired liquid Undo/Redo on D522191F, with a fixed receiver; hand, overflow and broader flow acceptance remain open. The latest animated 32-brick development run completed five minutes, averaging 71.43 FPS at 72 Hz; steady 72 FPS remains unmet. See [the current device measurement and its limits](QUEST_DEVICE_QA.md#animated-book-icons--2026-10-06). See the [chat layout fix and shortened candidate measurement](QUEST_DEVICE_QA.md#quest-chat-layout-feedback-fix--2026-10-06) and earlier ten-minute comparison. |
@@ -451,9 +453,9 @@ production/Store verification remain separate steps.
 
 The ignored public release-profile draft contains the verified certificate,
 shared production web settings and dedicated Quest Firebase registration.
-Only the undeployed attestation and account-link endpoint URLs remain blank;
-strict validation still refuses this incomplete draft. See
-[the verified account setup and activation gaps](QUEST_MANAGED_ACCESS.md#verified-account-preparation--2026-10-06).
+The subsequent approved rollout supplied actual attestation and account-link URLs;
+strict profile validation now passes while both endpoints remain disabled. See
+[the scoped rollout and remaining activation gaps](QUEST_MANAGED_ACCESS.md#scoped-backend-rollout--2026-10-06).
 Evidence includes the public paper receipt and configuration readbacks under
 `.quest-evidence/account-release-config-20261006/`.
 

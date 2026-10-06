@@ -1,10 +1,59 @@
 # Quest managed access and release integration
 
 Status: attestation, account-link backend, browser approval and book sign-in client
-implemented, **disabled and not deployed**. Real Meta/Firebase verification and
-Quest acceptance remain open. The dedicated Firebase client registration and
-verified public release settings are prepared as recorded below. Services and
-the browser pairing page have not been deployed.
+implemented. The two Quest endpoints are now **deployed but disabled** following
+the owner's scoped approval. The temporary private diagnostic is removed.
+Real Meta/Firebase account verification and Quest acceptance remain open; the
+existing API and browser pairing page still need their separate release work.
+
+## Scoped backend rollout — 2026-10-06
+
+The owner approved the frozen rollout from `d7bfee10`: two new disabled functions,
+a temporary IAM-private diagnostic, and access to one Meta secret. Both new
+Node.js 22 functions are active in `europe-west1`, with maximum three instances
+and concurrency 20. Their `QUEST_ATTESTATION_ENABLED` and
+`QUEST_ACCOUNT_LINK_ENABLED` settings remain `false`:
+
+- `https://europe-west1-chatwithmaestro.cloudfunctions.net/questAttestation`
+- `https://europe-west1-chatwithmaestro.cloudfunctions.net/questAccountLink`
+
+All seven operation paths returned their expected unavailable response (HTTP 503,
+no tokens, no-store) through both Functions and Cloud Run URLs: **14 checks**.
+Deployed source archives exactly match the approved inputs: 198 files for each
+Quest function and four for the diagnostic. Disabled handlers reject before the
+store, provider and token-mint operations in that verified source.
+
+The owner entered `META_QUEST_APP_SECRET` privately; only enabled-version metadata
+was inspected. Only attestation binds version 1. Firebase granted the existing
+runtime `secretAccessor` on that one secret. Project and runtime service-account
+IAM policies, including their etags, are unchanged. All **10 existing functions**
+match the predeployment inventory exactly. No existing API, scheduler, website or
+database policy was deployed.
+
+The private diagnostic rejected anonymous access with 403 on both URLs. Two fresh
+server-generated **non-token** challenge signatures were independently verified
+using the runtime identity's public certificate. This confirms runtime signing
+access, not successful Firebase App Check/Auth minting or Meta verification.
+The diagnostic was deleted; final inventory contains only the ten original and
+two new functions, and both diagnostic URLs return 404.
+
+Forwarding inspection covered normal requests and three attacker-prepended
+header variants on each ingress. An exact-address candidate resolved all eight
+recorded chains consistently in the locked parser. This is one revision and one
+operator network, not a supported ingress-range guarantee or cold-start/network
+acceptance. Production trusted ranges remain empty; **do not enable issuance**
+until ingress and the remaining release prerequisites are verified.
+
+The ignored release profile now uses URLs read back from the deployed functions
+and passes strict configuration validation. This does not establish provider or
+Store acceptance. The original API's Quest identity/origin/purchase boundary,
+public approval page, database TTL/rules, real Store-channel integrity/entitlement,
+account round trip and managed/BYOK behavior remain separate release gates.
+
+Local evidence: `.quest-evidence/account-activation-20261006/verified.json`, the
+frozen rollout plan, deployed source archives, metadata/IAM comparisons, private
+probe and disabled-response results, and cleanup receipt. No secret payload or
+operator bearer token was read into evidence.
 
 ## Verified account preparation — 2026-10-06
 
@@ -26,7 +75,8 @@ on either public browser key and includes the required Firebase APIs; this is
 configuration evidence, not a successful Quest authentication request. The read
 used [Google's metadata-only endpoint](https://docs.cloud.google.com/api-keys/docs/reference/rest/v2/projects.locations.keys/get).
 
-Live inventory establishes the remaining setup:
+The pre-rollout inventory established this setup (superseded where noted by the
+scoped rollout above):
 
 - `api` is active in `europe-west1`, requires App Check, and does not yet configure
   the Quest app ID or allow the book origin.
@@ -210,7 +260,8 @@ when disabling new attestation or linking: previously minted proofs can still be
 valid. While the Quest ID is configured, `REQUIRE_APPCHECK=false` also closes checkout
 for every client until verification is restored; it cannot silently weaken this
 purchase boundary. Other existing managed-service rollback behavior is unchanged.
-No production deployment has occurred. The client-service guard is included in
+The main API purchase-boundary change remains undeployed. The client-service
+guard is included in
 the audited `049188fd` development APK, `MaestroQuest-scanned-ink-45468330.apk`;
 the server guard remains undeployed. See [packaging evidence](QUEST_RELEASE_BUILD.md#development-checkpoint-2026-10-05).
 

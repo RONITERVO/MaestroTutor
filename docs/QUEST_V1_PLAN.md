@@ -26,10 +26,14 @@ The dedicated release key has a verified encrypted USB copy and a completed
 owner-confirmed paper-password backup; the retyped password unlocked the exact
 key and passed signature verification. A dedicated Quest Firebase registration is
 now prepared in the original project, with no alternate providers or debug tokens.
-Verified shared public settings are in the local release draft. Production
-endpoints and browser approval remain undeployed; Meta/IAM/ingress, actual
+Verified shared public settings and read-back endpoint URLs now pass strict
+release-profile validation. The approved rollout deployed two disabled Quest
+endpoints, verified runtime non-token signing, and removed its private diagnostic.
+All 14 disabled-operation requests pass; the original ten functions and broader
+IAM are unchanged. Quest changes to the original API, browser approval, ingress
+trust, real Meta/Firebase
 provider acceptance and authorized signing/Store work remain open. See
-[account preparation](QUEST_MANAGED_ACCESS.md#verified-account-preparation--2026-10-06)
+[the scoped rollout](QUEST_MANAGED_ACCESS.md#scoped-backend-rollout--2026-10-06)
 and [signing recovery](QUEST_RELEASE_BUILD.md#dedicated-release-key-prepared--2026-10-06).
 
 A separate Android diagnostic now passes four partial-write terminations, six
