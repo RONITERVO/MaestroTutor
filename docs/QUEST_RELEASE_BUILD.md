@@ -8,7 +8,7 @@ deployed but disabled. The first owner-approved local candidate is now signed
 and audited. Its approved private Alpha draft upload was rejected for an SDK-generated
 unsupported device identifier. A corrected Quest 3 candidate is signed and verified,
 uploaded successfully as a private draft after replacement approval; details are below. Account/provider
-acceptance and server-side Store compatibility results remain open; see [the scoped rollout](QUEST_MANAGED_ACCESS.md#scoped-backend-rollout--2026-10-06).
+acceptance and the separate Virtual Reality Checks remain open; see [the scoped rollout](QUEST_MANAGED_ACCESS.md#scoped-backend-rollout--2026-10-06).
 The existing development command still produces `com.maestro.quest.development`.
 The release command prepares a non-development IL2CPP/ARM64 APK from the same
 source, web app, native browser, included avatar and motions.
@@ -82,10 +82,17 @@ with exit 0 at **05:30:56 UTC**, after three recovered network retries, and crea
 **build `1767008267909255`**. APK validation reported **zero error types/messages**.
 The underlying uploader parameters confirm `draft: true`; `--publish` was absent.
 
-The upload receipt says server compatibility tests are running. Their final result
-is **unverified**: the CLI has no draft-test-results command, and browser automation
-still fails before reaching the dashboard. The owner has been asked to read
+The owner supplied successive dashboard screenshots for this exact build. The
+latest shows green checks for both **Basic malware test** and **Security
+Vulnerability Review** on
 [the build test results](https://developers.meta.com/vr/manage/applications/1763835394893209/builds/1767008267909255/test-results/).
+These two checks have passed. The separate Virtual Reality Checks, Store approval,
+entitlement and account/provider acceptance are not established by that screenshot.
+The owner also showed the Virtual Reality Checks tab: no checks yet, with results
+expected after submission and team review. The app submission remains Draft
+(`Luonnos`), with `Submission binary: N/A` and no submission/review date.
+The local receipt retains screenshot hashes and the earlier pending observations;
+browser automation remains unavailable and the CLI does not expose draft results.
 All four channels still show empty current-build lists, consistent with an
 unpublished draft; this does not mean the uploaded build is missing. No channel
 publication, tester invitations, policy certification, backend activation or
@@ -93,8 +100,7 @@ headset installation occurred. The APK hash is unchanged after upload.
 
 The successful uploader retained the two warnings above despite the verified
 Quest-3-only manifest and ARM64-only native inventory. These warnings are recorded
-rather than treated as proof of unsupported binaries. Their cause and server-side
-compatibility outcome are not established.
+rather than treated as proof of unsupported binaries. Their cause is not established; the two visible security reviews subsequently passed.
 
 Evidence: `.quest-evidence/quest-device-targets-20261006/` contains frozen inputs,
 input delta, complete package audit, tests/journeys, signing receipt and public

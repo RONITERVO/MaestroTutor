@@ -3578,3 +3578,33 @@ not hand-tracking ergonomics, overflow/multiple-receiver acceptance, event-deliv
 assertions, restart during flow or sustained performance. No provider, paid
 asset generation, deployment, new APK installation, release signing or Store
 submission occurred. Those release gates remain open.
+
+## Held pencil, brush and eraser — 2026-10-06
+
+On the installed **D522191F** development APK, a temporary chalkboard and ordinary
+Pencil, Paint brush and Eraser templates were exercised through XR Operator's
+actual Touch Plus grip bindings. The tray drawing mode was off. Loose pencil
+contact produced zero strokes; holding and moving it produced 19- and seven-point
+strokes with radius 0.002 and the template colour. The brush produced a 17-point
+blue stroke with radius 0.01. Saved surface facts confirm those independent values.
+
+One held eraser sweep removed the two contacted strokes, preserving the distant
+pencil stroke. The first Undo reversed the eraser's separate placement change;
+the next Undo restored both original stroke IDs, widths and point counts. Redo
+removed those same two strokes. Capture returned idle without retained errors.
+The virtual-room render visibly contains the restored marks; this is not a human
+assessment of contact feel, readability or comfort.
+
+Ordinary book controls discarded the temporary room and restored the preceding
+drawing settings. All 198 remaining external files, including saved room and
+behaviour content, match the fresh backup. The two changed files are the bounded
+receipt history (nine known completed QA commands, seven prior receipts retained)
+and the SDK's refreshed MRUK world-lock anchor cache. Input overrides were
+released; app, debug properties and forwards were restored. All ten unrelated
+working-tree files remain byte-identical. No provider call or package installation
+occurred. Evidence: `.quest-evidence/held-drawing-20261006/verified.json`, input
+journals, book fact readbacks, virtual render, before/after archives and cleanup.
+
+This covers automated controller grip on a planar board, not tracked-hand comfort,
+curved/scanned/animated surfaces, restart/save-failure or maximum-load performance.
+It does not test the uploaded Store candidate.

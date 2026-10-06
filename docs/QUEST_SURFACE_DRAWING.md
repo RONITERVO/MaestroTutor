@@ -205,6 +205,9 @@ This is whole-stroke erasure, not cutting individual stroke segments or wet pain
 Desktop tests cover curved sweeps, physical grip/contact, solid obstruction,
 priority, failed-save recovery, atomic batch editing and Undo. Quest contact feel
 and performance at maximum admitted drawing capacity remain acceptance work.
+The [Quest controller check](QUEST_DEVICE_QA.md#held-pencil-brush-and-eraser--2026-10-06)
+now verifies loose-tool inactivity, independent pencil/brush ink and one swept
+erasure with Undo/Redo on a planar board; physical placement has a separate Undo.
 
 
 ## Saved scanned ink layers (2026-10-05)

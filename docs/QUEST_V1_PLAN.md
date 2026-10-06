@@ -36,18 +36,19 @@ provider acceptance and Store work remain open. See
 [the scoped rollout](QUEST_MANAGED_ACCESS.md#scoped-backend-rollout--2026-10-06)
 and [signing recovery](QUEST_RELEASE_BUILD.md#dedicated-release-key-prepared--2026-10-06).
 
-A real-settings release-mode intermediate is now audited as **BB9C6A89**:
-non-debuggable `com.maestro.quest`, ARM64/16 KiB, with matching public configuration
-and included content. Native suites, Android checks and both book/room journeys
-pass. A temporary Quest installation rejected unverified Store access and exited;
-it was removed, leaving the D522191F development APK and all 200 saved files
-unchanged. After explicit owner approval, this exact intermediate was signed
-into local candidate **848FFA51**, with the expected release certificate, verified
-v3/v2 signatures, 16 KiB alignment and all 1,070 non-signature entries unchanged.
-The signed candidate is not installed or uploaded. Positive Store/account
-acceptance remains open; see
-[the package and negative launch check](QUEST_RELEASE_BUILD.md#verified-real-settings-intermediate--2026-10-06)
-and [signed-candidate evidence](QUEST_RELEASE_BUILD.md#signed-local-candidate--2026-10-06).
+The corrected signed release candidate is **DA689683**, non-debuggable
+`com.maestro.quest`, Quest 3 only, ARM64/16 KiB. Its approved private draft upload
+created build **1767008267909255**, version 1.0.0/build 1. Owner dashboard screenshots
+confirm both Basic malware and Security Vulnerability Review checks passed.
+Virtual Reality Checks await submission/review; the Store submission is still a
+draft with no binary attached. The CLI shows no current channel builds. Private
+channel activation, positive Store entitlement and account/provider acceptance
+remain open. See [the exact package and checks](QUEST_RELEASE_BUILD.md#corrected-signed-quest-3-candidate--2026-10-06).
+
+The installed development app also passed a held pencil/brush/eraser check on a
+planar board, including loose-tool inactivity and swept erasure Undo/Redo. Its
+temporary room was discarded and saved content verified unchanged. See
+[the bounded device evidence](QUEST_DEVICE_QA.md#held-pencil-brush-and-eraser--2026-10-06).
 
 A separate Android diagnostic now passes four partial-write terminations, six
 injected ENOSPC recoveries and 256 consecutive saves using unchanged production
