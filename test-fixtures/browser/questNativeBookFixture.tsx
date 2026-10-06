@@ -1,6 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
-// Real book, chat coordinator, task journal and native wire. The runner alone supplies offline provider responses.
+// Real book, chat coordinator, task journal and native wire. The runner selects offline or real provider access.
 import {useRef} from 'react';
 import {createRoot} from 'react-dom/client';
 import {QuestBookSurface} from '../../src/platform/quest/QuestBookSurface';
@@ -9,6 +9,12 @@ import {useMaestroStore,initialSettings} from '../../src/store';
 // Read-only test evidence; the internal task journal is not a production feature API.
 // eslint-disable-next-line no-restricted-imports
 import {roomTaskStore} from '../../src/features/chat/services/roomTaskStore';
+import type {ManagedAccessSession} from '../../src/core/contracts/backend';
+import {saveManagedAccessSession} from '../../src/core/security/managedAccessSessionStorage';
+import {firebaseAuthBridgeService} from '../../src/services/auth/firebaseAuthBridgeService';
+import {maestroFirebaseService} from '../../src/services/firebase/maestroFirebaseService';
+// eslint-disable-next-line no-restricted-imports
+import {roomAgentTasks} from '../../src/features/chat/services/roomAgentTasks';
 import {setApiKey} from '../../src/core/security/apiKeyStorage';
 import {selectIsAgentWorking,selectIsSending} from '../../src/store/slices/uiSlice';
 import {enTranslations} from '../../src/core/i18n/en';
@@ -16,13 +22,27 @@ import type {RoomAgentState} from '../../src/core-sdk/room/roomAgent';
 import type {RoomAgentClient} from '../../src/core-sdk/room/roomAgentClient';
 import '../../src/app/index.css';
 declare global {interface Window {
+ nativeBookCredentials?:()=>Promise<{mode:'byok';apiKey:string}|{mode:'managed';session:ManagedAccessSession;appCheckToken:string}>;
+ nativeBookStop?:()=>void;
  maestroNativeExchange?:(snapshot:ReturnType<RoomAgentClient['snapshot']>)=>Promise<{state?:unknown;capture?:unknown}>;
  nativeBookEvidence?:()=>{state:RoomAgentState|null;errors:string[];messages:ReturnType<typeof useMaestroStore.getState>['messages'];agentWorking:boolean;inputBlocked:boolean};
  nativeBookTask?:(id:string)=>ReturnType<typeof roomTaskStore.get>;
 }}
 if(!import.meta.env.DEV||!window.maestroNativeExchange)throw new Error('Launch this isolated fixture through Run-QuestRoomProbe -Journey Book.');
-// This intentionally invalid token exists only in the runner's disposable browser context.
-await setApiKey('maestro-offline-fixture-not-a-real-api-key');
+// Credential setup only: the real-provider runner supplies test credentials in
+// memory to this owned top-level page. No provider/native responses are replaced.
+// This does not test interactive sign-in, Quest integrity or device attestation.
+if(window.nativeBookCredentials){
+ const credentials=await window.nativeBookCredentials();
+ if(credentials.mode==='byok')await setApiKey(credentials.apiKey);
+ else {
+  await setApiKey('');
+  await saveManagedAccessSession(credentials.session);
+  Object.assign(firebaseAuthBridgeService,{getCurrentIdentity:async()=>credentials.session});
+  Object.assign(maestroFirebaseService,{getAppCheckToken:async()=>credentials.appCheckToken});
+ }
+}else await setApiKey('maestro-offline-fixture-not-a-real-api-key');
+window.nativeBookStop=()=>roomAgentTasks.stopAll();
 const store=useMaestroStore.getState();
 const pair=store.languagePairs.find(p=>p.targetLanguageCode==='es-ES'&&p.nativeLanguageCode==='en-US');
 if(!pair)throw new Error('Spanish/English pair missing');

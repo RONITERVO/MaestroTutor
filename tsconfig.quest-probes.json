@@ -22,7 +22,9 @@
     "scripts/probe-agent-animation.test.ts",
     "scripts/probe-agent-composite.test.ts",
     "test-fixtures/browser/questPhysicalPackingFixture.tsx",
-    "test-fixtures/browser/questRectangularContainerFixture.tsx"
+    "test-fixtures/browser/questRectangularContainerFixture.tsx",
+    "scripts/probe-provider-book.ts",
+    "scripts/book-provider-evidence.test.ts"
   ],
   "references": []
 }

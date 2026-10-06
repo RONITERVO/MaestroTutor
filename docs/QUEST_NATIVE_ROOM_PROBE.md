@@ -557,3 +557,39 @@ Native preview/result and solid-tray renders are inspected separately. Full nati
 suites passed 805 EditMode and 620 PlayMode cases, with three optional private-file
 skips. The shared-client room journey passed 462 observations. These checks do not
 certify Quest tracking feel, scanned-room alignment or sustained performance.
+
+
+## Real-provider book journey
+
+`-Journey Book -ProviderScenario ContextCreateEdit` uses the real rendered
+QuestBookSurface and ChatInterface/useTutorConversation with a real Unity room
+and the selected managed or BYOK provider. The existing Book journey without
+ProviderScenario remains deterministic and offline.
+
+The runner enters a context-only message through the chat composer, then asks
+for creation and a later colour edit. It verifies the exact task handoff, real
+verifier decision, provider output/usage, visible working/result state, editable
+chat during work, native object identity/geometry/colour and preserved unrelated
+objects. Workshop Undo/Redo uses the ordinary controls. Reload must retain the
+same saved task journal and result without any new provider request or room action.
+
+Only test credential setup is supplied through an owned top-level fixture binding.
+Managed calls still use the browser backend service and the real staging backend;
+BYOK uses the browser Gemini client. Provider replies and native states are never
+fabricated. A Fetch response clone records UTF-8 stream evidence without changing
+the original Response. Network access is limited to the local fixture and the
+selected generation endpoint; headers, keys and tokens are not stored in evidence.
+The browser context is disposable. No credentials are added to compiled assets.
+Managed staging uses its already trusted `http://localhost` origin (port 80);
+the runner refuses a busy port and does not weaken CORS or browser security.
+
+Managed billing covers the whole browser journey and settles on failure as well
+as success. This does not test interactive sign-in, Quest attestation, physical
+input, Android WebView texture or headset rendering. Keep these boundaries in the
+release evidence and retain failed attempts separately.
+
+The result-reply gate also rejects another tool handoff after native completion.
+The shared reply provider distinguishes the original action from the current
+request to report its result, with at most one reply-only correction. This never
+replays native work. The probe verifies the final visible text against the original
+provider stream using the normal tutor parser, and checks tool fences separately.

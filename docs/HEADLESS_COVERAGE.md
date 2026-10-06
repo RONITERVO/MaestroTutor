@@ -420,3 +420,11 @@ WebSocket client allows a bounded 60-second gateway startup, cleans failed
 connections and drains queued final data/billing before closing a ready session.
 Synthetic fixture passes remain separate from physical input/rendered acceptance;
 current evidence and outstanding scenarios are in the Quest matrix above.
+
+
+The real-provider book runner (`-Journey Book -ProviderScenario ContextCreateEdit`)
+adds the original rendered chat controls, browser provider adapter, task status and
+result, native workshop Undo/Redo and IndexedDB reload without replay to the Unity
+checks. It uses supplied test credentials; sign-in, attestation, Android texture
+and physical input remain separate gates. The offline book runner still verifies
+deterministic concurrent user edits and refused stale agent commands.

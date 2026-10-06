@@ -16,10 +16,11 @@ if($ProviderScenario -in @('LiveVisual','ObserverVisual')){
  $SpeechFixture=(Resolve-Path -LiteralPath $SpeechFixture).Path
 }
 if($ProviderScenario){
- if($Journey -ne 'Headless' -or ![string]::IsNullOrWhiteSpace($Prompt)){throw 'ProviderScenario requires Headless and cannot be combined with Prompt.'}
+ if(![string]::IsNullOrWhiteSpace($Prompt)){throw 'ProviderScenario cannot be combined with Prompt.'}
+ if($Journey -eq 'Book' -and $ProviderScenario -ne 'ContextCreateEdit'){throw 'The real-provider book supports ContextCreateEdit only.'}
  $Prompt='Please create my test object now. Use the definition I gave in the previous message.'
 }
-if($Journey -eq 'Book' -and ![string]::IsNullOrWhiteSpace($Prompt)){throw 'The deterministic book journey does not accept a provider prompt.'}
+if($Journey -eq 'Book' -and !$ProviderScenario -and ![string]::IsNullOrWhiteSpace($Prompt)){throw 'The deterministic book journey does not accept a provider prompt.'}
 . (Join-Path $PSScriptRoot 'QuestBuildProcesses.ps1')
 $repoRoot=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
 $mirror=(Resolve-Path -LiteralPath $BuildMirror).Path
@@ -51,7 +52,7 @@ try{
  $env:MAESTRO_ROOM_PROBE_PROMPT=$Prompt;$env:MAESTRO_ROOM_PROBE_PROFILE=$Profile;$env:MAESTRO_ROOM_PROBE_SCENARIO=$ProviderScenario;$env:MAESTRO_ROOM_PROBE_SPEECH=$SpeechFixture
  Push-Location $repoRoot
  try{
-  $clientScript=$(if($Journey -eq 'Book'){'scripts/probe-native-book.ts'}else{'scripts/probe-native-room.ts'})
+  $clientScript=$(if($Journey -eq 'Book' -and $ProviderScenario){'scripts/probe-provider-book.ts'}elseif($Journey -eq 'Book'){'scripts/probe-native-book.ts'}else{'scripts/probe-native-room.ts'})
   & $runner $clientScript $directory *> (Join-Path $directory 'client.log');$clientExit=$LASTEXITCODE
  }finally{Pop-Location}
  if($clientExit -ne 0 -and !$process.HasExited){

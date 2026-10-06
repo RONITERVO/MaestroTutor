@@ -1,7 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import { roomCaptureImages } from '../../../shared/prompts/room';
-import { buildRoomResultInstruction, buildRoomTaskReplyInstruction, buildRoomTaskOutcomeInstruction } from '../../../shared/prompts';
+import { buildRoomResultInstruction, buildRoomTaskReplyInstruction, buildRoomTaskOutcomeInstruction, buildRoomTaskReplyRequest } from '../../../shared/prompts';
 import { runTutorTextTurn, type TutorTextTurnOptions } from '../chat/tutorTextTurn';
 import { runRoomActionTask } from './roomAgent';
 import type { RoomTaskPorts } from './roomTaskHandoff';
@@ -16,15 +16,28 @@ export function roomTaskProvider(
     run: (input, lease, control) => runRoomActionTask(input, source(), lease,
       response => usage(response, input.model, 'planning'), control),
     reply: async (input, result, signal) => {
-      const turn = await runTutorTextTurn({ ...input,
-        currentImages: [...(input.currentImages ?? []), ...roomCaptureImages(result.snapshots)],
-        systemInstruction: input.systemInstruction + '\n\n' + buildRoomResultInstruction(result.receipts, result.scene)
-          + buildRoomTaskReplyInstruction(result.budgetExhausted)
-          + (result.relatedTask ? buildRoomTaskOutcomeInstruction(result.relatedTask, result.needsReview) : ''),
-        configOverrides: { maxOutputTokens: 2048 },
-      }, { ...source(), signal });
-      usage(turn.response, input.model, 'reply');
-      return { parsed: turn.parsed, rawResponse: turn.parsed.visibleText };
+      // Only the result text may be corrected. Native planning/dispatch has ended;
+      // accepted or uncertain effects must never be repeated to obtain a reply.
+      let rejectedReply: string | undefined;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        signal.throwIfAborted();
+        const turn = await runTutorTextTurn({ ...input,
+          prompt: buildRoomTaskReplyRequest(input.prompt, rejectedReply),
+          currentImages: [...(input.currentImages ?? []), ...roomCaptureImages(result.snapshots)],
+          systemInstruction: input.systemInstruction + '\n\n' + buildRoomResultInstruction(result.receipts, result.scene)
+            + buildRoomTaskReplyInstruction(result.budgetExhausted)
+            + (result.relatedTask ? buildRoomTaskOutcomeInstruction(result.relatedTask, result.needsReview) : ''),
+          configOverrides: { maxOutputTokens: 2048 },
+        }, { ...source(), signal });
+        usage(turn.response, input.model, 'reply');
+        signal.throwIfAborted();
+        if (!roomReplyHasToolRequest(turn.rawResponse)) return { parsed: turn.parsed, rawResponse: turn.parsed.visibleText };
+        rejectedReply = turn.rawResponse;
+      }
+      throw new Error('The result reply proposed another tool. Recorded room actions remain available; they were not repeated.');
     },
   };
 }
+
+/** Tool fences are not valid result prose, even when malformed or hidden by parsing. */
+export const roomReplyHasToolRequest = (text: string): boolean => /(?:`{3,}|~{3,})[ \t]*maestro-tool\b/i.test(text);

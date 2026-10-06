@@ -365,3 +365,80 @@ Earlier 837 EditMode / 647 PlayMode results remain historical native evidence.
 This covers one included construction module, not arbitrary generated geometry,
 all modules, physical fidget feel, headset rendering or scanned-room acceptance.
 Those broader release gates remain open.
+
+
+## Real-provider rendered book proof (2026-10-06)
+
+The book provider runner passes in both access modes on the final sources. It
+uses the ordinary book chat controls and browser provider path against the real
+Unity room, with isolated test credential setup. It checks earlier context,
+verified delegation, native creation/editing, visible status/result, continued
+chat access, workshop Undo/Redo and persisted task reload without replay.
+
+Initial BYOK run `b6bc556f5b1e4b2bb0814288048c02cb` created the correct object and
+completed the task, but failed reply equality because the Chrome DevTools response
+reader misdecoded non-ASCII SSE text. The app's reply was correct. Observation now
+uses a Fetch clone's UTF-8 text, preserving the original response. Run
+`31e7c09347f847ecb4779bcfbf4bb7bd` then failed before a provider request: tsx's
+function-name helper was unavailable inside the serialized browser init script.
+The observer now uses an explicit isolated script. Neither failed run is a pass.
+
+Managed attempt `cb2d96b6ef5a40629bb75c02763cdc34` failed at the first browser
+request because staging correctly rejected the random local origin. Billing
+reconciled zero usage/charges and zero reservations. The runner now serves its
+isolated fixture from the existing trusted `http://localhost` origin; the backend
+returns the ordinary CORS headers without a policy change or security bypass.
+
+Before the result-reply fix, managed run `e16565c562bb4c3da6fff19205189c35` passed all ten book gates, with
+14 real provider responses, matching task/native observations and clean client /
+Editor exits. Whole-journey accounting settled **201 credits / USD 0.192848**,
+with 14 matched usage/charge entries and zero reservations. This window includes
+the initial context chat and both delegated tasks.
+
+BYOK run `7f87a5467b744b2db1fbd3016b5df136` remains failed and exposed an app
+issue: the native repaint completed, but the final provider response announced
+another future handoff and included an agent tool fence. The existing visible-text
+parser hid the fence, so the inaccurate future promise would have reached chat.
+No native action was repeated.
+
+The shared browser/headless reply stage now asks for a report of the already
+recorded result. It retains the exact original request as quoted context instead
+of issuing it again as the current instruction. Native receipts, scene, history,
+language, attachments and task-limit/uncertainty information remain available.
+A tool fence is rejected before publication, even if malformed. One bounded
+correction may regenerate only the reply text; both calls count usage. Repeated
+tool proposals fail visibly with recorded actions retained. Transport errors and
+cancellation do not trigger this correction, and native planning/dispatch cannot
+run from this path. Focused regressions force these conditions. The book gate now
+compares the normal parsed visible text and separately refuses a final tool fence.
+
+
+| Final access mode, including reply fix | Native run | Real provider responses |
+| --- | --- | --- |
+| BYOK | `05f53e53a7734385b9dfbf8a167f0c75` | 12 |
+| Managed staging | `aedda976a985447096ac91e9f975b1db` | 14 |
+
+Both pass all ten book gates and exit the client and Editor cleanly on identical
+source fingerprints. Screenshots show working/completed tasks and the reloaded
+result; original network output, task journals and native observations agree.
+Final replies report the actual creation/repaint and contain no new tool fence.
+These real runs need no reply correction; deterministic regressions force it.
+Managed accounting for the complete final journey settled **207 credits /
+USD 0.201414**, with 14 matching usage/charge entries and zero reservations.
+BYOK records actual provider usage and payer identity without claiming invoice
+verification. The earlier managed 201-credit pass remains historical evidence.
+
+Validation: **2,472 app tests in 272 files**, app/probe TypeScript, full app lint,
+production build, prompt ownership and core boundaries pass. No snapshots changed.
+The test credential/observation bindings are absent from the production bundle.
+No native C# changes are part of this increment; the mirror is hash-checked.
+This proves the rendered book's basic conversational tasks. Broader artifacts,
+page/bookmark and media flows, physical input, Android texture, Quest rendering,
+sign-in/attestation and the other outstanding release gates still need their
+separate acceptance evidence.
+
+The original offline-provider book regression also passes on these sources: run
+`9a03bda67fa6484589e0a069a1da12fa`, client and Editor exit 0. It keeps
+concurrent human edits, stale-plan refusal, manual authoring and persisted reload
+covered independently of the real-provider happy path. It does not count as a
+real-provider run.
