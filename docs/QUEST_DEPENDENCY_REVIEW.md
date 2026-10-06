@@ -73,3 +73,27 @@ separate native WebView library, whose dependency graph contains no Capacitor
 Android library. The installed Quest checkpoint remains D522191F; a later full
 Quest package will include the updated shared JavaScript dependency. These
 checks do not establish human phone-layout or real-provider acceptance.
+## Functions proxy-address patch — 2026-10-06
+
+The Functions lockfile now resolves `proxy-addr` **2.0.8**, fixing
+[GHSA-jqcg-44mw-7w3h](https://github.com/jshttp/proxy-addr/security/advisories/GHSA-jqcg-44mw-7w3h).
+The upstream defect lets certain incorrectly written IPv4-mapped IPv6 trust
+subnets match every IPv4 caller, undermining forwarded-address throttling.
+Only this transitive package changed; application proxy configuration and the
+existing dependency audit policy are unchanged. This is a dependency repair,
+not evidence of exploitation or a claim about deployed ingress configuration.
+
+Verification passed: **96 Functions unit tests**, including existing CORS,
+untrusted forwarded-header and nearest-untrusted-hop checks; the complete local
+Firestore emulator command (billing, Live gateway, **57 managed Gemini cases**,
+Quest attestation and account-link transaction checks); and five direct checks
+of malformed-mapped-subnet rejection and correct IPv4/mapped-subnet matching.
+These local checks used Node 25.4.0; release CI separately uses the declared
+Node 22 runtime. Evidence is in
+`.quest-evidence/android-byte-storage-20261006/functions-*-patched.*` and
+`proxy-addr-boundary.json` in that directory.
+
+The Functions shipped-dependency audit has no high/critical findings; six
+moderate entries through the existing `uuid` dependency remain reported. The
+Live gateway shipped audit has no findings. No audit exception was added, no
+provider request or deployment was made, and no installed Quest package changed.
