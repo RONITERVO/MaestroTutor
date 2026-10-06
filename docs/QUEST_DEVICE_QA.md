@@ -3382,3 +3382,68 @@ verified restored. Battery was 83% after the remaining checks. Evidence is in
 the same local checkpoint directory, including `metrics-summary.json`,
 `device-tools.json`, `workshop-controller-verified.json`, saved-file verification
 and cleanup receipts.
+
+## Animated book icons — 2026-10-06
+
+The shared Globe and Target icons animate CSS boxes containing static SVG layers;
+the fixed-colour palette is a self-contained SVG image. Geometry, timing, draw
+order, inherited theme/hover colours and toolbar sizes remain the same. This
+avoids animating inner SVG geometry in the surrounding document's layout tree.
+A narrow-phone check caught an image max-width regression before packaging;
+the palette now retains the former SVG's minimum toolbar footprint.
+
+Development package `MaestroQuest-animated-icons-D522191F.apk` is **188,198,759
+bytes**, SHA-256
+`D522191F126BD8F1D6D09958F0637780367C30C9E57C8DEDA02669FD78A96ED3`.
+It was installed on Quest 3 with exact package bytes verified and app data retained.
+
+Verification passed: 837 EditMode / 647 PlayMode tests (three optional private-file
+skips), 471 native-room and 91 original-book state observations with scripted
+offline provider responses, 39 session web tests, TypeScript, targeted lint and
+core boundaries. Production web, Android lint, 82 Android tests (two optional
+skips), source/content audit, ARM64-only libraries, development signature and
+16 KiB alignment passed. The audit matches 3,037 source inputs, native sources
+and metas, AAR, all 147 web files, included avatar, 178 motions, 26 templates and
+seven modules. The phone correction changed only two web files before the
+original-book journey and web compilation; native inputs remained identical.
+
+Browser comparisons covered four icon sizes, three opaque/translucent/accent
+colours and four animation positions. Small antialiasing differences remain; this
+is not a pixel-identical raster claim. Dynamic colour changes, event bubbling,
+image decoding and 48 running test-instance animations passed. The isolated
+icons produced zero layouts in a three-second desktop sample. Actual app toolbar
+sizes passed at 320/390-pixel phone widths and 819/1024-pixel book widths.
+
+The installed normal book, with the initial API-key dialog and original saved
+room, produced **zero layouts in 15.19 seconds**. The preceding package produced
+1,086 in 15.29 seconds. Browser task time was 5.62 seconds versus 6.96; script time
+was 0.165 versus 0.191; style work was 0.707 versus 0.787. These separate samples
+are diagnostic and do not establish a controlled whole-app frame-rate gain.
+The first candidate profile ran on the entry page because its helper checked
+readiness too early; that result was preserved separately and excluded.
+
+Local evidence: `.quest-evidence/book-render-profile-20261006/`.
+
+The installed package completed a **300.30-second** development run with 300
+VrApi samples: 32 bricks, a board, 19-part robot, included Maestro and scanned-room
+physics. Both animation branches and physics were verified active before and
+after the capture. FPS mean was **71.43 at 72 Hz**, range 66–74. App GPU
+mean/p95/max was **6.14/6.64/7.48 ms**; stale-frame mean/p95/max was
+**5.90/8/13**; CPU utilization mean was **0.811**. Texture copies were
+**29.89/s**, with **71.98/s** renderer callbacks. PSS rose from 1,565,599 to
+1,593,340 KB; battery fell from 67% to 66%; VrApi temperature was 42–43°C and
+power-level counter stayed zero. There was no early stop.
+
+As before, this used a fixed tilted headset view, inactive controller/hand input,
+the initial API-key dialog and partly visible/overlapping geometry. It does not
+establish sustained 72 FPS, human comfort, real-provider performance, or a
+controlled FPS gain over A8D296E4. A helper initially raced an unfinished
+workspace close; the explicit read-only verification succeeded after navigation
+settled, before the timed run began.
+
+The QA behaviour was stopped and deleted through the book and the temporary room
+was discarded. Original room/behaviour bytes, including the custom-avatar choice,
+matched the fresh backup. All ten unrelated dirty files retained their hashes.
+The app is stopped, inputs inactive, debug properties restored and forwards clear;
+final battery was 65%. No real provider, paid generation, deployment, release key
+use or Store submission occurred. Release gates remain open.

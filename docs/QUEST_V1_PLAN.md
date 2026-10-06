@@ -2,14 +2,18 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
-The current installed development checkpoint is **A8D296E4**, with optional
-physical tool trays and simpler manual book action forms. Native book controls,
-actual controller activation of the permanent 3D Workshop blocks and saved-file
-restoration passed. Its ten-minute animated 32-brick development run averaged
-71.20 FPS at 72 Hz; sustained performance remains open. See
-[the exact package, device evidence and limits](QUEST_DEVICE_QA.md#manual-book-action-forms--2026-10-06).
-The app is stopped, test inputs/properties/forwards are restored, and saved room
-and behaviour files match the pre-install backup byte-for-byte.
+The current installed development checkpoint is **D522191F**, retaining the
+original phone/book controls while isolating their animated icon rendering.
+The installed normal-book profile produced zero layouts in 15.19 seconds, versus
+1,086 in the preceding sample. Its five-minute animated 32-brick development run
+averaged 71.43 FPS at 72 Hz; sustained performance remains open. See
+[the exact package, device evidence and limits](QUEST_DEVICE_QA.md#animated-book-icons--2026-10-06).
+The app is stopped, inputs/properties/forwards are restored, and saved room and
+behaviour files match the fresh backup byte-for-byte.
+
+The preceding A8D296E4 checkpoint passed native book controls and actual controller
+activation of the permanent 3D Workshop blocks. Its ten-minute animated run
+averaged 71.20 FPS. These separate runs are not a controlled frame-rate comparison.
 
 The dedicated release key is prepared locally, with a verified encrypted USB copy.
 Independent password recovery and production configuration remain open.

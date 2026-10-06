@@ -439,10 +439,23 @@ fails release-profile validation until the real settings are supplied.
 
 ## Manual book controls checkpoint — 2026-10-06
 
-`MaestroQuest-book-action-forms-A8D296E4.apk` is the newest audited development candidate,
+`MaestroQuest-book-action-forms-A8D296E4.apk` was the audited development candidate at that checkpoint,
 SHA-256 `A8D296E40395E889FE86497EF739E6C8D9DF6F696ECD971970E13C60F6E7F63D`. Full native, original-book, web, Android,
 source/content/signature/alignment checks passed; exact counts and limits are in
 [device QA](QUEST_DEVICE_QA.md#manual-book-action-forms--2026-10-06). The same audited
 APK is installed; book/tool/controller checks and a ten-minute development
 measurement are recorded there. It was not signed with the new release key. Quest performance, independent password
 recovery, production configuration and Store gates remain open.
+
+## Animated shared icons checkpoint — 2026-10-06
+
+The current audited and installed development package is
+`MaestroQuest-animated-icons-D522191F.apk`, SHA-256
+`D522191F126BD8F1D6D09958F0637780367C30C9E57C8DEDA02669FD78A96ED3`.
+The shared web UI keeps its animated icon shapes, colours and dimensions while
+avoiding repeated page layouts. Phone/book viewport, native integration, packaged
+content/signature and Quest checks passed;
+[exact counts and measurement limits](QUEST_DEVICE_QA.md#animated-book-icons--2026-10-06)
+include the 71.43 FPS five-minute development run. This is not sustained 72 FPS
+acceptance or a release-signed build. Independent password recovery, production
+configuration, human/provider testing and Store gates remain open.
