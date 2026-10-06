@@ -106,7 +106,8 @@ export interface RoomTaskControl {
   onReceipt?:(receipt:RoomAgentState)=>void|Promise<void>;
   onSnapshot?:(image:RoomCaptureImage)=>void|Promise<void>;
 }
-export interface RoomTaskResult {snapshots?:RoomCaptureImage[];receipts:RoomAgentState[];scene:RoomAgentState;budgetExhausted:boolean;relatedTask?:RelatedRoomTask;needsReview?:boolean}
+export interface RoomTaskOperation {commands:RoomCommand[];receiptIndex:number}
+export interface RoomTaskResult {operations?:RoomTaskOperation[];snapshots?:RoomCaptureImage[];receipts:RoomAgentState[];scene:RoomAgentState;budgetExhausted:boolean;relatedTask?:RelatedRoomTask;needsReview?:boolean}
 const copy=<T>(value:T):T=>JSON.parse(JSON.stringify(value));
 
 /** A bounded tool task owned by the original Maestro app. The caller supplies
@@ -116,7 +117,7 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
   options:TutorTextTurnOptions,lease:RoomAgentLease,
   onUsage:(response:Awaited<ReturnType<typeof generateGeminiResponse>>)=>void,control:RoomTaskControl={}
 ):Promise<RoomTaskResult> {
-  const receipts:RoomAgentState[]=[],snapshots:RoomCaptureImage[]=[];
+  const receipts:RoomAgentState[]=[],snapshots:RoomCaptureImage[]=[],operations:RoomTaskOperation[]=[];
   // One task starts a saved program revision once. Accepted preparation/queueing
   // is already an effect; a repeated model proposal must observe it, not replay it.
   const acceptedProgramStarts=new Map<string,{target:string;revision:number;receiptIndex:number;runIds:string[]}>();
@@ -127,7 +128,7 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
   for(let step=0;step<ROOM_TASK_LIMITS.planningCalls;step++) {
     active();await control.beforePlan?.();active();
     const scene=copy(lease.state()),budget=remainingRoomTaskBudget(step,queries,actions);
-    const response=await generateGeminiResponse(input.model,buildRoomAgentPrompt(input.prompt,scene,receipts,{systemInstruction:input.systemInstruction,nativeLanguageCode:input.nativeLanguageCode,relatedTask:control.relatedTask,...(planRejection?{planRejection}:{}),...(acceptedProgramStarts.size?{acceptedProgramStarts:[...acceptedProgramStarts.values()]}:{})},budget),input.history,{
+    const response=await generateGeminiResponse(input.model,buildRoomAgentPrompt(input.prompt,scene,receipts,{systemInstruction:input.systemInstruction,nativeLanguageCode:input.nativeLanguageCode,relatedTask:control.relatedTask,operations,...(planRejection?{planRejection}:{}),...(acceptedProgramStarts.size?{acceptedProgramStarts:[...acceptedProgramStarts.values()]}:{})},budget),input.history,{
       ...pickGeminiClientSource(options),systemInstruction:ROOM_AGENT_INSTRUCTION+'\n'+ROOM_PLANNER_ARGUMENT_GUIDE,currentFileParts:input.currentFileParts,
       currentImages:[...(input.currentImages??[]),...roomCaptureImages(snapshots)],
       ...(input.liveInputMedia ? {liveInputMedia:input.liveInputMedia} : {}),
@@ -149,10 +150,10 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
     }
     if(!commands.length&&planRejection)throw new Error('The room planner stopped after an invalid plan: '+planRejection.message);
     planRejection=undefined;
-    if(!commands.length)return {...(snapshots.length?{snapshots}:{}),receipts,scene:copy(lease.state()),budgetExhausted:false,relatedTask:control.relatedTask,needsReview:!!control.relatedTask?.unconfirmed};
+    if(!commands.length)return {...(snapshots.length?{snapshots}:{}),operations:copy(operations),receipts,scene:copy(lease.state()),budgetExhausted:false,relatedTask:control.relatedTask,needsReview:!!control.relatedTask?.unconfirmed};
     // An unconfirmed earlier action is evidence of uncertainty, never permission to retry it.
     if (control.relatedTask?.unconfirmed && commands.some(command => !isRoomQuery(command)))
-      return { ...(snapshots.length?{snapshots}:{}), receipts, scene: copy(lease.state()), budgetExhausted: false, relatedTask: control.relatedTask, needsReview: true };
+      return { ...(snapshots.length?{snapshots}:{}), operations:copy(operations),receipts, scene: copy(lease.state()), budgetExhausted: false, relatedTask: control.relatedTask, needsReview: true };
     const proposedStart=commands.length===1&&commands[0].action==='rules'&&commands[0].rule?.action==='play'?commands[0].rule:null;
     const startKey=proposedStart?JSON.stringify([proposedStart.target,proposedStart.revision]):null;
     if(startKey&&acceptedProgramStarts.has(startKey))commands=[{action:'rules',rule:{action:'inspect',target:proposedStart!.target}}];
@@ -166,9 +167,13 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
     requireRoomCapabilities(commands,scene);
     if(scene.capabilities?.includes('executionReceipts.v1'))commands=commands.map(c=>c.action==='execution'&&c.execution?{...c,execution:identifyExecution(c.execution,scene.execution)}:c);
     await control.beforeDispatch?.(commands,scene);active();
+    // Preserve the actual dispatch, including reconciled reads and issued run IDs.
+    // A post-action scene alone cannot tell the next planner what was removed.
+    const dispatched=copy(commands);
     const receipt=await (control.signal
       ? lease.execute(commands,scene.sceneRevision,scene.objects,control.signal)
       : lease.execute(commands,scene.sceneRevision,scene.objects));
+    operations.push({commands:dispatched,receiptIndex:receipts.length});
     receipts.push(copy(receipt));
     const moduleQuery=commands.length===1&&commands[0].action==='catalog'&&commands[0].catalog?.operation==='inspect'&&commands[0].catalog.category==='modules'?commands[0].catalog:null;
     const moduleReply=receipt.catalog;
@@ -190,7 +195,7 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
       snapshots.push(image);await control.onSnapshot?.(copy(image));active();
     }
   }
-  active();return {...(snapshots.length?{snapshots}:{}),receipts,scene:copy(lease.state()),budgetExhausted:true,relatedTask:control.relatedTask};
+  active();return {...(snapshots.length?{snapshots}:{}),operations:copy(operations),receipts,scene:copy(lease.state()),budgetExhausted:true,relatedTask:control.relatedTask};
 }
 
 /** Compatibility wrapper until room tasks enter the common tool dispatcher. */
@@ -198,5 +203,5 @@ export async function runRoomTutorTurn(input:TutorTextTurnInput,options:TutorTex
   onUsage:(response:Awaited<ReturnType<typeof generateGeminiResponse>>)=>void,isCurrent:()=>boolean=()=>true) {
   const task=await runRoomActionTask(input,options,lease,onUsage,{isCurrent});
   if(!isCurrent()||!lease.valid())throw new DOMException('The room request was interrupted. No further actions will run.','AbortError');
-  return runTutorTextTurn({...input,currentImages:[...(input.currentImages??[]),...roomCaptureImages(task.snapshots)],systemInstruction:input.systemInstruction+'\n\n'+buildRoomResultInstruction(task.receipts,task.scene)},options);
+  return runTutorTextTurn({...input,currentImages:[...(input.currentImages??[]),...roomCaptureImages(task.snapshots)],systemInstruction:input.systemInstruction+'\n\n'+buildRoomResultInstruction(task.receipts,task.scene,task.operations)},options);
 }

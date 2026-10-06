@@ -494,3 +494,32 @@ describe('bounded local plan correction',()=>{
   expect(execute).toHaveBeenCalledOnce();expect(ai.models.generateContentStream).toHaveBeenCalledOnce();
  });
 });
+
+
+it('pairs acknowledged commands with their receipts after deletion, failure and read-only inspection', async () => {
+ const target='b'.repeat(32),other='c'.repeat(32);
+ const object=(id:string,name:string)=>({id,name,kind:'block',position:{x:0,y:0,z:0},scale:1,color:{r:1,g:1,b:1,a:1},animated:false});
+ let current:RoomAgentState={...scene,capabilities:['catalog.v1'],objects:[object(target,'Assembly'),object(other,'Separate block')]};
+ const batches:RoomCommand[][]=[
+  [{action:'delete',target}],
+  [{action:'paint',target:other,color:{r:1,g:0,b:0,a:1}}],
+  [{action:'catalog',catalog:{operation:'search',query:'position',offset:0}}],
+ ];
+ const ai=client([...batches.map(commands=>JSON.stringify({commands})),'{"commands":[]}']);
+ const execute=vi.fn(async(commands:RoomCommand[])=>{
+  const n=execute.mock.calls.length;
+  current={...current,ack:n,sceneRevision:5,objects:[object(other,'Separate block')],ok:n!==2,status:n===2?'Object held; edit rejected':'Acknowledged'};
+  // The adapter may retain/mutate its argument; earlier evidence must remain frozen.
+  commands[0].target='changed by adapter';
+  return current;
+ });
+ const result=await runRoomActionTask({...input,prompt:'Remove the assembly.'},{aiClient:ai},{state:()=>current,valid:()=>true,execute},()=>{});
+ const requests=ai.models.generateContentStream.mock.calls as unknown as [{contents:{parts:{text:string}[]}[]}][];
+ const afterDelete=JSON.parse(requests[1][0].contents[0].parts[0].text);
+ expect(afterDelete.scene.objects.map((item:{id:string})=>item.id)).toEqual([other]);
+ expect(afterDelete.tutorContext.operations).toEqual([{commands:batches[0],receiptIndex:0}]);
+ const final=JSON.parse(requests[3][0].contents[0].parts[0].text);
+ expect(final.tutorContext.operations).toEqual(batches.map((commands,receiptIndex)=>({commands,receiptIndex})));
+ expect(final.receipts.map((receipt:RoomAgentState)=>receipt.ok)).toEqual([true,false,true]);
+ expect(result.operations).toEqual(final.tutorContext.operations);
+});

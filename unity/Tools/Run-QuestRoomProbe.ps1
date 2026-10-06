@@ -6,8 +6,9 @@ param(
  [Parameter(Mandatory)][string]$BuildMirror,
  [string]$Prompt,
  [string]$Profile = 'quest-probe',
- [ValidateSet('ContextCreateEdit','LiveVisual','ObserverVisual','EventProgram','AvatarAnimation','CompositeModule','PhysicsLaunch','TaskSteering')][string]$ProviderScenario,
+ [ValidateSet('ContextCreateEdit','LiveVisual','ObserverVisual','EventProgram','AvatarAnimation','CompositeModule','PhysicsLaunch','TaskSteering','LearnerConversation')][string]$ProviderScenario,
  [string]$SpeechFixture,
+ [string]$ResumeLearnerRun,
  [ValidateSet('Headless','Book')][string]$Journey = 'Headless'
 )
 $ErrorActionPreference='Stop'
@@ -15,12 +16,14 @@ if($ProviderScenario -in @('LiveVisual','ObserverVisual')){
  if([string]::IsNullOrWhiteSpace($SpeechFixture) -or !(Test-Path -LiteralPath $SpeechFixture -PathType Leaf)){throw 'Live provider scenarios require an explicit SpeechFixture JSON file.'}
  $SpeechFixture=(Resolve-Path -LiteralPath $SpeechFixture).Path
 }
+if($ProviderScenario -eq 'LearnerConversation' -and $Journey -ne 'Headless'){throw 'LearnerConversation uses the interactive headless driver.'}
 if($ProviderScenario){
  if(![string]::IsNullOrWhiteSpace($Prompt)){throw 'ProviderScenario cannot be combined with Prompt.'}
  if($Journey -eq 'Book' -and $ProviderScenario -ne 'ContextCreateEdit'){throw 'The real-provider book supports ContextCreateEdit only.'}
  $Prompt='Please create my test object now. Use the definition I gave in the previous message.'
 }
 if($Journey -eq 'Book' -and !$ProviderScenario -and ![string]::IsNullOrWhiteSpace($Prompt)){throw 'The deterministic book journey does not accept a provider prompt.'}
+if($ResumeLearnerRun -and ($ProviderScenario -ne 'LearnerConversation' -or $ResumeLearnerRun -notmatch '^[a-f0-9]{32}$')){throw 'ResumeLearnerRun requires a completed learner run ID.'}
 . (Join-Path $PSScriptRoot 'QuestBuildProcesses.ps1')
 $repoRoot=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
 $mirror=(Resolve-Path -LiteralPath $BuildMirror).Path
@@ -44,15 +47,32 @@ foreach($running in Get-CimInstance Win32_Process -Filter "Name='Unity.exe'"){
 $id=[Guid]::NewGuid().ToString('N');$directory=Join-Path $repoRoot ".quest-evidence/native-room/$id"
 New-Item -ItemType Directory -Path $directory | Out-Null
 @{version=1;id=$id} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'owner.json') -Encoding utf8
+if($ResumeLearnerRun){
+ $previousRun=Join-Path $repoRoot ".quest-evidence/native-room/$ResumeLearnerRun"
+ $previousOwner=Get-Content -LiteralPath (Join-Path $previousRun 'owner.json') -Raw | ConvertFrom-Json
+ $previousVerified=Get-Content -LiteralPath (Join-Path $previousRun 'verified.json') -Raw | ConvertFrom-Json
+ $previousSession=Get-Content -LiteralPath (Join-Path $previousRun 'learner-session.json') -Raw | ConvertFrom-Json
+ if($previousOwner.id -ne $ResumeLearnerRun -or $previousVerified.id -ne $ResumeLearnerRun -or $previousVerified.clientExit -ne 0 -or $previousVerified.editorExit -ne 0 -or !$previousSession.finished){throw 'Resume requires a cleanly closed, owned learner run.'}
+ if($previousSession.accessMode -ne $env:MAESTRO_HEADLESS_ACCESS_MODE){throw 'Resume must keep the original access mode.'}
+ $previousProfile=[IO.Path]::GetFullPath($previousSession.profile)
+ $tempPrefix=Join-Path ([IO.Path]::GetTempPath()) 'maestro-headless-'
+ $profilePrefix=[IO.Path]::GetFullPath((Join-Path $previousRun 'profiles'))+[IO.Path]::DirectorySeparatorChar
+ if(!$previousProfile.StartsWith($tempPrefix,[StringComparison]::OrdinalIgnoreCase) -and !$previousProfile.StartsWith($profilePrefix,[StringComparison]::OrdinalIgnoreCase)){throw 'Unexpected learner profile location.'}
+ $profileCopy=Join-Path $directory 'profiles/learner'
+ New-Item -ItemType Directory -Path (Split-Path -Parent $profileCopy) | Out-Null
+ Copy-Item -LiteralPath $previousProfile -Destination $profileCopy -Recurse
+ Copy-Item -LiteralPath (Join-Path $previousRun 'workspace') -Destination (Join-Path $directory 'workspace') -Recurse
+ @{version=1;sourceRun=$ResumeLearnerRun;accessMode=$previousSession.accessMode;nativeObjectIds=@($previousSession.records[-1].native.objects.id);profileSha256=(Get-FileHash -LiteralPath (Join-Path $previousProfile 'profile.json')).Hash;boundary='Copied closed diagnostic profile and saved room; new native session. No old operations are replayed.'} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'learner-resume.json') -Encoding utf8
+}
 $log=Join-Path $directory 'unity.log'
 Stop-QuestBuildHelper
-$process=Start-Process -FilePath $editorPath -WindowStyle Hidden -PassThru -ArgumentList @('-batchmode','-force-d3d11','-buildTarget','Win64','-projectPath',('"'+$mirror+'"'),'-executeMethod','Maestro.Quest.Editor.QuestRoomProbe.Start','-logFile',('"'+$log+'"')) -Environment @{ADB_SERVER_SOCKET='tcp:localhost:5041';MAESTRO_ROOM_PROBE_DIRECTORY=$directory;MAESTRO_ROOM_PROBE_AVATAR=$(if($ProviderScenario -eq 'AvatarAnimation'){'1'}else{''});MAESTRO_ROOM_PROBE_PHYSICS=$(if([string]::IsNullOrWhiteSpace($Prompt) -or $ProviderScenario -eq 'PhysicsLaunch'){'1'}else{''});MAESTRO_QUEST_RELEASE_PROFILE='';MAESTRO_QUEST_KEYSTORE='';MAESTRO_QUEST_KEY_ALIAS='';MAESTRO_QUEST_STORE_PASSWORD='';MAESTRO_QUEST_KEY_PASSWORD=''}
+$process=Start-Process -FilePath $editorPath -WindowStyle Hidden -PassThru -ArgumentList @('-batchmode','-force-d3d11','-buildTarget','Win64','-projectPath',('"'+$mirror+'"'),'-executeMethod','Maestro.Quest.Editor.QuestRoomProbe.Start','-logFile',('"'+$log+'"')) -Environment @{ADB_SERVER_SOCKET='tcp:localhost:5041';MAESTRO_ROOM_PROBE_DIRECTORY=$directory;MAESTRO_ROOM_PROBE_LEARNER=$(if($ProviderScenario -eq 'LearnerConversation'){'1'}else{''});MAESTRO_ROOM_PROBE_AVATAR=$(if($ProviderScenario -in @('AvatarAnimation','LearnerConversation')){'1'}else{''});MAESTRO_ROOM_PROBE_PHYSICS=$(if([string]::IsNullOrWhiteSpace($Prompt) -or $ProviderScenario -in @('PhysicsLaunch','LearnerConversation')){'1'}else{''});MAESTRO_QUEST_RELEASE_PROFILE='';MAESTRO_QUEST_KEYSTORE='';MAESTRO_QUEST_KEY_ALIAS='';MAESTRO_QUEST_STORE_PASSWORD='';MAESTRO_QUEST_KEY_PASSWORD=''}
 $previousPrompt=$env:MAESTRO_ROOM_PROBE_PROMPT;$previousProfile=$env:MAESTRO_ROOM_PROBE_PROFILE;$previousScenario=$env:MAESTRO_ROOM_PROBE_SCENARIO;$previousSpeech=$env:MAESTRO_ROOM_PROBE_SPEECH
 try{
  $env:MAESTRO_ROOM_PROBE_PROMPT=$Prompt;$env:MAESTRO_ROOM_PROBE_PROFILE=$Profile;$env:MAESTRO_ROOM_PROBE_SCENARIO=$ProviderScenario;$env:MAESTRO_ROOM_PROBE_SPEECH=$SpeechFixture
  Push-Location $repoRoot
  try{
-  $clientScript=$(if($Journey -eq 'Book' -and $ProviderScenario){'scripts/probe-provider-book.ts'}elseif($Journey -eq 'Book'){'scripts/probe-native-book.ts'}else{'scripts/probe-native-room.ts'})
+  $clientScript=$(if($ProviderScenario -eq 'LearnerConversation'){'scripts/probe-learner-room.ts'}elseif($Journey -eq 'Book' -and $ProviderScenario){'scripts/probe-provider-book.ts'}elseif($Journey -eq 'Book'){'scripts/probe-native-book.ts'}else{'scripts/probe-native-room.ts'})
   & $runner $clientScript $directory *> (Join-Path $directory 'client.log');$clientExit=$LASTEXITCODE
  }finally{Pop-Location}
  if($clientExit -ne 0 -and !$process.HasExited){
@@ -68,8 +88,8 @@ try{
  }
  $terminal=Get-Content -LiteralPath (Join-Path $directory 'terminal.json') -Raw | ConvertFrom-Json
  if($clientExit -ne 0 -or $process.ExitCode -ne 0 -or $terminal.exitCode -ne 0 -or $terminal.id -ne $id){throw "Native room probe failed. Evidence: $directory"}
- @{version=1;id=$id;clientExit=$clientExit;editorExit=$process.ExitCode;directory=$directory;providerUsed=![string]::IsNullOrWhiteSpace($Prompt);journey=$Journey;providerScenario=$ProviderScenario} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'verified.json')
- Write-Output "Native room probe passed: $directory"
+ @{version=1;id=$id;clientExit=$clientExit;editorExit=$process.ExitCode;directory=$directory;providerUsed=![string]::IsNullOrWhiteSpace($Prompt);journey=$Journey;providerScenario=$ProviderScenario;outcome=$(if($ProviderScenario -eq 'LearnerConversation'){'collected-requires-semantic-review'}else{'passed'});resumedFrom=$ResumeLearnerRun} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'verified.json')
+ if($ProviderScenario -eq 'LearnerConversation'){Write-Output "Learner session collected (manual outcome review required): $directory"}else{Write-Output "Native room probe passed: $directory"}
 }finally{
  $env:MAESTRO_ROOM_PROBE_PROMPT=$previousPrompt;$env:MAESTRO_ROOM_PROBE_PROFILE=$previousProfile;$env:MAESTRO_ROOM_PROBE_SCENARIO=$previousScenario;$env:MAESTRO_ROOM_PROBE_SPEECH=$previousSpeech
  if(!$process.HasExited){$process.Kill();$process.WaitForExit()}

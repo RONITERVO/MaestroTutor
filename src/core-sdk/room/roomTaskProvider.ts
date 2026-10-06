@@ -24,7 +24,7 @@ export function roomTaskProvider(
         const turn = await runTutorTextTurn({ ...input,
           prompt: buildRoomTaskReplyRequest(input.prompt, rejectedReply),
           currentImages: [...(input.currentImages ?? []), ...roomCaptureImages(result.snapshots)],
-          systemInstruction: input.systemInstruction + '\n\n' + buildRoomResultInstruction(result.receipts, result.scene)
+          systemInstruction: input.systemInstruction + '\n\n' + buildRoomResultInstruction(result.receipts, result.scene, result.operations)
             + buildRoomTaskReplyInstruction(result.budgetExhausted)
             + (result.relatedTask ? buildRoomTaskOutcomeInstruction(result.relatedTask, result.needsReview) : ''),
           configOverrides: { maxOutputTokens: 2048 },

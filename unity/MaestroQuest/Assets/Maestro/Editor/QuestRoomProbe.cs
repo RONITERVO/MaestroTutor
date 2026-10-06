@@ -17,7 +17,7 @@ namespace Maestro.Quest.Editor
     {
         const string Key="Maestro.RoomProbe.Directory";
         static string directory,id,clientId;static RoomAgent agent;static GameObject root;
-        static double started,next;static bool finishing;static QuestAvatarProbe avatarProbe;
+        static double started,next;static int timeoutSeconds;static bool finishing;static QuestAvatarProbe avatarProbe;
         static QuestRoomProbe(){EditorApplication.playModeStateChanged+=Changed;EditorApplication.update+=Tick;}
         public static void Start()
         {
@@ -26,7 +26,14 @@ namespace Maestro.Quest.Editor
             if(string.IsNullOrWhiteSpace(directory)||!Path.IsPathRooted(directory))throw new InvalidOperationException("Supply an absolute, fresh probe directory.");
             directory=Path.GetFullPath(directory);var owner=JObject.Parse(File.ReadAllText(Path.Combine(directory,"owner.json")));
             if((int?)owner["version"]!=1||!Guid.TryParseExact((string)owner["id"],"N",out _))throw new InvalidOperationException("Invalid probe owner receipt.");
-            foreach(var name in new[]{"workspace","ready.json","state.json","terminal.json"})if(File.Exists(Path.Combine(directory,name))||Directory.Exists(Path.Combine(directory,name)))throw new InvalidOperationException("Probe directories cannot be reused.");
+            foreach(var name in new[]{"ready.json","state.json","terminal.json"})if(File.Exists(Path.Combine(directory,name))||Directory.Exists(Path.Combine(directory,name)))throw new InvalidOperationException("Probe directories cannot be reused.");
+            if(File.Exists(Path.Combine(directory,"workspace")))throw new InvalidOperationException("The probe workspace must be a directory.");
+            if(Directory.Exists(Path.Combine(directory,"workspace"))){
+                var resumePath=Path.Combine(directory,"learner-resume.json");
+                if(Environment.GetEnvironmentVariable("MAESTRO_ROOM_PROBE_LEARNER")!="1"||!File.Exists(resumePath))throw new InvalidOperationException("An existing workspace requires an explicit closed learner-session copy.");
+                var resume=JObject.Parse(File.ReadAllText(resumePath));
+                if((int?)resume["version"]!=1||!Guid.TryParseExact((string)resume["sourceRun"],"N",out _)||(string)resume["sourceRun"]==(string)owner["id"])throw new InvalidOperationException("Invalid learner restore receipt.");
+            }
             SessionState.SetString(Key,directory);
             // This is a disposable batch mirror, never an interactive user's open scene.
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
@@ -39,6 +46,8 @@ namespace Maestro.Quest.Editor
                 try{
                     id=(string)JObject.Parse(File.ReadAllText(Path.Combine(directory,"owner.json")))["id"];
                     started=EditorApplication.timeSinceStartup;next=0;finishing=false;
+                    // Deliberate interactive learner sessions need time between user turns.
+                    timeoutSeconds=Environment.GetEnvironmentVariable("MAESTRO_ROOM_PROBE_LEARNER")=="1"?3600:900;
                     avatarProbe=Environment.GetEnvironmentVariable("MAESTRO_ROOM_PROBE_AVATAR")=="1"?new QuestAvatarProbe():null;
                     Application.runInBackground=true;Application.targetFrameRate=72;
                     root=new GameObject("Maestro probe app");root.SetActive(false);
@@ -59,7 +68,7 @@ namespace Maestro.Quest.Editor
         static void Tick()
         {
             if(!EditorApplication.isPlaying||string.IsNullOrEmpty(directory)||finishing)return;
-            if(EditorApplication.timeSinceStartup-started>900){Fail(new TimeoutException("Room probe exceeded fifteen minutes."));return;}
+            if(EditorApplication.timeSinceStartup-started>timeoutSeconds){Fail(new TimeoutException("Room probe exceeded its bounded session duration."));return;}
             if(EditorApplication.timeSinceStartup<next)return;next=EditorApplication.timeSinceStartup+.1;
             try{
                 var input=Path.Combine(directory,"request.json");

@@ -28,7 +28,8 @@
     "scripts/probe-agent-physics.ts",
     "scripts/probe-agent-physics.test.ts",
     "scripts/probe-agent-steering.ts",
-    "scripts/probe-agent-steering.test.ts"
+    "scripts/probe-agent-steering.test.ts",
+    "scripts/probe-learner-room.ts"
   ],
   "references": []
 }

@@ -129,6 +129,44 @@ editing. Parallel/module execution, animation, persistence and physical Quest
 acceptance require their own scenarios. Keep provider transcripts and credentials
 in private ignored evidence, never in committed test fixtures.
 
+### Adaptive first-time learner session
+
+`-ProviderScenario LearnerConversation` starts a fresh English-native / Spanish-
+target headless profile connected to the actual Unity room. It waits for explicit
+`learner-request.json` messages in its fresh evidence directory. Requests have a
+consecutive `sequence`, a `type` (`text`, `live`, or `finish`) and, for turns, the
+learner's natural `text`. Live also names a local `speechFixture` whose transcript
+must exactly match that text. The shared chat, verifier, media tools, room task
+host and Live path perform the work; there are no synthetic tool decisions.
+
+A developer reads `learner-response.json` and adapts the next ordinary beginner
+message to the reply. Do not feed capability IDs, schemas, hidden native facts or
+technical solutions back as the learner. Record clarification and failure instead
+of forcing the model to produce a prescribed tool call. Stop during a turn is
+available through `learner-control.json` with `stopSequence` matching that turn.
+`finish` closes the owned session. The collector keeps actual messages, exported
+artifacts, native samples, task journals, usage and per-turn managed settlement.
+
+This mode has a one-hour Editor-only lifetime; other probes retain fifteen minutes.
+It samples the shared client's passive snapshot during pending commands, without
+trying to acquire an execution lease. Its floor is explicitly synthetic. A normal
+collector exit means evidence was collected, **not** that the learner's requests
+succeeded. Review semantics, generated artifact interaction, beginner usability,
+voice understanding and the later real-headset session separately. Existing payer
+credentials do not certify first-time account registration or Quest sign-in.
+
+Proactive helpful artifacts and multiple complementary outputs are intended
+product behavior. Evaluate their usefulness, accuracy and interaction together;
+do not classify an unrequested music/image/artifact/tool as a failure by itself.
+
+To continue after an external limit, use `-ResumeLearnerRun <closed-run-id>`.
+Only a cleanly finished owned learner run with the same access mode is accepted.
+Its saved room and profile are copied into the new isolated run; the source stays
+unchanged, native session identity changes, and previous commands are not replayed.
+`resumedFrom` records this boundary. This is restored-state evidence, not proof of
+an uninterrupted Live transition. New requests start at sequence 1. The wrapper's
+`outcome` is `collected-requires-semantic-review`, including when no errors occur.
+
 ### Stop and task steering provider scenario
 
 `-ProviderScenario TaskSteering` asks the real conversational agent to paint the

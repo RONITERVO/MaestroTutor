@@ -21,6 +21,12 @@ describe('shared room result reply',()=>{
   expect(request.systemInstruction).toContain(JSON.stringify(scene));expect(request.history).toEqual(source.history);expect(request.currentFileParts).toEqual(source.currentFileParts);
   expect(options.signal).toBe(signal);expect(input).toEqual(source);expect(reply.rawResponse).toBe('Listo.\n[EN] Done.');expect(usage).toHaveBeenCalledOnce();
  });
+ it('includes the exact acknowledged operations when reporting what changed',async()=>{
+  const operations=[{commands:[{action:'delete' as const,target:'b'.repeat(32)}],receiptIndex:0}];
+  vi.mocked(runTutorTextTurn).mockResolvedValue(output('Listo.\n[EN] Done.') as never);
+  await roomTaskProvider(()=>({} as never),vi.fn()).reply(input,{...result,operations},new AbortController().signal);
+  expect(vi.mocked(runTutorTextTurn).mock.calls[0][0].systemInstruction).toContain(JSON.stringify(operations));
+ });
  it('corrects only result text once, accounts both calls and never publishes the new tool proposal',async()=>{
   const rejected='I will ask the agent.\n```maestro-tool\n{"tool":"agent"}\n```',usage=vi.fn();
   vi.mocked(runTutorTextTurn).mockResolvedValueOnce(output(rejected) as never).mockResolvedValueOnce(output('Está roja.\n[EN] It is red.') as never);

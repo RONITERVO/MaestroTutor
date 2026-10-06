@@ -578,3 +578,82 @@ This is a deterministic acknowledgement-boundary Stop and ordinary native edit
 handlers. It does not establish physical grip arbitration, spoken Stop latency,
 rendered Stop controls/status, process-crash recovery, lost acknowledgements,
 Android reload or headset acceptance. Those remain separate release gates.
+
+
+## Adaptive novice lesson findings (2026-10-06)
+
+The requested English-native / Spanish-target novice dialogue ran through the
+shared headless chat, verifier, tools, room agent and actual Unity. User messages
+contained ordinary learner requests, not catalog IDs, coordinates, schemas or
+native solutions. The developer adapted follow-ups to the actual replies.
+
+Baseline managed run `3b23832e3b01431fa237fd4778cc0882` and BYOK run
+`8454b9153dfa47b1a6d9feb18d08276c` collected the full text sequence: greeting,
+flashcards, cafe image, tree/table/apple, current weather, walking, wagging dog,
+robot, Newton/catch and guidance to enter Live. Proactive music and weather
+artifacts are intended product behavior, including complementary artifact/tool
+outputs; their mere presence is not a failure. Exported flashcards and the
+weather notebook were exercised in isolated desktop Chrome, and PNGs inspected.
+This does not prove interaction with those artifacts on the book texture.
+
+The baselines are **not semantic passes**. The initial real-table placement did
+not create the requested objects; a natural follow-up requesting a virtual table
+created them. Weather responses initially assumed an unsupplied location. After
+the persona supplied Helsinki, the reported temperature matched an independent
+FMI check. Walking and catch never ran: physics was paused and no real-room
+alignment was established. Dog recipe tracks and robot animation were saved and
+marked playing, but their appearance/motion was not observed on a headset. Live
+navigation advice named generic controls rather than establishing the real UI.
+
+BYOK Live understood all 34 requested words and removed the exact tree while
+retaining the same apple and named dog/robot/table. A strict all-object comparison
+then found a second batch deleting three unrelated starter primitives. Managed
+Live, resumed from the untouched saved room as
+`292a987d4a6245fdbe2923cdc8cf46ae`, reproduced these extra deletions. Both are
+failures despite successful native receipts and fluent final replies. The first
+managed Live attempt was blocked by the staging daily allowance; the owner-
+authorized increase is recorded in LIVE_TURN_SPENDING_RELEASE.md. No previous
+native command was replayed during restore.
+
+The shared planner now receives its exact dispatched commands, paired by index
+with the native receipts already supplied. Previously it received only resulting
+room snapshots, which omitted deleted targets. The same pairing reaches the
+result narrator. Rejected receipts remain failures; runtime start receipts still
+do not prove completed motion. Generic assembly guidance distinguishes one
+recipe's internal parts from independent top-level objects. This changes neither
+proactive tutor outputs nor the native command/permission contract.
+
+Managed regression `782a61fe9fee4d9882c0d102582e70ba` restores the original room
+and repeats the identical spoken request with this fix. One acknowledged batch
+deletes only the tree and places the same apple at y=0.04 m (its radius is 0.039 m).
+All other object identities, placements, colours and physics settings remain
+unchanged. The five usage/charge rows reconcile to **86 credits / USD 0.083598**,
+with zero reservations. The failed managed baseline Live cost **121 credits /
+USD 0.118723**; the earlier text lesson cost **649 / USD 0.631325**. These are
+separate windows, not a total of every development attempt. BYOK records provider
+usage and payer, not an independently reconciled invoice.
+
+The focused shared tests pass **102 cases**, and the full app suite passes
+**2,483 cases in 275 files**, plus application and integration-driver TypeScript.
+Unit tests verify command/receipt pairing through deletion, rejected edits and
+queries, retained immutable evidence and final-reply delivery; they do not assert
+that a mocked model made a correct semantic decision. Original failed evidence
+is retained. The real-headset lesson remains open. All Editor runs use a synthetic floor and synthetic paced speech: they do
+not prove real scan alignment, floor contact, microphone capture, headset pixels,
+first-time account registration or physical input. The whole lesson remains
+incomplete until those outcomes and the observed novice friction are resolved.
+
+
+Fresh focused BYOK regression `b20568a8b0774530a2d068d58853cfa1` creates its tree,
+table, apple, dog and robot through two ordinary learner chat turns, then switches
+to real Live. With command/receipt pairing, its single edit batch deletes only the
+tree; every unrelated object and the same apple's properties are preserved.
+However, the apple center was placed at y=0, intersecting the synthetic floor by
+its 0.052 m radius. This remains a **partial result, not a full semantic pass**.
+A subsequent shared API-contract clarification explains primitive center origins
+and prefers native surface placement or inspected geometry/bounds over guessed
+floor coordinates. It also makes explicit that completing a deletion stops further
+deletion, not other unfinished requested actions. These two wording clarifications
+postdate the paired provider runs; their provider/device acceptance remains open.
+The Editor-only restore guard also retains rejection of conflicting files or
+response directories. Original runs and source fingerprints remain private evidence.
