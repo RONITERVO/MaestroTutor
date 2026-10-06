@@ -6,7 +6,7 @@ param(
  [Parameter(Mandatory)][string]$BuildMirror,
  [string]$Prompt,
  [string]$Profile = 'quest-probe',
- [ValidateSet('ContextCreateEdit','LiveVisual','ObserverVisual','EventProgram','AvatarAnimation')][string]$ProviderScenario,
+ [ValidateSet('ContextCreateEdit','LiveVisual','ObserverVisual','EventProgram','AvatarAnimation','CompositeModule')][string]$ProviderScenario,
  [string]$SpeechFixture,
  [ValidateSet('Headless','Book')][string]$Journey = 'Headless'
 )

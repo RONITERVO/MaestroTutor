@@ -152,6 +152,41 @@ receipt; it cannot restart a completed or cancelled run to satisfy an agent retr
 The probe requires exactly one completed run, not merely one accepted play reply.
 A later user task can start the saved program again.
 
+## Composite module provider journey
+
+`-ProviderScenario CompositeModule` uses the same managed/BYOK configuration and
+ordinary chat/verifier/task pipeline. A real agent discovers the included Passive
+spinner module and saves its exact immutable definition/hash in editable
+ParitySpinners source. Saving must create no objects, buttons, bindings or runs.
+
+After a later chat request starts it, two native branches must wait independently
+under one unfinished parent. The harness sends user.spawnLeft, observes only the
+left construction while the right branch still waits, then sends user.spawnRight
+and requires parent completion. These are ordinary user-event handlers, not mock
+program execution. Each construction has its requested position, editable recipe
+parts, authored collision shapes, physics settings and an internal passive hinge
+connecting only its own new members. One Undo removes each complete construction;
+Redo restores exact identities, geometry and connections. Later signals cannot
+restart a finished program. Existing room objects and avatar preferences stay intact.
+
+`provider-composite.json` retains source, native facts, intermediate states and
+real-provider usage for save/start turns. Source checks accept either reuse of one
+pin or separate aliases of the identical pin. Recipe comparison tolerates native
+float precision and JsonUtility's null/empty root-parent representation, but rejects
+missing parts, changed hierarchy, different geometry or cross-construction links.
+JSON syntax and invalid behaviour-source proposals can be corrected by the shared
+planner within its existing planning limit. The invalid proposal never reaches
+native dispatch or the native receipt journal. Unsupported actions, oversized
+command envelopes and transport failures are not correction candidates. This is
+shared browser/headless behavior, not a special provider-test retry.
+Agent drafts can reference a successfully inspected module with module:null plus
+its exact hash. The shared verified-copy authoring helper materializes the complete
+pin before validating/journaling/sending the program. Source and native validators
+still reject unresolved null imports. The visual editor uses the same pin copier;
+references neither fetch assets nor grant resources/signals or change pinned code.
+This proves authoring and native construction; it does not prove physical fidget
+feel, scanned collisions, headset rendering or arbitrary generated recipe quality.
+
 ### Spoken and visual agent scenarios
 
 `-ProviderScenario LiveVisual` and `-ProviderScenario ObserverVisual` run the

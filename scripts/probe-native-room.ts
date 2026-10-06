@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {runAgentCompositeProof} from './probe-agent-composite';
 import {runAgentAnimationProof} from './probe-agent-animation';
 import {runAgentProgramProof} from './probe-agent-program';
 import {assertCreatedParityBall,assertPaintedParityBall,assertSameRoomObjects} from './agent-provider-contract';
@@ -25,7 +26,7 @@ import {checkedProbeReply,factReply,assertSamePlacement,type NativeProbeState} f
 const directory=process.argv[2];if(!directory)throw new Error('Supply the explicitly started native probe directory.');
 const prompt=process.env.MAESTRO_ROOM_PROBE_PROMPT;
 const providerScenario=process.env.MAESTRO_ROOM_PROBE_SCENARIO;
-if(providerScenario && (!['ContextCreateEdit','LiveVisual','ObserverVisual','EventProgram','AvatarAnimation'].includes(providerScenario)||!prompt))throw new Error('Unknown or unconfigured provider scenario.');
+if(providerScenario && (!['ContextCreateEdit','LiveVisual','ObserverVisual','EventProgram','AvatarAnimation','CompositeModule'].includes(providerScenario)||!prompt))throw new Error('Unknown or unconfigured provider scenario.');
 const transport=await HeadlessRoomTransport.connect(directory,120000);
 const observations:unknown[]=[];
 try{
@@ -72,7 +73,7 @@ try{
   try{
    await selectHeadlessLanguage(client,{targetLanguageCode:'es-ES',nativeLanguageCode:'en-US'});
    const spoken=providerScenario==='LiveVisual'||providerScenario==='ObserverVisual';
-   const contextTurn=await runHeadlessChatTurn(client,{text:(providerScenario==='EventProgram'||providerScenario==='AvatarAnimation')?"For this test, my test object is a blue ball named ParityBall, half the diameter of the room's standard ball. Remember that; do not create anything yet.":spoken?"For this test, 'my test object' means one ball named ParityBall, exactly half the diameter of the room's standard ball. I will choose its colour in my next request. Remember that; do not make anything yet.":"For this test, 'my test object' means one small blue ball named ParityBall. Remember that for my next request; do not make anything yet.",useGoogleSearch:false});
+   const contextTurn=await runHeadlessChatTurn(client,{text:(['EventProgram','AvatarAnimation','CompositeModule'].includes(providerScenario||''))?"For this test, my test object is a blue ball named ParityBall, half the diameter of the room's standard ball. Remember that; do not create anything yet.":spoken?"For this test, 'my test object' means one ball named ParityBall, exactly half the diameter of the room's standard ball. I will choose its colour in my next request. Remember that; do not make anything yet.":"For this test, 'my test object' means one small blue ball named ParityBall. Remember that for my next request; do not make anything yet.",useGoogleSearch:false});
    const contextAftersteps=await runHeadlessSuggestionAftersteps(client,{assistantMessageId:contextTurn.assistantMessage.id});
    if(contextAftersteps.toolRequest?.tool==='agent'||lease.state().sceneRevision!==initial.sceneRevision||agent.usage.length)throw new Error('Context-only chat unexpectedly started room work.');
    let createdJourney;
@@ -102,6 +103,10 @@ try{
    if(providerScenario==='AvatarAnimation'){
     const before=structuredClone(lease.state());assertCreatedParityBall(initial,before,'blue',0.5);
     outcome={scenario:providerScenario,createdJourney,animation:await runAgentAnimationProof({client,before,execute,directory,probeId:transport.id})};
+   }
+   if(providerScenario==='CompositeModule'){
+    const before=structuredClone(lease.state());assertCreatedParityBall(initial,before,'blue',0.5);
+    outcome={scenario:providerScenario,createdJourney,composite:await runAgentCompositeProof({client,before,execute,directory})};
    }
    if(providerScenario==='ContextCreateEdit'){
     const createdState=structuredClone(lease.state());

@@ -460,3 +460,37 @@ describe('accepted program starts are observed, never replayed by a planner retr
   expect(execute.mock.calls.map(call=>call[0])).toEqual([[start()],[start()]]);
  });
 });
+
+
+describe('bounded local plan correction',()=>{
+ it('returns local syntax feedback and dispatches only a corrected plan with truthful receipts',async()=>{
+  const create={action:'create',reference:'ball',name:'Ball',kind:'ball'};
+  const ai=client(['{"commands": [',JSON.stringify({commands:[create]}),'{"commands":[]}']);
+  const execute=vi.fn(async()=>({...scene,ack:1})),beforeDispatch=vi.fn(),onReceipt=vi.fn(),usage=vi.fn();
+  const result=await runRoomActionTask(input,{aiClient:ai},{state:()=>scene,valid:()=>true,execute},usage,{beforeDispatch,onReceipt});
+  expect(execute).toHaveBeenCalledOnce();expect(beforeDispatch).toHaveBeenCalledOnce();expect(onReceipt).toHaveBeenCalledOnce();expect(usage).toHaveBeenCalledTimes(3);
+  expect(execute).toHaveBeenCalledWith([create],scene.sceneRevision,scene.objects);expect(result.receipts).toHaveLength(1);
+  const request:any=(ai.models.generateContentStream.mock.calls as any)[1][0],prompt=JSON.parse(request.contents[0].parts[0].text);
+  expect(prompt.tutorContext.planRejection).toMatchObject({response:'{"commands": [',truncated:false});
+  expect(prompt.budget).toMatchObject({planningCalls:ROOM_TASK_LIMITS.planningCalls-1,actionBatches:ROOM_TASK_LIMITS.actionBatches,queryBatches:ROOM_TASK_LIMITS.queryBatches});
+ });
+ it('reports malformed embedded source before dispatch and refuses an empty response pretending the task was fixed',async()=>{
+  const invalid={commands:[{action:'rules',rule:{action:'edit',revision:1,edits:[{kind:'save',reference:'program',sequence:{id:'',name:'Broken',repeat:false,interruption:0,program:'{"version":3,'}}]}}]};
+  const ai=client([JSON.stringify(invalid),'{"commands":[]}']),execute=vi.fn(),beforeDispatch=vi.fn();
+  await expect(runRoomActionTask(input,{aiClient:ai},{state:()=>scene,valid:()=>true,execute},()=>{},{beforeDispatch})).rejects.toThrow('stopped after an invalid plan');
+  expect(execute).not.toHaveBeenCalled();expect(beforeDispatch).not.toHaveBeenCalled();
+  const request:any=(ai.models.generateContentStream.mock.calls as any)[1][0],prompt=JSON.parse(request.contents[0].parts[0].text);
+  expect(prompt.tutorContext.planRejection.message).toMatch(/Invalid behaviour request/);
+ });
+ it('stops correction at the existing planning limit without native effects or hidden extra provider calls',async()=>{
+  const ai=client(Array(ROOM_TASK_LIMITS.planningCalls).fill('{"commands":[')),execute=vi.fn();
+  const result=await runRoomActionTask(input,{aiClient:ai},{state:()=>scene,valid:()=>true,execute},()=>{});
+  expect(result.budgetExhausted).toBe(true);expect(result.receipts).toEqual([]);expect(execute).not.toHaveBeenCalled();expect(ai.models.generateContentStream).toHaveBeenCalledTimes(ROOM_TASK_LIMITS.planningCalls);
+ });
+ it('does not turn a lost native receipt into a correction retry',async()=>{
+  const ai=client(['{"commands":[{"action":"create","reference":"r","name":"Ball","kind":"ball"}]}']);
+  const execute=vi.fn(async()=>{throw new Error('Receipt lost');});
+  await expect(runRoomActionTask(input,{aiClient:ai},{state:()=>scene,valid:()=>true,execute},()=>{})).rejects.toThrow('Receipt lost');
+  expect(execute).toHaveBeenCalledOnce();expect(ai.models.generateContentStream).toHaveBeenCalledOnce();
+ });
+});

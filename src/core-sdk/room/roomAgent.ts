@@ -14,6 +14,8 @@ import {validAvatarActivityRequest,type AvatarActivityRequest,type ActivityProfi
 import {validMotionQuery,type MotionQuery,type MotionSearchView} from '../../../shared/roomMotions';
 import type { RelatedRoomTask } from './taskSteering';
 import {validRuleRequest,type RuleRequest,type RuleView} from './rules';
+import {parseProgram} from './programs';
+import {resolveProgramImportReferences} from './programImportReferences';
 import { parseRecipe, type RoomRecipe } from './recipe';
 import { generateGeminiResponse } from '../gemini/generative';
 import { pickGeminiClientSource } from '../gemini/clientSource';
@@ -46,6 +48,20 @@ export interface RoomAgentLease {
   execute(commands: RoomCommand[], expectedRevision: number, expectedObjects?: RoomAgentState['objects'], signal?: AbortSignal): Promise<RoomAgentState>;
 }
 const record = (v: unknown): v is Record<string, unknown> => v !== null && typeof v === 'object' && !Array.isArray(v);
+/** Expand only explicit null imports from successful native inspections in this task.
+ * parseRoomCommands and native validation still check the complete expanded draft. */
+function resolveRoomProgramImports(value: unknown, observed: { hash: string; definition: unknown }[]): unknown {
+  if (!record(value) || !Array.isArray(value.commands) || value.commands.length > 8 || JSON.stringify(value).length > 28000) return value;
+  for (const command of value.commands) {
+    if (!record(command) || command.action !== 'rules' || !record(command.rule) || !Array.isArray(command.rule.edits) || command.rule.edits.length > 16) continue;
+    for (const edit of command.rule.edits) {
+      if (!record(edit) || edit.kind !== 'save' || !record(edit.sequence) || typeof edit.sequence.program !== 'string') continue;
+      try { edit.sequence.program = resolveProgramImportReferences(edit.sequence.program, observed); }
+      catch (error) { throw new Error('Invalid behaviour request. '+(error instanceof Error?error.message:'Invalid module reference.')); }
+    }
+  }
+  return value;
+}
 const validColor = (v: unknown) => record(v) && ['r','g','b'].every(k => typeof v[k] === 'number' && Number.isFinite(v[k]) && Number(v[k]) >= 0 && Number(v[k]) <= 1) && v.a === 1;
 const vector = (v: unknown) => record(v) && ['x','y','z'].every(k => typeof v[k] === 'number' && Number.isFinite(v[k]) && Math.abs(v[k] as number) <= 25);
 export function parseRoomCommands(input: unknown): RoomCommand[] {
@@ -63,7 +79,11 @@ export function parseRoomCommands(input: unknown): RoomCommand[] {
     if (action === 'execution' && !validExecutionRequest(c.execution)) throw new Error('Invalid action execution request.');
     if (action === 'catalog' && !validCatalogRequest(c.catalog)) throw new Error('Invalid capability query.');
     if (action === 'motions' && !validMotionQuery(c.motionQuery)) throw new Error('Invalid motion search.');
-    if (action === 'rules' && !validRuleRequest(c.rule)) throw new Error('Invalid behaviour request.');
+    if (action === 'rules' && !validRuleRequest(c.rule)) {
+      const edits=record(c.rule)&&Array.isArray(c.rule.edits)?c.rule.edits.slice(0,16):[];
+      const error=edits.flatMap(edit=>record(edit)&&record(edit.sequence)&&typeof edit.sequence.program==='string'?[parseProgram(edit.sequence.program).error]:[]).find(Boolean);
+      throw new Error('Invalid behaviour request.'+(error?' '+error.slice(0,512):''));
+    }
     if (action === 'workspace' && typeof c.visible !== 'boolean') throw new Error('Invalid workspace state.');
     if (c.atPosition !== undefined && typeof c.atPosition !== 'boolean') throw new Error('Invalid placement.');
     if ((action === 'resize' || c.scale !== undefined) && (typeof c.scale !== 'number' || !Number.isFinite(c.scale) || c.scale < .1 || c.scale > 4)) throw new Error('Invalid scale.');
@@ -100,11 +120,13 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
   // is already an effect; a repeated model proposal must observe it, not replay it.
   const acceptedProgramStarts=new Map<string,{target:string;revision:number;receiptIndex:number;runIds:string[]}>();
   const active=()=>{if(control.signal?.aborted||control.isCurrent?.()===false||!lease.valid())throw new DOMException('The room request was interrupted. No further actions will run.','AbortError');};
+  const inspectedModules=new Map<string,unknown>();
   let queries=0,actions=0;
+  let planRejection:{message:string;response:string;truncated:boolean}|undefined;
   for(let step=0;step<ROOM_TASK_LIMITS.planningCalls;step++) {
     active();await control.beforePlan?.();active();
     const scene=copy(lease.state()),budget=remainingRoomTaskBudget(step,queries,actions);
-    const response=await generateGeminiResponse(input.model,buildRoomAgentPrompt(input.prompt,scene,receipts,{systemInstruction:input.systemInstruction,nativeLanguageCode:input.nativeLanguageCode,relatedTask:control.relatedTask,...(acceptedProgramStarts.size?{acceptedProgramStarts:[...acceptedProgramStarts.values()]}:{})},budget),input.history,{
+    const response=await generateGeminiResponse(input.model,buildRoomAgentPrompt(input.prompt,scene,receipts,{systemInstruction:input.systemInstruction,nativeLanguageCode:input.nativeLanguageCode,relatedTask:control.relatedTask,...(planRejection?{planRejection}:{}),...(acceptedProgramStarts.size?{acceptedProgramStarts:[...acceptedProgramStarts.values()]}:{})},budget),input.history,{
       ...pickGeminiClientSource(options),systemInstruction:ROOM_AGENT_INSTRUCTION,currentFileParts:input.currentFileParts,
       currentImages:[...(input.currentImages??[]),...roomCaptureImages(snapshots)],
       ...(input.liveInputMedia ? {liveInputMedia:input.liveInputMedia} : {}),
@@ -112,7 +134,20 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
       timeoutMs:input.timeoutMs,signal:control.signal,lifecycleHooks:{onProgress:options.lifecycleHooks?.onProgress},
     });
     onUsage(response);active();
-    let commands=parseRoomCommands(JSON.parse(response.text||'{}'));
+    let commands:RoomCommand[];
+    try { commands=parseRoomCommands(resolveRoomProgramImports(JSON.parse(response.text||'{}'),[...inspectedModules].map(([hash,definition])=>({hash,definition})))); }
+    catch(error) {
+      // This is before durable intent and native dispatch. A new bounded planning
+      // call may correct syntax/validation; transport/receipt errors are not caught.
+      // Unsupported actions, oversized envelopes and other command-contract errors
+      // remain hard failures. Only JSON syntax or rejected behaviour source is repairable.
+      if(!(error instanceof SyntaxError)&&!(error instanceof Error&&error.message.startsWith('Invalid behaviour request.')))throw error;
+      const raw=response.text||'';
+      planRejection={message:(error instanceof Error?error.message:'Invalid room plan.').slice(0,1024),response:raw.slice(0,28000),truncated:raw.length>28000};
+      continue;
+    }
+    if(!commands.length&&planRejection)throw new Error('The room planner stopped after an invalid plan: '+planRejection.message);
+    planRejection=undefined;
     if(!commands.length)return {...(snapshots.length?{snapshots}:{}),receipts,scene:copy(lease.state()),budgetExhausted:false,relatedTask:control.relatedTask,needsReview:!!control.relatedTask?.unconfirmed};
     // An unconfirmed earlier action is evidence of uncertainty, never permission to retry it.
     if (control.relatedTask?.unconfirmed && commands.some(command => !isRoomQuery(command)))
@@ -134,6 +169,10 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
       ? lease.execute(commands,scene.sceneRevision,scene.objects,control.signal)
       : lease.execute(commands,scene.sceneRevision,scene.objects));
     receipts.push(copy(receipt));
+    const moduleQuery=commands.length===1&&commands[0].action==='catalog'&&commands[0].catalog?.operation==='inspect'&&commands[0].catalog.category==='modules'?commands[0].catalog:null;
+    const moduleReply=receipt.catalog;
+    if(moduleQuery&&receipt.ok&&moduleReply?.operation==='inspect'&&moduleReply.category==='modules'&&moduleReply.capability===moduleQuery.capability&&moduleReply.definition)
+      inspectedModules.set(moduleReply.capability,copy(moduleReply.definition));
     if(startKey&&proposedStart&&!query&&receipt.ok)acceptedProgramStarts.set(startKey,{target:proposedStart.target!,revision:proposedStart.revision!,receiptIndex:receipts.length-1,
       runIds:[...new Set([...(receipt.rules?.running??[]),...(receipt.rules?.outcomes??[])].filter(run=>run.sequenceId===proposedStart.target).map(run=>run.id))]});
     if(query)queries++;else actions++;

@@ -404,6 +404,14 @@ real-provider runs in both modes. Deterministic fixtures, native receipts and pr
 are recorded separately; none implies unobserved headset or Store acceptance.
 
 
+`CompositeModule` adds paired real-provider save/start journeys for a pinned
+included construction, two independent parallel event branches, native geometry,
+collisions, hinges and atomic construction Undo/Redo. Agent drafts can reference
+an exact module inspected in the same task; shared authoring expands and validates
+the full definition before journaling or dispatch. Bounded local source correction
+never retries native effects or turns rejected source into success. The release
+matrix records original failures, final paired results and scope limits.
+
 The native probe also has real `LiveVisual` and `ObserverVisual` scenarios for both
 access modes. They require the original transmitted audio/frame hashes in the
 planner, current conversation ownership, spoken output without tool JSON, verified

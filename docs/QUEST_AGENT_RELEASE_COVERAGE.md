@@ -292,3 +292,76 @@ This covers one exact shipped full-body library motion. It does not certify all
 178 motions, arbitrary imported rigs, live body/cloth physics, gestures, follow,
 obstacle-aware travel, physical joint posing, Android WebView or Quest rendering.
 Those broader acceptance requirements remain open; no release gate is waived.
+
+## Composite module provider/native proof (2026-10-06)
+
+CompositeModule adds a real-agent-authored program with a pinned included Passive
+spinner definition, parallel branches, independently signalled construction and
+native Undo/Redo. Both final access-mode runs pass. The probe checks actual geometry,
+collision sources, physics settings, member identities and internal hinge frames;
+it does not infer correctness from a successful play acknowledgement.
+
+Initial BYOK run `cd8af4e105e54de69138f0400b504f7d` remains failed before composite
+creation: the real planner chose RGB (0,1,1), cyan, for the preceding blue sentinel
+request. The shared colour guide now distinguishes ordinary primary/secondary
+names while preserving explicit RGB and qualified shades. The blue gate remains
+unchanged. Independently, prior native evidence showed Unity serializes root
+recipe parents as empty strings; the geometry check normalizes null/empty roots
+without accepting changed nonempty parents. Focused regressions cover exact pins,
+parallel child ownership, self-trigger refusal, hierarchy, finite geometry and links.
+
+Second BYOK run `154693a3e5454d3fb5bcf137ef8b23e1` also remains failed. The blue
+sentinel passed, and the agent searched/inspected the correct included module,
+but its escaped sequence.program contained malformed JSON. No program save was
+dispatched. The shared task runner now offers bounded local correction for JSON
+syntax or rejected behaviour source, returning the validator diagnostic and prior
+proposal as data in the next planning call. It uses the existing nine-call budget,
+counts provider usage, and spends no action/query batch for rejected local drafts.
+Unsupported actions and oversized command envelopes remain hard failures. Native
+transport/receipt errors are outside this catch and never trigger replay. An empty
+response after an unresolved rejection cannot masquerade as completion. Tests
+exercise corrected dispatch, retained receipts, hard bounds and lost acknowledgements.
+
+Run `fa17cb7a995047acbc90a159aa136882` reproduced the same embedded-source bracket
+error during bounded corrections and reached the task stop deadline without a
+program dispatch. Repeatedly regenerating immutable library code is not a reliable
+module-import interface. Explicit agent drafts may now use module:null with an
+exact hash inspected successfully in the same task. Shared authoring copies the
+verified immutable definition before full validation, durable intent and dispatch.
+The visual module editor uses the same verified-copy function. Native wire and
+saved source still contain complete definitions; pins are never fetched remotely,
+upgraded, or granted extra resources/signals. Stale catalog data carried by an
+unrelated acknowledgement is not proof of inspection. Missing/changed pins and
+combined-size/duplicate-key violations fail before effects.
+
+Run `629b0ba444d745ef85bc1a87d4af8742` stopped on a Gemini SDK incomplete JSON stream
+segment before any save proposal. It is transport-failure evidence, not a pass or
+proof against the reference mechanism.
+
+| Final access mode | Native run | Result |
+| --- | --- | --- |
+| Managed staging | `d614feae861546d0a706d6eaf4b3eac8` | Passed, client and Editor exit 0 |
+| BYOK | `af0d435034924b65b619c9acb8867bbe` | Passed, client and Editor exit 0 |
+
+Both use identical runtime/probe source fingerprints. Each save and start journey
+passes all ten chat/verifier/handoff/context/native/result/usage gates. All 15
+composite semantics pass: exact inspected pin, save without execution, editable
+source, parallel native children owned by one unfinished parent, independent user
+events, completed parent, exact editable geometry and placement, native collision
+and physics settings, internal hinge endpoints/frames, one Undo per construction,
+Redo preserving identities/connections, preserved unrelated objects and no effects
+after completion. Each run records 80 native samples for both two-piece
+constructions; the source and journal retain complete module definitions.
+
+Managed save/start billing windows settled **139/78 credits** (USD
+**0.134878/0.075327**), with matched usage/charge rows and zero reservations. These
+windows exclude preceding context chat and sentinel-object creation. BYOK records
+real usage and API-key payer identity, not an independent provider-invoice audit.
+
+Validation: **2,466 app tests in 270 files**, app/probe TypeScript, full app lint,
+production build, prompt ownership and core boundaries pass. No snapshots changed.
+There are no C# changes in this increment; each probe verifies the native mirror.
+Earlier 837 EditMode / 647 PlayMode results remain historical native evidence.
+This covers one included construction module, not arbitrary generated geometry,
+all modules, physical fidget feel, headset rendering or scanned-room acceptance.
+Those broader release gates remain open.
