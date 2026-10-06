@@ -2,9 +2,61 @@
 
 Status: attestation, account-link backend, browser approval and book sign-in client
 implemented, **disabled and not deployed**. Real Meta/Firebase verification and
-Quest acceptance remain open. No production credential, signing key, deployment
-or headset operation was created by this checkpoint; the owner supplied the
-public Meta app ID recorded below.
+Quest acceptance remain open. The dedicated Firebase client registration and
+verified public release settings are prepared as recorded below. Services and
+the browser pairing page have not been deployed.
+
+## Verified account preparation — 2026-10-06
+
+A dedicated **Maestro Quest** Firebase web registration is now active in the
+existing `chatwithmaestro` project:
+`1:47084692464:web:0b698a31e7e80cddac7335`. This is the client identity for the
+book's JavaScript CustomProvider, not a second account, backend or public website.
+The original web registration
+`1:47084692464:web:7e83d9b9c36b6c59ac7335` and Android registration
+`1:47084692464:android:1f3e885d2a423a63ac7335` read back unchanged.
+The new registration has neither reCAPTCHA provider configured and has zero
+App Check debug tokens. Registration alone cannot mint a Quest proof.
+
+The ignored release draft now contains the verified original web SDK settings,
+its existing reCAPTCHA Enterprise site key, the existing production API URL and
+the dedicated Quest app ID. All six shared public settings also match the
+currently deployed website bundle. API-key metadata shows no referrer allowlist
+on either public browser key and includes the required Firebase APIs; this is
+configuration evidence, not a successful Quest authentication request. The read
+used [Google's metadata-only endpoint](https://docs.cloud.google.com/api-keys/docs/reference/rest/v2/projects.locations.keys/get).
+
+Live inventory establishes the remaining setup:
+
+- `api` is active in `europe-west1`, requires App Check, and does not yet configure
+  the Quest app ID or allow the book origin.
+- Neither `questAttestation` nor `questAccountLink` is deployed. Their release
+  profile URLs stay blank, and strict release validation still refuses the draft.
+- `https://chatwithmaestro.com/quest-link.html` returns **404**, while the original
+  home page returns 200. Deploy the actual approval page through the website's
+  release process; a chosen URL is not a working pairing flow.
+- The Meta server secret, token-mint/signing permissions, verified ingress ranges,
+  Store-channel integrity/entitlement and real account/provider acceptance remain
+  outstanding. No secret, ingress range or working endpoint was inferred.
+
+A public server-settings merge draft is prepared locally with both Quest
+bootstrap switches **false**, the exact app/package/certificate identities and
+the proposed additional book origin. It is outside `functions/` and has not been
+applied. It must preserve existing production settings, including App Check,
+when deployment is approved. Keep the Quest ID on the main API after deployment
+even if new proof issuance is later disabled, as described below.
+
+The four Quest TTL entries in `firestore.indexes.json` cover
+`questAttestationChallenges`, `questAttestationRateWindows`, `questAccountLinks`
+and `questAccountLinkRateWindows`. Include all four with the server-only rules;
+no database policy was changed during this preparation.
+
+Evidence: `.quest-evidence/account-release-config-20261006/verified.json`, the
+before/after app inventories, provider/debug-token readbacks, public SDK/bundle
+comparison, HTTP response and disabled server merge draft. The only remote
+mutation was creating the dedicated Firebase registration (including its
+Firebase-created public browser key). No service, website, provider, permission,
+account balance or Store deployment changed.
 
 ## Why there is platform work despite one Maestro account
 
@@ -81,7 +133,7 @@ any Cloud Run URL and any hosting rewrite before enabling public access. A
 misconfigured narrow list can make callers share a proxy's rate bucket; a broad
 list can permit spoofing. [Express proxy configuration](https://expressjs.com/en/guide/behind-proxies.html).
 
-Deploy server-only Firestore rules and the two `purgeAt` TTL policies together
+Deploy server-only Firestore rules and all four Quest `purgeAt` TTL policies together
 when deployment is approved. Expiration remains safe while TTL deletion is delayed.
 Do not remove managed API App Check enforcement to make development APKs pass.
 Store recognition is required, so sideloaded debug APKs are not production proofs.

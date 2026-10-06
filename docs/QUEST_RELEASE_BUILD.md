@@ -434,20 +434,28 @@ inspection path, refuses redirected/captured interactive execution, and requires
 the owner to retype the password after clearing its display and confirm safe
 paper storage. A successful run writes only a public verification receipt after
 unlocking the exact expected private key and signing an in-memory challenge.
-The helper's preflight and captured-session refusal passed; existing key, public
-certificate, DPAPI password and public receipt bytes were unchanged. It has not
-yet completed the owner's paper confirmation. The USB was absent at this check;
-a fresh USB readback is separate from the earlier verified encrypted copy.
+The helper's preflight and captured-session refusal passed. On 2026-10-06 at
+03:09:28 UTC, the password retyped from paper unlocked the exact expected private
+key and passed a signature challenge. The helper recorded safe paper storage,
+and the owner also confirmed completion in chat. Its public receipt and the
+current keystore/certificate fingerprints were verified. The four original key,
+certificate, DPAPI password and public receipt files remain byte-identical.
 
-Independent password recovery still remains required before release signing.
-The USB copy alone cannot be opened on another PC without that password. Do not
-regenerate or replace this key while completing recovery storage. Production
-certificate allowlists, Firebase/Meta configuration and package availability are
-still unverified.
+Independent password recovery is now prepared through the owner-held paper and
+the previously verified encrypted USB copy. The USB was absent during the paper
+check, so it used the identical local keystore; this is not a fresh USB readback
+or a restore performed on another computer. Physical paper storage is the owner's
+attestation. No plaintext password file was created and no release APK was signed.
+Do not regenerate or replace this key. Authorized release signing and actual
+production/Store verification remain separate steps.
 
-The ignored public release-profile draft now contains the verified certificate
-fingerprint. Production web/account fields remain blank; this draft intentionally
-fails release-profile validation until the real settings are supplied.
+The ignored public release-profile draft contains the verified certificate,
+shared production web settings and dedicated Quest Firebase registration.
+Only the undeployed attestation and account-link endpoint URLs remain blank;
+strict validation still refuses this incomplete draft. See
+[the verified account setup and activation gaps](QUEST_MANAGED_ACCESS.md#verified-account-preparation--2026-10-06).
+Evidence includes the public paper receipt and configuration readbacks under
+`.quest-evidence/account-release-config-20261006/`.
 
 ## Manual book controls checkpoint — 2026-10-06
 
@@ -471,3 +479,16 @@ content/signature and Quest checks passed;
 include the 71.43 FPS five-minute development run. This is not sustained 72 FPS
 acceptance or a release-signed build. Independent password recovery, production
 configuration, human/provider testing and Store gates remain open.
+
+
+## Account and signing recovery preparation — 2026-10-06
+
+The owner completed paper-password recovery; the typed password and exact signing
+key passed verification. The encrypted USB copy was verified earlier. The dedicated
+Quest Firebase client registration is created, its alternate providers/debug tokens
+are absent, and the original app registrations are unchanged. Verified public
+settings are saved in the ignored release draft. Production bootstrap endpoints,
+browser approval page, Meta/IAM/ingress configuration, authorized deployment and
+provider/Store-channel acceptance remain open. No release build was signed or
+uploaded. See [the account evidence](QUEST_MANAGED_ACCESS.md#verified-account-preparation--2026-10-06)
+and the dedicated-key section above. Earlier checkpoint notes retain their scope.

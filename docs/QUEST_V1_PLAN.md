@@ -22,8 +22,15 @@ the normal bounded receipt history records the QA commands. Hand pouring,
 overflow, event and broader interaction acceptance remain open. See
 [the device result and limits](QUEST_DEVICE_QA.md#controller-bucket-to-cup-pour--2026-10-06).
 
-The dedicated release key is prepared locally, with a verified encrypted USB copy.
-Independent password recovery and production configuration remain open.
+The dedicated release key has a verified encrypted USB copy and a completed
+owner-confirmed paper-password backup; the retyped password unlocked the exact
+key and passed signature verification. A dedicated Quest Firebase registration is
+now prepared in the original project, with no alternate providers or debug tokens.
+Verified shared public settings are in the local release draft. Production
+endpoints and browser approval remain undeployed; Meta/IAM/ingress, actual
+provider acceptance and authorized signing/Store work remain open. See
+[account preparation](QUEST_MANAGED_ACCESS.md#verified-account-preparation--2026-10-06)
+and [signing recovery](QUEST_RELEASE_BUILD.md#dedicated-release-key-prepared--2026-10-06).
 
 A separate Android diagnostic now passes four partial-write terminations, six
 injected ENOSPC recoveries and 256 consecutive saves using unchanged production
