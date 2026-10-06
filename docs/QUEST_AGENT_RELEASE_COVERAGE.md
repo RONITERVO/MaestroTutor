@@ -503,3 +503,33 @@ colliders, contact-driven user programs, headset rendering and Quest performance
 remain separate gates. Earlier scenario passes are historical where shared
 planner sources have since changed; the selected release still requires its
 final paired provider and physical acceptance evidence.
+
+### Follow-up on the argument-encoding sources
+
+The rendered-book regression passes again on both access paths after the shared
+planner change: BYOK `eeabb4227e3b4da9beb1b1e00510c919` and managed
+`9674aaff8ff24c9b9d291ab2e08293d0`. Each passes all ten gates, makes 14 real
+provider calls and exits both client and Editor cleanly. Reloaded screenshots
+show the recorded result in the original chat. Managed whole-journey billing
+reconciles **195 credits / USD 0.189442**, with 14 usage/charge rows and zero
+reservations. This remains desktop browser/Unity evidence, not Android sign-in
+or headset acceptance.
+
+The construction-module regression also passes on both paths: BYOK
+`7a209693f04e4b95ab61f6d08829b336` and managed
+`59f8056b497c4ad09f4daed2138ffb30`, each with 19 real provider responses,
+all fifteen semantic gates, both ten-gate save/start journeys and clean exits.
+Exact module discovery/pinning, editable source, two independently triggered
+parallel branches, native geometry/hinges, atomic Undo/Redo and no effects after
+completion remain verified. Managed save/start billing reconciles respectively
+**158 / USD 0.153682** (7 rows) and **76 / USD 0.073026** (5 rows), each with
+zero reservations; earlier context/creation is outside those two windows.
+
+Default Vitest discovery now inherits the existing Vite configuration and normal
+Vitest exclusions, adding only the ignored `.quest-evidence` directory. Running
+the ordinary test command passes the same **2,479 cases in 274 files**, without
+a special local exclusion flag. No committed tests or snapshots were removed.
+The separate configuration passes TypeScript checking. An attempted project-build
+check encountered the existing node-config theme include mismatch; its generated
+files were removed and that original config restored. No application fix or pass
+is claimed for that separate build mode.
