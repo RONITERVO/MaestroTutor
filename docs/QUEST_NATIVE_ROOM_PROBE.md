@@ -98,6 +98,28 @@ checks succeed. An ad hoc Prompt run has no such semantic certification.
 Provider exceptions retain billing settlement evidence; failed zero-cost calls
 are valid billing evidence but never a successful agent journey.
 
+### Event-driven program scenario
+
+Use `-ProviderScenario EventProgram` with the same managed/BYOK configuration.
+It needs no speech fixture. The real tutor/verifier/agent creates the contextual
+half-size ParityBall, saves ParitySignal without starting it, and later starts
+and stops the program through ordinary conversational requests. Native user-event
+handlers supply two signals; the driver checks actual colours, private state,
+timer waits, completion, a fresh-state restart and no effects after Stop.
+
+`provider-program.json` records the exact editable source, each provider journey,
+accounting and native observations. It says passed only after all 11 program
+semantics succeed; the outer `verified.json` also requires duplicate prevention
+and clean process exits. Save, task completion and program completion are distinct.
+The generator may use interpreter Sleep or the native time.wait capability;
+both expose their actual scheduler state. The top-level journey retains initial
+creation evidence separately from save/start/stop billing windows.
+
+This proves the common native handlers, not controller input or rendered block
+editing. Parallel/module execution, animation, persistence and physical Quest
+acceptance require their own scenarios. Keep provider transcripts and credentials
+in private ignored evidence, never in committed test fixtures.
+
 ### Spoken and visual agent scenarios
 
 `-ProviderScenario LiveVisual` and `-ProviderScenario ObserverVisual` run the

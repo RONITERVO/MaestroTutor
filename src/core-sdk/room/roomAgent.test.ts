@@ -378,3 +378,29 @@ describe('planner response schema compatibility',()=>{
   expect(beforeDispatch).not.toHaveBeenCalled();expect(execute).not.toHaveBeenCalled();
  });
 });
+
+
+describe('program save provider schema', () => {
+ it('requires the creation reference the real program response omitted', () => {
+  const schema = ROOM_AGENT_RESPONSE_SCHEMA as any;
+  const rules = schema.properties.commands.items.anyOf.find((item: any) => item.properties.action.enum[0] === 'rules').properties.rule.anyOf;
+  const edit = rules.find((item: any) => item.properties.action.enum[0] === 'edit');
+  expect(edit.required).toEqual(['action', 'revision', 'edits']);
+  const saves = edit.properties.edits.items.anyOf.filter((item: any) => item.properties.kind.enum[0] === 'save');
+  const fresh = saves.find((item: any) => item.properties.sequence.properties.id.enum?.[0] === '');
+  expect(fresh.required).toEqual(['kind', 'reference', 'sequence']);
+  expect(fresh.properties.reference.pattern).toBe('^[a-zA-Z0-9_]{1,32}$');
+  const existing = saves.find((item: any) => item.properties.sequence.properties.id.pattern);
+  expect(existing.required).toEqual(['kind', 'sequence']);
+  expect(existing.properties.sequence.properties.id.pattern).toBe('^[a-f0-9]{32}$');
+  const program = JSON.stringify({ version: 2, entry: 'main', resources: [], functions: [{ name: 'main', returns: 'void', parameters: [], locals: [], body: [] }] });
+  const sequence = { id: '', name: 'ParitySignal', interruption: 0, repeat: false, program };
+  const command = (edit: unknown) => ({ commands: [{ action: 'rules', rule: { action: 'edit', revision: 1, edits: [edit] } }] });
+  expect(() => parseRoomCommands(command({ kind: 'save', sequence }))).toThrow();
+  expect(parseRoomCommands(command({ kind: 'save', reference: 'parity_signal', sequence }))).toHaveLength(1);
+  expect(parseRoomCommands(command({ kind: 'save', sequence: { ...sequence, id: 'a'.repeat(32) } }))).toHaveLength(1);
+  for (const action of ['play', 'signal', 'undo', 'redo']) expect(rules.find((item: any) => item.properties.action.enum[0] === action).required).toContain('revision');
+  expect(rules.find((item: any) => item.properties.action.enum[0] === 'play').required).toContain('target');
+  expect(rules.find((item: any) => item.properties.action.enum[0] === 'signal').required).toEqual(['action', 'revision', 'eventName', 'value']);
+ });
+});

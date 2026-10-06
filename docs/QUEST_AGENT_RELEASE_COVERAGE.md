@@ -141,9 +141,81 @@ These passes cover delegated work after a Live turn. Direct native Live function
 calls, actual microphone/camera/Whisper capture, final task speech, rendered book
 and broad program/animation/recovery scenarios remain separate release gates.
 
-This document is an acceptance matrix, not a claim that it is all green. The full
-managed/BYOK real-provider scenario suite, broader Live/observer cases, complex program
-semantics, rendered book coverage and remaining Quest release acceptance still
-need their own recorded passes. The matching local BYOK run uses the owner's dedicated test key without recording
-its value. The CI secret cannot be read back to a local Unity process. No release
-gate is waived.
+This document is an acceptance matrix, not a claim that it is all green. The
+passes below extend the provider suite; broader composite/animation/recovery cases,
+rendered book coverage and physical Quest acceptance still need their own evidence.
+The local BYOK run uses the owner's dedicated test key without recording its value.
+The CI secret cannot be read back to a local Unity process. No release gate is waived.
+
+## Event-driven program provider/native proof (2026-10-06)
+
+`EventProgram` uses the original chat, verifier and agent with a fresh full Unity
+room. Both real Gemini access modes passed:
+
+| Access | Local evidence run | Result |
+| --- | --- | --- |
+| BYOK | af1df718528644bc984a018b2d14342f | All 11 program semantics and clean client/Editor exits |
+| Managed staging | d59e88ac77e54dad98ba5dfbba401aa5 | Same semantics; each agent turn reconciled with zero reserved credits |
+
+The agent first creates the contextual blue ParityBall at half standard diameter.
+It then saves an editable ParitySignal program without executing it or creating
+buttons/bindings. The source declares a text event, a separate colour function,
+a conditional branch, a state counter, two event waits and one-second delays.
+A later conversational request starts it. Two native user signals exercise the
+red and fallback-blue branches, increment the counter and complete the exact run.
+A manual native restart gets a new run identity and fresh state. A conversational
+Stop cancels that second run; a later signal causes no effects. Source and object
+identity/size/position remain unchanged. The program runs in Unity without model
+polling. Native calls exercise the same handlers as controls, not physical clicks.
+
+The save/start/stop managed windows respectively cost 106 credits/USD 0.100957
+(seven usage/charge rows), 107/USD 0.104404 (five), and 121/USD 0.116902 (seven).
+Each has zero remaining reservations. These windows exclude setup chat and initial
+ball creation. BYOK records real model usage and the API-key owner as payer, not
+an independently checked provider invoice. All three conversational tasks in both
+modes passed ten handoff/result/usage gates in addition to native semantic checks.
+
+An earlier BYOK attempt, `97b42a5ff0b640c0895836dd5cc61995`, exposed a missing
+fresh-sequence reference in the flat optional-field response schema. Validation
+refused it before a program was saved or started. The provider projection now
+separates operations and fresh/existing saves, requiring the appropriate fields.
+The shared native validator and wire contract remain unchanged. Regression tests
+cover the captured invalid response and both valid save forms.
+
+Both passes include that schema fix. BYOK generated interpreter Sleep; managed
+generated the native time.wait capability. The observation gate recognizes both
+scheduler representations, with focused regressions. The BYOK run passed its
+stricter earlier Sleep-only gate. A later evidence-only change retains creation
+accounting in the top-level result and labels the stop phase; neither changes
+provider requests or native effects. Private original journals remain available.
+
+Validation for this increment: 2,441 app tests, 100 Functions unit tests, strict
+application/probe TypeScript, lint, production build, prompt ownership and core
+boundaries pass. Local discovery excludes only ignored diagnostic copies under
+.quest-evidence; no committed tests or snapshots were excluded/updated. Native C#
+is unchanged, and each probe verified the reused Editor mirror against source.
+
+These runs establish events, branches, functions, state, timing and lifecycle;
+they do not cover parallel/modules, every trigger, restart persistence, controller
+button mounting, animations, physics or rendered block editing. Those remain
+separate rows in the acceptance matrix.
+
+## Existing web provider gates (2026-10-06)
+
+The full [managed/BYOK provider workflow](https://github.com/RONITERVO/MaestroTutor/actions/runs/37438807399)
+and [release CI](https://github.com/RONITERVO/MaestroTutor/actions/runs/37438731895)
+passed on `800ddca8cadb42f5538af597b4577b287361925a`. That commit predates the
+EventProgram increment above; these are not claims about a later release commit.
+The provider workflow includes accounting safety, both access modes and access
+parity against staging, with no deployment. Both first-lesson artifacts pass all
+18 coverage flags, including ten chat turns, search, attachments, streaming, STT,
+Live/observer audio and vision, suggestion aftersteps, tools/uploads, translation,
+TTS, capture, re-engagement and accounting. Connected Live, long observer and
+long conversation jobs also passed their assertions. Managed no-output and
+60-second handoff checks passed, including release/settlement checks.
+
+The managed first lesson reconciled 468 credits/USD 0.450024 across 49 usage and
+charge rows, with zero reservations. Its no-output test released all 156 reserved
+credits with no usage/charge rows. The handoff test forwarded 60 of the offered
+65 seconds and settled 2 credits/USD 0.001405 with zero reservations. These are
+existing web/provider proofs; they do not substitute for native or headset proof.
