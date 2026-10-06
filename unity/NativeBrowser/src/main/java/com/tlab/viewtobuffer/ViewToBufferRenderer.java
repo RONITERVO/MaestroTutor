@@ -69,6 +69,7 @@ public class ViewToBufferRenderer implements GLSurfaceView.Renderer {
 
     protected boolean mFrameAvailable = false;
     private boolean mFramePending;
+    private boolean mResumeSurfaceRequested;
     private boolean mCopyOnNewFrame;
     private long mDrawCount, mReceivedFrameCount, mCopyCount;
 
@@ -310,6 +311,7 @@ public class ViewToBufferRenderer implements GLSurfaceView.Renderer {
         // But if I avoid calling OffscreenGeckoView.mDisplay.onSurfaceChanged (mSurfaceCallback) over twice, onSurfaceChange also called only
         // twice and it could avoid HardwareBuffer's null reference error. I don't know if this behaviour is only GeckoView's or not.
         // This has been tested in both cases of onPause/onResume and switching screen orientation and it has not caused any errors/crashes.
+        mResumeSurfaceRequested = false;
         if (mSurfaceEnabled) return;
         mSurfaceEnabled = true;
 
@@ -337,7 +339,9 @@ public class ViewToBufferRenderer implements GLSurfaceView.Renderer {
     public void onDrawFrame(GL10 gl) {
         synchronized (this) {
             mDrawCount++;
-            if (!mInitialized || !mSurfaceEnabled || mSurfaceTexture == null) return;
+            if (!mInitialized) return;
+            if (mResumeSurfaceRequested) onSurfaceChanged(gl, mViewSize.x, mViewSize.y);
+            if (!mSurfaceEnabled || mSurfaceTexture == null) return;
             boolean resized = mForceResizeTex;
             if (mForceResizeTex) {
                 destroyBuffer();
@@ -387,8 +391,16 @@ public class ViewToBufferRenderer implements GLSurfaceView.Renderer {
         mTexSize.update(texWidth, texHeight);
     }
 
+    /** Lifecycle callbacks run on the UI thread; GL resources are rebuilt only
+     * by onDrawFrame. A fresh SurfaceTexture rejects callbacks queued before pause. */
+    public synchronized void requestResume() {
+        if (mInitialized && !mSurfaceEnabled && mSurfaceTexture != null)
+            mResumeSurfaceRequested = true;
+    }
+
     public void disable() {
         synchronized (this) {
+            mResumeSurfaceRequested = false;
             mContentExists = false;
             mFrameAvailable = false;
             mFramePending = false;

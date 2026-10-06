@@ -69,8 +69,9 @@ reading have not yet been tested. This is file access infrastructure, not a fini
 GLB/VRM model importer. Renderer recovery currently occurs on returning from an
 application interruption.
 
-Verification: `testReleaseUnitTest assembleRelease lintRelease` runs twelve
-Robolectric tests plus the native build/lint. The development APK build invokes
+Verification: `testReleaseUnitTest assembleRelease lintRelease` discovers 88
+Robolectric tests: 86 pass, with two optional private-import fixtures skipped when
+not configured, plus the native build/lint. The development APK build invokes
 these checks and verifies that the expected test suite ran. Web tests exercise
 the gate and existing lifecycle behavior. With a local Vite server on 5178,
 `node scripts/probe-quest-file-gate.mjs` (from the repository root) checks real
@@ -88,3 +89,24 @@ opens none until the physical batch controls confirm saving. It streams one
 explicit release and selection-session guards against late commands/results.
 No new storage permission or persistent grant is used. See
 `../../docs/QUEST_BATCH_IMPORTS.md` for workflow and remaining headset QA.
+
+## Capture after Android interruptions
+
+The October 6 novice Quest lesson exposed stale book pixels after the spatial
+permission dialog: the WebView DOM advanced while the book retained an older
+reply. Fragment pause disabled capture, but fragment resume relied on a later
+surface-size callback that need not occur. Resume now schedules surface recovery
+on the renderer's GL thread using the retained view dimensions. It waits for a
+fresh frame and rejects callbacks from the old surface; another pause cancels the
+queued recovery. A normal surface callback consumes the request without duplicate
+allocation.
+
+Four lifecycle regression tests drive the actual fragment pause/resume callbacks,
+with GPU allocation replaced by a test renderer. They cover missing resize,
+stale frames, a second pause, repeated resume, and initial surface creation.
+This establishes the lifecycle logic, not rendered Quest acceptance. The updated
+APK still needs a real interruption/return check with actual headset pixels;
+a current DOM screenshot alone cannot establish that the Unity book is current.
+
+Android documents the renderer callbacks and GL thread in
+[GLSurfaceView.Renderer](https://developer.android.com/reference/android/opengl/GLSurfaceView.Renderer).

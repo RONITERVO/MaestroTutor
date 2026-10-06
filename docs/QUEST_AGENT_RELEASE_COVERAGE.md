@@ -657,3 +657,58 @@ deletion, not other unfinished requested actions. These two wording clarificatio
 postdate the paired provider runs; their provider/device acceptance remains open.
 The Editor-only restore guard also retains rejection of conflicting files or
 response directories. Original runs and source fingerprints remain private evidence.
+
+## Novice Quest lesson: partial device evidence (2026-10-06)
+
+The same English-native / Spanish-target persona has now begun a fresh lesson on
+Quest 3 using the installed development APK (SHA-256 prefix 4997B47A4620).
+BYOK was configured through the visible application UI. Managed access was not
+offered by that headset build; production Quest bootstrap remains disabled.
+Neither managed headset acceptance nor first-time account registration is claimed.
+
+Ordinary composer text was entered through the WebView, then submitted through
+simulated Quest controller input routed to the real book collider and page.
+No tool schemas, object IDs, coordinates or native implementation hints were sent
+as learner messages. Actual stereo headset captures, browser DOM/images, native
+task receipts and room state were collected separately. This is device automation,
+not physical-controller ergonomics or human microphone coverage.
+
+The greeting returned bilingual help and a proactive notebook. A five-card game
+responded to controller-driven flips and Next controls, and a cafe image was
+generated and inspected in the WebView. Spanish-only game controls were awkward
+for the beginner. Opening the game first did nothing while the session was
+inactive, requiring the existing physical resume bell. Language confirmation
+also reset the selected pair; the existing idle-confirm path eventually committed
+English/Spanish. These two application defects now have focused regression tests:
+Confirm commits the chosen pair, and deliberately opening an inactive game resumes
+the session if foreground and media-shutdown gates permit it.
+
+The first real-table request correctly created nothing without room access.
+A natural help request opened Quest's spatial-data permission dialog, which the
+user allowed. The task stopped on application interruption, and its native
+permission deadline expired while waiting for that manual response. No command
+was replayed automatically. Asking to carry on did not recover the intent; a
+complete natural restatement was needed. The next request created an independent
+tree, virtual table and apple in one acknowledged batch. No actual scanned-table
+alignment, apple contact or corner placement was established. Weather used Finland
+without a supplied city; actual local weather remains unverified.
+
+A later actual stereo capture exposed **stale book pixels** after the permission
+dialog even though the browser DOM had advanced. Native diagnostics reported
+contentExists=false; DOM screenshots after that interruption are not proof of
+the user-visible book. Android resume now schedules renderer recovery without
+requiring a resize callback. Four fragment-lifecycle regression tests cover fresh
+frames, cancelled recovery and duplicate/initial surface callbacks; two fail
+against the old implementation and pass with the fix.
+
+Current source validation is **2,488 web tests in 276 files**, application
+TypeScript and focused lint, plus **86 Android tests passed / two optional
+private-import tests skipped**, release AAR build and lint. The language tests
+also fail against the original handler. Updated APK and actual book-texture
+acceptance remain separate from these test results.
+
+The lesson and app data were backed up before stopping at 22% battery for charging.
+Walking, wagging dog, robot, catch and Live have not yet run in this headset lesson.
+Real-room physics, rendered motion, actual microphone audio and preservation of
+the same apple through Live remain open. Original failures and private room/chat
+evidence are retained outside version control; the lesson is not a semantic pass.

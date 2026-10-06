@@ -4,7 +4,9 @@ The capture transport is derived from TLabWebViewPlugin (MIT), at the commit
 recorded in README.md. Its upstream copyright and license are in LICENSE-TLab.md.
 Maestro changes omit the JavaScript interface and Gecko implementation, remove
 the Gecko-only selection adapter, recycle dispatched touch events, and correct
-the case of the JniLog include for portable builds.
+the case of the JniLog include for portable builds. Further capture changes copy
+only newly received frames, reject callbacks from replaced surfaces, and schedule
+surface recovery on the GL thread after an Android lifecycle resume.
 
 `src/main/java/com/android/grafika/gles/{EglCore,GlUtil}.java` are from Google's
 Grafika project, as vendored by that same upstream commit. Copyright 2013/2014

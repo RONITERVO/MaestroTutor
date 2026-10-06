@@ -3,6 +3,7 @@
 package com.tlab.viewtobuffer;
 
 import android.graphics.SurfaceTexture;
+import com.tlab.webkit.BaseOffscreenFragment;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -26,6 +27,43 @@ public final class FrameCopyTest {
         void surface() { onSurfaceChanged(null,1024,768); }
         void frame() { onFrameAvailable(mSurfaceTexture); }
         void draw() { onDrawFrame(null); }
+    }
+
+    private static final class Fragment extends BaseOffscreenFragment {
+        Fragment(Renderer renderer) { mViewToBufferRenderer=renderer; }
+        @Override public void SetSurface(Object surface,int width,int height) { }
+        @Override public void RemoveSurface() { }
+        @Override public void Dispose() { }
+    }
+
+    @Test public void fragmentResumeRebuildsCaptureWithoutAWindowResize() {
+        Renderer r=new Renderer(true);r.surface();r.frame();r.draw();
+        SurfaceTexture old=r.mSurfaceTexture;Fragment f=new Fragment(r);
+        f.onPause();r.onFrameAvailable(old);r.draw();assertFalse(r.contentExists());
+        f.onResume();assertEquals(1,r.allocations); // No GL work on the UI thread.
+        r.draw();assertEquals(2,r.allocations);assertFalse(r.contentExists());
+        r.onFrameAvailable(old);r.draw();assertEquals(1,r.copies);
+        r.frame();r.draw();assertEquals(2,r.copies);assertTrue(r.contentExists());
+    }
+    @Test public void anotherPauseCancelsAQueuedSurfaceResume() {
+        Renderer r=new Renderer(true);r.surface();r.frame();r.draw();Fragment f=new Fragment(r);
+        f.onPause();f.onResume();f.onPause();r.draw();
+        assertEquals(1,r.allocations);assertFalse(r.contentExists());
+        f.onResume();r.draw();r.frame();r.draw();
+        assertEquals(2,r.allocations);assertTrue(r.contentExists());
+    }
+    @Test public void normalSurfaceCallbackAndRepeatedResumeDoNotRebuildTwice() {
+        Renderer r=new Renderer(true);r.surface();r.frame();r.draw();Fragment f=new Fragment(r);
+        f.onResume();r.draw();assertEquals(1,r.allocations);assertTrue(r.contentExists());
+        f.onPause();f.onResume();r.surface();r.draw();
+        assertEquals(2,r.allocations);assertFalse(r.contentExists());
+        r.frame();r.draw();f.onResume();r.draw();
+        assertEquals(2,r.allocations);assertEquals(2,r.copies);assertTrue(r.contentExists());
+    }
+    @Test public void resumeBeforeFirstSurfaceDoesNotAllocateWithDefaultDimensions() {
+        Renderer r=new Renderer(true);Fragment f=new Fragment(r);f.onResume();r.draw();
+        assertEquals(0,r.allocations);assertFalse(r.contentExists());
+        r.surface();r.frame();r.draw();assertEquals(1,r.allocations);assertTrue(r.contentExists());
     }
 
     @Test public void idleDrawsRetainTheLastImageWithoutAnotherCopy() {

@@ -236,7 +236,7 @@ const InputArea: React.FC<InputAreaProps> = ({
     updateSetting('selectedCameraId', deviceId);
   }, [updateSetting]);
 
-  const { handleShowLanguageSelector } = useLanguageSelection({
+  const { handleConfirmLanguageSelection } = useLanguageSelection({
     isSettingsLoaded,
     settings,
     settingsRef,
@@ -467,7 +467,7 @@ const InputArea: React.FC<InputAreaProps> = ({
 
   const handleSend = async () => {
     if (languageSelectionOpen) {
-      handleShowLanguageSelector();
+      await handleConfirmLanguageSelection();
       return;
     }
     if (isSuggestionMode) {
@@ -1118,7 +1118,7 @@ const InputArea: React.FC<InputAreaProps> = ({
                   }
                 >
                   {languageSelectionOpen
-                    ? <IconUndo className="w-5 h-5" />
+                    ? <IconCheck className="w-5 h-5" />
                     : isSuggestionMode
                       ? (isCreatingSuggestion ? <SmallSpinner className="w-5 h-5" /> : <IconPlus className="w-5 h-5" />)
                       : (sendPrep && sendPrep.active ? <SmallSpinner className="w-5 h-5" /> : <IconSend className="w-5 h-5" />)}

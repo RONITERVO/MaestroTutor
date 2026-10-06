@@ -17,6 +17,7 @@ import {
 } from '../utils/embedIntrinsics';
 import type { EmbedBox as EmbedBoxValue } from '../../../core/types';
 import { useSessionActive } from '../../../platform/browser/useSessionActive';
+import { sessionActivity } from '../../../platform/browser/sessionActivity';
 
 type MiniGameRuntimeState = 'booting' | 'ready' | 'error';
 type MiniGameInteractionMode = 'scroll' | 'gestures';
@@ -400,7 +401,9 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
   const returnToChatScrollLabel = translateOrFallback('miniGame.returnToChatScroll', 'Chat scroll');
   const gameGesturesUnavailableLabel = translateOrFallback('miniGame.gameGesturesUnavailable', 'Fully show game to use swipes');
   const interactionModeGroupLabel = translateOrFallback('miniGame.interactionMode', 'Mini-game interaction mode');
-  const resumeLabel = translateOrFallback('miniGame.tapToRun', 'Tap to run');
+  const resumeLabel = sessionActive
+    ? translateOrFallback('miniGame.tapToRun', 'Tap to run')
+    : translateOrFallback('miniGame.resumeAndPlay', 'Resume and play');
 
   // ------------------------------------------------------------------ gestures
 
@@ -455,6 +458,9 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
    * when the user engages a different one.
    */
   const handleActivateFromRest = useCallback(() => {
+    // Opening a game is an explicit resume gesture. Respect native suspension
+    // and pending media shutdown instead of silently pinning an inert poster.
+    if (!sessionActivity.isActive() && !sessionActivity.resume()) return;
     pin();
   }, [pin]);
 

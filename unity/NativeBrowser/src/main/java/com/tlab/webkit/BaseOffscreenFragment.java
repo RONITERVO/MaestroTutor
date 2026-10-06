@@ -61,6 +61,10 @@ public abstract class BaseOffscreenFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        // Returning from a system dialog need not resize the offscreen GL view.
+        // Schedule capture recovery on its renderer thread in that case.
+        if (mCaptureMode != CaptureMode.Surface && mViewToBufferRenderer != null)
+            mViewToBufferRenderer.requestResume();
     }
 
     public void initParam(int viewWidth, int viewHeight, int texWidth, int texHeight, int screenWidth, int screenHeight, boolean isVulkan, CaptureMode captureMode) {
