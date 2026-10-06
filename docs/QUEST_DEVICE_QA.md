@@ -3447,3 +3447,82 @@ matched the fresh backup. All ten unrelated dirty files retained their hashes.
 The app is stopped, inputs inactive, debug properties restored and forwards clear;
 final battery was 65%. No real provider, paid generation, deployment, release key
 use or Store submission occurred. Release gates remain open.
+
+## Android partial-write and ENOSPC probe — 2026-10-06
+
+The separate `com.maestro.quest.storageprobe` diagnostic passed **11 cases** on
+Quest 3: four forced terminations during native writes, six injected native
+`ENOSPC` failures, and 256 consecutive paired saves. The production
+`RoomSnapshotTransaction` and other runtime sources were unchanged: the build
+receipt verifies all **713 runtime files** against the source checkout and mirror.
+
+The diagnostic APK is **182,291,295 bytes**, SHA-256
+`19255B1403F5B1085915CF8CB1D5E809F412593D3992DDDD04707CB5066EF7EB`.
+It is ARM64, debug-signed, and has no network, microphone, camera, scene, anchor
+or hand-tracking permissions and no required VR feature/category. This package
+does not replace the installed Maestro app.
+
+A diagnostic-only native library intercepts writes to one explicitly armed,
+synthetic staging path. The Android
+[debug-app wrapper mechanism](https://developer.android.com/ndk/guides/wrap-script)
+loads it before Unity. Production C# files are not patched. The library writes
+seven actual bytes before either waiting for the host's SIGKILL or returning a
+short write followed by ENOSPC. The host checks the target file length and exact
+diagnostic PID before terminating it. No headset storage was filled.
+
+| Case | Verified outcome |
+| --- | --- |
+| Interrupted prepared journal, room, memory, or commit-journal write | Four real SIGKILLs after seven bytes. Primaries/backups match their expected intermediate state. Repeated startup refuses the incomplete staging and leaves every workspace file byte-identical for explicit recovery. |
+| ENOSPC during prepared journal, room, memory, or commit-journal write | Native error reaches a managed IOException. Recovery selects the complete earlier pair and preserves its expected backups. |
+| ENOSPC during room-backup or memory-backup write | The durable committed journal recovers the complete new pair and both correct previous backups. |
+| 256 consecutive saves | Each publication and capture matches the requested pair; every previous backup is checked. Final values are independently read from the device archive. Completed in **17.56 seconds**, with no leftover staging or journal files. |
+
+The host independently audits the retained device archives, including native-hit
+records, saved bytes, journal state, numeric room/memory values, backup identities
+and repeated-recovery results. Test book positions wrap within the existing room
+bounds while the saved counter continues increasing. Expected backups retain
+their original revision IDs instead of regenerating a superficially equal document.
+
+Build/source/manifest/signature evidence:
+`.quest-evidence/android-storage-build/b5c9ede7c2ae449eae135488c5051824/`.
+Complete accepted run:
+`.quest-evidence/android-storage/daf5bc3539c54ffdba23c46d2b9c17e8/`.
+Independent before/after archive and cleanup:
+`.quest-evidence/android-byte-storage-20261006/`.
+
+Earlier diagnostic runs exposed helper defects: Quest's descriptor path carried
+a " (deleted)" annotation despite the virtual staging entry remaining present;
+a marker's mode prevented the host reading it; and a test regenerated a random
+memory revision for its backup comparison. Those runs were excluded. Their
+available evidence is retained; the unreadable marker is explicitly recorded as
+missing from that failed run's partial archive. One cancelled packaging attempt
+was also excluded. The accepted run uses fresh case IDs and one audited APK.
+
+Reproduce using the existing diagnostic build and audit commands above, then:
+
+```powershell
+python unity/Tools/test-quest-android-storage.py --adb '<adb.exe>' --serial '<Quest serial>' --audit '<build evidence>/audit.json' --byte-faults
+```
+
+`--smoke` runs only the first partial-write case and marks its receipt incomplete
+for matrix coverage. Without `--byte-faults`, the earlier transaction-boundary
+matrix remains available. Evidence is retained; the runner stops only its
+diagnostic package. Archive the cases and verify the installed diagnostic hash
+before uninstalling that package.
+
+The build checks source hashes, restores mirror settings, and removes its
+injected C# and native source files. Normal development/release packaging now
+rejects a native startup wrapper or this fault library before any release signing.
+That guard accepted the installed D522191F package and rejected this diagnostic.
+
+After the accepted run, all 11 cases were archived and the diagnostic was
+uninstalled. The main D522191F package and **all 200 external saved files** match
+the fresh baseline; the main app remains stopped. Debug properties are empty and
+ADB forwards clear. Final battery was 61%, charging; battery temperature was 44°C.
+
+These are bounded synthetic tests of the paired snapshot writer, not actual
+filesystem exhaustion, power-loss/fsync durability, every possible byte offset,
+ordinary unpaired saves, all book recovery UX or prolonged save stress. The
+17.56-second sequence does not close the prolonged-use gate. Partial staging is
+preserved and refused, not silently repaired. Human/provider, performance and
+Store acceptance gates remain open.

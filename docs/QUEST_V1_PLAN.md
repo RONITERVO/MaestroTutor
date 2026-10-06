@@ -18,6 +18,13 @@ averaged 71.20 FPS. These separate runs are not a controlled frame-rate comparis
 The dedicated release key is prepared locally, with a verified encrypted USB copy.
 Independent password recovery and production configuration remain open.
 
+A separate Android diagnostic now passes four partial-write terminations, six
+injected ENOSPC recoveries and 256 consecutive saves using unchanged production
+runtime sources. It has been removed; the installed D522191F package and all
+200 external saved files match the fresh baseline. This does not close actual
+full-disk, power-loss, prolonged-save or book recovery UX acceptance. See
+[the bounded evidence and reproduction steps](QUEST_DEVICE_QA.md#android-partial-write-and-enospc-probe--2026-10-06).
+
 The preceding FD9AEBDE checkpoint fixed Quest chat scrollbar layout feedback.
 Its animated development run stopped at the battery limit after five minutes,
 averaging 70.81 FPS at 72 Hz. Different charge, view and workload conditions mean
@@ -28,7 +35,8 @@ The preceding 496EC9BB same-package comparison reduced texture copies by about
 Normal book staging-refusal/explicit-retry passed. A separate, removed Android
 diagnostic verifies 13 paired-storage transaction-boundary crash cases with 15
 forced terminations using unchanged production IL2CPP code and synthetic data.
-These checks do not establish full-disk, mid-byte-write or all book recovery UX.
+Those earlier boundary-only checks do not establish full-disk, mid-byte-write
+or all book recovery UX; the later byte-write diagnostic has its own scope above.
 
 An earlier ten-minute workload on 3FB9A8AF kept included Maestro and recipe-robot
 animations cycling while scanned-room physics ran with 32 construction bricks.

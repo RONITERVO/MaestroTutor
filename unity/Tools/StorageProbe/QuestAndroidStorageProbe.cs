@@ -17,7 +17,7 @@ using UnityEngine;
 namespace Maestro.Quest.Diagnostics
 {
     /// <summary>Diagnostic player template; copied only into an owned build mirror.</summary>
-    public static class QuestAndroidStorageProbe
+    public static partial class QuestAndroidStorageProbe
     {
         const string Program="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",Cell="bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
         static readonly string[] Stages={"before-journal","prepared","room","memory","committed","room-backup","memory-backup"};
@@ -27,7 +27,7 @@ namespace Maestro.Quest.Diagnostics
         static JObject owner;
         static void Need(bool condition,string message){if(!condition)throw new InvalidDataException(message);}
         static RoomSnapshotTransaction.Snapshot Pair(int n)=>RoomSnapshotTransaction.FromDocuments(
-            new RoomDocument{objects=new[]{new RoomObjectData{id="book",kind=RoomObjectKind.Book,position=new Vector3(n,1,0)},new RoomObjectData{id="maestro",kind=RoomObjectKind.Maestro}}},
+            new RoomDocument{objects=new[]{new RoomObjectData{id="book",kind=RoomObjectKind.Book,position=new Vector3(n%20,1,0)},new RoomObjectData{id="maestro",kind=RoomObjectKind.Maestro}}},
             ProgramMemoryDocument.Empty().WithValues(Program,new Dictionary<string,ProgramMemoryDocument.Cell>{{Cell,new("count",new ProgramValue(n))}}));
         static void Publish(string name,JObject value)
         {
@@ -70,6 +70,7 @@ namespace Maestro.Quest.Diagnostics
                 Need((string)owner["package"]==Application.identifier,"Wrong probe package.");
                 Need((string)owner["recoveryStop"] is null or "recovered-room","Invalid recovery stop.");
                 mode=intent.Call<string>("getStringExtra","mode");
+                if(owner["ioFault"]!=null){RunByteProbe(mode);return;}
                 if(mode=="write")Write();
                 else if(mode=="recoverStop"){
                     Need((string)owner["recoveryStop"]=="recovered-room"&&File.Exists(Path.Combine(directory,"writer-stopped.json")),"Writer termination was not recorded.");

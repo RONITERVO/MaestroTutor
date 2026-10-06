@@ -115,6 +115,7 @@ try { while (!$process.WaitForExit(1000)) {
 if ($process.ExitCode -ne 0) { Get-Content -LiteralPath $buildLog -Tail 60; throw "Unity Android build failed ($($process.ExitCode))." }
 if (!(Test-Path -LiteralPath $env:MAESTRO_QUEST_APK)) { throw 'Unity exited without producing the expected APK.' }
 $output = $env:MAESTRO_QUEST_APK
+& (Join-Path $PSScriptRoot 'Assert-QuestNoStorageProbe.ps1') -Apk $output
 if ($release) {
     $signer = Join-Path $sdkRoot 'build-tools/35.0.1/apksigner.bat'
     $analyzer = Join-Path $sdkRoot 'cmdline-tools/16.0/bin/apkanalyzer.bat'

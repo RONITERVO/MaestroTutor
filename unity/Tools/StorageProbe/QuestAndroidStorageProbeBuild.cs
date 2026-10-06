@@ -82,7 +82,18 @@ namespace Maestro.Quest.Editor
                 foreach(XmlElement node in manifest.SelectNodes("/manifest/uses-permission").Cast<XmlElement>().Where(x=>x.GetAttribute("name",android)==permission).ToArray())node.ParentNode.RemoveChild(node);
                 var entry=manifest.CreateElement("uses-permission");entry.SetAttribute("name",android,permission);entry.SetAttribute("node",tools,"remove");manifest.DocumentElement.AppendChild(entry);
             }
+            ((XmlElement)manifest.SelectSingleNode("/manifest/application")).SetAttribute("extractNativeLibs",android,"true");
             manifest.Save(file);
+            // These files exist only in the diagnostic Gradle project.
+            string library=Environment.GetEnvironmentVariable("MAESTRO_STORAGE_FAULT_LIBRARY");
+            string wrapper=Environment.GetEnvironmentVariable("MAESTRO_STORAGE_FAULT_WRAPPER");
+            if(!File.Exists(library)||!File.Exists(wrapper))throw new BuildFailedException("Missing diagnostic native hook.");
+            string jni=Path.Combine(path,"src/main/jniLibs/arm64-v8a"),resources=Path.Combine(path,"src/main/resources/lib/arm64-v8a");
+            Directory.CreateDirectory(jni);Directory.CreateDirectory(resources);
+            File.Copy(library,Path.Combine(jni,"libmaestro_storage_fault.so"),true);
+            File.Copy(wrapper,Path.Combine(resources,"wrap.sh"),true);
+            string launcher=Path.Combine(Directory.GetParent(path).FullName,"launcher/build.gradle");
+            File.AppendAllText(launcher,"\nandroid { packaging { jniLibs { useLegacyPackaging true } } }\n");
         }
         [Serializable]sealed class Evidence{public string package,result,unity;public int errors;public ulong bytes;public double seconds;}
     }
