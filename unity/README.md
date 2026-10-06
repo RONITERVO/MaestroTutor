@@ -45,7 +45,7 @@ Build the shared web app, native browser AAR, and ARM64 development APK together
 ```
 
 The build uses JDK 17, NDK 27.2.12479018, Android minimum 32/target 34,
-GameActivity, GLES3 and development signing. Output and SHA256 are under the
+GameActivity, Vulkan (required by OpenXR environment depth) and development signing. Output and SHA256 are under the
 mirror's `Builds` directory. Never submit this development identity or debug APK
 to the store. `QuestProjectSetup.Configure` enables the XR Hands subsystem,
 Meta aim, passthrough and composition layers explicitly.

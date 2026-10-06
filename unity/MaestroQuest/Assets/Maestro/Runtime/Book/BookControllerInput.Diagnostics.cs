@@ -28,6 +28,8 @@ namespace Maestro.Quest.Book
         {
             var result = new JObject { ["frame"] = Time.frameCount, ["paused"] = paused,
                 ["focused"] = focused, ["enabled"] = isActiveAndEnabled, ["hands"] = new JArray() };
+            var environment = FindAnyObjectByType<Interaction.RoomDepthOcclusion>();
+            result["environmentDepthAvailable"] = environment && environment.DepthAvailable;
             if (hands == null) return result;
             foreach (var input in hands)
             {

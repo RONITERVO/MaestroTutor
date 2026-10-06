@@ -33,9 +33,12 @@ Shader "Maestro/Watercolor"
             #pragma vertex vert
             #pragma fragment frag
             #pragma multi_compile_instancing
+            #pragma target 3.5
+            #pragma multi_compile _ HARD_OCCLUSION SOFT_OCCLUSION
             #include "UnityCG.cginc"
+            #include "MaestroEnvironmentDepth.cginc"
             struct Vertex { float4 vertex : POSITION; float3 normal : NORMAL; float2 uv : TEXCOORD0; UNITY_VERTEX_INPUT_INSTANCE_ID };
-            struct Varying { float4 position : SV_POSITION; float2 uv : TEXCOORD0; UNITY_VERTEX_OUTPUT_STEREO };
+            struct Varying { float4 position : SV_POSITION; float2 uv : TEXCOORD0; float3 world : TEXCOORD1; UNITY_VERTEX_OUTPUT_STEREO };
             float _PencilWidth;
             sampler2D _MainTex;
             float4 _MainTex_ST;
@@ -48,12 +51,14 @@ Shader "Maestro/Watercolor"
                 float3 world = mul(unity_ObjectToWorld, input.vertex).xyz;
                 world += UnityObjectToWorldNormal(input.normal) * _PencilWidth;
                 output.position = mul(UNITY_MATRIX_VP, float4(world, 1));
+                output.world = world;
                 output.uv = TRANSFORM_TEX(input.uv, _MainTex);
                 return output;
             }
             fixed4 frag(Varying input) : SV_Target
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+                MaestroOccludeEnvironment(input.world);
                 clip(tex2D(_MainTex, input.uv).a - _AlphaCutoff);
                 return fixed4(.204,.176,.169,1);
             }
@@ -67,9 +72,12 @@ Shader "Maestro/Watercolor"
             #pragma vertex vert
             #pragma fragment frag
             #pragma multi_compile_instancing
+            #pragma target 3.5
+            #pragma multi_compile _ HARD_OCCLUSION SOFT_OCCLUSION
             #include "UnityCG.cginc"
+            #include "MaestroEnvironmentDepth.cginc"
             struct Vertex { float4 vertex : POSITION; float3 normal : NORMAL; float2 uv : TEXCOORD0; float3 rest : TEXCOORD2; float3 restNormal : TEXCOORD3; float4 color : COLOR; UNITY_VERTEX_INPUT_INSTANCE_ID };
-            struct Varying { float4 position : SV_POSITION; float2 uv : TEXCOORD0; float3 local : TEXCOORD1; float3 normal : TEXCOORD2; float3 pigmentNormal : TEXCOORD3; float4 color : COLOR; UNITY_VERTEX_OUTPUT_STEREO };
+            struct Varying { float4 position : SV_POSITION; float2 uv : TEXCOORD0; float3 local : TEXCOORD1; float3 normal : TEXCOORD2; float3 pigmentNormal : TEXCOORD3; float4 color : COLOR; float3 world : TEXCOORD4; UNITY_VERTEX_OUTPUT_STEREO };
             sampler2D _MainTex;
             sampler2D _PigmentTex;
             float4 _MainTex_ST;
@@ -87,6 +95,7 @@ Shader "Maestro/Watercolor"
                 UNITY_SETUP_INSTANCE_ID(input);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
                 output.position = UnityObjectToClipPos(input.vertex);
+                output.world = mul(unity_ObjectToWorld, input.vertex).xyz;
                 output.local = lerp(input.vertex.xyz, input.rest, _HasRestCoordinates);
                 output.normal = input.normal;
                 output.pigmentNormal = lerp(input.normal, input.restNormal, _HasRestCoordinates);
@@ -97,6 +106,7 @@ Shader "Maestro/Watercolor"
             fixed4 frag(Varying input) : SV_Target
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+                MaestroOccludeEnvironment(input.world);
                 fixed4 surface = tex2D(_MainTex, input.uv);
                 #ifndef UNITY_COLORSPACE_GAMMA
                 if (_DecodeBrowserSrgb > .5) surface.rgb = GammaToLinearSpace(surface.rgb);

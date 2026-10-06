@@ -33593,7 +33593,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/MaestroRoom.cs",
-      "sha256": "15c613bf217ab2683b79322145958cf47c1dc3872efe140b572e875eef9a54be"
+      "sha256": "ba680986a259252c3771831af8b56571c2ebcce98bc485bbc33cb1becbad9dce"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -33825,11 +33825,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/Watercolor.shader",
-      "sha256": "ac5f646f2393a04cdcf55bc2457c3c27326ba3bb1c7c312b6c89191b769520e0"
+      "sha256": "e9606ab4d21f3717c23bff91f0d56cdc35d1ef7af44e51e55ea8313ba659defe"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomViewCapture.cs",
-      "sha256": "1a6093e6f18c1ad57d190773f94026e82941926c1fbe2631efe0774dcb312973"
+      "sha256": "5c26bbeb8a4eb295c98ef47cf9274b510e28023f655fc345275de1e256cc26d0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CollisionRecipe.cs",

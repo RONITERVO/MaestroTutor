@@ -42,7 +42,7 @@ namespace Maestro.Quest.Editor
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
             PlayerSettings.SetApiCompatibilityLevel(NamedBuildTarget.Android, ApiCompatibilityLevel.NET_Standard);
             PlayerSettings.SetUseDefaultGraphicsAPIs(BuildTarget.Android, false);
-            PlayerSettings.SetGraphicsAPIs(BuildTarget.Android, new[] { GraphicsDeviceType.OpenGLES3 });
+            PlayerSettings.SetGraphicsAPIs(BuildTarget.Android, new[] { GraphicsDeviceType.Vulkan });
             // Meta's OpenXR build requires linear lighting. The browser shader
             // decodes its raw sRGB pixels before Unity's final display conversion.
             if (PlayerSettings.colorSpace != ColorSpace.Linear) PlayerSettings.colorSpace = ColorSpace.Linear;
@@ -86,7 +86,8 @@ namespace Maestro.Quest.Editor
                 "com.unity.openxr.feature.input.handtrackingsubsystem",
                 "com.unity.openxr.feature.input.metahandtrackingaim",
                 "com.unity.openxr.feature.arfoundation-meta-session",
-                "com.unity.openxr.feature.arfoundation-meta-camera"
+                "com.unity.openxr.feature.arfoundation-meta-camera",
+                "com.unity.openxr.feature.arfoundation-meta-occlusion"
             })
             {
                 var feature = FeatureHelpers.GetFeatureWithIdForBuildTarget(BuildTargetGroup.Android, id);
@@ -94,7 +95,7 @@ namespace Maestro.Quest.Editor
                 feature.enabled = true;
                 if (id == "com.unity.openxr.feature.metaquest")
                 {
-                    // Browser texture sharing uses GLES. This Meta optimization is Vulkan-only.
+                    // Keep discard optimization off until the Vulkan book texture path is verified.
                     var serialized = new SerializedObject(feature);
                     var discard = serialized.FindProperty("m_optimizeBufferDiscards");
                     if (discard != null) discard.boolValue = false;

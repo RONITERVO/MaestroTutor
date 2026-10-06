@@ -3387,3 +3387,104 @@ References verified 2026-10-07:
 [Unity camera integration](https://developers.meta.com/vr/documentation/unity/unity-pca-documentation/),
 [Headset screen sharing](https://developers.meta.com/vr/documentation/native/native-media-projection/).
 Implementation and device acceptance of these camera sources remain open.
+
+
+## Live real-world occlusion (owner clarification, 2026-10-07)
+
+Real objects visible to the headset, including objects absent from the saved room
+scan, must hide virtual content behind them. Add Meta Environment Depth support
+across book surfaces, avatar/import materials, user geometry, pencil silhouettes
+and world labels. Use physical tracking-space alignment in MR; disable physical
+depth in virtual locomotion mode and exclude it from virtual-only captures.
+
+Keep hands in the live depth map initially. Test near-field hands and controllers
+separately; use aligned tracked masks where the live depth is insufficient, with
+proper removal when tracking is lost. Do not claim exact coverage of transparent,
+reflective, very small or very close objects from depth data alone. This changes
+visibility; existing scanned-room collision and authored rigid-body physics
+remain separate. Depth does not automatically create dependable moving colliders.
+
+The first implementation uses hard occlusion to preserve opaque pigment/depth
+writes. Device acceptance must check real furniture moved since the scan, hands,
+controllers, book readability, both eyes, MR/virtual transitions, permission and
+focus interruption, and performance. Soft edge refinement follows measured
+results rather than introducing transparent outlines or invisible depth writes.
+
+## One world with adjustable reality layers (owner clarification, 2026-10-07)
+
+The owner wants passthrough, a blended world, and a fully virtual environment to
+be views of the same persistent world. The current binary VirtualRoomView and its
+virtual-only thumbstick gate are an interim implementation, not the intended v1
+restriction. This also supersedes treating physical-depth shutdown during all
+artificial movement as the final architecture.
+
+Expose independent shared capabilities, with the same state/receipts available
+to the book, voice agent and user-authored programs:
+
+- Environment blend: real surroundings, adjustable mixture, or fully virtual.
+  Preserve clear book text by default; allow separate per-object/surface opacity.
+- Environment source: included or imported virtual surroundings using the normal
+  asset library, stable identities and Quest import budgets.
+- Locomotion: disabled, or user-controlled movement/turning of the virtual world
+  relative to physical tracking, including while passthrough is visible.
+- Real-room collision: an explicit setting independent of visual blend, usable
+  in mixed or virtual views. Do not infer physical behavior from opacity.
+- Real-world occlusion: independently control where live depth masks virtual
+  content. Fully virtual surroundings must not acquire unintended room-shaped
+  holes. Hand/controller visibility can be an explicit separate preference.
+- Passthrough windows: editable masks, including adjustable transparency, anchored
+  to real surfaces or deliberately placed in virtual space. Window plane depth
+  and live real-surface depth have different semantics and must not be conflated.
+
+Keep the physical tracking frame fixed. Real scan geometry, depth reprojection,
+physical-surface windows and tracked hands/controllers remain in that frame.
+Maintain an explicit virtual-world transform for locomotion. Every spatial
+observation, entity placement, target, ray, physics operation, saved program and
+capture must identify/convert its coordinate space consistently. Moving the
+virtual world must not move the saved real walls or mislabel an actual camera
+frame. Keep room-anchored objects and virtual-world objects distinguishable;
+allow explicit re-anchoring rather than silently changing their meaning.
+
+This is a spatial-state refactor, not simply removing UserEnabled&&!Virtual.
+Use one simulation with transformed physical geometry/queries, consistent
+navigation and grab constraints, and an explicit policy for held objects during
+world movement. Switching view/blend must not duplicate entities, reset program
+state, forget the apple, or turn camera sharing on. The camera picker remains an
+independent choice of what the user sends to Maestro.
+
+Implement windows with the current compositor/framebuffer alpha approach.
+Meta's surface-projected passthrough Unity APIs are deprecated for new development
+as of SDK v83. References verified 2026-10-07:
+[Passthrough Windows](https://developers.meta.com/vr/documentation/unity/unity-customize-passthrough-passthrough-windows/),
+[Passthrough AR](https://developers.meta.com/vr/documentation/unity/unity-customize-passthrough-passthrough-ar/),
+[Surface-projected deprecation](https://developers.meta.com/vr/documentation/unity/unity-customize-passthrough-surface-projected-passthrough/).
+
+Acceptance remains open. Cover blend endpoints/intermediate values, physical and
+virtual window anchors, imports, persistence and shared-agent edits, real-depth
+alignment during virtual-world translation/turning, collisions independently
+on/off, grab/throw/catch after movement, recall/recenter, source-accurate captures,
+both eyes, and actual Quest performance. Current occlusion APK verification is a
+separate incremental check and does not establish these new combinations.
+
+### Environment-depth implementation checkpoint
+
+Development APK `0B7A4CF5` now enables Meta OpenXR environment depth and uses
+Vulkan, which the installed Unity Meta OpenXR occlusion feature requires. The
+existing HardwareBuffer book bridge selects its Vulkan path. The same shaders
+mask pigment, pencil silhouettes and world lettering; virtual-only snapshots
+scope out physical depth. Raw hands remain in the depth map.
+
+Verification: 839 EditMode and 647 PlayMode passes (three expected optional
+private-file skips), both full native room/book probes, shared web build, native
+browser unit tests/build/lint, and a verified development-signed Android package.
+After the graphics API prerequisite was corrected, the APK stage was rerun with
+all other runtime/test/shader sources hash-matched to the tested mirror. Actual
+Quest stereo pixels show the book, saved lesson reloads, and the read-only device
+diagnostic reports environmentDepthAvailable=true. Moving-real-object masking,
+close hands/controllers, sustained performance and Vulkan interruption recovery
+remain device acceptance checks. The third-party Vulkan copy path has an existing
+Unity 6 command-buffer warning; sustained/device validation and any necessary
+native transfer repair are release gates, not implied by a successful APK.
+
+This checkpoint does not yet implement the independent blend/collision/window
+settings described above, or the new selectable physical/composited cameras.
