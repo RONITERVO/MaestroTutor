@@ -43,3 +43,33 @@ The ordinary `npm audit --omit=dev` result is still nonzero. This is a documente
 temporary reachability assessment, not a claim that all installed dependencies
 are vulnerability-free. Optional development-only `@capacitor/assets` still has
 its own older sharp tree; it is not the headless runtime's selected sharp module.
+
+## Capacitor proxy navigation patch — 2026-10-06
+
+The release audit began reporting
+[GHSA-rvm3-566m-v7fv](https://github.com/ionic-team/capacitor/security/advisories/GHSA-rvm3-566m-v7fv)
+against the locked Capacitor native packages. The upstream issue permits
+untrusted frame navigation through the internal HTTP proxy to acquire the app's
+origin privileges. Disabling CapacitorHttp alone does not fix affected versions.
+
+Root Android/core/CLI are now pinned to **8.5.1**. The secure-storage package's
+nested Android/core/iOS copies move from 7.4.5 to **7.6.9**, within its existing
+supported ranges. No major-version override or Firebase downgrade was introduced.
+Only these six package versions changed. The upstream
+[8.5.1](https://github.com/ionic-team/capacitor/releases/tag/8.5.1) and
+[7.6.9](https://github.com/ionic-team/capacitor/releases/tag/7.6.9) releases identify
+the proxy-navigation fixes.
+
+The shipped-dependency gate passes with its original exact, expiring Firebase
+exception; no new advisory exception was added. Verification passed: **2,396
+app tests**, production TypeScript/web build, phone Android debug assembly and
+its one unit test, plus the actual original-book/Unity integration journey with
+scripted provider responses. Evidence is in
+`.quest-evidence/android-byte-storage-20261006/` and book journey
+`.quest-evidence/native-room/7b41b75f4c664673b1e5ddeac153d121/`.
+
+The phone APK was built but not installed or released. Unity's book uses its
+separate native WebView library, whose dependency graph contains no Capacitor
+Android library. The installed Quest checkpoint remains D522191F; a later full
+Quest package will include the updated shared JavaScript dependency. These
+checks do not establish human phone-layout or real-provider acceptance.
