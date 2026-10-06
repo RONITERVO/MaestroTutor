@@ -4,11 +4,77 @@ This is a packaging path, not Store acceptance. A dedicated release key has been
 prepared locally at the owner's request, with a verified encrypted USB copy.
 Independent paper-password recovery is verified. The public release profile now
 passes strict configuration checks, and the two Quest bootstrap endpoints are
-deployed but disabled. Account/provider acceptance, authorized release signing
-and Store upload remain open; see [the scoped rollout](QUEST_MANAGED_ACCESS.md#scoped-backend-rollout--2026-10-06).
+deployed but disabled. The first owner-approved local candidate is now signed
+and audited. Account/provider acceptance and Store upload remain open; see [the scoped rollout](QUEST_MANAGED_ACCESS.md#scoped-backend-rollout--2026-10-06).
 The existing development command still produces `com.maestro.quest.development`.
 The release command prepares a non-development IL2CPP/ARM64 APK from the same
 source, web app, native browser, included avatar and motions.
+
+## Verified real-settings intermediate — 2026-10-06
+
+`MaestroQuest-intermediate-20261006-041018.apk` was prepared from `855e96f6` with
+3,148 frozen source/tooling/profile/content inputs and the verified public release
+configuration. SHA-256:
+`BB9C6A89321FBDF13F8FE68E98630EDD02E434DE77940F7DEDADE11E9043C776`;
+174,552,032 bytes. It is non-debuggable `com.maestro.quest`, version 1.0.0/code 1,
+ARM64-only and 16 KiB aligned. Its **development certificate** is verified; it is
+not signed with the backed-up release key and must not be uploaded as a release.
+
+The full helper exited successfully after **837 EditMode / 647 PlayMode** tests
+(three optional private-model skips), **82 Android tests** (two optional skips),
+475 native-room and 91 original-book observations using scripted offline providers,
+and the public-profile web build. All 148 packaged web files and the profile
+receipt match. The included avatar, 178 motions, 26 templates and seven modules
+match their source bytes. The packaged Meta configuration is enabled with the
+owner's app ID; the source/mirror setting was restored afterwards. Development
+input/render tools, the XR Operator native layer and storage-fault injection are
+absent from the package.
+
+A temporary installation under the separate release package identity on Quest 3
+was non-debuggable, emitted the native Store-access refusal message, and exited.
+This verifies rejection of that unverified installation, not the precise Meta
+failure reason, positive Store entitlement, real account access or release-mode
+performance. The test app was removed. Installed development APK D522191F and all
+200 external saved files match their fresh pre-test hashes; it remains stopped.
+The initial file comparison was corrected for Windows newline conversion in the
+local hash listing; no device data was restored or changed to make it pass.
+
+Evidence: `.quest-evidence/release-profile-build-20261006/verified.json`, package
+and source inventories, native reports/journeys, signature/alignment/manifest,
+launch record and cleanup receipt. The owner subsequently approved local signing
+of this exact intermediate with the existing backed-up key; the signed result is
+recorded below. No Store upload, backend enablement or paid provider call occurred.
+
+## Signed local candidate — 2026-10-06
+
+After explicit owner approval, the unchanged BB9C6A89 intermediate was signed
+once into `MaestroQuest-release-1-BB9C6A89.apk`. SHA-256:
+`848FFA51C1E03B36A5B9DC63E397A4DC0D7122C67B523937EB3241271A7908EF`;
+174,671,215 bytes. Its verified certificate is
+`EDD758283DB1A2A2D033119E25C0312332421B154250AC6C7F38003B84AA92A9`.
+
+Default verification for minimum API 32 passes with APK Signature Scheme v3;
+an explicit API 24–27 verification also passes v2. The one-off checking helper
+initially required v2 in the default output and stopped after signing. Public
+verification identified this checking error; the existing output was verified
+without signing it again or modifying it. The tracked packaging helper checks
+the certificate without that incorrect v2-only condition.
+
+All **1,070 non-signature APK entries** match the audited intermediate byte
+for byte, including executable code, web content and bundled models/motions.
+Only the JAR signature metadata is excluded from that comparison. The manifest
+is identical: non-debuggable `com.maestro.quest`, version 1.0.0/code 1, minimum
+API 32/target 34. ARM64-only libraries and 16 KiB alignment pass. All four original
+key/certificate/protected-password/receipt files match their saved fingerprints.
+Signing passwords stayed inside the signing process and were cleared afterwards.
+
+Public evidence: `.quest-evidence/release-profile-build-20261006/local-signing-result.json`,
+`release-entry-inventory.json`, signature results, alignment and manifest. The
+APK also has adjacent `.release.json`, `.sha256`, `.signature.txt` and
+`.manifest.xml` files in the local build directory. This signed APK has not been
+installed or uploaded; the earlier temporary headset check used the intermediate.
+Real Store entitlement/integrity, account/provider access and device acceptance
+remain separate release gates.
 
 ## Public profile
 
@@ -105,8 +171,8 @@ A local successful package is not proof of Store package availability, accepted
 signing identity, entitlement/offline behavior, Meta attestation, Firebase minting,
 original-browser approval, managed/BYOK parity, device behavior, frame rate,
 comfort, audience/privacy/payment configuration or Store compliance. Those remain
-separate gates in [the delivery record](QUEST_V1_PLAN.md). No APK has been signed
-with the new release key and no build has been submitted.
+separate gates in [the delivery record](QUEST_V1_PLAN.md). The signed local
+candidate above closes the local packaging/signing check; no build has been submitted.
 
 
 Packaged development and release builds pass `BuildOptions.CleanBuildCache` to
@@ -126,7 +192,7 @@ feature backlog or permission to use credentials, deploy or submit.
 
 | Gate | Current implementation/evidence | What closes it |
 | --- | --- | --- |
-| Reproducible package | Audited ARM64 development APK; release profile/signing pipeline with offline refusal tests. | Owner's real public profile, backed-up release key, authorized signing and audited signed candidate. |
+| Reproducible package | Verified real public profile, backed-up release key, full release-mode checks and the owner-approved signed candidate 848FFA51. | Local packaging/signing is verified; Store recognition and runtime acceptance remain separate. |
 | Account and managed AI | Shared book, browser pairing and Meta-to-App-Check endpoints; offline/native tests. Endpoints deployed but disabled; runtime non-token signing verified. Quest changes to the original API and the approval page remain undeployed. | Matching Firebase registrations and certificate, actual ingress config, authorized deployment, real Store-channel entitlement/integrity and account round trip. |
 | Purchase model | Quest checkout hidden and refused by client/server; existing prepaid credit balances remain shared. BYOK remains available. No Meta commerce integration. | Resolve eligibility for the actual prepaid-credit/BYOK and interactive model using the [prepared Meta review request](QUEST_MANAGED_ACCESS.md#purchase-model-decision-and-prepared-meta-request-2026-10-05), then implement and verify any required payment changes. |
 | Familiar book and provider parity | Original components, desktop chat-to-native journeys with scripted responses, and on-device book texture/page input/field focus checks. | Human virtual-key selection, microphone, Live, artifacts, interruption/recovery and managed/BYOK tests with real providers. |
@@ -447,9 +513,9 @@ Independent password recovery is now prepared through the owner-held paper and
 the previously verified encrypted USB copy. The USB was absent during the paper
 check, so it used the identical local keystore; this is not a fresh USB readback
 or a restore performed on another computer. Physical paper storage is the owner's
-attestation. No plaintext password file was created and no release APK was signed.
-Do not regenerate or replace this key. Authorized release signing and actual
-production/Store verification remain separate steps.
+attestation. No plaintext password file was created or APK signed during recovery.
+The later authorized signing is recorded above. Do not regenerate or replace
+this key. Actual production/Store verification remains open.
 
 The ignored public release-profile draft contains the verified certificate,
 shared production web settings and dedicated Quest Firebase registration.

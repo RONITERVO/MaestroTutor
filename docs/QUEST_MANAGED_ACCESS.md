@@ -55,6 +55,30 @@ frozen rollout plan, deployed source archives, metadata/IAM comparisons, private
 probe and disabled-response results, and cleanup receipt. No secret payload or
 operator bearer token was read into evidence.
 
+## Original API comparison before further rollout — 2026-10-06
+
+Read-only retrieval of the live `api-00017-jos` source archive establishes the
+actual deployment baseline (updated 2026-09-24). The proposed build changes 13
+compiled modules and adds 46. Changes include the Quest checkout boundary and
+account-link deletion cleanup, streaming cancellation/usage fixes, and bounded
+Live room-tool accounting. This is broader than adding a book CORS origin.
+`MANAGED_LIVE_ROOM_TOOLS_ENABLED` must remain false until coordinated gateway and
+provider continuation acceptance; bootstrap deployment alone cannot enable Live
+agent parity.
+
+Offline comparison of the deployed and proposed shared modules produced identical
+outputs for **18 ordinary Live reservation cases and 108 legacy saved-session
+usage cases**, with room tools disabled. This is sampled compatibility evidence,
+not a provider-bill or production admission test. Two old Play-billing files are
+absent from the proposed archive, but neither is reachable through the live
+entry point's static local-require graph; the live checkout routes already use
+Stripe. Do not infer removal of an active Play billing route from archive names.
+
+The live API and gateway remain unchanged. Evidence is under
+`.quest-evidence/api-rollout-review-20261006/`: exact-generation source archive,
+module diff, static dependency inventory and reproducible offline comparison.
+A further production rollout still needs its own concrete plan and approval.
+
 ## Verified account preparation — 2026-10-06
 
 A dedicated **Maestro Quest** Firebase web registration is now active in the

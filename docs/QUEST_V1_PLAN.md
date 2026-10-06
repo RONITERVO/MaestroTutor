@@ -32,9 +32,22 @@ endpoints, verified runtime non-token signing, and removed its private diagnosti
 All 14 disabled-operation requests pass; the original ten functions and broader
 IAM are unchanged. Quest changes to the original API, browser approval, ingress
 trust, real Meta/Firebase
-provider acceptance and authorized signing/Store work remain open. See
+provider acceptance and Store work remain open. See
 [the scoped rollout](QUEST_MANAGED_ACCESS.md#scoped-backend-rollout--2026-10-06)
 and [signing recovery](QUEST_RELEASE_BUILD.md#dedicated-release-key-prepared--2026-10-06).
+
+A real-settings release-mode intermediate is now audited as **BB9C6A89**:
+non-debuggable `com.maestro.quest`, ARM64/16 KiB, with matching public configuration
+and included content. Native suites, Android checks and both book/room journeys
+pass. A temporary Quest installation rejected unverified Store access and exited;
+it was removed, leaving the D522191F development APK and all 200 saved files
+unchanged. After explicit owner approval, this exact intermediate was signed
+into local candidate **848FFA51**, with the expected release certificate, verified
+v3/v2 signatures, 16 KiB alignment and all 1,070 non-signature entries unchanged.
+The signed candidate is not installed or uploaded. Positive Store/account
+acceptance remains open; see
+[the package and negative launch check](QUEST_RELEASE_BUILD.md#verified-real-settings-intermediate--2026-10-06)
+and [signed-candidate evidence](QUEST_RELEASE_BUILD.md#signed-local-candidate--2026-10-06).
 
 A separate Android diagnostic now passes four partial-write terminations, six
 injected ENOSPC recoveries and 256 consecutive saves using unchanged production
