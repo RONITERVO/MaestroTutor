@@ -236,6 +236,7 @@ export const dispatchHeadlessMethod = async (
             return {
               fileUri: requiredString(part, 'fileUri'),
               mimeType: requiredString(part, 'mimeType'),
+              ...(part.origin === 'generated' ? { origin: 'generated' as const } : {}),
             };
           })
           : undefined,

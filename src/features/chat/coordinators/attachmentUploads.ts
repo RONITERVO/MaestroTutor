@@ -108,7 +108,7 @@ export function createAttachmentUploads(ports: AttachmentUploadPorts) {
 
     return {
       variants: normalizedState.uploadedFileVariants || [],
-      chatFileParts: selectUploadedAttachmentParts(normalizedState, 'chat'),
+      chatFileParts: selectUploadedAttachmentParts({ ...message, ...normalizedState }, 'chat'),
     };
   };
 

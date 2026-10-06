@@ -47,9 +47,9 @@ async function setup(mode: 'managed' | 'byok' = 'byok') {
 }
 
 describe('headless conversational agent parity (deterministic transport)', () => {
-  it.each(['managed', 'byok'] as const)('runs tutor → verifier → journal → native receipt → chat in %s', async mode => {
+  it.each([['managed', undefined], ['byok', undefined], ['managed', 'generated'], ['byok', 'generated']] as const)('runs tutor → verifier → journal → native receipt → chat in %s with origin %s', async (mode, origin) => {
     const f = await setup(mode);
-    const turn = await runHeadlessChatTurn(f.client, { text: 'Make that ball.', fileParts: [{ fileUri: 'test://drawing', mimeType: 'image/png' }], useGoogleSearch: false });
+    const turn = await runHeadlessChatTurn(f.client, { text: 'Make that ball.', fileParts: [{ fileUri: 'test://drawing', mimeType: 'image/png', ...(origin ? { origin } : {}) }], useGoogleSearch: false });
     const result = await runHeadlessSuggestionAftersteps(f.client, { assistantMessageId: turn.assistantMessage.id });
     expect(result.decisionSource).toBe('model'); expect(result.toolRequest).toEqual({ tool: 'agent' });
     expect(JSON.stringify(result.toolResult)).not.toMatch(/commands|sceneRevision|test:\/\/drawing/);
@@ -60,6 +60,12 @@ describe('headless conversational agent parity (deterministic transport)', () =>
     expect(record?.handoff.input.currentFileParts?.[0].fileUri).toBe('test://drawing');
     expect(record?.handoff.accessScope).toBe(mode === 'byok' ? 'byok' : 'managed:fixture-user');
     expect(JSON.stringify(f.requests[2])).toContain('The ball should be blue.');
+    for (const index of [0, 2, 3, 4]) {
+      expect(JSON.stringify(f.requests[index]).includes('AI-generated illustration')).toBe(origin === 'generated');
+      const files = f.requests[index].contents.flatMap((c: any) => c.parts).filter((p: any) => p.fileData);
+      expect(files[0].fileData).toEqual({ fileUri: 'test://drawing', mimeType: 'image/png' });
+    }
+    expect(turn.userMessage?.uploadedFileVariants?.[0].origin).toBe(origin);
     const message = f.client.state.chats[f.pairId].find(message => message.id === record?.id)!;
     expect(message.translations?.[0]).toEqual({ target: 'Listo.', native: 'Ready.' });
     expect(JSON.stringify(message)).not.toMatch(/commands|sceneRevision|test:\/\/drawing/);

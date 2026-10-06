@@ -42,6 +42,8 @@ export interface ChatMessage {
   ttsAudioCache?: TtsAudioCacheEntry[];
   imageUrl?: string;
   imageMimeType?: string;
+  /** Origin of the displayed image, independent of compression/upload variants. */
+  imageOrigin?: 'generated';
   /** Original attachment file name if available (e.g. README.md, app.tsx) */
   attachmentName?: string;
   /** Optimized (lower res) image for local storage to reduce DB size */
@@ -92,6 +94,13 @@ export type UploadedAttachmentSource =
   | 'svg-rasterized'
   | 'derived';
 
+/** Provenance is application metadata; never sent as a provider fileData field. */
+export interface ChatFilePart {
+  fileUri: string;
+  mimeType: string;
+  origin?: 'generated';
+}
+
 export interface UploadedAttachmentVariant {
   /** Stable variant key so callers can upsert a specific surrogate. */
   id: string;
@@ -99,6 +108,7 @@ export interface UploadedAttachmentVariant {
   mimeType: string;
   targets: UploadedAttachmentTarget[];
   source: UploadedAttachmentSource;
+  origin?: 'generated';
   order?: number;
 }
 

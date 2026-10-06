@@ -3,6 +3,7 @@
 
 // Only authored framing lives here; history selection, truncation limits, and data stay with their owners.
 export const REENGAGEMENT_PROMPT = '...';
+export const GENERATED_IMAGE_CONTEXT = '[AI-generated illustration for this conversation. It can illustrate ideas and vocabulary, but is not a camera capture or evidence of current room geometry, app controls, permissions, alignment, physics, or completed actions. Use current native observations and the user’s actual reports to establish those facts.]';
 export const PROMPT_CONTEXT_TEXT = {
   user: 'User',
   tutor: 'Tutor',

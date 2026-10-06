@@ -3,6 +3,8 @@ import {validateInlineImages,type InlineImage} from '../../../shared/inlineImage
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import type { ChatFilePart } from '../../core/types';
+import { GENERATED_IMAGE_CONTEXT } from '../../../shared/prompts/context';
 import { buildTranslationPrompt } from '../../core/config/prompts';
 import { ThinkingLevel } from '@google/genai';
 import { debugLogService } from '../diagnostics';
@@ -49,7 +51,7 @@ export interface GeminiRequestLifecycleHooks {
 
 export type GenerateGeminiResponseOptions = GeminiClientSource & {
   systemInstruction?: string;
-  currentFileParts?: Array<{ fileUri: string; mimeType: string }>;
+  currentFileParts?: ChatFilePart[];
   liveInputMedia?: LiveInputMedia;
   currentImages?:InlineImage[];
   useGoogleSearch?: boolean;
@@ -418,17 +420,17 @@ export const generateGeminiResponse = async (
   checkCancellation(options.signal);
   const rawContents: any[] = [];
 
-  const normalizeFileParts = (parts: unknown): Array<{ fileUri: string; mimeType: string }> => {
+  const normalizeFileParts = (parts: unknown): ChatFilePart[] => {
     if (!Array.isArray(parts)) return [];
     return parts
       .map((part) => {
-        const candidate = part as { fileUri?: string; mimeType?: string } | null | undefined;
+        const candidate = part as { fileUri?: string; mimeType?: string; origin?: unknown } | null | undefined;
         const fileUri = typeof candidate?.fileUri === 'string' ? candidate.fileUri.trim() : '';
         const mimeType = typeof candidate?.mimeType === 'string' ? candidate.mimeType.trim() : '';
         if (!fileUri || !mimeType) return null;
-        return { fileUri, mimeType };
+        return { fileUri, mimeType, ...(candidate?.origin === 'generated' && mimeType.startsWith('image/') ? { origin: 'generated' as const } : {}) };
       })
-      .filter((part): part is { fileUri: string; mimeType: string } => Boolean(part));
+      .filter((part): part is ChatFilePart => Boolean(part));
   };
 
   // Build a lossless "raw" payload first, then collapse adjacent user/model
@@ -441,6 +443,7 @@ export const generateGeminiResponse = async (
 
     const historyFileParts = normalizeFileParts(h.fileParts);
     historyFileParts.forEach((part) => {
+      if (part.origin === 'generated') parts.push({ text: GENERATED_IMAGE_CONTEXT });
       parts.push({ fileData: { fileUri: part.fileUri, mimeType: part.mimeType } });
     });
 
@@ -457,6 +460,7 @@ export const generateGeminiResponse = async (
   const currentParts: any[] = [{ text: userPrompt }];
   const normalizedCurrentFileParts = normalizeFileParts(currentFileParts);
   normalizedCurrentFileParts.forEach((part) => {
+    if (part.origin === 'generated') currentParts.push({ text: GENERATED_IMAGE_CONTEXT });
     currentParts.push({ fileData: { fileUri: part.fileUri, mimeType: part.mimeType } });
   });
 

@@ -92,12 +92,14 @@ export function createGeneratedImages(ports: GeneratedImagesPorts) {
             mimeType: upload.mimeType,
             targets: inferUploadedAttachmentTargetsForMimeType(upload.mimeType),
             source: 'original',
+            origin: 'generated',
             order: 10,
           },
         ]);
 
         updateMessage(params.userMessageId, {
           imageUrl: finalResult.base64Image,
+          imageOrigin: 'generated',
           imageMimeType: finalResult.mimeType,
           storageOptimizedImageUrl: optimized.dataUrl,
           storageOptimizedImageMimeType: optimized.mimeType,
@@ -107,11 +109,12 @@ export function createGeneratedImages(ports: GeneratedImagesPorts) {
           imageGenerationStartTime: undefined
         });
         return {
-          imageForGeminiContextFileUri: [{ fileUri: upload.uri, mimeType: upload.mimeType }],
+          imageForGeminiContextFileUri: [{ fileUri: upload.uri, mimeType: upload.mimeType, origin: 'generated' as const }],
         };
       } catch (e) {
         updateMessage(params.userMessageId, {
           imageUrl: finalResult.base64Image,
+          imageOrigin: 'generated',
           imageMimeType: finalResult.mimeType,
           ...(optimizedMedia ? { storageOptimizedImageUrl: optimizedMedia.dataUrl, storageOptimizedImageMimeType: optimizedMedia.mimeType } : {}),
           isGeneratingImage: false,
@@ -231,11 +234,13 @@ export function createGeneratedImages(ports: GeneratedImagesPorts) {
             mimeType: upload.mimeType,
             targets: inferUploadedAttachmentTargetsForMimeType(upload.mimeType),
             source: 'original',
+            origin: 'generated',
             order: 10,
           },
         ]);
         updateMessage(params.thinkingMessageId, {
           imageUrl: assistantImgGenResult.base64Image,
+          imageOrigin: 'generated',
           imageMimeType: assistantImgGenResult.mimeType,
           storageOptimizedImageUrl: optimized.dataUrl,
           storageOptimizedImageMimeType: optimized.mimeType,
@@ -249,6 +254,7 @@ export function createGeneratedImages(ports: GeneratedImagesPorts) {
       } catch {
         updateMessage(params.thinkingMessageId, {
           imageUrl: assistantImgGenResult.base64Image,
+          imageOrigin: 'generated',
           imageMimeType: assistantImgGenResult.mimeType,
           attachmentName: 'assistant-generated.jpg',
           ...(optimizedMedia ? { storageOptimizedImageUrl: optimizedMedia.dataUrl, storageOptimizedImageMimeType: optimizedMedia.mimeType } : {}),

@@ -3,7 +3,7 @@
 
 import { composeMaestroSystemInstruction } from '../core/config/prompts';
 import { getGeminiModels } from '../core-sdk/modelRegistry';
-import type { ChatMessage, UploadedAttachmentVariant } from '../core/types';
+import type { ChatMessage, ChatFilePart, UploadedAttachmentVariant } from '../core/types';
 import { assertTutorTurnInvariants } from '../core-sdk/assertions';
 import { deriveHistoryForApi, sanitizeHistoryWithVerifiedMedia } from '../core-sdk/chat/history';
 import { resolveLanguagePair } from '../core-sdk/chat/language';
@@ -16,7 +16,7 @@ export interface HeadlessChatTurnParams {
   operationId?: string;
   languagePairId?: string;
   useGoogleSearch?: boolean;
-  fileParts?: Array<{ fileUri: string; mimeType: string }>;
+  fileParts?: ChatFilePart[];
   uploadedFileVariants?: UploadedAttachmentVariant[];
   requireInvariants?: boolean;
   /** Internal UI-equivalent re-engagements send "..." without persisting a user bubble. */
@@ -71,6 +71,7 @@ export const runHeadlessChatTurn = async (
               mimeType: part.mimeType,
               targets: ['chat'],
               source: 'original',
+              ...(part.origin === 'generated' ? { origin: 'generated' as const } : {}),
               order: index,
             })),
           }

@@ -13,6 +13,7 @@ import { pickGeminiClientSource, type GeminiClientSource } from '../gemini/clien
 import type { RoomTaskTarget } from '../room/taskSteering';
 import type { AssistantArtifactOptions } from './artifactOptions';
 import { buildCompactAssistantHistoryText } from './assistantMessageContext';
+import { withImageOriginContext } from './imageOrigin';
 
 export interface ReplySuggestionsInput {
   assistantMessageId: string;
@@ -94,19 +95,19 @@ export const buildReplySuggestionsPrompt = (input: ReplySuggestionsInput, option
     .map(group => {
       if (group.role === 'user') {
         const userText = group.items
-          .map(message => message.text?.trim() || PROMPT_CONTEXT_TEXT.sentImage)
+          .map(message => withImageOriginContext(message.text?.trim() || PROMPT_CONTEXT_TEXT.sentImage, message))
           .filter(Boolean)
           .join('\n\n')
           .trim();
         return userText ? `${PROMPT_CONTEXT_TEXT.user}: ${userText}` : '';
       }
       const tutorText = group.items
-        .map(message => (
+        .map(message => withImageOriginContext(
           buildCompactAssistantHistoryText(message, options)
           || message.translations?.[0]?.target
           || message.rawAssistantResponse
           || message.text
-          || PROMPT_CONTEXT_TEXT.sentImage
+          || PROMPT_CONTEXT_TEXT.sentImage, message
         ))
         .filter(Boolean)
         .join('\n\n')

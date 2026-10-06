@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import type {
   ChatMessage,
+  ChatFilePart,
   UploadedAttachmentTarget,
   UploadedAttachmentVariant,
 } from '../../core/types';
@@ -61,6 +62,7 @@ const normalizeVariant = (variant: Partial<UploadedAttachmentVariant> | null | u
     mimeType,
     targets: normalizeTargets(variant.targets, mimeType),
     source: variant.source || 'derived',
+    ...(variant.origin === 'generated' ? { origin: 'generated' as const } : {}),
     order,
   };
 };
@@ -127,15 +129,18 @@ export const selectPrimaryUploadedAttachmentVariant = (
 };
 
 export const selectUploadedAttachmentParts = (
-  message: Pick<ChatMessage, 'uploadedFileVariants'>,
+  message: Pick<ChatMessage, 'uploadedFileVariants' | 'imageOrigin' | 'maestroToolKind'>,
   target: UploadedAttachmentTarget
-): Array<{ fileUri: string; mimeType: string }> => {
+): ChatFilePart[] => {
   const variants = normalizeUploadedAttachmentVariants(message.uploadedFileVariants);
   const parts = variants
     .filter(variant => variant.targets.includes(target))
-    .map(variant => ({ fileUri: variant.uri, mimeType: variant.mimeType }));
+    .map(variant => ({ fileUri: variant.uri, mimeType: variant.mimeType,
+      ...(variant.mimeType.startsWith('image/') && (variant.origin === 'generated' || message.imageOrigin === 'generated' || message.maestroToolKind === 'image')
+        ? { origin: 'generated' as const } : {}),
+    }));
 
-  const deduped = new Map<string, { fileUri: string; mimeType: string }>();
+  const deduped = new Map<string, ChatFilePart>();
   parts.forEach((part) => {
     const key = `${part.fileUri}::${part.mimeType}`;
     if (!deduped.has(key)) {

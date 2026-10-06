@@ -405,9 +405,9 @@ describe('actual tutor hook send contract before coordinator extraction', () => 
     const h = harness([]);
     expect(await send(h, 'Draw this')).toBe(true);
     expect(ports.runImage.mock.calls[0][0]).toMatchObject({ contextText: 'Draw this', maestroAvatarUri: undefined, maestroAvatarMimeType: undefined });
-    expect(useMaestroStore.getState().messages[0]).toMatchObject({ imageUrl: 'data:image/png;base64,AQID', isGeneratingImage: false, imageGenError: null });
+    expect(useMaestroStore.getState().messages[0]).toMatchObject({ imageUrl: 'data:image/png;base64,AQID', imageOrigin: 'generated', isGeneratingImage: false, imageGenError: null });
     expect(useMaestroStore.getState().messages[0]).toMatchObject({ storageOptimizedImageUrl: 'data:image/webp;base64,AQ==', storageOptimizedImageMimeType: 'image/webp' });
-    expect(ports.runText.mock.calls[0][0].currentFileParts).toEqual(fails ? undefined : [{ fileUri: 'https://files/generated', mimeType: 'image/png' }]);
+    expect(ports.runText.mock.calls[0][0].currentFileParts).toEqual(fails ? undefined : [{ fileUri: 'https://files/generated', mimeType: 'image/png', origin: 'generated' }]);
   });
 
   it('keeps a generated audio note visible when its upload fails', async () => {
@@ -427,7 +427,7 @@ describe('actual tutor hook send contract before coordinator extraction', () => 
     await harness([message('a')]).fetch();
     expect(useMaestroStore.getState().messages[0]).toMatchObject({
       imageUrl: 'data:image/png;base64,AQID', storageOptimizedImageUrl: 'data:image/webp;base64,AQ==',
-      storageOptimizedImageMimeType: 'image/webp', isGeneratingImage: false,
+      storageOptimizedImageMimeType: 'image/webp', imageOrigin: 'generated', isGeneratingImage: false,
     });
   });
 

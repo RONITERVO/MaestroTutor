@@ -11,6 +11,7 @@ import { pickGeminiClientSource, type GeminiClientSource } from '../gemini/clien
 import { createCoreRuntime, type CoreRuntime } from '../runtime';
 import { formatStreamingTutorDraftText, parseStrictTutorResponseText } from './tutorResponse';
 
+import type { ChatFilePart } from '../../core/types';
 import type { LiveInputMedia } from '../media/liveInputContext';
 
 export interface TutorTextTurnInput {
@@ -19,7 +20,7 @@ export interface TutorTextTurnInput {
   history: unknown[];
   nativeLanguageCode: string;
   systemInstruction: string;
-  currentFileParts?: Array<{ fileUri: string; mimeType: string }>;
+  currentFileParts?: ChatFilePart[];
   liveInputMedia?: LiveInputMedia;
   currentImages?:InlineImage[];
   useGoogleSearch?: boolean;

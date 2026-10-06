@@ -712,3 +712,57 @@ Walking, wagging dog, robot, catch and Live have not yet run in this headset les
 Real-room physics, rendered motion, actual microphone audio and preservation of
 the same apple through Live remain open. Original failures and private room/chat
 evidence are retained outside version control; the lesson is not a semantic pass.
+
+
+### Wireless headset continuation and generated-image provenance (2026-10-07)
+
+The owner supplied a wireless ADB endpoint, and the same Quest 3 was verified
+before installation. Development APK `211B99FF` (source `dad2ba62`) preserves the
+saved lesson. The headset remained connected to its charger at about 53%.
+Actual stereo captures show new book content after opening and returning from
+Android Settings, with the same app process and advancing frame-copy counters.
+This verifies a real focus interruption; the exact spatial-permission dialog
+resume still needs a separate rerun. A native controller tap on **Resume and play**
+opened the weather activity without touching the audio bell.
+
+A natural setup-help turn exposed an image-origin defect: the tutor treated its
+AI-camera illustration as a real view, claimed a green alignment check and named
+nonexistent pictured buttons. Its delegated task performed zero native actions.
+A subsequent plain-language clarification actually loaded and displayed the
+scanned room. The owner then confirmed that the surfaces lined up with the real
+room. The next request started physics and hid the overlays. However, it used
+an instant `move` for Maestro and narrated this as walking; walking is not a pass.
+
+The dog and robot were created. The dog has a running rotation track, but native
+samples and recipe playback semantics show that its cylindrical tail rotates
+about its length axis (unchanged center and longitudinal direction), not a visible
+side-to-side wag. The first catch request performed no actions; its follow-up
+inspected hold/launch/catch capabilities but still created no program or throw.
+The same apple remained on the virtual table. Further catch and Live testing
+continues; this device lesson remains a **semantic failure**, not release acceptance.
+
+Generated user/assistant images now persist explicit provenance independently of
+upload/compression variants, including failed uploads and subsequent reuploads.
+The shared provider boundary labels the corresponding image parts for chat and
+room-agent planning/results. Live and suggestion context retain the distinction.
+Headless file inputs retain the same provenance. Images and proactive artifacts
+remain enabled; filenames alone are not treated as evidence of origin. Old
+unmarked user images remain of unknown origin.
+
+Current validation: **2,494 web tests in 277 files**, application TypeScript,
+focused lint, prompt ownership and runtime-boundary checks pass. Both managed and
+BYOK transport regressions cover the tutor-to-agent handoff and preserve original
+user words while keeping application metadata out of provider fileData fields.
+One owner-approved **real BYOK Gemini 3.8 Flash** replay of the failed setup turn
+with its current illustration labelled no longer asserted a visible green check
+or named the imaginary controls; it proposed a room-agent handoff. This is one
+captured-input replay, not a complete provider or headset acceptance run.
+The provenance change is not yet installed on Quest.
+
+The preceding development APK completed **837 EditMode / 647 PlayMode tests**,
+three optional private-file skips, **86 Android tests / two optional skips**, and
+both deterministic native headless and rendered-book integration probes.
+Release CI [37522598096](https://github.com/RONITERVO/MaestroTutor/actions/runs/37522598096)
+passed on `dad2ba62`; these native results precede the web-only provenance change.
+Private conversation/room pixels, original failures and the replay remain outside
+version control.
