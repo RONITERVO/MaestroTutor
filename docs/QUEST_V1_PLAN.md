@@ -15,6 +15,13 @@ The preceding A8D296E4 checkpoint passed native book controls and actual control
 activation of the permanent 3D Workshop blocks. Its ten-minute animated run
 averaged 71.20 FPS. These separate runs are not a controlled frame-rate comparison.
 
+On the same installed package, an actual controller-gripped bucket transferred
+200 mL to a fixed cup; both accepted quantities and atomic liquid Undo/Redo match.
+Temporary content was discarded. Original room/behaviour bytes are unchanged;
+the normal bounded receipt history records the QA commands. Hand pouring,
+overflow, event and broader interaction acceptance remain open. See
+[the device result and limits](QUEST_DEVICE_QA.md#controller-bucket-to-cup-pour--2026-10-06).
+
 The dedicated release key is prepared locally, with a verified encrypted USB copy.
 Independent password recovery and production configuration remain open.
 

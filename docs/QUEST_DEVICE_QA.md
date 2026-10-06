@@ -1,18 +1,21 @@
 # Quest 3 development verification — updated 2026-10-06
 
-Current installed development checkpoint: **FD9AEBDE**. A Quest-only stable
-chat scrollbar gutter removes repeated Android text-layout/style invalidation,
-with identical pixels in the controlled initial-screen comparison. Full native,
-book, Android and package checks passed. Its animated 32-brick device workload
-stopped at the battery limit after five minutes and averaged **70.81 FPS at 72
-Hz**; sustained performance remains open. Saved room/behaviour files were
-preserved byte-for-byte and the app is stopped for charging. Earlier checkpoint
-results below remain historical; full Store/provider/comfort acceptance is open.
+Current installed development checkpoint: **D522191F**, with the shared animated
+icons and optional physical authoring trays hidden at startup. Exact installed
+APK bytes were verified again for the controller-pouring check below. The app is
+stopped; synthetic input and owned forwards are released, and debug properties
+are restored. Earlier candidate/installation notes below remain historical.
 
-Latest packaged candidate: **C43EBC56**, with optional physical tool trays hidden
-by default. Full native/book/web/Android/package validation passed. It is not
-installed yet; the owner is fast-charging the headset. No new device performance
-result is claimed. [Candidate evidence](#optional-physical-tool-trays--2026-10-06).
+The five-minute animated 32-brick development run averaged **71.43 FPS at 72 Hz**;
+sustained performance, human comfort and full Store/provider acceptance remain
+open. See [the exact icon-rendering checkpoint](#animated-book-icons--2026-10-06).
+The separate Android storage diagnostic was removed after its bounded checks.
+
+The current controller-pouring check transferred **200 mL** from the ordinary
+bucket to a fixed cup and verified the saved quantities, Undo and Redo. Original
+room/behaviour content and 199 of 200 external files remain byte-identical; the
+normal bounded action-receipt history contains this test's completed commands.
+[Scope, excluded first aim and cleanup evidence](#controller-bucket-to-cup-pour--2026-10-06).
 
 ## On-device automation resumed — 2026-10-05
 
@@ -3526,3 +3529,52 @@ ordinary unpaired saves, all book recovery UX or prolonged save stress. The
 17.56-second sequence does not close the prolonged-use gate. Partial staging is
 preserved and refused, not silently repaired. Human/provider, performance and
 Store acceptance gates remain open.
+
+## Controller bucket-to-cup pour — 2026-10-06
+
+The installed **D522191F** APK hash matched the audited animated-icons checkpoint.
+Fresh stopped-app private/external backups preceded this test. Through the
+original book's shared catalog, a temporary room created the ordinary Bucket
+and Cup templates, configured the bucket with **200 mL** and made the cup fixed
+with its existing 500 mL capacity. The existing scan loaded before physics started.
+The fixed receiver isolates pouring from movement; this is not a freehand
+two-vessel or real tabletop alignment claim.
+
+Meta XR Operator supplied actual OpenXR Touch Plus grip/pose input. Native
+selection stayed on the bucket at all **23 samples** from upright to 110 degrees,
+with maximum observed root-position error **0.0731 mm** against the requested
+path. The path accounted for the moving lip and bounded gravity trajectory to
+keep the stream over the cup. After returning upright and letting flow settle,
+the bucket's live and saved quantities were **0 mL** and the cup's were **200 mL**,
+with idle flow state, no reported error and zero measured quantity difference.
+A virtual-room capture was inspected for the vessel geometry; its view does not
+prove interior fill-level readability or human comfort.
+
+Ordinary book Undo first reversed the separate grip-placement edit without
+changing contents. The next Undo reversed the single liquid episode, restoring
+**200 / 0 mL**. Redo restored **0 / 200 mL**. This verifies one atomic liquid edit
+for source and receiver; it does not imply that moving an object and pouring
+share one history entry. No special quantity-transfer command simulated the pour.
+
+The first controller path was excluded from the all-collected result: it aimed
+outside the cup opening during the early tilt, and only 58.03397065985879 mL was
+received. That trial, its poses and its exact Undo are retained, not discarded as
+an application failure. The corrected path produced the complete transfer without
+changing app code, container geometry or physics parameters.
+
+Cleanup discarded the temporary room through the book and restored input. The
+app is stopped, the three debug properties match their initial values, and the
+owned ADB forwards are removed. Of 200 original external files, **199 match
+byte-for-byte**, including the room, behaviours and asset files. The sole changed
+file is the ordinary bounded action-receipt history: 12 matching completed QA
+commands and four unchanged prior entries. No extra external file remained.
+All ten unrelated checkout edits retained their hashes. Final battery was 55%,
+charging, at 45°C.
+
+Evidence is ignored locally under `.quest-evidence/container-pour-20261006/`:
+`verified.json`, native input/pose journals, book quantity observations, exact
+backup/after archives and cleanup receipts. This is automated device evidence,
+not hand-tracking ergonomics, overflow/multiple-receiver acceptance, event-delivery
+assertions, restart during flow or sustained performance. No provider, paid
+asset generation, deployment, new APK installation, release signing or Store
+submission occurred. Those release gates remain open.
