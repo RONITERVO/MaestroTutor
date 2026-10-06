@@ -6,8 +6,9 @@ Independent paper-password recovery is verified. The public release profile now
 passes strict configuration checks, and the two Quest bootstrap endpoints are
 deployed but disabled. The first owner-approved local candidate is now signed
 and audited. Its approved private Alpha draft upload was rejected for an SDK-generated
-unsupported device identifier; the correction is described below. Account/provider
-acceptance and a successful Store upload remain open; see [the scoped rollout](QUEST_MANAGED_ACCESS.md#scoped-backend-rollout--2026-10-06).
+unsupported device identifier. A corrected Quest 3 candidate is signed and verified,
+uploaded successfully as a private draft after replacement approval; details are below. Account/provider
+acceptance and server-side Store compatibility results remain open; see [the scoped rollout](QUEST_MANAGED_ACCESS.md#scoped-backend-rollout--2026-10-06).
 The existing development command still produces `com.maestro.quest.development`.
 The release command prepares a non-development IL2CPP/ARM64 APK from the same
 source, web app, native browser, included avatar and motions.
@@ -32,8 +33,10 @@ The release packager checks the **final APK's merged manifest**, after both SDK
 writers, for exactly one supported-device entry with value `quest3`. The same
 PowerShell check accepts the valid case and refuses eight missing, duplicate,
 unsupported or broader declarations in release CI. It also rejects the actual
-manifest from 848FFA51. A replacement intermediate is being verified before any
-new key use or upload.
+manifest from 848FFA51. The replacement passed the full build and content audit, then was signed and
+verified with the existing key as recorded below. Automatic approval review
+required explicit approval of the replacement bytes before external upload; the
+owner supplied that approval and the subsequent upload succeeded.
 
 The uploader also warned about Quest 1 and mixed 32/64-bit libraries. The actual
 rejected APK declares neither Quest 1 nor any 32-bit native directory: its 20
@@ -45,6 +48,60 @@ attempt, redacted uploader error blocks and before/after channel reads. The
 replacement preparation is under `.quest-evidence/quest-device-targets-20261006/`.
 No backend activation, policy certification, channel publication or headset
 installation is part of this correction.
+
+## Corrected signed Quest 3 candidate — 2026-10-06
+
+Source `d7d5d847` produces
+`MaestroQuest-intermediate-20261006-051907.apk`,
+SHA-256 `8F460E1B8CF7AD80970052C887ADF4C8B6180E3143C07C577A5232B455F3FC4F` (174,552,012 bytes).
+The signed replacement is `MaestroQuest-release-1-8F460E1B.apk`,
+SHA-256 `DA6896832902832176A66406EDF328E3B01D4FF2E6DA295760AECB470163DC9B` (174,671,215 bytes).
+It is non-debuggable `com.maestro.quest`, version 1.0.0/code 1, with exactly
+`quest3` as its supported device. The existing backed-up certificate verifies.
+
+The complete helper exited successfully: **837 EditMode / 647 PlayMode** checks
+(three optional private-file skips), **82 Android tests** (two optional skips),
+**470 native-room / 87 original-book observations**, using offline scripted
+providers. Observation counts include runtime sampling and differ from preceding
+runs; both complete journey contracts passed. All **3,150 frozen inputs**, native
+sources/metas, AAR, **148 web files**, avatar/178 motions/26 templates/seven modules
+match their audited inputs. All **25 release CI steps** passed on this source,
+including the new final-manifest policy regression cases.
+
+Relative to the previously approved package inputs, all **3,144 unchanged inputs**
+match, including chat/runtime source, assets and the public production profile.
+Only device target configuration and packaging checks changed (four changed files,
+two added check scripts). Signing preserved all **1,070 non-signature ZIP entries**
+of the corrected intermediate. The v3 signature, explicit v2 verification, ARM64
+inventory and 16 KiB alignment pass; all four original key files remain unchanged.
+
+Automatic approval review initially stopped the replacement upload before process
+creation because the earlier approval named **848FFA51**. The owner then explicitly
+approved **DA689683** for the same private Alpha draft. The official CLI completed
+with exit 0 at **05:30:56 UTC**, after three recovered network retries, and created
+**build `1767008267909255`**. APK validation reported **zero error types/messages**.
+The underlying uploader parameters confirm `draft: true`; `--publish` was absent.
+
+The upload receipt says server compatibility tests are running. Their final result
+is **unverified**: the CLI has no draft-test-results command, and browser automation
+still fails before reaching the dashboard. The owner has been asked to read
+[the build test results](https://developers.meta.com/vr/manage/applications/1763835394893209/builds/1767008267909255/test-results/).
+All four channels still show empty current-build lists, consistent with an
+unpublished draft; this does not mean the uploaded build is missing. No channel
+publication, tester invitations, policy certification, backend activation or
+headset installation occurred. The APK hash is unchanged after upload.
+
+The successful uploader retained the two warnings above despite the verified
+Quest-3-only manifest and ARM64-only native inventory. These warnings are recorded
+rather than treated as proof of unsupported binaries. Their cause and server-side
+compatibility outcome are not established.
+
+Evidence: `.quest-evidence/quest-device-targets-20261006/` contains frozen inputs,
+input delta, complete package audit, tests/journeys, signing receipt and public
+signature/manifest/alignment outputs. The completed guarded replacement upload plan and public receipt are in
+`.quest-evidence/meta-private-alpha-20261006/retry-quest3/`. The installed D522191F
+development app was not touched by this packaging correction. Store entitlement,
+account/provider access and release readiness remain unverified.
 
 ## Verified real-settings intermediate — 2026-10-06
 
