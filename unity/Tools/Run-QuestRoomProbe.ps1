@@ -6,9 +6,14 @@ param(
  [Parameter(Mandatory)][string]$BuildMirror,
  [string]$Prompt,
  [string]$Profile = 'quest-probe',
+ [ValidateSet('ContextCreateEdit')][string]$ProviderScenario,
  [ValidateSet('Headless','Book')][string]$Journey = 'Headless'
 )
 $ErrorActionPreference='Stop'
+if($ProviderScenario){
+ if($Journey -ne 'Headless' -or ![string]::IsNullOrWhiteSpace($Prompt)){throw 'ProviderScenario requires Headless and cannot be combined with Prompt.'}
+ $Prompt='Please create my test object now. Use the definition I gave in the previous message.'
+}
 if($Journey -eq 'Book' -and ![string]::IsNullOrWhiteSpace($Prompt)){throw 'The deterministic book journey does not accept a provider prompt.'}
 . (Join-Path $PSScriptRoot 'QuestBuildProcesses.ps1')
 $repoRoot=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
@@ -36,9 +41,9 @@ New-Item -ItemType Directory -Path $directory | Out-Null
 $log=Join-Path $directory 'unity.log'
 Stop-QuestBuildHelper
 $process=Start-Process -FilePath $editorPath -WindowStyle Hidden -PassThru -ArgumentList @('-batchmode','-force-d3d11','-buildTarget','Win64','-projectPath',('"'+$mirror+'"'),'-executeMethod','Maestro.Quest.Editor.QuestRoomProbe.Start','-logFile',('"'+$log+'"')) -Environment @{ADB_SERVER_SOCKET='tcp:localhost:5041';MAESTRO_ROOM_PROBE_DIRECTORY=$directory;MAESTRO_ROOM_PROBE_PHYSICS=$(if([string]::IsNullOrWhiteSpace($Prompt)){'1'}else{''});MAESTRO_QUEST_RELEASE_PROFILE='';MAESTRO_QUEST_KEYSTORE='';MAESTRO_QUEST_KEY_ALIAS='';MAESTRO_QUEST_STORE_PASSWORD='';MAESTRO_QUEST_KEY_PASSWORD=''}
-$previousPrompt=$env:MAESTRO_ROOM_PROBE_PROMPT;$previousProfile=$env:MAESTRO_ROOM_PROBE_PROFILE
+$previousPrompt=$env:MAESTRO_ROOM_PROBE_PROMPT;$previousProfile=$env:MAESTRO_ROOM_PROBE_PROFILE;$previousScenario=$env:MAESTRO_ROOM_PROBE_SCENARIO
 try{
- $env:MAESTRO_ROOM_PROBE_PROMPT=$Prompt;$env:MAESTRO_ROOM_PROBE_PROFILE=$Profile
+ $env:MAESTRO_ROOM_PROBE_PROMPT=$Prompt;$env:MAESTRO_ROOM_PROBE_PROFILE=$Profile;$env:MAESTRO_ROOM_PROBE_SCENARIO=$ProviderScenario
  Push-Location $repoRoot
  try{
   $clientScript=$(if($Journey -eq 'Book'){'scripts/probe-native-book.ts'}else{'scripts/probe-native-room.ts'})
@@ -57,10 +62,10 @@ try{
  }
  $terminal=Get-Content -LiteralPath (Join-Path $directory 'terminal.json') -Raw | ConvertFrom-Json
  if($clientExit -ne 0 -or $process.ExitCode -ne 0 -or $terminal.exitCode -ne 0 -or $terminal.id -ne $id){throw "Native room probe failed. Evidence: $directory"}
- @{version=1;id=$id;clientExit=$clientExit;editorExit=$process.ExitCode;directory=$directory;providerUsed=![string]::IsNullOrWhiteSpace($Prompt);journey=$Journey} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'verified.json')
+ @{version=1;id=$id;clientExit=$clientExit;editorExit=$process.ExitCode;directory=$directory;providerUsed=![string]::IsNullOrWhiteSpace($Prompt);journey=$Journey;providerScenario=$ProviderScenario} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'verified.json')
  Write-Output "Native room probe passed: $directory"
 }finally{
- $env:MAESTRO_ROOM_PROBE_PROMPT=$previousPrompt;$env:MAESTRO_ROOM_PROBE_PROFILE=$previousProfile
+ $env:MAESTRO_ROOM_PROBE_PROMPT=$previousPrompt;$env:MAESTRO_ROOM_PROBE_PROFILE=$previousProfile;$env:MAESTRO_ROOM_PROBE_SCENARIO=$previousScenario
  if(!$process.HasExited){$process.Kill();$process.WaitForExit()}
  Stop-QuestBuildHelper
 }

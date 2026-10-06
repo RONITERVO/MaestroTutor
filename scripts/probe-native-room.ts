@@ -1,19 +1,24 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {assertCreatedParityBall,assertPaintedParityBall,assertSameRoomObjects} from './agent-provider-contract';
 import {readFile,writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {isDeepStrictEqual} from 'node:util';
 import {HeadlessRoomTransport} from '../src/headless/roomTransport';
-import {runRoomActionTask,type RoomCommand,type RoomAgentState} from '../src/core-sdk/room/roomAgent';
+import {type RoomCommand,type RoomAgentState} from '../src/core-sdk/room/roomAgent';
 import {createHeadlessClient} from '../src/headless/client';
 import {capabilityDefinition} from '../shared/capabilities';
 import {constructionCaptureCall} from '../shared/roomSelection';
 import {insertProgramCapability} from '../src/core-sdk/room/programCapabilityEditing';
-import {getGeminiModels} from '../src/core-sdk/modelRegistry';
+import {HeadlessRoomAgent,runHeadlessRoomTurn} from '../src/headless/roomJourney';
+import {selectHeadlessLanguage,runHeadlessChatTurn} from '../src/headless/chatJourney';
+import {runHeadlessSuggestionAftersteps} from '../src/headless/suggestionJourney';
 import {parseProgram} from '../src/core-sdk/room/programs';
 import {checkedProbeReply,factReply,assertSamePlacement,type NativeProbeState} from './native-probe-contract';
 const directory=process.argv[2];if(!directory)throw new Error('Supply the explicitly started native probe directory.');
 const prompt=process.env.MAESTRO_ROOM_PROBE_PROMPT;
+const providerScenario=process.env.MAESTRO_ROOM_PROBE_SCENARIO;
+if(providerScenario && (providerScenario!=='ContextCreateEdit'||!prompt))throw new Error('Unknown or unconfigured provider scenario.');
 const transport=await HeadlessRoomTransport.connect(directory,120000);
 const observations:unknown[]=[];
 try{
@@ -28,13 +33,55 @@ try{
  const readPlacement=(target:string)=>execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.placement',version:1,arguments:{target}}}]);
  let outcome:unknown;
  if(prompt){
-  const client=await createHeadlessClient({profileName:process.env.MAESTRO_ROOM_PROBE_PROFILE||'quest-probe'});
-  const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),240000);
-  const usage:unknown[]=[];
-  try{outcome=await runRoomActionTask({model:getGeminiModels().text.default,prompt,history:[],nativeLanguageCode:'en-US',timeoutMs:45000},
-   {aiClient:client.ai},lease,response=>usage.push({model:response.modelUsed,usage:response.usageMetadata}),{signal:controller.signal,onReceipt:receipt=>{observations.push(structuredClone(receipt));}});
-  }finally{clearTimeout(timer);await client.save();}
-  outcome={accessMode:client.accessMode,usage,result:outcome};
+  const client=await createHeadlessClient(); // isolated evidence, never an existing user's profile
+  // Observe responses from the real provider for this isolated synthetic test.
+  // The original stream and request are passed through unchanged.
+  const providerResponses:Array<{model:string;text:string}>=[];
+  const stream=client.ai.models.generateContentStream.bind(client.ai.models);
+  client.ai.models.generateContentStream=async request=>{
+   const result=await stream(request);
+   return (async function*(){let text='';try{for await(const chunk of result){if(chunk.text)text+=chunk.text;yield chunk;}}
+    finally{providerResponses.push({model:request.model,text});await writeFile(join(directory,'provider-responses.json'),JSON.stringify(providerResponses,null,2));}})();
+  };
+  const agent=new HeadlessRoomAgent(client,()=>transport.lease());client.roomAgent=agent;
+  const timer=setTimeout(()=>agent.tasks.stopAll(),providerScenario?600000:240000);
+  try{
+   await selectHeadlessLanguage(client,{targetLanguageCode:'es-ES',nativeLanguageCode:'en-US'});
+   const contextTurn=await runHeadlessChatTurn(client,{text:"For this test, 'my test object' means one small blue ball named ParityBall. Remember that for my next request; do not make anything yet.",useGoogleSearch:false});
+   const contextAftersteps=await runHeadlessSuggestionAftersteps(client,{assistantMessageId:contextTurn.assistantMessage.id});
+   if(contextAftersteps.toolRequest?.tool==='agent'||lease.state().sceneRevision!==initial.sceneRevision||agent.usage.length)throw new Error('Context-only chat unexpectedly started room work.');
+   const createdJourney=await runHeadlessRoomTurn(client,{text:prompt});
+   outcome=createdJourney;
+   if(providerScenario==='ContextCreateEdit'){
+    const createdState=structuredClone(lease.state());
+    const ball=assertCreatedParityBall(initial,createdState);
+    await writeFile(join(directory,'provider-scenarios.json'),JSON.stringify({scenario:providerScenario,phase:'created',createdJourney,createdState},null,2));
+    const editJourney=await runHeadlessRoomTurn(client,{text:'Ask the room agent to change only the existing ParityBall to red. Keep its name, size and position; do not create another object.'});
+    const editedState=structuredClone(lease.state());
+    assertPaintedParityBall(createdState,editedState,ball.id);
+    // These are the same native Undo/Redo handlers used by physical controls;
+    // this is handler parity, not a claim that a controller button was pressed.
+    const undone=await execute([{action:'undo'}]);assertSameRoomObjects(createdState,undone);
+    const redone=await execute([{action:'redo'}]);assertSameRoomObjects(editedState,redone);
+    const readbackJourney=await runHeadlessRoomTurn(client,{text:'Ask the room agent to inspect the current ParityBall in the live room and tell me its name, shape, colour and size. Read only; do not change anything.',requireActions:false});
+    const readbackState=structuredClone(lease.state());assertSameRoomObjects(redone,readbackState);
+    const visibleReply=readbackJourney.task?.message.translations?.map(value=>value.native).join(' ')||'';
+    if(!visibleReply.includes('ParityBall')||!(/\bred\b/i.test(visibleReply)))throw new Error('Agent readback did not describe the current red ParityBall.');
+    const scenarioEvidence={scenario:providerScenario,phase:'passed',semantics:{contextOnly:true,exactCreation:true,sameObjectEdit:true,unrelatedObjectsPreserved:true,undo:true,redo:true,agentReadback:true},
+     createdJourney,editJourney,readbackJourney,createdState,editedState,undone,redone,readbackState};
+    await writeFile(join(directory,'provider-scenarios.json'),JSON.stringify(scenarioEvidence,null,2));
+    outcome=scenarioEvidence;
+   }
+   const records=await agent.store.list();
+   for(const record of records)for(const operation of record.operations)if(operation.receipt)observations.push(operation.receipt);
+   await writeFile(join(directory,'agent-journal.json'),JSON.stringify(records,null,2));
+   // Retrying the same claimed source must neither spend nor dispatch again.
+   const record=records.find(record=>record.id===createdJourney.task?.id)!;const revision=lease.state().sceneRevision,usageCount=agent.usage.length;
+   await agent.start(record.handoff.sourceAssistantId);
+   if(lease.state().sceneRevision!==revision||agent.usage.length!==usageCount)throw new Error('Duplicate handoff was executed again.');
+  }catch(error){await writeFile(join(directory,'agent-failure.json'),JSON.stringify({message:error instanceof Error?error.message:String(error),evidence:(error as {evidence?:unknown}).evidence},null,2));throw error;
+  }finally{clearTimeout(timer);await agent.disconnect();await writeFile(join(directory,'agent-journal.json'),JSON.stringify(await agent.store.list(),null,2));await client.save();}
+
  }else{
   const catalog=await execute([{action:'catalog',catalog:{operation:'inspect',category:'actions',capability:'object.create',version:1}}]);
   const definition=catalog.catalog?.definition as {example?:Record<string,unknown>}|undefined;

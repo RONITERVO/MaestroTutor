@@ -5,7 +5,7 @@ import type { HeadlessAccessMode } from './access';
 
 export type HeadlessParityClass = 'local-parity' | 'provider-parity' | 'managed-account-only';
 export type HeadlessCostClass = 'none' | 'provider-usage' | 'provider-storage' | 'managed-purchase';
-export type HeadlessReleaseProof = 'unit' | 'paired-first-lesson' | 'paired-raw' | 'managed-billing' | 'hosted-browser';
+export type HeadlessReleaseProof = 'unit' | 'paired-first-lesson' | 'paired-raw' | 'managed-billing' | 'hosted-browser' | 'paired-native-room';
 
 export interface HeadlessMethodAccessPolicy {
   accessModes: readonly HeadlessAccessMode[];
@@ -62,6 +62,11 @@ export const HEADLESS_METHOD_ACCESS_POLICY = {
   'language.list': local(),
   'language.select': local(),
   'chat.history': local(),
+  'journey.room': provider('paired-native-room'),
+  'room.connect': local('paired-native-room'),
+  'room.disconnect': local('paired-native-room'),
+  'room.tasks': local(),
+  'room.stop': local('paired-native-room'),
   'chat.turn': provider('paired-first-lesson'),
   'chat.attachment.turn': provider('paired-first-lesson', 'provider-storage'),
   'suggestions.generate': provider('paired-first-lesson'),

@@ -55,6 +55,14 @@ describe('managed journey billing evidence', () => {
     });
   });
 
+  it('allows a zero-cost failed attempt without weakening ledger or reservation checks', () => {
+    const before = snapshot(1_000, 0, 0);
+    expect(evaluateManagedJourneyBilling(before, before).passed).toBe(false);
+    expect(evaluateManagedJourneyBilling(before, before, { requirePaidUsage: false }).passed).toBe(true);
+    expect(evaluateManagedJourneyBilling(before, snapshot(999, 1, 0.001), { requirePaidUsage: false }).passed).toBe(false);
+    expect(evaluateManagedJourneyBilling(before, snapshot(1_000, 0, 0, [], [], 10), { requirePaidUsage: false }).passed).toBe(false);
+  });
+
   it('rejects missing charges and stranded reservations', () => {
     const evidence = evaluateManagedJourneyBilling(
       snapshot(1_000, 0, 0),

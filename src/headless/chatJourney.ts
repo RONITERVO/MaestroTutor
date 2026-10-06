@@ -7,7 +7,7 @@ import type { ChatMessage, UploadedAttachmentVariant } from '../core/types';
 import { assertTutorTurnInvariants } from '../core-sdk/assertions';
 import { deriveHistoryForApi, sanitizeHistoryWithVerifiedMedia } from '../core-sdk/chat/history';
 import { resolveLanguagePair } from '../core-sdk/chat/language';
-import { runTutorTextTurn } from '../core-sdk/chat/tutorTextTurn';
+import { runTutorTextTurn, type TutorTextTurnInput } from '../core-sdk/chat/tutorTextTurn';
 import { runReplySuggestions } from '../core-sdk/chat/suggestions';
 import type { HeadlessClient } from './client';
 
@@ -80,7 +80,8 @@ export const runHeadlessChatTurn = async (
     deriveHistoryForApi(history),
     uris => client.files.statuses(uris),
   );
-  const turn = await runTutorTextTurn({
+  const assistantId = client.runtime.ids.create('message-assistant');
+  let tutorInput: TutorTextTurnInput = {
     model: getGeminiModels().text.default,
     prompt: params.text,
     history: derivedHistory,
@@ -88,18 +89,23 @@ export const runHeadlessChatTurn = async (
     systemInstruction: composeMaestroSystemInstruction(pair.baseSystemPrompt),
     currentFileParts: params.fileParts,
     useGoogleSearch: params.useGoogleSearch ?? client.state.settings.enableGoogleSearch ?? true,
-  }, {
+  };
+  if (client.roomAgent && userMessage) {
+    client.state.settings.selectedLanguagePairId = pair.id;
+    tutorInput = await client.roomAgent.prepare(tutorInput, { conversationId: pair.id, sourceUserId: userMessage.id, sourceAssistantId: assistantId });
+  }
+  const turn = await runTutorTextTurn(tutorInput, {
     runtime: client.runtime,
     operationId: params.operationId,
     aiClient: client.ai,
   });
-  const assistantMessage = createMessage(client, 'assistant', {
+  const assistantMessage: ChatMessage = { id: assistantId, role: 'assistant', timestamp: client.runtime.clock.now(),
     translations: turn.parsed.translations.length ? turn.parsed.translations : undefined,
     llmRawResponse: turn.rawResponse,
     rawAssistantResponse: turn.parsed.visibleText || undefined,
     text: turn.parsed.translations.length ? undefined : turn.parsed.visibleText || undefined,
     isLoadingArtifact: turn.parsed.hasSkippedNonLanguageContent,
-  });
+  };
   if (userMessage) history.push(userMessage);
   history.push(assistantMessage);
   client.state.chats[pair.id] = history;
@@ -162,6 +168,7 @@ export const runHeadlessSuggestions = async (
     languagePair: pair,
     existingGlobalProfile: client.state.globalProfile,
     responseSource: input.responseSource,
+    ...client.roomAgent?.verification(assistantMessage.id, lastTutorMessage),
   }, {
     runtime: client.runtime,
     aiClient: client.ai,

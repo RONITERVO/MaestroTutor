@@ -61,17 +61,46 @@ the shared-client/fixture tests but does not run Unity.
 
 ## Optional original-provider route
 
-Passing `-Prompt` and optionally `-Profile` uses createHeadlessClient and the
-original core runRoomActionTask against that same native lease. It adds no Gemini
-SDK, account, subscription or billing implementation in Unity. This opt-in route
-can use the existing configured headless profile/environment and may incur normal
-provider/managed usage. Do not put secrets into the prompt or command line.
+Passing `-Prompt` now runs the original conversational path: a real context-setting
+chat turn, the requested tutor turn, the suggestion verifier, durable agent task,
+native operations and final tutor reply in chat. It uses an isolated headless
+profile; the old `-Profile` argument no longer selects existing personal history
+for provider proofs. Unity contains no provider client or billing implementation.
+The existing managed/BYOK environment selects the original application transport.
+This opt-in route incurs normal provider/managed usage; keep secrets out of the
+prompt and command line.
 
-This increment did not run a provider prompt or read provider credentials. A future
-provider journey must inspect its usage, actual receipts and final world state;
-a returned task result alone does not prove the requested semantics. The optional
-route starts with empty chat history and English native-language context. It does
-not test chat handoff, Live audio/video, account UI or subscription enforcement.
+The context-setting turn defines “my test object” as a small blue ball named
+ParityBall and requests no action yet. A useful prompt is “Please create my test
+object now. Use the definition I gave in the previous message.” The real response
+stream is observed without replacing its content. `provider-responses.json` is
+private diagnostic evidence for these synthetic requests. `agent-journal.json`
+retains the original inputs and actual native receipts on success; failure writes
+`agent-failure.json`. `journey.room` requires provider usage, final chat delivery
+and reconciled billing, and the probe checks that starting the same claimed task
+again causes neither additional usage nor a new native revision. Inspect the
+resulting scene for the requested name, shape and colour as well.
+
+For the repeatable semantic scenario, use
+`-ProviderScenario ContextCreateEdit` instead of `-Prompt`. Set
+MAESTRO_HEADLESS_ACCESS_MODE to managed or byok; BYOK reads only the explicitly
+configured MAESTRO_GEMINI_API_KEY. The wrapper starts a fresh isolated room/profile
+and the same real-provider conversation in either mode. The scenario checks the
+native ball's name, shape, small scale and blue colour, then asks for a red edit
+of that exact object without changing other objects. It exercises the ordinary
+native Undo/Redo handlers, compares actual saved object properties, and asks the
+agent to inspect the current room without editing it. This is native handler
+parity, not an assertion that a physical controller was pressed.
+
+provider-scenarios.json preserves each journey's accounting/coverage and the
+before/edit/Undo/Redo/readback states. It only says passed after all semantic
+checks succeed. An ad hoc Prompt run has no such semantic certification.
+Provider exceptions retain billing settlement evidence; failed zero-cost calls
+are valid billing evidence but never a successful agent journey.
+
+This does not replace the broader paired real-provider scenarios in
+[QUEST_AGENT_RELEASE_COVERAGE.md](QUEST_AGENT_RELEASE_COVERAGE.md). A successful
+basic creation run alone is not Live, program-authoring or headset release proof.
 
 ## Acceptance boundary
 

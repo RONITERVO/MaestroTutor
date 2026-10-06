@@ -4,7 +4,7 @@ import {sequenceProgram} from './programs';
 // SPDX-License-Identifier: Apache-2.0
 import {describe,expect,it,vi} from 'vitest';
 import {parseRoomCommands,runRoomActionTask,runRoomTutorTurn,type RoomAgentState,type RoomCommand} from './roomAgent';
-import {ROOM_AGENT_SCHEMA,ROOM_HANDOFF_TUTOR_INSTRUCTION,ROOM_HANDOFF_LIVE_INSTRUCTION} from '../../../shared/prompts';
+import {ROOM_AGENT_SCHEMA,ROOM_AGENT_RESPONSE_SCHEMA,ROOM_HANDOFF_TUTOR_INSTRUCTION,ROOM_HANDOFF_LIVE_INSTRUCTION} from '../../../shared/prompts';
 import {ROOM_TASK_LIMITS} from '../../../shared/roomTaskBudget';
 const scene:RoomAgentState={version:1,session:'a'.repeat(32),revision:1,sceneRevision:4,ack:0,ok:true,status:'Ready',objects:[],created:[],canUndo:false,canRedo:false,physicsRunning:false};
 const input={model:'gemini-3.8-flash',prompt:'Make a robot and have it wave.',history:[],nativeLanguageCode:'en',systemInstruction:'Tutor fixture'};
@@ -21,7 +21,7 @@ describe('shared room tutor journey',()=>{
   expect(execute).toHaveBeenCalledTimes(1);expect(execute.mock.calls[0]).toMatchObject([[{kind:'boxRobot'}],4,scene.objects]);
   expect(usage).toHaveBeenCalledTimes(2);expect(result.rawResponse).toContain('Hola');
   const requests=ai.models.generateContentStream.mock.calls as unknown as [any][];
-  expect(requests[0][0].config.responseJsonSchema).toEqual(ROOM_AGENT_SCHEMA);
+  expect(requests[0][0].config.responseJsonSchema).toEqual(ROOM_AGENT_RESPONSE_SCHEMA);
   expect(requests[2][0].config.systemInstruction).toContain('Created robot');
   expect(requests[0][0].config.tools).toBeUndefined();
  });
@@ -361,4 +361,20 @@ it('uses catalog-based narration and native import handoffs without promising pi
   expect(guide).toContain('shared native catalog');expect(guide).toContain('system');expect(guide).toContain('file paths');expect(guide).toContain('Only one room task');
   expect(guide).not.toMatch(/(?:Importing files|File import, account changes).*not (?:available|supported)/);
  }
+});
+
+describe('planner response schema compatibility',()=>{
+ it('keeps native limits enforced even when structured decoding omits array bounds',()=>{
+  expect(ROOM_AGENT_SCHEMA.properties.commands.maxItems).toBe(8);
+  const encoded=JSON.stringify(ROOM_AGENT_RESPONSE_SCHEMA);
+  expect(encoded).not.toMatch(/"(?:minItems|maxItems)":/);
+  expect(encoded).toContain('Array length must be 0..8');
+  expect(()=>parseRoomCommands({commands:Array.from({length:9},()=>({action:'create',reference:'r',name:'Ball',kind:'ball'}))})).toThrow(/too large/);
+ });
+ it('rejects an oversized provider plan before journaling or native dispatch',async()=>{
+  const ai=client([JSON.stringify({commands:Array.from({length:9},()=>({action:'create',reference:'r',name:'Ball',kind:'ball'}))})]);
+  const execute=vi.fn(),beforeDispatch=vi.fn();
+  await expect(runRoomActionTask(input,{aiClient:ai},{state:()=>scene,valid:()=>true,execute},()=>{},{beforeDispatch})).rejects.toThrow(/too large/);
+  expect(beforeDispatch).not.toHaveBeenCalled();expect(execute).not.toHaveBeenCalled();
+ });
 });

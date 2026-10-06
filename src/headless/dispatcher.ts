@@ -3,6 +3,8 @@
 import type {
   BackendAiContentReportRequest,
 } from '../core/contracts/backend';
+import { connectHeadlessRoom, runHeadlessRoomTurn } from './roomJourney';
+import { summarizeRoomTask } from '../core-sdk/room/roomTaskProjection';
 import { createHash } from 'node:crypto';
 import type { HeadlessClient } from './client';
 import { describeHeadlessMethods } from './client';
@@ -152,6 +154,22 @@ export const dispatchHeadlessMethod = async (
         ...(input.includeState === true ? { state: client.state } : {}),
       };
     }
+    case 'journey.room':
+      return runHeadlessRoomTurn(client, { text: requiredString(input, 'text'), languagePairId: typeof input.languagePairId === 'string' ? input.languagePairId : undefined, requireActions: input.requireActions !== false });
+    case 'room.connect':
+      return connectHeadlessRoom(client, requiredString(input, 'directory'));
+    case 'room.disconnect':
+      await client.roomAgent?.disconnect(); client.roomAgent = undefined; return { connected: false };
+    case 'room.tasks': {
+      if (!client.roomAgent) throw new Error('No native room is connected.');
+      const records = await client.roomAgent.store.list();
+      return input.includeEvidence === true ? records : records.map(summarizeRoomTask);
+    }
+    case 'room.stop': {
+      if (!client.roomAgent) throw new Error('No native room is connected.');
+      const id = requiredString(input, 'taskId'), running = client.roomAgent.tasks.running(id);
+      client.roomAgent.tasks.stop(id); return { taskId: id, stopRequested: running };
+    }
     case 'auth.status':
       return { accessMode: client.accessMode, ...(await client.credentials.describe()) };
     case 'auth.signIn': {
@@ -161,6 +179,7 @@ export const dispatchHeadlessMethod = async (
       return { user: response.account.user, billingSummary: response.account.billingSummary };
     }
     case 'auth.signOut':
+      await client.roomAgent?.disconnect(); client.roomAgent = undefined;
       await client.account.signOut(typeof input.operationId === 'string' ? input.operationId : undefined);
       return { signedOut: true };
     case 'auth.google.verifyHosted':

@@ -8,6 +8,7 @@ import type {RoomOwnershipView} from '../../../shared/roomOwnership';
 import type {TemporaryRoomView} from '../../../shared/roomSession';
 import {identifyExecution,validExecutionRequest,type ExecutionRequest,type ExecutionView} from '../../../shared/roomExecutions';
 import {validCatalogRequest,type CatalogRequest,type CatalogView} from '../../../shared/roomCatalog';
+import { roomCommandFields as fields } from '../../../shared/roomCommandFields';
 import { roomControlFields, validRoomControl, requireRoomCapabilities, type ObjectPhysicsSettings, type AvatarMovementSettings, type PhysicsObservation, type AvatarMovementObservation, type AvatarWalkObservation } from '../../../shared/roomControls';
 import {validAvatarActivityRequest,type AvatarActivityRequest,type ActivityProfile} from '../../../shared/avatarActivities';
 import {validMotionQuery,type MotionQuery,type MotionSearchView} from '../../../shared/roomMotions';
@@ -17,7 +18,7 @@ import { parseRecipe, type RoomRecipe } from './recipe';
 import { generateGeminiResponse } from '../gemini/generative';
 import { pickGeminiClientSource } from '../gemini/clientSource';
 import { runTutorTextTurn, type TutorTextTurnInput, type TutorTextTurnOptions } from '../chat/tutorTextTurn';
-import { buildRoomAgentPrompt, buildRoomResultInstruction, ROOM_AGENT_INSTRUCTION, ROOM_AGENT_SCHEMA } from '../../../shared/prompts';
+import { buildRoomAgentPrompt, buildRoomResultInstruction, ROOM_AGENT_INSTRUCTION, ROOM_AGENT_RESPONSE_SCHEMA } from '../../../shared/prompts';
 
 export interface RoomCommand {
   action: 'create' | 'move' | 'resize' | 'paint' | 'recipe' | 'delete' | 'undo' | 'redo' | 'inspect' | 'workspace' | 'play' | 'stop' | 'rules' | 'motions' | 'catalog' | 'execution' | 'avatarActivities' | keyof typeof roomControlFields;
@@ -47,18 +48,13 @@ export interface RoomAgentLease {
 const record = (v: unknown): v is Record<string, unknown> => v !== null && typeof v === 'object' && !Array.isArray(v);
 const validColor = (v: unknown) => record(v) && ['r','g','b'].every(k => typeof v[k] === 'number' && Number.isFinite(v[k]) && Number(v[k]) >= 0 && Number(v[k]) <= 1) && v.a === 1;
 const vector = (v: unknown) => record(v) && ['x','y','z'].every(k => typeof v[k] === 'number' && Number.isFinite(v[k]) && Math.abs(v[k] as number) <= 25);
-const fields: Record<RoomCommand['action'], readonly string[]> = {
-  ...roomControlFields, execution:['execution'], catalog:['catalog'], avatarActivities:['activities'], motions:['target','motionQuery'],
-  create:['reference','name','kind','atPosition','position','scale','color','recipe'], move:['target','position'], resize:['target','scale'],
-  paint:['target','color'], recipe:['target','recipe'], delete:['target'], undo:[], redo:[], inspect:['target','partId'], workspace:['visible'], play:['target'], stop:['target'], rules:['rule'],
-};
 export function parseRoomCommands(input: unknown): RoomCommand[] {
   if (!record(input) || Object.keys(input).some(k => k !== 'commands') || !Array.isArray(input.commands) || input.commands.length > 8 || JSON.stringify(input).length > 28000) throw new Error('The room plan is invalid or too large.');
   for (const c of input.commands) {
     if (!record(c) || typeof c.action !== 'string' || !Object.prototype.hasOwnProperty.call(fields,c.action)) throw new Error('Unknown room action.');
     const action = c.action as RoomCommand['action'];
-    if (Object.keys(c).some(k => k !== 'action' && !fields[action].includes(k))) throw new Error('Unknown room action field.');
-    if (fields[action].includes('target') && (typeof c.target !== 'string' || !/^[a-zA-Z0-9_]{1,32}$/.test(c.target))) throw new Error('Invalid room target.');
+    if (Object.keys(c).some(k => k !== 'action' && !(fields[action] as readonly string[]).includes(k))) throw new Error('Unknown room action field.');
+    if ((fields[action] as readonly string[]).includes('target') && (typeof c.target !== 'string' || !/^[a-zA-Z0-9_]{1,32}$/.test(c.target))) throw new Error('Invalid room target.');
     if (action === 'create' && (typeof c.reference !== 'string' || !/^[a-zA-Z0-9_]{1,32}$/.test(c.reference) || typeof c.name !== 'string' || c.name.length > 80 || /[\u0000-\u001f]/.test(c.name) || !['block','ball','cylinder','recipe','boxRobot'].includes(c.kind as string))) throw new Error('Invalid creation.');
     if ((action === 'move' || c.atPosition === true || c.position !== undefined) && !vector(c.position)) throw new Error('Invalid position.');
     if (c.partId !== undefined && (typeof c.partId !== 'string' || !/^[a-zA-Z0-9_]{1,32}$/.test(c.partId))) throw new Error('Invalid recipe part.');
@@ -109,7 +105,7 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
       ...pickGeminiClientSource(options),systemInstruction:ROOM_AGENT_INSTRUCTION,currentFileParts:input.currentFileParts,
       currentImages:[...(input.currentImages??[]),...roomCaptureImages(snapshots)],
       ...(input.liveInputMedia ? {liveInputMedia:input.liveInputMedia} : {}),
-      configOverrides:{responseMimeType:'application/json',responseJsonSchema:ROOM_AGENT_SCHEMA},
+      configOverrides:{responseMimeType:'application/json',responseJsonSchema:ROOM_AGENT_RESPONSE_SCHEMA},
       timeoutMs:input.timeoutMs,signal:control.signal,lifecycleHooks:{onProgress:options.lifecycleHooks?.onProgress},
     });
     onUsage(response);active();

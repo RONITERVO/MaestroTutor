@@ -109,6 +109,7 @@ export const waitForManagedJourneyBillingSettlement = async (
 export const evaluateManagedJourneyBilling = (
   before: ManagedJourneyBillingSnapshot,
   after: ManagedJourneyBillingSnapshot,
+  options: { requirePaidUsage?: boolean } = {},
 ): ManagedJourneyBillingEvidence => {
   const beforeSummary = before.account.account.billingSummary;
   const afterSummary = after.account.account.billingSummary;
@@ -129,7 +130,7 @@ export const evaluateManagedJourneyBilling = (
 
   if (beforeSummary.reservedCredits !== 0) mismatches.push('The managed journey began with reserved credits.');
   if (afterSummary.reservedCredits !== 0) mismatches.push('The managed journey left reserved credits behind.');
-  if (creditsSpent <= 0 || newUsage.length === 0 || newCharges.length === 0) {
+  if (options.requirePaidUsage !== false && (creditsSpent <= 0 || newUsage.length === 0 || newCharges.length === 0)) {
     mismatches.push('The managed journey produced no complete paid-usage evidence.');
   }
   if (availableCreditsSpent !== creditsSpent) mismatches.push('Available-credit and lifetime-spend deltas differ.');

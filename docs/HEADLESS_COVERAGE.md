@@ -380,3 +380,19 @@ fallback: fail closed if the gateway is unavailable.
 
 Always preserve the JSON result and Actions logs as release evidence. They contain
 public metadata and hashes, not API keys or raw payment data.
+
+
+## Quest conversational agent coverage
+
+Quest adds a release requirement alongside the original web journey:
+[Quest agent release coverage](QUEST_AGENT_RELEASE_COVERAGE.md). Protocol 1.9
+connects the ordinary headless chat and verifier to the same task handoff, provider,
+journal and native handlers used by the book. Text, Live and observer paths must
+retain original context and return task state/results into that conversation.
+
+The optional native provider probe now exercises the conversational delegation
+instead of invoking the planner directly. A passed basic creation journey is
+only that scenario's evidence. Complex programs, animation, visual/audio requests,
+ownership and recovery need semantic assertions and real-provider runs in both
+managed and BYOK modes. Deterministic fixtures, native receipts and provider usage
+are recorded separately; none implies unobserved headset or Store acceptance.

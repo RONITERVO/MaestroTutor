@@ -1,14 +1,12 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
-import {roomCaptureImages} from '../../../../shared/prompts/room';
 import { parseRoomTaskDirective, type RoomTaskDirective, type RoomTaskTarget } from '../../../core-sdk/room/taskSteering';
 import { missingLiveInput, validateLiveInputMedia, type LiveInputMedia } from '../../../core-sdk/media/liveInputContext';
 import type { TutorTextTurnInput } from '../../../core-sdk/chat/tutorTextTurn';
-import { runTutorTextTurn } from '../../../core-sdk/chat/tutorTextTurn';
+import { roomTaskProvider } from '../../../core-sdk/room/roomTaskProvider';
 import { RoomTaskHandoff, type RoomTaskRecord } from '../../../core-sdk/room/roomTaskHandoff';
-import { runRoomActionTask } from '../../../core-sdk/room/roomAgent';
 import { hasAgentHandoffProposal } from '../../../core-sdk/chat/suggestionAftersteps';
-import { buildRoomResultInstruction, buildRoomTaskReplyInstruction, buildRoomTaskCatalogue, buildRoomTaskOutcomeInstruction, ROOM_HANDOFF_TUTOR_INSTRUCTION, ROOM_HANDOFF_LIVE_INSTRUCTION } from '../../../../shared/prompts';
+import { buildRoomTaskCatalogue, ROOM_HANDOFF_TUTOR_INSTRUCTION, ROOM_HANDOFF_LIVE_INSTRUCTION } from '../../../../shared/prompts';
 import { browserClientSource } from '../../../api/gemini/browserClientSource';
 import { currentRoomAgentLease } from '../../../platform/quest/roomAgentBridge';
 import { useMaestroStore } from '../../../store';
@@ -49,17 +47,7 @@ function project(record: RoomTaskRecord) {
 export const roomAgentTasks = new RoomTaskHandoff({
   store: roomTaskStore,
   lease: currentRoomAgentLease,
-  run: (input, lease, control) => runRoomActionTask(input, browserClientSource(), lease, response => usage(response, input.model), control),
-  reply: async (input, result, signal) => {
-    const turn = await runTutorTextTurn({ ...input,
-      currentImages:[...(input.currentImages??[]),...roomCaptureImages(result.snapshots)],
-      systemInstruction: input.systemInstruction + '\n\n' + buildRoomResultInstruction(result.receipts, result.scene) + buildRoomTaskReplyInstruction(result.budgetExhausted)
-        + (result.relatedTask ? buildRoomTaskOutcomeInstruction(result.relatedTask, result.needsReview) : ''),
-      configOverrides: { maxOutputTokens: 2048 },
-    }, { ...browserClientSource(), signal });
-    usage(turn.response, input.model);
-    return { parsed: turn.parsed, rawResponse: turn.parsed.visibleText };
-  },
+  ...roomTaskProvider(browserClientSource, usage),
   changed: project,
   activity: active => {
     activityCount += active ? 1 : -1;

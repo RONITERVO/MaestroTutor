@@ -113,6 +113,13 @@ describe('prompt ownership', () => {
     expect(catalogueRuntimeViolations(source, 'roomTaskBudget.ts')).toEqual([]);
   });
 
+  it('keeps command field vocabulary dependent only on pure control definitions', () => {
+    const source = readFileSync(new URL('../../../shared/roomCommandFields.ts', import.meta.url), 'utf8');
+    const ast = ts.createSourceFile('roomCommandFields.ts', source, ts.ScriptTarget.Latest, true);
+    expect(ast.statements.filter(ts.isImportDeclaration).map(node => (node.moduleSpecifier as ts.StringLiteral).text)).toEqual(['./prompts/roomcontrols']);
+    expect(catalogueRuntimeViolations(source, 'roomCommandFields.ts')).toEqual([]);
+  });
+
   it('keeps the catalogue runtime-independent and usable by Functions', () => {
     const rootDirectory = new URL('../../../shared/prompts/', import.meta.url);
     for (const file of readdirSync(rootDirectory).filter(name => name.endsWith('.ts'))) {
@@ -121,7 +128,7 @@ describe('prompt ownership', () => {
       for (const statement of ast.statements) {
         if (ts.isImportDeclaration(statement) || ts.isExportDeclaration(statement)) {
           if (ts.isImportDeclaration(statement) && statement.importClause?.isTypeOnly && (statement.moduleSpecifier as ts.StringLiteral).text === '../roomViewCapture') continue;
-          if (statement.moduleSpecifier) expect((statement.moduleSpecifier as ts.StringLiteral).text).toMatch(/^(?:\.\/[a-z]+|\.\.\/(?:behaviourCatalog|behaviourEvents|capabilities|roomTaskBudget))$/);
+          if (statement.moduleSpecifier) expect((statement.moduleSpecifier as ts.StringLiteral).text).toMatch(/^(?:\.\/[a-z]+|\.\.\/(?:behaviourCatalog|behaviourEvents|capabilities|roomTaskBudget|roomCommandFields))$/);
         }
       }
       expect(catalogueRuntimeViolations(source, file)).toEqual([]);

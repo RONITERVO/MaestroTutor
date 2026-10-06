@@ -109,6 +109,11 @@ export const runHeadlessLiveTurn = async (
   if (input.instructionSuffix?.trim()) {
     systemInstruction += `\n\n${input.instructionSuffix.trim()}`;
   }
+  client.state.settings.selectedLanguagePairId = pair.id;
+  const roomContext = input.mode === 'stt' ? null : await client.roomAgent?.prepareLive({
+    model: getGeminiModels().text.default, history: [], nativeLanguageCode: pair.nativeLanguageCode, systemInstruction,
+  }, pair.id);
+  if (roomContext) systemInstruction = roomContext.systemInstruction;
   const contextEvidence = {
     historyMessageCount: history.length,
     systemInstructionSha256: createHash('sha256').update(systemInstruction).digest('hex'),
@@ -139,6 +144,7 @@ export const runHeadlessLiveTurn = async (
     playModelAudioRealtime: input.pace === true,
     timeoutMs: input.timeoutMs,
     includeModelAudio: true,
+    captureInputMedia: !!roomContext,
     videoFrames: visual ? [{ dataBase64: visual.dataBase64, mimeType: visual.mimeType }] : undefined,
   }, { runtime: client.runtime, operationId });
   const transcriptEvidence = requireTranscriptEvidence(
@@ -170,6 +176,7 @@ export const runHeadlessLiveTurn = async (
   if (input.mode === 'stt') {
     return {
       ...result,
+      liveInputMedia: undefined,
       contextEvidence,
       mode: input.mode,
       accessMode: client.accessMode,
@@ -215,6 +222,7 @@ export const runHeadlessLiveTurn = async (
     id: client.runtime.ids.create('message-assistant'),
     role: 'assistant',
     timestamp: client.runtime.clock.now(),
+    llmRawResponse: result.outputTranscript || result.transcript,
     rawAssistantResponse: result.outputTranscript || result.transcript,
     translations: parsed.translations.length ? parsed.translations : undefined,
     text: parsed.translations.length ? undefined : (parsed.visibleText || result.outputTranscript || result.transcript),
@@ -234,6 +242,8 @@ export const runHeadlessLiveTurn = async (
   client.state.settings.selectedLanguagePairId = pair.id;
   await client.save();
 
+  await roomContext?.capture({ sourceUserId: userMessage.id, sourceAssistantId: assistantMessage.id, conversationId: pair.id },
+    userMessage.text || '', assistantMessage.llmRawResponse || '', result.liveInputMedia);
   const aftersteps = input.runSuggestionAftersteps === false
     ? null
     : await runHeadlessSuggestionAftersteps(client, {
@@ -245,6 +255,7 @@ export const runHeadlessLiveTurn = async (
   const compactAssistantMessage = summarizeLiveMessageForHeadlessOutput(assistantMessage);
   return {
     ...result,
+    liveInputMedia: undefined,
     contextEvidence,
     mode: input.mode,
     accessMode: client.accessMode,

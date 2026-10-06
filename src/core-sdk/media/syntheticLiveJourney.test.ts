@@ -62,6 +62,7 @@ describe('synthetic Live journey', () => {
       simulateUiSpeechHandoff: true,
       requireRealtimeInputPacing: true,
       playModelAudioRealtime: true,
+      captureInputMedia: true,
     }, { runtime });
 
     await vi.waitFor(() => expect(ai.live.connect).toHaveBeenCalledOnce());
@@ -69,6 +70,11 @@ describe('synthetic Live journey', () => {
     finishConnect?.(session);
     const result = await journey;
 
+    expect(result.liveInputMedia?.complete).toBe(true);
+    expect(result.liveInputMedia?.audio?.samples).toBe(result.sentSamples);
+    expect(result.liveInputMedia?.packets.reduce((n, packet) => n + packet.samples, 0)).toBe(result.sentSamples);
+    const expectedPcm = Buffer.concat(sent.filter(message => message.audio).map(message => Buffer.from(message.audio.data, 'base64')));
+    expect(Buffer.from(result.liveInputMedia!.audio!.data, 'base64').subarray(44)).toEqual(expectedPcm);
     expect(result.inputTranscript).toContain('final words');
     expect(result.sentSamples).toBe(pcm.length);
     expect(result.timing.uiSpeechHandoff).toBe(true);

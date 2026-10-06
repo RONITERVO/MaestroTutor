@@ -1,0 +1,135 @@
+// Copyright 2026 Roni Tervo
+// SPDX-License-Identifier: Apache-2.0
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { rm } from 'node:fs/promises';
+import { createHeadlessClient, type HeadlessClient } from './client';
+import { HeadlessRoomAgent, runHeadlessRoomTurn } from './roomJourney';
+import { HeadlessRoomTaskStore } from './roomTaskStore';
+import { runHeadlessChatTurn, selectHeadlessLanguage } from './chatJourney';
+import { runHeadlessSuggestionAftersteps } from './suggestionJourney';
+import { LiveInputContext } from '../core-sdk/media/liveInputContext';
+import type { RoomAgentState } from '../core-sdk/room/roomAgent';
+import type { RoomTaskRecord } from '../core-sdk/room/roomTaskHandoff';
+
+const proposal = 'Lo prepararé.\n[EN]I will prepare it.\n```maestro-tool\n{"tool":"agent"}\n```';
+const verification = JSON.stringify({ suggestions: [{ target: 'Gracias.', native: 'Thanks.' }], toolRequest: { tool: 'agent' } });
+const clients: HeadlessClient[] = [];
+afterEach(async () => { for (const client of clients.splice(0)) { await client.roomAgent?.disconnect(); await rm(client.profile.directory, { recursive: true, force: true }); } });
+async function setup(mode: 'managed' | 'byok' = 'byok') {
+  // Managed construction avoids resolving any local BYOK key; both test clients
+  // inject a deterministic provider at the same transport port, never the agent.
+  const client = await createHeadlessClient({ accessMode: 'managed' }); clients.push(client); client.accessMode = mode;
+  vi.spyOn(client.credentials, 'getUserId').mockResolvedValue('fixture-user');
+  await selectHeadlessLanguage(client, { targetLanguageCode: 'es-ES', nativeLanguageCode: 'en-US' });
+  const pairId = client.state.settings.selectedLanguagePairId!;
+  client.state.chats[pairId].push({ id: 'earlier', role: 'user', text: 'The ball should be blue.', timestamp: 1 });
+  const outputs = [proposal, verification, '{"commands":[{"action":"create","reference":"ball","name":"Blue ball","kind":"ball"}]}', '{"commands":[]}', 'Listo.\n[EN]Ready.'];
+  const requests: any[] = [];
+  const send = vi.fn(async (request: any) => {
+    requests.push(request); const text = outputs.shift(); if (!text) throw new Error('Unexpected provider request');
+    return (async function* () { yield { text, usageMetadata: { totalTokenCount: 20 }, candidates: [{ content: { role: 'model', parts: [{ text }] } }] }; })();
+  });
+  client.ai = { models: { generateContentStream: send } } as any;
+  const scene: RoomAgentState = { version: 1, session: 'native', revision: 1, sceneRevision: 1, ack: 0, ok: true, status: 'Ready', objects: [], created: [], canUndo: false, canRedo: false, physicsRunning: false };
+  let valid = true;
+  const execute = vi.fn(async () => {
+    const records = await agent.store.list();
+    expect(records[records.length - 1]?.operations.slice(-1)[0]?.receipt).toBeUndefined();
+    expect(records[records.length - 1]?.operations.slice(-1)[0]?.commands[0].action).toBe('create');
+    scene.sceneRevision++; scene.ack++; scene.objects.push({ id: 'ball1', name: 'Blue ball', kind: 'ball', position: { x: 0, y: 1, z: 0 }, scale: 1, color: { r: 0, g: 0, b: 1, a: 1 }, animated: false });
+    return structuredClone(scene);
+  });
+  const agent = new HeadlessRoomAgent(client, () => ({ valid: () => valid, state: () => scene, execute })); client.roomAgent = agent;
+  return { client, pairId, agent, outputs, requests, send, scene, execute, invalidate: () => { valid = false; } };
+}
+
+describe('headless conversational agent parity (deterministic transport)', () => {
+  it.each(['managed', 'byok'] as const)('runs tutor → verifier → journal → native receipt → chat in %s', async mode => {
+    const f = await setup(mode);
+    const turn = await runHeadlessChatTurn(f.client, { text: 'Make that ball.', fileParts: [{ fileUri: 'test://drawing', mimeType: 'image/png' }], useGoogleSearch: false });
+    const result = await runHeadlessSuggestionAftersteps(f.client, { assistantMessageId: turn.assistantMessage.id });
+    expect(result.decisionSource).toBe('model'); expect(result.toolRequest).toEqual({ tool: 'agent' });
+    expect(JSON.stringify(result.toolResult)).not.toMatch(/commands|sceneRevision|test:\/\/drawing/);
+    const record = await f.agent.store.get(`room-task:${turn.assistantMessage.id}`);
+    expect(record?.phase).toBe('completed'); expect(f.execute).toHaveBeenCalledOnce();
+    expect(record?.handoff.input.prompt).toBe('Make that ball.');
+    expect(JSON.stringify(record?.handoff.input.history)).toContain('The ball should be blue.');
+    expect(record?.handoff.input.currentFileParts?.[0].fileUri).toBe('test://drawing');
+    expect(record?.handoff.accessScope).toBe(mode === 'byok' ? 'byok' : 'managed:fixture-user');
+    expect(JSON.stringify(f.requests[2])).toContain('The ball should be blue.');
+    const message = f.client.state.chats[f.pairId].find(message => message.id === record?.id)!;
+    expect(message.translations?.[0]).toEqual({ target: 'Listo.', native: 'Ready.' });
+    expect(JSON.stringify(message)).not.toMatch(/commands|sceneRevision|test:\/\/drawing/);
+    const persisted = await f.client.profile.load(); expect(persisted.chats[f.pairId]).toContainEqual(message);
+    expect(f.client.events.snapshot().filter(e => e.phase === 'activity.changed').map(e => e.data?.active)).toEqual([true, false]);
+    await f.agent.start(turn.assistantMessage.id); expect(f.execute).toHaveBeenCalledOnce(); expect(f.send).toHaveBeenCalledTimes(5);
+  });
+  it('does not allow a synthetic verifier override to launch an agent', async () => {
+    const f = await setup(); const turn = await runHeadlessChatTurn(f.client, { text: 'Make a ball.' });
+    const result = await runHeadlessSuggestionAftersteps(f.client, { assistantMessageId: turn.assistantMessage.id, syntheticDecision: { toolRequest: { tool: 'agent' } } });
+    expect(result.toolRequest).toBeNull(); expect(f.execute).not.toHaveBeenCalled(); expect(await f.agent.store.list()).toEqual([]);
+  });
+  it('rejects invented verifier handoffs without a tutor proposal', async () => {
+    const f = await setup(); f.outputs[0] = 'Hola.\n[EN]Hello.';
+    const turn = await runHeadlessChatTurn(f.client, { text: 'Hello.' });
+    const result = await runHeadlessSuggestionAftersteps(f.client, { assistantMessageId: turn.assistantMessage.id });
+    expect(result.toolRequest).toBeNull(); expect(f.execute).not.toHaveBeenCalled();
+  });
+  it.each(['session', 'source', 'account', 'conversation'] as const)('revokes a prepared handoff after %s loss', async reason => {
+    const f = await setup('managed'); const turn = await runHeadlessChatTurn(f.client, { text: 'Make a ball.' });
+    if (reason === 'session') f.invalidate();
+    if (reason === 'source') f.client.state.chats[f.pairId] = [];
+    if (reason === 'account') vi.mocked(f.client.credentials.getUserId).mockResolvedValue('other');
+    if (reason === 'conversation') f.client.state.settings.selectedLanguagePairId = 'other';
+    await expect(f.agent.start(turn.assistantMessage.id)).rejects.toThrow(/no longer available/);
+    expect(f.execute).not.toHaveBeenCalled(); expect(await f.agent.store.list()).toEqual([]);
+  });
+  it('Stop cancels a pending provider and persists the stopped task', async () => {
+    const f = await setup(); const turn = await runHeadlessChatTurn(f.client, { text: 'Make a ball.' });
+    let signal: AbortSignal | undefined;
+    f.send.mockImplementationOnce(async request => { signal = request.config.abortSignal; return new Promise(() => {}); });
+    const task = f.agent.start(turn.assistantMessage.id);
+    await vi.waitFor(() => expect(signal).toBeDefined()); f.agent.tasks.stop(`room-task:${turn.assistantMessage.id}`);
+    expect((await task).phase).toBe('stopped'); expect(signal?.aborted).toBe(true); expect(f.execute).not.toHaveBeenCalled();
+  });
+  it.each([true, false])('freezes Live context and requires complete original sent media (complete=%s)', async complete => {
+    const f = await setup();
+    const context = await f.agent.prepareLive({ model: 'fixture', history: [], systemInstruction: 'Original Live context.', nativeLanguageCode: 'en-US' }, f.pairId);
+    const media = new LiveInputContext(() => 0); media.recordAudio('AAA='); media.recordFrame('/9j/2Q==');
+    const source = { sourceUserId: 'live-user', sourceAssistantId: 'live-assistant', conversationId: f.pairId };
+    f.client.state.chats[f.pairId].push({ id: source.sourceUserId, role: 'user', text: 'Make a ball.', timestamp: 2 },
+      { id: source.sourceAssistantId, role: 'assistant', llmRawResponse: 'I will ask the agent.', timestamp: 3 });
+    await context!.capture(source, 'Make a ball.', 'I will ask the agent.', complete ? media.finish() : undefined);
+    f.outputs.splice(0, 2);
+    const record = await f.agent.start(source.sourceAssistantId);
+    expect(record.phase).toBe(complete ? 'completed' : 'failed');
+    expect(f.execute).toHaveBeenCalledTimes(complete ? 1 : 0);
+    expect(f.send).toHaveBeenCalledTimes(complete ? 3 : 0);
+    if (complete) { expect(record.handoff.input.liveInputMedia?.frames).toHaveLength(1); expect(JSON.stringify(f.requests[0])).toContain('audio/wav'); }
+  });
+  it.each(['tutor', 'verifier'] as const)('retains settlement evidence when the %s throws before dispatch', async stage => {
+    const f = await setup('managed');
+    const summary = { availableCredits: 100, reservedCredits: 0, lifetimeSpentCredits: 0, lifetimeSpentUsd: 0 };
+    const refresh = vi.spyOn(f.client.account, 'refreshAccount').mockResolvedValue({ account: { billingSummary: summary } } as any);
+    vi.spyOn(f.client.account, 'listLedgers').mockResolvedValue({ usage: { entries: [] }, billing: { entries: [] } } as any);
+    const implementation = f.send.getMockImplementation()!;
+    f.send.mockImplementation(async () => { throw Object.assign(new Error('Provider refused the request'), { status: 400 }); });
+    if (stage === 'verifier') f.send.mockImplementationOnce(implementation);
+    const error = await runHeadlessRoomTurn(f.client, { text: 'Make a ball.' }).catch(error => error);
+    expect(error.message).toBe('Provider refused the request');
+    expect(error.evidence.billing).toMatchObject({ passed: true, creditsSpent: 0, reservedCreditsAfter: 0 });
+    expect(refresh).toHaveBeenCalledTimes(2);
+    expect(error.evidence.coverage.completed).toBe(false);
+    expect(f.execute).not.toHaveBeenCalled();
+  });
+  it('recovers an interrupted journal for display without executing it', async () => {
+    const f = await setup(); const turn = await runHeadlessChatTurn(f.client, { text: 'Make a ball.' });
+    const record: RoomTaskRecord = { version: 1, id: `room-task:${turn.assistantMessage.id}`, phase: 'working', note: 'Dispatching', startedAt: 1, updatedAt: 1, operations: [{ commands: [{ action: 'undo' }], sceneRevision: 1 }],
+      handoff: { version: 1, id: `room-task:${turn.assistantMessage.id}`, sourceUserId: turn.userMessage!.id, sourceAssistantId: turn.assistantMessage.id, conversationId: f.pairId, nativeSession: 'native', accessScope: 'byok', input: { model: 'fixture', prompt: 'Make a ball.', history: [], nativeLanguageCode: 'en-US', systemInstruction: 'Fixture' } } };
+    await f.agent.store.claim(record);
+    const recovered = new HeadlessRoomTaskStore(f.client.profile.directory + '/room-tasks');
+    const old = await recovered.get(record.id); expect(old?.phase).toBe('interrupted'); expect(old?.readOnly).toBe(true);
+    expect((await recovered.claim(record)).claimed).toBe(false);
+    await expect(recovered.save(record)).rejects.toThrow(/does not own/); expect(f.execute).not.toHaveBeenCalled();
+  });
+});
