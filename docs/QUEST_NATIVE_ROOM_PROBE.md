@@ -129,6 +129,36 @@ editing. Parallel/module execution, animation, persistence and physical Quest
 acceptance require their own scenarios. Keep provider transcripts and credentials
 in private ignored evidence, never in committed test fixtures.
 
+### Stop and task steering provider scenario
+
+`-ProviderScenario TaskSteering` asks the real conversational agent to paint the
+contextual ParityBall red, inspect it, then resize in a separate edit. The fixture
+observes the first actual native paint acknowledgement and invokes the public
+`room.stop` control before returning that unchanged receipt. It then uses ordinary
+native edit handlers to paint green and change placement. Provider output and
+native acknowledgements are never substituted.
+
+The original task must be stopped, with the confirmed paint retained, no resize,
+no result narration after Stop, and a stopped status projected into its source
+chat state. Rendering that status is a separate browser/headset acceptance check.
+The normal positive journey intentionally refuses that stopped outcome; the probe
+checks the exact expected coverage differences and still requires real tutor,
+verifier, planner usage and complete managed settlement. Reusing the same stopped
+handoff cannot run or charge again.
+
+Later conversational requests must resolve Revise to that exact stopped task and
+Continue to the resulting revised task. Their recorded parent request/receipt
+chains must match, the cancelled resize must stay cancelled, and painting blue
+must preserve the manually changed position and original size. Continue is read
+only. A fresh host/store restores those statuses; original claims and handoffs
+cannot replay any actions or consume provider usage.
+
+`provider-steering.json` retains the original paint, stop response, manual edit,
+all task records, final results and billing, including failed runs. This tests
+shared handlers and a deterministic acknowledgement boundary. It does not prove
+physical grip arbitration, spoken Stop latency, process-crash recovery, missing
+acknowledgements or headset UI acceptance.
+
 ### Physical launch provider scenario
 
 `-ProviderScenario PhysicsLaunch` uses the original managed/BYOK chat,

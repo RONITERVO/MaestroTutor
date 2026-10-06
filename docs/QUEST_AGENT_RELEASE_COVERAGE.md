@@ -533,3 +533,48 @@ The separate configuration passes TypeScript checking. An attempted project-buil
 check encountered the existing node-config theme include mismatch; its generated
 files were removed and that original config restored. No application fix or pass
 is claimed for that separate build mode.
+
+## Real-provider task steering proof (2026-10-06)
+
+`TaskSteering` passes against actual Unity in both access modes. A real contextual
+creation task is followed by a paint/inspect/resize request. Immediately after the
+native paint acknowledgement, the probe invokes the public `room.stop` control
+and makes manual-handler edits to colour and placement. It returns the unchanged
+paint receipt to the runner. The stopped task retains that confirmed operation,
+never performs the unfinished resize, and projects its stopped status into the
+original chat state without generating a result reply.
+
+| Access mode | Native run | Real provider responses |
+| --- | --- | --- |
+| BYOK | `90427aa74ab74e18ba17ab4328863828` | 21 |
+| Managed staging | `9aa542b2b5794467953b50c91b78d458` | 21 |
+
+Both runs pass fifteen semantic gates and exit client and Editor cleanly. Real
+conversational Revise and Continue requests resolve to their exact parent tasks,
+retain the original request/receipt chain, and stay in the same room, owner and
+conversation. Revision paints the same object blue while preserving manual
+placement and the original size. The continuation inspects without editing. A
+fresh host/store restores the records and chat statuses; durable claims and the
+old handoffs cannot replay work or consume more provider usage.
+
+The positive journey checker intentionally rejects the stopped task's completion,
+reply and reply-usage gates. Its other seven gates pass; planning usage is present
+and result-reply usage absent. Revised and continued tasks pass all ten gates.
+Managed billing reconciles separately for stop **32 credits / USD 0.031611**
+(3 usage/charge rows), revise **143 / USD 0.140431** (7 rows), and continue
+**66 / USD 0.062922** (4 rows), all with zero reserved credits. These billing
+windows exclude the earlier context/creation work included in the response counts.
+BYOK confirms recorded provider usage and payer, not an independent invoice.
+
+Validation: **2,481 app tests in 275 files**, including 74 focused task/provider/
+projection tests, and probe TypeScript pass. The two new evidence-gate tests reject
+extra effects, uncertain receipts and incorrect task ancestry. No app runtime,
+C# sources or snapshots changed in this increment. Provider runs used matching
+source fingerprints; afterward only the semantic flag `visibleStoppedStatus`
+was renamed to `stoppedStatusInChatState` and its wording clarified, with no
+assertion change. The original run evidence retains its original flag name.
+
+This is a deterministic acknowledgement-boundary Stop and ordinary native edit
+handlers. It does not establish physical grip arbitration, spoken Stop latency,
+rendered Stop controls/status, process-crash recovery, lost acknowledgements,
+Android reload or headset acceptance. Those remain separate release gates.

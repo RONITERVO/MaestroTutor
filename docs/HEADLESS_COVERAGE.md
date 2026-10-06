@@ -436,3 +436,9 @@ settling. Duplicate launch receipts cannot cause another throw, and a real agent
 simulation. Fixture placement/settings are labelled setup, not agent work.
 This does not substitute for real scan/wall alignment, physical controller or Quest
 performance checks. Run evidence is recorded in QUEST_AGENT_RELEASE_COVERAGE.md.
+
+`TaskSteering` adds real-provider Stop/Revise/Continue coverage against Unity. It
+stops at a real acknowledged edit, changes the object through manual handlers,
+requires exact parent-task resolution and retained manual placement, and reopens
+the task host/store without replay. The negative stopped outcome still reconciles
+managed billing. Physical input and crash/unknown-receipt recovery remain separate.

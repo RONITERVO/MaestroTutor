@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {runAgentSteeringProof,type ReceiptObserver} from './probe-agent-steering';
 import {runAgentPhysicsProof} from './probe-agent-physics';
 import {runAgentCompositeProof} from './probe-agent-composite';
 import {runAgentAnimationProof} from './probe-agent-animation';
@@ -27,7 +28,7 @@ import {checkedProbeReply,factReply,assertSamePlacement,type NativeProbeState} f
 const directory=process.argv[2];if(!directory)throw new Error('Supply the explicitly started native probe directory.');
 const prompt=process.env.MAESTRO_ROOM_PROBE_PROMPT;
 const providerScenario=process.env.MAESTRO_ROOM_PROBE_SCENARIO;
-if(providerScenario && (!['ContextCreateEdit','LiveVisual','ObserverVisual','EventProgram','AvatarAnimation','CompositeModule','PhysicsLaunch'].includes(providerScenario)||!prompt))throw new Error('Unknown or unconfigured provider scenario.');
+if(providerScenario && (!['ContextCreateEdit','LiveVisual','ObserverVisual','EventProgram','AvatarAnimation','CompositeModule','PhysicsLaunch','TaskSteering'].includes(providerScenario)||!prompt))throw new Error('Unknown or unconfigured provider scenario.');
 const transport=await HeadlessRoomTransport.connect(directory,120000);
 const observations:unknown[]=[];
 try{
@@ -69,12 +70,18 @@ try{
    return (async function*(){let text='';try{for await(const chunk of result){if(chunk.text)text+=chunk.text;yield chunk;}}
     finally{providerResponses.push({model:request.model,text});await writeFile(join(directory,'provider-responses.json'),JSON.stringify(providerResponses,null,2));}})();
   };
-  const agent=new HeadlessRoomAgent(client,()=>transport.lease());client.roomAgent=agent;
-  const timer=setTimeout(()=>agent.tasks.stopAll(),providerScenario==='PhysicsLaunch'?780000:providerScenario?600000:240000);
+  let receiptObserver:ReceiptObserver|undefined;
+  const agent=new HeadlessRoomAgent(client,()=>{
+   const native=transport.lease();
+   return !receiptObserver?native:{...native,execute:async(...args)=>{
+    const receipt=await native.execute(...args);await receiptObserver?.(args[0],receipt);return receipt;
+   }};
+  });client.roomAgent=agent;
+  const timer=setTimeout(()=>agent.tasks.stopAll(),['PhysicsLaunch','TaskSteering'].includes(providerScenario||'')?780000:providerScenario?600000:240000);
   try{
    await selectHeadlessLanguage(client,{targetLanguageCode:'es-ES',nativeLanguageCode:'en-US'});
    const spoken=providerScenario==='LiveVisual'||providerScenario==='ObserverVisual';
-   const contextTurn=await runHeadlessChatTurn(client,{text:(['EventProgram','AvatarAnimation','CompositeModule','PhysicsLaunch'].includes(providerScenario||''))?"For this test, my test object is a blue ball named ParityBall, half the diameter of the room's standard ball. Remember that; do not create anything yet.":spoken?"For this test, 'my test object' means one ball named ParityBall, exactly half the diameter of the room's standard ball. I will choose its colour in my next request. Remember that; do not make anything yet.":"For this test, 'my test object' means one small blue ball named ParityBall. Remember that for my next request; do not make anything yet.",useGoogleSearch:false});
+   const contextTurn=await runHeadlessChatTurn(client,{text:(['EventProgram','AvatarAnimation','CompositeModule','PhysicsLaunch','TaskSteering'].includes(providerScenario||''))?"For this test, my test object is a blue ball named ParityBall, half the diameter of the room's standard ball. Remember that; do not create anything yet.":spoken?"For this test, 'my test object' means one ball named ParityBall, exactly half the diameter of the room's standard ball. I will choose its colour in my next request. Remember that; do not make anything yet.":"For this test, 'my test object' means one small blue ball named ParityBall. Remember that for my next request; do not make anything yet.",useGoogleSearch:false});
    const contextAftersteps=await runHeadlessSuggestionAftersteps(client,{assistantMessageId:contextTurn.assistantMessage.id});
    if(contextAftersteps.toolRequest?.tool==='agent'||lease.state().sceneRevision!==initial.sceneRevision||agent.usage.length)throw new Error('Context-only chat unexpectedly started room work.');
    let createdJourney;
@@ -112,6 +119,11 @@ try{
    if(providerScenario==='PhysicsLaunch'){
     const before=structuredClone(lease.state()),ball=assertCreatedParityBall(initial,before,'blue',0.5);
     outcome={scenario:providerScenario,createdJourney,physics:await runAgentPhysicsProof({client,before,target:ball.id,execute,directory,read:()=>lease.state()})};
+   }
+   if(providerScenario==='TaskSteering'){
+    const before=structuredClone(lease.state()),ball=assertCreatedParityBall(initial,before,'blue',0.5);
+    outcome={scenario:providerScenario,createdJourney,steering:await runAgentSteeringProof({client,before,target:ball.id,directory,execute,
+     lease:()=>transport.lease(),observe:observer=>{receiptObserver=observer;}})};
    }
    if(providerScenario==='ContextCreateEdit'){
     const createdState=structuredClone(lease.state());
