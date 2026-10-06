@@ -144,7 +144,7 @@ export async function prepareLiveRoomAgentContext(systemInstruction?: string): P
   if (!access) return { systemInstruction };
   const targets = await captureTaskTargets(conversationId, access);
   if (!await access.valid()) return { systemInstruction };
-  const prepared = systemInstruction + ROOM_HANDOFF_LIVE_INSTRUCTION + buildRoomTaskCatalogue(targets);
+  const prepared = systemInstruction + ROOM_HANDOFF_LIVE_INSTRUCTION + buildRoomTaskCatalogue(targets, 'live');
   const handoffId = crypto.randomUUID();
   liveContexts.set(handoffId, { conversationId, access, targets, input: {
     model: getGeminiModels().text.default, systemInstruction: prepared,

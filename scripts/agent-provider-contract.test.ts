@@ -18,6 +18,13 @@ describe('conversational provider semantic proof', () => {
       expect(() => assertCreatedParityBall(before, wrong)).toThrow();
     }
   });
+  it('requires the visual reference colour when the colour was absent from the spoken request', () => {
+    const before = state([]);
+    const red = state([{ ...object('new'), color: { r: 1, g: 0, b: 0, a: 1 } }]);
+    expect(assertCreatedParityBall(before, red, 'red', 0.5).id).toBe('new');
+    expect(() => assertCreatedParityBall(before, state([object('new')]), 'red', 0.5)).toThrow();
+    expect(() => assertCreatedParityBall(before, state([{ ...red.objects[0], scale: 0.8 }]), 'red', 0.5)).toThrow();
+  });
   it('rejects replacement, extra objects and unrelated edits', () => {
     const before = state([object('old')]), after = state([...before.objects, object('new')]);
     expect(() => assertCreatedParityBall(before, state([object('new')]))).toThrow();

@@ -7,6 +7,9 @@ import { HeadlessRoomAgent, runHeadlessRoomTurn } from './roomJourney';
 import { HeadlessRoomTaskStore } from './roomTaskStore';
 import { runHeadlessChatTurn, selectHeadlessLanguage } from './chatJourney';
 import { runHeadlessSuggestionAftersteps } from './suggestionJourney';
+import { runHeadlessLiveTurn } from './liveJourney';
+import { liveInputHashes, providerMediaHashes } from './roomLiveJourney';
+import { createHash } from 'node:crypto';
 import { LiveInputContext } from '../core-sdk/media/liveInputContext';
 import type { RoomAgentState } from '../core-sdk/room/roomAgent';
 import type { RoomTaskRecord } from '../core-sdk/room/roomTaskHandoff';
@@ -91,6 +94,45 @@ describe('headless conversational agent parity (deterministic transport)', () =>
     const task = f.agent.start(turn.assistantMessage.id);
     await vi.waitFor(() => expect(signal).toBeDefined()); f.agent.tasks.stop(`room-task:${turn.assistantMessage.id}`);
     expect((await task).phase).toBe('stopped'); expect(signal?.aborted).toBe(true); expect(f.execute).not.toHaveBeenCalled();
+  });
+  it.each(['conversation', 'observer'] as const)('delegates the actual %s stream, original media and final reply through shared chat', async mode => {
+    const f = await setup(); f.outputs.shift();
+    const sent: Array<{ audio?: { data: string }; video?: { data: string } }> = [];
+    const connect = vi.fn(async (params: any) => ({
+      close: vi.fn(),
+      sendRealtimeInput: (message: any) => {
+        sent.push(message);
+        if (!message.audioStreamEnd && !message.activityEnd) return;
+        params.callbacks.onmessage({ serverContent: {
+          inputTranscription: { text: 'Make a ball.' },
+          outputTranscription: { text: 'I will ask the room agent to make it.' },
+          modelTurn: { parts: [{ inlineData: { mimeType: 'audio/pcm;rate=24000', data: Buffer.alloc(4800).toString('base64') } }] },
+          turnComplete: true,
+        } });
+      },
+    }));
+    Object.assign(f.client.ai, { live: { connect } });
+    const result = await runHeadlessLiveTurn(f.client, { mode, pcm: new Int16Array(32_000).fill(6000),
+      languagePairId: f.pairId, pace: false, includeVisual: true, expectedTranscript: 'Make a ball.' });
+    const instruction = connect.mock.calls[0][0].config.systemInstruction;
+    expect(instruction).toContain('Propose the handoff in natural speech only.');
+    expect(instruction).not.toContain('Propose the same {"tool":"agent"}');
+    expect(result.aftersteps.toolRequest?.tool).toBe('agent');
+    const record = (await f.agent.store.list())[0];
+    expect(record.phase).toBe('completed'); expect(f.execute).toHaveBeenCalledOnce();
+    const hashes = liveInputHashes(record.handoff.input.liveInputMedia!);
+    const pcm = Buffer.concat(sent.filter(value => value.audio).map(value => Buffer.from(value.audio!.data, 'base64')));
+    expect(hashes.pcm).toBe(createHash('sha256').update(pcm).digest('hex'));
+    expect(hashes.samples * 2).toBe(pcm.length);
+    const frames = sent.filter(value => value.video).map(value => createHash('sha256').update(Buffer.from(value.video!.data, 'base64')).digest('hex'));
+    expect(hashes.frames.map(value => value.sha256)).toEqual(frames);
+    expect(frames.length).toBeGreaterThan(0);
+    expect(providerMediaHashes(f.requests[1].contents)).toEqual(expect.arrayContaining([
+      { mimeType: 'audio/wav', sha256: hashes.audio }, { mimeType: 'image/jpeg', sha256: frames[0] },
+    ]));
+    expect(result.liveInputMedia).toBeUndefined();
+    expect(JSON.stringify(result.aftersteps.toolResult)).not.toContain(record.handoff.input.liveInputMedia!.audio!.data);
+    expect(f.client.state.chats[f.pairId].find(value => value.id === record.id)?.agentTask?.phase).toBe('completed');
   });
   it.each([true, false])('freezes Live context and requires complete original sent media (complete=%s)', async complete => {
     const f = await setup();

@@ -711,6 +711,17 @@ packets and JPEG frames for the handoff. Raw microphone capture is not substitut
 for transmitted input. Incomplete media prevents room actions. Ordinary RPC
 results omit that media; the private task journal retains it. These additions do
 not establish real-provider Live/Quest parity merely by passing unit tests.
+A Live result is refused if its originating history, selection, access or native
+session changed; it cannot reselect an old conversation after completion. The
+provider may already have consumed the turn, so this is not an immediate midstream
+cancellation claim. Text task proposals retain their tool envelope; spoken task
+proposals use natural language and the normal after-turn verifier.
+
+The native probe's `LiveVisual` and `ObserverVisual` scenarios exercise these
+ordinary paths with real providers and byte-level media checks. Their internal
+`runHeadlessRoomLiveTurn` evidence wrapper is not a new public RPC method. See the
+[native probe instructions](QUEST_NATIVE_ROOM_PROBE.md) for the explicit speech
+fixture, semantic checks, billing and physical-device limitations.
 
 See [Quest agent release coverage](QUEST_AGENT_RELEASE_COVERAGE.md) for the required
 release matrix. Existing first-lesson, attachment, media and accounting gates

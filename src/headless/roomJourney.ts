@@ -95,9 +95,9 @@ export class HeadlessRoomAgent {
   async prepareLive(input: Omit<TutorTextTurnInput, 'prompt'>, conversationId: string) {
     const scope = await this.scope(conversationId); if (!scope) return null;
     const targets = await this.targets(conversationId, scope);
-    const frozen = structuredClone({ ...input, systemInstruction: input.systemInstruction + ROOM_HANDOFF_LIVE_INSTRUCTION + buildRoomTaskCatalogue(targets) });
+    const frozen = structuredClone({ ...input, systemInstruction: input.systemInstruction + ROOM_HANDOFF_LIVE_INSTRUCTION + buildRoomTaskCatalogue(targets, 'live') });
     let consumed = false;
-    return { systemInstruction: frozen.systemInstruction, capture: async (source: Source, prompt: string, reply: string, media?: LiveInputMedia) => {
+    return { systemInstruction: frozen.systemInstruction, current: scope.valid, capture: async (source: Source, prompt: string, reply: string, media?: LiveInputMedia) => {
       if (consumed) return false; consumed = true;
       if (source.conversationId !== conversationId || !prompt.trim() || !reply.trim()) return false;
       const capturedSource = structuredClone(source);

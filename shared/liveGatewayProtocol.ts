@@ -46,7 +46,9 @@ export type LiveGatewayServerMessage =
   | { type: 'error'; message: string; code?: string; retryable?: boolean };
 
 export const LIVE_GATEWAY_AUTH_TIMEOUT_MS = 5_000;
-export const LIVE_GATEWAY_CONNECT_TIMEOUT_MS = 20_000;
+// Covers a scale-from-zero gateway startup plus its bounded provider connection.
+// Ticket expiry and session deadlines remain server-enforced; no automatic retry.
+export const LIVE_GATEWAY_CONNECT_TIMEOUT_MS = 60_000;
 export const LIVE_GATEWAY_MAX_MESSAGE_BYTES = 2_000_000;
 /** One minute of input, followed by time for the model to answer. */
 export const LIVE_USER_TURN_MAX_MS = 60_000;

@@ -13,14 +13,15 @@ function unchangedOthers(before: RoomAgentState, after: RoomAgentState, target?:
     if (!current || !isDeepStrictEqual(saved(current), saved(object))) throw new Error('Provider scenario changed an unrelated object: ' + object.name);
   }
 }
-export function assertCreatedParityBall(before: RoomAgentState, after: RoomAgentState) {
+export function assertCreatedParityBall(before: RoomAgentState, after: RoomAgentState, colour: 'blue' | 'red' = 'blue', expectedScale?: number) {
   const added = after.objects.filter(object => !before.objects.some(previous => previous.id === object.id));
   const ball = added[0];
   if (after.objects.length !== before.objects.length + 1 || added.length !== 1 || !ball
     || ball.name !== 'ParityBall' || ball.kind.toLowerCase() !== 'ball'
     || !Number.isFinite(ball.scale) || ball.scale <= 0 || ball.scale >= 1
-    || ball.color.b < 0.7 || ball.color.r > 0.2 || ball.color.g > 0.5 || ball.color.a !== 1) {
-    throw new Error('Provider did not create exactly the requested small blue ParityBall.');
+    || (expectedScale !== undefined && Math.abs(ball.scale - expectedScale) > 0.0001)
+    || ball.color.a !== 1 || (colour === 'blue' ? ball.color.b < 0.7 || ball.color.r > 0.2 || ball.color.g > 0.5 : ball.color.r < 0.7 || ball.color.g > 0.3 || ball.color.b > 0.3)) {
+    throw new Error('Provider did not create exactly the requested small ' + colour + ' ParityBall.');
   }
   unchangedOthers(before, after);
   return structuredClone(ball);

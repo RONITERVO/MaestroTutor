@@ -144,6 +144,8 @@ describe('Live connection provenance for the shared room dispatcher', () => {
     const { id, source } = liveSetup();
     if (mode === 'managed') { ports.key.mockResolvedValue(null); ports.managed.mockResolvedValue({ user: { id: 'user-1' }, firebaseIdToken: 'synthetic-session' }); }
     const connection = await prepareLiveRoomAgentContext('Original profile, bookmark summary and history.');
+    expect(connection.systemInstruction).toContain('Propose the handoff in natural speech only.');
+    expect(connection.systemInstruction).not.toContain('Propose the same {"tool":"agent"}');
     expect(connection.handoffId).toBeTruthy();
     expect(connection.systemInstruction).toContain('Do not speak JSON');
     useMaestroStore.getState().addMessage({ role: 'user', text: 'A later unrelated message' });

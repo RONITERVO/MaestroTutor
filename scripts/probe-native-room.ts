@@ -1,6 +1,11 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {assertCreatedParityBall,assertPaintedParityBall,assertSameRoomObjects} from './agent-provider-contract';
+import {createHash} from 'node:crypto';
+import type {LiveSendRealtimeInputParameters} from '@google/genai';
+import {runHeadlessRoomLiveTurn,providerMediaHashes} from '../src/headless/roomLiveJourney';
+import {ROOM_AGENT_RESPONSE_SCHEMA} from '../shared/prompts/room';
+import {decodePcm16LeBase64} from '../src/core-sdk/media/pcmInput';
 import {readFile,writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {isDeepStrictEqual} from 'node:util';
@@ -18,7 +23,7 @@ import {checkedProbeReply,factReply,assertSamePlacement,type NativeProbeState} f
 const directory=process.argv[2];if(!directory)throw new Error('Supply the explicitly started native probe directory.');
 const prompt=process.env.MAESTRO_ROOM_PROBE_PROMPT;
 const providerScenario=process.env.MAESTRO_ROOM_PROBE_SCENARIO;
-if(providerScenario && (providerScenario!=='ContextCreateEdit'||!prompt))throw new Error('Unknown or unconfigured provider scenario.');
+if(providerScenario && (!['ContextCreateEdit','LiveVisual','ObserverVisual'].includes(providerScenario)||!prompt))throw new Error('Unknown or unconfigured provider scenario.');
 const transport=await HeadlessRoomTransport.connect(directory,120000);
 const observations:unknown[]=[];
 try{
@@ -37,8 +42,25 @@ try{
   // Observe responses from the real provider for this isolated synthetic test.
   // The original stream and request are passed through unchanged.
   const providerResponses:Array<{model:string;text:string}>=[];
+  const providerInputs:Array<{stage:string;media:ReturnType<typeof providerMediaHashes>}>=[];
+  const liveSends:Array<{pcm:ReturnType<typeof createHash>;audioBytes:number;frames:string[]}>=[];
+  if(providerScenario==='LiveVisual'||providerScenario==='ObserverVisual'){
+   const connect=client.ai.live.connect.bind(client.ai.live);
+   client.ai.live.connect=async params=>{
+    const session=await connect(params),send=session.sendRealtimeInput.bind(session);
+    const observation={pcm:createHash('sha256'),audioBytes:0,frames:[] as string[]};liveSends.push(observation);
+    session.sendRealtimeInput=(message:LiveSendRealtimeInputParameters)=>{
+     send(message);
+     if(message.audio?.data){const bytes=Buffer.from(message.audio.data,'base64');observation.pcm.update(bytes);observation.audioBytes+=bytes.length;}
+     if(message.video?.data)observation.frames.push(createHash('sha256').update(Buffer.from(message.video.data,'base64')).digest('hex'));
+    };
+    return session;
+   };
+  }
   const stream=client.ai.models.generateContentStream.bind(client.ai.models);
   client.ai.models.generateContentStream=async request=>{
+   providerInputs.push({stage:isDeepStrictEqual(request.config?.responseJsonSchema,ROOM_AGENT_RESPONSE_SCHEMA)?'planning':'other',media:providerMediaHashes(request.contents)});
+   await writeFile(join(directory,'provider-inputs.json'),JSON.stringify(providerInputs,null,2));
    const result=await stream(request);
    return (async function*(){let text='';try{for await(const chunk of result){if(chunk.text)text+=chunk.text;yield chunk;}}
     finally{providerResponses.push({model:request.model,text});await writeFile(join(directory,'provider-responses.json'),JSON.stringify(providerResponses,null,2));}})();
@@ -47,11 +69,30 @@ try{
   const timer=setTimeout(()=>agent.tasks.stopAll(),providerScenario?600000:240000);
   try{
    await selectHeadlessLanguage(client,{targetLanguageCode:'es-ES',nativeLanguageCode:'en-US'});
-   const contextTurn=await runHeadlessChatTurn(client,{text:"For this test, 'my test object' means one small blue ball named ParityBall. Remember that for my next request; do not make anything yet.",useGoogleSearch:false});
+   const spoken=providerScenario==='LiveVisual'||providerScenario==='ObserverVisual';
+   const contextTurn=await runHeadlessChatTurn(client,{text:spoken?"For this test, 'my test object' means one ball named ParityBall, exactly half the diameter of the room's standard ball. I will choose its colour in my next request. Remember that; do not make anything yet.":"For this test, 'my test object' means one small blue ball named ParityBall. Remember that for my next request; do not make anything yet.",useGoogleSearch:false});
    const contextAftersteps=await runHeadlessSuggestionAftersteps(client,{assistantMessageId:contextTurn.assistantMessage.id});
    if(contextAftersteps.toolRequest?.tool==='agent'||lease.state().sceneRevision!==initial.sceneRevision||agent.usage.length)throw new Error('Context-only chat unexpectedly started room work.');
-   const createdJourney=await runHeadlessRoomTurn(client,{text:prompt});
-   outcome=createdJourney;
+   let createdJourney;
+   if(spoken){
+    const fixture=JSON.parse(await readFile(process.env.MAESTRO_ROOM_PROBE_SPEECH!,'utf8'));
+    if(fixture.sampleRate!==16000||typeof fixture.pcmBase64!=='string'||typeof fixture.expectedTranscript!=='string'||!fixture.expectedTranscript.trim())throw new Error('SpeechFixture needs 16 kHz pcmBase64 and a nonempty expectedTranscript.');
+    createdJourney=await runHeadlessRoomLiveTurn(client,{mode:providerScenario==='ObserverVisual'?'observer':'conversation',
+     pcm:decodePcm16LeBase64(fixture.pcmBase64),sampleRate:16000,expectedTranscript:fixture.expectedTranscript,pace:true,
+     includeVisual:true,visualLabel:'REFERENCE',manualActivityBoundaries:true,timeoutMs:120000});
+    const finalState=structuredClone(lease.state());
+    await writeFile(join(directory,'provider-scenarios.json'),JSON.stringify({scenario:providerScenario,phase:'validating',createdJourney,finalState},null,2));
+    const input=createdJourney.inputHashes!,sent=liveSends[0];
+    if(liveSends.length!==1||!sent||sent.audioBytes!==input.samples*2||sent.pcm.copy().digest('hex')!==input.pcm
+      ||!isDeepStrictEqual(sent.frames,input.frames.map(frame=>frame.sha256)))throw new Error('Delegated media differs from the actual Live client sends.');
+    const planner=providerInputs.filter(value=>value.stage==='planning').flatMap(value=>value.media);
+    if(!planner.some(value=>value.mimeType==='audio/wav'&&value.sha256===input.audio)
+      ||input.frames.some(frame=>!planner.some(value=>value.mimeType==='image/jpeg'&&value.sha256===frame.sha256)))throw new Error('Original Live audio/frames did not reach the real planner request.');
+    assertCreatedParityBall(initial,finalState,'red',0.5);
+    const scenarioEvidence={scenario:providerScenario,phase:'passed',semantics:{originalSentMedia:true,originalMediaInPlanner:true,contextNameAndSize:true,visualColour:true},
+     createdJourney,finalState,liveInput:{pcm:input.pcm,audioBytes:sent.audioBytes,frames:sent.frames}};
+    await writeFile(join(directory,'provider-scenarios.json'),JSON.stringify(scenarioEvidence,null,2));outcome=scenarioEvidence;
+   }else {createdJourney=await runHeadlessRoomTurn(client,{text:prompt});outcome=createdJourney;}
    if(providerScenario==='ContextCreateEdit'){
     const createdState=structuredClone(lease.state());
     const ball=assertCreatedParityBall(initial,createdState);

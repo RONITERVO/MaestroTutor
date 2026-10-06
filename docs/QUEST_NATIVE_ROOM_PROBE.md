@@ -98,6 +98,50 @@ checks succeed. An ad hoc Prompt run has no such semantic certification.
 Provider exceptions retain billing settlement evidence; failed zero-cost calls
 are valid billing evidence but never a successful agent journey.
 
+### Spoken and visual agent scenarios
+
+`-ProviderScenario LiveVisual` and `-ProviderScenario ObserverVisual` run the
+ordinary headless Live/observer turn and suggestion aftersteps against the same
+native room. Both require `-SpeechFixture <absolute JSON path>`. The JSON contains
+`sampleRate:16000`, mono PCM16LE `pcmBase64`, and a nonempty `expectedTranscript`.
+An offline synthetic fixture can be prepared on Windows with an installed voice:
+
+```powershell
+powershell.exe -NoProfile -NonInteractive -File ./scripts/New-RoomAgentSpeechFixture.ps1 -OutputPath '<new fixture.json>'
+./unity/Tools/Run-QuestRoomProbe.ps1 -Editor '<Unity.exe>' -BuildMirror '<owned mirror>' -ProviderScenario LiveVisual -SpeechFixture '<fixture.json>'
+```
+
+Choose `ObserverVisual` for the second route and repeat both with managed and
+BYOK access. The fixture generator uses Windows PowerShell 5.1/System.Speech,
+plays no sound, contacts no provider and refuses to overwrite an existing file.
+Its default installed voice is Microsoft David Desktop; `-Voice` can select
+another installed voice. Keep the generated audio and provider diagnostics local.
+The 11.34-second reference fixture is synthetic, not a human microphone recording.
+
+Earlier ordinary chat defines ParityBall and its diameter as exactly half the
+standard ball, leaving the colour unspecified. The spoken request asks to create
+that object using the colour of the camera reference. Only the synthetic JPEG
+shows red; neither its label nor the speech nor the context names the colour.
+The probe requires the real native name, shape, scale 0.5 and red colour, and
+preservation of unrelated objects. A prior ambiguous “small” fixture could
+legitimately select the standard 13 cm ball; that historical rejection remains
+recorded rather than being reported as a product size failure.
+
+The wrapper requires real-time input pacing, transcript recognition, model audio,
+a natural spoken handoff without text-tool syntax, real model verification,
+original context/media, completed native receipts, final chat projection and
+usage/settlement. Instrumentation hashes actual successful Live client sends and
+actual planner request media without replacing either. These must match the
+journal's WAV/PCM and JPEG hashes. The scenario records its candidate evidence
+before semantic checks and marks `phase:passed` only after they pass. The outer
+`verified.json` also requires duplicate prevention and clean Editor termination.
+
+Observer injection reproduces the local-speech-to-Live ownership transition; it
+does not run the browser Whisper worker or certify physical microphone/camera,
+headset rendering, tracking or comfort. The Live reply precedes the agent's final
+chat result. This route proves delegated after-turn planning, not direct native
+Live function calling or spoken playback of the final task result.
+
 This does not replace the broader paired real-provider scenarios in
 [QUEST_AGENT_RELEASE_COVERAGE.md](QUEST_AGENT_RELEASE_COVERAGE.md). A successful
 basic creation run alone is not Live, program-authoring or headset release proof.

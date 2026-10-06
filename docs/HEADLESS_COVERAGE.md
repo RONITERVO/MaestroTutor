@@ -396,3 +396,13 @@ only that scenario's evidence. Complex programs, animation, visual/audio request
 ownership and recovery need semantic assertions and real-provider runs in both
 managed and BYOK modes. Deterministic fixtures, native receipts and provider usage
 are recorded separately; none implies unobserved headset or Store acceptance.
+
+
+The native probe also has real `LiveVisual` and `ObserverVisual` scenarios for both
+access modes. They require the original transmitted audio/frame hashes in the
+planner, current conversation ownership, spoken output without tool JSON, verified
+delegation, native object semantics and reconciled usage. The shared managed
+WebSocket client allows a bounded 60-second gateway startup, cleans failed
+connections and drains queued final data/billing before closing a ready session.
+Synthetic fixture passes remain separate from physical input/rendered acceptance;
+current evidence and outstanding scenarios are in the Quest matrix above.
