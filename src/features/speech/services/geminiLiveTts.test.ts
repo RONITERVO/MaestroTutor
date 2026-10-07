@@ -48,6 +48,7 @@ vi.mock('../../../../shared/liveOpenReason', () => ({
 }));
 
 import { streamGeminiLiveTts } from './geminiLiveTts';
+import type { SpeechOutput } from '../../../core-sdk/media/speechOutput';
 
 class FakeBufferSource {
   buffer: AudioBuffer | null = null;
@@ -203,5 +204,37 @@ describe('Gemini Live TTS audible completion', () => {
     await expect(resultPromise).resolves.toMatchObject({ isComplete: false, error: 'ABORTED' });
     expect(context.sources[0].stop).toHaveBeenCalledOnce();
     expect(mocks.logComplete).toHaveBeenCalledWith(expect.objectContaining({ status: 'aborted' }));
+  });
+
+  it('uses an injected output exclusively and waits for its native-style completion acknowledgment', async () => {
+    const context = new FakeAudioContext(); let finish!: (result: 'drained' | 'cancelled') => void;
+    const drained = new Promise<'drained' | 'cancelled'>(resolve => { finish = resolve; });
+    const output: SpeechOutput = { sampleRate: 24000, write: vi.fn(), read: () => ({ submittedSamples: 2400, playedSamples: 0, started: false }),
+      drain: vi.fn(() => drained), reset: vi.fn(), dispose: vi.fn() };
+    const onLineComplete = vi.fn(), factory = vi.fn(() => output), settled = vi.fn();
+    const pending = streamGeminiLiveTts({ lines: [{ text: 'Hello', langCode: 'en' }], audioContext: context as any,
+      liveOpenTrigger: 'voice.tts-click', createOutput: factory, onLineComplete }).then(result => { settled(result); return result; });
+    await vi.waitFor(() => expect(mocks.callbacks).not.toBeNull());
+    mocks.callbacks!.onmessage({ serverContent: { modelTurn: { parts: [{ inlineData: { data: pcmBase64(2400) } }] } } });
+    mocks.callbacks!.onmessage({ serverContent: { turnComplete: true } }); await Promise.resolve();
+    expect(factory).toHaveBeenCalledOnce(); expect(output.write).toHaveBeenCalledWith(new Int16Array(2400).fill(4000));
+    expect(context.sources).toHaveLength(0); expect(settled).not.toHaveBeenCalled();
+    finish('drained'); await expect(pending).resolves.toMatchObject({ isComplete: true });
+    expect(output.dispose).toHaveBeenCalledOnce(); expect(onLineComplete).toHaveBeenCalled();
+  });
+
+  it.each(['write-failure', 'drain-failure', 'output-cancelled'])('settles %s without reporting successful speech or falling back to a dry copy', async mode => {
+    const context = new FakeAudioContext(); const onError = vi.fn();
+    const output: SpeechOutput = { sampleRate: 24000, write: vi.fn(() => { if (mode === 'write-failure') throw new Error('Output buffer full'); }),
+      read: () => ({ submittedSamples: 2400, playedSamples: 0, started: false }),
+      drain: async () => { if (mode === 'drain-failure') throw new Error('Renderer disconnected'); return 'cancelled'; }, reset: vi.fn(), dispose: vi.fn() };
+    const pending = streamGeminiLiveTts({ lines: [{ text: 'Hello', langCode: 'en' }], audioContext: context as any,
+      liveOpenTrigger: 'voice.tts-click', createOutput: () => output, onError });
+    await vi.waitFor(() => expect(mocks.callbacks).not.toBeNull());
+    mocks.callbacks!.onmessage({ serverContent: { modelTurn: { parts: [{ inlineData: { data: pcmBase64(2400) } }] } } });
+    mocks.callbacks!.onmessage({ serverContent: { turnComplete: true } });
+    await expect(pending).resolves.toMatchObject({ isComplete: false,
+      error: mode === 'output-cancelled' ? 'AUDIO_OUTPUT_CANCELLED' : 'AUDIO_OUTPUT_FAILED' });
+    expect(onError).toHaveBeenCalledOnce(); expect(context.sources).toHaveLength(0); expect(output.dispose).toHaveBeenCalledOnce();
   });
 });

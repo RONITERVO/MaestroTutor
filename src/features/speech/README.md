@@ -90,9 +90,25 @@ Gemini can deliver an entire transcript and PCM response much faster than the
 speaker can play it. `turnComplete`, `goAway`, and socket close are transport
 signals, not audible-completion signals. Live conversation teardown waits for an
 audio-worklet drain acknowledgement plus the device output latency. Triggered TTS
-waits for every scheduled `AudioBufferSourceNode` to emit `ended`. Only an explicit
+uses the core `SpeechOutput` contract: its browser adapter waits for every scheduled
+`AudioBufferSourceNode` to emit `ended`, then allows for the device output tail. Only an explicit
 user stop may discard queued model speech. Conversation input also defaults to
 `NO_INTERRUPTION` so Android speaker echo cannot barge into the model's response.
+
+`SpeechOutput` accepts copied mono PCM16 and exposes submitted/played sample
+positions, a drain fence, reset and disposal. Reset cancels older fences; later
+chunks cannot complete an earlier fence prematurely. TTS highlights use played
+samples, and output failures stop the request with an unsuccessful result. A
+request owns exactly one output; injecting a native adapter must not also start
+browser audio. Provider access, transcript and speech caching remain shared.
+
+Unity's `NativeSpeechOutput` implements bounded DSP-scheduled playback at the
+current avatar head, including imported-avatar replacement, with generation and
+sequence checks and cancellation on focus/pause/audio-device changes. It is not
+yet connected to the Android bridge. Live and cached replay still use their
+existing output paths. Native routing, Meta HRTF/acoustics and physical echo,
+latency and intelligibility acceptance remain open; controlled-clock PCM tests
+do not establish audible headset quality.
 
 See [`docs/GEMINI_LIVE_OPEN_POLICY.md`](../../../docs/GEMINI_LIVE_OPEN_POLICY.md)
 for the complete allowlist, activity phases, backend audit fields and maintainer

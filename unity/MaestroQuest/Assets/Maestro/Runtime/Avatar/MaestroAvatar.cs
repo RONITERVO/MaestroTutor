@@ -24,7 +24,7 @@ namespace Maestro.Quest.Avatar
         void RuntimeChanged(){
             blockedSnapshot=Browser?Browser.Snapshot:observedSnapshot;observedActivity=null;
             if(runtimeGate?.Held!=true)return;
-            EndAmbient();gestureLayer?.Stop();walkMotion?.Stop();StopImportedClip();spatialWalking=false;
+            SpeechOutput?.Stop();EndAmbient();gestureLayer?.Stop();walkMotion?.Stop();StopImportedClip();spatialWalking=false;
             if(animator)animator.speed=0;
         }
         Animator animator;
@@ -94,6 +94,7 @@ namespace Maestro.Quest.Avatar
         int modelGeneration;
         bool disposed;
         public AvatarPoseRig PoseRig { get; private set; }
+        public NativeSpeechOutput SpeechOutput { get; private set; }
         public string ModelHash { get; private set; } = "";
         public string ModelStatus { get; private set; } = "Included Maestro";
         public bool ModelBusy { get; private set; }
@@ -125,6 +126,9 @@ namespace Maestro.Quest.Avatar
             // while its own meshes are hidden.
             animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
             PoseRig = gameObject.AddComponent<AvatarPoseRig>(); PoseRig.Initialize(animator);
+            var voice = new GameObject("Maestro mouth voice"); voice.transform.SetParent(transform, false);
+            SpeechOutput = voice.AddComponent<NativeSpeechOutput>();
+            SpeechOutput.ConfigureAnchor(PoseRig, transform, new Vector3(0, .08f, .08f), new Vector3(0, 1.4f, .08f));
             if (savedPose != null) { PoseRig.SetManual(true); PoseRig.Apply(savedPose); }
             if(animator.runtimeAnimatorController)gestureLayer=new AvatarGestureLayer(included,animator,PoseRig);
             greetingUntil = Time.unscaledTime + (ReducedMotion ? 0 : 2.5f);

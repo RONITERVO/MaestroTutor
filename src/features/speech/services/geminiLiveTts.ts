@@ -34,7 +34,8 @@ import {
   createLiveOpenReason,
   type TtsLiveOpenTrigger,
 } from '../../../../shared/liveOpenReason';
-import { ScheduledPlaybackDrain } from '../utils/playbackDrain';
+import type { SpeechOutput } from '../../../core-sdk/media/speechOutput';
+import { ScheduledSpeechOutput } from '../utils/scheduledSpeechOutput';
 import { getLiveCostControlConfig } from '../../../../shared/liveCostControls';
 
 // ============================================================================
@@ -52,6 +53,8 @@ export interface GeminiLiveTtsLine {
 export interface GeminiLiveTtsParams {
   lines: GeminiLiveTtsLine[];
   audioContext: AudioContext;
+  /** Ownership transfers to this request; it disposes the output on every exit. */
+  createOutput?: () => SpeechOutput;
   abortSignal?: AbortSignal;
   voiceName?: string;
   liveOpenTrigger: TtsLiveOpenTrigger;
@@ -104,26 +107,6 @@ function mergeInt16Arrays(arrays: Int16Array[]): Int16Array {
     offset += arr.length;
   }
   return result;
-}
-
-function pcmToAudioBuffer(
-  pcmData: Uint8Array,
-  audioContext: AudioContext,
-  sampleRate: number = 24000,
-  numChannels: number = 1
-): AudioBuffer {
-  const dataInt16 = new Int16Array(pcmData.buffer, pcmData.byteOffset, pcmData.byteLength / 2);
-  const frameCount = dataInt16.length / numChannels;
-  const buffer = audioContext.createBuffer(numChannels, frameCount, sampleRate);
-
-  for (let channel = 0; channel < numChannels; channel++) {
-    const channelData = buffer.getChannelData(channel);
-    for (let i = 0; i < frameCount; i++) {
-      channelData[i] = dataInt16[i * numChannels + channel] / 32768.0;
-    }
-  }
-  
-  return buffer;
 }
 
 // ============================================================================
@@ -179,21 +162,26 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
     systemInstructionText,
   });
 
+  let output: SpeechOutput;
+  try {
+    output = params.createOutput?.() ?? new ScheduledSpeechOutput(audioContext, OUTPUT_SAMPLE_RATE);
+    if (output.sampleRate !== OUTPUT_SAMPLE_RATE) { output.dispose(); throw new Error('Speech output format does not match the provider.'); }
+  } catch {
+    log.error({ message: 'Speech output could not start.' });
+    onError?.('Speech output could not start.');
+    return { isComplete: false, error: 'AUDIO_OUTPUT_UNAVAILABLE', audioSegments: [] };
+  }
+
   return new Promise(async (resolve) => {
-    let nextStartTime = audioContext.currentTime;
     let isStreaming = false;
     let streamCleanup: (() => void) | null = null;
     let session: any = null;
     let isResolved = false;
-    const activeSources: AudioBufferSourceNode[] = [];
-    const playbackDrain = new ScheduledPlaybackDrain();
     let finalized = false;
     let terminalHandled = false;
     let abortHandler: (() => void) | null = null;
 
-    let sessionStartTime: number | null = null;
-    const scheduledLineStarts: Array<{ lineIndex: number; text: string; startTime: number }> = [];
-    const pendingLineStarts: Array<{ lineIndex: number; text: string; startSample: number }> = [];
+    const scheduledLineStarts: Array<{ lineIndex: number; text: string; startSample: number }> = [];
     let rafId: number | null = null;
 
     const ensureHighlightLoop = () => {
@@ -203,8 +191,8 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
           rafId = null;
           return;
         }
-        const now = audioContext.currentTime;
-        while (scheduledLineStarts.length > 0 && scheduledLineStarts[0].startTime <= now) {
+        const now = output.read();
+        while (now.started && scheduledLineStarts.length > 0 && scheduledLineStarts[0].startSample <= now.playedSamples) {
           const next = scheduledLineStarts.shift();
           if (next) onLineStart?.(next.lineIndex, next.text);
         }
@@ -214,13 +202,8 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
     };
 
     const scheduleLineStart = (lineIndex: number, text: string, startSample: number) => {
-      if (sessionStartTime === null) {
-        pendingLineStarts.push({ lineIndex, text, startSample });
-        return;
-      }
-      const startTime = sessionStartTime + startSample / OUTPUT_SAMPLE_RATE;
-      scheduledLineStarts.push({ lineIndex, text, startTime });
-      scheduledLineStarts.sort((a, b) => a.startTime - b.startTime);
+      scheduledLineStarts.push({ lineIndex, text, startSample });
+      scheduledLineStarts.sort((a, b) => a.startSample - b.startSample);
       ensureHighlightLoop();
     };
 
@@ -253,27 +236,19 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
       }
     };
 
-    const cleanupPlayback = (interrupt: boolean) => {
+    const cleanupPlayback = () => {
       if (rafId !== null) {
         cancelAnimationFrame(rafId);
         rafId = null;
       }
       scheduledLineStarts.length = 0;
-      pendingLineStarts.length = 0;
-      if (!interrupt) return;
-
-      playbackDrain.cancel();
-      while (activeSources.length > 0) {
-        const source = activeSources.pop();
-        try { source?.stop(); } catch {}
-        try { source?.disconnect(); } catch {}
-      }
+      output.dispose();
     };
 
     const interruptAndCleanup = () => {
       cleanupTransport();
       detachAbortHandler();
-      cleanupPlayback(true);
+      cleanupPlayback();
     };
 
     const resolveOnce = (result: GeminiLiveTtsResult) => {
@@ -376,17 +351,20 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
       cleanupTransport();
       try { session?.close(); } catch {}
 
-      // Server completion only seals the incoming stream. AudioBufferSources
-      // may still contain most of the spoken answer, especially on Android.
+      // Provider completion seals input; only the selected output knows when
+      // its queued samples and hardware tail have finished playing.
       onStatusUpdate?.('PLAYBACK DRAINING');
       const drainStartedAt = Date.now();
-      const drainResult = await playbackDrain.wait();
+      let drainResult: 'drained' | 'cancelled';
+      try { drainResult = await output.drain(); }
+      catch { interruptImmediately('AUDIO_OUTPUT_FAILED'); return; }
       const playbackDrainMs = Date.now() - drainStartedAt;
       // An explicit stop may arrive after turnComplete while the scheduled
       // sources are still audible. It remains authoritative.
-      if (drainResult === 'cancelled' || isResolved) return;
+      if (isResolved) return;
+      if (drainResult === 'cancelled') { interruptImmediately('AUDIO_OUTPUT_CANCELLED'); return; }
       detachAbortHandler();
-      cleanupPlayback(false);
+      cleanupPlayback();
 
       if (result.isComplete) {
         log.complete({
@@ -411,20 +389,22 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
 
     let connectPending = false;
     let interruptedConnection: GeminiLiveTtsResult | null = null;
-    const abortImmediately = () => {
+    const interruptImmediately = (error = 'ABORTED') => {
       if (isResolved) return;
       terminalHandled = true;
       interruptAndCleanup();
       try { session?.close(); } catch {}
       const finalizedResult = finalizeAudioSegments('aborted');
-      log.complete({
-        status: 'aborted',
+      const record = {
+        status: error === 'ABORTED' ? 'aborted' : 'error',
         segmentCount: finalizedResult?.audioSegments.length || 0,
         transcript: transcriptAccumulator,
-      });
+      };
+      if (error === 'ABORTED') log.complete(record);
+      else { log.error({ ...record, message: error }); onError?.('Speech playback stopped before completion.'); }
       const result: GeminiLiveTtsResult = {
         isComplete: false,
-        error: 'ABORTED',
+        error,
         audioSegments: finalizedResult?.audioSegments || [],
       };
       // The caller's shutdown acknowledgment must include a connection that
@@ -435,9 +415,9 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
     };
 
     try {
-      abortHandler = abortImmediately;
+      abortHandler = () => interruptImmediately();
       abortSignal?.addEventListener('abort', abortHandler, { once: true });
-      if (abortSignal?.aborted) { abortImmediately(); return; }
+      if (abortSignal?.aborted) { interruptImmediately(); return; }
       connectPending = true;
       session = await ai.live.connect({
         model,
@@ -467,52 +447,18 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
                 audioChunks.push(pcm16);
                 audioTotalLength += pcm16.length;
 
-                // Decode and schedule playback immediately
-                const chunk = base64ToUint8(inlineAudio);
-                const audioBuffer = pcmToAudioBuffer(chunk, audioContext, OUTPUT_SAMPLE_RATE);
-                const source = audioContext.createBufferSource();
-                source.buffer = audioBuffer;
-                source.connect(audioContext.destination);
-                activeSources.push(source);
-                const markSourceEnded = playbackDrain.trackSource();
-
-                // Clean up the source when it finishes playing to free memory
-                source.onended = () => {
-                  const idx = activeSources.indexOf(source);
-                  if (idx !== -1) {
-                    activeSources.splice(idx, 1);
-                  }
-                  try { source.disconnect(); } catch {}
-                  markSourceEnded();
-                };
-                
-                nextStartTime = Math.max(audioContext.currentTime, nextStartTime);
-                if (sessionStartTime === null) {
-                  sessionStartTime = nextStartTime;
+                output.write(pcm16);
+                if (audioTotalLength === pcm16.length) {
                   const initialIndex = correctedHighlightIndex;
-                  if (initialIndex >= 0 && lines[initialIndex]) {
+                  if (initialIndex >= 0 && lines[initialIndex] && lastScheduledHighlightIndex < initialIndex) {
                     scheduleLineStart(initialIndex, lines[initialIndex].text, 0);
                     lastScheduledHighlightIndex = initialIndex;
                   }
-                  if (pendingLineStarts.length > 0) {
-                    for (const pending of pendingLineStarts) {
-                      scheduleLineStart(pending.lineIndex, pending.text, pending.startSample);
-                    }
-                    pendingLineStarts.length = 0;
-                  }
                 }
-                try {
-                  source.start(nextStartTime);
-                } catch (error) {
-                  const idx = activeSources.indexOf(source);
-                  if (idx !== -1) activeSources.splice(idx, 1);
-                  try { source.disconnect(); } catch {}
-                  markSourceEnded();
-                  throw error;
-                }
-                nextStartTime += audioBuffer.duration;
               } catch (e) {
-                console.warn('[GeminiLiveTts] Audio decode failed', e);
+                console.warn('[GeminiLiveTts] Speech output failed', e);
+                interruptImmediately('AUDIO_OUTPUT_FAILED');
+                return;
               }
             }
 

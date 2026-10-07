@@ -3577,3 +3577,29 @@ Official references verified 2026-10-07:
 [Meta XR Audio features](https://developers.meta.com/vr/documentation/unity/meta-xr-audio-sdk-features/),
 [Acoustic Ray Tracing](https://developers.meta.com/vr/documentation/unity/meta-xr-acoustic-ray-tracing-unity-overview/),
 [Acoustic setup](https://developers.meta.com/vr/documentation/unity/meta-xr-acoustic-ray-tracing-unity-getting-started/).
+
+First implementation increment (2026-10-07): core `SpeechOutput` now defines one
+owned mono PCM renderer with sample-position reporting, bounded buffering, drain
+fences and cancellation. Triggered TTS uses this contract through a browser
+adapter, including actual source completion plus output latency; output failures
+no longer silently skip spoken chunks. An injected renderer replaces browser
+playback completely without moving provider, transcript or cache ownership.
+
+The Unity avatar owns a native DSP-scheduled emitter that follows its visible
+head after animation and imported-avatar replacement. It validates generations
+and chunk order, bounds its queue and stops on focus loss, pause and device
+reconfiguration. Native tests exercise actual AudioClip/AudioSource PCM using a
+controlled clock, including imported-rig replacement. These are desktop playback
+and lifecycle checks, not an audible headset or acoustic acceptance result.
+
+This increment does not route WebView speech into Unity yet. Android handshake,
+chunk/ack transport, Live and cached replay adapters, persistent mouth settings,
+Meta HRTF/acoustic geometry and microphone echo handling are subsequent work.
+The current installed APK therefore still plays speech through WebView. No new
+device test is attempted while cooling/charging readiness is pending.
+
+Validation for this increment: 2,533 web tests / 281 files; TypeScript, lint,
+architecture/catalog checks and production web build pass. The synchronized
+Unity mirror passes 839 EditMode and 656 PlayMode tests, with three documented
+optional private-import skips. No Android source or packaged APK changed in this
+increment; managed/BYOK network and physical echo tests were not rerun for it.
