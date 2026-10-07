@@ -73,8 +73,7 @@ namespace Maestro.Quest.Book
                 source.playOnAwake = false; source.loop = true;
                 source.spatialBlend = 1; source.dopplerLevel = 0; source.spread = 0; source.priority = 0;
                 source.minDistance = 1; source.maxDistance = 15; source.rolloffMode = AudioRolloffMode.Logarithmic;
-                source.spatialize = !string.IsNullOrEmpty(AudioSettings.GetSpatializerPluginName());
-                source.spatializePostEffects = true;
+                SpeechSpatializer.Configure(source);
                 // A silent mono carrier keeps Unity's DSP graph active. The
                 // procedural filter replaces its samples; it never replays PCM.
                 carrier = AudioClip.Create("Maestro voice carrier", 1024, 1, rate, false);

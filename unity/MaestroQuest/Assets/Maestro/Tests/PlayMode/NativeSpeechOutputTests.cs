@@ -136,5 +136,65 @@ namespace Maestro.Quest.Tests
                 AudioListener.pause=previousPause; AudioListener.volume=previousVolume;
             }
         }
+
+        [UnityTest] public IEnumerator NativeHrtfRendersAtTheListenerAndRespondsToHeadRotation()
+        {
+            float previousVolume = AudioListener.volume; bool previousPause = AudioListener.pause;
+            var listenerObject = new GameObject("Muted HRTF listener", typeof(AudioListener), typeof(SpeechListenerProbe));
+            var probe = listenerObject.GetComponent<SpeechListenerProbe>();
+            var existing = UnityEngine.Object.FindObjectsByType<AudioListener>(FindObjectsSortMode.None);
+            var enabled = new bool[existing.Length];
+            for (int i=0; i<existing.Length; i++) { enabled[i]=existing[i].enabled; existing[i].enabled=existing[i].gameObject==listenerObject; }
+            AudioListener.volume = 1; AudioListener.pause = false; // Probe clears the final mix.
+            try
+            {
+                Assert.AreEqual(SpeechSpatializer.PluginName, AudioSettings.GetSpatializerPluginName());
+                Assert.AreEqual(32, MetaXRAudioSettings.Instance.voiceLimit);
+                output.Clock = () => AudioSettings.dspTime; output.TailOverride = null;
+                root.transform.position = new Vector3(2,0,0);
+                for (int direction=0; direction<2; direction++)
+                {
+                    listenerObject.transform.rotation = Quaternion.Euler(0,direction*180,0);
+                    probe.Reset();
+                    long generation = output.Begin(24000);
+                    var source = root.GetComponentInChildren<AudioSource>();
+                    var spatializer = source.GetComponent<MetaXRAudioSource>();
+                    Assert.IsTrue(spatializer.EnableSpatialization); Assert.IsFalse(spatializer.EnableAcoustics);
+                    Assert.IsTrue(source.spatializePostEffects);
+                    var random = new System.Random(124);
+                    for (int packet=0; packet<4; packet++)
+                    {
+                        var pcm = new short[4800];
+                        for (int i=0; i<pcm.Length; i++) pcm[i]=(short)random.Next(-1000,1001);
+                        Assert.IsTrue(output.TryWrite(generation,packet+1,pcm,out var error),error);
+                    }
+                    double deadline = Time.realtimeSinceStartupAsDouble+8;
+                    float peakVoices = 0;
+                    while (output.Read().playedSamples<19200 && Time.realtimeSinceStartupAsDouble<deadline)
+                    {
+                        if (source.GetSpatializerFloat((int)MetaXRAudioSource.NativeParameterIndex.P_READONLY_NUM_VOICES,out var activeVoices))
+                            peakVoices = Math.Max(peakVoices,activeVoices);
+                        yield return null;
+                    }
+                    Assert.AreEqual(19200,output.Read().playedSamples);
+                    var result = probe.Read();
+                    Debug.Log($"MAESTRO_HRTF_PROBE: rotation={direction*180}; blocks={result.Blocks}; channels={result.Channels}; left={result.Left}; right={result.Right}; peakVoices={peakVoices}");
+                    Assert.Greater(peakVoices,0,"No native spatial voice was active during playback");
+                    Assert.IsTrue(source.GetSpatializerFloat((int)MetaXRAudioSource.NativeParameterIndex.P_DISABLE_RFL,out var disabledReflections));
+                    Assert.AreEqual(1,disabledReflections);
+                    Assert.Greater(result.Blocks,1); Assert.AreEqual(2,result.Channels);
+                    Assert.Greater(Math.Min(result.Left,result.Right),.0001,"The listener never received both rendered channels");
+                    if (direction==0) Assert.Greater(result.Right,result.Left*1.1,"Right-side voice did not favor the right ear");
+                    else Assert.Greater(result.Left,result.Right*1.1,"Head rotation did not reverse the heard direction");
+                    output.Stop(); yield return null;
+                }
+            }
+            finally
+            {
+                output.Stop(); UnityEngine.Object.Destroy(listenerObject);
+                for(int i=0;i<existing.Length;i++) if(existing[i]) existing[i].enabled=enabled[i];
+                AudioListener.pause=previousPause; AudioListener.volume=previousVolume;
+            }
+        }
     }
 }

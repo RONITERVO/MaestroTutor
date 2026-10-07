@@ -2,6 +2,7 @@
   "name": "Maestro.Quest.PlayMode.Tests",
   "rootNamespace": "Maestro.Quest.Tests",
   "references": [
+    "Meta.XR.Audio",
     "Maestro.Quest",
     "Unity.XR.Interaction.Toolkit",
     "Maestro.Quest.TestFixtures",

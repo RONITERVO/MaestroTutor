@@ -3636,3 +3636,42 @@ preinstall backups, turn summaries and response diagnostics, and the stopped
 room/action-receipt files. Physical floor placement and the complete novice
 lesson remain unfinished. The shared stream-recovery change is desktop-only
 until explicitly included in a later development build.
+
+## Mouth-positioned speech and acoustics — pending device acceptance
+
+The continuous native renderer and Meta HRTF have desktop rendered-audio evidence,
+but are not in installed APK D85F3CB7. Resume only after the owner confirms cooling
+and normal charging, then inspect actual battery/temperature and the interrupted
+task without replaying it. Record the exact APK/source, output device (built-in
+speakers or headphones), provider route and timestamps for each result.
+
+1. Play ordinary tutor TTS, a completed room-agent reply, a saved Maestro replay
+   and a Live reply. Each must sound once at the visible animated head/mouth,
+   with no second copy at the book or fixed to the listener. User recordings and
+   artifact music retain their existing destinations. Exercise managed access
+   when available and BYOK; report unavailable managed access as a coverage gap.
+2. Turn the head through left/right and up/down while Maestro stays still, then
+   walk around the avatar and move/scale it. Direction and distance must follow
+   the rendered world and remain intelligible nearby. Repeat after selecting an
+   imported avatar with a different head rig; assess the mouth offset visually.
+3. Listen through a long streamed answer and delayed packets. Check for seams,
+   repeats, missing endings and stale audio after silence. Correlate hearing with
+   submitted/played receipts; a receipt alone does not prove audible completion.
+4. Stop during streaming and cached replay, then start a fresh answer. Repeat
+   across app focus loss, pause/resume and output-device changes. Old PCM must
+   not resume and the native voice must not be duplicated by browser fallback.
+5. In full Live and observer mode, let native speech finish before speaking a
+   fresh sentence. Maestro's output must not become a new user transcript or
+   room request. Verify the fresh onset survives after the settling interval.
+   The current native playback gate suppresses simultaneous speech; it is not
+   full-duplex echo cancellation. Measure that conversational limitation.
+6. Once room acoustics are implemented, compare an unobstructed voice with a
+   scanned wall and a moved/deleted virtual wall. Verify corresponding material
+   changes, reflections and cleanup. Toggling physics or visual opacity must not
+   silently change acoustic participation. Dynamic real objects absent from the
+   acoustic geometry require separate coverage; visual depth occlusion does not
+   establish audio occlusion.
+7. Measure the final reflection/reverb tail and microphone suppression after
+   speech and Stop. The current 500 ms input-settling interval has no measured
+   room-reverb guarantee. Complete a sustained thermal/frame/audio-underrun run
+   on the accepted build; short muted desktop tests do not close that gate.

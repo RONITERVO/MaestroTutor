@@ -15,6 +15,11 @@ namespace Maestro.Quest.Editor
         public void OnPreprocessBuild(BuildReport report)
         {
             if (report.summary.platform != BuildTarget.Android) return;
+            if (AudioSettings.GetSpatializerPluginName() != "Meta XR Audio")
+                throw new BuildFailedException("Maestro requires the pinned Meta XR Audio spatializer.");
+            var audioAsset = AssetDatabase.LoadAssetAtPath<ScriptableObject>("Assets/Resources/MetaXRAudioSettings.asset");
+            if (!audioAsset || Required(new SerializedObject(audioAsset), "voiceLimit").intValue != 32)
+                throw new BuildFailedException("Maestro's spatial voice budget is missing or changed.");
             var asset = AssetDatabase.LoadAssetAtPath<ScriptableObject>("Assets/Resources/DevAgentSettings.asset");
             if (!asset) throw new BuildFailedException("Meta developer-agent settings were not found; check the pinned SDK build order.");
             var settings = new SerializedObject(asset);

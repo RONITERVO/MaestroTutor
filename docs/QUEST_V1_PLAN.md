@@ -3711,3 +3711,28 @@ passed 2,571 tests / 285 files, alongside TypeScript/build, lint, core boundarie
 prompt ownership, catalog provenance, Quest asset and probe-type checks. No
 provider calls or headset operations occurred in this increment. The headset
 remains stopped pending owner confirmation of cooling and normal charging.
+
+Directional voice increment (2026-10-07): pin the separately versioned Meta XR
+Audio SDK 85.0.0 and its required built-in Terrain module, configure the Meta
+spatializer, and include a 32-voice settings asset. Speech startup checks the
+native plugin context before creating its single HRTF source. PCM generation
+precedes spatialization. Room reflections remain explicitly disabled until
+owned real/virtual acoustic geometry, materials and effect-tail handling exist.
+Android build preprocessing checks renderer selection and the voice budget.
+
+A muted listener-mix probe captures actual stereo output, rotates the listener
+180 degrees and requires the favored ear to reverse. It also reads the native
+voice count while PCM is playing and checks that synthetic-room reflections are
+disabled. The focused six-test native-speech suite passes: equal-source listener
+energy changes from left 0.092 / right 1.705 to left 1.705 / right 0.092, with one
+active Meta voice. The first probe incorrectly queried activity only after the
+output had drained; the correction samples during playback. The SDK ARM64 ELF
+has 16 KiB-aligned load segments. These are desktop/binary checks, not proof of
+Quest sound, echo cancellation, spatial comfort, packaged APK or room acoustics.
+
+Final directional verification passed 849 EditMode / 664 PlayMode tests (three
+optional private-import skips) and both complete native-room/original-book
+integration probes. The latter use scripted provider responses, not a new paid
+provider run. Catalog provenance and included-asset checks pass. The unchanged
+web source retains its preceding 2,571-test pass. Headset installation and its
+acceptance checklist in `QUEST_DEVICE_QA.md` remain pending.

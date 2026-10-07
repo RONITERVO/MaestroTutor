@@ -274,6 +274,17 @@ and outstanding real-provider and headset acceptance. The browser approval page
 and book client are implemented but remain disabled pending release setup. Meta SDKs remain package dependencies governed by their
 upstream license; no copied SDK source is committed here.
 
+Native speech uses the separately versioned Meta XR Audio SDK **85.0.0**, pinned
+from Unity's registry. Its geometry implementation also requires Unity's built-in
+Terrain module even when the app does not create a Terrain. The project selects
+`Meta XR Audio` and includes an explicit 32-voice budget. Each speech generation
+has one continuous source, positioned at the avatar's head/mouth offset, with
+HRTF processing after procedural PCM generation. Runtime startup checks the
+actual native context; Android preprocessing rejects missing renderer/budget
+configuration. Room reflections are disabled until room geometry/materials and
+acoustic-tail handling are implemented. Desktop rendered-audio tests do not
+replace Quest direction, echo, latency and sustained-performance acceptance.
+
 For a real-provider novice dialogue against the actual Editor runtime, use
 `Tools/Run-QuestRoomProbe.ps1 -ProviderScenario LearnerConversation` with the
 configured managed or BYOK test profile. The optional `-SyntheticRoomScan` supplies
