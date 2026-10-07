@@ -17,6 +17,7 @@ namespace Maestro.Quest.Interaction
         readonly List<RoomItem> items = new();
         readonly Dictionary<RoomItem,Home> tools = new();
         internal int RegisteredCount=>items.Count;
+        internal bool AnyHeld { get { foreach(var item in items)if(item&&item.Grab&&item.Grab.isSelected)return true;return false; } }
         readonly struct Home
         {
             public readonly Vector3 Position;

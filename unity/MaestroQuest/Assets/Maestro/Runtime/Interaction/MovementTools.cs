@@ -20,11 +20,11 @@ namespace Maestro.Quest.Interaction
         public void Build(MovementControls owner,RoomInteraction room)
         {
             controls=owner; var wood=Paint("C89D65"); var teal=Paint("2B8D88");
-            Part(transform,Vector3.zero,new Vector3(.92f,.76f,.04f),wood);
-            var handle=gameObject.AddComponent<BoxCollider>(); handle.size=new Vector3(.92f,.76f,.04f);
+            Part(transform,Vector3.zero,new Vector3(.92f,1f,.04f),wood);
+            var handle=gameObject.AddComponent<BoxCollider>(); handle.size=new Vector3(.92f,1f,.04f);
             var item=gameObject.AddComponent<RoomItem>(); item.Configure(new Collider[] { handle },1,1); room.Register(item,true);
-            string[] labels={ "Maestro stick","Your movement","Virtual / MR","Maestro binding","Your binding","Swap sticks","Walk speed","Dead zone","Select button","Use action","Button command","Stop / MR" };
-            Action[] commands={ owner.ToggleAvatar,owner.ToggleUser,owner.ToggleView,() => owner.CycleStick(false),() => owner.CycleStick(true),owner.SwapSticks,Speed,DeadZone,SelectButton,() => owner.BindSelected(selectedButton),Command,owner.Recover };
+            string[] labels={ "Maestro stick","Your movement","Virtual / MR","Maestro binding","Your binding","Swap sticks","Walk speed","Dead zone","Select button","Use action","Button command","Stop / MR","World origin" };
+            Action[] commands={ owner.ToggleAvatar,owner.ToggleUser,owner.ToggleView,() => owner.CycleStick(false),() => owner.CycleStick(true),owner.SwapSticks,Speed,DeadZone,SelectButton,() => owner.BindSelected(selectedButton),Command,owner.Recover,owner.ReturnToWorldOrigin };
             for (int i=0;i<labels.Length;i++)
             {
                 var tool=new GameObject(labels[i]); tool.transform.SetParent(transform,false); tool.transform.localPosition=new Vector3(-.3f+i%3*.3f,.13f-i/3*.115f,-.05f);
@@ -34,7 +34,7 @@ namespace Maestro.Quest.Interaction
                 Label(tool.transform,new Vector3(0,-.04f,-.025f),labels[i],.0048f);
             }
             summary=Label(transform,new Vector3(0,.28f,-.026f),"",.0047f);
-            status=Label(transform,new Vector3(0,-.31f,-.026f),"",.0042f);
+            status=Label(transform,new Vector3(0,-.43f,-.026f),"",.0042f);
             owner.Changed+=Refresh; Refresh();
         }
         void SelectButton() { selectedButton=(selectedButton+1)%4; Refresh(); }

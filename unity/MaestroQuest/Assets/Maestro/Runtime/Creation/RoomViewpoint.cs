@@ -38,9 +38,9 @@ namespace Maestro.Quest.Creation
     {
         RoomViewpoint viewpoint=new();
         internal RoomViewpoint Viewpoint=>viewpoint.Copy();
-        internal bool UpdateViewpoint(RoomViewpoint value)
+        internal bool UpdateViewpoint(RoomViewpoint value,bool exact=false)
         {
-            if(value==null||!value.Valid||viewpoint.Same(value))return false;
+            if(value==null||!value.Valid||!exact&&viewpoint.Same(value))return false;
             viewpoint=value.Copy();return true;
         }
     }

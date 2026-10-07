@@ -55,6 +55,36 @@ namespace Maestro.Quest.Interaction
             var rotation=Quaternion.AngleAxis(heading-value.yaw,Vector3.up);
             return motion.SetPose(foot-rotation*value.position,rotation,out error);
         }
+        internal bool CanPlaceViewpoint(RoomViewpoint value,out string error)
+        {
+            error="Wait for an active tracked view and an idle room scan";
+            if(!CanEnter||!PhysicalView(out var physicalFoot,out _)||value==null||!value.Valid||!value.active)return false;
+            Physics.SyncTransforms();
+            var destination=new RoomFrame(content).PointToWorld(value.position);
+            float height=Mathf.Clamp(viewer.transform.position.y-physicalFoot.y,.65f,2.2f),radius=.2f;
+            int mask=(1<<RoomPhysicsLayers.Item)|(1<<RoomPhysicsLayers.Environment);
+            int count=Physics.OverlapCapsuleNonAlloc(destination+Vector3.up*(radius+.04f),destination+Vector3.up*(height-radius),radius,overlaps,mask,QueryTriggerInteraction.Ignore);
+            // Saturation is unknown clearance, never evidence of an empty destination.
+            if(count==overlaps.Length){error="The destination is too crowded to verify clearance";return false;}
+            for(int i=0;i<count;i++){
+                var hit=overlaps[i];
+                if(hit&&hit.transform.IsChildOf(content)&&hit.attachedRigidbody?.GetComponent<IPhysicalRoomBinding>()?.PhysicalFrame!=true){
+                    error="The requested world location is occupied; choose a clear place";return false;
+                }
+            }
+            content.GetComponentsInChildren(false,ground);
+            if(Active&&!Supported(destination,destination.y)){error="Virtual placement needs accepted level ground at the destination";return false;}
+            error=null;return true;
+        }
+        internal bool PrepareViewpoint(RoomViewpoint value,out string error)
+        {
+            if(!CanPlaceViewpoint(value,out error)||!PhysicalView(out var foot,out var heading))return false;
+            var rotation=Quaternion.AngleAxis(heading-value.yaw,Vector3.up);
+            return motion.PreparePose(foot-rotation*value.position,rotation,out error);
+        }
+        internal void ApplyPreparedViewpoint()=>motion.ApplyPreparedPose();
+        internal Vector3 WorldPosition=>content.position;
+        internal Quaternion WorldRotation=>content.rotation;
         public bool Enter()
         {
             if (Active) return true;

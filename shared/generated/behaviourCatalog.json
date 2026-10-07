@@ -4330,6 +4330,144 @@
       }
     },
     {
+      "id": "world.viewpoint.set",
+      "version": 1,
+      "label": "Go to a world location",
+      "input": {
+        "type": "object",
+        "properties": {
+          "stateId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "position": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "y": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "z": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "additionalProperties": false
+          },
+          "yaw": {
+            "type": "number",
+            "minimum": -180.0,
+            "maximum": 180.0
+          }
+        },
+        "required": [
+          "stateId",
+          "position",
+          "yaw"
+        ],
+        "additionalProperties": false,
+        "x-current": {
+          "fact": "world.viewpoint",
+          "version": 1,
+          "arguments": {},
+          "fields": {
+            "stateId": [
+              "stateId"
+            ]
+          },
+          "guards": [
+            "stateId"
+          ]
+        },
+        "x-features": [
+          "worldViewpoint.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "nativeWorldPlacement",
+      "channels": [],
+      "requirements": [
+        "world.viewpoint.current",
+        "workspace.available",
+        "head.tracked",
+        "destination.clear"
+      ],
+      "description": "Explicitly relocate the user's viewpoint to an authored floor position and horizontal heading by placing virtual content around the current physical view. Use only when the user intends to relocate themselves or recenter the world; moving Maestro is a different action. Read world.viewpoint and pass its stateId. (0,0,0), yaw 0 is the fixed authored origin, not a user-defined spawn. Coordinates are currently limited to a 25-metre sphere. This preserves entity poses, ongoing programs, motion, physics velocities, view and movement opt-ins, and physical head/room tracking. It does not align the real room, recall tools, change scale, reset activity, create ground, or navigate a path. Destination clearance is checked; virtual view additionally needs accepted level ground. Held items, workspace boundaries, tracking loss, crossing physical/virtual connections, active physics with real-room collisions and failed saving refuse the entire operation. Save occurs before native placement; temporary rooms retain a temporary bookmark. Personal navigation creates no geometry Undo or scene revision. Center the user's movement stick after relocation. Completed receipts never repeat movement.",
+      "example": {
+        "stateId": "00000000000000000000000000000000",
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "yaw": 0
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "stateId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "position": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "y": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "z": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "additionalProperties": false
+          },
+          "yaw": {
+            "type": "number",
+            "minimum": -180.0,
+            "maximum": 180.0
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "stateId",
+          "position",
+          "yaw",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "room.session",
       "version": 1,
       "label": "Temporary room",
@@ -35076,6 +35214,31 @@
       ]
     },
     {
+      "id": "world.viewpoint",
+      "version": 1,
+      "type": {
+        "record": {
+          "stateId": "text",
+          "ready": "boolean",
+          "reason": "text",
+          "located": "boolean",
+          "position": {
+            "record": {
+              "x": "number",
+              "y": "number",
+              "z": "number"
+            }
+          },
+          "yaw": "number"
+        }
+      },
+      "label": "Your world location",
+      "description": "Read the tracked authored floor position, heading and current placement guard. located=false means the position/yaw placeholders are unavailable. ready is basic workspace/tracking readiness only; requested destination clearance, ground and frame transfer are checked at execution. IDs change on world movement, temporary boundaries, observed tracking changes and successful relocation; they are workspace-local guards, not durable world or region IDs. Observation has no world effect.",
+      "features": [
+        "worldViewpoint.v1"
+      ]
+    },
+    {
       "id": "object.scanDrawing",
       "version": 1,
       "type": {
@@ -35525,7 +35688,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "37286d66cc4b23c30b95eb6925ca47b54f4438ca6ce936f85ef81a53b3832fc7"
+      "sha256": "c8c89e0deda104b4e963ab4cf6521b5c05a3fed391c17101c270f89e7b9653cc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -35577,7 +35740,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "0676ab62ec6f3290a6d1a47f3078b063f1718de9f55b4f96ca93395f4736efb0"
+      "sha256": "1fcdae878a0770380f1f3e7ac91e37fa5267dd3258ed30079c018cbecfad4aeb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -35885,7 +36048,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomInteraction.cs",
-      "sha256": "6ad29947d320a435fe644b448d8798512c71615b500b7688af9e3ae9d6688096"
+      "sha256": "45c2d1b284dad9ffa11faf404bafd825251458c31cd8e495e434ac0a4f9fe29d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/PalmRecoveryButton.cs",
@@ -35917,7 +36080,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MovementTools.cs",
-      "sha256": "98fb8ab54860e19e4b8e712e571599074bc19357b856a0a7b285d533d943e4c4"
+      "sha256": "3b7c479404e9f63770b5fe82d4cf767e6ae367065b763bbff818ef8be00ea217"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceContent.cs",
@@ -36221,11 +36384,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/VirtualRoomView.cs",
-      "sha256": "62e41aad24c80285405a8a380de18b4f2e6e1c7881beeec7562e25aeeda83980"
+      "sha256": "2aba1a00891a26e2a9b1ef3d3ba9c16199d6b7c9442744b1c856cd144e10d726"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomWorldMotion.cs",
-      "sha256": "d04f751092df6a89d467fa8bfb734240a67577eeeff8c49e3d311e2c13127cb8"
+      "sha256": "a800d102758771c75b1826d9549694766d25c08f03e1551f42ce1d76c5b00514"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceEditHold.cs",
@@ -36233,11 +36396,19 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/WorkspaceViewpoint.cs",
-      "sha256": "6b0806bb65badfde72d6ed3082695f96d926369b021e0abe2a39184a3c0e231e"
+      "sha256": "57dc1e622d75e003c5e1878ba9f4aae45f563bce4520f8dc6f90881ebf6431fe"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/WorkspaceViewpoint.Placement.cs",
+      "sha256": "7cf96488890cf5e23500de37a24d002e4f9bc78bff4d46499702cdc027b152a6"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomWorldPlacement.cs",
+      "sha256": "0002e78953fc0992d0b6d44b7441b9acaf27133d27a223c71af848dcfef7bc9a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomViewpoint.cs",
-      "sha256": "41ce024bc74e85270d0bf399b46c87d1e55afdb010960f4ac552c233c430bb00"
+      "sha256": "603f0e40e519ca520fe1a90f379c469733b9bef09c4b9dbda07d2ff95bbd80fd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleButton.cs",
@@ -36473,7 +36644,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "7cadb6751f32c2dca5e102edfd6b3fe3fdd5c13d62d0744c45047a1c38303690"
+      "sha256": "7b8e54a480cdfb5d1e878b55b0076b620677ebadcdfee3e6652dd66bf7ab8ce4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -36802,6 +36973,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceSelectionCapabilities.cs",
       "sha256": "1a8f9aa19660de404afba49f8a7b4f794c9d26af31a0cd5dcc5b0f7c995639b0"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldViewpointCapability.cs",
+      "sha256": "ace09cdd04257836a549b1229760c6efd009ada4b3a8d1ad2fe057b93c1d37cd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/ball.json",

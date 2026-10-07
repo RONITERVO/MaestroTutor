@@ -30,6 +30,7 @@ import nativeImportReadback from './importReadback.json';
 import nativeController from './controllerConfiguration.json';
 import nativeModes from './controllerModes.json';
 import nativeRecovery from './toolRecovery.json';
+import nativePlacement from './worldPlacement.json';
 import nativeSpatial from './spatialSettings.json';
 import nativeMotionBatch from './motionBatchImport.json';
 import nativeAvatar from './avatarSelection.json';
@@ -85,6 +86,14 @@ if(toolRecovery){
  state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';
  state.execution={...JSON.parse(JSON.stringify(nativeRecovery.receipt)),selected:null,running:[],outcomes:[],nextRunId:nativeRecovery.receipt.selected.id};
  state.capabilities=[...state.capabilities??[],'catalogVocabulary.v1','toolRecovery.v1','structuredValues.v1','factQueries.v1','execution.v1','executionReceipts.v1','actionResults.v1'];
+}
+const worldPlacement=new URLSearchParams(location.search).has('worldPlacement');
+let placementObservation=nativePlacement.before;
+if(worldPlacement){
+ if(!validExecutionView(nativePlacement.receipt))throw new Error('Invalid native world placement fixture');
+ state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';
+ state.execution={...JSON.parse(JSON.stringify(nativePlacement.receipt)),selected:null,running:[],outcomes:[],nextRunId:nativePlacement.receipt.selected.id};
+ state.capabilities=[...state.capabilities??[],'catalogVocabulary.v1','worldViewpoint.v1','structuredValues.v1','factQueries.v1','execution.v1','executionReceipts.v1','actionResults.v1'];
 }
 const controllerModes=new URLSearchParams(location.search).has('controllerModes');
 const modeViews=[nativeModes.enable,nativeModes.virtualView,nativeModes.user,nativeModes.mixed];
@@ -278,6 +287,11 @@ setInterval(()=>{
      if(input.runId!==view.selected.id||input.call.id!==view.selected.call.id||input.call.version!==view.selected.call.version||JSON.stringify(Object.entries(input.call.arguments).sort())!==JSON.stringify(Object.entries(view.selected.call.arguments).sort())){state.ok=false;state.status='Only captured native recovery can be replayed';}
      else{state.execution=copy(view) as RoomAgentState['execution'];recoveryObservation=nativeRecovery.after;state.status='Captured native tool recovery; browser does not move a headset';}
     }
+    else if(worldPlacement&&input.operation==='start'){
+     const view=nativePlacement.receipt;
+     if(input.runId!==view.selected.id||input.call.id!==view.selected.call.id||input.call.version!==view.selected.call.version||JSON.stringify(Object.entries(input.call.arguments).sort())!==JSON.stringify(Object.entries(view.selected.call.arguments).sort())){state.ok=false;state.status='Only captured native placement can be replayed';}
+     else{state.execution=copy(view) as RoomAgentState['execution'];placementObservation=nativePlacement.after;state.status='Captured native world placement; browser does not move a headset';}
+    }
     else if(controllerModes&&input.operation==='start'){
      const index=modeViews.findIndex(view=>input.call?.id===view.selected.call.id&&input.call.version===view.selected.call.version&&JSON.stringify(Object.entries(input.call.arguments).sort())===JSON.stringify(Object.entries(view.selected.call.arguments).sort()));
      if(index<0){state.ok=false;state.status='Only captured native mode transitions can be replayed';}
@@ -364,6 +378,12 @@ setInterval(()=>{
      const definition=behaviourFact('room.tools.recovery')!;
      if(query.operation==='search')state.catalog={operation:'search',category:'facts',query:query.query,offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Book and tool recovery'};
      else state.catalog={operation:'inspect',category:'facts',capability:query.capability,version:1,definition:query.capability===definition.id?definition:null,available:query.capability===definition.id,value:query.capability===definition.id?copy(recoveryObservation):null,status:'Captured native recovery state'};
+     continue;
+    }
+    if(worldPlacement&&query.operation!=='check'&&query.category==='facts'){
+     const definition=behaviourFact('world.viewpoint')!;
+     if(query.operation==='search')state.catalog={operation:'search',category:'facts',query:query.query,offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Your world location'};
+     else state.catalog={operation:'inspect',category:'facts',capability:query.capability,version:1,definition:query.capability===definition.id?definition:null,available:query.capability===definition.id,value:query.capability===definition.id?copy(placementObservation):null,status:'Captured native world placement state'};
      continue;
     }
     if(controllerModes&&query.operation!=='check'&&query.category==='facts'){

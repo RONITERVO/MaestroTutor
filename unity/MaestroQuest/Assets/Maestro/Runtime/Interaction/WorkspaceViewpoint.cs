@@ -7,7 +7,7 @@ namespace Maestro.Quest.Interaction
 {
     /// <summary>Per-workspace navigation bookmark. Tracking and real-room alignment
     /// remain physical; only the authored content frame is restored.</summary>
-    internal sealed class WorkspaceViewpoint:MonoBehaviour
+    internal sealed partial class WorkspaceViewpoint:MonoBehaviour
     {
         RoomEditor editor;
         VirtualRoomView view;

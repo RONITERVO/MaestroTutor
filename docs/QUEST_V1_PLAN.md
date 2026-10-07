@@ -3736,6 +3736,43 @@ explicit recentering, stable world/region IDs, terrain-following user movement,
 shared appearances, environment/water simulation and headset acceptance remain
 open. This bookmark is not a region identity or permission to replay activity.
 
+Explicit world-location increment (2026-10-08): world.viewpoint.set and
+world.viewpoint now expose the same native relocation to generated book forms,
+programs and delegated actions. The 3D movement tray adds **World origin**, using
+the same handler with a fixed authored (0,0,0), yaw-zero target. This is an explicit
+user-view relocation, separate from tool Recall or moving Maestro; it is not yet
+an editable spawn or a durable region/world identifier.
+
+The operation samples the current physical view and moves only the authored frame.
+It retains entity definitions, native body velocities, ongoing actors/programs,
+view mode and movement opt-ins. Only user movement's neutral-input gate is reset.
+It requires a fresh workspace-local guard, tracked/focused view, released items,
+clear destination and a completed workspace boundary. Virtual presentation also
+requires accepted level ground. Scanned physical geometry is not treated as a
+virtual destination obstacle; active physics with real collisions and joints
+crossing the two frames instead refuse frame transfer. No ground, path, scale
+change or implicit physics pause is invented.
+
+The old writer is drained before revalidation. After native placement is prepared,
+the exact viewpoint is saved before a callback-free frame transfer; failed saves
+leave journal and poses unchanged. Temporary placement stays in the fork and
+discard retains personal navigation, following the existing viewpoint policy.
+Navigation produces no geometry Undo or scene revision, and replaying a completed
+action receipt cannot repeat relocation. Current saved coordinates remain limited
+to a 25-metre sphere; this is not a country-size world claim.
+
+Final-source native verification passes **894 EditMode / 750 PlayMode** tests,
+with three expected optional private-file skips. Seven new workspace cases cover
+shared receipts and persistent NPC/program activity, write denial, occupancy,
+virtual ground, unchanged physical tracking, physical bindings and joint refusal,
+and temporary discard. The generated book form replays an actual native receipt;
+1,054 shared room checks and TypeScript pass. Full room/book journeys also pass with offline scripted providers:
+853501133b204eed9739a557507e7ace and 181249c9646f4096b016a0744618029d.
+Evidence is under .quest-evidence/spatial-state/world-placement-*.
+No provider, headset or city-scale acceptance is claimed by these checks.
+Stable world/region identities, terrain-following locomotion and the appearance/
+environment/medium stages below remain required work.
+
 The owner expects worlds to grow from room toys into miniature countries with
 cities, buildings, items and NPCs. Users and the agent must author the same world;
 imported Blender/Meshy assets are another source of its components. Texture and

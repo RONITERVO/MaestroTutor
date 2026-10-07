@@ -1,0 +1,117 @@
+{
+  "before": {
+    "stateId": "af8cc6caaed94f739e1c32a48d87eff1",
+    "ready": true,
+    "reason": "",
+    "located": true,
+    "position": {
+      "x": -2.0,
+      "y": 0.0,
+      "z": 1.0
+    },
+    "yaw": 34.9999962
+  },
+  "request": {
+    "operation": "start",
+    "runId": "e82b6b426535427e9b146e3db07851b5",
+    "call": {
+      "id": "world.viewpoint.set",
+      "version": 1,
+      "arguments": {
+        "stateId": "af8cc6caaed94f739e1c32a48d87eff1",
+        "position": {
+          "x": 3.0,
+          "y": 0.0,
+          "z": 4.0
+        },
+        "yaw": 70.0
+      }
+    }
+  },
+  "receipt": {
+    "selected": {
+      "id": "e82b6b426535427e9b146e3db07851b5",
+      "capability": "world.viewpoint.set",
+      "version": 1,
+      "resources": [],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "stateId": "5cf6851c3e4446d2aeafa175f3ecb3ba",
+        "position": {
+          "x": 3.0,
+          "y": 0.0,
+          "z": 4.0
+        },
+        "yaw": 70.0,
+        "temporary": false
+      },
+      "call": {
+        "id": "world.viewpoint.set",
+        "version": 1,
+        "arguments": {
+          "stateId": "af8cc6caaed94f739e1c32a48d87eff1",
+          "position": {
+            "x": 3.0,
+            "y": 0.0,
+            "z": 4.0
+          },
+          "yaw": 70.0
+        }
+      }
+    },
+    "running": [
+      {
+        "id": "4bc5cdbfdd384f119a91e98df5baeb20",
+        "capability": "time.wait",
+        "version": 1,
+        "resources": [],
+        "phase": "running",
+        "status": "Action running"
+      }
+    ],
+    "outcomes": [
+      {
+        "id": "e82b6b426535427e9b146e3db07851b5",
+        "capability": "world.viewpoint.set",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "stateId": "5cf6851c3e4446d2aeafa175f3ecb3ba",
+          "position": {
+            "x": 3.0,
+            "y": 0.0,
+            "z": 4.0
+          },
+          "yaw": 70.0,
+          "temporary": false
+        }
+      }
+    ],
+    "nextRunId": "cc7000b0c3554cfaa2c6aa6cd50121b3",
+    "storageError": null,
+    "recovery": null,
+    "workspace": {
+      "selected": null,
+      "running": [],
+      "outcomes": [],
+      "nextRunId": "6f738e4b8d10419c91c715a90eb9e007",
+      "storageError": null,
+      "recovery": null
+    }
+  },
+  "after": {
+    "stateId": "5cf6851c3e4446d2aeafa175f3ecb3ba",
+    "ready": true,
+    "reason": "",
+    "located": true,
+    "position": {
+      "x": 3.00000024,
+      "y": 0.0,
+      "z": 4.0
+    },
+    "yaw": 70.0
+  }
+}

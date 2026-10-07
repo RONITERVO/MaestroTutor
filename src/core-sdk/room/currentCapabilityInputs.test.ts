@@ -12,7 +12,7 @@ const view=():CatalogView=>({operation:'inspect',category:'facts',capability:'ob
 it('checks every native current-input annotation against both registered contracts',()=>{
  let count=0;
  const visit=(s:CapabilitySchema)=>{if(s['x-current'])count++;expect(()=>validateCurrentInputMapping(s)).not.toThrow();for(const child of [...s.oneOf??[],...Object.values(s.properties??{}),...s.items?[s.items]:[]])visit(child);};
- for(const action of behaviourCatalog.actions)visit(action.input as CapabilitySchema);expect(count).toBe(83);
+ for(const action of behaviourCatalog.actions)visit(action.input as CapabilitySchema);expect(count).toBe(84);
 });
 it('loads exact fact values atomically and distinguishes guards from editable preferences',()=>{
  const next=applyCurrentInputs(schema(),args(),view());expect(next).toEqual({target:native.beforePhysics.target,revision:native.beforePhysics.revision,mode:native.beforePhysics.mode,shape:native.beforePhysics.shape,mass:native.beforePhysics.mass});
@@ -82,4 +82,17 @@ it('fills both recall guards from one fact and refuses changing either guard wit
  const identity=currentInputIdentity(input,args,'workspace');
  expect(currentInputIdentity(input,{...args,revision:8},'workspace')).not.toBe(identity);
  expect(currentInputIdentity(input,{...args,stateId:'b'.repeat(32)},'workspace')).not.toBe(identity);
+});
+
+it('refreshes the world placement guard without replacing the requested destination',()=>{
+ const input=capabilityDefinition('world.viewpoint.set')!.input;
+ const value={stateId:'a'.repeat(32),ready:true,reason:'',located:true,position:{x:1,y:0,z:2},yaw:12};
+ const observation:CatalogView={operation:'inspect',category:'facts',capability:'world.viewpoint',version:1,definition:behaviourFact('world.viewpoint')!,available:true,value,status:'Available'};
+ const target={stateId:'0'.repeat(32),position:{x:3,y:0,z:4},yaw:70};
+ const loaded=applyCurrentInputs(input,target,observation);
+ expect(loaded).toEqual({...target,stateId:value.stateId});
+ const key=currentInputIdentity(input,loaded,'workspace');
+ expect(currentInputIdentity(input,{...loaded,position:{x:4,y:0,z:5},yaw:30},'workspace')).toBe(key);
+ expect(currentInputIdentity(input,{...loaded,stateId:'b'.repeat(32)},'workspace')).not.toBe(key);
+ expect(currentInputIdentity(input,loaded,'other-workspace')).not.toBe(key);
 });
