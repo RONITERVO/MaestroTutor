@@ -146,6 +146,16 @@ of forcing the model to produce a prescribed tool call. Stop during a turn is
 available through `learner-control.json` with `stopSequence` matching that turn.
 `finish` closes the owned session. The collector keeps actual messages, exported
 artifacts, native samples, task journals, usage and per-turn managed settlement.
+It also retains up to 50 recent provider response-text entries per turn (32,000
+characters per entry), without request/media payloads or credentials, so a
+rejected planner proposal can be distinguished from a native action failure.
+
+Optional `-SyntheticRoomScan` installs an explicit Editor-only platform fixture
+with a known FLOOR plane, initially unloaded. A real `room.environment.set` load
+must run before scan facts become available. Native setup, placement, persistence
+and receipts are unchanged. `ready.json` records `syntheticScan`, and
+`synthetic-scan.json` records load/scan counts. This option is restricted to this
+learner scenario; it cannot verify an OS permission dialog or physical alignment.
 
 This mode has a one-hour Editor-only lifetime; other probes retain fifteen minutes.
 It samples the shared client's passive snapshot during pending commands, without

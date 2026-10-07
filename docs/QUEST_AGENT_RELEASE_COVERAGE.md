@@ -796,3 +796,66 @@ remain open. The lesson and room have a fresh verified local backup.
 The owner also clarified that v1 must support separately selectable physical,
 mixed-reality and virtual-only views. The integration/acceptance requirements
 are recorded in QUEST_V1_PLAN.md; this microphone fix does not implement them.
+
+### Scanned-floor recovery and novice provider checks (2026-10-07)
+
+The physical Live continuation removed only the requested tree and preserved the
+apple and other objects, but its live surface ray missed. A subsequent request
+inspected four facts without loading the unavailable scan or moving the apple.
+Its reply described the earlier failed placement as a new attempt. Neither turn
+passes the complete placement requirement. The prior microphone/depth commit
+`9957953a` passed [release CI 37545778212](https://github.com/RONITERVO/MaestroTutor/actions/runs/37545778212).
+
+The shared catalog now exposes `object.scan.place` for an exact inspected upward
+scan plane. The real native handler fits collision bounds, saves through normal
+object editing, and preserves Undo, temporary-room and ownership semantics. See
+[surface placement](QUEST_SURFACE_PLACEMENT.md). Planner guidance distinguishes
+the requested floor from a live ray's first hit, and permits loading an available
+saved room once as a prerequisite. It requires a fresh setup observation rather
+than treating an initial permission-stage acknowledgement as a still-open prompt.
+Result narration must identify this task's actual commands; the initial Live
+reply cannot claim results before the delegated task executes.
+
+Per-task discovery limits are now 18 planning calls and 12 read batches; action
+batches remain limited to three. The earlier six-read ceiling was exhausted by
+setup, scan inspection and capability discovery. The higher ceiling costs more
+time/tokens when used; it is bounded, not a success guarantee. Regression tests
+retain rejection before dispatch/journaling and cancellation at budget boundaries.
+
+Real Gemini 3.8 Flash checks used the ordinary English-to-Spanish tutor, verifier,
+agent and actual Unity runtime, with fresh learning history. The learner asked
+to put the existing ball on the floor and explain "ball" in Spanish; no native
+IDs, schema names or coordinates were supplied in the learner request.
+
+| Access | Evidence | Observed result |
+| --- | --- | --- |
+| BYOK | `94b5065ae5404f0d93073d27a74deaf3` | Initial request failed under the earlier 9/6/3 limits. A plain-language follow-up discovered exact scanned placement and moved the same ball onto the floor. The other four objects stayed unchanged. |
+| Managed staging | `482d5939407a4677829fd430f6f3956e` | Fresh request under 18/12/3 limits loaded once, refreshed scan state, inspected the floor and placed the ball. One incorrect fact argument was rejected and corrected before placement. No follow-up or extra physics start was needed; other objects stayed unchanged. |
+
+Both successful placements returned completed native receipts and the expected
+collision support height. Managed accounting reconciled 17 usage/charge entries,
+465 credits / USD 0.454757, with no remaining reservation. Earlier failed runs
+are retained too: BYOK mistook a historical permission acknowledgement for a
+current prompt; the first managed attempt ended before placement with a generic
+task error whose rejected proposal was not retained. The learner driver now
+records bounded provider response text for diagnosis, excluding request media
+and credentials. No full-lesson acceptance is inferred from these focused runs.
+
+`Run-QuestRoomProbe.ps1 -ProviderScenario LearnerConversation -SyntheticRoomScan`
+explicitly replaces only the Editor platform scan/permission boundary with a
+known floor, initially unloaded. The native setup state machine, catalog, planner,
+placement, storage and receipts remain real. This fixture does not test an OS
+permission dialog, real room alignment or physical input. The option is rejected
+for other scenarios. Private conversations and diagnostics stay outside Git.
+
+Validation: **2,503 web tests in 278 files**, **839 EditMode / 651 PlayMode tests**,
+with three optional private-import skips. TypeScript and catalog provenance pass.
+Both deterministic native integration journeys pass: headless
+`3b715b2da041492d914a5284b805cccb` and rendered book
+`d43ec35228f14136a3e60ebb2908053b`. The latter exhausts all 12 discovery reads,
+still creates the object, rejects a stale agent paint after a human edit, shows
+the native receipt history and reloads without replay. Its earlier fixed-count
+test assertions were updated to the shared limit; provider replies remain
+explicitly scripted for this book regression, separate from the paid checks above.
+The new floor action and Live narration guidance still require headset testing;
+the installed APK has not changed during this increment.

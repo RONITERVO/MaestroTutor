@@ -17,7 +17,7 @@ namespace Maestro.Quest.Editor
     {
         const string Key="Maestro.RoomProbe.Directory";
         static string directory,id,clientId;static RoomAgent agent;static GameObject root;
-        static double started,next;static int timeoutSeconds;static bool finishing;static QuestAvatarProbe avatarProbe;
+        static double started,next;static int timeoutSeconds;static bool finishing;static QuestAvatarProbe avatarProbe;static QuestRoomProbeScan scanProbe;
         static QuestRoomProbe(){EditorApplication.playModeStateChanged+=Changed;EditorApplication.update+=Tick;}
         public static void Start()
         {
@@ -58,7 +58,10 @@ namespace Maestro.Quest.Editor
                         var floor=GameObject.CreatePrimitive(PrimitiveType.Cube);floor.name="Probe-only synthetic scanned floor";floor.transform.SetParent(root.transform,false);floor.transform.position=new Vector3(0,-.1f,0);floor.transform.localScale=new Vector3(20,.2f,20);floor.layer=RoomPhysicsLayers.Scanned;
                         root.GetComponent<RoomPhysicsWorld>().SetSurfaces(true,"Probe-only synthetic floor; no real scan or alignment proof");
                     }
-                    Publish("ready.json",new JObject {["version"]=1,["id"]=id,["boundary"]="Real Unity app in Editor; no Android WebView, headset or real room scan",["syntheticPhysics"]=synthetic});
+                    bool syntheticScan=Environment.GetEnvironmentVariable("MAESTRO_ROOM_PROBE_SCAN")=="1";
+                    if(syntheticScan&&!synthetic)throw new InvalidOperationException("The synthetic scan requires the explicit synthetic physics fixture.");
+                    scanProbe=syntheticScan?new QuestRoomProbeScan(root):null;
+                    Publish("ready.json",new JObject {["version"]=1,["id"]=id,["boundary"]="Real Unity app in Editor; no Android WebView, headset or real room scan",["syntheticPhysics"]=synthetic,["syntheticScan"]=syntheticScan});
                 }catch(Exception e){Fail(e);}
             }else if(state==PlayModeStateChange.EnteredEditMode){
                 directory=SessionState.GetString(Key,"");if(string.IsNullOrEmpty(directory))return;
@@ -71,6 +74,7 @@ namespace Maestro.Quest.Editor
             if(EditorApplication.timeSinceStartup-started>timeoutSeconds){Fail(new TimeoutException("Room probe exceeded its bounded session duration."));return;}
             if(EditorApplication.timeSinceStartup<next)return;next=EditorApplication.timeSinceStartup+.1;
             try{
+                scanProbe?.Tick();
                 var input=Path.Combine(directory,"request.json");
                 if(File.Exists(input)){
                     byte[] bytes;
@@ -92,6 +96,7 @@ namespace Maestro.Quest.Editor
                     var observed=agent.Observe();
                     Publish("state.json",new JObject {["version"]=1,["id"]=id,["clientId"]=clientId,["state"]=JObject.Parse(RoomAgentWire.Serialize(observed))});
                     var animation=avatarProbe?.Observe(root,id,observed);if(animation!=null)Publish("avatar-playback.json",animation);
+                    if(scanProbe!=null)Publish("synthetic-scan.json",new JObject{["loads"]=scanProbe.Loads,["scans"]=scanProbe.Scans,["boundary"]="Explicit synthetic platform and floor; native setup/placement and real provider"});
                 }
             }catch(InvalidDataException e){Fail(e);}
             catch(IOException){ /* Atomic replacement can briefly contend on Windows. The bounded client times out. */ }

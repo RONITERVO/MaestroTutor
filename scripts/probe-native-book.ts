@@ -7,6 +7,7 @@ import {join} from 'node:path';
 import assert from 'node:assert/strict';
 import {RoomProbeChannel} from '../src/headless/roomTransport';
 import type {RoomAgentState} from '../src/core-sdk/room/roomAgent';
+import {ROOM_TASK_LIMITS} from '../shared/roomTaskBudget';
 const directory=process.argv[2];if(!directory)throw new Error('Supply the fresh, explicitly started native probe directory.');
 const channel=await RoomProbeChannel.connect(directory,120000);
 let browser:Browser|undefined,server:ViteDevServer|undefined;
@@ -14,6 +15,7 @@ const requests=new Map<string,unknown>(),observations:RoomAgentState[]=[],provid
 let page:Awaited<ReturnType<Browser['newPage']>>|undefined;
 let releasePlan:()=>void=()=>{};const blockedPlan=new Promise<void>(resolve=>{releasePlan=resolve;});
 let plannerCalls=0,normalReplies=0,verificationCalls=0,planWaiting=false;
+const discoveryReads=ROOM_TASK_LIMITS.queryBatches,expectedPlans=discoveryReads+3;
 try{
  // This immutable verification page needs no watcher or shared optimizer cache.
  server=await createServer({cacheDir:join(directory,'vite-cache'),optimizeDeps:{entries:['test-fixtures/browser/quest-native-book.html']},server:{host:'127.0.0.1',port:0,strictPort:true,watch:null},logLevel:'warn',clearScreen:false});await server.listen();
@@ -49,21 +51,21 @@ try{
    const state=input.scene as RoomAgentState;assert.ok(state.session&&state.sceneRevision);
    assert.equal(input.receipts.length,plannerCalls-1);
    // Exercise the exhausted-discovery boundary with actual native reads.
-   assert.deepEqual(input.budget,{planningCalls:10-plannerCalls,queryBatches:Math.max(0,7-plannerCalls),actionBatches:3-Math.max(0,plannerCalls-7)});
+   assert.deepEqual(input.budget,{planningCalls:ROOM_TASK_LIMITS.planningCalls+1-plannerCalls,queryBatches:Math.max(0,discoveryReads+1-plannerCalls),actionBatches:ROOM_TASK_LIMITS.actionBatches-Math.max(0,plannerCalls-discoveryReads-1)});
    if(plannerCalls===1||plannerCalls===4)text=JSON.stringify({commands:[{action:'catalog',catalog:{operation:'search',query:plannerCalls===1?'object.create':'object.color',offset:0}}]});
    else if(plannerCalls===5)text=JSON.stringify({commands:[{action:'catalog',catalog:{operation:'inspect',capability:'object.color.set',version:1}}]});
    else if(plannerCalls===3){
     const definition=state.catalog?.operation==='inspect'?state.catalog.definition:null;assert.ok(definition&&'example' in definition&&definition.example);
     text=JSON.stringify({commands:[{action:'catalog',catalog:{operation:'check',call:{id:'object.create',version:1,arguments:{...definition.example,name:'Cooperative ball',x:.5,y:1,z:.8}}}}]});
-   }else if(plannerCalls===2||plannerCalls===6)text=JSON.stringify({commands:[{action:'catalog',catalog:{operation:'inspect',capability:'object.create',version:1}}]});
-   else if(plannerCalls===7){
+   }else if(plannerCalls<=discoveryReads)text=JSON.stringify({commands:[{action:'catalog',catalog:{operation:'inspect',capability:'object.create',version:1}}]});
+   else if(plannerCalls===discoveryReads+1){
     const definition=state.catalog?.operation==='inspect'?state.catalog.definition:null;
     assert.ok(definition&&'example' in definition&&definition.example);
     text=JSON.stringify({commands:[{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{...definition.example,name:'Cooperative ball',x:.5,y:1,z:.8}}}}]});
-   }else if(plannerCalls===8){
+   }else if(plannerCalls===discoveryReads+2){
     const ball=state.objects.find(o=>o.name==='Cooperative ball');assert.ok(ball);planWaiting=true;await blockedPlan;
     text=JSON.stringify({commands:[{action:'paint',target:ball.id,color:{r:0,g:1,b:0,a:1}}]});
-   }else if(plannerCalls===9){assert.equal(input.receipts.at(-1).ok,false);assert.match(input.receipts.at(-1).status,/target changed/);text=JSON.stringify({commands:[]});}
+   }else if(plannerCalls===expectedPlans){assert.equal(input.receipts.at(-1).ok,false);assert.match(input.receipts.at(-1).status,/target changed/);text=JSON.stringify({commands:[]});}
    else throw new Error('Unexpected additional planner request');
   }else if(schema?.properties?.suggestions){
    verificationCalls++;
@@ -162,9 +164,10 @@ try{
  assert.equal(task.handoff.input.prompt,'Create a ball, then make it green.');assert.equal(task.phase,'completed');
  const failedPaint=task.operations.find(o=>o.commands[0].action==='paint');assert.ok(failedPaint?.receipt&&!failedPaint.receipt.ok,'Stale planned paint must be refused after the human edit');
  assert.deepEqual(completed.state!.objects.find(o=>o.id===ball.id)!.color,human.objects.find(o=>o.id===ball.id)!.color);
- assert.equal(completed.state!.objects.length,initial.objects.length+1);assert.equal(plannerCalls,9);assert.equal(verificationCalls,1);assert.equal(normalReplies,2);
+ assert.equal(completed.state!.objects.length,initial.objects.length+1);assert.equal(plannerCalls,expectedPlans);assert.equal(verificationCalls,1);assert.equal(normalReplies,2);
  await page.getByRole('button',{name:'Back to chat',exact:true}).first().click();
- await page.getByText('Task details',{exact:true}).click();await page.getByText('Recorded action batches: 8.',{exact:true}).waitFor();
+ assert.equal(task.operations.length,discoveryReads+2);
+ await page.getByText('Task details',{exact:true}).click();await page.getByText(`Recorded action batches: ${discoveryReads+2}.`,{exact:true}).waitFor();
  await page.screenshot({path:join(directory,'book-agent-result.png')});
  // Capture through the real generated book form and native image channel.
  await page.evaluate(()=>window.maestroBook!.command({version:1,type:'workspace.open'}));
@@ -182,7 +185,7 @@ try{
  const commandCount=requests.size;
  await page.reload();await page.waitForFunction(()=>!!window.nativeBookEvidence?.().state);
  await page.getByText('The ball keeps your colour.',{exact:true}).waitFor();
- assert.equal(requests.size,commandCount,'Reload replayed a room command');assert.equal(plannerCalls,9);assert.deepEqual(errors,[]);assert.deepEqual((await page.evaluate(()=>window.nativeBookEvidence!())).errors,[]);
+ assert.equal(requests.size,commandCount,'Reload replayed a room command');assert.equal(plannerCalls,expectedPlans);assert.deepEqual(errors,[]);assert.deepEqual((await page.evaluate(()=>window.nativeBookEvidence!())).errors,[]);
  const evidence={boundary:'Real QuestBookSurface, ChatInterface/useTutorConversation, verifier, task service/IndexedDB and Unity app; provider SSE responses are explicitly scripted offline, no real provider, Android texture, headset or scan acceptance.',providerUsed:false,providerRequests,manual:true,physicalTools:{shownAndHiddenViaSharedForm:true,savedSceneUnchanged:true},manualForm,capture,capturePixelsVerified:true,humanEditPreserved:true,staleAgentPaintRefused:true,discoveryBudgetPreservedActions:true,planningCalls:plannerCalls,reloadWithoutReplay:true,initial,working,human,completed,task,requests:[...requests.values()],observations,errors};
  await writeFile(join(directory,'book-journey.json'),JSON.stringify(evidence,null,2));
  console.log('Real native book and original-chat handoff journey passed.');

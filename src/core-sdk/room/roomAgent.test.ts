@@ -149,10 +149,10 @@ it('discovers and checks a capability before saving while keeping a separate bou
 });
 it('refuses a proposal over either allowance before journaling or dispatch',async()=>{
  for(const action of [{action:'catalog',catalog:{operation:'search',query:'',offset:0}},{action:'workspace',visible:true}]){
-  const ai=client(Array.from({length:10},()=>JSON.stringify({commands:[action]}))),current={...scene,capabilities:['catalog.v1']};
+  const accepted=action.action==='catalog'?ROOM_TASK_LIMITS.queryBatches:ROOM_TASK_LIMITS.actionBatches;
+  const ai=client(Array.from({length:accepted+1},()=>JSON.stringify({commands:[action]}))),current={...scene,capabilities:['catalog.v1']};
   const execute=vi.fn(async(_commands:RoomCommand[])=>({...current,ack:1})),beforeDispatch=vi.fn(),onReceipt=vi.fn();
   const result=await runRoomActionTask(input,{aiClient:ai},{state:()=>current,valid:()=>true,execute},()=>{},{beforeDispatch,onReceipt});
-  const accepted=action.action==='catalog'?6:3;
   expect(result.budgetExhausted).toBe(true);expect(execute).toHaveBeenCalledTimes(accepted);expect(beforeDispatch).toHaveBeenCalledTimes(accepted);expect(onReceipt).toHaveBeenCalledTimes(accepted);
   expect(ai.models.generateContentStream).toHaveBeenCalledTimes(accepted+1);
  }
@@ -293,23 +293,24 @@ it.each([objectFactProgram,conditionProgram])('passes queried object records bac
 });
 
 
-it('can use discovered capabilities after six queries without increasing the total planning budget',async()=>{
+it('can use discovered capabilities after all discovery reads without consuming action allowance',async()=>{
  const query:RoomCommand={action:'catalog',catalog:{operation:'inspect',capability:'object.create',version:1}};
  const create:RoomCommand={action:'create',reference:'ball',name:'Ball',kind:'ball'};
  const paint:RoomCommand={action:'paint',target:'a'.repeat(32),color:{r:0,g:1,b:0,a:1}};
- const commands=[...Array.from({length:6},()=>query),create,paint];
+ const queries=ROOM_TASK_LIMITS.queryBatches;
+ const commands=[...Array.from({length:queries},()=>query),create,paint];
  const ai=client([...commands.map(command=>JSON.stringify({commands:[command]})),'{"commands":[]}']);
  let current={...scene,capabilities:['catalog.v1']};
  const execute=vi.fn(async(_commands:RoomCommand[])=>{current={...current,revision:current.revision+1,ack:current.ack+1};return current;});
  const result=await runRoomActionTask(input,{aiClient:ai},{state:()=>current,valid:()=>true,execute},()=>{});
  expect(execute.mock.calls.map(call=>call[0])).toEqual(commands.map(command=>[command]));expect(result.budgetExhausted).toBe(false);
  const requests=ai.models.generateContentStream.mock.calls as unknown as [any][];
- expect(requests).toHaveLength(ROOM_TASK_LIMITS.planningCalls);
+ expect(requests).toHaveLength(queries+3);
  const payload=(index:number)=>JSON.parse(requests[index][0].contents[0].parts[0].text);
- expect(payload(0).budget).toEqual({planningCalls:9,queryBatches:6,actionBatches:3});
- expect(payload(6).budget).toEqual({planningCalls:3,queryBatches:0,actionBatches:3});
- expect(payload(8).budget).toEqual({planningCalls:1,queryBatches:0,actionBatches:1});
- expect(payload(8).receipts).toHaveLength(8);expect(payload(8).scene.ack).toBe(8);
+ expect(payload(0).budget).toEqual(ROOM_TASK_LIMITS);
+ expect(payload(queries).budget).toEqual({planningCalls:ROOM_TASK_LIMITS.planningCalls-queries,queryBatches:0,actionBatches:3});
+ expect(payload(queries+2).budget).toEqual({planningCalls:ROOM_TASK_LIMITS.planningCalls-queries-2,queryBatches:0,actionBatches:1});
+ expect(payload(queries+2).receipts).toHaveLength(queries+2);expect(payload(queries+2).scene.ack).toBe(queries+2);
 });
 
 it('can inspect the actual result after its third action instead of returning an unchecked start',async()=>{
@@ -327,17 +328,23 @@ it('can inspect the actual result after its third action instead of returning an
  expect(execute).toHaveBeenCalledTimes(4);expect(result.budgetExhausted).toBe(false);
  expect(result.receipts[2].execution!.selected!.phase).toBe('running');expect(result.scene.execution!.selected!.phase).toBe('completed');
  const fourth:any=(ai.models.generateContentStream.mock.calls as any)[3][0];
- expect(JSON.parse(fourth.contents[0].parts[0].text).budget).toEqual({planningCalls:6,queryBatches:6,actionBatches:0});
+ expect(JSON.parse(fourth.contents[0].parts[0].text).budget).toEqual({planningCalls:ROOM_TASK_LIMITS.planningCalls-3,queryBatches:ROOM_TASK_LIMITS.queryBatches,actionBatches:0});
 });
 
-it('ends at nine planning calls even when both batch allowances are used exactly',async()=>{
+it('refuses an over-budget discovery read before dispatch while action allowance remains',async()=>{
  const query:RoomCommand={action:'catalog',catalog:{operation:'search',query:'create',offset:0}};
- const action:RoomCommand={action:'workspace',visible:true};
- const commands=[query,action,query,action,query,action,query,query,query];
- const ai=client([...commands.map(command=>JSON.stringify({commands:[command]})),'{"commands":[]}']);
+ const ai=client(Array.from({length:ROOM_TASK_LIMITS.queryBatches+1},()=>JSON.stringify({commands:[query]})));
  const execute=vi.fn(async()=>({...scene,capabilities:['catalog.v1'],ack:1}));
  const result=await runRoomActionTask(input,{aiClient:ai},{state:()=>({...scene,capabilities:['catalog.v1']}),valid:()=>true,execute},()=>{});
- expect(result.receipts).toHaveLength(9);expect(result.budgetExhausted).toBe(true);expect(ai.models.generateContentStream).toHaveBeenCalledTimes(9);
+ expect(result.receipts).toHaveLength(ROOM_TASK_LIMITS.queryBatches);expect(result.budgetExhausted).toBe(true);
+ expect(ai.models.generateContentStream).toHaveBeenCalledTimes(ROOM_TASK_LIMITS.queryBatches+1);
+});
+
+it('bounds repeated invalid proposals by planning calls without dispatching anything',async()=>{
+ const ai=client(Array.from({length:ROOM_TASK_LIMITS.planningCalls},()=>'{"commands": ['));const execute=vi.fn();
+ const result=await runRoomActionTask(input,{aiClient:ai},{state:()=>scene,valid:()=>true,execute},()=>{});
+ expect(result.receipts).toHaveLength(0);expect(result.budgetExhausted).toBe(true);expect(execute).not.toHaveBeenCalled();
+ expect(ai.models.generateContentStream).toHaveBeenCalledTimes(ROOM_TASK_LIMITS.planningCalls);
 });
 
 it('honours cancellation at the discovery boundary before using the remaining action allowance',async()=>{

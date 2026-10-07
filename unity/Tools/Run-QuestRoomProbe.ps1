@@ -8,10 +8,12 @@ param(
  [string]$Profile = 'quest-probe',
  [ValidateSet('ContextCreateEdit','LiveVisual','ObserverVisual','EventProgram','AvatarAnimation','CompositeModule','PhysicsLaunch','TaskSteering','LearnerConversation')][string]$ProviderScenario,
  [string]$SpeechFixture,
+ [switch]$SyntheticRoomScan,
  [string]$ResumeLearnerRun,
  [ValidateSet('Headless','Book')][string]$Journey = 'Headless'
 )
 $ErrorActionPreference='Stop'
+if($SyntheticRoomScan -and $ProviderScenario -ne 'LearnerConversation'){throw 'SyntheticRoomScan is an explicit LearnerConversation fixture only.'}
 if($ProviderScenario -in @('LiveVisual','ObserverVisual')){
  if([string]::IsNullOrWhiteSpace($SpeechFixture) -or !(Test-Path -LiteralPath $SpeechFixture -PathType Leaf)){throw 'Live provider scenarios require an explicit SpeechFixture JSON file.'}
  $SpeechFixture=(Resolve-Path -LiteralPath $SpeechFixture).Path
@@ -66,7 +68,7 @@ if($ResumeLearnerRun){
 }
 $log=Join-Path $directory 'unity.log'
 Stop-QuestBuildHelper
-$process=Start-Process -FilePath $editorPath -WindowStyle Hidden -PassThru -ArgumentList @('-batchmode','-force-d3d11','-buildTarget','Win64','-projectPath',('"'+$mirror+'"'),'-executeMethod','Maestro.Quest.Editor.QuestRoomProbe.Start','-logFile',('"'+$log+'"')) -Environment @{ADB_SERVER_SOCKET='tcp:localhost:5041';MAESTRO_ROOM_PROBE_DIRECTORY=$directory;MAESTRO_ROOM_PROBE_LEARNER=$(if($ProviderScenario -eq 'LearnerConversation'){'1'}else{''});MAESTRO_ROOM_PROBE_AVATAR=$(if($ProviderScenario -in @('AvatarAnimation','LearnerConversation')){'1'}else{''});MAESTRO_ROOM_PROBE_PHYSICS=$(if([string]::IsNullOrWhiteSpace($Prompt) -or $ProviderScenario -in @('PhysicsLaunch','LearnerConversation')){'1'}else{''});MAESTRO_QUEST_RELEASE_PROFILE='';MAESTRO_QUEST_KEYSTORE='';MAESTRO_QUEST_KEY_ALIAS='';MAESTRO_QUEST_STORE_PASSWORD='';MAESTRO_QUEST_KEY_PASSWORD=''}
+$process=Start-Process -FilePath $editorPath -WindowStyle Hidden -PassThru -ArgumentList @('-batchmode','-force-d3d11','-buildTarget','Win64','-projectPath',('"'+$mirror+'"'),'-executeMethod','Maestro.Quest.Editor.QuestRoomProbe.Start','-logFile',('"'+$log+'"')) -Environment @{ADB_SERVER_SOCKET='tcp:localhost:5041';MAESTRO_ROOM_PROBE_DIRECTORY=$directory;MAESTRO_ROOM_PROBE_SCAN=$(if($SyntheticRoomScan){'1'}else{''});MAESTRO_ROOM_PROBE_LEARNER=$(if($ProviderScenario -eq 'LearnerConversation'){'1'}else{''});MAESTRO_ROOM_PROBE_AVATAR=$(if($ProviderScenario -in @('AvatarAnimation','LearnerConversation')){'1'}else{''});MAESTRO_ROOM_PROBE_PHYSICS=$(if([string]::IsNullOrWhiteSpace($Prompt) -or $ProviderScenario -in @('PhysicsLaunch','LearnerConversation')){'1'}else{''});MAESTRO_QUEST_RELEASE_PROFILE='';MAESTRO_QUEST_KEYSTORE='';MAESTRO_QUEST_KEY_ALIAS='';MAESTRO_QUEST_STORE_PASSWORD='';MAESTRO_QUEST_KEY_PASSWORD=''}
 $previousPrompt=$env:MAESTRO_ROOM_PROBE_PROMPT;$previousProfile=$env:MAESTRO_ROOM_PROBE_PROFILE;$previousScenario=$env:MAESTRO_ROOM_PROBE_SCENARIO;$previousSpeech=$env:MAESTRO_ROOM_PROBE_SPEECH
 try{
  $env:MAESTRO_ROOM_PROBE_PROMPT=$Prompt;$env:MAESTRO_ROOM_PROBE_PROFILE=$Profile;$env:MAESTRO_ROOM_PROBE_SCENARIO=$ProviderScenario;$env:MAESTRO_ROOM_PROBE_SPEECH=$SpeechFixture

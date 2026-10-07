@@ -274,6 +274,16 @@ and outstanding real-provider and headset acceptance. The browser approval page
 and book client are implemented but remain disabled pending release setup. Meta SDKs remain package dependencies governed by their
 upstream license; no copied SDK source is committed here.
 
+For a real-provider novice dialogue against the actual Editor runtime, use
+`Tools/Run-QuestRoomProbe.ps1 -ProviderScenario LearnerConversation` with the
+configured managed or BYOK test profile. The optional `-SyntheticRoomScan` supplies
+an explicitly synthetic, initially unloaded floor for setup and scanned-placement
+checks. It replaces the platform boundary only; it cannot establish physical
+alignment or headset permission/input behavior. Review native state and receipts
+before counting a learner session as passed. See
+[agent release coverage](../docs/QUEST_AGENT_RELEASE_COVERAGE.md) for the run
+boundaries, accounting and remaining device requirements.
+
 
 Release packaging now has a separate public profile and `Build-QuestRelease.ps1`.
 It shares the development test/package path, supports preparation without release

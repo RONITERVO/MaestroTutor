@@ -26053,6 +26053,204 @@
       }
     },
     {
+      "id": "object.scan.place",
+      "version": 1,
+      "label": "Place on an exact scanned surface",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "stateId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "anchorId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "x": {
+            "type": "number",
+            "minimum": -25.0,
+            "maximum": 25.0
+          },
+          "y": {
+            "type": "number",
+            "minimum": -25.0,
+            "maximum": 25.0
+          }
+        },
+        "required": [
+          "target",
+          "stateId",
+          "anchorId",
+          "x",
+          "y"
+        ],
+        "additionalProperties": false,
+        "x-current": {
+          "fact": "room.scan",
+          "version": 1,
+          "arguments": {},
+          "fields": {
+            "stateId": [
+              "stateId"
+            ]
+          },
+          "guards": [
+            "stateId"
+          ]
+        },
+        "x-features": [
+          "scanPlacement.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "storage.writable",
+        "room.scan.current",
+        "room.active"
+      ],
+      "description": "Move an existing object onto an exact loaded upward scanned plane (floor or tabletop). Read room.scan for stateId, then room.scan.surfaces and room.scan.surface for the requested anchor's actual ID, label and bounds. x/y locate the collision-bounds centre in that plane's local axes, not room/world axes. Choose an inspected FLOOR for a floor request; never substitute a tabletop or guessed height. If scan data is unavailable, inspect room.environment; loading an available saved scan is a prerequisite, not proof of alignment. This action never loads, scans, requests permission or starts physics. The complete projected collision AABB must fit the stored rectangle/polygon; unknown or stale anchors and steep surfaces fail without edits. Rotation/scale stay unchanged, support uses actual collision bounds with a 1 cm gap. This is one placement, not an attachment, collision-free path, free-space check, dynamic depth query or proof of real alignment. Geometry absent from the scan and other objects may obstruct the chosen location. Success saves one Undo (temporary during trial play) and resets velocity; already-running gravity may continue. Output identifies the exact anchor and actual room-local placement. Use object.surface.place instead when the user wants the first live surface below the object or at gaze.",
+      "example": {
+        "target": "book",
+        "stateId": "00000000000000000000000000000000",
+        "anchorId": "00000000000000000000000000000000",
+        "x": 0,
+        "y": 0
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+            "maxLength": 32
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "roomId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "anchorId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "position": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "y": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "z": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "additionalProperties": false
+          },
+          "point": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": -128.0,
+                "maximum": 128.0
+              },
+              "y": {
+                "type": "number",
+                "minimum": -128.0,
+                "maximum": 128.0
+              },
+              "z": {
+                "type": "number",
+                "minimum": -128.0,
+                "maximum": 128.0
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "additionalProperties": false
+          },
+          "normal": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": -1.0,
+                "maximum": 1.0
+              },
+              "y": {
+                "type": "number",
+                "minimum": -1.0,
+                "maximum": 1.0
+              },
+              "z": {
+                "type": "number",
+                "minimum": -1.0,
+                "maximum": 1.0
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "additionalProperties": false
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "target",
+          "revision",
+          "roomId",
+          "anchorId",
+          "position",
+          "point",
+          "normal",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "object.surface.place",
       "version": 1,
       "label": "Place on a detected surface",
@@ -33629,7 +33827,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "239afa80ab3664643fb73e883a9da80c869f410e50f0c26b61de4d07cde7c6da"
+      "sha256": "ee80fb8a55c6411f27269cc5ae7e80ba9bab859722a5d60663eeba099ba6d900"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -34252,6 +34450,10 @@
       "sha256": "3090764ccce95a3c14c5f5aebd786c4999f117911927d891192f6c31690045cd"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ScannedRoomObjectPlacement.cs",
+      "sha256": "ba256d2f1b21f236847d1012f79d0b8b4aee1939b734525353190650c8f2955e"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ScanDrawingAnchor.cs",
       "sha256": "1984fcc8d87f7b9971b701d2f281ac0f380045c836d2756721cabfa6aa6f15e5"
     },
@@ -34369,7 +34571,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "74f70bc239dc03b38e90ed2ed80ea0d24569d13a4cc91915f5579a2e640b9361"
+      "sha256": "26436e95d02e183cab20a1694637c8a57f834364bc5df3f78925ffc5745796b0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -34614,6 +34816,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ScanDrawingCapability.cs",
       "sha256": "936da98015f29f7debbbb439ae6368653b74752b5f49645ebe3c285a2ec9b18e"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ScanPlacementCapability.cs",
+      "sha256": "bc9d75ce902d3a21dd987830d09d12a8bc7d531045a3489c5ef6242aa0af0943"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SculptTipCapability.cs",

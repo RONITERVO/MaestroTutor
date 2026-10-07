@@ -1,4 +1,4 @@
-# Shared live surface placement
+# Shared surface placement
 
 `object.surface.place` uses the same native placement calculation and saved object
 edit as the physical Place surface control. `surfacePlacement.v1` is advertised
@@ -59,5 +59,41 @@ requests/results against the generated catalog. Browser replay checks the same
 book action controls; it cannot prove live Meta surface detection.
 
 Physical Quest acceptance still needs permission UI, tracking, actual floor/table
-hits, imported model bounds, readability, latency and placement comfort. Device
-work remains on hold; this feature is not a Store acceptance claim.
+hits, imported model bounds, readability, latency and placement comfort. The
+2026-10-07 learner lesson exposed a live-ray miss and no subsequent room reload;
+the apple stayed on its table. This feature is not a Store acceptance claim.
+
+## Explicit scanned floor or tabletop
+
+`object.scan.place` (`scanPlacement.v1`) complements live detection when the user
+names a specific surface such as the floor. A downward live ray can hit a table
+first; that is not evidence of reaching the requested floor.
+
+Read `room.scan`, then its paginated `room.scan.surfaces` and the selected
+`room.scan.surface`. Supply the exact scan `stateId`, `anchorId`, target object
+and plane-local `x/y`. Meta's plane normal is local +Z. The supplied location
+represents the projected collision-bounds centre, not the object's origin.
+Select the inspected FLOOR anchor for a floor request; names and guessed Y=0
+are not substitutes for observed geometry.
+
+The native service requires loaded, tracked, active room geometry and an upward
+normal. It projects the complete world collision AABB onto the selected plane
+and checks its rectangle and polygon boundary, including concave notches. This
+is conservative for rotated/compound colliders. It preserves rotation/scale,
+adds the same 1 cm support gap, saves through the normal object edit and returns
+the exact room/anchor IDs and actual placement. Undo, temporary play, receipt
+replay, write guards and target ownership apply. No persistent attachment is
+created; the saved object does not follow a later scan revision.
+
+This does not check an unobstructed travel path or occupancy by other objects.
+Moving obstacles and holes absent from the scan remain outside its evidence.
+Neither placement nor a successful load verifies real-room alignment or starts
+physics. A missing/stale/steep plane or a footprint that does not fit leaves the
+object unchanged. The shared catalogue exposes the same action to the agent,
+editable programs and generated book/workshop controls.
+
+The planner may load an available saved scan once as a prerequisite for requested
+scan-dependent work. Pending, declined or cancelled requests are not silently
+retried. User permission/setup and alignment checks remain explicit when needed.
+Result narration must distinguish inspections from actual placement attempts;
+the initial Live handoff precedes execution and cannot confirm success.

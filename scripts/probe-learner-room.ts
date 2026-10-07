@@ -13,12 +13,15 @@ import {runHeadlessLiveTurn} from '../src/headless/liveJourney';
 import {decodePcm16LeBase64} from '../src/core-sdk/media/pcmInput';
 import {captureManagedJourneyBilling,evaluateManagedJourneyBilling,waitForManagedJourneyBillingSettlement} from '../src/headless/managedJourneyBilling';
 import type {ChatMessage} from '../src/core/types';
+import {debugLogService,type LogEntry} from '../src/core-sdk/diagnostics';
 
 const directory=process.argv[2];
 if(!directory||process.env.MAESTRO_ROOM_PROBE_SCENARIO!=='LearnerConversation')throw new Error('Explicit fresh learner probe required.');
 const transport=await HeadlessRoomTransport.connect(directory,120000);
 const sleep=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
 const records:Record<string,unknown>[]=[];
+let providerLogs:LogEntry[]=[];
+const stopProviderLogs=debugLogService.subscribe(logs=>{providerLogs=logs;});
 let sequence=0,finished=false,active=false;
 let resumedFrom:string|undefined,resumeObjectIds:string[]|undefined;
 try{const resume=JSON.parse(await readFile(join(directory,'learner-resume.json'),'utf8'));assert.equal(resume.version,1);assert.match(resume.sourceRun,/^[a-f0-9]{32}$/);resumedFrom=resume.sourceRun;assert.ok(Array.isArray(resume.nativeObjectIds));resumeObjectIds=resume.nativeObjectIds;}
@@ -87,6 +90,12 @@ try{
   }catch(error){record.error=String(error);}
   finally{
    active=false;clearInterval(sample);record.endedAt=new Date().toISOString();
+   // Diagnostic-only text responses make invalid planner proposals reviewable.
+   // Omit request payloads, media, credentials and raw provider error objects.
+   record.providerResponses=providerLogs.filter(log=>log.timestamp>=Date.parse(record.startedAt as string)).map(log=>({
+    timestamp:log.timestamp,type:log.type,model:log.model,duration:log.duration,failed:!!log.error,
+    text:typeof log.response?.text==='string'?log.response.text.slice(0,32000):undefined,
+   }));
    record.usage=agent.usage.slice(usageStart);record.tasks=await agent.store.list();
    record.native=structuredClone(transport.client.getSnapshot().state);
    const messages=(client.state.chats[pair.id]||[]).filter(message=>!beforeIds.has(message.id));
@@ -104,6 +113,6 @@ try{
  }
  if(!finished)throw new Error('Learner session exceeded its bounded duration.');
 }finally{
- clearInterval(control);agent.tasks.stopAll();await agent.disconnect();await save();await transport.close();
+ clearInterval(control);stopProviderLogs();agent.tasks.stopAll();await agent.disconnect();await save();await transport.close();
 }
 console.log('Learner session collected; semantic and UI outcomes require review.');
