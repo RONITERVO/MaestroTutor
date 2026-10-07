@@ -3699,3 +3699,13 @@ speakers or headphones), provider route and timestamps for each result.
    The experimental final-mix monitor does not distinguish conversation tails
    from ongoing world audio and is not enabled in the production scene. See the
    [audio implementation and acceptance contract](../unity/AUDIO.md).
+
+World-audio desktop checkpoint (2026-10-07): reusable tone definitions and
+root/part/joint emitters now use the shared catalog, room journal and temporary
+workspace. The native test mix verifies consumed PCM, independent cancellation,
+attachment movement and exact source revisions during edits. The headless room
+client creates a source, configures an emitter, waits for its native completion
+receipt, and removes both. These checks use synthetic audio and muted output;
+they do not establish physical audibility or microphone coexistence. Imported
+clips, live sources, continuous playback and construction-module audio packaging
+remain open. Installed APK D85F3CB7 is unchanged.

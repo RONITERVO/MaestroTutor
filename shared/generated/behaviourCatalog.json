@@ -2852,6 +2852,554 @@
       }
     },
     {
+      "id": "audio.source.edit",
+      "version": 1,
+      "label": "Create or edit a reusable sound",
+      "input": {
+        "type": "object",
+        "x-discriminators": [
+          "operation"
+        ],
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "save"
+                ],
+                "x-static": true
+              },
+              "id": {
+                "type": "string",
+                "pattern": "^([a-f0-9]{32})?$",
+                "maxLength": 32
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 0.0,
+                "maximum": 2147483647.0
+              },
+              "definition": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "pattern": "^.{0,80}$",
+                    "maxLength": 80
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "tone"
+                    ]
+                  },
+                  "tone": {
+                    "type": "object",
+                    "properties": {
+                      "wave": {
+                        "type": "string",
+                        "enum": [
+                          "sine",
+                          "triangle",
+                          "noise"
+                        ]
+                      },
+                      "frequency": {
+                        "type": "number",
+                        "minimum": 20.0,
+                        "maximum": 10000.0
+                      },
+                      "endFrequency": {
+                        "type": "number",
+                        "minimum": 20.0,
+                        "maximum": 10000.0
+                      },
+                      "seconds": {
+                        "type": "number",
+                        "minimum": 0.03,
+                        "maximum": 30.0
+                      },
+                      "attack": {
+                        "type": "number",
+                        "minimum": 0.005,
+                        "maximum": 2.0
+                      },
+                      "release": {
+                        "type": "number",
+                        "minimum": 0.005,
+                        "maximum": 2.0
+                      },
+                      "seed": {
+                        "type": "integer",
+                        "minimum": 1.0,
+                        "maximum": 2147483647.0
+                      }
+                    },
+                    "required": [
+                      "wave",
+                      "frequency",
+                      "endFrequency",
+                      "seconds",
+                      "attack",
+                      "release",
+                      "seed"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "name",
+                  "kind",
+                  "tone"
+                ],
+                "additionalProperties": false,
+                "format": "worldAudioSource"
+              }
+            },
+            "required": [
+              "operation",
+              "id",
+              "revision",
+              "definition"
+            ],
+            "additionalProperties": false,
+            "x-features": [
+              "worldAudio.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "remove"
+                ],
+                "x-static": true
+              },
+              "id": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              }
+            },
+            "required": [
+              "operation",
+              "id",
+              "revision"
+            ],
+            "additionalProperties": false,
+            "x-features": [
+              "worldAudio.v1"
+            ]
+          }
+        ]
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [
+        "source.revision.current",
+        "storage.writable"
+      ],
+      "description": "Save or remove a reusable room sound definition with one Undo. For a new sound use id='' and revision=0; the receipt returns its generated stable ID. For an existing sound use its exact ID and latest audio.source.definition revision. Current executable source kind is tone: a bounded 24 kHz mono sine, triangle or seeded noise recipe with linear frequency sweep and attack/release envelopes (their sum must fit seconds). No API call, microphone or network connection is opened. Editing a source affects future plays; an active play keeps its captured source revision. Removal fails while any saved emitter references the sound. File imports, live stream connections and indefinite looping are separate pending adapters, not supported by this action yet. Definitions survive saving, temporary rooms and workspace exports; playback never auto-starts on restore.",
+      "example": {
+        "operation": "save",
+        "id": "",
+        "revision": 0,
+        "definition": {
+          "name": "Robot greeting",
+          "kind": "tone",
+          "tone": {
+            "wave": "sine",
+            "frequency": 440.0,
+            "endFrequency": 440.0,
+            "seconds": 0.25,
+            "attack": 0.0099999997764825821,
+            "release": 0.039999999105930328,
+            "seed": 1
+          }
+        }
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 2147483647.0
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "revision",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "object.audioEmitter.edit",
+      "version": 1,
+      "label": "Attach a sound to an object",
+      "input": {
+        "type": "object",
+        "x-discriminators": [
+          "operation"
+        ],
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "configure"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^(book|maestro|[a-f0-9]{32})$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              },
+              "emitter": {
+                "type": "string",
+                "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,23}$",
+                "maxLength": 24
+              },
+              "definition": {
+                "type": "object",
+                "properties": {
+                  "source": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{32}$",
+                    "maxLength": 32
+                  },
+                  "part": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9_]{0,32}$",
+                    "maxLength": 32
+                  },
+                  "joint": {
+                    "type": "string",
+                    "enum": [
+                      "",
+                      "Hips",
+                      "Spine",
+                      "Chest",
+                      "Neck",
+                      "Head",
+                      "LeftUpperArm",
+                      "LeftLowerArm",
+                      "LeftHand",
+                      "RightUpperArm",
+                      "RightLowerArm",
+                      "RightHand",
+                      "LeftUpperLeg",
+                      "LeftLowerLeg",
+                      "LeftFoot",
+                      "RightUpperLeg",
+                      "RightLowerLeg",
+                      "RightFoot"
+                    ]
+                  },
+                  "position": {
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "type": "number",
+                        "minimum": -10.0,
+                        "maximum": 10.0
+                      },
+                      "y": {
+                        "type": "number",
+                        "minimum": -10.0,
+                        "maximum": 10.0
+                      },
+                      "z": {
+                        "type": "number",
+                        "minimum": -10.0,
+                        "maximum": 10.0
+                      }
+                    },
+                    "required": [
+                      "x",
+                      "y",
+                      "z"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "effects",
+                      "media",
+                      "ambience"
+                    ]
+                  },
+                  "spatial": {
+                    "type": "boolean"
+                  },
+                  "gain": {
+                    "type": "number",
+                    "minimum": 0.0,
+                    "maximum": 1.0
+                  },
+                  "distance": {
+                    "type": "object",
+                    "properties": {
+                      "minimum": {
+                        "type": "number",
+                        "minimum": 0.1,
+                        "maximum": 10.0
+                      },
+                      "maximum": {
+                        "type": "number",
+                        "minimum": 0.1,
+                        "maximum": 50.0
+                      }
+                    },
+                    "required": [
+                      "minimum",
+                      "maximum"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "source",
+                  "part",
+                  "joint",
+                  "position",
+                  "role",
+                  "spatial",
+                  "gain",
+                  "distance"
+                ],
+                "additionalProperties": false,
+                "format": "worldAudioEmitter"
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "revision",
+              "emitter",
+              "definition"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "object.audioEmitter",
+              "version": 1,
+              "arguments": {
+                "target": "target",
+                "emitter": "emitter"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
+            "x-features": [
+              "worldAudio.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "remove"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^(book|maestro|[a-f0-9]{32})$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              },
+              "emitter": {
+                "type": "string",
+                "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,23}$",
+                "maxLength": 24
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "revision",
+              "emitter"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "object.audioEmitter",
+              "version": 1,
+              "arguments": {
+                "target": "target",
+                "emitter": "emitter"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
+            "x-features": [
+              "worldAudio.v1"
+            ]
+          }
+        ]
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "source.revision.current",
+        "storage.writable"
+      ],
+      "description": "Configure or remove a saved sound emitter on an object, including the book or Maestro. Use the exact source ID from audio.source.edit/list. Empty part and joint attach to the object root; choose either an existing recipe part or one Maestro joint. Joint offsets use canonical avatar axes and root scale through model changes. Up to four emitters per object and 32 in a room. minDistance/maxDistance control logarithmic attenuation; gain is 0–1, spatial=false is nonspatial. The semantic role is saved for future mixing policy; it does not acquire conversation/microphone privileges. Editing never starts playback. An active play ends if its emitter changes or disappears; movement/grabbing does not change its definition. Copies share the source ID and remain silent. Use the current object revision from object.audioEmitter before editing.",
+      "example": {
+        "operation": "configure",
+        "target": "maestro",
+        "revision": 1,
+        "emitter": "beep",
+        "definition": {
+          "source": "00000000000000000000000000000000",
+          "part": "",
+          "joint": "Head",
+          "role": "effects",
+          "position": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "spatial": true,
+          "gain": 0.25,
+          "distance": {
+            "minimum": 0.5,
+            "maximum": 15.0
+          }
+        }
+      }
+    },
+    {
+      "id": "audio.play",
+      "version": 1,
+      "label": "Play an object's sound",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(book|maestro|[a-f0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "emitter": {
+            "type": "string",
+            "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,23}$",
+            "maxLength": 24
+          }
+        },
+        "required": [
+          "target",
+          "emitter"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "worldAudio.v1"
+        ]
+      },
+      "duration": "completion",
+      "ownership": "exclusiveChannels",
+      "channels": [
+        "audioEmitter"
+      ],
+      "requirements": [
+        "target.exists",
+        "audio.emitter.configured",
+        "audio.output.ready",
+        "audio.voice.available"
+      ],
+      "description": "Play one finite sound from a saved object emitter, waiting for consumed PCM and the device output tail before completion. Can be called by manual controls, agent programs or existing event subscriptions (buttons, contacts, timers or Maestro state). Plays retain the exact source revision at start. Moving, gripping or animating the object does not interrupt the sound; emitter edits, deletion, room switch, lost audio device, app suspension or stopping its owning program do. Claims are independent of the object's movement channels. Up to eight world voices, separate from Maestro speech; capacity failure never silently steals another voice. Current sources are procedural mono tones up to 30 seconds. This does not yet provide live connections, looping streams, echo cancellation or a guarantee of audible headset output. Spatial emitters use the native HRTF/direct obstruction renderer; room reflections remain gated.",
+      "example": {
+        "target": "maestro",
+        "emitter": "beep"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "instance": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "source": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "sourceRevision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "seconds": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 30.0
+          }
+        },
+        "required": [
+          "instance",
+          "source",
+          "sourceRevision",
+          "seconds"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "time.wait",
       "version": 1,
       "label": "Wait",
@@ -5612,7 +6160,7 @@
         "source.revision.current",
         "storage.writable"
       ],
-      "description": "Capture 1–16 created objects into the existing reusable program library. Give every exact member ID, its current revision and a distinct slot name. Pause physics, recipe playback and animation authoring, finish drawing, and release all members first. Captures current poses and saved geometry, paint, collision/physics, drawing patches/ink/tips and recorded root motion. Imported models retain their exact content hashes; a module file does not bundle model bytes. Include both ends of every hinge; external links are refused. Book/Maestro, structure monitors, running behaviours, buttons and unsaved drafts are not object geometry and are not captured. Nothing moves or starts. The first listed member defines the constructor origin/orientation; its existing scale remains part of the piece. Publishes ordinary editable program source exporting create(position,rotation,scale), returning fresh member IDs in slot order; deleting originals does not invalidate that source. Standard source size, 16-piece and room budgets apply; oversized captures fail explicitly. Model files stay retained while the library references them. Existing module pins never change. A dispatched library write may finish after Stop; inspect its receipt/library instead of retrying uncertainty.",
+      "description": "Capture 1–16 created objects into the existing reusable program library. Give every exact member ID, its current revision and a distinct slot name. Pause physics, recipe playback and animation authoring, finish drawing, and release all members first. Captures current poses and saved geometry, paint, collision/physics, drawing patches/ink/tips and recorded root motion. Imported models retain their exact content hashes; a module file does not bundle model bytes. Include both ends of every hinge; external links are refused. Book/Maestro, structure monitors, running behaviours, buttons and unsaved drafts are not object geometry and are not captured. Objects with sound emitters are currently refused because modules do not yet bundle their source library; export the workspace to preserve them. Nothing moves or starts. The first listed member defines the constructor origin/orientation; its existing scale remains part of the piece. Publishes ordinary editable program source exporting create(position,rotation,scale), returning fresh member IDs in slot order; deleting originals does not invalidate that source. Standard source size, 16-piece and room budgets apply; oversized captures fail explicitly. Model files stay retained while the library references them. Existing module pins never change. A dispatched library write may finish after Stop; inspect its receipt/library instead of retrying uncertainty.",
       "example": {
         "name": "My construction",
         "members": [
@@ -28959,6 +29507,248 @@
   ],
   "facts": [
     {
+      "id": "audio.source.list",
+      "version": 1,
+      "type": {
+        "record": {
+          "total": "number",
+          "next": "number",
+          "entries": {
+            "list": {
+              "record": {
+                "id": "text",
+                "name": "text",
+                "kind": "text",
+                "revision": "number"
+              }
+            }
+          }
+        }
+      },
+      "label": "Reusable room sounds",
+      "description": "List four saved audio sources at a time in stable ID order. next=-1 ends the list. Reads never open a connection or play a sound.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 32.0
+          }
+        },
+        "required": [
+          "offset"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "offset": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "worldAudio.v1"
+      ]
+    },
+    {
+      "id": "audio.source.definition",
+      "version": 1,
+      "type": {
+        "record": {
+          "id": "text",
+          "revision": "number",
+          "definition": {
+            "record": {
+              "name": "text",
+              "kind": "text",
+              "tone": {
+                "record": {
+                  "wave": "text",
+                  "frequency": "number",
+                  "endFrequency": "number",
+                  "seconds": "number",
+                  "attack": "number",
+                  "release": "number",
+                  "seed": "number"
+                }
+              }
+            }
+          }
+        }
+      },
+      "label": "Sound definition",
+      "description": "Read the exact saved source and current edit revision. Active playback may retain an earlier revision. Missing IDs are unavailable, never silently substituted.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "id": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1",
+        "worldAudio.v1"
+      ]
+    },
+    {
+      "id": "object.audioEmitters",
+      "version": 1,
+      "type": {
+        "record": {
+          "revision": "number",
+          "entries": {
+            "list": {
+              "record": {
+                "emitter": "text",
+                "source": "text"
+              }
+            }
+          }
+        }
+      },
+      "label": "Object sounds",
+      "description": "List all saved sound emitter keys and exact source IDs on an object. No playback is started.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(book|maestro|[a-f0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "maestro"
+      },
+      "features": [
+        "factQueries.v1",
+        "worldAudio.v1"
+      ]
+    },
+    {
+      "id": "object.audioEmitter",
+      "version": 1,
+      "type": {
+        "record": {
+          "revision": "number",
+          "configured": "boolean",
+          "definition": {
+            "record": {
+              "source": "text",
+              "part": "text",
+              "joint": "text",
+              "position": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number"
+                }
+              },
+              "role": "text",
+              "spatial": "boolean",
+              "gain": "number",
+              "distance": {
+                "record": {
+                  "minimum": "number",
+                  "maximum": "number"
+                }
+              }
+            }
+          }
+        }
+      },
+      "label": "Sound emitter settings",
+      "description": "Saved attachment and current object edit revision. configured=false returns inert default fields and an empty source ID for editing; it does not add an emitter.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(book|maestro|[a-f0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "emitter": {
+            "type": "string",
+            "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,23}$",
+            "maxLength": 24
+          }
+        },
+        "required": [
+          "target",
+          "emitter"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "maestro",
+        "emitter": "beep"
+      },
+      "features": [
+        "factQueries.v1",
+        "worldAudio.v1"
+      ]
+    },
+    {
+      "id": "audio.playback",
+      "version": 1,
+      "type": {
+        "record": {
+          "playing": "boolean",
+          "instance": "text",
+          "source": "text",
+          "sourceRevision": "number",
+          "seconds": "number"
+        }
+      },
+      "label": "Active sound playback",
+      "description": "Current transient instance and consumed PCM cursor for this emitter. playing=false gives empty identity fields when no instance is active. Completed/cancelled/failed outcomes belong to the owning action's receipt/trace. This is not proof that the user heard sound. Neither saving nor reading this fact starts audio.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(book|maestro|[a-f0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "emitter": {
+            "type": "string",
+            "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,23}$",
+            "maxLength": 24
+          }
+        },
+        "required": [
+          "target",
+          "emitter"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "maestro",
+        "emitter": "beep"
+      },
+      "features": [
+        "factQueries.v1",
+        "worldAudio.v1"
+      ]
+    },
+    {
       "id": "object.definition",
       "version": 1,
       "type": {
@@ -33803,7 +34593,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "c25a3ad6b9832a0e157a65f8a00859407dc6909f029bd067756e58fc70c98418"
+      "sha256": "6c38a61236868c44b94dc68985f9db82c53c5cf139eb157f37e339ebf3feb4f2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -33823,7 +34613,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "38c8e3b8b33851175fdf3ee737c6e0c5d7c732c01e1fc816cc6e63699dd9cbab"
+      "sha256": "b9eb51c60bcf5697d633ef6b6fea4f1e178988e2ddeebff7f4220046bf2ecd98"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -33855,7 +34645,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "ee80fb8a55c6411f27269cc5ae7e80ba9bab859722a5d60663eeba099ba6d900"
+      "sha256": "49284f04e694285bc12cb6a28eee612ece94e0fd0a7a04df9665d37e0972b40f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -33883,11 +34673,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "787f3a4c13c1d417d660bb4dcadcfd697238b02caf7c4c659b0934fac8ff15b3"
+      "sha256": "d741111e0e7a7da3b86dc25aca0acc85df4580c6909ffe4905d76322c7afa97e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
-      "sha256": "214433e4dddcd9d39044c4b2bb793ab05e5f102d432417e060090275e5d66459"
+      "sha256": "44d5a654d4020d1dfafe7cb8b505189bc2efa77fa33a7a2efccc578beae53a3e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleMemory.cs",
@@ -33907,7 +34697,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveSnapshot.cs",
-      "sha256": "6eee9694fc22c339bc74e9b1a565007ee3954f5d3a8d4aa854658ea9fbae6ac4"
+      "sha256": "60f673856611639907a0e78aa142c08cbe6289d3d650a1988b38fe15584b6a2e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.Retention.cs",
@@ -34143,7 +34933,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "f3f6025569e5a8cc8300351c57fe00ed4aff2ef1cef59adc2600e8a84d83e7ea"
+      "sha256": "96cd3bdc17325d1dbc7791c1d6298b1525e6d73bf374797ffcc8bf12e873f404"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomToolTray.cs",
@@ -34227,7 +35017,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationPrototype.cs",
-      "sha256": "32c145bd7a5ba220a474a39d24853461f07871908809d42c9e2aafcdadc88abe"
+      "sha256": "526f777058cbd0306b214a209c0dd8b2bb0d13a2ff6c08f56c77aa8619e89c1c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomComponentEdits.cs",
@@ -34375,7 +35165,23 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "54d513ff5ef493a31b0f8291d5358aa83eff12a31f34ca282f78a4561140c06b"
+      "sha256": "6dade11b546bdee5b43c1a4ffc9f6146a8dd7855f55e1c556dc3d047170e6c97"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAudioDefinition.cs",
+      "sha256": "d94fe1f5f62bf31f2d496cbf6fc8f511012ca2e8bc8ab178c08c7fb2550fa16a"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAudioEdits.cs",
+      "sha256": "ca895fbd6540bcd97c0d68b1a45bf30212d76df436534a3c248f60812eab976e"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AudioTone.cs",
+      "sha256": "46bcf12c8a3d16cc1e6ebbee706ef640a3d7b593f362e517912a1cd6eed7c007"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/WorldAudio.cs",
+      "sha256": "13ab52efd52bc7995ca8488885e56641e379245e48c20d2d03e9eaeb3d111930"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedDrawing.cs",
@@ -34642,6 +35448,14 @@
       "sha256": "b84498a5ad2416832510318b67f24af74b6c2bf77e62803ddf08198d1b5a6b3a"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AudioCapabilities.cs",
+      "sha256": "9f3f693ebd3e13361050f77da68de6406b847b92a28bd6298b9584d69ddb9940"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AudioFacts.cs",
+      "sha256": "2cfb3c56e5c5443899285f17d74e2bb6002ca2edaa5ded367ffac97eceb84791"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AvatarModelCapabilities.cs",
       "sha256": "1b739e5c0a9253946f12e61c835e8746b34e2522f64b663e2ae4f61ca33b3899"
     },
@@ -34655,7 +35469,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "26436e95d02e183cab20a1694637c8a57f834364bc5df3f78925ffc5745796b0"
+      "sha256": "19066c63f2365b56c6b7c06f092b80ee1f101c5458aba0e421860ea918e5bfe1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -34667,7 +35481,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CaptureConstructionCapability.cs",
-      "sha256": "c1d3637d88f32bcb797dcc0f63a935f2622ab0623724412f6526f93a006d0351"
+      "sha256": "2a43bf3df573b5a3fea0c93ecf99fb775532101a416051378be3a645a6d8fe85"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CatchObjectCapability.cs",

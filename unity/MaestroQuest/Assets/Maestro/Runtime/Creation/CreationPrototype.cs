@@ -73,6 +73,7 @@ namespace Maestro.Quest.Creation
         }.Concat(objects).ToArray()}.Validate(out error);
         internal static CreationPrototype Capture(RoomObjectData data) {
             if(data==null||data.IsBuiltIn)throw new ArgumentException("Choose a created object");
+            if((data.audioEmitters?.Length??0)>0)throw new ArgumentException("A construction prototype cannot silently omit sound emitters");
             var copy=data.Copy();var q=Quaternion.Inverse(copy.rotation);
             return new CreationPrototype {kind=copy.kind switch {RoomObjectKind.ImportedModel=>"model",RoomObjectKind.Assembly=>"recipe",_=>copy.kind.ToString().ToLowerInvariant()},
                 color=copy.color,physics=RoomControls.Physics(copy),recipe=copy.recipe,collision=copy.collision,surfaces=copy.surfaces,drawingTips=copy.drawingTips,snapPoints=copy.snapPoints,containers=copy.containers,heightFields=copy.heightFields,sculptTips=copy.sculptTips,materialStores=copy.materialStores,

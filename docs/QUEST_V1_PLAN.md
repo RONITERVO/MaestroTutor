@@ -3866,3 +3866,20 @@ original-book integrations passed, along with 115 shared catalog tests,
 TypeScript, catalog provenance and included-asset integrity. The first failed
 reports are retained alongside the passing rerun. No provider requests or
 headset operations were performed for this increment.
+
+Shared world-audio increment (2026-10-07): `audio.source.edit`,
+`object.audioEmitter.edit` and `audio.play` now expose reusable procedural sounds
+through the same catalog used by human controls, programs and the agent. Sources
+have stable identities and revisions; emitters attach to an object root, recipe
+part or Maestro joint. Definitions participate in save, Undo, temporary rooms and
+workspace export. Playback retains its starting source revision, follows motion,
+and cancels independently on Stop, emitter changes, deletion or room teardown.
+Completion follows actual native PCM consumption, not a duration timer.
+
+The first adapter supports bounded sine, triangle and seeded-noise recipes, with
+32 saved sources and eight concurrent world voices. It does not complete the
+accepted arbitrary-audio requirement: imported clips, live adapters, continuous
+playback controls, source dependencies in construction modules, speech integration
+and mixed-audio Live echo handling remain required. Production reflection routing
+is still disabled. See `unity/AUDIO.md` for the executable boundary and acceptance
+contract. No headset or provider operations occurred in this increment.

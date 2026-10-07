@@ -92,7 +92,7 @@ namespace Maestro.Quest.Persistence
             var assets=assetNames.ToHashSet(StringComparer.Ordinal);CheckNames(documents.Keys.Concat(assets));
             foreach(var pair in documents){if(pair.Value.Length<1||pair.Value.Length>Limit(pair.Key))throw new InvalidDataException("Workspace document exceeds its limit.");}
             if(documents.TryGetValue(ProgramMemoryStore.FileName,out var memory))_=ProgramMemoryDocument.Decode(memory);
-            var room=Document<RoomDocument>(documents,RoomStorage.FileName,"version","objects","structures");RoomStorage.Normalize(room);
+            var room=Document<RoomDocument>(documents,RoomStorage.FileName,"version","objects","structures","audioSources");RoomStorage.Normalize(room);
             if(!room.Validate(out var issue))throw new InvalidDataException(issue);
             var rules=Document<RuleDocument>(documents,"behaviours.v2.json","version","sequences","bindings","buttons");
             var ruleJson=Json(documents["behaviours.v2.json"],Limit("behaviours.v2.json"));

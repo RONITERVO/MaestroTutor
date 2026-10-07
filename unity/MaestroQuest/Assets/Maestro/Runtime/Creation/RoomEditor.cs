@@ -227,24 +227,26 @@ namespace Maestro.Quest.Creation
             var data=Pose(Read(id),Find(id).transform);change(data);
             return CommitPersisted(new[]{data},Array.Empty<string>(),message,applyPose,out error);
         }
-        bool CommitPersisted(RoomObjectData[] replacements,string[] removals,string message,bool applyPose,out string error,RoomLayout observedBefore=null,StructureEdits structureEdits=null) {
+        bool CommitPersisted(RoomObjectData[] replacements,string[] removals,string message,bool applyPose,out string error,RoomLayout observedBefore=null,StructureEdits structureEdits=null,AudioDefinitionEdits audioEdits=null) {
             using var write=WriteGate.TryWrite(out error);if(write==null)return false;
             if(structureEdits!=null&&!structureEdits.Validate(out error))return false;
+            if(audioEdits!=null&&!audioEdits.Validate(out error))return false;
             var candidate=journal.Snapshot();
             var changed=replacements.Select(x=>x.id).Concat(removals).ToHashSet();
             candidate.objects=candidate.objects.Where(x=>!changed.Contains(x.id)).Concat(replacements).ToArray();
             if(structureEdits!=null)candidate.structures=structureEdits.Apply(candidate.structures);
+            if(audioEdits!=null)candidate.audioSources=audioEdits.Apply(candidate.audioSources);
             if(!candidate.Validate(out error))return false;
             if(observedBefore!=null&&!journal.EditBaseline(replacements,removals,observedBefore,out _,out error))return false;
             if(TemporaryRoom) {
-                if(!Commit(replacements,removals,message,true,applyPose,observedBefore,structureEdits)){error=Status;return false;}
+                if(!Commit(replacements,removals,message,true,applyPose,observedBefore,structureEdits,audioEdits)){error=Status;return false;}
                 return true;
             }
             // Same serialized writer and journal as manual edits; no global Editing
             // signal here because the caller already owns only the affected targets.
             CompleteSave(wait:true);
             if(!storage.Save(candidate,out error))return false;
-            if(!Commit(replacements,removals,message,true,applyPose,observedBefore,structureEdits)){error=Status;return false;}
+            if(!Commit(replacements,removals,message,true,applyPose,observedBefore,structureEdits,audioEdits)){error=Status;return false;}
             dirty=false;lastSaveError=null;return true;
         }
 
@@ -339,12 +341,12 @@ namespace Maestro.Quest.Creation
             return true;
         }
 
-        bool Commit(RoomObjectData[] replacements, string[] removals, string success, bool placement = false, bool? applyPose = null, RoomLayout observedBefore = null, StructureEdits structureEdits = null)
+        bool Commit(RoomObjectData[] replacements, string[] removals, string success, bool placement = false, bool? applyPose = null, RoomLayout observedBefore = null, StructureEdits structureEdits = null,AudioDefinitionEdits audioEdits=null)
         {
             using var write=WriteGate.TryWrite(out var blocked);if(write==null){SetStatus(blocked);return false;}
             if (!placement) Editing?.Invoke();
             if (journal == null || (!placement && Busy())) return false;
-            if (!journal.Apply(replacements,removals,out var error,observedBefore,structureEdits)) { SetStatus(error); return false; }
+            if (!journal.Apply(replacements,removals,out var error,observedBefore,structureEdits,audioEdits)) { SetStatus(error); return false; }
             Reconcile(replacements.Select(item => item.id).ToHashSet(), applyPose ?? !placement); MarkDirty(); SetStatus(success); return true;
         }
         public bool SetItemPhysics(string id,ObjectPhysicsSettings settings)
