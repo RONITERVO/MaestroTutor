@@ -4145,7 +4145,7 @@
         "workspace.available",
         "tools.released"
       ],
-      "description": "Show or hide a named solid 3D authoring tray, or all trays, using the exact stateId from room.tools. Creation, animation, behaviours, imports, physics, avatar movement and controller bindings start hidden so conversation stays central. Showing retains the tray's current position; use the existing book/palm Recall if it is out of reach. Hiding changes only the tray's presentation and input surfaces: room objects, drawing modes, poses, animations, programs, imports and physics continue. Release a held tray and finish/cancel armed physical surface placement before hiding it; hide-all refuses atomically if any requested tray cannot hide. Book controls and palm Recall stay available. This is transient workspace view state, not a room edit: no save or Undo, no automatic action on show, and a new workspace/relaunch starts hidden. A completed receipt describes that moment; Stop does not reverse a completed visibility change. Replayed receipts never reopen tools. Discover/run the same action from chat, book or a program; no separate provider tool is needed.",
+      "description": "Show or hide a named solid 3D authoring tray, or all trays, using the exact stateId from room.tools. Creation, animation, behaviours, imports, physics, avatar movement and controller bindings start hidden so conversation stays central. Showing retains the tray's current position; use room.tools.recall (also on B/Y or the palm) if it is out of reach. Hiding changes only the tray's presentation and input surfaces: room objects, drawing modes, poses, animations, programs, imports and physics continue. Release a held tray and finish/cancel armed physical surface placement before hiding it; hide-all refuses atomically if any requested tray cannot hide. Book controls and palm Recall stay available. This is transient workspace view state, not a room edit: no save or Undo, no automatic action on show, and a new workspace/relaunch starts hidden. A completed receipt describes that moment; Stop does not reverse a completed visibility change. Replayed receipts never reopen tools. Discover/run the same action from chat, book or a program; no separate provider tool is needed.",
       "example": {
         "stateId": "00000000000000000000000000000000",
         "tray": "creation",
@@ -4236,6 +4236,95 @@
           "stateId",
           "visible",
           "held"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "room.tools.recall",
+      "version": 1,
+      "label": "Bring book and tools back",
+      "input": {
+        "type": "object",
+        "properties": {
+          "stateId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          }
+        },
+        "required": [
+          "stateId",
+          "revision"
+        ],
+        "additionalProperties": false,
+        "x-current": {
+          "fact": "room.tools.recovery",
+          "version": 1,
+          "arguments": {},
+          "fields": {
+            "stateId": [
+              "stateId"
+            ],
+            "revision": [
+              "revision"
+            ]
+          },
+          "guards": [
+            "stateId",
+            "revision"
+          ]
+        },
+        "x-features": [
+          "toolRecovery.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "nativeBookPlacement",
+      "channels": [],
+      "requirements": [
+        "tools.recovery.current",
+        "workspace.available",
+        "tools.released",
+        "head.tracked"
+      ],
+      "description": "Bring the book and seven authoring trays to their comfortable starting layout around the currently tracked viewer. Read room.tools.recovery and pass its exact stateId and book revision. This is the same Recall as B/Y, Home, palm and creation tray. It does not move or reset the world, Maestro, creations, constructed terrain, user-made buttons or construction handles, stop other programs/physics/audio, change view/locomotion modes, or reopen hidden trays. Held book/trays, inactive tracking, workspace holds, unsupported frames and unavailable saving refuse the entire action. It owns only book wholeTarget briefly at program priority; it refuses a competing book actor. The physical control may interrupt a lower-priority book actor only. Book placement is saved as one Undo; tray placement is transient and not undone. A temporary room keeps the book change temporary. Completed receipts do not replay Recall and Stop cannot undo an already completed placement. This is tool recovery, not world recentering or physical room alignment.",
+      "example": {
+        "stateId": "00000000000000000000000000000000",
+        "revision": 1
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "stateId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "recovered": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 8.0
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "stateId",
+          "revision",
+          "recovered",
+          "temporary"
         ],
         "additionalProperties": false
       }
@@ -34970,6 +35059,23 @@
       ]
     },
     {
+      "id": "room.tools.recovery",
+      "version": 1,
+      "type": {
+        "record": {
+          "stateId": "text",
+          "revision": "number",
+          "ready": "boolean",
+          "reason": "text"
+        }
+      },
+      "label": "Book and tool recovery",
+      "description": "Read current Recall identity, book revision and admission. ready is sampled availability, not a reservation. Recall uses the current tracked view at execution; successful Recall, temporary-room boundaries and workspace replacement invalidate old IDs, and book edits invalidate old revisions. reason describes why recovery currently cannot run. No world action is performed by observation.",
+      "features": [
+        "toolRecovery.v1"
+      ]
+    },
+    {
       "id": "object.scanDrawing",
       "version": 1,
       "type": {
@@ -35419,7 +35525,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "6b764c286a8fe9e2078adf995870ee55a0e8c047e32a310544df88c376bf9a28"
+      "sha256": "37286d66cc4b23c30b95eb6925ca47b54f4438ca6ce936f85ef81a53b3832fc7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -35435,7 +35541,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/MaestroRoom.cs",
-      "sha256": "52ffd906f780c588d4f1ad490d0a7591bc39ecf48b62486ef1426d5fa14de0a0"
+      "sha256": "5b5c6b696d606523a91f56a0551d81fdef5260d85e39ee09d997fc34c26d9e02"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -35471,7 +35577,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "8076128c936adb902ba28c0e0658342b5c0314eb1f8a6040fc4a59529a181371"
+      "sha256": "0676ab62ec6f3290a6d1a47f3078b063f1718de9f55b4f96ca93395f4736efb0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -35579,7 +35685,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RoomRules.cs",
-      "sha256": "efc0f59f98e9745f7aef172054a67f26ffff845301dcc190bbd23fb4e0f782ba"
+      "sha256": "0eddfeb582d33d3c582ce9fa539fdddaad40d5ce7a84bc779a53cbeb8b355da9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleWorkshop.cs",
@@ -35759,7 +35865,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "5192423e08ff229c22f7e1c692d5016c1416aeeb0e94d06bca1005fe450b8ca6"
+      "sha256": "70873ab20c78d1da0966c9983de1aa34c69a43fc7f184bc03b9e1312a9166bf8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomFrame.cs",
@@ -35771,35 +35877,47 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomToolTray.cs",
-      "sha256": "fe8189ce3abd235987e3ea8a71eba061233134c321261a434061bb11296f7d15"
+      "sha256": "0795a9ec92a5e191d64cfe6ecc997b77805a5d5a929b44037fa83fd2ee525faa"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomToolVisibility.cs",
       "sha256": "23f0df8e3bb19ea9bd44f9ef7393a316946eeff83a7efb932dbd167ce8f46ded"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomInteraction.cs",
+      "sha256": "6ad29947d320a435fe644b448d8798512c71615b500b7688af9e3ae9d6688096"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/PalmRecoveryButton.cs",
+      "sha256": "610e698348c58b8e2b6c180c53f0da61f687524218bd13370c41ac2372eea74a"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomToolRecovery.cs",
+      "sha256": "56f1550ca818ed72ae8460792940cea169809bd7f89bfaa4c9844e3a4b9a8de0"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationTools.cs",
-      "sha256": "7664a79862a0b82dc532902313935fcf8ad77b84fed0254d7720f60aa0559694"
+      "sha256": "d17bae0bb2b844a575f0d979f802fc23c57fe57a6b88a8e550128fa65205d287"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleTools.cs",
-      "sha256": "65c7fa78dc8fca44f0ee4ae73287c503595d4d60db3d50ffd9eea960fff06b06"
+      "sha256": "3ad9d72a189acc98970a0cdcd38f38040cc2d994d51d710057c6ba5691ac3c9c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportTools.cs",
-      "sha256": "be2284a0ac960ade29f7c08d13e0225be57dab96fb46df4200f85bcbb43e4388"
+      "sha256": "187214d846509d09b6442805fbb19066fc01bfbbe52914dd49975b53dc1df87f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/PhysicsTools.cs",
-      "sha256": "07ae914700038d14018efa9ffa171bf11761edad583a4dbf064a9398ebc025f5"
+      "sha256": "d036ea85f4381dd1a8bcc5e6bc6b002ba7e6e90a0cac12a06464fe881a90de59"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarSpatialTools.cs",
-      "sha256": "b81ce5547d8acaa50a84611b131d9510392994904b68ddb680e6775612f12a17"
+      "sha256": "2702c11629ecb1e91463ef7dc935e96243a0384bf609fc9e71e87c2e7ec26c70"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MovementTools.cs",
-      "sha256": "c0a15175ae7d9ec37880b3228bdd9c34a930df44b319300017b0eced8a8691bc"
+      "sha256": "98fb8ab54860e19e4b8e712e571599074bc19357b856a0a7b285d533d943e4c4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceContent.cs",
@@ -35811,7 +35929,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/BookControllerInput.cs",
-      "sha256": "e4d58dc3c14cd2bc96e875d8248b22a3484a49b217c8b019d8cdef6bff4bf0df"
+      "sha256": "e7567b5021864cde3bd3bb5479aa80e2cab1f786958224508257b9feb56ed532"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectCopy.cs",
@@ -36063,7 +36181,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarSpatialMotion.cs",
-      "sha256": "34bc6e4a292c0a576863fa064810ae20ff44e4dc9ab823a67653d6893f84cbc9"
+      "sha256": "ec37002d969d54b3d1551846396b91f3c86d915c30fdb5176b6a37cd91ca2ca3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarAuthoredTravel.cs",
@@ -36091,7 +36209,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MovementControls.cs",
-      "sha256": "84663a66dc26b7d194517795d00b88867a6081ea2c93b3994272ccc490e6cae1"
+      "sha256": "c253f6089e9abdb7e382f8fe4b5dbf7d033cb04916338a747dc4960a314ed9db"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MovementConfiguration.cs",
@@ -36099,7 +36217,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MovementModes.cs",
-      "sha256": "51d9b3963cad0816330ef41ffcf0a7c6a94b8b35a979e6528e365c4c8c4ae878"
+      "sha256": "9ca24dde1c66d61a6f8bdf75fc029e6a717af20a495457d93a504bf98daf634f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/VirtualRoomView.cs",
@@ -36343,7 +36461,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "a14abd14188d7e08b53f1ea62999eacce3ddfd87a85e359ba0b1bcb3753e8f94"
+      "sha256": "7cadb6751f32c2dca5e102edfd6b3fe3fdd5c13d62d0744c45047a1c38303690"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -36574,8 +36692,12 @@
       "sha256": "5a809c3ffcbd36910e36052558d4caf20328f51615816ebbaf4a4766bc60a6a0"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RoomToolRecoveryCapability.cs",
+      "sha256": "a5dcde9fed36d2679238923e33adb37f34c280a0ee6842e67059beddb0dc6257"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RoomToolsCapability.cs",
-      "sha256": "6f47173d08f6d69ac0aef16bc43707ecc3729f50c499041f7488d43ae9acd35e"
+      "sha256": "38e6d14f6aa309aa8c8b305bc3e089df587f63ea0b5163c59b60086e5241f131"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RoomViewCapability.cs",

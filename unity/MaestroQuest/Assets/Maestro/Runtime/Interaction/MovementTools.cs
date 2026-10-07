@@ -22,7 +22,7 @@ namespace Maestro.Quest.Interaction
             controls=owner; var wood=Paint("C89D65"); var teal=Paint("2B8D88");
             Part(transform,Vector3.zero,new Vector3(.92f,.76f,.04f),wood);
             var handle=gameObject.AddComponent<BoxCollider>(); handle.size=new Vector3(.92f,.76f,.04f);
-            var item=gameObject.AddComponent<RoomItem>(); item.Configure(new Collider[] { handle },1,1); room.Register(item);
+            var item=gameObject.AddComponent<RoomItem>(); item.Configure(new Collider[] { handle },1,1); room.Register(item,true);
             string[] labels={ "Maestro stick","Your movement","Virtual / MR","Maestro binding","Your binding","Swap sticks","Walk speed","Dead zone","Select button","Use action","Button command","Stop / MR" };
             Action[] commands={ owner.ToggleAvatar,owner.ToggleUser,owner.ToggleView,() => owner.CycleStick(false),() => owner.CycleStick(true),owner.SwapSticks,Speed,DeadZone,SelectButton,() => owner.BindSelected(selectedButton),Command,owner.Recover };
             for (int i=0;i<labels.Length;i++)

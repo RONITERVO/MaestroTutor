@@ -11,6 +11,7 @@ namespace Maestro.Quest.Interaction
         string modeId=Guid.NewGuid().ToString("N");
         (string configuration,bool avatar,bool user,bool view,bool paused,bool focused,bool tracked) modeSignature;
         bool HeadReady=>headTracked?.Invoke()==true;
+        internal bool RecoveryHeadReady=>isActiveAndEnabled&&!paused&&focused&&HeadReady;
         string CurrentModeId()
         {
             // Observe transitions, including focus/tracking loss while already off. Never

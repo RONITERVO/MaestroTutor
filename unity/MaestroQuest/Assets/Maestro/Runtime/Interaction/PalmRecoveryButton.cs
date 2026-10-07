@@ -14,7 +14,6 @@ namespace Maestro.Quest.Interaction
         readonly List<XRHandSubsystem> subsystems = new();
         XRHandSubsystem hands;
         RoomInteraction room;
-        RoomPhysicsWorld world;
         Transform trackingSpace, viewer, visual;
         Collider target;
         Material material;
@@ -23,7 +22,7 @@ namespace Maestro.Quest.Interaction
 
         public void Build(int hand, RoomInteraction content, RoomPhysicsWorld physics, Transform tracking, Transform head)
         {
-            handIndex = hand; room = content; world = physics; trackingSpace = tracking; viewer = head;
+            handIndex = hand; room = content; trackingSpace = tracking; viewer = head;
             AccessibleName = "Bring book and tools back";
             var shape = GameObject.CreatePrimitive(PrimitiveType.Sphere); shape.name = "Palm recall pebble";
             shape.transform.SetParent(transform,false); shape.transform.localScale = new Vector3(.085f,.06f,.035f);
@@ -40,7 +39,7 @@ namespace Maestro.Quest.Interaction
         }
 
         public override bool CanActivatePointer(int pointerId) => tracked && pointerId >= 0 && pointerId != handIndex;
-        protected override void OnActivate() { world?.PausePhysics(); room?.RestoreInFrontOfViewer(); }
+        protected override void OnActivate() => room?.RestoreInFrontOfViewer();
 
         // Input supplies a pose in tracking-space coordinates. A missing pose hides
         // both the visual and target, so tracking loss cannot leave a stale button.

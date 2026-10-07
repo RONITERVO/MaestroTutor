@@ -12,7 +12,7 @@ const view=():CatalogView=>({operation:'inspect',category:'facts',capability:'ob
 it('checks every native current-input annotation against both registered contracts',()=>{
  let count=0;
  const visit=(s:CapabilitySchema)=>{if(s['x-current'])count++;expect(()=>validateCurrentInputMapping(s)).not.toThrow();for(const child of [...s.oneOf??[],...Object.values(s.properties??{}),...s.items?[s.items]:[]])visit(child);};
- for(const action of behaviourCatalog.actions)visit(action.input as CapabilitySchema);expect(count).toBe(82);
+ for(const action of behaviourCatalog.actions)visit(action.input as CapabilitySchema);expect(count).toBe(83);
 });
 it('loads exact fact values atomically and distinguishes guards from editable preferences',()=>{
  const next=applyCurrentInputs(schema(),args(),view());expect(next).toEqual({target:native.beforePhysics.target,revision:native.beforePhysics.revision,mode:native.beforePhysics.mode,shape:native.beforePhysics.shape,mass:native.beforePhysics.mass});
@@ -71,4 +71,15 @@ it('copies a complete typed container record without aliasing the native snapsho
  const key=currentInputIdentity(s,loaded,'session');(loaded.definition as typeof definition).rectangle.width=1;
  expect(definition.rectangle.width).toBe(1.18);expect(currentInputIdentity(s,loaded,'session')).toBe(key);
  const bad=structuredClone(s);bad.oneOf![0].properties!.definition.properties!.rectangle.properties!.width.type='string';expect(()=>validateCurrentInputMapping(bad.oneOf![0])).toThrow('type differs');
+});
+
+it('fills both recall guards from one fact and refuses changing either guard without a fresh read',()=>{
+ const input=capabilityDefinition('room.tools.recall')!.input;
+ const value={stateId:'a'.repeat(32),revision:7,ready:true,reason:''};
+ const observation:CatalogView={operation:'inspect',category:'facts',capability:'room.tools.recovery',version:1,definition:behaviourFact('room.tools.recovery')!,available:true,value,status:'Available'};
+ const args=applyCurrentInputs(input,{stateId:'0'.repeat(32),revision:1},observation);
+ expect(args).toEqual({stateId:value.stateId,revision:7});
+ const identity=currentInputIdentity(input,args,'workspace');
+ expect(currentInputIdentity(input,{...args,revision:8},'workspace')).not.toBe(identity);
+ expect(currentInputIdentity(input,{...args,stateId:'b'.repeat(32)},'workspace')).not.toBe(identity);
 });

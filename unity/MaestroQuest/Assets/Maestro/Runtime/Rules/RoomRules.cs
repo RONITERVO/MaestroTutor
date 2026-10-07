@@ -36,7 +36,7 @@ namespace Maestro.Quest.Rules
             runtimeGate=editor.RuntimeGate;runtimeGate.Changed+=RefreshSuspension;RefreshSuspension();
             workshop.DocumentChanged += Reload;
             editor.Editing += StopAll; editor.ItemGrabbed += Grabbed; editor.ItemReleased += Released; editor.ItemTapped += Tapped; editor.ItemCollided += Collided;editor.ItemCaught+=Caught;editor.ConnectionBroken+=ConnectionBroke;editor.ContainerPoured+=ContainerPoured;editor.ContainerScooped+=ContainerScooped;
-            animations.Starting += Authoring; room.Restoring += StopAll; room.Restored += RecoverButtons;
+            animations.Starting += Authoring;
             Reload();
         }
         void Reload()
@@ -85,7 +85,6 @@ namespace Maestro.Quest.Rules
             Scheduler.EmitNative("object.container.scooped",id,new Programs.ProgramValue(id),new Newtonsoft.Json.Linq.JObject{["scoopedMl"]=amount,["donors"]=donors,["liquid"]=liquid,["temporary"]=editor.TemporaryRoom},Time.unscaledTime,out _);
         }
         void Authoring(string id) => Scheduler.StopTarget(id,false);
-        void RecoverButtons() => workshop.RecoverButtons();
         void ShowError() { if (Scheduler.LastError != null) workshop.Say(Scheduler.LastError); }
         public bool Trigger(string sequenceId)
         {
@@ -139,7 +138,6 @@ namespace Maestro.Quest.Rules
             if(runtimeGate!=null)runtimeGate.Changed-=RefreshSuspension;
             if (editor) { editor.Editing -= StopAll; editor.ItemGrabbed -= Grabbed; editor.ItemReleased -= Released; editor.ItemTapped -= Tapped; editor.ItemCollided -= Collided;editor.ItemCaught-=Caught;editor.ConnectionBroken-=ConnectionBroke;editor.ContainerPoured-=ContainerPoured;editor.ContainerScooped-=ContainerScooped; }
             if (animations) animations.Starting -= Authoring;
-            if (room) { room.Restoring -= StopAll; room.Restored -= RecoverButtons; }
         }
     }
 }

@@ -7,7 +7,7 @@ in progress. Desktop evidence does not establish headset comfort or acceptance.
 
 The movable **Movement and controller bindings** tray contains solid 3D buttons.
 No new overlay covers conversation pages. Both movement modes begin disabled on
-every launch and after focus loss, pause, head-tracking loss or Recall.
+every launch and after focus loss, pause, head-tracking loss.
 
 - Maestro stick enables direct walking using the selected avatar stick.
 - Your movement enables user walking only in the explicit Virtual view.
@@ -53,7 +53,7 @@ A direct step must stay on a connected navigation surface and pass the same
 swept body-capsule and overlap checks as following. A blocked direction stops;
 reversing the stick permits backing away. This remains a body-clearance test,
 not per-limb contact, foot planting or cloth/hair collision. Posing, authoring,
-replacement, focus loss, Recall and rule ownership changes interrupt movement.
+replacement, focus loss and conflicting rule ownership changes interrupt movement.
 
 ## User movement and mixed reality
 
@@ -87,10 +87,20 @@ animation authoring. Focus, pause and head-tracking loss disable both movement
 opt-ins and restore MR without rewinding the world. Other subsystem lifecycle
 handlers still stop unsafe activity on actual interruption.
 
-B/Y and palm Recall remain explicit recovery: stop movement and relocate the book
-and tools around the physical viewer through RoomInteraction. View selection is
-not Recall. Offsets survive view changes within the session; persisting them
-across restart/workspace changes is still required. Scan loading, held items and
+B/Y, Home, palm Recall and the creation tray recover only the book and seven
+optional tool trays around the tracked physical viewer. The shared
+`room.tools.recall` action uses the same native transaction with fresh
+`room.tools.recovery` state and book revision. Recall keeps the world frame,
+Maestro, creations, user-built buttons, physics, programs, audio and view/input
+modes unchanged. Hidden trays remain hidden. Release a held book/tray first;
+unrelated held objects stay in your grip. Only a physical Recall can interrupt a
+lower-priority book actor; shared calls refuse a competing book owner. The saved
+book placement is one Undo; recovered tray positions are transient. Workspace
+holds, invalid frames, tracking loss and unavailable saving refuse all placement.
+
+World recentering is a separate operation still to be implemented. Offsets survive
+view changes within the session; persisting them across restart/workspace changes
+is still required. Scan loading, held items and
 workspace boundaries continue to gate view changes. Camera sharing is independent.
 
 The shared controller.mode.set action is version 2 because its old view-exit

@@ -29,7 +29,7 @@ namespace Maestro.Quest.Rules
             var wood = Paint("C89D65"); var teal = Paint("2B8D88"); var plum = Paint("73534E");
             Part(transform,PrimitiveType.Cube,Vector3.zero,new Vector3(.94f,.87f,.045f),wood);
             var handle = gameObject.AddComponent<BoxCollider>(); handle.size = new Vector3(.94f,.87f,.045f);
-            var item = gameObject.AddComponent<RoomItem>(); item.Configure(new Collider[] { handle },1,1); room.Register(item);
+            var item = gameObject.AddComponent<RoomItem>(); item.Configure(new Collider[] { handle },1,1); room.Register(item,true);
             var labels = new[] { "New action","Prev action","Next action","Delete action","Try action","Stop actions",
                 "Block type","Set field","Prev block","Next block","Add block","Delete block",
                 "Prev field","Next field","Value -","Value +","Apply draft","Discard draft",

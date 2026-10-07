@@ -193,8 +193,12 @@ palm Recall and retrieval beyond scanned walls. Live-depth placement accuracy,
 long-session contact/throw behavior and performance still need Quest QA.
 The user confirmed a basic room-physics test. Scanned geometry stops loose items
 but does not block tool-selection rays. B/Y or the creation tray's Bring back
-control recovers content; hand users also have a solid Recall pebble above either
-tracked palm, activated by pointing and pinching with the opposite hand.
+control recovers only the book and authoring trays; hand users also have a solid
+Recall pebble above either tracked palm, activated by pointing and pinching with
+the opposite hand. Shared `room.tools.recall` uses the same transaction. World
+placement, physics, programs, avatar activity, creations and hidden-tray visibility
+are retained. A held book/tray or workspace/tracking/saving boundary refuses Recall.
+Only book placement enters the room journal; transient tray recovery is not undone.
 
 ### Searchable animation book
 

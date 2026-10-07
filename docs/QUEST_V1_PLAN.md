@@ -3679,6 +3679,35 @@ attempts exposed local server setup conflicts and a stale field-toggle step;
 the corrected harness passed without changing product UI. No provider request or
 headset operation occurred. These checks do not close physical acceptance.
 
+Tool recovery increment (2026-10-07): B/Y,
+Home, palm and creation-tray Recall now recover only explicitly registered book
+and authoring trays. Created objects, Maestro, construction handles, user-authored
+buttons, world pose, simulation, audio, programs and movement/view modes retain
+their lifetimes. A growing country must never be collapsed into the old starter
+object grid by a convenience control. Shared `room.tools.recall` and
+`room.tools.recovery` expose the same native placement transaction to generated
+book controls, agent discovery and programs, with exact recovery identity and book
+revision guards. A physical command may interrupt only a lower-priority book
+owner; an agent/program refuses a competing book owner. Held recovery tools,
+tracking loss, workspace boundaries, distorted coordinate frames and save failure
+refuse tool placement. Unrelated held creations stay held. Hidden trays stay hidden.
+Book placement uses the existing saved journal and Undo; tray placement remains
+transient. Temporary-room boundaries invalidate old recovery intent. Explicit
+world recentering and persistent authored viewpoint/physical alignment remain
+separate required work. Tracking coordinates must not become a presumed physical
+anchor just because they were written to disk.
+
+Verification passed 883 EditMode and 736 PlayMode cases (three expected optional
+private-file skips), six focused recovery cases, 1,052 shared room checks,
+application/fixture TypeScript and catalog provenance. A Chromium probe loaded
+both guards, executed the generated book action and displayed its captured native
+receipt; reusable blocks default to reading current values at execution. A real
+saved-file sharing violation refused every recovery pose; scaled-frame limits
+are now checked before interrupting a book owner. A first full run also recorded
+one non-finite native reflection-mixer output; that existing test passed in the
+final-source run. Its failure evidence is retained, production reflections remain
+disabled, and sustained audio/headset acceptance remains a release gate.
+
 The owner expects worlds to grow from room toys into miniature countries with
 cities, buildings, items and NPCs. Users and the agent must author the same world;
 imported Blender/Meshy assets are another source of its components. Texture and

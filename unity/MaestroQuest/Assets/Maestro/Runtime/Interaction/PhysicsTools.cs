@@ -29,7 +29,7 @@ namespace Maestro.Quest.Interaction
             var wood = Paint("C89D65"); var teal = Paint("2B8D88");
             Part(transform,Vector3.zero,new Vector3(.72f,.59f,.04f),wood);
             var handle = gameObject.AddComponent<BoxCollider>(); handle.size = new Vector3(.72f,.59f,.04f);
-            var item = gameObject.AddComponent<RoomItem>(); item.Configure(new Collider[] { handle },1,1); room.Register(item);
+            var item = gameObject.AddComponent<RoomItem>(); item.Configure(new Collider[] { handle },1,1); room.Register(item,true);
             var labels = new[] { "Load room","Scan room","Show room","Start physics","Pause","Object mode","Mass","Place surface","Collision shape" };
             Action[] commands = { scan.Load,()=>{if(scan.Busy)scan.CancelSetup();else scan.Scan();},scan.ToggleSurfaces,world.StartPhysics,world.PausePhysics,editor.CyclePhysics,editor.CycleMass,ArmPlacement,editor.CycleCollider };
             for (int i = 0; i < labels.Length; i++)

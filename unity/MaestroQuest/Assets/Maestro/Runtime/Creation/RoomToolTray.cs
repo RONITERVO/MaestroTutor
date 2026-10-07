@@ -23,7 +23,7 @@ namespace Maestro.Quest.Creation
             var teal = Material(IllustratedMaterials.Hex("2B8D88")); var ink = Material(IllustratedMaterials.Ink);
             Part(transform,PrimitiveType.Cube,new Vector3(0,-.125f,0),new Vector3(.74f,.69f,.025f),wood);
             var handle = gameObject.AddComponent<BoxCollider>(); handle.center = new Vector3(0,-.125f,.007f); handle.size = new Vector3(.74f,.69f,.025f);
-            var movable = gameObject.AddComponent<RoomItem>(); movable.Configure(new Collider[] { handle },1,1); room.Register(movable);
+            var movable = gameObject.AddComponent<RoomItem>(); movable.Configure(new Collider[] { handle },1,1); room.Register(movable,true);
             var kinds = new[] { RoomTool.Block, RoomTool.Ball, RoomTool.Cylinder };
             var primitives = new[] { PrimitiveType.Cube, PrimitiveType.Sphere, PrimitiveType.Cylinder };
             for (int i = 0; i < 3; i++)

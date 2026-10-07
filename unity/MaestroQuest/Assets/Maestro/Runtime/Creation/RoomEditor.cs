@@ -74,7 +74,7 @@ namespace Maestro.Quest.Creation
 
         public void Initialize(RoomInteraction interaction, RoomItem book, RoomItem maestro, string saveDirectory = null, RoomPhysicsWorld physics = null, RoomRuntimeGate runtimeGate = null, string receiptDirectory = null, BundledAvatar includedAvatar = null, BundledMotions includedMotions = null)
         {
-            room = interaction; room.ConfigureWrites(WriteGate); RuntimeGate=runtimeGate??RuntimeGate;RuntimeGate.Changed+=RefreshOwnership;RefreshOwnership();
+            room = interaction; room.ConfigureWrites(WriteGate); room.Register(book,true); RuntimeGate=runtimeGate??RuntimeGate;RuntimeGate.Changed+=RefreshOwnership;RefreshOwnership();
             PhysicsWorld = physics;PhysicsWorld?.ConfigureRuntime(RuntimeGate);
             AddIdentity("book", book); AddIdentity("maestro", maestro);
             var directory = saveDirectory ?? Path.Combine(Application.persistentDataPath, "room"); SaveDirectory=directory;ReceiptDirectory=receiptDirectory??directory;
@@ -88,7 +88,7 @@ namespace Maestro.Quest.Creation
             maestro.GetComponent<MaestroAvatar>()?.ConfigureOwnership(Ownership,"maestro");
             Liquids=gameObject.AddComponent<LiquidPouring>();Liquids.Initialize(this);Sculpting.Editor=this;
             Reconcile();
-            room.Restoring += BeforeRestore; room.Restored += AfterRestore;
+            room.RecoveryEditor=this;
             if (message != null) SetStatus(message);
         }
 
@@ -483,14 +483,6 @@ namespace Maestro.Quest.Creation
             foreach (var pair in objects) { var created = pair.Value.GetComponent<CreatedRoomObject>(); if (created) created.SetSelection(pair.Key == selected,constructionMembers.Contains(pair.Key)); }
             Changed?.Invoke();
         }
-        void BeforeRestore() { FinishLiquidPour(out _); Editing?.Invoke(); applying = true; }
-        void AfterRestore()
-        {
-            applying = false;
-            var placements = identities.Select(pair => Pose(journal.Read(pair.Value),pair.Key.transform)).ToArray();
-            Commit(placements,Array.Empty<string>(),"Room brought back within reach");
-        }
-
         void MarkDirty() { Revision++; dirty = !TemporaryRoom; saveAt = Time.unscaledTime + .5f; }
         public void RememberPlacement(string id)
         {
@@ -639,7 +631,7 @@ namespace Maestro.Quest.Creation
         {
             ClearViewCapture();FinishLiquidPour(out _);
             RuntimeGate.Changed-=RefreshOwnership;Ownership.Suspend(true);Flush(); Motions?.Dispose();
-            if (room) { room.Restoring -= BeforeRestore; room.Restored -= AfterRestore; }
+            if (room && room.RecoveryEditor==this) room.RecoveryEditor=null;
             foreach (var item in objects.Values) if (item) { item.GrabStarted -= GrabStarted; item.GrabFinished -= GrabFinished;var rigid=item.GetComponent<RigidRoomItem>();if(rigid)rigid.ContactStarted-=ContactStarted; }
         }
     }

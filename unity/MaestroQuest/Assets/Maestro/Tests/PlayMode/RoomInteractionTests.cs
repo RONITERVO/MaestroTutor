@@ -46,7 +46,7 @@ namespace Maestro.Quest.Tests
         [UnityTest]
         public IEnumerator PalmRecoveryNeedsTheOtherHandAndHidesOnTrackingLoss()
         {
-            var room = root.AddComponent<RoomInteraction>(); room.Register(item);
+            var room = root.AddComponent<RoomInteraction>(); room.Register(item,true);
             var viewer = new GameObject("Viewer"); viewer.transform.SetParent(root.transform,false); viewer.transform.position = new Vector3(0,1.55f,0); room.Viewer = viewer.transform;
             var world = root.AddComponent<RoomPhysicsWorld>(); world.SetSurfaces(true,"Ready"); world.StartPhysics();
             var control = new GameObject("Palm recovery"); control.transform.SetParent(root.transform,false);
@@ -56,7 +56,7 @@ namespace Maestro.Quest.Tests
             item.transform.position = Vector3.forward*5;
             recall.Activate(0); Assert.That(item.transform.position.z,Is.EqualTo(5),"The carrying hand must not activate its own button");
             recall.Activate(1); Assert.That(Vector3.Distance(item.transform.position,Vector3.forward),Is.LessThan(.001f));
-            Assert.That(world.Running,Is.False,"Recovery should pause loose items");
+            Assert.That(world.Running,Is.True,"Tool recovery must leave room physics running");
             recall.SetPalmPose(null); Assert.That(recall.GetComponent<Collider>().enabled,Is.False); Assert.That(recall.CanActivatePointer(1),Is.False);
             yield return null;
         }
@@ -79,7 +79,7 @@ namespace Maestro.Quest.Tests
             Assert.That(item.Grab.isSelected,Is.True,"XRI could not grab a tool behind a scanned surface");
             var room = root.AddComponent<RoomInteraction>();
             var viewer = new GameObject("Viewer"); viewer.transform.SetParent(root.transform,false); viewer.transform.position = new Vector3(0,1.55f,0);
-            room.Viewer = viewer.transform; room.Register(item);
+            room.Viewer = viewer.transform; room.Register(item,true);
             hand.gameObject.SetActive(false); item.transform.position = Vector3.forward*5;
             room.RestoreInFrontOfViewer();
             Assert.That(item.Grab.isSelected,Is.False);

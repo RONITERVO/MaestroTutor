@@ -289,7 +289,7 @@ namespace Maestro.Quest.Tests
             tracked = true; Assert.That(motion.Begin("recording",AvatarSpatialMode.Look,out _),Is.True);
             editor.Select(editor.Find("maestro")); authoring.ToggleRecord(); Assert.That(motion.Active,Is.False);
             Assert.That(motion.Begin("blocked",AvatarSpatialMode.Look,out _,RoomActorRole.Program),Is.False,"Program movement cannot override recording"); Assert.That(authoring.IsRecording,Is.True); authoring.Stop();
-            Assert.That(motion.Begin("recovery",AvatarSpatialMode.Look,out _),Is.True); room.RestoreInFrontOfViewer(); Assert.That(motion.Active,Is.False);
+            Assert.That(motion.Begin("recovery",AvatarSpatialMode.Look,out _),Is.True); room.RestoreInFrontOfViewer(); Assert.That(motion.Active,Is.True,"Tool recall must leave Maestro active");
             Assert.That(motion.Begin("pause",AvatarSpatialMode.Look,out _),Is.True); motion.SendMessage("OnApplicationPause",true); Assert.That(motion.Active,Is.False);
             motion.SendMessage("OnApplicationPause",false); yield return null; Assert.That(motion.Active,Is.False,"Resume never starts movement automatically");
         }

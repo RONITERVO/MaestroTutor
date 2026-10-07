@@ -201,7 +201,7 @@ namespace Maestro.Quest.Book
             busy=hands[0].Select.manualPerformed || hands[1].Select.manualPerformed || hands[0].PageHeld || hands[1].PageHeld || hands[0].DrawingHeld || hands[1].DrawingHeld
         };
         public void CancelAll() => CancelInputs();
-        void RestoreRoom() { CancelInputs(); Room?.RestoreInFrontOfViewer(); }
+        void RestoreRoom() => Room?.RestoreInFrontOfViewer();
 
         static void DrawPointer(HandInput input, Ray ray, bool visible, Vector3 point)
         {

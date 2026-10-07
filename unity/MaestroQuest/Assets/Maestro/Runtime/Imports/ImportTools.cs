@@ -26,7 +26,7 @@ namespace Maestro.Quest.Imports
             var wood = Paint("C89D65"); var teal = Paint("2B8D88"); var purple = Paint("73534E");
             Part(transform, Vector3.zero, new Vector3(.72f, .94f, .04f), wood);
             var handle = gameObject.AddComponent<BoxCollider>(); handle.size = new Vector3(.72f, .94f, .04f);
-            var item = gameObject.AddComponent<RoomItem>(); item.Configure(new Collider[] { handle }, 1, 1); room.Register(item);
+            var item = gameObject.AddComponent<RoomItem>(); item.Configure(new Collider[] { handle }, 1, 1); room.Register(item,true);
             var labels = ModelLabels;
             for (int i = 0; i < labels.Length; i++)
             {

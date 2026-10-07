@@ -49,7 +49,7 @@ namespace Maestro.Quest.Avatar
             avatar = GetComponent<MaestroAvatar>(); item = GetComponent<RoomItem>();
             editor = source; animations = authoring; room = interaction; navigation = paths; tracked = headTracked ?? (() => room.Viewer && room.Viewer.gameObject.activeInHierarchy);
             editor.Editing += Stop; editor.ItemGrabbed += Grabbed; animations.Starting += Authoring;
-            room.Restoring += Stop; avatar.ModelChanged += ModelChanged;
+            avatar.ModelChanged += ModelChanged;
             editor.Changed += ReadPreferences; ReadPreferences();
         }
         public bool CanBegin(AvatarSpatialMode value, out string error,bool allowAuthoringTakeover=false)
@@ -252,7 +252,7 @@ namespace Maestro.Quest.Avatar
         {
             Stop(); if (editor) { editor.Editing -= Stop; editor.ItemGrabbed -= Grabbed; editor.Changed -= ReadPreferences; }
             if (animations) animations.Starting -= Authoring;
-            if (room) room.Restoring -= Stop; if (avatar) avatar.ModelChanged -= ModelChanged;
+            if (avatar) avatar.ModelChanged -= ModelChanged;
         }
     }
 }

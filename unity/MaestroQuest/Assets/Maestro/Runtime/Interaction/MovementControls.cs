@@ -44,7 +44,7 @@ namespace Maestro.Quest.Interaction
             sample=frames ?? (() => input ? input.ReadMovement() : default);
             storage=new ControllerPreferenceStorage(directory ?? source.SaveDirectory); preferences=storage.Load(out var message);
             runtimeGate=editor.RuntimeGate;runtimeGate.Changed+=RuntimeChanged;RuntimeChanged();
-            room.Restoring+=Recover; editor.Editing+=Interrupt; animations.Starting+=Authoring; if (workshop) workshop.Changed+=RulesChanged;
+            editor.Editing+=Interrupt; animations.Starting+=Authoring; if (workshop) workshop.Changed+=RulesChanged;
             if (message != null) Say(message);
         }
         public bool Apply(ControllerPreferences next)
@@ -150,7 +150,7 @@ namespace Maestro.Quest.Interaction
         void OnDisable() => Recover();
         void OnDestroy()
         {
-            Recover(); if (room) room.Restoring-=Recover; if(runtimeGate!=null)runtimeGate.Changed-=RuntimeChanged; if (editor) editor.Editing-=Interrupt; if (animations) animations.Starting-=Authoring; if (workshop) workshop.Changed-=RulesChanged;
+            Recover(); if(runtimeGate!=null)runtimeGate.Changed-=RuntimeChanged; if (editor) editor.Editing-=Interrupt; if (animations) animations.Starting-=Authoring; if (workshop) workshop.Changed-=RulesChanged;
         }
     }
 }

@@ -51,7 +51,7 @@ namespace Maestro.Quest.Creation
             recordPaint = Paint("B8644E"); posePaint = Paint("73534E");
             Part(transform,PrimitiveType.Cube,Vector3.zero,new Vector3(.76f,.50f,.055f),wood);
             var handle = gameObject.AddComponent<BoxCollider>(); handle.size = new Vector3(.76f,.50f,.055f);
-            var item = gameObject.AddComponent<RoomItem>(); item.Configure(new Collider[] { handle },1,1); room.Register(item);
+            var item = gameObject.AddComponent<RoomItem>(); item.Configure(new Collider[] { handle },1,1); room.Register(item,true);
             var kinds = new[] { AnimationTool.Pose,AnimationTool.Record,AnimationTool.AddFrame,AnimationTool.Play,AnimationTool.Stop,AnimationTool.Loop,
                 AnimationTool.Previous,AnimationTool.Next,AnimationTool.Replace,AnimationTool.Delete,AnimationTool.Gesture,AnimationTool.Automatic,AnimationTool.Faster,AnimationTool.Slower,AnimationTool.DiscardTake,AnimationTool.SavePose,AnimationTool.DiscardPose };
             var labels = new[] { "Pose Maestro","Record","Save frame","Play","Stop","Loop","Earlier","Later","Replace","Remove","Gesture","Auto gestures","Faster","Slower","Discard take","Save pose","Discard pose" };

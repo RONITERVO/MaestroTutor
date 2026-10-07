@@ -29,6 +29,7 @@ import nativeModelImport from './modelSelection.json';
 import nativeImportReadback from './importReadback.json';
 import nativeController from './controllerConfiguration.json';
 import nativeModes from './controllerModes.json';
+import nativeRecovery from './toolRecovery.json';
 import nativeSpatial from './spatialSettings.json';
 import nativeMotionBatch from './motionBatchImport.json';
 import nativeAvatar from './avatarSelection.json';
@@ -76,6 +77,14 @@ if(controllerConfiguration){
  state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';
  state.execution={...JSON.parse(JSON.stringify(nativeController.movement)),selected:null,running:[],outcomes:[],nextRunId:nativeController.movement.selected.id};
  state.capabilities=[...state.capabilities??[],'catalogVocabulary.v1','controllerConfiguration.v1','execution.v1','executionReceipts.v1','actionResults.v1'];
+}
+const toolRecovery=new URLSearchParams(location.search).has('toolRecovery');
+let recoveryObservation=nativeRecovery.before;
+if(toolRecovery){
+ if(!validExecutionView(nativeRecovery.receipt))throw new Error('Invalid native tool recovery fixture');
+ state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';
+ state.execution={...JSON.parse(JSON.stringify(nativeRecovery.receipt)),selected:null,running:[],outcomes:[],nextRunId:nativeRecovery.receipt.selected.id};
+ state.capabilities=[...state.capabilities??[],'catalogVocabulary.v1','toolRecovery.v1','structuredValues.v1','factQueries.v1','execution.v1','executionReceipts.v1','actionResults.v1'];
 }
 const controllerModes=new URLSearchParams(location.search).has('controllerModes');
 const modeViews=[nativeModes.enable,nativeModes.virtualView,nativeModes.user,nativeModes.mixed];
@@ -264,6 +273,11 @@ setInterval(()=>{
      if(index<0){state.ok=false;state.status='Only captured native spatial settings can be replayed';}
      else{state.execution=copy(spatialViews[index]) as RoomAgentState['execution'];spatialFacts=index===0?{...spatialFacts,'object.physics.settings':nativeSpatial.afterPhysics}:index===1?{...spatialFacts,'avatar.movement.settings':nativeSpatial.afterMovement,'avatar.walk.settings':nativeSpatial.walkBeforeSave}:{...spatialFacts,'avatar.walk.settings':nativeSpatial.afterWalk};state.status='Captured native settings result; no headset or provider execution';}
     }
+    else if(toolRecovery&&input.operation==='start'){
+     const view=nativeRecovery.receipt;
+     if(input.runId!==view.selected.id||input.call.id!==view.selected.call.id||input.call.version!==view.selected.call.version||JSON.stringify(Object.entries(input.call.arguments).sort())!==JSON.stringify(Object.entries(view.selected.call.arguments).sort())){state.ok=false;state.status='Only captured native recovery can be replayed';}
+     else{state.execution=copy(view) as RoomAgentState['execution'];recoveryObservation=nativeRecovery.after;state.status='Captured native tool recovery; browser does not move a headset';}
+    }
     else if(controllerModes&&input.operation==='start'){
      const index=modeViews.findIndex(view=>input.call?.id===view.selected.call.id&&input.call.version===view.selected.call.version&&JSON.stringify(Object.entries(input.call.arguments).sort())===JSON.stringify(Object.entries(view.selected.call.arguments).sort()));
      if(index<0){state.ok=false;state.status='Only captured native mode transitions can be replayed';}
@@ -344,6 +358,12 @@ setInterval(()=>{
      const definitions=Object.keys(spatialFacts).filter(id=>query.operation!=='search'||id.includes(query.query??'')).map(id=>behaviourFact(id)!);
      if(query.operation==='search')state.catalog={operation:'search',category:'facts',query:query.query,offset:0,total:definitions.length,pageSize:6,entries:definitions.map(d=>({id:d.id,version:1,label:d.label})),status:'Found spatial settings'};
      else{const definition=behaviourFact(query.capability??'');const value=spatialFacts[query.capability??''];const available=!!value&&(query.capability!=='object.physics.settings'||query.arguments?.target===nativeSpatial.beforePhysics.target);state.catalog={operation:'inspect',category:'facts',capability:query.capability,version:1,definition,arguments:query.arguments,available,value:available?copy(value):null,status:'Captured native spatial settings'};}
+     continue;
+    }
+    if(toolRecovery&&query.operation!=='check'&&query.category==='facts'){
+     const definition=behaviourFact('room.tools.recovery')!;
+     if(query.operation==='search')state.catalog={operation:'search',category:'facts',query:query.query,offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Book and tool recovery'};
+     else state.catalog={operation:'inspect',category:'facts',capability:query.capability,version:1,definition:query.capability===definition.id?definition:null,available:query.capability===definition.id,value:query.capability===definition.id?copy(recoveryObservation):null,status:'Captured native recovery state'};
      continue;
     }
     if(controllerModes&&query.operation!=='check'&&query.category==='facts'){

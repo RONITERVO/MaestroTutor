@@ -91,7 +91,7 @@ namespace Maestro.Quest
             bookObject.layer = RoomPhysicsLayers.Environment;
             coverHandle.center = new Vector3(0, 0, .024f);
             coverHandle.size = new Vector3(.648f, .457f, .012f);
-            var bookItem = bookObject.AddComponent<RoomItem>(); bookItem.Configure(new Collider[] { coverHandle }, .65f, 1.8f); room.Register(bookItem);
+            var bookItem = bookObject.AddComponent<RoomItem>(); bookItem.Configure(new Collider[] { coverHandle }, .65f, 1.8f); room.Register(bookItem,true);
             var router = gameObject.AddComponent<BookPointerRouter>(); router.Browser = browser;
             var input = gameObject.AddComponent<BookControllerInput>();
             input.Router = router; input.TrackingSpace = offset.transform; input.DesktopCamera = camera; input.Room = room;
