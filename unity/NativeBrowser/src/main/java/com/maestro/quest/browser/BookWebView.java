@@ -40,6 +40,7 @@ public final class BookWebView extends OffscreenBrowser {
     private WebView web;
     private final BrowserSnapshotStore roomSnapshots = new BrowserSnapshotStore(32768);
     private final BrowserSnapshotStore snapshots = new BrowserSnapshotStore();
+    private final BookSpeechMailbox speech = new BookSpeechMailbox();
     private volatile String error = "";
     private volatile String externalLink = "";
     private volatile boolean disposed;
@@ -147,7 +148,7 @@ public final class BookWebView extends OffscreenBrowser {
             settings.setMediaPlaybackRequiresUserGesture(true);
             CookieManager.getInstance().setAcceptThirdPartyCookies(web, false);
             web.setWebViewClient(new WebViewClient() {
-                @Override public void onPageStarted(WebView view,String url,android.graphics.Bitmap icon) { snapshots.invalidate(); roomSnapshots.invalidate(); resetRequests(); }
+                @Override public void onPageStarted(WebView view,String url,android.graphics.Bitmap icon) { speech.invalidate(); snapshots.invalidate(); roomSnapshots.invalidate(); resetRequests(); }
                 @Override public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                     Uri uri = request.getUrl();
                     if (isAppOrigin(uri)) {
@@ -168,6 +169,7 @@ public final class BookWebView extends OffscreenBrowser {
                     if (suspended) suspendWebView();
                 }
                 @Override public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
+                    speech.invalidate();
                     error = "The book browser stopped. Reopen the book to recover your saved conversation.";
                     mInitialized = false;
                     if (requests != null) { requests.close(); requests = null; }
@@ -195,6 +197,7 @@ public final class BookWebView extends OffscreenBrowser {
     }
 
     private void destroyWebView() {
+        speech.invalidate();
         if (exports != null) { exports.close(); exports = null; }
         if (requests != null) { requests.close(); requests = null; }
         if (web == null) return;
@@ -239,6 +242,22 @@ public final class BookWebView extends OffscreenBrowser {
     }
 
     public String ReadSnapshot() { return snapshots.read(); }
+    public String ReadSpeechExchange() { return speech.read(); }
+    public void RequestSpeechExchange(String document, String status) {
+        final String script = BookSpeechMailbox.script(status);
+        if (script == null || !speech.begin(document)) return;
+        UnityPlayer.currentActivity.runOnUiThread(() -> {
+            if (!speech.owns(document)) return;
+            if (disposed || suspended || web == null || !isAppOrigin(Uri.parse(web.getUrl() == null ? "" : web.getUrl()))) {
+                speech.complete(document, null); return;
+            }
+            final WebView owner = web;
+            owner.evaluateJavascript(script, result -> {
+                if (disposed || suspended || web != owner) return;
+                speech.complete(document, result);
+            });
+        });
+    }
     public String ReadError() { return error; }
     public void ClearError() { error = ""; }
     public String TakeExternalLink() { String result = externalLink; externalLink = ""; return result; }
@@ -290,6 +309,7 @@ public final class BookWebView extends OffscreenBrowser {
     }
 
     public void SetSuspended(boolean value) {
+        speech.invalidate();
         snapshots.suspend(value); roomSnapshots.suspend(value);
         if (value) externalLink = "";
         UnityPlayer.currentActivity.runOnUiThread(() -> {
@@ -365,6 +385,7 @@ public final class BookWebView extends OffscreenBrowser {
     @Override public void Dispose() {
         if (disposed) return;
         disposed = true;
+        speech.invalidate();
         ReleaseSharedTexture();
         abortCaptureThread();
         Activity activity = UnityPlayer.currentActivity;

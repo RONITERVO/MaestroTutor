@@ -3627,3 +3627,32 @@ the audible-completion gate and deliver the finished Live turn while its speech
 was still queued. The finalization path now waits for the selected renderer even
 when the provider closes; the same test then passes. This prevents an early
 chat/room-task handoff independently of which renderer is selected.
+
+Android voice transport increment (2026-10-07): the local top-level book now
+selects Unity's mouth emitter for both Live and triggered TTS. Desktop/phone web
+outputs are unchanged. The Android bridge polls a transient speech mailbox;
+there is no JavaScript-to-JNI interface, file URL playback, provider duplication,
+or PCM in saved rooms/action receipts. One voice owner has bounded copied PCM,
+little-endian chunks, native played-sample acknowledgements and drain fences.
+The browser queue allows at most 120 seconds; native flow credit is two seconds
+and individual exchanges contain at most eight 4,800-sample chunks. Idle polling
+runs more slowly than active speech. Lost receipts resend identical chunks but
+never play them twice.
+
+Document identity, browser session and output revision reject late callbacks.
+Stop, navigation, host suspension, emitter replacement, missing browser/native
+heartbeats and a stalled audio device stop the voice. A retired browser revision
+cannot reopen on focus return even if JavaScript did not process suspension.
+Live and TTS close their existing provider on native output failure; there is no
+mid-stream fallback that starts a second dry copy. Scanned/virtual acoustics,
+Meta HRTF, mouth-offset controls, cached replay, physical echo and audible
+direction/latency acceptance are still open. This source increment is not yet
+packaged or installed, and the owner cooling/charging gate remains in effect.
+
+Verification: 2,556 web tests across 284 files, TypeScript, lint, production web
+build, core boundaries, prompt ownership and catalog provenance passed. Android
+release tests/build/lint passed (90 tests, two optional private-import skips).
+Unity passed 839 EditMode and 662 PlayMode tests (three optional private-import
+skips), followed by the complete native-room and original-book integration
+journeys. These deterministic probes used no provider and do not establish
+Android device playback, audible positioning or microphone echo acceptance.

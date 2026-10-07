@@ -113,9 +113,22 @@ is pending; the speech-gated input path stays closed until actual output drains.
 
 Unity's `NativeSpeechOutput` implements bounded DSP-scheduled playback at the
 current avatar head, including imported-avatar replacement, with generation and
-sequence checks and cancellation on focus/pause/audio-device changes. It is not
-yet connected to the Android bridge. Cached replay still uses HTML Audio. Native
-routing, replay adaptation, Meta HRTF/acoustics and physical echo,
+sequence checks and cancellation on focus/pause/audio-device changes. The native
+book selects it for both Live and triggered TTS through `SpeechBookClient` and
+Android's top-document polling. No JavaScript-to-JNI object is exposed to frames.
+Each transient exchange carries a document, browser session, output revision and
+ordered chunks; Unity acknowledges accepted and actually played sample counts.
+Lost receipts may resend the same bytes but cannot play them twice. Stop/reload,
+missing heartbeats, a stalled output or avatar-owner replacement closes the voice;
+an old browser revision cannot resume it after focus returns, even if JavaScript
+missed the suspension notification. Native failure never falls back to a second
+browser copy. Provider, account and transcript ownership remain unchanged.
+
+The web queue is capped at 120 seconds; native credit admits at most two seconds,
+in batches of at most eight 4,800-sample chunks. Small incoming packets coalesce
+until offered, then their sequence/bytes remain immutable. Native polling slows
+while idle. PCM never enters saved room state or action receipts. Cached replay
+still uses HTML Audio. Replay adaptation, Meta HRTF/acoustics and physical echo,
 latency and intelligibility acceptance remain open; controlled-clock PCM tests
 do not establish audible headset quality.
 

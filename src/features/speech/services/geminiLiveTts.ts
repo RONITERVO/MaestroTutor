@@ -36,6 +36,7 @@ import {
 } from '../../../../shared/liveOpenReason';
 import type { SpeechOutput } from '../../../core-sdk/media/speechOutput';
 import { ScheduledSpeechOutput } from '../utils/scheduledSpeechOutput';
+import { selectSpeechOutput } from '../utils/selectSpeechOutput';
 import { getLiveCostControlConfig } from '../../../../shared/liveCostControls';
 
 // ============================================================================
@@ -163,8 +164,11 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
   });
 
   let output: SpeechOutput;
+  let failOutput: ((error: Error) => void) | null = null;
   try {
-    output = params.createOutput?.() ?? new ScheduledSpeechOutput(audioContext, OUTPUT_SAMPLE_RATE);
+    output = params.createOutput?.() ?? selectSpeechOutput(() => new ScheduledSpeechOutput(audioContext, OUTPUT_SAMPLE_RATE), {
+      onError: error => failOutput?.(error),
+    });
     if (output.sampleRate !== OUTPUT_SAMPLE_RATE) { output.dispose(); throw new Error('Speech output format does not match the provider.'); }
   } catch {
     log.error({ message: 'Speech output could not start.' });
@@ -414,6 +418,7 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
       else resolveOnce(result);
     };
 
+    failOutput = () => interruptImmediately('AUDIO_OUTPUT_FAILED');
     try {
       abortHandler = () => interruptImmediately();
       abortSignal?.addEventListener('abort', abortHandler, { once: true });

@@ -17,7 +17,12 @@ namespace Maestro.Quest.Avatar
     [DefaultExecutionOrder(110)]
     public sealed class MaestroAvatar : MonoBehaviour
     {
-        public NativeBookBrowser Browser;
+        NativeBookBrowser browser;
+        public NativeBookBrowser Browser
+        {
+            get => browser;
+            set { browser = value; browser?.BindSpeechOutput(SpeechOutput); }
+        }
         public bool ReducedMotion;
         RoomRuntimeGate runtimeGate;
         internal void ConfigureRuntime(RoomRuntimeGate gate){if(runtimeGate==gate)return;if(runtimeGate!=null)runtimeGate.Changed-=RuntimeChanged;runtimeGate=gate;if(gate!=null)gate.Changed+=RuntimeChanged;RuntimeChanged();}
@@ -129,6 +134,7 @@ namespace Maestro.Quest.Avatar
             var voice = new GameObject("Maestro mouth voice"); voice.transform.SetParent(transform, false);
             SpeechOutput = voice.AddComponent<NativeSpeechOutput>();
             SpeechOutput.ConfigureAnchor(PoseRig, transform, new Vector3(0, .08f, .08f), new Vector3(0, 1.4f, .08f));
+            browser?.BindSpeechOutput(SpeechOutput);
             if (savedPose != null) { PoseRig.SetManual(true); PoseRig.Apply(savedPose); }
             if(animator.runtimeAnimatorController)gestureLayer=new AvatarGestureLayer(included,animator,PoseRig);
             greetingUntil = Time.unscaledTime + (ReducedMotion ? 0 : 2.5f);

@@ -49,6 +49,7 @@ vi.mock('../../../../shared/liveOpenReason', () => ({
 
 import { streamGeminiLiveTts } from './geminiLiveTts';
 import type { SpeechOutput } from '../../../core-sdk/media/speechOutput';
+import { SpeechBookClient, registerBookSpeech } from '../../../platform/quest/speechBookBridge';
 
 class FakeBufferSource {
   buffer: AudioBuffer | null = null;
@@ -103,6 +104,28 @@ describe('Gemini Live TTS audible completion', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+  });
+
+  it('routes Quest TTS to the native mouth and closes the provider immediately if that output is lost', async () => {
+    const target = { location: { origin: 'https://appassets.androidplatform.net', search: '?surface=quest-book' }, top: null as unknown };
+    target.top = target; vi.stubGlobal('window', target);
+    const client = new SpeechBookClient(), unregister = registerBookSpeech(client);
+    try {
+      const idle = client.exchange(null)!;
+      const host = 'a'.repeat(32);
+      client.exchange({ ...idle, host, status: 'ready', acceptedSequence: 0, submittedSamples: 0, playedSamples: 0 });
+      const context = new FakeAudioContext(); const onError = vi.fn();
+      const pending = streamGeminiLiveTts({ lines: [{ text: 'Hello', langCode: 'en' }],
+        audioContext: context as unknown as AudioContext, liveOpenTrigger: 'voice.tts-click', onError });
+      await vi.waitFor(() => expect(mocks.callbacks).not.toBeNull());
+      mocks.callbacks!.onmessage({ serverContent: { modelTurn: { parts: [{ inlineData: { data: pcmBase64(2400) } }] } } });
+      expect(client.exchange(null)!.chunks).toHaveLength(1); expect(context.sources).toHaveLength(0);
+      client.exchange({ ...client.exchange(null), host, status: 'failed' });
+      await expect(pending).resolves.toMatchObject({ isComplete: false, error: 'AUDIO_OUTPUT_FAILED' });
+      expect(mocks.sessionClose).toHaveBeenCalledOnce(); expect(onError).toHaveBeenCalledWith('Speech playback stopped before completion.');
+      mocks.callbacks!.onmessage({ serverContent: { modelTurn: { parts: [{ inlineData: { data: pcmBase64(2400) } }] } } });
+      expect(client.exchange(null)!.chunks).toHaveLength(0); expect(context.sources).toHaveLength(0);
+    } finally { unregister(); }
   });
 
   it('aborts during connection and closes a late transport without playing or sending', async () => {

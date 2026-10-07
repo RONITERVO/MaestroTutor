@@ -43,6 +43,12 @@ namespace Maestro.Quest.Book
 #endif
         }
         QuestIntegrityExchange integrity;
+        BookSpeechSession speech;
+        float nextSpeechPoll;
+        public void BindSpeechOutput(NativeSpeechOutput output)
+        {
+            if (speech == null) speech = new BookSpeechSession(output); else speech.Bind(output);
+        }
         long pointerDownTime;
         bool pointerHeld;
         bool suspended;
@@ -85,6 +91,7 @@ namespace Maestro.Quest.Book
         void Update()
         {
             GarbageCollect();
+            speech?.Tick(Time.realtimeSinceStartupAsDouble);
             if (!IsReady) return;
 #if UNITY_ANDROID && !UNITY_EDITOR
             if (nativeSuspended != suspended) { m_NativePlugin.Call("SetSuspended", suspended); nativeSuspended = suspended; }
@@ -92,6 +99,12 @@ namespace Maestro.Quest.Book
             if (suspended) return;
             UpdateFrame();
 #if UNITY_ANDROID && !UNITY_EDITOR
+            if (speech != null && Time.unscaledTime >= nextSpeechPoll)
+            {
+                speech.Receive(m_NativePlugin.Call<string>("ReadSpeechExchange"), Time.realtimeSinceStartupAsDouble);
+                nextSpeechPoll = Time.unscaledTime + (speech.Active ? .05f : .2f);
+                m_NativePlugin.Call("RequestSpeechExchange", speech.Document, speech.Status(Time.realtimeSinceStartupAsDouble));
+            }
             if (Time.unscaledTime < nextPoll) return;
             nextPoll = Time.unscaledTime + .2f;
             m_NativePlugin.Call("RequestSnapshot");
@@ -197,6 +210,7 @@ namespace Maestro.Quest.Book
 
         public void SetSuspended(bool value)
         {
+            if (value) speech?.Suspend();
             if (value && pointerHeld) Pointer(0, 0, BrowserPointerPhase.Cancel);
             if (suspended != value) { integrity?.Clear(); Snapshot=null; previousSnapshot=null; }
             suspended = value;
@@ -205,7 +219,7 @@ namespace Maestro.Quest.Book
 #endif
         }
 
-        void OnDisable() { integrity?.Clear(); }
+        void OnDisable() { speech?.Suspend(); integrity?.Clear(); }
         void OnApplicationPause(bool paused) { applicationPaused = paused; SetSuspended(applicationPaused || !applicationFocused); }
         void OnApplicationFocus(bool focused) { applicationFocused = focused; SetSuspended(applicationPaused || !applicationFocused); }
     }
