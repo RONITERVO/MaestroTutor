@@ -1,7 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 using System;
-using System.Collections.Generic;
 using Maestro.Quest.Avatar;
 using Maestro.Quest.Creation;
 using UnityEngine;
@@ -21,26 +20,22 @@ namespace Maestro.Quest.Book
     [DefaultExecutionOrder(250)]
     public sealed class NativeSpeechOutput : MonoBehaviour
     {
-        const int MaxSegments = 64, MaxChunkSamples = 4800, MaxQueuedSeconds = 8;
         const double ScheduleLeadSeconds = .1;
-        sealed class Segment
-        {
-            public AudioSource Source;
-            public AudioClip Clip;
-            public double Start, End;
-            public long First, Last;
-        }
-        readonly List<Segment> segments = new();
-        long generation, sequence, submitted, completed, reported;
+        SpeechPcmStream stream;
+        AudioSource source;
+        AudioClip carrier;
+        SpeechPcmFilter filter;
+        long generation;
         int sampleRate;
-        double nextStart;
         bool open, paused, focused = true;
         AvatarPoseRig rig;
         Transform frame;
         Vector3 mouthOffset = new(0, .08f, .08f), fallbackOffset = new(0, 1.4f, .08f);
-        // Test seams control time/tail, never substitute the AudioSource/PCM path.
+        // Tests control time/tail and exercise the same render function as the
+        // audio callback; clock advancement alone cannot acknowledge playback.
         internal Func<double> Clock = () => AudioSettings.dspTime;
         internal double? TailOverride;
+        internal void Render(float[] data, int channels, int rate, double dspTime) => stream.Render(data, channels, rate, dspTime);
 
         public void ConfigureAnchor(AvatarPoseRig poseRig, Transform avatarFrame, Vector3 headOffset, Vector3 fallback)
         {
@@ -66,81 +61,56 @@ namespace Maestro.Quest.Book
         {
             if (rate != 24000) throw new ArgumentException("Speech requires mono PCM16 at 24000 Hz.");
             if (!isActiveAndEnabled || paused || !focused) throw new InvalidOperationException("Speech output is inactive.");
-            Stop(); sampleRate = rate; open = true;
+            Stop(); sampleRate = rate;
+            try
+            {
+                int outputRate = AudioSettings.outputSampleRate;
+                if (outputRate < rate || outputRate > 192000) throw new InvalidOperationException("Unsupported speech output rate.");
+                stream = new SpeechPcmStream(Clock() + ScheduleLeadSeconds, TailSeconds);
+                var child = new GameObject("Maestro voice stream");
+                child.transform.SetParent(transform, false);
+                source = child.AddComponent<AudioSource>();
+                source.playOnAwake = false; source.loop = true;
+                source.spatialBlend = 1; source.dopplerLevel = 0; source.spread = 0; source.priority = 0;
+                source.minDistance = 1; source.maxDistance = 15; source.rolloffMode = AudioRolloffMode.Logarithmic;
+                source.spatialize = !string.IsNullOrEmpty(AudioSettings.GetSpatializerPluginName());
+                source.spatializePostEffects = true;
+                // A silent mono carrier keeps Unity's DSP graph active. The
+                // procedural filter replaces its samples; it never replays PCM.
+                carrier = AudioClip.Create("Maestro voice carrier", 1024, 1, rate, false);
+                source.clip = carrier;
+                filter = child.AddComponent<SpeechPcmFilter>(); filter.Bind(stream, outputRate);
+                open = true; source.Play();
+            }
+            catch { Stop(); throw; }
             return generation;
         }
         public bool TryWrite(long owner, long nextSequence, short[] pcm, out string error)
         {
             error = null;
             if (!open || owner != generation || !isActiveAndEnabled || paused || !focused) { error = "Speech output was stopped"; return false; }
-            if (nextSequence != sequence + 1) { error = "Speech chunk is duplicate or out of order"; return false; }
-            if (pcm == null || pcm.Length == 0 || pcm.Length > MaxChunkSamples) { error = "Speech chunk is invalid"; return false; }
             Tick();
-            if (segments.Count >= MaxSegments || submitted - completed + pcm.Length > sampleRate * MaxQueuedSeconds)
-            { error = "Speech output buffer is full"; return false; }
-            AudioClip clip = null; GameObject child = null;
-            try
-            {
-                var samples = new float[pcm.Length];
-                for (int i = 0; i < pcm.Length; i++) samples[i] = pcm[i] / 32768f;
-                clip = AudioClip.Create("Maestro speech PCM", samples.Length, 1, sampleRate, false);
-                if (!clip.SetData(samples, 0)) throw new InvalidOperationException("Speech PCM upload failed");
-                child = new GameObject("Speech segment", typeof(AudioSource));
-                child.transform.SetParent(transform, false);
-                var source = child.GetComponent<AudioSource>();
-                source.playOnAwake = false; source.loop = false; source.clip = clip;
-                source.spatialBlend = 1; source.dopplerLevel = 0; source.spread = 0;
-                source.minDistance = 1; source.maxDistance = 15; source.rolloffMode = AudioRolloffMode.Logarithmic;
-                source.spatialize = !string.IsNullOrEmpty(AudioSettings.GetSpatializerPluginName());
-                var start = Math.Max(Clock() + ScheduleLeadSeconds, nextStart);
-                source.PlayScheduled(start);
-                var segment = new Segment { Source = source, Clip = clip, Start = start,
-                    End = start + (double)pcm.Length / sampleRate, First = submitted, Last = submitted + pcm.Length };
-                segments.Add(segment);
-                sequence = nextSequence; submitted = segment.Last; nextStart = segment.End;
-                return true;
-            }
-            catch (Exception)
-            {
-                if (child) { var source = child.GetComponent<AudioSource>(); if (source) source.Stop(); DestroyOwned(child); }
-                if (clip) DestroyOwned(clip);
-                error = "Speech output could not schedule audio";
-                return false;
-            }
+            if (!open) { error = "Speech output was stopped"; return false; }
+            return stream.TryWrite(nextSequence, pcm, Clock(), out error);
         }
         public SpeechOutputSnapshot Read()
         {
             Tick();
-            long played = completed;
-            var now = Clock() - TailSeconds;
-            foreach (var segment in segments)
-            {
-                if (now < segment.Start) break;
-                played = Math.Max(played, segment.First + Math.Min(segment.Last - segment.First,
-                    Math.Max(0, (long)Math.Floor((now - segment.Start) * sampleRate))));
-            }
-            reported = Math.Max(reported, played);
+            var state = stream?.Read(Clock()) ?? default;
             return new SpeechOutputSnapshot { generation = generation, sampleRate = sampleRate,
-                acceptedSequence = sequence, submittedSamples = submitted, playedSamples = reported, started = reported > 0 };
+                acceptedSequence = state.Sequence, submittedSamples = state.Submitted, playedSamples = state.Played, started = state.Played > 0 };
         }
         internal void Tick()
         {
-            var now = Clock() - TailSeconds;
-            while (segments.Count > 0 && now >= segments[0].End)
-            {
-                var done = segments[0]; segments.RemoveAt(0); completed = done.Last; Release(done);
-            }
+            if (open && (!source || !filter || stream.Read(Clock()).Faulted)) Stop();
         }
         public void Stop()
         {
             open = false; generation++;
-            foreach (var segment in segments) Release(segment);
-            segments.Clear(); sequence = submitted = completed = reported = 0; nextStart = 0;
-        }
-        static void Release(Segment segment)
-        {
-            if (segment.Source) { segment.Source.Stop(); segment.Source.clip = null; DestroyOwned(segment.Source.gameObject); }
-            if (segment.Clip) DestroyOwned(segment.Clip);
+            stream?.Close(); stream = null;
+            if (filter) filter.Stop(); filter = null;
+            if (source) { source.Stop(); source.clip = null; DestroyOwned(source.gameObject); } source = null;
+            if (carrier) DestroyOwned(carrier); carrier = null;
         }
         static void DestroyOwned(UnityEngine.Object value)
         {

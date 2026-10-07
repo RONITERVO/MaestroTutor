@@ -16,6 +16,7 @@ it('uses the normal browser output outside the native book and never falls back 
     const idle = client.exchange(null)!;
     client.exchange({ ...idle, host: 'a'.repeat(32), status: 'ready', acceptedSequence: 0, submittedSamples: 0, playedSamples: 0 });
     const output = selectSpeechOutput(browser); output.write(new Int16Array([7]));
+    expect(output.microphonePolicy).toBe('suppress-during-playback');
     expect(client.exchange(null)?.chunks).toHaveLength(1); expect(browser).not.toHaveBeenCalled(); output.dispose();
   } finally { unregister(); }
 });

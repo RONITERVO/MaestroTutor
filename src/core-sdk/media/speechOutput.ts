@@ -9,6 +9,9 @@ export interface SpeechOutputEvents {
  * Maestro; adapters own rendering, buffering and the output-device tail. */
 export interface SpeechOutput {
   readonly sampleRate: number;
+  /** External renderers may not participate in the browser's echo reference.
+   * Keep captured microphone audio out of the provider while their voice plays. */
+  readonly microphonePolicy?: 'suppress-during-playback';
   /** Copies samples before returning. Throws on closed output or buffer overflow. */
   write(pcm: Int16Array): void;
   /** Sample positions exclude underrun silence and belong to the current reset epoch. */

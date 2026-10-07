@@ -41,7 +41,7 @@ namespace Maestro.Quest.Tests
         {
             Receive(Packet(1,0,false)); Assert.AreEqual("ready",(string)Status["status"]);
             Receive(Packet(2,1,true,Chunk(1),Chunk(2)));
-            var samples = new float[4800]; Assert.IsTrue(root.GetComponentInChildren<AudioSource>().clip.GetData(samples,0));
+            var samples = new float[9600]; output.Render(samples,1,24000,clock+.1);
             Assert.AreEqual(-1,samples[0]); Assert.AreEqual(32767f/32768f,samples[1]);
             Receive(Packet(3,1,true,Chunk(1),Chunk(2)));
             Assert.AreEqual(2,(long)Status["acceptedSequence"]); Assert.AreEqual(9600,(long)Status["submittedSamples"]);
@@ -85,7 +85,8 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator FreshBrowserMessagesCannotHideAStalledAudioDevice()
         {
-            var frozen = clock; output.Clock = () => frozen;
+            // Both browser and DSP clocks may advance while no render callback
+            // consumes speech (for example, a virtualized/stalled source).
             Receive(Packet(1,1,true,Chunk(1)));
             for (int i=2;i<40;i++) { clock += .1; Receive(Packet(i,1,true,Chunk(1))); }
             Assert.AreEqual("failed",(string)Status["status"]); Assert.AreEqual(0,output.Read().submittedSamples);

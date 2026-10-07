@@ -58,6 +58,7 @@ export class SpeechBookClient {
 
 class BookSpeechOutput implements SpeechOutput {
   readonly sampleRate = RATE;
+  readonly microphonePolicy = 'suppress-during-playback' as const;
   private chunks: Chunk[] = [];
   private sequence = 0;
   private offered = 0;

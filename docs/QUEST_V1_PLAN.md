@@ -3675,3 +3675,39 @@ no provider calls or headset hearing claim. The preceding native bridge passed
 839 EditMode / 662 PlayMode tests and both full integration probes. Its release
 CI passed on c54517ad. No native source changed in this replay increment. The
 installed APK is unchanged; room acoustics and physical acceptance remain open.
+
+Continuous native voice increment (2026-10-07): replace the per-packet Unity
+AudioSources with one source and procedural filter per voice owner. A bounded
+eight-second PCM ring retains resampling phase across packet/DSP boundaries;
+underruns emit silence. A fixed receipt ring records actual audio-thread DSP
+blocks, so a moving clock or a stalled/virtualized source cannot falsely finish
+queued speech. Stop closes the old stream under its thread fence, then stops and
+releases only that owner's source. The spatializer is ordered after PCM generation.
+This supplies a continuous signal for later HRTF/effect integration; the Meta
+audio package and room acoustic geometry are not enabled by this increment.
+
+New deterministic tests cover 24/44.1/48/96 kHz output, copied PCM, interpolation
+across packet boundaries, ring wrap, capacity, underruns, cross-thread close and
+zero steady-render managed allocations. A muted PlayMode test also exercises
+real Unity DSP callbacks and captures the output after the speech filter: it
+requires one retained source, expected waveform level, bounded discontinuity,
+actual played-sample completion and immediate Stop. This is desktop rendering
+evidence, not physical Quest sound, head-relative direction or acoustic acceptance.
+
+The selected speech renderer also declares whether full Live needs microphone
+suppression during playback. Native output opts in because Unity's signal may
+not be present in the browser echo reference. Captured samples are dropped
+before retention/encoding until actual drain plus the shared 500 ms settling
+interval. Browser Live retains its previous input behavior. A failure-first
+test demonstrated native playback leaking through full Live's ungated input;
+the regression and browser-continuity test now pass. This policy suppresses
+simultaneous speech, and is not acoustic echo cancellation or a measured reverb
+tail; physical acceptance and later room-effects tuning remain open.
+
+Verification: 849 EditMode and 663 PlayMode tests passed (three optional private
+fixtures skipped), including the actual muted DSP waveform test. Both complete
+native-room and original-book integration probes passed. The final web suite
+passed 2,571 tests / 285 files, alongside TypeScript/build, lint, core boundaries,
+prompt ownership, catalog provenance, Quest asset and probe-type checks. No
+provider calls or headset operations occurred in this increment. The headset
+remains stopped pending owner confirmation of cooling and normal charging.

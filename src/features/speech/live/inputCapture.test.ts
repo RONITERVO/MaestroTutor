@@ -11,24 +11,47 @@ import { createLiveSessionState } from './state';
 beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(10_000); });
 afterEach(() => vi.useRealTimers());
 const flush = async () => { for (let i = 0; i < 15; i++) await Promise.resolve(); };
-const setup = () => {
+const setup = (gated = true) => {
   const state = createLiveSessionState({});
   state.currentSessionIdRef.current = 1;
-  state.speechGateRef.current = new SpeechGate({ requireConfirmation: true });
-  state.speechGateRef.current.openFromConfirmedTrigger(Date.now());
-  state.speechTurnBoundaryRef.current = new ContinuousLiveTurnBoundary();
-  state.speechTurnBoundaryRef.current.openFromConfirmedSpeech(Date.now());
-  state.semanticSpeechCaptureRef.current = new SemanticSpeechCapture({ sampleRate: 16000 });
+  if (gated) {
+    state.speechGateRef.current = new SpeechGate({ requireConfirmation: true });
+    state.speechGateRef.current.openFromConfirmedTrigger(Date.now());
+    state.speechTurnBoundaryRef.current = new ContinuousLiveTurnBoundary();
+    state.speechTurnBoundaryRef.current.openFromConfirmedSpeech(Date.now());
+    state.semanticSpeechCaptureRef.current = new SemanticSpeechCapture({ sampleRate: 16000 });
+  }
   const send = vi.fn(); const encode = vi.fn(async () => 'pcm');
   state.sessionRef.current = { sendRealtimeInput: send };
   createLiveInputCapture(state, {
     ensureInputCodecWorker: () => ({ encodePcmToBase64: encode }) as any,
     setVadActivity: vi.fn(), setLocalSpeechTriggerPhase: vi.fn(), emitTurnTranscriptUpdate: vi.fn(),
-  }, { sessionId: 1, speechGateEpoch: 0, speechGateEnabled: true, observerActivity: false, localSpeechTrigger: null, workletNode: null, inputSource: null });
+  }, { sessionId: 1, speechGateEpoch: 0, speechGateEnabled: gated, observerActivity: false, localSpeechTrigger: null, workletNode: null, inputSource: null });
   return { state, send, encode, capture: async () => { await state.pcmCaptureRouterRef.current!.push(new Int16Array(1600).fill(1000), 16000, 'device'); await flush(); } };
 };
 
 describe('continuous Live input boundaries', () => {
+  it('suppresses native-speaker echo in full Live until actual drain and the settling interval', async () => {
+    const h = setup(false); h.state.speechOutputRef.current = { microphonePolicy: 'suppress-during-playback' } as any;
+    h.state.liveInputContextRef.current = new LiveInputContext();
+    h.state.playbackPendingRef.current = true; h.state.playbackUntilRef.current = Date.now() - 1000;
+    await h.capture(); await vi.advanceTimersByTimeAsync(1000); await h.capture();
+    expect(h.encode).not.toHaveBeenCalled(); expect(h.state.currentUserAudioTotalLengthRef.current).toBe(0);
+    expect(h.state.liveInputContextRef.current.finish().audio).toBeUndefined();
+    h.state.playbackPendingRef.current = false;
+    await h.capture(); await vi.advanceTimersByTimeAsync(499); await h.capture();
+    expect(h.encode).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1); await h.capture();
+    expect(h.encode).toHaveBeenCalledOnce(); expect(h.state.currentUserAudioTotalLengthRef.current).toBe(1600);
+    h.state.inputPacketizerRef.current!.dispose();
+  });
+
+  it('keeps ordinary full-browser Live input continuous with its existing echo cancellation', async () => {
+    const h = setup(false); h.state.playbackPendingRef.current = true;
+    await h.capture(); expect(h.encode).toHaveBeenCalledOnce();
+    h.state.inputPacketizerRef.current!.dispose();
+  });
+
   it('keeps gated input closed beyond the estimated end until the selected output drains', async () => {
     const h = setup(); h.state.playbackUntilRef.current = Date.now() - 1000;
     h.state.playbackPendingRef.current = true;

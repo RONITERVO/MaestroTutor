@@ -111,9 +111,23 @@ Render/decode failures close Live with an error rather than complete a turn with
 missing speech. Stop resets output immediately, including while capture cleanup
 is pending; the speech-gated input path stays closed until actual output drains.
 
-Unity's `NativeSpeechOutput` implements bounded DSP-scheduled playback at the
-current avatar head, including imported-avatar replacement, with generation and
-sequence checks and cancellation on focus/pause/audio-device changes. The native
+External renderers declare `microphonePolicy: 'suppress-during-playback'` because
+their sound may be outside the browser's echo-cancellation reference. Full Live
+then drops captured microphone packets before retention/encoding while native
+speech is pending and for the shared 500 ms settling interval afterward. This
+is a playback gate, not acoustic echo cancellation; simultaneous speech during
+native playback is suppressed. Ordinary browser Live keeps its existing input
+behavior. Physical Quest echo and future reverberation tails need device testing.
+
+Unity's `NativeSpeechOutput` owns one continuous mono source at the current
+avatar head, including imported-avatar replacement, with generation and sequence
+checks and cancellation on focus/pause/audio-device changes. `SpeechPcmStream`
+copies packets into an eight-second ring, resamples on the audio thread and
+records actual rendered DSP blocks. Played receipts include the device tail;
+advancing a clock without render callbacks cannot complete speech. Underruns
+produce silence and cannot replay old ring contents. One silent looping carrier
+keeps the source/filter graph alive between packets, with spatialization ordered
+after PCM generation. The render loop has no per-block managed allocations. The native
 book selects it for both Live and triggered TTS through `SpeechBookClient` and
 Android's top-document polling. No JavaScript-to-JNI object is exposed to frames.
 Each transient exchange carries a document, browser session, output revision and

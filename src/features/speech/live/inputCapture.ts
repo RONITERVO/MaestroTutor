@@ -56,7 +56,7 @@ export function createLiveInputCapture(state: Pick<LiveSessionData,
   | 'observerWhisperRef' | 'observerWhisperBusyRef' | 'lastWhisperRequestAtRef'
   | 'loadingFallbackOnsetAtRef' | 'whisperFailureWarnedRef' | 'speechGateEpochRef'
   | 'playbackUntilRef' | 'playbackPendingRef' | 'playbackActiveRef' | 'awaitingModelTurnRef'
-  | 'inputClosedByServerRef' | 'boundaryClosePromiseRef'
+  | 'inputClosedByServerRef' | 'boundaryClosePromiseRef' | 'speechOutputRef'
 >, ports: LiveInputCapturePorts, session: {
   sessionId: number; speechGateEpoch: number; speechGateEnabled: boolean; observerActivity: boolean;
   localSpeechTrigger: LocalSpeechTriggerResult | null; workletNode: AudioWorkletNode | null;
@@ -71,10 +71,11 @@ export function createLiveInputCapture(state: Pick<LiveSessionData,
     observerWhisperRef, observerWhisperBusyRef, lastWhisperRequestAtRef,
     loadingFallbackOnsetAtRef, whisperFailureWarnedRef, speechGateEpochRef,
     playbackUntilRef, playbackPendingRef, playbackActiveRef, awaitingModelTurnRef,
-    inputClosedByServerRef, boundaryClosePromiseRef,
+    inputClosedByServerRef, boundaryClosePromiseRef, speechOutputRef,
   } = state;
   const { ensureInputCodecWorker, setVadActivity, setLocalSpeechTriggerPhase, emitTurnTranscriptUpdate } = ports;
   const { sessionId, speechGateEpoch, speechGateEnabled, observerActivity, localSpeechTrigger, workletNode, inputSource } = session;
+  let externalPlaybackActive = false, externalPlaybackSettleUntil = 0;
   const isDetectorUnavailable = (now: number) => {
     const detector = observerWhisperRef.current;
     return !detector || detector.status === 'failed' || detector.status === 'disposed'
@@ -292,6 +293,22 @@ export function createLiveInputCapture(state: Pick<LiveSessionData,
     const boundary = speechTurnBoundaryRef.current;
     const speechCapture = semanticSpeechCaptureRef.current;
     if (!gate || !boundary) {
+      // Full user-started Live normally delegates echo cancellation to the
+      // browser. Unity's output can be outside that reference, so use the
+      // selected renderer's actual drain gate on the capture clock instead.
+      if (speechOutputRef.current?.microphonePolicy === 'suppress-during-playback') {
+        const now = Date.now();
+        const speaking = playbackPendingRef.current || now < playbackUntilRef.current;
+        if (speaking) externalPlaybackActive = true;
+        else if (externalPlaybackActive) {
+          externalPlaybackActive = false;
+          externalPlaybackSettleUntil = now + DEFAULT_SPEECH_GATE.playbackSettleMs;
+        }
+        if (speaking || now < externalPlaybackSettleUntil) {
+          inputAudioTelemetryRef.current.gatedPackets += 1;
+          return;
+        }
+      }
       currentUserAudioChunksRef.current.push(pcm);
       currentUserAudioTotalLengthRef.current += pcm.length;
       inputPacketizerRef.current?.push(pcm);
