@@ -7,8 +7,8 @@ using Newtonsoft.Json.Linq;
 
 namespace Maestro.Quest.Interaction
 {
-    /// <summary>Gravity is available only while the room is aligned and the user has started physics.</summary>
-    public sealed class RoomPhysicsWorld : MonoBehaviour
+    /// <summary>Gravity uses the explicitly selected physical or authored environment and an explicit Start.</summary>
+    public sealed partial class RoomPhysicsWorld : MonoBehaviour
     {
         public bool SurfacesReady { get; private set; }
         public bool Running { get; private set; }
@@ -18,8 +18,8 @@ namespace Maestro.Quest.Interaction
         bool paused,focused=true;
         string stateId=Guid.NewGuid().ToString("N");
         bool Active=>!paused&&focused&&isActiveAndEnabled;
-        void Notify(){stateId=Guid.NewGuid().ToString("N");Changed?.Invoke();}
-        string IdleStatus=>SurfacesReady?"Physics paused — Start resumes without old throw speeds":"Load or scan your room to use gravity";
+        void Notify(){observedReady=SimulationReady;stateId=Guid.NewGuid().ToString("N");Changed?.Invoke();}
+        string IdleStatus=>SimulationReady?"Physics paused — Start resumes without old throw speeds":RealCollisions?"Load or scan your room to use gravity":"Add accepted virtual ground before starting physics";
         RoomRuntimeGate runtimeGate;
         internal bool RuntimeHeld=>runtimeGate?.Held==true;
         internal string RuntimeHoldReason=>runtimeGate?.Reason;
@@ -28,8 +28,8 @@ namespace Maestro.Quest.Interaction
         public void SetSurfaces(bool ready, string message)
         {
             SurfacesReady = ready;
-            if (!ready) Running = false;
-            Status = message; Notify();
+            if (RealCollisions && !ready) Running = false;
+            if(RealCollisions)Status = message; Notify();
         }
         public void StartPhysics() => SetRunning(true,out _);
         public void PausePhysics() => SetRunning(false,out _);
@@ -38,7 +38,7 @@ namespace Maestro.Quest.Interaction
             error=null;
             if(running&&runtimeGate?.Held==true)error=runtimeGate.Reason;
             else if(running&&!Active)error="Return to the active room before starting physics";
-            else if(running&&!SurfacesReady)error="Load the room scan and check its alignment first";
+            else if(running&&!SimulationReady)error=RealCollisions?"Load the room scan and check its alignment first":"Add accepted virtual ground before starting physics";
             return error==null;
         }
         public bool SetRunning(bool running,out string status)
@@ -50,7 +50,7 @@ namespace Maestro.Quest.Interaction
         internal JObject ObserveSimulation()
         {
             bool canStart=CanRun(true,out var reason);
-            return new JObject {["stateId"]=stateId,["ready"]=SurfacesReady,["running"]=Running,["active"]=Active,["held"]=runtimeGate?.Held==true,
+            return new JObject {["stateId"]=stateId,["ready"]=SimulationReady,["running"]=Running,["active"]=Active,["held"]=runtimeGate?.Held==true,
                 ["canStart"]=canStart,["status"]=ImportObservation.Text(Status),["reason"]=ImportObservation.Text(reason)};
         }
         internal bool CanSetSimulation(string expected,bool running,out string error)
@@ -66,7 +66,7 @@ namespace Maestro.Quest.Interaction
             if(Running!=running&&!SetRunning(running,out error))return false;
             result=ObserveSimulation();return true;
         }
-        public bool CanSimulate(Vector3 position) => runtimeGate?.Held!=true && Running && SurfacesReady && (Contains == null || Contains(position));
+        public bool CanSimulate(Vector3 position) => runtimeGate?.Held!=true && Active && Running && ContainsSimulation(position);
         void OnApplicationPause(bool value) { paused=value;if (paused) PausePhysics();else Notify(); }
         void OnApplicationFocus(bool value) { focused=value;if (!focused) PausePhysics();else Notify(); }
         void OnEnable()=>Notify();

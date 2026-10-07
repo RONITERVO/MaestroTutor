@@ -27764,7 +27764,7 @@
         "room.active",
         "workspace.available"
       ],
-      "description": "Explicitly start or pause gravity and object physics through the physical Start physics/Pause controls. Read physics.simulation and pass its exact stateId. Manual Start/Pause, scan changes, focus/lifecycle transitions and workspace holds invalidate older intents, even after returning to the same mode. Start needs loaded aligned surfaces and an active room; this action cannot scan, grant room permission or verify alignment. Pause freezes dynamic bodies and clears throw velocities; it can stop physics-dependent walking or actions, but does not stop unrelated gestures, programs or authoring. Held/carried/animated objects keep their own existing owners when physics starts. These world transitions may run alongside other actions; they do not acquire those actors or clear the scheduler. Returning focus/alignment never automatically restarts physics or cancelled movement. No save or Undo; pausing cannot reverse a throw. A completed result describes that moment only; read the fact for current state. Duplicate receipts never restart physics. Stop on a completed receipt does not pause simulation: issue explicit pause with a fresh stateId.",
+      "description": "Explicitly start or pause gravity and object physics through the physical Start physics/Pause controls. Read physics.simulation and pass its exact stateId. Manual Start/Pause, scan changes, focus/lifecycle transitions and workspace holds invalidate older intents, even after returning to the same mode. Start needs the selected environment ready (aligned scan when real collisions are on, accepted virtual ground when off) and an active room; this action cannot scan, grant room permission or verify alignment. Pause freezes dynamic bodies and clears throw velocities; it can stop physics-dependent walking or actions, but does not stop unrelated gestures, programs or authoring. Held/carried/animated objects keep their own existing owners when physics starts. These world transitions may run alongside other actions; they do not acquire those actors or clear the scheduler. Returning focus/alignment never automatically restarts physics or cancelled movement. No save or Undo; pausing cannot reverse a throw. A completed result describes that moment only; read the fact for current state. Duplicate receipts never restart physics. Stop on a completed receipt does not pause simulation: issue explicit pause with a fresh stateId.",
       "example": {
         "operation": "start",
         "stateId": "00000000000000000000000000000000"
@@ -27810,6 +27810,96 @@
           "canStart",
           "status",
           "reason"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "physics.environment.set",
+      "version": 1,
+      "label": "Choose real-room collisions",
+      "input": {
+        "type": "object",
+        "properties": {
+          "realCollisions": {
+            "type": "boolean"
+          },
+          "stateId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "realCollisions",
+          "stateId"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "physicsEnvironment.v1"
+        ],
+        "x-current": {
+          "fact": "physics.environment",
+          "version": 1,
+          "arguments": {},
+          "fields": {
+            "stateId": [
+              "stateId"
+            ]
+          },
+          "guards": [
+            "stateId"
+          ]
+        }
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [
+        "physics.state.current",
+        "room.active",
+        "workspace.available"
+      ],
+      "description": "Set real-room collision participation independently of the visual view. Read physics.environment and pass its exact stateId. Changing this policy pauses physics and clears old throw speeds; explicitly start afterwards. On requires a loaded aligned scan and keeps simulation inside that physical room. Off uses accepted authored terrain or the virtual floor, excluding scanned geometry from contacts, navigation and motion checks. Off requires virtual ground: current room-scale support is columns above actual accepted surfaces, up to 16 metres above and 0.25 metres below; gaps and unloaded regions are unavailable. This does not delete the scan, change passthrough/depth/audio, grant permissions, move the user or create terrain. Fresh rooms default to on; this runtime setting is not saved or undone. Already-satisfied requests preserve motion. Physical surfaces still exist when virtual objects do not collide with them.",
+      "example": {
+        "realCollisions": false,
+        "stateId": "00000000000000000000000000000000"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "stateId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "realCollisions": {
+            "type": "boolean"
+          },
+          "scanReady": {
+            "type": "boolean"
+          },
+          "authoredReady": {
+            "type": "boolean"
+          },
+          "ready": {
+            "type": "boolean"
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "alignedPhysicalRoom",
+              "acceptedGroundColumns"
+            ]
+          }
+        },
+        "required": [
+          "stateId",
+          "realCollisions",
+          "scanReady",
+          "authoredReady",
+          "ready",
+          "scope"
         ],
         "additionalProperties": false
       }
@@ -35102,7 +35192,23 @@
         }
       },
       "label": "Room physics state",
-      "description": "Current native simulation state and exact stateId for physics.simulation.set. canStart describes scan/lifecycle prerequisites, not permission to act, alignment approval, all-object geometry readiness or workspace admission. ready is the scanned-room observation, not a guarantee of a clear navigation path. Running does not mean held/animated/fixed objects simulate. This read never starts, pauses or saves anything."
+      "description": "Current native simulation state and exact stateId for physics.simulation.set. canStart describes selected-ground/lifecycle prerequisites, not permission to act, alignment approval, all-object geometry readiness or workspace admission. ready is selected environment readiness; read physics.environment for separate scan/virtual observations, not a guarantee of a clear navigation path. Running does not mean held/animated/fixed objects simulate. This read never starts, pauses or saves anything."
+    },
+    {
+      "id": "physics.environment",
+      "version": 1,
+      "type": {
+        "record": {
+          "stateId": "text",
+          "realCollisions": "boolean",
+          "scanReady": "boolean",
+          "authoredReady": "boolean",
+          "ready": "boolean",
+          "scope": "text"
+        }
+      },
+      "label": "Physics environment",
+      "description": "Read the separate physical scan, authored ground and selected simulation readiness. This does not verify physical alignment or a clear route, start physics, load a scan or change its collision/visual/acoustic geometry. Physical placement continues to use scanReady even when authored ground is ready. No side effects."
     },
     {
       "id": "physics.running",
@@ -35116,7 +35222,7 @@
       "version": 1,
       "type": "boolean",
       "label": "Room surfaces ready",
-      "description": "Whether aligned room surfaces are currently ready for physics. This does not start physics or guarantee a particular navigation path."
+      "description": "Whether the selected physics environment is ready (aligned scan with real collisions on, accepted virtual ground with them off). This does not start physics or guarantee a particular navigation path."
     }
   ],
   "adapters": {
@@ -35313,7 +35419,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "6667183eb83699323d3058df36d33e483730766f36c46d2498f6e309e0a6fe45"
+      "sha256": "040974d53259136f2263b80c4cb88fdcba37b6005fbcd1293b0641dec6bff722"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -35365,7 +35471,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "49284f04e694285bc12cb6a28eee612ece94e0fd0a7a04df9665d37e0972b40f"
+      "sha256": "8076128c936adb902ba28c0e0658342b5c0314eb1f8a6040fc4a59529a181371"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -35469,7 +35575,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RoomRuleActions.cs",
-      "sha256": "f25ad9a58cf1fe165de9b6f96bef89fb0b0cdf3d5fd10b6c2df818e8f17b6919"
+      "sha256": "54aebadfdefb9dc7a4ffd2b7e3c192f182c67138d89a50b472275c33a06b910e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RoomRules.cs",
@@ -35593,11 +35699,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/HeldRoomProp.cs",
-      "sha256": "fb8006114b356bfa91e1ea04be4f4a286e2e3eea92e5e62ab892fac1c5aab1e5"
+      "sha256": "05c9ff055cfaf0eb155e71040b72dfd052e02cc88e85cb6f70c46e0b9cfeef82"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomBallistics.cs",
-      "sha256": "aa293b68dda4cfdc4408a918dc2688c1516f9f48e290440b8956ccb6fdd5805d"
+      "sha256": "eb549063365672de19379cd5163df10360b9e21246c4efe4d2b84e148609d6f7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomCollisionVolume.cs",
@@ -35609,11 +35715,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/CatchClearance.cs",
-      "sha256": "8d0f99c25ce9acf5962a2d6e41b6011244604d15fe045fe7f46c6188ca7b47a7"
+      "sha256": "442e533198fca81fe27ed4b429b58a510a3616c9d602e4dfca019b30869808ab"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomCatch.cs",
-      "sha256": "8b612ccbffa77d4e1578780c4bd48029a12991519421b81414855120bba6f59e"
+      "sha256": "34a1f9af6de24d6fe11681052d7980f64d0bb638ba832b058c0e1cff2d29fa14"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarCatchReach.cs",
@@ -35621,7 +35727,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.cs",
-      "sha256": "1a348d9a8f242c4a4db303c21504179b67de43f9a56627e914e03759f4b71aa5"
+      "sha256": "72077c74fc9d41b738cdfd3e2b97a673576e132bc3ec78d784de1bc8df8bef7c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomPropAnchor.cs",
@@ -35953,7 +36059,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarSpatialMotion.cs",
-      "sha256": "0395673f6b429e13d0ff3524d3d96bc53da9aae4df11364a546991ffa500d177"
+      "sha256": "a63a3a423b25dbbd2426b444922744145faaaacf46c9033de21189d014053b30"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarAuthoredTravel.cs",
@@ -35993,23 +36099,27 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/VirtualRoomView.cs",
-      "sha256": "a93f87f683864b84c4f1c6df18a732fb7d54a1feb3803e4580aa4765e5749cdc"
+      "sha256": "0a077d599280966e2ec9b46e518dc0eed8ff3d242b71e237b09dc131ea2016f9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigation.cs",
-      "sha256": "bac66f6e2ce3635a035098abfee39c1f91b60ffc16698d26001ffa669c0d5cf2"
+      "sha256": "6c7f1009bf8c5d23a62ef756d39367a6e5cc6755d78317f4bc9568685874f082"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationGeometry.cs",
-      "sha256": "42a27f3b81167c426eeb9a6c073afc13a7d07ebc233347e3c45ae868c05b2147"
+      "sha256": "a79beb6a8bfbca3b9e7fa2c3dc33640221c09e17dd3f636719174d300ab3758b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomWalkableSurface.cs",
-      "sha256": "2fccca94cfdcecb9e565194bc1c943139a037942cf560ae59b3975e3965322a1"
+      "sha256": "7c353736d317c71ba5ecbe1360298f6d50d70eece83fbf3689ec839867f1ed77"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomPhysicsWorld.cs",
-      "sha256": "aade605230c6b4a2f92db559001d3432bfe5805508d98ac900f609178243defd"
+      "sha256": "39cfb584ccb9ebee8209a0c06991317a87c2ab9757d61b043b7b87c56ac6e3e1"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomSimulationEnvironment.cs",
+      "sha256": "4862da2964f73062ec9d609f376473e3c39079cab82f27a27a479e2bc3d5e4e5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ScannedRoom.cs",
@@ -36221,7 +36331,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "0b62d1913e56d8ac0b4c405e4a14de355e121fa426b0a4d37047e157b6b32cd9"
+      "sha256": "a14abd14188d7e08b53f1ea62999eacce3ddfd87a85e359ba0b1bcb3753e8f94"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -36400,8 +36510,12 @@
       "sha256": "0ebadc4b48e57c545197f7d6f49c5f6efda67c6ebc7595f6fed906279d33ed3e"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsEnvironmentCapability.cs",
+      "sha256": "95774285d0c94693736901ecd27871e8be059ff1dd2c4a914e82a8a00e7a77c0"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsSimulationCapability.cs",
-      "sha256": "ad4a77a798294faf02926da628a46ce0ad7bbaf8077e723e99bf176ac3974dc4"
+      "sha256": "39c9ef7a5cec37af4038fe451d87cc31d1c671dc21cf9cbbd2dccddda11150bb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ProgramMemoryCapability.cs",

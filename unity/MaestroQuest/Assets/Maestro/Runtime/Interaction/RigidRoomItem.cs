@@ -24,7 +24,7 @@ namespace Maestro.Quest.Interaction
         readonly HashSet<object> constraints = new();
         public void SetConstraintBlocked(object owner,bool blocked){bool changed=blocked?constraints.Add(owner):constraints.Remove(owner);if(changed){MotionRevision++;Refresh();}}
         ItemPhysics profile;
-        bool wasMoving, canceled, geometryReady = true;
+        bool wasMoving, canceled, boundaryActive, geometryReady = true;
         float quietSince;
         Vector3 lastGoodPosition;
         Quaternion lastGoodRotation;
@@ -83,7 +83,7 @@ namespace Maestro.Quest.Interaction
         }
         void PhysicsChanged(){MotionRevision++;Refresh();}
         bool Allowed => Dynamic && geometryReady && owners.Count == 0 && constraints.Count == 0 && world && world.CanSimulate(transform.position);
-        void Grabbed(SelectEnterEventArgs _) { MotionRevision++;canceled = false; wasMoving = true; }
+        void Grabbed(SelectEnterEventArgs _) { MotionRevision++;boundaryActive=false;canceled = false; wasMoving = true; }
         void Released(SelectExitEventArgs args)
         {
             MotionRevision++;canceled = args.isCanceled;
@@ -93,7 +93,12 @@ namespace Maestro.Quest.Interaction
         public void Refresh()
         {
             if (!body || !item || !item.Grab) return;
+            // The body override affects contacts only; scan geometry remains available
+            // for physical placement, visual overlays and independent acoustics.
+            int scanBit=1<<RoomPhysicsLayers.Scanned;
+            body.excludeLayers=world&&!world.RealCollisions?body.excludeLayers.value|scanBit:body.excludeLayers.value&~scanBit;
             bool allowed = Allowed;
+            if(!world||!world.Running||!Dynamic||!geometryReady||AnimationOwned||constraints.Count>0)boundaryActive=false;
             item.Grab.throwOnDetach = allowed && !canceled;
             item.Grab.throwVelocityScale = 1;
             item.Grab.throwAngularVelocityScale = 1;
@@ -114,7 +119,7 @@ namespace Maestro.Quest.Interaction
         }
         public void Teleported()
         {
-            PlacementRevision++;MotionRevision++;StopVelocity(); canceled = true;
+            PlacementRevision++;MotionRevision++;boundaryActive=false;StopVelocity(); canceled = true;
             lastGoodPosition = transform.position; lastGoodRotation = transform.rotation;
             if (body) { body.position = transform.position; body.rotation = transform.rotation; }
             Refresh();
@@ -128,7 +133,7 @@ namespace Maestro.Quest.Interaction
             if(item.Grab.isSelected) {error="Release the object before changing its motion";return false;}
             if(constraints.Count>0) {error="A physical connection is suspended; inspect its state";return false;}
             if(AnimationOwned) {error="An animation or carried prop owns this object";return false;}
-            if(!world||!world.CanSimulate(transform.position)) {error="Start room physics with valid scanned surfaces first";return false;}
+            if(!world||!world.CanSimulate(transform.position)) {error="Start physics with the selected ground ready first";return false;}
             return true;
         }
         // Impulse is in Newton-seconds, in world axes. Reuse the same launch
@@ -153,12 +158,14 @@ namespace Maestro.Quest.Interaction
         void FixedUpdate()
         {
             if (!body || !Dynamic) return;
-            if (world && world.Running && !world.CanSimulate(transform.position) && !item.Grab.isSelected)
+            // Unsupported dormant items do not stop an otherwise valid region. Only
+            // a body that was actually simulating can cross its admitted boundary.
+            if (world && world.Running && (boundaryActive||!body.isKinematic) && !world.CanSimulate(transform.position) && !item.Grab.isSelected)
             {
                 transform.SetPositionAndRotation(lastGoodPosition,lastGoodRotation); Teleported();
                 world.PausePhysics(); return;
             }
-            if (Allowed && !item.Grab.isSelected) { lastGoodPosition = transform.position; lastGoodRotation = transform.rotation; }
+            if (Allowed && !item.Grab.isSelected) { boundaryActive=true;lastGoodPosition = transform.position; lastGoodRotation = transform.rotation; }
         }
         void LateUpdate()
         {
@@ -168,7 +175,7 @@ namespace Maestro.Quest.Interaction
             if (moving) { quietSince = Time.unscaledTime; wasMoving = true; }
             else if (wasMoving && Time.unscaledTime - quietSince > .6f) { wasMoving = false; Settled?.Invoke(item); }
         }
-        void OnDisable() { MotionRevision++;StopVelocity(); if (body) { body.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative; body.isKinematic = true; body.useGravity = false; } }
+        void OnDisable() { MotionRevision++;boundaryActive=false;StopVelocity(); if (body) { body.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative; body.isKinematic = true; body.useGravity = false; } }
         void OnDestroy()
         {
             if (world) world.Changed -= PhysicsChanged;

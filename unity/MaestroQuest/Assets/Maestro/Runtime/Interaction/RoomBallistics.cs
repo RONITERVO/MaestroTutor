@@ -13,6 +13,8 @@ namespace Maestro.Quest.Interaction
         public float Seconds {get;private set;}
         public float Radius {get;private set;}
         public float Speed=>Velocity.magnitude;
+        RoomPhysicsWorld environment;
+        int QueryMask=>environment?environment.CollisionMask(Mask):Mask;
         readonly Collider[] overlaps=new Collider[48];
         readonly RaycastHit[] hits=new RaycastHit[48];
         const int Mask=(1<<RoomPhysicsLayers.Scanned)|(1<<RoomPhysicsLayers.Item)|(1<<RoomPhysicsLayers.Environment)|(1<<RoomPhysicsLayers.Controller);
@@ -21,7 +23,7 @@ namespace Maestro.Quest.Interaction
         static float SegmentDistance(Vector3 p,Vector3 a,Vector3 b) {var d=b-a;return Vector3.Distance(p,a+d*Mathf.Clamp01(d.sqrMagnitude>0?Vector3.Dot(p-a,d)/d.sqrMagnitude:0));}
         public bool Prepare(RoomItem item,RoomPhysicsWorld world,Transform viewer,Vector3 destination,float seconds,float maxSpeed,out string error)
         {
-            error=null;
+            error=null;environment=world;
             if(!item||!world||!viewer||!viewer.gameObject.activeInHierarchy||!Finite(viewer.position)){error="Return to the active room view before aiming a throw";return false;}
             var rigid=item.GetComponent<RigidRoomItem>();var body=item.GetComponent<Rigidbody>();
             if(!item.isActiveAndEnabled||!rigid||!rigid.isActiveAndEnabled||!body){error="This object has no rigid-body physics";return false;}
@@ -49,7 +51,7 @@ namespace Maestro.Quest.Interaction
                 var delta=point-previous;
                 // A small curve envelope covers the gap between bounded sweep samples.
                 float pad=Physics.gravity.magnitude*Mathf.Pow(stride*dt,2)/8;
-                int n=delta.sqrMagnitude<.00000001f?0:Physics.SphereCastNonAlloc(previous,Radius+pad,delta.normalized,hits,delta.magnitude,Mask,QueryTriggerInteraction.Ignore);
+                int n=delta.sqrMagnitude<.00000001f?0:Physics.SphereCastNonAlloc(previous,Radius+pad,delta.normalized,hits,delta.magnitude,QueryMask,QueryTriggerInteraction.Ignore);
                 if(n==hits.Length){error="Too many nearby colliders to verify the planned throw";return false;}
                 for(int j=0;j<n;j++)if(Obstacle(hits[j].collider,item)){
                     // The padded sweep can report distance zero at a resting contact.
@@ -70,7 +72,7 @@ namespace Maestro.Quest.Interaction
             return distance>.000001f&&distance>=radius-.001f&&Vector3.Dot(to-from,outward)>0;
         }
         bool ClearPoint(RoomItem item,Vector3 point,float radius,out string error){
-            error=null;int count=Physics.OverlapSphereNonAlloc(point,radius,overlaps,Mask,QueryTriggerInteraction.Ignore);
+            error=null;int count=Physics.OverlapSphereNonAlloc(point,radius,overlaps,QueryMask,QueryTriggerInteraction.Ignore);
             if(count==overlaps.Length){error="Too many nearby colliders to verify the planned throw";return false;}
             for(int i=0;i<count;i++)if(Obstacle(overlaps[i],item)&&(overlaps[i] is MeshCollider mesh&&!mesh.convex||Vector3.Distance(overlaps[i].ClosestPoint(point),point)<radius-.001f)){error="The planned throw is blocked by a room surface or object";return false;}
             return true;

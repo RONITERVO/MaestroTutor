@@ -39,7 +39,7 @@ namespace Maestro.Quest.Rules
         public bool TryRead(string name,out ProgramValue value)=>TryRead(name,1,null,out value);
         public bool TryRead(string name,int version,JObject arguments,out ProgramValue value) {
             value=default;var definition=BehaviourCatalog.Fact(name);if(definition==null||domain!=null&&definition.Domain!=domain||!context.Editor&&!context.Workspace)return false;
-            return BehaviourCatalog.TryRead(name,version,arguments,new BehaviourCatalog.FactContext(physicsReady:context.Editor&&context.Editor.PhysicsWorld?context.Editor.PhysicsWorld.SurfacesReady:null,
+            return BehaviourCatalog.TryRead(name,version,arguments,new BehaviourCatalog.FactContext(physicsReady:context.Editor&&context.Editor.PhysicsWorld?context.Editor.PhysicsWorld.SimulationReady:null,
                 physicsRunning:context.Editor&&context.Editor.PhysicsWorld?context.Editor.PhysicsWorld.Running:null,roomSessionId:context.Editor?.TemporarySessionId,world:this,editor:context.Editor,workspace:context.Workspace),out value);
         }
         public bool CanRun(CapabilityCall call,out string error){if(domain!=null&&call.Definition.Module.Domain!=domain){error="This action belongs to another execution domain.";return false;}if(call.Definition.Module.Domain=="room"&&context.Editor&&context.Editor.RuntimeGate.Held){error=context.Editor.RuntimeGate.Reason;return false;}return call.Definition.Module.CanRun(context,call.Arguments,out error);}

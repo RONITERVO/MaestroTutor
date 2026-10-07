@@ -23,11 +23,11 @@ namespace Maestro.Quest.Interaction
         Quaternion installedRotation;
         public bool Ready => configured && RefreshGeometry(out _);
         public void Initialize(RoomPhysicsWorld value) { world = value; world.Changed += RoomChanged; }
-        void RoomChanged() { if (!world.SurfacesReady) Clear(); }
+        void RoomChanged() { if (!world.SimulationReady) Clear(); }
         public bool Prepare(float bodyRadius, float bodyHeight, out string error)
         {
             error = null;
-            if (!world || !world.Running || !world.SurfacesReady) { error = "Load the room, check its alignment, then Start physics before walking"; return false; }
+            if (!world || !world.Running || !world.SimulationReady) { error = "Prepare the selected ground and Start physics before walking"; return false; }
             if(!float.IsFinite(bodyRadius)||!float.IsFinite(bodyHeight)||bodyRadius<=0||bodyHeight<bodyRadius*2) { error="Choose a valid walking body";return false; }
             if(!configured||Mathf.Abs(radius-bodyRadius)>=.005f||Mathf.Abs(height-bodyHeight)>=.01f)Clear();
             radius=bodyRadius;height=bodyHeight;configured=true;
@@ -36,8 +36,8 @@ namespace Maestro.Quest.Interaction
         bool RefreshGeometry(out string error)
         {
             error="Room navigation needs active physics and accepted surfaces";
-            if(!world||!world.Running||!world.SurfacesReady)return false;
-            if(!candidate.Capture(world.transform)) { Clear();error="No accepted scanned or authored floor is available for walking";return false; }
+            if(!world||!world.Running||!world.SimulationReady)return false;
+            if(!candidate.Capture(world.transform,world.RealCollisions)) { Clear();error="No accepted scanned or authored floor is available for walking";return false; }
             if(data&&installed.valid&&candidate.Same(accepted)){
                 Install(candidate.Position,candidate.Rotation);error=null;return installed.valid;
             }
@@ -67,7 +67,7 @@ namespace Maestro.Quest.Interaction
         public bool Sample(Vector3 point, float maximumDistance, out Vector3 floor)
         {
             floor = default;
-            if (!Ready || !NavMesh.SamplePosition(point,out var hit,maximumDistance,Filter) || world.Contains != null && !world.Contains(hit.position + Vector3.up*.1f)) return false;
+            if (!Ready || !NavMesh.SamplePosition(point,out var hit,maximumDistance,Filter) || !world.ContainsSimulation(hit.position + Vector3.up*.1f)) return false;
             floor = hit.position; return true;
         }
         public bool DirectStep(Vector3 from,Vector3 to,out Vector3 floor)

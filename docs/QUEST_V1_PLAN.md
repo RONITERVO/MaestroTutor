@@ -3543,6 +3543,43 @@ invalidated navigation earlier than the old collision sweep; the blocked movemen
 and accepted pose were preserved, and the explanation now describes the supported
 walking surface. Physical Quest terrain/navigation acceptance remains open.
 
+Independent simulation environment increment (2026-10-07): the shared
+`physics.environment` fact distinguishes physical scan readiness, authored-ground
+readiness and the selected collision policy. `physics.environment.set` changes
+real collision participation with a current state identity, independently of
+passthrough, depth and acoustic geometry. A changed policy pauses physics and
+clears old throw speeds; explicit Start is still required. The generated book
+controls, agent and saved programs use this same capability. Scan placement and
+layout continue to require actual scan readiness, never a synthetic ready flag.
+
+With real collisions enabled, simulation retains aligned-room containment. With
+them disabled, accepted height surfaces and the virtual floor supply bounded
+ground columns: up to 16 metres above and 0.25 metres below the actual collider.
+Unsupported gaps and regions remain unavailable. Rigid-body contacts, navigation,
+avatar/held-prop sweeps, throws and catch checks all apply the same scan policy.
+The original scanned colliders remain available for placement and acoustics.
+Ground loss pauses simulation; recovery never resumes it automatically. Dormant
+objects outside admitted ground do not stop other supported objects; bodies that
+actually leave their admitted region retain boundary recovery and pause behavior.
+
+This is a runtime policy, defaulting to real collisions on in a fresh app world.
+Persisted world/region settings, general region bounds, scaled-world physics,
+terrain-aware user locomotion, fixed physical tracking during world movement and
+replacement of the interim virtual floor remain required. These bounded columns
+are not streamed city simulation, caves or a general surface-query implementation.
+Appearance, weather and water delivery remain as specified below. Physical-device,
+real-provider and sustained-performance acceptance of this increment remain open.
+
+Verification passes 870 EditMode and 706 PlayMode cases (three expected optional
+private-file skips), both complete native-room/original-book integrations and
+91 shared-catalog/browser tests. The browser controls replay actual native
+environment receipts; TypeScript, catalog provenance and included assets also
+pass. Failure-first checks cover the missing capability and the dormant-object
+global pause. The first whole-project run caught an outdated catalog mapping
+count; a browser test fixture-name collision was corrected before its passing
+rerun. No headset or provider operations occurred.
+
+
 The owner expects worlds to grow from room toys into miniature countries with
 cities, buildings, items and NPCs. Users and the agent must author the same world;
 imported Blender/Meshy assets are another source of its components. Texture and

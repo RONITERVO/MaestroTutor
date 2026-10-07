@@ -64,6 +64,7 @@ namespace Maestro.Quest.Interaction
             float height = Mathf.Clamp(viewer.transform.position.y-foot,.65f,2.2f), radius=.2f;
             Vector3 bottom=new(viewer.transform.position.x,foot+radius+.04f,viewer.transform.position.z), top=new(viewer.transform.position.x,foot+height-radius,viewer.transform.position.z);
             int mask=(1<<RoomPhysicsLayers.Scanned)|(1<<RoomPhysicsLayers.Item)|(1<<RoomPhysicsLayers.Environment);
+            if(physics)mask=physics.CollisionMask(mask);
             int count=Physics.CapsuleCastNonAlloc(bottom,top,radius,delta.normalized,hits,delta.magnitude+.005f,mask,QueryTriggerInteraction.Ignore);
             if (count>0) return false;
             count=Physics.OverlapCapsuleNonAlloc(bottom+delta,top+delta,radius,overlaps,mask,QueryTriggerInteraction.Ignore);

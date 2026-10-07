@@ -208,6 +208,7 @@ namespace Maestro.Quest.Avatar
             var bottom = transform.position + Vector3.up*(r+.035f); var top = transform.position + Vector3.up*(h-r);
             var step = next-transform.position;
             int mask = (1<<RoomPhysicsLayers.Scanned) | (1<<RoomPhysicsLayers.Item) | (1<<RoomPhysicsLayers.Environment);
+            mask=editor.PhysicsWorld.CollisionMask(mask);
             int count = Physics.CapsuleCastNonAlloc(bottom,top,r,step.normalized,hits,step.magnitude+.01f,mask,QueryTriggerInteraction.Ignore);
             if (count == hits.Length) return false;
             for (int i=0;i<count;i++) if (BodyObstacle(hits[i].collider)) { blocked = Blocker(hits[i].collider); return false; }

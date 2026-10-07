@@ -278,6 +278,19 @@ try{
   const snowHash=createHash('sha256').update(await readFile('unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/snow-patch.json')).digest('hex');
   const fieldCreated=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{...templateArgs,templateHash:snowHash,name:'Editable snow'}}}}]);
   const fieldId=fieldCreated.execution?.selected?.output?.objectId;if(typeof fieldId!=='string')throw new Error('Height surface creation failed');
+  const environmentRead=async()=>execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'physics.environment',version:1}}]);
+  const environmentBefore=await environmentRead();
+  const environmentBeforeValue=environmentBefore.catalog?.value as {stateId:string;realCollisions:boolean;authoredReady:boolean;scanReady:boolean};
+  if(!environmentBeforeValue.realCollisions||!environmentBeforeValue.authoredReady)throw new Error('Physics environment lost its default or accepted authored ground');
+  const virtualEnvironment=await execute([{action:'execution',execution:{operation:'start',call:{id:'physics.environment.set',version:1,arguments:{realCollisions:false,stateId:environmentBeforeValue.stateId}}}}]);
+  const environmentVirtual=await environmentRead();
+  const environmentVirtualValue=environmentVirtual.catalog?.value as {stateId:string;realCollisions:boolean;ready:boolean;scanReady:boolean};
+  if(environmentVirtualValue.realCollisions||!environmentVirtualValue.ready||environmentVirtualValue.scanReady!==environmentBeforeValue.scanReady||virtualEnvironment.physics?.running)throw new Error('Collision policy changed scan readiness or started physics');
+  const physicalEnvironment=await execute([{action:'execution',execution:{operation:'start',call:{id:'physics.environment.set',version:1,arguments:{realCollisions:true,stateId:environmentVirtualValue.stateId}}}}]);
+  const environmentRestored=await environmentRead();
+  if(!(environmentRestored.catalog?.value as {realCollisions:boolean}).realCollisions||physicalEnvironment.physics?.running)throw new Error('Restored physical collision policy did not remain paused');
+  await writeFile(join(directory,'physics-environment.json'),JSON.stringify({boundary:'Full native shared transport and editable terrain readiness; actual collisions are tested in PlayMode. No provider or headset proof.',before:environmentBefore,disabled:virtualEnvironment,virtual:environmentVirtual,enabled:physicalEnvironment,restored:environmentRestored},null,2));
+
   const fieldSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Sculpt a surface path',offset:0}}]);
   const fieldDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.field.sculpt',version:1}}]);
   const fieldBefore=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.field',version:1,arguments:{target:fieldId}}}]);

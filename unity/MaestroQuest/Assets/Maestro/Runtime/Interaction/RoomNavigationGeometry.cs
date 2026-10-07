@@ -31,7 +31,7 @@ namespace Maestro.Quest.Interaction
         internal Bounds Bounds { get; private set; }
         internal Vector3 Position { get; private set; }
         internal Quaternion Rotation { get; private set; }
-        internal bool Capture(Transform owner)
+        internal bool Capture(Transform owner,bool includeScan=true)
         {
             colliders.Clear(); entries.Clear(); sources.Clear(); Bounds=default;
             if(!owner)return false;
@@ -45,6 +45,7 @@ namespace Maestro.Quest.Interaction
                 if(!collider.enabled||collider.isTrigger)continue;
                 var surface=collider.GetComponent<RoomWalkableSurface>();
                 bool authored=surface&&surface.Available&&surface.Collision==collider;
+                if(collider.gameObject.layer==RoomPhysicsLayers.Scanned&&!includeScan)continue;
                 if(!authored&&collider.gameObject.layer!=RoomPhysicsLayers.Scanned)continue;
                 var source=new NavMeshBuildSource { transform=owner.worldToLocalMatrix*collider.transform.localToWorldMatrix,component=collider,area=0 };
                 Bounds localBounds;

@@ -69,7 +69,7 @@ namespace Maestro.Quest.Interaction
             bool crossing=CatchGeometry.Crosses(previousBall,position,previousSocket,centre,volume.Radius+gripRadius);
             var before=previousBall;Remember(position,centre,now,revision);
             if(!crossing){Reason="Waiting for physical contact with the selected socket";return;}
-            if(!clearance.Segment(item,holder,editor.Viewer,before,position,volume.Radius)||!clearance.Segment(item,holder,editor.Viewer,position,centre,volume.Radius)){Reason="The catch path is blocked by a surface, object or the user's head";return;}
+            if(!clearance.Segment(item,holder,editor.Viewer,before,position,volume.Radius,editor.PhysicsWorld)||!clearance.Segment(item,holder,editor.Viewer,position,centre,volume.Radius,editor.PhysicsWorld)){Reason="The catch path is blocked by a surface, object or the user's head";return;}
             Capture(centre,speed);
         }
         void Remember(Vector3 position,Vector3 centre,float now,uint revision){sampled=true;previousBall=position;previousSocket=centre;sampleAt=now;motionRevision=rigid.MotionRevision;holderRevision=revision;}

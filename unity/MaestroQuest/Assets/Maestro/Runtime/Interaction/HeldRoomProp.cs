@@ -80,6 +80,7 @@ namespace Maestro.Quest.Interaction
         {
             Physics.SyncTransforms();
             int mask=(1<<RoomPhysicsLayers.Scanned)|(1<<RoomPhysicsLayers.Item)|(1<<RoomPhysicsLayers.Environment);
+            if(editor.PhysicsWorld)mask=editor.PhysicsWorld.CollisionMask(mask);
             var oldCentre=item.transform.TransformPoint(centre);
             var newCentre=position+rotation*Vector3.Scale(centre,item.transform.lossyScale);
             var delta=newCentre-oldCentre;

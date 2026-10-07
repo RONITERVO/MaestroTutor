@@ -42,7 +42,7 @@ namespace Maestro.Quest.Programs
             new PaintObjectCapability(),
             new DeleteObjectCapability(),
             new CollisionCapability(),new PhysicsSettingsCapability(),new AvatarMovementSettingsCapability(),new AvatarWalkSettingsCapability(),
-            new ScanDrawingCapability(),new ScanPlacementCapability(),new SurfacePlacementCapability(),new RoomEnvironmentCapability(),new PhysicsSimulationCapability(),new PhysicsImpulseCapability(),
+            new ScanDrawingCapability(),new ScanPlacementCapability(),new SurfacePlacementCapability(),new RoomEnvironmentCapability(),new PhysicsSimulationCapability(),new PhysicsEnvironmentCapability(),new PhysicsImpulseCapability(),
             new PhysicsStopCapability(),new LaunchObjectCapability(),new CatchObjectCapability(),
             new ThrowRecordingCapability(),
             new LookAtUserCapability(),

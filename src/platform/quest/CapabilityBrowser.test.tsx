@@ -710,6 +710,26 @@ it('uses generated physics start and pause fields with each current native ident
  act(()=>client.cancel());
 });
 
+import nativePhysicsEnvironment from '../../../test-fixtures/browser/physicsEnvironment.json';
+it('edits real collisions through the same generated inputs and native receipts used by programs',async()=>{
+ const {client,screen,receive}=setup(true,['physicsEnvironment.v1','execution.v1','actionResults.v1']);
+ await receive(undefined,false,{execution:{...nativePhysicsEnvironment.disabled,selected:null,running:[],outcomes:[],nextRunId:nativePhysicsEnvironment.disabled.selected.id} as RoomAgentState['execution']});
+ const definition=capabilityDefinition('physics.environment.set')!;
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:/^Search$/}));
+ await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Physics environment'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Physics environment'});
+ let current=nativePhysicsEnvironment.before;
+ for(const view of [nativePhysicsEnvironment.disabled,nativePhysicsEnvironment.enabled]){
+  await loadCurrentDraft(screen,receive,definition,current);
+  fireEvent.change(screen.getByLabelText('Action inputs realCollisions'),{target:{value:String(view.selected.call.arguments.realCollisions)}});
+  fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
+  expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:view.selected.call,runId:view.selected.id}});
+  await receive(undefined,false,{execution:view as RoomAgentState['execution']});
+  expect(screen.getByLabelText('Action result').textContent).toContain(view.selected.output.stateId);current=view.selected.output;
+ }
+ act(()=>client.cancel());
+});
+
 it('requires an explicit settings snapshot, preserves edits, invalidates changed targets and ignores a late read',async()=>{
  const {client,screen,receive,state}=setup(true,['spatialSettings.v1','execution.v1']);
  const definition=capabilityDefinition('object.physics.configure')!,before=nativeSpatial.beforePhysics;
