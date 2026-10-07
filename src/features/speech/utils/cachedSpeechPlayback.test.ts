@@ -23,7 +23,7 @@ function host() {
   const client = new SpeechBookClient(); unregister = registerBookSpeech(client);
   const idle = client.exchange(null)!;
   const receive = (extra = {}) => client.exchange({ ...client.exchange(null), host: 'a'.repeat(32), status: 'ready',
-    acceptedSequence: 0, submittedSamples: 0, playedSamples: 0, ...extra });
+    acceptedSequence: 0, submittedSamples: 0, playedSamples: 0, microphoneSuppressed: false, ...extra });
   receive(); expect(idle.open).toBe(false);
   return { client, receive };
 }

@@ -113,7 +113,7 @@ describe('Gemini Live TTS audible completion', () => {
     try {
       const idle = client.exchange(null)!;
       const host = 'a'.repeat(32);
-      client.exchange({ ...idle, host, status: 'ready', acceptedSequence: 0, submittedSamples: 0, playedSamples: 0 });
+      client.exchange({ ...idle, host, status: 'ready', acceptedSequence: 0, submittedSamples: 0, playedSamples: 0, microphoneSuppressed: false });
       const context = new FakeAudioContext(); const onError = vi.fn();
       const pending = streamGeminiLiveTts({ lines: [{ text: 'Hello', langCode: 'en' }],
         audioContext: context as unknown as AudioContext, liveOpenTrigger: 'voice.tts-click', onError });
