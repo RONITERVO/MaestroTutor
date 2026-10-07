@@ -35699,7 +35699,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/HeldRoomProp.cs",
-      "sha256": "05c9ff055cfaf0eb155e71040b72dfd052e02cc88e85cb6f70c46e0b9cfeef82"
+      "sha256": "238ec1b8b493cf7c4ee89895765aa77d51d6478291ab69d07ca7c030418cbdcd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomBallistics.cs",
@@ -35719,11 +35719,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomCatch.cs",
-      "sha256": "34a1f9af6de24d6fe11681052d7980f64d0bb638ba832b058c0e1cff2d29fa14"
+      "sha256": "1684683d50b3f11c87f74191e3864937b7b96b16350e9fc37e982ab26fa94d36"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarCatchReach.cs",
-      "sha256": "7b3ef630171c3fbceb78930e4de6c8d3dce6a83711f971e73c9a5746c7cc452c"
+      "sha256": "67caee23d96988692560cb8531a8a58ed9821daf0261d03db1676c13d5a39c76"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.cs",
@@ -35764,6 +35764,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomFrame.cs",
       "sha256": "b0dac44d699fbb7d0a0d75eec358e8aa1e7a8e1a2df9c006482bc0cac7c2ff43"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomMotionFrame.cs",
+      "sha256": "f8872e23cac6861007969eb25218ab44fb1c873560ef5a2bd8387e6ebea2d4c1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomToolTray.cs",
@@ -36059,11 +36063,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarSpatialMotion.cs",
-      "sha256": "a63a3a423b25dbbd2426b444922744145faaaacf46c9033de21189d014053b30"
+      "sha256": "34bc6e4a292c0a576863fa064810ae20ff44e4dc9ab823a67653d6893f84cbc9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarAuthoredTravel.cs",
-      "sha256": "dfc8805b242c5a82490ff33f9c123fb51327cb9f51d2335b3698e4bcdeaee638"
+      "sha256": "b9a6a7a0531fef64b82f16dc5a48e304383fff69ef74e905e78e75944cea01b4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportWorkshop.cs",

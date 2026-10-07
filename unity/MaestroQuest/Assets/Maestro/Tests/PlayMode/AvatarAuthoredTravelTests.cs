@@ -32,6 +32,22 @@ namespace Maestro.Quest.Tests
             Assert.That(avatar.SampleImportedAt(1.01f),Is.True,avatar.ImportedPlaybackError);var after=avatar.transform.position;Assert.That(Vector3.Distance(before,after),Is.LessThan(.08f));Assert.That(Vector3.Distance(origin,after),Is.GreaterThan(1));
             var final=avatar.transform.position;avatar.StopImportedClip();Assert.That(avatar.transform.position,Is.EqualTo(final));Assert.That(avatar.CustomModel.transform.localPosition,Is.EqualTo(Vector3.zero));Assert.That(editor.Read("maestro").position,Is.EqualTo(final));
         }
+        [UnityTest]public IEnumerator AuthoredTravelKeepsItsAcceptedPathWhenTheAuthoredWorldMoves()
+        {
+            TravelStage();yield return LoadTravelAvatar(ModelFixture.HipTravel());
+            var start=avatar.transform.localPosition;
+            Assert.That(avatar.PlayImportedClip(0,true,true),Is.True);
+            Assert.That(avatar.SampleImportedAt(.4f),Is.True,avatar.ImportedPlaybackError);
+            var expected=avatar.transform.localPosition;avatar.StopImportedClip();avatar.transform.localPosition=start;
+            Assert.That(avatar.PlayImportedClip(0,true,true),Is.True);
+            Assert.That(avatar.SampleImportedAt(.2f),Is.True,avatar.ImportedPlaybackError);
+            root.transform.SetPositionAndRotation(new Vector3(5,0,-3),Quaternion.Euler(0,75,0));Physics.SyncTransforms();
+            Assert.That(avatar.SampleImportedAt(.4f),Is.True,avatar.ImportedPlaybackError);
+            Assert.That(Vector3.Distance(avatar.transform.localPosition,expected),Is.LessThan(.0002f));
+            avatar.transform.localPosition+=Vector3.forward*.1f;
+            Assert.That(avatar.SampleImportedAt(.5f),Is.False,"An actual placement change must still stop the authored action");
+            Assert.That(avatar.ImportedPlaybackError,Does.Contain("placement"));avatar.StopImportedClip();
+        }
         [UnityTest]public IEnumerator AuthoredTravelRefusesWallCrossingAndLostReadinessWithoutMovingPastTheLastAcceptedPose()
         {
             TravelStage();yield return LoadTravelAvatar(ModelFixture.HipTravel());var origin=avatar.transform.position;Assert.That(avatar.PlayImportedClip(0,true,true),Is.True);Assert.That(avatar.SampleImportedAt(.2f),Is.True,avatar.ImportedPlaybackError);var accepted=avatar.transform.position;var direction=(accepted-origin).normalized;

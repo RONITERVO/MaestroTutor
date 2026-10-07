@@ -11,6 +11,7 @@ namespace Maestro.Quest.Interaction
     [DefaultExecutionOrder(240)]
     public sealed class RoomCatch:MonoBehaviour
     {
+        RoomMotionFrame space;
         RoomEditor editor;RoomItem item,holder;Transform socket;RoomPropAnchor anchor;RigidRoomItem rigid,holderRigid;Rigidbody body;
         RoomCollisionVolume volume;Vector3 offset,previousBall,previousSocket,holdCentre;uint motionRevision,holderRevision;float sampleAt,deadline,holdSeconds,gripRadius,maxSpeed;bool sampled,stopped;
         HeldRoomProp prop;AvatarCatchReach reach;RoomOwnership.Lease lease;string ownerId;
@@ -21,6 +22,7 @@ namespace Maestro.Quest.Interaction
         public bool Finished=>Phase is "missed" or "dropped";
         public bool WaitsThroughGrab(string target)=>!stopped&&Phase=="waiting"&&target==TargetId;
         public static bool Check(RoomEditor editor,string target,RoomPropAnchor anchor,out string error){
+            if(!editor||!new RoomMotionFrame(editor.transform).TryRead(out _)){error=RoomMotionFrame.Changed;return false;}
             error="Choose a loaded solid or bouncy creation";var item=editor?editor.Find(target):null;
             if(!item||!item.isActiveAndEnabled||editor.Read(target)?.IsBuiltIn!=false)return false;
             var rigid=item.GetComponent<RigidRoomItem>();if(!rigid||!rigid.isActiveAndEnabled||!rigid.Dynamic||!rigid.GeometryReady)return false;
@@ -34,7 +36,7 @@ namespace Maestro.Quest.Interaction
             if(!Check(editor,target,anchor,out error))return null;
             if(editor.Ownership.Covers(runId,new[]{new BehaviourCatalog.Claim(target,"wholeTarget")})){error="Catching must leave the incoming object free; use a version 3 program or a one-off action";return null;}
             anchor.Resolve(editor,out var holder,out var socket,out _);var value=holder.gameObject.AddComponent<RoomCatch>();
-            value.editor=editor;value.item=editor.Find(target);value.TargetId=target;value.holder=holder;value.socket=socket;value.anchor=anchor;value.offset=offset;value.deadline=Time.unscaledTime+timeout;value.holdSeconds=holdSeconds;value.gripRadius=gripRadius;value.maxSpeed=maxSpeed;value.ownerId="catch:"+runId;
+            value.editor=editor;value.space=new RoomMotionFrame(editor.transform);value.item=editor.Find(target);value.TargetId=target;value.holder=holder;value.socket=socket;value.anchor=anchor;value.offset=offset;value.deadline=Time.unscaledTime+timeout;value.holdSeconds=holdSeconds;value.gripRadius=gripRadius;value.maxSpeed=maxSpeed;value.ownerId="catch:"+runId;
             value.rigid=value.item.GetComponent<RigidRoomItem>();value.body=value.item.GetComponent<Rigidbody>();value.holderRigid=holder.GetComponent<RigidRoomItem>();
             RoomCollisionVolume.Read(value.item,.3f,out value.volume,out _);
             if(anchor.Kind=="avatarHand"){value.reach=AvatarCatchReach.Begin(holder.GetComponent<MaestroAvatar>().PoseRig,anchor.Part=="left");if(!value.reach){error="This avatar needs a usable shoulder, elbow and hand chain";value.End();return null;}}
@@ -44,6 +46,7 @@ namespace Maestro.Quest.Interaction
         bool Valid(){
             if(stopped)return false;
             if(!editor||editor.RuntimeGate.Held||!item||!item.isActiveAndEnabled||editor.Find(TargetId)!=item||!rigid||!rigid.isActiveAndEnabled||!rigid.GeometryReady||!body){Fail("The catch object changed or room actions were paused");return false;}
+            if(!space.TryRead(out _)){Fail(RoomMotionFrame.Changed);return false;}
             if(!anchor.Matches(editor,holder,socket,out var error)){Fail(error);return false;}
             if(!editor.PhysicsWorld||!editor.PhysicsWorld.CanSimulate(item.transform.position)||!editor.PhysicsWorld.CanSimulate(holder.transform.position)||!editor.Viewer||!editor.Viewer.gameObject.activeInHierarchy){Fail("Catching stopped; restore room physics and the active room view");return false;}
             if(reach&&!reach.Valid){Fail("The avatar pose or model changed during the catch");return false;}
@@ -63,16 +66,17 @@ namespace Maestro.Quest.Interaction
             if(!rigid.TryReadMotion(out bool available,out float speed,out _)||!available){sampled=false;Reason="Waiting for the user or other action to release the object";return;}
             if(speed>maxSpeed){sampled=false;Reason="The object exceeds the selected catch speed";return;}
             if(!sampled||motionRevision!=rigid.MotionRevision||holderRevision!=revision||now-sampleAt>.1f||now<=sampleAt){Remember(position,centre,now,revision);return;}
+            var frame=editor.Frame;var before=frame.PointToWorld(previousBall);var oldSocket=frame.PointToWorld(previousSocket);
             float elapsed=now-sampleAt;
             // Reject discontinuities instead of treating a teleport as an incoming throw.
-            if(Vector3.Distance(position,previousBall)>maxSpeed*elapsed+.03f||Vector3.Distance(centre,previousSocket)>4*elapsed+.03f){Remember(position,centre,now,revision);Reason="Motion changed too quickly to verify contact";return;}
-            bool crossing=CatchGeometry.Crosses(previousBall,position,previousSocket,centre,volume.Radius+gripRadius);
-            var before=previousBall;Remember(position,centre,now,revision);
+            if(Vector3.Distance(position,before)>maxSpeed*elapsed+.03f||Vector3.Distance(centre,oldSocket)>4*elapsed+.03f){Remember(position,centre,now,revision);Reason="Motion changed too quickly to verify contact";return;}
+            bool crossing=CatchGeometry.Crosses(before,position,oldSocket,centre,volume.Radius+gripRadius);
+            Remember(position,centre,now,revision);
             if(!crossing){Reason="Waiting for physical contact with the selected socket";return;}
             if(!clearance.Segment(item,holder,editor.Viewer,before,position,volume.Radius,editor.PhysicsWorld)||!clearance.Segment(item,holder,editor.Viewer,position,centre,volume.Radius,editor.PhysicsWorld)){Reason="The catch path is blocked by a surface, object or the user's head";return;}
             Capture(centre,speed);
         }
-        void Remember(Vector3 position,Vector3 centre,float now,uint revision){sampled=true;previousBall=position;previousSocket=centre;sampleAt=now;motionRevision=rigid.MotionRevision;holderRevision=revision;}
+        void Remember(Vector3 position,Vector3 centre,float now,uint revision){sampled=true;var frame=editor.Frame;previousBall=frame.PointToRoom(position);previousSocket=frame.PointToRoom(centre);sampleAt=now;motionRevision=rigid.MotionRevision;holderRevision=revision;}
         void Capture(Vector3 centre,float speed){
             if(!rigid.CanReceivePhysicsAction(out var error)){sampled=false;Reason=error;return;}
             if(!editor.Ownership.TryAcquire(ownerId,"Physical catch",RoomActorRole.Reflex,new[]{new BehaviourCatalog.Claim(TargetId,"wholeTarget")},notice=>Fail(notice.Message),out var acquired,out error,true)){Reason=error;return;}
@@ -98,7 +102,7 @@ namespace Maestro.Quest.Interaction
             if(Phase=="waiting"&&!available)return;
             var goal=Phase=="holding"?holder.transform.TransformPoint(holdCentre):volume.Centre(item,body)+body.linearVelocity*.08f;
             goal-=socket.rotation*(offset*holder.transform.lossyScale.y);
-            if(!reach.Apply(goal,item,holder,editor.Viewer,clearance,Time.unscaledDeltaTime)&&Phase=="waiting")Reason="The arm cannot reach the incoming object along a clear path";
+            if(!reach.Apply(goal,item,holder,editor.Viewer,clearance,Time.unscaledDeltaTime,editor.PhysicsWorld)&&Phase=="waiting")Reason="The arm cannot reach the incoming object along a clear path";
         }
         public void End(){if(stopped)return;stopped=true;if(prop)prop.End(true);if(reach)reach.End();lease?.Dispose();lease=null;enabled=false;Destroy(this);}
         void OnDisable()=>End();void OnDestroy()=>End();

@@ -3580,6 +3580,40 @@ count; a browser test fixture-name collision was corrected before its passing
 rerun. No headset or provider operations occurred.
 
 
+Motion-history increment (2026-10-07): authored avatar travel, carried-prop throw
+samples and incoming catch samples now retain coordinates in their owning authored
+room. Each use samples the current room-to-physics mapping. Translation and yaw
+therefore preserve the actual action trajectory instead of appearing as a teleport,
+a false throw impulse or a discontinuous incoming flight. Catch-arm smoothing
+retains orientation relative to the avatar, so rotating the world cannot leave
+its arm reaching toward the old world orientation. The arm also now consumes the
+same real-collision policy as the ball; virtual obstacles and tracked controllers
+remain blocking when scanned-wall collisions are excluded.
+
+The motion frame keeps its owner and initial units. Lost ownership, invalid or
+distorted transforms, changed scale and tilted gravity axes refuse continuation;
+restoring a frame does not automatically resume a failed action. A genuine change
+to Maestro's placement still interrupts authored travel. This supports continuity
+of existing actions through a rigid frame move, not scaled-world physics.
+
+Five failure-first regressions reproduced interrupted authored travel, incorrect
+arm orientation, missed catches and a false prop throw reaching the existing
+15 m/s clamp. The focused corrected cases pass alongside existing real native
+throws, floor bounce, catch ownership and cancellation tests. Additional guards
+cover invalid motion frames and collision-policy agreement. Test harnesses move
+native bodies with their fixture root; that harness is not the production world
+movement implementation. Whole-project and device acceptance are tracked separately.
+
+Before changing thumbstick controls, implement the production atomic body transfer
+(including velocities, sleeping/interpolation and last-supported poses), distinguish
+physical/virtual anchors and held-item ownership, and move navigation's authored
+frame without rebaking on each movement tick. Define queued point/event frame
+semantics and reconcile recall, workspace replacement and scan world-lock updates.
+The interim XR-origin movement and binary view remain in place until those paths
+are coherent. This increment does not enable passthrough locomotion, view blending,
+world regions, textures, weather or water; those accepted requirements remain below.
+
+
 The owner expects worlds to grow from room toys into miniature countries with
 cities, buildings, items and NPCs. Users and the agent must author the same world;
 imported Blender/Meshy assets are another source of its components. Texture and

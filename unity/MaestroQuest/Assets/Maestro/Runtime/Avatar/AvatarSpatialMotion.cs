@@ -173,6 +173,7 @@ namespace Maestro.Quest.Avatar
             avatar.SpatialWalk(dt > 0 ? moved/dt : 0);
             if (Time.unscaledTime >= nextRemember) { nextRemember=Time.unscaledTime+1; editor.RememberPlacement("maestro"); }
         }
+        internal RoomMotionFrame MotionFrame => new(editor?editor.transform:null);
         internal bool CanBeginAuthored(out string error)
         {
             error="Room navigation is unavailable";if(!editor||!navigation)return false;

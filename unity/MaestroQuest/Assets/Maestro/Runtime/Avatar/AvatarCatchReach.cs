@@ -28,21 +28,21 @@ namespace Maestro.Quest.Avatar
             if(l&&Quaternion.Angle(l.localRotation,lastLower)<.01f)l.localRotation=baseLower;
             rig.Apply(Array.Empty<JointPose>());
         }
-        public bool Apply(Vector3 goal,RoomItem ball,RoomItem holder,Transform viewer,CatchClearance clearance,float dt){
+        public bool Apply(Vector3 goal,RoomItem ball,RoomItem holder,Transform viewer,CatchClearance clearance,float dt,RoomPhysicsWorld world=null){
             if(!Valid||!float.IsFinite(dt)||dt<=0||dt>.25f)return false;
             Restore();var u=rig.CanonicalBone(upper);var l=rig.CanonicalBone(lower);baseUpper=u.localRotation;baseLower=l.localRotation;
             Vector3 pole=holder.transform.right*(upper==PoseJoint.LeftUpperArm?-1:1)-holder.transform.up;
             if(!CatchGeometry.TwoBone(visibleUpper.position,visibleLower.position,visibleHand.position,goal,pole,out var elbow,out var tip))return false;
             float armRadius=.035f*Mathf.Clamp(holder.transform.lossyScale.y,.25f,2);
-            if(!clearance.Segment(ball,holder,viewer,visibleUpper.position,elbow,armRadius)||!clearance.Segment(ball,holder,viewer,elbow,tip,armRadius))return false;
+            if(!clearance.Segment(ball,holder,viewer,visibleUpper.position,elbow,armRadius,world)||!clearance.Segment(ball,holder,viewer,elbow,tip,armRadius,world))return false;
             var rotation=Quaternion.FromToRotation(visibleLower.position-visibleUpper.position,elbow-visibleUpper.position)*visibleUpper.rotation;
-            rig.Rotate(upper,Quaternion.RotateTowards(hasDisplay?displayUpper:visibleUpper.rotation,rotation,360*dt));
+            rig.Rotate(upper,Quaternion.RotateTowards(hasDisplay?rig.transform.rotation*displayUpper:visibleUpper.rotation,rotation,360*dt));
             rotation=Quaternion.FromToRotation(visibleHand.position-visibleLower.position,tip-visibleLower.position)*visibleLower.rotation;
-            rig.Rotate(lower,Quaternion.RotateTowards(hasDisplay?displayLower:visibleLower.rotation,rotation,360*dt));
+            rig.Rotate(lower,Quaternion.RotateTowards(hasDisplay?rig.transform.rotation*displayLower:visibleLower.rotation,rotation,360*dt));
             lastUpper=u.localRotation;lastLower=l.localRotation;applied=true;
             // Joint limits and a moving torso may produce a different pose than the ideal solve.
-            if(!clearance.Segment(ball,holder,viewer,visibleUpper.position,visibleLower.position,armRadius)||!clearance.Segment(ball,holder,viewer,visibleLower.position,visibleHand.position,armRadius)){Restore();rig.Apply(new[]{new JointPose{joint=upper,rotation=u.localRotation},new JointPose{joint=lower,rotation=l.localRotation}});return false;}
-            displayUpper=visibleUpper.rotation;displayLower=visibleLower.rotation;hasDisplay=true;return true;
+            if(!clearance.Segment(ball,holder,viewer,visibleUpper.position,visibleLower.position,armRadius,world)||!clearance.Segment(ball,holder,viewer,visibleLower.position,visibleHand.position,armRadius,world)){Restore();rig.Apply(new[]{new JointPose{joint=upper,rotation=u.localRotation},new JointPose{joint=lower,rotation=l.localRotation}});return false;}
+            displayUpper=Quaternion.Inverse(rig.transform.rotation)*visibleUpper.rotation;displayLower=Quaternion.Inverse(rig.transform.rotation)*visibleLower.rotation;hasDisplay=true;return true;
         }
         public void End(){Restore();enabled=false;Destroy(this);}
         void OnDisable()=>Restore();void OnDestroy()=>Restore();
