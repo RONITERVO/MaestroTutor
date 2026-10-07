@@ -34567,7 +34567,27 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/RoomAcoustics.cs",
-      "sha256": "360d117de538a0877714e301954de55925711cb5217613e2ba91640015186fcb"
+      "sha256": "29419db430da07dd4e2ecd5d9ab1d9a4abdc3665ce03926c33dfdb4d7632f678"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/AcousticOutputMonitor.cs",
+      "sha256": "b8617921c90738e1926cc5d58065b1b3bb7efa4f28f233a1eabb5d9255319d06"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/RoomAudioTap.cs",
+      "sha256": "4422ea366ca2776a6e1503e97787c05cb2e7c45733b16fa5f2390abee3d54a18"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/RoomAudioOutput.cs",
+      "sha256": "0d7ca8704eab1409811deb765ec97260403256d1f6d9b310fab1665bbb7bd725"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/BookSpeechSession.cs",
+      "sha256": "92314b5d595fcd4744dd2b8d220395610f4a5b549c0b076c94461988ff74777a"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Resources/MaestroRoomAudio.mixer",
+      "sha256": "81895adbfa8d284ba3df0554fc99305c5a930b2b1b0f5471ec8eddaf9f7005bb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/RoomAcousticMapJob.cs",
@@ -34583,7 +34603,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/SpeechOcclusion.cs",
-      "sha256": "0e226bfcc05706cbae868a9efc7c750dec1da48be1368d8cd140498ef8d19922"
+      "sha256": "0bf3679b4d94dabe37203bdbeaf403d658dbfe079c7476b5f27701129a676c70"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/SpeechSpatializer.cs",
@@ -34591,7 +34611,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/NativeSpeechOutput.cs",
-      "sha256": "276919376e0b92da14971a06e3475fba52a01db0d603f34d4155e53505d81679"
+      "sha256": "678a20052ef6b989c3538fc006c78f3263aae1c8968bd35c4c780857f2f33819"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ScannedRoomAcoustics.cs",

@@ -4,8 +4,8 @@ using UnityEngine;
 
 namespace Maestro.Quest.Book
 {
-    /// <summary>Direct sound obstruction only. Reflections have no mixer route
-    /// until their completion/cancellation and microphone tails are measured.</summary>
+    /// <summary>One voice's direct obstruction and sends to the owned room mixer.
+    /// A source's Stop must never reset the room's shared reflection state.</summary>
     internal sealed class SpeechOcclusion : MonoBehaviour
     {
         RoomAcoustics room;
@@ -13,13 +13,15 @@ namespace Maestro.Quest.Book
         internal void Bind(MetaXRAudioSource value)
         {
             source = value; room = GetComponentInParent<RoomAcoustics>();
-            source.ReverbSendDb = -60;
+            var audio = GetComponentInParent<RoomAudioOutput>();
+            bool routed = audio && audio.Route(GetComponent<AudioSource>());
+            source.ReverbSendDb = routed ? 0 : -60;
             var parameters = gameObject.AddComponent<MetaXRAudioSourceExperimentalFeatures>();
-            parameters.EarlyReflectionsSendDb = -60;
+            parameters.EarlyReflectionsSendDb = routed ? 0 : -60;
             // Preserve useful speech intelligibility behind objects. Full
             // obstruction/material controls can share this same geometry later.
             parameters.OcclusionIntensity = .65f;
-            parameters.UpdateParameters(); Refresh();
+            parameters.UpdateParameters(); source.UpdateParameters(); Refresh();
         }
         internal void Refresh()
         {

@@ -31,6 +31,17 @@ const setup = (gated = true) => {
 };
 
 describe('continuous Live input boundaries', () => {
+  it.each([false, true])('waits for native reflection quiet after PCM completion (gated=%s)', async gated => {
+    const h = setup(gated), tail = vi.fn(() => true);
+    h.state.speechOutputRef.current = { microphonePolicy: 'suppress-during-playback', isMicrophoneSuppressed: tail } as any;
+    h.state.playbackPendingRef.current = false; h.state.playbackUntilRef.current = 0;
+    await h.capture(); await vi.advanceTimersByTimeAsync(1000); await h.capture();
+    expect(h.encode).not.toHaveBeenCalled();
+    tail.mockReturnValue(false); await h.capture();
+    await vi.advanceTimersByTimeAsync(499); await h.capture(); expect(h.encode).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1); await h.capture(); expect(h.encode).toHaveBeenCalledOnce();
+    h.state.inputPacketizerRef.current!.dispose();
+  });
   it('suppresses native-speaker echo in full Live until actual drain and the settling interval', async () => {
     const h = setup(false); h.state.speechOutputRef.current = { microphonePolicy: 'suppress-during-playback' } as any;
     h.state.liveInputContextRef.current = new LiveInputContext();

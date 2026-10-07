@@ -28,10 +28,21 @@ namespace Maestro.Quest.Tests
         }
         string Packet(long poll, long revision, bool open, params JObject[] chunks) => new JObject {
             ["document"] = document, ["poll"] = poll, ["payload"] = new JObject {
-                ["version"] = 1, ["session"] = session, ["revision"] = revision, ["open"] = open, ["chunks"] = new JArray(chunks)
+                ["version"] = 2, ["session"] = session, ["revision"] = revision, ["open"] = open, ["chunks"] = new JArray(chunks)
             }
         }.ToString(Newtonsoft.Json.Formatting.None);
         JObject Status => JObject.Parse(bridge.Status(clock));
+        [UnityTest] public IEnumerator OldSpeechProtocolCannotOpenAStreamWithoutTheCaptureContract()
+        {
+            var packet = JObject.Parse(Packet(1,1,true,Chunk(1)));
+            packet["payload"]["version"] = 1;
+            Receive(packet.ToString());
+            Assert.AreEqual("failed",(string)Status["status"]);
+            Assert.AreEqual(2,(int)Status["version"]);
+            Assert.IsTrue((bool)Status["microphoneSuppressed"]);
+            Assert.AreEqual(0,output.Read().submittedSamples);
+            yield return null;
+        }
         void Receive(string packet)
         {
             bridge.Receive(packet,clock);

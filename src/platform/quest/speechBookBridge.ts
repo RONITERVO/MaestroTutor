@@ -37,8 +37,9 @@ export class SpeechBookClient {
     if (this.closed) return null;
     if (input && typeof input === 'object' && !Array.isArray(input)) {
       const value = input as Record<string, unknown>;
-      if (value.version === 1 && value.session === this.session && token(value.host)
+      if (value.version === 2 && value.session === this.session && token(value.host)
         && integer(value.revision) && value.revision <= this.revision
+        && typeof value.microphoneSuppressed === 'boolean'
         && ['ready', 'playing', 'failed'].includes(String(value.status))) {
         if (this.host && this.host !== value.host) this.current?.fail(unavailable());
         this.host = value.host; this.lastSeen = this.now();
@@ -49,7 +50,7 @@ export class SpeechBookClient {
         }
       }
     }
-    return { version: 1, session: this.session, revision: this.revision,
+    return { version: 2, session: this.session, revision: this.revision,
       open: this.current !== null, chunks: this.current?.poll() ?? [] };
   };
   suspend() { this.current?.fail(unavailable()); this.host = ''; this.ready = false; this.lastSeen = -Infinity; }
@@ -67,6 +68,7 @@ class BookSpeechOutput implements SpeechOutput {
   private submitted = 0;
   private played = 0;
   private started = false;
+  private microphoneSuppressed = true;
   private closed = false;
   private failure: Error | null = null;
   private readonly fences = new Set<Fence>();
@@ -112,11 +114,13 @@ class BookSpeechOutput implements SpeechOutput {
     const expected = sequence === this.accepted ? this.acceptedSamples : this.chunks.find(chunk => chunk.sequence === sequence)?.last;
     if (sequence > this.offered || samples !== expected || played > samples) { this.fail(unavailable()); return; }
     this.accepted = sequence; this.acceptedSamples = samples; this.played = played;
+    this.microphoneSuppressed = value.microphoneSuppressed === true;
     this.chunks = this.chunks.filter(chunk => chunk.sequence > sequence);
     if (!this.started && played > 0) { this.started = true; this.events.onEvent?.('started'); }
     for (const fence of this.fences) if (played >= fence.sample) { this.fences.delete(fence); fence.resolve('drained'); }
   }
   read() { return { submittedSamples: this.submitted, playedSamples: this.played, started: this.started }; }
+  isMicrophoneSuppressed() { return this.closed || !this.owner.alive() || this.microphoneSuppressed; }
   drain(): Promise<'drained' | 'cancelled'> {
     if (this.failure) return Promise.reject(this.failure);
     if (this.closed) return Promise.resolve('cancelled');
@@ -129,6 +133,7 @@ class BookSpeechOutput implements SpeechOutput {
     for (const fence of this.fences) fence.resolve('cancelled');
     this.fences.clear(); this.chunks = [];
     this.sequence = this.offered = this.accepted = this.acceptedSamples = this.submitted = this.played = 0; this.started = false;
+    this.microphoneSuppressed = true;
     this.owner.changed(this);
   }
   dispose() {

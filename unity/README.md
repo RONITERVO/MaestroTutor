@@ -288,6 +288,12 @@ renderer switches; `runtime.acoustics` exposes its current coverage through the
 shared catalog. Approximate hard-surface materials and partial occlusion preserve
 speech audibility. Skinned/cutout meshes and unscanned real objects are excluded.
 Room reflections remain unrouted pending material and acoustic-tail handling.
+The broader [shared world audio contract](AUDIO.md) covers user and agent authored
+clips, live sources, emitters and event-driven playback. The experimental room
+mixer and final-output monitor are tested separately and are not installed by the
+production scene: ongoing world audio must not permanently close Live input.
+Speech mailbox protocol 2 carries microphone suppression independently of PCM
+receipts; browser and native speech adapters must be upgraded together.
 The map coordinator retains native inputs while a bounded SDK worker calculates
 them, cancels stale work on edits and keeps the native scene leased through
 deferred destruction. Automatic scheduling waits two seconds after structural

@@ -41,6 +41,7 @@ namespace Maestro.Quest.Book
         int scannedCount, virtualCount, scannedTriangles, virtualTriangles, scannedVertices, virtualVertices, epoch;
         bool paused, focused = true, ownsModel;
         public bool Ready => opened && mapJob == null;
+        internal bool ContextOpen => opened;
         internal bool MapComputing => mapJob != null;
         internal bool MapReady => Ready && map != IntPtr.Zero;
         internal string MapIssue { get; private set; }
@@ -291,7 +292,7 @@ namespace Maestro.Quest.Book
                     {
                         foreach (var handle in handles) { api.AudioGeometrySetObjectFlag(handle, ObjectFlags.ENABLED, false); api.DestroyAudioGeometry(handle); }
                         if (ownedMaterial != IntPtr.Zero) api.DestroyAudioMaterial(ownedMaterial);
-                        if (restore) api.SetAcousticModel(model);
+                        if (restore) { api.ResetReverb(); api.SetAcousticModel(model); }
                     }
                     finally { ReleaseLease(ownedLease); }
                 });
@@ -299,7 +300,9 @@ namespace Maestro.Quest.Book
             }
             foreach (var entry in entries.Values) { Release(entry); entry.Revision = -1; }
             if (material != IntPtr.Zero) { native.DestroyAudioMaterial(material); material = IntPtr.Zero; }
-            if (ownsModel) { native.SetAcousticModel(previousModel); ownsModel = false; }
+            // This closes the whole exclusively leased room, not one voice.
+            // Clear its shared tail before another workspace/context can use it.
+            if (ownsModel) { native.ResetReverb(); native.SetAcousticModel(previousModel); ownsModel = false; }
             ReleaseLease(lease); lease = null;
             OmittedCount = OmittedBoundaries = 0;
         }

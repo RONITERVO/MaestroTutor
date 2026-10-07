@@ -9,16 +9,42 @@ function setup() {
   vi.useFakeTimers();
   const client = new SpeechBookClient(() => Date.now()); clients.push(client);
   const idle = client.exchange(null)!;
-  client.exchange({ ...idle, host, status: 'ready', acceptedSequence: 0, submittedSamples: 0, playedSamples: 0 });
+  client.exchange({ ...idle, host, status: 'ready', acceptedSequence: 0, submittedSamples: 0, playedSamples: 0, microphoneSuppressed: false });
   return client;
 }
 const receipt = (client: SpeechBookClient, acceptedSequence: number, submittedSamples: number, playedSamples: number) => {
   const request = client.exchange(null)!;
-  return { ...request, host, status: 'playing', acceptedSequence, submittedSamples, playedSamples };
+  return { ...request, host, status: 'playing', acceptedSequence, submittedSamples, playedSamples, microphoneSuppressed: false };
 };
 afterEach(() => { for (const client of clients.splice(0)) client.dispose(); vi.useRealTimers(); });
 
 describe('book speech transport', () => {
+  it('drains PCM independently of the native tail and keeps reset and stale owners gated', async () => {
+    const client = setup(), output = client.create();
+    expect(output.isMicrophoneSuppressed?.()).toBe(true);
+    output.write(new Int16Array(240));
+    const done = output.drain(), quiet = receipt(client, 1, 240, 240);
+    client.exchange({ ...quiet, microphoneSuppressed: true });
+    await expect(done).resolves.toBe('drained');
+    expect(output.isMicrophoneSuppressed?.()).toBe(true);
+    client.exchange(quiet); expect(output.isMicrophoneSuppressed?.()).toBe(false);
+    output.reset(); client.exchange(quiet);
+    expect(output.isMicrophoneSuppressed?.()).toBe(true);
+    client.exchange({ ...receipt(client, 0, 0, 0), microphoneSuppressed: true });
+    expect(output.isMicrophoneSuppressed?.()).toBe(true);
+    client.exchange(receipt(client, 0, 0, 0)); expect(output.isMicrophoneSuppressed?.()).toBe(false);
+    client.suspend(); expect(output.isMicrophoneSuppressed?.()).toBe(true);
+  });
+  it.each([undefined, 0, 'false'])('ignores an invalid microphone receipt (%s) without claiming progress', flag => {
+    const client = setup(), output = client.create(); output.write(new Int16Array(240));
+    client.exchange({ ...receipt(client, 1, 240, 240), microphoneSuppressed: flag });
+    expect(output.read().playedSamples).toBe(0); expect(output.isMicrophoneSuppressed?.()).toBe(true);
+  });
+  it('does not establish a voice connection with an old native speech protocol', () => {
+    const client = new SpeechBookClient(); clients.push(client);
+    client.exchange({ ...client.exchange(null), version: 1, host, status: 'ready', microphoneSuppressed: false });
+    expect(() => client.create()).toThrow();
+  });
   it('copies little-endian PCM, retries unchanged bytes and drains only played samples at its fence', async () => {
     const client = setup(), onEvent = vi.fn(), output = client.create({ onEvent });
     const pcm = new Int16Array(4800); pcm[0] = -32768; pcm[1] = 32767;

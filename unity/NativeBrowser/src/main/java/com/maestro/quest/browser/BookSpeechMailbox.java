@@ -38,7 +38,7 @@ final class BookSpeechMailbox {
         try {
             if (status == null || status.length() > 2048) return null;
             JSONObject value = new JSONObject(status);
-            if (value.optInt("version") != 1) return null;
+            if (value.optInt("version") != 2) return null;
             return "window.maestroBook && window.maestroBook.speechExchange ? JSON.stringify(window.maestroBook.speechExchange("
                 + value.toString() + ")) : ''";
         } catch (Exception invalid) { return null; }

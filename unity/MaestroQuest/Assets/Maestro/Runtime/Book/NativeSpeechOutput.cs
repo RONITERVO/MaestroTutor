@@ -30,6 +30,8 @@ namespace Maestro.Quest.Book
         bool open, paused, focused = true;
         AvatarPoseRig rig;
         Transform frame;
+        RoomAudioOutput roomAudio;
+        internal bool MicrophoneSuppressed => roomAudio && roomAudio.MicrophoneSuppressed;
         Vector3 mouthOffset = new(0, .08f, .08f), fallbackOffset = new(0, 1.4f, .08f);
         // Tests control time/tail and exercise the same render function as the
         // audio callback; clock advancement alone cannot acknowledge playback.
@@ -74,6 +76,7 @@ namespace Maestro.Quest.Book
                 source.spatialBlend = 1; source.dopplerLevel = 0; source.spread = 0; source.priority = 0;
                 source.minDistance = 1; source.maxDistance = 15; source.rolloffMode = AudioRolloffMode.Logarithmic;
                 SpeechSpatializer.Configure(source);
+                roomAudio = source.outputAudioMixerGroup ? GetComponentInParent<RoomAudioOutput>() : null;
                 // A silent mono carrier keeps Unity's DSP graph active. The
                 // procedural filter replaces its samples; it never replays PCM.
                 carrier = AudioClip.Create("Maestro voice carrier", 1024, 1, rate, false);
@@ -90,7 +93,9 @@ namespace Maestro.Quest.Book
             if (!open || owner != generation || !isActiveAndEnabled || paused || !focused) { error = "Speech output was stopped"; return false; }
             Tick();
             if (!open) { error = "Speech output was stopped"; return false; }
-            return stream.TryWrite(nextSequence, pcm, Clock(), out error);
+            bool accepted = stream.TryWrite(nextSequence, pcm, Clock(), out error);
+            if (accepted && pcm.Length > 0 && roomAudio) roomAudio.NoteSpeech();
+            return accepted;
         }
         public SpeechOutputSnapshot Read()
         {
@@ -101,7 +106,7 @@ namespace Maestro.Quest.Book
         }
         internal void Tick()
         {
-            if (open && (!source || !filter || stream.Read(Clock()).Faulted)) Stop();
+            if (open && (!source || !filter || stream.Read(Clock()).Faulted || roomAudio && roomAudio.MonitorFailed)) Stop();
         }
         public void Stop()
         {

@@ -12,6 +12,9 @@ export interface SpeechOutput {
   /** External renderers may not participate in the browser's echo reference.
    * Keep captured microphone audio out of the provider while their voice plays. */
   readonly microphonePolicy?: 'suppress-during-playback';
+  /** Renderer echo tail/health, independent of PCM completion. Only conversation
+   * audio may hold this gate; arbitrary looping world audio needs its own policy. */
+  isMicrophoneSuppressed?(): boolean;
   /** Copies samples before returning. Throws on closed output or buffer overflow. */
   write(pcm: Int16Array): void;
   /** Sample positions exclude underrun silence and belong to the current reset epoch. */

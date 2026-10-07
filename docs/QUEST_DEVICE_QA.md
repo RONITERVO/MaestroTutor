@@ -3686,3 +3686,16 @@ speakers or headphones), provider route and timestamps for each result.
    speech and Stop. The current 500 ms input-settling interval has no measured
    room-reverb guarantee. Complete a sustained thermal/frame/audio-underrun run
    on the accepted build; short muted desktop tests do not close that gate.
+8. General world audio must use the same definitions and capabilities for user
+   controls and agent actions. Test a reusable clip, event-triggered effect and
+   continuous live source attached to separate objects. Start and stop each
+   independently; deletion or cancellation must not clear another source's
+   playback or shared reflection tail. Verify saved definitions and transient
+   stream ownership separately.
+9. Keep a radio or ambient loop playing throughout a real Live turn, then add an
+   event sound while Maestro speaks. The user must still be able to speak after
+   the reply, with no permanent suppression or invented transcript from the
+   app's own audio. Verify managed and BYOK with headset speakers and headphones.
+   The experimental final-mix monitor does not distinguish conversation tails
+   from ongoing world audio and is not enabled in the production scene. See the
+   [audio implementation and acceptance contract](../unity/AUDIO.md).

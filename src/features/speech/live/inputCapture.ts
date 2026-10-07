@@ -138,6 +138,7 @@ export function createLiveInputCapture(state: Pick<LiveSessionData,
       || awaitingModelTurnRef.current
       || playbackPendingRef.current
       || now < playbackUntilRef.current
+      || speechOutputRef.current?.isMicrophoneSuppressed?.()
       || !boundary.openFromConfirmedSpeech(now)
     ) return false;
 
@@ -298,7 +299,8 @@ export function createLiveInputCapture(state: Pick<LiveSessionData,
       // selected renderer's actual drain gate on the capture clock instead.
       if (speechOutputRef.current?.microphonePolicy === 'suppress-during-playback') {
         const now = Date.now();
-        const speaking = playbackPendingRef.current || now < playbackUntilRef.current;
+        const speaking = playbackPendingRef.current || now < playbackUntilRef.current
+          || speechOutputRef.current?.isMicrophoneSuppressed?.() === true;
         if (speaking) externalPlaybackActive = true;
         else if (externalPlaybackActive) {
           externalPlaybackActive = false;
@@ -319,7 +321,8 @@ export function createLiveInputCapture(state: Pick<LiveSessionData,
     const now = Date.now();
     // Evaluate echo suppression on the capture clock. Old paced packets
     // must never be classified using the speaker state of a later moment.
-    const speaking = playbackPendingRef.current || now < playbackUntilRef.current;
+    const speaking = playbackPendingRef.current || now < playbackUntilRef.current
+      || speechOutputRef.current?.isMicrophoneSuppressed?.() === true;
     if (speaking !== playbackActiveRef.current) {
       playbackActiveRef.current = speaking;
       gate.notePlayback(speaking, now);

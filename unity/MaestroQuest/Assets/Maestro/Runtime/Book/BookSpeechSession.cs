@@ -64,7 +64,7 @@ namespace Maestro.Quest.Book
                 if (envelope["payload"] is not JObject payload) { Fail(); return; }
                 var nextSession = (string)payload["session"];
                 var nextRevision = Number(payload["revision"]);
-                if ((int?)payload["version"] != 1 || !Token(nextSession)
+                if ((int?)payload["version"] != 2 || !Token(nextSession)
                     || payload["open"]?.Type != JTokenType.Boolean || payload["chunks"] is not JArray chunks || chunks.Count > 8)
                     throw new ArgumentException("Invalid speech request");
                 bool nextOpen = (bool)payload["open"];
@@ -124,11 +124,12 @@ namespace Maestro.Quest.Book
             Tick(now);
             var state = open && !failed && output ? output.Read() : null;
             return new JObject {
-                ["version"] = 1, ["host"] = host, ["session"] = session, ["revision"] = Math.Max(0, revision),
+                ["version"] = 2, ["host"] = host, ["session"] = session, ["revision"] = Math.Max(0, revision),
                 ["status"] = failed || !output || !output.isActiveAndEnabled ? "failed" : open ? "playing" : "ready",
                 ["acceptedSequence"] = state?.acceptedSequence ?? 0,
                 ["submittedSamples"] = state?.submittedSamples ?? 0,
-                ["playedSamples"] = state?.playedSamples ?? 0
+                ["playedSamples"] = state?.playedSamples ?? 0,
+                ["microphoneSuppressed"] = failed || !output || output.MicrophoneSuppressed
             }.ToString(Newtonsoft.Json.Formatting.None);
         }
     }

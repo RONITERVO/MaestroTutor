@@ -2,7 +2,20 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
-The current installed development checkpoint is **D522191F**, retaining the
+The current installed development checkpoint is **D85F3CB7**. Headset work is
+paused until the owner confirms cooling and charging; mouth-positioned speech and
+native room acoustics have not yet been installed for physical acceptance.
+The newer **496CE27D / c032eacc** package has local packaging evidence only.
+
+User and agent authored audio is accepted v1 scope: reusable sources, object or
+joint emitters, live streams, and existing events/programs controlling playback.
+See the [shared world audio contract](../unity/AUDIO.md). Current native rendering
+still handles Maestro speech only. General emitter editing, import/stream adapters
+and continuous-background-audio/Live coexistence remain implementation gates.
+The experimental reflection mixer stays out of the production scene until the
+capture policy handles a mixed scene without indefinitely suppressing the user.
+
+The earlier development checkpoint **D522191F** retained the
 original phone/book controls while isolating their animated icon rendering.
 The installed normal-book profile produced zero layouts in 15.19 seconds, versus
 1,086 in the preceding sample. Its five-minute animated 32-brick development run
@@ -41,9 +54,10 @@ The corrected signed release candidate is **DA689683**, non-debuggable
 created build **1767008267909255**, version 1.0.0/build 1. Owner dashboard screenshots
 confirm both Basic malware and Security Vulnerability Review checks passed.
 Virtual Reality Checks await submission/review; the Store submission is still a
-draft with no binary attached. The CLI shows no current channel builds. Private
-channel activation, positive Store entitlement and account/provider acceptance
-remain open. See [the exact package and checks](QUEST_RELEASE_BUILD.md#corrected-signed-quest-3-candidate--2026-10-06).
+draft with no binary attached. The owner's later dashboard screenshots confirm
+this build is current in private Alpha. Positive Store entitlement and
+account/provider acceptance remain open. See
+[the exact package and checks](QUEST_RELEASE_BUILD.md#corrected-signed-quest-3-candidate--2026-10-06).
 
 The installed development app also passed a held pencil/brush/eraser check on a
 planar board, including loose-tool inactivity and swept erasure Undo/Redo. Its
