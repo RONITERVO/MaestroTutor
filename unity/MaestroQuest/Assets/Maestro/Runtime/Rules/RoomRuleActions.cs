@@ -9,7 +9,7 @@ using Newtonsoft.Json.Linq;
 namespace Maestro.Quest.Rules
 {
     /// <summary>One lifecycle host for every native module. No capability IDs, enum dispatch or argument fields.</summary>
-    public sealed class RoomRuleActions : IRuleActions, IRuleCompletion, IRuleReadiness, IRuleInterruptionInfo, IRuleGrabPolicy, IRuleOwnershipSource, IProgramFacts, IProgramFactQueries, IProgramEventWorld, IProgramPhysicsWorld, IProgramClockWorld, IProgramAnchorWorld, IRuleResults
+    public sealed class RoomRuleActions : IRuleActions, IRuleCompletion, IRuleReadiness, IRuleInterruptionInfo, IRuleGrabPolicy, IRuleOwnershipSource, IProgramFacts, IProgramFactQueries, IProgramEventWorld, IProgramPhysicsWorld, IProgramClockWorld, IProgramAnchorWorld, IProgramAudioWorld, IRuleResults
     {
         readonly CapabilityContext context;
         readonly Dictionary<string,CapabilityOperation> operations=new();
@@ -18,6 +18,8 @@ namespace Maestro.Quest.Rules
         readonly Dictionary<string,string> interrupted=new();
         public RoomOwnership Ownership {get;}
         public IProgramClock Clock {get;private set;}=SystemProgramClock.Instance;
+        public bool TryAudioInstance(string target,string instance,out AudioInstanceSample sample){sample=default;var audio=context.Editor?context.Editor.GetComponent<WorldAudio>():null;return audio&&audio.ReadInstance(target,instance,out sample);}
+        public bool TryAudioNotice(string target,string instance,int after,out AudioInstanceSample sample,out string error){sample=default;error="The sound workspace is unavailable";var audio=context.Editor?context.Editor.GetComponent<WorldAudio>():null;return audio&&audio.NextNotice(target,instance,after,out sample,out error);}
         readonly string domain;
         public RoomRuleActions(RoomEditor editor,AnimationWorkshop workshop,IProgramClock clock=null):this(new CapabilityContext(editor,workshop)){Clock=clock??SystemProgramClock.Instance;}
         internal static RoomRuleActions ForWorkspace(Maestro.Quest.Persistence.WorkspaceHost host)=>new(new CapabilityContext(host),"workspace");

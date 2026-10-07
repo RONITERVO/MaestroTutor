@@ -13,6 +13,23 @@ namespace Maestro.Quest.Tests
         void Write(SpeechPcmStream stream, long sequence, short[] pcm, double now = 0)
             => Assert.IsTrue(stream.TryWrite(sequence, pcm, now, out var error), error);
 
+        [Test] public void ReusableProducerBufferCopiesOnlyItsDeclaredFrames()
+        {
+            var stream=new SpeechPcmStream(0,0);var buffer=new short[4800];buffer[0]=1234;buffer[1]=-2345;buffer[2]=30000;
+            Assert.IsTrue(stream.TryWrite(1,buffer,2,0,out var error),error);buffer[0]=0;
+            Assert.IsFalse(stream.TryWrite(2,buffer,0,0,out _));Assert.IsFalse(stream.TryWrite(2,buffer,4801,0,out _));
+            var rendered=new float[8];stream.Render(rendered,1,24000,0);
+            Assert.AreEqual(1234f/32768,rendered[0]);Assert.AreEqual(-2345f/32768,rendered[1]);Assert.IsTrue(rendered.Skip(2).All(x=>x==0));Assert.AreEqual(2,stream.Read(1).Played);
+        }
+
+        [Test] public void PauseFencesProceduralConsumptionAndResumeRetainsTheQueuedPosition()
+        {
+            var stream=new SpeechPcmStream(0,0);Write(stream,1,new short[]{1000,2000,3000,4000});
+            var block=new float[2];stream.Render(block,1,24000,0);Assert.AreEqual(2,stream.Read(1).Played);
+            stream.SetPaused(true);stream.Render(block,1,24000,5);Assert.IsTrue(block.All(x=>x==0));Assert.AreEqual(2,stream.Read(6).Played);
+            stream.SetPaused(false);stream.Render(block,1,24000,10);Assert.AreEqual(3000f/32768,block[0]);Assert.AreEqual(4000f/32768,block[1]);Assert.AreEqual(4,stream.Read(11).Played);
+        }
+
         [TestCase(24000)] [TestCase(44100)] [TestCase(48000)] [TestCase(96000)]
         public void PacketBoundariesDoNotRestartResamplingOrLoseSamples(int rate)
         {

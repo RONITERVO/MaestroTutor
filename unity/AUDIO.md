@@ -6,9 +6,9 @@ event-driven playback.
 Maestro's mouth is one emitter in that system. The familiar chat continues to own
 providers, account access, generated media and Live conversation.
 
-The first implementation exposes reusable procedural sources, object emitters
-and finite native playback through the shared capability catalog. Clip imports,
-live stream adapters and continuous playback remain pending. Maestro speech still
+The current implementation exposes reusable procedural sources, object emitters,
+finite or looping native playback, independent controls and playback events through
+the shared capability catalog. Clip imports and live stream adapters remain pending. Maestro speech still
 uses its existing native speech session, and artifact music still plays in the
 web app. Room reflection output is under development and is not installed by
 `MaestroRoom`. These audio changes have not been accepted on the headset.
@@ -27,10 +27,28 @@ web app. Room reflection output is under development and is not installed by
   target deletion, workspace changes and app/audio suspension terminate that
   instance. Movement and grip channels are independent. Source edits only affect
   subsequent plays. Existing buttons and event programs can invoke this action.
+- `audio.start` returns an exact playback instance after the renderer consumes
+  its first samples. Its explicit `lifetime: "room"` hands that instance to the
+  room, so the starting program can continue or finish while the sound plays.
+  `loop: true` repeats the captured source and envelope; `false` plays it once.
+  Stopping preparation cancels it. Stopping the starting task after handoff does
+  not retract room-owned playback.
+- `audio.control` pauses, resumes, stops or changes the gain of that exact
+  room-owned instance, using its current revision. Pause preserves queued PCM
+  and resampling phase. Gain is transient; it does not edit the saved emitter.
+  Stale controls cannot stop a replacement sound. A stopped or failed sound cannot
+  be resumed, and focus/device loss never restarts one automatically.
 - `audio.source.list`, `audio.source.definition`, `object.audioEmitters`,
   `object.audioEmitter` and `audio.playback` expose the same definitions and runtime
   observations to book controls, programs and the agent. Completion/failure belongs
   to the owning action's receipt; observed playback is not proof of audible output.
+- `audio.instances` discovers active world sounds; `audio.instance` reads one
+  exact identity, revision, phase, consumed cursor, gain and lifetime. These facts
+  do not include the separate conversation renderer. `audio.instance.changed`
+  delivers lifecycle/control transitions to existing event-driven programs.
+  Its `after` revision selects the next change. Sixteen changes per instance and
+  the latest 32 terminal instances are retained. Overflow and expired identities
+  fail visibly, so a missed change cannot silently look like successful playback.
 
 Room format 21 stores sources and emitters in the existing journal, temporary-room
 fork and portable workspace. It stores no runtime handle or queued samples.
@@ -42,7 +60,8 @@ Current bounds are 32 sources, four emitters per object, 32 emitters per room an
 eight simultaneous world voices in addition to speech. Tone duration is 0.03–30
 seconds at 24 kHz mono. Decoding runs on a bounded, cancellable worker path;
 concurrent instances share the decoded source. Each voice reuses the bounded PCM
-transport and DSP consumption receipts. No clock-only completion, automatic
+transport, reusable producer buffer and DSP consumption receipts. Looping does not
+allocate another copy on every cycle. No clock-only completion, automatic
 voice stealing or new provider calls are involved. Role labels currently preserve
 intent for the future mix policy; they do not grant microphone privileges.
 
@@ -86,6 +105,13 @@ its end: a looping emitter cannot block an entire program waiting for an EOF tha
 will never come. Return an instance handle and expose started, buffering,
 completed, cancelled and failed events. Fence late callbacks by workspace, source
 and playback generation.
+
+The procedural adapter implements preparing, playing, paused, completed, stopped,
+cancelled and failed phases. Buffering/disconnection phases will be introduced
+with executable stream adapters. A room-owned sound has one active instance per
+emitter. The eight-voice budget refuses a new start instead of replacing another
+sound. Paused voices continue to occupy their slot. Playback handles and event
+history are transient and never restored from a saved room.
 
 Stop affects the owned instance. Deleting an object cancels its attached instances.
 Stopping a program affects the instances it owns according to the declared

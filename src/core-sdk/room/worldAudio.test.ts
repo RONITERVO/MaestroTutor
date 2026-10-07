@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 import {expect,it} from 'vitest';
 import {capabilityDefinition,capabilityResources,validateCapabilityArguments} from '../../../shared/capabilities';
-import {behaviourFact} from '../../../shared/behaviourCatalog';
+import {behaviourCatalog,behaviourFact} from '../../../shared/behaviourCatalog';
 import {currentInputRequest} from '../../../shared/currentCapabilityInputs';
 
 it('shares sound definitions and playback with both book authoring and agent programs',()=>{
- for(const id of ['audio.source.edit','object.audioEmitter.edit','audio.play']){
+ for(const id of ['audio.source.edit','object.audioEmitter.edit','audio.play','audio.start','audio.control']){
   const definition=capabilityDefinition(id)!;
   expect(definition).not.toBeNull();expect(validateCapabilityArguments(id,1,definition.example)).toBeNull();
  }
@@ -15,6 +15,17 @@ it('shares sound definitions and playback with both book authoring and agent pro
  expect(behaviourFact('audio.playback')?.features).toContain('worldAudio.v1');
  const emitter=capabilityDefinition('object.audioEmitter.edit')!;
  expect(currentInputRequest(emitter.input,emitter.example!)).toMatchObject({capability:'object.audioEmitter',arguments:{target:'maestro',emitter:'beep'}});
+});
+
+it('keeps continuous playback lifetime and exact instance controls explicit',()=>{
+ const start=capabilityDefinition('audio.start')!,control=capabilityDefinition('audio.control')!;
+ expect(capabilityResources('audio.start',start.example!)).toEqual(['maestro']);
+ expect(currentInputRequest(control.input,control.example!)).toMatchObject({capability:'audio.instance',arguments:{target:'maestro',instance:'0'.repeat(32)}});
+ const invalid={...start.example,lifetime:'unowned'};expect(validateCapabilityArguments('audio.start',1,invalid)).not.toBeNull();
+ expect(validateCapabilityArguments('audio.control',1,{...control.example,operation:'gain',gain:1.1})).not.toBeNull();
+ const event=behaviourCatalog.events.find(e=>e.id==='audio.instance.changed');
+ expect(event?.features).toContain('worldAudio.v1');expect(event?.input).toBeDefined();
+ expect(behaviourFact('audio.instance')?.features).toContain('worldAudio.v1');
 });
 
 it('accepts ordinary user sound names and rejects envelopes beyond the sound duration',()=>{

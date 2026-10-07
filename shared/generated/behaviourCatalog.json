@@ -3009,7 +3009,7 @@
         "source.revision.current",
         "storage.writable"
       ],
-      "description": "Save or remove a reusable room sound definition with one Undo. For a new sound use id='' and revision=0; the receipt returns its generated stable ID. For an existing sound use its exact ID and latest audio.source.definition revision. Current executable source kind is tone: a bounded 24 kHz mono sine, triangle or seeded noise recipe with linear frequency sweep and attack/release envelopes (their sum must fit seconds). No API call, microphone or network connection is opened. Editing a source affects future plays; an active play keeps its captured source revision. Removal fails while any saved emitter references the sound. File imports, live stream connections and indefinite looping are separate pending adapters, not supported by this action yet. Definitions survive saving, temporary rooms and workspace exports; playback never auto-starts on restore.",
+      "description": "Save or remove a reusable room sound definition with one Undo. For a new sound use id='' and revision=0; the receipt returns its generated stable ID. For an existing sound use its exact ID and latest audio.source.definition revision. Current executable source kind is tone: a bounded 24 kHz mono sine, triangle or seeded noise recipe with linear frequency sweep and attack/release envelopes (their sum must fit seconds). No API call, microphone or network connection is opened. Editing a source affects future plays; an active play keeps its captured source revision. Removal fails while any saved emitter references the sound. File imports and live stream connections remain pending adapters. To repeat a saved procedural source, use audio.start with loop=true; this edit action never starts playback. Definitions survive saving, temporary rooms and workspace exports; playback never auto-starts on restore.",
       "example": {
         "operation": "save",
         "id": "",
@@ -3361,7 +3361,7 @@
         "audio.output.ready",
         "audio.voice.available"
       ],
-      "description": "Play one finite sound from a saved object emitter, waiting for consumed PCM and the device output tail before completion. Can be called by manual controls, agent programs or existing event subscriptions (buttons, contacts, timers or Maestro state). Plays retain the exact source revision at start. Moving, gripping or animating the object does not interrupt the sound; emitter edits, deletion, room switch, lost audio device, app suspension or stopping its owning program do. Claims are independent of the object's movement channels. Up to eight world voices, separate from Maestro speech; capacity failure never silently steals another voice. Current sources are procedural mono tones up to 30 seconds. This does not yet provide live connections, looping streams, echo cancellation or a guarantee of audible headset output. Spatial emitters use the native HRTF/direct obstruction renderer; room reflections remain gated.",
+      "description": "Play one finite sound from a saved object emitter, waiting for consumed PCM and the device output tail before completion. Can be called by manual controls, agent programs or existing event subscriptions (buttons, contacts, timers or Maestro state). Plays retain the exact source revision at start. Moving, gripping or animating the object does not interrupt the sound; emitter edits, deletion, room switch, lost audio device, app suspension or stopping its owning program do. Claims are independent of the object's movement channels. Up to eight world voices, separate from Maestro speech; capacity failure never silently steals another voice. Current sources are procedural mono tones up to 30 seconds. For looping or independently controlled playback use audio.start. Live-source adapters, echo cancellation and headset audible acceptance remain pending. Spatial emitters use the native HRTF/direct obstruction renderer; room reflections remain gated.",
       "example": {
         "target": "maestro",
         "emitter": "beep"
@@ -3395,6 +3395,527 @@
           "source",
           "sourceRevision",
           "seconds"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "audio.start",
+      "version": 1,
+      "label": "Start independent room sound",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(book|maestro|[a-f0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "emitter": {
+            "type": "string",
+            "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,23}$",
+            "maxLength": 24
+          },
+          "loop": {
+            "type": "boolean"
+          },
+          "lifetime": {
+            "type": "string",
+            "enum": [
+              "room"
+            ]
+          }
+        },
+        "required": [
+          "target",
+          "emitter",
+          "loop",
+          "lifetime"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "worldAudio.v1"
+        ]
+      },
+      "duration": "completion",
+      "ownership": "exclusiveChannels",
+      "channels": [
+        "audioEmitter"
+      ],
+      "requirements": [
+        "target.exists",
+        "audio.emitter.configured",
+        "audio.output.ready",
+        "audio.voice.available"
+      ],
+      "description": "Start an independently controlled room sound. Explicit lifetime='room' transfers playback to the current room only when native PCM consumption is confirmed; the result returns the exact instance and current control revision. The program then continues without waiting for the sound to end. loop=true repeats the captured source, including its envelope, until explicitly stopped or its room/emitter becomes unavailable. loop=false ends after the finite source. Stopping the starting action before handoff cancels its preparation; stopping that task after a successful handoff does not retract the room-owned sound. Use audio.control with this exact instance to pause, resume, set gain or stop. Read audio.instance or await audio.instance.changed for later outcomes; a successful start does not mean completed playback. Never use repeated starts as a loop. One active instance per emitter, eight per room, with no silent replacement. Emitter edits/deletion, room replacement, focus loss and audio-device reset cancel playback; restore does not restart it. Only the executable procedural source adapter is currently supported; imported clips and live adapters are still pending.",
+      "example": {
+        "target": "maestro",
+        "emitter": "beep",
+        "loop": true,
+        "lifetime": "room"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "identity": {
+            "type": "object",
+            "properties": {
+              "instance": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^(book|maestro|[a-f0-9]{32})$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "emitter": {
+                "type": "string",
+                "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,23}$",
+                "maxLength": 24
+              },
+              "source": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "sourceRevision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              }
+            },
+            "required": [
+              "instance",
+              "target",
+              "emitter",
+              "source",
+              "sourceRevision"
+            ],
+            "additionalProperties": false
+          },
+          "playback": {
+            "type": "object",
+            "properties": {
+              "phase": {
+                "type": "string",
+                "enum": [
+                  "preparing",
+                  "playing",
+                  "paused",
+                  "completed",
+                  "stopped",
+                  "cancelled",
+                  "failed"
+                ]
+              },
+              "seconds": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 9007199254740991.0
+              },
+              "loop": {
+                "type": "boolean"
+              },
+              "gain": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 1.0
+              },
+              "lifetime": {
+                "type": "string",
+                "enum": [
+                  "action",
+                  "room"
+                ]
+              }
+            },
+            "required": [
+              "phase",
+              "seconds",
+              "loop",
+              "gain",
+              "lifetime"
+            ],
+            "additionalProperties": false
+          },
+          "error": {
+            "type": "string",
+            "pattern": "^.{0,120}$",
+            "maxLength": 120
+          }
+        },
+        "required": [
+          "revision",
+          "identity",
+          "playback",
+          "error"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "audio.control",
+      "version": 1,
+      "label": "Control a room sound",
+      "input": {
+        "type": "object",
+        "x-discriminators": [
+          "operation"
+        ],
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "pause"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^(book|maestro|[a-f0-9]{32})$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "instance": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "instance",
+              "revision"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "audio.instance",
+              "version": 1,
+              "arguments": {
+                "target": "target",
+                "instance": "instance"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
+            "x-features": [
+              "worldAudio.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "resume"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^(book|maestro|[a-f0-9]{32})$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "instance": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "instance",
+              "revision"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "audio.instance",
+              "version": 1,
+              "arguments": {
+                "target": "target",
+                "instance": "instance"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
+            "x-features": [
+              "worldAudio.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "stop"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^(book|maestro|[a-f0-9]{32})$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "instance": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "instance",
+              "revision"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "audio.instance",
+              "version": 1,
+              "arguments": {
+                "target": "target",
+                "instance": "instance"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
+            "x-features": [
+              "worldAudio.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "gain"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^(book|maestro|[a-f0-9]{32})$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "instance": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              },
+              "gain": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 1.0
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "instance",
+              "revision",
+              "gain"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "audio.instance",
+              "version": 1,
+              "arguments": {
+                "target": "target",
+                "instance": "instance"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
+            "x-features": [
+              "worldAudio.v1"
+            ]
+          }
+        ]
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "audioControl"
+      ],
+      "requirements": [
+        "audio.instance.exists",
+        "source.revision.current"
+      ],
+      "description": "Pause, resume, stop or set the gain of the exact room-owned instance returned by audio.start. Read audio.instance immediately before editing and use its revision. A stale handle cannot stop a newer sound on the same emitter. Pause retains queued sound and its place; resume uses that same native source. Device/focus loss cancels rather than resuming. Gain is transient 0–1 and does not rewrite the saved emitter. Pause/resume of an already matching state and stop of a retained terminal instance are idempotent. Other edits to a terminal instance fail. Stop affects only this sound and never clears shared room reflections. audio.play belongs to its waiting action and is stopped through that action; use audio.start when independent controls are needed. Controls do not play a replacement, restart an ended sound or open any connection.",
+      "example": {
+        "operation": "pause",
+        "target": "maestro",
+        "instance": "00000000000000000000000000000000",
+        "revision": 1
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "identity": {
+            "type": "object",
+            "properties": {
+              "instance": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^(book|maestro|[a-f0-9]{32})$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "emitter": {
+                "type": "string",
+                "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,23}$",
+                "maxLength": 24
+              },
+              "source": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "sourceRevision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              }
+            },
+            "required": [
+              "instance",
+              "target",
+              "emitter",
+              "source",
+              "sourceRevision"
+            ],
+            "additionalProperties": false
+          },
+          "playback": {
+            "type": "object",
+            "properties": {
+              "phase": {
+                "type": "string",
+                "enum": [
+                  "preparing",
+                  "playing",
+                  "paused",
+                  "completed",
+                  "stopped",
+                  "cancelled",
+                  "failed"
+                ]
+              },
+              "seconds": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 9007199254740991.0
+              },
+              "loop": {
+                "type": "boolean"
+              },
+              "gain": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 1.0
+              },
+              "lifetime": {
+                "type": "string",
+                "enum": [
+                  "action",
+                  "room"
+                ]
+              }
+            },
+            "required": [
+              "phase",
+              "seconds",
+              "loop",
+              "gain",
+              "lifetime"
+            ],
+            "additionalProperties": false
+          },
+          "error": {
+            "type": "string",
+            "pattern": "^.{0,120}$",
+            "maxLength": 120
+          }
+        },
+        "required": [
+          "revision",
+          "identity",
+          "playback",
+          "error"
         ],
         "additionalProperties": false
       }
@@ -29007,6 +29528,119 @@
       }
     },
     {
+      "id": "audio.instance.changed",
+      "version": 1,
+      "label": "Sound playback changed",
+      "activity": null,
+      "objectEvent": false,
+      "valueType": "text",
+      "description": "Observe retained lifecycle/control changes for one exact audio instance. Source filter must be empty. Read audio.instance, then use its revision as after; after=0 requests the retained history from creation. Events carry instance, revision, phase, consumed seconds, loop, gain, lifetime and bounded error. Keep the delivered revision to wait for the next change. Each instance retains 16 changes; 32 terminal instances are retained per room owner. Overflow, an unknown identity or a changed room fails visibly rather than silently skipping changes. Reading or waiting never starts, resumes or owns audio. The primary text value is the target object ID. Native consumption is not proof of headset audibility.",
+      "features": [
+        "eventPrograms.v1",
+        "eventFields.v1",
+        "eventSubscriptions.v1",
+        "worldAudio.v1"
+      ],
+      "fields": {
+        "type": "object",
+        "properties": {
+          "instance": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "phase": {
+            "type": "string",
+            "enum": [
+              "preparing",
+              "playing",
+              "paused",
+              "completed",
+              "stopped",
+              "cancelled",
+              "failed"
+            ]
+          },
+          "seconds": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 9007199254740991.0
+          },
+          "loop": {
+            "type": "boolean"
+          },
+          "gain": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          },
+          "lifetime": {
+            "type": "string",
+            "enum": [
+              "action",
+              "room"
+            ]
+          },
+          "error": {
+            "type": "string",
+            "pattern": "^.{0,120}$",
+            "maxLength": 120
+          }
+        },
+        "required": [
+          "instance",
+          "revision",
+          "phase",
+          "seconds",
+          "loop",
+          "gain",
+          "lifetime",
+          "error"
+        ],
+        "additionalProperties": false
+      },
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(book|maestro|[a-f0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "instance": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "after": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 2147483647.0
+          }
+        },
+        "required": [
+          "target",
+          "instance",
+          "after"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "worldAudio.v1"
+        ]
+      },
+      "example": {
+        "target": "maestro",
+        "instance": "00000000000000000000000000000000",
+        "after": 0
+      }
+    },
+    {
       "id": "clock.scheduled",
       "version": 1,
       "label": "Scheduled time reached",
@@ -29506,6 +30140,92 @@
     }
   ],
   "facts": [
+    {
+      "id": "audio.instance",
+      "version": 1,
+      "type": {
+        "record": {
+          "revision": "number",
+          "identity": {
+            "record": {
+              "instance": "text",
+              "target": "text",
+              "emitter": "text",
+              "source": "text",
+              "sourceRevision": "number"
+            }
+          },
+          "playback": {
+            "record": {
+              "phase": "text",
+              "seconds": "number",
+              "loop": "boolean",
+              "gain": "number",
+              "lifetime": "text"
+            }
+          },
+          "error": "text"
+        }
+      },
+      "label": "Sound playback instance",
+      "description": "Read one exact transient playback identity and control revision, including its captured source revision, consumed cursor, gain and lifetime. Room-owned playback may continue after its starting task completes. Terminal history retains the most recent 32 instances and 16 control/lifecycle changes each; unavailable means the identity/room changed or retention expired. It never means successful playback. Reading cannot open or advance audio; gain is the current instance gain, not a saved emitter edit. No state or samples are restored after reload. A consumed cursor is not proof that a headset user heard sound.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(book|maestro|[a-f0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "instance": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "target",
+          "instance"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "worldAudio.v1"
+        ]
+      },
+      "example": {
+        "target": "maestro",
+        "instance": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1",
+        "worldAudio.v1"
+      ]
+    },
+    {
+      "id": "audio.instances",
+      "version": 1,
+      "type": {
+        "record": {
+          "entries": {
+            "list": {
+              "record": {
+                "instance": "text",
+                "target": "text",
+                "emitter": "text",
+                "phase": "text",
+                "lifetime": "text"
+              }
+            }
+          }
+        }
+      },
+      "label": "Active room sounds",
+      "description": "List all current world-audio instances, up to eight, in stable ID order. Includes preparing, playing and paused sounds; excludes separate conversation speech and completed history. Use audio.instance for exact settings/control revision, then audio.control for room-owned sounds. An empty list does not prove silence from every application source. Reading does not start, stop or adopt playback.",
+      "features": [
+        "worldAudio.v1"
+      ]
+    },
     {
       "id": "audio.source.list",
       "version": 1,
@@ -34593,7 +35313,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "6c38a61236868c44b94dc68985f9db82c53c5cf139eb157f37e339ebf3feb4f2"
+      "sha256": "6667183eb83699323d3058df36d33e483730766f36c46d2498f6e309e0a6fe45"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -34749,7 +35469,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RoomRuleActions.cs",
-      "sha256": "7d4f87a2835f03c4a40587f050262772f62438762caccb4cf4614e89c79a3da0"
+      "sha256": "f25ad9a58cf1fe165de9b6f96bef89fb0b0cdf3d5fd10b6c2df818e8f17b6919"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RoomRules.cs",
@@ -35181,7 +35901,19 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/WorldAudio.cs",
-      "sha256": "13ab52efd52bc7995ca8488885e56641e379245e48c20d2d03e9eaeb3d111930"
+      "sha256": "8dd757908adb55d9b78f52b02a2862e0130a7d80794d0f2b902135ced730ebb6"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/WorldAudio.Control.cs",
+      "sha256": "85fd5207860d5f9b6e0ae6ba99d95ad889f050e15c3a1559b35dd0a63b554b22"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/AudioInstanceSubscription.cs",
+      "sha256": "ed1f80d4dacda9101a54702e6854095090b0643835e9d36c539d8d78791e529f"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/SpeechPcmStream.cs",
+      "sha256": "1ec3a89ef1ede83a0472396308523ed078c539d40af145de5ae8f291c564ffc3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedDrawing.cs",
@@ -35449,11 +36181,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AudioCapabilities.cs",
-      "sha256": "9f3f693ebd3e13361050f77da68de6406b847b92a28bd6298b9584d69ddb9940"
+      "sha256": "88a5e8f8ff94d855fa8d6de63c0a64988d5c3eb8b27f910c09bc9574ec993a6e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AudioFacts.cs",
       "sha256": "2cfb3c56e5c5443899285f17d74e2bb6002ca2edaa5ded367ffac97eceb84791"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AudioPlaybackCapabilities.cs",
+      "sha256": "aa998e09f85259dd5463b8505de905edbb467332ef299b423a3971e872820839"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AvatarModelCapabilities.cs",
@@ -35469,7 +36205,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "19066c63f2365b56c6b7c06f092b80ee1f101c5458aba0e421860ea918e5bfe1"
+      "sha256": "0b62d1913e56d8ac0b4c405e4a14de355e121fa426b0a4d37047e157b6b32cd9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",

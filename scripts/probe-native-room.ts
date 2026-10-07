@@ -937,10 +937,46 @@ try{
   const deadline=Date.now()+10000;
   while(played.execution?.selected?.phase==='preparing'&&Date.now()<deadline){await new Promise(r=>setTimeout(r,100));played=await execute([{action:'execution',execution:{operation:'inspect',runId}}]);}
   if(played.execution?.selected?.phase!=='completed'||played.execution.selected.output?.source!==soundId||Number(played.execution.selected.output.seconds)<.299)throw new Error('Sound playback did not finish from consumed native samples: '+JSON.stringify(played.execution?.selected));
+  let started=await execute([{action:'execution',execution:{operation:'start',call:{id:'audio.start',version:1,arguments:{target:'book',emitter:'probeSound',loop:true,lifetime:'room'}}}}]);
+  const startRun=started.execution?.selected?.id;if(!startRun)throw new Error('Independent sound returned no run identity');
+  const startDeadline=Date.now()+10000;
+  while(!['completed','failed','cancelled'].includes(started.execution?.selected?.phase??'')&&Date.now()<startDeadline){await new Promise(r=>setTimeout(r,100));started=await execute([{action:'execution',execution:{operation:'inspect',runId:startRun}}]);}
+  type SoundSample={revision:number;identity:{instance:string};playback:{phase:string;seconds:number;loop:boolean;gain:number;lifetime:string}};
+  const startSample=started.execution?.selected?.output as SoundSample|undefined;
+  if(started.execution?.selected?.phase!=='completed'||!startSample?.identity.instance||startSample.playback.lifetime!=='room'||startSample.playback.seconds<=0)throw new Error('Independent sound was not handed off after native consumption');
+  const soundInstance=startSample.identity.instance;
+  const readSound=()=>execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'audio.instance',version:1,arguments:{target:'book',instance:soundInstance}}}]);
+  const activeSounds=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'audio.instances',version:1}}]);
+  if(!(activeSounds.catalog?.value as {entries:{instance:string}[]}).entries.some(v=>v.instance===soundInstance))throw new Error('Room sound discovery lost the handed-off instance');
+  const beforePause=await readSound();
+  const soundWatch={version:3,entry:'main',resources:['book'],state:[{name:'phase',initial:'waiting'}],events:[],functions:[{name:'main',returns:'void',parameters:[],locals:[{name:'received',initial:false},{name:'source',initial:''},{name:'phase',initial:''}],body:[
+   {id:'watch',op:'awaitEvent',event:'audio.instance.changed',source:'',version:1,arguments:{target:'book',instance:soundInstance,after:(beforePause.catalog!.value as SoundSample).revision},bindings:{},timeout:{value:10},received:'received',value:'source',fields:{phase:'phase'}},
+   {id:'remember',op:'setState',variable:'phase',value:{var:'phase'}},{id:'hold',op:'sleep',seconds:{value:20}}
+  ]}]};
+  const soundWatchSaved=await execute([{action:'rules',rule:{action:'edit',revision:lease.state().rules!.revision,edits:[{kind:'save',reference:'audio_watch',sequence:{id:'',name:'Native sound watch probe',interruption:0,repeat:false,program:JSON.stringify(soundWatch)}}]}}]);
+  const soundWatchId=soundWatchSaved.rules?.sequences.find(s=>s.name==='Native sound watch probe')?.id;if(!soundWatchId)throw new Error('Sound event program was not saved');
+  await execute([{action:'rules',rule:{action:'play',revision:soundWatchSaved.rules!.revision,target:soundWatchId}}]);
+  const controlSound=async(operation:string)=>{
+   const read=await readSound(),args={operation,target:'book',instance:soundInstance,revision:(read.catalog!.value as SoundSample).revision,...(operation==='gain'?{gain:0}: {})};
+   const after=await execute([{action:'execution',execution:{operation:'start',call:{id:'audio.control',version:1,arguments:args}}}]);
+   if(after.execution?.selected?.phase!=='completed'||(after.execution.selected.output as SoundSample).identity.instance!==soundInstance)throw new Error('Sound control failed or changed instance: '+operation);
+   return after;
+  };
+  const soundPaused=await controlSound('pause');
+  let soundObserved=lease.state();const soundEventDeadline=Date.now()+10000;
+  while(Date.now()<soundEventDeadline){soundObserved=await execute([{action:'rules',rule:{action:'inspect',target:soundWatchId}}]);if(soundObserved.rules?.running.find(r=>r.sequenceId===soundWatchId)?.state?.some(v=>v.name==='phase'&&v.value==='paused'))break;await new Promise(r=>setTimeout(r,100));}
+  if(!soundObserved.rules?.running.find(r=>r.sequenceId===soundWatchId)?.state?.some(v=>v.name==='phase'&&v.value==='paused'))throw new Error('Native event program did not receive the exact sound pause');
+  const soundResumed=await controlSound('resume'),soundGain=await controlSound('gain');
+  await new Promise(r=>setTimeout(r,450));const soundContinued=await readSound();
+  if((soundContinued.catalog!.value as SoundSample).playback.seconds<=.3)throw new Error('Loop did not continue beyond its finite source duration');
+  const soundStopped=await controlSound('stop'),soundTerminal=await readSound();
+  if((soundTerminal.catalog!.value as SoundSample).playback.phase!=='stopped')throw new Error('Sound stop did not retain its terminal receipt');
+  await execute([{action:'rules',rule:{action:'stop',target:soundWatchId}}]);
+  await execute([{action:'rules',rule:{action:'edit',revision:lease.state().rules!.revision,edits:[{kind:'delete',target:soundWatchId}]}}]);
   const removed=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.audioEmitter.edit',version:1,arguments:{operation:'remove',target:'book',revision:lease.state().objects.find(o=>o.id==='book')!.objectRevision,emitter:'probeSound'}}}}]);
   const sourceRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'audio.source.definition',version:1,arguments:{id:soundId}}}]);
   const cleaned=await execute([{action:'execution',execution:{operation:'start',call:{id:'audio.source.edit',version:1,arguments:{operation:'remove',id:soundId,revision:(sourceRead.catalog?.value as {revision:number}).revision}}}}]);
-  await writeFile(join(directory,'world-audio.json'),JSON.stringify({boundary:'Shared headless client and real native source/edit/play receipts; silent gain, no provider or headset audio proof.',sound,emitter,configured,played,removed,cleaned},null,2));
+  await writeFile(join(directory,'world-audio.json'),JSON.stringify({boundary:'Shared headless client and real native source/edit/play, independent loop/control/discovery receipts and program event delivery; silent gain, no provider or headset audio proof.',sound,emitter,configured,played,started,activeSounds,beforePause,soundWatch,soundWatchSaved,soundPaused,soundObserved,soundResumed,soundGain,soundContinued,soundStopped,soundTerminal,removed,cleaned},null,2));
  }
  const gripBefore=lease.state();
  const gripSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Configure construction grip snapping',offset:0}}]);

@@ -26,7 +26,7 @@ namespace Maestro.Quest.Book
         long sequence, written, consumed, played;
         double phase, renderedUntil = double.NegativeInfinity;
         int receiptHead, receiptCount;
-        bool closed, faulted;
+        bool closed, faulted, paused;
         public SpeechPcmStream(double startAt, double tail)
         {
             if (!double.IsFinite(startAt) || !double.IsFinite(tail) || tail < 0 || tail > 2)
@@ -34,17 +34,20 @@ namespace Maestro.Quest.Book
             this.startAt = startAt; this.tail = tail;
         }
         public bool TryWrite(long nextSequence, short[] pcm, double now, out string error)
+            => TryWrite(nextSequence, pcm, pcm?.Length ?? 0, now, out error);
+        // The caller may reuse a fixed producer buffer after this synchronous copy.
+        public bool TryWrite(long nextSequence, short[] pcm, int count, double now, out string error)
         {
             lock (sync)
             {
                 error = null;
                 if (closed || faulted) { error = "Speech output was stopped"; return false; }
                 if (nextSequence != sequence + 1) { error = "Speech chunk is duplicate or out of order"; return false; }
-                if (pcm == null || pcm.Length < 1 || pcm.Length > MaxChunk) { error = "Speech chunk is invalid"; return false; }
+                if (pcm == null || count < 1 || count > pcm.Length || count > MaxChunk) { error = "Speech chunk is invalid"; return false; }
                 AdvancePlayed(now - tail);
-                if (written - played + pcm.Length > Capacity) { error = "Speech output buffer is full"; return false; }
-                for (int i = 0; i < pcm.Length; i++) samples[(int)((written + i) % Capacity)] = pcm[i] / 32768f;
-                written += pcm.Length; sequence = nextSequence;
+                if (written - played + count > Capacity) { error = "Speech output buffer is full"; return false; }
+                for (int i = 0; i < count; i++) samples[(int)((written + i) % Capacity)] = pcm[i] / 32768f;
+                written += count; sequence = nextSequence;
                 return true;
             }
         }
@@ -55,7 +58,7 @@ namespace Maestro.Quest.Book
             Array.Clear(data, 0, data.Length);
             lock (sync)
             {
-                if (closed || faulted) return;
+                if (closed || faulted || paused) return;
                 if (channels < 1 || channels > 8 || data.Length % channels != 0
                     || outputRate < Rate || outputRate > 192000 || !double.IsFinite(dspTime))
                 { faulted = true; return; }
@@ -107,6 +110,9 @@ namespace Maestro.Quest.Book
         {
             lock (sync) { AdvancePlayed(now - tail); return new Cursor(sequence, written, played, faulted); }
         }
+        // Procedural filters can still be called while their AudioSource is paused.
+        // Fence consumption on the audio thread, retaining queued frames and phase.
+        public void SetPaused(bool value) { lock(sync) { paused=value; } }
         public void Close()
         {
             lock (sync) { closed = true; sequence = written = consumed = played = 0; phase = 0; receiptHead = receiptCount = 0; }

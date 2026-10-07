@@ -9,9 +9,11 @@ The newer **496CE27D / c032eacc** package has local packaging evidence only.
 
 User and agent authored audio is accepted v1 scope: reusable sources, object or
 joint emitters, live streams, and existing events/programs controlling playback.
-See the [shared world audio contract](../unity/AUDIO.md). Current native rendering
-still handles Maestro speech only. General emitter editing, import/stream adapters
-and continuous-background-audio/Live coexistence remain implementation gates.
+See the [shared world audio contract](../unity/AUDIO.md). Native rendering now
+handles procedural world sounds with editable emitters, looping playback,
+independent controls and events alongside the separate Maestro speech renderer.
+Import/stream adapters and continuous-background-audio/Live coexistence remain
+implementation gates.
 The experimental reflection mixer stays out of the production scene until the
 capture policy handles a mixed scene without indefinitely suppressing the user.
 
@@ -3883,3 +3885,30 @@ playback controls, source dependencies in construction modules, speech integrati
 and mixed-audio Live echo handling remain required. Production reflection routing
 is still disabled. See `unity/AUDIO.md` for the executable boundary and acceptance
 contract. No headset or provider operations occurred in this increment.
+
+Continuous world-audio increment (2026-10-07): `audio.start` explicitly transfers
+an instance to the room after actual PCM consumption, allowing the initiating
+program to continue. `audio.control` uses that exact identity and a current
+revision for pause, resume, transient gain and Stop. Room-owned sounds survive
+completion of their starting task; cancellation before handoff stops preparation.
+An emitter has at most one active instance, and a full voice budget refuses new
+starts instead of replacing another sound. No playback is restored after reload.
+
+`audio.instances`, `audio.instance` and `audio.instance.changed` expose discovery,
+readback and bounded lifecycle/control history through the existing catalog and
+event scheduler. Delayed observers receive retained changes in order; overflow
+and expired identities fail visibly. They cannot start or advance playback.
+Native testing caught Unity requesting procedural PCM after AudioSource.Pause;
+the PCM transport now fences consumption itself while preserving its queue and
+resampling phase. The regression pauses one loop longer than the output watchdog
+while a second continues, then resumes the same instance and stops it independently.
+These changes do not implement imported clips, live adapters, mixed-audio echo
+handling or physical headset acceptance.
+
+Verification passed 865 EditMode and 694 PlayMode tests, with three expected
+optional private-file skips, plus 186 shared editor/catalog tests, application
+and probe TypeScript and catalog provenance. The full native-room journey starts
+a real muted loop, discovers and controls the same instance, receives its pause
+event in a saved program and retains its stopped receipt. The original-book
+integration also passes. The installed headset build is unchanged; these runs
+did not contact an AI provider or use the headset.

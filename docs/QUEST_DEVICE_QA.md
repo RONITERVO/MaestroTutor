@@ -3709,3 +3709,19 @@ receipt, and removes both. These checks use synthetic audio and muted output;
 they do not establish physical audibility or microphone coexistence. Imported
 clips, live sources, continuous playback and construction-module audio packaging
 remain open. Installed APK D85F3CB7 is unchanged.
+
+Continuous-audio desktop checkpoint (2026-10-07): room-owned loops now have exact
+instance controls and retained lifecycle events. A failure-first native test
+confirmed that pausing AudioSource alone did not stop procedural PCM consumption;
+the transport now preserves queued audio and its cursor during pause. Focused
+rendered tests verify pause/resume, transient gain, independent Stop, cancellation
+before handoff, ordered events and explicit missed-history failure. This is muted
+desktop evidence. On a cooled, charged headset, still verify a looping sound with
+another effect, movement, speech, focus/device interruption and the real Live
+microphone. Imported/live source adapters and mixed-audio capture remain open.
+
+The complete desktop run passed 865 EditMode / 694 PlayMode tests (three optional
+private-file skips), 186 shared editor/catalog tests and both native-room and
+original-book integrations. The new headless audio journey confirms actual PCM
+consumption, same-instance controls, discovery and delivery of the pause event
+to a running saved program. It used no real AI provider or headset.
