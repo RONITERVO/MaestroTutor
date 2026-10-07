@@ -98,10 +98,27 @@ lower-priority book actor; shared calls refuse a competing book owner. The saved
 book placement is one Undo; recovered tray positions are transient. Workspace
 holds, invalid frames, tracking loss and unavailable saving refuse all placement.
 
-World recentering is a separate operation still to be implemented. Offsets survive
-view changes within the session; persisting them across restart/workspace changes
-is still required. Scan loading, held items and
-workspace boundaries continue to gate view changes. Camera sharing is independent.
+World recentering is a separate operation still to be implemented. Once the user
+moves or turns the virtual world, a workspace-owned bookmark records the authored
+floor position and horizontal heading. It is sampled at most once per second
+while tracking is valid, with explicit save/flush capture where available. Reload
+waits for fresh tracking and positions virtual content around that current view;
+it never moves the XR origin or claims real-room anchor alignment. Movement and
+physics still need their normal opt-ins. A fresh workspace uses its entry frame
+and cannot inherit the previous workspace's offset.
+
+The bookmark uses the current room coordinate bound (25 m from its origin).
+Virtual input refuses movement/turns outside that bound before moving content.
+Region streaming and larger coordinate ranges remain future spatial work.
+
+The bookmark shares the versioned room document, room/memory snapshot and workspace
+archive. It does not change entity revisions or add Undo steps. Geometry Undo and
+temporary-room discard preserve the current viewpoint. Tracking loss, workspace
+holds and frozen writes preserve the last accepted sample. Ordinary autosave
+failure remains visible and retryable. Initial stationary MR rooms have no active
+bookmark until virtual movement is used; merely opening them does not reposition
+the world around the viewer. Scan loading, held items and workspace boundaries
+continue to gate view changes. Camera sharing is independent.
 
 The shared controller.mode.set action is version 2 because its old view-exit
 contract reset the world. Old calls remain unavailable for explicit review;
@@ -130,5 +147,5 @@ placement, MRUK alignment, passthrough lifecycle, grabs/throws during movement,
 seated/standing heights and sustained performance.
 
 Independent blend/opacity, passthrough windows, terrain-following locomotion,
-persisted world offsets and active real-collision world movement remain release
+persistent physical alignment and active real-collision world movement remain release
 work in the shared spatial-state refactor.

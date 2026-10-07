@@ -60,7 +60,7 @@ namespace Maestro.Quest.Creation
         public bool AnyHeld => objects.Values.Any(item => item && item.Grab && item.Grab.isSelected);
         public RoomDocument Snapshot() => journal.Snapshot();
         public int ObjectRevision(string id) => journal.ObjectRevision(id);
-        public void PrepareAgentEdit() => Editing?.Invoke();
+        public void PrepareAgentEdit() {GetComponent<WorkspaceViewpoint>()?.Capture();Editing?.Invoke();}
         public bool UsesMotion(string id) => journal.UsesMotion(id) || savedJournal?.UsesMotion(id)==true || savingSnapshot?.objects.Any(x=>x.walkMotionId==id)==true;
         public bool HistoricalMotion(string id) => journal.HistoricalMotionIds.Contains(id) || savedJournal?.HistoricalMotionIds.Contains(id)==true;
         public bool SavedMotion(string id,out bool uncertain,bool force=false) => storage.RetainsMotion(id,out uncertain,force);
@@ -519,7 +519,7 @@ namespace Maestro.Quest.Creation
             if(!FinishLiquidPour(out var liquidError)){SetStatus(liquidError);return;}
             using var write=WriteGate.TryWrite(out var blocked);if(write==null){SetStatus(blocked);return;}
             if(TemporaryRoom) {if(!KeepTemporaryRoom(out var error))SetStatus(error);return;}
-            CapturePhysicsPlacements(); MarkDirty(); saveAt = 0; SetStatus("Saving room");
+            GetComponent<WorkspaceViewpoint>()?.Capture();CapturePhysicsPlacements(); MarkDirty(); saveAt = 0; SetStatus("Saving room");
         }
         void CapturePhysicsPlacements()
         {
@@ -600,7 +600,7 @@ namespace Maestro.Quest.Creation
             if(saveDispatch.Frozen){error="Room saves are paused while recovery preserves original files.";return false;}
             if (journal == null || storage == null) { error="Room storage is not ready."; return false; }
             if (TemporaryRoom) { error="Keep or discard the temporary room before saving the ordinary workspace."; return false; }
-            CapturePhysicsPlacements(); CompleteSave(wait:true);
+            GetComponent<WorkspaceViewpoint>()?.Capture();CapturePhysicsPlacements(); CompleteSave(wait:true);
             if(storage.ReadOnly){error="Room storage is unavailable; original files are preserved.";return false;}
             if (!dirty) return true;
             int revision=Revision;

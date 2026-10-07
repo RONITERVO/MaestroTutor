@@ -1,6 +1,8 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+using System;
 using System.Collections.Generic;
+using Maestro.Quest.Creation;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 
@@ -11,6 +13,8 @@ namespace Maestro.Quest.Interaction
     {
         Transform content,trackingOrigin;
         RoomWorldMotion motion;
+        Vector3 entryPosition;Quaternion entryRotation;
+        internal event Action Moved;
         public string MovementError {get;private set;}
         Camera viewer;
         ScannedRoom scan;
@@ -25,8 +29,32 @@ namespace Maestro.Quest.Interaction
         public bool Active { get; private set; }
         public bool CanEnter=>isActiveAndEnabled&&motion!=null&&motion.Ready&&trackingOrigin&&viewer&&!viewer.transform.IsChildOf(content)&&(!scan||!scan.Busy);
         public void Initialize(Transform virtualContent,Transform physicalOrigin,Camera camera,ScannedRoom scanned,RoomPhysicsWorld world)
-        { content=virtualContent;trackingOrigin=physicalOrigin;motion=new RoomWorldMotion(content,world);viewer=camera;scan=scanned;physics=world;
+        { content=virtualContent;entryPosition=content.position;entryRotation=content.rotation;trackingOrigin=physicalOrigin;motion=new RoomWorldMotion(content,world);viewer=camera;scan=scanned;physics=world;
             passthrough=viewer.GetComponent<ARCameraManager>();world?.GetComponent<RoomNavigation>()?.SetVirtualFrame(content); }
+        internal bool ResetWorkspaceFrame(out string error)=>motion.SetPose(entryPosition,entryRotation,out error);
+        bool PhysicalView(out Vector3 foot,out float heading)
+        {
+            foot=default;heading=0;
+            if(!viewer||!trackingOrigin||motion==null||!motion.Ready||viewer.transform.IsChildOf(content))return false;
+            var head=viewer.transform;var forward=Vector3.ProjectOnPlane(head.forward,Vector3.up);
+            foot=new Vector3(head.position.x,trackingOrigin.position.y,head.position.z);
+            if(!RoomRecipe.Finite(foot)||!RoomRecipe.Finite(forward)||forward.sqrMagnitude<.0001f)return false;
+            heading=Mathf.Atan2(forward.x,forward.z)*Mathf.Rad2Deg;return true;
+        }
+        internal bool ReadViewpoint(out RoomViewpoint value)
+        {
+            value=null;if(!PhysicalView(out var foot,out var heading))return false;
+            var frame=new RoomFrame(content);
+            value=new RoomViewpoint{active=true,position=frame.PointToRoom(foot),yaw=Mathf.DeltaAngle(0,heading-content.eulerAngles.y)};
+            return value.Valid;
+        }
+        internal bool RestoreViewpoint(RoomViewpoint value,out string error)
+        {
+            error="A valid tracked view and saved location are needed to restore the world";
+            if(value==null||!value.Valid||!value.active||!PhysicalView(out var foot,out var heading))return false;
+            var rotation=Quaternion.AngleAxis(heading-value.yaw,Vector3.up);
+            return motion.SetPose(foot-rotation*value.position,rotation,out error);
+        }
         public bool Enter()
         {
             if (Active) return true;
@@ -51,6 +79,9 @@ namespace Maestro.Quest.Interaction
             MovementError=null;
             if (!Active || !float.IsFinite(delta.sqrMagnitude) || delta.sqrMagnitude > .01f) return false;
             delta.y=0;
+            if(!PhysicalView(out var proposedFoot,out _)||!RoomViewpoint.ValidPosition(new RoomFrame(content).PointToRoom(proposedFoot+delta))){
+                MovementError="Movement would leave the supported saved-world coordinates";return false;
+            }
             // Only accepted, scene-owned ground supports travel. Presentation never
             // inserts a second flat collider beneath editable terrain or water.
             Physics.SyncTransforms();
@@ -68,7 +99,7 @@ namespace Maestro.Quest.Interaction
             if (count>0) return false;
             count=Physics.OverlapCapsuleNonAlloc(bottom+delta,top+delta,radius,overlaps,mask,QueryTriggerInteraction.Ignore);
             if (count>0) return false;
-            bool moved=motion.SetPose(content.position-delta,content.rotation,out var error);MovementError=error;return moved;
+            bool moved=motion.SetPose(content.position-delta,content.rotation,out var error);MovementError=error;if(moved)Moved?.Invoke();return moved;
         }
         bool Supported(Vector3 eye,float foot)
         {
@@ -91,8 +122,9 @@ namespace Maestro.Quest.Interaction
         public bool Turn(float degrees)
         {
             MovementError=null;if(!Active||(degrees!=-30&&degrees!=30))return false;
+            if(!ReadViewpoint(out _)){MovementError="Turning needs a view within supported saved-world coordinates";return false;}
             var turn=Quaternion.AngleAxis(-degrees,Vector3.up);var pivot=viewer.transform.position;
-            bool moved=motion.SetPose(pivot+turn*(content.position-pivot),turn*content.rotation,out var error);MovementError=error;return moved;
+            bool moved=motion.SetPose(pivot+turn*(content.position-pivot),turn*content.rotation,out var error);MovementError=error;if(moved)Moved?.Invoke();return moved;
         }
         void OnDisable() => Exit();
         void OnDestroy() => Exit();

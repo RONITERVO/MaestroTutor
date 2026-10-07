@@ -85,6 +85,7 @@ namespace Maestro.Quest.Persistence
         {
             var bytes=documents[path];var json=Json(bytes,Limit(path));
             if(json.Count!=fields.Length||fields.Any(x=>!json.ContainsKey(x))||json["version"]?.Type!=JTokenType.Integer||(int)json["version"]!=DocumentVersion(path))throw new InvalidDataException("Unsupported workspace document: "+path);
+            if(path==RoomStorage.FileName&&!RoomViewpoint.ValidWire(json))throw new InvalidDataException("Invalid workspace viewpoint.");
             return JsonUtility.FromJson<T>(Utf8.GetString(bytes));
         }
         internal static WorkspaceArchiveMetadata Read(Dictionary<string,byte[]> documents,IEnumerable<string> assetNames)
@@ -92,7 +93,7 @@ namespace Maestro.Quest.Persistence
             var assets=assetNames.ToHashSet(StringComparer.Ordinal);CheckNames(documents.Keys.Concat(assets));
             foreach(var pair in documents){if(pair.Value.Length<1||pair.Value.Length>Limit(pair.Key))throw new InvalidDataException("Workspace document exceeds its limit.");}
             if(documents.TryGetValue(ProgramMemoryStore.FileName,out var memory))_=ProgramMemoryDocument.Decode(memory);
-            var room=Document<RoomDocument>(documents,RoomStorage.FileName,"version","objects","structures","audioSources");RoomStorage.Normalize(room);
+            var room=Document<RoomDocument>(documents,RoomStorage.FileName,"version","objects","structures","audioSources","viewpoint");RoomStorage.Normalize(room);
             if(!room.Validate(out var issue))throw new InvalidDataException(issue);
             var rules=Document<RuleDocument>(documents,"behaviours.v2.json","version","sequences","bindings","buttons");
             var ruleJson=Json(documents["behaviours.v2.json"],Limit("behaviours.v2.json"));

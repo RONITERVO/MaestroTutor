@@ -3708,6 +3708,34 @@ one non-finite native reflection-mixer output; that existing test passed in the
 final-source run. Its failure evidence is retained, production reflections remain
 disabled, and sustained audio/headset acceptance remains a release gate.
 
+Workspace-viewpoint persistence increment (2026-10-07): accepted virtual-world
+movement now records a bounded authored floor position and horizontal heading in
+room v22. Reload waits for fresh head tracking and restores that virtual location
+relative to the current physical view. The XR origin, scanned room and listener
+stay physical; this is not persistent real-anchor alignment. The shared shell
+resets to its entry frame before another workspace loads, preventing offset
+leakage. Restoring a bookmark does not enable user movement or start physics.
+
+Navigation sampling does not churn entity/scene revisions or geometry Undo. It
+shares ordinary room autosave, paired room/memory v21 transactions and the strict v20
+workspace archive. Copies, temporary Keep and exports retain it; geometry Undo
+and temporary discard preserve the current view. Lost tracking, runtime holds,
+frozen writes and unavailable storage cannot overwrite the last accepted sample.
+Legacy room documents load with an inactive bookmark and remain byte-preserved
+until an ordinary save. Current missing/malformed/future bookmark fields refuse
+saving over the original. Earlier development archive formats remain unsupported
+and preserved; no silent archive rewrite is introduced.
+
+Matching-source verification passes **894 EditMode / 743 PlayMode** tests (three
+expected optional private-file skips), including seven workspace-viewpoint cases;
+**1,052 shared room checks**, app TypeScript and catalog provenance also pass.
+The full native room and original book journeys pass with offline scripted
+providers. Evidence: `.quest-evidence/spatial-state/world-viewpoint-working.json`.
+No new device, provider, packaging or store acceptance is claimed. Persistent physical alignment,
+explicit recentering, stable world/region IDs, terrain-following user movement,
+shared appearances, environment/water simulation and headset acceptance remain
+open. This bookmark is not a region identity or permission to replay activity.
+
 The owner expects worlds to grow from room toys into miniature countries with
 cities, buildings, items and NPCs. Users and the agent must author the same world;
 imported Blender/Meshy assets are another source of its components. Texture and

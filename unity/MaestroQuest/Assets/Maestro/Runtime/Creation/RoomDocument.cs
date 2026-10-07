@@ -53,11 +53,12 @@ namespace Maestro.Quest.Creation
     [Serializable]
     public sealed class RoomDocument
     {
-        public const int CurrentVersion=21;
+        public const int CurrentVersion=22;
         public const int MaximumObjects = 64;
         public const int MaximumStrokePoints = 2048;
         public const int MaximumTotalPoints = 32768;
         public int version;
+        public RoomViewpoint viewpoint = new();
         public RoomObjectData[] objects = Array.Empty<RoomObjectData>();
         public RoomStructure[] structures = Array.Empty<RoomStructure>();
         public RoomAudioDefinition[] audioSources = Array.Empty<RoomAudioDefinition>();
@@ -69,8 +70,9 @@ namespace Maestro.Quest.Creation
         public bool Validate(out string error)
         {
             error = null;
-            if (version != 1 && version != 2 && version != 3 && version != 4 && version != 5 && version != 7 && version != 8 && version != 9 && version != 10 && version != 11 && version != 12 && version != 13 && version != 14 && version != 15 && version != 16 && version != 17 && version != 18 && version != 19 && version != 20 && version != CurrentVersion || objects == null || objects.Length < 2 || objects.Length > MaximumObjects + 2)
+            if (version != 1 && version != 2 && version != 3 && version != 4 && version != 5 && version != 7 && version != 8 && version != 9 && version != 10 && version != 11 && version != 12 && version != 13 && version != 14 && version != 15 && version != 16 && version != 17 && version != 18 && version != 19 && version != 20 && version != 21 && version != CurrentVersion || objects == null || objects.Length < 2 || objects.Length > MaximumObjects + 2)
                 return Fail("This room file has an unsupported version or object count.", out error);
+            if(version>=22&&(viewpoint==null||!viewpoint.Valid))return Fail("This room has an invalid saved viewpoint.",out error);
             var ids = new HashSet<string>(); int partCount = 0; int pointCount = 0, builtIns = 0, frameCount = 0, jointCount = 0;
             foreach (var item in objects)
             {
@@ -173,7 +175,7 @@ namespace Maestro.Quest.Creation
         static bool Unit(float value) => float.IsFinite(value) && value >= 0 && value <= 1;
         static bool Finite(Vector3 value) => float.IsFinite(value.x) && float.IsFinite(value.y) && float.IsFinite(value.z);
         static bool Fail(string message, out string error) { error = message; return false; }
-        public RoomDocument Copy() => new() { version = version, objects = objects.Select(item => item.Copy()).ToArray(), structures = structures?.Select(item=>item.Copy()).ToArray()??Array.Empty<RoomStructure>(), audioSources=audioSources?.Select(item=>item.Copy()).ToArray()??Array.Empty<RoomAudioDefinition>() };
+        public RoomDocument Copy() => new() { version = version, viewpoint=viewpoint?.Copy(), objects = objects.Select(item => item.Copy()).ToArray(), structures = structures?.Select(item=>item.Copy()).ToArray()??Array.Empty<RoomStructure>(), audioSources=audioSources?.Select(item=>item.Copy()).ToArray()??Array.Empty<RoomAudioDefinition>() };
     }
 
     /// <summary>Bounded object deltas preserve drawings without retaining whole scene copies.</summary>
@@ -195,13 +197,14 @@ namespace Maestro.Quest.Creation
         public RoomJournal(RoomDocument document)
         {
             if (!document.Validate(out var error)) throw new ArgumentException(error, nameof(document));
+            viewpoint=document.version>=22?document.viewpoint.Copy():new RoomViewpoint();
             foreach (var item in document.objects) { items.Add(item.id, item.Copy()); revisions[item.id]=clock.Next++; }
             SetStructures(Array.Empty<RoomStructure>(),document.structures??Array.Empty<RoomStructure>());
             SetAudio(Array.Empty<RoomAudioDefinition>(),document.audioSources??Array.Empty<RoomAudioDefinition>());
         }
         RoomJournal(RoomJournal source)
         {
-            clock=source.clock;
+            clock=source.clock;viewpoint=source.viewpoint.Copy();
             foreach(var pair in source.items) items.Add(pair.Key,pair.Value.Copy());
             foreach(var pair in source.revisions) revisions.Add(pair.Key,pair.Value);
             foreach(var pair in source.structures)structures.Add(pair.Key,pair.Value.Copy());
@@ -222,7 +225,8 @@ namespace Maestro.Quest.Creation
             var edits=new StructureEdits {Replacements=(document.structures??Array.Empty<RoomStructure>()).Where(x=>!structures.TryGetValue(x.id,out var before)||!EquivalentStructures(new[]{before},new[]{x})).ToArray(),Removals=structures.Keys.Where(id=>!groupIds.Contains(id)).ToArray()};
             var soundIds=(document.audioSources??Array.Empty<RoomAudioDefinition>()).Select(x=>x.id).ToHashSet();
             var sounds=new AudioDefinitionEdits {Replacements=(document.audioSources??Array.Empty<RoomAudioDefinition>()).Where(x=>!audioSources.TryGetValue(x.id,out var before)||!EquivalentAudio(new[]{before},new[]{x})).ToArray(),Removals=audioSources.Keys.Where(id=>!soundIds.Contains(id)).ToArray()};
-            return Apply(replacements,items.Keys.Where(id=>!ids.Contains(id)).ToArray(),out error,structureEdits:edits,audioEdits:sounds);
+            if(!Apply(replacements,items.Keys.Where(id=>!ids.Contains(id)).ToArray(),out error,structureEdits:edits,audioEdits:sounds))return false;
+            if(document.version>=22)viewpoint=document.viewpoint.Copy();return true;
         }
         public void InvalidateChangedObservations(RoomJournal other)
         {
@@ -239,7 +243,7 @@ namespace Maestro.Quest.Creation
             if ((data.position-position).sqrMagnitude < .000001f && Quaternion.Angle(data.rotation,rotation) < .1f) return false;
             data.position = position; data.rotation = rotation; revisions[id]=clock.Next++; return true;
         }
-        public RoomDocument Snapshot() => new() { version = RoomDocument.CurrentVersion, objects = items.Values.Select(item => item.Copy()).OrderBy(item => item.id, StringComparer.Ordinal).ToArray(), structures = StructureSnapshot(), audioSources=AudioSnapshot() };
+        public RoomDocument Snapshot() => new() { version = RoomDocument.CurrentVersion, viewpoint=viewpoint.Copy(), objects = items.Values.Select(item => item.Copy()).OrderBy(item => item.id, StringComparer.Ordinal).ToArray(), structures = StructureSnapshot(), audioSources=AudioSnapshot() };
 
         internal bool PlacementBaseline(RoomLayout layout,out RoomObjectData[] baseline,out string error)
         {
@@ -269,7 +273,7 @@ namespace Maestro.Quest.Creation
             foreach (var item in replacements) candidate[item.id] = item.Copy();
             var groups=structureEdits?.Apply(StructureSnapshot())??StructureSnapshot();
             var sounds=audioEdits?.Apply(AudioSnapshot())??AudioSnapshot();
-            if (!(new RoomDocument { version = RoomDocument.CurrentVersion, objects = candidate.Values.ToArray(), structures=groups,audioSources=sounds }).Validate(out error)) return false;
+            if (!(new RoomDocument { version = RoomDocument.CurrentVersion, viewpoint=viewpoint.Copy(), objects = candidate.Values.ToArray(), structures=groups,audioSources=sounds }).Validate(out error)) return false;
             var soundIds=(audioEdits?.Replacements.Select(x=>x.id)??Array.Empty<string>()).Concat(audioEdits?.Removals??Array.Empty<string>()).ToHashSet();
             var groupIds=(structureEdits?.Replacements.Select(x=>x.id)??Array.Empty<string>()).Concat(structureEdits?.Removals??Array.Empty<string>()).ToHashSet();
             var before=changedIds.Where(items.ContainsKey).Select(id=>items[id].Copy()).ToArray();

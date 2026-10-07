@@ -23,6 +23,7 @@ namespace Maestro.Quest.Persistence
             IDisposable activity=null,writes=null;
             try {
                 // Stop may accept a final authored pose/take. Finish it before freezing writes.
+                editor.GetComponent<WorkspaceViewpoint>()?.Capture();
                 activity=editor.RuntimeGate.Hold("Preserving the current workspace before a restore");
                 editor.PrepareAgentEdit();
                 if(editor.RuntimeGate.Failure!=null){error=editor.RuntimeGate.Failure;return false;}
