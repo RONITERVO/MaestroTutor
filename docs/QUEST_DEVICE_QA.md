@@ -3670,6 +3670,14 @@ speakers or headphones), provider route and timestamps for each result.
    materials and retains some speech audibility; reflections/material authoring
    remain pending. Verify cleanup, tracking loss and workspace replacement.
    Inspect `runtime.acoustics` for readiness, uploaded geometry and omissions.
+   With tracking available, stable room boundaries should calculate a map after
+   two seconds. Move an animated robot or dynamic prop: it should retain direct
+   obstruction without repeatedly rebuilding that map. Move, grab or delete a
+   fixed creation, or remove/reload the scan: stale map data must be discarded
+   and the settled scene recalculated. Check `map.geometry`/`map.omitted` separately
+   from direct geometry counts. Move beyond the current listener region, then
+   return; reuse is bounded to four points. Measure computation cost on Quest;
+   the one-second worker limit is cooperative, not a hard wall-clock guarantee.
    Toggling physics or visual opacity must not
    silently change acoustic participation. Dynamic real objects absent from the
    acoustic geometry require separate coverage; visual depth occlusion does not

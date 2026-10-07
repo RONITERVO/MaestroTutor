@@ -50,9 +50,10 @@ namespace Maestro.Quest.Tests
         {
             root.AddComponent<RuntimeDiagnostics>();var audio=root.AddComponent<Maestro.Quest.Book.RoomAcoustics>();
             var mesh=GameObject.CreatePrimitive(PrimitiveType.Cube);mesh.transform.SetParent(root.transform,false);
-            Maestro.Quest.Book.AcousticSurface.Attach(mesh,mesh.GetComponent<MeshFilter>().sharedMesh);
+            Maestro.Quest.Book.AcousticSurface.Attach(mesh,mesh.GetComponent<MeshFilter>().sharedMesh,environment:true);
             var before=DiagnosticFact("runtime.acoustics");Assert.That((int)before["geometry"],Is.Zero,"Reading must not upload geometry");
             audio.Synchronize();var fact=DiagnosticFact("runtime.acoustics");Assert.That((bool)fact["active"],Is.True);Assert.That((int)fact["geometry"],Is.EqualTo(1));
+            Assert.That((int)fact["map"]["geometry"],Is.EqualTo(1));Assert.That((int)fact["map"]["omitted"],Is.Zero);
             Assert.That((bool)fact["reflections"],Is.False);Assert.That((bool)fact["map"]["computing"],Is.False);Assert.That((bool)fact["map"]["ready"],Is.False);fact["geometry"]=-1;Assert.That((int)DiagnosticFact("runtime.acoustics")["geometry"],Is.EqualTo(1));
             Assert.That(audio.RequestMap(new[]{new Vector3(0,1,0)}),Is.True);
             var pending=DiagnosticFact("runtime.acoustics");Assert.That((bool)pending["map"]["computing"],Is.True);Assert.That((bool)pending["active"],Is.False);

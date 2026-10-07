@@ -3813,3 +3813,42 @@ run's mirror copy; it passed after the focused runner copied and tested those
 files. Production code was unchanged between the full and focused runs. The
 initial catalog export rejected nine record fields; nesting the map diagnostics
 fixed it without expanding the shared program format's eight-field limit.
+
+Automatic acoustic-map scheduling increment (2026-10-07): accepted scan geometry,
+the virtual floor and fixed, unheld, nonanimated creations now define a static-only
+map. Dynamic bodies and animated model/recipe parts retain direct obstruction
+without invalidating that map every frame. Changes of mobility, fixed pose,
+availability or topology rebuild the affected native geometry. Even dynamic
+native handles stay alive while the SDK worker reads its inputs.
+
+The application waits two seconds after structural changes and half a second
+after listener movement before requesting a map. A cache keeps at most four
+listener positions with a 2.5 m coverage heuristic. Failed calculations back off
+for 4, 16, 64 and then 120 seconds. Tracking loss cancels pending work and clears
+the cached positions. This is bounded acoustic sampling, not automatic detection
+of adjacent rooms or a complete acoustic reconstruction. Shared diagnostics now
+report reflection-boundary counts and omissions separately from direct geometry.
+
+The new regressions caught two issues during development. A disabled surface that
+remained registered after releasing its native handle cancelled subsequent maps;
+input validation now ignores that retired boundary. The first full test run also
+exposed an XR fixture leak: creating interactive props without owning a manager
+let XRI create a global fallback, interfering with 43 later grab-dependent cases.
+The acoustic fixtures now own their manager and verify teardown restores the
+previous manager count. All 14 map cases and nine grab/physics cases then passed
+sequentially in one editor process before the full-suite rerun.
+
+A muted synthetic-audio experiment uses this scheduler and the production map
+owner, with a private test mixer. It measures increased output energy for early
+reflections, late reverb and both together; per-source Stop leaves a room tail.
+Production reflection routing remains disabled pending shared-mixer lifecycle,
+multi-emitter Stop and measured Live microphone-tail handling. PCM completion
+receipts must continue to report played samples independently of those tails.
+Desktop evidence does not close Quest audibility, echo or performance acceptance.
+
+Final scheduling verification passed 849 EditMode and 686 PlayMode cases, with
+three expected optional private-file skips. Both complete native-room and
+original-book integrations passed, along with 115 shared catalog tests,
+TypeScript, catalog provenance and included-asset integrity. The first failed
+reports are retained alongside the passing rerun. No provider requests or
+headset operations were performed for this increment.

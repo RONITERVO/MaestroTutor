@@ -47,7 +47,7 @@ namespace Maestro.Quest.Book
                 parameters.thisSize = (UIntPtr)Marshal.SizeOf<MapParameters>();
                 parameters.threadCount = (UIntPtr)1;
                 parameters.reflectionCount = (UIntPtr)8;
-                parameters.flags = AcousticMapFlags.NONE;
+                parameters.flags = AcousticMapFlags.STATIC_ONLY;
                 task = Task.Run(() => Compute(ownedPoints, parameters));
             }
             catch { DestroyCandidate(); throw; }

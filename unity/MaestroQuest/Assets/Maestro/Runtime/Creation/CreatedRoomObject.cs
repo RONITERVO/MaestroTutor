@@ -28,6 +28,13 @@ namespace Maestro.Quest.Creation
         bool pendingCollider;
         public ImportedModel Model { get; private set; }
         public string ModelStatus { get; private set; }
+        RoomItem acousticItem;
+        RigidRoomItem acousticBody;
+        // Mobility is an acoustic input, independently of whether physics or
+        // colliders are currently enabled. A paused dynamic ball is not a wall.
+        internal bool AcousticBoundary => acousticBody && !acousticBody.Dynamic
+            && acousticItem && acousticItem.Grab && !acousticItem.Grab.isSelected
+            && !acousticBody.AnimationOwned && !(recipe && recipe.IsPlaying) && !(Model && Model.IsPlaying);
         public RoomItem Build(RoomObjectData data, ModelLibrary library = null, RoomRuntimeGate runtimeGate = null)
         {
             Bounds bounds;
@@ -64,6 +71,7 @@ namespace Maestro.Quest.Creation
             item.Configure(new[] { collider }, limits.minimum, limits.maximum);item.PoseLocked=ScanDrawingAnchor.Has(data);
             geometryBounds = bounds; originalCollider = chosenCollider = collider;
             var rigid = gameObject.AddComponent<RigidRoomItem>(); rigid.Initialize(item);
+            acousticItem = item; acousticBody = rigid;
             collider.gameObject.layer = RoomPhysicsLayers.Item;
             if (data.kind == RoomObjectKind.ImportedModel) rigid.SetGeometryReady(false);
             if (data.kind == RoomObjectKind.ImportedModel && library != null) LoadModel(data.modelHash, library, collider);

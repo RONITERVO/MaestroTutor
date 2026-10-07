@@ -14,16 +14,19 @@ namespace Maestro.Quest.Book
         internal bool Scanned { get; private set; }
         internal bool Available { get; private set; } = true;
         internal string Issue { get; set; }
+        Creation.CreatedRoomObject creation;
+        bool environment;
+        internal bool ReflectionBoundary => Scanned || environment || creation && creation.AcousticBoundary;
 
-        internal static AcousticSurface Attach(GameObject target, Mesh mesh, bool scanned = false)
+        internal static AcousticSurface Attach(GameObject target, Mesh mesh, bool scanned = false, bool environment = false)
         {
             var surface = target.GetComponent<AcousticSurface>() ?? target.AddComponent<AcousticSurface>();
-            surface.Bind(mesh, scanned);
+            surface.Bind(mesh, scanned, environment);
             return surface;
         }
-        internal void Bind(Mesh mesh, bool scanned = false)
+        internal void Bind(Mesh mesh, bool scanned = false, bool environment = false)
         {
-            Mesh = mesh; Scanned = scanned; Revision++;
+            Mesh = mesh; Scanned = scanned; this.environment = environment; Revision++;
             Connect(); Owner?.Invalidate(this);
         }
         internal void SetAvailable(bool value)
@@ -33,6 +36,7 @@ namespace Maestro.Quest.Book
         }
         void Connect()
         {
+            creation = GetComponentInParent<Creation.CreatedRoomObject>();
             var next = GetComponentInParent<RoomAcoustics>(true);
             if (Owner == next) return;
             if (Owner) Owner.Unregister(this);

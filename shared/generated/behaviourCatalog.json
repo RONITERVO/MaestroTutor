@@ -33270,6 +33270,8 @@
             "record": {
               "computing": "boolean",
               "ready": "boolean",
+              "geometry": "number",
+              "omitted": "number",
               "issue": "text"
             }
           },
@@ -33278,7 +33280,7 @@
         }
       },
       "label": "Room sound obstruction",
-      "description": "Last native acoustic synchronization: active renderer, uploaded mesh/triangle counts and omitted or pending registered surfaces. Bounded direct speech obstruction uses approximate hard-surface materials, independently of collision and overlay visibility. While map.computing, geometry inputs are retained for the worker and active is false. map.ready confirms calculated map data, not audible reflections: the reflection mixer remains disabled. Skinned meshes, alpha-cutout imports, drawing overlays and unscanned moving real objects are not acoustic geometry; omitted does not count those unsupported categories. Counts do not verify room alignment, device audibility or performance. Reads never upload, compute, load or change the scene.",
+      "description": "Last native acoustic synchronization: active renderer, uploaded mesh/triangle counts and omitted or pending registered surfaces. Bounded direct speech obstruction uses approximate hard-surface materials, independently of collision and overlay visibility. map.geometry and map.omitted describe reflection boundaries: accepted scans, the virtual floor, and fixed unheld creations without active model/recipe/object animation. Dynamic objects still obstruct direct sound but do not rebuild reflections. Stable boundaries are mapped after two seconds, with up to four listener points, movement settling and failure backoff. While map.computing, geometry inputs are retained for the worker and active is false. map.ready confirms calculated map data, not audible reflections: the reflection mixer remains disabled. Skinned meshes, alpha-cutout imports, drawing overlays and unscanned moving real objects are not acoustic geometry; omitted does not count those unsupported categories. Counts do not verify room alignment, device audibility or performance. Reads never upload, compute, load or change the scene.",
       "features": [
         "runtimeDiagnostics.v1"
       ]
@@ -33817,7 +33819,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/MaestroRoom.cs",
-      "sha256": "9c7292501a613cf80b3f14ab27736a7c823404c3854c62e5974ae9514e4f0ab5"
+      "sha256": "09193da4be9e88e7a16bf76336d184b4106c0350155b6cd44ebf829719d91e8c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -34385,7 +34387,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedRoomObject.cs",
-      "sha256": "9916e27853ba87bdf0c9bc7750c9f4fad2b7369160703d0619b1f2a519bb2868"
+      "sha256": "4086c9a0d39329733938de9887d0917f6203da77f96099f1010dec0e231a8f73"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectSettings.cs",
@@ -34449,7 +34451,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/VirtualRoomView.cs",
-      "sha256": "322378f3cde456d49d0d7e64860597f9062ca57ef2bcad0dbca8c62ef1e6b44e"
+      "sha256": "216d162da354eeede2efa6fbee245b3fc532ca0ccfbfd404c683646a744715ae"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomPhysicsWorld.cs",
@@ -34565,15 +34567,19 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/RoomAcoustics.cs",
-      "sha256": "cf0d5690447dd167c36b96433acbac3a97096a79ac48351941625ab66633cbab"
+      "sha256": "360d117de538a0877714e301954de55925711cb5217613e2ba91640015186fcb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/RoomAcousticMapJob.cs",
-      "sha256": "ff60b551237dff1c32609e9a4fe7e397c99334671fffdfa12576486106d8a9a1"
+      "sha256": "61cfabf731cc991554abcb3424f73c9939bca11fcdd39f2925b399940856a9f7"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/RoomAcousticMapScheduler.cs",
+      "sha256": "d70958c84bdf532116f0a59b2d0da6692d80005c1634147f63b7b7024ff76034"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/AcousticSurface.cs",
-      "sha256": "1fcf399e9243ac5e7ec98e2971e4b45bcb54fd17c83ed7b8df1264a9d10fbde2"
+      "sha256": "0566e4ed681a5cac544d715f19e9270c24017fa59f3f4875f24008d024a5cc20"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/SpeechOcclusion.cs",
@@ -34593,7 +34599,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedRoomObject.cs",
-      "sha256": "9916e27853ba87bdf0c9bc7750c9f4fad2b7369160703d0619b1f2a519bb2868"
+      "sha256": "4086c9a0d39329733938de9887d0917f6203da77f96099f1010dec0e231a8f73"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationAuthoringCapability.cs",
@@ -34869,7 +34875,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RuntimeDiagnosticFacts.cs",
-      "sha256": "5f654384d48b8b0e8b72002c5ac4b094e91b734516e1e2dd9f17b5410d08e4a0"
+      "sha256": "bb95ff2a40a776eaec8c3144d01e01a38da254879e1f80270a7da1ae558779f0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ScanDrawingCapability.cs",
