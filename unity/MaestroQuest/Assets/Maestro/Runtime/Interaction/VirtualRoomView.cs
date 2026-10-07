@@ -1,6 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
-using Maestro.Quest.Art;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 
@@ -16,13 +16,10 @@ namespace Maestro.Quest.Interaction
         ScannedRoom scan;
         RoomPhysicsWorld physics;
         ARCameraManager passthrough;
-        Vector3 homePosition;
-        Quaternion homeRotation;
         Color homeBackground;
         CameraClearFlags homeFlags;
         bool passthroughWasEnabled;
-        GameObject floor;
-        Material paper;
+        readonly List<RoomWalkableSurface> ground = new();
         readonly RaycastHit[] hits = new RaycastHit[32];
         readonly Collider[] overlaps = new Collider[32];
         public bool Active { get; private set; }
@@ -34,28 +31,19 @@ namespace Maestro.Quest.Interaction
         {
             if (Active) return true;
             if (!CanEnter) return false;
-            homePosition=content.position; homeRotation=content.rotation; homeBackground=viewer.backgroundColor; homeFlags=viewer.clearFlags;
+            homeBackground=viewer.backgroundColor; homeFlags=viewer.clearFlags;
             scan?.SetVirtualView(true);
             passthroughWasEnabled=passthrough && passthrough.enabled;
             if (passthrough) passthrough.enabled=false;
             viewer.clearFlags=CameraClearFlags.SolidColor; viewer.backgroundColor=new Color(.91f,.90f,.86f,1);
-            floor=GameObject.CreatePrimitive(PrimitiveType.Cube); floor.name="Virtual paper floor"; floor.transform.SetParent(content,false);
-            floor.transform.position=new Vector3(viewer.transform.position.x,trackingOrigin.position.y-.065f,viewer.transform.position.z);
-            floor.transform.localScale=new Vector3(20,.1f,20); floor.layer=RoomPhysicsLayers.Environment;
-            paper=IllustratedMaterials.Create(IllustratedMaterials.Paper); floor.GetComponent<Renderer>().sharedMaterial=paper;
-            Book.AcousticSurface.Attach(floor,floor.GetComponent<MeshFilter>().sharedMesh,environment:true);
-            floor.AddComponent<RoomWalkableSurface>().Publish(floor.GetComponent<Collider>());
             Active=true; return true;
         }
         public void Exit()
         {
             if (!Active) return;
-            physics?.PausePhysics();
-            motion.SetPose(homePosition,homeRotation,out var error);MovementError=error;
-            viewer.backgroundColor=homeBackground; viewer.clearFlags=homeFlags;
+            if(viewer) { viewer.backgroundColor=homeBackground; viewer.clearFlags=homeFlags; }
             if (passthrough) passthrough.enabled=passthroughWasEnabled;
             scan?.SetVirtualView(false);
-            if (floor) { floor.SetActive(false); ArtResources.Release(floor); } ArtResources.Release(paper); floor=null; paper=null;
             Active=false;
         }
         public bool Move(Vector3 delta)
@@ -63,8 +51,14 @@ namespace Maestro.Quest.Interaction
             MovementError=null;
             if (!Active || !float.IsFinite(delta.sqrMagnitude) || delta.sqrMagnitude > .01f) return false;
             delta.y=0;
-            if ((Vector3.ProjectOnPlane(viewer.transform.position+delta-floor.transform.position,Vector3.up)).sqrMagnitude > 64) return false;
-            float foot = floor.transform.position.y+.065f;
+            // Only accepted, scene-owned ground supports travel. Presentation never
+            // inserts a second flat collider beneath editable terrain or water.
+            Physics.SyncTransforms();
+            float foot=trackingOrigin.position.y;
+            content.GetComponentsInChildren(false,ground);
+            if(!Supported(viewer.transform.position,foot)||!Supported(viewer.transform.position+delta,foot)) {
+                MovementError="Your movement needs accepted level ground beneath you and the next step";return false;
+            }
             float height = Mathf.Clamp(viewer.transform.position.y-foot,.65f,2.2f), radius=.2f;
             Vector3 bottom=new(viewer.transform.position.x,foot+radius+.04f,viewer.transform.position.z), top=new(viewer.transform.position.x,foot+height-radius,viewer.transform.position.z);
             // The viewer stays physical: this query follows virtual obstacles only.
@@ -75,6 +69,24 @@ namespace Maestro.Quest.Interaction
             count=Physics.OverlapCapsuleNonAlloc(bottom+delta,top+delta,radius,overlaps,mask,QueryTriggerInteraction.Ignore);
             if (count>0) return false;
             bool moved=motion.SetPose(content.position-delta,content.rotation,out var error);MovementError=error;return moved;
+        }
+        bool Supported(Vector3 eye,float foot)
+        {
+            // Terrain-following elevation is a separate locomotion policy. Until
+            // implemented, reject hills, holes and ledges instead of floating over
+            // them. Sample the complete planar footprint within this owned world.
+            for(int sample=0;sample<9;sample++) {
+                float angle=(sample-1)*Mathf.PI/4;
+                var offset=sample==0?Vector3.zero:new Vector3(Mathf.Cos(angle),0,Mathf.Sin(angle))*.2f;
+                var ray=new Ray(new Vector3(eye.x,foot+.05f,eye.z)+offset,Vector3.down);
+                bool found=false;
+                foreach(var surface in ground) {
+                    if(!surface.Available)continue;
+                    if(surface.Collision.Raycast(ray,out var hit,.075f)&&hit.normal.y>.999f&&Mathf.Abs(hit.point.y-foot)<.025f) {found=true;break;}
+                }
+                if(!found)return false;
+            }
+            return true;
         }
         public bool Turn(float degrees)
         {

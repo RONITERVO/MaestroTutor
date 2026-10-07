@@ -372,6 +372,13 @@ namespace Maestro.Quest.Tests
             }
             finally { UnityEngine.Object.Destroy(baked); }
         }
+        GameObject TravelGround()
+        {
+            var ground=GameObject.CreatePrimitive(PrimitiveType.Cube);ground.name="Authored travel ground";
+            ground.transform.SetParent(root.transform,false);ground.transform.localPosition=Vector3.down*.1f;
+            ground.transform.localScale=new Vector3(20,.2f,20);ground.layer=RoomPhysicsLayers.Environment;
+            ground.AddComponent<RoomWalkableSurface>().Publish(ground.GetComponent<Collider>());Physics.SyncTransforms();return ground;
+        }
         ControllerFrame frame;
         MovementControls Controls(out VirtualRoomView view,out Transform userOrigin,RoomRules rules=null,RuleWorkshop workshop=null,BookControllerInput controller=null)
         {
@@ -394,7 +401,7 @@ namespace Maestro.Quest.Tests
             yield return new WaitForSeconds(.35f); Assert.That(avatar.transform.position.z,Is.GreaterThan(.1f));
             Assert.That(Quaternion.Angle(footBefore,foot.localRotation),Is.GreaterThan(1)); Assert.That(viewer.transform.position,Is.EqualTo(initial));
             controls.ToggleUser(); Assert.That(controls.UserEnabled,Is.False,"MR must not translate passthrough");
-            world.PausePhysics(); controls.ToggleView(); Assert.That(view.Active,Is.True); Assert.That(viewer.GetComponent<Camera>().backgroundColor.a,Is.EqualTo(1));
+            TravelGround(); world.PausePhysics(); controls.ToggleView(); Assert.That(view.Active,Is.True); Assert.That(viewer.GetComponent<Camera>().backgroundColor.a,Is.EqualTo(1));
             controls.ToggleUser(); frame.leftStick=Vector2.zero; frame.rightStick=Vector2.zero; yield return null;
             frame.leftStick=Vector2.right; yield return new WaitForSeconds(.3f);
             Assert.That(root.transform.position.x,Is.LessThan(-.1f)); Assert.That(viewer.transform.position,Is.EqualTo(initial)); Assert.That(origin.localPosition,Is.EqualTo(Vector3.zero)); Assert.That(motion.Active,Is.False);
@@ -417,14 +424,14 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator VirtualContentCollisionsSnapTurnAndPauseKeepPhysicalOriginFixed()
         {
-            Tutor(); var controls=Controls(out var view,out var origin);
+            Tutor(); TravelGround(); var controls=Controls(out var view,out var origin);
             var wall=Surface(new Vector3(.65f,1,3),new Vector3(.12f,2,2));wall.transform.SetParent(root.transform,true);wall.layer=RoomPhysicsLayers.Environment; Physics.SyncTransforms();
             controls.ToggleView(); controls.ToggleUser(); yield return null; frame.leftStick=Vector2.right;
             yield return new WaitForSeconds(1.2f); Assert.That(root.transform.position.x,Is.InRange(-.41f,-.25f));Assert.That(origin.position,Is.EqualTo(Vector3.zero));
             frame.leftStick=Vector2.zero; frame.a=true; yield return null; var turned=root.transform.rotation;
             Assert.That(Quaternion.Angle(Quaternion.identity,turned),Is.EqualTo(30).Within(.1f));
             yield return null; Assert.That(Quaternion.Angle(root.transform.rotation,turned),Is.LessThan(.01f),"Holding a button must not keep turning");
-            controls.SendMessage("OnApplicationPause",true); Assert.That(view.Active,Is.False); Assert.That(origin.localPosition,Is.EqualTo(Vector3.zero)); Assert.That(origin.localRotation,Is.EqualTo(Quaternion.identity));Assert.That(root.transform.position,Is.EqualTo(Vector3.zero));Assert.That(root.transform.rotation,Is.EqualTo(Quaternion.identity));
+            var retained=root.transform.position;controls.SendMessage("OnApplicationPause",true); Assert.That(view.Active,Is.False); Assert.That(origin.localPosition,Is.EqualTo(Vector3.zero)); Assert.That(origin.localRotation,Is.EqualTo(Quaternion.identity));Assert.That(root.transform.position,Is.EqualTo(retained));Assert.That(root.transform.rotation,Is.EqualTo(turned));
             controls.SendMessage("OnApplicationPause",false); yield return null; Assert.That(controls.UserEnabled,Is.False);
         }
         [UnityTest] public IEnumerator ControllerButtonsUseSavedActionsAndSolidToolsExposeBindings()

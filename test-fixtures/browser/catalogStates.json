@@ -4,15 +4,26 @@
     "revision": 3,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "2910632cf82549e7b22e2e1743c2ce53",
+    "session": "295ee7d089fd43af963ba061ad2c567a",
     "status": "Room actions ready",
-    "selectedId": "4f614c9fd2d84aa1ab6923e83ee71f86",
+    "selectedId": "670709d5dabd4ef69daf750a12d64e2c",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
     "physicsRunning": false,
     "visible": false,
     "inspection": null,
+    "constructionSelection": {
+      "stateId": "87dc3ee0c2f04c299abd3a840d5b3789",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "87dc3ee0c2f04c299abd3a840d5b3789",
+      "error": "",
+      "visible": false,
+      "holding": false
+    },
     "workspaceView": "objects",
     "rules": {
       "revision": 19,
@@ -28,7 +39,7 @@
       "selectedError": "",
       "sequences": [
         {
-          "id": "5fc48c0ddc3548d1a63d8ec7f7def6c7",
+          "id": "49014c5ba5f24d7c87243b7d68253a29",
           "name": "Action 1",
           "error": "",
           "steps": 1,
@@ -37,6 +48,7 @@
         }
       ],
       "selected": null,
+      "memory": null,
       "bindings": [],
       "buttons": [],
       "running": [],
@@ -53,12 +65,15 @@
       "catalogVocabulary.v1",
       "roomOwnership.v1",
       "behaviourPrograms.v3",
+      "worldAudio.v1",
       "eventPrograms.v1",
       "eventFields.v1",
       "eventSubscriptions.v1",
       "factQueries.v1",
       "conditionWaits.v1",
       "parallelPrograms.v1",
+      "rememberedVariables.v1",
+      "temporaryMemory.v1",
       "structuredValues.v1",
       "programModules.v1",
       "moduleLibrary.v1",
@@ -67,24 +82,72 @@
       "executionReceipts.v1",
       "actionResults.v1",
       "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
       "objectEdits.v1",
       "objectCopy.v1",
       "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "curvedDrawingSurfaces.v1",
+      "drawingTips.v1",
+      "drawingErasers.v1",
+      "containers.v1",
+      "rectangularContainers.v1",
+      "heightFields.v1",
+      "heightFieldTransfer.v1",
+      "materialStores.v1",
+      "materialTransfer.v1",
+      "materialPacking.v1",
+      "physicalMaterialPacking.v1",
+      "physicalSculpting.v1",
+      "physicalMaterialTools.v1",
+      "containerPouring.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
       "recipeEdits.v1",
+      "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "recipePatterns.v1",
+      "roomViewCapture.v1",
+      "collisionShapes.v1",
       "recipePartPlayback.v1",
       "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
+      "objectLaunch.v1",
+      "physicalCatching.v1",
       "calendarSchedules.v1",
       "animationAuthoring.v1",
       "animationRecording.v1",
       "animationPosing.v1",
       "avatarModels.v1",
       "modelImport.v1",
+      "modelArchiveImport.v1",
       "motionBatchImport.v1",
+      "includedMotions.v1",
+      "authoredMotion.v1",
       "unavailablePrograms.v1",
       "actionRecovery.v1",
       "temporaryRoom.v1",
       "spatialSettings.v1",
-      "physicsSimulation.v1"
+      "physicsSimulation.v1",
+      "physicsEnvironment.v1"
     ],
     "physics": {
       "ready": false,
@@ -94,7 +157,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "31185407ccc940d4a6f87ea4d9a607ba",
+      "id": "82da5176bc7a44dfb927bcd3d5b120e8",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -136,61 +199,7 @@
     },
     "objects": [
       {
-        "id": "39a4a0895c534bada7ac5fd44318abd1",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "47b3cc18d9ce4b23876d244af4c36df6",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "4f614c9fd2d84aa1ab6923e83ee71f86",
+        "id": "670709d5dabd4ef69daf750a12d64e2c",
         "name": "Block",
         "kind": "Block",
         "objectRevision": 6,
@@ -204,6 +213,33 @@
           "r": 0.45098039507865906,
           "g": 0.32549020648002625,
           "b": 0.30588236451148987,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "862ed8f56e0048818523a4e2ad0e5a18",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
           "a": 1.0
         },
         "animated": false,
@@ -231,6 +267,33 @@
           "r": 1.0,
           "g": 1.0,
           "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "cb89b67673854e9b93da443cb92f0ee7",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
           "a": 1.0
         },
         "animated": false,
@@ -275,6 +338,7 @@
       }
     ],
     "created": [],
+    "capture": null,
     "catalog": {
       "operation": "inspect",
       "capability": "animation.play",
@@ -1254,7 +1318,7 @@
       "selected": null,
       "running": [],
       "outcomes": [],
-      "nextRunId": "1935a6c949524c48b8f245c4a1afc17c",
+      "nextRunId": "ba25f6ee8a9e4500915933b9802c3589",
       "storageError": null,
       "recovery": null
     }
@@ -1264,15 +1328,26 @@
     "revision": 7,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "2910632cf82549e7b22e2e1743c2ce53",
+    "session": "295ee7d089fd43af963ba061ad2c567a",
     "status": "Room actions ready",
-    "selectedId": "4f614c9fd2d84aa1ab6923e83ee71f86",
+    "selectedId": "670709d5dabd4ef69daf750a12d64e2c",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
     "physicsRunning": false,
     "visible": false,
     "inspection": null,
+    "constructionSelection": {
+      "stateId": "87dc3ee0c2f04c299abd3a840d5b3789",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "87dc3ee0c2f04c299abd3a840d5b3789",
+      "error": "",
+      "visible": false,
+      "holding": false
+    },
     "workspaceView": "objects",
     "rules": {
       "revision": 19,
@@ -1288,7 +1363,7 @@
       "selectedError": "",
       "sequences": [
         {
-          "id": "5fc48c0ddc3548d1a63d8ec7f7def6c7",
+          "id": "49014c5ba5f24d7c87243b7d68253a29",
           "name": "Action 1",
           "error": "",
           "steps": 1,
@@ -1297,15 +1372,16 @@
         }
       ],
       "selected": null,
+      "memory": null,
       "bindings": [],
       "buttons": [],
       "running": [],
       "outcomes": [
         {
-          "id": "1df166fc533f40e2bcc862b46f0464e9",
-          "sequenceId": "5fc48c0ddc3548d1a63d8ec7f7def6c7",
+          "id": "413548b5aaef429e832417da1708c01a",
+          "sequenceId": "49014c5ba5f24d7c87243b7d68253a29",
           "phase": "cancelled",
-          "nodeId": "8d904a6005e8459ba9255fa0f18276ad",
+          "nodeId": "443aba892fae472782be53cce0eb391a",
           "status": "Behaviour stopped"
         }
       ]
@@ -1321,12 +1397,15 @@
       "catalogVocabulary.v1",
       "roomOwnership.v1",
       "behaviourPrograms.v3",
+      "worldAudio.v1",
       "eventPrograms.v1",
       "eventFields.v1",
       "eventSubscriptions.v1",
       "factQueries.v1",
       "conditionWaits.v1",
       "parallelPrograms.v1",
+      "rememberedVariables.v1",
+      "temporaryMemory.v1",
       "structuredValues.v1",
       "programModules.v1",
       "moduleLibrary.v1",
@@ -1335,24 +1414,72 @@
       "executionReceipts.v1",
       "actionResults.v1",
       "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
       "objectEdits.v1",
       "objectCopy.v1",
       "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "curvedDrawingSurfaces.v1",
+      "drawingTips.v1",
+      "drawingErasers.v1",
+      "containers.v1",
+      "rectangularContainers.v1",
+      "heightFields.v1",
+      "heightFieldTransfer.v1",
+      "materialStores.v1",
+      "materialTransfer.v1",
+      "materialPacking.v1",
+      "physicalMaterialPacking.v1",
+      "physicalSculpting.v1",
+      "physicalMaterialTools.v1",
+      "containerPouring.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
       "recipeEdits.v1",
+      "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "recipePatterns.v1",
+      "roomViewCapture.v1",
+      "collisionShapes.v1",
       "recipePartPlayback.v1",
       "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
+      "objectLaunch.v1",
+      "physicalCatching.v1",
       "calendarSchedules.v1",
       "animationAuthoring.v1",
       "animationRecording.v1",
       "animationPosing.v1",
       "avatarModels.v1",
       "modelImport.v1",
+      "modelArchiveImport.v1",
       "motionBatchImport.v1",
+      "includedMotions.v1",
+      "authoredMotion.v1",
       "unavailablePrograms.v1",
       "actionRecovery.v1",
       "temporaryRoom.v1",
       "spatialSettings.v1",
-      "physicsSimulation.v1"
+      "physicsSimulation.v1",
+      "physicsEnvironment.v1"
     ],
     "physics": {
       "ready": false,
@@ -1362,7 +1489,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "31185407ccc940d4a6f87ea4d9a607ba",
+      "id": "82da5176bc7a44dfb927bcd3d5b120e8",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -1404,61 +1531,7 @@
     },
     "objects": [
       {
-        "id": "39a4a0895c534bada7ac5fd44318abd1",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "47b3cc18d9ce4b23876d244af4c36df6",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "4f614c9fd2d84aa1ab6923e83ee71f86",
+        "id": "670709d5dabd4ef69daf750a12d64e2c",
         "name": "Block",
         "kind": "Block",
         "objectRevision": 6,
@@ -1472,6 +1545,33 @@
           "r": 0.45098039507865906,
           "g": 0.32549020648002625,
           "b": 0.30588236451148987,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "862ed8f56e0048818523a4e2ad0e5a18",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
           "a": 1.0
         },
         "animated": false,
@@ -1499,6 +1599,33 @@
           "r": 1.0,
           "g": 1.0,
           "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "cb89b67673854e9b93da443cb92f0ee7",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
           "a": 1.0
         },
         "animated": false,
@@ -1543,13 +1670,14 @@
       }
     ],
     "created": [],
+    "capture": null,
     "catalog": {
       "operation": "check",
       "call": {
         "id": "animation.play",
         "version": 1,
         "arguments": {
-          "target": "83196242769a47268138b62abf8939a1",
+          "target": "aa3cf51ab7c3475388858a38fcbc4746",
           "seconds": 100,
           "loop": false,
           "source": {
@@ -1568,7 +1696,7 @@
       "selected": null,
       "running": [],
       "outcomes": [],
-      "nextRunId": "1935a6c949524c48b8f245c4a1afc17c",
+      "nextRunId": "ba25f6ee8a9e4500915933b9802c3589",
       "storageError": null,
       "recovery": null
     }
@@ -1578,15 +1706,26 @@
     "revision": 6,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "2910632cf82549e7b22e2e1743c2ce53",
+    "session": "295ee7d089fd43af963ba061ad2c567a",
     "status": "Room actions ready",
-    "selectedId": "4f614c9fd2d84aa1ab6923e83ee71f86",
+    "selectedId": "670709d5dabd4ef69daf750a12d64e2c",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
     "physicsRunning": false,
     "visible": false,
     "inspection": null,
+    "constructionSelection": {
+      "stateId": "87dc3ee0c2f04c299abd3a840d5b3789",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "87dc3ee0c2f04c299abd3a840d5b3789",
+      "error": "",
+      "visible": false,
+      "holding": false
+    },
     "workspaceView": "objects",
     "rules": {
       "revision": 19,
@@ -1602,7 +1741,7 @@
       "selectedError": "",
       "sequences": [
         {
-          "id": "5fc48c0ddc3548d1a63d8ec7f7def6c7",
+          "id": "49014c5ba5f24d7c87243b7d68253a29",
           "name": "Action 1",
           "error": "",
           "steps": 1,
@@ -1611,15 +1750,16 @@
         }
       ],
       "selected": null,
+      "memory": null,
       "bindings": [],
       "buttons": [],
       "running": [],
       "outcomes": [
         {
-          "id": "1df166fc533f40e2bcc862b46f0464e9",
-          "sequenceId": "5fc48c0ddc3548d1a63d8ec7f7def6c7",
+          "id": "413548b5aaef429e832417da1708c01a",
+          "sequenceId": "49014c5ba5f24d7c87243b7d68253a29",
           "phase": "cancelled",
-          "nodeId": "8d904a6005e8459ba9255fa0f18276ad",
+          "nodeId": "443aba892fae472782be53cce0eb391a",
           "status": "Behaviour stopped"
         }
       ]
@@ -1635,12 +1775,15 @@
       "catalogVocabulary.v1",
       "roomOwnership.v1",
       "behaviourPrograms.v3",
+      "worldAudio.v1",
       "eventPrograms.v1",
       "eventFields.v1",
       "eventSubscriptions.v1",
       "factQueries.v1",
       "conditionWaits.v1",
       "parallelPrograms.v1",
+      "rememberedVariables.v1",
+      "temporaryMemory.v1",
       "structuredValues.v1",
       "programModules.v1",
       "moduleLibrary.v1",
@@ -1649,24 +1792,72 @@
       "executionReceipts.v1",
       "actionResults.v1",
       "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
       "objectEdits.v1",
       "objectCopy.v1",
       "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "curvedDrawingSurfaces.v1",
+      "drawingTips.v1",
+      "drawingErasers.v1",
+      "containers.v1",
+      "rectangularContainers.v1",
+      "heightFields.v1",
+      "heightFieldTransfer.v1",
+      "materialStores.v1",
+      "materialTransfer.v1",
+      "materialPacking.v1",
+      "physicalMaterialPacking.v1",
+      "physicalSculpting.v1",
+      "physicalMaterialTools.v1",
+      "containerPouring.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
       "recipeEdits.v1",
+      "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "recipePatterns.v1",
+      "roomViewCapture.v1",
+      "collisionShapes.v1",
       "recipePartPlayback.v1",
       "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
+      "objectLaunch.v1",
+      "physicalCatching.v1",
       "calendarSchedules.v1",
       "animationAuthoring.v1",
       "animationRecording.v1",
       "animationPosing.v1",
       "avatarModels.v1",
       "modelImport.v1",
+      "modelArchiveImport.v1",
       "motionBatchImport.v1",
+      "includedMotions.v1",
+      "authoredMotion.v1",
       "unavailablePrograms.v1",
       "actionRecovery.v1",
       "temporaryRoom.v1",
       "spatialSettings.v1",
-      "physicsSimulation.v1"
+      "physicsSimulation.v1",
+      "physicsEnvironment.v1"
     ],
     "physics": {
       "ready": false,
@@ -1676,7 +1867,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "31185407ccc940d4a6f87ea4d9a607ba",
+      "id": "82da5176bc7a44dfb927bcd3d5b120e8",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -1718,61 +1909,7 @@
     },
     "objects": [
       {
-        "id": "39a4a0895c534bada7ac5fd44318abd1",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "47b3cc18d9ce4b23876d244af4c36df6",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "4f614c9fd2d84aa1ab6923e83ee71f86",
+        "id": "670709d5dabd4ef69daf750a12d64e2c",
         "name": "Block",
         "kind": "Block",
         "objectRevision": 6,
@@ -1786,6 +1923,33 @@
           "r": 0.45098039507865906,
           "g": 0.32549020648002625,
           "b": 0.30588236451148987,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "862ed8f56e0048818523a4e2ad0e5a18",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
           "a": 1.0
         },
         "animated": false,
@@ -1813,6 +1977,33 @@
           "r": 1.0,
           "g": 1.0,
           "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "cb89b67673854e9b93da443cb92f0ee7",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
           "a": 1.0
         },
         "animated": false,
@@ -1857,13 +2048,14 @@
       }
     ],
     "created": [],
+    "capture": null,
     "catalog": {
       "operation": "check",
       "call": {
         "id": "animation.play",
         "version": 1,
         "arguments": {
-          "target": "83196242769a47268138b62abf8939a1",
+          "target": "aa3cf51ab7c3475388858a38fcbc4746",
           "seconds": 1,
           "loop": false,
           "source": {
@@ -1876,7 +2068,7 @@
       "available": false,
       "occupied": false,
       "resources": [
-        "83196242769a47268138b62abf8939a1"
+        "aa3cf51ab7c3475388858a38fcbc4746"
       ],
       "status": "An action target was removed; choose another target"
     },
@@ -1884,7 +2076,7 @@
       "selected": null,
       "running": [],
       "outcomes": [],
-      "nextRunId": "1935a6c949524c48b8f245c4a1afc17c",
+      "nextRunId": "ba25f6ee8a9e4500915933b9802c3589",
       "storageError": null,
       "recovery": null
     }
@@ -1894,15 +2086,26 @@
     "revision": 5,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "2910632cf82549e7b22e2e1743c2ce53",
+    "session": "295ee7d089fd43af963ba061ad2c567a",
     "status": "Room actions ready",
-    "selectedId": "4f614c9fd2d84aa1ab6923e83ee71f86",
+    "selectedId": "670709d5dabd4ef69daf750a12d64e2c",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
     "physicsRunning": false,
     "visible": false,
     "inspection": null,
+    "constructionSelection": {
+      "stateId": "87dc3ee0c2f04c299abd3a840d5b3789",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "87dc3ee0c2f04c299abd3a840d5b3789",
+      "error": "",
+      "visible": false,
+      "holding": false
+    },
     "workspaceView": "objects",
     "rules": {
       "revision": 19,
@@ -1918,7 +2121,7 @@
       "selectedError": "",
       "sequences": [
         {
-          "id": "5fc48c0ddc3548d1a63d8ec7f7def6c7",
+          "id": "49014c5ba5f24d7c87243b7d68253a29",
           "name": "Action 1",
           "error": "",
           "steps": 1,
@@ -1927,19 +2130,20 @@
         }
       ],
       "selected": null,
+      "memory": null,
       "bindings": [],
       "buttons": [],
       "running": [
         {
           "parentRunId": "",
-          "id": "1df166fc533f40e2bcc862b46f0464e9",
-          "sequenceId": "5fc48c0ddc3548d1a63d8ec7f7def6c7",
+          "id": "413548b5aaef429e832417da1708c01a",
+          "sequenceId": "49014c5ba5f24d7c87243b7d68253a29",
           "preparing": false,
           "waiting": false,
           "waitEvent": "",
           "waitSeconds": 0.0,
           "state": [],
-          "nodeId": "8d904a6005e8459ba9255fa0f18276ad",
+          "nodeId": "443aba892fae472782be53cce0eb391a",
           "functionName": "main",
           "status": "Running",
           "locals": []
@@ -1958,12 +2162,15 @@
       "catalogVocabulary.v1",
       "roomOwnership.v1",
       "behaviourPrograms.v3",
+      "worldAudio.v1",
       "eventPrograms.v1",
       "eventFields.v1",
       "eventSubscriptions.v1",
       "factQueries.v1",
       "conditionWaits.v1",
       "parallelPrograms.v1",
+      "rememberedVariables.v1",
+      "temporaryMemory.v1",
       "structuredValues.v1",
       "programModules.v1",
       "moduleLibrary.v1",
@@ -1972,24 +2179,72 @@
       "executionReceipts.v1",
       "actionResults.v1",
       "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
       "objectEdits.v1",
       "objectCopy.v1",
       "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "curvedDrawingSurfaces.v1",
+      "drawingTips.v1",
+      "drawingErasers.v1",
+      "containers.v1",
+      "rectangularContainers.v1",
+      "heightFields.v1",
+      "heightFieldTransfer.v1",
+      "materialStores.v1",
+      "materialTransfer.v1",
+      "materialPacking.v1",
+      "physicalMaterialPacking.v1",
+      "physicalSculpting.v1",
+      "physicalMaterialTools.v1",
+      "containerPouring.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
       "recipeEdits.v1",
+      "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "recipePatterns.v1",
+      "roomViewCapture.v1",
+      "collisionShapes.v1",
       "recipePartPlayback.v1",
       "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
+      "objectLaunch.v1",
+      "physicalCatching.v1",
       "calendarSchedules.v1",
       "animationAuthoring.v1",
       "animationRecording.v1",
       "animationPosing.v1",
       "avatarModels.v1",
       "modelImport.v1",
+      "modelArchiveImport.v1",
       "motionBatchImport.v1",
+      "includedMotions.v1",
+      "authoredMotion.v1",
       "unavailablePrograms.v1",
       "actionRecovery.v1",
       "temporaryRoom.v1",
       "spatialSettings.v1",
-      "physicsSimulation.v1"
+      "physicsSimulation.v1",
+      "physicsEnvironment.v1"
     ],
     "physics": {
       "ready": false,
@@ -1999,7 +2254,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "31185407ccc940d4a6f87ea4d9a607ba",
+      "id": "82da5176bc7a44dfb927bcd3d5b120e8",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -2010,13 +2265,13 @@
       "error": "",
       "owners": [
         {
-          "id": "1df166fc533f40e2bcc862b46f0464e9",
+          "id": "413548b5aaef429e832417da1708c01a",
           "label": "Action 1",
           "role": "program",
           "allowsGrab": false,
           "claims": [
             {
-              "target": "4f614c9fd2d84aa1ab6923e83ee71f86",
+              "target": "670709d5dabd4ef69daf750a12d64e2c",
               "channel": "wholeTarget"
             }
           ]
@@ -2054,20 +2309,20 @@
     },
     "objects": [
       {
-        "id": "39a4a0895c534bada7ac5fd44318abd1",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
+        "id": "670709d5dabd4ef69daf750a12d64e2c",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 6,
         "position": {
-          "x": 0.6899999976158142,
+          "x": 0.5299334526062012,
           "y": 1.4500000476837158,
           "z": 0.800000011920929
         },
         "scale": 1.0,
         "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
           "a": 1.0
         },
         "animated": false,
@@ -2081,7 +2336,7 @@
         "movement": null
       },
       {
-        "id": "47b3cc18d9ce4b23876d244af4c36df6",
+        "id": "862ed8f56e0048818523a4e2ad0e5a18",
         "name": "Cylinder",
         "kind": "Cylinder",
         "objectRevision": 5,
@@ -2095,33 +2350,6 @@
           "r": 0.16862745583057404,
           "g": 0.5529412031173706,
           "b": 0.5333333611488342,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "4f614c9fd2d84aa1ab6923e83ee71f86",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 6,
-        "position": {
-          "x": 0.5227343440055847,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
           "a": 1.0
         },
         "animated": false,
@@ -2149,6 +2377,33 @@
           "r": 1.0,
           "g": 1.0,
           "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "cb89b67673854e9b93da443cb92f0ee7",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
           "a": 1.0
         },
         "animated": false,
@@ -2193,13 +2448,14 @@
       }
     ],
     "created": [],
+    "capture": null,
     "catalog": {
       "operation": "check",
       "call": {
         "id": "animation.play",
         "version": 1,
         "arguments": {
-          "target": "4f614c9fd2d84aa1ab6923e83ee71f86",
+          "target": "670709d5dabd4ef69daf750a12d64e2c",
           "seconds": 1,
           "loop": false,
           "source": {
@@ -2212,7 +2468,7 @@
       "available": false,
       "occupied": true,
       "resources": [
-        "4f614c9fd2d84aa1ab6923e83ee71f86"
+        "670709d5dabd4ef69daf750a12d64e2c"
       ],
       "status": "A running action owns a required animation channel or object"
     },
@@ -2220,7 +2476,7 @@
       "selected": null,
       "running": [],
       "outcomes": [],
-      "nextRunId": "1935a6c949524c48b8f245c4a1afc17c",
+      "nextRunId": "ba25f6ee8a9e4500915933b9802c3589",
       "storageError": null,
       "recovery": null
     }
@@ -2230,15 +2486,26 @@
     "revision": 4,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "2910632cf82549e7b22e2e1743c2ce53",
+    "session": "295ee7d089fd43af963ba061ad2c567a",
     "status": "Room actions ready",
-    "selectedId": "4f614c9fd2d84aa1ab6923e83ee71f86",
+    "selectedId": "670709d5dabd4ef69daf750a12d64e2c",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
     "physicsRunning": false,
     "visible": false,
     "inspection": null,
+    "constructionSelection": {
+      "stateId": "87dc3ee0c2f04c299abd3a840d5b3789",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "87dc3ee0c2f04c299abd3a840d5b3789",
+      "error": "",
+      "visible": false,
+      "holding": false
+    },
     "workspaceView": "objects",
     "rules": {
       "revision": 19,
@@ -2254,7 +2521,7 @@
       "selectedError": "",
       "sequences": [
         {
-          "id": "5fc48c0ddc3548d1a63d8ec7f7def6c7",
+          "id": "49014c5ba5f24d7c87243b7d68253a29",
           "name": "Action 1",
           "error": "",
           "steps": 1,
@@ -2263,6 +2530,7 @@
         }
       ],
       "selected": null,
+      "memory": null,
       "bindings": [],
       "buttons": [],
       "running": [],
@@ -2279,12 +2547,15 @@
       "catalogVocabulary.v1",
       "roomOwnership.v1",
       "behaviourPrograms.v3",
+      "worldAudio.v1",
       "eventPrograms.v1",
       "eventFields.v1",
       "eventSubscriptions.v1",
       "factQueries.v1",
       "conditionWaits.v1",
       "parallelPrograms.v1",
+      "rememberedVariables.v1",
+      "temporaryMemory.v1",
       "structuredValues.v1",
       "programModules.v1",
       "moduleLibrary.v1",
@@ -2293,24 +2564,72 @@
       "executionReceipts.v1",
       "actionResults.v1",
       "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
       "objectEdits.v1",
       "objectCopy.v1",
       "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "curvedDrawingSurfaces.v1",
+      "drawingTips.v1",
+      "drawingErasers.v1",
+      "containers.v1",
+      "rectangularContainers.v1",
+      "heightFields.v1",
+      "heightFieldTransfer.v1",
+      "materialStores.v1",
+      "materialTransfer.v1",
+      "materialPacking.v1",
+      "physicalMaterialPacking.v1",
+      "physicalSculpting.v1",
+      "physicalMaterialTools.v1",
+      "containerPouring.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
       "recipeEdits.v1",
+      "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "recipePatterns.v1",
+      "roomViewCapture.v1",
+      "collisionShapes.v1",
       "recipePartPlayback.v1",
       "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
+      "objectLaunch.v1",
+      "physicalCatching.v1",
       "calendarSchedules.v1",
       "animationAuthoring.v1",
       "animationRecording.v1",
       "animationPosing.v1",
       "avatarModels.v1",
       "modelImport.v1",
+      "modelArchiveImport.v1",
       "motionBatchImport.v1",
+      "includedMotions.v1",
+      "authoredMotion.v1",
       "unavailablePrograms.v1",
       "actionRecovery.v1",
       "temporaryRoom.v1",
       "spatialSettings.v1",
-      "physicsSimulation.v1"
+      "physicsSimulation.v1",
+      "physicsEnvironment.v1"
     ],
     "physics": {
       "ready": false,
@@ -2320,7 +2639,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "31185407ccc940d4a6f87ea4d9a607ba",
+      "id": "82da5176bc7a44dfb927bcd3d5b120e8",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -2362,61 +2681,7 @@
     },
     "objects": [
       {
-        "id": "39a4a0895c534bada7ac5fd44318abd1",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "47b3cc18d9ce4b23876d244af4c36df6",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "4f614c9fd2d84aa1ab6923e83ee71f86",
+        "id": "670709d5dabd4ef69daf750a12d64e2c",
         "name": "Block",
         "kind": "Block",
         "objectRevision": 6,
@@ -2430,6 +2695,33 @@
           "r": 0.45098039507865906,
           "g": 0.32549020648002625,
           "b": 0.30588236451148987,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "862ed8f56e0048818523a4e2ad0e5a18",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
           "a": 1.0
         },
         "animated": false,
@@ -2457,6 +2749,33 @@
           "r": 1.0,
           "g": 1.0,
           "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "cb89b67673854e9b93da443cb92f0ee7",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
           "a": 1.0
         },
         "animated": false,
@@ -2501,13 +2820,14 @@
       }
     ],
     "created": [],
+    "capture": null,
     "catalog": {
       "operation": "check",
       "call": {
         "id": "animation.play",
         "version": 1,
         "arguments": {
-          "target": "4f614c9fd2d84aa1ab6923e83ee71f86",
+          "target": "670709d5dabd4ef69daf750a12d64e2c",
           "seconds": 1,
           "loop": false,
           "source": {
@@ -2520,7 +2840,7 @@
       "available": true,
       "occupied": false,
       "resources": [
-        "4f614c9fd2d84aa1ab6923e83ee71f86"
+        "670709d5dabd4ef69daf750a12d64e2c"
       ],
       "status": "Ready now. This check does not reserve or start the action."
     },
@@ -2528,7 +2848,7 @@
       "selected": null,
       "running": [],
       "outcomes": [],
-      "nextRunId": "1935a6c949524c48b8f245c4a1afc17c",
+      "nextRunId": "ba25f6ee8a9e4500915933b9802c3589",
       "storageError": null,
       "recovery": null
     }
@@ -2538,15 +2858,26 @@
     "revision": 2,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "2910632cf82549e7b22e2e1743c2ce53",
+    "session": "295ee7d089fd43af963ba061ad2c567a",
     "status": "Room actions ready",
-    "selectedId": "4f614c9fd2d84aa1ab6923e83ee71f86",
+    "selectedId": "670709d5dabd4ef69daf750a12d64e2c",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
     "physicsRunning": false,
     "visible": false,
     "inspection": null,
+    "constructionSelection": {
+      "stateId": "87dc3ee0c2f04c299abd3a840d5b3789",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "87dc3ee0c2f04c299abd3a840d5b3789",
+      "error": "",
+      "visible": false,
+      "holding": false
+    },
     "workspaceView": "objects",
     "rules": {
       "revision": 19,
@@ -2562,7 +2893,7 @@
       "selectedError": "",
       "sequences": [
         {
-          "id": "5fc48c0ddc3548d1a63d8ec7f7def6c7",
+          "id": "49014c5ba5f24d7c87243b7d68253a29",
           "name": "Action 1",
           "error": "",
           "steps": 1,
@@ -2571,6 +2902,7 @@
         }
       ],
       "selected": null,
+      "memory": null,
       "bindings": [],
       "buttons": [],
       "running": [],
@@ -2587,12 +2919,15 @@
       "catalogVocabulary.v1",
       "roomOwnership.v1",
       "behaviourPrograms.v3",
+      "worldAudio.v1",
       "eventPrograms.v1",
       "eventFields.v1",
       "eventSubscriptions.v1",
       "factQueries.v1",
       "conditionWaits.v1",
       "parallelPrograms.v1",
+      "rememberedVariables.v1",
+      "temporaryMemory.v1",
       "structuredValues.v1",
       "programModules.v1",
       "moduleLibrary.v1",
@@ -2601,24 +2936,72 @@
       "executionReceipts.v1",
       "actionResults.v1",
       "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
       "objectEdits.v1",
       "objectCopy.v1",
       "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "curvedDrawingSurfaces.v1",
+      "drawingTips.v1",
+      "drawingErasers.v1",
+      "containers.v1",
+      "rectangularContainers.v1",
+      "heightFields.v1",
+      "heightFieldTransfer.v1",
+      "materialStores.v1",
+      "materialTransfer.v1",
+      "materialPacking.v1",
+      "physicalMaterialPacking.v1",
+      "physicalSculpting.v1",
+      "physicalMaterialTools.v1",
+      "containerPouring.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
       "recipeEdits.v1",
+      "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "recipePatterns.v1",
+      "roomViewCapture.v1",
+      "collisionShapes.v1",
       "recipePartPlayback.v1",
       "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
+      "objectLaunch.v1",
+      "physicalCatching.v1",
       "calendarSchedules.v1",
       "animationAuthoring.v1",
       "animationRecording.v1",
       "animationPosing.v1",
       "avatarModels.v1",
       "modelImport.v1",
+      "modelArchiveImport.v1",
       "motionBatchImport.v1",
+      "includedMotions.v1",
+      "authoredMotion.v1",
       "unavailablePrograms.v1",
       "actionRecovery.v1",
       "temporaryRoom.v1",
       "spatialSettings.v1",
-      "physicsSimulation.v1"
+      "physicsSimulation.v1",
+      "physicsEnvironment.v1"
     ],
     "physics": {
       "ready": false,
@@ -2628,7 +3011,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "31185407ccc940d4a6f87ea4d9a607ba",
+      "id": "82da5176bc7a44dfb927bcd3d5b120e8",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -2670,61 +3053,7 @@
     },
     "objects": [
       {
-        "id": "39a4a0895c534bada7ac5fd44318abd1",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "47b3cc18d9ce4b23876d244af4c36df6",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "4f614c9fd2d84aa1ab6923e83ee71f86",
+        "id": "670709d5dabd4ef69daf750a12d64e2c",
         "name": "Block",
         "kind": "Block",
         "objectRevision": 6,
@@ -2738,6 +3067,33 @@
           "r": 0.45098039507865906,
           "g": 0.32549020648002625,
           "b": 0.30588236451148987,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "862ed8f56e0048818523a4e2ad0e5a18",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
           "a": 1.0
         },
         "animated": false,
@@ -2765,6 +3121,33 @@
           "r": 1.0,
           "g": 1.0,
           "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "cb89b67673854e9b93da443cb92f0ee7",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
           "a": 1.0
         },
         "animated": false,
@@ -2809,13 +3192,34 @@
       }
     ],
     "created": [],
+    "capture": null,
     "catalog": {
       "operation": "search",
       "query": "",
       "offset": 6,
       "pageSize": 6,
-      "total": 58,
+      "total": 101,
       "entries": [
+        {
+          "id": "audio.source.edit",
+          "version": 1,
+          "label": "Create or edit a reusable sound"
+        },
+        {
+          "id": "audio.start",
+          "version": 1,
+          "label": "Start independent room sound"
+        },
+        {
+          "id": "avatar.follow.user",
+          "version": 1,
+          "label": "Follow user"
+        },
+        {
+          "id": "avatar.look.user",
+          "version": 1,
+          "label": "Look at user"
+        },
         {
           "id": "avatar.model.select",
           "version": 1,
@@ -2825,35 +3229,15 @@
           "id": "avatar.movement.configure",
           "version": 1,
           "label": "Configure Maestro movement"
-        },
-        {
-          "id": "avatar.walk.select",
-          "version": 1,
-          "label": "Choose walking animation"
-        },
-        {
-          "id": "controller.configure",
-          "version": 1,
-          "label": "Configure controller bindings"
-        },
-        {
-          "id": "controller.mode.set",
-          "version": 1,
-          "label": "Change movement or room view"
-        },
-        {
-          "id": "model.import",
-          "version": 1,
-          "label": "Import a model together"
         }
       ],
-      "status": "Found 58 actions. Search does not run or enable anything."
+      "status": "Found 101 actions. Search does not run or enable anything."
     },
     "execution": {
       "selected": null,
       "running": [],
       "outcomes": [],
-      "nextRunId": "1935a6c949524c48b8f245c4a1afc17c",
+      "nextRunId": "ba25f6ee8a9e4500915933b9802c3589",
       "storageError": null,
       "recovery": null
     }
@@ -2863,15 +3247,26 @@
     "revision": 1,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "2910632cf82549e7b22e2e1743c2ce53",
+    "session": "295ee7d089fd43af963ba061ad2c567a",
     "status": "Room actions ready",
-    "selectedId": "4f614c9fd2d84aa1ab6923e83ee71f86",
+    "selectedId": "670709d5dabd4ef69daf750a12d64e2c",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
     "physicsRunning": false,
     "visible": false,
     "inspection": null,
+    "constructionSelection": {
+      "stateId": "87dc3ee0c2f04c299abd3a840d5b3789",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "87dc3ee0c2f04c299abd3a840d5b3789",
+      "error": "",
+      "visible": false,
+      "holding": false
+    },
     "workspaceView": "objects",
     "rules": {
       "revision": 19,
@@ -2887,7 +3282,7 @@
       "selectedError": "",
       "sequences": [
         {
-          "id": "5fc48c0ddc3548d1a63d8ec7f7def6c7",
+          "id": "49014c5ba5f24d7c87243b7d68253a29",
           "name": "Action 1",
           "error": "",
           "steps": 1,
@@ -2896,6 +3291,7 @@
         }
       ],
       "selected": null,
+      "memory": null,
       "bindings": [],
       "buttons": [],
       "running": [],
@@ -2912,12 +3308,15 @@
       "catalogVocabulary.v1",
       "roomOwnership.v1",
       "behaviourPrograms.v3",
+      "worldAudio.v1",
       "eventPrograms.v1",
       "eventFields.v1",
       "eventSubscriptions.v1",
       "factQueries.v1",
       "conditionWaits.v1",
       "parallelPrograms.v1",
+      "rememberedVariables.v1",
+      "temporaryMemory.v1",
       "structuredValues.v1",
       "programModules.v1",
       "moduleLibrary.v1",
@@ -2926,24 +3325,72 @@
       "executionReceipts.v1",
       "actionResults.v1",
       "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
       "objectEdits.v1",
       "objectCopy.v1",
       "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "curvedDrawingSurfaces.v1",
+      "drawingTips.v1",
+      "drawingErasers.v1",
+      "containers.v1",
+      "rectangularContainers.v1",
+      "heightFields.v1",
+      "heightFieldTransfer.v1",
+      "materialStores.v1",
+      "materialTransfer.v1",
+      "materialPacking.v1",
+      "physicalMaterialPacking.v1",
+      "physicalSculpting.v1",
+      "physicalMaterialTools.v1",
+      "containerPouring.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
       "recipeEdits.v1",
+      "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "recipePatterns.v1",
+      "roomViewCapture.v1",
+      "collisionShapes.v1",
       "recipePartPlayback.v1",
       "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
+      "objectLaunch.v1",
+      "physicalCatching.v1",
       "calendarSchedules.v1",
       "animationAuthoring.v1",
       "animationRecording.v1",
       "animationPosing.v1",
       "avatarModels.v1",
       "modelImport.v1",
+      "modelArchiveImport.v1",
       "motionBatchImport.v1",
+      "includedMotions.v1",
+      "authoredMotion.v1",
       "unavailablePrograms.v1",
       "actionRecovery.v1",
       "temporaryRoom.v1",
       "spatialSettings.v1",
-      "physicsSimulation.v1"
+      "physicsSimulation.v1",
+      "physicsEnvironment.v1"
     ],
     "physics": {
       "ready": false,
@@ -2953,7 +3400,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "31185407ccc940d4a6f87ea4d9a607ba",
+      "id": "82da5176bc7a44dfb927bcd3d5b120e8",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -2995,61 +3442,7 @@
     },
     "objects": [
       {
-        "id": "39a4a0895c534bada7ac5fd44318abd1",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "47b3cc18d9ce4b23876d244af4c36df6",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "4f614c9fd2d84aa1ab6923e83ee71f86",
+        "id": "670709d5dabd4ef69daf750a12d64e2c",
         "name": "Block",
         "kind": "Block",
         "objectRevision": 6,
@@ -3063,6 +3456,33 @@
           "r": 0.45098039507865906,
           "g": 0.32549020648002625,
           "b": 0.30588236451148987,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "862ed8f56e0048818523a4e2ad0e5a18",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
           "a": 1.0
         },
         "animated": false,
@@ -3090,6 +3510,33 @@
           "r": 1.0,
           "g": 1.0,
           "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "cb89b67673854e9b93da443cb92f0ee7",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
           "a": 1.0
         },
         "animated": false,
@@ -3134,12 +3581,13 @@
       }
     ],
     "created": [],
+    "capture": null,
     "catalog": {
       "operation": "search",
       "query": "",
       "offset": 0,
       "pageSize": 6,
-      "total": 58,
+      "total": 101,
       "entries": [
         {
           "id": "animation.author",
@@ -3162,23 +3610,23 @@
           "label": "Record, save or discard a take"
         },
         {
-          "id": "avatar.follow.user",
+          "id": "audio.control",
           "version": 1,
-          "label": "Follow user"
+          "label": "Control a room sound"
         },
         {
-          "id": "avatar.look.user",
+          "id": "audio.play",
           "version": 1,
-          "label": "Look at user"
+          "label": "Play an object's sound"
         }
       ],
-      "status": "Found 58 actions. Search does not run or enable anything."
+      "status": "Found 101 actions. Search does not run or enable anything."
     },
     "execution": {
       "selected": null,
       "running": [],
       "outcomes": [],
-      "nextRunId": "1935a6c949524c48b8f245c4a1afc17c",
+      "nextRunId": "ba25f6ee8a9e4500915933b9802c3589",
       "storageError": null,
       "recovery": null
     }
@@ -3188,15 +3636,26 @@
     "revision": 8,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "2910632cf82549e7b22e2e1743c2ce53",
+    "session": "295ee7d089fd43af963ba061ad2c567a",
     "status": "Room actions ready",
-    "selectedId": "4f614c9fd2d84aa1ab6923e83ee71f86",
+    "selectedId": "670709d5dabd4ef69daf750a12d64e2c",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
     "physicsRunning": false,
     "visible": false,
     "inspection": null,
+    "constructionSelection": {
+      "stateId": "87dc3ee0c2f04c299abd3a840d5b3789",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "87dc3ee0c2f04c299abd3a840d5b3789",
+      "error": "",
+      "visible": false,
+      "holding": false
+    },
     "workspaceView": "objects",
     "rules": {
       "revision": 19,
@@ -3212,7 +3671,7 @@
       "selectedError": "",
       "sequences": [
         {
-          "id": "5fc48c0ddc3548d1a63d8ec7f7def6c7",
+          "id": "49014c5ba5f24d7c87243b7d68253a29",
           "name": "Action 1",
           "error": "",
           "steps": 1,
@@ -3221,15 +3680,16 @@
         }
       ],
       "selected": null,
+      "memory": null,
       "bindings": [],
       "buttons": [],
       "running": [],
       "outcomes": [
         {
-          "id": "1df166fc533f40e2bcc862b46f0464e9",
-          "sequenceId": "5fc48c0ddc3548d1a63d8ec7f7def6c7",
+          "id": "413548b5aaef429e832417da1708c01a",
+          "sequenceId": "49014c5ba5f24d7c87243b7d68253a29",
           "phase": "cancelled",
-          "nodeId": "8d904a6005e8459ba9255fa0f18276ad",
+          "nodeId": "443aba892fae472782be53cce0eb391a",
           "status": "Behaviour stopped"
         }
       ]
@@ -3245,12 +3705,15 @@
       "catalogVocabulary.v1",
       "roomOwnership.v1",
       "behaviourPrograms.v3",
+      "worldAudio.v1",
       "eventPrograms.v1",
       "eventFields.v1",
       "eventSubscriptions.v1",
       "factQueries.v1",
       "conditionWaits.v1",
       "parallelPrograms.v1",
+      "rememberedVariables.v1",
+      "temporaryMemory.v1",
       "structuredValues.v1",
       "programModules.v1",
       "moduleLibrary.v1",
@@ -3259,24 +3722,72 @@
       "executionReceipts.v1",
       "actionResults.v1",
       "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
       "objectEdits.v1",
       "objectCopy.v1",
       "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "curvedDrawingSurfaces.v1",
+      "drawingTips.v1",
+      "drawingErasers.v1",
+      "containers.v1",
+      "rectangularContainers.v1",
+      "heightFields.v1",
+      "heightFieldTransfer.v1",
+      "materialStores.v1",
+      "materialTransfer.v1",
+      "materialPacking.v1",
+      "physicalMaterialPacking.v1",
+      "physicalSculpting.v1",
+      "physicalMaterialTools.v1",
+      "containerPouring.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
       "recipeEdits.v1",
+      "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "recipePatterns.v1",
+      "roomViewCapture.v1",
+      "collisionShapes.v1",
       "recipePartPlayback.v1",
       "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
+      "objectLaunch.v1",
+      "physicalCatching.v1",
       "calendarSchedules.v1",
       "animationAuthoring.v1",
       "animationRecording.v1",
       "animationPosing.v1",
       "avatarModels.v1",
       "modelImport.v1",
+      "modelArchiveImport.v1",
       "motionBatchImport.v1",
+      "includedMotions.v1",
+      "authoredMotion.v1",
       "unavailablePrograms.v1",
       "actionRecovery.v1",
       "temporaryRoom.v1",
       "spatialSettings.v1",
-      "physicsSimulation.v1"
+      "physicsSimulation.v1",
+      "physicsEnvironment.v1"
     ],
     "physics": {
       "ready": false,
@@ -3286,7 +3797,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "31185407ccc940d4a6f87ea4d9a607ba",
+      "id": "82da5176bc7a44dfb927bcd3d5b120e8",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -3328,61 +3839,7 @@
     },
     "objects": [
       {
-        "id": "39a4a0895c534bada7ac5fd44318abd1",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "47b3cc18d9ce4b23876d244af4c36df6",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "4f614c9fd2d84aa1ab6923e83ee71f86",
+        "id": "670709d5dabd4ef69daf750a12d64e2c",
         "name": "Block",
         "kind": "Block",
         "objectRevision": 6,
@@ -3396,6 +3853,33 @@
           "r": 0.45098039507865906,
           "g": 0.32549020648002625,
           "b": 0.30588236451148987,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "862ed8f56e0048818523a4e2ad0e5a18",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
           "a": 1.0
         },
         "animated": false,
@@ -3423,6 +3907,33 @@
           "r": 1.0,
           "g": 1.0,
           "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "cb89b67673854e9b93da443cb92f0ee7",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
           "a": 1.0
         },
         "animated": false,
@@ -3467,6 +3978,7 @@
       }
     ],
     "created": [],
+    "capture": null,
     "catalog": {
       "operation": "inspect",
       "capability": "future.unknown",
@@ -3478,7 +3990,7 @@
       "selected": null,
       "running": [],
       "outcomes": [],
-      "nextRunId": "1935a6c949524c48b8f245c4a1afc17c",
+      "nextRunId": "ba25f6ee8a9e4500915933b9802c3589",
       "storageError": null,
       "recovery": null
     }

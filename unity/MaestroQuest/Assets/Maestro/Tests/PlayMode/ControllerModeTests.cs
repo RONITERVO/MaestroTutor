@@ -29,7 +29,7 @@ namespace Maestro.Quest.Tests
             Assert.That(BehaviourCatalog.TryRead("controller.mode",1,null,new BehaviourCatalog.FactContext(editor:editor),out var value),Is.True);
             Assert.That(value.Characters,Is.LessThanOrEqualTo(1024));return JObject.FromObject(value.Value);
         }
-        JObject ModeRequest(string operation)=>new() {["operation"]="start",["runId"]=modeActions.Observe()["nextRunId"].DeepClone(),["call"]=new JObject {["id"]="controller.mode.set",["version"]=1,["arguments"]=new JObject {["operation"]=operation,["stateId"]=ModeFact()["stateId"].DeepClone()}}};
+        JObject ModeRequest(string operation)=>new() {["operation"]="start",["runId"]=modeActions.Observe()["nextRunId"].DeepClone(),["call"]=new JObject {["id"]="controller.mode.set",["version"]=2,["arguments"]=new JObject {["operation"]=operation,["stateId"]=ModeFact()["stateId"].DeepClone()}}};
         IEnumerator ChangeMode(string operation)
         {
             Assert.That(modeActions.Execute(ModeRequest(operation),out var error),Is.True,error);yield return null;
@@ -37,7 +37,7 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator SharedModesMoveIndependentTargetsOnlyAfterNeutralWithoutMovingTracking()
         {
-            var controls=SharedModes(out var view,out var origin);var before=ModeFact();var home=origin.localPosition;var rotation=origin.localRotation;
+            var controls=SharedModes(out var view,out var origin);TravelGround();var before=ModeFact();var home=origin.localPosition;var rotation=origin.localRotation;
             frame.rightStick=Vector2.up;frame.leftStick=Vector2.right;
             yield return ChangeMode("maestro.enable");var enable=modeActions.Observe().DeepClone();yield return new WaitForSeconds(.15f);
             Assert.That(motion.Active,Is.False);Assert.That(avatar.transform.position.z,Is.Zero);
@@ -49,7 +49,7 @@ namespace Maestro.Quest.Tests
             Assert.That(root.transform.position.x,Is.LessThan(-.05f));Assert.That(origin.localPosition,Is.EqualTo(home));var walked=viewer.transform.position;frame.leftStick=Vector2.zero;frame.a=true;yield return null;
             Assert.That(Quaternion.Angle(root.transform.rotation,rotation),Is.EqualTo(30).Within(.1f));Assert.That(Vector3.Distance(viewer.transform.position,walked),Is.LessThan(.001f),"Snap turn pivots around the viewer");
             yield return ChangeMode("view.mixedReality");var mixed=modeActions.Observe().DeepClone();var after=ModeFact();
-            Assert.That(view.Active||controls.UserEnabled||controls.AvatarEnabled||motion.Active||world.Running,Is.False);
+            Assert.That(view.Active||controls.UserEnabled||motion.Active||world.Running,Is.False);Assert.That(controls.AvatarEnabled,Is.True,"View selection retains the independent Maestro opt-in");
             Assert.That(origin.localPosition,Is.EqualTo(home));Assert.That(Quaternion.Angle(origin.localRotation,rotation),Is.LessThan(.001f));Assert.That(viewer.GetComponent<Camera>().backgroundColor.a,Is.Zero);
             Assert.That(modeRules.Scheduler.RunningCount,Is.Zero,"View transitions must complete, not cancel their own invocation");
             string evidence=Environment.GetEnvironmentVariable("MAESTRO_CONTROLLER_MODES");if(!string.IsNullOrEmpty(evidence)){Directory.CreateDirectory(evidence);File.WriteAllText(Path.Combine(evidence,"modes.json"),new JObject {["before"]=before,["enable"]=enable,["virtualView"]=virtualView,["user"]=user,["mixed"]=mixed,["after"]=after}.ToString());}
@@ -65,14 +65,17 @@ namespace Maestro.Quest.Tests
             stale=ModeRequest("view.virtual");controls.SendMessage("OnApplicationFocus",false);controls.SendMessage("OnApplicationFocus",true);Assert.That(modeActions.Execute(stale,out _),Is.False);
             stale=ModeRequest("view.virtual");tracked=false;yield return null;tracked=true;Assert.That(modeActions.Execute(stale,out _),Is.False);
         }
-        [UnityTest] public IEnumerator SharedModeRefusesOtherActorsAndBusyInputWithoutStoppingThem()
+        [UnityTest] public IEnumerator ViewModesPreserveOtherActorsWhileTakeoverAndBusyInputStillRefuse()
         {
             var controls=SharedModes(out var view,out _);
             Assert.That(motion.Begin("existing follow",Avatar.AvatarSpatialMode.Follow,out var error),Is.True,error);
-            Assert.That(modeActions.Execute(ModeRequest("view.virtual"),out error),Is.False);StringAssert.Contains("Stop the current",error);Assert.That(motion.OwnedBy("existing follow"),Is.True);Assert.That(view.Active,Is.False);motion.Stop();
+            Assert.That(modeActions.Execute(ModeRequest("maestro.enable"),out error),Is.False);StringAssert.Contains("Stop the current",error);
+            yield return ChangeMode("view.virtual");Assert.That(motion.OwnedBy("existing follow"),Is.True);Assert.That(view.Active,Is.True);Assert.That(world.Running,Is.True);
+            controls.ToggleView();Assert.That(motion.OwnedBy("existing follow"),Is.True);Assert.That(view.Active,Is.False);Assert.That(world.Running,Is.True);motion.Stop();
             var follow=new JObject {["operation"]="start",["call"]=new JObject {["id"]="avatar.follow.user",["version"]=1,["arguments"]=new JObject {["target"]="maestro",["seconds"]=10}}};
             Assert.That(modeActions.Execute(follow,out error),Is.True,error);yield return null;string followId=(string)modeActions.Observe()["selected"]["id"];
-            Assert.That(modeActions.Execute(ModeRequest("view.virtual"),out _),Is.False);Assert.That(modeRules.Scheduler.RunningCount,Is.EqualTo(1));
+            yield return ChangeMode("view.virtual");Assert.That(modeRules.Scheduler.RunningCount,Is.EqualTo(1));
+            yield return ChangeMode("view.mixedReality");Assert.That(modeRules.Scheduler.RunningCount,Is.EqualTo(1));Assert.That(world.Running,Is.True);
             // Safe disable can run without requiring an unrelated action to finish.
             yield return ChangeMode("user.disable");Assert.That(modeRules.Scheduler.RunningCount,Is.EqualTo(1));modeRules.StopAll();
             view.enabled=false;Assert.That(modeActions.Execute(ModeRequest("view.virtual"),out _),Is.False);Assert.That(controls.Virtual,Is.False);view.enabled=true;
@@ -81,7 +84,7 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator SharedModesRequireExplicitVirtualViewAndBoundStickAndDoNotResumeAfterPause()
         {
-            var controls=SharedModes(out var view,out var origin);
+            var controls=SharedModes(out var view,out var origin);TravelGround();
             Assert.That(modeActions.Execute(ModeRequest("user.enable"),out var error),Is.False);StringAssert.Contains("Virtual view",error);
             var prefs=controls.Preferences;prefs.avatarStick=MovementStick.None;Assert.That(controls.Apply(prefs),Is.True);
             Assert.That(modeActions.Execute(ModeRequest("maestro.enable"),out error),Is.False);StringAssert.Contains("binding",error);

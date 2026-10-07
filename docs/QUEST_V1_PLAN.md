@@ -3650,6 +3650,35 @@ scripted local provider; no Gemini request or headset operation was performed.
 Web validation uses fresh Unity captures of throw, catch, part pose and anchor
 programs; old-version rejection and visual version selection agree with native.
 
+World/view lifetime increment (2026-10-07): Virtual and MR presentation no longer
+rewind the virtual frame, pause physics, remove ground or take over autonomous
+actors and programs. View changes retain Maestro's independent control opt-in;
+returning to MR disables only user locomotion while swept MR travel is unfinished.
+Actual focus/tracking interruption still disables live input through lifecycle
+recovery, without rewinding content. Explicit Recall remains a separate recovery.
+Physical scan tracking and world lock continue in Virtual view; presentation no
+longer fabricates scan invalidation or treats Virtual as acoustic tracking proof.
+
+The view-owned paper floor is removed. Accepted scene ground owns its geometry,
+collision, navigation and lifetime. Planar user travel now requires accepted
+level authored ground under the current/destination footprints and refuses
+unsupported hills, edges and holes. Entering Virtual with no ground only changes
+the view; it does not create an invisible collider or claim walking is ready.
+Terrain-following locomotion, default environment authoring, cross-session frame
+persistence, real-collision sweep admission and continuous blending remain open.
+
+The changed controller.mode.set contract is version 2. Old resetting-view calls
+are preserved for review rather than silently rewritten. Shared definitions,
+native receipts and web consumers use the current action; controller.mode retains
+its unchanged readback shape. Verification passed 883 EditMode and 730 PlayMode
+cases, with three expected optional private-file skips, plus 83 focused native
+cases and 1,050 shared room checks. Both complete native-room/original-book
+journeys passed using local scripted responses. A real Chromium probe exercised
+four generated mode controls against current native receipts. Initial probe
+attempts exposed local server setup conflicts and a stale field-toggle step;
+the corrected harness passed without changing product UI. No provider request or
+headset operation occurred. These checks do not close physical acceptance.
+
 The owner expects worlds to grow from room toys into miniature countries with
 cities, buildings, items and NPCs. Users and the agent must author the same world;
 imported Blender/Meshy assets are another source of its components. Texture and

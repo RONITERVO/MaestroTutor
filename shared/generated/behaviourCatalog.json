@@ -4758,7 +4758,7 @@
     },
     {
       "id": "controller.mode.set",
-      "version": 1,
+      "version": 2,
       "label": "Change movement or room view",
       "input": {
         "type": "object",
@@ -4810,7 +4810,7 @@
         "tracking.available",
         "manual.released"
       ],
-      "description": "Explicit live opt-in only: enable/disable Maestro's stick or the user's separate movement, or switch Virtual/Mixed Reality view. Use only when the user requests that movement or view change; entering Virtual hides the real room. Read controller.mode immediately beforehand and pass its exact stateId. Manual changes, settings saves, focus/tracking changes and recovery invalidate it. Enabling never injects movement: sticks must return to neutral first. Your movement moves virtual content while physical tracking stays fixed. It currently requires Virtual view; active physics against real-room colliders refuses world movement until paused or real collisions are disabled. enabling Maestro requires loaded avatar and aligned running room physics. Enabling or changing view requires other runs and animation authoring to finish; it does not stop another actor. Disabling a stick is allowed alongside other runs. Returning to MR disables both sticks, restores the virtual content entry pose and pauses physics for alignment review. B/Y and palm Recall remain immediate manual recovery. These live modes are never saved; restart or tracking/focus loss requires explicit reenable. A completed receipt reports that moment, not continued tracking or path readiness; read the fact for current state. Cancelling a completed action does not undo its mode: issue the explicit disable or MR action with a fresh identity. Duplicate receipts never enable again.",
+      "description": "Explicit live opt-in only: enable/disable Maestro's stick or the user's separate movement, or switch Virtual/Mixed Reality view. Use only when the user requests that movement or view change; entering Virtual hides the real room. Read controller.mode immediately beforehand and pass its exact stateId. Manual changes, settings saves, focus/tracking changes and recovery invalidate it. Enabling never injects movement: sticks must return to neutral first. Your movement moves virtual content while physical tracking stays fixed. It currently requires Virtual view; active physics against real-room colliders refuses world movement until paused or real collisions are disabled. enabling Maestro requires loaded avatar and aligned running room physics. Enabling a stick requires other runs and animation authoring to finish; it does not stop another actor. Disabling a stick and changing view are allowed alongside other runs. View changes preserve world position, objects, physics and autonomous activity, and create no ground. Returning to MR disables only user locomotion; Maestro control is retained. User walking currently requires accepted level authored ground under the complete step; missing ground, hills and ledges refuse movement until terrain-following travel is implemented. B/Y and palm Recall remain immediate manual recovery. Stick opt-ins are never saved; restart or tracking/focus loss requires explicit reenable. Focus/tracking loss restores the mixed view without rewinding the world. World offsets survive view changes in this session but are not yet persisted across restart. A completed receipt reports that moment, not continued tracking or path readiness; read the fact for current state. Cancelling a completed action does not undo its mode: issue the explicit disable or MR action with a fresh identity. Duplicate receipts never enable again.",
       "example": {
         "operation": "view.virtual",
         "stateId": "00000000000000000000000000000000"
@@ -27860,7 +27860,7 @@
         "room.active",
         "workspace.available"
       ],
-      "description": "Set real-room collision participation independently of the visual view. Read physics.environment and pass its exact stateId. Changing this policy pauses physics and clears old throw speeds; explicitly start afterwards. On requires a loaded aligned scan and keeps simulation inside that physical room. Off uses accepted authored terrain or the virtual floor, excluding scanned geometry from contacts, navigation and motion checks. Off requires virtual ground: current room-scale support is columns above actual accepted surfaces, up to 16 metres above and 0.25 metres below; gaps and unloaded regions are unavailable. This does not delete the scan, change passthrough/depth/audio, grant permissions, move the user or create terrain. Fresh rooms default to on; this runtime setting is not saved or undone. Already-satisfied requests preserve motion. Physical surfaces still exist when virtual objects do not collide with them.",
+      "description": "Set real-room collision participation independently of the visual view. Read physics.environment and pass its exact stateId. Changing this policy pauses physics and clears old throw speeds; explicitly start afterwards. On requires a loaded aligned scan and keeps simulation inside that physical room. Off uses accepted authored ground, excluding scanned geometry from contacts, navigation and motion checks. Off requires virtual ground: current room-scale support is columns above actual accepted surfaces, up to 16 metres above and 0.25 metres below; gaps and unloaded regions are unavailable. This does not delete the scan, change passthrough/depth/audio, grant permissions, move the user or create terrain. Fresh rooms default to on; this runtime setting is not saved or undone. Already-satisfied requests preserve motion. Physical surfaces still exist when virtual objects do not collide with them.",
       "example": {
         "realCollisions": false,
         "stateId": "00000000000000000000000000000000"
@@ -36091,7 +36091,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MovementControls.cs",
-      "sha256": "aa31d303471e8b48654ec38fc5c69792b70e91f47b91c82fb41fd7e2db92cfe0"
+      "sha256": "84663a66dc26b7d194517795d00b88867a6081ea2c93b3994272ccc490e6cae1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MovementConfiguration.cs",
@@ -36099,11 +36099,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MovementModes.cs",
-      "sha256": "d98159c90cb6054ee87e2b89d588256b8e4d7fd8696138d1be81559f9f11c7af"
+      "sha256": "51d9b3963cad0816330ef41ffcf0a7c6a94b8b35a979e6528e365c4c8c4ae878"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/VirtualRoomView.cs",
-      "sha256": "acd97929a625d48a16d65eb8e9e9e5e2590e8838a3ed76b5c5cdc2d335131cee"
+      "sha256": "26bed5471022a5d28f596e40666a5628643e5a78d6c3d5d89e6d9549fc9e747d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomWorldMotion.cs",
@@ -36135,7 +36135,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ScannedRoom.cs",
-      "sha256": "40faa8122f44db04316cb5317e523f08db4a279131ed4a4da710ec1e3ab9c597"
+      "sha256": "b3e09f9712fc459ebd27449039215330f5bf37ea9e64051af289803dea88b185"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ScannedRoomRequests.cs",
@@ -36291,7 +36291,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ScannedRoomAcoustics.cs",
-      "sha256": "651f4791dbe541a08c3c54213f8968b0e6d85740b47437c5d5e546938d754749"
+      "sha256": "39fd72b1ea9895d4355e14cca8caf6379ef2f1ac3a145356b0282960777ffa23"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedRoomObject.cs",
@@ -36399,7 +36399,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ControllerModeCapability.cs",
-      "sha256": "5811bee736a88bd40845dc0afdb3881abcc8b6fbd22ae7b40c1c369e1e8c1a93"
+      "sha256": "e4d0aeb44128d84ba390f08d76d4146989f73fbf21432e1f9883487394ca6dd0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CopyObjectCapability.cs",
@@ -36523,7 +36523,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsEnvironmentCapability.cs",
-      "sha256": "95774285d0c94693736901ecd27871e8be059ff1dd2c4a914e82a8a00e7a77c0"
+      "sha256": "36687aa39efd19c67325c930e7de6c6d6b6ac3f8e4eb043ec4d7da13dfeb3fda"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsSimulationCapability.cs",

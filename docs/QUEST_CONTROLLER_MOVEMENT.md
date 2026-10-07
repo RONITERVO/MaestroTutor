@@ -1,8 +1,7 @@
 # Controller movement and bindings
 
-Development implementation, 2026-09-26. Device installation and comfort checks
-remain on hold while the user sleeps and charges Quest. This is not a release
-or headset acceptance claim.
+Development implementation, updated 2026-10-07. The spatial-state refactor is
+in progress. Desktop evidence does not establish headset comfort or acceptance.
 
 ## Physical controls
 
@@ -12,7 +11,8 @@ every launch and after focus loss, pause, head-tracking loss or Recall.
 
 - Maestro stick enables direct walking using the selected avatar stick.
 - Your movement enables user walking only in the explicit Virtual view.
-- Virtual / MR changes presentation; Stop / MR returns to the physical room.
+- Virtual / MR changes presentation while keeping world position and activity.
+  Stop / MR disables the movement opt-ins and restores the mixed view.
 - Maestro binding and Your binding cycle Off, Left and Right, skipping the other
   target's assigned stick. Swap sticks exchanges assignments in one operation.
 - Walk speed changes user speed through 0.35, 0.65 and 1 m/s. Maestro retains its
@@ -41,7 +41,9 @@ motions just like controller-mounted 3D buttons and tutor-state triggers.
 
 ## Maestro and the room
 
-Direct walking requires a checked scan and Start physics, like Follow me. It is
+Direct walking requires accepted navigation and Start physics, like Follow me.
+Its ground follows the independent real-collision policy: aligned scanned
+surfaces when enabled, accepted authored surfaces when disabled. It is
 relative to the user's horizontal viewing direction and proportional to the
 stick deflection after the dead zone. It uses the existing avatar scale, speed,
 saved walking motion and navigation-owned root translation. Centering stops and
@@ -55,34 +57,52 @@ replacement, focus loss, Recall and rule ownership changes interrupt movement.
 
 ## User movement and mixed reality
 
-Artificial user movement is opt-in and limited to Virtual view. That view
-stops ARCameraManager passthrough and uses an opaque background and a 20-metre
-paper floor. Existing scanned surfaces are visible as geometry. MRUK updates
-are suspended while the tracking origin is moved, preserving its entry-time
-alignment transform rather than allowing world-lock updates to cancel the
-locomotion offset. Loading/scanning and live-depth placement wait for MR view.
+Artificial user movement currently requires explicit Virtual view. That view
+stops ARCameraManager passthrough and uses an opaque background; scanned surfaces
+are visible as geometry. It creates no floor or other world object. The physical
+tracking origin and MRUK world lock keep updating in both views. Virtual content
+moves relative to that fixed physical frame. Loading/scanning and physical
+surface placement currently wait for MR view.
 
-Horizontal user walking uses a body capsule against scanned surfaces, collidable
-room objects and the book/avatar. It stops at an 8-metre radius from the virtual
-floor centre. Snap turns rotate the origin around the current headset position.
-This initial virtual space has a fixed floor height: slopes, stairs, gravity for
-the user's body and teleportation are not implemented. The headset can still
-move physically; application collisions do not constrain the real person or
-replace the Quest system boundary.
+Horizontal walking and snap turns transform virtual content, including its
+accepted ground, bodies, velocities and navigation. Held objects and physically
+bound content keep their physical poses. Unsupported cross-frame joints and
+active physics against real-room colliders refuse movement. Pause physics or
+explicitly disable real collisions before virtual travel; a view switch never
+changes that policy. Swept admission for active real collisions remains open.
 
-Returning to MR restores the exact original origin transform and camera settings,
-resumes the prior passthrough component state, ends artificial movement and pauses
-physics for alignment review. The origin offset is not saved to the room. B/Y and
-palm Recall invoke this return before relocating the book/tools around the real
-viewer. Focus, pause and head-tracking loss also return to MR and require explicit
-movement enablement again. Transitions refuse entry while holding items or while
-a scan is loading. Existing audio-resume policy remains owned by the browser.
+Walking uses a swept body capsule against virtual obstacles and checks accepted
+authored ground under the current and destination footprints. There is no hidden
+flat fallback. Current planar travel refuses missing ground, ledges and ground
+outside the small level tolerance of the physical floor. Following slopes,
+stairs, gravity for the user's body and teleportation remain unimplemented. The
+headset still moves physically; application collision does not constrain the
+real person or replace the Quest system boundary.
+
+Returning to MR restores camera and passthrough settings and disables user
+locomotion. It retains Maestro's separate controller opt-in, world pose, authored
+ground, physics, programs and autonomous actors. Manual view changes use the same
+path as the shared action. View entry/exit do not acquire actor ownership or cancel
+animation authoring. Focus, pause and head-tracking loss disable both movement
+opt-ins and restore MR without rewinding the world. Other subsystem lifecycle
+handlers still stop unsafe activity on actual interruption.
+
+B/Y and palm Recall remain explicit recovery: stop movement and relocate the book
+and tools around the physical viewer through RoomInteraction. View selection is
+not Recall. Offsets survive view changes within the session; persisting them
+across restart/workspace changes is still required. Scan loading, held items and
+workspace boundaries continue to gate view changes. Camera sharing is independent.
+
+The shared controller.mode.set action is version 2 because its old view-exit
+contract reset the world. Old calls remain unavailable for explicit review;
+saved sources are not silently upgraded. The controller.mode readback remains
+version 1 with the same fields. User and agent use the same catalog definition.
 
 ## Evidence and remaining acceptance
 
 Automated verification exercises independent targets, opt-in and neutral gates,
 actual rig leg motion, scanned-wall rejection and reverse input, virtual body
-collisions, snap-turn press edges, origin restoration, pause/tracking loss,
+collisions, snap-turn press edges, world-pose retention, pause/tracking loss,
 persisted assignments, missing-action behaviour, and the physical tray. A test
 also creates the installed OpenXR Oculus Touch device layout and reads its real
 stick, primary-button and stick-click controls through BookControllerInput.
@@ -91,22 +111,14 @@ click-release ordering that a direct method-call test would miss.
 Settings tests cover invalid/conflicting mappings, finite bounds, copying,
 backup recovery and refusal to overwrite a newer version.
 
-The latest full run passed 44 EditMode and 48 required PlayMode tests (three
-optional private-file tests were explicitly skipped). The desktop tray render
-is inspection evidence only. Required Quest checks:
-actual Touch Plus/controller-hand switching, both simultaneous sticks, comfort
-and text placement, return-to-MR alignment with MRUK world lock, passthrough
-lifecycle, controllers following snap turns, grabs/throws around movement,
-scanned corners and furniture, seated/standing heights and sustained performance.
-No new device work has occurred during charging.
+Current verification results are recorded in QUEST_V1_PLAN.md. Focused tests also
+check live rigid-body velocity, accepted collider identity, navigation bake reuse,
+autonomous follow and running program continuity across view changes. These are
+real native Unity tests, not headset observations. Required Quest checks include
+Touch Plus/controller-hand switching, simultaneous sticks, comfort and text
+placement, MRUK alignment, passthrough lifecycle, grabs/throws during movement,
+seated/standing heights and sustained performance.
 
-Implementation uses the installed XRI/OpenXR/Meta packages. Unity's locomotion
-architecture treats movement as transformation of the XR Origin and distinguishes
-continuous movement from snap turning:
-https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@3.6/manual/locomotion.html
-The pinned Meta OpenXR camera editor documents ARCameraManager enable/disable as
-the passthrough lifecycle control; pinned MRUK.Update owns world-lock correction.
-
-The verified development APK is 7CCC2880 (uninstalled), with 108 required
-Unity/Android checks and matching build-mirror source hashes. Exact artifact,
-checksum and archived evidence are recorded in QUEST_DEVICE_QA.md.
+Independent blend/opacity, passthrough windows, terrain-following locomotion,
+persisted world offsets and active real-collision world movement remain release
+work in the shared spatial-state refactor.

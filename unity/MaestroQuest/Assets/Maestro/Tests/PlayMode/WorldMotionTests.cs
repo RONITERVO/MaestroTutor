@@ -88,12 +88,45 @@ namespace Maestro.Quest.Tests
             ray.selectInput.manualPerformed=false;ray.selectInput.manualValue=0;manager.SelectExit((IXRSelectInteractor)ray,item.Grab);yield return null;
             Assert.That(Vector3.ProjectOnPlane(ball.linearVelocity,Vector3.up).magnitude,Is.LessThan(.05f));Assert.That(ball.angularVelocity.magnitude,Is.LessThan(.05f));
         }
-        [UnityTest]public IEnumerator DisabledRoomRestoresVirtualEntryPoseWithoutWritingTracking() {
+        [UnityTest]public IEnumerator DisabledRoomRetainsWorldPoseWithoutWritingTracking() {
             world.PausePhysics();var camera=tracking.gameObject.AddComponent<Camera>();var view=root.AddComponent<VirtualRoomView>();view.Initialize(content.transform,root.transform,camera,null,world);
             var eye=tracking.position;var facing=tracking.rotation;var home=content.transform.position;
-            Assert.That(view.Enter(),Is.True);Assert.That(view.Turn(30),Is.True,view.MovementError);Assert.That(content.transform.rotation,Is.Not.EqualTo(Quaternion.identity));
-            root.SetActive(false);Assert.That(view.Active,Is.False);Assert.That(view.MovementError,Is.Null);Assert.That(content.transform.position,Is.EqualTo(home));Assert.That(content.transform.rotation,Is.EqualTo(Quaternion.identity));
+            Assert.That(view.Enter(),Is.True);Assert.That(view.Turn(30),Is.True,view.MovementError);var position=content.transform.position;var rotation=content.transform.rotation;Assert.That(rotation,Is.Not.EqualTo(Quaternion.identity));
+            root.SetActive(false);Assert.That(view.Active,Is.False);Assert.That(view.MovementError,Is.Null);Assert.That(content.transform.position,Is.EqualTo(position));Assert.That(content.transform.rotation,Is.EqualTo(rotation));
             root.SetActive(true);yield return null;Assert.That(tracking.position,Is.EqualTo(eye));Assert.That(tracking.rotation,Is.EqualTo(facing));Assert.That(view.Active,Is.False);Assert.That(world.Running,Is.False);
+        }
+        [UnityTest]public IEnumerator ViewChangesKeepTheMovingWorldAndAcceptedGroundAlive() {
+            var camera=tracking.gameObject.AddComponent<Camera>();camera.backgroundColor=Color.clear;
+            var scan=root.AddComponent<ScannedRoom>();scan.Initialize(world);world.SetSurfaces(true,"Aligned real scan");
+            var view=root.AddComponent<VirtualRoomView>();view.Initialize(content.transform,root.transform,camera,scan,world);
+            var ground=content.GetComponentInChildren<RoomWalkableSurface>();var collider=ground.Collision;var groundRevision=ground.Revision;
+            Assert.That(rigid.Launch(new Vector3(.3f,2,0),Vector3.up),Is.True);Shift(new Vector3(2,0,-1),35);
+            Assert.That(navigation.Prepare(.2f,1.6f,out var error),Is.True,error);var bake=navigation.BuildRevision;
+            var frame=content.transform.localToWorldMatrix;var physical=tracking.localToWorldMatrix;var simulation=world.ObserveSimulation().ToString();
+            var velocity=ball.linearVelocity;var angular=ball.angularVelocity;var placement=rigid.PlacementRevision;var motionRevision=rigid.MotionRevision;
+            for(int i=0;i<3;i++) {
+                Assert.That(view.Enter(),Is.True);view.Exit();
+                Assert.That(content.transform.localToWorldMatrix,Is.EqualTo(frame));Assert.That(tracking.localToWorldMatrix,Is.EqualTo(physical));
+                Assert.That(ball.linearVelocity,Is.EqualTo(velocity));Assert.That(ball.angularVelocity,Is.EqualTo(angular));
+                Assert.That(rigid.PlacementRevision,Is.EqualTo(placement));Assert.That(rigid.MotionRevision,Is.EqualTo(motionRevision));
+                Assert.That(world.ObserveSimulation().ToString(),Is.EqualTo(simulation));Assert.That(world.SurfacesReady,Is.True);
+                Assert.That(ground.Collision,Is.SameAs(collider));Assert.That(ground.Available,Is.True);Assert.That(ground.Revision,Is.EqualTo(groundRevision));
+                Assert.That(content.GetComponentsInChildren<RoomWalkableSurface>().Length,Is.EqualTo(1));
+                Assert.That(navigation.Sample(content.transform.TransformPoint(Vector3.zero),.1f,out _),Is.True);Assert.That(navigation.BuildRevision,Is.EqualTo(bake));
+            }
+            var before=ball.position;yield return new WaitForFixedUpdate();yield return new WaitForFixedUpdate();
+            Assert.That(world.Running,Is.True);Assert.That(Vector3.Distance(before,ball.position),Is.GreaterThan(.001f),"Native physics must continue after returning to MR");
+        }
+        [UnityTest]public IEnumerator ViewNeverInventsGroundAndPlanarTravelRefusesHolesAndRaisedTerrain() {
+            world.PausePhysics();var camera=tracking.gameObject.AddComponent<Camera>();var view=root.AddComponent<VirtualRoomView>();view.Initialize(content.transform,root.transform,camera,null,world);
+            var floor=content.GetComponentInChildren<RoomWalkableSurface>();var collider=floor.Collision;var at=content.transform.position;
+            floor.gameObject.SetActive(false);Assert.That(view.Enter(),Is.True);Assert.That(view.Move(Vector3.right*.05f),Is.False);Assert.That(view.MovementError,Does.Contain("accepted level ground"));
+            Assert.That(content.GetComponentsInChildren<RoomWalkableSurface>(true).Length,Is.EqualTo(1));Assert.That(content.transform.position,Is.EqualTo(at));
+            floor.gameObject.SetActive(true);floor.transform.position+=Vector3.up*.2f;Assert.That(view.Move(Vector3.right*.05f),Is.False,"No floating over raised terrain");
+            floor.transform.position-=Vector3.up*.2f;Assert.That(view.Move(Vector3.right*.05f),Is.True,view.MovementError);
+            tracking.position=new Vector3(collider.bounds.max.x-.22f,1.6f,2);at=content.transform.position;
+            Assert.That(view.Move(Vector3.right*.05f),Is.False,"A footprint crossing an edge must stop");Assert.That(content.transform.position,Is.EqualTo(at));
+            view.Exit();Assert.That(floor.Available,Is.True);yield return null;
         }
         [UnityTearDown]public IEnumerator Cleanup(){Object.Destroy(root);Time.captureDeltaTime=previousDelta;yield return null;yield return null;}
     }

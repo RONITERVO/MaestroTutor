@@ -1,7 +1,7 @@
 {
   "before": {
-    "stateId": "87ae15affaef4e0c95ef632b90feba20",
-    "configurationId": "957c9b45b971469da5e10a97950eb0fc",
+    "stateId": "754fcdbd18704340ada22f4059754949",
+    "configurationId": "aa72c58d96ff402f91967cb3394e8fa8",
     "avatarEnabled": false,
     "userEnabled": false,
     "virtualView": false,
@@ -10,15 +10,15 @@
   },
   "enable": {
     "selected": {
-      "id": "fc4241c191234ee188623eff58a0fc58",
+      "id": "e2cc733f06924d77806127a86c8b01f0",
       "capability": "controller.mode.set",
-      "version": 1,
+      "version": 2,
       "resources": [],
       "phase": "completed",
       "status": "Action completed",
       "output": {
-        "stateId": "2f665d4ff98c42b7ae05cb71dee26fcd",
-        "configurationId": "957c9b45b971469da5e10a97950eb0fc",
+        "stateId": "7269df5ea60c44aaafe554d276f87cf7",
+        "configurationId": "aa72c58d96ff402f91967cb3394e8fa8",
         "avatarEnabled": true,
         "userEnabled": false,
         "virtualView": false,
@@ -27,25 +27,25 @@
       },
       "call": {
         "id": "controller.mode.set",
-        "version": 1,
+        "version": 2,
         "arguments": {
           "operation": "maestro.enable",
-          "stateId": "87ae15affaef4e0c95ef632b90feba20"
+          "stateId": "754fcdbd18704340ada22f4059754949"
         }
       }
     },
     "running": [],
     "outcomes": [
       {
-        "id": "fc4241c191234ee188623eff58a0fc58",
+        "id": "e2cc733f06924d77806127a86c8b01f0",
         "capability": "controller.mode.set",
-        "version": 1,
+        "version": 2,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "stateId": "2f665d4ff98c42b7ae05cb71dee26fcd",
-          "configurationId": "957c9b45b971469da5e10a97950eb0fc",
+          "stateId": "7269df5ea60c44aaafe554d276f87cf7",
+          "configurationId": "aa72c58d96ff402f91967cb3394e8fa8",
           "avatarEnabled": true,
           "userEnabled": false,
           "virtualView": false,
@@ -54,21 +54,21 @@
         }
       }
     ],
-    "nextRunId": "64c364c17c0b4c90840c1407d21d03a3",
+    "nextRunId": "444fc13ea653453589a0b0e37d100dd4",
     "storageError": null,
     "recovery": null
   },
   "virtualView": {
     "selected": {
-      "id": "64c364c17c0b4c90840c1407d21d03a3",
+      "id": "444fc13ea653453589a0b0e37d100dd4",
       "capability": "controller.mode.set",
-      "version": 1,
+      "version": 2,
       "resources": [],
       "phase": "completed",
       "status": "Action completed",
       "output": {
-        "stateId": "12da01e7c11745358873dd623923e0f9",
-        "configurationId": "957c9b45b971469da5e10a97950eb0fc",
+        "stateId": "a4b45035fd8147f4922b3a9580984a34",
+        "configurationId": "aa72c58d96ff402f91967cb3394e8fa8",
         "avatarEnabled": true,
         "userEnabled": false,
         "virtualView": true,
@@ -77,25 +77,25 @@
       },
       "call": {
         "id": "controller.mode.set",
-        "version": 1,
+        "version": 2,
         "arguments": {
           "operation": "view.virtual",
-          "stateId": "2f665d4ff98c42b7ae05cb71dee26fcd"
+          "stateId": "7269df5ea60c44aaafe554d276f87cf7"
         }
       }
     },
     "running": [],
     "outcomes": [
       {
-        "id": "fc4241c191234ee188623eff58a0fc58",
+        "id": "e2cc733f06924d77806127a86c8b01f0",
         "capability": "controller.mode.set",
-        "version": 1,
+        "version": 2,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "stateId": "2f665d4ff98c42b7ae05cb71dee26fcd",
-          "configurationId": "957c9b45b971469da5e10a97950eb0fc",
+          "stateId": "7269df5ea60c44aaafe554d276f87cf7",
+          "configurationId": "aa72c58d96ff402f91967cb3394e8fa8",
           "avatarEnabled": true,
           "userEnabled": false,
           "virtualView": false,
@@ -104,15 +104,15 @@
         }
       },
       {
-        "id": "64c364c17c0b4c90840c1407d21d03a3",
+        "id": "444fc13ea653453589a0b0e37d100dd4",
         "capability": "controller.mode.set",
-        "version": 1,
+        "version": 2,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "stateId": "12da01e7c11745358873dd623923e0f9",
-          "configurationId": "957c9b45b971469da5e10a97950eb0fc",
+          "stateId": "a4b45035fd8147f4922b3a9580984a34",
+          "configurationId": "aa72c58d96ff402f91967cb3394e8fa8",
           "avatarEnabled": true,
           "userEnabled": false,
           "virtualView": true,
@@ -121,21 +121,21 @@
         }
       }
     ],
-    "nextRunId": "c0e6ddbcde8c48569c5fb1d7e3b0ead8",
+    "nextRunId": "7687486a8c6b47b7b9493374a0883f53",
     "storageError": null,
     "recovery": null
   },
   "user": {
     "selected": {
-      "id": "c0e6ddbcde8c48569c5fb1d7e3b0ead8",
+      "id": "7687486a8c6b47b7b9493374a0883f53",
       "capability": "controller.mode.set",
-      "version": 1,
+      "version": 2,
       "resources": [],
       "phase": "completed",
       "status": "Action completed",
       "output": {
-        "stateId": "1c30ebd67ae44fd6b06d5b21d3426156",
-        "configurationId": "957c9b45b971469da5e10a97950eb0fc",
+        "stateId": "b022c9944e5741ba8c50a78093024fe4",
+        "configurationId": "aa72c58d96ff402f91967cb3394e8fa8",
         "avatarEnabled": true,
         "userEnabled": true,
         "virtualView": true,
@@ -144,25 +144,25 @@
       },
       "call": {
         "id": "controller.mode.set",
-        "version": 1,
+        "version": 2,
         "arguments": {
           "operation": "user.enable",
-          "stateId": "12da01e7c11745358873dd623923e0f9"
+          "stateId": "a4b45035fd8147f4922b3a9580984a34"
         }
       }
     },
     "running": [],
     "outcomes": [
       {
-        "id": "fc4241c191234ee188623eff58a0fc58",
+        "id": "e2cc733f06924d77806127a86c8b01f0",
         "capability": "controller.mode.set",
-        "version": 1,
+        "version": 2,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "stateId": "2f665d4ff98c42b7ae05cb71dee26fcd",
-          "configurationId": "957c9b45b971469da5e10a97950eb0fc",
+          "stateId": "7269df5ea60c44aaafe554d276f87cf7",
+          "configurationId": "aa72c58d96ff402f91967cb3394e8fa8",
           "avatarEnabled": true,
           "userEnabled": false,
           "virtualView": false,
@@ -171,15 +171,15 @@
         }
       },
       {
-        "id": "64c364c17c0b4c90840c1407d21d03a3",
+        "id": "444fc13ea653453589a0b0e37d100dd4",
         "capability": "controller.mode.set",
-        "version": 1,
+        "version": 2,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "stateId": "12da01e7c11745358873dd623923e0f9",
-          "configurationId": "957c9b45b971469da5e10a97950eb0fc",
+          "stateId": "a4b45035fd8147f4922b3a9580984a34",
+          "configurationId": "aa72c58d96ff402f91967cb3394e8fa8",
           "avatarEnabled": true,
           "userEnabled": false,
           "virtualView": true,
@@ -188,15 +188,15 @@
         }
       },
       {
-        "id": "c0e6ddbcde8c48569c5fb1d7e3b0ead8",
+        "id": "7687486a8c6b47b7b9493374a0883f53",
         "capability": "controller.mode.set",
-        "version": 1,
+        "version": 2,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "stateId": "1c30ebd67ae44fd6b06d5b21d3426156",
-          "configurationId": "957c9b45b971469da5e10a97950eb0fc",
+          "stateId": "b022c9944e5741ba8c50a78093024fe4",
+          "configurationId": "aa72c58d96ff402f91967cb3394e8fa8",
           "avatarEnabled": true,
           "userEnabled": true,
           "virtualView": true,
@@ -205,22 +205,22 @@
         }
       }
     ],
-    "nextRunId": "4afc604090054008a153bfe0969ae56c",
+    "nextRunId": "073a1baa6bee452d8d3e75bc6c3820e2",
     "storageError": null,
     "recovery": null
   },
   "mixed": {
     "selected": {
-      "id": "4afc604090054008a153bfe0969ae56c",
+      "id": "073a1baa6bee452d8d3e75bc6c3820e2",
       "capability": "controller.mode.set",
-      "version": 1,
+      "version": 2,
       "resources": [],
       "phase": "completed",
       "status": "Action completed",
       "output": {
-        "stateId": "b569f356e7bc4f14bb862a7bf76062e6",
-        "configurationId": "957c9b45b971469da5e10a97950eb0fc",
-        "avatarEnabled": false,
+        "stateId": "825017c1a753419e9d90f07f8307c453",
+        "configurationId": "aa72c58d96ff402f91967cb3394e8fa8",
+        "avatarEnabled": true,
         "userEnabled": false,
         "virtualView": false,
         "headTracked": true,
@@ -228,25 +228,25 @@
       },
       "call": {
         "id": "controller.mode.set",
-        "version": 1,
+        "version": 2,
         "arguments": {
           "operation": "view.mixedReality",
-          "stateId": "1c30ebd67ae44fd6b06d5b21d3426156"
+          "stateId": "b022c9944e5741ba8c50a78093024fe4"
         }
       }
     },
     "running": [],
     "outcomes": [
       {
-        "id": "fc4241c191234ee188623eff58a0fc58",
+        "id": "e2cc733f06924d77806127a86c8b01f0",
         "capability": "controller.mode.set",
-        "version": 1,
+        "version": 2,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "stateId": "2f665d4ff98c42b7ae05cb71dee26fcd",
-          "configurationId": "957c9b45b971469da5e10a97950eb0fc",
+          "stateId": "7269df5ea60c44aaafe554d276f87cf7",
+          "configurationId": "aa72c58d96ff402f91967cb3394e8fa8",
           "avatarEnabled": true,
           "userEnabled": false,
           "virtualView": false,
@@ -255,15 +255,15 @@
         }
       },
       {
-        "id": "64c364c17c0b4c90840c1407d21d03a3",
+        "id": "444fc13ea653453589a0b0e37d100dd4",
         "capability": "controller.mode.set",
-        "version": 1,
+        "version": 2,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "stateId": "12da01e7c11745358873dd623923e0f9",
-          "configurationId": "957c9b45b971469da5e10a97950eb0fc",
+          "stateId": "a4b45035fd8147f4922b3a9580984a34",
+          "configurationId": "aa72c58d96ff402f91967cb3394e8fa8",
           "avatarEnabled": true,
           "userEnabled": false,
           "virtualView": true,
@@ -272,15 +272,15 @@
         }
       },
       {
-        "id": "c0e6ddbcde8c48569c5fb1d7e3b0ead8",
+        "id": "7687486a8c6b47b7b9493374a0883f53",
         "capability": "controller.mode.set",
-        "version": 1,
+        "version": 2,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "stateId": "1c30ebd67ae44fd6b06d5b21d3426156",
-          "configurationId": "957c9b45b971469da5e10a97950eb0fc",
+          "stateId": "b022c9944e5741ba8c50a78093024fe4",
+          "configurationId": "aa72c58d96ff402f91967cb3394e8fa8",
           "avatarEnabled": true,
           "userEnabled": true,
           "virtualView": true,
@@ -289,16 +289,16 @@
         }
       },
       {
-        "id": "4afc604090054008a153bfe0969ae56c",
+        "id": "073a1baa6bee452d8d3e75bc6c3820e2",
         "capability": "controller.mode.set",
-        "version": 1,
+        "version": 2,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "stateId": "b569f356e7bc4f14bb862a7bf76062e6",
-          "configurationId": "957c9b45b971469da5e10a97950eb0fc",
-          "avatarEnabled": false,
+          "stateId": "825017c1a753419e9d90f07f8307c453",
+          "configurationId": "aa72c58d96ff402f91967cb3394e8fa8",
+          "avatarEnabled": true,
           "userEnabled": false,
           "virtualView": false,
           "headTracked": true,
@@ -306,14 +306,14 @@
         }
       }
     ],
-    "nextRunId": "8cafa86da7794942b28214c9982ad7c9",
+    "nextRunId": "4fe57b2f4e1a4d8b8010f1a4a703424c",
     "storageError": null,
     "recovery": null
   },
   "after": {
-    "stateId": "b569f356e7bc4f14bb862a7bf76062e6",
-    "configurationId": "957c9b45b971469da5e10a97950eb0fc",
-    "avatarEnabled": false,
+    "stateId": "825017c1a753419e9d90f07f8307c453",
+    "configurationId": "aa72c58d96ff402f91967cb3394e8fa8",
+    "avatarEnabled": true,
     "userEnabled": false,
     "virtualView": false,
     "headTracked": true,

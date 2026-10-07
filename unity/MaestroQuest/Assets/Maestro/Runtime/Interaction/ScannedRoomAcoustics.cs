@@ -56,7 +56,7 @@ namespace Maestro.Quest.Interaction
         {
             readonly ScannedRoom owner;
             internal DeviceAcousticSource(ScannedRoom value) { owner = value; }
-            public bool Tracked => owner.mruk && (owner.virtualView || owner.mruk.IsWorldLockActive) &&
+            public bool Tracked => owner.mruk && owner.mruk.IsWorldLockActive &&
                 (owner.tracked == null || owner.tracked.IsPressed());
             public bool TryRead(out ScannedAcousticMesh[] meshes)
             {

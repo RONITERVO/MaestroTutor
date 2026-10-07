@@ -209,7 +209,9 @@ for transport limits, visual verification and outstanding headset acceptance.
 Controller walking and user locomotion are described in
 [`QUEST_CONTROLLER_MOVEMENT.md`](../docs/QUEST_CONTROLLER_MOVEMENT.md). The
 physical control tray owns separate bindings and user-rule button assignments.
-Both movement modes default off; user movement needs explicit virtual view.
+Both movement modes default off; user movement needs explicit virtual view and
+accepted level authored ground. View changes preserve world pose, physics and
+autonomous programs; no presentation-owned flat floor is created.
 Device alignment, comfort and actual controller acceptance remain required.
 
 Custom Maestro state-motion profiles are described in
@@ -298,7 +300,7 @@ The map coordinator retains native inputs while a bounded SDK worker calculates
 them, cancels stale work on edits and keeps the native scene leased through
 deferred destruction. Automatic scheduling waits two seconds after structural
 edits and keeps at most four listener points, with movement settling and retry
-backoff. Accepted scans, the virtual floor and fixed, unheld, nonanimated
+backoff. Accepted scans, authored ground and fixed, unheld, nonanimated
 creations contribute to the static-only map. Moving/animated props retain direct
 obstruction without causing continuous reflection rebuilds. `map.geometry` and
 `map.omitted` report this boundary subset. `map.ready` reports calculated data,

@@ -120,8 +120,8 @@ namespace Maestro.Quest.Interaction
             var userAxis=userGate.Read(frame.Axis(preferences.userStick),UserEnabled && Virtual && frame.Tracked(preferences.userStick),preferences.deadZone);
             if (userAxis.sqrMagnitude > 0 && float.IsFinite(deltaTime) && deltaTime > 0)
             {
-                if (!view.Move(Direction(userAxis)*preferences.userSpeed*Mathf.Min(deltaTime,.05f))) Say(view.MovementError??"Your path is blocked or at the virtual floor edge");
-                else Say("Virtual walking — B/Y or palm Recall returns to your real room");
+                if (!view.Move(Direction(userAxis)*preferences.userSpeed*Mathf.Min(deltaTime,.05f))) Say(view.MovementError??"Your path is blocked or lacks accepted ground");
+                else Say("Virtual walking — B/Y or palm Recall brings your book and tools back");
             }
             for (int i=0;i<4;i++)
             {

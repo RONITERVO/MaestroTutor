@@ -28,12 +28,10 @@ namespace Maestro.Quest.Interaction
         public void SetVirtualView(bool value)
         {
             if (virtualView == value) return; virtualView=value;
-            if(value)CancelRequest("Room setup cancelled by virtual view");
             NotifySetup();
             // Only virtual content moves. Physical tracking and MRUK world lock
             // keep updating in virtual view as well as mixed reality.
             if (surfaces) surfaces.HideMesh=!(value || showing);
-            if (!value) { world.SetSurfaces(false,"Check room alignment after leaving virtual view"); nextCheck=0; }
         }
         float nextCheck;
         public void Initialize(RoomPhysicsWorld physics)
@@ -88,7 +86,7 @@ namespace Maestro.Quest.Interaction
         }
         void ValidateRoom()
         {
-            if (!SetupActive || virtualView || !geometryAccepted || Busy || !mruk || !surfaces) return;
+            if (!SetupActive || !geometryAccepted || Busy || !mruk || !surfaces) return;
             var room = mruk.GetCurrentRoom();
             bool ready = room && room.FloorAnchors.Count > 0 && room.WallAnchors.Count > 0 && mruk.IsWorldLockActive &&
                 room.FloorAnchors.All(anchor => surfaces.EffectMeshObjects.TryGetValue(anchor,out var floor) && floor.collider && floor.collider.enabled) &&

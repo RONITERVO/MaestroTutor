@@ -33,19 +33,20 @@ namespace Maestro.Quest.Interaction
             }
             return false;
         }
-        internal static bool QuietMode(string operation)=>operation!="maestro.disable"&&operation!="user.disable";
+        internal static bool QuietMode(string operation)=>operation=="maestro.enable"||operation=="user.enable";
+        static bool ViewMode(string operation)=>operation=="view.virtual"||operation=="view.mixedReality";
         bool CanChangeMode(string operation,bool manual,out string error)
         {
             error=null;
             if(!editor||!ConfigurationInitialized||!isActiveAndEnabled){error="Movement controls are unavailable";return false;}
             // Disabling sticks is always allowed through the manual controls, even while
             // tracking is lost. Shared requests still use the runtime's normal action gate.
-            if(!QuietMode(operation)||manual&&operation=="view.mixedReality")return true;
+            if(operation=="maestro.disable"||operation=="user.disable"||manual&&operation=="view.mixedReality")return true;
             if(editor.RuntimeGate.Held)error=editor.RuntimeGate.Reason;
             else if(editor.WriteGate.Frozen)error="Finish the current workspace boundary before changing control modes";
             else if(paused||!focused||!HeadReady)error="Wait for head tracking and focus before changing control modes";
             else if((manual?sample().manipulating:sample().busy)||editor.AnyHeld||rules&&rules.AnyButtonHeld)error="Release held items and controls before changing control modes";
-            else if(!manual&&OtherActor(out error))return false;
+            else if(!manual&&!ViewMode(operation)&&OtherActor(out error))return false;
             if(error!=null)return false;
             if(operation=="maestro.enable"){
                 if(preferences.avatarStick==MovementStick.None)error="Choose a Maestro binding first";
@@ -74,20 +75,26 @@ namespace Maestro.Quest.Interaction
         bool ChangeMode(string operation,bool manual,out string error)
         {
             if(!CanChangeMode(operation,manual,out error))return false;
-            bool same=operation switch {"maestro.enable"=>AvatarEnabled,"maestro.disable"=>!AvatarEnabled,"user.enable"=>UserEnabled,"user.disable"=>!UserEnabled,"view.virtual"=>Virtual,"view.mixedReality"=>!Virtual&&!AvatarEnabled&&!UserEnabled,_=>false};
+            bool same=operation switch {"maestro.enable"=>AvatarEnabled,"maestro.disable"=>!AvatarEnabled,"user.enable"=>UserEnabled,"user.disable"=>!UserEnabled,"view.virtual"=>Virtual,"view.mixedReality"=>!Virtual,_=>false};
             if(same)return true;
-            if(operation=="view.mixedReality"){
-                Recover();Say("Mixed reality restored — check scan alignment before Start physics");return true;
+            if(ViewMode(operation)) {
+                if(operation=="view.virtual") {
+                    if(!view.Enter()){error="Wait for the room scan to finish before changing view";return false;}
+                } else {
+                    view?.Exit();UserEnabled=false;
+                }
+                // Changing the view is not an ownership takeover or a world reset.
+                // User locomotion remains Virtual-only until MR sweep admission lands.
+                userGate.Reset();Array.Clear(buttonReady,0,buttonReady.Length);
+                CurrentModeId();Say(Virtual?"Virtual view — real room hidden; accepted ground supports walking":"Mixed reality — world and its activity retained");
+                Changed?.Invoke();return true;
             }
-            // Only a deliberate physical takeover interrupts other work. Shared calls
-            // require a quiet room and must not cancel their own scheduler invocation.
-            if(manual&&(operation=="view.virtual"||operation=="maestro.enable")){
+            // Only a deliberate physical Maestro takeover interrupts its actor.
+            if(manual&&operation=="maestro.enable"){
                 animations.Stop();
-                if(operation=="view.virtual")rules?.StopAll();
-                else rules?.Scheduler.StopConflicting(new Rules.RuleStep {action=Rules.RuleActionKind.FollowUser,targetId="maestro"},true);
+                rules?.Scheduler.StopConflicting(new Rules.RuleStep {action=Rules.RuleActionKind.FollowUser,targetId="maestro"},true);
                 avatar?.Stop();
             }
-            if(operation=="view.virtual"&&!view.Enter()){error="Wait for the room scan to finish before changing view";return false;}
             Interrupt();
             if(operation.StartsWith("maestro.",StringComparison.Ordinal))AvatarEnabled=operation=="maestro.enable";
             else if(operation.StartsWith("user.",StringComparison.Ordinal))UserEnabled=operation=="user.enable";

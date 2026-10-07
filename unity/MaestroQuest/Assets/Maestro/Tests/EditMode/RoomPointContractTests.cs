@@ -28,6 +28,12 @@ namespace Maestro.Quest.Tests
             var fact=BehaviourCatalog.Fact(id);Assert.That(fact.Version,Is.EqualTo(2));var args=(JObject)fact.ToJson()["example"];
             Assert.That(fact.ValidArguments(1,args,out _),Is.False);Assert.That(fact.ValidArguments(2,args,out var error),Is.True,error);
         }
+        [Test] public void OldResettingViewContractRequiresExplicitReview()
+        {
+            var action=BehaviourCatalog.Action("controller.mode.set");Assert.That(action.Version,Is.EqualTo(2));
+            Assert.That(BehaviourCatalog.TryCall(action.Id,1,action.Example,out _,out _),Is.False);
+            Assert.That(BehaviourCatalog.TryCall(action.Id,2,action.Example,out _,out var error),Is.True,error);
+        }
         [Test] public void OldPhysicalLaunchCannotSilentlyUseAuthoredCoordinates()
         {
             var action=BehaviourCatalog.Action("object.physics.launch");Assert.That(action.Version,Is.EqualTo(2));
