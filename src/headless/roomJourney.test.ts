@@ -11,6 +11,7 @@ import { runHeadlessLiveTurn } from './liveJourney';
 import { liveInputHashes, providerMediaHashes } from './roomLiveJourney';
 import { createHash } from 'node:crypto';
 import { LiveInputContext } from '../core-sdk/media/liveInputContext';
+import { LIVE_TURN_CALLBACK_QUIET_MS } from '../core-sdk/media/liveTurnFinalizer';
 import type { RoomAgentState } from '../core-sdk/room/roomAgent';
 import type { RoomTaskRecord } from '../core-sdk/room/roomTaskHandoff';
 
@@ -103,6 +104,13 @@ describe('headless conversational agent parity (deterministic transport)', () =>
   });
   it.each(['conversation', 'observer'] as const)('delegates the actual %s stream, original media and final reply through shared chat', async mode => {
     const f = await setup(); f.outputs.shift();
+    // This fixture checks handoff data, not wall-clock playback. Advance the
+    // injected clock through the normal quiet window without a real CI sleep;
+    // real-time pacing and late callbacks have separate journey coverage.
+    let now = f.client.runtime.clock.now();
+    const sleeps: number[] = [];
+    f.client.runtime.clock = { ...f.client.runtime.clock, now: () => now,
+      sleep: async ms => { sleeps.push(ms); now += ms; } };
     const sent: Array<{ audio?: { data: string }; video?: { data: string } }> = [];
     const connect = vi.fn(async (params: any) => ({
       close: vi.fn(),
@@ -120,6 +128,7 @@ describe('headless conversational agent parity (deterministic transport)', () =>
     Object.assign(f.client.ai, { live: { connect } });
     const result = await runHeadlessLiveTurn(f.client, { mode, pcm: new Int16Array(32_000).fill(6000),
       languagePairId: f.pairId, pace: false, includeVisual: true, expectedTranscript: 'Make a ball.' });
+    expect(sleeps).toContain(LIVE_TURN_CALLBACK_QUIET_MS);
     const instruction = connect.mock.calls[0][0].config.systemInstruction;
     expect(instruction).toContain('Propose the handoff in natural speech only.');
     expect(instruction).not.toContain('Propose the same {"tool":"agent"}');
