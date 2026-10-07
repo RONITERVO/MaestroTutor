@@ -96,7 +96,7 @@ namespace Maestro.Quest
             var input = gameObject.AddComponent<BookControllerInput>();
             input.Router = router; input.TrackingSpace = offset.transform; input.DesktopCamera = camera; input.Room = room;
             input.PhysicsWorld = physics;
-            var virtualView=gameObject.AddComponent<VirtualRoomView>(); virtualView.Initialize(originObject.transform,camera,scan,physics);
+            var virtualView=gameObject.AddComponent<VirtualRoomView>(); virtualView.Initialize(content.transform,originObject.transform,camera,scan,physics);
             gameObject.AddComponent<RoomDepthOcclusion>().Initialize(offset.transform,camera.GetComponent<ARCameraManager>(),virtualView);
             var agent=gameObject.AddComponent<RoomAgent>();agent.Initialize(null,browser);
             var workspace=gameObject.AddComponent<Maestro.Quest.Persistence.WorkspaceHost>();

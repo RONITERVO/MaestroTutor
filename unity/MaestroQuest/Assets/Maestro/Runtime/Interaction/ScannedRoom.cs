@@ -24,15 +24,14 @@ namespace Maestro.Quest.Interaction
         RoomPhysicsWorld world;
         Material outline;
         InputAction tracked;
-        bool showing, virtualView, mrukWasEnabled;
+        bool showing, virtualView;
         public void SetVirtualView(bool value)
         {
             if (virtualView == value) return; virtualView=value;
             if(value)CancelRequest("Room setup cancelled by virtual view");
             NotifySetup();
-            // MRUK writes TrackingSpace every Update. Changing EnableWorldLock would
-            // reset that pose; freeze the updater to retain entry-time alignment.
-            if (mruk) { if (value) mrukWasEnabled=mruk.enabled; mruk.enabled=value ? false : mrukWasEnabled; }
+            // Only virtual content moves. Physical tracking and MRUK world lock
+            // keep updating in virtual view as well as mixed reality.
             if (surfaces) surfaces.HideMesh=!(value || showing);
             if (!value) { world.SetSurfaces(false,"Check room alignment after leaving virtual view"); nextCheck=0; }
         }

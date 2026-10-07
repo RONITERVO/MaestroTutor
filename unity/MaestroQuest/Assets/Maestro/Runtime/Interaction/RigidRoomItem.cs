@@ -124,6 +124,11 @@ namespace Maestro.Quest.Interaction
             if (body) { body.position = transform.position; body.rotation = transform.rotation; }
             Refresh();
         }
+        internal void MoveFrame(Creation.RoomFrame before,Creation.RoomFrame after)
+        {
+            lastGoodPosition=after.PointToWorld(before.PointToRoom(lastGoodPosition));
+            lastGoodRotation=after.RotationToWorld(before.RotationToRoom(lastGoodRotation));
+        }
         public bool CanReceivePhysicsAction(out string error)
         {
             error=null;

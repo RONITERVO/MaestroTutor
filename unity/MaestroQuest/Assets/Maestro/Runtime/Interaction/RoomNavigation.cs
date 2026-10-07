@@ -10,6 +10,8 @@ namespace Maestro.Quest.Interaction
     public sealed class RoomNavigation : MonoBehaviour
     {
         RoomPhysicsWorld world;
+        Transform virtualFrame;
+        internal void SetVirtualFrame(Transform value){virtualFrame=value;Clear();}
         NavMeshData data;
         NavMeshDataInstance installed;
         int agentType = -1;
@@ -37,7 +39,7 @@ namespace Maestro.Quest.Interaction
         {
             error="Room navigation needs active physics and accepted surfaces";
             if(!world||!world.Running||!world.SimulationReady)return false;
-            if(!candidate.Capture(world.transform,world.RealCollisions)) { Clear();error="No accepted scanned or authored floor is available for walking";return false; }
+            if(!candidate.Capture(world.transform,world.RealCollisions,!world.RealCollisions&&virtualFrame?virtualFrame:world.transform)) { Clear();error="No accepted scanned or authored floor is available for walking";return false; }
             if(data&&installed.valid&&candidate.Same(accepted)){
                 Install(candidate.Position,candidate.Rotation);error=null;return installed.valid;
             }

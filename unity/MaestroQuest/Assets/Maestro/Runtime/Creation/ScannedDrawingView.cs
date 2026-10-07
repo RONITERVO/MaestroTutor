@@ -5,9 +5,10 @@ using UnityEngine;
 namespace Maestro.Quest.Creation
 {
     /// <summary>The editor ticks this even while its missing-anchor object is inactive.</summary>
-    public sealed class ScannedDrawingView:MonoBehaviour
+    public sealed class ScannedDrawingView:MonoBehaviour,IPhysicalRoomBinding
     {
         RoomEditor editor;string id;ScanDrawingAnchor binding;float width,height;ScannedSurface previous;
+        bool IPhysicalRoomBinding.PhysicalFrame=>true;
         public bool Visible {get;private set;}
         public string Status {get;private set;}="Load the saved scanned room";
         internal string BindingSignature=>binding==null?"":JsonUtility.ToJson(binding);

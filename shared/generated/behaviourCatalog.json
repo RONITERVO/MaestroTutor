@@ -4810,7 +4810,7 @@
         "tracking.available",
         "manual.released"
       ],
-      "description": "Explicit live opt-in only: enable/disable Maestro's stick or the user's separate movement, or switch Virtual/Mixed Reality view. Use only when the user requests that movement or view change; entering Virtual hides the real room. Read controller.mode immediately beforehand and pass its exact stateId. Manual changes, settings saves, focus/tracking changes and recovery invalidate it. Enabling never injects movement: sticks must return to neutral first. Your movement requires Virtual view; enabling Maestro requires loaded avatar and aligned running room physics. Enabling or changing view requires other runs and animation authoring to finish; it does not stop another actor. Disabling a stick is allowed alongside other runs. Returning to MR disables both sticks, restores the physical camera origin and pauses physics for alignment review. B/Y and palm Recall remain immediate manual recovery. These live modes are never saved; restart or tracking/focus loss requires explicit reenable. A completed receipt reports that moment, not continued tracking or path readiness; read the fact for current state. Cancelling a completed action does not undo its mode: issue the explicit disable or MR action with a fresh identity. Duplicate receipts never enable again.",
+      "description": "Explicit live opt-in only: enable/disable Maestro's stick or the user's separate movement, or switch Virtual/Mixed Reality view. Use only when the user requests that movement or view change; entering Virtual hides the real room. Read controller.mode immediately beforehand and pass its exact stateId. Manual changes, settings saves, focus/tracking changes and recovery invalidate it. Enabling never injects movement: sticks must return to neutral first. Your movement moves virtual content while physical tracking stays fixed. It currently requires Virtual view; active physics against real-room colliders refuses world movement until paused or real collisions are disabled. enabling Maestro requires loaded avatar and aligned running room physics. Enabling or changing view requires other runs and animation authoring to finish; it does not stop another actor. Disabling a stick is allowed alongside other runs. Returning to MR disables both sticks, restores the virtual content entry pose and pauses physics for alignment review. B/Y and palm Recall remain immediate manual recovery. These live modes are never saved; restart or tracking/focus loss requires explicit reenable. A completed receipt reports that moment, not continued tracking or path readiness; read the fact for current state. Cancelling a completed action does not undo its mode: issue the explicit disable or MR action with a fresh identity. Duplicate receipts never enable again.",
       "example": {
         "operation": "view.virtual",
         "stateId": "00000000000000000000000000000000"
@@ -35435,7 +35435,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/MaestroRoom.cs",
-      "sha256": "09193da4be9e88e7a16bf76336d184b4106c0350155b6cd44ebf829719d91e8c"
+      "sha256": "52ffd906f780c588d4f1ad490d0a7591bc39ecf48b62486ef1426d5fa14de0a0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -35727,7 +35727,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.cs",
-      "sha256": "72077c74fc9d41b738cdfd3e2b97a673576e132bc3ec78d784de1bc8df8bef7c"
+      "sha256": "35939e3e34887b78b0f741670578a5cc8ddb9e0f010f626c822276cba20a4363"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomPropAnchor.cs",
@@ -36091,7 +36091,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MovementControls.cs",
-      "sha256": "1b48e4b3e6f3053331b43931454bebeccaafa713b849d9c30ad71ef7e14f855c"
+      "sha256": "aa31d303471e8b48654ec38fc5c69792b70e91f47b91c82fb41fd7e2db92cfe0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MovementConfiguration.cs",
@@ -36103,15 +36103,23 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/VirtualRoomView.cs",
-      "sha256": "0a077d599280966e2ec9b46e518dc0eed8ff3d242b71e237b09dc131ea2016f9"
+      "sha256": "acd97929a625d48a16d65eb8e9e9e5e2590e8838a3ed76b5c5cdc2d335131cee"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomWorldMotion.cs",
+      "sha256": "d04f751092df6a89d467fa8bfb734240a67577eeeff8c49e3d311e2c13127cb8"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleButton.cs",
+      "sha256": "46120aa65cc38f5f0670e2081bd7d49d0db4d699ea63df1b18ada759e6a7c299"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigation.cs",
-      "sha256": "6c7f1009bf8c5d23a62ef756d39367a6e5cc6755d78317f4bc9568685874f082"
+      "sha256": "3e877d432e8be9dd390a0e3540e182bbf5e14a3f90952aa58c26d074a607a88c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationGeometry.cs",
-      "sha256": "a79beb6a8bfbca3b9e7fa2c3dc33640221c09e17dd3f636719174d300ab3758b"
+      "sha256": "ac0d6b215a6039a125c556f38f7b9029d30c5f79a57be4d18bf745290c04d38b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomWalkableSurface.cs",
@@ -36127,7 +36135,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ScannedRoom.cs",
-      "sha256": "3209fd985e86f42812cee5fb06354bb1fb9d775de432ffae3c22d13650c2629d"
+      "sha256": "40faa8122f44db04316cb5317e523f08db4a279131ed4a4da710ec1e3ab9c597"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ScannedRoomRequests.cs",
@@ -36155,7 +36163,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ScannedDrawingView.cs",
-      "sha256": "fbe913261a96a5c882afc73383b410f39f56df5aeffae98382340ad2a40787dd"
+      "sha256": "6648a71095cca5dc9eb693e3615ba91f934d166674ee8c361dbdfdfa2151a60e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomScannedDrawing.cs",
@@ -36391,7 +36399,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ControllerModeCapability.cs",
-      "sha256": "bf0e42b77bc9e42c02eb4ab4287d9532120b15f33c2e22963c57e1abc4f9318c"
+      "sha256": "5811bee736a88bd40845dc0afdb3881abcc8b6fbd22ae7b40c1c369e1e8c1a93"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CopyObjectCapability.cs",

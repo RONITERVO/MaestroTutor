@@ -31,15 +31,16 @@ namespace Maestro.Quest.Interaction
         internal Bounds Bounds { get; private set; }
         internal Vector3 Position { get; private set; }
         internal Quaternion Rotation { get; private set; }
-        internal bool Capture(Transform owner,bool includeScan=true)
+        internal bool Capture(Transform owner,bool includeScan=true,Transform coordinates=null)
         {
             colliders.Clear(); entries.Clear(); sources.Clear(); Bounds=default;
             if(!owner)return false;
-            var frame=new Creation.RoomFrame(owner);
+            if(!coordinates)coordinates=owner;
+            var frame=new Creation.RoomFrame(coordinates);
             // Scaling terrain is supported through its collider transform. Changing
             // the world's metre or gravity convention needs a separate explicit policy.
-            if(!frame.Valid||Mathf.Abs(frame.MetresPerUnit-1)>.00001f||Vector3.Dot(owner.up,Vector3.up)<.99999f)return false;
-            Position=owner.position;Rotation=owner.rotation;
+            if(!frame.Valid||Mathf.Abs(frame.MetresPerUnit-1)>.00001f||Vector3.Dot(coordinates.up,Vector3.up)<.99999f)return false;
+            Position=coordinates.position;Rotation=coordinates.rotation;
             owner.GetComponentsInChildren(false,colliders);
             foreach(var collider in colliders) {
                 if(!collider.enabled||collider.isTrigger)continue;
@@ -47,7 +48,7 @@ namespace Maestro.Quest.Interaction
                 bool authored=surface&&surface.Available&&surface.Collision==collider;
                 if(collider.gameObject.layer==RoomPhysicsLayers.Scanned&&!includeScan)continue;
                 if(!authored&&collider.gameObject.layer!=RoomPhysicsLayers.Scanned)continue;
-                var source=new NavMeshBuildSource { transform=owner.worldToLocalMatrix*collider.transform.localToWorldMatrix,component=collider,area=0 };
+                var source=new NavMeshBuildSource { transform=coordinates.worldToLocalMatrix*collider.transform.localToWorldMatrix,component=collider,area=0 };
                 Bounds localBounds;
                 if(collider is MeshCollider mesh&&mesh.sharedMesh) { source.shape=NavMeshBuildSourceShape.Mesh;source.sourceObject=mesh.sharedMesh;localBounds=mesh.sharedMesh.bounds; }
                 else if(collider is BoxCollider box) { source.shape=NavMeshBuildSourceShape.Box;source.size=box.size;source.transform*=Matrix4x4.Translate(box.center);localBounds=new Bounds(Vector3.zero,box.size); }

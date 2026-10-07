@@ -66,7 +66,7 @@ namespace Maestro.Quest.Tests
             var scan=PlacementRoom(out var source,out var target);var before=editor.Read(target).position;source.Pending=new();var request=PlacementRequest(target);
             Assert.That(modeActions.Execute(request,out var error),Is.True,error);Assert.That(modeActions.Execute(new JObject {["operation"]="cancel",["runId"]=request["runId"].DeepClone()},out error),Is.True,error);
             source.Pending.SetResult(true);yield return null;yield return null;Assert.That(editor.Read(target).position,Is.EqualTo(before));Assert.That(source.Rays,Is.Zero);
-            source.Pending=new();Assert.That(modeActions.Execute(PlacementRequest(target),out error),Is.True,error);scan.SendMessage("OnApplicationFocus",false);scan.SendMessage("OnApplicationFocus",true);source.Pending.SetResult(true);yield return PlacementFinished("cancelled");
+            source.Pending=new();Assert.That(modeActions.Execute(PlacementRequest(target),out error),Is.True,error);scan.SendMessage("OnApplicationFocus",false);root.SendMessage("OnApplicationFocus",false,SendMessageOptions.DontRequireReceiver);scan.SendMessage("OnApplicationFocus",true);root.SendMessage("OnApplicationFocus",true,SendMessageOptions.DontRequireReceiver);source.Pending.SetResult(true);yield return PlacementFinished("cancelled");
             Assert.That(editor.Read(target).position,Is.EqualTo(before));Assert.That(source.Rays,Is.Zero);
         }
         [UnityTest] public IEnumerator SurfacePlacementRejectsChangedRoomOrObjectAndRespectsPreservation()

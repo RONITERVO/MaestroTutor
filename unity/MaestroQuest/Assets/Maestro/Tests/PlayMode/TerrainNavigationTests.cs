@@ -50,7 +50,7 @@ namespace Maestro.Quest.Tests
                 Ready(); Assert.That(navigation.Sample(new Vector3(8,.2f,0),.08f,out _),Is.True);
                 Assert.That(navigation.Sample(new Vector3(16,0,0),.08f,out _),Is.False,"No global collider discovery across world owners");
                 var bake=navigation.BuildRevision;
-                root.transform.SetPositionAndRotation(new Vector3(0,2,5),Quaternion.Euler(0,45,0));
+                physicalRoot.transform.SetPositionAndRotation(new Vector3(0,2,5),Quaternion.Euler(0,45,0));
                 Assert.That(navigation.Sample(field.transform.TransformPoint(Vector3.up*.2f),.08f,out _),Is.True);
                 Assert.That(navigation.BuildRevision,Is.EqualTo(bake),"Rigid world movement must move the owned navmesh without rebaking it");
                 field.transform.SetPositionAndRotation(new Vector3(10,1,3),Quaternion.Euler(0,30,0)); Physics.SyncTransforms();

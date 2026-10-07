@@ -927,7 +927,9 @@ state IDs; manual changes, configuration saves, focus/tracking changes and Recal
 invalidate old requests. Recall also invalidates requests while already off.
 Shared changes preserve other actors and complete their own scheduler invocation.
 Independent neutral-input gates prevent held sticks/buttons from starting input.
-MR restores the physical camera origin and pauses physics; live modes never save.
+At that increment, MR restored the physical camera origin and paused physics;
+the later fixed-tracking work below restores virtual content instead. Live modes
+are not saved.
 Manual takeover and B/Y/palm recovery retain priority. Five native journeys cover
 actual avatar/user movement, snap turns, stale IDs, tracking/focus loss, held
 input, actor refusal, duplicate receipts and final recovery notification identity.
@@ -3604,14 +3606,12 @@ cover invalid motion frames and collision-policy agreement. Test harnesses move
 native bodies with their fixture root; that harness is not the production world
 movement implementation. Whole-project and device acceptance are tracked separately.
 
-Before changing thumbstick controls, implement the production atomic body transfer
-(including velocities, sleeping/interpolation and last-supported poses), distinguish
-physical/virtual anchors and held-item ownership, and move navigation's authored
-frame without rebaking on each movement tick. Define queued point/event frame
-semantics and reconcile recall, workspace replacement and scan world-lock updates.
-The interim XR-origin movement and binary view remain in place until those paths
-are coherent. This increment does not enable passthrough locomotion, view blending,
-world regions, textures, weather or water; those accepted requirements remain below.
+The subsequent production-movement increment below supplies atomic body transfer,
+physical binding retention and authored navigation-frame movement. Queued point/event
+frame semantics, independent view lifecycle and recovery/persistence across all
+world modes remain release gates. Passthrough locomotion, view blending, world
+regions, textures, weather and water are not enabled by this motion-history work;
+those accepted requirements remain below.
 
 
 The owner expects worlds to grow from room toys into miniature countries with
@@ -3814,6 +3814,40 @@ again on return. Actual stereo pixels visibly show a newly edited unsent draft
 marker after returning; the marker was then cleared. Microphone/Live stayed
 stopped and media required an explicit resume. This checks one Settings focus
 transition, not sustained performance or every permission/recovery sequence.
+
+
+Production world-movement increment (2026-10-07): the existing virtual-view
+controller path now moves the long-lived Room content frame instead of the XR
+origin. Tracking, the audio listener, scanned geometry and MRUK world lock stay
+physical. Translation and snap turns transfer native body poses and velocities
+atomically, preserve sleeping/kinematic state and connected virtual assemblies,
+and rebase boundary-recovery history without declaring an authored teleport.
+Scanned ink, controller-mounted buttons and currently grabbed bodies keep their
+physical poses. Accepted virtual navigation relocates its instance without
+rebaking identical authored geometry on every movement tick.
+
+This remains the interim virtual-only view and recovery contract. Active physics
+against real-room colliders refuses artificial movement until physics is paused
+or real collisions are explicitly disabled. Connections crossing physical and
+virtual frames also refuse movement. These are visible temporary limits pending
+swept whole-assembly admission, not the final independent-reality-layer policy.
+Normal controls still interrupt while a user is holding an item; the transfer
+itself retains physical grab poses for recovery. View exit still pauses physics,
+restores the content entry pose and removes its temporary floor. Persistent world
+offsets, independent blend/view lifecycle, physical-anchor migration, queued
+spatial intent, terrain-following user travel and headset acceptance remain open.
+The authored world and physics continue through admitted virtual-only movement;
+this is not region streaming or scaled-world physics.
+
+Verification passed 873 EditMode and 722 PlayMode tests, with three expected
+optional private-file skips; both complete native-room and original-book journeys
+passed. All 66 shared browser/catalog checks and provenance checks pass. The
+81-case focused run also passed. The first focused run exposed two fixture
+assumptions about the former shared root: whole-application focus delivery and
+which root a whole-world navigation test moves. Both fixtures now use distinct
+physical/content ownership. The additional full-run recovery test checks whole-room
+disable/re-enable with no tracking movement or automatic physics restart. These
+are local scripted-provider integrations, not headset or real-provider acceptance.
 
 ## Spatial voice and room acoustics (owner clarification, 2026-10-07)
 

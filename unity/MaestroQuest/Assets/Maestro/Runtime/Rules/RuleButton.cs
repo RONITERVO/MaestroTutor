@@ -12,7 +12,7 @@ namespace Maestro.Quest.Rules
 {
     /// <summary>A solid mounted button can only be activated/grabbed by the other controller.</summary>
     [DefaultExecutionOrder(150)]
-    public sealed class RuleButton : PhysicalAction, IXRSelectFilter
+    public sealed class RuleButton : PhysicalAction, IXRSelectFilter, IPhysicalRoomBinding
     {
         RuleButtonData data;
         RoomRules rules;
@@ -25,6 +25,7 @@ namespace Maestro.Quest.Rules
         Collider hit;
         public bool canProcess => isActiveAndEnabled;
         public bool IsHeld => item && item.Grab.isSelected;
+        bool IPhysicalRoomBinding.PhysicalFrame=>Owner!=-1;
         int Owner => data == null || data.mount == ButtonMount.Room ? -1 : data.mount == ButtonMount.LeftController ? 0 : 1;
         public override bool CanActivatePointer(int pointerId) => Owner == -1 || pointerId != Owner;
         public bool Process(IXRSelectInteractor interactor, IXRSelectInteractable interactable)

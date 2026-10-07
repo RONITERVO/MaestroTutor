@@ -93,7 +93,7 @@ namespace Maestro.Quest.Interaction
         {
             bool changed=AvatarEnabled || UserEnabled || Virtual;
             Interrupt(); AvatarEnabled=UserEnabled=false;
-            if (changed) { input?.CancelAll(); view?.Exit(); Status="Movement off — choose controls to enable again"; }
+            if (changed) { input?.CancelAll(); view?.Exit(); Status=view&&view.MovementError!=null?view.MovementError:"Movement off — choose controls to enable again"; }
             CurrentModeId(); if(invalidate)modeId=Guid.NewGuid().ToString("N");
             if(changed)Changed?.Invoke();
         }
@@ -120,7 +120,7 @@ namespace Maestro.Quest.Interaction
             var userAxis=userGate.Read(frame.Axis(preferences.userStick),UserEnabled && Virtual && frame.Tracked(preferences.userStick),preferences.deadZone);
             if (userAxis.sqrMagnitude > 0 && float.IsFinite(deltaTime) && deltaTime > 0)
             {
-                if (!view.Move(Direction(userAxis)*preferences.userSpeed*Mathf.Min(deltaTime,.05f))) Say("Your path is blocked or at the virtual floor edge");
+                if (!view.Move(Direction(userAxis)*preferences.userSpeed*Mathf.Min(deltaTime,.05f))) Say(view.MovementError??"Your path is blocked or at the virtual floor edge");
                 else Say("Virtual walking — B/Y or palm Recall returns to your real room");
             }
             for (int i=0;i<4;i++)
@@ -135,7 +135,7 @@ namespace Maestro.Quest.Interaction
                     // User-authored button actions use exactly the same scheduler as mounted buttons.
                     if (rules && rules.Trigger(binding.sequenceId)) Say("Controller action triggered"); else Say("Action unavailable — assign an existing action");
                 }
-                else if (Virtual && UserEnabled && binding.command != ControllerCommand.None) view.Turn(binding.command == ControllerCommand.SnapLeft ? -30 : 30);
+                else if (Virtual && UserEnabled && binding.command != ControllerCommand.None) { if(!view.Turn(binding.command == ControllerCommand.SnapLeft ? -30 : 30)&&view.MovementError!=null)Say(view.MovementError); }
             }
         }
         Vector3 Direction(Vector2 axis)

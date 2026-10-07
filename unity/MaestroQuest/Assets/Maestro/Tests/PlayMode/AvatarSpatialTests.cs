@@ -30,7 +30,7 @@ namespace Maestro.Quest.Tests
     }
     public sealed partial class AvatarSpatialTests
     {
-        GameObject root, viewer;
+        GameObject root, physicalRoot, viewer;
         RoomPhysicsWorld world;
         RoomNavigation navigation;
         RoomInteraction room;
@@ -45,13 +45,14 @@ namespace Maestro.Quest.Tests
         {
             captureDelta = Time.captureDeltaTime; Time.captureDeltaTime = 1f/72;
             directory = Path.Combine(Path.GetTempPath(),"MaestroSpatialTests-"+Guid.NewGuid().ToString("N"));
-            root = new GameObject("Spatial room test"); root.AddComponent<XRInteractionManager>();
-            world = root.AddComponent<RoomPhysicsWorld>(); navigation = root.AddComponent<RoomNavigation>(); navigation.Initialize(world);
+            physicalRoot=new GameObject("Physical spatial test");physicalRoot.AddComponent<XRInteractionManager>();
+            root=new GameObject("Spatial room test");root.transform.SetParent(physicalRoot.transform,false);
+            world=physicalRoot.AddComponent<RoomPhysicsWorld>();navigation=physicalRoot.AddComponent<RoomNavigation>();navigation.Initialize(world);
             RoomPhysicsLayers.Configure(); tracked = true; yield return null;
         }
         GameObject Surface(Vector3 position,Vector3 scale)
         {
-            var value = GameObject.CreatePrimitive(PrimitiveType.Cube); value.transform.SetParent(root.transform,false);
+            var value = GameObject.CreatePrimitive(PrimitiveType.Cube); value.transform.SetParent(physicalRoot.transform,false);
             value.transform.position = position; value.transform.localScale = scale; value.layer = RoomPhysicsLayers.Scanned; return value;
         }
         void Ready()
@@ -374,9 +375,9 @@ namespace Maestro.Quest.Tests
         ControllerFrame frame;
         MovementControls Controls(out VirtualRoomView view,out Transform userOrigin,RoomRules rules=null,RuleWorkshop workshop=null,BookControllerInput controller=null)
         {
-            var origin=new GameObject("Simulated user origin"); origin.transform.SetParent(root.transform,false); userOrigin=origin.transform;
+            var origin=new GameObject("Simulated user origin"); origin.transform.SetParent(physicalRoot.transform,false); userOrigin=origin.transform;
             viewer.transform.SetParent(userOrigin,true); var camera=viewer.AddComponent<Camera>(); camera.backgroundColor=Color.clear;
-            view=root.AddComponent<VirtualRoomView>(); view.Initialize(userOrigin,camera,null,world);
+            view=physicalRoot.AddComponent<VirtualRoomView>(); view.Initialize(root.transform,userOrigin,camera,null,world);
             frame=new ControllerFrame { leftTracked=true,rightTracked=true };
             var controls=root.AddComponent<MovementControls>(); controls.Initialize(room,editor,authoring,motion,rules,workshop,controller,view,() => tracked,controller ? null : () => frame,directory);
             return controls;
@@ -393,10 +394,10 @@ namespace Maestro.Quest.Tests
             yield return new WaitForSeconds(.35f); Assert.That(avatar.transform.position.z,Is.GreaterThan(.1f));
             Assert.That(Quaternion.Angle(footBefore,foot.localRotation),Is.GreaterThan(1)); Assert.That(viewer.transform.position,Is.EqualTo(initial));
             controls.ToggleUser(); Assert.That(controls.UserEnabled,Is.False,"MR must not translate passthrough");
-            controls.ToggleView(); Assert.That(view.Active,Is.True); Assert.That(viewer.GetComponent<Camera>().backgroundColor.a,Is.EqualTo(1));
+            world.PausePhysics(); controls.ToggleView(); Assert.That(view.Active,Is.True); Assert.That(viewer.GetComponent<Camera>().backgroundColor.a,Is.EqualTo(1));
             controls.ToggleUser(); frame.leftStick=Vector2.zero; frame.rightStick=Vector2.zero; yield return null;
             frame.leftStick=Vector2.right; yield return new WaitForSeconds(.3f);
-            Assert.That(origin.position.x,Is.GreaterThan(.1f)); Assert.That(motion.Active,Is.False);
+            Assert.That(root.transform.position.x,Is.LessThan(-.1f)); Assert.That(viewer.transform.position,Is.EqualTo(initial)); Assert.That(origin.localPosition,Is.EqualTo(Vector3.zero)); Assert.That(motion.Active,Is.False);
             controls.SwapSticks(); Assert.That(controls.Preferences.userStick,Is.EqualTo(MovementStick.Right));
             var saved=new ControllerPreferenceStorage(directory).Load(out _); Assert.That(saved.avatarStick,Is.EqualTo(MovementStick.Left));
             var at=avatar.transform.position; yield return new WaitForSeconds(.1f); Assert.That(avatar.transform.position,Is.EqualTo(at),"Rebinding requires neutral");
@@ -414,16 +415,16 @@ namespace Maestro.Quest.Tests
             tracked=true; yield return null; Assert.That(motion.Active,Is.False); controls.ToggleAvatar(); yield return null; Assert.That(motion.Active,Is.False);
             frame.rightStick=Vector2.zero; yield return null; frame.rightStick=Vector2.up; yield return null; Assert.That(motion.Active,Is.True);
         }
-        [UnityTest] public IEnumerator VirtualViewCollisionsSnapTurnAndPauseRestorePhysicalOrigin()
+        [UnityTest] public IEnumerator VirtualContentCollisionsSnapTurnAndPauseKeepPhysicalOriginFixed()
         {
             Tutor(); var controls=Controls(out var view,out var origin);
-            Surface(new Vector3(.65f,1,3),new Vector3(.12f,2,2)); Physics.SyncTransforms();
+            var wall=Surface(new Vector3(.65f,1,3),new Vector3(.12f,2,2));wall.transform.SetParent(root.transform,true);wall.layer=RoomPhysicsLayers.Environment; Physics.SyncTransforms();
             controls.ToggleView(); controls.ToggleUser(); yield return null; frame.leftStick=Vector2.right;
-            yield return new WaitForSeconds(1.2f); Assert.That(origin.position.x,Is.InRange(.25f,.41f));
-            frame.leftStick=Vector2.zero; frame.a=true; yield return null; var turned=origin.rotation;
+            yield return new WaitForSeconds(1.2f); Assert.That(root.transform.position.x,Is.InRange(-.41f,-.25f));Assert.That(origin.position,Is.EqualTo(Vector3.zero));
+            frame.leftStick=Vector2.zero; frame.a=true; yield return null; var turned=root.transform.rotation;
             Assert.That(Quaternion.Angle(Quaternion.identity,turned),Is.EqualTo(30).Within(.1f));
-            yield return null; Assert.That(Quaternion.Angle(origin.rotation,turned),Is.LessThan(.01f),"Holding a button must not keep turning");
-            controls.SendMessage("OnApplicationPause",true); Assert.That(view.Active,Is.False); Assert.That(origin.localPosition,Is.EqualTo(Vector3.zero)); Assert.That(origin.localRotation,Is.EqualTo(Quaternion.identity));
+            yield return null; Assert.That(Quaternion.Angle(root.transform.rotation,turned),Is.LessThan(.01f),"Holding a button must not keep turning");
+            controls.SendMessage("OnApplicationPause",true); Assert.That(view.Active,Is.False); Assert.That(origin.localPosition,Is.EqualTo(Vector3.zero)); Assert.That(origin.localRotation,Is.EqualTo(Quaternion.identity));Assert.That(root.transform.position,Is.EqualTo(Vector3.zero));Assert.That(root.transform.rotation,Is.EqualTo(Quaternion.identity));
             controls.SendMessage("OnApplicationPause",false); yield return null; Assert.That(controls.UserEnabled,Is.False);
         }
         [UnityTest] public IEnumerator ControllerButtonsUseSavedActionsAndSolidToolsExposeBindings()
@@ -497,7 +498,7 @@ namespace Maestro.Quest.Tests
         }
         [UnityTearDown] public IEnumerator Cleanup()
         {
-            UnityEngine.Object.Destroy(root); if (viewer) UnityEngine.Object.Destroy(viewer);
+            UnityEngine.Object.Destroy(physicalRoot); if (viewer) UnityEngine.Object.Destroy(viewer);
             Time.captureDeltaTime = captureDelta; yield return null; yield return null;
             if (Directory.Exists(directory)) Directory.Delete(directory,true);
         }

@@ -36,7 +36,7 @@ namespace Maestro.Quest.Tests
             router=root.AddComponent<BookPointerRouter>();router.Browser=browser;input=root.AddComponent<BookControllerInput>();input.enabled=false;input.Router=router;input.Room=room;
             physics=root.AddComponent<RoomPhysicsWorld>();navigation=root.AddComponent<RoomNavigation>();navigation.Initialize(physics);scan=root.AddComponent<ScannedRoom>();scan.Initialize(physics);
             agent=root.AddComponent<RoomAgent>();agent.Initialize(null,browser);
-            view=root.AddComponent<VirtualRoomView>();view.Initialize(cameraObject.transform,camera,scan,physics);host=root.AddComponent<WorkspaceHost>();
+            view=root.AddComponent<VirtualRoomView>();view.Initialize(content.transform,cameraObject.transform,camera,scan,physics);host=root.AddComponent<WorkspaceHost>();
         }
         void Build(WorkspaceContent content,string data,string receipts,RoomRuntimeGate gate)
         {

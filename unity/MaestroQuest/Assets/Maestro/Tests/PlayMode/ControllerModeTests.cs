@@ -35,7 +35,7 @@ namespace Maestro.Quest.Tests
             Assert.That(modeActions.Execute(ModeRequest(operation),out var error),Is.True,error);yield return null;
             Assert.That((string)modeActions.Observe()["selected"]["phase"],Is.EqualTo("completed"),modeActions.Observe().ToString());
         }
-        [UnityTest] public IEnumerator SharedModesMoveIndependentTargetsOnlyAfterNeutralAndRestoreTheRealOrigin()
+        [UnityTest] public IEnumerator SharedModesMoveIndependentTargetsOnlyAfterNeutralWithoutMovingTracking()
         {
             var controls=SharedModes(out var view,out var origin);var before=ModeFact();var home=origin.localPosition;var rotation=origin.localRotation;
             frame.rightStick=Vector2.up;frame.leftStick=Vector2.right;
@@ -43,11 +43,11 @@ namespace Maestro.Quest.Tests
             Assert.That(motion.Active,Is.False);Assert.That(avatar.transform.position.z,Is.Zero);
             frame.rightStick=Vector2.zero;yield return null;frame.rightStick=Vector2.up;yield return new WaitForSeconds(.3f);
             Assert.That(avatar.transform.position.z,Is.GreaterThan(.1f));Assert.That(origin.localPosition,Is.EqualTo(home));
-            yield return ChangeMode("view.virtual");var virtualView=modeActions.Observe().DeepClone();Assert.That(view.Active,Is.True);Assert.That(controls.UserEnabled,Is.False);
+            world.PausePhysics();yield return ChangeMode("view.virtual");var virtualView=modeActions.Observe().DeepClone();Assert.That(view.Active,Is.True);Assert.That(controls.UserEnabled,Is.False);
             yield return ChangeMode("user.enable");var user=modeActions.Observe().DeepClone();yield return new WaitForSeconds(.1f);Assert.That(origin.localPosition,Is.EqualTo(home));
             frame.leftStick=frame.rightStick=Vector2.zero;yield return null;frame.leftStick=Vector2.right;yield return new WaitForSeconds(.3f);
-            Assert.That(origin.position.x,Is.GreaterThan(.05f));var walked=viewer.transform.position;frame.leftStick=Vector2.zero;frame.a=true;yield return null;
-            Assert.That(Quaternion.Angle(origin.rotation,rotation),Is.EqualTo(30).Within(.1f));Assert.That(Vector3.Distance(viewer.transform.position,walked),Is.LessThan(.001f),"Snap turn pivots around the viewer");
+            Assert.That(root.transform.position.x,Is.LessThan(-.05f));Assert.That(origin.localPosition,Is.EqualTo(home));var walked=viewer.transform.position;frame.leftStick=Vector2.zero;frame.a=true;yield return null;
+            Assert.That(Quaternion.Angle(root.transform.rotation,rotation),Is.EqualTo(30).Within(.1f));Assert.That(Vector3.Distance(viewer.transform.position,walked),Is.LessThan(.001f),"Snap turn pivots around the viewer");
             yield return ChangeMode("view.mixedReality");var mixed=modeActions.Observe().DeepClone();var after=ModeFact();
             Assert.That(view.Active||controls.UserEnabled||controls.AvatarEnabled||motion.Active||world.Running,Is.False);
             Assert.That(origin.localPosition,Is.EqualTo(home));Assert.That(Quaternion.Angle(origin.localRotation,rotation),Is.LessThan(.001f));Assert.That(viewer.GetComponent<Camera>().backgroundColor.a,Is.Zero);
@@ -85,16 +85,16 @@ namespace Maestro.Quest.Tests
             Assert.That(modeActions.Execute(ModeRequest("user.enable"),out var error),Is.False);StringAssert.Contains("Virtual view",error);
             var prefs=controls.Preferences;prefs.avatarStick=MovementStick.None;Assert.That(controls.Apply(prefs),Is.True);
             Assert.That(modeActions.Execute(ModeRequest("maestro.enable"),out error),Is.False);StringAssert.Contains("binding",error);
-            yield return ChangeMode("view.virtual");yield return ChangeMode("user.enable");frame.leftStick=Vector2.right;yield return new WaitForSeconds(.2f);Assert.That(origin.position.x,Is.GreaterThan(0));
+            world.PausePhysics();yield return ChangeMode("view.virtual");yield return ChangeMode("user.enable");frame.leftStick=Vector2.right;yield return new WaitForSeconds(.2f);Assert.That(root.transform.position.x,Is.LessThan(0));Assert.That(origin.position,Is.EqualTo(Vector3.zero));
             controls.SendMessage("OnApplicationPause",true);Assert.That(view.Active||controls.UserEnabled,Is.False);Assert.That(origin.localPosition,Is.EqualTo(Vector3.zero));
             Assert.That(modeActions.Execute(ModeRequest("view.virtual"),out _),Is.False);controls.SendMessage("OnApplicationPause",false);yield return null;Assert.That(controls.UserEnabled||controls.Virtual,Is.False);
         }
         [UnityTest] public IEnumerator SameModeIsInertAndHeldTurnNeedsReleaseAfterActivation()
         {
-            SharedModes(out _,out var origin);frame.a=true;yield return ChangeMode("view.virtual");yield return ChangeMode("user.enable");yield return null;
+            SharedModes(out _,out var origin);frame.a=true;world.PausePhysics();yield return ChangeMode("view.virtual");yield return ChangeMode("user.enable");yield return null;
             Assert.That(Quaternion.Angle(origin.rotation,Quaternion.identity),Is.LessThan(.001f));var before=ModeFact();
             yield return ChangeMode("user.enable");Assert.That(JToken.DeepEquals(before,ModeFact()),Is.True,"An already satisfied request does not reset gates or identities");
-            frame.a=false;yield return null;frame.a=true;yield return null;Assert.That(Quaternion.Angle(origin.rotation,Quaternion.identity),Is.EqualTo(30).Within(.1f));
+            frame.a=false;yield return null;frame.a=true;yield return null;Assert.That(Quaternion.Angle(root.transform.rotation,Quaternion.identity),Is.EqualTo(30).Within(.1f));
         }
     }
 }
