@@ -18,9 +18,11 @@ namespace Maestro.Quest.Tests {public sealed partial class RoomRulesTests {
  [UnityTest] public IEnumerator FieldTransferPersistsBothSurfacesWithOneUndoAndExactReceiptReplay(){
   var(ex,a,b)=TransferSurfaces();var beforeA=editor.Read(a).heightFields[0];var beforeB=editor.Read(b).heightFields[0];double total=beforeA.VolumeLitres+beforeB.VolumeLitres;
   // Different display scales/rotations do not silently redefine local litre units.
-  editor.Find(b).transform.localScale=new Vector3(2,1,.5f);editor.Find(b).transform.localRotation=Quaternion.Euler(0,35,0);
+  var acceptedPose=editor.Read(b);editor.Find(b).transform.localScale=new Vector3(2,1,.5f);editor.Find(b).transform.localRotation=Quaternion.Euler(0,35,0);
   var request=ContainerRequest(SurfaceTransfer(a,b));Assert.That(ex.Execute(request,out var error,out _),Is.True,error);var receipt=ex.Executions.Observe();var output=(JObject)receipt["selected"]["output"];
   var afterA=editor.Read(a).heightFields[0];var afterB=editor.Read(b).heightFields[0];double rounding=(double)output["roundingLitres"];
+  Assert.That(editor.Read(b).scale,Is.EqualTo(acceptedPose.scale),"A content edit cannot flatten an unrepresentable display scale into a saved pose");
+  Assert.That(editor.Find(b).transform.localScale,Is.EqualTo(new Vector3(2,1,.5f)),"The content edit must leave the visual transform alone");
   Assert.That(total-afterA.VolumeLitres-afterB.VolumeLitres,Is.EqualTo(-rounding).Within(.00000001));Assert.That(afterA.heights[144],Is.LessThan(beforeA.heights[144]));Assert.That(afterB.heights[144],Is.GreaterThan(beforeB.heights[144]));
   Assert.That(ex.Execute(request,out error,out _),Is.True,error);Assert.That(editor.Read(a).heightFields[0].heights,Is.EqualTo(afterA.heights));
   var loaded=new RoomStorage(directory).Load(out _);Assert.That(loaded.objects.Single(o=>o.id==a).heightFields[0].heights,Is.EqualTo(afterA.heights));Assert.That(loaded.objects.Single(o=>o.id==b).heightFields[0].heights,Is.EqualTo(afterB.heights));

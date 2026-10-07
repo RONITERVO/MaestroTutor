@@ -50,7 +50,7 @@ namespace Maestro.Quest.Creation
             if(!PrepareConnection(target,revision,operation,connected,definition,angle,out var data,out error))return false;
             if(operation=="rearm"){Find(target).GetComponent<RigidRoomItem>()?.StopVelocity();Find(connected).GetComponent<RigidRoomItem>()?.StopVelocity();Find(target).GetComponent<RoomConnectionView>()?.ResetBreak();error=null;return true;}
             var replacements=connected!=null?new[]{data,Pose(Read(connected),Find(connected).transform)}:new[]{data};
-            var before=new RoomLayout {placements=replacements.Select(x=>ObjectPlacement.Capture(x.id,Find(x.id).transform)).ToArray()};
+            var before=new RoomLayout {placements=replacements.Select(x=>Frame.Placement(x.id,Find(x.id).transform)).ToArray()};
             if(!CommitPersisted(replacements,Array.Empty<string>(),"Connection "+operation,true,out error,before))return false;
             Find(target)?.GetComponent<RoomConnectionView>()?.ResetBreak();return true;
         }

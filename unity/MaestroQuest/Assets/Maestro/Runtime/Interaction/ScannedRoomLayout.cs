@@ -23,7 +23,10 @@ namespace Maestro.Quest.Interaction
             (!Volume.HasValue||Coordinate(Volume.Value.center)&&Size(Volume.Value.size))&&Boundary!=null&&Boundary.Length<=256&&(Boundary.Length==0||Boundary.Length>=3)&&Boundary.All(p=>Coordinate(new Vector3(p.x,p.y,0)));
         static bool Coordinate(Vector3 v)=>float.IsFinite(v.x)&&float.IsFinite(v.y)&&float.IsFinite(v.z)&&Mathf.Abs(v.x)<=1000&&Mathf.Abs(v.y)<=1000&&Mathf.Abs(v.z)<=1000;
         static bool Size(Vector3 v)=>Coordinate(v)&&v.x>0&&v.y>0&&v.z>0;
-        internal static ScannedSurface FromFrame(string id,string label,Transform anchor,Transform frame,Rect? plane,Bounds? volume)=>new(){Id=id,Label=label,Position=frame.InverseTransformPoint(anchor.position),Rotation=Quaternion.Inverse(frame.rotation)*anchor.rotation,Plane=plane,Volume=volume};
+        internal static ScannedSurface FromFrame(string id,string label,Transform anchor,Transform frame,Rect? plane,Bounds? volume) {
+            var coordinates=new Creation.RoomFrame(frame);
+            return new(){Id=id,Label=label,Position=coordinates.PointToRoom(anchor.position),Rotation=coordinates.RotationToRoom(anchor.rotation),Plane=plane,Volume=volume};
+        }
         public ScannedSurface Copy()=>new(){Id=Id,Label=Label,Position=Position,Rotation=Rotation,Plane=Plane,Volume=Volume,Boundary=Boundary?.ToArray()};
         public bool Same(ScannedSurface other)=>other!=null&&Id==other.Id&&Label==other.Label&&Position.Equals(other.Position)&&Rotation.Equals(other.Rotation)&&Nullable.Equals(Plane,other.Plane)&&Nullable.Equals(Volume,other.Volume)&&Boundary.SequenceEqual(other.Boundary);
         public JObject Summary()=>new(){["id"]=Id,["label"]=Label,["plane"]=Plane.HasValue,["volume"]=Volume.HasValue};
@@ -44,7 +47,7 @@ namespace Maestro.Quest.Interaction
         int layoutFrame=-1,layoutFrameId,layoutOmitted;
         internal void SetLayoutSourceForTests(IRoomLayoutSource value){layoutSource=value;InvalidateLayout();}
         void InvalidateLayout(){layoutFrame=-1;layout=null;layoutId="";layoutRoom="";layoutOmitted=0;}
-        internal static bool RigidFrame(Transform value)=>value&&Vector3.Distance(value.lossyScale,Vector3.one)<.0001f;
+        internal static bool RigidFrame(Transform value) {var frame=new Creation.RoomFrame(value);return frame.Valid&&Mathf.Abs(frame.MetresPerUnit-1)<.00005f;}
         bool ReadLayout(Transform frame)
         {
             string reason=null;

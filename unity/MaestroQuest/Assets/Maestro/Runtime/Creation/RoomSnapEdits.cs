@@ -44,7 +44,7 @@ namespace Maestro.Quest.Creation {
             }
             var next=replacements.ToDictionary(x=>x.id);var candidate=Snapshot();candidate.objects=candidate.objects.Select(o=>next.TryGetValue(o.id,out var replacement)?replacement:o).ToArray();
             if(!candidate.Validate(out error))return false;
-            before=new RoomLayout{placements=source.placements.Append(ObjectPlacement.Capture(other.id,otherItem.transform)).ToArray()};return before.Validate(out error);
+            before=new RoomLayout{placements=source.placements.Append(Frame.Placement(other.id,otherItem.transform)).ToArray()};return before.Validate(out error);
         }
         internal bool SnapConstruction(RoomSnapPlacement request,out string error){
             if(!PrepareSnap(request,out var replacements,out var before,out error))return false;

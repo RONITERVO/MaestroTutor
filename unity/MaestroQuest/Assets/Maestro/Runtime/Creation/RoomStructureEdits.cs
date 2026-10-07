@@ -70,7 +70,7 @@ namespace Maestro.Quest.Creation
                 present++;
                 if(!item||!item.isActiveAndEnabled){available=false;continue;}
                 if(item.Grab&&item.Grab.isSelected)held++;
-                var live=ObjectPlacement.Capture(expected.target,item.transform);
+                var live=Frame.Placement(expected.target,item.transform);
                 if(!new RoomLayout {placements=new[]{live}}.Validate(out _)){available=false;continue;}
                 if(Vector3.Distance(live.position,expected.position)>definition.positionTolerance||Quaternion.Angle(live.rotation,expected.rotation)>definition.rotationTolerance||Mathf.Abs(live.scale-expected.scale)>definition.scaleTolerance)displaced++;
             }

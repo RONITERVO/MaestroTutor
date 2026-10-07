@@ -53,6 +53,7 @@ namespace Maestro.Quest.Creation
         public int Revision { get; private set; } = 1;
         public Vector3 CreationPosition => SpawnPosition();
         internal Transform Viewer=>room?room.Viewer:null;
+        internal RoomFrame Frame => new(transform);
         public string SelectedId => selected;
         public RoomItem Find(string id) => id != null && objects.TryGetValue(id,out var value) ? value : null;
         public RoomObjectData Read(string id) => journal.Read(id);
@@ -91,7 +92,7 @@ namespace Maestro.Quest.Creation
             if (message != null) SetStatus(message);
         }
 
-        static RoomDocument StarterDocument(RoomItem book, RoomItem maestro, BundledAvatar includedAvatar)
+        RoomDocument StarterDocument(RoomItem book, RoomItem maestro, BundledAvatar includedAvatar)
         {
             var items = new List<RoomObjectData> { Pose(new RoomObjectData { id = "book", kind = RoomObjectKind.Book }, book.transform), Pose(new RoomObjectData { id = "maestro", kind = RoomObjectKind.Maestro, modelHash = includedAvatar?.Hash, walkClip = (includedAvatar?.WalkClipIndex??-1)+1 }, maestro.transform) };
             var kinds = new[] { RoomObjectKind.Block, RoomObjectKind.Ball, RoomObjectKind.Cylinder };
@@ -149,6 +150,7 @@ namespace Maestro.Quest.Creation
 
         public bool CanCreatePrimitive(out string error) {
             error=null;
+            if(!Frame.Valid){error="The room coordinate frame is unavailable";return false;}
             if(WriteGate.Frozen){error=Maestro.Quest.Persistence.WorkspaceWriteGate.FrozenReason;return false;}
             if(journal==null) {error="Room editor is not ready";return false;}
             if(storage.ReadOnly) {error="This room was saved by a newer app and is read-only";return false;}
@@ -223,6 +225,7 @@ namespace Maestro.Quest.Creation
         }
         bool EditObject(string id,bool creationOnly,Action<RoomObjectData> change,string message,bool applyPose,out string error) {
             if(!CanEditObject(id,creationOnly,out error))return false;
+            if(applyPose&&!Frame.Read(Find(id).transform,out _,out _,out _)){error="The object needs a valid uniform room frame before placement";return false;}
             // Runtime physics can be newer than the last periodic saved placement.
             var data=Pose(Read(id),Find(id).transform);change(data);
             return CommitPersisted(new[]{data},Array.Empty<string>(),message,applyPose,out error);
@@ -255,7 +258,7 @@ namespace Maestro.Quest.Creation
             if (!room.Viewer) return new Vector3(.3f,1.3f,.65f);
             var forward = Vector3.ProjectOnPlane(room.Viewer.forward,Vector3.up).normalized;
             if (forward.sqrMagnitude < .01f) forward = transform.forward;
-            return transform.InverseTransformPoint(room.Viewer.position + forward * .7f + room.Viewer.right * .3f - Vector3.up * .2f);
+            return Frame.PointToRoom(room.Viewer.position + forward * .7f + room.Viewer.right * .3f - Vector3.up * .2f);
         }
 
         internal bool CreateImportedModel(string hash,out string id,out string error)
@@ -284,7 +287,7 @@ namespace Maestro.Quest.Creation
         {
             var item=Read(selected);var live=Find(selected);
             if(item==null||item.IsBuiltIn||!live){SetStatus("Select one of your creations to duplicate");return;}
-            if(CopyObject(selected,ObjectRevision(selected),item.name,live.transform.localPosition+Vector3.right*.18f,out var id,out var error)){selected=id;UpdateSelection();}
+            if(CopyObject(selected,ObjectRevision(selected),item.name,Frame.PointToRoom(live.transform.position)+Vector3.right*.18f,out var id,out var error)){selected=id;UpdateSelection();}
             else SetStatus(error);
         }
 
@@ -374,7 +377,7 @@ namespace Maestro.Quest.Creation
         {
             Editing?.Invoke(); if (Busy()) return false;
             var data = journal.Read(selected); if (data == null) return false;
-            if(MoveObject(selected,transform.InverseTransformPoint(worldPosition),out var error))return true;SetStatus(error);return false;
+            if(MoveObject(selected,Frame.PointToRoom(worldPosition),out var error))return true;SetStatus(error);return false;
         }
         public bool SaveAnimation(string id, RoomMotion motion, JointPose[] joints, bool savePose)
         {
@@ -455,14 +458,24 @@ namespace Maestro.Quest.Creation
             applying = false; UpdateSelection();
         }
 
-        static void ApplyPose(RoomItem item, RoomObjectData data)
+        void ApplyPose(RoomItem item, RoomObjectData data)
         {
             if(ScanDrawingAnchor.Has(data))return;
-            item.transform.SetLocalPositionAndRotation(data.position,data.rotation); item.transform.localScale = Vector3.one * data.scale;
+            if (!Frame.Apply(item.transform,data.position,data.rotation,data.scale)) { SetStatus("The object frame cannot represent this room placement"); return; }
             item.GetComponent<RigidRoomItem>()?.Teleported();
         }
-        static RoomObjectData Pose(RoomObjectData data, Transform pose)
-        { if(ScanDrawingAnchor.Has(data))return data;data.position = pose.localPosition; data.rotation = pose.localRotation.normalized; data.scale = pose.localScale.x; return data; }
+        RoomObjectData Pose(RoomObjectData data, Transform pose)
+        {
+            if(ScanDrawingAnchor.Has(data))return data;
+            // Component edits (for example measured material transfers) do not
+            // require a new placement. Retain the accepted pose if a transient
+            // display transform cannot be represented; never flatten its scale.
+            // Explicit placement/copy/layout paths validate the live frame first.
+            if(Frame.Read(pose,out var position,out var rotation,out var scale)){
+                data.position=position;data.rotation=rotation;data.scale=scale;
+            }
+            return data;
+        }
 
         void UpdateSelection()
         {
@@ -483,7 +496,7 @@ namespace Maestro.Quest.Creation
         {
             using var write=WriteGate.TryWrite(out _);if(write==null)return;
             var item = Find(id);
-            if (item && !item.PoseLocked && journal.UpdatePlacement(id,item.transform.localPosition,item.transform.localRotation.normalized)) MarkDirty();
+            if (item && !item.PoseLocked && Frame.Read(item.transform,out var position,out var rotation,out _) && journal.UpdatePlacement(id,position,rotation)) MarkDirty();
         }
         public void SetAvatarMovement(float distance, float speed)
         {
@@ -525,7 +538,7 @@ namespace Maestro.Quest.Creation
                 var item = pair.Value; if (!item || item.Grab.isSelected) continue;
                 var rigid = item.GetComponent<RigidRoomItem>();
                 if (!rigid || !rigid.Dynamic || rigid.AnimationOwned) continue;
-                if (journal.UpdatePlacement(pair.Key,item.transform.localPosition,item.transform.localRotation.normalized)) MarkDirty();
+                if (Frame.Read(item.transform,out var position,out var rotation,out _) && journal.UpdatePlacement(pair.Key,position,rotation)) MarkDirty();
             }
         }
         float captureAt;

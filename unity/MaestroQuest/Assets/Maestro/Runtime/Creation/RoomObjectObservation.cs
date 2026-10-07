@@ -25,10 +25,10 @@ namespace Maestro.Quest.Creation
     {
         internal RoomAgentObject[] ObserveObjects()
         {
-            var result=journal.ObserveObjects();
+            var result=journal.ObserveObjects();var frame=Frame;
             foreach(var value in result) {
                 var item=Find(value.id);if(!item)continue;
-                value.position=item.transform.localPosition;
+                if(frame.Valid)value.position=frame.PointToRoom(item.transform.position);
                 value.held=item.Grab&&item.Grab.isSelected;
                 value.simulating=item.GetComponent<RigidRoomItem>()?.Simulating??false;
                 value.animated=item.GetComponent<RecipeObject>()?.IsPlaying??false;

@@ -68,11 +68,15 @@ namespace Maestro.Quest.Creation
             if(editor.RuntimeGate.Held){Say(editor.RuntimeGate.Reason);return false;}
             if(HasUnsavedRecording){Say("Save or discard the retained take first");return false;}
             if (!target) { Say("Select an object first"); return false; }
+            if(!editor.Frame.Read(target.transform,out _,out _,out _)){Say("The animation needs a valid uniform room frame");return false;}
             if (avatar && avatar.ModelBusy) { Say("Wait for Maestro to finish changing avatars"); return false; }
             if (editor.AnyHeld || (avatar && avatar.PoseRig && avatar.PoseRig.IsHolding)) { Say("Release the object or joint first"); return false; }
             return true;
         }
-        MotionFrame Capture(float time) => new() { time = time, position = target.transform.localPosition, rotation = target.transform.localRotation.normalized, scale = target.transform.localScale.x, joints = avatar && avatar.PoseRig ? avatar.PoseRig.Capture() : null };
+        MotionFrame Capture(float time) {
+            var pose=editor.Frame.Placement(targetId,target.transform);
+            return new() {time=time,position=pose.position,rotation=pose.rotation,scale=pose.scale,joints=avatar&&avatar.PoseRig?avatar.PoseRig.Capture():null};
+        }
         bool Save(RoomMotion motion, bool savePose = false, JointPose[] joints = null)
         {
             saving = true;
@@ -163,7 +167,7 @@ namespace Maestro.Quest.Creation
         void Apply(MotionFrame frame)
         {
             if (!target) return;
-            target.transform.SetLocalPositionAndRotation(frame.position,frame.rotation); target.transform.localScale = Vector3.one * frame.scale;
+            if(!editor.Frame.Apply(target.transform,frame.position,frame.rotation,frame.scale)){Say("The animation needs a valid uniform room frame");return;}
             if (avatar && avatar.PoseRig) { avatar.PoseRig.SetManual(true); avatar.PoseRig.Apply(frame.joints); }
         }
         public void ResetPose()

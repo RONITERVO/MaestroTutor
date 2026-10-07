@@ -50,8 +50,11 @@ namespace Maestro.Quest.Programs
         ScriptPlayable<RoomMotionPlayable> player;
         protected RoomMotion Motion;
         float began;
+        string frameError;
         public RecordedMotionOperation(CapabilityContext context,JObject arguments):base(context,arguments) {}
         public bool Begin(bool loop,out string error) {
+            error="The animation needs a valid uniform room frame";
+            if(!Context.Editor.Frame.Read(Context.Editor.Find(TargetId).transform,out _,out _,out _))return false;
             if(!Acquire(out error))return false;
             Motion=Context.Editor.Read(TargetId).motion.Copy();Motion.loop=loop;
             if(Duration==0)Duration=Mathf.Max(.1f,Motion.Duration);
@@ -59,13 +62,17 @@ namespace Maestro.Quest.Programs
             player=ScriptPlayable<RoomMotionPlayable>.Create(graph);player.GetBehaviour().Motion=Motion;
             player.GetBehaviour().Apply=frame=>{
                 if(!Target)return;
-                Target.transform.SetLocalPositionAndRotation(frame.position,frame.rotation);Target.transform.localScale=Vector3.one*frame.scale;
+                if(!Context.Editor.Frame.Apply(Target.transform,frame.position,frame.rotation,frame.scale)){frameError="The animation room frame changed to an unsupported transform";return;}
                 if(Avatar&&Avatar.PoseRig) {Avatar.PoseRig.SetManual(true);Avatar.PoseRig.Apply(frame.joints);}
             };
             ScriptPlayableOutput.Create(graph,"Motion").SetSourcePlayable(player);graph.Play();began=Time.unscaledTime;
-            Evaluate(0);return BeginProp(out error);
+            Evaluate(0);if(frameError!=null){error=frameError;return false;}return BeginProp(out error);
         }
         protected void Evaluate(float time) {if(graph.IsValid()) {player.SetTime(time);graph.Evaluate(0);}}
+        public override Rules.RuleActionState State(out string error) {
+            if(frameError!=null){error=frameError;return Rules.RuleActionState.Failed;}return base.State(out error);
+        }
+        public override bool Complete(out string error) {if(State(out error)==Rules.RuleActionState.Failed)return false;return base.Complete(out error);}
         public override void Tick()=>Evaluate(Time.unscaledTime-began);
         protected override void ReleasePlayback() {if(graph.IsValid())graph.Destroy();}
     }
@@ -82,7 +89,8 @@ namespace Maestro.Quest.Programs
             var delta=end.rotation*Quaternion.Inverse(before.rotation);delta.ToAngleAxis(out float angle,out var axis);
             if(angle>180)angle-=360;
             var spin=Mathf.Abs(angle)<.001f?Vector3.zero:axis*(angle*Mathf.Deg2Rad/dt);
-            if(Target.transform.parent) {velocity=Target.transform.parent.TransformVector(velocity);spin=Target.transform.parent.TransformDirection(spin);}
+            if(State(out error)==Rules.RuleActionState.Failed)return false;
+            var coordinates=Context.Editor.Frame;velocity=coordinates.VectorToWorld(velocity);spin=coordinates.DirectionToWorld(spin);
             Stop(true);
             if(Target.GetComponent<RigidRoomItem>().Launch(velocity,spin))return true;
             Context.Editor.RestorePose(TargetId);error="Room physics could not take ownership after the recording";return false;

@@ -39,7 +39,7 @@ namespace Maestro.Quest.Programs
             "Current room-local position, unit rotation and uniform scale of a creation, suitable for an explicit layout baseline. Includes the last authored revision, which does not identify every live physics frame. A read does not save or reserve the object. Unlike object.definition these are live values; unlike object.position these are room-local axes. Unavailable for missing/disabled targets, paused runtime or out-of-bounds poses. Do not treat room axes as durable scan anchors.",Object(new JObject { ["target"]=Resource(Text("^[a-fA-F0-9]{32}$",32))}),new JObject { ["target"]=new string('0',32)},(context,args)=>{
                 var editor=context.Editor;string id=(string)args["target"];var item=editor?editor.Find(id):null;
                 if(!item||!item.isActiveAndEnabled||editor.RuntimeGate.Held)return null;
-                var pose=ObjectPlacement.Capture(id,item.transform);if(!new RoomLayout {placements=new[]{pose}}.Validate(out _))return null;
+                var pose=editor.Frame.Placement(id,item.transform);if(!new RoomLayout {placements=new[]{pose}}.Validate(out _))return null;
                 var value=JObject.Parse(JsonUtility.ToJson(pose));value["revision"]=editor.ObjectRevision(id);value["temporary"]=editor.TemporaryRoom;return ProgramValue.Literal(value);
             },features:new[]{Feature});
     }

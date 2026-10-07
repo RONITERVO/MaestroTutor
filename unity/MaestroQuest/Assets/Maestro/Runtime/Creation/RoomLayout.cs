@@ -15,7 +15,6 @@ namespace Maestro.Quest.Creation
         public Quaternion rotation=Quaternion.identity;
         public float scale=1;
         public void Apply(RoomObjectData data) {data.position=position;data.rotation=rotation;data.scale=scale;}
-        public static ObjectPlacement Capture(string id,Transform value)=>new() {target=id,position=value.localPosition,rotation=value.localRotation.normalized,scale=value.localScale.x};
     }
     /// <summary>Explicit room-local placements, independent of geometry and future assembly membership.</summary>
     [Serializable] public sealed class RoomLayout
@@ -43,6 +42,7 @@ namespace Maestro.Quest.Creation
             var workshop=GetComponent<AnimationWorkshop>();
             foreach(var placement in layout.placements) {
                 if(!CanEditObject(placement.target,true,out error))return false;
+                if(!Frame.Read(Find(placement.target).transform,out _,out _,out _)){error="A layout member needs a valid uniform room frame";return false;}
                 if(workshop&&workshop.ControlsTarget(placement.target)){error="Stop authoring before arranging these objects";return false;}
                 if(!Find(placement.target).isActiveAndEnabled){error="A layout member is unavailable";return false;}
             }
@@ -53,7 +53,7 @@ namespace Maestro.Quest.Creation
             if(!CanApplyLayout(layout,out error))return false;
             // Capture the actual before-pose, even between periodic physics saves.
             // It becomes one Undo baseline only AFTER the candidate save succeeds.
-            var before=new RoomLayout {placements=layout.placements.Select(p=>ObjectPlacement.Capture(p.target,Find(p.target).transform)).ToArray()};
+            var before=new RoomLayout {placements=layout.placements.Select(p=>Frame.Placement(p.target,Find(p.target).transform)).ToArray()};
             var replacements=layout.placements.Select(p=>{var data=Read(p.target);p.Apply(data);return data;}).ToArray();
             return CommitPersisted(replacements,Array.Empty<string>(),"Layout applied — one Undo restores the previous arrangement",true,out error,before);
         }

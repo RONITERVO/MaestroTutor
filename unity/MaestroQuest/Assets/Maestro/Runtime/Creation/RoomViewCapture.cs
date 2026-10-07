@@ -54,7 +54,8 @@ namespace Maestro.Quest.Creation {
                 byte[] bytes=null;foreach(int quality in new[]{75,50,30}){bytes=pixels.EncodeToJPG(quality);if(bytes.Length<=ViewByteLimit)break;}
                 if(bytes==null||bytes.Length==0||bytes.Length>ViewByteLimit)throw new InvalidOperationException("This snapshot exceeds its image budget");
                 string hash;using(var sha=SHA256.Create())hash=BitConverter.ToString(sha.ComputeHash(bytes)).Replace("-","").ToLowerInvariant();
-                var position=transform.InverseTransformPoint(camera.transform.position);var rotation=(Quaternion.Inverse(transform.rotation)*camera.transform.rotation).normalized;
+                var frame=Frame;if(!frame.Valid)throw new InvalidOperationException("The room coordinate frame is unavailable");
+                var position=frame.PointToRoom(camera.transform.position);var rotation=frame.RotationToRoom(camera.transform.rotation);
                 var metadata=new JObject{["captureId"]=Guid.NewGuid().ToString("N"),["sha256"]=hash,["mimeType"]="image/jpeg",["width"]=ViewWidth,["height"]=ViewHeight,
                     ["capturedAt"]=DateTime.UtcNow.ToString("O"),["sceneRevision"]=Revision,["verticalFov"]=60,
                     ["position"]=new JObject{["x"]=position.x,["y"]=position.y,["z"]=position.z},["rotation"]=new JObject{["x"]=rotation.x,["y"]=rotation.y,["z"]=rotation.z,["w"]=rotation.w}};

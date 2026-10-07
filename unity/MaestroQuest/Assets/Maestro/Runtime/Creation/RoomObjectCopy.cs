@@ -10,6 +10,7 @@ namespace Maestro.Quest.Creation
         internal bool CanCopyObject(string source,int revision,out string error)
         {
             if(!CanCreatePrimitive(out error)||!CanEditObject(source,true,out error))return false;
+            if(!Frame.Read(Find(source).transform,out _,out _,out _)){error="The source needs a valid uniform room frame before copying";return false;}
             if(ObjectRevision(source)!=revision){error="The source changed; inspect its current definition before copying";return false;}
             if(GetComponent<AnimationWorkshop>()?.ControlsTarget(source)==true){error="Finish authoring this object before copying";return false;}
             return true;

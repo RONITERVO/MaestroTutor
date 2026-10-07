@@ -64,13 +64,13 @@ namespace Maestro.Quest.Tests
             RoomPhysicsLayers.Configure();var floor=GameObject.CreatePrimitive(PrimitiveType.Cube);floor.transform.SetParent(root.transform,false);floor.transform.position=new Vector3(2,-.1f,0);floor.transform.localScale=new Vector3(3,.2f,3);floor.layer=RoomPhysicsLayers.Scanned;
             var executor=new RoomAgentExecutor(editor);var entry=CreationTemplates.All.First(e=>e.Id=="brick");var ids=new string[6];
             for(int i=0;i<ids.Length;i++) {Assert.That(editor.CreateRecipe("Castle brick",new Vector3(2+(i%2)*.25f,.04f+(i/2)*.08f,0),1,entry.Recipe,entry.Collision,entry.Physics,out ids[i],out var error),Is.True,error);}
-            var baseline=new RoomLayout {placements=ids.Select(id=>ObjectPlacement.Capture(id,editor.Find(id).transform)).ToArray()};Physics.SyncTransforms();physics.SetSurfaces(true,"Synthetic castle floor");physics.StartPhysics();
+            var baseline=new RoomLayout {placements=ids.Select(id=>editor.Frame.Placement(id,editor.Find(id).transform)).ToArray()};Physics.SyncTransforms();physics.SetSurfaces(true,"Synthetic castle floor");physics.StartPhysics();
             for(int i=0;i<100;i++)yield return new WaitForFixedUpdate();
             Assert.That(editor.Find(ids[4]).transform.localPosition.y,Is.GreaterThan(.12f),"The initial top brick must settle on its stack");
             Assert.That(editor.CreatePrimitive(RoomObjectKind.Ball,"Knockdown ball",new Vector3(2,.16f,-.6f),.7f,Color.white,out var ballId,out var createError),Is.True,createError);
             // Reset the projectile too: leaving it inside the rebuilding stack makes
             // subsequent stability a different physical question than layout reset.
-            baseline.placements=baseline.placements.Append(ObjectPlacement.Capture(ballId,editor.Find(ballId).transform)).ToArray();
+            baseline.placements=baseline.placements.Append(editor.Frame.Placement(ballId,editor.Find(ballId).transform)).ToArray();
             yield return new WaitForFixedUpdate();var ballBody=editor.Find(ballId).GetComponent<Rigidbody>();ballBody.linearVelocity=Vector3.forward*3;
             for(int i=0;i<100;i++)yield return new WaitForFixedUpdate();
             Assert.That(ids.Any(id=>Vector3.Distance(editor.Find(id).transform.localPosition,baseline.placements.Single(p=>p.target==id).position)>.1f),Is.True,"A real ball contact must displace at least one brick");

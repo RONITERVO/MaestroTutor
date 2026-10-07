@@ -3492,6 +3492,32 @@ separate incremental check and does not establish these new combinations.
 
 ### Authored living worlds: appearance, terrain, weather and water (2026-10-07)
 
+The first native spatial refactor establishes an explicit sampled `RoomFrame`
+between authored room coordinates and Unity rendering/physics coordinates.
+Saved/live placements, layout/structure/snap baselines, Undo, physical placement,
+recorded keyframes/playback/throw velocities, scanned-surface poses and virtual
+capture metadata now share this boundary. Placement capture no longer assumes
+that an object's immediate parent is the room. Direct-child captures preserve
+exact values to avoid spurious saved revisions; distorted/sheared/reflected
+frames are refused rather than silently flattened into a saved uniform pose.
+Content-only edits keep the accepted pose when a transient display transform
+cannot be represented; measured surface transfers stay independent of visual
+scale. Explicit movement, copy and layout paths require a representable live pose.
+Existing world-coordinate contact events and `object.position` retain their
+documented meaning. This does not yet change XR-origin locomotion, implement
+world/region identities or streaming, expose arbitrary hierarchy editing, or
+define scaled-world physics. Uniform scale conversion in the coordinate helper
+is mathematical conversion, not acceptance of miniature-world gravity or water.
+
+Verification: 870 EditMode and 698 PlayMode tests pass, with the three expected
+optional private-file skips. Both complete native room and original-book probes
+pass. Five frame-math cases and four shared/manual interaction cases cover nested
+parents, root translation/rotation, exact direct-child values, failed writes,
+Undo and recorded throws. The first full run caught the material-transfer
+admission regression; its corrected test now also asserts conserved contents and
+unchanged display scale. These are desktop checks with scripted provider replies,
+not physical headset, real-provider or scaled-world acceptance.
+
 The owner expects worlds to grow from room toys into miniature countries with
 cities, buildings, items and NPCs. Users and the agent must author the same world;
 imported Blender/Meshy assets are another source of its components. Texture and

@@ -84,13 +84,13 @@ namespace Maestro.Quest.Tests
             RoomPhysicsLayers.Configure();var floor=GameObject.CreatePrimitive(PrimitiveType.Cube);floor.transform.SetParent(root.transform,false);floor.transform.position=new Vector3(2,-.1f,0);floor.transform.localScale=new Vector3(3,.2f,3);floor.layer=RoomPhysicsLayers.Scanned;
             var executor=new RoomAgentExecutor(editor);var entry=CreationTemplates.All.First(e=>e.Id=="brick");var ids=new string[6];
             for(int i=0;i<ids.Length;i++) {Assert.That(editor.CreateRecipe("Castle brick",new Vector3(2+(i%2)*.25f,.04f+(i/2)*.08f,0),1,entry.Recipe,entry.Collision,entry.Physics,out ids[i],out var error),Is.True,error);}
-            var baseline=new RoomLayout {placements=ids.Select(id=>ObjectPlacement.Capture(id,editor.Find(id).transform)).ToArray()};Physics.SyncTransforms();physics.SetSurfaces(true,"Synthetic castle floor");physics.StartPhysics();
+            var baseline=new RoomLayout {placements=ids.Select(id=>editor.Frame.Placement(id,editor.Find(id).transform)).ToArray()};Physics.SyncTransforms();physics.SetSurfaces(true,"Synthetic castle floor");physics.StartPhysics();
             for(int i=0;i<100;i++)yield return new WaitForFixedUpdate();
             Assert.That(editor.Find(ids[4]).transform.localPosition.y,Is.GreaterThan(.12f),"The initial top brick must settle on its stack");
             Assert.That(editor.CreatePrimitive(RoomObjectKind.Ball,"Knockdown ball",new Vector3(2,.16f,-.6f),.7f,Color.white,out var ballId,out var createError),Is.True,createError);
             // Reset the projectile too: leaving it inside the rebuilding stack makes
             // subsequent stability a different physical question than layout reset.
-            baseline.placements=baseline.placements.Append(ObjectPlacement.Capture(ballId,editor.Find(ballId).transform)).ToArray();
+            baseline.placements=baseline.placements.Append(editor.Frame.Placement(ballId,editor.Find(ballId).transform)).ToArray();
             var save=StructureSaveCall(baseline.placements.Select(p=>p.target).ToArray());var source=(JObject)save["arguments"]["source"];source["kind"]="definition";source.Remove("members");source["slots"]=new JArray(baseline.placements.Select((p,i)=>new JObject {["slot"]="piece_"+i,["placement"]=JObject.Parse(JsonUtility.ToJson(p))}));
             Assert.That(executor.Execute(StructureRequest(save),out var groupError,out _),Is.True,groupError);string group=(string)executor.Executions.Observe()["selected"]["output"]["structureId"];int groupRevision=editor.StructureRevision(group);
             // Observe only the castle. The projectile is part of reset, not part of

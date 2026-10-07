@@ -48,7 +48,7 @@ namespace Maestro.Quest.Programs
         }
         RoomStructure Definition(CapabilityContext context,JObject args){
             var source=(JObject)args["source"];var value=JsonUtility.FromJson<RoomStructure>(source.ToString());value.version=1;value.id=string.IsNullOrEmpty((string)args["id"])?Guid.NewGuid().ToString("N"):(string)args["id"];
-            if((string)source["kind"]=="capture")value.slots=((JArray)source["members"]).Select(x=>new StructureSlot {slot=(string)x["slot"],placement=ObjectPlacement.Capture((string)x["target"],context.Editor.Find((string)x["target"]).transform)}).ToArray();
+            if((string)source["kind"]=="capture")value.slots=((JArray)source["members"]).Select(x=>new StructureSlot {slot=(string)x["slot"],placement=context.Editor.Frame.Placement((string)x["target"],context.Editor.Find((string)x["target"]).transform)}).ToArray();
             return value;
         }
         public override BehaviourCatalog.Claim[] Claims(JObject args)=>CapabilityArguments.Resources(args,InputSchema).Select(id=>new BehaviourCatalog.Claim(id,"wholeTarget")).ToArray();
