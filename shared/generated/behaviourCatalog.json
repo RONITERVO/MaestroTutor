@@ -35377,7 +35377,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectObservation.cs",
-      "sha256": "4dc9411bc5afdf42b710acb9ceb28a80c75e2a08b3094dd404450821956ae40f"
+      "sha256": "c8fcad2eef3929a984aba4d91be10906c7ead1ad31109217389cf4bd2b6c3336"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceRecoveryHold.cs",
@@ -35565,7 +35565,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomViewCapture.cs",
-      "sha256": "5c26bbeb8a4eb295c98ef47cf9274b510e28023f655fc345275de1e256cc26d0"
+      "sha256": "d4e47082b017aba86172aec33ba1842fbd92d4f0514e5bb67b7c0f23cec40c47"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CollisionRecipe.cs",
@@ -35641,7 +35641,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationWorkshop.cs",
-      "sha256": "69b56ae4f8c4a831e63a40b41eb1486cd7d3ba02d5c443fa249333ab7d52a430"
+      "sha256": "331fc5f49a6dc3b5662e18f8d56c859215bcf1a2faa59c3ed3967fb3f677275d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationPoseRetention.cs",
@@ -35653,7 +35653,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "96cd3bdc17325d1dbc7791c1d6298b1525e6d73bf374797ffcc8bf12e873f404"
+      "sha256": "5192423e08ff229c22f7e1c692d5016c1416aeeb0e94d06bca1005fe450b8ca6"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomFrame.cs",
+      "sha256": "b0dac44d699fbb7d0a0d75eec358e8aa1e7a8e1a2df9c006482bc0cac7c2ff43"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomToolTray.cs",
@@ -35701,7 +35705,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectCopy.cs",
-      "sha256": "aa4ebc8616422ccd86af9e8e90216cba35c8740c4cf9272f9c36f6785566c32d"
+      "sha256": "ab5674d4514ad5457d77b9e4e3631f82c1cf4cbeb785cde647afa09dac224fd7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDrawingEdits.cs",
@@ -35833,7 +35837,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSnapEdits.cs",
-      "sha256": "e15a5ab9cd0952c6046210a7b968b3d21efa06463d9261d26eaa2561981d3bf8"
+      "sha256": "fb0066f2dc09e6dcf270d9dfaf8184797697042a0599d99a8ce7c4d90008266a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ConstructionSnapping.cs",
@@ -35849,11 +35853,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomGroupTransform.cs",
-      "sha256": "086112376420be1116eacc8985617083afdcb34086efe4a3115f6499d1d20fd1"
+      "sha256": "4ccde60e06dcde985c50d86ceda6fe17564856dedd8334cd30c895c6dadfa36d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomConnectionEdits.cs",
-      "sha256": "602b64f946c39d84e642851f2f4f70bc0de467b8dd2ce7d62f08a9122fc289b5"
+      "sha256": "ad4a128d4c51098406b8c99c6ddb15205ac9035839ab13a3b5845cfe665f8f9d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomConnectionView.cs",
@@ -36009,7 +36013,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ScannedRoomLayout.cs",
-      "sha256": "cc56b25d4719cf5877343c090d42c90e382f9dfbc885f6af3ea26f145147d668"
+      "sha256": "1bc56142236f261a3c8a63646d92d92c7d864cc55134cdd5110137873fb9e211"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ScannedRoomDrawing.cs",
@@ -36085,7 +36089,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLayout.cs",
-      "sha256": "f95b1f0e772a782aeb44d885dda0ae6b6a835f3a80ab53c039cb2a379e0c0369"
+      "sha256": "50c74349563ac66d437d092432fccaa7256c51c1ddd91d9bdd002c935f91783a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationBatch.cs",
@@ -36097,7 +36101,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructureEdits.cs",
-      "sha256": "64bbc13c0a54cd3fcdb6afcf1bf0e3462b1cacad6f70f4cd4bbc99cd50bd9290"
+      "sha256": "f434737e52a1462b96fcd93693520edae5e95577c92e2e00b27b5bad44f9ded4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/LegacyCapabilityAdapters.cs",
@@ -36341,7 +36345,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/LayoutCapability.cs",
-      "sha256": "3e0655362f616467af6577b3becb698c56422aefc8ca89bc5f9a6c7043fad450"
+      "sha256": "6a98fb537be1b2aa04430126ca587cf55314b39179709c256e96d4a428ef0958"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/LibraryAnimationCapability.cs",
@@ -36417,7 +36421,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RecordedAnimationCapabilities.cs",
-      "sha256": "97e3f51b525991801f3162069ec66234f061dfe8b7348856ad4fc611b5e4e5b6"
+      "sha256": "76b392b79a29290e7db0a5b9789ef06d9697f48a743480fdb2a14c67890984e9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RoomEnvironmentCapability.cs",
@@ -36477,7 +36481,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/StructureCapabilities.cs",
-      "sha256": "27bc70e2baeca2a036ea7f9dac800368f50e5883ba9cf73db87d38c6ed661c9c"
+      "sha256": "d10bf7b5e3178c18ac9c6fdc3de95a3f763f63f562e330c2cbffa0d847ce9f2d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/StructureFacts.cs",
