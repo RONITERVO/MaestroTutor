@@ -857,5 +857,52 @@ still creates the object, rejects a stale agent paint after a human edit, shows
 the native receipt history and reloads without replay. Its earlier fixed-count
 test assertions were updated to the shared limit; provider replies remain
 explicitly scripted for this book regression, separate from the paid checks above.
-The new floor action and Live narration guidance still require headset testing;
-the installed APK has not changed during this increment.
+The new floor action and Live narration guidance still require completed headset
+acceptance. The subsequent device attempt is recorded below.
+
+## Interrupted planning stream on Quest — 2026-10-07
+
+Development APK **D85F3CB7** (`f58dab48`) was installed over the existing lesson,
+after verifying private/external backups, all 148 packaged web files, ARM64/v2
+signature and 16 KiB alignment. Android verification passed 87 tests with two
+optional private-import skips; the Unity counts above are unchanged. The saved
+room was equal before/after reload. This is separate from the older Alpha build.
+
+The BYOK learner's natural floor-placement follow-up produced a truthful pending
+handoff, then two read-only room queries. The task failed before native placement.
+The app's existing Traffic Log identified `Incomplete JSON segment at the end`.
+The installed Google SDK throws this at SSE EOF with an unfinished frame; this
+is transport framing, not invalid model-generated command JSON. Traffic Log
+inspection was developer diagnosis through the existing UI, not user-flow proof.
+Private bounded response/error evidence remains outside Git.
+
+A second ordinary follow-up loaded the real scan and inspected its FLOOR anchor.
+It was interrupted deliberately when the device reported 8% battery, discharging,
+and 56°C. The app was stopped and the device put to sleep; owned ADB forwards
+were removed. Saved room/receipt readback shows all nine objects unchanged,
+the same apple still on the table, and no `object.scan.place` receipt. This is
+neither a placement pass nor a diagnosis of what caused the heat. Sustained
+performance/thermal acceptance remains open; device work waits for cooling and
+normal charging above 40%. See [device QA](QUEST_DEVICE_QA.md).
+
+The shared Gemini response path now permits **one** retry of that exact SDK
+framing error, with a one-second cancellable delay and the same model/request.
+The allowance is shared across search/model fallbacks and stays within the
+existing total request-attempt ceiling. It applies only before any text or
+thought callback has exposed output. A private incomplete plan is discarded;
+partial visible output, ordinary JSON syntax errors and coded service errors
+are not reclassified as this transport failure. It does not restart the room
+task, resend a native command or replay an uncertain receipt. Progress reports
+retrying, not high demand or a model switch. A failed attempt may still incur
+ordinary provider charges; recovery does not imply that its usage was free.
+
+Deterministic regressions run through both access adapters and through the real
+installed SDK with a synthetic truncated SSE response (no network). Room-agent
+tests preserve a prior completed action and receipt across a broken subsequent
+planning stream, including a complete-looking command before the failed EOF.
+Stop, retry exhaustion, visible text/thoughts and Search fallback are covered.
+All **2,524 web tests in 280 files**, TypeScript, lint, runtime/prompt/catalog
+boundaries and the production web build pass. The ten unrelated local edits
+retain their original hashes. No native code changed or Unity test run was
+claimed for this recovery. It is not yet packaged or physically verified; the
+failed device attempt and interrupted follow-up remain in the acceptance record.

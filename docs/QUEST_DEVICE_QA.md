@@ -3608,3 +3608,31 @@ journals, book fact readbacks, virtual render, before/after archives and cleanup
 This covers automated controller grip on a planar board, not tracked-hand comfort,
 curved/scanned/animated surfaces, restart/save-failure or maximum-load performance.
 It does not test the uploaded Store candidate.
+
+## Saved learner lesson, scanned floor — 2026-10-07
+
+Installed development APK **D85F3CB7** from `f58dab48` after independent package
+checks and verified private/external backups. Reload preserved the saved lesson
+and all room objects. Ordinary book composition and Meta XR Operator Send input
+submitted two natural BYOK learner follow-ups; no object IDs or capability
+instructions were supplied in their wording.
+
+The first performed two queries then failed on the provider SDK's truncated SSE
+frame. Developer inspection of the app's Traffic Log found the exact error;
+that diagnostic access is not physical input acceptance. The second loaded
+the real room and read its FLOOR anchor but did not finish placement before
+testing was stopped. All nine saved objects retained their prior state, including
+the apple on the table; there is no floor-placement receipt.
+
+Battery readings changed from 58% / 42°C to 8% / 56°C with charging no longer
+reported. The app was force-stopped and the headset put to sleep. Owned forwards
+were removed and no Live audio remained active. Cooling and normal charging
+above 40% are required before resuming. These readings do not identify the heat
+source or establish a performance pass; sustained thermal/power testing remains
+a release gate. Do not silently replay the interrupted task after reconnecting.
+
+Evidence is private under `.quest-evidence/scan-placement/`: package audit,
+preinstall backups, turn summaries and response diagnostics, and the stopped
+room/action-receipt files. Physical floor placement and the complete novice
+lesson remain unfinished. The shared stream-recovery change is desktop-only
+until explicitly included in a later development build.

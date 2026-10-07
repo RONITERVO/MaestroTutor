@@ -22,7 +22,13 @@ const HIGH_DEMAND_RETRY_MAX_DELAY_MS = 8_000;
 const PROCESSING_PROGRESS_INTERVAL_MS = 4_000;
 const NO_MODEL_OUTPUT_FALLBACK_AFTER_MS = 24_000;
 
-export type GeminiRetryReason = 'server-high-demand' | 'no-output-timeout';
+export type GeminiRetryReason = 'server-high-demand' | 'no-output-timeout' | 'incomplete-stream';
+
+// Only the streaming transport can create this marker, before any text/thought
+// reaches a consumer. Model JSON validation and native actions never enter this path.
+class BufferedStreamInterruptedError extends Error {
+  readonly code = 'INCOMPLETE_RESPONSE_STREAM';
+}
 
 export type GeminiProgressPhase =
   | 'attempt-start'
@@ -239,7 +245,7 @@ const buildRetryMeta = (attempt: number, retryInMs?: number) => ({
   ...(typeof retryInMs === 'number' ? { retryInMs } : {}),
 });
 
-const withHighDemandRetry = async <T>(opts: {
+const withModelRequestRetry = async <T>(opts: {
   operation: string;
   model: string;
   fallbackModel?: string;
@@ -248,6 +254,7 @@ const withHighDemandRetry = async <T>(opts: {
   mapSuccess: (result: T) => any;
   signal?: AbortSignal;
   onProgress?: (event: GeminiProgressEvent) => void;
+  streamRetryBudget?: { remaining: number };
 }): Promise<{ value: T; modelUsed: string }> => {
   let lastError: any;
   let activeModel = normalizeModelName(opts.model);
@@ -315,14 +322,25 @@ const withHighDemandRetry = async <T>(opts: {
         throw cancellationError();
       }
 
-      const canRetry = attempt < HIGH_DEMAND_MAX_RETRIES && isHighDemandError(error);
-      const retryReason: GeminiRetryReason =
+      const interruptedStream = error instanceof BufferedStreamInterruptedError;
+      const canRetry = attempt < HIGH_DEMAND_MAX_RETRIES && (interruptedStream
+        ? (opts.streamRetryBudget?.remaining ?? 0) > 0
+        : isHighDemandError(error));
+      const retryReason: GeminiRetryReason = interruptedStream ? 'incomplete-stream' :
         error?.syntheticHighDemandReason === 'no-output-timeout'
           ? 'no-output-timeout'
           : 'server-high-demand';
       let retryInMs: number | undefined;
       let switchedToFallbackForRetry = false;
-      if (canRetry) {
+      if (canRetry && interruptedStream) {
+        opts.streamRetryBudget!.remaining--;
+        retryInMs = HIGH_DEMAND_RETRY_BASE_DELAY_MS;
+        opts.onProgress?.({
+          phase: 'retry-scheduled', operation: opts.operation, model: activeModel,
+          attempt: attemptNumber, totalAttempts, retryInMs,
+          elapsedMs: Date.now() - attemptStartedAt, reason: retryReason,
+        });
+      } else if (canRetry) {
         opts.onProgress?.({
           phase: 'high-demand',
           operation: opts.operation,
@@ -367,7 +385,7 @@ const withHighDemandRetry = async <T>(opts: {
         status: getErrorStatus(error),
         code: getErrorCode(error),
         message: getNestedErrorMessage(error) || error?.message || 'Gemini API failed',
-        retry: buildRetryMeta(attemptNumber, retryInMs),
+        retry: { ...buildRetryMeta(attemptNumber, retryInMs), ...(canRetry ? { reason: retryReason } : {}) },
         ...(switchedToFallbackForRetry ? { switchedToFallbackModel: activeModel } : {}),
       });
 
@@ -375,7 +393,9 @@ const withHighDemandRetry = async <T>(opts: {
         throw error;
       }
 
-      if (switchedToFallbackForRetry) {
+      if (interruptedStream) {
+        console.warn(`[Gemini] ${opts.operation} response stream ended early; retrying the buffered request once in ${retryInMs}ms with model ${activeModel}.`);
+      } else if (switchedToFallbackForRetry) {
         console.warn(
           `[Gemini] ${opts.operation} hit high-demand/unavailable response ` +
           `(attempt ${attempt + 1}/${HIGH_DEMAND_MAX_RETRIES + 1}), retrying immediately with fallback model ${activeModel}.`
@@ -530,12 +550,17 @@ export const generateGeminiResponse = async (
     };
   };
 
-  const runWithConfig = (requestConfig: any) => withHighDemandRetry(
+  // Shared across model/search fallback attempts: at most one transport recovery
+  // for this caller, and never after a consumer has observed a partial response.
+  const streamRetryBudget = { remaining: 1 };
+  let hasDeliveredOutput = false;
+  const runWithConfig = (requestConfig: any) => withModelRequestRetry(
     {
         operation: 'generateContent',
         signal: options.signal,
         model: modelName,
         fallbackModel,
+        streamRetryBudget,
         requestPayload: (activeModel: string) => ({
           contents: redactedContents,
           config: configForModel(requestConfig, activeModel),
@@ -598,8 +623,9 @@ export const generateGeminiResponse = async (
                   const appended = appendChunkWithPrefixDiff(accumulatedText, previousChunkText, chunkText);
                   accumulatedText = appended.nextAccumulated;
                   previousChunkText = appended.nextPreviousChunk;
-                  if (appended.delta) {
-                    lifecycleHooks?.onTextDelta?.(appended.delta, accumulatedText);
+                  if (appended.delta && lifecycleHooks?.onTextDelta) {
+                    hasDeliveredOutput = true;
+                    lifecycleHooks.onTextDelta(appended.delta, accumulatedText);
                   }
                 }
 
@@ -610,8 +636,9 @@ export const generateGeminiResponse = async (
                   const appendedThought = appendChunkWithPrefixDiff(accumulatedThought, previousChunkThought, chunkThought);
                   accumulatedThought = appendedThought.nextAccumulated;
                   previousChunkThought = appendedThought.nextPreviousChunk;
-                  if (appendedThought.delta) {
-                    lifecycleHooks?.onThoughtDelta?.(appendedThought.delta, accumulatedThought);
+                  if (appendedThought.delta && lifecycleHooks?.onThoughtDelta) {
+                    hasDeliveredOutput = true;
+                    lifecycleHooks.onThoughtDelta(appendedThought.delta, accumulatedThought);
                   }
                 }
               }
@@ -626,6 +653,12 @@ export const generateGeminiResponse = async (
               checkCancellation(options.signal);
               if (!hasVisibleModelOutput && abortController.signal.aborted) {
                 throw createNoOutputHighDemandError(activeModel, Date.now() - attemptStartedAt);
+              }
+              // @google/genai 1.45 throws this exact error when its SSE reader
+              // reaches EOF with an incomplete frame. It is not model JSON.
+              if (!hasDeliveredOutput && error instanceof Error && error.message === 'Incomplete JSON segment at the end'
+                && getErrorStatus(error) === undefined && getErrorCode(error) === undefined) {
+                throw new BufferedStreamInterruptedError(error.message);
               }
               throw error;
             } finally {
@@ -681,7 +714,7 @@ export const translateText = async (
   const fallbackModel = resolveFallbackTextModel(model);
 
   try {
-    const retryResult = await withHighDemandRetry(
+    const retryResult = await withModelRequestRetry(
       {
         operation: 'translateText',
         model,
