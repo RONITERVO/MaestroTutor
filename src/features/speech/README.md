@@ -88,11 +88,12 @@ to stream directly because their click is an explicit open reason.
 
 Gemini can deliver an entire transcript and PCM response much faster than the
 speaker can play it. `turnComplete`, `goAway`, and socket close are transport
-signals, not audible-completion signals. Live conversation teardown waits for an
-audio-worklet drain acknowledgement plus the device output latency. Triggered TTS
-uses the core `SpeechOutput` contract: its browser adapter waits for every scheduled
-`AudioBufferSourceNode` to emit `ended`, then allows for the device output tail. Only an explicit
-user stop may discard queued model speech. Conversation input also defaults to
+signals, not audible-completion signals. Live and triggered TTS use the same core
+`SpeechOutput` contract. Live's browser adapter owns worklet acknowledgements plus
+device output latency; triggered TTS's browser adapter waits for every scheduled
+`AudioBufferSourceNode` to emit `ended`, then allows for the device output tail.
+Stop, host suspension or renderer failure can discard queued speech; provider
+completion cannot. Conversation input also defaults to
 `NO_INTERRUPTION` so Android speaker echo cannot barge into the model's response.
 
 `SpeechOutput` accepts copied mono PCM16 and exposes submitted/played sample
@@ -102,13 +103,27 @@ samples, and output failures stop the request with an unsuccessful result. A
 request owns exactly one output; injecting a native adapter must not also start
 browser audio. Provider access, transcript and speech caching remain shared.
 
+Live's renderer is injected by its runtime port. The browser adapter keeps
+worklet resampling/startup buffering, copies PCM before transfer and tags messages
+with a reset generation. Drains fence submitted samples so later speech cannot
+delay a previous fence indefinitely. Worker results commit in provider order.
+Render/decode failures close Live with an error rather than complete a turn with
+missing speech. Stop resets output immediately, including while capture cleanup
+is pending; the speech-gated input path stays closed until actual output drains.
+
 Unity's `NativeSpeechOutput` implements bounded DSP-scheduled playback at the
 current avatar head, including imported-avatar replacement, with generation and
 sequence checks and cancellation on focus/pause/audio-device changes. It is not
-yet connected to the Android bridge. Live and cached replay still use their
-existing output paths. Native routing, Meta HRTF/acoustics and physical echo,
+yet connected to the Android bridge. Cached replay still uses HTML Audio. Native
+routing, replay adaptation, Meta HRTF/acoustics and physical echo,
 latency and intelligibility acceptance remain open; controlled-clock PCM tests
 do not establish audible headset quality.
+
+Run `node scripts/probe-speech-output.mjs` for isolated, muted Chromium rendering
+at 24/48 kHz with the real worklet and analyser. It checks PCM, early drain fences,
+the output tail and reset/reuse without a provider or account. Vitest additionally
+checks the full Live lifecycle with native-style renderer injection. These checks
+do not replace managed/BYOK headset output, microphone echo or acoustics testing.
 
 See [`docs/GEMINI_LIVE_OPEN_POLICY.md`](../../../docs/GEMINI_LIVE_OPEN_POLICY.md)
 for the complete allowlist, activity phases, backend audit fields and maintainer

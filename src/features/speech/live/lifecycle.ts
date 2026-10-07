@@ -11,7 +11,7 @@ import type { createLiveTranscripts } from './transcripts';
 export function createLiveLifecycle(state: Pick<LiveSessionData,
   'liveInputContextRef' | 'sessionRef' | 'inputAudioContextRef' | 'outputAudioContextRef'
   | 'microphoneStreamRef' | 'canvasRef' | 'workletNodeRef'
-  | 'playbackNodeRef' | 'logRef' | 'logFinalizedRef'
+  | 'speechOutputRef' | 'logRef' | 'logFinalizedRef'
   | 'pendingUserTurnRef' | 'videoUpdateVersionRef' | 'videoFrameInFlightRef'
   | 'pendingTranscriptUpdateRef' | 'serverMessageQueueRef' | 'inputCodecWorkerRef'
   | 'outputCodecWorkerRef' | 'inputPacketizerRef' | 'pcmCaptureRouterRef'
@@ -21,7 +21,7 @@ export function createLiveLifecycle(state: Pick<LiveSessionData,
   | 'currentUserTranscriptAudioLengthRef' | 'currentModelThinkingTraceRef' | 'currentModelThinkingPhaseRef'
   | 'currentModelThinkingStatusLineRef' | 'currentTurnWaitingForInputRef' | 'currentModelAudioTotalLengthRef'
   | 'modelAudioSplitPointsRef' | 'lastNewlineCountRef' | 'lastTranscriptUpdateRef'
-  | 'playbackDrainCoordinatorRef' | 'playbackPendingRef' | 'speechGateRef'
+  | 'playbackPendingRef' | 'speechGateRef'
   | 'speechTurnBoundaryRef' | 'semanticSpeechCaptureRef' | 'loadingFallbackOnsetAtRef'
   | 'speechGateEpochRef' | 'playbackUntilRef' | 'playbackActiveRef'
   | 'awaitingModelTurnRef' | 'boundaryClosePromiseRef'
@@ -29,7 +29,7 @@ export function createLiveLifecycle(state: Pick<LiveSessionData,
   const {
     liveInputContextRef, sessionRef, inputAudioContextRef, outputAudioContextRef,
     microphoneStreamRef, canvasRef, workletNodeRef,
-    playbackNodeRef, logRef, logFinalizedRef,
+    speechOutputRef, logRef, logFinalizedRef,
     pendingUserTurnRef, videoUpdateVersionRef, videoFrameInFlightRef,
     pendingTranscriptUpdateRef, serverMessageQueueRef, inputCodecWorkerRef,
     outputCodecWorkerRef, inputPacketizerRef, pcmCaptureRouterRef,
@@ -39,7 +39,7 @@ export function createLiveLifecycle(state: Pick<LiveSessionData,
     currentUserTranscriptAudioLengthRef, currentModelThinkingTraceRef, currentModelThinkingPhaseRef,
     currentModelThinkingStatusLineRef, currentTurnWaitingForInputRef, currentModelAudioTotalLengthRef,
     modelAudioSplitPointsRef, lastNewlineCountRef, lastTranscriptUpdateRef,
-    playbackDrainCoordinatorRef, playbackPendingRef, speechGateRef,
+    playbackPendingRef, speechGateRef,
     speechTurnBoundaryRef, semanticSpeechCaptureRef, loadingFallbackOnsetAtRef,
     speechGateEpochRef, playbackUntilRef, playbackActiveRef,
     awaitingModelTurnRef, boundaryClosePromiseRef,
@@ -99,12 +99,10 @@ export function createLiveLifecycle(state: Pick<LiveSessionData,
       try { activeCaptureNode.port.onmessage = null; activeCaptureNode.disconnect(); } catch { }
       workletNodeRef.current = null;
     }
-    if (playbackNodeRef.current) {
-      playbackDrainCoordinatorRef.current.cancelAll();
+    if (speechOutputRef.current) {
       playbackPendingRef.current = false;
-      try { playbackNodeRef.current.port.postMessage({ type: 'reset' }); } catch { }
-      try { playbackNodeRef.current.disconnect(); } catch { }
-      playbackNodeRef.current = null;
+      try { speechOutputRef.current.dispose(); } catch { }
+      speechOutputRef.current = null;
     }
     playbackUntilRef.current = 0;
     playbackActiveRef.current = false;
@@ -190,6 +188,9 @@ export function createLiveLifecycle(state: Pick<LiveSessionData,
   const cleanup = (): Promise<void> => {
     if (cleanupPromise) return cleanupPromise;
     isCleaningUpRef.current = true;
+    // Stop output before waiting for microphone flush/transport cleanup. The
+    // cleaning flag also prevents late decode/provider callbacks adding speech.
+    cancelModelAudioDecodeJobs(); stopAllAudio();
     // Publish the promise before invoking any callback, including synchronous ones.
     cleanupPromise = Promise.resolve().then(release).finally(() => {
       isCleaningUpRef.current = false;
@@ -200,10 +201,8 @@ export function createLiveLifecycle(state: Pick<LiveSessionData,
 
   const stop = async () => {
     updateState('idle');
-    if (inputPacketizerRef.current && !speechGateRef.current) {
-      try { await inputPacketizerRef.current.flushPending(); }
-      catch (error) { console.warn('Live packet flush during stop failed:', error); }
-    }
+    // release() flushes capture and its packetizer in order; it owns that work
+    // for every concurrent caller, without delaying immediate output reset.
     if (logRef.current && !logFinalizedRef.current) {
       logFinalizedRef.current = true;
       logRef.current.complete({

@@ -55,7 +55,7 @@ export function createLiveInputCapture(state: Pick<LiveSessionData,
   | 'speechGateRef' | 'speechTurnBoundaryRef' | 'semanticSpeechCaptureRef'
   | 'observerWhisperRef' | 'observerWhisperBusyRef' | 'lastWhisperRequestAtRef'
   | 'loadingFallbackOnsetAtRef' | 'whisperFailureWarnedRef' | 'speechGateEpochRef'
-  | 'playbackUntilRef' | 'playbackActiveRef' | 'awaitingModelTurnRef'
+  | 'playbackUntilRef' | 'playbackPendingRef' | 'playbackActiveRef' | 'awaitingModelTurnRef'
   | 'inputClosedByServerRef' | 'boundaryClosePromiseRef'
 >, ports: LiveInputCapturePorts, session: {
   sessionId: number; speechGateEpoch: number; speechGateEnabled: boolean; observerActivity: boolean;
@@ -70,7 +70,7 @@ export function createLiveInputCapture(state: Pick<LiveSessionData,
     speechGateRef, speechTurnBoundaryRef, semanticSpeechCaptureRef,
     observerWhisperRef, observerWhisperBusyRef, lastWhisperRequestAtRef,
     loadingFallbackOnsetAtRef, whisperFailureWarnedRef, speechGateEpochRef,
-    playbackUntilRef, playbackActiveRef, awaitingModelTurnRef,
+    playbackUntilRef, playbackPendingRef, playbackActiveRef, awaitingModelTurnRef,
     inputClosedByServerRef, boundaryClosePromiseRef,
   } = state;
   const { ensureInputCodecWorker, setVadActivity, setLocalSpeechTriggerPhase, emitTurnTranscriptUpdate } = ports;
@@ -135,6 +135,7 @@ export function createLiveInputCapture(state: Pick<LiveSessionData,
       !boundary
       || !activeSession
       || awaitingModelTurnRef.current
+      || playbackPendingRef.current
       || now < playbackUntilRef.current
       || !boundary.openFromConfirmedSpeech(now)
     ) return false;
@@ -301,7 +302,7 @@ export function createLiveInputCapture(state: Pick<LiveSessionData,
     const now = Date.now();
     // Evaluate echo suppression on the capture clock. Old paced packets
     // must never be classified using the speaker state of a later moment.
-    const speaking = now < playbackUntilRef.current;
+    const speaking = playbackPendingRef.current || now < playbackUntilRef.current;
     if (speaking !== playbackActiveRef.current) {
       playbackActiveRef.current = speaking;
       gate.notePlayback(speaking, now);

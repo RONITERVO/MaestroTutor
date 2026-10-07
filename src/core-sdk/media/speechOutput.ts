@@ -1,5 +1,10 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+export interface SpeechOutputEvents {
+  onEvent?: (event: 'started' | 'resumed' | 'underrun') => void;
+  onError?: (error: Error) => void;
+}
+
 /** One owned mono PCM output. Providers, caching and transcript state stay with
  * Maestro; adapters own rendering, buffering and the output-device tail. */
 export interface SpeechOutput {

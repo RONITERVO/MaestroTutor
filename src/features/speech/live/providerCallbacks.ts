@@ -116,6 +116,10 @@ export function createLiveProviderCallbacks(state: Pick<LiveSessionData,
     if (currentSessionIdRef.current !== sessionId) return;
     const modelAudioCheckpoint = getModelAudioDecodeCheckpoint();
     await waitForModelAudioDecodeCheckpoint(modelAudioCheckpoint);
+    // onclose flushes the quiet timer. It must not bypass the same audible
+    // completion boundary and start a lesson/tool handoff while speech remains.
+    if (currentSessionIdRef.current !== sessionId) return;
+    await waitForPlaybackDrain();
     if (
       currentSessionIdRef.current !== sessionId
       || currentModelAudioTurnIdRef.current !== modelAudioCheckpoint.turnId

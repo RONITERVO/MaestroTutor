@@ -3,6 +3,7 @@
 import type { getGeminiModels } from '../../../core-sdk/modelRegistry';
 import type { TokenCategory } from '../../../core/config/activityTokens';
 import type { LiveSessionState } from './types';
+import type { SpeechOutput, SpeechOutputEvents } from '../../../core-sdk/media/speechOutput';
 export interface LiveTimerPorts { setTimeout(callback: (...args: any[]) => void, ms: number): number; clearTimeout(id: number): void }
 export interface LiveActivityPorts { setState(state: LiveSessionState): void; addActivityToken(category: TokenCategory, subtype: string): string; removeActivityToken(token: string): void }
 
@@ -32,11 +33,10 @@ export interface LiveRuntimePorts extends LiveTimerPorts, LiveActivityPorts {
   getAudioContextConstructor(): typeof AudioContext;
   getUserMedia(constraints: MediaStreamConstraints): Promise<MediaStream>;
   createAudioWorkletNode(context: AudioContext, name: string, options: AudioWorkletNodeOptions): AudioWorkletNode;
+  createSpeechOutput(context: AudioContext, events: SpeechOutputEvents): Promise<SpeechOutput>;
   createCanvas(): HTMLCanvasElement;
   createCodecWorker(): AudioCodecWorkerClient;
   createVideo(state: LiveSessionData): ReturnType<typeof createBrowserLiveVideo>;
   FLOAT_TO_INT16_PROCESSOR_URL: string;
   FLOAT_TO_INT16_PROCESSOR_NAME: string;
-  PCM_PLAYBACK_PROCESSOR_URL: string;
-  PCM_PLAYBACK_PROCESSOR_NAME: string;
 }

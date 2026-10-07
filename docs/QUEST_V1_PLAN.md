@@ -3603,3 +3603,27 @@ architecture/catalog checks and production web build pass. The synchronized
 Unity mirror passes 839 EditMode and 656 PlayMode tests, with three documented
 optional private-import skips. No Android source or packaged APK changed in this
 increment; managed/BYOK network and physical echo tests were not rerun for it.
+
+Live output increment (2026-10-07): the real Live controller now owns a
+`SpeechOutput` supplied by its runtime adapter. Browser playback retains the
+existing resampling/startup worklet, with bounded copied PCM, reset generations,
+per-fence completion and explicit render-error reporting. Decoded results commit
+in provider order. Stop resets the selected renderer immediately while microphone
+cleanup is pending; queued provider audio cannot restart it. Speech-gated input
+also waits for actual output completion instead of only an estimated end time.
+An injected native-style renderer replaces browser playback in lifecycle tests
+without adding a provider session; asynchronous startup, write/decode/drain
+failures and cancellation cannot report a falsely completed Live turn.
+
+The reusable `scripts/probe-speech-output.mjs` checks the actual Chromium audio
+thread and analyser at 24 and 48 kHz using muted synthetic PCM, including early
+fences with later audio, output tail, reset and reuse. Its server isolates the
+audio modules and cache from other development servers. This establishes browser
+rendering, not physical hearing, native echo cancellation or provider acceptance.
+Android chunk transport/ownership, cached replay and acoustics remain open.
+
+A failure-first regression also found that socket-close flushing could bypass
+the audible-completion gate and deliver the finished Live turn while its speech
+was still queued. The finalization path now waits for the selected renderer even
+when the provider closes; the same test then passes. This prevents an early
+chat/room-task handoff independently of which renderer is selected.

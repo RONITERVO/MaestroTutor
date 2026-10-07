@@ -17,9 +17,7 @@ import { type AudioCodecWorkerClient } from '../utils/audioCodecWorkerClient';
 import {
   type LocalWhisperClient
 } from '../utils/localWhisperClient';
-import {
-  WorkletPlaybackDrainCoordinator
-} from '../utils/playbackDrain';
+import type { SpeechOutput } from '../../../core-sdk/media/speechOutput';
 import { createEmptyInputAudioTelemetry, createEmptyPlaybackTelemetry, type LiveInputAudioTelemetry, type LivePlaybackTelemetry, type LiveTurnTranscriptUpdate, type ModelAudioDecodeJob, type UseGeminiLiveConversationCallbacks } from './types';
 
 import type { LiveInputContext } from '../../../core-sdk/media/liveInputContext';
@@ -40,7 +38,7 @@ export function createLiveSessionState(callbacks: UseGeminiLiveConversationCallb
   const captureVideoRef = cell<HTMLVideoElement | null>(null);
   const canvasRef = cell<HTMLCanvasElement | null>(null);
   const workletNodeRef = cell<AudioWorkletNode | null>(null);
-  const playbackNodeRef = cell<AudioWorkletNode | null>(null);
+  const speechOutputRef = cell<SpeechOutput | null>(null);
   const logRef = cell<ReturnType<typeof debugLogService.logRequest> | null>(null);
   const logFinalizedRef = cell<boolean>(false);
   const modelRef = cell<string>('');
@@ -81,7 +79,6 @@ export function createLiveSessionState(callbacks: UseGeminiLiveConversationCallb
   const pendingModelAudioDecodeJobsRef = cell<Map<number, ModelAudioDecodeJob>>(new Map());
   const inputAudioTelemetryRef = cell<LiveInputAudioTelemetry>(createEmptyInputAudioTelemetry());
   const playbackTelemetryRef = cell<LivePlaybackTelemetry>(createEmptyPlaybackTelemetry());
-  const playbackDrainCoordinatorRef = cell(new WorkletPlaybackDrainCoordinator());
   const playbackPendingRef = cell(false);
   const speechGateRef = cell<SpeechGate | null>(null);
   const speechTurnBoundaryRef = cell<ContinuousLiveTurnBoundary | null>(null);
@@ -102,7 +99,7 @@ export function createLiveSessionState(callbacks: UseGeminiLiveConversationCallb
     speechTriggerActivityTokenRef, vadActivityTokenRef, sessionRef, liveInputContextRef,
     frameIntervalRef, inputAudioContextRef, outputAudioContextRef,
     microphoneStreamRef, captureVideoRef, canvasRef,
-    workletNodeRef, playbackNodeRef, logRef,
+    workletNodeRef, speechOutputRef, logRef,
     logFinalizedRef, modelRef, pendingUserTurnRef,
     videoUpdateVersionRef, videoFrameInFlightRef, transcriptUpdateTimerRef,
     pendingTranscriptUpdateRef, serverMessageQueueRef, inputCodecWorkerRef,
@@ -116,7 +113,7 @@ export function createLiveSessionState(callbacks: UseGeminiLiveConversationCallb
     modelAudioSplitPointsRef, lastNewlineCountRef, lastTranscriptUpdateRef,
     currentModelAudioTurnIdRef, nextModelAudioTurnIdRef, nextModelAudioDecodeJobIdRef,
     pendingModelAudioDecodeJobsRef, inputAudioTelemetryRef, playbackTelemetryRef,
-    playbackDrainCoordinatorRef, playbackPendingRef, speechGateRef,
+    playbackPendingRef, speechGateRef,
     speechTurnBoundaryRef, semanticSpeechCaptureRef, observerWhisperRef,
     observerWhisperBusyRef, lastWhisperRequestAtRef, loadingFallbackOnsetAtRef,
     whisperFailureWarnedRef, speechGateEpochRef, playbackUntilRef,

@@ -29,6 +29,18 @@ const setup = () => {
 };
 
 describe('continuous Live input boundaries', () => {
+  it('keeps gated input closed beyond the estimated end until the selected output drains', async () => {
+    const h = setup(); h.state.playbackUntilRef.current = Date.now() - 1000;
+    h.state.playbackPendingRef.current = true;
+    await h.capture(); expect(h.encode).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1000); await h.capture(); expect(h.encode).not.toHaveBeenCalled();
+    h.state.playbackPendingRef.current = false;
+    await h.capture(); await vi.advanceTimersByTimeAsync(499); await h.capture();
+    expect(h.encode).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1); await h.capture();
+    expect(h.encode).toHaveBeenCalledOnce(); h.state.inputPacketizerRef.current!.dispose();
+  });
+
   it('preserves the playback settling interval even inside an open continuous turn', async () => {
     const h = setup(); h.state.playbackUntilRef.current = Date.now() + 10;
     await h.capture(); expect(h.encode).not.toHaveBeenCalled();

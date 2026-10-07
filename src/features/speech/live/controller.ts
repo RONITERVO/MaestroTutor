@@ -45,12 +45,12 @@ export function createLiveConversationController(ports: LiveRuntimePorts, callba
   const {
     sessionRef, inputAudioContextRef, outputAudioContextRef,
     microphoneStreamRef, canvasRef, workletNodeRef,
-    playbackNodeRef, logRef, logFinalizedRef,
+    speechOutputRef, logRef, logFinalizedRef,
     modelRef, serverMessageQueueRef, currentSessionIdRef,
     speechTriggerAbortRef, currentInputTranscriptionRef,
     localSpeechPendingRef, concealedSpeechProgressRef, concealedSpeechSamplesRef,
     turnTimingRef, currentOutputTranscriptionRef, inputAudioTelemetryRef,
-    playbackTelemetryRef, playbackDrainCoordinatorRef, speechGateRef,
+    playbackTelemetryRef, speechGateRef,
     speechTurnBoundaryRef, semanticSpeechCaptureRef, observerWhisperRef,
     lastWhisperRequestAtRef, loadingFallbackOnsetAtRef, speechGateEpochRef,
     playbackUntilRef, playbackActiveRef, inputClosedByServerRef,
@@ -62,31 +62,38 @@ export function createLiveConversationController(ports: LiveRuntimePorts, callba
   const { resetAudioTelemetry, getAudioTelemetrySnapshot } = telemetry;
   const transcripts = createLiveTranscripts(state, ports);
   const { emitTurnTranscriptUpdate } = transcripts;
-  const modelAudio = createLiveModelAudio(state, ports);
+  const modelAudio = createLiveModelAudio(state, { ...ports, onFailure: (message, sessionId) => failAudio(message, sessionId) });
   const { startNextModelAudioTurn, ensureInputCodecWorker } = modelAudio;
   const video = ports.createVideo(state);
   const { ensureVideoElementReady, startVideoFrameLoop } = video;
   const lifecycle = createLiveLifecycle(state, { ...activity, ...telemetry, ...transcripts, ...modelAudio, ...video, flushCaptureWorkletNode: ports.flushCaptureWorkletNode });
   const { cleanup } = lifecycle;
+  const failAudio = (message: string, sessionId: number) => {
+    if (currentSessionIdRef.current !== sessionId) return;
+    // Invalidate synchronously: no queued provider callback may turn failed
+    // playback into a completed lesson or handoff while capture is closing.
+    currentSessionIdRef.current = 0;
+    modelAudio.cancelModelAudioDecodeJobs(); modelAudio.stopAllAudio();
+    if (logRef.current && !logFinalizedRef.current) {
+      logFinalizedRef.current = true;
+      logRef.current.error({ message, audioTelemetry: getAudioTelemetrySnapshot() });
+    }
+    updateState('error');
+    notifyLiveConsumer(() => state.callbacksRef.current.onError?.(message));
+    void cleanup().catch(error => console.warn('Live audio failure cleanup failed:', error));
+  };
   const {
     getGeminiModels, getAi, debugLogService,
     beginTurnTiming, createLiveUsageTracker, acquireLocalWhisperClient,
     releaseLocalWhisperClient, waitForLocalSpeechTrigger, isNativePlatform,
-    getAudioContextConstructor, getUserMedia, createAudioWorkletNode,
+    getAudioContextConstructor, getUserMedia, createAudioWorkletNode, createSpeechOutput,
     createCanvas, FLOAT_TO_INT16_PROCESSOR_URL, FLOAT_TO_INT16_PROCESSOR_NAME,
-    PCM_PLAYBACK_PROCESSOR_URL, PCM_PLAYBACK_PROCESSOR_NAME,
   } = ports;
   const ensureCaptureWorklet = async (ctx: AudioContext) => {
     if (!ctx.audioWorklet || typeof ctx.audioWorklet.addModule !== 'function') {
       throw new Error('AudioWorklet is not supported');
     }
     await ctx.audioWorklet.addModule(FLOAT_TO_INT16_PROCESSOR_URL);
-  };
-  const ensurePlaybackWorklet = async (ctx: AudioContext) => {
-    if (!ctx.audioWorklet || typeof ctx.audioWorklet.addModule !== 'function') {
-      throw new Error('AudioWorklet is not supported');
-    }
-    await ctx.audioWorklet.addModule(PCM_PLAYBACK_PROCESSOR_URL);
   };
   let startRequest = 0;
   const start = async (opts: StartLiveConversationOptions) => {
@@ -260,35 +267,27 @@ export function createLiveConversationController(ports: LiveRuntimePorts, callba
         }
 
         outputAudioContextRef.current = outputCtx;
-        await ensurePlaybackWorklet(outputCtx);
-        if (abortIfInvalidated()) return;
-        const playbackNode = createAudioWorkletNode(outputCtx, PCM_PLAYBACK_PROCESSOR_NAME, {
-          numberOfInputs: 0,
-          numberOfOutputs: 1,
-          outputChannelCount: [1],
+        const output = await createSpeechOutput(outputCtx, {
+          onError: () => failAudio('Speech playback stopped before completion.', sessionId),
+          onEvent: event => {
+            if (abortIfInvalidated()) return;
+            if (event === 'started') {
+              turnTimingRef.current?.markOnce('playback.first-render-notified');
+              playbackTelemetryRef.current.starts += 1;
+              return;
+            }
+            if (event === 'resumed') {
+              playbackTelemetryRef.current.resumes += 1;
+              return;
+            }
+            if (event === 'underrun') {
+              playbackTelemetryRef.current.underruns += 1;
+            }
+          },
         });
-        playbackNode.port.onmessage = (event: MessageEvent<{
-          type?: string;
-          event?: 'started' | 'resumed' | 'underrun';
-        }>) => {
-          const telemetryMessage = event.data;
-          if (playbackDrainCoordinatorRef.current.handleMessage(telemetryMessage)) return;
-          if (!telemetryMessage || telemetryMessage.type !== 'telemetry') return;
-          if (telemetryMessage.event === 'started') {
-            turnTimingRef.current?.markOnce('playback.first-render-notified');
-            playbackTelemetryRef.current.starts += 1;
-            return;
-          }
-          if (telemetryMessage.event === 'resumed') {
-            playbackTelemetryRef.current.resumes += 1;
-            return;
-          }
-          if (telemetryMessage.event === 'underrun') {
-            playbackTelemetryRef.current.underruns += 1;
-          }
-        };
-        playbackNode.connect(outputCtx.destination);
-        playbackNodeRef.current = playbackNode;
+        if (abortIfInvalidated()) { output.dispose(); return; }
+        if (output.sampleRate !== OUTPUT_SAMPLE_RATE) { output.dispose(); throw new Error('Speech output format mismatch.'); }
+        speechOutputRef.current = output;
       }
 
       const model = getGeminiModels().audio.conversation;
