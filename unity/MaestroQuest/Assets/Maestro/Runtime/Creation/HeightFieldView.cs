@@ -26,7 +26,7 @@ namespace Maestro.Quest.Creation {
             if(!data.Validate(out var error))throw new ArgumentException(error);
             if(!surface){surface=new GameObject("Editable height surface");surface.transform.SetParent(transform,false);surface.layer=RoomPhysicsLayers.Item;mesh=new Mesh{name="Bounded height surface"};surface.AddComponent<MeshFilter>().sharedMesh=mesh;var renderer=surface.AddComponent<MeshRenderer>();pigment=IllustratedMaterials.Create(data.color,.035f);pigment.SetFloat("_Shading",.28f);renderer.sharedMaterial=pigment;collision=surface.AddComponent<MeshCollider>();collision.convex=false;}
             surface.SetActive(true);surface.transform.SetLocalPositionAndRotation(data.frame.position,data.frame.rotation);sourceColor=data.color;Tint(tint);
-            collision.sharedMesh=null;Fill(mesh,data);collision.sharedMesh=mesh;Preview(null);return true;
+            collision.sharedMesh=null;Fill(mesh,data);collision.sharedMesh=mesh;Preview(null);Book.AcousticSurface.Attach(surface,mesh);return true;
         }
         static void Fill(Mesh mesh,RoomHeightField data){
             var vertices=new List<Vector3>();var uv=new List<Vector2>();var triangles=new List<int>();

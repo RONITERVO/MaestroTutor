@@ -78,10 +78,11 @@ namespace Maestro.Quest.Interaction
         static async Task<bool> WaitForPermission(Task<bool> result) => await Task.WhenAny(result,Task.Delay(120000)) == result && await result;
 #endif
         void SceneLoaded() { SetCurrentRoom(null); world.SetSurfaces(false,"Checking the scanned floor and walls…"); nextCheck = 0; }
-        void RoomChanged(MRUKRoom _) { world.SetSurfaces(false,"Room changed — check alignment and start physics again"); nextCheck = 0; }
-        void AnchorChanged(MRUKAnchor _) { world.SetSurfaces(false,"Room surfaces changed — check alignment and start physics again"); nextCheck = 0; }
+        void RoomChanged(MRUKRoom _) { ClearAcousticScan(); world.SetSurfaces(false,"Room changed — check alignment and start physics again"); nextCheck = 0; }
+        void AnchorChanged(MRUKAnchor _) { ClearAcousticScan(); world.SetSurfaces(false,"Room surfaces changed — check alignment and start physics again"); nextCheck = 0; }
         void SetCurrentRoom(MRUKRoom room)
         {
+            ClearAcousticScan();
             if (current) { current.AnchorCreatedEvent.RemoveListener(AnchorChanged); current.AnchorUpdatedEvent.RemoveListener(AnchorChanged); current.AnchorRemovedEvent.RemoveListener(AnchorChanged); }
             current = room;
             if (current) { current.AnchorCreatedEvent.AddListener(AnchorChanged); current.AnchorUpdatedEvent.AddListener(AnchorChanged); current.AnchorRemovedEvent.AddListener(AnchorChanged); }
@@ -105,12 +106,13 @@ namespace Maestro.Quest.Interaction
         }
         void Update()
         {
+            RefreshAcousticAvailability();
             if (Time.unscaledTime < nextCheck) return; nextCheck = Time.unscaledTime + .25f;
-            ValidateRoom();
+            ValidateRoom(); SynchronizeAcousticScan();
         }
         void OnApplicationPause(bool value) { setupPaused=value;LifecycleChanged(value); }
         void OnApplicationFocus(bool value) { setupFocused=value;LifecycleChanged(!value); }
-        void OnDisable(){CancelRequest("Room setup cancelled because the room closed");if(world)world.SetSurfaces(false,"Room is inactive");NotifySetup();}
+        void OnDisable(){ClearAcousticScan();CancelRequest("Room setup cancelled because the room closed");if(world)world.SetSurfaces(false,"Room is inactive");NotifySetup();}
         void OnEnable()=>NotifySetup();
         void OnDestroy()
         {

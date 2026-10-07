@@ -59,6 +59,7 @@ namespace Maestro.Quest.Creation
                 var collider = shape.GetComponent<Collider>(); if(collider){collider.enabled = false; ArtResources.Release(collider);}
                 var material=RecipeMaterials.Acquire(part,Color.white);var renderer=shape.GetComponent<Renderer>();
                 materials.Add(material);renderers.Add(renderer);renderer.sharedMaterial=material.Material;
+                Book.AcousticSurface.Attach(shape, shape.GetComponent<MeshFilter>().sharedMesh);
                 for (int i=0;i<8;i++)
                 {
                     var corner = new Vector3((i&1)==0 ? -.5f : .5f,(i&2)==0 ? -.5f : .5f,(i&4)==0 ? -.5f : .5f);

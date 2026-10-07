@@ -55,6 +55,7 @@ namespace Maestro.Quest.Creation
                 var shape = GameObject.CreatePrimitive(primitive); shape.name = data.kind.ToString(); shape.transform.SetParent(transform, false);
                 shape.transform.localScale = data.kind == RoomObjectKind.Cylinder ? new Vector3(.13f,.065f,.13f) : Vector3.one * .13f;
                 pigment = IllustratedMaterials.Create(data.color); shape.GetComponent<Renderer>().sharedMaterial = pigment;
+                if (data.kind != RoomObjectKind.ImportedModel) Book.AcousticSurface.Attach(shape, shape.GetComponent<MeshFilter>().sharedMesh);
                 collider = shape.GetComponent<Collider>(); bounds = new Bounds(Vector3.zero, Vector3.one * .13f);
             }
             ApplyColor(data.color);
@@ -124,6 +125,12 @@ namespace Maestro.Quest.Creation
                 var asset = await library.ReadAsync(hash); if (!this) return;
                 var root = new GameObject("Imported geometry"); root.transform.SetParent(transform, false);
                 Model = root.AddComponent<ImportedModel>(); await Model.LoadAsync(asset); if (!this) return;
+                // Only rigid visual meshes: no bounding-box approximation across
+                // holes, no bind-pose avatar skin or decorative pencil overlay.
+                foreach (var filter in Model.Instance.GetComponentsInChildren<MeshFilter>())
+                    if (filter.GetComponent<MeshRenderer>() is { } renderer && !filter.GetComponent<PencilMarks>() &&
+                        !renderer.sharedMaterials.Any(material => material && material.HasProperty("_AlphaCutoff") && material.GetFloat("_AlphaCutoff") > 0))
+                        Book.AcousticSurface.Attach(filter.gameObject, filter.sharedMesh);
                 var box = (BoxCollider)collider; box.transform.localScale = Vector3.one; box.center = Model.LocalBounds.center; box.size = Model.LocalBounds.size + Vector3.one * .02f;
                 box.GetComponent<Renderer>().enabled = false;
                 bool selected = selection && selection.activeSelf; if (selection) { selection.SetActive(false); Destroy(selection); }

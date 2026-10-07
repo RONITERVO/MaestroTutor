@@ -20,11 +20,11 @@ namespace Maestro.Quest.Book
             source.spatializePostEffects = true;
             var spatializer = source.gameObject.AddComponent<MetaXRAudioSource>();
             spatializer.EnableSpatialization = true;
-            // Room acoustics require owned geometry/materials and measured echo
-            // tails. Do not apply a synthetic default room to the user's room.
+            // Only the owned scene may opt into direct acoustic obstruction.
             spatializer.EnableAcoustics = false;
             spatializer.GainBoostDb = 0;
             spatializer.UpdateParameters();
+            source.gameObject.AddComponent<SpeechOcclusion>().Bind(spatializer);
         }
     }
 }

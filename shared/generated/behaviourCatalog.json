@@ -33258,6 +33258,25 @@
       ]
     },
     {
+      "id": "runtime.acoustics",
+      "version": 1,
+      "type": {
+        "record": {
+          "active": "boolean",
+          "geometry": "number",
+          "triangles": "number",
+          "omitted": "number",
+          "reflections": "boolean",
+          "issue": "text"
+        }
+      },
+      "label": "Room sound obstruction",
+      "description": "Last native acoustic synchronization: active renderer, uploaded mesh/triangle counts and omitted or pending registered surfaces. Bounded direct speech obstruction uses approximate hard-surface materials, independently of collision and overlay visibility. Reflections are currently disabled. Skinned meshes, alpha-cutout imports, drawing overlays and unscanned moving real objects are not acoustic geometry; omitted does not count those unsupported categories. Counts do not verify room alignment, device audibility or performance. Reads never upload, load or change the scene.",
+      "features": [
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
       "id": "room.sessionId",
       "version": 1,
       "type": "text",
@@ -33775,7 +33794,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "ad4140d25b585032ad9e265b8e7af1adaf3f7414b32aeb60bb9dd855933187b4"
+      "sha256": "c25a3ad6b9832a0e157a65f8a00859407dc6909f029bd067756e58fc70c98418"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -33791,7 +33810,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/MaestroRoom.cs",
-      "sha256": "ba680986a259252c3771831af8b56571c2ebcce98bc485bbc33cb1becbad9dce"
+      "sha256": "9c7292501a613cf80b3f14ab27736a7c823404c3854c62e5974ae9514e4f0ab5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
@@ -34043,7 +34062,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeObject.cs",
-      "sha256": "71c0b9533635b0e6510ca0fb31f908d3c58a90347ef83628d2aa65a5014a6632"
+      "sha256": "cac455064aefe083f15e965e256cb6798b3982735c079f261b6d547a7455ef47"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeMaterials.cs",
@@ -34211,7 +34230,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/HeightFieldView.cs",
-      "sha256": "7fcd12fbf9325ccdd006117be6d0bb5a94eec81678ed50c185ff7c41d392a8bc"
+      "sha256": "19304d0eee33b1b2be20a92ab226c2413bb8215d8eb7fc09ecb53d1c060eeaf9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomHeightField.cs",
@@ -34359,7 +34378,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedRoomObject.cs",
-      "sha256": "1ee270a9b969e28c8b6e3180343638e6e020b8f361f2f1049a9a425ec8abd0d7"
+      "sha256": "9916e27853ba87bdf0c9bc7750c9f4fad2b7369160703d0619b1f2a519bb2868"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectSettings.cs",
@@ -34423,7 +34442,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/VirtualRoomView.cs",
-      "sha256": "4d28505b3692fc88a3df5ff46b1580b5a8213e8ed8dd6ddd4e63996c478304dc"
+      "sha256": "322378f3cde456d49d0d7e64860597f9062ca57ef2bcad0dbca8c62ef1e6b44e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomPhysicsWorld.cs",
@@ -34431,11 +34450,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ScannedRoom.cs",
-      "sha256": "12811b13ecf7b96c869f0aca2e350db36cac67d385aa1633f5926eadeddff53d"
+      "sha256": "3209fd985e86f42812cee5fb06354bb1fb9d775de432ffae3c22d13650c2629d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ScannedRoomRequests.cs",
-      "sha256": "c54f254aa1c5e34323ab1f8b5a485452965065d3ec5d5d682402236973f3aa60"
+      "sha256": "3c482d3b1f71aefc87146d1e16871ae8c35ee538e2c03cbcda358243b3074b4c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ScannedRoomPlacement.cs",
@@ -34536,6 +34555,34 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/LegacyCapabilityAdapters.cs",
       "sha256": "f5e46d1a74dbc76d0bf10636ad0a0574b95a98c09f50b1daae1ec055c92601ce"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/RoomAcoustics.cs",
+      "sha256": "d1b5f287b85a4e1db951baf1c066239728e3f52a0d39c8c4e0828281bca6b796"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/AcousticSurface.cs",
+      "sha256": "1fcf399e9243ac5e7ec98e2971e4b45bcb54fd17c83ed7b8df1264a9d10fbde2"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/SpeechOcclusion.cs",
+      "sha256": "0e226bfcc05706cbae868a9efc7c750dec1da48be1368d8cd140498ef8d19922"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/SpeechSpatializer.cs",
+      "sha256": "608ef81084d96f54fbbacd11f80c629e7f0a4aca3be5cceeeb09b043dc381e82"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/NativeSpeechOutput.cs",
+      "sha256": "276919376e0b92da14971a06e3475fba52a01db0d603f34d4155e53505d81679"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ScannedRoomAcoustics.cs",
+      "sha256": "651f4791dbe541a08c3c54213f8968b0e6d85740b47437c5d5e546938d754749"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedRoomObject.cs",
+      "sha256": "9916e27853ba87bdf0c9bc7750c9f4fad2b7369160703d0619b1f2a519bb2868"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationAuthoringCapability.cs",
@@ -34811,7 +34858,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RuntimeDiagnosticFacts.cs",
-      "sha256": "627c44fa4a267eebfafe2f82445c8cb01c32940805336dc776a94d9b439824b4"
+      "sha256": "cd0c37d62c18ab0e2cb01628bfb1831f877cb32c07398216f655e2bcc7ea064d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ScanDrawingCapability.cs",

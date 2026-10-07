@@ -281,8 +281,14 @@ Terrain module even when the app does not create a Terrain. The project selects
 has one continuous source, positioned at the avatar's head/mouth offset, with
 HRTF processing after procedural PCM generation. Runtime startup checks the
 actual native context; Android preprocessing rejects missing renderer/budget
-configuration. Room reflections are disabled until room geometry/materials and
-acoustic-tail handling are implemented. Desktop rendered-audio tests do not
+configuration. Owned acoustic geometry follows scanned surfaces and supported
+rigid object meshes, with separate scan/creation budgets and at most four mesh
+uploads per frame. Direct speech obstruction is independent of collider and
+renderer switches; `runtime.acoustics` exposes its current coverage through the
+shared catalog. Approximate hard-surface materials and partial occlusion preserve
+speech audibility. Skinned/cutout meshes and unscanned real objects are excluded.
+Room reflections remain unrouted pending material and acoustic-tail handling.
+Desktop rendered-audio tests do not
 replace Quest direction, echo, latency and sustained-performance acceptance.
 
 For a real-provider novice dialogue against the actual Editor runtime, use

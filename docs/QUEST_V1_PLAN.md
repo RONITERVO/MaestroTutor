@@ -3736,3 +3736,41 @@ integration probes. The latter use scripted provider responses, not a new paid
 provider run. Catalog provenance and included-asset checks pass. The unchanged
 web source retains its preceding 2,571-test pass. Headset installation and its
 acceptance checklist in `QUEST_DEVICE_QA.md` remain pending.
+
+Direct acoustic obstruction increment (2026-10-07): the owned Meta native scene
+now receives explicit scanned effect meshes, created primitives, rigid recipe
+parts, accepted sculpted surfaces and readable rigid imported meshes. Topology
+replacement, availability loss, destruction, pause and focus loss release native
+geometry; animated parts update their actual world transform. Rendering and
+collider switches do not determine participation. Scan admission uses accepted,
+tracked room data separately from the physics/placement gate. Virtual view keeps
+the loaded scan's acoustic geometry.
+
+Admission is bounded to 128 scanned / 384 virtual meshes, 16,384 / 49,152 triangles
+and 32,768 / 98,304 vertices respectively, with at most four uploads per frame.
+Each mesh is limited to 16,384 vertices and 8,192 triangles. Invalid, unreadable or
+over-budget geometry is omitted without fabricating a bounding-box wall. The
+shared `runtime.acoustics` fact reports native counts, pending/omitted registered
+surfaces, readiness and renderer issues without changing the scene.
+
+This stage uses approximate hard-surface material properties and conversational
+occlusion intensity 0.65. Reflections remain unrouted, with both reflection sends
+at -60 dB. Skinned avatars, alpha-cutout imported meshes, ink overlays and moving
+real objects absent from the scan do not contribute acoustic geometry. The MRUK
+effect mesh is a structural approximation; dynamic doors, acoustic materials and
+reverberation still require implementation/acceptance. Visual environment depth
+does not provide those acoustic facts automatically.
+
+The first six focused PlayMode tests pass, including real, muted stereo output:
+unobstructed energy 2.202, wall 0.433, moved/deleted wall 2.202. A disabled renderer
+and collider leave the acoustic wall intact. Scan acceptance/tracking loss,
+recipe replacement, invalid geometry, separate scan budget, re-admission and
+owner lifecycle cleanup also pass. These desktop results do not close physical
+sound, Live echo, Quest performance or thermal acceptance. Final whole-project
+verification passed 849 EditMode and 672 PlayMode tests (three expected private
+import skips), both full native room/original-book integrations, 115 web catalog
+tests, TypeScript, included-asset integrity and catalog provenance. The first
+full-run probe guard correctly stopped at an Editor-only provenance list change;
+after exporting that matching catalog, both integrations passed without rerunning
+the unchanged runtime suites. No provider calls, headset operations, APK signing
+or installation occurred in this increment.

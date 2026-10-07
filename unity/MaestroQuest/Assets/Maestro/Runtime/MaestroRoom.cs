@@ -29,6 +29,7 @@ namespace Maestro.Quest
         void Awake()
         {
             gameObject.AddComponent<Diagnostics.RuntimeDiagnostics>();
+            gameObject.AddComponent<RoomAcoustics>();
             var originObject = new GameObject("User origin");
             originObject.SetActive(false);
             originObject.transform.SetParent(transform, false);

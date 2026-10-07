@@ -3665,9 +3665,12 @@ speakers or headphones), provider route and timestamps for each result.
    room request. Verify the fresh onset survives after the settling interval.
    The current native playback gate suppresses simultaneous speech; it is not
    full-duplex echo cancellation. Measure that conversational limitation.
-6. Once room acoustics are implemented, compare an unobstructed voice with a
-   scanned wall and a moved/deleted virtual wall. Verify corresponding material
-   changes, reflections and cleanup. Toggling physics or visual opacity must not
+6. Compare an unobstructed voice with a scanned wall and a moved/deleted virtual
+   wall. The first direct-obstruction implementation uses approximate hard-surface
+   materials and retains some speech audibility; reflections/material authoring
+   remain pending. Verify cleanup, tracking loss and workspace replacement.
+   Inspect `runtime.acoustics` for readiness, uploaded geometry and omissions.
+   Toggling physics or visual opacity must not
    silently change acoustic participation. Dynamic real objects absent from the
    acoustic geometry require separate coverage; visual depth occlusion does not
    establish audio occlusion.

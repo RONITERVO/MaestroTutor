@@ -23,7 +23,7 @@ namespace Maestro.Quest.Tests
         [UnityTest] public IEnumerator DiagnosticsAreSharedDetachedAndResetAcrossLifecycleBoundaries()
         {
             Assert.That(RoomControls.Capabilities(editor),Does.Not.Contain(RuntimeDiagnosticFacts.Feature));
-            foreach(var id in new[]{"runtime.frameIntervals","runtime.modelBudget","runtime.motionCache"})
+            foreach(var id in new[]{"runtime.frameIntervals","runtime.modelBudget","runtime.motionCache","runtime.acoustics"})
                 Assert.That(BehaviourCatalog.TryRead(id,1,null,new BehaviourCatalog.FactContext(editor:editor),out _),Is.False);
             var sampler=root.AddComponent<RuntimeDiagnostics>();sampler.SendMessage("OnApplicationFocus",true);
             Assert.That(RoomControls.Capabilities(editor),Does.Contain(RuntimeDiagnosticFacts.Feature));
@@ -45,6 +45,17 @@ namespace Maestro.Quest.Tests
             var output=Environment.GetEnvironmentVariable("MAESTRO_RUNTIME_DIAGNOSTICS");if(!string.IsNullOrWhiteSpace(output)){
                 Directory.CreateDirectory(output);File.WriteAllText(Path.Combine(output,"runtimeDiagnostics.json"),new JObject {["frames"]=frames,["empty"]=empty,["models"]=models,["motions"]=motions,["boundary"]="Unity desktop PlayMode observations, not Quest performance evidence"}.ToString());
             }
+        }
+        [UnityTest] public IEnumerator AcousticDiagnosticsReadTheSameNativeOwnershipWithoutChangingIt()
+        {
+            root.AddComponent<RuntimeDiagnostics>();var audio=root.AddComponent<Maestro.Quest.Book.RoomAcoustics>();
+            var mesh=GameObject.CreatePrimitive(PrimitiveType.Cube);mesh.transform.SetParent(root.transform,false);
+            Maestro.Quest.Book.AcousticSurface.Attach(mesh,mesh.GetComponent<MeshFilter>().sharedMesh);
+            var before=DiagnosticFact("runtime.acoustics");Assert.That((int)before["geometry"],Is.Zero,"Reading must not upload geometry");
+            audio.Synchronize();var fact=DiagnosticFact("runtime.acoustics");Assert.That((bool)fact["active"],Is.True);Assert.That((int)fact["geometry"],Is.EqualTo(1));
+            Assert.That((bool)fact["reflections"],Is.False);fact["geometry"]=-1;Assert.That((int)DiagnosticFact("runtime.acoustics")["geometry"],Is.EqualTo(1));
+            audio.enabled=false;Assert.That((bool)DiagnosticFact("runtime.acoustics")["active"],Is.False);Assert.That((int)DiagnosticFact("runtime.acoustics")["geometry"],Is.Zero);
+            yield return null;
         }
         [UnityTest] public IEnumerator NeverActiveImportCanBeDisposedTwiceWithoutReloadOrBudgetLeak()
         {
