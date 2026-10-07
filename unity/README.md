@@ -288,6 +288,10 @@ renderer switches; `runtime.acoustics` exposes its current coverage through the
 shared catalog. Approximate hard-surface materials and partial occlusion preserve
 speech audibility. Skinned/cutout meshes and unscanned real objects are excluded.
 Room reflections remain unrouted pending material and acoustic-tail handling.
+The on-demand map coordinator retains native inputs while a bounded SDK worker
+calculates them, cancels stale work on edits and keeps the native scene leased
+through deferred destruction. `map.ready` reports calculated data, not audible
+echoes. It does not start a calculation merely because diagnostics are read.
 Desktop rendered-audio tests do not
 replace Quest direction, echo, latency and sustained-performance acceptance.
 

@@ -53,7 +53,12 @@ namespace Maestro.Quest.Tests
             Maestro.Quest.Book.AcousticSurface.Attach(mesh,mesh.GetComponent<MeshFilter>().sharedMesh);
             var before=DiagnosticFact("runtime.acoustics");Assert.That((int)before["geometry"],Is.Zero,"Reading must not upload geometry");
             audio.Synchronize();var fact=DiagnosticFact("runtime.acoustics");Assert.That((bool)fact["active"],Is.True);Assert.That((int)fact["geometry"],Is.EqualTo(1));
-            Assert.That((bool)fact["reflections"],Is.False);fact["geometry"]=-1;Assert.That((int)DiagnosticFact("runtime.acoustics")["geometry"],Is.EqualTo(1));
+            Assert.That((bool)fact["reflections"],Is.False);Assert.That((bool)fact["map"]["computing"],Is.False);Assert.That((bool)fact["map"]["ready"],Is.False);fact["geometry"]=-1;Assert.That((int)DiagnosticFact("runtime.acoustics")["geometry"],Is.EqualTo(1));
+            Assert.That(audio.RequestMap(new[]{new Vector3(0,1,0)}),Is.True);
+            var pending=DiagnosticFact("runtime.acoustics");Assert.That((bool)pending["map"]["computing"],Is.True);Assert.That((bool)pending["active"],Is.False);
+            Assert.That((bool)DiagnosticFact("runtime.acoustics")["map"]["computing"],Is.True,"Reading does not advance the job or install its result");
+            double end=Time.realtimeSinceStartupAsDouble+5;while(audio.MapComputing&&Time.realtimeSinceStartupAsDouble<end){audio.Synchronize();yield return null;}
+            Assert.That(audio.MapComputing,Is.False);var calculated=DiagnosticFact("runtime.acoustics");Assert.That((bool)calculated["map"]["ready"],Is.True, audio.MapIssue);Assert.That((bool)calculated["reflections"],Is.False);
             audio.enabled=false;Assert.That((bool)DiagnosticFact("runtime.acoustics")["active"],Is.False);Assert.That((int)DiagnosticFact("runtime.acoustics")["geometry"],Is.Zero);
             yield return null;
         }

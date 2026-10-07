@@ -3774,3 +3774,42 @@ full-run probe guard correctly stopped at an Editor-only provenance list change;
 after exporting that matching catalog, both integrations passed without rerunning
 the unchanged runtime suites. No provider calls, headset operations, APK signing
 or installation occurred in this increment.
+
+Acoustic-map ownership increment (2026-10-07): the SDK needs computed map data
+in addition to geometry and a reflection mixer. A muted desktop experiment with
+six walls and a translated listener confirmed that a runtime map produces both
+early reflections and a late-reverb tail. Without map data, the same mixer
+settings produced no reflections. The shared reverb continues briefly after an
+individual source is destroyed; resetting it on every speech Stop would also
+cut other room sources' reverb and is not the intended cancellation design.
+
+The native room now owns an on-demand map calculation with at most eight explicit
+points, eight stored early reflections, one worker and a one-second cooperative
+compute budget. Geometry updates and native frees wait for that worker; sources
+temporarily disable room acoustics through `Ready` while keeping directional
+speech available. Edits, pose changes, tracking loss and destruction cancel the
+pending result. Destruction transfers native-input cleanup to the job and retains
+the scene lease until cleanup completes, preventing a new room from taking over
+the same native context prematurely. The worker and AOT callback use no Unity
+objects. Shared diagnostics distinguish pending/calculated maps from audible
+reflections and never start or advance a calculation.
+
+This is a tested integration dependency, not enabled room echoes: automatic map
+selection/rebuild scheduling, material controls, a single reflection mixer,
+multi-emitter Stop semantics and measured Live microphone-tail handling remain
+open. The shipped path does not calculate maps yet. Desktop cost does not prove
+Quest performance. The independently verified development APK D2BDBD9C remains
+the previous direct-obstruction build and has not been installed.
+
+Validation: 849 EditMode and 677 PlayMode cases passed, with the three expected
+private-file skips. Seven focused map cases also passed, adding timeout recovery
+and pause/focus/audio-reset callback races to the five cases in the full suite.
+They hold the actual native progress callback while changing lifecycle state;
+the audio-reset case invokes the app callback rather than resetting physical
+hardware. Both the native-room and original-book integrations passed, along with
+115 shared catalog tests, TypeScript and included-asset integrity checks. The
+integration source guard initially detected the two tests added after the full
+run's mirror copy; it passed after the focused runner copied and tested those
+files. Production code was unchanged between the full and focused runs. The
+initial catalog export rejected nine record fields; nesting the map diagnostics
+fixed it without expanding the shared program format's eight-field limit.

@@ -22,16 +22,27 @@ namespace Maestro.Quest.Book
             internal IntPtr Handle;
             internal int Triangles, Vertices, Revision = -1, AttemptEpoch = -1;
             internal bool Scanned;
+            internal bool Retired;
             internal Matrix4x4 Pose;
         }
         readonly Dictionary<AcousticSurface, Entry> entries = new();
+        readonly List<Entry> retiredEntries = new();
+        static readonly object leaseLock = new();
+        static object contextLease;
+        object lease;
+        RoomAcousticMapJob mapJob;
+        IntPtr map;
+        bool opened;
+        internal Action FirstMapProgress;
         MetaXRAcousticNativeInterface.INativeInterface native;
         IntPtr material;
-        static RoomAcoustics active;
         AcousticModel previousModel;
         int scannedCount, virtualCount, scannedTriangles, virtualTriangles, scannedVertices, virtualVertices, epoch;
         bool paused, focused = true, ownsModel;
-        public bool Ready { get; private set; }
+        public bool Ready => opened && mapJob == null;
+        internal bool MapComputing => mapJob != null;
+        internal bool MapReady => Ready && map != IntPtr.Zero;
+        internal string MapIssue { get; private set; }
         public string Issue { get; private set; }
         public int GeometryCount => scannedCount + virtualCount;
         public int TriangleCount => scannedTriangles + virtualTriangles;
@@ -39,7 +50,7 @@ namespace Maestro.Quest.Book
 
         internal void Register(AcousticSurface surface)
         {
-            if (!entries.ContainsKey(surface)) entries.Add(surface, new Entry());
+            if (!entries.ContainsKey(surface)) { InvalidateMap(); entries.Add(surface, new Entry()); }
         }
         internal void Unregister(AcousticSurface surface)
         {
@@ -47,6 +58,7 @@ namespace Maestro.Quest.Book
         }
         internal void Invalidate(AcousticSurface surface)
         {
+            InvalidateMap();
             // Destroy old topology immediately: no invisible wall while queued
             // replacement geometry is being validated or uploaded.
             if (entries.TryGetValue(surface, out var entry)) { Release(entry); entry.Revision = -1; }
@@ -54,9 +66,13 @@ namespace Maestro.Quest.Book
         void OnEnable() { AudioSettings.OnAudioConfigurationChanged += AudioConfigurationChanged; Open(); }
         void Open()
         {
-            if (Ready || !isActiveAndEnabled || paused || !focused) return;
+            if (opened || !isActiveAndEnabled || paused || !focused) return;
             Issue = null;
-            if (active && active != this) { Issue = "Another room owns acoustic geometry"; return; }
+            lock (leaseLock)
+            {
+                if (contextLease != null) { Issue = "Another room owns acoustic geometry or is finishing its calculation"; return; }
+                contextLease = lease = new object();
+            }
             try
             {
                 if (AudioSettings.GetSpatializerPluginName() != SpeechSpatializer.PluginName)
@@ -67,7 +83,7 @@ namespace Maestro.Quest.Book
                 if (native is not MetaXRAcousticNativeInterface.UnityNativeInterface)
                     throw new InvalidOperationException("The Unity acoustic renderer is unavailable");
                 previousModel = MetaXRAcousticSettings.Instance.AcousticModel;
-                Check(native.SetAcousticModel(AcousticModel.AcousticRayTracing)); ownsModel = true; active = this;
+                Check(native.SetAcousticModel(AcousticModel.AcousticRayTracing)); ownsModel = true;
                 Check(native.CreateAudioMaterial(out material));
                 // Neutral hard-surface approximation, not an inference about the
                 // real wall's construction. Measured/material authoring is future work.
@@ -77,7 +93,7 @@ namespace Maestro.Quest.Book
                     Check(native.AudioMaterialSetFrequency(material, MaterialProperty.TRANSMISSION, frequency, 0));
                     Check(native.AudioMaterialSetFrequency(material, MaterialProperty.SCATTERING, frequency, .5f));
                 }
-                Ready = true; epoch++;
+                opened = true; epoch++;
             }
             catch (Exception) { Close(); Issue = "Room acoustics could not start; directional speech remains available"; }
         }
@@ -87,7 +103,23 @@ namespace Maestro.Quest.Book
         }
         internal void Synchronize()
         {
-            if (!Ready) return;
+            if (!opened) return;
+            if (mapJob != null)
+            {
+                if (!MapInputsUnchanged()) mapJob.Cancel();
+                if (!mapJob.Completed) return;
+                var completed = mapJob; mapJob = null;
+                MapIssue = completed.Issue;
+                map = completed.Take();
+                completed.Retire();
+                foreach (var retired in retiredEntries) { retired.Retired = false; Release(retired); }
+                retiredEntries.Clear();
+                if (map != IntPtr.Zero)
+                {
+                    try { Check(native.AudioSceneIRSetEnabled(map, true)); }
+                    catch (Exception) { InvalidateMap(); MapIssue = "Acoustic map could not be activated"; }
+                }
+            }
             int uploads = 0, omitted = 0;
             foreach (var pair in entries)
             {
@@ -107,11 +139,50 @@ namespace Maestro.Quest.Book
                 }
                 else if (!entry.Pose.Equals(pose))
                 {
+                    InvalidateMap();
                     try { Check(native.AudioGeometrySetTransform(entry.Handle, in pose)); entry.Pose = pose; }
                     catch (Exception) { Release(entry); surface.Issue = "Acoustic movement could not be applied"; omitted++; }
                 }
             }
             OmittedCount = omitted;
+        }
+        // Called by the reflection owner, not by diagnostics or provider code.
+        // Input geometry stays frozen while the SDK worker reads it. Direct HRTF
+        // remains available; source acoustics must respect Ready throughout.
+        internal bool RequestMap(Vector3[] points)
+        {
+            Synchronize();
+            if (!Ready || GeometryCount == 0 || OmittedCount != 0 || points == null || points.Length == 0 || points.Length > RoomAcousticMapJob.MaximumPoints)
+                return false;
+            var packed = new float[points.Length * 3];
+            for (int i = 0; i < points.Length; i++)
+            {
+                var point = points[i];
+                if (!float.IsFinite(point.sqrMagnitude) || Mathf.Max(Mathf.Abs(point.x), Mathf.Abs(point.y), Mathf.Abs(point.z)) > 10000) return false;
+                // Map points are native world positions; unlike geometry's
+                // SetTransform wrapper, ComputeCustomPoints does not flip Z.
+                packed[3 * i] = point.x; packed[3 * i + 1] = point.y; packed[3 * i + 2] = -point.z;
+            }
+            InvalidateMap(); MapIssue = null;
+            try { mapJob = new RoomAcousticMapJob(native, packed, FirstMapProgress); return true; }
+            catch (Exception) { MapIssue = "Acoustic map could not start"; return false; }
+        }
+        bool MapInputsUnchanged()
+        {
+            foreach (var pair in entries)
+            {
+                var surface = pair.Key; var entry = pair.Value;
+                if (entry.Handle == IntPtr.Zero) continue;
+                if (!surface || !surface.isActiveAndEnabled || !surface.Available || !surface.Mesh
+                    || surface.Revision != entry.Revision || !surface.transform.localToWorldMatrix.Equals(entry.Pose)) return false;
+            }
+            return true;
+        }
+        void InvalidateMap()
+        {
+            mapJob?.Cancel();
+            if (map == IntPtr.Zero) return;
+            native.AudioSceneIRSetEnabled(map, false); native.DestroyAudioSceneIR(map); map = IntPtr.Zero;
         }
         bool TryUpload(AcousticSurface surface, Entry entry, Matrix4x4 pose)
         {
@@ -171,6 +242,14 @@ namespace Maestro.Quest.Book
         void Release(Entry entry)
         {
             if (entry.Handle == IntPtr.Zero) return;
+            InvalidateMap();
+            if (mapJob != null)
+            {
+                // The SDK may still be reading this object. Cancellation is
+                // cooperative, so retain its handle until the worker returns.
+                if (!entry.Retired) { entry.Retired = true; retiredEntries.Add(entry); }
+                return;
+            }
             // Disable first so a failed destroy cannot leave a ghost obstacle.
             native.AudioGeometrySetObjectFlag(entry.Handle, ObjectFlags.ENABLED, false);
             native.DestroyAudioGeometry(entry.Handle); entry.Handle = IntPtr.Zero;
@@ -180,14 +259,39 @@ namespace Maestro.Quest.Book
         }
         void Close()
         {
-            Ready = false;
+            opened = false; InvalidateMap();
+            if (mapJob != null)
+            {
+                var handles = new HashSet<IntPtr>();
+                foreach (var entry in entries.Values) { if (entry.Handle != IntPtr.Zero) handles.Add(entry.Handle); entry.Handle = IntPtr.Zero; entry.Revision = -1; entry.Retired = false; }
+                foreach (var entry in retiredEntries) { if (entry.Handle != IntPtr.Zero) handles.Add(entry.Handle); entry.Handle = IntPtr.Zero; entry.Retired = false; }
+                retiredEntries.Clear();
+                var closing = mapJob; mapJob = null;
+                var api = native; var ownedMaterial = material; var ownedLease = lease; var restore = ownsModel; var model = previousModel;
+                material = IntPtr.Zero; lease = null; ownsModel = false;
+                scannedCount = virtualCount = scannedTriangles = virtualTriangles = scannedVertices = virtualVertices = OmittedCount = 0;
+                // No Unity objects in the closure. The previous native scene
+                // remains exclusively leased until every input has been freed.
+                closing.Retire(() =>
+                {
+                    try
+                    {
+                        foreach (var handle in handles) { api.AudioGeometrySetObjectFlag(handle, ObjectFlags.ENABLED, false); api.DestroyAudioGeometry(handle); }
+                        if (ownedMaterial != IntPtr.Zero) api.DestroyAudioMaterial(ownedMaterial);
+                        if (restore) api.SetAcousticModel(model);
+                    }
+                    finally { ReleaseLease(ownedLease); }
+                });
+                return;
+            }
             foreach (var entry in entries.Values) { Release(entry); entry.Revision = -1; }
             if (material != IntPtr.Zero) { native.DestroyAudioMaterial(material); material = IntPtr.Zero; }
             if (ownsModel) { native.SetAcousticModel(previousModel); ownsModel = false; }
-            if (active == this) active = null;
+            ReleaseLease(lease); lease = null;
             OmittedCount = 0;
         }
-        void LateUpdate() => Synchronize();
+        static void ReleaseLease(object owner) { lock (leaseLock) { if (ReferenceEquals(contextLease, owner)) contextLease = null; } }
+        void LateUpdate() { if (!opened) Open(); Synchronize(); }
         void OnDisable() { AudioSettings.OnAudioConfigurationChanged -= AudioConfigurationChanged; Close(); }
         void AudioConfigurationChanged(bool _) { Close(); Open(); }
         void OnDestroy() { Close(); entries.Clear(); }
