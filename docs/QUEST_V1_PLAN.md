@@ -3656,3 +3656,22 @@ Unity passed 839 EditMode and 662 PlayMode tests (three optional private-import
 skips), followed by the complete native-room and original-book integration
 journeys. These deterministic probes used no provider and do not establish
 Android device playback, audible positioning or microphone echo acceptance.
+
+Saved voice replay increment (2026-10-07): cached Maestro speech now uses the
+same selected output as new speech, including Unity's mouth emitter in the
+native book. Inaudible decoding normalizes inline audio to mono 24 kHz; input
+is limited to 16 MiB encoded and 120 seconds decoded. Browser replay waits for
+scheduled-source completion plus the device tail. Stop, suspension and unmount
+fence late decode/context callbacks; output failure clears the remaining replay
+queue. Actual learner recordings are explicitly marked and retain their existing
+playback destination. This is transient playback metadata, with no save migration.
+
+All 2,569 web tests across 285 files, TypeScript, lint, production web build and
+architecture/provenance checks passed. A real muted Chromium probe decoded a
+stereo 32 kHz WAV, confirmed mono 24 kHz samples, rendered at both 24/48 kHz and
+verified actual tail completion, Stop and fresh replay. Native transport tests
+verify exact PCM and played-sample receipts; these are deterministic tests, with
+no provider calls or headset hearing claim. The preceding native bridge passed
+839 EditMode / 662 PlayMode tests and both full integration probes. Its release
+CI passed on c54517ad. No native source changed in this replay increment. The
+installed APK is unchanged; room acoustics and physical acceptance remain open.

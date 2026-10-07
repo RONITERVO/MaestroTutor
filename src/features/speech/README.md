@@ -127,16 +127,27 @@ browser copy. Provider, account and transcript ownership remain unchanged.
 The web queue is capped at 120 seconds; native credit admits at most two seconds,
 in batches of at most eight 4,800-sample chunks. Small incoming packets coalesce
 until offered, then their sequence/bytes remain immutable. Native polling slows
-while idle. PCM never enters saved room state or action receipts. Cached replay
-still uses HTML Audio. Replay adaptation, Meta HRTF/acoustics and physical echo,
-latency and intelligibility acceptance remain open; controlled-clock PCM tests
-do not establish audible headset quality.
+while idle. PCM never enters saved room state or action receipts. Cached Maestro
+speech selects the same output, decoding inline audio to mono 24 kHz before
+playback. Decoding is inaudible; Quest never starts an HTML Audio copy. Browser
+replay uses the scheduled output and its actual device-tail fence. Encoded input
+is capped at 16 MiB and decoded speech at 120 seconds. Stop fences outstanding
+decode/context promises, and a renderer failure clears the remaining replay
+queue. A learner's original recording carries explicit speaker identity and
+retains HTML Audio playback; artifact music/audio remain independent. Meta
+HRTF/acoustics and physical echo, latency and intelligibility acceptance remain
+open; controlled-clock PCM tests do not establish audible headset quality.
 
 Run `node scripts/probe-speech-output.mjs` for isolated, muted Chromium rendering
 at 24/48 kHz with the real worklet and analyser. It checks PCM, early drain fences,
 the output tail and reset/reuse without a provider or account. Vitest additionally
 checks the full Live lifecycle with native-style renderer injection. These checks
 do not replace managed/BYOK headset output, microphone echo or acoustics testing.
+
+`node scripts/probe-cached-speech.mjs` additionally decodes a synthetic stereo
+32 kHz WAV in real Chromium, checks mono 24 kHz samples, renders at 24/48 kHz and
+verifies drain, cancellation and fresh replay without closing the borrowed
+context. The probe is muted and blocks non-local network requests.
 
 See [`docs/GEMINI_LIVE_OPEN_POLICY.md`](../../../docs/GEMINI_LIVE_OPEN_POLICY.md)
 for the complete allowlist, activity phases, backend audit fields and maintainer

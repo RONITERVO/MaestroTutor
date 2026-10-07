@@ -117,6 +117,8 @@ export interface SpeechPart {
   langCode: string;
   cacheKey?: string;
   cachedAudio?: string;
+  /** A learner's actual recording must not be emitted from Maestro's avatar. */
+  speaker?: 'maestro' | 'learner';
   onAudioCached?: (audioDataUrl: string, details: SpeechCacheDetails) => void;
   context?: SpeechCacheContext;
   voiceName?: string;

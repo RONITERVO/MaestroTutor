@@ -19,6 +19,12 @@ beforeEach(() => {
   vi.clearAllMocks(); useMaestroStore.setState({ messages: [], activityTokens: new Set(),
     settings: { ...initialSettings, selectedLanguagePairId: pair.id, tts: { ...initialSettings.tts, voiceName: 'Kore' } } });
 });
+
+it('preserves the learner identity while preparing cached recording playback', () => {
+  const h = renderHook(() => useSpeechOrchestrator({ upsertMessageTtsCache: vi.fn(), upsertSuggestionTtsCache: vi.fn() }));
+  act(() => h.result.current.speakWrapper([{ text: 'My recording', langCode: 'en', speaker: 'learner', cachedAudio: 'recording' }], 'en'));
+  expect(ports.speak.mock.calls[0][0][0]).toMatchObject({ speaker: 'learner', cachedAudio: 'recording' });
+});
 afterEach(cleanup);
 it.each([true, false])('reads an agent result using ordinary message voice, languages and cache; native=%s', speakNative => {
   useMaestroStore.setState({ settings: { ...useMaestroStore.getState().settings, tts: { ...initialSettings.tts, speakNative } } });

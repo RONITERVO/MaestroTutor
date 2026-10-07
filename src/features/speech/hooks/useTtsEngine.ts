@@ -7,6 +7,7 @@ import { pcmToWav } from '../../../core-sdk/media/audioProcessing';
 import type { SpeechPart, TtsProvider, SpeechCacheDetails } from '../../../core/types';
 import type { TtsLiveOpenTrigger } from '../../../../shared/liveOpenReason';
 import { sessionActivity } from '../../../platform/browser/sessionActivity';
+import { playCachedSpeech } from '../utils/cachedSpeechPlayback';
 
 export interface UseTtsEngineOptions {
   onQueueComplete?: () => void;
@@ -22,6 +23,7 @@ interface SpeechQueueItem {
   provider: TtsProvider;
   audioDataUrl?: string;
   cachedAudio?: string;
+  speaker?: SpeechPart['speaker'];
   fetching?: boolean;
   onAudioCached?: (audioDataUrl: string, details: SpeechCacheDetails) => void;
   cacheKey?: string;
@@ -46,6 +48,7 @@ export const useTtsEngine = (options?: UseTtsEngineOptions): UseTtsEngineReturn 
   
   const queueRef = useRef<SpeechQueueItem[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const cachedReplayRef = useRef<AbortController | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const geminiLiveActiveRef = useRef(false);
   const queueIdRef = useRef(0);
@@ -220,6 +223,8 @@ export const useTtsEngine = (options?: UseTtsEngineOptions): UseTtsEngineReturn 
 
   const processSpeechQueue = useCallback(async () => {
     if (!sessionActivity.isActive()) return;
+    if (audioRef.current || cachedReplayRef.current || geminiLiveActiveRef.current) return;
+    const epoch = playbackEpoch.current;
     const queue = queueRef.current;
     if (queue.length === 0) {
       if (!audioRef.current && !geminiLiveActiveRef.current) handleQueueComplete();
@@ -247,28 +252,43 @@ export const useTtsEngine = (options?: UseTtsEngineOptions): UseTtsEngineReturn 
     }
 
     // Playback logic
-    if (audioRef.current) return; // already playing
-
     setIsSpeaking(true);
     setSpeakingUtteranceText(current.text);
     callbacksRef.current.pauseSttForPlayback?.();
 
-    if (current.audioDataUrl) {
+    if (current.audioDataUrl && current.speaker !== 'learner') {
+      const replay = new AbortController();
+      cachedReplayRef.current = replay;
+      try {
+        const result = await playCachedSpeech({ audioDataUrl: current.audioDataUrl, getAudioContext, signal: replay.signal });
+        if (playbackEpoch.current !== epoch || cachedReplayRef.current !== replay) return;
+        if (result === 'cancelled') queueRef.current = [];
+        else removeCurrent();
+      } catch (error) {
+        if (playbackEpoch.current !== epoch || cachedReplayRef.current !== replay) return;
+        console.error('[CachedSpeech] Playback failed:', error);
+        // An output failure must not automatically start the next queued voice.
+        queueRef.current = [];
+      } finally {
+        if (playbackEpoch.current === epoch && cachedReplayRef.current === replay) {
+          cachedReplayRef.current = null;
+          processSpeechQueue();
+        }
+      }
+    } else if (current.audioDataUrl) {
         const audio = new Audio(current.audioDataUrl);
         audioRef.current = audio;
-        audio.onended = () => {
+        const finish = () => {
+            if (playbackEpoch.current !== epoch || audioRef.current !== audio) return;
+            audio.onended = audio.onerror = null;
             audioRef.current = null;
             removeCurrent();
             processSpeechQueue();
         };
-        audio.onerror = () => {
-            audioRef.current = null;
-            removeCurrent();
-            processSpeechQueue();
-        };
-        try { await audio.play(); } catch { audioRef.current = null; removeCurrent(); processSpeechQueue(); }
+        audio.onended = audio.onerror = finish;
+        try { await audio.play(); } catch { finish(); }
       }
-  }, [handleQueueComplete, processGeminiLiveQueue]);
+  }, [getAudioContext, handleQueueComplete, processGeminiLiveQueue]);
 
   const speak = useCallback((
     textOrParts: string | SpeechPart[],
@@ -291,6 +311,7 @@ export const useTtsEngine = (options?: UseTtsEngineOptions): UseTtsEngineReturn 
         provider,
         cacheKey: p.cacheKey,
         cachedAudio: p.cachedAudio,
+        speaker: p.speaker,
         onAudioCached: p.onAudioCached,
         liveOpenTrigger,
       });
@@ -300,8 +321,11 @@ export const useTtsEngine = (options?: UseTtsEngineOptions): UseTtsEngineReturn 
 
   const stopSpeaking = useCallback(() => {
     playbackEpoch.current++;
+    cachedReplayRef.current?.abort();
+    cachedReplayRef.current = null;
     // Stop HTML Audio element
     if (audioRef.current) {
+        audioRef.current.onended = audioRef.current.onerror = null;
         audioRef.current.pause();
         audioRef.current = null;
     }
@@ -329,6 +353,8 @@ export const useTtsEngine = (options?: UseTtsEngineOptions): UseTtsEngineReturn 
   useEffect(() => {
     return () => {
       playbackEpoch.current++;
+      cachedReplayRef.current?.abort();
+      cachedReplayRef.current = null;
       // Abort any active live session
       if (liveAbortRef.current) {
         try { liveAbortRef.current.abort(); } catch {}
@@ -336,6 +362,7 @@ export const useTtsEngine = (options?: UseTtsEngineOptions): UseTtsEngineReturn 
       }
       // Stop audio element
       if (audioRef.current) {
+        audioRef.current.onended = audioRef.current.onerror = null;
         try { audioRef.current.pause(); } catch {}
         audioRef.current = null;
       }

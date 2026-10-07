@@ -732,6 +732,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
           text: targetMessage.text,
           langCode: lang,
           cachedAudio: recorded.dataUrl,
+          speaker: 'learner',
           context: { source: 'message', messageId: targetMessage.id },
         }];
         speakText(parts, lang);
