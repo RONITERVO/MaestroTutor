@@ -17,6 +17,14 @@ implementation gates.
 The experimental reflection mixer stays out of the production scene until the
 capture policy handles a mixed scene without indefinitely suppressing the user.
 
+The owner's authored-world clarification adds shared appearance/texture/opacity,
+height-changing terrain, weather, lighting and interactive water to the delivery
+direction. Larger user-built settlements must use bounded simulation and streamed
+detail with persistent identities, rather than making every object permanently
+active. These are accepted requirements, not implemented or device-certified
+features. They extend the spatial-state refactor below; later image-texture import
+and generation must use the original app's asset/provider flows.
+
 The earlier development checkpoint **D522191F** retained the
 original phone/book controls while isolating their animated icon rendering.
 The installed normal-book profile produced zero layouts in 15.19 seconds, versus
@@ -3481,6 +3489,155 @@ alignment during virtual-world translation/turning, collisions independently
 on/off, grab/throw/catch after movement, recall/recenter, source-accurate captures,
 both eyes, and actual Quest performance. Current occlusion APK verification is a
 separate incremental check and does not establish these new combinations.
+
+### Authored living worlds: appearance, terrain, weather and water (2026-10-07)
+
+The owner expects worlds to grow from room toys into miniature countries with
+cities, buildings, items and NPCs. Users and the agent must author the same world;
+imported Blender/Meshy assets are another source of its components. Texture and
+opacity are required beyond colour. Importing and generating image textures may
+follow later, through Maestro's existing image-generation and media ownership.
+Weather and lighting are required. Water, terrain and interactions must agree
+with what is visible. This expands environmental interaction scope without
+requiring a general-purpose fluid solver or a permanently simulated entire city.
+
+**One authoritative world and explicit spaces.** Implement the spatial-state
+refactor above first. World identity, region/cell identity, entity identity and
+coordinate frame are distinct; programs keep stable references across streaming,
+import replacement, miniature scale and locomotion. Region loading changes runtime
+representation, not saved ownership. Real anchors stay in physical tracking space.
+Virtual terrain, water levels, weather volumes and navigation use the explicit
+virtual world space. Define units and scale conversion once for gravity, speed,
+mass/density, rainfall/volume and audio distances; do not let each feature guess.
+
+In a virtual region, the visible ground, collision surface, placement queries and
+navigation must derive from the same accepted terrain. Raising a hill must not
+leave an invisible flat floor above or below it. Imported static terrain may use
+an inspected collision mesh; editable terrain extends the existing height-field
+component into bounded tiles with shared borders. A height field cannot represent
+caves or overhangs: those remain authored/imported meshes using the same surface
+queries. Terrain edits publish geometry, collision and affected navigation as one
+accepted revision; previews are visibly provisional. Water-region changes must
+reconcile against the new terrain rather than retaining a stale floating surface.
+
+The application cannot physically change the room's floor. In a mixed view,
+physical floors/walls remain accurate and their collision participation follows
+the separate user setting. A virtual lake below a real floor must not silently
+remove that floor's collision. Explain or offer a supported placement/layer change
+when both constraints cannot be satisfied. Virtual locomotion can traverse virtual
+slopes through the world transform; it must not move saved real anchors. Grabs,
+held props, miniature-world editing and recenter use the same frame conversions.
+
+**Reusable appearance resources.** Add versioned, named appearance definitions
+with stable IDs and per-object/part/imported-material-slot bindings. They hold
+tint, texture or procedural pattern, mapping/tiling, opacity, surface rendering
+mode and supported shading/emission parameters. Start with supported procedural
+patterns and reusable presets; image-backed texture sources later reference
+content-addressed app assets, not embedded image copies or expiring provider URLs.
+Retain imported UV/material-slot identity and report unsupported shading instead
+of silently painting everything with a replacement colour. Reusing a definition
+and making an independent copy are explicit edits, with revision checks and Undo.
+Existing colour controls must edit the same appearance state, not maintain a
+second competing value.
+
+Appearance is separate from the existing `object.material` measured-volume store.
+Do not repurpose that API or infer physical properties from a texture name. Surface
+response data may configure friction, acoustics, wetting or buoyancy alongside
+appearance through a reusable preset, but each remains independently inspectable.
+Object opacity, environment blend and passthrough-window masks are separate fields.
+Opacity does not disable collision, select a camera or remove acoustic geometry.
+Opaque, cutout and blended rendering require explicit depth/sorting/outline rules
+in both eyes; setting colour alpha in today's opaque shader is insufficient.
+Preserve readable book pages and the illustrated style while permitting supported
+imported appearances. Share immutable materials/textures and bounded variants;
+avoid a unique material allocation for every brick or NPC instance.
+
+**A shared environment state.** Weather and time of day are versioned world/region
+components with deterministic seeds, a shared simulation clock and explicit
+transitions. Include light direction, ambient illumination, authored local lights,
+cloud/fog appearance, wind and precipitation. Rendering, world audio, wetness,
+water inputs and behaviours consume that same state. A rain effect must agree
+with its sound and surface effects. Covered areas suppress rain/wetting according
+to supported collision/cover queries. Do not ask an LLM to run per-frame weather.
+Use a measured budget for direct lights/shadows, particles and transparency;
+emissive appearance alone must not be described as lighting nearby objects.
+Real passthrough pixels are not automatically relit by virtual weather or lights.
+
+**Water is a medium with a surface and bounds.** Extend the existing measured
+liquid transfers with region water bodies, rather than adding unrelated puddle,
+lake, river and aquarium implementations. A body has stable identity, containment
+geometry, level/depth, supported flow and one authoritative quantity/source/sink
+policy. Connect rainfall, overflow, drainage, scooping, pouring and terrain edits
+through explicit transfers or boundary flows; avoid a second hidden water balance.
+Finite containers and authored reservoirs may have different declared quantity
+policies. Procedural ripples and splash particles are presentation, not extra
+physics bodies or another liquid inventory.
+
+Shared medium queries provide surface/depth, flow and entry/exit/submersion facts.
+Rigid props apply bounded buoyancy and drag through ordinary physics. Hand,
+controller and avatar contact can produce ripples, splash sound and optional
+haptics. Characters use an authored traversal policy: avoid, wade, swim or refuse
+an unsupported route. Maestro cannot report a walk through a deep lake when no
+compatible swimming behaviour exists. Fish and other water life are ordinary
+entities whose behaviours consume those same habitat/medium queries. Animation
+does not exempt any actor from supported collision, contact or medium responses.
+Visual rain uses pooled/instanced effects and sampled surface interactions, not
+one rigid body per raindrop. V1 must disclose approximations while preserving
+convincing contact, containment and cause/effect in its supported scenarios.
+
+**Life follows relevance, not only the camera frustum.** Keep detailed physics,
+animation, water interactions and programs active near the player and around
+current interactions. Audible sources, an approaching NPC, a thrown object, a
+held object and dependencies of an active task may keep a region active even
+when the user looks away. Use hysteresis and load nearby collision before actors
+arrive. A ball must not freeze just because it leaves the view. Render detail and
+simulation detail are separate policies.
+
+Distant regions retain authoritative identities, inventories, clock/state and
+scheduled behaviours with cheaper bounded updates. Define catch-up and event
+ordering explicitly when detailed simulation returns; never replay old commands,
+reset programs, duplicate assets or invent exact offscreen collision results.
+An agent can inspect unloaded state and request activation through the same
+capabilities. Reads identify whether observations are active, retained or coarse.
+App suspension/reload does not silently reconnect Live audio or microphones.
+Offline world progression, if offered, must be an explicit policy. Quest capacity
+is bounded: expose occupancy, streaming status and refusals before accepting work
+that cannot run. Do not promise unlimited cities or thousands of active NPCs.
+
+**Delivery order and parity.** First establish coordinate/region identity and
+spatial query contracts; then shared appearances and rendering modes; then terrain
+tiles/navigation; then environment/light state; then medium interactions and
+water-aware actor behaviours; then measured streaming/detail budgets. These are
+staged parts of one model, not parallel world engines. Reuse catalog modules,
+facts/events, current-revision edits, runtime effects, durable receipts, asset
+libraries and readable user programs. Add public capability IDs only with working
+implementations. Built-in objects and imported assets use the same adapters.
+
+Release checks must include user and agent editing the same material; texture
+reuse and export/reload; transparent solids and water in both eyes with real-depth
+occlusion; shared terrain/collision/nav after edits and world movement; rain under
+and outside a roof; a rain-fed puddle, a floating/sinking prop and a hand ripple;
+Maestro avoiding/wading/swimming according to available behaviour; water life
+remaining in its habitat; looking away during a throw; leaving and returning to
+a region without identity/state loss; and equivalent real managed/BYOK requests.
+Measure a sustained populated scene on Quest 3 before setting published limits.
+
+Current evidence is narrower: editable height surfaces already derive their mesh
+and collider from the same accepted heights; measured material and vessel transfers,
+recipe patterns, imported textures and basic ambient/program behaviour exist.
+There is no completed shared appearance library/opacity control, environmental
+weather/light system, regional water-medium simulation or streamed city-scale
+world. None is established by the existing room-scale tests.
+
+The bounded loading/detail choice is consistent with Meta's guidance on loading
+nearby content and reducing distant detail, rather than loading an entire world:
+[Open World Games and Asset Streaming](https://developers.meta.com/vr/documentation/unity/po-assetstreaming/).
+Transparency and lighting budgets also need device measurement; see
+[Meta mobile performance guidance](https://developers.meta.com/vr/documentation/unity/unity-mobile-performance-intro/)
+and [Unity untethered XR guidance](https://docs.unity.com/en-us/engine/6000.3/manual/xr/graphics/untethered-device-optimization).
+These references support rendering choices; they do not establish our simulation
+semantics or certify this app's capacity. The URP reference does not imply a
+render-pipeline migration for our current shaders. Reviewed 2026-10-07.
 
 ### Environment-depth implementation checkpoint
 
