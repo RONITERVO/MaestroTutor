@@ -32,6 +32,7 @@ import nativeModes from './controllerModes.json';
 import nativeRecovery from './toolRecovery.json';
 import nativePlacement from './worldPlacement.json';
 import nativeWorldIdentity from './worldIdentity.json';
+import nativeWorldGround from './worldGround.json';
 import nativeSpatial from './spatialSettings.json';
 import nativeMotionBatch from './motionBatchImport.json';
 import nativeAvatar from './avatarSelection.json';
@@ -92,6 +93,11 @@ const worldIdentity=new URLSearchParams(location.search).has('worldIdentity');
 if(worldIdentity){
  state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';
  state.capabilities=[...state.capabilities??[],'catalogVocabulary.v1','worldIdentity.v1','structuredValues.v1','factQueries.v1'];
+}
+const worldGround=new URLSearchParams(location.search).has('worldGround');
+if(worldGround){
+ state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';
+ state.capabilities=[...state.capabilities??[],'catalogVocabulary.v1','terrainTraversal.v1','structuredValues.v1','factQueries.v1'];
 }
 const worldPlacement=new URLSearchParams(location.search).has('worldPlacement');
 let placementObservation=nativePlacement.before;
@@ -390,6 +396,17 @@ setInterval(()=>{
      const definition=behaviourFact('world.identity')!;
      if(query.operation==='search')state.catalog={operation:'search',category:'facts',query:query.query,offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'World and region identity'};
      else state.catalog={operation:'inspect',category:'facts',capability:query.capability,version:1,definition:query.capability===definition.id?definition:null,available:query.capability===definition.id,value:query.capability===definition.id?copy(nativeWorldIdentity.identity):null,status:'Captured native authored world scope'};
+     continue;
+    }
+    if(worldGround&&query.operation!=='check'&&query.category==='facts'){
+     const definition=behaviourFact('world.ground')!;
+     if(query.operation==='search')state.catalog={operation:'search',category:'facts',query:query.query,offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Accepted terrain support'};
+     else {
+      const args=query.arguments??definition.example;
+      const match=JSON.stringify(args)===JSON.stringify(nativeWorldGround.arguments);
+      const origin=JSON.stringify(args)===JSON.stringify(definition.example);
+      state.catalog={operation:'inspect',category:'facts',capability:query.capability,version:1,arguments:args,definition:query.capability===definition.id?definition:null,available:query.capability===definition.id&&(match||origin),value:query.capability===definition.id?(match?copy(nativeWorldGround.supported):origin?copy(nativeWorldGround.missing):null):null,status:'Captured native terrain support; no movement'};
+     }
      continue;
     }
     if(worldPlacement&&query.operation!=='check'&&query.category==='facts'){

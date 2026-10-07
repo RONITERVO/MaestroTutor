@@ -3853,6 +3853,45 @@ when both constraints cannot be satisfied. Virtual locomotion can traverse virtu
 slopes through the world transform; it must not move saved real anchors. Grabs,
 held props, miniature-world editing and recenter use the same frame conversions.
 
+**Per-entity participation in the real room (owner clarification, 2026-10-08).**
+The scanned physical floor/walls are a selectable environment layer, not a cage
+that every virtual entity must obey. Users and agents must be able to give
+Maestro, another NPC, a robot, a prop or an assembly an explicit collision profile.
+For example, Maestro may walk on authored terrain below the real floor while a
+ball still bounces on that real floor. The room-wide real-collision switch is a
+master policy; a per-entity profile can exclude real surfaces while that switch
+is on, and cannot secretly enable them when it is off. Saved settings have stable
+identities, revision checks, Undo and the same catalog/UI/program entry points.
+
+Use shared profile/group definitions and bounded membership/filter data, not a
+new Unity layer for every character. Specify inheritance for assemblies and
+imported children, explicit overrides and symmetric entity-pair contact rules.
+The effective profile must govern rigid contacts, ground/placement queries,
+character sweeps, navigation sources/paths, animation-root movement and supported
+medium/cover interaction queries for that actor. A floor ignored by Maestro's
+body cannot still trap its pathfinding. Profile changes invalidate affected
+routes and revalidate current overlap/support before resuming; never silently
+teleport, let an actor fall into unloaded space or retain stale collision pairs.
+Restore/reload/import and newly loaded terrain must reapply the same accepted
+profile. Publish effective participation and refusal reasons for agent inspection.
+
+Visual real-depth occlusion, world blend, acoustic participation and physical
+collision remain separately inspectable. A profile/preset may configure them
+together, but changing collision alone must not silently change what the user
+sees or hears. Acoustic queries need explicit source/listener environment policy
+so an opted-out real floor need not muffle a voice in the virtual world. Tracked
+hands/controllers and app locomotion get their own interaction policy; these
+settings never disable Meta's physical safety boundary or imply the user can
+physically walk through a real floor/wall. Keep the current whole-world motion
+guard until admission accounts for every actor still using physical collisions.
+
+Acceptance includes two actors with different real-floor policies simultaneously;
+Maestro following a below-floor hill while a physical-room ball still bounces;
+unchanged virtual terrain/obstacle collisions; hand-off/grab/release; changing a
+profile with a running path or overlapping floor; save/export/reload; and identical
+manual and agent operations. The present runtime has a room-wide toggle only;
+per-entity profiles are a required follow-on, not a currently shipped capability.
+
 **Reusable appearance resources.** Add versioned, named appearance definitions
 with stable IDs and per-object/part/imported-material-slot bindings. They hold
 tint, texture or procedural pattern, mapping/tiling, opacity, surface rendering
@@ -4428,3 +4467,46 @@ a real muted loop, discovers and controls the same instance, receives its pause
 event in a saved program and retains its stopped receipt. The original-book
 integration also passes. The installed headset build is unchanged; these runs
 did not contact an AI provider or use the headset.
+
+
+### Terrain-following movement and shared accepted-ground reads (2026-10-08)
+
+Virtual player movement now follows accepted authored slopes and small steps by
+moving the authored world vertically/horizontally under fixed physical tracking.
+Maestro navigation projects its route approximation onto that same accepted
+collider geometry before foot placement. Shared support checks retain the existing
+25-degree slope and 10 cm climb/drop limits, sample the centre and eight footprint
+edges, and use bounded capsule sweeps for the body/head. Ordinary props do not
+become stairs; holes, steep ground, oversized steps, overhead obstacles and unknown
+clearance refuse without publishing a partial movement. A step's swept landing,
+not an overlap-only approximation, determines the accepted capsule position.
+
+`world.ground` is an observation in the same generated catalog for the agent,
+programs and book. It returns world/region identity, found status, the accepted
+surface point/normal and traversal limits for a bounded authored point/footprint.
+It excludes scan geometry and visual sculpt previews. It describes support only:
+body clearance, connected routes and execution-time validity remain separate.
+The generated controls need no terrain-specific web implementation. Existing
+world-location actions still recheck current support and destination clearance.
+Terrain walking updates the existing persistent viewpoint; reloading restores
+that authored location using fresh tracking and leaves locomotion/physics paused.
+
+This is a bounded traversal checkpoint over current accepted terrain, not region
+streaming, large editable terrain tiles, miniature scale, swimming or per-entity
+real-room participation. The existing active-real-physics world-transfer guard
+remains. Next, replace the room-only participation assumptions in physics,
+containment, navigation, ballistics, holding/catching and traversal with the shared
+per-entity policy specified above. Keep real-depth visibility and acoustic policy
+independent rather than deriving them from a collision checkbox.
+
+Validation: 92 focused native checks passed, including accepted-versus-preview
+geometry, ledges, steps, slopes, transformed worlds, fixed physical tracking and
+a real save/reload. Shared room/program tests: 1,058 passed. The generated book
+read both unsupported and supported native captures through read-only catalog
+commands. Full native verification passed 910 EditMode and 763 PlayMode checks, with three
+optional private-file skips. The matching-source native
+headless and original-chat/book journeys both passed with local scripted provider
+responses (no live provider or headset use). This change has not been packaged,
+installed or checked on the headset.
+Evidence: `.quest-evidence/spatial-state/terrain-traversal-*` and
+`.quest-evidence/spatial-state/world-ground-book/`.

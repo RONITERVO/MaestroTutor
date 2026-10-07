@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+using System;
 using Maestro.Quest.Art;
 using UnityEngine;
 using UnityEngine.AI;
@@ -19,6 +20,9 @@ namespace Maestro.Quest.Interaction
         NavMeshQueryFilter Filter => new() { agentTypeID = agentType, areaMask = NavMesh.AllAreas };
         RoomNavigationGeometry accepted=new(), candidate=new();
         bool configured;
+        readonly RoomGroundMotor groundMotor=new();
+        Func<Vector3,bool> groundPosition;
+        internal Collider TraversalBlocker {get;private set;}
         internal uint SurfaceRevision { get; private set; }
         internal uint BuildRevision { get; private set; }
         Vector3 installedPosition;
@@ -39,6 +43,7 @@ namespace Maestro.Quest.Interaction
         {
             error="Room navigation needs active physics and accepted surfaces";
             if(!world||!world.Running||!world.SimulationReady)return false;
+            Physics.SyncTransforms();
             if(!candidate.Capture(world.transform,world.RealCollisions,!world.RealCollisions&&virtualFrame?virtualFrame:world.transform)) { Clear();error="No accepted scanned or authored floor is available for walking";return false; }
             if(data&&installed.valid&&candidate.Same(accepted)){
                 Install(candidate.Position,candidate.Rotation);error=null;return installed.valid;
@@ -49,7 +54,7 @@ namespace Maestro.Quest.Interaction
             var bounds=candidate.Bounds;bounds.Expand(.2f);
             var settings = NavMesh.CreateSettings(); agentType = settings.agentTypeID;
             settings.agentRadius = radius + .025f; settings.agentHeight = height;
-            settings.agentClimb = .10f; settings.agentSlope = 25;
+            settings.agentClimb = RoomGroundQuery.MaximumStep; settings.agentSlope = RoomGroundQuery.MaximumSlope;
             settings.overrideVoxelSize = true; settings.voxelSize = Mathf.Clamp(radius/4,.025f,.08f);
             settings.minRegionArea = .1f;
             data = NavMeshBuilder.BuildNavMeshData(settings,candidate.BuildSources,bounds,Vector3.zero,Quaternion.identity);
@@ -70,13 +75,30 @@ namespace Maestro.Quest.Interaction
         {
             floor = default;
             if (!Ready || !NavMesh.SamplePosition(point,out var hit,maximumDistance,Filter) || !world.ContainsSimulation(hit.position + Vector3.up*.1f)) return false;
-            floor = hit.position; return true;
+            // NavMesh is a route approximation. Foot placement uses the accepted
+            // collider itself, including its current revision and rendered height.
+            if(!accepted.Ground.Sample(hit.position,.08f,.08f,out var support)||Vector3.Distance(point,support.point)>maximumDistance+.001f)return false;
+            floor=support.point;return true;
         }
         public bool DirectStep(Vector3 from,Vector3 to,out Vector3 floor)
         {
             floor=default;
             return Sample(from,.1f,out var start) && Sample(to,.08f,out floor) &&
                 Vector3.Distance(new Vector3(to.x,floor.y,to.z),floor) < .025f && !NavMesh.Raycast(start,floor,out _,Filter);
+        }
+        bool GroundPosition(Vector3 value)=>world&&world.ContainsSimulation(value+Vector3.up*.1f);
+        internal bool Traverse(Vector3 from,Vector3 to,Func<Collider,bool> obstacle,out Vector3 floor,out string error)
+        {
+            TraversalBlocker=null;floor=default;error="No connected accepted ground is available for this step";
+            if(!DirectStep(from,to,out _))return false;
+            int mask=world.CollisionMask((1<<RoomPhysicsLayers.Scanned)|(1<<RoomPhysicsLayers.Item)|(1<<RoomPhysicsLayers.Environment));
+            bool moved=groundMotor.Travel(accepted.Ground,from,to-from,radius,height,mask,obstacle,groundPosition??=GroundPosition,out floor,out error);
+            if(!moved)TraversalBlocker=groundMotor.Blocker;return moved;
+        }
+        internal bool ClearAuthoredStep(Vector3 from,Vector3 to,float extraHeight,Func<Collider,bool> obstacle)
+        {
+            int mask=world.CollisionMask((1<<RoomPhysicsLayers.Scanned)|(1<<RoomPhysicsLayers.Item)|(1<<RoomPhysicsLayers.Environment));
+            bool clear=groundMotor.ClearExact(from,to,radius,height+extraHeight,mask,obstacle);TraversalBlocker=clear?null:groundMotor.Blocker;return clear;
         }
         public bool Path(Vector3 from, Vector3 to, NavMeshPath path) => Ready &&
             Sample(from,.25f,out var start) && Sample(to,.5f,out var end) &&

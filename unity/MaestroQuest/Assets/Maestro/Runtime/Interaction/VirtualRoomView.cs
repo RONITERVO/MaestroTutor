@@ -1,7 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 using System;
-using System.Collections.Generic;
 using Maestro.Quest.Creation;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
@@ -23,8 +22,10 @@ namespace Maestro.Quest.Interaction
         Color homeBackground;
         CameraClearFlags homeFlags;
         bool passthroughWasEnabled;
-        readonly List<RoomWalkableSurface> ground = new();
-        readonly RaycastHit[] hits = new RaycastHit[32];
+        readonly RoomGroundQuery ground = new();
+        readonly RoomGroundMotor groundMotor = new();
+        Func<Collider,bool> groundObstacle;
+        Func<Vector3,bool> groundPosition;
         readonly Collider[] overlaps = new Collider[32];
         public bool Active { get; private set; }
         public bool CanEnter=>isActiveAndEnabled&&motion!=null&&motion.Ready&&trackingOrigin&&viewer&&!viewer.transform.IsChildOf(content)&&(!scan||!scan.Busy);
@@ -72,8 +73,8 @@ namespace Maestro.Quest.Interaction
                     error="The requested world location is occupied; choose a clear place";return false;
                 }
             }
-            content.GetComponentsInChildren(false,ground);
-            if(Active&&!Supported(destination,destination.y)){error="Virtual placement needs accepted level ground at the destination";return false;}
+            ground.Capture(content);
+            if(Active&&!ground.Support(destination,radius,.025f,.025f,out _,out _,out _)){error="Virtual placement needs accepted ground at the destination";return false;}
             error=null;return true;
         }
         internal bool PrepareViewpoint(RoomViewpoint value,out string error)
@@ -104,50 +105,28 @@ namespace Maestro.Quest.Interaction
             scan?.SetVirtualView(false);
             Active=false;
         }
+        bool WalkingObstacle(Collider value)
+        {
+            if(!value||!value.transform.IsChildOf(content))return false;
+            var body=value.attachedRigidbody;
+            return !body||(body.GetComponent<IPhysicalRoomBinding>()?.PhysicalFrame!=true&&body.GetComponent<RoomItem>()?.Grab?.isSelected!=true);
+        }
+        bool WalkingPosition(Vector3 point)=>RoomViewpoint.ValidPosition(new RoomFrame(content).PointToRoom(point));
         public bool Move(Vector3 delta)
         {
             MovementError=null;
-            if (!Active || !float.IsFinite(delta.sqrMagnitude) || delta.sqrMagnitude > .01f) return false;
-            delta.y=0;
-            if(!PhysicalView(out var proposedFoot,out _)||!RoomViewpoint.ValidPosition(new RoomFrame(content).PointToRoom(proposedFoot+delta))){
-                MovementError="Movement would leave the supported saved-world coordinates";return false;
-            }
-            // Only accepted, scene-owned ground supports travel. Presentation never
-            // inserts a second flat collider beneath editable terrain or water.
-            Physics.SyncTransforms();
-            float foot=trackingOrigin.position.y;
-            content.GetComponentsInChildren(false,ground);
-            if(!Supported(viewer.transform.position,foot)||!Supported(viewer.transform.position+delta,foot)) {
-                MovementError="Your movement needs accepted level ground beneath you and the next step";return false;
-            }
-            float height = Mathf.Clamp(viewer.transform.position.y-foot,.65f,2.2f), radius=.2f;
-            Vector3 bottom=new(viewer.transform.position.x,foot+radius+.04f,viewer.transform.position.z), top=new(viewer.transform.position.x,foot+height-radius,viewer.transform.position.z);
-            // The viewer stays physical: this query follows virtual obstacles only.
+            if(!Active||!float.IsFinite(delta.sqrMagnitude)||delta.sqrMagnitude>.01f)return false;
+            if(!PhysicalView(out var foot,out _)){MovementError="Movement needs a valid tracked physical view";return false;}
+            if(!RoomViewpoint.ValidPosition(new RoomFrame(content).PointToRoom(foot))){MovementError="Movement needs a view within supported world coordinates";return false;}
+            delta.y=0;if(delta.sqrMagnitude<.00000001f)return true;
+            Physics.SyncTransforms();ground.Capture(content);
+            float height=Mathf.Clamp(viewer.transform.position.y-foot.y,.65f,2.2f);
             int mask=(1<<RoomPhysicsLayers.Item)|(1<<RoomPhysicsLayers.Environment);
-            if(physics)mask=physics.CollisionMask(mask);
-            int count=Physics.CapsuleCastNonAlloc(bottom,top,radius,delta.normalized,hits,delta.magnitude+.005f,mask,QueryTriggerInteraction.Ignore);
-            if (count>0) return false;
-            count=Physics.OverlapCapsuleNonAlloc(bottom+delta,top+delta,radius,overlaps,mask,QueryTriggerInteraction.Ignore);
-            if (count>0) return false;
-            bool moved=motion.SetPose(content.position-delta,content.rotation,out var error);MovementError=error;if(moved)Moved?.Invoke();return moved;
-        }
-        bool Supported(Vector3 eye,float foot)
-        {
-            // Terrain-following elevation is a separate locomotion policy. Until
-            // implemented, reject hills, holes and ledges instead of floating over
-            // them. Sample the complete planar footprint within this owned world.
-            for(int sample=0;sample<9;sample++) {
-                float angle=(sample-1)*Mathf.PI/4;
-                var offset=sample==0?Vector3.zero:new Vector3(Mathf.Cos(angle),0,Mathf.Sin(angle))*.2f;
-                var ray=new Ray(new Vector3(eye.x,foot+.05f,eye.z)+offset,Vector3.down);
-                bool found=false;
-                foreach(var surface in ground) {
-                    if(!surface.Available)continue;
-                    if(surface.Collision.Raycast(ray,out var hit,.075f)&&hit.normal.y>.999f&&Mathf.Abs(hit.point.y-foot)<.025f) {found=true;break;}
-                }
-                if(!found)return false;
+            if(!groundMotor.Travel(ground,foot,delta,.2f,height,mask,groundObstacle??=WalkingObstacle,groundPosition??=WalkingPosition,out var destination,out var error)){
+                MovementError=error;return false;
             }
-            return true;
+            bool moved=motion.SetPose(content.position-(destination-foot),content.rotation,out error);
+            MovementError=error;if(moved)Moved?.Invoke();return moved;
         }
         public bool Turn(float degrees)
         {

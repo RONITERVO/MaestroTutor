@@ -117,10 +117,10 @@ namespace Maestro.Quest.Tests
             var before=ball.position;yield return new WaitForFixedUpdate();yield return new WaitForFixedUpdate();
             Assert.That(world.Running,Is.True);Assert.That(Vector3.Distance(before,ball.position),Is.GreaterThan(.001f),"Native physics must continue after returning to MR");
         }
-        [UnityTest]public IEnumerator ViewNeverInventsGroundAndPlanarTravelRefusesHolesAndRaisedTerrain() {
+        [UnityTest]public IEnumerator ViewNeverInventsGroundAndTravelRefusesHolesAndUnsupportedRaisedTerrain() {
             world.PausePhysics();var camera=tracking.gameObject.AddComponent<Camera>();var view=root.AddComponent<VirtualRoomView>();view.Initialize(content.transform,root.transform,camera,null,world);
             var floor=content.GetComponentInChildren<RoomWalkableSurface>();var collider=floor.Collision;var at=content.transform.position;
-            floor.gameObject.SetActive(false);Assert.That(view.Enter(),Is.True);Assert.That(view.Move(Vector3.right*.05f),Is.False);Assert.That(view.MovementError,Does.Contain("accepted level ground"));
+            floor.gameObject.SetActive(false);Assert.That(view.Enter(),Is.True);Assert.That(view.Move(Vector3.right*.05f),Is.False);Assert.That(view.MovementError,Does.Contain("accepted ground"));
             Assert.That(content.GetComponentsInChildren<RoomWalkableSurface>(true).Length,Is.EqualTo(1));Assert.That(content.transform.position,Is.EqualTo(at));
             floor.gameObject.SetActive(true);floor.transform.position+=Vector3.up*.2f;Assert.That(view.Move(Vector3.right*.05f),Is.False,"No floating over raised terrain");
             floor.transform.position-=Vector3.up*.2f;Assert.That(view.Move(Vector3.right*.05f),Is.True,view.MovementError);

@@ -31,8 +31,6 @@ namespace Maestro.Quest.Avatar
         AvatarSpatialMode mode;
         bool paused, focused = true;
         NavMeshPath path;
-        readonly Collider[] overlaps = new Collider[32];
-        readonly RaycastHit[] hits = new RaycastHit[32];
         Vector3[] corners = Array.Empty<Vector3>();
         int corner;
         uint navigationRevision;
@@ -140,13 +138,13 @@ namespace Maestro.Quest.Avatar
                     var direction = corners[corner]-transform.position;
                     var next = Vector3.MoveTowards(transform.position,corners[corner],Mathf.Min(Speed*dt,delta.magnitude-Distance));
                     string blocked = "The walking surface has no space for this step — try Size or reposition Maestro";
-                    if (navigation.Sample(next,.10f,out var floor) && ClearStep(floor,out blocked))
+                    if (navigation.Traverse(transform.position,next,walkingObstacle??=BodyObstacle,out var floor,out blocked))
                     {
                         moved = Vector3.Distance(transform.position,floor); transform.position = floor;
                         direction.y = 0; if (direction.sqrMagnitude > .0001f) transform.rotation = Quaternion.RotateTowards(transform.rotation,Quaternion.LookRotation(direction),120*dt);
                         Say("Following you — Stop or grip Maestro to end");
                     }
-                    else Say(blocked);
+                    else Say(navigation.TraversalBlocker?Blocker(navigation.TraversalBlocker):blocked);
                 }
                 else Say("No connected path — try Size, or place Maestro on the same clear floor");
             }
@@ -163,13 +161,13 @@ namespace Maestro.Quest.Avatar
             if (Time.unscaledTime-manualAt > .15f) { Stop(); return; }
             var next=transform.position+manualDirection*Speed*dt;
             string error="The walking surface has no space for this step"; float moved=0;
-            if (manualDirection.sqrMagnitude > 0 && navigation.DirectStep(transform.position,next,out var floor) && ClearStep(floor,out error))
+            if (manualDirection.sqrMagnitude > 0 && navigation.Traverse(transform.position,next,walkingObstacle??=BodyObstacle,out var floor,out error))
             {
                 moved=Vector3.Distance(transform.position,floor); transform.position=floor;
                 transform.rotation=Quaternion.RotateTowards(transform.rotation,Quaternion.LookRotation(manualDirection),180*dt);
                 Say("Maestro stick active — center it to stop");
             }
-            else if (manualDirection.sqrMagnitude > 0) Say(error);
+            else if (manualDirection.sqrMagnitude > 0) Say(navigation.TraversalBlocker?Blocker(navigation.TraversalBlocker):error);
             avatar.SpatialWalk(dt > 0 ? moved/dt : 0);
             if (Time.unscaledTime >= nextRemember) { nextRemember=Time.unscaledTime+1; editor.RememberPlacement("maestro"); }
         }
@@ -192,7 +190,7 @@ namespace Maestro.Quest.Avatar
         }
         internal bool TryAuthoredStep(Vector3 next,float extraHeight,out string error)
         {
-            error="Authored motion blocked — no clear, level walking surface for this step";
+            error="Authored motion blocked — no supported ground for this authored foot position";
             if(!float.IsFinite(next.sqrMagnitude)||!navigation.DirectStep(transform.position,next,out var floor)||Mathf.Abs(floor.y-next.y)>.03f)return false;
             // Respect the user's space along the whole step, including a clip with discontinuous keys.
             var from=Vector3.ProjectOnPlane(transform.position-room.Viewer.position,Vector3.up);var to=Vector3.ProjectOnPlane(next-room.Viewer.position,Vector3.up);var step=to-from;
@@ -202,21 +200,12 @@ namespace Maestro.Quest.Avatar
             return ClearStep(next,out error,extraHeight);
         }
         internal void RememberAuthoredPlacement(){if(editor)editor.RememberPlacement("maestro");}
-        bool ClearStep(Vector3 next, out string blocked,float extraHeight=0)
+        Func<Collider,bool> walkingObstacle;
+        bool ClearStep(Vector3 next,out string blocked,float extraHeight=0)
         {
-            blocked = "Path crowded — try Size or reposition Maestro";
-            float scale = transform.lossyScale.y, r = .25f*scale, h = 1.7f*scale+extraHeight;
-            var bottom = transform.position + Vector3.up*(r+.035f); var top = transform.position + Vector3.up*(h-r);
-            var step = next-transform.position;
-            int mask = (1<<RoomPhysicsLayers.Scanned) | (1<<RoomPhysicsLayers.Item) | (1<<RoomPhysicsLayers.Environment);
-            mask=editor.PhysicsWorld.CollisionMask(mask);
-            int count = Physics.CapsuleCastNonAlloc(bottom,top,r,step.normalized,hits,step.magnitude+.01f,mask,QueryTriggerInteraction.Ignore);
-            if (count == hits.Length) return false;
-            for (int i=0;i<count;i++) if (BodyObstacle(hits[i].collider)) { blocked = Blocker(hits[i].collider); return false; }
-            count = Physics.OverlapCapsuleNonAlloc(bottom+step,top+step,r,overlaps,mask,QueryTriggerInteraction.Ignore);
-            if (count == overlaps.Length) return false;
-            for (int i=0;i<count;i++) if (BodyObstacle(overlaps[i])) { blocked = Blocker(overlaps[i]); return false; }
-            return true;
+            blocked="The authored path is blocked";
+            bool clear=navigation.ClearAuthoredStep(transform.position,next,extraHeight,walkingObstacle??=BodyObstacle);
+            if(!clear&&navigation.TraversalBlocker)blocked=Blocker(navigation.TraversalBlocker);return clear;
         }
         bool BodyObstacle(Collider collider)
         {

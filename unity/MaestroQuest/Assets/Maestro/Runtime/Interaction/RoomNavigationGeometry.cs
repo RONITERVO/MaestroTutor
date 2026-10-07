@@ -28,12 +28,13 @@ namespace Maestro.Quest.Interaction
         readonly List<Collider> colliders=new();
         readonly List<Entry> entries=new();
         readonly List<NavMeshBuildSource> sources=new();
+        internal RoomGroundQuery Ground {get;}=new();
         internal Bounds Bounds { get; private set; }
         internal Vector3 Position { get; private set; }
         internal Quaternion Rotation { get; private set; }
         internal bool Capture(Transform owner,bool includeScan=true,Transform coordinates=null)
         {
-            colliders.Clear(); entries.Clear(); sources.Clear(); Bounds=default;
+            colliders.Clear(); entries.Clear(); sources.Clear(); Ground.Clear(); Bounds=default;
             if(!owner)return false;
             if(!coordinates)coordinates=owner;
             var frame=new Creation.RoomFrame(coordinates);
@@ -43,11 +44,8 @@ namespace Maestro.Quest.Interaction
             Position=coordinates.position;Rotation=coordinates.rotation;
             owner.GetComponentsInChildren(false,colliders);
             foreach(var collider in colliders) {
-                if(!collider.enabled||collider.isTrigger)continue;
-                var surface=collider.GetComponent<RoomWalkableSurface>();
-                bool authored=surface&&surface.Available&&surface.Collision==collider;
-                if(collider.gameObject.layer==RoomPhysicsLayers.Scanned&&!includeScan)continue;
-                if(!authored&&collider.gameObject.layer!=RoomPhysicsLayers.Scanned)continue;
+                if(!RoomGroundQuery.Accepted(collider,includeScan,out var surface))continue;
+                bool authored=surface;
                 var source=new NavMeshBuildSource { transform=coordinates.worldToLocalMatrix*collider.transform.localToWorldMatrix,component=collider,area=0 };
                 Bounds localBounds;
                 if(collider is MeshCollider mesh&&mesh.sharedMesh) { source.shape=NavMeshBuildSourceShape.Mesh;source.sourceObject=mesh.sharedMesh;localBounds=mesh.sharedMesh.bounds; }
@@ -59,7 +57,7 @@ namespace Maestro.Quest.Interaction
                 var boundsInFrame=new Bounds(source.transform.MultiplyPoint3x4(localBounds.center),2*new Vector3(
                     Mathf.Abs(x.x)+Mathf.Abs(y.x)+Mathf.Abs(z.x),Mathf.Abs(x.y)+Mathf.Abs(y.y)+Mathf.Abs(z.y),Mathf.Abs(x.z)+Mathf.Abs(y.z)+Mathf.Abs(z.z)));
                 if(sources.Count==0)Bounds=boundsInFrame;else {var bounds=Bounds;bounds.Encapsulate(boundsInFrame);Bounds=bounds;}
-                sources.Add(source);entries.Add(new Entry(collider,authored?surface.Revision:0,source));
+                Ground.Add(collider);sources.Add(source);entries.Add(new Entry(collider,authored?surface.Revision:0,source));
             }
             return entries.Count>0;
         }
