@@ -35,6 +35,7 @@ namespace Maestro.Quest.Avatar
         readonly RaycastHit[] hits = new RaycastHit[32];
         Vector3[] corners = Array.Empty<Vector3>();
         int corner;
+        uint navigationRevision;
         float nextPath, nextRemember, yaw, pitch;
         public float Distance { get; private set; } = 1.3f;
         public float Speed { get; private set; } = .65f;
@@ -69,7 +70,7 @@ namespace Maestro.Quest.Avatar
             {
                 float scale = transform.lossyScale.y;
                 if (!navigation || !navigation.Prepare(.25f*scale,1.7f*scale,out error)) { Say(error ?? "Room navigation is unavailable"); return false; }
-                if (!navigation.Sample(transform.position,.25f,out _)) { error = "Place Maestro's feet near the scanned floor, then try walking"; Say(error); return false; }
+                if (!navigation.Sample(transform.position,.25f,out _)) { error = "Place Maestro's feet near a supported walking surface, then try walking"; Say(error); return false; }
             }
             var claims=value==AvatarSpatialMode.Look?new[]{new BehaviourCatalog.Claim("maestro","gaze")}:
                 new[]{new BehaviourCatalog.Claim("maestro","locomotion"),new BehaviourCatalog.Claim("maestro","gaze")};
@@ -120,6 +121,7 @@ namespace Maestro.Quest.Avatar
             if (editor.RuntimeGate.Held||paused || !focused || !tracked() || !avatar || avatar.ModelBusy || item.Grab.isSelected) { Stop(); return; }
             if (mode == AvatarSpatialMode.Look) return;
             if (!navigation || !navigation.Ready) { Stop(); Say("Walking stopped — check room alignment and Start physics again"); return; }
+            if(navigationRevision!=navigation.SurfaceRevision) { navigationRevision=navigation.SurfaceRevision;corners=Array.Empty<Vector3>();corner=0;nextPath=0; }
             float dt = Mathf.Min(Time.deltaTime,.05f);
             if (mode == AvatarSpatialMode.Manual) { ManualStep(dt); return; }
             var delta = Vector3.ProjectOnPlane(room.Viewer.position-transform.position,Vector3.up);
@@ -137,7 +139,7 @@ namespace Maestro.Quest.Avatar
                 {
                     var direction = corners[corner]-transform.position;
                     var next = Vector3.MoveTowards(transform.position,corners[corner],Mathf.Min(Speed*dt,delta.magnitude-Distance));
-                    string blocked = "Scanned floor has no space for this step — try Size or reposition Maestro";
+                    string blocked = "The walking surface has no space for this step — try Size or reposition Maestro";
                     if (navigation.Sample(next,.10f,out var floor) && ClearStep(floor,out blocked))
                     {
                         moved = Vector3.Distance(transform.position,floor); transform.position = floor;
@@ -160,7 +162,7 @@ namespace Maestro.Quest.Avatar
         {
             if (Time.unscaledTime-manualAt > .15f) { Stop(); return; }
             var next=transform.position+manualDirection*Speed*dt;
-            string error="Scanned floor has no space for this step"; float moved=0;
+            string error="The walking surface has no space for this step"; float moved=0;
             if (manualDirection.sqrMagnitude > 0 && navigation.DirectStep(transform.position,next,out var floor) && ClearStep(floor,out error))
             {
                 moved=Vector3.Distance(transform.position,floor); transform.position=floor;
@@ -177,7 +179,7 @@ namespace Maestro.Quest.Avatar
             if(!CanBegin(AvatarSpatialMode.Manual,out error))return false;
             float scale=transform.lossyScale.y;
             if(!navigation||!navigation.Prepare(.25f*scale,1.7f*scale,out error)){error??="Room navigation is unavailable";return false;}
-            if(!navigation.Sample(transform.position,.08f,out _)){error="Place Maestro on the scanned floor before authored travel";return false;}
+            if(!navigation.Sample(transform.position,.08f,out _)){error="Place Maestro on a supported walking surface before authored travel";return false;}
             return true;
         }
         internal bool CanContinueAuthored(out string error)
@@ -189,7 +191,7 @@ namespace Maestro.Quest.Avatar
         }
         internal bool TryAuthoredStep(Vector3 next,float extraHeight,out string error)
         {
-            error="Authored motion stopped at the edge of clear, level scanned floor";
+            error="Authored motion blocked — no clear, level walking surface for this step";
             if(!float.IsFinite(next.sqrMagnitude)||!navigation.DirectStep(transform.position,next,out var floor)||Mathf.Abs(floor.y-next.y)>.03f)return false;
             // Respect the user's space along the whole step, including a clip with discontinuous keys.
             var from=Vector3.ProjectOnPlane(transform.position-room.Viewer.position,Vector3.up);var to=Vector3.ProjectOnPlane(next-room.Viewer.position,Vector3.up);var step=to-from;

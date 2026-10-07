@@ -3518,6 +3518,31 @@ admission regression; its corrected test now also asserts conserved contents and
 unchanged display scale. These are desktop checks with scripted provider replies,
 not physical headset, real-provider or scaled-world acceptance.
 
+The next spatial increment removes scan-only navigation. Accepted editable
+height-field colliders and the virtual floor now publish explicit walkable
+surfaces. Navigation consumes these alongside scanned geometry, scoped to its
+room owner; unrelated scenes and ordinary props cannot become ground through a
+global layer search. Accepted mesh revisions, collider availability and local
+transforms invalidate old routes. Sculpt previews do not publish a new walking
+surface. Maestro drops cached path corners when that surface revision changes.
+The bake is in the owner's rigid local frame, so relocating the whole frame
+repositions the installed navigation data without rebaking it. Individual terrain
+edits or movement still rebuild the affected current room synchronously.
+
+Three failure-first native regressions cover accepted/preview/removed geometry,
+collider disable/reenable, isolation from another world's floor, root relocation
+without a new bake, and actual Maestro walking along the same sloping collider.
+This retains current bounded height-field limits and the scan/alignment requirement
+for starting physics. It does not yet implement independent virtual physics
+readiness, user locomotion over terrain, fixed-tracking world movement, navigation
+streaming or scaled-world physics. Continuous moving/streamed terrain needs a
+budgeted navigation update policy; room-scale synchronous rebuilds are not a
+city-scale performance guarantee. Six focused terrain/authored-motion cases pass.
+The first full PlayMode run caught a diagnostic mismatch when a newly added wall
+invalidated navigation earlier than the old collision sweep; the blocked movement
+and accepted pose were preserved, and the explanation now describes the supported
+walking surface. Physical Quest terrain/navigation acceptance remains open.
+
 The owner expects worlds to grow from room toys into miniature countries with
 cities, buildings, items and NPCs. Users and the agent must author the same world;
 imported Blender/Meshy assets are another source of its components. Texture and

@@ -41,6 +41,7 @@ namespace Maestro.Quest.Interaction
             floor.transform.localScale=new Vector3(20,.1f,20); floor.layer=RoomPhysicsLayers.Environment;
             paper=IllustratedMaterials.Create(IllustratedMaterials.Paper); floor.GetComponent<Renderer>().sharedMaterial=paper;
             Book.AcousticSurface.Attach(floor,floor.GetComponent<MeshFilter>().sharedMesh,environment:true);
+            floor.AddComponent<RoomWalkableSurface>().Publish(floor.GetComponent<Collider>());
             Active=true; return true;
         }
         public void Exit()

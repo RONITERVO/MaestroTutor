@@ -1,14 +1,12 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
-using System.Collections.Generic;
-using System.Linq;
 using Maestro.Quest.Art;
 using UnityEngine;
 using UnityEngine.AI;
 
 namespace Maestro.Quest.Interaction
 {
-    /// <summary>Owned navigation data built from the same MRUK colliders used by room physics.</summary>
+    /// <summary>Owned navigation built from accepted scanned and authored collision surfaces.</summary>
     public sealed class RoomNavigation : MonoBehaviour
     {
         RoomPhysicsWorld world;
@@ -17,31 +15,54 @@ namespace Maestro.Quest.Interaction
         int agentType = -1;
         float radius, height;
         NavMeshQueryFilter Filter => new() { agentTypeID = agentType, areaMask = NavMesh.AllAreas };
-        public bool Ready => data && installed.valid && world && world.Running && world.SurfacesReady;
+        RoomNavigationGeometry accepted=new(), candidate=new();
+        bool configured;
+        internal uint SurfaceRevision { get; private set; }
+        internal uint BuildRevision { get; private set; }
+        Vector3 installedPosition;
+        Quaternion installedRotation;
+        public bool Ready => configured && RefreshGeometry(out _);
         public void Initialize(RoomPhysicsWorld value) { world = value; world.Changed += RoomChanged; }
         void RoomChanged() { if (!world.SurfacesReady) Clear(); }
         public bool Prepare(float bodyRadius, float bodyHeight, out string error)
         {
             error = null;
             if (!world || !world.Running || !world.SurfacesReady) { error = "Load the room, check its alignment, then Start physics before walking"; return false; }
-            if (Ready && Mathf.Abs(radius-bodyRadius) < .005f && Mathf.Abs(height-bodyHeight) < .01f) return true;
+            if(!float.IsFinite(bodyRadius)||!float.IsFinite(bodyHeight)||bodyRadius<=0||bodyHeight<bodyRadius*2) { error="Choose a valid walking body";return false; }
+            if(!configured||Mathf.Abs(radius-bodyRadius)>=.005f||Mathf.Abs(height-bodyHeight)>=.01f)Clear();
+            radius=bodyRadius;height=bodyHeight;configured=true;
+            return RefreshGeometry(out error);
+        }
+        bool RefreshGeometry(out string error)
+        {
+            error="Room navigation needs active physics and accepted surfaces";
+            if(!world||!world.Running||!world.SurfacesReady)return false;
+            if(!candidate.Capture(world.transform)) { Clear();error="No accepted scanned or authored floor is available for walking";return false; }
+            if(data&&installed.valid&&candidate.Same(accepted)){
+                Install(candidate.Position,candidate.Rotation);error=null;return installed.valid;
+            }
+            // A mesh edit or root move must never reuse a stale route. Build from
+            // exactly the collider geometry captured for this accepted revision.
             Clear();
-            var geometry = FindObjectsByType<Collider>(FindObjectsSortMode.None).Where(c => c.enabled && !c.isTrigger && c.gameObject.layer == RoomPhysicsLayers.Scanned).ToArray();
-            if (geometry.Length == 0) { error = "No scanned floor or walls are available for walking"; return false; }
-            var bounds = geometry[0].bounds; foreach (var collider in geometry.Skip(1)) bounds.Encapsulate(collider.bounds);
-            bounds.Expand(.2f);
-            var sources = new List<NavMeshBuildSource>();
-            NavMeshBuilder.CollectSources(bounds,1 << RoomPhysicsLayers.Scanned,NavMeshCollectGeometry.PhysicsColliders,0,false,new List<NavMeshBuildMarkup>(),false,sources);
-            if (sources.Count == 0) { error = "The scanned surfaces cannot form a walking area"; return false; }
+            var bounds=candidate.Bounds;bounds.Expand(.2f);
             var settings = NavMesh.CreateSettings(); agentType = settings.agentTypeID;
-            settings.agentRadius = bodyRadius + .025f; settings.agentHeight = bodyHeight;
+            settings.agentRadius = radius + .025f; settings.agentHeight = height;
             settings.agentClimb = .10f; settings.agentSlope = 25;
-            settings.overrideVoxelSize = true; settings.voxelSize = Mathf.Clamp(bodyRadius/4,.025f,.08f);
+            settings.overrideVoxelSize = true; settings.voxelSize = Mathf.Clamp(radius/4,.025f,.08f);
             settings.minRegionArea = .1f;
-            data = NavMeshBuilder.BuildNavMeshData(settings,sources,bounds,Vector3.zero,Quaternion.identity);
-            if (!data) { Clear(); error = "No walking area could be built from this scan"; return false; }
-            installed = NavMesh.AddNavMeshData(data); radius = bodyRadius; height = bodyHeight;
-            return Ready;
+            data = NavMeshBuilder.BuildNavMeshData(settings,candidate.BuildSources,bounds,Vector3.zero,Quaternion.identity);
+            if (!data) { Clear(); error = "No walking area could be built from the accepted surfaces"; return false; }
+            Install(candidate.Position,candidate.Rotation); BuildRevision++;
+            (accepted,candidate)=(candidate,accepted);
+            error=installed.valid?null:"The accepted walking area could not be installed";
+            return installed.valid;
+        }
+        void Install(Vector3 position,Quaternion rotation)
+        {
+            if(installed.valid&&installedPosition.Equals(position)&&installedRotation.Equals(rotation))return;
+            if(installed.valid)installed.Remove();
+            installed=NavMesh.AddNavMeshData(data,position,rotation);
+            installedPosition=position;installedRotation=rotation;SurfaceRevision++;
         }
         public bool Sample(Vector3 point, float maximumDistance, out Vector3 floor)
         {
@@ -60,7 +81,7 @@ namespace Maestro.Quest.Interaction
             NavMesh.CalculatePath(start,end,Filter,path) && path.status == NavMeshPathStatus.PathComplete;
         void Clear()
         {
-            if (installed.valid) installed.Remove();
+            if (installed.valid) { installed.Remove(); SurfaceRevision++; }
             ArtResources.Release(data); data = null;
             if (agentType != -1) NavMesh.RemoveSettings(agentType);
             agentType = -1;

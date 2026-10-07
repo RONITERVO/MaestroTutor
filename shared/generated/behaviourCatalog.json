@@ -35753,7 +35753,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/HeightFieldView.cs",
-      "sha256": "19304d0eee33b1b2be20a92ab226c2413bb8215d8eb7fc09ecb53d1c060eeaf9"
+      "sha256": "d11cddb6d39e7bfc52ee7df9bb9c63ed52872ae84d9f308ea71b95355a4249a1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomHeightField.cs",
@@ -35953,7 +35953,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarSpatialMotion.cs",
-      "sha256": "f81c2ad848016e263bda215ee6ab93612199a5f2486ca726c69be3a8bcd90db5"
+      "sha256": "0395673f6b429e13d0ff3524d3d96bc53da9aae4df11364a546991ffa500d177"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarAuthoredTravel.cs",
@@ -35993,7 +35993,19 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/VirtualRoomView.cs",
-      "sha256": "216d162da354eeede2efa6fbee245b3fc532ca0ccfbfd404c683646a744715ae"
+      "sha256": "a93f87f683864b84c4f1c6df18a732fb7d54a1feb3803e4580aa4765e5749cdc"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigation.cs",
+      "sha256": "bac66f6e2ce3635a035098abfee39c1f91b60ffc16698d26001ffa669c0d5cf2"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationGeometry.cs",
+      "sha256": "42a27f3b81167c426eeb9a6c073afc13a7d07ebc233347e3c45ae868c05b2147"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomWalkableSurface.cs",
+      "sha256": "2fccca94cfdcecb9e565194bc1c943139a037942cf560ae59b3975e3965322a1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomPhysicsWorld.cs",
