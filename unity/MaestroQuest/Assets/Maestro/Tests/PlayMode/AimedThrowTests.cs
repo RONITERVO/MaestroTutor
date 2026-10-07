@@ -22,7 +22,7 @@ namespace Maestro.Quest.Tests
             ball.transform.position=new Vector3(2,1,0);ball.GetComponent<RigidRoomItem>().Teleported();
             var args=BehaviourCatalog.Action("object.physics.launch").Example;args["target"]=editor.Identity(ball);args["destination"]["position"]=new JObject{["x"]=3.5,["y"]=1,["z"]=0};args["seconds"]=seconds;args["maxSpeed"]=8;return args;
         }
-        static JObject AimCall(JObject args)=>new(){["id"]="object.physics.launch",["version"]=1,["arguments"]=args.DeepClone()};
+        static JObject AimCall(JObject args)=>new(){["id"]="object.physics.launch",["version"]=2,["arguments"]=args.DeepClone()};
         JObject AimPreview(JObject args)=>Fact("object.physics.trajectory",args);
         GameObject AimWall(Vector3 position){var wall=GameObject.CreatePrimitive(PrimitiveType.Cube);wall.transform.SetParent(root.transform,false);wall.layer=RoomPhysicsLayers.Scanned;wall.transform.position=position;wall.transform.localScale=new Vector3(.03f,5,3);Physics.SyncTransforms();return wall;}
         [UnityTest] public IEnumerator AimedThrowUsesRealGravityReportsLaunchAndNeverReplaysItsReceipt(){
@@ -33,8 +33,8 @@ namespace Maestro.Quest.Tests
             var catalog=new RoomCapabilityCatalog(editor);
             void Capture(string phase,JObject query){Assert.That(catalog.Execute(query,out _),Is.True);var state=observer.Observe();state.visible=true;state.workspaceView="rules";state.rules=rules.Observe(true);state.catalog=catalog.Observe();state.execution=executions.Observe();capture[phase]=JObject.Parse(RoomAgentWire.Serialize(state));}
             Capture("search",new JObject{["operation"]="search",["query"]="object.physics.launch",["offset"]=0});
-            Capture("inspect",new JObject{["operation"]="inspect",["capability"]="object.physics.launch",["version"]=1});
-            Capture("previewed",new JObject{["operation"]="inspect",["category"]="facts",["capability"]="object.physics.trajectory",["version"]=1,["arguments"]=args.DeepClone()});
+            Capture("inspect",new JObject{["operation"]="inspect",["capability"]="object.physics.launch",["version"]=2});
+            Capture("previewed",new JObject{["operation"]="inspect",["category"]="facts",["capability"]="object.physics.trajectory",["version"]=2,["arguments"]=args.DeepClone()});
             Assert.That((bool)capture["previewed"]["catalog"]["value"]["ready"],Is.True,capture["previewed"].ToString());
             Assert.That(JToken.DeepEquals(capture["previewed"]["catalog"]["value"],JObject.Parse(preview.ToString())),Is.True,"The real scheduler/catalog must read the same serialized live plan: "+capture["previewed"]["catalog"]["value"]);
             Capture("ready",new JObject{["operation"]="check",["call"]=AimCall(args)});

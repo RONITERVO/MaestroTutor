@@ -36,7 +36,7 @@
           "op": "awaitEvent",
           "event": "object.anchor.proximity.changed",
           "source": "",
-          "version": 1,
+          "version": 2,
           "arguments": {
             "target": "00000000000000000000000000000000",
             "holder": {

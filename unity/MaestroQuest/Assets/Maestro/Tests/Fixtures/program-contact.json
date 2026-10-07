@@ -72,7 +72,8 @@
                 "otherKind": "kind",
                 "otherId": "other",
                 "y": "height"
-              }
+              },
+              "version": 2
             },
             {
               "id": "record",

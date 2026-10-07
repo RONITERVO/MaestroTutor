@@ -27992,7 +27992,7 @@
     },
     {
       "id": "object.physics.launch",
-      "version": 1,
+      "version": 2,
       "label": "Aim and throw object",
       "input": {
         "type": "object",
@@ -28052,7 +28052,7 @@
                   "kind"
                 ],
                 "additionalProperties": false,
-                "title": "World point"
+                "title": "Room point"
               },
               {
                 "type": "object",
@@ -28253,7 +28253,7 @@
         "trajectory.clear",
         "viewer.available"
       ],
-      "description": "Launch a solid/bouncy creation toward an explicit world point or the current pose of an exact object/recipe-part/Maestro-hand anchor. The destination is the desired collision-volume centre. Anchor offset uses holder-scale metres. Replaces velocity and clears spin through the same rigid body as controller throws; this does not animate an arm or catch an object. Flight time 0.2–2 seconds is rounded up to fixed physics steps, with requested maximum speed up to 8 m/s. A bounded free-flight estimate includes gravity and damping. Current room/object/controller colliders and the head clearance zone can refuse a throw. Non-sphere objects use a conservative enclosing sphere. Read object.physics.trajectory to preview; execution always recomputes current readiness and path. Preview is not a reservation or a promised landing: moving targets, new obstructions and collisions change the outcome. Completion means launched, never arrived/caught. Stop cannot retract launched motion; pause clears motion through room physics. The launch itself adds no saved edit or Undo. Normal room physics autosave still captures later positions; use a temporary room to keep those changes in its fork until Keep. No automatic resume or retry.",
+      "description": "Launch a solid/bouncy creation toward an explicit authored room point or the current pose of an exact object/recipe-part/Maestro-hand anchor. The destination is the desired collision-volume centre. Point inputs and result origin/destination use authored room coordinates; execution resolves them in the current room frame. Result velocity uses physical metres/second along room axes; speed, radius, maxSpeed and flight time retain physical units. Anchor offset uses holder-scale metres. Replaces velocity and clears spin through the same rigid body as controller throws; this does not animate an arm or catch an object. Flight time 0.2–2 seconds is rounded up to fixed physics steps, with requested maximum speed up to 8 m/s. A bounded free-flight estimate includes gravity and damping. Current room/object/controller colliders and the head clearance zone can refuse a throw. Non-sphere objects use a conservative enclosing sphere. Read object.physics.trajectory to preview; execution always recomputes current readiness and path. Preview is not a reservation or a promised landing: moving targets, new obstructions and collisions change the outcome. Completion means launched, never arrived/caught. Stop cannot retract launched motion; pause clears motion through room physics. The launch itself adds no saved edit or Undo. Normal room physics autosave still captures later positions; use a temporary room to keep those changes in its fork until Keep. No automatic resume or retry.",
       "example": {
         "target": "00000000000000000000000000000000",
         "destination": {
@@ -29227,12 +29227,12 @@
     },
     {
       "id": "object.anchor.proximity.changed",
-      "version": 1,
+      "version": 2,
       "label": "Object entered or left an anchor zone",
       "activity": null,
       "objectEvent": false,
       "valueType": "text",
-      "description": "Observe one explicit object's transform origin around a moving recipe part, Maestro hand or object-root anchor. offset uses holder-root-scale metres, matching object.hold; radius/hysteresis use world metres. Initial baseline suppresses the current side; report also reports it on the first sample. Enter at distance <= radius; exit at >= radius+hysteresis. At most 20 samples/second per wait; gaps over 0.2 seconds, rigid-body motion discontinuities and eligibility changes reset the baseline and reapply initial. physics=true requires a solid/bouncy target; held, carried, animation-owned or paused/unready physics emits nothing. Held anchors also suspend observation. Missing/replaced objects or sockets and invalid readings fail. The exact anchor revision/avatarHash is checked on admission; subsequent root/part motion is observed on those same instances. Value is the target ID; fields include holderId, part, inside, distance and the sampled zone centre x/y/z. This is sampled origin distance, not swept contact, mesh intersection, line of sight, navigation or a catch guarantee. Fast crossings can be missed. It does not own objects or authorize mutation. Before pickup use object.hold reach with a suitable radius to recheck current distance and eligibility; an old event never permits teleporting a departed object. Stop/pause/reload discard watches without replay.",
+      "description": "Observe one explicit object's transform origin around a moving recipe part, Maestro hand or object-root anchor. offset uses holder-root-scale metres, matching object.hold; radius/hysteresis use world metres. Initial baseline suppresses the current side; report also reports it on the first sample. Enter at distance <= radius; exit at >= radius+hysteresis. At most 20 samples/second per wait; gaps over 0.2 seconds, rigid-body motion discontinuities and eligibility changes reset the baseline and reapply initial. physics=true requires a solid/bouncy target; held, carried, animation-owned or paused/unready physics emits nothing. Held anchors also suspend observation. Missing/replaced objects or sockets and invalid readings fail. The exact anchor revision/avatarHash is checked on admission; subsequent root/part motion is observed on those same instances. Value is the target ID; fields include holderId, part, inside, distance and the sampled zone centre x/y/z in authored room coordinates. This point stays in the authored room when its presentation moves; it is not a persistent real-surface anchor. This is sampled origin distance, not swept contact, mesh intersection, line of sight, navigation or a catch guarantee. Fast crossings can be missed. It does not own objects or authorize mutation. Before pickup use object.hold reach with a suitable radius to recheck current distance and eligibility; an old event never permits teleporting a departed object. Stop/pause/reload discard watches without replay.",
       "features": [
         "eventPrograms.v1",
         "eventFields.v1",
@@ -29939,12 +29939,12 @@
     },
     {
       "id": "object.caught",
-      "version": 1,
+      "version": 2,
       "label": "Object physically caught",
       "activity": null,
       "objectEvent": true,
       "valueType": "text",
-      "description": "Emitted once after a successful native physical catch, never merely near a socket or on a missed attempt. Source and primary value are the incoming object ID; holder and part identify the actual catcher, speed is the incoming world speed in metres/second, and x/y/z are the captured volume centre. The event is queued through the shared bounded scheduler; it does not grant mutation authority or replay after a pause/restart. Observe the attempt or receipt for later drop, manual takeover or failure.",
+      "description": "Emitted once after a successful native physical catch, never merely near a socket or on a missed attempt. Source and primary value are the incoming object ID; holder and part identify the actual catcher, speed is the incoming world speed in metres/second, and x/y/z are the captured volume centre in authored room coordinates at catch time. A queued point remains in that room after virtual-world movement; it is not a persistent real-surface anchor. The event is queued through the shared bounded scheduler; it does not grant mutation authority or replay after a pause/restart. Observe the attempt or receipt for later drop, manual takeover or failure.",
       "features": [
         "eventPrograms.v1",
         "eventFields.v1",
@@ -30081,12 +30081,12 @@
     },
     {
       "id": "object.collided",
-      "version": 1,
+      "version": 2,
       "label": "Object contact began",
       "activity": null,
       "objectEvent": true,
       "valueType": "text",
-      "description": "A physics contact began while room physics was running. Value is the source object ID. otherId is a registered room object ID or empty; otherKind distinguishes object, scannedRoom, controller and environment. speed is relative speed in metres/second; x/y/z are one contact point in world metres. Compound colliders can produce separate contacts. This is not a continuous contact or precise impact-energy measurement. Fields do not authorize editing new objects.",
+      "description": "A physics contact began while room physics was running. Value is the source object ID. otherId is a registered room object ID or empty; otherKind distinguishes object, scannedRoom, controller and environment. speed is relative speed in metres/second; x/y/z are one contact point captured in authored room coordinates when the contact begins. A queued point stays in that room after virtual-world movement; it is not a persistent anchor to a real surface. Compound colliders can produce separate contacts. This is not a continuous contact or precise impact-energy measurement. Fields do not authorize editing new objects.",
       "features": [
         "eventPrograms.v1",
         "eventFields.v1"
@@ -30985,7 +30985,7 @@
     },
     {
       "id": "object.physics.trajectory",
-      "version": 1,
+      "version": 2,
       "type": {
         "record": {
           "ready": "boolean",
@@ -31017,7 +31017,7 @@
         }
       },
       "label": "Preview aimed throw",
-      "description": "Read a fresh bounded estimate using the exact same arguments and collision checks as Aim and throw object. ready=false gives a reason; numerical fields are zero placeholders when not ready. This never launches, reserves or authorizes motion. Ready estimates are instantaneous snapshots, with no guarantee of arrival or a moving target remaining in place.",
+      "description": "Read a fresh bounded estimate using the exact same arguments and collision checks as Aim and throw object. ready=false gives a reason; numerical fields are zero placeholders when not ready. This never launches, reserves or authorizes motion. Point inputs and result origin/destination use authored room coordinates. Velocity is physical metres/second along room axes; speed and radius use physical units. Ready estimates are instantaneous snapshots, with no guarantee of arrival or a moving target remaining in place.",
       "input": {
         "type": "object",
         "properties": {
@@ -31076,7 +31076,7 @@
                   "kind"
                 ],
                 "additionalProperties": false,
-                "title": "World point"
+                "title": "Room point"
               },
               {
                 "type": "object",
@@ -33170,7 +33170,7 @@
     },
     {
       "id": "object.recipe.pose",
-      "version": 1,
+      "version": 2,
       "type": {
         "record": {
           "target": "text",
@@ -33196,7 +33196,7 @@
               }
             }
           },
-          "world": {
+          "room": {
             "record": {
               "position": {
                 "record": {
@@ -33219,7 +33219,7 @@
         }
       },
       "label": "Live recipe part pose",
-      "description": "Read one named part's current local/world position and unit rotation, exact saved object revision, parent and whether that track is playing. Local coordinates are relative to its parent; world coordinates use the current room origin. Parent motion carries descendants. Reads neither start playback nor grant edit authority. Missing, inactive or non-recipe parts are unavailable; parts without tracks are still readable. This is a live observation, never a saved key or independent physical body.",
+      "description": "Read one named part's current local/room position and unit rotation, exact saved object revision, parent and whether that track is playing. Local coordinates are relative to its parent; room coordinates use the authored room frame, independent of virtual-world translation or yaw. Parent motion carries descendants. Reads neither start playback nor grant edit authority. Missing, inactive or non-recipe parts are unavailable; parts without tracks are still readable. This is a live observation, never a saved key or independent physical body.",
       "input": {
         "type": "object",
         "properties": {
@@ -33251,7 +33251,7 @@
     },
     {
       "id": "object.anchor",
-      "version": 1,
+      "version": 2,
       "type": {
         "record": {
           "holder": "text",
@@ -33276,7 +33276,7 @@
         }
       },
       "label": "Live attachment point",
-      "description": "Read the exact selected anchor in world coordinates using the same admission checks as object.hold. Part is a recipe ID, left/right hand, or empty for a root. Offset units scale with the holder root; returned scale is that root's uniform scale. Matching revision/hash is required; held/missing/replaced anchors fail. This does not reserve an object, fit a prop, start motion or grant mutation authority.",
+      "description": "Read the exact selected anchor in authored room coordinates using the same admission checks as object.hold. Part is a recipe ID, left/right hand, or empty for a root. Offset units scale with the holder root; returned scale is that root's uniform scale relative to the authored room. Room translation/yaw does not change the returned pose; this is a snapshot, not a persistent real-surface anchor. Matching revision/hash is required; held/missing/replaced anchors fail. This does not reserve an object, fit a prop, start motion or grant mutation authority.",
       "input": {
         "type": "object",
         "properties": {
@@ -33451,7 +33451,7 @@
     },
     {
       "id": "object.position",
-      "version": 1,
+      "version": 2,
       "type": {
         "record": {
           "x": "number",
@@ -33459,8 +33459,8 @@
           "z": "number"
         }
       },
-      "label": "Object world position",
-      "description": "Current transform origin in Unity world metres as a record {x,y,z}. This is not a mesh centre, surface, floor height or navigation destination. Target may be the book, Maestro or an existing creation. Grabs, animations and physics all affect the reading; physics need not run. Missing/disabled targets, invalid positions and paused app runtime are unavailable. Reads take no ownership, grant no editing authority and do not subscribe. Save the result in a local when several calculations need the same snapshot. World coordinates may change after recentering/alignment; do not treat them as durable room anchors.",
+      "label": "Object room position",
+      "description": "Current transform origin in authored room coordinates as a record {x,y,z}, matching object.position.set and layout inputs. This is not a mesh centre, surface, floor height or navigation destination. Target may be the book, Maestro or an existing creation. Grabs, animations and physics all affect the reading; physics need not run. Missing/disabled targets, invalid positions and paused app runtime are unavailable. Reads take no ownership, grant no editing authority and do not subscribe. Save the result in a local when several calculations need the same snapshot. Virtual-world translation or yaw does not change this snapshot. It identifies a place in this authored room, not a persistent anchor to a physical surface or a point in another room. Invalid room frames are unavailable.",
       "input": {
         "type": "object",
         "properties": {
@@ -35419,7 +35419,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "040974d53259136f2263b80c4cb88fdcba37b6005fbcd1293b0641dec6bff722"
+      "sha256": "6b764c286a8fe9e2078adf995870ee55a0e8c047e32a310544df88c376bf9a28"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -35443,7 +35443,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
-      "sha256": "67c99f8863e7a5ff90be1ba69822060df5d9dd99f66d103f617fc44606b511a5"
+      "sha256": "004cbe142c18b7aaeebb6f0412372c47d075bd1e7248ecc7a32cc99642950ba5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramMachine.cs",
@@ -35555,7 +35555,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramSubscriptions.cs",
-      "sha256": "6c38762b122ec0b22b9b29c73bbde4e5ee3eeee5ba4318a602e102075521b6b6"
+      "sha256": "28b012e2d482d8a609fd741db97f3e05613317a1888086022487cb4f226c3c40"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/PhysicsMotionSubscription.cs",
@@ -35563,11 +35563,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/AnchorProximitySubscription.cs",
-      "sha256": "0d7aa30df2b44424668b85a591fb9db371c664ae00ea44c2d6ef37342a3fbc66"
+      "sha256": "be52c08ec6bec3bb2083426d91e2abad7a13ec8248281b9fa1686576fbccd411"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomAnchorProbe.cs",
-      "sha256": "9ea0f817ae370727529db83270e48b887ed98159905f6c1ee8383f009c1c7ece"
+      "sha256": "3f1c79540671baeb9012a80bf90585e8f8521e1376753b1d512f1af938435ab1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CalendarSubscription.cs",
@@ -35575,11 +35575,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RoomRuleActions.cs",
-      "sha256": "54aebadfdefb9dc7a4ffd2b7e3c192f182c67138d89a50b472275c33a06b910e"
+      "sha256": "531b74fbe481cc001e80af85a68fc7061ed9f526be0bd8821b0a122fd7f3d555"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RoomRules.cs",
-      "sha256": "6434ccd58dd8de4780e2c81d23a435dae75639fb44d1f679e24a81dfc919fce6"
+      "sha256": "efc0f59f98e9745f7aef172054a67f26ffff845301dcc190bbd23fb4e0f782ba"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleWorkshop.cs",
@@ -35595,7 +35595,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/NativeObjectFacts.cs",
-      "sha256": "63e9576093f5aa6ae38979911dae0d4b22efa0b216f71115bf4ebb5fc4f50855"
+      "sha256": "f1343166c8d560c4ea997c6e6c12659b74f71deaac194abfa57955c11abbe80c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramData.cs",
@@ -36359,7 +36359,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CatchObjectCapability.cs",
-      "sha256": "e3d14314a321043e0a8fdb1857df7db8d8c100e341743d7472689b24e1ea6506"
+      "sha256": "8f43d34ee6a87d214181c06d53a0e4dc265638f1d95ab9429506880ff0816755"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CollisionCapability.cs",
@@ -36475,7 +36475,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/LaunchObjectCapability.cs",
-      "sha256": "f1e705fd9bfc6dc72041eff724e9a5787a5bb0c3e912c977b73c5e9a3e9668c5"
+      "sha256": "2b705c4b256911517338361267f7ecbbd1721886b5b0aad68974a02be5eba894"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/LayoutCapability.cs",
@@ -36511,11 +36511,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectAttachmentFacts.cs",
-      "sha256": "36a2c4394036cf80edfa10c41e0f720e07d7f37a9e7c517715a7fc079d1ccf45"
+      "sha256": "c198d84ebf50e5d98a1a8e7de6404c6daac57cd232b500ad75bd5e7b4423b44f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectCapabilities.cs",
-      "sha256": "fffc1ec8894cacc47949219370a2c4bec765ae094c89999264d400f9e44c95f0"
+      "sha256": "df1ec39462ed48da06b8b4bef603b08a4346482d4e9b498a665e076f9e78730b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicalSculptCapability.cs",
@@ -36555,7 +36555,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RecipePartAnimationFacts.cs",
-      "sha256": "2f64f17185e25d2a9c038e29b891de31ead7d0d00849a4f44256ace3810e0379"
+      "sha256": "d7e2723c4eb0fb4ba029df6389b3d39ddef007ccecceaa6989f6f2448e4cdacd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RecordedAnimationCapabilities.cs",

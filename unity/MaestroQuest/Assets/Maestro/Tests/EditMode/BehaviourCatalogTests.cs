@@ -27,7 +27,7 @@ namespace Maestro.Quest.Tests
             Assert.That(ids,Is.EqualTo(BehaviourCatalog.Events.Select(x=>x.Id).OrderBy(x=>x,StringComparer.Ordinal)));
             pages.Last()["entries"][0]["label"]="Changed by caller";
             Assert.That((string)catalog.Observe()["entries"][0]["label"],Is.Not.EqualTo("Changed by caller"));
-            var inspected=Query("{\"operation\":\"inspect\",\"category\":\"events\",\"capability\":\"object.collided\",\"version\":1}");
+            var inspected=Query("{\"operation\":\"inspect\",\"category\":\"events\",\"capability\":\"object.collided\",\"version\":2}");
             Assert.That(JToken.DeepEquals(inspected["definition"],BehaviourCatalog.Events.Single(x=>x.Id=="object.collided").ToJson()),Is.True);
             inspected["definition"]["fields"]["properties"]["speed"]["type"]="string";
             Assert.That((string)catalog.Observe()["definition"]["fields"]["properties"]["speed"]["type"],Is.EqualTo("number"));
@@ -35,13 +35,13 @@ namespace Maestro.Quest.Tests
             Assert.That((bool)unavailable["available"],Is.False);Assert.That(unavailable["value"].Type,Is.EqualTo(JTokenType.Null));
             Assert.That(JToken.DeepEquals(unavailable["definition"],BehaviourCatalog.Fact("physics.ready").ToJson()),Is.True);
             foreach(var category in new[]{"actions","events","facts"}) {
-                var unknown=Query("{\"operation\":\"inspect\",\"category\":\""+category+"\",\"capability\":\"object.collided\",\"version\":2}");
+                var unknown=Query("{\"operation\":\"inspect\",\"category\":\""+category+"\",\"capability\":\"object.collided\",\"version\":1}");
                 Assert.That(unknown["definition"].Type,Is.EqualTo(JTokenType.Null));
             }
             foreach(var invalid in new[]{
                 "{\"operation\":\"search\",\"category\":\"unknown\",\"query\":\"\",\"offset\":0}",
                 "{\"operation\":\"search\",\"category\":null,\"query\":\"\",\"offset\":0}",
-                "{\"operation\":\"inspect\",\"category\":\"events\",\"capability\":\"object.collided\",\"version\":1,\"run\":true}",
+                "{\"operation\":\"inspect\",\"category\":\"events\",\"capability\":\"object.collided\",\"version\":2,\"run\":true}",
                 "{\"operation\":\"check\",\"category\":\"facts\",\"call\":{\"id\":\"time.wait\",\"version\":1,\"arguments\":{\"seconds\":1}}}"})
                 Assert.That(RoomCapabilityCatalog.ValidRequest(JObject.Parse(invalid)),Is.False,invalid);
             var factSearch=Query("{\"operation\":\"search\",\"category\":\"facts\",\"query\":\"suspension\",\"offset\":0}");

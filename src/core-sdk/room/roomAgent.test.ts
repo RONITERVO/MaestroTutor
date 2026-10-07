@@ -230,7 +230,7 @@ import contactProgram from '../../../unity/MaestroQuest/Assets/Maestro/Tests/Fix
 it('discovers event payloads and live facts before saving a program without starting it',async()=>{
  const queries:RoomCommand[]=[
   {action:'catalog',catalog:{operation:'search',category:'events',query:'contact',offset:0}},
-  {action:'catalog',catalog:{operation:'inspect',category:'events',capability:'object.collided',version:1}},
+  {action:'catalog',catalog:{operation:'inspect',category:'events',capability:'object.collided',version:2}},
   {action:'catalog',catalog:{operation:'search',category:'facts',query:'ready',offset:0}},
   {action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'physics.ready',version:1}},
  ];
@@ -274,8 +274,8 @@ it('inspects native subscription parameters then saves the same program without 
 import objectFactProgram from '../../../unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-object-facts.json';
 import conditionProgram from '../../../unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-conditions.json';
 it.each([objectFactProgram,conditionProgram])('passes queried object records back to the existing agent and saves the shared observer without starting it',async(program)=>{
- const inspect:RoomCommand={action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.position',version:1}};
- const read:RoomCommand={action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.position',version:1,arguments:{target:'book'}}};
+ const inspect:RoomCommand={action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.position',version:2}};
+ const read:RoomCommand={action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.position',version:2,arguments:{target:'book'}}};
  const save:RoomCommand={action:'rules',rule:{action:'edit',revision:1,edits:[{kind:'save',reference:'position',sequence:{id:'',name:'Observe position',interruption:0,repeat:false,program:JSON.stringify(program)}}]}};
  const ai=client([inspect,read,save].map(command=>JSON.stringify({commands:[command]})).concat('{"commands":[]}'));
  let current:RoomAgentState={...scene,capabilities:['catalog.v1','catalogVocabulary.v1','factQueries.v1','behaviourPrograms.v3','eventPrograms.v1','structuredValues.v1','conditionWaits.v1']};

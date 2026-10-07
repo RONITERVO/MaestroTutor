@@ -4,7 +4,7 @@
     "parallelVersion": 1,
     "entry": "main",
     "resources": [
-      "dff5a562e30e47aea3c8e874a5d32c89"
+      "7abcc62ddb6d4b5e93b044d2e8bc1ee5"
     ],
     "state": [],
     "events": [],
@@ -23,7 +23,7 @@
                 "function": "animate",
                 "args": [
                   {
-                    "value": "dff5a562e30e47aea3c8e874a5d32c89"
+                    "value": "7abcc62ddb6d4b5e93b044d2e8bc1ee5"
                   },
                   {
                     "value": "RightUpperArm"
@@ -37,7 +37,7 @@
                 "function": "animate",
                 "args": [
                   {
-                    "value": "dff5a562e30e47aea3c8e874a5d32c89"
+                    "value": "7abcc62ddb6d4b5e93b044d2e8bc1ee5"
                   },
                   {
                     "value": "RightLowerArm"
@@ -106,15 +106,26 @@
     "revision": 1,
     "sceneRevision": 3,
     "ack": 0,
-    "session": "99c2701bd30b496fb6683448cb1e1747",
+    "session": "082259360e074f26afa683271617d90d",
     "status": "Room actions ready",
-    "selectedId": "acce86aaa5634792b9ce0cbb5f9a54fa",
+    "selectedId": "9dd1b0461a73426197b362837ae96e8a",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
     "physicsRunning": false,
     "visible": true,
     "inspection": null,
+    "constructionSelection": {
+      "stateId": "f29af8fec7be4be6bae1c8008dfb36c6",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "f29af8fec7be4be6bae1c8008dfb36c6",
+      "error": "",
+      "visible": false,
+      "holding": false
+    },
     "workspaceView": "rules",
     "rules": {
       "revision": 20,
@@ -130,7 +141,7 @@
       "selectedError": "",
       "sequences": [
         {
-          "id": "62770235338e4285a5c7f6495c411c5b",
+          "id": "b1f017395f554bbcb8e91384714cdb81",
           "name": "Action 1",
           "error": "",
           "steps": 1,
@@ -138,7 +149,7 @@
           "program": true
         },
         {
-          "id": "97da5ba4121441cebfb22d439e87a6ba",
+          "id": "24a534d8e3b140488ec41b9e6e540916",
           "name": "Robot arm parts together",
           "error": "",
           "steps": 2,
@@ -147,11 +158,25 @@
         }
       ],
       "selected": {
-        "id": "97da5ba4121441cebfb22d439e87a6ba",
+        "id": "24a534d8e3b140488ec41b9e6e540916",
         "name": "Robot arm parts together",
         "interruption": 0,
         "repeat": false,
-        "program": "{\"version\":3,\"parallelVersion\":1,\"entry\":\"main\",\"resources\":[\"dff5a562e30e47aea3c8e874a5d32c89\"],\"state\":[],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[],\"body\":[{\"id\":\"together\",\"op\":\"parallel\",\"branches\":[{\"function\":\"animate\",\"args\":[{\"value\":\"dff5a562e30e47aea3c8e874a5d32c89\"},{\"value\":\"RightUpperArm\"},{\"value\":0.8}]},{\"function\":\"animate\",\"args\":[{\"value\":\"dff5a562e30e47aea3c8e874a5d32c89\"},{\"value\":\"RightLowerArm\"},{\"value\":1.2}]}]}]},{\"name\":\"animate\",\"returns\":\"void\",\"parameters\":[{\"name\":\"target\",\"type\":\"text\"},{\"name\":\"part\",\"type\":\"text\"},{\"name\":\"seconds\",\"type\":\"number\"}],\"locals\":[],\"body\":[{\"id\":\"playPart\",\"op\":\"invoke\",\"capability\":\"animation.play\",\"version\":1,\"arguments\":{\"target\":\"00000000000000000000000000000000\",\"source\":{\"kind\":\"recipe\",\"part\":\"RightUpperArm\"},\"channel\":\"recipePart\",\"seconds\":1,\"loop\":false},\"bindings\":{\"target\":{\"var\":\"target\"},\"source.part\":{\"var\":\"part\"},\"seconds\":{\"var\":\"seconds\"}}}]}]}"
+        "program": "{\"version\":3,\"parallelVersion\":1,\"entry\":\"main\",\"resources\":[\"7abcc62ddb6d4b5e93b044d2e8bc1ee5\"],\"state\":[],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[],\"body\":[{\"id\":\"together\",\"op\":\"parallel\",\"branches\":[{\"function\":\"animate\",\"args\":[{\"value\":\"7abcc62ddb6d4b5e93b044d2e8bc1ee5\"},{\"value\":\"RightUpperArm\"},{\"value\":0.8}]},{\"function\":\"animate\",\"args\":[{\"value\":\"7abcc62ddb6d4b5e93b044d2e8bc1ee5\"},{\"value\":\"RightLowerArm\"},{\"value\":1.2}]}]}]},{\"name\":\"animate\",\"returns\":\"void\",\"parameters\":[{\"name\":\"target\",\"type\":\"text\"},{\"name\":\"part\",\"type\":\"text\"},{\"name\":\"seconds\",\"type\":\"number\"}],\"locals\":[],\"body\":[{\"id\":\"playPart\",\"op\":\"invoke\",\"capability\":\"animation.play\",\"version\":1,\"arguments\":{\"target\":\"00000000000000000000000000000000\",\"source\":{\"kind\":\"recipe\",\"part\":\"RightUpperArm\"},\"channel\":\"recipePart\",\"seconds\":1,\"loop\":false},\"bindings\":{\"target\":{\"var\":\"target\"},\"source.part\":{\"var\":\"part\"},\"seconds\":{\"var\":\"seconds\"}}}]}]}"
+      },
+      "memory": {
+        "ready": true,
+        "pending": false,
+        "busy": false,
+        "temporary": false,
+        "error": "",
+        "revision": "initial",
+        "programId": "24a534d8e3b140488ec41b9e6e540916",
+        "sessionId": "c80946472799499fb1861e2c4fe52f43",
+        "page": 0,
+        "count": 0,
+        "programs": [],
+        "cells": []
       },
       "bindings": [],
       "buttons": [],
@@ -169,12 +194,15 @@
       "catalogVocabulary.v1",
       "roomOwnership.v1",
       "behaviourPrograms.v3",
+      "worldAudio.v1",
       "eventPrograms.v1",
       "eventFields.v1",
       "eventSubscriptions.v1",
       "factQueries.v1",
       "conditionWaits.v1",
       "parallelPrograms.v1",
+      "rememberedVariables.v1",
+      "temporaryMemory.v1",
       "structuredValues.v1",
       "programModules.v1",
       "moduleLibrary.v1",
@@ -183,22 +211,72 @@
       "executionReceipts.v1",
       "actionResults.v1",
       "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
       "objectEdits.v1",
       "objectCopy.v1",
       "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "curvedDrawingSurfaces.v1",
+      "drawingTips.v1",
+      "drawingErasers.v1",
+      "containers.v1",
+      "rectangularContainers.v1",
+      "heightFields.v1",
+      "heightFieldTransfer.v1",
+      "materialStores.v1",
+      "materialTransfer.v1",
+      "materialPacking.v1",
+      "physicalMaterialPacking.v1",
+      "physicalSculpting.v1",
+      "physicalMaterialTools.v1",
+      "containerPouring.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
       "recipeEdits.v1",
+      "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "recipePatterns.v1",
+      "roomViewCapture.v1",
+      "collisionShapes.v1",
       "recipePartPlayback.v1",
+      "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
+      "objectLaunch.v1",
+      "physicalCatching.v1",
+      "calendarSchedules.v1",
       "animationAuthoring.v1",
       "animationRecording.v1",
       "animationPosing.v1",
       "avatarModels.v1",
       "modelImport.v1",
+      "modelArchiveImport.v1",
       "motionBatchImport.v1",
+      "includedMotions.v1",
+      "authoredMotion.v1",
       "unavailablePrograms.v1",
       "actionRecovery.v1",
       "temporaryRoom.v1",
       "spatialSettings.v1",
-      "physicsSimulation.v1"
+      "physicsSimulation.v1",
+      "physicsEnvironment.v1"
     ],
     "physics": {
       "ready": false,
@@ -208,7 +286,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "7b95565e261146d6a966e7abcc033b2d",
+      "id": "c80946472799499fb1861e2c4fe52f43",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -250,7 +328,7 @@
     },
     "objects": [
       {
-        "id": "99af209880f14265819a68ea755c3bc6",
+        "id": "1e3ff264b57247b7ae34c69e70b49c46",
         "name": "Ball",
         "kind": "Ball",
         "objectRevision": 4,
@@ -277,20 +355,20 @@
         "movement": null
       },
       {
-        "id": "a8c8fe2d27c04966875459f7b061d52a",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
+        "id": "7abcc62ddb6d4b5e93b044d2e8bc1ee5",
+        "name": "Practice robot",
+        "kind": "Assembly",
+        "objectRevision": 7,
         "position": {
-          "x": 0.86000001430511475,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
+          "x": 0.30000001192092896,
+          "y": 1.2999999523162842,
+          "z": 0.64999997615814209
         },
         "scale": 1.0,
         "color": {
-          "r": 0.16862745583057404,
-          "g": 0.55294120311737061,
-          "b": 0.53333336114883423,
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
           "a": 1.0
         },
         "animated": false,
@@ -304,7 +382,7 @@
         "movement": null
       },
       {
-        "id": "acce86aaa5634792b9ce0cbb5f9a54fa",
+        "id": "9dd1b0461a73426197b362837ae96e8a",
         "name": "Block",
         "kind": "Block",
         "objectRevision": 6,
@@ -358,20 +436,20 @@
         "movement": null
       },
       {
-        "id": "dff5a562e30e47aea3c8e874a5d32c89",
-        "name": "Practice robot",
-        "kind": "Assembly",
-        "objectRevision": 7,
+        "id": "c80de4e8d7ab40fcb4e4a386858c33e5",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
         "position": {
-          "x": 0.30000001192092896,
-          "y": 1.2999999523162842,
-          "z": 0.64999997615814209
+          "x": 0.86000001430511475,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
         },
         "scale": 1.0,
         "color": {
-          "r": 1.0,
-          "g": 1.0,
-          "b": 1.0,
+          "r": 0.16862745583057404,
+          "g": 0.55294120311737061,
+          "b": 0.53333336114883423,
           "a": 1.0
         },
         "animated": false,
@@ -416,18 +494,19 @@
       }
     ],
     "created": [],
+    "capture": null,
     "catalog": null,
     "execution": {
       "selected": null,
       "running": [],
       "outcomes": [],
-      "nextRunId": "23a05f7981c34e25a80da10e6d184620",
+      "nextRunId": "7a629b5b83fc47d280ecd24139499860",
       "storageError": null,
       "recovery": null
     }
   },
   "savedPose": {
-    "target": "dff5a562e30e47aea3c8e874a5d32c89",
+    "target": "7abcc62ddb6d4b5e93b044d2e8bc1ee5",
     "part": "RightUpperArm",
     "parent": "Chest",
     "revision": 7,
@@ -444,7 +523,7 @@
         "w": 1.0
       }
     },
-    "world": {
+    "room": {
       "position": {
         "x": 0.51999998092651367,
         "y": 2.0199999809265137,
@@ -464,15 +543,26 @@
     "revision": 2,
     "sceneRevision": 3,
     "ack": 0,
-    "session": "99c2701bd30b496fb6683448cb1e1747",
+    "session": "082259360e074f26afa683271617d90d",
     "status": "Room actions ready",
-    "selectedId": "acce86aaa5634792b9ce0cbb5f9a54fa",
+    "selectedId": "9dd1b0461a73426197b362837ae96e8a",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
     "physicsRunning": false,
     "visible": true,
     "inspection": null,
+    "constructionSelection": {
+      "stateId": "f29af8fec7be4be6bae1c8008dfb36c6",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "f29af8fec7be4be6bae1c8008dfb36c6",
+      "error": "",
+      "visible": false,
+      "holding": false
+    },
     "workspaceView": "rules",
     "rules": {
       "revision": 20,
@@ -488,7 +578,7 @@
       "selectedError": "",
       "sequences": [
         {
-          "id": "62770235338e4285a5c7f6495c411c5b",
+          "id": "b1f017395f554bbcb8e91384714cdb81",
           "name": "Action 1",
           "error": "",
           "steps": 1,
@@ -496,7 +586,7 @@
           "program": true
         },
         {
-          "id": "97da5ba4121441cebfb22d439e87a6ba",
+          "id": "24a534d8e3b140488ec41b9e6e540916",
           "name": "Robot arm parts together",
           "error": "",
           "steps": 2,
@@ -505,19 +595,33 @@
         }
       ],
       "selected": {
-        "id": "97da5ba4121441cebfb22d439e87a6ba",
+        "id": "24a534d8e3b140488ec41b9e6e540916",
         "name": "Robot arm parts together",
         "interruption": 0,
         "repeat": false,
-        "program": "{\"version\":3,\"parallelVersion\":1,\"entry\":\"main\",\"resources\":[\"dff5a562e30e47aea3c8e874a5d32c89\"],\"state\":[],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[],\"body\":[{\"id\":\"together\",\"op\":\"parallel\",\"branches\":[{\"function\":\"animate\",\"args\":[{\"value\":\"dff5a562e30e47aea3c8e874a5d32c89\"},{\"value\":\"RightUpperArm\"},{\"value\":0.8}]},{\"function\":\"animate\",\"args\":[{\"value\":\"dff5a562e30e47aea3c8e874a5d32c89\"},{\"value\":\"RightLowerArm\"},{\"value\":1.2}]}]}]},{\"name\":\"animate\",\"returns\":\"void\",\"parameters\":[{\"name\":\"target\",\"type\":\"text\"},{\"name\":\"part\",\"type\":\"text\"},{\"name\":\"seconds\",\"type\":\"number\"}],\"locals\":[],\"body\":[{\"id\":\"playPart\",\"op\":\"invoke\",\"capability\":\"animation.play\",\"version\":1,\"arguments\":{\"target\":\"00000000000000000000000000000000\",\"source\":{\"kind\":\"recipe\",\"part\":\"RightUpperArm\"},\"channel\":\"recipePart\",\"seconds\":1,\"loop\":false},\"bindings\":{\"target\":{\"var\":\"target\"},\"source.part\":{\"var\":\"part\"},\"seconds\":{\"var\":\"seconds\"}}}]}]}"
+        "program": "{\"version\":3,\"parallelVersion\":1,\"entry\":\"main\",\"resources\":[\"7abcc62ddb6d4b5e93b044d2e8bc1ee5\"],\"state\":[],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[],\"body\":[{\"id\":\"together\",\"op\":\"parallel\",\"branches\":[{\"function\":\"animate\",\"args\":[{\"value\":\"7abcc62ddb6d4b5e93b044d2e8bc1ee5\"},{\"value\":\"RightUpperArm\"},{\"value\":0.8}]},{\"function\":\"animate\",\"args\":[{\"value\":\"7abcc62ddb6d4b5e93b044d2e8bc1ee5\"},{\"value\":\"RightLowerArm\"},{\"value\":1.2}]}]}]},{\"name\":\"animate\",\"returns\":\"void\",\"parameters\":[{\"name\":\"target\",\"type\":\"text\"},{\"name\":\"part\",\"type\":\"text\"},{\"name\":\"seconds\",\"type\":\"number\"}],\"locals\":[],\"body\":[{\"id\":\"playPart\",\"op\":\"invoke\",\"capability\":\"animation.play\",\"version\":1,\"arguments\":{\"target\":\"00000000000000000000000000000000\",\"source\":{\"kind\":\"recipe\",\"part\":\"RightUpperArm\"},\"channel\":\"recipePart\",\"seconds\":1,\"loop\":false},\"bindings\":{\"target\":{\"var\":\"target\"},\"source.part\":{\"var\":\"part\"},\"seconds\":{\"var\":\"seconds\"}}}]}]}"
+      },
+      "memory": {
+        "ready": true,
+        "pending": false,
+        "busy": true,
+        "temporary": false,
+        "error": "",
+        "revision": "initial",
+        "programId": "24a534d8e3b140488ec41b9e6e540916",
+        "sessionId": "c80946472799499fb1861e2c4fe52f43",
+        "page": 0,
+        "count": 0,
+        "programs": [],
+        "cells": []
       },
       "bindings": [],
       "buttons": [],
       "running": [
         {
           "parentRunId": "",
-          "id": "380ad43cd82a4543be3d4f20c66a4037",
-          "sequenceId": "97da5ba4121441cebfb22d439e87a6ba",
+          "id": "d34f73fc570f4594b1115b38f313c922",
+          "sequenceId": "24a534d8e3b140488ec41b9e6e540916",
           "preparing": false,
           "waiting": false,
           "waitEvent": "",
@@ -529,9 +633,9 @@
           "locals": []
         },
         {
-          "parentRunId": "380ad43cd82a4543be3d4f20c66a4037",
-          "id": "c8c0933196694fdc80ce80915a7b8a00",
-          "sequenceId": "97da5ba4121441cebfb22d439e87a6ba",
+          "parentRunId": "d34f73fc570f4594b1115b38f313c922",
+          "id": "03e18332309e4321b109eee6c1d495c7",
+          "sequenceId": "24a534d8e3b140488ec41b9e6e540916",
           "preparing": false,
           "waiting": false,
           "waitEvent": "",
@@ -544,7 +648,7 @@
             {
               "name": "target",
               "type": "text",
-              "value": "dff5a562e30e47aea3c8e874a5d32c89"
+              "value": "7abcc62ddb6d4b5e93b044d2e8bc1ee5"
             },
             {
               "name": "part",
@@ -559,9 +663,9 @@
           ]
         },
         {
-          "parentRunId": "380ad43cd82a4543be3d4f20c66a4037",
-          "id": "f477bbf06be745149c8f1e19fa40119f",
-          "sequenceId": "97da5ba4121441cebfb22d439e87a6ba",
+          "parentRunId": "d34f73fc570f4594b1115b38f313c922",
+          "id": "35eafce065134ba8a7a5f449c38d280d",
+          "sequenceId": "24a534d8e3b140488ec41b9e6e540916",
           "preparing": false,
           "waiting": false,
           "waitEvent": "",
@@ -574,7 +678,7 @@
             {
               "name": "target",
               "type": "text",
-              "value": "dff5a562e30e47aea3c8e874a5d32c89"
+              "value": "7abcc62ddb6d4b5e93b044d2e8bc1ee5"
             },
             {
               "name": "part",
@@ -602,12 +706,15 @@
       "catalogVocabulary.v1",
       "roomOwnership.v1",
       "behaviourPrograms.v3",
+      "worldAudio.v1",
       "eventPrograms.v1",
       "eventFields.v1",
       "eventSubscriptions.v1",
       "factQueries.v1",
       "conditionWaits.v1",
       "parallelPrograms.v1",
+      "rememberedVariables.v1",
+      "temporaryMemory.v1",
       "structuredValues.v1",
       "programModules.v1",
       "moduleLibrary.v1",
@@ -616,22 +723,72 @@
       "executionReceipts.v1",
       "actionResults.v1",
       "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
       "objectEdits.v1",
       "objectCopy.v1",
       "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "curvedDrawingSurfaces.v1",
+      "drawingTips.v1",
+      "drawingErasers.v1",
+      "containers.v1",
+      "rectangularContainers.v1",
+      "heightFields.v1",
+      "heightFieldTransfer.v1",
+      "materialStores.v1",
+      "materialTransfer.v1",
+      "materialPacking.v1",
+      "physicalMaterialPacking.v1",
+      "physicalSculpting.v1",
+      "physicalMaterialTools.v1",
+      "containerPouring.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
       "recipeEdits.v1",
+      "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "recipePatterns.v1",
+      "roomViewCapture.v1",
+      "collisionShapes.v1",
       "recipePartPlayback.v1",
+      "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
+      "objectLaunch.v1",
+      "physicalCatching.v1",
+      "calendarSchedules.v1",
       "animationAuthoring.v1",
       "animationRecording.v1",
       "animationPosing.v1",
       "avatarModels.v1",
       "modelImport.v1",
+      "modelArchiveImport.v1",
       "motionBatchImport.v1",
+      "includedMotions.v1",
+      "authoredMotion.v1",
       "unavailablePrograms.v1",
       "actionRecovery.v1",
       "temporaryRoom.v1",
       "spatialSettings.v1",
-      "physicsSimulation.v1"
+      "physicsSimulation.v1",
+      "physicsEnvironment.v1"
     ],
     "physics": {
       "ready": false,
@@ -641,7 +798,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "7b95565e261146d6a966e7abcc033b2d",
+      "id": "c80946472799499fb1861e2c4fe52f43",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -652,25 +809,25 @@
       "error": "",
       "owners": [
         {
-          "id": "c8c0933196694fdc80ce80915a7b8a00",
+          "id": "03e18332309e4321b109eee6c1d495c7",
           "label": "Robot arm parts together",
           "role": "program",
           "allowsGrab": false,
           "claims": [
             {
-              "target": "dff5a562e30e47aea3c8e874a5d32c89",
+              "target": "7abcc62ddb6d4b5e93b044d2e8bc1ee5",
               "channel": "recipePart:RightUpperArm"
             }
           ]
         },
         {
-          "id": "f477bbf06be745149c8f1e19fa40119f",
+          "id": "35eafce065134ba8a7a5f449c38d280d",
           "label": "Robot arm parts together",
           "role": "program",
           "allowsGrab": false,
           "claims": [
             {
-              "target": "dff5a562e30e47aea3c8e874a5d32c89",
+              "target": "7abcc62ddb6d4b5e93b044d2e8bc1ee5",
               "channel": "recipePart:RightLowerArm"
             }
           ]
@@ -708,7 +865,7 @@
     },
     "objects": [
       {
-        "id": "99af209880f14265819a68ea755c3bc6",
+        "id": "1e3ff264b57247b7ae34c69e70b49c46",
         "name": "Ball",
         "kind": "Ball",
         "objectRevision": 4,
@@ -735,23 +892,23 @@
         "movement": null
       },
       {
-        "id": "a8c8fe2d27c04966875459f7b061d52a",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
+        "id": "7abcc62ddb6d4b5e93b044d2e8bc1ee5",
+        "name": "Practice robot",
+        "kind": "Assembly",
+        "objectRevision": 7,
         "position": {
-          "x": 0.86000001430511475,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
+          "x": 0.30000001192092896,
+          "y": 1.2999999523162842,
+          "z": 0.64999997615814209
         },
         "scale": 1.0,
         "color": {
-          "r": 0.16862745583057404,
-          "g": 0.55294120311737061,
-          "b": 0.53333336114883423,
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
           "a": 1.0
         },
-        "animated": false,
+        "animated": true,
         "held": false,
         "simulating": false,
         "physics": {
@@ -762,7 +919,7 @@
         "movement": null
       },
       {
-        "id": "acce86aaa5634792b9ce0cbb5f9a54fa",
+        "id": "9dd1b0461a73426197b362837ae96e8a",
         "name": "Block",
         "kind": "Block",
         "objectRevision": 6,
@@ -816,23 +973,23 @@
         "movement": null
       },
       {
-        "id": "dff5a562e30e47aea3c8e874a5d32c89",
-        "name": "Practice robot",
-        "kind": "Assembly",
-        "objectRevision": 7,
+        "id": "c80de4e8d7ab40fcb4e4a386858c33e5",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
         "position": {
-          "x": 0.30000001192092896,
-          "y": 1.2999999523162842,
-          "z": 0.64999997615814209
+          "x": 0.86000001430511475,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
         },
         "scale": 1.0,
         "color": {
-          "r": 1.0,
-          "g": 1.0,
-          "b": 1.0,
+          "r": 0.16862745583057404,
+          "g": 0.55294120311737061,
+          "b": 0.53333336114883423,
           "a": 1.0
         },
-        "animated": true,
+        "animated": false,
         "held": false,
         "simulating": false,
         "physics": {
@@ -874,18 +1031,19 @@
       }
     ],
     "created": [],
+    "capture": null,
     "catalog": null,
     "execution": {
       "selected": null,
       "running": [],
       "outcomes": [],
-      "nextRunId": "23a05f7981c34e25a80da10e6d184620",
+      "nextRunId": "7a629b5b83fc47d280ecd24139499860",
       "storageError": null,
       "recovery": null
     }
   },
   "runningPose": {
-    "target": "dff5a562e30e47aea3c8e874a5d32c89",
+    "target": "7abcc62ddb6d4b5e93b044d2e8bc1ee5",
     "part": "RightUpperArm",
     "parent": "Chest",
     "revision": 7,
@@ -898,11 +1056,11 @@
       "rotation": {
         "x": 0.0,
         "y": 0.0,
-        "z": 0.49782422184944153,
-        "w": 0.867277979850769
+        "z": 0.48361098766326904,
+        "w": 0.87528306245803833
       }
     },
-    "world": {
+    "room": {
       "position": {
         "x": 0.51999998092651367,
         "y": 2.0199999809265137,
@@ -911,8 +1069,8 @@
       "rotation": {
         "x": 0.0,
         "y": 0.0,
-        "z": 0.49782422184944153,
-        "w": 0.867277979850769
+        "z": 0.48361098766326904,
+        "w": 0.87528306245803833
       }
     },
     "playing": true
@@ -922,15 +1080,26 @@
     "revision": 3,
     "sceneRevision": 3,
     "ack": 0,
-    "session": "99c2701bd30b496fb6683448cb1e1747",
+    "session": "082259360e074f26afa683271617d90d",
     "status": "Room actions ready",
-    "selectedId": "acce86aaa5634792b9ce0cbb5f9a54fa",
+    "selectedId": "9dd1b0461a73426197b362837ae96e8a",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
     "physicsRunning": false,
     "visible": true,
     "inspection": null,
+    "constructionSelection": {
+      "stateId": "f29af8fec7be4be6bae1c8008dfb36c6",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "f29af8fec7be4be6bae1c8008dfb36c6",
+      "error": "",
+      "visible": false,
+      "holding": false
+    },
     "workspaceView": "rules",
     "rules": {
       "revision": 20,
@@ -946,7 +1115,7 @@
       "selectedError": "",
       "sequences": [
         {
-          "id": "62770235338e4285a5c7f6495c411c5b",
+          "id": "b1f017395f554bbcb8e91384714cdb81",
           "name": "Action 1",
           "error": "",
           "steps": 1,
@@ -954,7 +1123,7 @@
           "program": true
         },
         {
-          "id": "97da5ba4121441cebfb22d439e87a6ba",
+          "id": "24a534d8e3b140488ec41b9e6e540916",
           "name": "Robot arm parts together",
           "error": "",
           "steps": 2,
@@ -963,19 +1132,33 @@
         }
       ],
       "selected": {
-        "id": "97da5ba4121441cebfb22d439e87a6ba",
+        "id": "24a534d8e3b140488ec41b9e6e540916",
         "name": "Robot arm parts together",
         "interruption": 0,
         "repeat": false,
-        "program": "{\"version\":3,\"parallelVersion\":1,\"entry\":\"main\",\"resources\":[\"dff5a562e30e47aea3c8e874a5d32c89\"],\"state\":[],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[],\"body\":[{\"id\":\"together\",\"op\":\"parallel\",\"branches\":[{\"function\":\"animate\",\"args\":[{\"value\":\"dff5a562e30e47aea3c8e874a5d32c89\"},{\"value\":\"RightUpperArm\"},{\"value\":0.8}]},{\"function\":\"animate\",\"args\":[{\"value\":\"dff5a562e30e47aea3c8e874a5d32c89\"},{\"value\":\"RightLowerArm\"},{\"value\":1.2}]}]}]},{\"name\":\"animate\",\"returns\":\"void\",\"parameters\":[{\"name\":\"target\",\"type\":\"text\"},{\"name\":\"part\",\"type\":\"text\"},{\"name\":\"seconds\",\"type\":\"number\"}],\"locals\":[],\"body\":[{\"id\":\"playPart\",\"op\":\"invoke\",\"capability\":\"animation.play\",\"version\":1,\"arguments\":{\"target\":\"00000000000000000000000000000000\",\"source\":{\"kind\":\"recipe\",\"part\":\"RightUpperArm\"},\"channel\":\"recipePart\",\"seconds\":1,\"loop\":false},\"bindings\":{\"target\":{\"var\":\"target\"},\"source.part\":{\"var\":\"part\"},\"seconds\":{\"var\":\"seconds\"}}}]}]}"
+        "program": "{\"version\":3,\"parallelVersion\":1,\"entry\":\"main\",\"resources\":[\"7abcc62ddb6d4b5e93b044d2e8bc1ee5\"],\"state\":[],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[],\"body\":[{\"id\":\"together\",\"op\":\"parallel\",\"branches\":[{\"function\":\"animate\",\"args\":[{\"value\":\"7abcc62ddb6d4b5e93b044d2e8bc1ee5\"},{\"value\":\"RightUpperArm\"},{\"value\":0.8}]},{\"function\":\"animate\",\"args\":[{\"value\":\"7abcc62ddb6d4b5e93b044d2e8bc1ee5\"},{\"value\":\"RightLowerArm\"},{\"value\":1.2}]}]}]},{\"name\":\"animate\",\"returns\":\"void\",\"parameters\":[{\"name\":\"target\",\"type\":\"text\"},{\"name\":\"part\",\"type\":\"text\"},{\"name\":\"seconds\",\"type\":\"number\"}],\"locals\":[],\"body\":[{\"id\":\"playPart\",\"op\":\"invoke\",\"capability\":\"animation.play\",\"version\":1,\"arguments\":{\"target\":\"00000000000000000000000000000000\",\"source\":{\"kind\":\"recipe\",\"part\":\"RightUpperArm\"},\"channel\":\"recipePart\",\"seconds\":1,\"loop\":false},\"bindings\":{\"target\":{\"var\":\"target\"},\"source.part\":{\"var\":\"part\"},\"seconds\":{\"var\":\"seconds\"}}}]}]}"
+      },
+      "memory": {
+        "ready": true,
+        "pending": false,
+        "busy": false,
+        "temporary": false,
+        "error": "",
+        "revision": "initial",
+        "programId": "24a534d8e3b140488ec41b9e6e540916",
+        "sessionId": "c80946472799499fb1861e2c4fe52f43",
+        "page": 0,
+        "count": 0,
+        "programs": [],
+        "cells": []
       },
       "bindings": [],
       "buttons": [],
       "running": [],
       "outcomes": [
         {
-          "id": "380ad43cd82a4543be3d4f20c66a4037",
-          "sequenceId": "97da5ba4121441cebfb22d439e87a6ba",
+          "id": "d34f73fc570f4594b1115b38f313c922",
+          "sequenceId": "24a534d8e3b140488ec41b9e6e540916",
           "phase": "completed",
           "nodeId": "together",
           "status": "Program completed"
@@ -993,12 +1176,15 @@
       "catalogVocabulary.v1",
       "roomOwnership.v1",
       "behaviourPrograms.v3",
+      "worldAudio.v1",
       "eventPrograms.v1",
       "eventFields.v1",
       "eventSubscriptions.v1",
       "factQueries.v1",
       "conditionWaits.v1",
       "parallelPrograms.v1",
+      "rememberedVariables.v1",
+      "temporaryMemory.v1",
       "structuredValues.v1",
       "programModules.v1",
       "moduleLibrary.v1",
@@ -1007,22 +1193,72 @@
       "executionReceipts.v1",
       "actionResults.v1",
       "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
       "objectEdits.v1",
       "objectCopy.v1",
       "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "curvedDrawingSurfaces.v1",
+      "drawingTips.v1",
+      "drawingErasers.v1",
+      "containers.v1",
+      "rectangularContainers.v1",
+      "heightFields.v1",
+      "heightFieldTransfer.v1",
+      "materialStores.v1",
+      "materialTransfer.v1",
+      "materialPacking.v1",
+      "physicalMaterialPacking.v1",
+      "physicalSculpting.v1",
+      "physicalMaterialTools.v1",
+      "containerPouring.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
       "recipeEdits.v1",
+      "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "recipePatterns.v1",
+      "roomViewCapture.v1",
+      "collisionShapes.v1",
       "recipePartPlayback.v1",
+      "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
+      "objectLaunch.v1",
+      "physicalCatching.v1",
+      "calendarSchedules.v1",
       "animationAuthoring.v1",
       "animationRecording.v1",
       "animationPosing.v1",
       "avatarModels.v1",
       "modelImport.v1",
+      "modelArchiveImport.v1",
       "motionBatchImport.v1",
+      "includedMotions.v1",
+      "authoredMotion.v1",
       "unavailablePrograms.v1",
       "actionRecovery.v1",
       "temporaryRoom.v1",
       "spatialSettings.v1",
-      "physicsSimulation.v1"
+      "physicsSimulation.v1",
+      "physicsEnvironment.v1"
     ],
     "physics": {
       "ready": false,
@@ -1032,7 +1268,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "7b95565e261146d6a966e7abcc033b2d",
+      "id": "c80946472799499fb1861e2c4fe52f43",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -1074,7 +1310,7 @@
     },
     "objects": [
       {
-        "id": "99af209880f14265819a68ea755c3bc6",
+        "id": "1e3ff264b57247b7ae34c69e70b49c46",
         "name": "Ball",
         "kind": "Ball",
         "objectRevision": 4,
@@ -1101,20 +1337,20 @@
         "movement": null
       },
       {
-        "id": "a8c8fe2d27c04966875459f7b061d52a",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
+        "id": "7abcc62ddb6d4b5e93b044d2e8bc1ee5",
+        "name": "Practice robot",
+        "kind": "Assembly",
+        "objectRevision": 7,
         "position": {
-          "x": 0.86000001430511475,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
+          "x": 0.30000001192092896,
+          "y": 1.2999999523162842,
+          "z": 0.64999997615814209
         },
         "scale": 1.0,
         "color": {
-          "r": 0.16862745583057404,
-          "g": 0.55294120311737061,
-          "b": 0.53333336114883423,
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
           "a": 1.0
         },
         "animated": false,
@@ -1128,7 +1364,7 @@
         "movement": null
       },
       {
-        "id": "acce86aaa5634792b9ce0cbb5f9a54fa",
+        "id": "9dd1b0461a73426197b362837ae96e8a",
         "name": "Block",
         "kind": "Block",
         "objectRevision": 6,
@@ -1182,20 +1418,20 @@
         "movement": null
       },
       {
-        "id": "dff5a562e30e47aea3c8e874a5d32c89",
-        "name": "Practice robot",
-        "kind": "Assembly",
-        "objectRevision": 7,
+        "id": "c80de4e8d7ab40fcb4e4a386858c33e5",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
         "position": {
-          "x": 0.30000001192092896,
-          "y": 1.2999999523162842,
-          "z": 0.64999997615814209
+          "x": 0.86000001430511475,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
         },
         "scale": 1.0,
         "color": {
-          "r": 1.0,
-          "g": 1.0,
-          "b": 1.0,
+          "r": 0.16862745583057404,
+          "g": 0.55294120311737061,
+          "b": 0.53333336114883423,
           "a": 1.0
         },
         "animated": false,
@@ -1240,18 +1476,19 @@
       }
     ],
     "created": [],
+    "capture": null,
     "catalog": null,
     "execution": {
       "selected": null,
       "running": [],
       "outcomes": [],
-      "nextRunId": "23a05f7981c34e25a80da10e6d184620",
+      "nextRunId": "7a629b5b83fc47d280ecd24139499860",
       "storageError": null,
       "recovery": null
     }
   },
   "completedPose": {
-    "target": "dff5a562e30e47aea3c8e874a5d32c89",
+    "target": "7abcc62ddb6d4b5e93b044d2e8bc1ee5",
     "part": "RightUpperArm",
     "parent": "Chest",
     "revision": 7,
@@ -1268,7 +1505,7 @@
         "w": 0.38268345594406128
       }
     },
-    "world": {
+    "room": {
       "position": {
         "x": 0.51999998092651367,
         "y": 2.0199999809265137,
@@ -1288,15 +1525,26 @@
     "revision": 4,
     "sceneRevision": 3,
     "ack": 0,
-    "session": "99c2701bd30b496fb6683448cb1e1747",
+    "session": "082259360e074f26afa683271617d90d",
     "status": "Room actions ready",
-    "selectedId": "dff5a562e30e47aea3c8e874a5d32c89",
+    "selectedId": "7abcc62ddb6d4b5e93b044d2e8bc1ee5",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
     "physicsRunning": false,
     "visible": true,
     "inspection": null,
+    "constructionSelection": {
+      "stateId": "f29af8fec7be4be6bae1c8008dfb36c6",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "f29af8fec7be4be6bae1c8008dfb36c6",
+      "error": "",
+      "visible": false,
+      "holding": false
+    },
     "workspaceView": "rules",
     "rules": {
       "revision": 20,
@@ -1312,7 +1560,7 @@
       "selectedError": "",
       "sequences": [
         {
-          "id": "62770235338e4285a5c7f6495c411c5b",
+          "id": "b1f017395f554bbcb8e91384714cdb81",
           "name": "Action 1",
           "error": "",
           "steps": 1,
@@ -1320,7 +1568,7 @@
           "program": true
         },
         {
-          "id": "97da5ba4121441cebfb22d439e87a6ba",
+          "id": "24a534d8e3b140488ec41b9e6e540916",
           "name": "Robot arm parts together",
           "error": "",
           "steps": 2,
@@ -1329,26 +1577,40 @@
         }
       ],
       "selected": {
-        "id": "97da5ba4121441cebfb22d439e87a6ba",
+        "id": "24a534d8e3b140488ec41b9e6e540916",
         "name": "Robot arm parts together",
         "interruption": 0,
         "repeat": false,
-        "program": "{\"version\":3,\"parallelVersion\":1,\"entry\":\"main\",\"resources\":[\"dff5a562e30e47aea3c8e874a5d32c89\"],\"state\":[],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[],\"body\":[{\"id\":\"together\",\"op\":\"parallel\",\"branches\":[{\"function\":\"animate\",\"args\":[{\"value\":\"dff5a562e30e47aea3c8e874a5d32c89\"},{\"value\":\"RightUpperArm\"},{\"value\":0.8}]},{\"function\":\"animate\",\"args\":[{\"value\":\"dff5a562e30e47aea3c8e874a5d32c89\"},{\"value\":\"RightLowerArm\"},{\"value\":1.2}]}]}]},{\"name\":\"animate\",\"returns\":\"void\",\"parameters\":[{\"name\":\"target\",\"type\":\"text\"},{\"name\":\"part\",\"type\":\"text\"},{\"name\":\"seconds\",\"type\":\"number\"}],\"locals\":[],\"body\":[{\"id\":\"playPart\",\"op\":\"invoke\",\"capability\":\"animation.play\",\"version\":1,\"arguments\":{\"target\":\"00000000000000000000000000000000\",\"source\":{\"kind\":\"recipe\",\"part\":\"RightUpperArm\"},\"channel\":\"recipePart\",\"seconds\":1,\"loop\":false},\"bindings\":{\"target\":{\"var\":\"target\"},\"source.part\":{\"var\":\"part\"},\"seconds\":{\"var\":\"seconds\"}}}]}]}"
+        "program": "{\"version\":3,\"parallelVersion\":1,\"entry\":\"main\",\"resources\":[\"7abcc62ddb6d4b5e93b044d2e8bc1ee5\"],\"state\":[],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[],\"body\":[{\"id\":\"together\",\"op\":\"parallel\",\"branches\":[{\"function\":\"animate\",\"args\":[{\"value\":\"7abcc62ddb6d4b5e93b044d2e8bc1ee5\"},{\"value\":\"RightUpperArm\"},{\"value\":0.8}]},{\"function\":\"animate\",\"args\":[{\"value\":\"7abcc62ddb6d4b5e93b044d2e8bc1ee5\"},{\"value\":\"RightLowerArm\"},{\"value\":1.2}]}]}]},{\"name\":\"animate\",\"returns\":\"void\",\"parameters\":[{\"name\":\"target\",\"type\":\"text\"},{\"name\":\"part\",\"type\":\"text\"},{\"name\":\"seconds\",\"type\":\"number\"}],\"locals\":[],\"body\":[{\"id\":\"playPart\",\"op\":\"invoke\",\"capability\":\"animation.play\",\"version\":1,\"arguments\":{\"target\":\"00000000000000000000000000000000\",\"source\":{\"kind\":\"recipe\",\"part\":\"RightUpperArm\"},\"channel\":\"recipePart\",\"seconds\":1,\"loop\":false},\"bindings\":{\"target\":{\"var\":\"target\"},\"source.part\":{\"var\":\"part\"},\"seconds\":{\"var\":\"seconds\"}}}]}]}"
+      },
+      "memory": {
+        "ready": true,
+        "pending": false,
+        "busy": false,
+        "temporary": false,
+        "error": "",
+        "revision": "initial",
+        "programId": "24a534d8e3b140488ec41b9e6e540916",
+        "sessionId": "c80946472799499fb1861e2c4fe52f43",
+        "page": 0,
+        "count": 0,
+        "programs": [],
+        "cells": []
       },
       "bindings": [],
       "buttons": [],
       "running": [],
       "outcomes": [
         {
-          "id": "380ad43cd82a4543be3d4f20c66a4037",
-          "sequenceId": "97da5ba4121441cebfb22d439e87a6ba",
+          "id": "d34f73fc570f4594b1115b38f313c922",
+          "sequenceId": "24a534d8e3b140488ec41b9e6e540916",
           "phase": "completed",
           "nodeId": "together",
           "status": "Program completed"
         },
         {
-          "id": "b99a01f5d20141fe9845ce08b18bc798",
-          "sequenceId": "97da5ba4121441cebfb22d439e87a6ba",
+          "id": "3e20498676974562a046d0af6c6e8bec",
+          "sequenceId": "24a534d8e3b140488ec41b9e6e540916",
           "phase": "cancelled",
           "nodeId": "playPart",
           "status": "Branch animate: Interrupted by Your grip"
@@ -1366,12 +1628,15 @@
       "catalogVocabulary.v1",
       "roomOwnership.v1",
       "behaviourPrograms.v3",
+      "worldAudio.v1",
       "eventPrograms.v1",
       "eventFields.v1",
       "eventSubscriptions.v1",
       "factQueries.v1",
       "conditionWaits.v1",
       "parallelPrograms.v1",
+      "rememberedVariables.v1",
+      "temporaryMemory.v1",
       "structuredValues.v1",
       "programModules.v1",
       "moduleLibrary.v1",
@@ -1380,22 +1645,72 @@
       "executionReceipts.v1",
       "actionResults.v1",
       "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
       "objectEdits.v1",
       "objectCopy.v1",
       "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "curvedDrawingSurfaces.v1",
+      "drawingTips.v1",
+      "drawingErasers.v1",
+      "containers.v1",
+      "rectangularContainers.v1",
+      "heightFields.v1",
+      "heightFieldTransfer.v1",
+      "materialStores.v1",
+      "materialTransfer.v1",
+      "materialPacking.v1",
+      "physicalMaterialPacking.v1",
+      "physicalSculpting.v1",
+      "physicalMaterialTools.v1",
+      "containerPouring.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
       "recipeEdits.v1",
+      "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "recipePatterns.v1",
+      "roomViewCapture.v1",
+      "collisionShapes.v1",
       "recipePartPlayback.v1",
+      "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
+      "objectLaunch.v1",
+      "physicalCatching.v1",
+      "calendarSchedules.v1",
       "animationAuthoring.v1",
       "animationRecording.v1",
       "animationPosing.v1",
       "avatarModels.v1",
       "modelImport.v1",
+      "modelArchiveImport.v1",
       "motionBatchImport.v1",
+      "includedMotions.v1",
+      "authoredMotion.v1",
       "unavailablePrograms.v1",
       "actionRecovery.v1",
       "temporaryRoom.v1",
       "spatialSettings.v1",
-      "physicsSimulation.v1"
+      "physicsSimulation.v1",
+      "physicsEnvironment.v1"
     ],
     "physics": {
       "ready": false,
@@ -1405,7 +1720,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "7b95565e261146d6a966e7abcc033b2d",
+      "id": "c80946472799499fb1861e2c4fe52f43",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -1416,13 +1731,13 @@
       "error": "",
       "owners": [
         {
-          "id": "hand:dff5a562e30e47aea3c8e874a5d32c89",
+          "id": "hand:7abcc62ddb6d4b5e93b044d2e8bc1ee5",
           "label": "Your grip",
           "role": "grab",
           "allowsGrab": false,
           "claims": [
             {
-              "target": "dff5a562e30e47aea3c8e874a5d32c89",
+              "target": "7abcc62ddb6d4b5e93b044d2e8bc1ee5",
               "channel": "wholeTarget"
             }
           ]
@@ -1460,7 +1775,7 @@
     },
     "objects": [
       {
-        "id": "99af209880f14265819a68ea755c3bc6",
+        "id": "1e3ff264b57247b7ae34c69e70b49c46",
         "name": "Ball",
         "kind": "Ball",
         "objectRevision": 4,
@@ -1487,24 +1802,24 @@
         "movement": null
       },
       {
-        "id": "a8c8fe2d27c04966875459f7b061d52a",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
+        "id": "7abcc62ddb6d4b5e93b044d2e8bc1ee5",
+        "name": "Practice robot",
+        "kind": "Assembly",
+        "objectRevision": 7,
         "position": {
-          "x": 0.86000001430511475,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
+          "x": 0.30000001192092896,
+          "y": 1.2999999523162842,
+          "z": 0.64999997615814209
         },
         "scale": 1.0,
         "color": {
-          "r": 0.16862745583057404,
-          "g": 0.55294120311737061,
-          "b": 0.53333336114883423,
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
           "a": 1.0
         },
         "animated": false,
-        "held": false,
+        "held": true,
         "simulating": false,
         "physics": {
           "mode": "fixed",
@@ -1514,7 +1829,7 @@
         "movement": null
       },
       {
-        "id": "acce86aaa5634792b9ce0cbb5f9a54fa",
+        "id": "9dd1b0461a73426197b362837ae96e8a",
         "name": "Block",
         "kind": "Block",
         "objectRevision": 6,
@@ -1568,24 +1883,24 @@
         "movement": null
       },
       {
-        "id": "dff5a562e30e47aea3c8e874a5d32c89",
-        "name": "Practice robot",
-        "kind": "Assembly",
-        "objectRevision": 7,
+        "id": "c80de4e8d7ab40fcb4e4a386858c33e5",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
         "position": {
-          "x": 0.30000001192092896,
-          "y": 1.2999999523162842,
-          "z": 0.64999997615814209
+          "x": 0.86000001430511475,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
         },
         "scale": 1.0,
         "color": {
-          "r": 1.0,
-          "g": 1.0,
-          "b": 1.0,
+          "r": 0.16862745583057404,
+          "g": 0.55294120311737061,
+          "b": 0.53333336114883423,
           "a": 1.0
         },
         "animated": false,
-        "held": true,
+        "held": false,
         "simulating": false,
         "physics": {
           "mode": "fixed",
@@ -1626,18 +1941,19 @@
       }
     ],
     "created": [],
+    "capture": null,
     "catalog": null,
     "execution": {
       "selected": null,
       "running": [],
       "outcomes": [],
-      "nextRunId": "23a05f7981c34e25a80da10e6d184620",
+      "nextRunId": "7a629b5b83fc47d280ecd24139499860",
       "storageError": null,
       "recovery": null
     }
   },
   "heldPose": {
-    "target": "dff5a562e30e47aea3c8e874a5d32c89",
+    "target": "7abcc62ddb6d4b5e93b044d2e8bc1ee5",
     "part": "RightUpperArm",
     "parent": "Chest",
     "revision": 7,
@@ -1650,11 +1966,11 @@
       "rotation": {
         "x": 0.0,
         "y": 0.0,
-        "z": 0.28471377491950989,
-        "w": 0.95861256122589111
+        "z": 0.28410303592681885,
+        "w": 0.9587937593460083
       }
     },
-    "world": {
+    "room": {
       "position": {
         "x": 0.51999998092651367,
         "y": 2.0199999809265137,
@@ -1663,8 +1979,8 @@
       "rotation": {
         "x": 0.0,
         "y": 0.0,
-        "z": 0.28471377491950989,
-        "w": 0.95861256122589111
+        "z": 0.28410303592681885,
+        "w": 0.9587937593460083
       }
     },
     "playing": false

@@ -172,6 +172,11 @@ it('lets users select typed collision fields through the same canonical blocks a
  const expected=JSON.parse(readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-contact.json','utf8'));
  expect(JSON.parse(h.source())).toEqual(expected);expect(parseProgram(h.source()).error).toBeNull();
  h.click('Edit values contact');h.change('Await event','object.tapped');h.click('Update draft');
+ expect(JSON.parse(h.source()).functions[0].body[0].body[0].version).toBe(1);
+ h.click('Edit values contact');h.change('Await event','object.collided');h.click('Update draft');
+ expect(JSON.parse(h.source()).functions[0].body[0].body[0].version).toBe(2);
+ expect(parseProgram(h.source()).error).toBeNull();
+
  expect(JSON.parse(h.source()).functions[0].body[0].body[0].fields).toBeUndefined();
 });
 it('keeps new physical events unavailable in editors connected to an older runtime',()=>{
@@ -191,7 +196,7 @@ it('edits native subscription inputs, expressions and field destinations without
  expect(wait).toMatchObject({version:1,arguments:{source:'book',target:'maestro',radius:.7,hysteresis:.2,transition:'enter'},bindings:{radius:{var:'distance'}}});
  expect(wait.fields).toEqual({inside:'inside',otherId:'other'});expect(result.functions[0].body[0].body.slice(1)).toEqual(initial.functions[0].body[0].body.slice(1));
  expect(parseProgram(h.source()).error).toBeNull();h.click('Edit values near');h.change('Await event','object.tapped');h.click('Update draft');
- const scalar=JSON.parse(h.source()).functions[0].body[0].body[0];expect(scalar.arguments).toBeUndefined();expect(scalar.bindings).toBeUndefined();expect(scalar.version).toBeUndefined();
+ const scalar=JSON.parse(h.source()).functions[0].body[0].body[0];expect(scalar.arguments).toBeUndefined();expect(scalar.bindings).toBeUndefined();expect(scalar.version).toBe(1);
  h.click('Edit values near');h.change('Await event','object.proximity.changed');h.click('Update draft');
  expect(JSON.parse(h.source()).functions[0].body[0].body[0]).toMatchObject({version:1,arguments:{source:'maestro',target:'book',radius:.5,hysteresis:.05,transition:'either'},bindings:{}});
 });

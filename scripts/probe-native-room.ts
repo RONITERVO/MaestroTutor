@@ -909,7 +909,7 @@ try{
    let previous=signature(lease.state());
    while(Date.now()<deadline){
     await new Promise(r=>setTimeout(r,150));
-    const sample=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.position',version:1,arguments:{target:catchTarget}}}]);
+    const sample=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.position',version:2,arguments:{target:catchTarget}}}]);
     samples.push(sample);const ball=sample.objects.find(o=>o.id===catchTarget);
     if(!ball||ball.simulating!==simulating)throw new Error('The catch fixture has the wrong physics state');
     const current=signature(sample);if(current!==previous)quietSince=Date.now();previous=current;
@@ -923,7 +923,7 @@ try{
   const catchWaiting=await execute([{action:'execution',execution:{operation:'start',call:catchCall}}]);const catchRun=catchWaiting.execution?.selected?.id;if(!catchRun||catchWaiting.execution?.selected?.phase!=='preparing')throw new Error('Native catch did not wait for physical contact');
   const catchFact=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.catch',version:1,arguments:{target:catchTarget}}}]);
   const catchAttempts=catchFact.catalog?.value as {attempts:{phase:string}[]};if(catchAttempts?.attempts[0]?.phase!=='waiting')throw new Error('Live catch fact lost the native wait');
-  const catchLaunch=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.physics.launch',version:1,arguments:{target:catchTarget,destination:{kind:'anchor',anchor:catchCall.arguments.holder,offset:catchCall.arguments.offset},seconds:.4,maxSpeed:8}}}}]);
+  const catchLaunch=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.physics.launch',version:2,arguments:{target:catchTarget,destination:{kind:'anchor',anchor:catchCall.arguments.holder,offset:catchCall.arguments.offset},seconds:.4,maxSpeed:8}}}}]);
   if(catchLaunch.execution?.selected?.output?.phase!=='launched')throw new Error('The ball was not launched by the shared action');
   let catchAfter=await execute([{action:'execution',execution:{operation:'inspect',runId:catchRun}}]);const catchDeadline=Date.now()+12000;
   while(catchAfter.execution?.selected?.phase==='preparing'&&Date.now()<catchDeadline){await new Promise(r=>setTimeout(r,100));catchAfter=await execute([{action:'execution',execution:{operation:'inspect',runId:catchRun}}]);}

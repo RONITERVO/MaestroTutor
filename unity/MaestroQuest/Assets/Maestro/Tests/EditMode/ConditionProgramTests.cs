@@ -12,12 +12,13 @@ namespace Maestro.Quest.Tests
 {
  public sealed class ConditionProgramTests
  {
-  sealed class World:IRuleActions,IProgramFacts,IProgramFactQueries,IProgramEventWorld {
+  sealed class World:IRuleActions,IProgramFacts,IProgramFactQueries,IProgramEventWorld,IProgramRoomSpace {
    public Vector3 Position;public bool Exists=true;public int Reads,Starts;
    public bool CanRun(CapabilityCall call,out string error){error=null;return true;}
    public bool Start(string run,CapabilityCall call,out float seconds,out string error){Starts++;seconds=.1f;error=null;return true;}
    public void Stop(string run,bool preserve){}
-   public bool TryPosition(string id,out Vector3 value){Reads++;value=Position;return Exists;}
+   public bool TryPosition(string id,out Vector3 value)=>TryRoomPosition(id,out value);
+   public bool TryRoomPosition(string id,out Vector3 value){Reads++;value=Position;return Exists;}
    public bool TryRead(string id,out ProgramValue value)=>BehaviourCatalog.TryRead(id,new BehaviourCatalog.FactContext(world:this),out value);
    public bool TryRead(string id,int version,JObject args,out ProgramValue value)=>BehaviourCatalog.TryRead(id,version,args,new BehaviourCatalog.FactContext(world:this),out value);
   }

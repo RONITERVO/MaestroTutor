@@ -5,7 +5,7 @@ import {decodeRoomPlannerResponse} from './roomPlannerResponse';
 import {parseRoomCommands,runRoomActionTask,type RoomAgentState,type RoomCommand} from './roomAgent';
 import {ROOM_AGENT_SCHEMA,ROOM_AGENT_RESPONSE_SCHEMA,ROOM_PLANNER_ARGUMENT_GUIDE} from '../../../shared/prompts/room';
 const target='a'.repeat(32),args={target,destination:{kind:'point',position:{x:3,y:.7,z:.6}},seconds:.6,maxSpeed:5};
-const call={id:'object.physics.launch',version:1,arguments:args};
+const call={id:'object.physics.launch',version:2,arguments:args};
 const encoded=()=>({commands:[{action:'execution',execution:{operation:'start',call:{...call,arguments:JSON.stringify(args)}}}]});
 const scene={version:1,session:'native',revision:1,sceneRevision:1,ack:0,ok:true,status:'Ready',created:[],objects:[],canUndo:false,canRedo:false,physicsRunning:true,capabilities:['execution.v1','objectLaunch.v1','actionResults.v1']} as RoomAgentState;
 function provider(outputs:unknown[]){
@@ -29,7 +29,7 @@ describe('provider-only argument encoding',()=>{
  it('decodes only the three provider slots and retains nested objects, arrays, text and scalar values',()=>{
   const nested={points:[{x:1,y:2,z:3}],enabled:false,zero:0,text:'Unicode: español; quoted "text"'};
   for(const command of [
-   {action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.position',version:1,arguments:JSON.stringify(nested)}},
+   {action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.position',version:2,arguments:JSON.stringify(nested)}},
    {action:'catalog',catalog:{operation:'check',call:{...call,arguments:JSON.stringify(nested)}}},
    {action:'execution',execution:{operation:'start',call:{...call,arguments:JSON.stringify(nested)}}}
   ]){

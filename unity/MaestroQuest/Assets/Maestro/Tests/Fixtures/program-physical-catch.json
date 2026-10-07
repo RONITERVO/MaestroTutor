@@ -41,7 +41,8 @@
           "value": "value",
           "fields": {
             "holder": "holder"
-          }
+          },
+          "version": 2
         },
         {
           "id": "remember",

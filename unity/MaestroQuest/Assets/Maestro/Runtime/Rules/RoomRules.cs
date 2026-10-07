@@ -63,11 +63,13 @@ namespace Maestro.Quest.Rules
         void Tapped(string id) { Scheduler.Emit(RuleEventKind.ItemTapped,id,Time.unscaledTime); ShowError(); }
         void Collided(string id,string otherId,string kind,Vector3 point,float speed) {
             if(editor.RuntimeGate.Held||paused||!focused||!isActiveAndEnabled||Scheduler==null||!Scheduler.IsListening("object.collided",id))return;
+            var frame=editor.Frame;if(!frame.Valid)return;point=frame.PointToRoom(point);
             var fields=new Newtonsoft.Json.Linq.JObject {["otherId"]=otherId,["otherKind"]=kind,["speed"]=speed,["x"]=point.x,["y"]=point.y,["z"]=point.z};
             Scheduler.EmitNative("object.collided",id,new Programs.ProgramValue(id),fields,Time.unscaledTime,out _);
         }
         void Caught(string id,string holder,string part,Vector3 point,float speed){
             if(editor.RuntimeGate.Held||paused||!focused||!isActiveAndEnabled||Scheduler==null||!Scheduler.IsListening("object.caught",id))return;
+            var frame=editor.Frame;if(!frame.Valid)return;point=frame.PointToRoom(point);
             Scheduler.EmitNative("object.caught",id,new Programs.ProgramValue(id),new Newtonsoft.Json.Linq.JObject{["holder"]=holder,["part"]=part,["speed"]=speed,["x"]=point.x,["y"]=point.y,["z"]=point.z},Time.unscaledTime,out _);
         }
         void ConnectionBroke(string id,string connected,string kind,float force,float torque){

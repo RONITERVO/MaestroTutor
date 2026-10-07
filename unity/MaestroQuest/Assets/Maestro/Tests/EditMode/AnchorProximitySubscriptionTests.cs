@@ -10,10 +10,10 @@ namespace Maestro.Quest.Tests
     public sealed class AnchorProximitySubscriptionTests
     {
         sealed class Probe:IProgramAnchorProbe {
-            public int Reads,Disposals;public bool Valid=true;public AnchorProximitySample Sample=new(Vector3.right,Vector3.zero,true);
+            public int Reads,Disposals;public bool Valid=true;public AnchorProximitySample Sample=new(Vector3.right,Vector3.zero,Vector3.zero,true);
             public bool Read(out AnchorProximitySample sample,out string error){Reads++;sample=Sample;error=Valid?null:"Anchor replaced";return Valid;}
             public void Dispose(){Disposals++;}
-            public void Set(float distance,bool available=true,uint revision=0,uint holderRevision=0)=>Sample=new(Vector3.right*distance,Vector3.zero,available,revision,holderRevision);
+            public void Set(float distance,bool available=true,uint revision=0,uint holderRevision=0)=>Sample=new(Vector3.right*distance,Vector3.zero,Vector3.zero,available,revision,holderRevision);
         }
         sealed class World:IProgramEventWorld,IProgramAnchorWorld {
             public readonly Probe Probe=new();public bool TryPosition(string id,out Vector3 p){p=default;return true;}
@@ -41,7 +41,18 @@ namespace Maestro.Quest.Tests
         [Test] public void SamplingAndDisposalAreBoundedAndFailuresNeverInventEvents(){
             var w=new World();var watch=new AnchorProximitySubscription(w,Args(),0);for(int i=0;i<100;i++)Assert.That(watch.Poll(i*.0001f,out _,out _,out _),Is.False);Assert.That(w.Probe.Reads,Is.EqualTo(1));
             w.Probe.Valid=false;Assert.That(watch.Poll(.06f,out _,out _,out var error),Is.False);Assert.That(error,Does.Contain("replaced"));watch.Dispose();watch.Dispose();Assert.That(watch.Poll(2,out _,out _,out _),Is.False);Assert.That(w.Probe.Reads,Is.EqualTo(2));Assert.That(w.Probe.Disposals,Is.EqualTo(1));
-            w=new World();w.Probe.Sample=new(Vector3.one*float.NaN,Vector3.zero,true);Assert.Throws<ProgramFault>(()=>new AnchorProximitySubscription(w,Args(),0));Assert.That(w.Probe.Disposals,Is.EqualTo(1));
+            w=new World();w.Probe.Sample=new(Vector3.one*float.NaN,Vector3.zero,Vector3.zero,true);Assert.Throws<ProgramFault>(()=>new AnchorProximitySubscription(w,Args(),0));Assert.That(w.Probe.Disposals,Is.EqualTo(1));
+        }
+        [Test] public void DistanceUsesPhysicalMetresWhileEventPointsUseTheAuthoredRoom() {
+            var w=new World();var centre=new Vector3(20,1,-8);var roomCentre=new Vector3(2,3,4);
+            w.Probe.Sample=new(centre+Vector3.right*.1f,centre,roomCentre,true);
+            using var watch=new AnchorProximitySubscription(w,Args("report"),0);
+            Assert.That(watch.Poll(.06f,out _,out var fields,out var error),Is.True,error);
+            Assert.That((float)fields["distance"],Is.EqualTo(.1f).Within(.0001f));
+            Assert.That((bool)fields["inside"],Is.True);
+            Assert.That(new Vector3((float)fields["x"],(float)fields["y"],(float)fields["z"]),Is.EqualTo(roomCentre));
+            w.Probe.Sample=new(centre,centre,Vector3.one*float.NaN,true);
+            Assert.That(watch.Poll(.12f,out _,out _,out error),Is.False);Assert.That(error,Does.Contain("invalid"));
         }
         [Test] public void SharedContractBindsTypedAnchorFieldsButNeverSelectorsOrUndeclaredActionResources(){
             var p=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-anchor-zone.json")));Assert.That(BehaviourProgram.TryParse(p.ToString(),out _,out var error),Is.True,error);

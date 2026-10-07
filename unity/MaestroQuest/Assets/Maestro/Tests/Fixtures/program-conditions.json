@@ -45,7 +45,7 @@
                 "args": [
                   {
                     "fact": "object.position",
-                    "version": 1,
+                    "version": 2,
                     "arguments": {
                       "target": "book"
                     },

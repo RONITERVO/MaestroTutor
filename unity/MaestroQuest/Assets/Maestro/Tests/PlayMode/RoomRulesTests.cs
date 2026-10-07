@@ -958,7 +958,7 @@ namespace Maestro.Quest.Tests
             var executor=new RoomAgentExecutor(editor);var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);
             Assert.That(executor.Execute(new RoomAgentRequest {version=2,commands=new[]{new RoomAgentCommand {action="rules",rule=new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="save",reference="read",sequence=new RuleSequence {id="",name="Observe position",program=source}}}}}}},out var error,out var created),Is.True,error);
             string id=created.Single();int revision=editor.Revision,rulesRevision=workshop.Revision;string document=JsonUtility.ToJson(editor.Snapshot());
-            var query=new JObject {["operation"]="inspect",["category"]="facts",["capability"]="object.position",["version"]=1};
+            var query=new JObject {["operation"]="inspect",["category"]="facts",["capability"]="object.position",["version"]=2};
             JObject Evidence(string phase){var result=executor.Catalog.Observe();string output=Environment.GetEnvironmentVariable("MAESTRO_OBJECT_FACT_EVIDENCE");if(!string.IsNullOrEmpty(output)){Directory.CreateDirectory(output);var state=observer.Observe();state.catalog=result;state.visible=true;state.workspaceView="rules";state.rules=workshop.Observe(true);File.WriteAllText(Path.Combine(output,phase+".json"),RoomAgentWire.Serialize(state));}return result;}
             Assert.That(executor.Catalog.Execute(query,out error),Is.True,error);Assert.That((bool)Evidence("definition")["available"],Is.False);
             query["arguments"]=new JObject {["target"]=target};Assert.That(executor.Catalog.Execute(query,out error),Is.True,error);var before=Evidence("before");Assert.That((bool)before["available"],Is.True);Assert.That((float)before["value"]["x"],Is.EqualTo(block.transform.position.x).Within(.0001));
@@ -991,7 +991,7 @@ namespace Maestro.Quest.Tests
             int found=events["entries"].Count()+next["entries"].Count();
             while(found<(int)events["total"]){var page=Query(new JObject {["operation"]="search",["category"]="events",["query"]="",["offset"]=found},"events-next-"+found);Assert.That(page["entries"].Count(),Is.GreaterThan(0));found+=page["entries"].Count();}
             Assert.That(found,Is.EqualTo(Maestro.Quest.Programs.BehaviourCatalog.Events.Count));
-            var contact=Query(new JObject {["operation"]="inspect",["category"]="events",["capability"]="object.collided",["version"]=1},"contact");
+            var contact=Query(new JObject {["operation"]="inspect",["category"]="events",["capability"]="object.collided",["version"]=2},"contact");
             Assert.That((string)contact["definition"]["fields"]["properties"]["speed"]["type"],Is.EqualTo("number"));
             yield return new WaitForSeconds(.2f);Assert.That(block.transform.localPosition.x,Is.GreaterThan(before.x+.01f));
             Assert.That(runtime.Scheduler.RunningCount,Is.EqualTo(1));runtime.StopAll();

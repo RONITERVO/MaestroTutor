@@ -7,7 +7,10 @@ namespace Maestro.Quest.Programs
 {
     // Registered event producers read only the active room. They never acquire
     // ownership or turn an observed object ID into permission to edit it.
+    // Physical metric space is retained for distance-only observations.
     public interface IProgramEventWorld {bool TryPosition(string id,out Vector3 position);}
+    // Exposed program points belong to the authored room, independent of its presentation pose.
+    public interface IProgramRoomSpace {bool TryRoomPosition(string id,out Vector3 position);}
     public interface IProgramEventWatch : IDisposable {
         bool Poll(float now,out ProgramValue value,out JObject fields,out string error);
     }

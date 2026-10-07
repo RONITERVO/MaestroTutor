@@ -3607,12 +3607,48 @@ native bodies with their fixture root; that harness is not the production world
 movement implementation. Whole-project and device acceptance are tracked separately.
 
 The subsequent production-movement increment below supplies atomic body transfer,
-physical binding retention and authored navigation-frame movement. Queued point/event
-frame semantics, independent view lifecycle and recovery/persistence across all
-world modes remain release gates. Passthrough locomotion, view blending, world
+physical binding retention and authored navigation-frame movement. The point-contract
+increment below fixes queued point/event semantics in the current room. Independent
+view lifecycle and recovery/persistence across all world modes remain release gates. Passthrough locomotion, view blending, world
 regions, textures, weather and water are not enabled by this motion-history work;
 those accepted requirements remain below.
 
+
+Shared spatial-point contracts increment (2026-10-07): live object position,
+attachment pose, recipe-part pose, aimed-throw input/output and contact/anchor-zone
+event points now use authored room coordinates. Native physics still calculates in
+physical space. The boundary converts each read/emission immediately and resolves
+stored action points against the current room frame at execution. A delayed event
+therefore keeps its authored location through translation/yaw. Physical speed,
+radius and impulse retain their documented metric units; velocity and impulse use
+room axes. Distance-only subscriptions continue measuring physical metres.
+
+Eight changed definitions explicitly advance to version 2: `object.position`,
+`object.anchor`, `object.recipe.pose`, `object.physics.trajectory`,
+`object.physics.launch`, `object.collided`, `object.caught` and
+`object.anchor.proximity.changed`. Recipe pose exposes `room` instead of the old
+`world` record. The native and web program validators require the exact version;
+omission means version 1 only for old nonsubscription native events. Human event
+selection records the catalog version. Old sources remain preserved and unavailable
+for repair; neither the agent nor storage silently relabels their coordinates.
+Custom user events retain their existing unversioned scalar contract.
+
+The owning room is still implicit in a running room program. These snapshots are
+not durable physical anchors, cross-workspace point references or a region identity
+system. Scale/gravity-axis changes remain unsupported during active watches; they
+fail rather than reinterpret a sampled distance. This increment does not remove
+the existing active real-physics locomotion guard, enable reality blending or
+complete terrain/world persistence. A nested-parent impulse bug found during this
+audit is fixed through the same authored frame, rather than its immediate parent's
+axes.
+
+Verification: 882 EditMode and 728 PlayMode cases passed, with three expected
+optional private-asset skips. Forty-five focused cases included translated/yawed
+throwing, anchor/part readback, delayed contact placement and nested-parent impulse.
+Both full native-room and original two-page book journeys passed using their
+scripted local provider; no Gemini request or headset operation was performed.
+Web validation uses fresh Unity captures of throw, catch, part pose and anchor
+programs; old-version rejection and visual version selection agree with native.
 
 The owner expects worlds to grow from room toys into miniature countries with
 cities, buildings, items and NPCs. Users and the agent must author the same world;

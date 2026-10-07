@@ -110,7 +110,7 @@ export async function runAgentAnimationProof(input: { client: HeadlessClient; be
   const evidence: Record<string, unknown> = { phase: 'saving', before };
   const save = () => writeFile(join(directory, 'provider-animation.json'), JSON.stringify(evidence, null, 2));
   const placement = () => execute([{ action: 'catalog', catalog: { operation: 'inspect', category: 'facts', capability: 'object.definition', version: 1, arguments: { target: 'maestro' } } }]);
-  const position = () => execute([{ action: 'catalog', catalog: { operation: 'inspect', category: 'facts', capability: 'object.position', version: 1, arguments: { target: 'maestro' } } }]);
+  const position = () => execute([{ action: 'catalog', catalog: { operation: 'inspect', category: 'facts', capability: 'object.position', version: 2, arguments: { target: 'maestro' } } }]);
   const beforePlacement = await placement(), beforePosition = await position(); evidence.beforePlacement = beforePlacement; evidence.beforePosition = beforePosition;
   assertAvatarPlacement(beforePlacement, beforePlacement, 'object.definition'); assertAvatarPlacement(beforePosition, beforePosition, 'object.position');
   const saveJourney = await runHeadlessRoomTurn(client, { text: PARITY_MOTION_REQUEST }); evidence.saveJourney = saveJourney; await save();

@@ -136,7 +136,7 @@ export function ProgramBlockEditor({node,program,fn,objects,onChange,eventFields
           const event=events.find(v=>v.name===e.target.value)!;
           const definition=behaviourEvent(event.name),next:Extract<ProgramNode,{op:'awaitEvent'}>={...node,event:event.name,source:event.objectEvent?node.source:'',value:locals.find(v=>v.type===event.type&&v.name!==node.received)?.name??''};delete next.fields;
           if(definition?.input){next.version=definition.version;next.arguments=definition.example??initialCapabilityValue(definition.input,objects) as Record<string,unknown>;next.bindings={};}
-          else {delete next.version;delete next.arguments;delete next.bindings;}onChange(next);
+          else {if(definition)next.version=definition.version;else delete next.version;delete next.arguments;delete next.bindings;}onChange(next);
         }}>{events.map(e=><option key={e.name} value={e.name} disabled={!eventFieldsSupported&&behaviourEvent(e.name)?.features?.includes('eventFields.v1')===true||!eventSubscriptionsSupported&&Boolean(behaviourEvent(e.name)?.input)}>{e.name}</option>)}</select></label>
         {selected?.objectEvent&&<label>Event object<select aria-label="Event object" value={node.source} onChange={e=>onChange({...node,source:e.target.value})}><option value="">Any object</option>{objects.map(o=><option key={o.id} value={o.id}>{o.name??o.id}</option>)}</select></label>}
         {definition?.input&&<fieldset disabled={!eventSubscriptionsSupported}><legend>Event subscription</legend><p>Inputs are evaluated when the wait starts and stay fixed until it ends.</p>

@@ -168,7 +168,8 @@ namespace Maestro.Quest.Programs
         }
         public override bool Start(CapabilityContext context,string runId,JObject arguments,out CapabilityOperation operation,out string error) {
             operation=null;var item=context.Editor.Find((string)arguments["target"]);var rigid=item.GetComponent<RigidRoomItem>();
-            var impulse=ObjectCapabilityData.Position(arguments);if(item.transform.parent)impulse=item.transform.parent.TransformDirection(impulse);
+            var frame=context.Editor.Frame;if(!frame.Valid){error="The authored room frame is unavailable";return false;}
+            var impulse=frame.DirectionToWorld(ObjectCapabilityData.Position(arguments));
             if(!rigid.ApplyImpulse(impulse,out error))return false;
             operation=new CompletedCapability();return true;
         }

@@ -56,7 +56,7 @@ namespace Maestro.Quest.Tests
             Assert.That(runtime.Scheduler.RunningCount,Is.Zero);Assert.That(recipe.IsPlaying,Is.False);Assert.That(Quaternion.Angle(rotation,part.localRotation),Is.LessThan(.01f));Assert.That(animator.speed,Is.Zero);Assert.That(Quaternion.Angle(pose,joint.localRotation),Is.LessThan(.01f));
             Assert.That(physics.SetRunning(true,out var error),Is.False);StringAssert.Contains("Review",error);Assert.That(avatar.BeginUpperBody("test","Greeting"),Is.False);
             var executions=new RoomExecutions(editor);string id=runtime.Scheduler.Receipts.NextId;Assert.That(executions.Execute(Request(),out error),Is.False);StringAssert.Contains("Review",error);Assert.That(runtime.Scheduler.Receipts.NextId,Is.EqualTo(id));
-            Assert.That(runtime.TryReadFact("object.position",1,new JObject {["target"]=objectId},out _),Is.True,"Inspection remains available during review");
+            Assert.That(runtime.TryReadFact("object.position",2,new JObject {["target"]=objectId},out _),Is.True,"Inspection remains available during review");
             FocusRoundTrip();Assert.That(editor.Ownership.Suspended,Is.True);review.Dispose();review=null;yield return null;
             Assert.That(recipe.IsPlaying,Is.False);Assert.That(physics.Running,Is.False);Assert.That(runtime.Scheduler.RunningCount,Is.Zero);Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(documents));
             runtime.ObserveSnapshot(new BookSnapshot {activity="speaking"});Assert.That(runtime.Scheduler.RunningCount,Is.Zero,"First post-review snapshot is a baseline");

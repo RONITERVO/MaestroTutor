@@ -9,7 +9,7 @@ using Newtonsoft.Json.Linq;
 namespace Maestro.Quest.Rules
 {
     /// <summary>One lifecycle host for every native module. No capability IDs, enum dispatch or argument fields.</summary>
-    public sealed class RoomRuleActions : IRuleActions, IRuleCompletion, IRuleReadiness, IRuleInterruptionInfo, IRuleGrabPolicy, IRuleOwnershipSource, IProgramFacts, IProgramFactQueries, IProgramEventWorld, IProgramPhysicsWorld, IProgramClockWorld, IProgramAnchorWorld, IProgramAudioWorld, IRuleResults
+    public sealed class RoomRuleActions : IRuleActions, IRuleCompletion, IRuleReadiness, IRuleInterruptionInfo, IRuleGrabPolicy, IRuleOwnershipSource, IProgramFacts, IProgramFactQueries, IProgramEventWorld, IProgramRoomSpace, IProgramPhysicsWorld, IProgramClockWorld, IProgramAnchorWorld, IProgramAudioWorld, IRuleResults
     {
         readonly CapabilityContext context;
         readonly Dictionary<string,CapabilityOperation> operations=new();
@@ -28,6 +28,11 @@ namespace Maestro.Quest.Rules
         public bool TryPosition(string id,out UnityEngine.Vector3 position) {
             position=default;var item=context.Editor?context.Editor.Find(id):null;
             if(!item||!item.isActiveAndEnabled)return false;position=item.transform.position;
+            return float.IsFinite(position.x)&&float.IsFinite(position.y)&&float.IsFinite(position.z);
+        }
+        public bool TryRoomPosition(string id,out UnityEngine.Vector3 position) {
+            position=default;if(!TryPosition(id,out var physical)||!context.Editor.Frame.Valid)return false;
+            position=context.Editor.Frame.PointToRoom(physical);
             return float.IsFinite(position.x)&&float.IsFinite(position.y)&&float.IsFinite(position.z);
         }
         public bool TryPhysicsMotion(string id,out PhysicsMotionSample sample) {

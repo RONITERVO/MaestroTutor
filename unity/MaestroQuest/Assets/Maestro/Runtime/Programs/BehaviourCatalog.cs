@@ -67,8 +67,8 @@ namespace Maestro.Quest.Programs
             { Id=id;Kind=kind;Label=label;Activity=activity;ObjectEvent=objectEvent;
                 Description=objectEvent?"An object interaction occurred. The primary text value is its object ID; source filters accept that exact ID or empty for any object.":"Maestro entered "+activity+". The primary text value is the state name. Source must be empty. The initial activity snapshot establishes a baseline without emitting an event."; }
             // New native events do not require a legacy tray enum or a signal route.
-            public EventDefinition(string id,string label,string description,JObject fields,bool objectEvent=false,JObject input=null,JObject example=null,Func<IProgramEventWorld,JObject,float,IProgramEventWatch> watch=null,string[] features=null)
-            { Id=id;Label=label;Description=description;ObjectEvent=objectEvent;this.fields=(JObject)fields.DeepClone();this.input=input==null?null:(JObject)input.DeepClone();this.example=example==null?null:(JObject)example.DeepClone();this.watch=watch;extraFeatures=features==null?Array.Empty<string>():(string[])features.Clone(); }
+            public EventDefinition(string id,string label,string description,JObject fields,bool objectEvent=false,JObject input=null,JObject example=null,Func<IProgramEventWorld,JObject,float,IProgramEventWatch> watch=null,string[] features=null,int version=1)
+            { if(version<1)throw new ArgumentOutOfRangeException(nameof(version));Version=version;Id=id;Label=label;Description=description;ObjectEvent=objectEvent;this.fields=(JObject)fields.DeepClone();this.input=input==null?null:(JObject)input.DeepClone();this.example=example==null?null:(JObject)example.DeepClone();this.watch=watch;extraFeatures=features==null?Array.Empty<string>():(string[])features.Clone(); }
             public bool ValidArguments(int version,JObject arguments,out string error) {
                 error="Unknown event subscription version or arguments";return HasSubscription&&version==Version&&CapabilityArguments.Validate(arguments,input,out error,"event arguments");
             }
@@ -116,8 +116,8 @@ namespace Maestro.Quest.Programs
             public bool Parameterized=>input!=null;
             public FactDefinition(string id,ProgramType type,string label,string description,Func<FactContext,ProgramValue?> read)
                 :this(id,type,label,description,null,null,(context,args)=>read(context)) {}
-            public FactDefinition(string id,ProgramDataType type,string label,string description,JObject input,JObject example,Func<FactContext,JObject,ProgramValue?> read,string domain="room",string[] features=null)
-            {Id=id;Type=type;Label=label;Description=description;Domain=domain;this.input=input==null?null:(JObject)input.DeepClone();this.example=example==null?null:(JObject)example.DeepClone();this.read=read;this.features=features==null?Array.Empty<string>():(string[])features.Clone();}
+            public FactDefinition(string id,ProgramDataType type,string label,string description,JObject input,JObject example,Func<FactContext,JObject,ProgramValue?> read,string domain="room",string[] features=null,int version=1)
+            {if(version<1)throw new ArgumentOutOfRangeException(nameof(version));Version=version;Id=id;Type=type;Label=label;Description=description;Domain=domain;this.input=input==null?null:(JObject)input.DeepClone();this.example=example==null?null:(JObject)example.DeepClone();this.read=read;this.features=features==null?Array.Empty<string>():(string[])features.Clone();}
             static JToken TypeJson(ProgramDataType type)=>type.Kind==ProgramType.Record?new JObject {["record"]=new JObject(type.Fields.Select(p=>new JProperty(p.Key,TypeJson(p.Value))))}:type.Kind==ProgramType.List?new JObject {["list"]=TypeJson(type.Item)}:new JValue(type.ToString().ToLowerInvariant());
             public JObject ToJson() {
                 var value=new JObject {["id"]=Id,["version"]=Version,["type"]=TypeJson(Type),["label"]=Label,["description"]=Description};
@@ -155,13 +155,13 @@ namespace Maestro.Quest.Programs
             new EventDefinition("object.grabbed",RuleEventKind.ItemGrabbed,"Item grabbed",objectEvent:true),
             new EventDefinition("object.released",RuleEventKind.ItemReleased,"Item released",objectEvent:true),
             new EventDefinition("object.collided","Object contact began",
-                "A physics contact began while room physics was running. Value is the source object ID. otherId is a registered room object ID or empty; otherKind distinguishes object, scannedRoom, controller and environment. speed is relative speed in metres/second; x/y/z are one contact point in world metres. Compound colliders can produce separate contacts. This is not a continuous contact or precise impact-energy measurement. Fields do not authorize editing new objects.",
+                "A physics contact began while room physics was running. Value is the source object ID. otherId is a registered room object ID or empty; otherKind distinguishes object, scannedRoom, controller and environment. speed is relative speed in metres/second; x/y/z are one contact point captured in authored room coordinates when the contact begins. A queued point stays in that room after virtual-world movement; it is not a persistent anchor to a real surface. Compound colliders can produce separate contacts. This is not a continuous contact or precise impact-energy measurement. Fields do not authorize editing new objects.",
                 CapabilitySchema.Object(new JObject {
                     ["otherId"]=CapabilitySchema.Text("^[a-zA-Z0-9_]{0,32}$",32),
                     ["otherKind"]=CapabilitySchema.Choice("object","scannedRoom","controller","environment"),
                     ["speed"]=CapabilitySchema.Number(0,1000000),
                     ["x"]=CapabilitySchema.Number(-1000000,1000000),["y"]=CapabilitySchema.Number(-1000000,1000000),["z"]=CapabilitySchema.Number(-1000000,1000000)
-                }),objectEvent:true),
+                }),objectEvent:true,version:2),
             new EventDefinition("object.proximity.changed","Object distance crossed a boundary",
                 "Sampled change between two explicit room-object transform origins in world metres, not mesh distance, contact, visibility or navigation. Source filter must be empty; choose source and target in subscription arguments. Samples at most 10 times/second while this wait is active. Initial distance is a baseline, never an event. Enter at distance <= radius; exit at distance >= radius + hysteresis. Transition selects enter, exit or either. Value is the source object ID; fields include the other ID, inside and measured distance. No missed crossings replay after an action, timeout, pause or reload. Missing/disabled objects fail the wait; observations never authorize edits. Physics need not run: grabs and animations also change positions.",
                 CapabilitySchema.Object(new JObject {["otherId"]=CapabilitySchema.Text("^(maestro|book|[a-fA-F0-9]{32})$",32),["inside"]=new JObject {["type"]="boolean"},["distance"]=CapabilitySchema.Number(0,1000000)}),

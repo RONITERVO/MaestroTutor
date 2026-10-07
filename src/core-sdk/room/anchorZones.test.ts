@@ -12,9 +12,9 @@ const source=()=>JSON.parse(readFileSync('unity/MaestroQuest/Assets/Maestro/Test
 const event='object.anchor.proximity.changed';
 it('shares the exact native anchored-zone program and typed nested argument contract',()=>{
  const p=source(),wait=p.functions[0].body[0];if(wait.op!=='awaitEvent')throw Error('fixture');expect(parseProgram(JSON.stringify(p)).program).toEqual(p);
- expect(behaviourEvent(event)?.features).toContain('anchorZones.v1');expect(validateEventArguments(event,1,wait.arguments)).toBeNull();
+ expect(behaviourEvent(event)?.features).toContain('anchorZones.v1');expect(validateEventArguments(event,2,wait.arguments)).toBeNull();
  expect(eventArgumentType(event,'holder.revision',wait.arguments)).toBe('number');expect(eventArgumentType(event,'holder.kind',wait.arguments)).toBeNull();expect(eventArgumentType(event,'holder.hand',wait.arguments)).toBeNull();
- expect(validateEventArguments(event,1,{...wait.arguments,radius:0})).not.toBeNull();expect(validateEventArguments(event,1,{...wait.arguments,physics:'yes'})).not.toBeNull();
+ expect(validateEventArguments(event,2,{...wait.arguments,radius:0})).not.toBeNull();expect(validateEventArguments(event,2,{...wait.arguments,physics:'yes'})).not.toBeNull();
  wait.bindings={'holder.revision':{value:1},'offset.z':{value:.35}};expect(parseProgram(JSON.stringify(p)).error).toBeNull();wait.bindings['holder.kind']={value:'object'};expect(parseProgram(JSON.stringify(p)).program).toBeNull();
 });
 it('requires anchor support for zone waits and optional reach without breaking old hold calls',()=>{

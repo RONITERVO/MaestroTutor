@@ -28,8 +28,8 @@ it('keeps the same native program and blocks unsupported runtimes and bound sele
 });
 it('validates typed anchor queries without admitting another variant’s fields',()=>{
  const a={holder:{kind:'object',objectId:'book',revision:1}};
- expect(validateFactArguments('object.anchor',1,a)).toBeNull();expect(factArgumentType('object.anchor','holder.objectId',a)).toBe('text');expect(factArgumentType('object.anchor','holder.revision',a)).toBe('number');expect(factArgumentType('object.anchor','holder.kind',a)).toBeNull();expect(factArgumentType('object.anchor','holder.hand',a)).toBeNull();
- expect(validateFactArguments('object.anchor',1,{holder:{...a.holder,hand:'right'}})).not.toBeNull();
+ expect(validateFactArguments('object.anchor',2,a)).toBeNull();expect(factArgumentType('object.anchor','holder.objectId',a)).toBe('text');expect(factArgumentType('object.anchor','holder.revision',a)).toBe('number');expect(factArgumentType('object.anchor','holder.kind',a)).toBeNull();expect(factArgumentType('object.anchor','holder.hand',a)).toBeNull();
+ expect(validateFactArguments('object.anchor',2,{holder:{...a.holder,hand:'right'}})).not.toBeNull();
 });
 
 it('reads the actual native carry, physical release and joined result through the shared wire',()=>{

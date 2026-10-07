@@ -18,7 +18,7 @@ namespace Maestro.Quest.Tests
  public sealed partial class RoomRulesTests
  {
   JObject PartCall(string target,string part,float seconds=1)=>new(){["id"]="animation.play",["version"]=1,["arguments"]=new JObject{["target"]=target,["source"]=new JObject{["kind"]="recipe",["part"]=part},["channel"]="recipePart",["seconds"]=seconds,["loop"]=false}};
-  JObject LivePart(string target,string part){Assert.That(BehaviourCatalog.TryRead("object.recipe.pose",1,new JObject{["target"]=target,["part"]=part},new BehaviourCatalog.FactContext(editor:editor),out var pose),Is.True);return JObject.FromObject(pose.Value);}
+  JObject LivePart(string target,string part){Assert.That(BehaviourCatalog.TryRead("object.recipe.pose",2,new JObject{["target"]=target,["part"]=part},new BehaviourCatalog.FactContext(editor:editor),out var pose),Is.True);return JObject.FromObject(pose.Value);}
   [UnityTest] public IEnumerator RecipePartsRunIndependentlyWithLivePoseAndNoSavedEditsOrPhysicsOwnership(){
    string target=RecipeTarget(true);var item=editor.Find(target);var recipe=item.GetComponent<RecipeObject>();string before=JsonUtility.ToJson(editor.Read(target));int revision=editor.ObjectRevision(target);var host=new RoomRuleActions(editor,animations);
    CapabilityCall Call(string part){var json=PartCall(target,part);Assert.That(BehaviourCatalog.TryCall("animation.play",1,(JObject)json["arguments"],out var call,out var error),Is.True,error);return call;}
@@ -28,7 +28,7 @@ namespace Maestro.Quest.Tests
    Assert.That(Quaternion.Angle(upper,recipe.Part("RightUpperArm").localRotation),Is.LessThan(.01f));Assert.That(Quaternion.Angle(lower,recipe.Part("RightLowerArm").localRotation),Is.GreaterThan(2));Assert.That((bool)LivePart(target,"RightUpperArm")["playing"],Is.False);Assert.That((bool)LivePart(target,"RightLowerArm")["playing"],Is.True);
    host.Stop("lower",true);var stopped=recipe.Part("RightLowerArm").localRotation;yield return new WaitForSeconds(.1f);Assert.That(Quaternion.Angle(stopped,recipe.Part("RightLowerArm").localRotation),Is.LessThan(.01f));Assert.That(recipe.IsPlaying,Is.False);
    Assert.That(JsonUtility.ToJson(editor.Read(target)),Is.EqualTo(before));Assert.That(editor.ObjectRevision(target),Is.EqualTo(revision));Assert.That(editor.Ownership.Observe().owners,Is.Empty);
-   var pose=LivePart(target,"RightLowerArm");Assert.That((string)pose["parent"],Is.EqualTo("RightUpperArm"));Assert.That(Vector3.Distance(pose["world"]["position"].ToObject<Vector3>(),recipe.Part("RightLowerArm").position),Is.LessThan(.0001f));
+   var pose=LivePart(target,"RightLowerArm");Assert.That((string)pose["parent"],Is.EqualTo("RightUpperArm"));Assert.That(Vector3.Distance(pose["room"]["position"].ToObject<Vector3>(),recipe.Part("RightLowerArm").position),Is.LessThan(.0001f));
    recipe.Restart();yield return new WaitForSeconds(.1f);Assert.That((bool)LivePart(target,"RightUpperArm")["playing"],Is.True,"Only explicit whole restart re-enables suppressed autoplay");
   }
   [UnityTest] public IEnumerator ScheduledRecipePartsUseTheSchedulerClockWhenPhysicsTimeIsPaused(){

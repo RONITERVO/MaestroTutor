@@ -23,7 +23,7 @@ namespace Maestro.Quest.Tests
   JObject HoldCall(string holder,string part="RightHand",string release="return"){
    var args=(JObject)BehaviourCatalog.Action("object.hold").Example.DeepClone();args["target"]=editor.Identity(ball);args["holder"]=new JObject{["kind"]="recipePart",["objectId"]=holder,["part"]=part,["revision"]=editor.ObjectRevision(holder)};args["offset"]["z"]=.35;args["release"]=release;return new JObject{["id"]="object.hold",["version"]=1,["arguments"]=args};
   }
-  JObject Fact(string name,JObject args){Assert.That(BehaviourCatalog.TryRead(name,1,args,new BehaviourCatalog.FactContext(editor:editor),out var value),Is.True,name);return JObject.FromObject(value.Value);}
+  JObject Fact(string name,JObject args){Assert.That(BehaviourCatalog.TryRead(name,BehaviourCatalog.Fact(name).Version,args,new BehaviourCatalog.FactContext(editor:editor),out var value),Is.True,name);return JObject.FromObject(value.Value);}
   void FitRobotBall(string robot){var point=editor.Find(robot).GetComponent<RecipeObject>().Part("RightHand");ball.transform.position=point.position+Vector3.forward*.35f;ball.GetComponent<RigidRoomItem>().Teleported();editor.RememberPlacement(editor.Identity(ball));}
   [UnityTest] public IEnumerator RobotAnchorCarriesAndThrowsThroughSharedParallelProgramsAndRoomPhysics(){
    Time.captureDeltaTime=0; // Exercise the shared motion clock and real-time physics together.

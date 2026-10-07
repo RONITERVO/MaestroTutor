@@ -71,7 +71,7 @@ it('scopes discovery without allowing categories on execution checks or older ru
  for(const bad of [{...check,category:'actions'},{operation:'search',category:null,query:'',offset:0},{operation:'search',category:'unknown',query:'',offset:0}])expect(validCatalogRequest(bad)).toBe(false);
 });
 it('checks exact event and fact definitions and distinguishes false, unavailable and wrong scalar types',()=>{
- const event={operation:'inspect',category:'events',capability:'object.collided',version:1,definition:behaviourEvent('object.collided'),status:'Event definition'};
+ const event={operation:'inspect',category:'events',capability:'object.collided',version:2,definition:behaviourEvent('object.collided'),status:'Event definition'};
  expect(validCatalogView(event)).toBe(true);expect(validCatalogView({...event,category:'actions'})).toBe(false);
  expect(validCatalogView({...event,definition:{...event.definition,features:[]}})).toBe(false);
  const fact={operation:'inspect',category:'facts',capability:'physics.ready',version:1,definition:behaviourFact('physics.ready'),available:true,value:false,status:'Current reading'};
@@ -102,7 +102,7 @@ it('accepts native module pins and requires library support for human and agent 
 });
 
 it('correlates bounded fact arguments and validates structured available values',()=>{
- const query={operation:'inspect',category:'facts',capability:'object.position',version:1,arguments:{target:'book'}};
+ const query={operation:'inspect',category:'facts',capability:'object.position',version:2,arguments:{target:'book'}};
  expect(validCatalogRequest(query)).toBe(true);expect(parseRoomCommands({commands:[{action:'catalog',catalog:query}]})).toHaveLength(1);
  for(const category of ['events','actions','modules'])expect(validCatalogRequest({...query,category})).toBe(false);
  expect(validCatalogRequest({...query,arguments:{target:'x'.repeat(129)}})).toBe(false);

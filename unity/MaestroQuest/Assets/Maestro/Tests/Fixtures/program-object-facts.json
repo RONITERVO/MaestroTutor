@@ -52,7 +52,7 @@
           "variable": "before",
           "value": {
             "fact": "object.position",
-            "version": 1,
+            "version": 2,
             "arguments": {
               "target": "book"
             },
@@ -92,7 +92,7 @@
           "variable": "after",
           "value": {
             "fact": "object.position",
-            "version": 1,
+            "version": 2,
             "arguments": {
               "target": "book"
             },

@@ -36,7 +36,7 @@ try {
  await reply({operation:'search',category:'events',query:'',offset:0},'events');
  await page.getByRole('button',{name:'Next events',exact:true}).click();await reply({operation:'search',category:'events',query:'',offset:6},'events-next');
  await page.getByRole('button',{name:'Previous events',exact:true}).click();await reply({operation:'search',category:'events',query:'',offset:0},'events');
- await page.getByRole('button',{name:/Object contact began/}).click();await reply({operation:'inspect',category:'events',capability:'object.collided',version:1},'contact');
+ await page.getByRole('button',{name:/Object contact began/}).click();await reply({operation:'inspect',category:'events',capability:'object.collided',version:2},'contact');
  await page.getByRole('region',{name:'Event definition'}).waitFor();assert((await page.getByRole('region',{name:'Event definition'}).textContent()).includes('speed'));
  assert.equal(await page.getByRole('button',{name:'Run action now'}).count(),0);await page.screenshot({path:resolve(out,'book-event-definition.png')});
  await page.getByLabel('Catalog category').selectOption('facts');assert.equal(await page.getByRole('region',{name:'Event definition'}).count(),0);

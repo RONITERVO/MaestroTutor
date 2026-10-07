@@ -10,7 +10,7 @@ import {ProgramValueEditor} from './ProgramValueEditor';
 import type {Expression} from '../../core-sdk/room/programs';
 afterEach(cleanup);
 it('lets users bind a nested anchor fact field and change the literal variant without stale bindings',()=>{
- let value:Expression={fact:'object.anchor',version:1,arguments:{holder:{kind:'recipePart',objectId:'1'.repeat(32),part:'RightHand',revision:1}},bindings:{}};
+ let value:Expression={fact:'object.anchor',version:2,arguments:{holder:{kind:'recipePart',objectId:'1'.repeat(32),part:'RightHand',revision:1}},bindings:{}};
  function Harness(){const [v,set]=useState(value);return <ProgramValueEditor label="Anchor" value={v} type={behaviourFact('object.anchor')!.type} objects={[{id:'1'.repeat(32),name:'Robot'}]} sources={[{name:'robot',type:'text',kind:'var'}]} onChange={next=>{value=next;set(next);}}/>;}
  const screen=render(<Harness/>);fireEvent.change(screen.getByLabelText('Anchor fact holder.objectId mode'),{target:{value:'expression'}});fireEvent.change(screen.getByLabelText('Anchor fact holder.objectId expression source'),{target:{value:'var:robot'}});
  if(!('fact' in value))throw Error('fixture');expect(value.bindings?.['holder.objectId']).toEqual({var:'robot'});

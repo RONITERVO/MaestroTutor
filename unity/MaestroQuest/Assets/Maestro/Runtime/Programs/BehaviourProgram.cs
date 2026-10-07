@@ -222,7 +222,12 @@ namespace Maestro.Quest.Programs
                                 var argumentType=definition.ArgumentType(binding.Name,Object(node["arguments"]));Need(argumentType!=ProgramType.Void,"Unsupported event argument binding");
                                 Need(Expression(binding.Value,function)==argumentType,"Event argument type differs");
                             }
-                        } else Need(!node.ContainsKey("version")&&!node.ContainsKey("arguments")&&!node.ContainsKey("bindings"),"This event has no subscription arguments");
+                        } else {
+                            Need(!node.ContainsKey("arguments")&&!node.ContainsKey("bindings"),"This event has no subscription arguments");
+                            Need(definition==null?!node.ContainsKey("version"):
+                                node.ContainsKey("version")?node["version"]?.Type==JTokenType.Integer&&(double)node["version"]==definition.Version:definition.Version==1,
+                                "Unsupported native event version; inspect its current definition");
+                        }
                         Need(function.Types.TryGetValue(Text(node["received"]),out var received)&&received==ProgramType.Boolean,"Event received needs a boolean local");
                         Need(function.Types.TryGetValue(Text(node["value"]),out var payload)&&payload==eventType,"Event value needs a matching local");
                         Need(Text(node["received"])!=Text(node["value"]),"Event destinations must differ");
