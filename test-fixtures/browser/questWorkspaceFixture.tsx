@@ -31,6 +31,7 @@ import nativeController from './controllerConfiguration.json';
 import nativeModes from './controllerModes.json';
 import nativeRecovery from './toolRecovery.json';
 import nativePlacement from './worldPlacement.json';
+import nativeWorldIdentity from './worldIdentity.json';
 import nativeSpatial from './spatialSettings.json';
 import nativeMotionBatch from './motionBatchImport.json';
 import nativeAvatar from './avatarSelection.json';
@@ -86,6 +87,11 @@ if(toolRecovery){
  state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';
  state.execution={...JSON.parse(JSON.stringify(nativeRecovery.receipt)),selected:null,running:[],outcomes:[],nextRunId:nativeRecovery.receipt.selected.id};
  state.capabilities=[...state.capabilities??[],'catalogVocabulary.v1','toolRecovery.v1','structuredValues.v1','factQueries.v1','execution.v1','executionReceipts.v1','actionResults.v1'];
+}
+const worldIdentity=new URLSearchParams(location.search).has('worldIdentity');
+if(worldIdentity){
+ state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';
+ state.capabilities=[...state.capabilities??[],'catalogVocabulary.v1','worldIdentity.v1','structuredValues.v1','factQueries.v1'];
 }
 const worldPlacement=new URLSearchParams(location.search).has('worldPlacement');
 let placementObservation=nativePlacement.before;
@@ -378,6 +384,12 @@ setInterval(()=>{
      const definition=behaviourFact('room.tools.recovery')!;
      if(query.operation==='search')state.catalog={operation:'search',category:'facts',query:query.query,offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Book and tool recovery'};
      else state.catalog={operation:'inspect',category:'facts',capability:query.capability,version:1,definition:query.capability===definition.id?definition:null,available:query.capability===definition.id,value:query.capability===definition.id?copy(recoveryObservation):null,status:'Captured native recovery state'};
+     continue;
+    }
+    if(worldIdentity&&query.operation!=='check'&&query.category==='facts'){
+     const definition=behaviourFact('world.identity')!;
+     if(query.operation==='search')state.catalog={operation:'search',category:'facts',query:query.query,offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'World and region identity'};
+     else state.catalog={operation:'inspect',category:'facts',capability:query.capability,version:1,definition:query.capability===definition.id?definition:null,available:query.capability===definition.id,value:query.capability===definition.id?copy(nativeWorldIdentity.identity):null,status:'Captured native authored world scope'};
      continue;
     }
     if(worldPlacement&&query.operation!=='check'&&query.category==='facts'){

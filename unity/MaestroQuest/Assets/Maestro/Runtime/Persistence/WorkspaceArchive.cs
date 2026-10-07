@@ -38,6 +38,7 @@ namespace Maestro.Quest.Persistence
     /// download, activate a restore, migrate data, rebind IDs, or restore execution receipts/room scans.</summary>
     public static class WorkspaceArchive
     {
+        internal const int FormatVersion=21;
         public const int MaximumEntries=1400,MaximumManifestBytes=512*1024;
         public const long MaximumArchiveBytes=512L*1024*1024;
         static readonly UTF8Encoding Utf8=new(false,true);
@@ -89,7 +90,7 @@ namespace Maestro.Quest.Persistence
                 cancellation.ThrowIfCancellationRequested();using var stream=pair.Value();if(stream==null||!stream.CanRead)throw Invalid("The asset could not be opened.");
                 var bytes=Read(stream,WorkspaceArchiveMetadata.Limit(pair.Key),cancellation);snapshot.Metadata.ValidateAsset(pair.Key,bytes);Put(pair.Key,bytes);
             }
-            var json=new JObject {["format"]="maestro-native-workspace",["version"]=20,["entries"]=new JArray(entries.Select(x=>new JObject {["path"]=x.Path,["bytes"]=x.Bytes,["sha256"]=x.Hash}))};
+            var json=new JObject {["format"]="maestro-native-workspace",["version"]=FormatVersion,["entries"]=new JArray(entries.Select(x=>new JObject {["path"]=x.Path,["bytes"]=x.Bytes,["sha256"]=x.Hash}))};
             manifest=Utf8.GetBytes(json.ToString(Formatting.None));if(manifest.Length>MaximumManifestBytes)throw Invalid("Archive manifest is too large.");
             cancellation.ThrowIfCancellationRequested();return new WorkspaceArchiveReceipt {ManifestHash=ModelLibrary.Hash(manifest),Summary=CopySummary(snapshot.Metadata.Summary,budget.Total)};
         }
@@ -97,7 +98,7 @@ namespace Maestro.Quest.Persistence
         {
             using var reader=new JsonTextReader(new StringReader(Utf8.GetString(bytes))) {MaxDepth=8,DateParseHandling=DateParseHandling.None};
             var root=JObject.Load(reader,new JsonLoadSettings {DuplicatePropertyNameHandling=DuplicatePropertyNameHandling.Error});
-            if(reader.Read()||root.Count!=3||(string)root["format"]!="maestro-native-workspace"||root["version"]?.Type!=JTokenType.Integer||(int)root["version"]!=20||root["entries"] is not JArray array||array.Count>MaximumEntries)throw Invalid("Unsupported workspace archive manifest.");
+            if(reader.Read()||root.Count!=3||(string)root["format"]!="maestro-native-workspace"||root["version"]?.Type!=JTokenType.Integer||(int)root["version"]!=FormatVersion||root["entries"] is not JArray array||array.Count>MaximumEntries)throw Invalid("Unsupported workspace archive manifest.");
             var entries=new List<Entry>();var budget=new Budget();
             foreach(var value in array){
                 if(value is not JObject item||item.Count!=3||item["path"]?.Type!=JTokenType.String||item["bytes"]?.Type!=JTokenType.Integer||item["sha256"]?.Type!=JTokenType.String||!ModelLibrary.ValidHash((string)item["sha256"]))throw Invalid("Invalid manifest entry.");

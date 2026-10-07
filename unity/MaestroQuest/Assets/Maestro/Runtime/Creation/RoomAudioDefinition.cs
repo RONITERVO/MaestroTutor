@@ -100,6 +100,7 @@ namespace Maestro.Quest.Creation
             foreach(var s in before){audioSources.Remove(s.id);audioRevisions.Remove(s.id);}
             foreach(var s in after){audioSources[s.id]=s.Copy();audioRevisions[s.id]=clock.Next++;}
         }
-        static bool EquivalentAudio(RoomAudioDefinition[] a,RoomAudioDefinition[] b)=>JsonUtility.ToJson(new RoomDocument {audioSources=a.OrderBy(x=>x.id).ToArray()})==JsonUtility.ToJson(new RoomDocument {audioSources=b.OrderBy(x=>x.id).ToArray()});
+        [Serializable] sealed class AudioDelta { public RoomAudioDefinition[] audioSources; }
+        static bool EquivalentAudio(RoomAudioDefinition[] a,RoomAudioDefinition[] b)=>JsonUtility.ToJson(new AudioDelta {audioSources=a.OrderBy(x=>x.id).ToArray()})==JsonUtility.ToJson(new AudioDelta {audioSources=b.OrderBy(x=>x.id).ToArray()});
     }
 }

@@ -73,6 +73,7 @@ namespace Maestro.Quest.Creation
             foreach(var s in before){structures.Remove(s.id);structureRevisions.Remove(s.id);}
             foreach(var s in after){structures[s.id]=s.Copy();structureRevisions[s.id]=clock.Next++;}
         }
-        static bool EquivalentStructures(RoomStructure[] a,RoomStructure[] b)=>JsonUtility.ToJson(new RoomDocument {structures=a.OrderBy(x=>x.id).ToArray()})==JsonUtility.ToJson(new RoomDocument {structures=b.OrderBy(x=>x.id).ToArray()});
+        [Serializable] sealed class StructureDelta { public RoomStructure[] structures; }
+        static bool EquivalentStructures(RoomStructure[] a,RoomStructure[] b)=>JsonUtility.ToJson(new StructureDelta {structures=a.OrderBy(x=>x.id).ToArray()})==JsonUtility.ToJson(new StructureDelta {structures=b.OrderBy(x=>x.id).ToArray()});
     }
 }

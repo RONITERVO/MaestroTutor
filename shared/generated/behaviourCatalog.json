@@ -35239,6 +35239,21 @@
       ]
     },
     {
+      "id": "world.identity",
+      "version": 1,
+      "type": {
+        "record": {
+          "worldId": "text",
+          "regionId": "text"
+        }
+      },
+      "label": "World and region identity",
+      "description": "Read the durable authored world and current region identities. Entity IDs and authored positions in this workspace are interpreted inside this scope. These identities survive reload, geometry edits, Undo, temporary keep/discard, viewpoint movement and archive restoration. They are not workspace-session guards, physical room anchors, action receipts or revisions. Current worlds contain one bounded region; this fact does not claim streaming or change the 25-metre coordinate limit. Restoring an archive retains its world identity; it does not implicitly fork a new world. If identity cannot be saved or verified, this fact is unavailable. Observation never creates a world, writes a file, activates a region or starts programs.",
+      "features": [
+        "worldIdentity.v1"
+      ]
+    },
+    {
       "id": "object.scanDrawing",
       "version": 1,
       "type": {
@@ -35688,7 +35703,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "c8c89e0deda104b4e963ab4cf6521b5c05a3fed391c17101c270f89e7b9653cc"
+      "sha256": "62d3665854bdbf6cc7f3c32498e50e1fdb68a8cc6a46c0ffa029e6c2ea040af1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -35740,7 +35755,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "1fcdae878a0770380f1f3e7ac91e37fa5267dd3258ed30079c018cbecfad4aeb"
+      "sha256": "170b7f1d5022e3f78bf34147a229ae21ca3dc55c78f15bb302375dbabf9cccda"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -35768,11 +35783,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "ea8b8d90a6a88f634b13bfbcff137cc109573bd11837a3c186659b73b969ed9b"
+      "sha256": "8a02678ee1726ba95bf3feee58585ce2eb5c02b3cd18cb5a0c5128c9a771af5b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
-      "sha256": "d6b6c4465247851c96e70481fcab6b03e37391e64d68c024b22c7a633995a316"
+      "sha256": "af017573b50c0a7d3c5d0d402eda5dc57661693ea887e124137d29ea10e8823b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleMemory.cs",
@@ -35792,7 +35807,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveSnapshot.cs",
-      "sha256": "e9912ac73b772017b8666d48443bdfd6dfc305f7dc2cf68da5dc1f2f6a5b8247"
+      "sha256": "1461470141ecd1fbac2879e329d7a139bfc8f0cf7c6b30dd20a0730a95668b9d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.Retention.cs",
@@ -36028,7 +36043,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "880488c1de879be615ab52be2beb8874ef960fdc7a9a824fa102dfffd601a6a2"
+      "sha256": "985d8df1249fadedafe36bacf2c49967abb7590077d56763e0f3953be553727c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomFrame.cs",
@@ -36280,11 +36295,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "4b5425aeb85aa94dca2fa2828051705a88e612a6680b71c96b61f061e36c435b"
+      "sha256": "5278253360e60ab2458dddeb088906a043c0d2f01b2f410e8cfd4f3b5fdacf0a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAudioDefinition.cs",
-      "sha256": "d94fe1f5f62bf31f2d496cbf6fc8f511012ca2e8bc8ab178c08c7fb2550fa16a"
+      "sha256": "bfc1b356d38a96fa72cf0a693f925fffdece164920cea6e52a31419261f4ff63"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAudioEdits.cs",
@@ -36411,6 +36426,10 @@
       "sha256": "603f0e40e519ca520fe1a90f379c469733b9bef09c4b9dbda07d2ff95bbd80fd"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomWorldIdentity.cs",
+      "sha256": "57ec909541d6b5de214bb866e6b673dcf71f3c221af20366b5674edd7e692b0f"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleButton.cs",
       "sha256": "46120aa65cc38f5f0670e2081bd7d49d0db4d699ea63df1b18ada759e6a7c299"
     },
@@ -36532,7 +36551,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructure.cs",
-      "sha256": "ff976d11a0075bd130899592fd139c393dbacf50ab5afa6403fb4d1e1d9db9d2"
+      "sha256": "0b040d5081314f74e6afb7bd96bdc7ceaf8d48a120ad6960c4766be797a25a48"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructureEdits.cs",
@@ -36973,6 +36992,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceSelectionCapabilities.cs",
       "sha256": "1a8f9aa19660de404afba49f8a7b4f794c9d26af31a0cd5dcc5b0f7c995639b0"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldIdentityFacts.cs",
+      "sha256": "7e187a1f0275c859fdf69e8edadbf9888d0fe760e14697a706b917dc9fb642e0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldViewpointCapability.cs",

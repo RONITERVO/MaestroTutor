@@ -84,6 +84,11 @@ namespace Maestro.Quest.Creation
             storage = new RoomStorage(directory); Models = new ModelLibrary(Path.Combine(directory, "models"),WriteGate,includedAvatar); Motions = new MotionLibrary(Path.Combine(directory,"motions"),WriteGate,includedMotions);
             var loaded = storage.Load(out var message);
             journal = new RoomJournal(loaded ?? StarterDocument(book, maestro, includedAvatar));
+            WorldIdentityReady=loaded!=null&&!loaded.WorldNeedsSave&&!storage.ReadOnly;
+            if(!WorldIdentityReady&&!storage.ReadOnly){
+                WorldIdentityReady=storage.PinWorldIdentity(journal.Snapshot(),out var identityError);
+                if(!WorldIdentityReady)message=identityError;
+            }
             maestro.GetComponent<MaestroAvatar>()?.ConfigureRuntime(RuntimeGate);
             maestro.GetComponent<MaestroAvatar>()?.ConfigureOwnership(Ownership,"maestro");
             Liquids=gameObject.AddComponent<LiquidPouring>();Liquids.Initialize(this);Sculpting.Editor=this;

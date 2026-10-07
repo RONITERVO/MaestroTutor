@@ -53,12 +53,14 @@ namespace Maestro.Quest.Creation
     [Serializable]
     public sealed class RoomDocument
     {
-        public const int CurrentVersion=22;
+        public const int CurrentVersion=23;
         public const int MaximumObjects = 64;
         public const int MaximumStrokePoints = 2048;
         public const int MaximumTotalPoints = 32768;
         public int version;
         public RoomViewpoint viewpoint = new();
+        public RoomWorldIdentity world = RoomWorldIdentity.Create();
+        [NonSerialized] internal bool WorldNeedsSave;
         public RoomObjectData[] objects = Array.Empty<RoomObjectData>();
         public RoomStructure[] structures = Array.Empty<RoomStructure>();
         public RoomAudioDefinition[] audioSources = Array.Empty<RoomAudioDefinition>();
@@ -70,8 +72,9 @@ namespace Maestro.Quest.Creation
         public bool Validate(out string error)
         {
             error = null;
-            if (version != 1 && version != 2 && version != 3 && version != 4 && version != 5 && version != 7 && version != 8 && version != 9 && version != 10 && version != 11 && version != 12 && version != 13 && version != 14 && version != 15 && version != 16 && version != 17 && version != 18 && version != 19 && version != 20 && version != 21 && version != CurrentVersion || objects == null || objects.Length < 2 || objects.Length > MaximumObjects + 2)
+            if (version != 1 && version != 2 && version != 3 && version != 4 && version != 5 && version != 7 && version != 8 && version != 9 && version != 10 && version != 11 && version != 12 && version != 13 && version != 14 && version != 15 && version != 16 && version != 17 && version != 18 && version != 19 && version != 20 && version != 21 && version != 22 && version != CurrentVersion || objects == null || objects.Length < 2 || objects.Length > MaximumObjects + 2)
                 return Fail("This room file has an unsupported version or object count.", out error);
+            if(world!=null&&!world.Valid||version>=23&&world==null)return Fail("This room has an invalid world or region identity.",out error);
             if(version>=22&&(viewpoint==null||!viewpoint.Valid))return Fail("This room has an invalid saved viewpoint.",out error);
             var ids = new HashSet<string>(); int partCount = 0; int pointCount = 0, builtIns = 0, frameCount = 0, jointCount = 0;
             foreach (var item in objects)
@@ -175,7 +178,7 @@ namespace Maestro.Quest.Creation
         static bool Unit(float value) => float.IsFinite(value) && value >= 0 && value <= 1;
         static bool Finite(Vector3 value) => float.IsFinite(value.x) && float.IsFinite(value.y) && float.IsFinite(value.z);
         static bool Fail(string message, out string error) { error = message; return false; }
-        public RoomDocument Copy() => new() { version = version, viewpoint=viewpoint?.Copy(), objects = objects.Select(item => item.Copy()).ToArray(), structures = structures?.Select(item=>item.Copy()).ToArray()??Array.Empty<RoomStructure>(), audioSources=audioSources?.Select(item=>item.Copy()).ToArray()??Array.Empty<RoomAudioDefinition>() };
+        public RoomDocument Copy() => new() { version = version, world=world?.Copy(), WorldNeedsSave=WorldNeedsSave, viewpoint=viewpoint?.Copy(), objects = objects.Select(item => item.Copy()).ToArray(), structures = structures?.Select(item=>item.Copy()).ToArray()??Array.Empty<RoomStructure>(), audioSources=audioSources?.Select(item=>item.Copy()).ToArray()??Array.Empty<RoomAudioDefinition>() };
     }
 
     /// <summary>Bounded object deltas preserve drawings without retaining whole scene copies.</summary>
@@ -189,6 +192,8 @@ namespace Maestro.Quest.Creation
         // must never make a stale observation current again.
         sealed class RevisionClock { public int Next = 1; }
         readonly RevisionClock clock = new();
+        readonly RoomWorldIdentity world;
+        internal RoomWorldIdentity WorldIdentity=>world.Copy();
         public int ObjectRevision(string id) => id != null && revisions.TryGetValue(id,out var value) ? value : 0;
         public bool CanUndo => undo.Count > 0;
         public bool CanRedo => redo.Count > 0;
@@ -197,6 +202,7 @@ namespace Maestro.Quest.Creation
         public RoomJournal(RoomDocument document)
         {
             if (!document.Validate(out var error)) throw new ArgumentException(error, nameof(document));
+            world=document.world?.Copy()??RoomWorldIdentity.Create();
             viewpoint=document.version>=22?document.viewpoint.Copy():new RoomViewpoint();
             foreach (var item in document.objects) { items.Add(item.id, item.Copy()); revisions[item.id]=clock.Next++; }
             SetStructures(Array.Empty<RoomStructure>(),document.structures??Array.Empty<RoomStructure>());
@@ -204,7 +210,7 @@ namespace Maestro.Quest.Creation
         }
         RoomJournal(RoomJournal source)
         {
-            clock=source.clock;viewpoint=source.viewpoint.Copy();
+            clock=source.clock;world=source.world.Copy();viewpoint=source.viewpoint.Copy();
             foreach(var pair in source.items) items.Add(pair.Key,pair.Value.Copy());
             foreach(var pair in source.revisions) revisions.Add(pair.Key,pair.Value);
             foreach(var pair in source.structures)structures.Add(pair.Key,pair.Value.Copy());
@@ -219,6 +225,7 @@ namespace Maestro.Quest.Creation
         {
             if(document==null) {error="Room snapshot is missing";return false;}
             if(!document.Validate(out error))return false;
+            if(!world.Same(document.world)){error="This snapshot belongs to a different world or region; use workspace activation";return false;}
             var ids=document.objects.Select(x=>x.id).ToHashSet();
             var replacements=document.objects.Where(x=>!items.TryGetValue(x.id,out var before)||!Equivalent(new[]{before},new[]{x})).ToArray();
             var groupIds=(document.structures??Array.Empty<RoomStructure>()).Select(x=>x.id).ToHashSet();
@@ -243,7 +250,7 @@ namespace Maestro.Quest.Creation
             if ((data.position-position).sqrMagnitude < .000001f && Quaternion.Angle(data.rotation,rotation) < .1f) return false;
             data.position = position; data.rotation = rotation; revisions[id]=clock.Next++; return true;
         }
-        public RoomDocument Snapshot() => new() { version = RoomDocument.CurrentVersion, viewpoint=viewpoint.Copy(), objects = items.Values.Select(item => item.Copy()).OrderBy(item => item.id, StringComparer.Ordinal).ToArray(), structures = StructureSnapshot(), audioSources=AudioSnapshot() };
+        public RoomDocument Snapshot() => new() { version = RoomDocument.CurrentVersion, world=world.Copy(), viewpoint=viewpoint.Copy(), objects = items.Values.Select(item => item.Copy()).OrderBy(item => item.id, StringComparer.Ordinal).ToArray(), structures = StructureSnapshot(), audioSources=AudioSnapshot() };
 
         internal bool PlacementBaseline(RoomLayout layout,out RoomObjectData[] baseline,out string error)
         {
@@ -273,7 +280,7 @@ namespace Maestro.Quest.Creation
             foreach (var item in replacements) candidate[item.id] = item.Copy();
             var groups=structureEdits?.Apply(StructureSnapshot())??StructureSnapshot();
             var sounds=audioEdits?.Apply(AudioSnapshot())??AudioSnapshot();
-            if (!(new RoomDocument { version = RoomDocument.CurrentVersion, viewpoint=viewpoint.Copy(), objects = candidate.Values.ToArray(), structures=groups,audioSources=sounds }).Validate(out error)) return false;
+            if (!(new RoomDocument { version = RoomDocument.CurrentVersion, world=world.Copy(), viewpoint=viewpoint.Copy(), objects = candidate.Values.ToArray(), structures=groups,audioSources=sounds }).Validate(out error)) return false;
             var soundIds=(audioEdits?.Replacements.Select(x=>x.id)??Array.Empty<string>()).Concat(audioEdits?.Removals??Array.Empty<string>()).ToHashSet();
             var groupIds=(structureEdits?.Replacements.Select(x=>x.id)??Array.Empty<string>()).Concat(structureEdits?.Removals??Array.Empty<string>()).ToHashSet();
             var before=changedIds.Where(items.ContainsKey).Select(id=>items[id].Copy()).ToArray();
@@ -313,6 +320,7 @@ namespace Maestro.Quest.Creation
             foreach (var item in before) { items.Remove(item.id); revisions.Remove(item.id); }
             foreach (var item in after) { items[item.id] = item.Copy(); revisions[item.id]=clock.Next++; }
         }
-        static bool Equivalent(RoomObjectData[] a, RoomObjectData[] b) => JsonUtility.ToJson(new RoomDocument { objects = a.OrderBy(x => x.id).ToArray() }) == JsonUtility.ToJson(new RoomDocument { objects = b.OrderBy(x => x.id).ToArray() });
+        [Serializable] sealed class ObjectDelta { public RoomObjectData[] objects; }
+        static bool Equivalent(RoomObjectData[] a, RoomObjectData[] b) => JsonUtility.ToJson(new ObjectDelta { objects = a.OrderBy(x => x.id).ToArray() }) == JsonUtility.ToJson(new ObjectDelta { objects = b.OrderBy(x => x.id).ToArray() });
     }
 }

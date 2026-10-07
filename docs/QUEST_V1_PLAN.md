@@ -3773,6 +3773,50 @@ No provider, headset or city-scale acceptance is claimed by these checks.
 Stable world/region identities, terrain-following locomotion and the appearance/
 environment/medium stages below remain required work.
 
+Durable world-scope increment (2026-10-08): room format 23 carries a versioned
+world identity and one independently identified authored region. Ordinary saves,
+object/audio/structure edits, Undo/Redo, temporary journal forks and viewpoint
+movement retain that scope. A temporary fork is a reversible edit session in the
+same world. Restoring an archive retains its world/region identities; making a
+separate world copy will require an explicit future operation. Workspace generation,
+runtime session, revision guards, receipts and physical tracking anchors remain
+separate identities and must not be used as substitutes.
+
+The original room file remains untouched during passive legacy inspection. Before
+a fresh or legacy room exposes its identity through world.identity, startup saves a
+current-format checkpoint. If that cannot be written, the original files remain
+preserved, room writes are unavailable and the fact cannot advertise an invented
+durable identity. Current saves with missing, malformed or future identity data
+are rejected; a future identity cannot silently fall back to an older backup.
+Journal snapshot application cannot substitute another world or region.
+
+The shared catalog gives the book, programs and agent the same read-only fact.
+Observation does not create regions, save files or execute programs. Equality
+checks now compare object, structure and sound deltas independently of world
+construction, avoiding false edits and consumed Undo history. Paired snapshot
+format 22 and archive manifest 21 include the exact world scope in their verified
+bytes. Unsupported development archives/intents stay preserved under the existing
+recovery policy; this is not an implicit migration or fork.
+
+This implements durable scope for the current one-region world only. Region
+streaming, portable cross-region entity references, expanded coordinate bounds,
+miniature scale, terrain-following locomotion, appearances, weather/light and
+interactive water remain required. The 25-metre authored-coordinate limit and
+current content budgets are unchanged. Native regression and book/catalog evidence
+are tracked under .quest-evidence/spatial-state/world-identity-*.
+
+Verification: all 910 EditMode tests pass. The broad PlayMode run passed 754 cases
+with three expected private-file skips and one obsolete assertion that startup
+had not created a room file. That assertion now checks the saved checkpoint stays
+byte-for-byte unchanged while temporary Begin waits for an earlier writer. All
+16 focused temporary-session and world-identity cases pass after this test-only
+correction; production source is unchanged from the broad run. Shared room checks
+pass 1,056 cases, plus app/probe TypeScript and catalog provenance. Both complete
+native-room and original-book integrations pass with scripted providers:
+56d03634dd6f46809477d99e52207efe and 10ff5c3cf24b4937b9322f3e5d098a81.
+The generated book catalog displays an actual native identity capture and emits
+only read requests. No provider or headset acceptance is claimed.
+
 The owner expects worlds to grow from room toys into miniature countries with
 cities, buildings, items and NPCs. Users and the agent must author the same world;
 imported Blender/Meshy assets are another source of its components. Texture and

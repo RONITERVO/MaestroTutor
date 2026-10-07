@@ -7,17 +7,26 @@ namespace Maestro.Quest.Creation
 {
     public sealed class RoomStorage
     {
-        public const string FileName="room.v22.json";
+        public const string FileName="room.v23.json";
         readonly VersionedRoomFile<RoomDocument> file;
         readonly string directory;
         volatile string coordinationError;
         public bool ReadOnly => coordinationError!=null||file.ReadOnly;
         public RoomStorage(string directory) {
-            this.directory=directory;file=new VersionedRoomFile<RoomDocument>(directory,"room",4*1024*1024,x => x.Validate(out _),x => x.Copy(),Normalize,x => x.version = RoomDocument.CurrentVersion,version:RoomDocument.CurrentVersion,validWire:RoomViewpoint.ValidWire,newerDocument:x=>x.viewpoint?.version>1||x.audioSources?.Any(a=>a!=null&&a.version>1)==true||x.structures?.Any(s=>s!=null&&s.version>1)==true||x.objects?.Any(o=>o?.audioEmitters?.Any(e=>e!=null&&e.version>1)==true||o?.scanAnchors?.Any(a=>a!=null&&a.version>1)==true||o?.surfaces?.Any(s=>s!=null&&s.version>2)==true||o?.drawingTips?.Any(t=>t!=null&&t.version>2)==true||o?.connections?.Any(h=>h!=null&&h.version>1)==true||o?.snapPoints?.Any(p=>p!=null&&p.version>1)==true||o?.containers?.Any(c=>c!=null&&c.version>2)==true||o?.heightFields?.Any(f=>f!=null&&f.version>1)==true||o?.sculptTips?.Any(t=>t!=null&&t.version>2)==true||o?.materialStores?.Any(s=>s!=null&&s.version>1)==true)==true);
+            this.directory=directory;file=new VersionedRoomFile<RoomDocument>(directory,"room",4*1024*1024,x => x.Validate(out _),x => x.Copy(),Normalize,x => x.version = RoomDocument.CurrentVersion,version:RoomDocument.CurrentVersion,validWire:x=>RoomViewpoint.ValidWire(x)&&RoomWorldIdentity.ValidWire(x),newerDocument:x=>x.world?.version>1||x.viewpoint?.version>1||x.audioSources?.Any(a=>a!=null&&a.version>1)==true||x.structures?.Any(s=>s!=null&&s.version>1)==true||x.objects?.Any(o=>o?.audioEmitters?.Any(e=>e!=null&&e.version>1)==true||o?.scanAnchors?.Any(a=>a!=null&&a.version>1)==true||o?.surfaces?.Any(s=>s!=null&&s.version>2)==true||o?.drawingTips?.Any(t=>t!=null&&t.version>2)==true||o?.connections?.Any(h=>h!=null&&h.version>1)==true||o?.snapPoints?.Any(p=>p!=null&&p.version>1)==true||o?.containers?.Any(c=>c!=null&&c.version>2)==true||o?.heightFields?.Any(f=>f!=null&&f.version>1)==true||o?.sculptTips?.Any(t=>t!=null&&t.version>2)==true||o?.materialStores?.Any(s=>s!=null&&s.version>1)==true)==true);
         }
         public RoomDocument Load(out string message) {
             try {using var owner=RoomSnapshotTransaction.Enter(directory,recover:true,initialize:false);return file.Load(out message);}
             catch(Exception e){message=coordinationError="Saved room/memory snapshot is unavailable; its files are preserved. "+e.Message;return null;}
+        }
+        // A new/legacy world must have a durable identity before callers can use
+        // it as a stable reference. Failed checkpointing keeps the original files
+        // and blocks writes until storage is recovered or reopened.
+        internal bool PinWorldIdentity(RoomDocument room,out string error)
+        {
+            if(Save(room,out error))return true;
+            coordinationError="World identity could not be saved; original files are preserved. Reopen after resolving storage or use workspace recovery. "+error;
+            error=coordinationError;return false;
         }
         public bool Save(RoomDocument room,out string error) {
             error=coordinationError;if(error!=null)return false;
@@ -31,6 +40,7 @@ namespace Maestro.Quest.Creation
         }
         internal static void Normalize(RoomDocument room)
         {
+            if(room.version<23){room.world??=RoomWorldIdentity.Create();room.WorldNeedsSave=true;}
             if(room.version<22)room.viewpoint=new RoomViewpoint();
             if(room.version<21&&room.audioSources==null)room.audioSources=Array.Empty<RoomAudioDefinition>();
             if(room.version<3 && room.structures==null)room.structures=Array.Empty<RoomStructure>();

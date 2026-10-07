@@ -39,6 +39,19 @@ namespace Maestro.Quest.Tests
             documents["models/"+modelHash+".txt"]=Bytes("Maestro äö\nOriginal attribution kept");
             var module=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-modules-nested.json")))["imports"][0]["module"] as JObject;moduleHash=ProgramModules.Hash(module);documents["program-modules.v1/"+moduleHash+".json"]=Bytes(module.ToString(Formatting.None));
         }
+        [Test] public void WorldIdentitySurvivesArchiveAndChangesItsFingerprint()
+        {
+            var room=JsonUtility.FromJson<RoomDocument>(Encoding.UTF8.GetString(documents[RoomStorage.FileName]));
+            var before=WorkspaceArchive.Fingerprint(Snapshot()).ManifestHash;var bytes=Archive();
+            using(var staged=WorkspaceArchive.Stage(new MemoryStream(bytes),directory)){
+                var restored=new RoomStorage(staged.DirectoryPath).Load(out var error);Assert.That(restored,Is.Not.Null,error);
+                Assert.That(JsonUtility.ToJson(restored.world),Is.EqualTo(JsonUtility.ToJson(room.world)));
+            }
+            room.world.worldId=Guid.NewGuid().ToString("N");documents[RoomStorage.FileName]=Document(room);
+            Assert.That(WorkspaceArchive.Fingerprint(Snapshot()).ManifestHash,Is.Not.EqualTo(before));
+            var wire=JObject.Parse(Encoding.UTF8.GetString(documents[RoomStorage.FileName]));wire.Remove("world");documents[RoomStorage.FileName]=Bytes(wire.ToString());
+            Assert.That(()=>Snapshot(),Throws.Exception);
+        }
         [Test] public void StructureBaselinesAndMissingMemberIdsSurvivePortableArchiveRoundTrip()
         {
             var room=JsonUtility.FromJson<RoomDocument>(Encoding.UTF8.GetString(documents[RoomStorage.FileName]));room.structures=new[]{RoomStructureTests.Structure()};documents[RoomStorage.FileName]=Document(room);
