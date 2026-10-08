@@ -23,6 +23,8 @@ export async function probeLiquidMedium(execute:Execute,directory:string){
  const after=await query(),destination=await read(cup);assert.ok(Math.abs(after.depthMetres-.1)<1e-5);assert.equal(destination.definition.amountMl,100000);assert.equal(destination.definition.fluid.densityKgM3,900);assert.equal(destination.definition.fluid.linearDrag,4);assert.equal((await read(pool)).definition.amountMl+destination.definition.amountMl,400000);
  await execute([{action:'undo'}]);assert.ok(Math.abs((await query()).depthMetres-before.depthMetres)<1e-5);await execute([{action:'redo'}]);assert.ok(Math.abs((await query()).depthMetres-after.depthMetres)<1e-5);
  const response=await fact('object.medium',{target:cup}) as {applied:boolean};assert.equal(response.applied,false);
+ const contact=await fact('object.medium.contactState',{target:cup}) as {known:boolean;immersed:boolean};assert.equal(contact.known,false);assert.equal(contact.immersed,false);
+ const inputContact=await fact('input.medium.contactState',{side:'left'}) as {known:boolean;immersed:boolean};assert.equal(inputContact.known,false);assert.equal(inputContact.immersed,false);
  for(let i=0;i<5;i++)await execute([{action:'undo'}]);
- await writeFile(join(directory,'liquid-medium.json'),JSON.stringify({boundary:'Full desktop native transport, finite-medium depth, explicit fluid transfer and Undo. Physics forces have separate PlayMode acceptance; no headset or terrain-water claim.',before,after,destination,response},null,2));
+ await writeFile(join(directory,'liquid-medium.json'),JSON.stringify({boundary:'Full desktop native transport, finite-medium depth, explicit fluid transfer and Undo. Physics forces have separate PlayMode acceptance; no headset or terrain-water claim.',before,after,destination,response,contact,inputContact},null,2));
 }

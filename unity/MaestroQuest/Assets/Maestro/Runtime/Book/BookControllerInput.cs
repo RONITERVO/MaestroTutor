@@ -132,13 +132,15 @@ namespace Maestro.Quest.Book
             bool usingHand = !controllerTracked && hand != null && hand.isTracked.isPressed;
             var flags = usingHand ? (MetaAimFlags)hand.aimFlags.ReadValue() : MetaAimFlags.None;
             bool tracked = controllerTracked || (usingHand && (flags & MetaAimFlags.Valid) != 0 && (flags & MetaAimFlags.SystemGesture) == 0);
-            if (!tracked) { Router.Cancel(index); Drawing?.Cancel(index);Editor?.GetComponent<SpatialSculpting>()?.Cancel(index,input.Interactor); input.Cancel(); return; }
+            if (!tracked) { Editor?.Liquids?.SetContactInput(index,null,usingHand); Router.Cancel(index); Drawing?.Cancel(index);Editor?.GetComponent<SpatialSculpting>()?.Cancel(index,input.Interactor); input.Cancel(); return; }
             if (!input.WasTracked || input.UsingHand != usingHand) { Router.Cancel(index); Drawing?.Cancel(index);Editor?.GetComponent<SpatialSculpting>()?.Cancel(index,input.Interactor); input.Cancel(); }
             input.WasTracked = true; input.UsingHand = usingHand;
             var position = usingHand ? hand.devicePosition.ReadValue() : input.Position.ReadValue<Vector3>();
             var rotation = usingHand ? hand.deviceRotation.ReadValue() : input.Rotation.ReadValue<Quaternion>();
             input.Root.transform.SetPositionAndRotation(TrackingSpace.TransformPoint(position), TrackingSpace.rotation * rotation);
             input.Root.SetActive(true);
+            Vector3? waterContact=usingHand?(TryFingerPoint(index,out var tip)?tip:null):input.Root.transform.position;
+            Editor?.Liquids?.SetContactInput(index,waterContact,usingHand);
             var ray = new Ray(input.Root.transform.position, input.Root.transform.forward);
             bool hitSomething = RoomPointerHit.Raycast(ray, out var hit, Router.MaximumDistance, Router.InteractionLayers, QueryTriggerInteraction.Ignore);
             bool page = hitSomething && (hit.collider.GetComponent<BookPageTarget>() || hit.collider.GetComponentInParent<PhysicalAction>());
@@ -216,7 +218,7 @@ namespace Maestro.Quest.Book
         void CancelInputs()
         {
             if (hands == null) return;
-            for (int i = 0; i < hands.Length; i++) { Router?.Cancel(i); Drawing?.Cancel(i);Editor?.GetComponent<SpatialSculpting>()?.Cancel(i,hands[i].Interactor); hands[i].Cancel(); }
+            for (int i = 0; i < hands.Length; i++) { Editor?.Liquids?.SetContactInput(i,null,false); Router?.Cancel(i); Drawing?.Cancel(i);Editor?.GetComponent<SpatialSculpting>()?.Cancel(i,hands[i].Interactor); hands[i].Cancel(); }
             Router?.Cancel(10);
         }
 

@@ -24,8 +24,9 @@ namespace Maestro.Quest.Creation {
         internal bool Active=>write!=null;
         internal bool Owns(string target)=>Active&&contents.ContainsKey(target);
         internal string Error=>error;
-        internal void Initialize(RoomEditor owner){editor=owner;world=owner.PhysicsWorld;lastSample=Time.unscaledTime;if(world)world.Changed+=PhysicsChanged;}
+        internal void Initialize(RoomEditor owner){editor=owner;world=owner.PhysicsWorld;lastSample=Time.unscaledTime;if(world)world.Changed+=PhysicsChanged;editor.RuntimeGate.Changed+=ContactGateChanged;}
         internal void Synchronize(RoomDocument document){
+            ResetContacts();
             var ids=new HashSet<string>();
             foreach(var data in document.objects){
                 if(data.containers?.Length!=1)continue;ids.Add(data.id);
@@ -39,7 +40,7 @@ namespace Maestro.Quest.Creation {
                 if(Owns(id))Cancel("A container was removed; the unfinished liquid flow was reverted");Release(vessels[id]);vessels.Remove(id);
             }
         }
-        void LateUpdate(){float now=Time.unscaledTime;if(now<nextSample)return;nextSample=now+.05f;float elapsedSinceSample=Mathf.Min(now-lastSample,.1f);lastSample=now;Tick(elapsedSinceSample);}
+        void LateUpdate(){float now=Time.unscaledTime;if(now<nextSample)return;nextSample=now+.05f;float elapsedSinceSample=Mathf.Min(now-lastSample,.1f);lastSample=now;Tick(elapsedSinceSample);TickContacts(elapsedSinceSample);}
         internal void Tick(float seconds){
             if(!editor||publishing)return;
             if(!float.IsFinite(seconds)||seconds<=0)return;seconds=Mathf.Min(seconds,.1f);
@@ -162,11 +163,11 @@ namespace Maestro.Quest.Creation {
 
         internal JObject ObserveScooping(string id){if(!vessels.TryGetValue(id,out var v))return null;return new JObject{["sessionId"]=session,["phase"]=blocked?"failed":Owns(id)?"flowing":"idle",["scoopedMl"]=v.Scooped,["drawnMl"]=v.Drawn,["donors"]=v.Donors.Count,["recipients"]=v.Dippers.Count};}
 
-        void PhysicsChanged(){if(!editor||!world)return;if(!world.Running)Finish(out _);else{blocked=false;lastSample=Time.unscaledTime;nextSample=lastSample+.05f;}}
-        void OnApplicationPause(bool paused){if(paused)Finish(out _);}
-        void OnApplicationFocus(bool focused){if(!focused)Finish(out _);}
-        void OnDisable(){Finish(out _);}
+        void PhysicsChanged(){ResetContacts();if(!editor||!world)return;if(!world.Running)Finish(out _);else{blocked=false;lastSample=Time.unscaledTime;nextSample=lastSample+.05f;}}
+        void OnApplicationPause(bool paused){contactsPaused=paused;if(paused){ResetContacts();Finish(out _);}}
+        void OnApplicationFocus(bool focused){contactsFocused=focused;if(!focused){ResetContacts();Finish(out _);}}
+        void OnDisable(){ResetContacts();Finish(out _);}
         static void Release(Vessel v){if(v.Stream)Destroy(v.Stream.gameObject);ArtResources.Release(v.Material);}
-        void OnDestroy(){Finish(out _);if(world)world.Changed-=PhysicsChanged;foreach(var v in vessels.Values)Release(v);vessels.Clear();write?.Dispose();write=null;}
+        void OnDestroy(){if(editor)editor.RuntimeGate.Changed-=ContactGateChanged;ResetContacts();Finish(out _);if(world)world.Changed-=PhysicsChanged;foreach(var v in vessels.Values)Release(v);vessels.Clear();write?.Dispose();write=null;}
     }
 }

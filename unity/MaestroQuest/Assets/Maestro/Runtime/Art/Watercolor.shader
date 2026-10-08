@@ -4,6 +4,7 @@ Shader "Maestro/Watercolor"
 {
     Properties
     {
+        [HideInInspector] _LiquidRippleCount ("Live liquid contact ripples", Float) = 0
         _WorldLighting ("Accept world illumination", Float) = 1
         _Color ("Pigment", Color) = (1,.94,.82,1)
         _PatternMode ("Pattern: solid/checker/stripes", Float) = 0
@@ -108,6 +109,8 @@ Shader "Maestro/Watercolor"
             float _AlphaCutoff, _SurfaceMode, _SurfaceOpacity;
             float _VisibilityOpacity, _VisibilityRealDepth;
             float _DecodeBrowserSrgb;
+            float _LiquidRippleCount;
+            float4 _LiquidRipples[8],_LiquidRippleWeights[8];
             Varying vert(Vertex input)
             {
                 Varying output;
@@ -152,6 +155,15 @@ Shader "Maestro/Watercolor"
                     float alternate = _PatternMode < 1.5 ? .5 - .5 * wave.x * wave.y : .5 - .5 * wave.x;
                     color = lerp(color, _PatternColor.rgb, saturate(alternate));
                 }
+                // Only measured liquid surfaces publish this bounded transient array.
+                // Drawing on the existing clipped mesh keeps rings inside the cavity.
+                float ripple = 0;
+                [loop] for (int i = 0; i < min((int)_LiquidRippleCount, 8); i++) {
+                    float distance = length(input.world - _LiquidRipples[i].xyz);
+                    float width = max(fwidth(distance), .001);
+                    ripple += (1 - smoothstep(.008, .008 + width, abs(distance - _LiquidRipples[i].w))) * _LiquidRippleWeights[i].x;
+                }
+                color = lerp(color, float3(1,1,1), saturate(ripple) * .65);
                 return half4(MaestroAtmosphere(surface.rgb * color * input.color.rgb * pigment * MaestroLight(input.worldNormal, face), input.world), (_SurfaceMode > 1.5 ? alpha : 1) * _VisibilityOpacity);
             }
             ENDCG

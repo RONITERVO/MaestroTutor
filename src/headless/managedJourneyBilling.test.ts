@@ -1,9 +1,11 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import type { HeadlessClient } from './client';
 import type { ManagedJourneyBillingSnapshot } from './managedJourneyBilling';
 import {
+  beginManagedJourneyBilling,
   evaluateManagedLiveBilling,
   evaluateManagedJourneyBilling,
   evaluateManagedJourneyFailureBilling,
@@ -39,6 +41,18 @@ const snapshot = (
 });
 
 describe('managed journey billing evidence', () => {
+  it('waits for old reservations before returning the measured baseline', async () => {
+    const pending = snapshot(980, 0, 0, [], [], 20);
+    const settled = snapshot(995, 5, 0.005);
+    const refreshAccount = vi.fn().mockResolvedValueOnce(pending.account).mockResolvedValueOnce(settled.account);
+    const listLedgers = vi.fn().mockResolvedValue({usage:{entries:[]},billing:{entries:[]}});
+    const sleep = vi.fn().mockResolvedValue(undefined);
+    const client = {account:{refreshAccount,listLedgers},runtime:{clock:{sleep}}} as unknown as HeadlessClient;
+    expect(await beginManagedJourneyBilling(client, 'fresh-measurement')).toEqual(settled);
+    expect(sleep).toHaveBeenCalledOnce(); expect(sleep).toHaveBeenCalledWith(500);
+    expect(refreshAccount).toHaveBeenCalledTimes(2);
+  });
+
   it('requires account, usage ledger and charge ledger to reconcile exactly', () => {
     const before = snapshot(1_000, 0, 0);
     const after = snapshot(875, 125, 0.125, [{

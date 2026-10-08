@@ -74,6 +74,16 @@ describe('headless conversational agent parity (deterministic transport)', () =>
     expect(f.client.events.snapshot().filter(e => e.phase === 'activity.changed').map(e => e.data?.active)).toEqual([true, false]);
     await f.agent.start(turn.assistantMessage.id); expect(f.execute).toHaveBeenCalledOnce(); expect(f.send).toHaveBeenCalledTimes(5);
   });
+  it('does not spend or dispatch while earlier managed requests remain reserved', async () => {
+    const f = await setup('managed');
+    vi.spyOn(f.client.account, 'refreshAccount').mockResolvedValue({ account: { billingSummary: { reservedCredits: 20 } } } as any);
+    vi.spyOn(f.client.account, 'listLedgers').mockResolvedValue({ usage: { entries: [] }, billing: { entries: [] } } as any);
+    const sleep = vi.spyOn(f.client.runtime.clock, 'sleep').mockResolvedValue(undefined);
+    await expect(runHeadlessRoomTurn(f.client, { text: 'Make that ball.' })).rejects.toThrow('before earlier billing has settled');
+    expect(sleep).toHaveBeenCalledTimes(19);
+    expect(f.send).not.toHaveBeenCalled(); expect(f.execute).not.toHaveBeenCalled();
+    expect(await f.agent.store.list()).toEqual([]);
+  });
   it('does not allow a synthetic verifier override to launch an agent', async () => {
     const f = await setup(); const turn = await runHeadlessChatTurn(f.client, { text: 'Make a ball.' });
     const result = await runHeadlessSuggestionAftersteps(f.client, { assistantMessageId: turn.assistantMessage.id, syntheticDecision: { toolRequest: { tool: 'agent' } } });

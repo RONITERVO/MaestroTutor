@@ -5,7 +5,7 @@ import type { HeadlessClient } from './client';
 import { runHeadlessLiveTurn, type HeadlessLiveTurnInput } from './liveJourney';
 import { validateLiveInputMedia, type LiveInputMedia } from '../core-sdk/media/liveInputContext';
 import { summarizeRoomTask } from '../core-sdk/room/roomTaskProjection';
-import { captureManagedJourneyBilling, evaluateManagedJourneyBilling, waitForManagedJourneyBillingSettlement } from './managedJourneyBilling';
+import { beginManagedJourneyBilling, evaluateManagedJourneyBilling, waitForManagedJourneyBillingSettlement } from './managedJourneyBilling';
 
 export function liveInputHashes(media: LiveInputMedia) {
   validateLiveInputMedia(media);
@@ -43,7 +43,7 @@ export async function runHeadlessRoomLiveTurn(client: HeadlessClient, input: Hea
     throw new Error('Agent Live proof requires conversation/observer, an expected transcript and real-time pacing.');
   }
   const operationId = client.runtime.ids.create('headless-room-live');
-  const before = client.accessMode === 'managed' ? await captureManagedJourneyBilling(client, operationId) : null;
+  const before = client.accessMode === 'managed' ? await beginManagedJourneyBilling(client, operationId) : null;
   const usageStart = agent.usage.length;
   let turn: Awaited<ReturnType<typeof runHeadlessLiveTurn>> | undefined, failure: unknown;
   try { turn = await runHeadlessLiveTurn(client, { ...input, runSuggestionAftersteps: true }); }

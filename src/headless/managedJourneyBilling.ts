@@ -105,6 +105,17 @@ export const waitForManagedJourneyBillingSettlement = async (
   throw new Error('Managed journey finished with credits still reserved after the settlement wait.');
 };
 
+/** A new measured journey must not include settlement from an earlier request. */
+export const beginManagedJourneyBilling = async (
+  client: HeadlessClient,
+  operationId: string,
+): Promise<ManagedJourneyBillingSnapshot> => {
+  try { return await waitForManagedJourneyBillingSettlement(client, operationId); }
+  catch (cause) {
+    throw new Error('Cannot start a measured managed journey before earlier billing has settled.', { cause });
+  }
+};
+
 /** Proves ledger consistency and that no reservation was stranded. */
 export const evaluateManagedJourneyBilling = (
   before: ManagedJourneyBillingSnapshot,

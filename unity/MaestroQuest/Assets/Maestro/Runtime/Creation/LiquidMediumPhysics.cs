@@ -33,7 +33,7 @@ namespace Maestro.Quest.Creation {
             // Nested authored cavities select the smallest containing medium, then
             // stable ID order. Never add overlapping densities or skip an unavailable
             // inner medium to borrow readiness from another vessel.
-            if(found)ready=!blocked&&environment.CanSimulate(point,participant,chosen.Item)&&!editor.RuntimeGate.Held&&!editor.Ownership.Suspended&&!editor.WriteGate.Frozen;
+            if(found)ready=chosen.Item.GetComponent<RigidRoomItem>().GeometryReady&&!blocked&&environment.CanSimulate(point,participant,chosen.Item)&&!editor.RuntimeGate.Held&&!editor.Ownership.Suspended&&!editor.WriteGate.Frozen;
             return found;
         }
         void FixedUpdate()=>TickMedium(Time.fixedDeltaTime);
@@ -41,7 +41,7 @@ namespace Maestro.Quest.Creation {
             if(!editor||publishing||!float.IsFinite(seconds)||seconds<=0)return;
             foreach(var b in mediumBodies.Values){b.Applied=false;b.Lift=Vector3.zero;b.Submerged=0;b.Reason="Physics or object ownership is unavailable";}
             if(!world||!world.Running||blocked||editor.RuntimeGate.Held||editor.Ownership.Suspended||editor.WriteGate.Frozen)return;
-            CaptureMedia();if(mediaCount==0)return;
+            CaptureMedia(false);if(mediaCount==0)return;
             using var environment=mediumEnvironment.Begin(world);
             foreach(var b in mediumBodies.Values){
                 if(!b.Item||!b.Rigid||!b.Rigid.TryReadMotion(out bool available,out _,out _)||!available)continue;
@@ -69,7 +69,7 @@ namespace Maestro.Quest.Creation {
         internal JObject ObserveMedium(Vector3 authored,string target){
             if(!editor.Frame.Valid||!RoomViewpoint.ValidPosition(authored))return null;
             RoomItem participant=null;if(!string.IsNullOrEmpty(target)){participant=editor.Find(target);if(!participant)return null;}
-            CaptureMedia();var point=editor.Frame.PointToWorld(authored);bool found=SampleMedium(point,participant,null,out var m,out float depth,out bool ready);var identity=editor.WorldIdentity;
+            CaptureMedia(false);var point=editor.Frame.PointToWorld(authored);bool found=SampleMedium(point,participant,null,out var m,out float depth,out bool ready);var identity=editor.WorldIdentity;
             return new JObject{["worldId"]=identity.worldId,["regionId"]=identity.regionId,["found"]=found,["active"]=ready,["bodyId"]=found?m.Id:"",["liquid"]=found?m.Contents.liquid:"",["depthMetres"]=found?depth:0,["surface"]=WorkspaceViewpoint.Point(found?editor.Frame.PointToRoom(point+m.Up*depth):Vector3.zero),["densityKgM3"]=found?RoomFluid.Effective(m.Contents.fluid).densityKgM3:0,["reason"]=found&&!ready?"Medium or participant physics is unavailable":found?"":"No finite liquid contains this point"};
         }
         internal JObject ObserveMediumBody(string id){

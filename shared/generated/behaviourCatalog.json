@@ -32390,6 +32390,83 @@
   ],
   "events": [
     {
+      "id": "object.medium.contact",
+      "version": 1,
+      "label": "Water contact changed",
+      "activity": null,
+      "objectEvent": true,
+      "valueType": "text",
+      "description": "Contacts sample at up to 20 Hz: rigid props use the shared 4x4x4 occupancy grid; Maestro uses six visible mapped joints (feet, hands, hips and head); each hand uses its tracked index fingertip, each controller its aim-pose origin. This is bounded sampled contact, not whole-skin or fluid simulation. known=false means unavailable, never dry. Samples expire after 0.2 seconds; tracking expires after 0.15 seconds. Physics, participant and vessel environment policies, geometry, lifecycle and workspace holds apply. Spawn, reload, geometry/ownership changes and tracking reacquisition establish a baseline without entry/exit events. Nested water chooses the smallest containing cavity then stable ID. Contacts change no quantities or velocities. Transient ripples use at most eight one-second waves per vessel on its clipped surface. Value/source is the vessel ID. participantId identifies a created prop, maestro, input:left or input:right; kind distinguishes object/avatar/hand/controller. phase is entered/exited for aggregate membership changes, or crossed when a sampled point travels across the finite free surface and ends dry beyond the cavity between samples. Multiple samples collapse to one representative event per phase and participant; this is not exhaustive continuous collision detection. speed is sampled physical metres/second capped at 30, depth is sampled metres, x/y/z is a representative surface point in authored coordinates. A queued point remains in its authored room. Use a condition on phase/kind/participantId to attach a sound or behavior; ongoing submerged movement only refreshes ripples, not event spam.",
+      "features": [
+        "eventPrograms.v1",
+        "eventFields.v1",
+        "liquidContacts.v1"
+      ],
+      "fields": {
+        "type": "object",
+        "properties": {
+          "participantId": {
+            "type": "string",
+            "pattern": "^([a-f0-9]{32}|maestro|input:left|input:right)$",
+            "maxLength": 32
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "object",
+              "avatar",
+              "hand",
+              "controller"
+            ]
+          },
+          "phase": {
+            "type": "string",
+            "enum": [
+              "entered",
+              "exited",
+              "crossed"
+            ]
+          },
+          "speed": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 30.0
+          },
+          "depth": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 100.0
+          },
+          "x": {
+            "type": "number",
+            "minimum": -1000.0,
+            "maximum": 1000.0
+          },
+          "y": {
+            "type": "number",
+            "minimum": -1000.0,
+            "maximum": 1000.0
+          },
+          "z": {
+            "type": "number",
+            "minimum": -1000.0,
+            "maximum": 1000.0
+          }
+        },
+        "required": [
+          "participantId",
+          "kind",
+          "phase",
+          "speed",
+          "depth",
+          "x",
+          "y",
+          "z"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "object.connection.broken",
       "version": 1,
       "label": "Physical connection broke",
@@ -35316,6 +35393,100 @@
       "features": [
         "factQueries.v1",
         "containerScooping.v1"
+      ]
+    },
+    {
+      "id": "object.medium.contactState",
+      "version": 1,
+      "type": {
+        "record": {
+          "known": "boolean",
+          "immersed": "boolean",
+          "bodyId": "text",
+          "kind": "text",
+          "liquid": "text",
+          "depthMetres": "number",
+          "sampleSpeedMetresPerSecond": "number",
+          "surface": {
+            "record": {
+              "x": "number",
+              "y": "number",
+              "z": "number"
+            }
+          },
+          "reason": "text"
+        }
+      },
+      "label": "Object or Maestro water contact",
+      "description": "Contacts sample at up to 20 Hz: rigid props use the shared 4x4x4 occupancy grid; Maestro uses six visible mapped joints (feet, hands, hips and head); each hand uses its tracked index fingertip, each controller its aim-pose origin. This is bounded sampled contact, not whole-skin or fluid simulation. known=false means unavailable, never dry. Samples expire after 0.2 seconds; tracking expires after 0.15 seconds. Physics, participant and vessel environment policies, geometry, lifecycle and workspace holds apply. Spawn, reload, geometry/ownership changes and tracking reacquisition establish a baseline without entry/exit events. Nested water chooses the smallest containing cavity then stable ID. Contacts change no quantities or velocities. Transient ripples use at most eight one-second waves per vessel on its clipped surface. Read the last sampled aggregate for a created prop or Maestro. surface is an authored-coordinate projection, depth is physical metres. When dry, surface is only the first sampled position.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^([a-f0-9]{32}|maestro)$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "maestro"
+      },
+      "features": [
+        "factQueries.v1",
+        "liquidContacts.v1"
+      ]
+    },
+    {
+      "id": "input.medium.contactState",
+      "version": 1,
+      "type": {
+        "record": {
+          "known": "boolean",
+          "immersed": "boolean",
+          "bodyId": "text",
+          "kind": "text",
+          "liquid": "text",
+          "depthMetres": "number",
+          "sampleSpeedMetresPerSecond": "number",
+          "surface": {
+            "record": {
+              "x": "number",
+              "y": "number",
+              "z": "number"
+            }
+          },
+          "reason": "text"
+        }
+      },
+      "label": "Tracked hand or controller water contact",
+      "description": "Contacts sample at up to 20 Hz: rigid props use the shared 4x4x4 occupancy grid; Maestro uses six visible mapped joints (feet, hands, hips and head); each hand uses its tracked index fingertip, each controller its aim-pose origin. This is bounded sampled contact, not whole-skin or fluid simulation. known=false means unavailable, never dry. Samples expire after 0.2 seconds; tracking expires after 0.15 seconds. Physics, participant and vessel environment policies, geometry, lifecycle and workspace holds apply. Spawn, reload, geometry/ownership changes and tracking reacquisition establish a baseline without entry/exit events. Nested water chooses the smallest containing cavity then stable ID. Contacts change no quantities or velocities. Transient ripples use at most eight one-second waves per vessel on its clipped surface. Pointing a ray at distant water does not touch it. Tracked physical inputs use the global real-room policy.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "side": {
+            "type": "string",
+            "enum": [
+              "left",
+              "right"
+            ]
+          }
+        },
+        "required": [
+          "side"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "side": "left"
+      },
+      "features": [
+        "factQueries.v1",
+        "liquidContacts.v1"
       ]
     },
     {
@@ -40202,7 +40373,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/Watercolor.shader",
-      "sha256": "8b308d9c841710c382614690a962350e43e633e11bd902f40dca9fd9a03ccd48"
+      "sha256": "8f4f8a3e6997def8788143a6025bd559d813aa68c24d8fea493686fa0f031279"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/WeatherProjection.cs",
@@ -40290,7 +40461,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/BookControllerInput.cs",
-      "sha256": "e5bc2e79bedd8a467c419aef39a18ba2b47bea997e943958f83452c52a54c7cf"
+      "sha256": "5f74a21b6ab0b982a7be1e0ec3f2353c3f0a8a555dd6fb366f88b8da4583547c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/BookCoordinates.cs",
@@ -40621,6 +40792,10 @@
       "sha256": "2ce662a485c5e033d804b99ee73abb38a0f5527aa07519706d25a5a7c230195b"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/MediumContactFacts.cs",
+      "sha256": "24016c035ca9f7ec1aceca90e61ce6dc6447afab545c98747645dafeae1e2670"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/MediumFacts.cs",
       "sha256": "c42d03aca1981fc6efe00ff51030b08fabddbd51401004d3a54ca77fe44c870e"
     },
@@ -40890,11 +41065,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ContainerFillView.cs",
-      "sha256": "ecf41cc6ebb6b89324ca2d4b87b4f24056d8a785777af3973a56893c8c1bd887"
+      "sha256": "c5d5eae3740c74fbff79630c0d2938474c195629c50152e7ddfc98c3ba31746a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ContainerFlowGeometry.cs",
       "sha256": "4e0a1f1542e2446f4734df37d488f2318c93158a260f13f436289bfb6ba31329"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ContainerRipples.cs",
+      "sha256": "88be7cf179c58d716129fafe65b73f062416db65a4b3e8bc26c613087cb51008"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ContainerScoopingGeometry.cs",
@@ -40957,16 +41136,20 @@
       "sha256": "e1582465ac88790ce6410350d5adbd0698ac9944916b013148819e5e02e74dd5"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidContacts.cs",
+      "sha256": "acd774ae308140d54ff4f747f403b4edc0bfec95ec7dedcfd271e9347699fc79"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidMediumGeometry.cs",
-      "sha256": "5ff632b05d39938d5e9d281f783ebb754066bf0ac460adbd65d64268b5784f92"
+      "sha256": "5dfa542e4db1db094511f5c0148ba64babaaa788102801151b590ec721e59889"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidMediumPhysics.cs",
-      "sha256": "7552cb80f75d5ea62c8f8cfd26788c65d9d7b1089608891f126aec78c33817e9"
+      "sha256": "a18bb8a7c7f9736344636f12b1f127da2786dfd8efb850dee7b054d2b7f5914a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidPouring.cs",
-      "sha256": "fbdd82dc5af3b7f0713079053d160597e1f13398375a0f74060df95651994014"
+      "sha256": "35fd5e45577089a806be44cc89031d0e78b0077b3098e842f139627152c42a11"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidRainCollection.cs",
@@ -41090,7 +41273,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "14327c9619e034efa31bcd17f523c77db1f17dccff3d9631c5f0c9c38a3c658d"
+      "sha256": "be547b2c52c1976f8e44ad56e4d3ca1b2e197d999b2dfb2d9b611f83966b5f9f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
@@ -41818,7 +42001,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "36880b460d38508ea4dfa12e6ea10295246b650e86c7748ef6914ad68ea58ad3"
+      "sha256": "04a0e0e9ab98f0607832193daca0de526239e3b9d7e14ec40c120ea50ebc3994"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -41898,7 +42081,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RoomRules.cs",
-      "sha256": "e2c305ad9132f492c7a38abfca9c86f89d824d015e89beb9ca73f07b60042069"
+      "sha256": "a7f059bd8d460984e2273532ca67f58e7dc942ded6874a10b9fe8bd23c02bd9f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleButton.cs",

@@ -1641,3 +1641,98 @@ provider, physical headset, new package, release signing, upload or deployment
 was used for this routing increment. All ten protected unrelated working files
 remain unchanged. Physical movement quality, thermal behavior and planning cost
 remain pending the existing headset cooling/charge hold.
+
+
+### Shared liquid contacts and bounded ripples (2026-10-09)
+
+Water contact now has one native sampling path used by presentation, shared facts
+and event programs. `object.medium.contact` names the changed vessel and reports
+participant, kind, entered/exited/crossed phase, sampled speed, depth and an
+explicit authored-world surface point. `object.medium.contactState` and
+`input.medium.contactState` distinguish unavailable sampling from a dry result.
+All three advertise `liquidContacts.v1` through the generated catalog. Users and
+the in-app agent can build an editable listener using the existing program
+system; no separate agent-only contact endpoint or new saved-water format is used.
+
+Created rigid props reuse the existing 4x4x4 collider-occupancy samples. Maestro
+uses six visible mapped joints; tracked hands use the actual index fingertip,
+and controllers use the same aim-pose origin as physical pushers. Distant ray
+hits do not touch water. Sampling runs at up to 20 Hz, selects the smallest
+containing cavity, and respects both participant and vessel environment policy.
+An unavailable inner vessel cannot borrow an outer pool's readiness. Props
+allowed outside the scanned room can contact virtual water below its floor;
+physical input retains the global environment policy.
+
+Initial placement, geometry/ownership changes, reload, tracking reacquisition,
+pauses and workspace holds establish fresh baselines. They do not manufacture
+entry/exit events. A strict finite-surface crossing can report a fast sample
+that enters and leaves the cavity between ticks. This is bounded sampled contact,
+not exhaustive continuous fluid or skin collision. Contacts alter neither saved
+liquid quantity nor velocity; free-body buoyancy/drag remains in its existing
+physics path. The new event can drive authored sounds or behaviors, but this
+increment does not add automatic splash audio, haptics, fluid displacement,
+terrain reservoirs, swimming or aquatic NPC simulation.
+
+Each vessel renders at most eight transient one-second expanding waves on its
+existing clipped free-surface mesh. No per-wave object, collider or extra liquid
+store is created. The surface follows gravity; material/opacity, authored-world
+lighting and depth occlusion still use the shared presentation pipeline. The
+bounded effect is an initial readable contact cue, not a final art treatment.
+
+Final native regression passes **992 EditMode** and **895 PlayMode** cases, with
+zero failures and the three established optional private-import skips. Nine new
+contact cases cover actual Input System controller events, Maestro joints, typed
+native event delivery, below-scan policies, unavailable nested geometry, focus/
+tracking/workspace reset, finite crossings, bounded rendering and expiration.
+The rendered ripple was inspected on the measured finite surface. Hand-tip
+injection remains an adapter-boundary check, not physical hand acceptance.
+
+Shared contracts initially pass 1,366 tests in 123 files. After the real-provider
+diagnostic fixes, the shared/core room and probe-contract subset passes 1,349
+in 122 files; the focused three diagnostic/contact tests and probe types pass
+again after the final valid-program fast path. Quest UI/probe contracts pass
+274 tests in 29 files. These are overlapping suites, not additive totals. Billing
+and room-journey checks pass 35 tests in three files after the baseline repair.
+Catalog provenance, core boundaries, included assets and unique Unity metadata
+checks pass. The generated catalog now contains 119 actions, 142 facts, 19 events
+and 486 native source inputs.
+
+Deterministic native journey **b4dc89d57c6145fab38303d8976b4ab9** passes **709
+observations**, including unknown contact readback while tracking/physics are
+unavailable; client and Editor exit 0. Original-book journey
+**9d6c11860a6745a8bce1cb768edb9beb** passes the complete existing form/chat/native
+workflow and the new contact fact inspection. Its screenshot was inspected:
+users can select a tracked side and read unknown versus dry through the existing
+catalog form. The initial book test used the wrong search label after changing
+category; correcting it to `Search facts` fixed the test without product changes.
+An initial duplicate event/fact catalog identity was also corrected before the
+passing native regression, using explicit `contactState` fact IDs.
+
+New `LiquidContacts` real-provider acceptance asks ordinary English/Spanish chat
+to save, arm and stop an editable water-contact listener, preserving its finite
+vessel, objects, quantities and paused physics. It checks the authored event,
+source filter, participant field, state assignment and twenty-second delay.
+No tracked contact is fabricated; physical event delivery is separate PlayMode
+evidence. Fresh BYOK **80a69f05f194440cb7e05bb489fe9946** passes all three requests,
+using the configured `gemini-3.5-flash-lite` fallback during provider high demand.
+
+Initial managed **b2b3cf16df224b3c81a1f3fd94a97aa5** failed while the fallback
+model repeatedly submitted malformed programs. Shared source validation now
+identifies missing/unknown fields and malformed expression/assignment shapes,
+without accepting, normalizing or silently repairing invalid programs. Managed
+retry **60f8d2aa5a554184a65e494ba34d94dd** successfully saved the native program
+and passed handoff/usage coverage, but strict billing failed: 248 credits were
+already reserved at its baseline, and earlier settlement contaminated its
+measured deltas. Failed evidence is retained. Chat and Live room acceptance now
+wait for a settled billing baseline, with a bounded preflight that fails before
+provider calls if earlier reservations remain. Ledger/charge checks are unchanged.
+Fresh managed **391710e70e9e475580fd8ac384febe2e** passes all three requests,
+including native start/wait/stop and preserved source/world state. Gemini 3.8 Flash
+and the configured 3.5 Flash Lite fallback both appear in these successful
+managed/BYOK journeys. Managed accounting reconciles **282 credits / USD 0.273610**
+across the three measured requests, excluding the introductory chat, with zero
+reservations before and after each. No tracked contact was synthesized. Final
+lint, probe types and whitespace checks pass. All ten protected unrelated files
+retain their original hashes. PR comments were reread with no new findings since
+the previous review. No new headset, APK, signing, upload, deployment or
+Store-readiness claim is made; the existing device cooling/charge hold remains.

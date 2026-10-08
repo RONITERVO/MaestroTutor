@@ -61,6 +61,13 @@ namespace Maestro.Quest.Creation {
             float t=(limit-at)/change;if(change>0)exit=Mathf.Min(exit,t);else enter=Mathf.Max(enter,t);
             return enter<=exit;
         }
+        internal bool CrossesSurface(Vector3 from,Vector3 to,out Vector3 point){
+            point=default;float before=Vector3.Dot(from,Up)-Level,after=Vector3.Dot(to,Up)-Level;
+            if(before*after>=0||Mathf.Abs(before)<1e-6f||Mathf.Abs(after)<1e-6f)return false;
+            point=Vector3.LerpUnclamped(from,to,before/(before-after));
+            var local=inverse.MultiplyPoint3x4(point);
+            return Contents.amountMl>0&&local.y>=-.0001f&&local.y<=Contents.height+.0001f&&Contents.ContainsHorizontal(local);
+        }
         internal bool Sample(Vector3 point,out float depth){
             depth=Level-Vector3.Dot(point,Up);var local=inverse.MultiplyPoint3x4(point);
             return Contents.amountMl>0&&depth>0&&local.y>=0&&local.y<=Contents.height&&Contents.ContainsHorizontal(local);

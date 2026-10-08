@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {prepareAgentLiquidContacts,runAgentLiquidContactsProof} from './probe-agent-liquid-contacts';
 import {runAgentWorldWeatherProof} from './probe-agent-world-weather';
 import {probeWorldWeather} from './probe-world-weather';
 import {probeLiquidMedium} from './probe-liquid-medium';
@@ -42,7 +43,7 @@ import {checkedProbeReply,factReply,assertSamePlacement,type NativeProbeState} f
 const directory=process.argv[2];if(!directory)throw new Error('Supply the explicitly started native probe directory.');
 const prompt=process.env.MAESTRO_ROOM_PROBE_PROMPT;
 const providerScenario=process.env.MAESTRO_ROOM_PROBE_SCENARIO;
-if(providerScenario && (!['ContextCreateEdit','LiveVisual','ObserverVisual','EventProgram','AvatarAnimation','CompositeModule','PhysicsLaunch','TaskSteering','WorldPresentation','WorldLighting','WorldTime','WorldWeather','LiquidMedium','WaterTraversal'].includes(providerScenario)||!prompt))throw new Error('Unknown or unconfigured provider scenario.');
+if(providerScenario && (!['ContextCreateEdit','LiveVisual','ObserverVisual','EventProgram','AvatarAnimation','CompositeModule','PhysicsLaunch','TaskSteering','WorldPresentation','WorldLighting','WorldTime','WorldWeather','LiquidMedium','WaterTraversal','LiquidContacts'].includes(providerScenario)||!prompt))throw new Error('Unknown or unconfigured provider scenario.');
 const transport=await HeadlessRoomTransport.connect(directory,120000);
 const observations:unknown[]=[];
 try{
@@ -100,7 +101,7 @@ try{
   try{
    await selectHeadlessLanguage(client,{targetLanguageCode:'es-ES',nativeLanguageCode:'en-US'});
    const spoken=providerScenario==='LiveVisual'||providerScenario==='ObserverVisual';
-   const contextTurn=await runHeadlessChatTurn(client,{text:['WorldPresentation','WorldLighting','WorldTime','WorldWeather','LiquidMedium','WaterTraversal'].includes(providerScenario||'')?"Hello! I am learning Spanish. I will try the room view controls next, but please do not change anything yet.":(['EventProgram','AvatarAnimation','CompositeModule','PhysicsLaunch','TaskSteering'].includes(providerScenario||''))?"For this test, my test object is a blue ball named ParityBall, half the diameter of the room's standard ball. Remember that; do not create anything yet.":spoken?"For this test, 'my test object' means one ball named ParityBall, exactly half the diameter of the room's standard ball. I will choose its colour in my next request. Remember that; do not make anything yet.":"For this test, 'my test object' means one small blue ball named ParityBall. Remember that for my next request; do not make anything yet.",useGoogleSearch:false});
+   const contextTurn=await runHeadlessChatTurn(client,{text:['WorldPresentation','WorldLighting','WorldTime','WorldWeather','LiquidMedium','WaterTraversal','LiquidContacts'].includes(providerScenario||'')?"Hello! I am learning Spanish. I will try the room view controls next, but please do not change anything yet.":(['EventProgram','AvatarAnimation','CompositeModule','PhysicsLaunch','TaskSteering'].includes(providerScenario||''))?"For this test, my test object is a blue ball named ParityBall, half the diameter of the room's standard ball. Remember that; do not create anything yet.":spoken?"For this test, 'my test object' means one ball named ParityBall, exactly half the diameter of the room's standard ball. I will choose its colour in my next request. Remember that; do not make anything yet.":"For this test, 'my test object' means one small blue ball named ParityBall. Remember that for my next request; do not make anything yet.",useGoogleSearch:false});
    const contextAftersteps=await runHeadlessSuggestionAftersteps(client,{assistantMessageId:contextTurn.assistantMessage.id});
    if(contextAftersteps.toolRequest?.tool==='agent'||lease.state().sceneRevision!==initial.sceneRevision||agent.usage.length)throw new Error('Context-only chat unexpectedly started room work.');
    const presentationBaseline=providerScenario==='WorldPresentation'
@@ -117,6 +118,7 @@ try{
    if(providerScenario==='WorldTime')await writeFile(join(directory,'world-time-baseline.json'),JSON.stringify({startup:initial,beforeRequest:worldTimeBaseline},null,2));
    const weatherBaseline=providerScenario==='WorldWeather'?await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'world.weather',version:1}}]):initial;
    const mediumSetup=providerScenario==='LiquidMedium'?await prepareAgentLiquidMedium(execute):null;
+   const contactSetup=providerScenario==='LiquidContacts'?await prepareAgentLiquidContacts(execute):null;
    const waterSetup=providerScenario==='WaterTraversal'?await prepareAgentWaterTraversal(execute):null;
    let createdJourney;
    if(spoken){
@@ -138,6 +140,7 @@ try{
      createdJourney,finalState,liveInput:{pcm:input.pcm,audioBytes:sent.audioBytes,frames:sent.frames}};
     await writeFile(join(directory,'provider-scenarios.json'),JSON.stringify(scenarioEvidence,null,2));outcome=scenarioEvidence;
    }else {createdJourney=await runHeadlessRoomTurn(client,{text:prompt});outcome=createdJourney;}
+   if(providerScenario==='LiquidContacts'&&contactSetup){outcome={scenario:providerScenario,createdJourney,contacts:await runAgentLiquidContactsProof({client,execute,directory,...contactSetup})};}
    if(providerScenario==='WaterTraversal'&&waterSetup){outcome={scenario:providerScenario,createdJourney,water:await runAgentWaterTraversalProof({client,execute,directory,...waterSetup})};}
    if(providerScenario==='LiquidMedium'&&mediumSetup){outcome={scenario:providerScenario,createdJourney,medium:await runAgentLiquidMediumProof({client,execute,directory,...mediumSetup})};}
    if(providerScenario==='WorldWeather'){outcome={scenario:providerScenario,createdJourney,weather:await runAgentWorldWeatherProof({client,initial:weatherBaseline,execute,directory,read:()=>lease.state()})};}

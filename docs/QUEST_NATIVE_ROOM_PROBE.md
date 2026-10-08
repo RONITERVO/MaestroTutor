@@ -957,3 +957,27 @@ cover continuous thin-water sweeps, live fill changes, per-participant environme
 policy, paused forces, freshly moved collision bounds, and both Maestro and
 opted-in creation recordings. A path fact reports water admission only, not an
 entire traversable route or an automatic detour.
+
+
+### Shared liquid contacts
+
+`-ProviderScenario LiquidContacts` uses the same managed/BYOK setup and fresh
+English-native/Spanish-target chat. The harness creates a finite half-filled
+ContactPool with physics paused. The learner asks for a saved WaterTouch program
+that waits for the first pool contact, remembers the actual participant, then
+waits twenty seconds. Later ordinary requests start and stop that same program.
+Acceptance checks the native event/source/field mapping, editable source,
+waiting state, preserved objects/quantities/physics, original handoff and final
+chat. No button or automatic start is requested. No physical contact is injected
+into this provider proof; Unity PlayMode verifies actual native event delivery.
+
+The no-provider transport reads object/input contact facts with unavailable
+sampling, and the original-book journey inspects a tracked side through the
+existing catalog form. `known:false` must remain unknown, not a dry measurement.
+Evidence is `provider-scenarios.json`, `book-native-liquid-contact.json` and its
+screenshot. Native tests cover bounded contact sampling, tracking/lifecycle
+baselines, participant policies, event fields and surface-contained ripple pixels.
+These desktop checks do not establish physical fingertip, latency or Quest GPU
+acceptance. Both chat and Live room journeys wait for earlier managed billing to
+settle before their measured baseline; an unsettled account fails the bounded
+preflight before new provider work, and all subsequent ledger checks still apply.

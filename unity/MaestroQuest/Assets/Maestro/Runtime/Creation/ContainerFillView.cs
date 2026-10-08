@@ -5,26 +5,27 @@ using Maestro.Quest.Art;
 using UnityEngine;
 namespace Maestro.Quest.Creation {
     /// <summary>Bounded, upward-facing liquid-level presentation; never mutates quantity or physics.</summary>
-    public sealed class ContainerFillView:MonoBehaviour {
+    public sealed partial class ContainerFillView:MonoBehaviour {
         const int Segments=24;
         readonly List<Vector3> rim=new(72),vertices=new(74);
         readonly List<int> triangles=new(216);
         readonly List<Vector3> normals=new(74);
         readonly Vector3[] bottom=new Vector3[Segments],top=new Vector3[Segments];
         RoomContainer data;GameObject surface;Mesh mesh;Material material;MeshRenderer renderer;
-        Quaternion lastRotation;float nextRefresh;bool dirty;
+        Quaternion lastRotation;Vector3 lastUp;float nextRefresh;bool dirty;
         public void Apply(RoomContainer[] containers){
             data=containers?.Length==1?containers[0].Copy():null;dirty=true;
-            if(data==null||data.amountMl<=0){if(surface)surface.SetActive(false);return;}
+            if(data==null||data.amountMl<=0){ClearRipples();if(surface)surface.SetActive(false);return;}
             if(!surface){surface=new GameObject("Measured liquid surface");surface.transform.SetParent(transform,false);mesh=new Mesh{name="Bounded liquid level"};mesh.MarkDynamic();surface.AddComponent<MeshFilter>().sharedMesh=mesh;renderer=surface.AddComponent<MeshRenderer>();material=IllustratedMaterials.Create(data.color,0);renderer.sharedMaterial=material;renderer.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;renderer.receiveShadows=false;}
             surface.SetActive(true);surface.transform.SetLocalPositionAndRotation(data.frame.position+data.frame.rotation*(Vector3.up*data.height*.5f),data.frame.rotation);material.SetColor("_Color",data.color);
             Refresh();RoomAppearanceView.VisualsChanged(this);
         }
-        void LateUpdate(){if(surface&&surface.activeSelf&&(dirty||Time.unscaledTime>=nextRefresh&&Quaternion.Angle(lastRotation,surface.transform.rotation)>.25f))Refresh();}
+        static Vector3 GravityUp=>float.IsFinite(Physics.gravity.sqrMagnitude)&&Physics.gravity.sqrMagnitude>.01f?-Physics.gravity.normalized:Vector3.up;
+        void LateUpdate(){if(surface&&surface.activeSelf&&(dirty||Time.unscaledTime>=nextRefresh&&(Quaternion.Angle(lastRotation,surface.transform.rotation)>.25f||Vector3.Angle(lastUp,GravityUp)>.25f)))Refresh();UpdateRipples();}
         internal void Refresh(){
             if(data==null||!surface||data.amountMl<=0)return;
             nextRefresh=Time.unscaledTime+.1f;lastRotation=surface.transform.rotation;dirty=false;
-            Vector3 normal=surface.transform.InverseTransformDirection(Vector3.up).normalized;
+            lastUp=GravityUp;Vector3 normal=surface.transform.InverseTransformDirection(lastUp).normalized;
             float level=ContainerFlowGeometry.Level(data,normal,data.amountMl/data.capacityMl);
             int count=data.IsRectangular?4:Segments;
             for(int i=0;i<count;i++){

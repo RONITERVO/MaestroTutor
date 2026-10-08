@@ -21,7 +21,14 @@ const array=(v:unknown,max:number)=>{need(Array.isArray(v)&&v.length<=max,'Missi
 const text=(v:unknown)=>{need(typeof v==='string','Expected text');return v;};
 const name=(v:unknown)=>typeof v==='string'&&/^[a-zA-Z0-9_]{1,32}$/.test(v);
 const target=(v:unknown)=>v==='maestro'||v==='book'||typeof v==='string'&&/^[a-fA-F0-9]{32}$/.test(v);
-function keys(v:Record<string,unknown>,required:string,optional='') {const a=required.split(' ').filter(Boolean),b=[...a,...optional.split(' ')];need(a.every(k=>Object.prototype.hasOwnProperty.call(v,k))&&Object.keys(v).every(k=>b.includes(k)),'Missing or unknown program field');}
+function keys(v:Record<string,unknown>,required:string,optional='') {
+ const a=required.split(' ').filter(Boolean),allowed=[...a,...optional.split(' ')];
+ const missing=a.filter(k=>!Object.prototype.hasOwnProperty.call(v,k)),unknown=Object.keys(v).filter(k=>!allowed.includes(k));
+ if(!missing.length&&!unknown.length)return;
+ const where=typeof v.op==='string'?`block ${String(v.id).slice(0,32)} (${v.op.slice(0,32)})`:typeof v.name==='string'?`definition ${v.name.slice(0,32)}`:'program object';
+ const names=(items:string[])=>items.slice(0,8).map(k=>k.slice(0,48)).join(', ')+(items.length>8?', …':'');
+ need(false,`Missing or unknown program field in ${where}; missing: ${names(missing)||'none'}; unknown: ${names(unknown)||'none'}`);
+}
 function type(v:unknown):ValueType|'void' {return v==='void'?'void':readDataType(v);}
 const literal=(v:unknown,declared?:unknown):ValueType=>checkedDataValue(v,declared);
 /** Reject ambiguous duplicate keys and excessive JSON depth before typed validation. */

@@ -339,6 +339,15 @@ try{
  assert.equal(await page.getByLabel('Action inputs mode',{exact:true}).inputValue(),'avoid');
  await page.getByRole('heading',{name:'Configure water traversal',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-water-traversal.png')});
  await writeFile(join(directory,'book-native-water-traversal.json'),JSON.stringify({boundary:'Actual original-book generated form, native save receipt and current-value reload. No provider, physical movement or headset claim.',waterTraversal},null,2));
+ // The original book reads shared contact state and event documentation; inspection never enables physics.
+ await page.getByRole('button',{name:'Back to workshop',exact:true}).click();await page.getByRole('button',{name:'Action catalog',exact:true}).click();
+ await page.getByLabel('Catalog category',{exact:true}).selectOption('facts');await page.getByLabel('Search facts',{exact:true}).fill('input.medium.contactState');await page.getByRole('button',{name:'Search',exact:true}).click();
+ await page.getByRole('button',{name:/Tracked hand or controller water contact.*input.medium.contactState/}).click();
+ await page.getByLabel('Fact inputs side',{exact:true}).selectOption('left');await page.getByRole('button',{name:'Read fact',exact:true}).click();
+ await page.waitForFunction(()=>{const c=window.nativeBookEvidence!().state!.catalog;return c?.operation==='inspect'&&c.category==='facts'&&c.capability==='input.medium.contactState'&&c.available===true;});
+ const contactState=await page.evaluate(()=>{const c=window.nativeBookEvidence!().state!.catalog;if(c?.operation!=='inspect'||c.category!=='facts')throw new Error('Contact fact missing');return c.value as {known:boolean;immersed:boolean};});assert.equal(contactState.known,false);assert.equal(contactState.immersed,false);
+ await page.getByLabel('Current fact value',{exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-liquid-contact.png')});
+ await writeFile(join(directory,'book-native-liquid-contact.json'),JSON.stringify({boundary:'Original book fact form through native transport. Untracked desktop input stays unknown. No contact, provider or headset claim.',contactState},null,2));
  await openNamedAction('Save environment profile','environment.profile.save');
  await page.getByLabel('Action inputs name',{exact:true}).fill('Virtual terrain only');
  await page.getByLabel('Action inputs realCollisions',{exact:true}).selectOption('false');

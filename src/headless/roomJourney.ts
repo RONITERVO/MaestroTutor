@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { runHeadlessChatTurn } from './chatJourney';
 import { runHeadlessSuggestionAftersteps } from './suggestionJourney';
-import { captureManagedJourneyBilling, evaluateManagedJourneyBilling, waitForManagedJourneyBillingSettlement } from './managedJourneyBilling';
+import { beginManagedJourneyBilling, evaluateManagedJourneyBilling, waitForManagedJourneyBillingSettlement } from './managedJourneyBilling';
 import { join } from 'node:path';
 import type { HeadlessClient } from './client';
 import type { TutorTextTurnInput } from '../core-sdk/chat/tutorTextTurn';
@@ -138,7 +138,7 @@ export async function connectHeadlessRoom(client: HeadlessClient, directory: str
 export async function runHeadlessRoomTurn(client: HeadlessClient, input: { text: string; languagePairId?: string; requireActions?: boolean }) {
   const agent = client.roomAgent; if (!agent) throw new Error('Connect a native room first.');
   const operationId = client.runtime.ids.create('headless-room-turn');
-  const before = client.accessMode === 'managed' ? await captureManagedJourneyBilling(client, operationId) : null;
+  const before = client.accessMode === 'managed' ? await beginManagedJourneyBilling(client, operationId) : null;
   const usageStart = agent.usage.length;
   let turn: Awaited<ReturnType<typeof runHeadlessChatTurn>> | undefined;
   let aftersteps: Awaited<ReturnType<typeof runHeadlessSuggestionAftersteps>> | undefined;

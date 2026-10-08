@@ -46,8 +46,11 @@ export function linkProgram(source:Record<string,unknown>,validate:(value:Record
    const f=object(token);need(plain(f.name),'Function names must be local');list(f.body,128);
    visitProgramNodes((f as unknown as ProgramFunction).body,n=>{
     need(plain(n.id),'Block identities must be local');
-    visitNodeExpressions(n,e=>{if('state' in e)need(plain(e.state),'State references must be local');});
-    if(n.op==='setState')need(plain(n.variable),'State destinations must be local');
+    visitNodeExpressions(n,e=>{
+     need(e!==null&&typeof e==='object'&&!Array.isArray(e),`Block ${n.id}: an expression must be an object, for example {"value":0}, not a bare number or text`);
+     if('state' in e)need(plain(e.state),'State references must be local');
+    });
+    if(n.op==='setState')need(plain(n.variable),`Block ${n.id}: setState needs a local variable field naming a declared state entry, for example "variable":"participant"`);
    });
   }
   for(const f of p.functions)visitProgramNodes(f.body,n=>{
