@@ -4510,3 +4510,67 @@ responses (no live provider or headset use). This change has not been packaged,
 installed or checked on the headset.
 Evidence: `.quest-evidence/spatial-state/terrain-traversal-*` and
 `.quest-evidence/spatial-state/world-ground-book/`.
+
+
+### Saved per-entity environment profiles (2026-10-08)
+
+The real-room "glass box" now has an explicit saved participant policy. Each
+book, Maestro or created/imported object holds an optional stable profile ID;
+an empty ID inherits the global physical-room switch. A profile can exclude
+scanned surfaces while retaining virtual terrain and object contacts. The global
+switch remains an upper bound. No extra Unity layer is allocated per character:
+one owning object applies the resolved scan mask to its body and compound/import
+children. Missing or unsupported profiles are rejected, never silently inherited.
+
+The same resolver now supplies native contacts, containment/readiness, navigation
+source selection and foot/body sweeps, throw trajectories, held props, catch
+clearance, connections and liquid transfer paths. Navigation prepares for its
+own actor; current Maestro owns that navigator. Future concurrent NPC navigation
+must retain separate owned query instances rather than change another actor's
+route context. The current room has one region. physics.environment.ready
+retains its default-scope meaning; object.environment reports the individual
+actor, and physics.simulation.ready reports whether any accepted environment
+can start. Loss of scan readiness freezes physical participants while accepted
+virtual participants can keep running. Explicit room Pause still pauses all.
+
+Shared authoring is exposed through environment.profile.save,
+environment.profile.remove, object.environment.assign, and the corresponding
+profile/list/binding facts. The existing catalog generates book fields, agent
+discovery, argument validation and program calls. A shared edit names every
+affected member as an explicit ownership claim and rechecks its exact membership
+and profile revision. Assignments check object and chosen-profile revisions.
+Held/authored/moving Maestro targets refuse conflicting edits. Enabling real
+collisions refuses new scanned-surface penetration; during running physics the
+target must also fit its new environment. Successful policy changes retain
+position and clear the changed body's prior throw speeds. Independent bodies
+keep their speeds. Removing a referenced profile requires explicit reassignment.
+
+Definitions and bindings use the existing journal: one Undo, idempotent unchanged
+edits, temporary Keep/Discard, saved snapshots and workspace archives. Room v24,
+paired snapshot v23 and archive v22 record the added data explicitly. Earlier
+rooms inherit the prior global policy; unknown future data remains preserved by
+workspace recovery. Current limits are 16 profiles, 16 members per profile and
+three definitions per fact page, fitting the existing 16-target action and
+bounded program-value budgets. These are visible admission limits, not a promise
+of unlimited concurrent city simulation.
+
+Collision participation does not change real-depth occlusion, passthrough,
+materials, water-medium semantics or acoustics. Existing world-transfer guards
+and bounded accepted-ground columns remain. This checkpoint is not terrain
+streaming, arbitrary physical-surface subsets or a general NPC locomotion system.
+The next appearance, weather, water and regional-simulation steps retain the
+shared spatial-state direction above.
+
+Verification passed 915 EditMode and 772 PlayMode tests, with three optional
+private-file skips, plus 1,064 shared room/program tests. App and probe TypeScript
+and catalog provenance pass. Matching-source native headless and original-chat/book
+journeys pass. The headless journey creates, assigns, edits, undoes and removes an
+actual saved profile through the shared native transport. Native receipts/facts
+also drive the generated book inputs and fact display; screenshots were inspected
+for readability and overflow. Physical tests put one ball on the real floor and
+another on virtual ground two metres below it, and verify scan-loss isolation.
+These runs use local scripted responses, not a live provider or headset. Headset
+testing remains on hold; this checkpoint has not been packaged or installed.
+Evidence: .quest-evidence/spatial-state/environment-profiles-*;
+native runs 3bb00a88aad64ff588f502a0bb6db0cc and
+f14e4be6047e4b6eba71d3fa76913a69.

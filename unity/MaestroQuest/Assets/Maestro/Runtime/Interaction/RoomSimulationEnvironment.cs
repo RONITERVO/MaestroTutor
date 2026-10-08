@@ -12,8 +12,16 @@ namespace Maestro.Quest.Interaction
         public bool RealCollisions { get; private set; } = true;
         readonly List<RoomWalkableSurface> ground = new();
         bool observedReady;
+        readonly HashSet<RoomEnvironmentBinding> environments=new();
+        internal void RegisterEnvironment(RoomEnvironmentBinding value)=>environments.Add(value);
+        internal void UnregisterEnvironment(RoomEnvironmentBinding value)=>environments.Remove(value);
+        internal bool IncludesRealRoom(RoomItem item)=>RealCollisions&&(!item||!item.TryGetComponent<RoomEnvironmentBinding>(out var binding)||binding.RealCollisions);
+        internal bool EnvironmentReady(RoomItem item)=>IncludesRealRoom(item)?SurfacesReady:AuthoredReady();
+        internal bool AnySimulationReady {
+            get {if(SimulationReady)return true;foreach(var binding in environments)if(binding&&binding.isActiveAndEnabled&&!binding.RealCollisions)return AuthoredReady();return false;}
+        }
         public bool SimulationReady => RealCollisions ? SurfacesReady : AuthoredReady();
-        internal int CollisionMask(int mask) => RealCollisions ? mask : mask & ~(1<<RoomPhysicsLayers.Scanned);
+        internal int CollisionMask(int mask,RoomItem item=null) => IncludesRealRoom(item) ? mask : mask & ~(1<<RoomPhysicsLayers.Scanned);
         bool GatherGround() {
             ground.Clear();
             var frame=new Creation.RoomFrame(transform);
@@ -25,9 +33,10 @@ namespace Maestro.Quest.Interaction
             foreach(var surface in ground)if(surface.Available)return true;
             return false;
         }
-        internal bool ContainsSimulation(Vector3 point) {
+        internal bool ContainsSimulation(Vector3 point,RoomItem item=null)=>ContainsEnvironment(point,IncludesRealRoom(item));
+        internal bool ContainsEnvironment(Vector3 point,bool real) {
             if(!float.IsFinite(point.sqrMagnitude))return false;
-            if(RealCollisions)return SurfacesReady&&(Contains==null||Contains(point));
+            if(real)return SurfacesReady&&(Contains==null||Contains(point));
             if(!GatherGround())return false;
             // Until streamed region bounds exist, simulation is bounded to actual
             // accepted ground columns. A hidden scan/fallback plane is never used.
@@ -57,7 +66,7 @@ namespace Maestro.Quest.Interaction
             result=ObserveEnvironment();return true;
         }
         void Update() {
-            bool ready=SimulationReady;
+            bool ready=AnySimulationReady;
             if(ready==observedReady)return;
             if(!ready)Running=false;
             Status=Running?"Physics on — grip to pick up, release to throw":IdleStatus;Notify();

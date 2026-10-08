@@ -67,7 +67,7 @@ namespace Maestro.Quest.Avatar
             if (value != AvatarSpatialMode.Look)
             {
                 float scale = transform.lossyScale.y;
-                if (!navigation || !navigation.Prepare(.25f*scale,1.7f*scale,out error)) { Say(error ?? "Room navigation is unavailable"); return false; }
+                if (!navigation || !navigation.Prepare(.25f*scale,1.7f*scale,out error,item)) { Say(error ?? "Room navigation is unavailable"); return false; }
                 if (!navigation.Sample(transform.position,.25f,out _)) { error = "Place Maestro's feet near a supported walking surface, then try walking"; Say(error); return false; }
             }
             var claims=value==AvatarSpatialMode.Look?new[]{new BehaviourCatalog.Claim("maestro","gaze")}:
@@ -177,7 +177,7 @@ namespace Maestro.Quest.Avatar
             error="Room navigation is unavailable";if(!editor||!navigation)return false;
             if(!CanBegin(AvatarSpatialMode.Manual,out error))return false;
             float scale=transform.lossyScale.y;
-            if(!navigation||!navigation.Prepare(.25f*scale,1.7f*scale,out error)){error??="Room navigation is unavailable";return false;}
+            if(!navigation||!navigation.Prepare(.25f*scale,1.7f*scale,out error,item)){error??="Room navigation is unavailable";return false;}
             if(!navigation.Sample(transform.position,.08f,out _)){error="Place Maestro on a supported walking surface before authored travel";return false;}
             return true;
         }

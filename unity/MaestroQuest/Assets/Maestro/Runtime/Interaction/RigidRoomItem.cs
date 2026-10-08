@@ -31,7 +31,7 @@ namespace Maestro.Quest.Interaction
         public event Action<RoomItem> Settled;
         public event Action<RoomItem,Collider,Vector3,float> ContactStarted;
         void OnCollisionEnter(Collision collision) {
-            if(ContactStarted==null||!isActiveAndEnabled||!geometryReady||AnimationOwned||!world||!world.CanSimulate(transform.position)||collision.contactCount==0)return;
+            if(ContactStarted==null||!isActiveAndEnabled||!geometryReady||AnimationOwned||!world||!world.CanSimulate(transform.position,item)||collision.contactCount==0)return;
             // Unity may reuse Collision objects. Copy the observation immediately;
             // no callback object or mutable body state enters the program queue.
             var point=collision.GetContact(0).point;float speed=collision.relativeVelocity.magnitude;
@@ -82,7 +82,7 @@ namespace Maestro.Quest.Interaction
             Refresh();
         }
         void PhysicsChanged(){MotionRevision++;Refresh();}
-        bool Allowed => Dynamic && geometryReady && owners.Count == 0 && constraints.Count == 0 && world && world.CanSimulate(transform.position);
+        bool Allowed => Dynamic && geometryReady && owners.Count == 0 && constraints.Count == 0 && world && world.CanSimulate(transform.position,item);
         void Grabbed(SelectEnterEventArgs _) { MotionRevision++;boundaryActive=false;canceled = false; wasMoving = true; }
         void Released(SelectExitEventArgs args)
         {
@@ -96,7 +96,7 @@ namespace Maestro.Quest.Interaction
             // The body override affects contacts only; scan geometry remains available
             // for physical placement, visual overlays and independent acoustics.
             int scanBit=1<<RoomPhysicsLayers.Scanned;
-            body.excludeLayers=world&&!world.RealCollisions?body.excludeLayers.value|scanBit:body.excludeLayers.value&~scanBit;
+            body.excludeLayers=world&&!world.IncludesRealRoom(item)?body.excludeLayers.value|scanBit:body.excludeLayers.value&~scanBit;
             bool allowed = Allowed;
             if(!world||!world.Running||!Dynamic||!geometryReady||AnimationOwned||constraints.Count>0)boundaryActive=false;
             item.Grab.throwOnDetach = allowed && !canceled;
@@ -138,7 +138,7 @@ namespace Maestro.Quest.Interaction
             if(item.Grab.isSelected) {error="Release the object before changing its motion";return false;}
             if(constraints.Count>0) {error="A physical connection is suspended; inspect its state";return false;}
             if(AnimationOwned) {error="An animation or carried prop owns this object";return false;}
-            if(!world||!world.CanSimulate(transform.position)) {error="Start physics with the selected ground ready first";return false;}
+            if(!world||!world.CanSimulate(transform.position,item)) {error="Start physics with the selected ground ready first";return false;}
             return true;
         }
         // Impulse is in Newton-seconds, in world axes. Reuse the same launch
@@ -165,7 +165,7 @@ namespace Maestro.Quest.Interaction
             if (!body || !Dynamic) return;
             // Unsupported dormant items do not stop an otherwise valid region. Only
             // a body that was actually simulating can cross its admitted boundary.
-            if (world && world.Running && (boundaryActive||!body.isKinematic) && !world.CanSimulate(transform.position) && !item.Grab.isSelected)
+            if (world && world.Running && (boundaryActive||!body.isKinematic) && world.EnvironmentReady(item) && !world.CanSimulate(transform.position,item) && !item.Grab.isSelected)
             {
                 transform.SetPositionAndRotation(lastGoodPosition,lastGoodRotation); Teleported();
                 world.PausePhysics(); return;
@@ -175,7 +175,9 @@ namespace Maestro.Quest.Interaction
         void LateUpdate()
         {
             if (!body || !Dynamic || AnimationOwned || item.Grab.isSelected) return;
-            if (!Allowed && !body.isKinematic) Refresh();
+            // A newly accepted actor may become ready after collider synchronization,
+            // even when another profile kept the global world ready throughout.
+            if (Allowed == body.isKinematic) Refresh();
             bool moving = !body.isKinematic && !body.IsSleeping() && (body.linearVelocity.sqrMagnitude > .0025f || body.angularVelocity.sqrMagnitude > .01f);
             if (moving) { quietSince = Time.unscaledTime; wasMoving = true; }
             else if (wasMoving && Time.unscaledTime - quietSince > .6f) { wasMoving = false; Settled?.Invoke(item); }

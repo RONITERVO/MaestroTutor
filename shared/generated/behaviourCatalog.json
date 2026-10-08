@@ -28087,7 +28087,7 @@
         "room.active",
         "workspace.available"
       ],
-      "description": "Set real-room collision participation independently of the visual view. Read physics.environment and pass its exact stateId. Changing this policy pauses physics and clears old throw speeds; explicitly start afterwards. On requires a loaded aligned scan and keeps simulation inside that physical room. Off uses accepted authored ground, excluding scanned geometry from contacts, navigation and motion checks. Off requires virtual ground: current room-scale support is columns above actual accepted surfaces, up to 16 metres above and 0.25 metres below; gaps and unloaded regions are unavailable. This does not delete the scan, change passthrough/depth/audio, grant permissions, move the user or create terrain. Fresh rooms default to on; this runtime setting is not saved or undone. Already-satisfied requests preserve motion. Physical surfaces still exist when virtual objects do not collide with them.",
+      "description": "Set real-room collision participation independently of the visual view. Read physics.environment and pass its exact stateId. Changing this policy pauses physics and clears old throw speeds; explicitly start afterwards. On requires a loaded aligned scan for objects that participate in the real room and keeps those objects inside it; saved virtual-only profiles remain governed by authored ground. Off uses accepted authored ground, excluding scanned geometry from contacts, navigation and motion checks. Off requires virtual ground: current room-scale support is columns above actual accepted surfaces, up to 16 metres above and 0.25 metres below; gaps and unloaded regions are unavailable. This does not delete the scan, change passthrough/depth/audio, grant permissions, move the user or create terrain. Fresh rooms default to on; this runtime setting is not saved or undone. Already-satisfied requests preserve motion. Physical surfaces still exist when virtual objects do not collide with them.",
       "example": {
         "realCollisions": false,
         "stateId": "00000000000000000000000000000000"
@@ -28127,6 +28127,275 @@
           "authoredReady",
           "ready",
           "scope"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "environment.profile.save",
+      "version": 1,
+      "label": "Save environment profile",
+      "input": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^(|[a-f0-9]{32})$",
+            "maxLength": 32
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 2147483647.0
+          },
+          "name": {
+            "type": "string",
+            "pattern": "^.{1,80}$",
+            "maxLength": 80
+          },
+          "realCollisions": {
+            "type": "boolean"
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^(book|maestro|[a-fA-F0-9]{32})$",
+              "maxLength": 32,
+              "x-resource": "object"
+            },
+            "minItems": 0,
+            "maxItems": 16
+          }
+        },
+        "required": [
+          "id",
+          "revision",
+          "name",
+          "realCollisions",
+          "members"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "environmentProfiles.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "environment.revision.current",
+        "storage.writable"
+      ],
+      "description": "Create or edit one of up to 16 reusable environment profiles, each shared by at most 16 objects. Empty id and revision 0 create a new stable ID. Otherwise read environment.profile and supply its exact revision and every bound member. realCollisions=false lets those objects use virtual terrain below or beyond the real floor/walls. realCollisions=true inherits the global real-room switch. Read environment.profiles to find definitions. Saving does not assign new members; use object.environment.assign. Stable exact IDs are references; names are display text. Changes use the saved room journal with one Undo and temporary-play Keep/Discard semantics. Already-identical values do not add Undo. All affected targets must be released and free of authoring or competing motion. The entire edit refuses on stale revision, changed membership, missing target, unavailable support during running physics, or new scanned-surface penetration. It never moves an object. Changed targets lose previous throw speeds. Visual depth/opacity and acoustics remain independent; this setting changes collision participation only. The global real-room switch is an upper bound: a profile cannot re-enable it. Virtual collisions remain active. Virtual-only simulation needs accepted authored ground; current bounds are columns up to 16 metres above and 0.25 metres below those surfaces, not unlimited space.",
+      "example": {
+        "id": "",
+        "revision": 0,
+        "name": "Virtual terrain characters",
+        "realCollisions": false,
+        "members": []
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "revision",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "environment.profile.remove",
+      "version": 1,
+      "label": "Remove unused environment profile",
+      "input": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          }
+        },
+        "required": [
+          "id",
+          "revision"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "environmentProfiles.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "environment.revision.current",
+        "storage.writable"
+      ],
+      "description": "Remove an unused environment profile by exact ID/revision from environment.profile. Refuses while any object still refers to it; explicitly reassign those objects first. Objects are never silently returned to physical-room collision. Stable exact IDs are references; names are display text. Changes use the saved room journal with one Undo and temporary-play Keep/Discard semantics. Already-identical values do not add Undo. All affected targets must be released and free of authoring or competing motion. The entire edit refuses on stale revision, changed membership, missing target, unavailable support during running physics, or new scanned-surface penetration. It never moves an object. Changed targets lose previous throw speeds. Visual depth/opacity and acoustics remain independent; this setting changes collision participation only. The global real-room switch is an upper bound: a profile cannot re-enable it. Virtual collisions remain active. Virtual-only simulation needs accepted authored ground; current bounds are columns up to 16 metres above and 0.25 metres below those surfaces, not unlimited space.",
+      "example": {
+        "id": "00000000000000000000000000000000",
+        "revision": 1
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 2147483647.0
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "revision",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "object.environment.assign",
+      "version": 1,
+      "label": "Choose object environment",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(book|maestro|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "profileId": {
+            "type": "string",
+            "pattern": "^(|[a-f0-9]{32})$",
+            "maxLength": 32
+          },
+          "profileRevision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 2147483647.0
+          }
+        },
+        "required": [
+          "target",
+          "revision",
+          "profileId",
+          "profileRevision"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "environmentProfiles.v1"
+        ],
+        "x-current": {
+          "fact": "object.environment",
+          "version": 1,
+          "arguments": {
+            "target": "target"
+          },
+          "fields": {
+            "revision": [
+              "revision"
+            ],
+            "profileId": [
+              "profileId"
+            ],
+            "profileRevision": [
+              "profileRevision"
+            ]
+          },
+          "guards": [
+            "revision"
+          ]
+        }
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "environment.revision.current",
+        "storage.writable"
+      ],
+      "description": "Assign a saved environment profile to the book, Maestro or a creation, including all its assembly/import child colliders. Read object.environment for target revision and environment.profile for selected profile revision. An empty profileId with profileRevision 0 explicitly restores inherited real-room participation. One object's assignment does not edit the reusable profile or other members. It does not start physics or walking. Stable exact IDs are references; names are display text. Changes use the saved room journal with one Undo and temporary-play Keep/Discard semantics. Already-identical values do not add Undo. All affected targets must be released and free of authoring or competing motion. The entire edit refuses on stale revision, changed membership, missing target, unavailable support during running physics, or new scanned-surface penetration. It never moves an object. Changed targets lose previous throw speeds. Visual depth/opacity and acoustics remain independent; this setting changes collision participation only. The global real-room switch is an upper bound: a profile cannot re-enable it. Virtual collisions remain active. Virtual-only simulation needs accepted authored ground; current bounds are columns up to 16 metres above and 0.25 metres below those surfaces, not unlimited space.",
+      "example": {
+        "target": "maestro",
+        "revision": 1,
+        "profileId": "",
+        "profileRevision": 0
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(book|maestro|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "target",
+          "revision",
+          "temporary"
         ],
         "additionalProperties": false
       }
@@ -35579,7 +35848,136 @@
         }
       },
       "label": "Physics environment",
-      "description": "Read the separate physical scan, authored ground and selected simulation readiness. This does not verify physical alignment or a clear route, start physics, load a scan or change its collision/visual/acoustic geometry. Physical placement continues to use scanReady even when authored ground is ready. No side effects."
+      "description": "Read the separate physical scan, authored ground and default-scope simulation readiness. Individual profile admission is reported by object.environment; physics.simulation reports whether any accepted environment can run. This does not verify physical alignment or a clear route, start physics, load a scan or change its collision/visual/acoustic geometry. Physical placement continues to use scanReady even when authored ground is ready. No side effects."
+    },
+    {
+      "id": "object.environment",
+      "version": 1,
+      "type": {
+        "record": {
+          "target": "text",
+          "revision": "number",
+          "profileId": "text",
+          "profileRevision": "number",
+          "realCollisions": "boolean",
+          "state": {
+            "record": {
+              "effectiveRealCollisions": "boolean",
+              "ready": "boolean",
+              "inside": "boolean",
+              "admitted": "boolean"
+            }
+          },
+          "temporary": "boolean"
+        }
+      },
+      "label": "Object environment",
+      "description": "Saved profile binding and effective real-room participation. Empty profileId inherits the global switch. ready checks this actor's environment; inside checks its current centre against that environment's bounds. admitted means environment admission and running physics, not that this body's geometry, ownership or dynamic mode permits motion. Does not test a complete walking route or overlap.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(book|maestro|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "maestro"
+      },
+      "features": [
+        "factQueries.v1",
+        "environmentProfiles.v1"
+      ]
+    },
+    {
+      "id": "environment.profile",
+      "version": 1,
+      "type": {
+        "record": {
+          "id": "text",
+          "revision": "number",
+          "name": "text",
+          "realCollisions": "boolean",
+          "members": {
+            "list": "text"
+          },
+          "temporary": "boolean"
+        }
+      },
+      "label": "Environment profile",
+      "description": "Read the exact saved profile revision and all currently bound object IDs. Names are display metadata. Shared changes require every listed member as an explicit claim. Missing profiles are unavailable; never substitute by name.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "id": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1",
+        "environmentProfiles.v1"
+      ]
+    },
+    {
+      "id": "environment.profiles",
+      "version": 1,
+      "type": {
+        "record": {
+          "offset": "number",
+          "total": "number",
+          "pageSize": "number",
+          "entries": {
+            "list": {
+              "record": {
+                "id": "text",
+                "revision": "number",
+                "name": "text",
+                "realCollisions": "boolean"
+              }
+            }
+          }
+        }
+      },
+      "label": "Environment profiles",
+      "description": "Read three reusable environment profiles at a time, ordered by stable ID. Start offset 0 and advance by pageSize until total. Definition pages do not claim targets or change the room.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 16.0
+          }
+        },
+        "required": [
+          "offset"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "offset": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "environmentProfiles.v1"
+      ]
     },
     {
       "id": "physics.running",
@@ -35790,7 +36188,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "09e06e96bcc0cad4cd8081d8b654c1712ca15aaf77718de42725e1e90ac30ec3"
+      "sha256": "99ce8eafd33729afa18c658299c55741dded9b16e358c16d44f47665bfa7e59b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -35842,7 +36240,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "613f6b299e70b44185d9564299b817165a3cf3bcef3521f49aa8e95b58f2e9f6"
+      "sha256": "a3b62be40639b8efa147e0cbfd5e319c97255ece6af15587e0768e629489337c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -35870,11 +36268,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "8a02678ee1726ba95bf3feee58585ce2eb5c02b3cd18cb5a0c5128c9a771af5b"
+      "sha256": "df874d11d11da66cfa11bec6cbbc894ba42412e85ec404691fd7dec705bd924f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
-      "sha256": "af017573b50c0a7d3c5d0d402eda5dc57661693ea887e124137d29ea10e8823b"
+      "sha256": "5667de2313bfe6e0abd8017645e2701914d1576e46aab500c82ff9151a320845"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleMemory.cs",
@@ -35894,7 +36292,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveSnapshot.cs",
-      "sha256": "1461470141ecd1fbac2879e329d7a139bfc8f0cf7c6b30dd20a0730a95668b9d"
+      "sha256": "d007cfb5adcad586aebe31fb382a36a81b9d62f6eacdc77b9b6f6030c31d9205"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.Retention.cs",
@@ -36070,11 +36468,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/HeldRoomProp.cs",
-      "sha256": "238ec1b8b493cf7c4ee89895765aa77d51d6478291ab69d07ca7c030418cbdcd"
+      "sha256": "d01c4b6b5bc51bd46151cf9e6355ba8b963c1d064595f32b3557b2c9ed87a575"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomBallistics.cs",
-      "sha256": "eb549063365672de19379cd5163df10360b9e21246c4efe4d2b84e148609d6f7"
+      "sha256": "cf7330a5c7c2d9ae61fe969cf38b2fd7b39c04728d8f1505d2e1ae83f85818d9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomCollisionVolume.cs",
@@ -36086,11 +36484,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/CatchClearance.cs",
-      "sha256": "442e533198fca81fe27ed4b429b58a510a3616c9d602e4dfca019b30869808ab"
+      "sha256": "d96ea7e3d167dd7d0abafe88251b95085b7d0667f7ebeb725306df202c9aae67"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomCatch.cs",
-      "sha256": "1684683d50b3f11c87f74191e3864937b7b96b16350e9fc37e982ab26fa94d36"
+      "sha256": "c05721fdf015db50f6f1d0326018e5e29a9101243b2cc64c348bd0540737ab28"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarCatchReach.cs",
@@ -36098,7 +36496,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.cs",
-      "sha256": "35939e3e34887b78b0f741670578a5cc8ddb9e0f010f626c822276cba20a4363"
+      "sha256": "7b5d850428c1b0688a5b63c0922edbe30cc53727f670041094d65d8dcc927d3f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomPropAnchor.cs",
@@ -36130,7 +36528,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "985d8df1249fadedafe36bacf2c49967abb7590077d56763e0f3953be553727c"
+      "sha256": "048ee2f6cd7554d30a376c10106c1ba0cfe6146aeb1a9298b2a1721935e9cd00"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomFrame.cs",
@@ -36318,7 +36716,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidPouring.cs",
-      "sha256": "3ced8ad35ff37b6dd76b0aa8280b2b47aa3f62d0385b6c742efa0c27e0842b7b"
+      "sha256": "45033a17a7efcf4c9df855c3e4c1c3874290bbfe159d05b7c03b63e500bcaae2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLiquidEdits.cs",
@@ -36354,7 +36752,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomConnectionView.cs",
-      "sha256": "8d2df454fe3c594eadd9252f67eb466c0cf6ffc0387c27f3a2b25aaaa6d18187"
+      "sha256": "7f854103eb386b11503f039b746056cb066a2786a31249a11dd5c83f74ebb6c9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/DrawingTipView.cs",
@@ -36382,7 +36780,19 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "5278253360e60ab2458dddeb088906a043c0d2f01b2f410e8cfd4f3b5fdacf0a"
+      "sha256": "ad09cd7dceefa5c16078ecb33b25cbbfb4e2e7edcbbc70dfab20442961f839b7"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentProfile.cs",
+      "sha256": "c35474d81b051cf6a11e608e614787009d1d3f471e8d6ca177034d5cafa83b14"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
+      "sha256": "97799bcedead623def150bbf2be015c314b3448ce5cba6bd900f16e0d4c5f7ba"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomEnvironmentBinding.cs",
+      "sha256": "e162c09295524f6e35755d6ded825f2eb6e486e0b2e766734f322433d8b8640a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAudioDefinition.cs",
@@ -36446,7 +36856,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarSpatialMotion.cs",
-      "sha256": "042ec231d6edf9ce5f7832f290b57f310b2a12b9faba515bc8765329c4ae7d2c"
+      "sha256": "a508d8a4bf57a72769798af40d2a83a6139bcead2a81e29843def267966004cd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarAuthoredTravel.cs",
@@ -36530,7 +36940,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigation.cs",
-      "sha256": "4f148736567bf91dcbb238e1e56bd14817cad5d610732dfadd1989ca4f74f772"
+      "sha256": "52edde3f691cd55c85e57fbd2b2982dc11b82a6fea1ede100c3a786567d32c03"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationGeometry.cs",
@@ -36542,11 +36952,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomPhysicsWorld.cs",
-      "sha256": "39cfb584ccb9ebee8209a0c06991317a87c2ab9757d61b043b7b87c56ac6e3e1"
+      "sha256": "45262750d4fe30ddcce1f1ca7dd4dc0fed43f7f8fa029f63554e5ed6b776d0c2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomSimulationEnvironment.cs",
-      "sha256": "4862da2964f73062ec9d609f376473e3c39079cab82f27a27a479e2bc3d5e4e5"
+      "sha256": "57f157b0f0ce4640a848538ed07e64423842b234563b5b633f7d440edf8645b0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ScannedRoom.cs",
@@ -36758,7 +37168,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "7b8e54a480cdfb5d1e878b55b0076b620677ebadcdfee3e6652dd66bf7ab8ce4"
+      "sha256": "856b56fbbc943b3f1a8261d7ca4a9717fd5894db380fb7333346c12c62a6657c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -36861,6 +37271,10 @@
       "sha256": "637029de8b1b9f9a8018dd43561a435470d8c3ccfaf7b05cf097e5f345c38f7b"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/EnvironmentProfileCapabilities.cs",
+      "sha256": "6502d53c3c3d68fd1ac056a99fdba62dde6cb33ef25e33848c66bd6e13cedad2"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/GestureCapabilities.cs",
       "sha256": "84d2aad5dba840bd58229547c45e12a2028b1253ee3192c8fcd69cb283a7db6a"
     },
@@ -36938,7 +37352,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsEnvironmentCapability.cs",
-      "sha256": "36687aa39efd19c67325c930e7de6c6d6b6ac3f8e4eb043ec4d7da13dfeb3fda"
+      "sha256": "a5fc206153654ea4748314e5ad682b63120a7db5b0324d8b70da2aec440e7931"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsSimulationCapability.cs",

@@ -11,6 +11,7 @@ namespace Maestro.Quest.Interaction
     public sealed class RoomNavigation : MonoBehaviour
     {
         RoomPhysicsWorld world;
+        RoomItem actor;
         Transform virtualFrame;
         internal void SetVirtualFrame(Transform value){virtualFrame=value;Clear();}
         NavMeshData data;
@@ -29,11 +30,12 @@ namespace Maestro.Quest.Interaction
         Quaternion installedRotation;
         public bool Ready => configured && RefreshGeometry(out _);
         public void Initialize(RoomPhysicsWorld value) { world = value; world.Changed += RoomChanged; }
-        void RoomChanged() { if (!world.SimulationReady) Clear(); }
-        public bool Prepare(float bodyRadius, float bodyHeight, out string error)
+        void RoomChanged() { if (!world.EnvironmentReady(actor)) Clear(); }
+        public bool Prepare(float bodyRadius, float bodyHeight, out string error,RoomItem target=null)
         {
             error = null;
-            if (!world || !world.Running || !world.SimulationReady) { error = "Prepare the selected ground and Start physics before walking"; return false; }
+            if(actor!=target){Clear();actor=target;}
+            if (!world || !world.Running || !world.EnvironmentReady(actor)) { error = "Prepare the selected ground and Start physics before walking"; return false; }
             if(!float.IsFinite(bodyRadius)||!float.IsFinite(bodyHeight)||bodyRadius<=0||bodyHeight<bodyRadius*2) { error="Choose a valid walking body";return false; }
             if(!configured||Mathf.Abs(radius-bodyRadius)>=.005f||Mathf.Abs(height-bodyHeight)>=.01f)Clear();
             radius=bodyRadius;height=bodyHeight;configured=true;
@@ -42,9 +44,9 @@ namespace Maestro.Quest.Interaction
         bool RefreshGeometry(out string error)
         {
             error="Room navigation needs active physics and accepted surfaces";
-            if(!world||!world.Running||!world.SimulationReady)return false;
+            if(!world||!world.Running||!world.EnvironmentReady(actor))return false;
             Physics.SyncTransforms();
-            if(!candidate.Capture(world.transform,world.RealCollisions,!world.RealCollisions&&virtualFrame?virtualFrame:world.transform)) { Clear();error="No accepted scanned or authored floor is available for walking";return false; }
+            if(!candidate.Capture(world.transform,world.IncludesRealRoom(actor),!world.IncludesRealRoom(actor)&&virtualFrame?virtualFrame:world.transform)) { Clear();error="No accepted scanned or authored floor is available for walking";return false; }
             if(data&&installed.valid&&candidate.Same(accepted)){
                 Install(candidate.Position,candidate.Rotation);error=null;return installed.valid;
             }
@@ -74,7 +76,7 @@ namespace Maestro.Quest.Interaction
         public bool Sample(Vector3 point, float maximumDistance, out Vector3 floor)
         {
             floor = default;
-            if (!Ready || !NavMesh.SamplePosition(point,out var hit,maximumDistance,Filter) || !world.ContainsSimulation(hit.position + Vector3.up*.1f)) return false;
+            if (!Ready || !NavMesh.SamplePosition(point,out var hit,maximumDistance,Filter) || !world.ContainsSimulation(hit.position + Vector3.up*.1f,actor)) return false;
             // NavMesh is a route approximation. Foot placement uses the accepted
             // collider itself, including its current revision and rendered height.
             if(!accepted.Ground.Sample(hit.position,.08f,.08f,out var support)||Vector3.Distance(point,support.point)>maximumDistance+.001f)return false;
@@ -86,18 +88,18 @@ namespace Maestro.Quest.Interaction
             return Sample(from,.1f,out var start) && Sample(to,.08f,out floor) &&
                 Vector3.Distance(new Vector3(to.x,floor.y,to.z),floor) < .025f && !NavMesh.Raycast(start,floor,out _,Filter);
         }
-        bool GroundPosition(Vector3 value)=>world&&world.ContainsSimulation(value+Vector3.up*.1f);
+        bool GroundPosition(Vector3 value)=>world&&world.ContainsSimulation(value+Vector3.up*.1f,actor);
         internal bool Traverse(Vector3 from,Vector3 to,Func<Collider,bool> obstacle,out Vector3 floor,out string error)
         {
             TraversalBlocker=null;floor=default;error="No connected accepted ground is available for this step";
             if(!DirectStep(from,to,out _))return false;
-            int mask=world.CollisionMask((1<<RoomPhysicsLayers.Scanned)|(1<<RoomPhysicsLayers.Item)|(1<<RoomPhysicsLayers.Environment));
+            int mask=world.CollisionMask((1<<RoomPhysicsLayers.Scanned)|(1<<RoomPhysicsLayers.Item)|(1<<RoomPhysicsLayers.Environment),actor);
             bool moved=groundMotor.Travel(accepted.Ground,from,to-from,radius,height,mask,obstacle,groundPosition??=GroundPosition,out floor,out error);
             if(!moved)TraversalBlocker=groundMotor.Blocker;return moved;
         }
         internal bool ClearAuthoredStep(Vector3 from,Vector3 to,float extraHeight,Func<Collider,bool> obstacle)
         {
-            int mask=world.CollisionMask((1<<RoomPhysicsLayers.Scanned)|(1<<RoomPhysicsLayers.Item)|(1<<RoomPhysicsLayers.Environment));
+            int mask=world.CollisionMask((1<<RoomPhysicsLayers.Scanned)|(1<<RoomPhysicsLayers.Item)|(1<<RoomPhysicsLayers.Environment),actor);
             bool clear=groundMotor.ClearExact(from,to,radius,height+extraHeight,mask,obstacle);TraversalBlocker=clear?null:groundMotor.Blocker;return clear;
         }
         public bool Path(Vector3 from, Vector3 to, NavMeshPath path) => Ready &&

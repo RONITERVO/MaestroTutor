@@ -28,7 +28,7 @@ namespace Maestro.Quest.Interaction
             var rigid=item.GetComponent<RigidRoomItem>();if(!rigid||!rigid.isActiveAndEnabled||!rigid.Dynamic||!rigid.GeometryReady)return false;
             if(!anchor.Resolve(editor,out var holder,out _,out error))return false;
             if(item==holder){error="An object cannot catch itself";return false;}
-            if(!editor.PhysicsWorld||!editor.PhysicsWorld.CanSimulate(item.transform.position)||!editor.PhysicsWorld.CanSimulate(holder.transform.position)){error="Catching needs running, aligned room physics";return false;}
+            if(!editor.PhysicsWorld||!editor.PhysicsWorld.CanSimulate(item.transform.position,item)||!editor.PhysicsWorld.CanSimulate(holder.transform.position,holder)){error="Catching needs running, aligned room physics";return false;}
             if(!editor.Viewer||!editor.Viewer.gameObject.activeInHierarchy){error="Return to the active room view before catching";return false;}
             return RoomCollisionVolume.Read(item,.3f,out _,out error);
         }
@@ -48,7 +48,7 @@ namespace Maestro.Quest.Interaction
             if(!editor||editor.RuntimeGate.Held||!item||!item.isActiveAndEnabled||editor.Find(TargetId)!=item||!rigid||!rigid.isActiveAndEnabled||!rigid.GeometryReady||!body){Fail("The catch object changed or room actions were paused");return false;}
             if(!space.TryRead(out _)){Fail(RoomMotionFrame.Changed);return false;}
             if(!anchor.Matches(editor,holder,socket,out var error)){Fail(error);return false;}
-            if(!editor.PhysicsWorld||!editor.PhysicsWorld.CanSimulate(item.transform.position)||!editor.PhysicsWorld.CanSimulate(holder.transform.position)||!editor.Viewer||!editor.Viewer.gameObject.activeInHierarchy){Fail("Catching stopped; restore room physics and the active room view");return false;}
+            if(!editor.PhysicsWorld||!editor.PhysicsWorld.CanSimulate(item.transform.position,item)||!editor.PhysicsWorld.CanSimulate(holder.transform.position,holder)||!editor.Viewer||!editor.Viewer.gameObject.activeInHierarchy){Fail("Catching stopped; restore room physics and the active room view");return false;}
             if(reach&&!reach.Valid){Fail("The avatar pose or model changed during the catch");return false;}
             return true;
         }

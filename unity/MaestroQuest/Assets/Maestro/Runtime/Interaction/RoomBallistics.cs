@@ -14,7 +14,8 @@ namespace Maestro.Quest.Interaction
         public float Radius {get;private set;}
         public float Speed=>Velocity.magnitude;
         RoomPhysicsWorld environment;
-        int QueryMask=>environment?environment.CollisionMask(Mask):Mask;
+        RoomItem actor;
+        int QueryMask=>environment?environment.CollisionMask(Mask,actor):Mask;
         readonly Collider[] overlaps=new Collider[48];
         readonly RaycastHit[] hits=new RaycastHit[48];
         const int Mask=(1<<RoomPhysicsLayers.Scanned)|(1<<RoomPhysicsLayers.Item)|(1<<RoomPhysicsLayers.Environment)|(1<<RoomPhysicsLayers.Controller);
@@ -23,7 +24,7 @@ namespace Maestro.Quest.Interaction
         static float SegmentDistance(Vector3 p,Vector3 a,Vector3 b) {var d=b-a;return Vector3.Distance(p,a+d*Mathf.Clamp01(d.sqrMagnitude>0?Vector3.Dot(p-a,d)/d.sqrMagnitude:0));}
         public bool Prepare(RoomItem item,RoomPhysicsWorld world,Transform viewer,Vector3 destination,float seconds,float maxSpeed,out string error)
         {
-            error=null;environment=world;
+            error=null;environment=world;actor=item;
             if(!item||!world||!viewer||!viewer.gameObject.activeInHierarchy||!Finite(viewer.position)){error="Return to the active room view before aiming a throw";return false;}
             var rigid=item.GetComponent<RigidRoomItem>();var body=item.GetComponent<Rigidbody>();
             if(!item.isActiveAndEnabled||!rigid||!rigid.isActiveAndEnabled||!body){error="This object has no rigid-body physics";return false;}
@@ -32,7 +33,7 @@ namespace Maestro.Quest.Interaction
             if(!Finite(destination)||!Finite(Physics.gravity)||!float.IsFinite(seconds)||seconds<.2f||seconds>2||!float.IsFinite(maxSpeed)||maxSpeed<.1f||maxSpeed>8||dt<.005f||dt>.05f){error="The throw or physics time step is outside supported limits";return false;}
             if(!RoomCollisionVolume.Read(item,1,out var volume,out error))return false;
             Origin=volume.Centre(item);Destination=destination;Radius=volume.Radius;
-            if(!world.CanSimulate(Origin)){error="The planned throw starts outside the aligned room";return false;}
+            if(!world.CanSimulate(Origin,item)){error="The planned throw starts outside this object's accepted environment";return false;}
             int steps=Mathf.CeilToInt(seconds/dt);Seconds=steps*dt;
             // Semi-implicit fixed-step estimate with the existing room body's small linear damping.
             // Contacts and moving targets are deliberately not predicted.
@@ -45,7 +46,7 @@ namespace Maestro.Quest.Interaction
             if(!ClearPoint(item,point,Radius,out error))return false;
             for(int i=1;i<=steps;i++){
                 velocity=(velocity+Physics.gravity*dt)*damping;point+=velocity*dt;
-                if(!world.CanSimulate(point)){error="The planned throw leaves the aligned room";return false;}
+                if(!world.CanSimulate(point,item)){error="The planned throw leaves this object's accepted environment";return false;}
                 if(SegmentDistance(viewer.position,previous,point)<Radius+.35f){error="The planned throw passes too close to the user's head";return false;}
                 if(i%stride!=0&&i!=steps)continue;
                 var delta=point-previous;

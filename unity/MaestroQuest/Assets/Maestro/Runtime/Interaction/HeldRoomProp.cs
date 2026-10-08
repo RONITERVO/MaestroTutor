@@ -55,7 +55,7 @@ namespace Maestro.Quest.Interaction
             var rigid=item ? item.GetComponent<RigidRoomItem>() : null;
             if (!item || editor.Read(attachment.ObjectId)?.IsBuiltIn != false || !rigid || !rigid.GeometryReady || item.Grab.isSelected)
             { error="Select a loaded creation and release it before using it as a prop"; return false; }
-            if (attachment.Release != PropRelease.Return && (!rigid.Dynamic || !editor.PhysicsWorld || !editor.PhysicsWorld.CanSimulate(item.transform.position)))
+            if (attachment.Release != PropRelease.Return && (!rigid.Dynamic || !editor.PhysicsWorld || !editor.PhysicsWorld.CanSimulate(item.transform.position,item)))
             { error="Drop or throw needs a Solid/Bouncy prop and running aligned room physics"; return false; }
             return true;
         }
@@ -82,7 +82,7 @@ namespace Maestro.Quest.Interaction
         {
             Physics.SyncTransforms();
             int mask=(1<<RoomPhysicsLayers.Scanned)|(1<<RoomPhysicsLayers.Item)|(1<<RoomPhysicsLayers.Environment);
-            if(editor.PhysicsWorld)mask=editor.PhysicsWorld.CollisionMask(mask);
+            if(editor.PhysicsWorld)mask=editor.PhysicsWorld.CollisionMask(mask,item);
             var oldCentre=item.transform.TransformPoint(centre);
             var newCentre=position+rotation*Vector3.Scale(centre,item.transform.lossyScale);
             var delta=newCentre-oldCentre;
@@ -112,7 +112,7 @@ namespace Maestro.Quest.Interaction
                 error="Prop action stopped — its holder or item changed";
             else if(!space.TryRead(out _))error=RoomMotionFrame.Changed;
             else if(!anchor.Matches(editor,holder,hand,out error)) {}
-            else if (requiresRoom && (!editor.PhysicsWorld || !editor.PhysicsWorld.CanSimulate(item.transform.position)))
+            else if (requiresRoom && (!editor.PhysicsWorld || !editor.PhysicsWorld.CanSimulate(item.transform.position,item)))
                 error="Prop action stopped — check room alignment and restart physics";
             if (error != null) Error=error;
             return error == null;
@@ -125,7 +125,7 @@ namespace Maestro.Quest.Interaction
             float scale=holder.transform.lossyScale.y;
             var position=hand.position+hand.rotation*(attachment.Offset*scale); var rotation=hand.rotation*attachment.Rotation;
             if (!float.IsFinite(position.sqrMagnitude) || !MotionFrame.ValidRotation(rotation) ||
-                requiresRoom && !editor.PhysicsWorld.CanSimulate(position) || !Clear(position,rotation,false,true))
+                requiresRoom && !editor.PhysicsWorld.CanSimulate(position,item) || !Clear(position,rotation,false,true))
             { Error="Prop path is blocked — adjust its fit, motion or holder placement"; return false; }
             item.transform.SetPositionAndRotation(position,rotation); body.position=position; body.rotation=rotation;
             var frame=editor.Frame;lastPoseAt=now;
@@ -147,7 +147,7 @@ namespace Maestro.Quest.Interaction
         bool Release()
         {
             if (!Valid(out _) || !holding) return false;
-            if (!editor.PhysicsWorld || !editor.PhysicsWorld.CanSimulate(item.transform.position) || !Clear(item.transform.position,item.transform.rotation,true,false))
+            if (!editor.PhysicsWorld || !editor.PhysicsWorld.CanSimulate(item.transform.position,item) || !Clear(item.transform.position,item.transform.rotation,true,false))
             { Error="Cannot release here — move the prop clear of the holder and room surfaces"; return false; }
             var frame=editor.Frame;
             var first=samples[0]; var last=new Sample { Time=Time.unscaledTime,Position=frame.PointToRoom(item.transform.position),Rotation=frame.RotationToRoom(item.transform.rotation) }; float dt=last.Time-first.Time;

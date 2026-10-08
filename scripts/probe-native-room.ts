@@ -291,6 +291,28 @@ try{
   if(!(environmentRestored.catalog?.value as {realCollisions:boolean}).realCollisions||physicalEnvironment.physics?.running)throw new Error('Restored physical collision policy did not remain paused');
   await writeFile(join(directory,'physics-environment.json'),JSON.stringify({boundary:'Full native shared transport and editable terrain readiness; actual collisions are tested in PlayMode. No provider or headset proof.',before:environmentBefore,disabled:virtualEnvironment,virtual:environmentVirtual,enabled:physicalEnvironment,restored:environmentRestored},null,2));
 
+  const profileSaved=await execute([{action:'execution',execution:{operation:'start',call:{id:'environment.profile.save',version:1,arguments:{id:'',revision:0,name:'Virtual terrain actors',realCollisions:false,members:[]}}}}]);
+  const profileId=profileSaved.execution?.selected?.output?.id;
+  if(typeof profileId!=='string')throw new Error('Environment profile returned no stable ID');
+  const profileRead=()=>execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'environment.profile',version:1,arguments:{id:profileId}}}]);
+  const actorEnvironment=()=>execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.environment',version:1,arguments:{target:'maestro'}}}]);
+  const unbound=await actorEnvironment(),profileInitial=await profileRead();
+  const profileAssigned=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.environment.assign',version:1,arguments:{target:'maestro',revision:(unbound.catalog!.value as {revision:number}).revision,profileId,profileRevision:(profileInitial.catalog!.value as {revision:number}).revision}}}}]);
+  const bound=await actorEnvironment(),profileBound=await profileRead();
+  const boundValue=bound.catalog!.value as {profileId:string;state:{effectiveRealCollisions:boolean}};
+  if(boundValue.profileId!==profileId||boundValue.state.effectiveRealCollisions)throw new Error('Per-actor profile did not exclude the real room');
+  const members=(profileBound.catalog!.value as {members:string[]}).members;
+  if(JSON.stringify(members)!==JSON.stringify(['maestro']))throw new Error('Profile membership did not preserve exact target IDs');
+  const profileEdited=await execute([{action:'execution',execution:{operation:'start',call:{id:'environment.profile.save',version:1,arguments:{id:profileId,revision:(profileBound.catalog!.value as {revision:number}).revision,name:'Downhill actors',realCollisions:false,members}}}}]);
+  const profileList=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'environment.profiles',version:1,arguments:{offset:0}}}]);
+  await execute([{action:'undo'}]);const profileUndo=await profileRead();
+  if((profileUndo.catalog!.value as {name:string}).name!=='Virtual terrain actors')throw new Error('Profile Undo did not restore the definition');
+  await execute([{action:'undo'}]);const bindingUndo=await actorEnvironment();
+  if((bindingUndo.catalog!.value as {profileId:string}).profileId!=='')throw new Error('Assignment Undo did not restore inheritance');
+  const unusedProfile=await profileRead();
+  const profileRemoved=await execute([{action:'execution',execution:{operation:'start',call:{id:'environment.profile.remove',version:1,arguments:{id:profileId,revision:(unusedProfile.catalog!.value as {revision:number}).revision}}}}]);
+  await writeFile(join(directory,'entity-environment.json'),JSON.stringify({boundary:'Real native shared transport, persisted profile edits, binding facts and Undo. PlayMode separately tests physical motion; no headset or live provider proof.',profileSaved,unbound,profileInitial,profileAssigned,bound,profileBound,profileEdited,profileList,profileUndo,bindingUndo,profileRemoved},null,2));
+
   const fieldSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Sculpt a surface path',offset:0}}]);
   const fieldDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.field.sculpt',version:1}}]);
   const fieldBefore=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.field',version:1,arguments:{target:fieldId}}}]);

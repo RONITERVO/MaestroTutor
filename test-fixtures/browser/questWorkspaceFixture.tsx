@@ -33,6 +33,7 @@ import nativeRecovery from './toolRecovery.json';
 import nativePlacement from './worldPlacement.json';
 import nativeWorldIdentity from './worldIdentity.json';
 import nativeWorldGround from './worldGround.json';
+import nativeEntityEnvironment from './entityEnvironment.json';
 import nativeSpatial from './spatialSettings.json';
 import nativeMotionBatch from './motionBatchImport.json';
 import nativeAvatar from './avatarSelection.json';
@@ -98,6 +99,11 @@ const worldGround=new URLSearchParams(location.search).has('worldGround');
 if(worldGround){
  state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';
  state.capabilities=[...state.capabilities??[],'catalogVocabulary.v1','terrainTraversal.v1','structuredValues.v1','factQueries.v1'];
+}
+const environmentProfiles=new URLSearchParams(location.search).has('environmentProfiles');
+if(environmentProfiles){
+ state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';
+ state.capabilities=[...state.capabilities??[],'catalogVocabulary.v1','environmentProfiles.v1','structuredValues.v1','factQueries.v1'];
 }
 const worldPlacement=new URLSearchParams(location.search).has('worldPlacement');
 let placementObservation=nativePlacement.before;
@@ -396,6 +402,21 @@ setInterval(()=>{
      const definition=behaviourFact('world.identity')!;
      if(query.operation==='search')state.catalog={operation:'search',category:'facts',query:query.query,offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'World and region identity'};
      else state.catalog={operation:'inspect',category:'facts',capability:query.capability,version:1,definition:query.capability===definition.id?definition:null,available:query.capability===definition.id,value:query.capability===definition.id?copy(nativeWorldIdentity.identity):null,status:'Captured native authored world scope'};
+     continue;
+    }
+    if(environmentProfiles&&query.operation!=='check'&&query.category==='facts'){
+     const definitions=['object.environment','environment.profile','environment.profiles'].map(id=>behaviourFact(id)!);
+     if(query.operation==='search'){
+      const matches=definitions.filter(d=>(d.id+' '+d.label).toLowerCase().includes((query.query??'').toLowerCase()));
+      state.catalog={operation:'search',category:'facts',query:query.query,offset:0,total:matches.length,pageSize:6,entries:matches.map(d=>({id:d.id,version:1,label:d.label})),status:'Native environment profiles'};
+     }else{
+      const definition=definitions.find(d=>d.id===query.capability)??null,args=query.arguments??definition?.example;
+      const value=definition?.id==='object.environment'&&args?.target==='maestro'?copy(nativeEntityEnvironment.after):
+       definition?.id==='environment.profile'&&args?.id===nativeEntityEnvironment.profile.id?copy(nativeEntityEnvironment.profile):
+       definition?.id==='environment.profiles'&&args?.offset===0?copy(nativeEntityEnvironment.profiles):
+       definition?.id==='environment.profiles'&&args?.offset===16?copy(nativeEntityEnvironment.emptyPage):null;
+      state.catalog={operation:'inspect',category:'facts',capability:query.capability,version:1,arguments:args,definition,available:value!==null,value,status:'Captured native per-object environment'};
+     }
      continue;
     }
     if(worldGround&&query.operation!=='check'&&query.category==='facts'){

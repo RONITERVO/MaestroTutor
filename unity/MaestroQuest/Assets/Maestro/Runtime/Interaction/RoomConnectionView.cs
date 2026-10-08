@@ -43,7 +43,7 @@ namespace Maestro.Quest.Interaction
             if(rigid.AnimationOwned||otherRigid.AnimationOwned){Suspend("owned","An animation or carried prop owns a connection member");return;}
             if(!rigid.Dynamic){Suspend("fixed","Choose solid or bouncy physics for the moving member");return;}
             var world=editor.PhysicsWorld;
-            if(!world||!world.CanSimulate(transform.position)||!world.CanSimulate(other.transform.position)){Suspend("paused");return;}
+            if(!world||!world.CanSimulate(transform.position,item)||!world.CanSimulate(other.transform.position,other)){Suspend("paused");return;}
             if(ownScale!=transform.lossyScale||otherScale!=other.transform.lossyScale||ownPlacement!=rigid.PlacementRevision||otherPlacement!=otherRigid.PlacementRevision)Retire();
             if(joint){Phase="active";Error="";rigid.SetConstraintBlocked(this,false);return;}
             if(retiring){Suspend("pausing");return;} // Destroy completes at the frame boundary, before another joint is admitted.

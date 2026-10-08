@@ -1,0 +1,226 @@
+{
+  "capabilities": [
+    "physicsSettings.v1",
+    "avatarSettings.v1",
+    "physicsRun.v1",
+    "motions.v1",
+    "avatarActivities.v1",
+    "catalog.v1",
+    "catalogVocabulary.v1",
+    "roomOwnership.v1",
+    "worldIdentity.v1",
+    "terrainTraversal.v1",
+    "behaviourPrograms.v3",
+    "worldAudio.v1",
+    "eventPrograms.v1",
+    "eventFields.v1",
+    "eventSubscriptions.v1",
+    "factQueries.v1",
+    "conditionWaits.v1",
+    "parallelPrograms.v1",
+    "rememberedVariables.v1",
+    "temporaryMemory.v1",
+    "structuredValues.v1",
+    "programModules.v1",
+    "moduleLibrary.v1",
+    "moduleLibraryFiles.v1",
+    "execution.v1",
+    "executionReceipts.v1",
+    "actionResults.v1",
+    "recipeCreation.v1",
+    "creationComponents.v1",
+    "creationTemplates.v1",
+    "layoutEdits.v1",
+    "structures.v1",
+    "batchCreation.v1",
+    "structuredResults.v1",
+    "structuredInputs.v1",
+    "indexedInputs.v1",
+    "constructionSelection.v1",
+    "groupTransforms.v1",
+    "constructionManipulation.v1",
+    "constructionSnapping.v1",
+    "objectEdits.v1",
+    "objectCopy.v1",
+    "drawingEdits.v1",
+    "drawingSurfaces.v1",
+    "curvedDrawingSurfaces.v1",
+    "drawingTips.v1",
+    "drawingErasers.v1",
+    "containers.v1",
+    "rectangularContainers.v1",
+    "heightFields.v1",
+    "heightFieldTransfer.v1",
+    "materialStores.v1",
+    "materialTransfer.v1",
+    "materialPacking.v1",
+    "physicalMaterialPacking.v1",
+    "physicalSculpting.v1",
+    "physicalMaterialTools.v1",
+    "containerPouring.v1",
+    "containerScooping.v1",
+    "physicalConnections.v1",
+    "physicalSliders.v1",
+    "snapPoints.v1",
+    "connectedBlueprints.v2",
+    "creationPrototypes.v1",
+    "constructionCapture.v1",
+    "recipeEdits.v1",
+    "latheGeometry.v1",
+    "extrusionGeometry.v1",
+    "sweepGeometry.v1",
+    "recipePatterns.v1",
+    "roomViewCapture.v1",
+    "collisionShapes.v1",
+    "recipePartPlayback.v1",
+    "objectAttachments.v1",
+    "anchorZones.v1",
+    "channelWaits.v1",
+    "objectLaunch.v1",
+    "physicalCatching.v1",
+    "calendarSchedules.v1",
+    "animationAuthoring.v1",
+    "animationRecording.v1",
+    "animationPosing.v1",
+    "avatarModels.v1",
+    "modelImport.v1",
+    "modelArchiveImport.v1",
+    "motionBatchImport.v1",
+    "includedMotions.v1",
+    "authoredMotion.v1",
+    "unavailablePrograms.v1",
+    "actionRecovery.v1",
+    "temporaryRoom.v1",
+    "spatialSettings.v1",
+    "physicsSimulation.v1",
+    "physicsEnvironment.v1",
+    "environmentProfiles.v1"
+  ],
+  "saveCall": {
+    "id": "environment.profile.save",
+    "version": 1,
+    "arguments": {
+      "id": "",
+      "revision": 0,
+      "name": "Virtual actors",
+      "realCollisions": false,
+      "members": []
+    }
+  },
+  "saveReceipt": {
+    "id": "63c53f70568a45d6b8af92dade83738a",
+    "capability": "environment.profile.save",
+    "version": 1,
+    "resources": [],
+    "phase": "completed",
+    "status": "Action completed",
+    "output": {
+      "id": "306edaeeae1c48cb9f9c7200d88d6786",
+      "revision": 7,
+      "temporary": false
+    },
+    "call": {
+      "id": "environment.profile.save",
+      "version": 1,
+      "arguments": {
+        "id": "",
+        "revision": 0,
+        "name": "Virtual actors",
+        "realCollisions": false,
+        "members": []
+      }
+    }
+  },
+  "assignCall": {
+    "id": "object.environment.assign",
+    "version": 1,
+    "arguments": {
+      "target": "maestro",
+      "revision": 2,
+      "profileId": "306edaeeae1c48cb9f9c7200d88d6786",
+      "profileRevision": 7
+    }
+  },
+  "assignReceipt": {
+    "id": "5ed4224bf6a0459b92bb9c9a45542454",
+    "capability": "object.environment.assign",
+    "version": 1,
+    "resources": [
+      "maestro"
+    ],
+    "phase": "completed",
+    "status": "Action completed",
+    "output": {
+      "target": "maestro",
+      "revision": 8,
+      "temporary": false
+    },
+    "call": {
+      "id": "object.environment.assign",
+      "version": 1,
+      "arguments": {
+        "target": "maestro",
+        "revision": 2,
+        "profileId": "306edaeeae1c48cb9f9c7200d88d6786",
+        "profileRevision": 7
+      }
+    }
+  },
+  "before": {
+    "target": "maestro",
+    "revision": 2,
+    "profileId": "",
+    "profileRevision": 0,
+    "realCollisions": true,
+    "state": {
+      "effectiveRealCollisions": true,
+      "ready": false,
+      "inside": false,
+      "admitted": false
+    },
+    "temporary": false
+  },
+  "after": {
+    "target": "maestro",
+    "revision": 8,
+    "profileId": "306edaeeae1c48cb9f9c7200d88d6786",
+    "profileRevision": 7,
+    "realCollisions": false,
+    "state": {
+      "effectiveRealCollisions": false,
+      "ready": false,
+      "inside": false,
+      "admitted": false
+    },
+    "temporary": false
+  },
+  "profile": {
+    "id": "306edaeeae1c48cb9f9c7200d88d6786",
+    "revision": 7,
+    "name": "Virtual actors",
+    "realCollisions": false,
+    "members": [
+      "maestro"
+    ],
+    "temporary": false
+  },
+  "profiles": {
+    "offset": 0,
+    "total": 1,
+    "pageSize": 3,
+    "entries": [
+      {
+        "id": "306edaeeae1c48cb9f9c7200d88d6786",
+        "revision": 7,
+        "name": "Virtual actors",
+        "realCollisions": false
+      }
+    ]
+  },
+  "emptyPage": {
+    "offset": 16,
+    "total": 1,
+    "pageSize": 3,
+    "entries": []
+  }
+}
