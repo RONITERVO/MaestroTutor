@@ -13,6 +13,9 @@ Current desktop source supports saved per-object real-room participation and
 swept world movement at any backdrop opacity. See the [current movement contract
 and evidence](#swept-world-travel-in-mixed-reality-2026-10-08). These changes are
 not physical Quest acceptance.
+The next visual-layer increment starts with an internal renderer composition path;
+its saved definitions and shared user/agent controls are still pending. See
+[visibility composition](#visibility-composition-foundation-2026-10-08).
 
 User and agent authored audio is accepted v1 scope: reusable sources, object or
 joint emitters, live streams, and existing events/programs controlling playback.
@@ -4835,3 +4838,83 @@ original book passes generated movement inputs and reload without replay
 (61054388242a44afb1c396ab27db06f0), with its screenshot inspected.
 Fresh provider journey results are recorded in QUEST_AGENT_RELEASE_COVERAGE.md. Headset acceptance remains on hold pending the
 owner's cooling/charge readiness response. No APK or release change is claimed.
+
+
+### Visibility composition foundation (2026-10-08)
+
+The chosen layering model keeps visibility, physical participation and sound as
+separate properties of the same persistent objects. A future named visual layer
+will bind ordinary imported models, recipes and terrain; it will not create a
+second environment scene or bypass the normal asset budgets. Per-object real-room
+collision profiles already decide whether the scanned floor/walls constrain an
+actor. A visual fade must not silently change that policy, navigation, gravity,
+audio, object identity or saved geometry.
+
+The renderer foundation now composes layer opacity and acceptance of real depth
+after imported/source material settings and root/part/exact-slot appearances.
+Texture masks are tested before layer opacity: fading a leaf changes its final
+coverage without shrinking its cutout. Glass retains its source alpha and is
+multiplied by layer opacity. A zero-opacity layer discards fragments and does not
+write invisible depth. Partial opacity uses transparent blending without depth
+writes or opaque pencil silhouettes; returning to one restores the source queue,
+blend state, depth writes and outline state. Transparent meshes still have the
+normal depth-sorting limitations of alpha blending; this is not order-independent
+transparency or a physical glass simulation.
+
+Layer state has explicit runtime ownership. Equal sources within a layer share
+one leased variant; separate layers/rooms remain independent even if their
+current values are equal. Continuous opacity/depth updates reuse those variants.
+The existing appearance owner applies and restores the final materials, including
+model refreshes and disable/destruction, rather than adding another component
+that competes to replace renderer materials. Book browser-page renderers remain
+excluded. Other objects nested under their own RoomItem are not inherited by
+accident. The shader's existing global depth eligibility/capture bypass remains
+the upper bound; disabling depth for a layer cannot enable a disabled provider.
+
+This increment is deliberately internal: it does not expose an unsaved layer
+editor, change world.presentation.set semantics, migrate stored rooms, or claim
+that users can already group their imported surroundings. The next integration
+must add stable saved layer IDs and independent object bindings, strict native
+and shared wire validation, revision/membership claims, one-step Undo, temporary
+Keep/Discard, archive roundtrips, and closed portable-construction dependencies.
+Layer bindings must survive specific material overrides, replaced imported
+models and newly generated terrain/ink/liquid renderers. Dynamic renderer creation
+and retirement need explicit refresh hooks; rescanning every object every frame
+is not an acceptable substitute. A fade must not cancel an NPC walking or a
+playing sound, so visual ownership must be compatible with motion/audio ownership.
+Zero visual opacity must also have an explicit picking policy: normal pointing
+should not be intercepted by an invisible control, while named-object inspection
+and deliberate editing remain possible. Physical collision is still independent.
+Agent and book controls
+must come from the same capability catalog; no separate agent-only path.
+
+Authored layer defaults and a viewer's transient surroundings blend should remain
+distinct. Smooth transient changes must not rewrite the saved room every frame.
+Editable passthrough windows and physical/world anchoring remain separate pending
+increments; this alpha-composition path does not implement them. Headset depth,
+binocular compositor behavior, transparency overdraw and sustained performance
+still need physical acceptance after the owner's readiness response.
+
+Full desktop verification passes **935 EditMode and 822 PlayMode cases**, with
+three expected optional private-file skips. Ten new layer tests cover rendered
+pixels at both eye positions, opaque/cutout/blended sources, zero and partial
+coverage, source restoration, imported GLB slots, appearance composition,
+independent layer ownership and lease cleanup. The 23-case focused rendering run
+also passes. Shared room/headless/Quest tests pass **1,489 cases in 152 files**.
+The complete native journey passes 586 observations
+(7de69b5048484074b9e16e8d9f0d8729); the original book journey passes native controls
+and reload without replay (b51a19e7bb504a9ebfda587ae633be43). Its movement-form
+screenshot was inspected. These two journeys use scripted responses; this
+rendering increment makes no new provider-acceptance claim.
+
+Native export and CI now discover runtime C#, shader/include and assembly files
+recursively, alongside the existing template/module JSON and audio-mixer inputs.
+They sort and hash the same source scope instead of maintaining duplicated lists
+that could omit new helpers. This expands provenance coverage without changing
+the 110-action/125-fact contract or any saved format. Fourteen focused native
+catalog checks pass. Provenance covers 451 discovered inputs; negative checks
+reject both an unrecorded uppercase shader include and a changed hash, then
+pass again after exact restoration. CI still cannot compile or execute Unity; those remain
+separate local checks. Evidence is retained in
+.quest-evidence/spatial-state/visibility-render-*.
+No APK was packaged or installed, and no release signing/upload/deployment occurred.

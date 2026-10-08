@@ -23,6 +23,8 @@ Shader "Maestro/Watercolor"
         [HideInInspector] _SrcBlend ("Source blending", Float) = 1
         [HideInInspector] _DstBlend ("Destination blending", Float) = 0
         [HideInInspector] _ZWrite ("Depth writing", Float) = 1
+        [HideInInspector] _VisibilityOpacity ("Layer opacity", Range(0,1)) = 1
+        [HideInInspector] _VisibilityRealDepth ("Layer accepts real depth", Float) = 1
         _DecodeBrowserSrgb ("Raw browser sRGB pixels", Float) = 0
     }
     SubShader
@@ -50,6 +52,7 @@ Shader "Maestro/Watercolor"
             sampler2D _MainTex;
             float4 _MainTex_ST;
             float _AlphaCutoff, _SurfaceMode, _SurfaceOpacity;
+            float _VisibilityOpacity, _VisibilityRealDepth;
             Varying vert(Vertex input)
             {
                 Varying output;
@@ -66,10 +69,11 @@ Shader "Maestro/Watercolor"
             fixed4 frag(Varying input) : SV_Target
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
-                MaestroOccludeEnvironment(input.world);
+                if (_VisibilityOpacity <= 0) clip(-1);
+                if (_VisibilityRealDepth > .5) MaestroOccludeEnvironment(input.world);
                 float alpha = tex2D(_MainTex, input.uv).a * (_SurfaceMode > .5 ? _SurfaceOpacity * input.alpha : 1);
                 clip(alpha - _AlphaCutoff);
-                return fixed4(.204,.176,.169,1);
+                return fixed4(.204,.176,.169,_VisibilityOpacity);
             }
             ENDCG
         }
@@ -98,6 +102,7 @@ Shader "Maestro/Watercolor"
             float _Shading;
             float _HasRestCoordinates;
             float _AlphaCutoff, _SurfaceMode, _SurfaceOpacity;
+            float _VisibilityOpacity, _VisibilityRealDepth;
             float _DecodeBrowserSrgb;
             Varying vert(Vertex input)
             {
@@ -116,7 +121,8 @@ Shader "Maestro/Watercolor"
             fixed4 frag(Varying input) : SV_Target
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
-                MaestroOccludeEnvironment(input.world);
+                if (_VisibilityOpacity <= 0) clip(-1);
+                if (_VisibilityRealDepth > .5) MaestroOccludeEnvironment(input.world);
                 fixed4 surface = tex2D(_MainTex, input.uv);
                 #ifndef UNITY_COLORSPACE_GAMMA
                 if (_DecodeBrowserSrgb > .5) surface.rgb = GammaToLinearSpace(surface.rgb);
@@ -141,7 +147,7 @@ Shader "Maestro/Watercolor"
                     float alternate = _PatternMode < 1.5 ? .5 - .5 * wave.x * wave.y : .5 - .5 * wave.x;
                     color = lerp(color, _PatternColor.rgb, saturate(alternate));
                 }
-                return fixed4(surface.rgb * color * input.color.rgb * pigment * face, _SurfaceMode > 1.5 ? alpha : 1);
+                return fixed4(surface.rgb * color * input.color.rgb * pigment * face, (_SurfaceMode > 1.5 ? alpha : 1) * _VisibilityOpacity);
             }
             ENDCG
         }

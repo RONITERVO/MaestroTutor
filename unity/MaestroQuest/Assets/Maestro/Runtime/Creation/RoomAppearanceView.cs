@@ -17,6 +17,8 @@ namespace Maestro.Quest.Creation
         sealed class Rendered {internal Renderer Renderer;internal Material[] Original,Applied;}
         readonly List<Rendered> rendered=new();
         readonly List<AppearanceMaterials.Lease> leases=new();
+        readonly List<VisibilityMaterials.Lease> visibilityLeases=new();
+        VisibilityState visibility;
         RoomObjectKind kind;
         AppearanceBinding[] bindings=Array.Empty<AppearanceBinding>();
         Dictionary<string,RoomAppearance> definitions=new();
@@ -27,15 +29,20 @@ namespace Maestro.Quest.Creation
             if(!avatar){avatar=GetComponent<MaestroAvatar>();if(avatar)avatar.ModelChanged+=Refresh;}
             Refresh();
         }
+        internal void ConfigureVisibility(VisibilityState value) {
+            if(ReferenceEquals(visibility,value))return;
+            visibility=value;Refresh();
+        }
         internal void Refresh() {
-            var previous=leases.ToArray();leases.Clear();Restore();
+            var previous=leases.ToArray();leases.Clear();
+            var previousVisibility=visibilityLeases.ToArray();visibilityLeases.Clear();Restore();
             try {
-            if(!isActiveAndEnabled||bindings.Length==0)return;
+            if(!isActiveAndEnabled||bindings.Length==0&&visibility==null)return;
             var owner=GetComponent<RoomItem>();var recipe=GetComponent<RecipeObject>();
             var root=bindings.FirstOrDefault(b=>b.kind=="root");
             foreach(var renderer in GetComponentsInChildren<Renderer>(true)) {
-                if(renderer.GetComponent<Book.BookPageTarget>()||renderer.GetComponentInParent<RoomItem>()!=owner||
-                    renderer.GetComponent<PencilMarks>()&&!(kind==RoomObjectKind.Drawing&&renderer.transform==transform))continue;
+                if(renderer.GetComponent<Book.BookPageTarget>()||renderer.GetComponentInParent<RoomItem>()!=owner)continue;
+                bool appearanceEligible=!renderer.GetComponent<PencilMarks>()||kind==RoomObjectKind.Drawing&&renderer.transform==transform;
                 string part=recipe?recipe.AppearancePart(renderer):null;
                 var model=renderer.GetComponentInParent<ImportedModel>();
                 string hash=model&&model.Ready?model.AssetHash:null;
@@ -46,13 +53,17 @@ namespace Maestro.Quest.Creation
                     if(part!=null)binding=bindings.FirstOrDefault(b=>b.kind=="part"&&b.partId==part)??binding;
                     if(hash!=null&&int.TryParse(source.GetTag("MaestroMaterialIndex",false,""),out int index))
                         binding=bindings.FirstOrDefault(b=>b.kind=="material"&&b.modelHash==hash&&b.materialIndex==index)??binding;
-                    if(binding==null||!definitions.TryGetValue(binding.appearanceId,out var definition))continue;
-                    var basePigment=binding.kind=="material"&&model&&model.Ready?model.Instance.GetComponent<PencilModelStyle>()?.ImportedBaseColor(binding.materialIndex):null;
-                    var lease=AppearanceMaterials.Acquire(source,binding.Effective(definition),basePigment);leases.Add(lease);applied[i]=lease.Material;changed=true;
+                    if(appearanceEligible&&binding!=null&&definitions.TryGetValue(binding.appearanceId,out var definition)) {
+                        var basePigment=binding.kind=="material"&&model&&model.Ready?model.Instance.GetComponent<PencilModelStyle>()?.ImportedBaseColor(binding.materialIndex):null;
+                        var lease=AppearanceMaterials.Acquire(source,binding.Effective(definition),basePigment);leases.Add(lease);applied[i]=lease.Material;changed=true;
+                    }
+                    if(visibility!=null) {
+                        var lease=VisibilityMaterials.Acquire(applied[i],visibility);visibilityLeases.Add(lease);applied[i]=lease.Material;changed=true;
+                    }
                 }
                 if(changed){rendered.Add(new Rendered{Renderer=renderer,Original=original,Applied=applied});renderer.sharedMaterials=applied;}
             }
-            } finally {foreach(var lease in previous)lease.Dispose();}
+            } finally {foreach(var lease in previousVisibility)lease.Dispose();foreach(var lease in previous)lease.Dispose();}
         }
         void Restore() {
             foreach(var entry in rendered)if(entry.Renderer) {
@@ -62,7 +73,7 @@ namespace Maestro.Quest.Creation
             }
             rendered.Clear();
         }
-        void Clear(){Restore();foreach(var lease in leases)lease.Dispose();leases.Clear();}
+        void Clear(){Restore();foreach(var lease in visibilityLeases)lease.Dispose();visibilityLeases.Clear();foreach(var lease in leases)lease.Dispose();leases.Clear();}
         void OnEnable(){Refresh();}
         void OnDisable(){Clear();}
         void OnDestroy(){if(avatar)avatar.ModelChanged-=Refresh;Clear();}
