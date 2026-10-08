@@ -19,6 +19,10 @@ namespace Maestro.Quest.Creation
         readonly List<AppearanceMaterials.Lease> leases=new();
         readonly List<VisibilityMaterials.Lease> visibilityLeases=new();
         VisibilityState visibility;
+        bool refreshPending;
+        internal bool PointerVisible=>!isActiveAndEnabled||visibility==null||visibility.Opacity>0;
+        internal static void VisualsChanged(Component source){var owner=source.GetComponentInParent<RoomItem>();var view=owner?owner.GetComponent<RoomAppearanceView>():null;if(view)view.refreshPending=true;}
+        void LateUpdate(){if(refreshPending)Refresh();}
         RoomObjectKind kind;
         AppearanceBinding[] bindings=Array.Empty<AppearanceBinding>();
         Dictionary<string,RoomAppearance> definitions=new();
@@ -29,11 +33,13 @@ namespace Maestro.Quest.Creation
             if(!avatar){avatar=GetComponent<MaestroAvatar>();if(avatar)avatar.ModelChanged+=Refresh;}
             Refresh();
         }
+        internal void ConfigureLayer(RoomObjectData value,IEnumerable<RoomAppearance> appearances,VisibilityState layer){visibility=layer;Configure(value,appearances);}
         internal void ConfigureVisibility(VisibilityState value) {
             if(ReferenceEquals(visibility,value))return;
             visibility=value;Refresh();
         }
         internal void Refresh() {
+            refreshPending=false;
             var previous=leases.ToArray();leases.Clear();
             var previousVisibility=visibilityLeases.ToArray();visibilityLeases.Clear();Restore();
             try {

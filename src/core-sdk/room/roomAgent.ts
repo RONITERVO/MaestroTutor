@@ -65,6 +65,8 @@ function resolveRoomProgramImports(value: unknown, observed: { hash: string; def
 }
 const validColor = (v: unknown) => record(v) && ['r','g','b'].every(k => typeof v[k] === 'number' && Number.isFinite(v[k]) && Number(v[k]) >= 0 && Number(v[k]) <= 1) && v.a === 1;
 const vector = (v: unknown) => record(v) && ['x','y','z'].every(k => typeof v[k] === 'number' && Number.isFinite(v[k]) && Math.abs(v[k] as number) <= 25);
+/** Fully validated commands with an invalid standalone batch shape; nothing was dispatched. */
+class RoomBatchShapeError extends Error {}
 export function parseRoomCommands(input: unknown): RoomCommand[] {
   if (!record(input) || Object.keys(input).some(k => k !== 'commands') || !Array.isArray(input.commands) || input.commands.length > 8 || JSON.stringify(input).length > 28000) throw new Error('The room plan is invalid or too large.');
   for (const c of input.commands) {
@@ -91,7 +93,7 @@ export function parseRoomCommands(input: unknown): RoomCommand[] {
     if ((action === 'paint' || c.color !== undefined) && !validColor(c.color)) throw new Error('Invalid colour.');
     if ((action === 'recipe' || c.kind === 'recipe') && !parseRecipe(c.recipe)) throw new Error('Missing recipe.');
   }
-  if (input.commands.some(c => ['undo','redo','inspect','workspace','play','stop','rules','motions','catalog','execution','avatarActivities','physicsRun','avatarMotion'].includes(c.action)) && input.commands.length !== 1) throw new Error('This action must be submitted on its own.');
+  if (input.commands.some(c => ['undo','redo','inspect','workspace','play','stop','rules','motions','catalog','execution','avatarActivities','physicsRun','avatarMotion'].includes(c.action)) && input.commands.length !== 1) throw new RoomBatchShapeError('This action must be submitted on its own. Submit exactly one command; no part of this rejected batch was dispatched.');
   return input.commands as unknown as RoomCommand[];
 }
 
@@ -142,8 +144,9 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
       // This is before durable intent and native dispatch. A new bounded planning
       // call may correct syntax/validation; transport/receipt errors are not caught.
       // Unsupported actions, oversized envelopes and other command-contract errors
-      // remain hard failures. Only JSON syntax or rejected behaviour source is repairable.
-      if(!(error instanceof SyntaxError)&&!(error instanceof Error&&error.message.startsWith('Invalid behaviour request.')))throw error;
+      // remain hard failures. Syntax, rejected behaviour source and the batch shape
+      // of otherwise valid commands can be corrected within the existing budget.
+      if(!(error instanceof SyntaxError)&&!(error instanceof RoomBatchShapeError)&&!(error instanceof Error&&error.message.startsWith('Invalid behaviour request.')))throw error;
       const raw=response.text||'';
       planRejection={message:(error instanceof Error?error.message:'Invalid room plan.').slice(0,1024),response:raw.slice(0,28000),truncated:raw.length>28000};
       continue;

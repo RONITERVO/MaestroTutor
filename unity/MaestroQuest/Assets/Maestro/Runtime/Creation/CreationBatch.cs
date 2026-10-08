@@ -100,12 +100,14 @@ namespace Maestro.Quest.Creation
         internal static bool ValidResourceWire(JObject value,out string error) {
             var wire=(JObject)value["blueprint"];error="Explicit construction resources require blueprint version 4";
             if(wire.ContainsKey("resources")&&(int)wire["version"]!=4)return false;
+            if(wire["resources"] is JObject resources&&((int?)resources["version"]==1&&resources.ContainsKey("visibilityLayers")||(int?)resources["version"]==2&&resources["visibilityLayers"] is not JArray)){error="Visual resource bundles require version 2 and a visibilityLayers array";return false;}
             error=null;return true;
         }
         internal static CreationBatch Read(JObject value) {
             if(!ValidResourceWire(value,out var error))throw new ArgumentException(error);
             var batch=JsonUtility.FromJson<CreationBatch>(value.ToString());
             if(!((JObject)value["blueprint"]).ContainsKey("resources"))batch.blueprint.resources=null;
+            else if((int?)value["blueprint"]["resources"]["version"]==1)batch.blueprint.resources.visibilityLayers=Array.Empty<RoomVisibilityLayer>();
             for(int i=0;i<batch.blueprint.pieces.Length;i++)if(batch.blueprint.pieces[i].source.kind=="prototype")
                 batch.blueprint.pieces[i].source.prototype=CreationPrototype.Read((JObject)value["blueprint"]["pieces"][i]["source"]["prototype"]);
             return batch;
@@ -149,13 +151,13 @@ namespace Maestro.Quest.Creation
         bool PrepareCreationBatch(CreationBatch batch,out RoomObjectData[] objects,out CreationResources resources,out string error) {
             objects=null;resources=null;error="Provide a creation batch";if(batch==null||!CanCreatePrimitive(out error)||!batch.Prepare(out objects,out resources,out error))return false;
             var candidate=Snapshot();candidate.objects=candidate.objects.Concat(objects).ToArray();
-            candidate.appearances=candidate.appearances.Concat(resources.appearances).ToArray();candidate.audioSources=candidate.audioSources.Concat(resources.audioSources).ToArray();candidate.environmentProfiles=candidate.environmentProfiles.Concat(resources.environmentProfiles).ToArray();
+            candidate.appearances=candidate.appearances.Concat(resources.appearances).ToArray();candidate.audioSources=candidate.audioSources.Concat(resources.audioSources).ToArray();candidate.environmentProfiles=candidate.environmentProfiles.Concat(resources.environmentProfiles).ToArray();candidate.visibilityLayers=candidate.visibilityLayers.Concat(resources.visibilityLayers).ToArray();
             return candidate.Validate(out error);
         }
         public bool CanCreateBatch(CreationBatch batch,out string error)=>PrepareCreationBatch(batch,out _,out _,out error);
         public bool CreateBatch(CreationBatch batch,out string[] ids,out string error) {
             ids=null;if(!PrepareCreationBatch(batch,out var objects,out var resources,out error))return false;
-            if(!CommitPersisted(objects,Array.Empty<string>(),"Structure created — one Undo removes its pieces and resources",false,out error,appearanceEdits:new AppearanceEdits{Replacements=resources.appearances},audioEdits:new AudioDefinitionEdits{Replacements=resources.audioSources},environmentEdits:new EnvironmentProfileEdits{Replacements=resources.environmentProfiles}))return false;
+            if(!CommitPersisted(objects,Array.Empty<string>(),"Structure created — one Undo removes its pieces and resources",false,out error,appearanceEdits:new AppearanceEdits{Replacements=resources.appearances},audioEdits:new AudioDefinitionEdits{Replacements=resources.audioSources},environmentEdits:new EnvironmentProfileEdits{Replacements=resources.environmentProfiles},visibilityEdits:new VisibilityLayerEdits{Replacements=resources.visibilityLayers}))return false;
             ids=objects.Select(o=>o.id).ToArray();return true;
         }
     }

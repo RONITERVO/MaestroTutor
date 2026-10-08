@@ -13,13 +13,15 @@ using Maestro.Quest.Book;
 namespace Maestro.Quest.Interaction
 {
     /// <summary>Movable room content; loose creations can opt into RigidRoomItem physics.</summary>
-    public sealed class RoomItem : MonoBehaviour, IXRSelectFilter
+    public sealed class RoomItem : MonoBehaviour, IXRSelectFilter, IXRHoverFilter
     {
         public XRGrabInteractable Grab { get; private set; }
         internal bool PoseLocked {get;set;}
         WorkspaceWriteGate writes;
         public bool canProcess=>isActiveAndEnabled;
-        public bool Process(IXRSelectInteractor interactor,IXRSelectInteractable interactable)=>!PoseLocked&&writes?.Frozen!=true;
+        internal bool PointerVisible=>!GetComponent<Creation.RoomAppearanceView>()||GetComponent<Creation.RoomAppearanceView>().PointerVisible;
+        public bool Process(IXRSelectInteractor interactor,IXRSelectInteractable interactable)=>PointerVisible&&!PoseLocked&&writes?.Frozen!=true;
+        bool IXRHoverFilter.Process(IXRHoverInteractor interactor,IXRHoverInteractable interactable)=>PointerVisible;
         internal void ConfigureWrites(WorkspaceWriteGate gate){writes=gate;}
         internal void DetachWrites(WorkspaceWriteGate gate){if(ReferenceEquals(writes,gate))writes=null;}
         public event Action<RoomItem> GrabStarted, GrabFinished;
@@ -51,7 +53,7 @@ namespace Maestro.Quest.Interaction
             Grab.AddMultipleGrabTransformer(transformer);
             Grab.firstSelectEntered.AddListener(OnGrabStarted);
             Grab.lastSelectExited.AddListener(OnGrabFinished);
-            Grab.selectFilters.Add(this);
+            Grab.selectFilters.Add(this);Grab.hoverFilters.Add(this);
             Grab.enabled = true;
         }
 

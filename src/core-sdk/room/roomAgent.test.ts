@@ -470,6 +470,36 @@ describe('accepted program starts are observed, never replayed by a planner retr
 
 
 describe('bounded local plan correction',()=>{
+ it('corrects two standalone catalog queries without dispatching a partial batch or replaying a prior effect',async()=>{
+  const create:RoomCommand={action:'create',reference:'ball',name:'Ball',kind:'ball'};
+  const query=(category:'actions'|'facts'):RoomCommand=>({action:'catalog',catalog:{operation:'search',category,query:'visibility',offset:0}});
+  const first=query('actions'),second=query('facts');
+  const responses=[[create],[first,second],[first],[second],[]].map(commands=>JSON.stringify({commands}));
+  const ai=client(responses),current={...scene,capabilities:['catalog.v1','catalogVocabulary.v1']};
+  const execute=vi.fn(async(_commands:RoomCommand[])=>({...current,ack:1})),beforeDispatch=vi.fn(),onReceipt=vi.fn(),usage=vi.fn();
+  const result=await runRoomActionTask(input,{aiClient:ai},{state:()=>current,valid:()=>true,execute},usage,{beforeDispatch,onReceipt});
+  expect(execute.mock.calls.map(c=>c[0])).toEqual([[create],[first],[second]]);
+  expect(beforeDispatch).toHaveBeenCalledTimes(3);expect(onReceipt).toHaveBeenCalledTimes(3);expect(usage).toHaveBeenCalledTimes(5);
+  expect(result.operations).toEqual([[create],[first],[second]].map((commands,receiptIndex)=>({commands,receiptIndex})));
+  const requests=ai.models.generateContentStream.mock.calls as unknown as [{contents:{parts:{text:string}[]}[]}][];
+  const correction=JSON.parse(requests[2][0].contents[0].parts[0].text);
+  expect(correction.tutorContext.planRejection.message).toContain('Submit exactly one command');
+  expect(correction.tutorContext.operations).toEqual([{commands:[create],receiptIndex:0}]);
+  expect(correction.budget).toEqual({planningCalls:ROOM_TASK_LIMITS.planningCalls-2,actionBatches:ROOM_TASK_LIMITS.actionBatches-1,queryBatches:ROOM_TASK_LIMITS.queryBatches});
+  expect(JSON.parse(requests[3][0].contents[0].parts[0].text).tutorContext.planRejection).toBeUndefined();
+ });
+ it('bounds repeated standalone-batch correction without spending query or mutation allowance',async()=>{
+  const response=JSON.stringify({commands:[{action:'inspect',target:'maestro'},{action:'undo'}]});
+  const ai=client(Array(ROOM_TASK_LIMITS.planningCalls).fill(response)),execute=vi.fn(),beforeDispatch=vi.fn();
+  const result=await runRoomActionTask(input,{aiClient:ai},{state:()=>scene,valid:()=>true,execute},()=>{},{beforeDispatch});
+  expect(result.budgetExhausted).toBe(true);expect(result.receipts).toEqual([]);expect(execute).not.toHaveBeenCalled();expect(beforeDispatch).not.toHaveBeenCalled();
+  expect(ai.models.generateContentStream).toHaveBeenCalledTimes(ROOM_TASK_LIMITS.planningCalls);
+ });
+ it('does not soften unknown actions inside a mixed batch into repairable shape errors',async()=>{
+  const ai=client([JSON.stringify({commands:[{action:'inspect',target:'maestro'},{action:'runCode',code:'anything'}]})]),execute=vi.fn();
+  await expect(runRoomActionTask(input,{aiClient:ai},{state:()=>scene,valid:()=>true,execute},()=>{})).rejects.toThrow('Unknown room action');
+  expect(execute).not.toHaveBeenCalled();expect(ai.models.generateContentStream).toHaveBeenCalledOnce();
+ });
  it('returns local syntax feedback and dispatches only a corrected plan with truthful receipts',async()=>{
   const create={action:'create',reference:'ball',name:'Ball',kind:'ball'};
   const ai=client(['{"commands": [',JSON.stringify({commands:[create]}),'{"commands":[]}']);

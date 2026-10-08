@@ -192,6 +192,25 @@ try{
  assert.equal(appearance.call.arguments.name,'Book-created glass');assert.equal((appearance.call.arguments.style as {opacity:number}).opacity,.35);assert.ok(appearance.output?.id);
  await writeFile(join(directory,'book-native-appearance.json'),JSON.stringify({boundary:'Actual generated book form and native saved receipt, scripted provider elsewhere; no headset/provider proof for appearances.',appearance},null,2));
  await page.screenshot({path:join(directory,'book-native-appearance.png')});
+ // Saved layers use ordinary generated forms and their current-value guard.
+ await page.getByRole('button',{name:'Back to workshop',exact:true}).click();await page.getByRole('button',{name:'Action catalog',exact:true}).click();
+ await page.getByLabel('Search actions',{exact:true}).fill('Save visual layer');await page.getByRole('button',{name:'Search',exact:true}).click();
+ await page.getByRole('button',{name:/Save visual layer.*visibility.layer.save/}).click();
+ await page.getByLabel('Action inputs name',{exact:true}).fill('Book-created layer');await page.getByLabel('Action inputs opacity',{exact:true}).fill('0.6');
+ await page.getByRole('button',{name:'Run action now',exact:true}).click();
+ await page.waitForFunction(()=>{const r=window.nativeBookEvidence!().state!.execution?.selected;return r?.capability==='visibility.layer.save'&&r.phase==='completed';});
+ const visualLayer=await page.evaluate(()=>window.nativeBookEvidence!().state!.execution!.selected!);
+ await page.getByRole('button',{name:'Back to workshop',exact:true}).click();await page.getByRole('button',{name:'Action catalog',exact:true}).click();
+ await page.getByLabel('Search actions',{exact:true}).fill('Choose object visual layer');await page.getByRole('button',{name:'Search',exact:true}).click();
+ await page.getByRole('button',{name:/Choose object visual layer.*object.visibility.assign/}).click();
+ await page.getByLabel('Action inputs target',{exact:true}).selectOption(ball.id);
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ await page.getByLabel('Action inputs layerId',{exact:true}).fill(String(visualLayer.output!.id));await page.getByLabel('Action inputs layerRevision',{exact:true}).fill(String(visualLayer.output!.revision));
+ await page.getByRole('button',{name:'Run action now',exact:true}).click();
+ await page.waitForFunction(()=>{const r=window.nativeBookEvidence!().state!.execution?.selected;return r?.capability==='object.visibility.assign'&&r.phase==='completed';});
+ const visualBinding=await page.evaluate(()=>window.nativeBookEvidence!().state!.execution!.selected!);
+ await writeFile(join(directory,'book-native-visibility.json'),JSON.stringify({boundary:'Generated book forms and native saved-layer receipts; no headset or provider acceptance.',visualLayer,visualBinding},null,2));
+ await page.screenshot({path:join(directory,'book-native-visibility.png')});
  // Use the ordinary generated forms to bind a style and capture the styled object.
  await page.getByRole('button',{name:'Back to workshop',exact:true}).click();
  await page.getByRole('button',{name:'Action catalog',exact:true}).click();

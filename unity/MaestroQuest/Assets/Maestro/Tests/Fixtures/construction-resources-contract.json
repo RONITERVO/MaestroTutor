@@ -8239,5 +8239,2300 @@
       },
       "scale": 1
     }
+  },
+  {
+    "name": "shared portable visual layer",
+    "valid": true,
+    "arguments": {
+      "blueprint": {
+        "version": 4,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 3,
+                "color": {
+                  "r": 1,
+                  "g": 1,
+                  "b": 1,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "block"
+                },
+                "appearanceBindings": [
+                  {
+                    "version": 1,
+                    "appearanceId": "00000000000000000000000000000001",
+                    "kind": "root",
+                    "partId": "",
+                    "modelHash": "",
+                    "materialIndex": -1,
+                    "tint": "#BBEEFF"
+                  }
+                ],
+                "audioEmitters": [
+                  {
+                    "version": 1,
+                    "id": "bell",
+                    "source": "00000000000000000000000000000001",
+                    "part": "",
+                    "joint": "",
+                    "role": "effects",
+                    "position": {
+                      "x": 0,
+                      "y": 0.1,
+                      "z": 0
+                    },
+                    "spatial": true,
+                    "gain": 0.2,
+                    "minDistance": 0.5,
+                    "maxDistance": 15
+                  }
+                ],
+                "environmentProfile": "00000000000000000000000000000001",
+                "visibilityLayer": "44444444444444444444444444444444"
+              }
+            }
+          },
+          {
+            "slot": "other",
+            "name": "My block",
+            "position": {
+              "x": 0.4,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 3,
+                "color": {
+                  "r": 1,
+                  "g": 1,
+                  "b": 1,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "block"
+                },
+                "appearanceBindings": [
+                  {
+                    "version": 1,
+                    "appearanceId": "00000000000000000000000000000001",
+                    "kind": "root",
+                    "partId": "",
+                    "modelHash": "",
+                    "materialIndex": -1,
+                    "tint": "#BBEEFF"
+                  }
+                ],
+                "audioEmitters": [
+                  {
+                    "version": 1,
+                    "id": "bell",
+                    "source": "00000000000000000000000000000001",
+                    "part": "",
+                    "joint": "",
+                    "role": "effects",
+                    "position": {
+                      "x": 0,
+                      "y": 0.1,
+                      "z": 0
+                    },
+                    "spatial": true,
+                    "gain": 0.2,
+                    "minDistance": 0.5,
+                    "maxDistance": 15
+                  }
+                ],
+                "environmentProfile": "00000000000000000000000000000001",
+                "visibilityLayer": "44444444444444444444444444444444"
+              }
+            }
+          }
+        ],
+        "resources": {
+          "version": 2,
+          "appearances": [
+            {
+              "version": 1,
+              "id": "00000000000000000000000000000001",
+              "name": "Glass",
+              "style": {
+                "tint": "#DDBBAA",
+                "patternMode": "replace",
+                "pattern": {
+                  "kind": "stripes",
+                  "plane": "xz",
+                  "secondary": "#FFFFFF",
+                  "columns": 4,
+                  "rows": 4
+                },
+                "tiling": {
+                  "x": 1,
+                  "y": 1
+                },
+                "offset": {
+                  "x": 0,
+                  "y": 0
+                },
+                "renderMode": "blend",
+                "opacity": 0.4,
+                "cutoff": 0,
+                "sidedness": "both",
+                "grain": -1,
+                "shading": -1
+              }
+            }
+          ],
+          "audioSources": [
+            {
+              "version": 1,
+              "id": "00000000000000000000000000000001",
+              "name": "Bell",
+              "kind": "tone",
+              "wave": "sine",
+              "frequency": 440,
+              "endFrequency": 220,
+              "seconds": 0.25,
+              "attack": 0.01,
+              "release": 0.04,
+              "seed": 1
+            }
+          ],
+          "environmentProfiles": [
+            {
+              "version": 1,
+              "id": "00000000000000000000000000000001",
+              "name": "Virtual actors",
+              "realCollisions": false
+            }
+          ],
+          "visibilityLayers": [
+            {
+              "version": 1,
+              "id": "44444444444444444444444444444444",
+              "name": "Landscape",
+              "opacity": 0.45,
+              "realDepth": false
+            }
+          ]
+        }
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "layer reference requires prototype version 3",
+    "valid": false,
+    "arguments": {
+      "blueprint": {
+        "version": 4,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 2,
+                "color": {
+                  "r": 1,
+                  "g": 1,
+                  "b": 1,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "block"
+                },
+                "appearanceBindings": [
+                  {
+                    "version": 1,
+                    "appearanceId": "00000000000000000000000000000001",
+                    "kind": "root",
+                    "partId": "",
+                    "modelHash": "",
+                    "materialIndex": -1,
+                    "tint": "#BBEEFF"
+                  }
+                ],
+                "audioEmitters": [
+                  {
+                    "version": 1,
+                    "id": "bell",
+                    "source": "00000000000000000000000000000001",
+                    "part": "",
+                    "joint": "",
+                    "role": "effects",
+                    "position": {
+                      "x": 0,
+                      "y": 0.1,
+                      "z": 0
+                    },
+                    "spatial": true,
+                    "gain": 0.2,
+                    "minDistance": 0.5,
+                    "maxDistance": 15
+                  }
+                ],
+                "environmentProfile": "00000000000000000000000000000001",
+                "visibilityLayer": "44444444444444444444444444444444"
+              }
+            }
+          },
+          {
+            "slot": "other",
+            "name": "My block",
+            "position": {
+              "x": 0.4,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 3,
+                "color": {
+                  "r": 1,
+                  "g": 1,
+                  "b": 1,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "block"
+                },
+                "appearanceBindings": [
+                  {
+                    "version": 1,
+                    "appearanceId": "00000000000000000000000000000001",
+                    "kind": "root",
+                    "partId": "",
+                    "modelHash": "",
+                    "materialIndex": -1,
+                    "tint": "#BBEEFF"
+                  }
+                ],
+                "audioEmitters": [
+                  {
+                    "version": 1,
+                    "id": "bell",
+                    "source": "00000000000000000000000000000001",
+                    "part": "",
+                    "joint": "",
+                    "role": "effects",
+                    "position": {
+                      "x": 0,
+                      "y": 0.1,
+                      "z": 0
+                    },
+                    "spatial": true,
+                    "gain": 0.2,
+                    "minDistance": 0.5,
+                    "maxDistance": 15
+                  }
+                ],
+                "environmentProfile": "00000000000000000000000000000001",
+                "visibilityLayer": "44444444444444444444444444444444"
+              }
+            }
+          }
+        ],
+        "resources": {
+          "version": 2,
+          "appearances": [
+            {
+              "version": 1,
+              "id": "00000000000000000000000000000001",
+              "name": "Glass",
+              "style": {
+                "tint": "#DDBBAA",
+                "patternMode": "replace",
+                "pattern": {
+                  "kind": "stripes",
+                  "plane": "xz",
+                  "secondary": "#FFFFFF",
+                  "columns": 4,
+                  "rows": 4
+                },
+                "tiling": {
+                  "x": 1,
+                  "y": 1
+                },
+                "offset": {
+                  "x": 0,
+                  "y": 0
+                },
+                "renderMode": "blend",
+                "opacity": 0.4,
+                "cutoff": 0,
+                "sidedness": "both",
+                "grain": -1,
+                "shading": -1
+              }
+            }
+          ],
+          "audioSources": [
+            {
+              "version": 1,
+              "id": "00000000000000000000000000000001",
+              "name": "Bell",
+              "kind": "tone",
+              "wave": "sine",
+              "frequency": 440,
+              "endFrequency": 220,
+              "seconds": 0.25,
+              "attack": 0.01,
+              "release": 0.04,
+              "seed": 1
+            }
+          ],
+          "environmentProfiles": [
+            {
+              "version": 1,
+              "id": "00000000000000000000000000000001",
+              "name": "Virtual actors",
+              "realCollisions": false
+            }
+          ],
+          "visibilityLayers": [
+            {
+              "version": 1,
+              "id": "44444444444444444444444444444444",
+              "name": "Landscape",
+              "opacity": 0.45,
+              "realDepth": false
+            }
+          ]
+        }
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "layer requires resource bundle version 2",
+    "valid": false,
+    "arguments": {
+      "blueprint": {
+        "version": 4,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 3,
+                "color": {
+                  "r": 1,
+                  "g": 1,
+                  "b": 1,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "block"
+                },
+                "appearanceBindings": [
+                  {
+                    "version": 1,
+                    "appearanceId": "00000000000000000000000000000001",
+                    "kind": "root",
+                    "partId": "",
+                    "modelHash": "",
+                    "materialIndex": -1,
+                    "tint": "#BBEEFF"
+                  }
+                ],
+                "audioEmitters": [
+                  {
+                    "version": 1,
+                    "id": "bell",
+                    "source": "00000000000000000000000000000001",
+                    "part": "",
+                    "joint": "",
+                    "role": "effects",
+                    "position": {
+                      "x": 0,
+                      "y": 0.1,
+                      "z": 0
+                    },
+                    "spatial": true,
+                    "gain": 0.2,
+                    "minDistance": 0.5,
+                    "maxDistance": 15
+                  }
+                ],
+                "environmentProfile": "00000000000000000000000000000001",
+                "visibilityLayer": "44444444444444444444444444444444"
+              }
+            }
+          },
+          {
+            "slot": "other",
+            "name": "My block",
+            "position": {
+              "x": 0.4,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 3,
+                "color": {
+                  "r": 1,
+                  "g": 1,
+                  "b": 1,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "block"
+                },
+                "appearanceBindings": [
+                  {
+                    "version": 1,
+                    "appearanceId": "00000000000000000000000000000001",
+                    "kind": "root",
+                    "partId": "",
+                    "modelHash": "",
+                    "materialIndex": -1,
+                    "tint": "#BBEEFF"
+                  }
+                ],
+                "audioEmitters": [
+                  {
+                    "version": 1,
+                    "id": "bell",
+                    "source": "00000000000000000000000000000001",
+                    "part": "",
+                    "joint": "",
+                    "role": "effects",
+                    "position": {
+                      "x": 0,
+                      "y": 0.1,
+                      "z": 0
+                    },
+                    "spatial": true,
+                    "gain": 0.2,
+                    "minDistance": 0.5,
+                    "maxDistance": 15
+                  }
+                ],
+                "environmentProfile": "00000000000000000000000000000001",
+                "visibilityLayer": "44444444444444444444444444444444"
+              }
+            }
+          }
+        ],
+        "resources": {
+          "version": 1,
+          "appearances": [
+            {
+              "version": 1,
+              "id": "00000000000000000000000000000001",
+              "name": "Glass",
+              "style": {
+                "tint": "#DDBBAA",
+                "patternMode": "replace",
+                "pattern": {
+                  "kind": "stripes",
+                  "plane": "xz",
+                  "secondary": "#FFFFFF",
+                  "columns": 4,
+                  "rows": 4
+                },
+                "tiling": {
+                  "x": 1,
+                  "y": 1
+                },
+                "offset": {
+                  "x": 0,
+                  "y": 0
+                },
+                "renderMode": "blend",
+                "opacity": 0.4,
+                "cutoff": 0,
+                "sidedness": "both",
+                "grain": -1,
+                "shading": -1
+              }
+            }
+          ],
+          "audioSources": [
+            {
+              "version": 1,
+              "id": "00000000000000000000000000000001",
+              "name": "Bell",
+              "kind": "tone",
+              "wave": "sine",
+              "frequency": 440,
+              "endFrequency": 220,
+              "seconds": 0.25,
+              "attack": 0.01,
+              "release": 0.04,
+              "seed": 1
+            }
+          ],
+          "environmentProfiles": [
+            {
+              "version": 1,
+              "id": "00000000000000000000000000000001",
+              "name": "Virtual actors",
+              "realCollisions": false
+            }
+          ],
+          "visibilityLayers": [
+            {
+              "version": 1,
+              "id": "44444444444444444444444444444444",
+              "name": "Landscape",
+              "opacity": 0.45,
+              "realDepth": false
+            }
+          ]
+        }
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "layer resource cannot be missing",
+    "valid": false,
+    "arguments": {
+      "blueprint": {
+        "version": 4,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 3,
+                "color": {
+                  "r": 1,
+                  "g": 1,
+                  "b": 1,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "block"
+                },
+                "appearanceBindings": [
+                  {
+                    "version": 1,
+                    "appearanceId": "00000000000000000000000000000001",
+                    "kind": "root",
+                    "partId": "",
+                    "modelHash": "",
+                    "materialIndex": -1,
+                    "tint": "#BBEEFF"
+                  }
+                ],
+                "audioEmitters": [
+                  {
+                    "version": 1,
+                    "id": "bell",
+                    "source": "00000000000000000000000000000001",
+                    "part": "",
+                    "joint": "",
+                    "role": "effects",
+                    "position": {
+                      "x": 0,
+                      "y": 0.1,
+                      "z": 0
+                    },
+                    "spatial": true,
+                    "gain": 0.2,
+                    "minDistance": 0.5,
+                    "maxDistance": 15
+                  }
+                ],
+                "environmentProfile": "00000000000000000000000000000001",
+                "visibilityLayer": "44444444444444444444444444444444"
+              }
+            }
+          },
+          {
+            "slot": "other",
+            "name": "My block",
+            "position": {
+              "x": 0.4,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 3,
+                "color": {
+                  "r": 1,
+                  "g": 1,
+                  "b": 1,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "block"
+                },
+                "appearanceBindings": [
+                  {
+                    "version": 1,
+                    "appearanceId": "00000000000000000000000000000001",
+                    "kind": "root",
+                    "partId": "",
+                    "modelHash": "",
+                    "materialIndex": -1,
+                    "tint": "#BBEEFF"
+                  }
+                ],
+                "audioEmitters": [
+                  {
+                    "version": 1,
+                    "id": "bell",
+                    "source": "00000000000000000000000000000001",
+                    "part": "",
+                    "joint": "",
+                    "role": "effects",
+                    "position": {
+                      "x": 0,
+                      "y": 0.1,
+                      "z": 0
+                    },
+                    "spatial": true,
+                    "gain": 0.2,
+                    "minDistance": 0.5,
+                    "maxDistance": 15
+                  }
+                ],
+                "environmentProfile": "00000000000000000000000000000001",
+                "visibilityLayer": "44444444444444444444444444444444"
+              }
+            }
+          }
+        ],
+        "resources": {
+          "version": 2,
+          "appearances": [
+            {
+              "version": 1,
+              "id": "00000000000000000000000000000001",
+              "name": "Glass",
+              "style": {
+                "tint": "#DDBBAA",
+                "patternMode": "replace",
+                "pattern": {
+                  "kind": "stripes",
+                  "plane": "xz",
+                  "secondary": "#FFFFFF",
+                  "columns": 4,
+                  "rows": 4
+                },
+                "tiling": {
+                  "x": 1,
+                  "y": 1
+                },
+                "offset": {
+                  "x": 0,
+                  "y": 0
+                },
+                "renderMode": "blend",
+                "opacity": 0.4,
+                "cutoff": 0,
+                "sidedness": "both",
+                "grain": -1,
+                "shading": -1
+              }
+            }
+          ],
+          "audioSources": [
+            {
+              "version": 1,
+              "id": "00000000000000000000000000000001",
+              "name": "Bell",
+              "kind": "tone",
+              "wave": "sine",
+              "frequency": 440,
+              "endFrequency": 220,
+              "seconds": 0.25,
+              "attack": 0.01,
+              "release": 0.04,
+              "seed": 1
+            }
+          ],
+          "environmentProfiles": [
+            {
+              "version": 1,
+              "id": "00000000000000000000000000000001",
+              "name": "Virtual actors",
+              "realCollisions": false
+            }
+          ],
+          "visibilityLayers": []
+        }
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "layer resources cannot be unreferenced",
+    "valid": false,
+    "arguments": {
+      "blueprint": {
+        "version": 4,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 3,
+                "color": {
+                  "r": 1,
+                  "g": 1,
+                  "b": 1,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "block"
+                },
+                "appearanceBindings": [
+                  {
+                    "version": 1,
+                    "appearanceId": "00000000000000000000000000000001",
+                    "kind": "root",
+                    "partId": "",
+                    "modelHash": "",
+                    "materialIndex": -1,
+                    "tint": "#BBEEFF"
+                  }
+                ],
+                "audioEmitters": [
+                  {
+                    "version": 1,
+                    "id": "bell",
+                    "source": "00000000000000000000000000000001",
+                    "part": "",
+                    "joint": "",
+                    "role": "effects",
+                    "position": {
+                      "x": 0,
+                      "y": 0.1,
+                      "z": 0
+                    },
+                    "spatial": true,
+                    "gain": 0.2,
+                    "minDistance": 0.5,
+                    "maxDistance": 15
+                  }
+                ],
+                "environmentProfile": "00000000000000000000000000000001",
+                "visibilityLayer": "44444444444444444444444444444444"
+              }
+            }
+          },
+          {
+            "slot": "other",
+            "name": "My block",
+            "position": {
+              "x": 0.4,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 3,
+                "color": {
+                  "r": 1,
+                  "g": 1,
+                  "b": 1,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "block"
+                },
+                "appearanceBindings": [
+                  {
+                    "version": 1,
+                    "appearanceId": "00000000000000000000000000000001",
+                    "kind": "root",
+                    "partId": "",
+                    "modelHash": "",
+                    "materialIndex": -1,
+                    "tint": "#BBEEFF"
+                  }
+                ],
+                "audioEmitters": [
+                  {
+                    "version": 1,
+                    "id": "bell",
+                    "source": "00000000000000000000000000000001",
+                    "part": "",
+                    "joint": "",
+                    "role": "effects",
+                    "position": {
+                      "x": 0,
+                      "y": 0.1,
+                      "z": 0
+                    },
+                    "spatial": true,
+                    "gain": 0.2,
+                    "minDistance": 0.5,
+                    "maxDistance": 15
+                  }
+                ],
+                "environmentProfile": "00000000000000000000000000000001",
+                "visibilityLayer": "44444444444444444444444444444444"
+              }
+            }
+          }
+        ],
+        "resources": {
+          "version": 2,
+          "appearances": [
+            {
+              "version": 1,
+              "id": "00000000000000000000000000000001",
+              "name": "Glass",
+              "style": {
+                "tint": "#DDBBAA",
+                "patternMode": "replace",
+                "pattern": {
+                  "kind": "stripes",
+                  "plane": "xz",
+                  "secondary": "#FFFFFF",
+                  "columns": 4,
+                  "rows": 4
+                },
+                "tiling": {
+                  "x": 1,
+                  "y": 1
+                },
+                "offset": {
+                  "x": 0,
+                  "y": 0
+                },
+                "renderMode": "blend",
+                "opacity": 0.4,
+                "cutoff": 0,
+                "sidedness": "both",
+                "grain": -1,
+                "shading": -1
+              }
+            }
+          ],
+          "audioSources": [
+            {
+              "version": 1,
+              "id": "00000000000000000000000000000001",
+              "name": "Bell",
+              "kind": "tone",
+              "wave": "sine",
+              "frequency": 440,
+              "endFrequency": 220,
+              "seconds": 0.25,
+              "attack": 0.01,
+              "release": 0.04,
+              "seed": 1
+            }
+          ],
+          "environmentProfiles": [
+            {
+              "version": 1,
+              "id": "00000000000000000000000000000001",
+              "name": "Virtual actors",
+              "realCollisions": false
+            }
+          ],
+          "visibilityLayers": [
+            {
+              "version": 1,
+              "id": "44444444444444444444444444444444",
+              "name": "Landscape",
+              "opacity": 0.45,
+              "realDepth": false
+            },
+            {
+              "version": 1,
+              "id": "55555555555555555555555555555555",
+              "name": "Extra",
+              "opacity": 1,
+              "realDepth": true
+            }
+          ]
+        }
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "layer IDs are unique",
+    "valid": false,
+    "arguments": {
+      "blueprint": {
+        "version": 4,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 3,
+                "color": {
+                  "r": 1,
+                  "g": 1,
+                  "b": 1,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "block"
+                },
+                "appearanceBindings": [
+                  {
+                    "version": 1,
+                    "appearanceId": "00000000000000000000000000000001",
+                    "kind": "root",
+                    "partId": "",
+                    "modelHash": "",
+                    "materialIndex": -1,
+                    "tint": "#BBEEFF"
+                  }
+                ],
+                "audioEmitters": [
+                  {
+                    "version": 1,
+                    "id": "bell",
+                    "source": "00000000000000000000000000000001",
+                    "part": "",
+                    "joint": "",
+                    "role": "effects",
+                    "position": {
+                      "x": 0,
+                      "y": 0.1,
+                      "z": 0
+                    },
+                    "spatial": true,
+                    "gain": 0.2,
+                    "minDistance": 0.5,
+                    "maxDistance": 15
+                  }
+                ],
+                "environmentProfile": "00000000000000000000000000000001",
+                "visibilityLayer": "44444444444444444444444444444444"
+              }
+            }
+          },
+          {
+            "slot": "other",
+            "name": "My block",
+            "position": {
+              "x": 0.4,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 3,
+                "color": {
+                  "r": 1,
+                  "g": 1,
+                  "b": 1,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "block"
+                },
+                "appearanceBindings": [
+                  {
+                    "version": 1,
+                    "appearanceId": "00000000000000000000000000000001",
+                    "kind": "root",
+                    "partId": "",
+                    "modelHash": "",
+                    "materialIndex": -1,
+                    "tint": "#BBEEFF"
+                  }
+                ],
+                "audioEmitters": [
+                  {
+                    "version": 1,
+                    "id": "bell",
+                    "source": "00000000000000000000000000000001",
+                    "part": "",
+                    "joint": "",
+                    "role": "effects",
+                    "position": {
+                      "x": 0,
+                      "y": 0.1,
+                      "z": 0
+                    },
+                    "spatial": true,
+                    "gain": 0.2,
+                    "minDistance": 0.5,
+                    "maxDistance": 15
+                  }
+                ],
+                "environmentProfile": "00000000000000000000000000000001",
+                "visibilityLayer": "44444444444444444444444444444444"
+              }
+            }
+          }
+        ],
+        "resources": {
+          "version": 2,
+          "appearances": [
+            {
+              "version": 1,
+              "id": "00000000000000000000000000000001",
+              "name": "Glass",
+              "style": {
+                "tint": "#DDBBAA",
+                "patternMode": "replace",
+                "pattern": {
+                  "kind": "stripes",
+                  "plane": "xz",
+                  "secondary": "#FFFFFF",
+                  "columns": 4,
+                  "rows": 4
+                },
+                "tiling": {
+                  "x": 1,
+                  "y": 1
+                },
+                "offset": {
+                  "x": 0,
+                  "y": 0
+                },
+                "renderMode": "blend",
+                "opacity": 0.4,
+                "cutoff": 0,
+                "sidedness": "both",
+                "grain": -1,
+                "shading": -1
+              }
+            }
+          ],
+          "audioSources": [
+            {
+              "version": 1,
+              "id": "00000000000000000000000000000001",
+              "name": "Bell",
+              "kind": "tone",
+              "wave": "sine",
+              "frequency": 440,
+              "endFrequency": 220,
+              "seconds": 0.25,
+              "attack": 0.01,
+              "release": 0.04,
+              "seed": 1
+            }
+          ],
+          "environmentProfiles": [
+            {
+              "version": 1,
+              "id": "00000000000000000000000000000001",
+              "name": "Virtual actors",
+              "realCollisions": false
+            }
+          ],
+          "visibilityLayers": [
+            {
+              "version": 1,
+              "id": "44444444444444444444444444444444",
+              "name": "Landscape",
+              "opacity": 0.45,
+              "realDepth": false
+            },
+            {
+              "version": 1,
+              "id": "44444444444444444444444444444444",
+              "name": "Landscape",
+              "opacity": 0.45,
+              "realDepth": false
+            }
+          ]
+        }
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "layer opacity is bounded",
+    "valid": false,
+    "arguments": {
+      "blueprint": {
+        "version": 4,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 3,
+                "color": {
+                  "r": 1,
+                  "g": 1,
+                  "b": 1,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "block"
+                },
+                "appearanceBindings": [
+                  {
+                    "version": 1,
+                    "appearanceId": "00000000000000000000000000000001",
+                    "kind": "root",
+                    "partId": "",
+                    "modelHash": "",
+                    "materialIndex": -1,
+                    "tint": "#BBEEFF"
+                  }
+                ],
+                "audioEmitters": [
+                  {
+                    "version": 1,
+                    "id": "bell",
+                    "source": "00000000000000000000000000000001",
+                    "part": "",
+                    "joint": "",
+                    "role": "effects",
+                    "position": {
+                      "x": 0,
+                      "y": 0.1,
+                      "z": 0
+                    },
+                    "spatial": true,
+                    "gain": 0.2,
+                    "minDistance": 0.5,
+                    "maxDistance": 15
+                  }
+                ],
+                "environmentProfile": "00000000000000000000000000000001",
+                "visibilityLayer": "44444444444444444444444444444444"
+              }
+            }
+          },
+          {
+            "slot": "other",
+            "name": "My block",
+            "position": {
+              "x": 0.4,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 3,
+                "color": {
+                  "r": 1,
+                  "g": 1,
+                  "b": 1,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "block"
+                },
+                "appearanceBindings": [
+                  {
+                    "version": 1,
+                    "appearanceId": "00000000000000000000000000000001",
+                    "kind": "root",
+                    "partId": "",
+                    "modelHash": "",
+                    "materialIndex": -1,
+                    "tint": "#BBEEFF"
+                  }
+                ],
+                "audioEmitters": [
+                  {
+                    "version": 1,
+                    "id": "bell",
+                    "source": "00000000000000000000000000000001",
+                    "part": "",
+                    "joint": "",
+                    "role": "effects",
+                    "position": {
+                      "x": 0,
+                      "y": 0.1,
+                      "z": 0
+                    },
+                    "spatial": true,
+                    "gain": 0.2,
+                    "minDistance": 0.5,
+                    "maxDistance": 15
+                  }
+                ],
+                "environmentProfile": "00000000000000000000000000000001",
+                "visibilityLayer": "44444444444444444444444444444444"
+              }
+            }
+          }
+        ],
+        "resources": {
+          "version": 2,
+          "appearances": [
+            {
+              "version": 1,
+              "id": "00000000000000000000000000000001",
+              "name": "Glass",
+              "style": {
+                "tint": "#DDBBAA",
+                "patternMode": "replace",
+                "pattern": {
+                  "kind": "stripes",
+                  "plane": "xz",
+                  "secondary": "#FFFFFF",
+                  "columns": 4,
+                  "rows": 4
+                },
+                "tiling": {
+                  "x": 1,
+                  "y": 1
+                },
+                "offset": {
+                  "x": 0,
+                  "y": 0
+                },
+                "renderMode": "blend",
+                "opacity": 0.4,
+                "cutoff": 0,
+                "sidedness": "both",
+                "grain": -1,
+                "shading": -1
+              }
+            }
+          ],
+          "audioSources": [
+            {
+              "version": 1,
+              "id": "00000000000000000000000000000001",
+              "name": "Bell",
+              "kind": "tone",
+              "wave": "sine",
+              "frequency": 440,
+              "endFrequency": 220,
+              "seconds": 0.25,
+              "attack": 0.01,
+              "release": 0.04,
+              "seed": 1
+            }
+          ],
+          "environmentProfiles": [
+            {
+              "version": 1,
+              "id": "00000000000000000000000000000001",
+              "name": "Virtual actors",
+              "realCollisions": false
+            }
+          ],
+          "visibilityLayers": [
+            {
+              "version": 1,
+              "id": "44444444444444444444444444444444",
+              "name": "Landscape",
+              "opacity": 1.2,
+              "realDepth": false
+            }
+          ]
+        }
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "layer physical depth must be explicit",
+    "valid": false,
+    "arguments": {
+      "blueprint": {
+        "version": 4,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 3,
+                "color": {
+                  "r": 1,
+                  "g": 1,
+                  "b": 1,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "block"
+                },
+                "appearanceBindings": [
+                  {
+                    "version": 1,
+                    "appearanceId": "00000000000000000000000000000001",
+                    "kind": "root",
+                    "partId": "",
+                    "modelHash": "",
+                    "materialIndex": -1,
+                    "tint": "#BBEEFF"
+                  }
+                ],
+                "audioEmitters": [
+                  {
+                    "version": 1,
+                    "id": "bell",
+                    "source": "00000000000000000000000000000001",
+                    "part": "",
+                    "joint": "",
+                    "role": "effects",
+                    "position": {
+                      "x": 0,
+                      "y": 0.1,
+                      "z": 0
+                    },
+                    "spatial": true,
+                    "gain": 0.2,
+                    "minDistance": 0.5,
+                    "maxDistance": 15
+                  }
+                ],
+                "environmentProfile": "00000000000000000000000000000001",
+                "visibilityLayer": "44444444444444444444444444444444"
+              }
+            }
+          },
+          {
+            "slot": "other",
+            "name": "My block",
+            "position": {
+              "x": 0.4,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 3,
+                "color": {
+                  "r": 1,
+                  "g": 1,
+                  "b": 1,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "block"
+                },
+                "appearanceBindings": [
+                  {
+                    "version": 1,
+                    "appearanceId": "00000000000000000000000000000001",
+                    "kind": "root",
+                    "partId": "",
+                    "modelHash": "",
+                    "materialIndex": -1,
+                    "tint": "#BBEEFF"
+                  }
+                ],
+                "audioEmitters": [
+                  {
+                    "version": 1,
+                    "id": "bell",
+                    "source": "00000000000000000000000000000001",
+                    "part": "",
+                    "joint": "",
+                    "role": "effects",
+                    "position": {
+                      "x": 0,
+                      "y": 0.1,
+                      "z": 0
+                    },
+                    "spatial": true,
+                    "gain": 0.2,
+                    "minDistance": 0.5,
+                    "maxDistance": 15
+                  }
+                ],
+                "environmentProfile": "00000000000000000000000000000001",
+                "visibilityLayer": "44444444444444444444444444444444"
+              }
+            }
+          }
+        ],
+        "resources": {
+          "version": 2,
+          "appearances": [
+            {
+              "version": 1,
+              "id": "00000000000000000000000000000001",
+              "name": "Glass",
+              "style": {
+                "tint": "#DDBBAA",
+                "patternMode": "replace",
+                "pattern": {
+                  "kind": "stripes",
+                  "plane": "xz",
+                  "secondary": "#FFFFFF",
+                  "columns": 4,
+                  "rows": 4
+                },
+                "tiling": {
+                  "x": 1,
+                  "y": 1
+                },
+                "offset": {
+                  "x": 0,
+                  "y": 0
+                },
+                "renderMode": "blend",
+                "opacity": 0.4,
+                "cutoff": 0,
+                "sidedness": "both",
+                "grain": -1,
+                "shading": -1
+              }
+            }
+          ],
+          "audioSources": [
+            {
+              "version": 1,
+              "id": "00000000000000000000000000000001",
+              "name": "Bell",
+              "kind": "tone",
+              "wave": "sine",
+              "frequency": 440,
+              "endFrequency": 220,
+              "seconds": 0.25,
+              "attack": 0.01,
+              "release": 0.04,
+              "seed": 1
+            }
+          ],
+          "environmentProfiles": [
+            {
+              "version": 1,
+              "id": "00000000000000000000000000000001",
+              "name": "Virtual actors",
+              "realCollisions": false
+            }
+          ],
+          "visibilityLayers": [
+            {
+              "version": 1,
+              "id": "44444444444444444444444444444444",
+              "name": "Landscape",
+              "opacity": 0.45
+            }
+          ]
+        }
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "resource version 2 layer array required",
+    "valid": false,
+    "arguments": {
+      "blueprint": {
+        "version": 4,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 3,
+                "color": {
+                  "r": 1,
+                  "g": 1,
+                  "b": 1,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "block"
+                },
+                "appearanceBindings": [
+                  {
+                    "version": 1,
+                    "appearanceId": "00000000000000000000000000000001",
+                    "kind": "root",
+                    "partId": "",
+                    "modelHash": "",
+                    "materialIndex": -1,
+                    "tint": "#BBEEFF"
+                  }
+                ],
+                "audioEmitters": [
+                  {
+                    "version": 1,
+                    "id": "bell",
+                    "source": "00000000000000000000000000000001",
+                    "part": "",
+                    "joint": "",
+                    "role": "effects",
+                    "position": {
+                      "x": 0,
+                      "y": 0.1,
+                      "z": 0
+                    },
+                    "spatial": true,
+                    "gain": 0.2,
+                    "minDistance": 0.5,
+                    "maxDistance": 15
+                  }
+                ],
+                "environmentProfile": "00000000000000000000000000000001",
+                "visibilityLayer": "44444444444444444444444444444444"
+              }
+            }
+          },
+          {
+            "slot": "other",
+            "name": "My block",
+            "position": {
+              "x": 0.4,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 3,
+                "color": {
+                  "r": 1,
+                  "g": 1,
+                  "b": 1,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "block"
+                },
+                "appearanceBindings": [
+                  {
+                    "version": 1,
+                    "appearanceId": "00000000000000000000000000000001",
+                    "kind": "root",
+                    "partId": "",
+                    "modelHash": "",
+                    "materialIndex": -1,
+                    "tint": "#BBEEFF"
+                  }
+                ],
+                "audioEmitters": [
+                  {
+                    "version": 1,
+                    "id": "bell",
+                    "source": "00000000000000000000000000000001",
+                    "part": "",
+                    "joint": "",
+                    "role": "effects",
+                    "position": {
+                      "x": 0,
+                      "y": 0.1,
+                      "z": 0
+                    },
+                    "spatial": true,
+                    "gain": 0.2,
+                    "minDistance": 0.5,
+                    "maxDistance": 15
+                  }
+                ],
+                "environmentProfile": "00000000000000000000000000000001",
+                "visibilityLayer": "44444444444444444444444444444444"
+              }
+            }
+          }
+        ],
+        "resources": {
+          "version": 2,
+          "appearances": [
+            {
+              "version": 1,
+              "id": "00000000000000000000000000000001",
+              "name": "Glass",
+              "style": {
+                "tint": "#DDBBAA",
+                "patternMode": "replace",
+                "pattern": {
+                  "kind": "stripes",
+                  "plane": "xz",
+                  "secondary": "#FFFFFF",
+                  "columns": 4,
+                  "rows": 4
+                },
+                "tiling": {
+                  "x": 1,
+                  "y": 1
+                },
+                "offset": {
+                  "x": 0,
+                  "y": 0
+                },
+                "renderMode": "blend",
+                "opacity": 0.4,
+                "cutoff": 0,
+                "sidedness": "both",
+                "grain": -1,
+                "shading": -1
+              }
+            }
+          ],
+          "audioSources": [
+            {
+              "version": 1,
+              "id": "00000000000000000000000000000001",
+              "name": "Bell",
+              "kind": "tone",
+              "wave": "sine",
+              "frequency": 440,
+              "endFrequency": 220,
+              "seconds": 0.25,
+              "attack": 0.01,
+              "release": 0.04,
+              "seed": 1
+            }
+          ],
+          "environmentProfiles": [
+            {
+              "version": 1,
+              "id": "00000000000000000000000000000001",
+              "name": "Virtual actors",
+              "realCollisions": false
+            }
+          ]
+        }
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "prototype version 3 must carry a layer",
+    "valid": false,
+    "arguments": {
+      "blueprint": {
+        "version": 4,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 3,
+                "color": {
+                  "r": 1,
+                  "g": 1,
+                  "b": 1,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "block"
+                },
+                "appearanceBindings": [
+                  {
+                    "version": 1,
+                    "appearanceId": "00000000000000000000000000000001",
+                    "kind": "root",
+                    "partId": "",
+                    "modelHash": "",
+                    "materialIndex": -1,
+                    "tint": "#BBEEFF"
+                  }
+                ],
+                "audioEmitters": [
+                  {
+                    "version": 1,
+                    "id": "bell",
+                    "source": "00000000000000000000000000000001",
+                    "part": "",
+                    "joint": "",
+                    "role": "effects",
+                    "position": {
+                      "x": 0,
+                      "y": 0.1,
+                      "z": 0
+                    },
+                    "spatial": true,
+                    "gain": 0.2,
+                    "minDistance": 0.5,
+                    "maxDistance": 15
+                  }
+                ],
+                "environmentProfile": "00000000000000000000000000000001"
+              }
+            }
+          },
+          {
+            "slot": "other",
+            "name": "My block",
+            "position": {
+              "x": 0.4,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 3,
+                "color": {
+                  "r": 1,
+                  "g": 1,
+                  "b": 1,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "block"
+                },
+                "appearanceBindings": [
+                  {
+                    "version": 1,
+                    "appearanceId": "00000000000000000000000000000001",
+                    "kind": "root",
+                    "partId": "",
+                    "modelHash": "",
+                    "materialIndex": -1,
+                    "tint": "#BBEEFF"
+                  }
+                ],
+                "audioEmitters": [
+                  {
+                    "version": 1,
+                    "id": "bell",
+                    "source": "00000000000000000000000000000001",
+                    "part": "",
+                    "joint": "",
+                    "role": "effects",
+                    "position": {
+                      "x": 0,
+                      "y": 0.1,
+                      "z": 0
+                    },
+                    "spatial": true,
+                    "gain": 0.2,
+                    "minDistance": 0.5,
+                    "maxDistance": 15
+                  }
+                ],
+                "environmentProfile": "00000000000000000000000000000001",
+                "visibilityLayer": "44444444444444444444444444444444"
+              }
+            }
+          }
+        ],
+        "resources": {
+          "version": 2,
+          "appearances": [
+            {
+              "version": 1,
+              "id": "00000000000000000000000000000001",
+              "name": "Glass",
+              "style": {
+                "tint": "#DDBBAA",
+                "patternMode": "replace",
+                "pattern": {
+                  "kind": "stripes",
+                  "plane": "xz",
+                  "secondary": "#FFFFFF",
+                  "columns": 4,
+                  "rows": 4
+                },
+                "tiling": {
+                  "x": 1,
+                  "y": 1
+                },
+                "offset": {
+                  "x": 0,
+                  "y": 0
+                },
+                "renderMode": "blend",
+                "opacity": 0.4,
+                "cutoff": 0,
+                "sidedness": "both",
+                "grain": -1,
+                "shading": -1
+              }
+            }
+          ],
+          "audioSources": [
+            {
+              "version": 1,
+              "id": "00000000000000000000000000000001",
+              "name": "Bell",
+              "kind": "tone",
+              "wave": "sine",
+              "frequency": 440,
+              "endFrequency": 220,
+              "seconds": 0.25,
+              "attack": 0.01,
+              "release": 0.04,
+              "seed": 1
+            }
+          ],
+          "environmentProfiles": [
+            {
+              "version": 1,
+              "id": "00000000000000000000000000000001",
+              "name": "Virtual actors",
+              "realCollisions": false
+            }
+          ],
+          "visibilityLayers": [
+            {
+              "version": 1,
+              "id": "44444444444444444444444444444444",
+              "name": "Landscape",
+              "opacity": 0.45,
+              "realDepth": false
+            }
+          ]
+        }
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
   }
 ]

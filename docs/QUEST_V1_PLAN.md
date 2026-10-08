@@ -4918,3 +4918,81 @@ pass again after exact restoration. CI still cannot compile or execute Unity; th
 separate local checks. Evidence is retained in
 .quest-evidence/spatial-state/visibility-render-*.
 No APK was packaged or installed, and no release signing/upload/deployment occurred.
+
+
+### Saved visual layers and shared authoring — 2026-10-08
+
+The renderer foundation is now connected to saved room resources. A visual layer
+has a stable ID, name, opacity and real-depth participation; each room object can
+bind to one layer independently of its environment collision profile, acoustic
+settings and material appearance. Up to 16 layers may each include all 66 current
+room objects. These are present bounded-room limits, not a claim of streamed
+country-sized worlds. The book's browser pages keep their original materials and
+remain readable even when its frame belongs to a hidden layer.
+
+`visibility.layer.save`, `visibility.layer.remove` and `object.visibility.assign`
+are ordinary catalog capabilities. The same generated forms, native scheduler,
+receipts and facts serve human, program and agent. Layer member queries page by
+16, library queries by three. Shared edits require the exact definition revision
+and complete member set; assignment checks both object and layer revisions.
+The `visibility` ownership channel coexists with compatible movement, part
+animation and audio channels; whole-target ownership still excludes competing
+operations. A separate visual reconciliation path avoids reapplying rigid-body,
+avatar, recipe and audio configuration. Held objects and authoring gestures
+remain guarded. A saved opacity edit is a discrete edit, not a per-frame fade
+animation or a viewer's transient surroundings slider.
+
+Room v26, snapshot intent v25 and workspace archive v24 carry this state through
+save, restore, one-step Undo and temporary Keep/Discard. Future layer definitions
+preserve files as read-only. Portable blueprint v4 gains resource bundle v2 and
+prototype v3 when needed; older resource/prototype source remains supported.
+Captured modules close every reference and canonicalize local symbols. Each
+instantiation allocates fresh definitions, retaining sharing inside the creation
+without changing any existing destination layer. The visibility feature gate
+prevents older clients from accepting these new resource forms silently.
+
+Procedural ink, liquid surfaces and editable terrain notify their owning visual
+view when materials or renderers change. Refreshes coalesce and do not rescan
+all objects each frame. Objects hidden by zero layer opacity do not receive ordinary grab/hover
+or intercept book/controller pointing. Their physical colliders remain active;
+named-object inspection and deliberate editing still work. Visible book pages
+remain pointer targets. This does not turn depth images into physical colliders
+or implement programmable passthrough windows.
+
+Verification and physical acceptance are recorded separately. Device work remains
+on hold pending the owner's cooldown/charge readiness reply. Imported surroundings,
+physical/world anchors, transient per-layer fades, passthrough windows, camera
+source selection, streaming and sustained headset transparency performance remain
+explicit follow-up work; this increment does not claim those complete.
+
+
+Desktop verification for saved layers passes **941 EditMode and 828 PlayMode
+cases**, with three expected optional private-file skips. The final EditMode run
+adds archive round-trip and unknown-field coverage; it caught and repaired a
+missing strict layer check in the archive reader. Shared room/headless/Quest
+and prompt-contract verification passes **1,722 tests in 168 files**. Production build, lint, probe
+TypeScript and generated catalog provenance pass. The catalog now exposes 113
+actions and 129 facts, derived from 455 runtime source inputs.
+
+The native journey passes **603 observations** in
+`f83ba1d0ea1c4294928d92fb8c7e014f`. Original-book run
+`70ae6c7b65ae40409fa271575d4c3715` creates a visual layer, assigns it through the
+generated form, captures a layered construction, and reloads without replay.
+The layer-form screenshot was inspected. Both journeys use scripted provider
+responses; real-provider evidence is recorded separately in the coverage matrix.
+The manual forms still expose definition IDs and revisions. A catalog-driven
+named-resource picker is required before release, shared across appearances,
+collision profiles, audio and visibility; it must preserve exact identity and
+revision checks rather than introduce a separate hand-written layer editor.
+Resource-choice metadata belongs beside `x-current` in the native catalog and
+must be validated against the referenced paged fact schemas in both runtimes.
+Selection fills exact identity/revision pairs atomically, shows the saved name,
+and retains an inspectable ID for duplicate names. Explicit refresh invalidates
+old selections; delayed responses may not overwrite a newer user choice.
+Selecting a resource must not run an action, silently overwrite another chosen
+field or turn a stale revision into permission to retry. Programs retain literal
+asset/resource identities unless the user deliberately chooses a dynamic lookup.
+
+No APK was packaged or installed for this increment. Full-suite simulation and
+desktop pixels do not establish headset compositor, transparency performance,
+hand/controller comfort or room alignment acceptance.

@@ -785,3 +785,26 @@ These turns establish capability discovery, native state, replies and accounting
 they do not synthesize controller motion or prove headset comfort. Actual swept
 world transfers and collision-profile differences are covered separately by
 WorldMotionTests and AvatarSpatialTests in the native PlayMode suite.
+
+
+## Saved visual layers (2026-10-08)
+
+The native journey now creates a layer, assigns it to Maestro, reads its exact
+binding and complete membership, edits it, undoes both edits and removes the
+unused definition. `visibility-layers.json` retains those native replies and
+checks that per-entity physical participation did not change.
+
+The original-book journey uses generated `visibility.layer.save` and
+`object.visibility.assign` forms, reads current values, then captures the styled
+and layered ball through the existing reusable-construction path. It saves
+`book-native-visibility.json` and `book-native-visibility.png`; normal reload must
+not replay completed edits. No parallel UI-only layer implementation is used.
+
+The fresh WorldPresentation provider scenario adds a request to make only
+Maestro half see-through and ignore physical depth, then removes that assignment.
+It checks native layer binding, opacity, depth and unchanged per-entity collision
+policy and global view. These use the existing managed/BYOK tutor, verifier and
+agent path. The persisted layer is distinct from the earlier transient backdrop
+preference. Provider evidence and device limitations belong in the release
+coverage matrix; a desktop semantic pass does not establish headset composition,
+readability or transparency performance.

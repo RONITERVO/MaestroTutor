@@ -9,7 +9,7 @@ namespace Maestro.Quest.Creation {
     /// <summary>One bounded mesh/collider, rebuilt only when accepted source changes.</summary>
     public sealed class HeightFieldView:MonoBehaviour {
         GameObject surface;Mesh mesh,previewMesh;Material pigment;MeshCollider collision;string encoded;Color sourceColor,tint=Color.white;
-        internal void Tint(Color color){tint=color;if(pigment)pigment.SetColor("_Color",sourceColor*tint);}
+        internal void Tint(Color color){tint=color;if(pigment){pigment.SetColor("_Color",sourceColor*tint);RoomAppearanceView.VisualsChanged(this);}}
         public Collider Collision=>collision;
         internal RoomHeightField Accepted {get;private set;}
         public Bounds WorldBounds {

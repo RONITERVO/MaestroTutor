@@ -83,7 +83,7 @@ namespace Maestro.Quest.Tests
                 }
                 foreach(var guard in (JArray)mapping["guards"])Assert.That(mapping["fields"][(string)guard],Is.Not.Null);
             }
-            Assert.That(count,Is.EqualTo(86));
+            Assert.That(count,Is.EqualTo(87));
         }
         static bool AcceptsCurrentType(JObject schema,JToken type,int depth=0){
             if(schema==null||type==null||depth>4||schema["oneOf"]!=null||(bool?)schema["x-static"]==true)return false;

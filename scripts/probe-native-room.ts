@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import {runAgentPresentationProof} from './probe-agent-presentation';
 import {probeWorldPresentation} from './probe-world-presentation';
+import {probeVisibilityLayers} from './probe-visibility-layers';
 import {probeConstructionResources} from './probe-construction-resources';
 import {runAgentSteeringProof,type ReceiptObserver} from './probe-agent-steering';
 import {runAgentPhysicsProof} from './probe-agent-physics';
@@ -302,6 +303,7 @@ try{
   await writeFile(join(directory,'physics-environment.json'),JSON.stringify({boundary:'Full native shared transport and editable terrain readiness; actual collisions are tested in PlayMode. No provider or headset proof.',before:environmentBefore,disabled:virtualEnvironment,virtual:environmentVirtual,enabled:physicalEnvironment,restored:environmentRestored},null,2));
 
   await probeWorldPresentation(execute,directory);
+  await probeVisibilityLayers(execute,directory);
 
   const profileSaved=await execute([{action:'execution',execution:{operation:'start',call:{id:'environment.profile.save',version:1,arguments:{id:'',revision:0,name:'Virtual terrain actors',realCollisions:false,members:[]}}}}]);
   const profileId=profileSaved.execution?.selected?.output?.id;

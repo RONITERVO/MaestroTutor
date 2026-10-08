@@ -25,10 +25,10 @@ namespace Maestro.Quest.Art
             }
             GetComponent<MeshFilter>().sharedMesh = next;
             ArtResources.Release(mesh);
-            mesh = next;
+            mesh = next;Creation.RoomAppearanceView.VisualsChanged(this);
         }
 
-        public void SetColor(Color color) { if (material) material.color = color; }
+        public void SetColor(Color color) { if (material){material.color = color;Creation.RoomAppearanceView.VisualsChanged(this);} }
 
         void OnDestroy() { ArtResources.Release(mesh); ArtResources.Release(material); }
     }

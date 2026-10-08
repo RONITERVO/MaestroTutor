@@ -32,6 +32,7 @@ namespace Maestro.Quest.Creation
                 }catch{ArtResources.Release(root.gameObject);throw;}
                 patches.Add(surface.id,patch);
             }
+            RoomAppearanceView.VisualsChanged(this);
         }
         static void Release(Patch patch){if(patch.Root){patch.Root.gameObject.SetActive(false);ArtResources.Release(patch.Root.gameObject);}}
         internal void PreviewErasure(string id,IReadOnlyCollection<string> removed){if(patches.TryGetValue(id,out var p))foreach(var pair in p.Ink)if(pair.Value)pair.Value.SetActive(!removed.Contains(pair.Key));}

@@ -77,6 +77,20 @@ namespace Maestro.Quest.Tests
             var wire=JObject.Parse(JsonUtility.ToJson(room));wire["appearances"][0]["style"]["unrecognizedTexture"]="texture.png";documents[RoomStorage.FileName]=Bytes(wire.ToString());
             Assert.That(()=>Snapshot(),Throws.Exception,"Unsupported saved appearance fields must not silently disappear");
         }
+        [Test] public void SharedVisualLayersSurviveArchiveWithExactBindingsAndRejectUnknownFields() {
+            var room=JsonUtility.FromJson<RoomDocument>(Encoding.UTF8.GetString(documents[RoomStorage.FileName]));
+            var baseline=WorkspaceArchive.Fingerprint(Snapshot()).ManifestHash;
+            var layer=new RoomVisibilityLayer{id=new string('c',32),name="Distant scene",opacity=.25f,realDepth=false};room.visibilityLayers=new[]{layer};
+            foreach(var obj in room.objects)obj.visibilityLayer=layer.id;documents[RoomStorage.FileName]=Document(room);
+            Assert.That(WorkspaceArchive.Fingerprint(Snapshot()).ManifestHash,Is.Not.EqualTo(baseline));
+            using(var staged=WorkspaceArchive.Stage(new MemoryStream(Archive()),directory)) {
+                var restored=new RoomStorage(staged.DirectoryPath).Load(out var error);Assert.That(restored,Is.Not.Null,error);
+                Assert.That(JsonUtility.ToJson(restored.visibilityLayers.Single()),Is.EqualTo(JsonUtility.ToJson(layer)));
+                Assert.That(restored.objects.All(o=>o.visibilityLayer==layer.id),Is.True);
+            }
+            var wire=JObject.Parse(JsonUtility.ToJson(room));wire["visibilityLayers"][0]["unknownDepthPolicy"]="future";documents[RoomStorage.FileName]=Bytes(wire.ToString());Assert.That(()=>Snapshot(),Throws.Exception);
+            room.objects[0].visibilityLayer=new string('d',32);documents[RoomStorage.FileName]=Document(room);Assert.That(()=>Snapshot(),Throws.Exception);
+        }
         [Test] public void StructureBaselinesAndMissingMemberIdsSurvivePortableArchiveRoundTrip()
         {
             var room=JsonUtility.FromJson<RoomDocument>(Encoding.UTF8.GetString(documents[RoomStorage.FileName]));room.structures=new[]{RoomStructureTests.Structure()};documents[RoomStorage.FileName]=Document(room);

@@ -140,7 +140,7 @@ namespace Maestro.Quest.Book
             input.Root.transform.SetPositionAndRotation(TrackingSpace.TransformPoint(position), TrackingSpace.rotation * rotation);
             input.Root.SetActive(true);
             var ray = new Ray(input.Root.transform.position, input.Root.transform.forward);
-            bool hitSomething = Physics.Raycast(ray, out var hit, Router.MaximumDistance, Router.InteractionLayers, QueryTriggerInteraction.Ignore);
+            bool hitSomething = RoomPointerHit.Raycast(ray, out var hit, Router.MaximumDistance, Router.InteractionLayers, QueryTriggerInteraction.Ignore);
             bool page = hitSomething && (hit.collider.GetComponent<BookPageTarget>() || hit.collider.GetComponentInParent<PhysicalAction>());
             bool item = hitSomething && hit.collider.GetComponentInParent<RoomItem>();
             // Packing leaves ordinary props available for pinch-grab; only height surfaces own packing contact.

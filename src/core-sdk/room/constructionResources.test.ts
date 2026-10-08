@@ -14,3 +14,13 @@ it('requires advertised resource support before dispatching or installing a cons
  expect(()=>requireRoomCapabilities(commands,{capabilities:['execution.v1',...features.filter(f=>f!=='constructionResources.v1')]})).toThrow('constructionResources.v1');
  expect(()=>requireRoomCapabilities(commands,{capabilities:['execution.v1',...features]})).not.toThrow();
 });
+
+it('gates portable visual layers independently and retains older resource calls',()=>{
+ const args=cases.find(c=>c.name==='shared portable visual layer')!.arguments;
+ const features=capabilityFeatures('object.batch.create',args);
+ expect(features).toContain('visibilityLayers.v1');
+ expect(capabilityFeatures('object.batch.create',cases[0].arguments)).not.toContain('visibilityLayers.v1');
+ const commands=[{action:'execution',execution:{operation:'start',call:{id:'object.batch.create',version:1,arguments:args}}}];
+ expect(()=>requireRoomCapabilities(commands,{capabilities:['execution.v1',...features.filter(f=>f!=='visibilityLayers.v1')]})).toThrow('visibilityLayers.v1');
+ expect(capabilityResources('object.batch.create',args)).toEqual([]);
+});

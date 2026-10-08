@@ -38,7 +38,7 @@ namespace Maestro.Quest.Persistence
     /// download, activate a restore, migrate data, rebind IDs, or restore execution receipts/room scans.</summary>
     public static class WorkspaceArchive
     {
-        internal const int FormatVersion=23;
+        internal const int FormatVersion=24;
         public const int MaximumEntries=1400,MaximumManifestBytes=512*1024;
         public const long MaximumArchiveBytes=512L*1024*1024;
         static readonly UTF8Encoding Utf8=new(false,true);

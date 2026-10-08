@@ -19,7 +19,7 @@ namespace Maestro.Quest.Programs
         internal static JObject Schema() {
             var fields=(JObject)new CreateRecipeCapability().InputSchema["properties"];
             var tip=(JObject)DrawingTipCapability.DefinitionSchema()["properties"];tip["version"]=Number(1,2,true);
-            var common=new JObject {["version"]=Number(1,2,true),["color"]=Color(),["appearanceBindings"]=CreationResourcesSchema.Bindings(),["audioEmitters"]=CreationResourcesSchema.Emitters(),["environmentProfile"]=CreationResourcesSchema.Featured(Text("^(|[a-f0-9]{32})$",32)),["physics"]=fields["physics"].DeepClone(),
+            var common=new JObject {["version"]=Number(1,3,true),["color"]=Color(),["appearanceBindings"]=CreationResourcesSchema.Bindings(),["audioEmitters"]=CreationResourcesSchema.Emitters(),["environmentProfile"]=CreationResourcesSchema.Featured(Text("^(|[a-f0-9]{32})$",32)),["visibilityLayer"]=VisibilityLayerCapability.Featured(VisibilityLayerCapability.LayerId(true)),["physics"]=fields["physics"].DeepClone(),
                 ["collision"]=fields["collision"].DeepClone(),["surfaces"]=List(Surface(),0,4),["drawingTips"]=List(Object(tip,"mode"),0,1),["snapPoints"]=List(SnapPointCapability.SavedSchema(),0,64),["containers"]=List(ContainerCapability.SavedSchema(),0,1),["heightFields"]=List(HeightFieldCapability.SavedSchema(),0,1),["sculptTips"]=List(SculptTipCapability.SavedSchema(),0,1),["materialStores"]=List(MaterialStoreCapability.SavedSchema(),0,1),
                 ["motion"]=Object(new JObject {["loop"]=new JObject {["type"]="boolean"},["frames"]=List(Object(new JObject {
                     ["time"]=Number(0,30),["position"]=Point(500.001),["rotation"]=Vector(true),["scale"]=Number(.024999,40.00001)}),1,301)})};
@@ -32,7 +32,7 @@ namespace Maestro.Quest.Programs
                 var variant=Object(p);variant["title"]=kind;variants.Add(variant);
             }
             common["geometry"]=new JObject {["type"]="object",["oneOf"]=variants,["x-discriminators"]=new JArray("kind")};
-            var schema=Object(common,"appearanceBindings","audioEmitters","environmentProfile","collision","motion","snapPoints","containers","heightFields","sculptTips","materialStores");schema["format"]="creationPrototype";schema["x-features"]=new JArray(Feature);return schema;
+            var schema=Object(common,"appearanceBindings","audioEmitters","environmentProfile","visibilityLayer","collision","motion","snapPoints","containers","heightFields","sculptTips","materialStores");schema["format"]="creationPrototype";schema["x-features"]=new JArray(Feature);return schema;
         }
         // JsonUtility emits all default fields, including fields belonging to other variants.
         // Public source includes only fields belonging to its explicit kind.
@@ -49,6 +49,7 @@ namespace Maestro.Quest.Programs
             if(prototype.appearanceBindings.Length==0)value.Remove("appearanceBindings");
             if(prototype.audioEmitters.Length==0)value.Remove("audioEmitters");
             if(prototype.environmentProfile=="")value.Remove("environmentProfile");
+            if(prototype.visibilityLayer=="")value.Remove("visibilityLayer");
             if((prototype.containers?.Length??0)==0)value.Remove("containers");
             if((prototype.heightFields?.Length??0)==0)value.Remove("heightFields");
             if((prototype.sculptTips?.Length??0)==0)value.Remove("sculptTips");

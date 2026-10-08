@@ -13104,7 +13104,7 @@
                                 "version": {
                                   "type": "integer",
                                   "minimum": 1.0,
-                                  "maximum": 2.0
+                                  "maximum": 3.0
                                 },
                                 "color": {
                                   "type": "object",
@@ -13311,6 +13311,14 @@
                                   "maxLength": 32,
                                   "x-features": [
                                     "constructionResources.v1"
+                                  ]
+                                },
+                                "visibilityLayer": {
+                                  "type": "string",
+                                  "pattern": "^(|[a-f0-9]{32})$",
+                                  "maxLength": 32,
+                                  "x-features": [
+                                    "visibilityLayers.v1"
                                   ]
                                 },
                                 "physics": {
@@ -17538,7 +17546,7 @@
                   "version": {
                     "type": "integer",
                     "minimum": 1.0,
-                    "maximum": 1.0
+                    "maximum": 2.0
                   },
                   "appearances": {
                     "type": "array",
@@ -17843,6 +17851,50 @@
                     },
                     "minItems": 0,
                     "maxItems": 16
+                  },
+                  "visibilityLayers": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "version": {
+                          "type": "integer",
+                          "minimum": 1.0,
+                          "maximum": 1.0
+                        },
+                        "id": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{32}$",
+                          "maxLength": 32
+                        },
+                        "name": {
+                          "type": "string",
+                          "pattern": "^.{1,80}$",
+                          "maxLength": 80
+                        },
+                        "opacity": {
+                          "type": "number",
+                          "minimum": 0.0,
+                          "maximum": 1.0
+                        },
+                        "realDepth": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "version",
+                        "id",
+                        "name",
+                        "opacity",
+                        "realDepth"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "minItems": 0,
+                    "maxItems": 16,
+                    "x-features": [
+                      "visibilityLayers.v1"
+                    ]
                   }
                 },
                 "required": [
@@ -27032,6 +27084,282 @@
           "revision",
           "appearanceId",
           "appearanceRevision",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "visibility.layer.save",
+      "version": 1,
+      "label": "Save visual layer",
+      "input": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^(|[a-f0-9]{32})$",
+            "maxLength": 32
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 2147483647.0
+          },
+          "name": {
+            "type": "string",
+            "pattern": "^.{1,80}$",
+            "maxLength": 80
+          },
+          "opacity": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          },
+          "realDepth": {
+            "type": "boolean"
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^(book|maestro|[a-fA-F0-9]{32})$",
+              "maxLength": 32,
+              "x-resource": "object"
+            },
+            "minItems": 0,
+            "maxItems": 66
+          }
+        },
+        "required": [
+          "id",
+          "revision",
+          "name",
+          "opacity",
+          "realDepth",
+          "members"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "visibilityLayers.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "visibility"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "visibility.revision.current",
+        "storage.writable"
+      ],
+      "description": "Create or edit one of up to 16 reusable visual layers. Empty id and revision 0 create. Otherwise read visibility.layer and every visibility.members page at its revision, then supply all members (up to 66). opacity 0–1 fades the group; realDepth=false keeps this layer visible in front of physical depth. Saving alone does not bind objects. Use object.visibility.assign for each object. Stable IDs identify saved definitions; names are display text. One Undo and temporary Keep/Discard apply. Compatible movement, animation and audio keep running; held objects and authoring gestures refuse. Layers multiply existing surface alpha, preserving cutouts and source textures. Book browser pages remain readable. Real-depth participation is independent of collisions, walking, sound and camera sharing, and cannot enable globally disabled or unavailable depth. Opacity zero does not disable physical collision. Inspect saved facts after completion; those are not proof of visual headset acceptance.",
+      "example": {
+        "id": "",
+        "revision": 0,
+        "name": "Distant landscape",
+        "opacity": 0.5,
+        "realDepth": false,
+        "members": []
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "revision",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "visibility.layer.remove",
+      "version": 1,
+      "label": "Remove unused visual layer",
+      "input": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          }
+        },
+        "required": [
+          "id",
+          "revision"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "visibilityLayers.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "visibility"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "visibility.revision.current",
+        "storage.writable"
+      ],
+      "description": "Remove an unused visual layer using its exact ID/revision. Refuses while any object refers to it; explicitly unbind those first. Stable IDs identify saved definitions; names are display text. One Undo and temporary Keep/Discard apply. Compatible movement, animation and audio keep running; held objects and authoring gestures refuse. Layers multiply existing surface alpha, preserving cutouts and source textures. Book browser pages remain readable. Real-depth participation is independent of collisions, walking, sound and camera sharing, and cannot enable globally disabled or unavailable depth. Opacity zero does not disable physical collision. Inspect saved facts after completion; those are not proof of visual headset acceptance.",
+      "example": {
+        "id": "00000000000000000000000000000000",
+        "revision": 1
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 2147483647.0
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "revision",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "object.visibility.assign",
+      "version": 1,
+      "label": "Choose object visual layer",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(book|maestro|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "layerId": {
+            "type": "string",
+            "pattern": "^(|[a-f0-9]{32})$",
+            "maxLength": 32
+          },
+          "layerRevision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 2147483647.0
+          }
+        },
+        "required": [
+          "target",
+          "revision",
+          "layerId",
+          "layerRevision"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "visibilityLayers.v1"
+        ],
+        "x-current": {
+          "fact": "object.visibility",
+          "version": 1,
+          "arguments": {
+            "target": "target"
+          },
+          "fields": {
+            "revision": [
+              "revision"
+            ],
+            "layerId": [
+              "layerId"
+            ],
+            "layerRevision": [
+              "layerRevision"
+            ]
+          },
+          "guards": [
+            "revision"
+          ]
+        }
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "visibility"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "visibility.revision.current",
+        "storage.writable"
+      ],
+      "description": "Assign a saved visual layer to Maestro, the book frame or a creation. Read object.visibility for the current object revision and visibility.layer for the selected layer revision. Empty layerId with layerRevision 0 restores full visibility and inherited depth. Assignment affects that object and its visual children, excluding independent room objects and book browser pages. It leaves simulation and physical participation unchanged. Stable IDs identify saved definitions; names are display text. One Undo and temporary Keep/Discard apply. Compatible movement, animation and audio keep running; held objects and authoring gestures refuse. Layers multiply existing surface alpha, preserving cutouts and source textures. Book browser pages remain readable. Real-depth participation is independent of collisions, walking, sound and camera sharing, and cannot enable globally disabled or unavailable depth. Opacity zero does not disable physical collision. Inspect saved facts after completion; those are not proof of visual headset acceptance.",
+      "example": {
+        "target": "maestro",
+        "revision": 1,
+        "layerId": "",
+        "layerRevision": 0
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(book|maestro|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "target",
+          "revision",
           "temporary"
         ],
         "additionalProperties": false
@@ -37373,6 +37701,172 @@
       ]
     },
     {
+      "id": "visibility.layer",
+      "version": 1,
+      "type": {
+        "record": {
+          "id": "text",
+          "revision": "number",
+          "name": "text",
+          "opacity": "number",
+          "realDepth": "boolean",
+          "memberCount": "number",
+          "temporary": "boolean"
+        }
+      },
+      "label": "Visual layer",
+      "description": "Saved opacity and physical-depth participation. Read all visibility.members pages at this revision before editing. Does not report effective device depth or camera sharing.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "id": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1",
+        "visibilityLayers.v1"
+      ]
+    },
+    {
+      "id": "visibility.layers",
+      "version": 1,
+      "type": {
+        "record": {
+          "offset": "number",
+          "total": "number",
+          "pageSize": "number",
+          "entries": {
+            "list": {
+              "record": {
+                "id": "text",
+                "revision": "number",
+                "name": "text"
+              }
+            }
+          }
+        }
+      },
+      "label": "Visual layers",
+      "description": "Reusable layers ordered by stable ID, three per page. Advance offset by pageSize until total.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 16.0
+          }
+        },
+        "required": [
+          "offset"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "offset": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "visibilityLayers.v1"
+      ]
+    },
+    {
+      "id": "visibility.members",
+      "version": 1,
+      "type": {
+        "record": {
+          "id": "text",
+          "revision": "number",
+          "offset": "number",
+          "total": "number",
+          "pageSize": "number",
+          "members": {
+            "list": "text"
+          }
+        }
+      },
+      "label": "Visual layer members",
+      "description": "Sixteen bound object IDs per page. Read every page at the same layer revision before a shared edit, supplying the full member set.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 66.0
+          }
+        },
+        "required": [
+          "id",
+          "offset"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "id": "00000000000000000000000000000000",
+        "offset": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "visibilityLayers.v1"
+      ]
+    },
+    {
+      "id": "object.visibility",
+      "version": 1,
+      "type": {
+        "record": {
+          "target": "text",
+          "revision": "number",
+          "layerId": "text",
+          "layerRevision": "number",
+          "opacity": "number",
+          "realDepth": "boolean",
+          "temporary": "boolean"
+        }
+      },
+      "label": "Object visual layer",
+      "description": "Saved object binding and layer settings. Empty binding means opacity 1 and inherited real depth. Physics and acoustic participation are separate settings.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(book|maestro|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "maestro"
+      },
+      "features": [
+        "factQueries.v1",
+        "visibilityLayers.v1"
+      ]
+    },
+    {
       "id": "physics.running",
       "version": 1,
       "type": "boolean",
@@ -37741,7 +38235,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/PencilMarks.cs",
-      "sha256": "e19cb61426a0bf3aaf93723904f0fdca84d30007fae8e5bede31e934a6981126"
+      "sha256": "72f8aeaa0177f0bd672e99753d1374d98e0030ed79d14fc6de4dd3ece2d3bc73"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/PencilModelStyle.cs",
@@ -37829,7 +38323,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/BookControllerInput.cs",
-      "sha256": "e7567b5021864cde3bd3bb5479aa80e2cab1f786958224508257b9feb56ed532"
+      "sha256": "e5bc2e79bedd8a467c419aef39a18ba2b47bea997e943958f83452c52a54c7cf"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/BookCoordinates.cs",
@@ -37845,7 +38339,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/BookPointerRouter.cs",
-      "sha256": "e6dbb726123789e5b35f0c17700fb42bb05f93ee464277741f79cdccffdc293f"
+      "sha256": "a2c5a0a6d8e091bcd98ca00c8d1fd4fffcf3b6e9c904aec9ad28fbf387d7b5d4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/BookSpeechSession.cs",
@@ -37989,7 +38483,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "6ee00c48fb0da294aebdb1c1696a8ecc98c481f67dc4d8368d61ee36af70367f"
+      "sha256": "6a0d031188746654ade8c991634a7f9d9811eec3ee269ad7e5e63213ff451c6f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -38061,11 +38555,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreationPrototypeSchema.cs",
-      "sha256": "d885cc6765655a65cdc08e9b1966d307d9089979676fb208f8eb4d5dcba3a42f"
+      "sha256": "0f81dc76aba28bcfe0dc786b9a3da9abc6201e5874421000416de92db28880f8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreationResourcesSchema.cs",
-      "sha256": "4128a19c299396d677d52a2f6318f4fd3bb21aed7d9086a455ed9f3b9c1a24cf"
+      "sha256": "d7d08ae1931598f76ab4bb2f1cc3b22bd32e7c3f14f38475a47fbc361ad5caab"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingCapabilities.cs",
@@ -38292,6 +38786,10 @@
       "sha256": "2273d55676c79b88c916496fd18cc082456c8177a11d71b1096974d2883df829"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/VisibilityLayerCapabilities.cs",
+      "sha256": "bcda4bf6baa8da00ff8541643bc2c5f481d32fb288c8019e5432d9eb22de0200"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceActivationCapabilities.cs",
       "sha256": "41291c4504ba8289406e2973eb482323f5dd99f17419d8b0432eb192d954543d"
     },
@@ -38385,7 +38883,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ConstructionCapture.cs",
-      "sha256": "d4b0ca812e658b5194208b76f883e33fd18669636072bcf45992467332fd7744"
+      "sha256": "428db0327041393d9dbfbabfe547d655d8fc4dac2a9764e1218a0c7bd0dd87cd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ConstructionManipulator.cs",
@@ -38401,7 +38899,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ContainerFillView.cs",
-      "sha256": "31443208651b735087aa6791de0f72e37800b0cf6eb2788d70f7d1189e9a0711"
+      "sha256": "ecf41cc6ebb6b89324ca2d4b87b4f24056d8a785777af3973a56893c8c1bd887"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ContainerFlowGeometry.cs",
@@ -38421,15 +38919,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationBatch.cs",
-      "sha256": "85b4f2eedf5c826aea80a00c5d31250a752e502a373d672448ef92d971e7f1fe"
+      "sha256": "d5e17ac6adce6fc239e7d9ad7d760066ba4918fd0bac9869c3f7b545f62d0927"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationPrototype.cs",
-      "sha256": "df8ef90a62bdb41e180013085925cb9e29f19bbd94f04ae48e8bb183a62ac067"
+      "sha256": "81a97ded3137f9c7e9b47b2903dba5c7ad34d3c377544cefb0a78a22ccfa8abd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationResources.cs",
-      "sha256": "c3dc03f25c041163bb39d0641c2e13317cc7a0809491f00f6921b8ffcf0dc598"
+      "sha256": "d755d0a3fbc08314977630436ea59327a50f96b30926c8421566c02ca46a1857"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationTemplates.cs",
@@ -38449,7 +38947,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/DrawingSurfaceView.cs",
-      "sha256": "f157232990c1f7c29986edd9f5632e4e65485287ab5258a0a53c21cd319468a6"
+      "sha256": "b954c45bb273261cc32b51e3709ed4710c7ef7a5e11d77528a1583876b493212"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/DrawingTip.cs",
@@ -38465,7 +38963,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/HeightFieldView.cs",
-      "sha256": "d11cddb6d39e7bfc52ee7df9bb9c63ed52872ae84d9f308ea71b95355a4249a1"
+      "sha256": "e1582465ac88790ce6410350d5adbd0698ac9944916b013148819e5e02e74dd5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidPouring.cs",
@@ -38541,7 +39039,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAppearanceView.cs",
-      "sha256": "9cdaa6ee91a0f2410a30e955d73508dd1875eccbf9d978868663af1c66417178"
+      "sha256": "16938bc0ecf5f25ed28f0809c6a432d0f538b55bafbff70d1e1fab73c0a8b953"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAudioDefinition.cs",
@@ -38581,11 +39079,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "916701f24ec8846c8bf240fd8c8b762c58fa82a8a3920ca035fc63db58a80c31"
+      "sha256": "17eb76d4046e3ef8c6716ab6ad7b186460cacb676761c98c0bd86de282207ca1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "e6dc7a14c9f6d2b6e1e0477f4cf56c521e86fd463681e8bcf6b25aa938857b2e"
+      "sha256": "aa09553b0638e60a5a5a5f236d27fc13ec8e9309e2f15925e458302933f7676c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDrawingEdits.cs",
@@ -38601,7 +39099,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "8e5b14e2df3217ce0278703c96ecf959c5a67460e4fd4bb6f6b1b6ef41fdba41"
+      "sha256": "d5d7d8531a99ae143f91f7d9c49eec83dc163d4cdf6527623ade38355bf8fbf4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -38713,7 +39211,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "a080cc7c10dc98793e7b3ef3b2d18ee0458a5bf8c1ec47492e6504d14a233017"
+      "sha256": "d6ed5b62e82c91bbb5893b17466c75a24479c058506f60388784858cc6e1306d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructure.cs",
@@ -38742,6 +39240,14 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomViewpoint.cs",
       "sha256": "603f0e40e519ca520fe1a90f379c469733b9bef09c4b9dbda07d2ff95bbd80fd"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomVisibilityEdits.cs",
+      "sha256": "8af98b853dceefb75835af5d22a7ab4a391568a3b5afb90e0120bebc397de04d"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomVisibilityLayer.cs",
+      "sha256": "174db5a556b3d3235e284818339d2ec4b2f2b4a51d0608ab333261d43a77e57c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomWorldIdentity.cs",
@@ -39005,7 +39511,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomItem.cs",
-      "sha256": "393e1e2a9b1e1de1fe8b3524c7c3c0137097da094531d67b9b38b74e4fdae30c"
+      "sha256": "5f506c705985bd6ebb9d497ca555bc3513c54b920f164a7418a2fe5cc6386dbc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigation.cs",
@@ -39026,6 +39532,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomPhysicsWorld.cs",
       "sha256": "45262750d4fe30ddcce1f1ca7dd4dc0fed43f7f8fa029f63554e5ed6b776d0c2"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomPointerHit.cs",
+      "sha256": "e6a10dc34884fac56a822ff810cc034159aa7fefc9c7b1ec0085a6bae45e42f1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomPropAnchor.cs",
@@ -39125,7 +39635,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
-      "sha256": "d17ab7c353e2a46bafb1109cf1d89561f787db63f61d6ff16aab4150e935fd9f"
+      "sha256": "09b80ad5017d4bf1ee43514b125e5209aefae5f6dfca4cb697509b2556cb8c1c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceAcceptedSave.cs",
@@ -39137,7 +39647,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchive.cs",
-      "sha256": "f384e4cda480bdefe41c72554bba322c552ef185599dc30bb03417656e9287fe"
+      "sha256": "c73cffd9f5f1039697d2796fa1c8300460f5ce2ad0e2679b27be9ebec6ee7c8f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveCapture.cs",
@@ -39145,7 +39655,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveSnapshot.cs",
-      "sha256": "b5be890e007c2a483d017ebf8a8ad32b7dc09a5b6be0f194fe6f99bdc99cc892"
+      "sha256": "1909b4cf9a49f7f0326166c6c3d6faa6c04dfb35cbefcb751fff5cb5199ef5de"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceContent.cs",
@@ -39253,7 +39763,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "2722c98e5173cd44ff27089c5fbeea8984097e68e65e8141d9511293ffcbac76"
+      "sha256": "605abd983c409f37256b6a1b8bce4b3c441546ccc1ad6e68da0bcaba551bf4d9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

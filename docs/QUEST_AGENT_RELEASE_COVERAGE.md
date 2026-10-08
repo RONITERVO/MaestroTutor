@@ -1013,3 +1013,64 @@ claimed. Fixed physical tracking and synthetic collision tests do not establish
 headset scan alignment or compositor pixels. Synchronous room-scale navigation
 baking and conservative collider envelopes remain explicit performance/clearance
 limits; streamed navigation and larger worlds remain accepted implementation work.
+
+
+## Saved visual layers and shared planner correction — 2026-10-08
+
+WorldPresentation now adds two ordinary learner requests after the existing four
+view/movement turns: make only Maestro half transparent and visible behind real
+things, save that choice, then remove that visual-layer assignment. The user
+messages supply no schema fields or native IDs. Both providers use the original
+chat, suggestion verifier, delegated agent and shared capability discovery.
+
+| Access | Fresh native run | Result |
+| --- | --- | --- |
+| Managed staging | `7b150581bc484b1ea0d53e5a118a38cd` | All six action turns pass handoff, native receipts, completion, chat reply, real usage and managed accounting gates. |
+| BYOK | `92b25cc1ef984658a4d3048b01784105` | The same six requests pass through real Gemini 3.8 Flash, with API-key-owner billing. |
+
+Native object.visibility changes to a saved layer at opacity 0.5 and realDepth
+false, then returns to empty binding, opacity 1 and realDepth true. The global
+view and Maestro's environment collision policy remain unchanged. This verifies
+saved native facts; it does not claim physical passthrough pixels or rendered
+headset translucency. The layer definition remains available for reuse after its
+assignment is removed. The six successful managed action turns reconcile
+**772 credits / USD 0.744659**, with 49 usage/charge entries and zero outstanding
+reservation. This excludes introductory chat and earlier failed attempts.
+Neither run sends old private chat, uploaded images, camera frames or speech.
+
+Earlier attempt `f32d40240f6e4c9091939dfa2a15c4dc` applied the requested view
+change but the observer helper incorrectly supplied empty arguments to an
+argument-free fact. The helper now omits that field and checks availability
+before reading values. Attempt `c181e675c80d451e83bd166298ed5612` reached the
+new layer request, where the real planner emitted two catalog queries together.
+The strict standalone-command contract refused the proposal before dispatch,
+but the task ended rather than returning local correction feedback. Its failed
+layer turn still reconciled 76 credits / USD 0.073368; no layer mutation occurred.
+
+The shared planner now identifies that batch-shape error only after every command
+has passed validation. It feeds back the rejected proposal within the existing
+18-call budget; it neither splits and executes a partial batch nor adds a retry
+allowance. Existing successful command/receipt pairs stay in context. Unknown
+actions, oversized input and lost native receipts remain hard failures. Regression
+tests prove correction into individual reads, preservation of a prior successful
+edit, no partial dispatch, bounded repeated rejection and unknown-action refusal.
+The successful fresh provider runs are separate from that deterministic recovery
+proof; they do not require that a model reproduce the same mistake.
+
+Local verification passes **941 EditMode and 828 PlayMode cases**, with three
+expected optional private-file skips, plus **1,722 shared room/headless/Quest and
+prompt tests in 168 files**. Build, lint, probe types, catalog provenance, core
+boundaries and asset integrity pass. The final archive regression caught an
+omitted strict layer check and the repaired reader passes the full EditMode suite;
+PlayMode used the same runtime except for that archive-reader repair. Native
+headless run `f83ba1d0ea1c4294928d92fb8c7e014f` passes **603 observations**.
+Book run `70ae6c7b65ae40409fa271575d4c3715` creates/assigns a layer with the
+generated fields, captures the layered construction and reloads without replay.
+Its form screenshot was inspected. These two journeys use scripted responses.
+
+The generated manual form still exposes resource IDs/revisions. Shared named
+resource selection remains pre-release usability work. No new APK, signing,
+installation, upload or deployment occurred. Device acceptance remains on hold
+for the owner's cooling/charge readiness and a fresh health check. The outstanding
+novice lesson, audio/camera, performance, world streaming and release gates remain
+open; desktop success is not a full Quest v1 release claim.

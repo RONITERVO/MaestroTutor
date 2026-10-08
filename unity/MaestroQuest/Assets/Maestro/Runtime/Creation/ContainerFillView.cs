@@ -18,7 +18,7 @@ namespace Maestro.Quest.Creation {
             if(data==null||data.amountMl<=0){if(surface)surface.SetActive(false);return;}
             if(!surface){surface=new GameObject("Measured liquid surface");surface.transform.SetParent(transform,false);mesh=new Mesh{name="Bounded liquid level"};mesh.MarkDynamic();surface.AddComponent<MeshFilter>().sharedMesh=mesh;renderer=surface.AddComponent<MeshRenderer>();material=IllustratedMaterials.Create(data.color,0);renderer.sharedMaterial=material;renderer.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;renderer.receiveShadows=false;}
             surface.SetActive(true);surface.transform.SetLocalPositionAndRotation(data.frame.position+data.frame.rotation*(Vector3.up*data.height*.5f),data.frame.rotation);material.SetColor("_Color",data.color);
-            Refresh();
+            Refresh();RoomAppearanceView.VisualsChanged(this);
         }
         void LateUpdate(){if(surface&&surface.activeSelf&&(dirty||Time.unscaledTime>=nextRefresh&&Quaternion.Angle(lastRotation,surface.transform.rotation)>.25f))Refresh();}
         internal void Refresh(){

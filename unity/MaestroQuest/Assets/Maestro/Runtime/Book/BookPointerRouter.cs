@@ -24,7 +24,7 @@ namespace Maestro.Quest.Book
         public bool Begin(int pointerId, Ray ray)
         {
             if (owner == -1 && Placement && Placement.Placing) { owner = pointerId; capturedPlacement = true; return true; }
-            if (owner != -1 || !Physics.Raycast(ray, out var hit, MaximumDistance, InteractionLayers, QueryTriggerInteraction.Ignore)) return false;
+            if (owner != -1 || !RoomPointerHit.Raycast(ray, out var hit, MaximumDistance, InteractionLayers, QueryTriggerInteraction.Ignore)) return false;
             if (IsMoving(hit.collider)) return false;
             var action = hit.collider.GetComponentInParent<PhysicalAction>();
             if (action != null && !action.CanActivatePointer(pointerId)) return false;
@@ -41,7 +41,7 @@ namespace Maestro.Quest.Book
         public void Move(int pointerId, Ray ray)
         {
             if (pointerId != owner || capturedPage == null) return;
-            if (Physics.Raycast(ray, out var hit, MaximumDistance, InteractionLayers, QueryTriggerInteraction.Ignore) && !IsMoving(hit.collider) && hit.collider.GetComponent<BookPageTarget>() == capturedPage) Send(hit, BrowserPointerPhase.Move);
+            if (RoomPointerHit.Raycast(ray, out var hit, MaximumDistance, InteractionLayers, QueryTriggerInteraction.Ignore) && !IsMoving(hit.collider) && hit.collider.GetComponent<BookPageTarget>() == capturedPage) Send(hit, BrowserPointerPhase.Move);
             else Cancel(pointerId);
         }
 
@@ -49,7 +49,7 @@ namespace Maestro.Quest.Book
         {
             if (pointerId != owner) return;
             if (capturedPlacement) { Placement.Place(ray); Clear(); return; }
-            bool hits = Physics.Raycast(ray, out var hit, MaximumDistance, InteractionLayers, QueryTriggerInteraction.Ignore);
+            bool hits = RoomPointerHit.Raycast(ray, out var hit, MaximumDistance, InteractionLayers, QueryTriggerInteraction.Ignore);
             if (hits && IsMoving(hit.collider)) { Cancel(pointerId); return; }
             if (capturedAction != null && hits && hit.collider.GetComponentInParent<PhysicalAction>() == capturedAction) capturedAction.Activate(pointerId);
             if (capturedItem != null && hits && hit.collider.GetComponentInParent<RoomItem>() == capturedItem) { Editor.Select(capturedItem); Editor.Tapped(capturedItem); }

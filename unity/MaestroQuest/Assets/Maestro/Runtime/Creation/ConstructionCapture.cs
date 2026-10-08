@@ -47,6 +47,7 @@ namespace Maestro.Quest.Creation
             foreach(var entry in (JArray)arguments["blueprint"]["connections"])entry["definition"]=ConnectionCapability.Definition(batch.blueprint.connections[((JArray)arguments["blueprint"]["connections"]).IndexOf(entry)].definition.Bind(""));
             for(int i=0;i<pieces.Count;i++)pieces[i]["source"]=new JObject {["kind"]="prototype",["prototype"]=CreationPrototypeSchema.Encode(batch.blueprint.pieces[i].source.prototype)};
             if(batch.blueprint.resources==null)((JObject)arguments["blueprint"]).Remove("resources");
+            else arguments["blueprint"]["resources"]=CreationResourcesSchema.Encode(batch.blueprint.resources);
             // Independent blueprints need no connected feature. A present empty connections field would require it.
             if(batch.blueprint.connections.Length==0)((JObject)arguments["blueprint"]).Remove("connections");
             JObject VectorType(bool q=false){var fields=new JObject {["x"]="number",["y"]="number",["z"]="number"};if(q)fields["w"]="number";return new JObject {["record"]=fields};}
