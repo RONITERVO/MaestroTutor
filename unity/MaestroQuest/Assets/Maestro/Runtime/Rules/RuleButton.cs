@@ -36,7 +36,7 @@ namespace Maestro.Quest.Rules
         public void Build(RoomRules runtime, RuleWorkshop source, Func<int,Transform> controllerAnchors)
         {
             rules = runtime; workshop = source; anchorSource = controllerAnchors;
-            material = IllustratedMaterials.Create(IllustratedMaterials.Hex("2B8D88"));
+            material = IllustratedMaterials.CreateControl(IllustratedMaterials.Hex("2B8D88"));
             var shape = GameObject.CreatePrimitive(PrimitiveType.Cube); shape.transform.SetParent(transform,false); shape.transform.localScale = new Vector3(.065f,.055f,.025f);
             shape.GetComponent<Collider>().enabled = false; ArtResources.Release(shape.GetComponent<Collider>()); shape.GetComponent<Renderer>().sharedMaterial = material; visual = shape.transform;
             var collider = gameObject.AddComponent<BoxCollider>(); collider.size = new Vector3(.075f,.065f,.035f); hit = collider;

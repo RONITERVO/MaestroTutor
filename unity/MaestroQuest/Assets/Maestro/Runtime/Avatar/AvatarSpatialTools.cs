@@ -68,7 +68,7 @@ namespace Maestro.Quest.Avatar
             preferences.text = "Maestro · Distance " + motion.Distance.ToString("0.0") + " m · Walk " + motion.Speed.ToString("0.00") + " m/s · Size " + (editor ? editor.Read("maestro").scale : 1f).ToString("0.00") + "×";
             status.text = string.Join("\n",ModelText.Wrap((animations && animations.ControlsTarget("maestro") ? animations.Status : motion.Status) + " · " + (avatar ? avatar.WalkClipName : "Included walk") + (avatar && avatar.WalkMotionStatus != null ? " · "+avatar.WalkMotionStatus : ""),62).Take(3));
         }
-        Material Paint(string color) { var value = IllustratedMaterials.Create(IllustratedMaterials.Hex(color)); materials.Add(value); return value; }
+        Material Paint(string color) { var value = IllustratedMaterials.CreateControl(IllustratedMaterials.Hex(color)); materials.Add(value); return value; }
         static void Part(Transform parent,Vector3 position,Vector3 scale,Material material)
         {
             var part = GameObject.CreatePrimitive(PrimitiveType.Cube); part.transform.SetParent(parent,false); part.transform.localPosition = position; part.transform.localScale = scale;

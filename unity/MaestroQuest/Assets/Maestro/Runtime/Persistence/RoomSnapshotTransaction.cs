@@ -20,7 +20,7 @@ namespace Maestro.Quest.Persistence
     /// Recovery never executes actions, and unexpected file identities preserve all evidence.</summary>
     internal static class RoomSnapshotTransaction
     {
-        internal const string FileName="room-snapshot.v25.json";
+        internal const string FileName="room-snapshot.v26.json";
         internal const int RoomLimit=4*1024*1024,JournalLimit=16*1024*1024;
         static readonly string[] Names={RoomStorage.FileName,ProgramMemoryStore.FileName};
         static readonly int[] Limits={RoomLimit,ProgramMemoryDocument.MaximumBytes};
@@ -63,13 +63,14 @@ namespace Maestro.Quest.Persistence
             Need(bytes.Length>0&&bytes.Length<=Limits[index],"Snapshot document exceeds its limit.");
             if(index==1){_=ProgramMemoryDocument.Decode(bytes);return;}
             var json=Json(bytes,48);
-            Need(Exact(json,"version","objects","structures","audioSources","viewpoint","world","environmentProfiles","appearances","visibilityLayers")&&RoomViewpoint.ValidWire(json)&&RoomWorldIdentity.ValidWire(json)&&RoomEnvironmentProfile.ValidWire(json)&&RoomAppearance.ValidWire(json)&&RoomVisibilityLayer.ValidWire(json)&&json["version"]?.Type==JTokenType.Integer&&(int)json["version"]==RoomDocument.CurrentVersion,"Unsupported room snapshot.");
+            Need(Exact(json,"version","objects","structures","audioSources","viewpoint","world","environmentProfiles","appearances","visibilityLayers","lighting")&&RoomViewpoint.ValidWire(json)&&RoomWorldIdentity.ValidWire(json)&&RoomEnvironmentProfile.ValidWire(json)&&RoomAppearance.ValidWire(json)&&RoomVisibilityLayer.ValidWire(json)&&RoomLighting.ValidWire(json)&&json["version"]?.Type==JTokenType.Integer&&(int)json["version"]==RoomDocument.CurrentVersion,"Unsupported room snapshot.");
             var room=JsonUtility.FromJson<RoomDocument>(Utf8.GetString(bytes));Need(room!=null,"Missing room snapshot.");RoomStorage.Normalize(room);
             Need(room.Validate(out _),"Invalid room snapshot.");
         }
         internal static Snapshot FromDocuments(RoomDocument room,ProgramMemoryDocument memory)
         {
             Need(room!=null&&memory!=null,"Missing snapshot documents.");
+            Need(room.Validate(out _),"Invalid room snapshot.");
             var copy=room.Copy();copy.version=RoomDocument.CurrentVersion;
             var files=new[]{Utf8.GetBytes(JsonUtility.ToJson(copy)),memory.Encode()};
             for(int i=0;i<2;i++)Validate(i,files[i],true);return new Snapshot(files);
@@ -166,13 +167,13 @@ namespace Maestro.Quest.Persistence
         static byte[] Encode(Intent intent)
         {
             JArray Files(Snapshot value)=>new(Enumerable.Range(0,2).Select(i=>value.Read(i) is byte[] b?(JToken)new JValue(Convert.ToBase64String(b)):JValue.CreateNull()));
-            var bytes=Utf8.GetBytes(new JObject{["version"]=25,["id"]=intent.Id,["phase"]=intent.Phase,["before"]=Files(intent.Before),["after"]=Files(intent.After),["backups"]=new JArray(intent.Backups)}.ToString(Formatting.None));
+            var bytes=Utf8.GetBytes(new JObject{["version"]=26,["id"]=intent.Id,["phase"]=intent.Phase,["before"]=Files(intent.Before),["after"]=Files(intent.After),["backups"]=new JArray(intent.Backups)}.ToString(Formatting.None));
             Need(bytes.Length<=JournalLimit,"Snapshot intent exceeds its limit.");intent.Wire=bytes;return bytes;
         }
         static Intent Decode(byte[] bytes)
         {
             var root=Json(bytes,4);
-            Need(Exact(root,"version","id","phase","before","after","backups")&&root["version"]?.Type==JTokenType.Integer&&(int)root["version"]==25,"Unsupported snapshot intent.");
+            Need(Exact(root,"version","id","phase","before","after","backups")&&root["version"]?.Type==JTokenType.Integer&&(int)root["version"]==26,"Unsupported snapshot intent.");
             Need(root["id"]?.Type==JTokenType.String&&ProgramMemoryDocument.Id((string)root["id"]),"Invalid snapshot identity.");
             Need(root["phase"]?.Type==JTokenType.String&&((string)root["phase"]=="prepared"||(string)root["phase"]=="committed"),"Invalid snapshot phase.");
             Snapshot Files(string key,bool required){

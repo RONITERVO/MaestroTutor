@@ -4479,6 +4479,206 @@
       }
     },
     {
+      "id": "world.lighting.set",
+      "version": 1,
+      "label": "Set world lighting",
+      "input": {
+        "type": "object",
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "settings": {
+            "type": "object",
+            "properties": {
+              "version": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 1.0
+              },
+              "enabled": {
+                "type": "boolean"
+              },
+              "ambientColor": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$",
+                "maxLength": 7
+              },
+              "sunColor": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$",
+                "maxLength": 7
+              },
+              "ambientIntensity": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 2.0
+              },
+              "sunIntensity": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 2.0
+              },
+              "azimuth": {
+                "type": "number",
+                "minimum": -180.0,
+                "maximum": 180.0
+              },
+              "elevation": {
+                "type": "number",
+                "minimum": -90.0,
+                "maximum": 90.0
+              }
+            },
+            "required": [
+              "version",
+              "enabled",
+              "ambientColor",
+              "sunColor",
+              "ambientIntensity",
+              "sunIntensity",
+              "azimuth",
+              "elevation"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "revision",
+          "settings"
+        ],
+        "additionalProperties": false,
+        "x-current": {
+          "fact": "world.lighting",
+          "version": 1,
+          "arguments": {},
+          "fields": {
+            "revision": [
+              "revision"
+            ],
+            "settings": [
+              "settings"
+            ]
+          },
+          "guards": [
+            "revision"
+          ]
+        },
+        "x-features": [
+          "worldLighting.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [
+        "world.lighting.current",
+        "workspace.available",
+        "storage.writable"
+      ],
+      "description": "Save ambient and directional sun lighting for the active world region. Read world.lighting and pass its exact revision. Colours are sRGB hex; intensities are multipliers 0–2. Azimuth is degrees around authored +Y (0 faces +Z, +90 faces +X); elevation is -90–90 above the authored horizon. enabled=false restores the original illustrated lighting while retaining these settings. This affects illustrated virtual surfaces including imported models; it does not relight passthrough, cast shadows, create local lights or simulate time/weather. Browser pages and tool labels remain readable. Movement, animation, sound, physics and view opacity continue independently. One Undo and temporary Keep/Discard apply; failed saving changes nothing. Readback confirms accepted settings, not physical headset appearance.",
+      "example": {
+        "revision": 1,
+        "settings": {
+          "version": 1,
+          "enabled": true,
+          "ambientColor": "#FFFFFF",
+          "sunColor": "#FFF4D6",
+          "ambientIntensity": 0.34999999403953552,
+          "sunIntensity": 0.64999997615814209,
+          "azimuth": -150.0,
+          "elevation": 55.0
+        }
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "worldId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "regionId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "settings": {
+            "type": "object",
+            "properties": {
+              "version": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 1.0
+              },
+              "enabled": {
+                "type": "boolean"
+              },
+              "ambientColor": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$",
+                "maxLength": 7
+              },
+              "sunColor": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$",
+                "maxLength": 7
+              },
+              "ambientIntensity": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 2.0
+              },
+              "sunIntensity": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 2.0
+              },
+              "azimuth": {
+                "type": "number",
+                "minimum": -180.0,
+                "maximum": 180.0
+              },
+              "elevation": {
+                "type": "number",
+                "minimum": -90.0,
+                "maximum": 90.0
+              }
+            },
+            "required": [
+              "version",
+              "enabled",
+              "ambientColor",
+              "sunColor",
+              "ambientIntensity",
+              "sunIntensity",
+              "azimuth",
+              "elevation"
+            ],
+            "additionalProperties": false
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "revision",
+          "worldId",
+          "regionId",
+          "settings",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "room.session",
       "version": 1,
       "label": "Temporary room",
@@ -37225,6 +37425,35 @@
       ]
     },
     {
+      "id": "world.lighting",
+      "version": 1,
+      "type": {
+        "record": {
+          "revision": "number",
+          "worldId": "text",
+          "regionId": "text",
+          "settings": {
+            "record": {
+              "version": "number",
+              "enabled": "boolean",
+              "ambientColor": "text",
+              "sunColor": "text",
+              "ambientIntensity": "number",
+              "sunIntensity": "number",
+              "azimuth": "number",
+              "elevation": "number"
+            }
+          },
+          "temporary": "boolean"
+        }
+      },
+      "label": "World lighting",
+      "description": "Saved region illumination and its current edit revision. Directions use authored world axes, independent of viewer movement. Does not report shadows, physical light or device rendering.",
+      "features": [
+        "worldLighting.v1"
+      ]
+    },
+    {
       "id": "world.identity",
       "version": 1,
       "type": {
@@ -38492,7 +38721,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/IllustratedMaterials.cs",
-      "sha256": "93592bb87d4d1394e221de8efba80d87a5404d10842342c894929b75a5e35863"
+      "sha256": "ccdf1ca34818ec9615f1bdfe4f5dcf4dac4917440af6309f9eafd7f4dc0da7bf"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/IllustratedSurface.cs",
@@ -38505,6 +38734,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/MaestroEnvironmentDepth.cginc",
       "sha256": "76deccb0759e9536306d33a624639c342c162ffa5ebdc2952345c86949a3c611"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/MaestroWorldLighting.cginc",
+      "sha256": "3bf05b77119913a92a5ac3a9254479ed073f0f0e7d4f78b14fc1b6ecda9ee242"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/PencilMarks.cs",
@@ -38524,7 +38757,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/Watercolor.shader",
-      "sha256": "3ea6e1ea04b461a7909c04a32b80654ba0932cd8e30afe2c8331690f9624d5a7"
+      "sha256": "e13268b6edbfc71c24bf7526796cfea1d9ed4ed31d7d61972406ed2e239ff8fc"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/WorldLightingView.cs",
+      "sha256": "87dfe7f8e23ec4e378e2b6ded0a08129f6d948667efd5e928914a32b1071a312"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/AssemblyInfo.cs",
@@ -38564,7 +38801,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarSpatialTools.cs",
-      "sha256": "2702c11629ecb1e91463ef7dc935e96243a0384bf609fc9e71e87c2e7ec26c70"
+      "sha256": "b3dce12f08ed8866544ee6e26c6327abbc2fa89cdc32fb29295f0131214a6770"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarWalkMotion.cs",
@@ -38628,7 +38865,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/IllustratedBook.cs",
-      "sha256": "4c9023b3828d2cdaeb3c7f66dcf199f184411c31a6edaea2169308adbec81024"
+      "sha256": "629d801ecadace1ae3a763d443cf77161d6894742ea4b4355263b66a3d4ea542"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/LibraryBookController.cs",
@@ -38756,7 +38993,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "e2b3a7ab635138aa37ce13435e0ab1df4664d3e8ec80f2342cd59f5df70080e0"
+      "sha256": "8ecf47a60647544b2612a62796e17f6eda03437af1cd5416903f88561fdcfbfc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -39111,6 +39348,10 @@
       "sha256": "7e187a1f0275c859fdf69e8edadbf9888d0fe760e14697a706b917dc9fb642e0"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldLightingCapability.cs",
+      "sha256": "b8cc96347c285eac7092d32a6456813376c89600951d4be938bde5213846cf12"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldPresentationCapability.cs",
       "sha256": "c62a9606830ae75daaedd68f70bf4c3f248ffe25884695c4ea96a6ea5c7eed4a"
     },
@@ -39132,7 +39373,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationTools.cs",
-      "sha256": "d17bae0bb2b844a575f0d979f802fc23c57fe57a6b88a8e550128fa65205d287"
+      "sha256": "141091630d05207f2db8f492451da1dc4ad58f5ba54749191a566f659ee31caf"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationWorkshop.cs",
@@ -39356,11 +39597,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "e97034b6e213779f74374c4a37ac12f6e666b24ba08238a47b675eb4e6602cfd"
+      "sha256": "9d1ae303eba60c2d40637e0f6cbd1f08f39f1cc4938f2c352c7a982547ecb4c3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "aa09553b0638e60a5a5a5f236d27fc13ec8e9309e2f15925e458302933f7676c"
+      "sha256": "eba942713606997106c23bbe9a9ea3afbdc7800680ac8755e051ebc99ae73fc5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDrawingEdits.cs",
@@ -39376,7 +39617,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "7ebd30d0c9cad95417ff55c6e9d39226b981b289501ec7f1edf9d0e85de484e5"
+      "sha256": "31904bd3abd6bff5b06f9b69f7aaf6fe0eb8bb13a91b9a552470cd3215bedfed"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -39421,6 +39662,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLayout.cs",
       "sha256": "50c74349563ac66d437d092432fccaa7256c51c1ddd91d9bdd002c935f91783a"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLighting.cs",
+      "sha256": "dd430196044519361b939de0d9b408da8e4d0735eff3c8044f9dac4b1503d57f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLiquidEdits.cs",
@@ -39492,7 +39737,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "d6ed5b62e82c91bbb5893b17466c75a24479c058506f60388784858cc6e1306d"
+      "sha256": "9dfa919738df888017c2c363605b96199b877fd65e30f24e820056893bb9bc2a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructure.cs",
@@ -39512,7 +39757,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomToolTray.cs",
-      "sha256": "0795a9ec92a5e191d64cfe6ecc997b77805a5d5a929b44037fa83fd2ee525faa"
+      "sha256": "209dd30df235c8fe6b7ae40d76b8fbf4e9428b54fe4c0e61979e2953d4d79113"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomViewCapture.cs",
@@ -39640,7 +39885,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportTools.cs",
-      "sha256": "187214d846509d09b6442805fbb19066fc01bfbbe52914dd49975b53dc1df87f"
+      "sha256": "f5076e57c03f524d8973ae4a22e2e4c37f8052291518f8d8d516a1b27b17880d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportWorkshop.cs",
@@ -39732,11 +39977,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MovementTools.cs",
-      "sha256": "ced5590cc62f2f31e2703c373bf69436aa9cb5365ce96a94c592a34f7c4b3652"
+      "sha256": "fc1c8bd63057ca91f9a19739a77c3d855c2333a7d27c5eeb30228eaaa203384f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/PalmRecoveryButton.cs",
-      "sha256": "610e698348c58b8e2b6c180c53f0da61f687524218bd13370c41ac2372eea74a"
+      "sha256": "6c2cece9ba304d45812140415cd306a80269cdbef0dc2379a021c2633fd8a197"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/PhysicalAction.cs",
@@ -39744,7 +39989,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/PhysicsTools.cs",
-      "sha256": "d036ea85f4381dd1a8bcc5e6bc6b002ba7e6e90a0cac12a06464fe881a90de59"
+      "sha256": "acfcef8636cc571ab165b392a2f771f69fe7f149161f3e5e0fde8058159d028b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.cs",
@@ -39852,7 +40097,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ScannedRoom.cs",
-      "sha256": "b3e09f9712fc459ebd27449039215330f5bf37ea9e64051af289803dea88b185"
+      "sha256": "0ee0102f99cd88dc24c62244f8a934fc9b6a11b66dc71dabe71807c820bf36c3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ScannedRoomAcoustics.cs",
@@ -39916,7 +40161,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
-      "sha256": "09b80ad5017d4bf1ee43514b125e5209aefae5f6dfca4cb697509b2556cb8c1c"
+      "sha256": "5f1ddf98605bbbd0623b4787d4d8694991775fc1b0b6bb236405912fb568ac62"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceAcceptedSave.cs",
@@ -39928,7 +40173,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchive.cs",
-      "sha256": "c73cffd9f5f1039697d2796fa1c8300460f5ce2ad0e2679b27be9ebec6ee7c8f"
+      "sha256": "8975b1696e2ff2590bd2cc234c96e97d988e0433ff77dd23499fea9e5e2057d2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveCapture.cs",
@@ -39936,7 +40181,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveSnapshot.cs",
-      "sha256": "1909b4cf9a49f7f0326166c6c3d6faa6c04dfb35cbefcb751fff5cb5199ef5de"
+      "sha256": "6a1721e7f8db13b15cc549bcdfe16361e9da46f4e9630631d8e15d7a40a8542b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceContent.cs",
@@ -40044,7 +40289,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "86ef39b804469e277e989a5df52b99328df34cea60a614551db13239bc93bf8f"
+      "sha256": "869ed0fdeadbe52deeb2424b8e223b653545df6444785f7df25c73a62e4e8e9e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -40128,7 +40373,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleButton.cs",
-      "sha256": "46120aa65cc38f5f0670e2081bd7d49d0db4d699ea63df1b18ada759e6a7c299"
+      "sha256": "67f44ef1a23fb480d339ac69a88008fe8de92d022ee38d80ae9f13838e440721"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleChannelWaits.cs",
@@ -40168,7 +40413,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleTools.cs",
-      "sha256": "3ad9d72a189acc98970a0cdcd38f38040cc2d994d51d710057c6ba5691ac3c9c"
+      "sha256": "241c15e61ec4ea66dc14a8b1a66e5ce08d1cf50903458caf0be6728c6a5889cc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleWorkshop.cs",

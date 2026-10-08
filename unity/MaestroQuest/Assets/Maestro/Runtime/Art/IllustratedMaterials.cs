@@ -45,6 +45,12 @@ namespace Maestro.Quest.Art
             textMaterials.Clear();
         }
 
+        // Built-in controls remain readable even when an authored scene has no light.
+        public static Material CreateControl(Color color, float grain = .07f)
+        {
+            var material=Create(color,grain);material.SetFloat("_WorldLighting",0);return material;
+        }
+
         public static Material Create(Color color, float grain = .07f)
         {
             var shader = Shader.Find("Maestro/Watercolor");

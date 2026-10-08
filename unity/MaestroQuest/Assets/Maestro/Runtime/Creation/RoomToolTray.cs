@@ -128,7 +128,7 @@ namespace Maestro.Quest.Creation
             shape.GetComponent<Collider>().enabled = false; ArtResources.Release(shape.GetComponent<Collider>());
             shape.GetComponent<Renderer>().sharedMaterial = material; return shape;
         }
-        Material Material(Color color) { var material = IllustratedMaterials.Create(color); materials.Add(material); return material; }
+        Material Material(Color color) { var material = IllustratedMaterials.CreateControl(color); materials.Add(material); return material; }
         void OnDestroy() { if (editor) editor.Changed -= Refresh; foreach (var material in materials) ArtResources.Release(material); }
     }
 }

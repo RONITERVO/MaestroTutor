@@ -49,7 +49,7 @@ namespace Maestro.Quest.Interaction
                 MRUKAnchor.SceneLabels.INVISIBLE_WALL_FACE | MRUKAnchor.SceneLabels.INNER_WALL_FACE |
                 MRUKAnchor.SceneLabels.TABLE | MRUKAnchor.SceneLabels.COUCH | MRUKAnchor.SceneLabels.STORAGE |
                 MRUKAnchor.SceneLabels.BED | MRUKAnchor.SceneLabels.OTHER;
-            outline = IllustratedMaterials.Create(IllustratedMaterials.Hex("2B8D88")); surfaces.MeshMaterial = outline;
+            outline = IllustratedMaterials.CreateControl(IllustratedMaterials.Hex("2B8D88")); surfaces.MeshMaterial = outline;
             surfaces.Layer = RoomPhysicsLayers.Scanned;
             mruk.RoomUpdatedEvent.AddListener(RoomChanged); mruk.RoomRemovedEvent.AddListener(RoomChanged);
             mruk.SceneLoadedEvent.AddListener(SceneLoaded);

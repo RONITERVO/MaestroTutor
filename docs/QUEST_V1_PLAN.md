@@ -5112,3 +5112,53 @@ Physical Quest acceptance remains on hold for the existing cooling/charging
 readiness reply and a fresh health check. No APK was built or installed for this
 increment. Imported environment scenes, passthrough windows, camera sharing and
 streamed regions remain separate accepted work.
+
+
+### Saved region lighting — implementation increment (2026-10-08)
+
+The active authored region now owns a versioned `RoomLighting` definition. Shared
+`world.lighting` / `world.lighting.set` contracts expose ambient colour/energy and
+sun colour/energy/azimuth/elevation, with one current revision and the world's
+stable world/region IDs. Generated book controls, agent requests and programs use
+the same native save path. This is independent of physical-room collision profiles,
+real-depth participation, viewer backdrop opacity and temporary visual-layer fades.
+
+The default is disabled, retaining the original illustrated shading. Enabling it
+illuminates the illustrated virtual surfaces with world-space normals, including
+imported models; pigment coordinates remain attached to their original surfaces.
+Sun direction uses authored axes and follows world placement, never the user's
+head or each object's local frame. Colour strings are sRGB and are converted once
+when projecting accepted state into the shader's active colour space. The renderer
+uses shared uniforms, caches accepted revisions/frame orientation, and releases
+its authority when the workspace is disabled. It creates no per-frame material
+variants and writes no per-frame saves. Actual browser-page and built-in control materials opt out;
+world-text tool labels keep their unlit shader. Scan-alignment guides also remain
+readable when the authored environment has no light.
+
+Room v27, paired snapshot intent v26 and workspace archive v25 preserve lighting.
+An older room with no lighting retains the original illustration. Current files
+must include the complete definition; unsupported/truncated definitions are
+rejected rather than silently normalised. Archive fingerprints cover lighting.
+Accepted edits save before publication, create one Undo step, retain temporary
+Keep/Discard semantics, and do not cancel unrelated movement, animation or audio.
+A failed save does not change accepted settings or their current revision.
+
+This increment supplies authored ambient/directional illumination only. It does
+not cast shadows, relight camera passthrough, simulate a clock or weather, or
+provide local point/spot lights. Those remain release work under the shared
+environment-state design above; future weather/time controllers must drive this
+same region authority. Multiple streamed regions will require scoped lighting
+projection; today's runtime has one active region. Device appearance and timing
+still need Quest acceptance after the outstanding charging/cooling hold clears.
+
+Verification passes 956 EditMode cases, 1,736 shared tests and the full 842-case
+PlayMode suite with three optional external-asset skips. Eight focused lighting
+cases were rerun after the final control-material exemption. The native journey
+passes 627 observations; the original-book form and reload checks pass. Fresh
+managed and BYOK Gemini 3.8 Flash journeys both complete the two learner requests,
+retain the preset and leave objects, viewing and collision policy unchanged.
+Full run IDs, billing evidence, failed-attempt explanations and acceptance limits
+are in [the coverage matrix](QUEST_AGENT_RELEASE_COVERAGE.md#saved-region-lighting-2026-10-08).
+The local `.quest-evidence/spatial-state/lighting-working.json` checkpoint records
+active release work. These journeys use fresh synthetic English-to-Spanish chat,
+not previously captured private media.

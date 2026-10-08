@@ -51,7 +51,7 @@ namespace Maestro.Quest.Interaction
                 "\n"+Buttons[selectedButton]+" → "+controls.ButtonLabel(selectedButton);
             status.text=string.Join("\n",ModelText.Wrap(controls.Status,75).Take(2))+"\nB / Y and palm Recall bring back book and tools";
         }
-        Material Paint(string color) { var value=IllustratedMaterials.Create(IllustratedMaterials.Hex(color)); paints.Add(value); return value; }
+        Material Paint(string color) { var value=IllustratedMaterials.CreateControl(IllustratedMaterials.Hex(color)); paints.Add(value); return value; }
         static void Part(Transform parent,Vector3 point,Vector3 scale,Material paint)
         {
             var part=GameObject.CreatePrimitive(PrimitiveType.Cube); part.transform.SetParent(parent,false); part.transform.localPosition=point; part.transform.localScale=scale;

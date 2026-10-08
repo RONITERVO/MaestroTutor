@@ -251,6 +251,16 @@ try{
   await page!.waitForFunction(id=>{const r=window.nativeBookEvidence!().state!.execution?.selected;return r?.capability===id&&r.phase==='completed';},id);
   return page!.evaluate(()=>window.nativeBookEvidence!().state!.execution!.selected!);
  };
+ await openNamedAction('Set world lighting','world.lighting.set');
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ await page.getByLabel('Action inputs settings enabled',{exact:true}).selectOption('true');
+ await page.getByLabel('Action inputs settings ambientIntensity',{exact:true}).fill('0.2');
+ await page.getByLabel('Action inputs settings sunIntensity',{exact:true}).fill('0.7');
+ await page.getByLabel('Action inputs settings ambientColor',{exact:true}).fill('#223344');
+ const lighting=await runNamedAction('world.lighting.set');
+ assert.equal((lighting.output!.settings as {enabled:boolean}).enabled,true);assert.ok(Math.abs((lighting.output!.settings as {ambientIntensity:number}).ambientIntensity-.2)<1e-6);
+ await writeFile(join(directory,'book-native-lighting.json'),JSON.stringify({boundary:'Real generated book form, current-value guard and native saved lighting receipt; no headset/provider proof.',lighting},null,2));
+ await page.screenshot({path:join(directory,'book-native-lighting.png')});
  await openNamedAction('Blend a visual layer','visibility.layer.present');
  await page.getByRole('button',{name:'Load saved visual layer',exact:true}).click();
  await page.getByLabel('Choose visual layer',{exact:true}).selectOption(JSON.stringify([visualLayer.output!.id,null]));

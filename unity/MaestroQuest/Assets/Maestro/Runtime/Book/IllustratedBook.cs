@@ -34,6 +34,7 @@ namespace Maestro.Quest.Book
                 Box(side + " cover", new Vector3(sign * (.5f * PageWidth + Gutter), 0, .024f), new Vector3(PageWidth + .025f, PageHeight + .027f, .009f), cover);
                 Box(side + " page stack", new Vector3(sign * (.5f * PageWidth + Gutter), 0, .013f), new Vector3(PageWidth + .003f, PageHeight + .006f, .018f), stack);
                 var material = Own(IllustratedMaterials.Create(Color.white, 0));
+                material.SetFloat("_WorldLighting",0);
                 pageMaterials.Add(material);
                 var page = new GameObject(side + " page", typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider), typeof(BookPageTarget));
                 page.transform.SetParent(transform, false);

@@ -108,7 +108,7 @@ namespace Maestro.Quest.Rules
             if(precisionLabel)precisionLabel.text="Step\n"+Draft.PrecisionLabel;
             status.text=Draft.Status.Length>92?Draft.Status.Substring(0,92)+"…":Draft.Status;
         }
-        Material Paint(string value) { var paint = IllustratedMaterials.Create(IllustratedMaterials.Hex(value)); materials.Add(paint); return paint; }
+        Material Paint(string value) { var paint = IllustratedMaterials.CreateControl(IllustratedMaterials.Hex(value)); materials.Add(paint); return paint; }
         static GameObject Part(Transform parent, PrimitiveType type, Vector3 position, Vector3 size, Material paint)
         {
             var part = GameObject.CreatePrimitive(type); part.transform.SetParent(parent,false); part.transform.localPosition = position; part.transform.localScale = size;

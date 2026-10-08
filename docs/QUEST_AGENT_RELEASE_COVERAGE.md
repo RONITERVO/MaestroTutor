@@ -1174,3 +1174,63 @@ comfort, real depth or sustained headset performance. Imported surroundings,
 passthrough windows, image-backed texture authoring, camera/audio completion,
 weather/light, water-aware traversal, streamed regions and the remaining novice
 and Store release gates remain open.
+
+
+## Saved region lighting (2026-10-08)
+
+Saved ambient and directional sun settings now use `world.lighting` and
+`world.lighting.set` across generated book controls, programs and agent tasks.
+Room v27, paired snapshot v26 and archive v25 preserve the settings. Exact
+revisions, save-before-publication, Undo/Redo and temporary Keep/Discard use the
+existing room authority. Lighting leaves object ownership, movement, animation,
+collision profiles, backdrop/depth preferences and sound independent.
+
+Fresh English-native/Spanish-learning conversations pass both action turns:
+create dim blue ambient lighting with a warm sun, then restore the original
+illustration while retaining the preset. Both used Gemini 3.8 Flash and completed
+tutor, verifier, original-context handoff, native receipts and final chat.
+
+| Access | Run | Confirmed native operations |
+| --- | --- | --- |
+| Managed | `9cbb44c4a14346d98d2a6607dfbf2e90` | 6 |
+| BYOK | `04a1581bbb354dad8192055dfcdf63b3` | 7 |
+
+Native readback confirms both requests, exact preset retention and unchanged
+objects, collision policy and viewer state. Duplicate handoff checks produce no
+extra dispatch or usage. Managed billing reconciles **202 credits / USD 0.194999**
+across 14 usage and charge entries, with zero reservations before and after both
+turns. Costs exclude introductory chat and the earlier failed attempt. BYOK usage
+is attributed to the configured key owner. No old private chat or media was reused.
+
+Verification passes **956 EditMode tests**, **1,736 shared tests in 170 files**,
+app/probe TypeScript, lint, production build, catalog provenance, boundaries and
+included-asset integrity. The full PlayMode suite passes **842 cases**, with the
+three documented optional external-asset skips. After the final built-in-control
+lighting exemption, all **eight focused authoring/rendering tests** pass on the
+final native source. These include actual book-page and palm Recall materials in
+zero light, world-space sun direction, alpha/cutout preservation, failed-save
+isolation, continued animation and temporary editing. The broad suite preceded
+that final control exemption; it was not reported as a new full-suite run afterward.
+The catalog contains 115 actions, 131 facts, 90 current-input mappings and 462
+recursively discovered runtime source inputs.
+
+Scripted native run `c3dc952185dd4d0883e1e0d50dc0939f` passes **627 observations**,
+including lighting readback, Undo/Redo and restoration. Original-book run
+`dd8f1f600eaf4f20b9af44b76f4ded7c` loads current lighting into the generated form,
+executes it natively and reloads without replay. Its form screenshot was inspected.
+The initial native attempt `4af8f9c7dc1c4c689c5fcc845a4d4fdf` failed an exact
+JavaScript-double versus Unity-float comparison; the probe now uses a numeric
+1e-6 tolerance, leaving production behavior unchanged.
+
+The first managed attempt `20939a1aeaff420196541d4873f1cc04` completed its native
+lighting action but failed the unrelated-object comparison against the startup
+handshake. Every recorded agent operation retained the same Book position. The
+probe now reads a fresh native baseline immediately before the request, after
+startup/context, and saves both snapshots. The object-equality assertion remains
+strict; the failed attempt remains failed and retained.
+
+No new APK, signing, installation, upload or deployment occurred. Physical
+lighting and performance acceptance remain on hold for the owner's cooldown/charge
+readiness and a fresh health check. This implementation supplies one active
+region's ambient/directional illumination; shadows, local lights, time/weather,
+streamed-region projection and the remaining release gates are still open.

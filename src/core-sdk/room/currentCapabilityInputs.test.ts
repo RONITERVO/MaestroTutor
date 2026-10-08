@@ -12,7 +12,7 @@ const view=():CatalogView=>({operation:'inspect',category:'facts',capability:'ob
 it('checks every native current-input annotation against both registered contracts',()=>{
  let count=0;
  const visit=(s:CapabilitySchema)=>{if(s['x-current'])count++;expect(()=>validateCurrentInputMapping(s)).not.toThrow();for(const child of [...s.oneOf??[],...Object.values(s.properties??{}),...s.items?[s.items]:[]])visit(child);};
- for(const action of behaviourCatalog.actions)visit(action.input as CapabilitySchema);expect(count).toBe(89);
+ for(const action of behaviourCatalog.actions)visit(action.input as CapabilitySchema);expect(count).toBe(90);
 });
 it('loads exact fact values atomically and distinguishes guards from editable preferences',()=>{
  const next=applyCurrentInputs(schema(),args(),view());expect(next).toEqual({target:native.beforePhysics.target,revision:native.beforePhysics.revision,mode:native.beforePhysics.mode,shape:native.beforePhysics.shape,mass:native.beforePhysics.mass});
@@ -95,4 +95,19 @@ it('refreshes the world placement guard without replacing the requested destinat
  expect(currentInputIdentity(input,{...loaded,position:{x:4,y:0,z:5},yaw:30},'workspace')).toBe(key);
  expect(currentInputIdentity(input,{...loaded,stateId:'b'.repeat(32)},'workspace')).not.toBe(key);
  expect(currentInputIdentity(input,loaded,'other-workspace')).not.toBe(key);
+});
+
+it('loads complete region lighting without aliasing state and isolates edit guards by workspace',()=>{
+ const input=capabilityDefinition('world.lighting.set')!.input;
+ const settings={version:1,enabled:true,ambientColor:'#123456',sunColor:'#FFEEDD',ambientIntensity:.25,sunIntensity:.7,azimuth:45,elevation:30};
+ const value={revision:19,worldId:'a'.repeat(32),regionId:'b'.repeat(32),settings,temporary:false};
+ const observation:CatalogView={operation:'inspect',category:'facts',capability:'world.lighting',version:1,definition:behaviourFact('world.lighting')!,available:true,value,status:'Available'};
+ const draft={...capabilityDefinition('world.lighting.set')!.example};
+ const loaded=applyCurrentInputs(input,draft,observation);expect(loaded).toEqual({revision:19,settings});
+ const identity=currentInputIdentity(input,loaded,'workspace');
+ (loaded.settings as typeof settings).ambientIntensity=.5;expect(settings.ambientIntensity).toBe(.25);
+ expect(currentInputIdentity(input,loaded,'workspace')).toBe(identity);
+ expect(currentInputIdentity(input,{...loaded,revision:20},'workspace')).not.toBe(identity);
+ expect(currentInputIdentity(input,loaded,'other')).not.toBe(identity);
+ expect(()=>applyCurrentInputs(input,draft,{...observation,value:{...value,settings:{...settings,sunIntensity:3}}})).toThrow();
 });

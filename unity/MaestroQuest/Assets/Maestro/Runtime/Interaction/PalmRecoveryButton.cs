@@ -27,7 +27,7 @@ namespace Maestro.Quest.Interaction
             var shape = GameObject.CreatePrimitive(PrimitiveType.Sphere); shape.name = "Palm recall pebble";
             shape.transform.SetParent(transform,false); shape.transform.localScale = new Vector3(.085f,.06f,.035f);
             shape.GetComponent<Collider>().enabled = false; ArtResources.Release(shape.GetComponent<Collider>());
-            material = IllustratedMaterials.Create(IllustratedMaterials.Hex("2B8D88")); shape.GetComponent<Renderer>().sharedMaterial = material;
+            material = IllustratedMaterials.CreateControl(IllustratedMaterials.Hex("2B8D88")); shape.GetComponent<Renderer>().sharedMaterial = material;
             visual = shape.transform;
             var collider = gameObject.AddComponent<BoxCollider>(); collider.size = new Vector3(.09f,.065f,.04f); target = collider;
             var label = new GameObject("Recall marking",typeof(TextMesh)); label.transform.SetParent(visual,false);

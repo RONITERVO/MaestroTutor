@@ -39,6 +39,15 @@ namespace Maestro.Quest.Tests
             documents["models/"+modelHash+".txt"]=Bytes("Maestro äö\nOriginal attribution kept");
             var module=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-modules-nested.json")))["imports"][0]["module"] as JObject;moduleHash=ProgramModules.Hash(module);documents["program-modules.v1/"+moduleHash+".json"]=Bytes(module.ToString(Formatting.None));
         }
+        [Test] public void RegionLightingSurvivesArchiveAndRejectsUnsupportedFields() {
+            var room=JsonUtility.FromJson<RoomDocument>(Encoding.UTF8.GetString(documents[RoomStorage.FileName]));var baseline=WorkspaceArchive.Fingerprint(Snapshot()).ManifestHash;
+            room.lighting=new(){enabled=true,ambientColor="#123456",sunIntensity=1.5f,azimuth=17};documents[RoomStorage.FileName]=Document(room);
+            Assert.That(WorkspaceArchive.Fingerprint(Snapshot()).ManifestHash,Is.Not.EqualTo(baseline));
+            using(var staged=WorkspaceArchive.Stage(new MemoryStream(Archive()),directory)) {
+                var restored=new RoomStorage(staged.DirectoryPath).Load(out var error);Assert.That(restored,Is.Not.Null,error);Assert.That(restored.lighting.Same(room.lighting),Is.True);
+            }
+            var wire=JObject.Parse(JsonUtility.ToJson(room));wire["lighting"]["unknownWeather"]="future";documents[RoomStorage.FileName]=Bytes(wire.ToString());Assert.That(()=>Snapshot(),Throws.Exception);
+        }
         [Test] public void WorldIdentitySurvivesArchiveAndChangesItsFingerprint()
         {
             var room=JsonUtility.FromJson<RoomDocument>(Encoding.UTF8.GetString(documents[RoomStorage.FileName]));

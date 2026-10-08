@@ -868,3 +868,23 @@ probe's fifteen-minute lifetime. Failure evidence includes the supervisor start,
 limit and actual expiry, so harness cancellation cannot be mistaken for an
 unexplained runtime stop. This does not extend app leases, provider request
 budgets, task planning limits or native action deadlines.
+
+
+### Shared region lighting
+
+The deterministic native journey now reads `world.lighting`, changes the saved
+ambient/sun definition, checks Undo/Redo, and restores the initial definition.
+It checks that physical collision policy and viewer presentation remain unchanged.
+The original-book journey loads the same current settings through the generated
+form and runs the native action, retaining a receipt and screenshot.
+
+`-ProviderScenario WorldLighting` starts a fresh English-native, Spanish-learning
+conversation. The learner asks for dim blue ambient light and a warm sun without
+naming tools or schema fields, then asks to restore original illustrated shading
+while retaining the authored preset. The runner checks actual native readback,
+unchanged objects, independent collision/view settings, and duplicate-handoff
+suppression. Use each existing managed and BYOK harness configuration; the runner
+uses its existing bounded provider deadline and receipt/usage evidence. It never
+reuses captured private chat or headset media. Native pixel tests separately check
+world-space direction, opacity/cutout preservation, and readable book/control
+materials. These checks do not establish Quest lighting or performance acceptance.

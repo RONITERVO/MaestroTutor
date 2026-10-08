@@ -93,6 +93,7 @@ namespace Maestro.Quest.Creation
             maestro.GetComponent<MaestroAvatar>()?.ConfigureOwnership(Ownership,"maestro");
             Liquids=gameObject.AddComponent<LiquidPouring>();Liquids.Initialize(this);Sculpting.Editor=this;
             Reconcile();
+            gameObject.AddComponent<Art.WorldLightingView>().Initialize(this);
             room.RecoveryEditor=this;
             if (message != null) SetStatus(message);
         }
@@ -239,7 +240,7 @@ namespace Maestro.Quest.Creation
             var data=Pose(Read(id),Find(id).transform);change(data);
             return CommitPersisted(new[]{data},Array.Empty<string>(),message,applyPose,out error);
         }
-        bool CommitPersisted(RoomObjectData[] replacements,string[] removals,string message,bool applyPose,out string error,RoomLayout observedBefore=null,StructureEdits structureEdits=null,AudioDefinitionEdits audioEdits=null,EnvironmentProfileEdits environmentEdits=null,AppearanceEdits appearanceEdits=null,VisibilityLayerEdits visibilityEdits=null,bool visualOnly=false) {
+        bool CommitPersisted(RoomObjectData[] replacements,string[] removals,string message,bool applyPose,out string error,RoomLayout observedBefore=null,StructureEdits structureEdits=null,AudioDefinitionEdits audioEdits=null,EnvironmentProfileEdits environmentEdits=null,AppearanceEdits appearanceEdits=null,VisibilityLayerEdits visibilityEdits=null,bool visualOnly=false,RoomLighting lighting=null) {
             using var write=WriteGate.TryWrite(out error);if(write==null)return false;
             if(structureEdits!=null&&!structureEdits.Validate(out error))return false;
             if(audioEdits!=null&&!audioEdits.Validate(out error))return false;
@@ -247,6 +248,7 @@ namespace Maestro.Quest.Creation
             if(visibilityEdits!=null&&!visibilityEdits.Validate(out error))return false;
             if(appearanceEdits!=null&&!appearanceEdits.Validate(out error))return false;
             var candidate=journal.Snapshot();
+            if(lighting!=null)candidate.lighting=lighting.Copy();
             var changed=replacements.Select(x=>x.id).Concat(removals).ToHashSet();
             candidate.objects=candidate.objects.Where(x=>!changed.Contains(x.id)).Concat(replacements).ToArray();
             if(structureEdits!=null)candidate.structures=structureEdits.Apply(candidate.structures);
@@ -257,14 +259,14 @@ namespace Maestro.Quest.Creation
             if(!candidate.Validate(out error))return false;
             if(observedBefore!=null&&!journal.EditBaseline(replacements,removals,observedBefore,out _,out error))return false;
             if(TemporaryRoom) {
-                if(!Commit(replacements,removals,message,true,applyPose,observedBefore,structureEdits,audioEdits,environmentEdits,appearanceEdits,visibilityEdits,visualOnly)){error=Status;return false;}
+                if(!Commit(replacements,removals,message,true,applyPose,observedBefore,structureEdits,audioEdits,environmentEdits,appearanceEdits,visibilityEdits,visualOnly,lighting)){error=Status;return false;}
                 return true;
             }
             // Same serialized writer and journal as manual edits; no global Editing
             // signal here because the caller already owns only the affected targets.
             CompleteSave(wait:true);
             if(!storage.Save(candidate,out error))return false;
-            if(!Commit(replacements,removals,message,true,applyPose,observedBefore,structureEdits,audioEdits,environmentEdits,appearanceEdits,visibilityEdits,visualOnly)){error=Status;return false;}
+            if(!Commit(replacements,removals,message,true,applyPose,observedBefore,structureEdits,audioEdits,environmentEdits,appearanceEdits,visibilityEdits,visualOnly,lighting)){error=Status;return false;}
             dirty=false;lastSaveError=null;return true;
         }
 
@@ -359,12 +361,12 @@ namespace Maestro.Quest.Creation
             return true;
         }
 
-        bool Commit(RoomObjectData[] replacements, string[] removals, string success, bool placement = false, bool? applyPose = null, RoomLayout observedBefore = null, StructureEdits structureEdits = null,AudioDefinitionEdits audioEdits=null,EnvironmentProfileEdits environmentEdits=null,AppearanceEdits appearanceEdits=null,VisibilityLayerEdits visibilityEdits=null,bool visualOnly=false)
+        bool Commit(RoomObjectData[] replacements, string[] removals, string success, bool placement = false, bool? applyPose = null, RoomLayout observedBefore = null, StructureEdits structureEdits = null,AudioDefinitionEdits audioEdits=null,EnvironmentProfileEdits environmentEdits=null,AppearanceEdits appearanceEdits=null,VisibilityLayerEdits visibilityEdits=null,bool visualOnly=false,RoomLighting lighting=null)
         {
             using var write=WriteGate.TryWrite(out var blocked);if(write==null){SetStatus(blocked);return false;}
             if (!placement) Editing?.Invoke();
             if (journal == null || (!placement && Busy())) return false;
-            if (!journal.Apply(replacements,removals,out var error,observedBefore,structureEdits,audioEdits,environmentEdits,appearanceEdits,visibilityEdits)) { SetStatus(error); return false; }
+            if (!journal.Apply(replacements,removals,out var error,observedBefore,structureEdits,audioEdits,environmentEdits,appearanceEdits,visibilityEdits,lighting)) { SetStatus(error); return false; }
             if(visualOnly)ReconcileVisibility();else Reconcile(replacements.Select(item => item.id).ToHashSet(), applyPose ?? !placement); MarkDirty(); SetStatus(success); return true;
         }
         public bool SetItemPhysics(string id,ObjectPhysicsSettings settings)

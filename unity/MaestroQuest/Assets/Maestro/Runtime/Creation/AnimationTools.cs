@@ -77,7 +77,7 @@ namespace Maestro.Quest.Creation
             recordPaint.color = IllustratedMaterials.Hex(workshop.IsRecording ? "F04C42" : workshop.HasUnsavedRecording ? "E5A42A" : "B8644E");
             posePaint.color = IllustratedMaterials.Hex(workshop.HasUnsavedPose ? "E5A42A" : workshop.IsPosing ? "2B8D88" : "73534E");
         }
-        Material Paint(string hex) { var value = IllustratedMaterials.Create(IllustratedMaterials.Hex(hex)); materials.Add(value); return value; }
+        Material Paint(string hex) { var value = IllustratedMaterials.CreateControl(IllustratedMaterials.Hex(hex)); materials.Add(value); return value; }
         static void Part(Transform parent, PrimitiveType type, Vector3 position, Vector3 size, Material paint)
         {
             var part = GameObject.CreatePrimitive(type); part.transform.SetParent(parent,false); part.transform.localPosition = position; part.transform.localScale = size;

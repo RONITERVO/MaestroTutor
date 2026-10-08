@@ -80,7 +80,7 @@ namespace Maestro.Quest.Interaction
             if(scanLabel){scanLabel.text=scan.Busy?(scan.CanCancel?"Cancel setup":"Wait for system"):"Scan room";scanAction.AccessibleName=scanLabel.text;scanAction.GetComponent<Collider>().enabled=!scan.Busy||scan.CanCancel;}
             if (!Placing) status.text = string.Join("\n",ModelText.Wrap(scan.Status,62).Take(3));
         }
-        Material Paint(string color) { var material = IllustratedMaterials.Create(IllustratedMaterials.Hex(color)); materials.Add(material); return material; }
+        Material Paint(string color) { var material = IllustratedMaterials.CreateControl(IllustratedMaterials.Hex(color)); materials.Add(material); return material; }
         static void Part(Transform parent,Vector3 position,Vector3 scale,Material material)
         {
             var part = GameObject.CreatePrimitive(PrimitiveType.Cube); part.transform.SetParent(parent,false); part.transform.localPosition = position; part.transform.localScale = scale;

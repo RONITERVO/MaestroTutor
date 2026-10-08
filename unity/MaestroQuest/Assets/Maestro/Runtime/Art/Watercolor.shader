@@ -4,6 +4,7 @@ Shader "Maestro/Watercolor"
 {
     Properties
     {
+        _WorldLighting ("Accept world illumination", Float) = 1
         _Color ("Pigment", Color) = (1,.94,.82,1)
         _PatternMode ("Pattern: solid/checker/stripes", Float) = 0
         _PatternPlane ("Pattern: UV/XY/XZ/YZ", Float) = 0
@@ -46,8 +47,9 @@ Shader "Maestro/Watercolor"
             #pragma multi_compile _ HARD_OCCLUSION SOFT_OCCLUSION
             #include "UnityCG.cginc"
             #include "MaestroEnvironmentDepth.cginc"
+            #include "MaestroWorldLighting.cginc"
             struct Vertex { float4 vertex : POSITION; float3 normal : NORMAL; float2 uv : TEXCOORD0; float4 color : COLOR; UNITY_VERTEX_INPUT_INSTANCE_ID };
-            struct Varying { float4 position : SV_POSITION; float2 uv : TEXCOORD0; float3 world : TEXCOORD1; float alpha : TEXCOORD2; UNITY_VERTEX_OUTPUT_STEREO };
+            struct Varying { float4 position : SV_POSITION; float2 uv : TEXCOORD0; float3 world : TEXCOORD1; float alpha : TEXCOORD2; float3 worldNormal : TEXCOORD3; UNITY_VERTEX_OUTPUT_STEREO };
             float _PencilWidth;
             sampler2D _MainTex;
             float4 _MainTex_ST;
@@ -63,6 +65,7 @@ Shader "Maestro/Watercolor"
                 output.position = mul(UNITY_MATRIX_VP, float4(world, 1));
                 output.world = world;
                 output.alpha = input.color.a;
+                output.worldNormal = UnityObjectToWorldNormal(input.normal);
                 output.uv = TRANSFORM_TEX(input.uv, _MainTex);
                 return output;
             }
@@ -73,7 +76,7 @@ Shader "Maestro/Watercolor"
                 if (_VisibilityRealDepth > .5) MaestroOccludeEnvironment(input.world);
                 float alpha = tex2D(_MainTex, input.uv).a * (_SurfaceMode > .5 ? _SurfaceOpacity * input.alpha : 1);
                 clip(alpha - _AlphaCutoff);
-                return fixed4(.204,.176,.169,_VisibilityOpacity);
+                return half4(float3(.204,.176,.169) * MaestroLight(input.worldNormal, 1),_VisibilityOpacity);
             }
             ENDCG
         }
@@ -90,8 +93,9 @@ Shader "Maestro/Watercolor"
             #pragma multi_compile _ HARD_OCCLUSION SOFT_OCCLUSION
             #include "UnityCG.cginc"
             #include "MaestroEnvironmentDepth.cginc"
+            #include "MaestroWorldLighting.cginc"
             struct Vertex { float4 vertex : POSITION; float3 normal : NORMAL; float2 uv : TEXCOORD0; float3 rest : TEXCOORD2; float3 restNormal : TEXCOORD3; float4 color : COLOR; UNITY_VERTEX_INPUT_INSTANCE_ID };
-            struct Varying { float4 position : SV_POSITION; float2 uv : TEXCOORD0; float3 local : TEXCOORD1; float3 normal : TEXCOORD2; float3 pigmentNormal : TEXCOORD3; float4 color : COLOR; float3 world : TEXCOORD4; UNITY_VERTEX_OUTPUT_STEREO };
+            struct Varying { float4 position : SV_POSITION; float2 uv : TEXCOORD0; float3 local : TEXCOORD1; float3 normal : TEXCOORD2; float3 pigmentNormal : TEXCOORD3; float4 color : COLOR; float3 world : TEXCOORD4; float3 worldNormal : TEXCOORD5; UNITY_VERTEX_OUTPUT_STEREO };
             sampler2D _MainTex;
             sampler2D _PigmentTex;
             float4 _MainTex_ST;
@@ -113,6 +117,7 @@ Shader "Maestro/Watercolor"
                 output.world = mul(unity_ObjectToWorld, input.vertex).xyz;
                 output.local = lerp(input.vertex.xyz, input.rest, _HasRestCoordinates);
                 output.normal = input.normal;
+                output.worldNormal = UnityObjectToWorldNormal(input.normal);
                 output.pigmentNormal = lerp(input.normal, input.restNormal, _HasRestCoordinates);
                 output.color = input.color;
                 output.uv = TRANSFORM_TEX(input.uv, _MainTex);
@@ -147,7 +152,7 @@ Shader "Maestro/Watercolor"
                     float alternate = _PatternMode < 1.5 ? .5 - .5 * wave.x * wave.y : .5 - .5 * wave.x;
                     color = lerp(color, _PatternColor.rgb, saturate(alternate));
                 }
-                return fixed4(surface.rgb * color * input.color.rgb * pigment * face, (_SurfaceMode > 1.5 ? alpha : 1) * _VisibilityOpacity);
+                return half4(surface.rgb * color * input.color.rgb * pigment * MaestroLight(input.worldNormal, face), (_SurfaceMode > 1.5 ? alpha : 1) * _VisibilityOpacity);
             }
             ENDCG
         }

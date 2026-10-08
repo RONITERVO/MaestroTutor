@@ -67,7 +67,7 @@ namespace Maestro.Quest.Imports
             status.text=string.Join("\n",ModelText.Wrap(batches ? workshop.Batches.Status : workshop.Status,65).Take(3));
             footer.text=!batches&&workshop.HasArchive&&!workshop.HasPreview ? "Preview checks one file; accepting comes afterward" : batches ? "Save batch / Resume / Retry confirms you may use these assets" : "Add / Use Maestro / Save motions confirms you may use this asset";
         }
-        Material Paint(string color) { var value = IllustratedMaterials.Create(IllustratedMaterials.Hex(color)); materials.Add(value); return value; }
+        Material Paint(string color) { var value = IllustratedMaterials.CreateControl(IllustratedMaterials.Hex(color)); materials.Add(value); return value; }
         static void Part(Transform parent, Vector3 position, Vector3 size, Material material)
         {
             var part = GameObject.CreatePrimitive(PrimitiveType.Cube); part.transform.SetParent(parent, false); part.transform.localPosition = position; part.transform.localScale = size;
