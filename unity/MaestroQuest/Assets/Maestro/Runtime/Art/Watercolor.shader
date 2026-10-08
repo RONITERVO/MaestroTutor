@@ -76,7 +76,7 @@ Shader "Maestro/Watercolor"
                 if (_VisibilityRealDepth > .5) MaestroOccludeEnvironment(input.world);
                 float alpha = tex2D(_MainTex, input.uv).a * (_SurfaceMode > .5 ? _SurfaceOpacity * input.alpha : 1);
                 clip(alpha - _AlphaCutoff);
-                return half4(float3(.204,.176,.169) * MaestroLight(input.worldNormal, 1),_VisibilityOpacity);
+                return half4(MaestroAtmosphere(float3(.204,.176,.169) * MaestroLight(input.worldNormal, 1), input.world),_VisibilityOpacity);
             }
             ENDCG
         }
@@ -152,7 +152,7 @@ Shader "Maestro/Watercolor"
                     float alternate = _PatternMode < 1.5 ? .5 - .5 * wave.x * wave.y : .5 - .5 * wave.x;
                     color = lerp(color, _PatternColor.rgb, saturate(alternate));
                 }
-                return half4(surface.rgb * color * input.color.rgb * pigment * MaestroLight(input.worldNormal, face), (_SurfaceMode > 1.5 ? alpha : 1) * _VisibilityOpacity);
+                return half4(MaestroAtmosphere(surface.rgb * color * input.color.rgb * pigment * MaestroLight(input.worldNormal, face), input.world), (_SurfaceMode > 1.5 ? alpha : 1) * _VisibilityOpacity);
             }
             ENDCG
         }

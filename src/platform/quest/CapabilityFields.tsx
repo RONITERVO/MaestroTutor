@@ -9,6 +9,18 @@ import {resolveCapabilitySchema,validateCapabilityValue,type CapabilitySchema} f
 
 export type EditorObject = {id:string; name?:string};
 
+// Shorten binary32 transport noise for display only. Keep doubles, integer guards
+// and the actual draft value untouched; an unchanged form must submit exact state.
+function displayNumber(value:number):number {
+ if(!Number.isFinite(value)||Number.isInteger(value)||Math.fround(value)!==value)return value;
+ for(let digits=7;digits<=9;digits++){
+  const short=Number(value.toPrecision(digits));
+  if(Math.fround(short)===value)return short;
+ }
+ return value;
+}
+
+
 /** A draft value only. The shared validator and native handler decide validity. */
 export function initialCapabilityValue(schema:CapabilitySchema, objects:readonly EditorObject[]):unknown {
   if (schema.examples?.length) return JSON.parse(JSON.stringify(schema.examples[0]));
@@ -94,7 +106,7 @@ export function CapabilityFields({schema,value,onChange,label,objects,depth=0,lo
     {options.map(option=><option key={option} value={option}>{schema['x-resource']==='object'?roomObjectLabel(objects.find(o=>o.id===option)!,objects):schema['x-enum-labels']?.[option]??option}</option>)}
   </select>{previewUrl&&<img className="maestro-capability-choice-preview" src={previewUrl} alt={(schema['x-enum-labels']?.[stringValue]??'Selected option')+' preview'}/>} {optionalNull}</label>;
   if(schema.type==='boolean') return <label>{label}<select aria-label={label} value={String(value===true)} onChange={e=>onChange(e.target.value==='true')}><option value="false">No</option><option value="true">Yes</option></select>{optionalNull}</label>;
-  return <label>{label}<input aria-label={label} type={schema.type==='string'?'text':'number'} value={typeof value==='number'||typeof value==='string'?value:''}
+  return <label>{label}<input aria-label={label} type={schema.type==='string'?'text':'number'} value={typeof value==='number'?displayNumber(value):typeof value==='string'?value:''}
     min={schema.minimum} max={schema.maximum} step={schema.type==='integer'?1:'any'} maxLength={schema.maxLength}
     onChange={e=>onChange(schema.type==='string'?e.target.value:e.target.value===''?'':Number(e.target.value))}/>{optionalNull}</label>;
 }

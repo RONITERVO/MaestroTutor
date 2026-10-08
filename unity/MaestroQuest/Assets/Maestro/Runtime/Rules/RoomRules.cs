@@ -35,7 +35,7 @@ namespace Maestro.Quest.Rules
             actions = new RoomRuleActions(editor,animations,clock); Scheduler = new RuleScheduler(actions,new InvocationReceipts(editor.ReceiptDirectory)); workshop.Runtime = this;Scheduler.ConfigureMemory(workshop.Memory,()=>workshop.MemoryBlocked);
             runtimeGate=editor.RuntimeGate;runtimeGate.Changed+=RefreshSuspension;RefreshSuspension();
             workshop.DocumentChanged += Reload;
-            editor.Editing += StopAll; editor.ItemGrabbed += Grabbed; editor.ItemReleased += Released; editor.ItemTapped += Tapped; editor.ItemCollided += Collided;editor.ItemCaught+=Caught;editor.ConnectionBroken+=ConnectionBroke;editor.ContainerPoured+=ContainerPoured;editor.ContainerScooped+=ContainerScooped;
+            editor.Editing += StopAll; editor.ItemGrabbed += Grabbed; editor.ItemReleased += Released; editor.ItemTapped += Tapped; editor.ItemCollided += Collided;editor.ItemCaught+=Caught;editor.ConnectionBroken+=ConnectionBroke;editor.ContainerPoured+=ContainerPoured;editor.ContainerScooped+=ContainerScooped;editor.ContainerRainCollected+=ContainerRainCollected;
             animations.Starting += Authoring;
             Reload();
         }
@@ -83,6 +83,10 @@ namespace Maestro.Quest.Rules
         void ContainerScooped(string id,double amount,int donors,string liquid){
             if(editor.RuntimeGate.Held||paused||!focused||!isActiveAndEnabled||Scheduler==null||!Scheduler.IsListening("object.container.scooped",id))return;
             Scheduler.EmitNative("object.container.scooped",id,new Programs.ProgramValue(id),new Newtonsoft.Json.Linq.JObject{["scoopedMl"]=amount,["donors"]=donors,["liquid"]=liquid,["temporary"]=editor.TemporaryRoom},Time.unscaledTime,out _);
+        }
+        void ContainerRainCollected(string id,double amount){
+            if(editor.RuntimeGate.Held||paused||!focused||!isActiveAndEnabled||Scheduler==null||!Scheduler.IsListening("object.container.rainCollected",id))return;
+            Scheduler.EmitNative("object.container.rainCollected",id,new Programs.ProgramValue(id),new Newtonsoft.Json.Linq.JObject{["collectedMl"]=amount,["temporary"]=editor.TemporaryRoom},Time.unscaledTime,out _);
         }
         void Authoring(string id) => Scheduler.StopTarget(id,false);
         void ShowError() { if (Scheduler.LastError != null) workshop.Say(Scheduler.LastError); }
@@ -136,7 +140,7 @@ namespace Maestro.Quest.Rules
             StopAll();
             if (workshop) workshop.DocumentChanged -= Reload;
             if(runtimeGate!=null)runtimeGate.Changed-=RefreshSuspension;
-            if (editor) { editor.Editing -= StopAll; editor.ItemGrabbed -= Grabbed; editor.ItemReleased -= Released; editor.ItemTapped -= Tapped; editor.ItemCollided -= Collided;editor.ItemCaught-=Caught;editor.ConnectionBroken-=ConnectionBroke;editor.ContainerPoured-=ContainerPoured;editor.ContainerScooped-=ContainerScooped; }
+            if (editor) { editor.Editing -= StopAll; editor.ItemGrabbed -= Grabbed; editor.ItemReleased -= Released; editor.ItemTapped -= Tapped; editor.ItemCollided -= Collided;editor.ItemCaught-=Caught;editor.ConnectionBroken-=ConnectionBroke;editor.ContainerPoured-=ContainerPoured;editor.ContainerScooped-=ContainerScooped;editor.ContainerRainCollected-=ContainerRainCollected; }
             if (animations) animations.Starting -= Authoring;
         }
     }

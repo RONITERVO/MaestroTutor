@@ -11,4 +11,11 @@ float3 MaestroLight(float3 worldNormal, float legacyShade)
     float3 illumination = _MaestroAmbient.rgb + _MaestroSun.rgb * saturate(dot(normalize(worldNormal), _MaestroSunDirection.xyz));
     return lerp(legacyShade.xxx, illumination, saturate(_MaestroLightingEnabled * _WorldLighting));
 }
+float _MaestroFogDensity;
+float4 _MaestroFogColor;
+float3 MaestroAtmosphere(float3 color, float3 world)
+{
+    float amount = 1 - exp(-max(0, _MaestroFogDensity) * length(UnityWorldSpaceViewDir(world)));
+    return lerp(color, _MaestroFogColor.rgb, saturate(amount * _WorldLighting));
+}
 #endif

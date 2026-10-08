@@ -16,7 +16,7 @@ namespace Maestro.Quest.Creation
         public float ambientIntensity=.35f,sunIntensity=.65f,azimuth=-150,elevation=55;
         public RoomLighting Copy()=>(RoomLighting)MemberwiseClone();
         internal static bool ColorValid(string v)=>v?.Length==7&&Regex.IsMatch(v,"^#[0-9A-Fa-f]{6}$");
-        static bool Range(float v,float min,float max)=>float.IsFinite(v)&&v>=min&&v<=max;
+        internal static bool Range(float v,float min,float max)=>float.IsFinite(v)&&v>=min&&v<=max;
         public bool Valid=>version==1&&ColorValid(ambientColor)&&ColorValid(sunColor)&&Range(ambientIntensity,0,2)&&Range(sunIntensity,0,2)&&Range(azimuth,-180,180)&&Range(elevation,-90,90);
         internal bool Same(RoomLighting other)=>other!=null&&JsonUtility.ToJson(this)==JsonUtility.ToJson(other);
         // Direction TOWARDS the sun: +Z at azimuth zero, +X at +90. Not a camera or device pose.

@@ -288,6 +288,16 @@ try{
  assert.equal((retainedCycle.output!.settings as typeof cycleSettings).cycleEnabled,false);assert.deepEqual((retainedCycle.output!.settings as typeof cycleSettings).frames,cycleSettings.frames);
  await writeFile(join(directory,'book-native-day-cycle.json'),JSON.stringify({boundary:'Actual generated book controls add two daily frames, save through native receipts and disable the cycle without losing its frames; no headset/provider claim.',dayCycle,retainedCycle},null,2));
  await page.getByRole('heading',{name:'Configure world time and day lighting',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-day-cycle.png')});
+ await openNamedAction('Set world weather','world.weather.set');
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ for(const [key,value] of Object.entries({rainMmPerHour:12,windX:2,windZ:-1,cloudCover:.6,fogDensity:.04,fogColor:'#AABBCC'}))await page.getByLabel('Action inputs settings '+key,{exact:true}).fill(String(value));
+ await page.getByLabel('Action inputs seed',{exact:true}).fill('31');await page.getByLabel('Action inputs transitionSeconds',{exact:true}).fill('0');
+ const weather=await runNamedAction('world.weather.set');
+ assert.equal((weather.output!.settings as {rainMmPerHour:number}).rainMmPerHour,12);assert.equal(weather.output!.seed,31);assert.equal((weather.output!.transition as {progress:number}).progress,1);
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ assert.equal(await page.getByLabel('Action inputs settings fogColor',{exact:true}).inputValue(),'#AABBCC');assert.equal(await page.getByLabel('Action inputs seed',{exact:true}).inputValue(),'31');
+ await writeFile(join(directory,'book-native-weather.json'),JSON.stringify({boundary:'Actual generated original-book controls and native weather receipt; no headset appearance or real-provider proof.',weather},null,2));
+ await page.getByRole('heading',{name:'Set world weather',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-weather.png')});
  await openNamedAction('Blend a visual layer','visibility.layer.present');
  await page.getByRole('button',{name:'Load saved visual layer',exact:true}).click();
  await page.getByLabel('Choose visual layer',{exact:true}).selectOption(JSON.stringify([visualLayer.output!.id,null]));

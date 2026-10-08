@@ -4802,7 +4802,7 @@
         "workspace.available",
         "storage.writable"
       ],
-      "description": "Configure the region's authored environment clock and optional daily lighting keyframes while retaining its current day/second. Read world.time and its exact edit revision. rate is authored seconds per active real second (0–3600). running=false pauses time; rate=0 freezes it too. A lighting cycle needs 2–8 strictly time-ordered frames, at seconds 0–86400 exclusive. It loops at midnight, interpolating light energy and the shortest sun-azimuth arc. Disabling the cycle retains its frames and restores world.lighting's manual preset. Static lighting edits refuse while the cycle owns lighting. Focus loss, app suspension, workspace write/runtime holds and invalid world frames freeze advancement; the first resumed tick and gaps over one second are skipped. Saved running intent resumes from the saved position, without offline catch-up. Clock progress checkpoints through room persistence at most every five active seconds; explicit saves and lifecycle flush include current position. A crash may lose progress since the last successful checkpoint. Ordinary editing, looking away and viewer opacity do not stop it. This does not scale physics/animation, change the device calendar, simulate weather or cast shadows. Exact save/Undo/temporary semantics apply.",
+      "description": "Configure the region's authored environment clock and optional daily lighting keyframes while retaining its current day/second. Read world.time and its exact edit revision. rate is authored seconds per active real second (0–3600). running=false pauses time; rate=0 freezes it too. A lighting cycle needs 2–8 strictly time-ordered frames, at seconds 0–86400 exclusive. It loops at midnight, interpolating light energy and the shortest sun-azimuth arc. Disabling the cycle retains its frames and restores world.lighting's manual preset. Static lighting edits refuse while the cycle owns lighting. Focus loss, app suspension, workspace write/runtime holds and invalid world frames freeze advancement; the first resumed tick and gaps over one second are skipped. Saved running intent resumes from the saved position, without offline catch-up. Clock progress checkpoints through room persistence at most every five active seconds; explicit saves and lifecycle flush include current position. A crash may lose progress since the last successful checkpoint. Ordinary editing, looking away and viewer opacity do not stop it. Weather transitions sample this same clock; rain collection and physics use active real seconds. This does not scale physics/animation, change the device calendar or cast shadows. Exact save/Undo/temporary semantics apply.",
       "example": {
         "revision": 1,
         "settings": {
@@ -5119,6 +5119,285 @@
           "second",
           "settings",
           "advancing",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "world.weather.set",
+      "version": 1,
+      "label": "Set world weather",
+      "input": {
+        "type": "object",
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "seed": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 1000000.0
+          },
+          "settings": {
+            "type": "object",
+            "properties": {
+              "rainMmPerHour": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 120.0
+              },
+              "windX": {
+                "type": "number",
+                "minimum": -15.0,
+                "maximum": 15.0
+              },
+              "windZ": {
+                "type": "number",
+                "minimum": -15.0,
+                "maximum": 15.0
+              },
+              "cloudCover": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 1.0
+              },
+              "fogDensity": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 0.25
+              },
+              "fogColor": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$",
+                "maxLength": 7
+              }
+            },
+            "required": [
+              "rainMmPerHour",
+              "windX",
+              "windZ",
+              "cloudCover",
+              "fogDensity",
+              "fogColor"
+            ],
+            "additionalProperties": false
+          },
+          "transitionSeconds": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 86400.0
+          }
+        },
+        "required": [
+          "revision",
+          "seed",
+          "settings",
+          "transitionSeconds"
+        ],
+        "additionalProperties": false,
+        "x-current": {
+          "fact": "world.weather",
+          "version": 1,
+          "arguments": {},
+          "fields": {
+            "revision": [
+              "revision"
+            ],
+            "settings": [
+              "settings"
+            ],
+            "seed": [
+              "seed"
+            ]
+          },
+          "guards": [
+            "revision"
+          ]
+        },
+        "x-features": [
+          "worldWeather.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [
+        "world.weather.current",
+        "workspace.available",
+        "storage.writable"
+      ],
+      "description": "Save region rain (0–120 mm/hour), authored X/Z wind (-15–15 metres/second), cloud cover (0–1), exponential fog density (0–0.25 per metre), fog sRGB colour and rain visual seed (1–1000000). Read world.weather for its exact revision. transitionSeconds=0 changes immediately; positive duration up to 86400 uses the running authored world clock, interpolating from current sampled weather. Seeking the clock resamples weather without replaying water input. Cloud cover attenuates authored sun/ambient lighting, fog affects virtual surfaces, and wind inclines bounded rain streaks. Browser pages and controls stay readable; passthrough is unchanged. Exposed compatible open containers collect Water through the existing physical liquid system while physics runs, using active real seconds irrespective of clock speed. Cover respects the receiving object's real-room collision profile; unavailable scan or saturated query is unknown, never clear. Existing different liquids do not mix. world.weather.exposure and object.container.rain report geometry/collection. No automatic ground puddles, wind forces, snow, weather audio or volumetric cloud geometry yet. One Undo restores weather; already saved collected water has its own liquid-flow Undo.",
+      "example": {
+        "revision": 1,
+        "seed": 1,
+        "settings": {
+          "rainMmPerHour": 8.0,
+          "windX": 0.0,
+          "windZ": 0.0,
+          "cloudCover": 0.699999988079071,
+          "fogDensity": 0.0,
+          "fogColor": "#CCD6E0"
+        },
+        "transitionSeconds": 0
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "worldId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "regionId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "seed": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 1000000.0
+          },
+          "settings": {
+            "type": "object",
+            "properties": {
+              "rainMmPerHour": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 120.0
+              },
+              "windX": {
+                "type": "number",
+                "minimum": -15.0,
+                "maximum": 15.0
+              },
+              "windZ": {
+                "type": "number",
+                "minimum": -15.0,
+                "maximum": 15.0
+              },
+              "cloudCover": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 1.0
+              },
+              "fogDensity": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 0.25
+              },
+              "fogColor": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$",
+                "maxLength": 7
+              }
+            },
+            "required": [
+              "rainMmPerHour",
+              "windX",
+              "windZ",
+              "cloudCover",
+              "fogDensity",
+              "fogColor"
+            ],
+            "additionalProperties": false
+          },
+          "current": {
+            "type": "object",
+            "properties": {
+              "rainMmPerHour": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 120.0
+              },
+              "windX": {
+                "type": "number",
+                "minimum": -15.0,
+                "maximum": 15.0
+              },
+              "windZ": {
+                "type": "number",
+                "minimum": -15.0,
+                "maximum": 15.0
+              },
+              "cloudCover": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 1.0
+              },
+              "fogDensity": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 0.25
+              },
+              "fogColor": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$",
+                "maxLength": 7
+              }
+            },
+            "required": [
+              "rainMmPerHour",
+              "windX",
+              "windZ",
+              "cloudCover",
+              "fogDensity",
+              "fogColor"
+            ],
+            "additionalProperties": false
+          },
+          "transition": {
+            "type": "object",
+            "properties": {
+              "startDay": {
+                "type": "integer",
+                "minimum": 0.0,
+                "maximum": 999999.0
+              },
+              "startSecond": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 86400.0
+              },
+              "seconds": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 86400.0
+              },
+              "progress": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 1.0
+              }
+            },
+            "required": [
+              "startDay",
+              "startSecond",
+              "seconds",
+              "progress"
+            ],
+            "additionalProperties": false
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "revision",
+          "worldId",
+          "regionId",
+          "seed",
+          "settings",
+          "current",
+          "transition",
           "temporary"
         ],
         "additionalProperties": false
@@ -32023,6 +32302,38 @@
       }
     },
     {
+      "id": "object.container.rainCollected",
+      "version": 1,
+      "label": "Collected rain was saved",
+      "activity": null,
+      "objectEvent": true,
+      "valueType": "text",
+      "description": "A shared physical liquid-flow episode containing precipitation was accepted. Source/value is the receiving container ID; collectedMl is external Water intake during that episode. Only successful saves emit; failed saving, Undo and reload do not. Lifecycle-paused listeners can miss the event; inspect accepted contents.",
+      "features": [
+        "eventPrograms.v1",
+        "eventFields.v1",
+        "worldWeather.v1"
+      ],
+      "fields": {
+        "type": "object",
+        "properties": {
+          "collectedMl": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 8000000.0
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "collectedMl",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "object.anchor.proximity.changed",
       "version": 2,
       "label": "Object entered or left an anchor zone",
@@ -37965,9 +38276,159 @@
         }
       },
       "label": "Effective world illumination",
-      "description": "Sampled manual/day-cycle light energy in the renderer's working colour space and authored-axis sun angles. Independent of physical passthrough, viewer state and collisions. This is mathematical readback, not measured device pixels.",
+      "description": "Sampled manual/day-cycle light energy attenuated by current cloud cover in the renderer's working colour space and authored-axis sun angles. Independent of physical passthrough, viewer state and collisions. This is mathematical readback, not measured device pixels.",
       "features": [
         "worldTime.v1"
+      ]
+    },
+    {
+      "id": "world.weather",
+      "version": 1,
+      "type": {
+        "record": {
+          "revision": "number",
+          "worldId": "text",
+          "regionId": "text",
+          "seed": "number",
+          "settings": {
+            "record": {
+              "rainMmPerHour": "number",
+              "windX": "number",
+              "windZ": "number",
+              "cloudCover": "number",
+              "fogDensity": "number",
+              "fogColor": "text"
+            }
+          },
+          "current": {
+            "record": {
+              "rainMmPerHour": "number",
+              "windX": "number",
+              "windZ": "number",
+              "cloudCover": "number",
+              "fogDensity": "number",
+              "fogColor": "text"
+            }
+          },
+          "transition": {
+            "record": {
+              "startDay": "number",
+              "startSecond": "number",
+              "seconds": "number",
+              "progress": "number"
+            }
+          },
+          "temporary": "boolean"
+        }
+      },
+      "label": "World weather",
+      "description": "Saved target, sampled current weather and transition on the authored world clock. Does not infer real weather or location. Read world.illumination for cloud-attenuated light energy. Rain collection uses active real time and has independent liquid-flow receipts.",
+      "features": [
+        "worldWeather.v1"
+      ]
+    },
+    {
+      "id": "world.weather.exposure",
+      "version": 1,
+      "type": {
+        "record": {
+          "state": "text",
+          "realRoom": "boolean",
+          "queryMetres": "number"
+        }
+      },
+      "label": "Rain exposure at a point",
+      "description": "Query upstream along the sampled wind/rain direction from an authored point, at most 100 physical metres. Accepted solid virtual objects and policy-enabled aligned scanned surfaces provide cover. target selects whose real-room participation applies; an empty target uses the global policy. Unknown means missing scan/alignment or saturated collision query, never an exposed surface. Rain intensity and physics pause do not change geometric exposure. Transparent solid roofs still block rain; visual opacity is independent. No unscanned physical geometry is inferred.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "position": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "y": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "z": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "additionalProperties": false
+          },
+          "target": {
+            "type": "string",
+            "pattern": "^(|maestro|book|[a-f0-9]{32})$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "position",
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "position": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "target": ""
+      },
+      "features": [
+        "factQueries.v1",
+        "worldWeather.v1"
+      ]
+    },
+    {
+      "id": "object.container.rain",
+      "version": 1,
+      "type": {
+        "record": {
+          "sessionId": "text",
+          "phase": "text",
+          "collectedMl": "number",
+          "exposure": "number",
+          "ready": "boolean",
+          "reason": "text"
+        }
+      },
+      "label": "Rain collected by a container",
+      "description": "Current shared liquid-flow episode's Water intake from precipitation. Collected quantity resets after publication or rollback. exposure is the open fraction of five aperture samples; unknown samples are excluded. Collection needs running physics, an available upward/wind-facing cavity and empty or matching Water contents. Rate uses projected opening area and active real time; camera visibility and authored clock speed do not multiply it. Read object.container.live for total and accepted quantities. Pause/save failure uses the same rollback and Undo as pouring.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1",
+        "worldWeather.v1"
       ]
     },
     {
@@ -39254,7 +39715,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/MaestroWorldLighting.cginc",
-      "sha256": "3bf05b77119913a92a5ac3a9254479ed073f0f0e7d4f78b14fc1b6ecda9ee242"
+      "sha256": "c8bfc089cba1d601ee47c82457bad87eeb90bee60a14a069b501043f8a2d194c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/PencilMarks.cs",
@@ -39274,7 +39735,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/Watercolor.shader",
-      "sha256": "e13268b6edbfc71c24bf7526796cfea1d9ed4ed31d7d61972406ed2e239ff8fc"
+      "sha256": "8b308d9c841710c382614690a962350e43e633e11bd902f40dca9fd9a03ccd48"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/WeatherProjection.cs",
+      "sha256": "344d2e6391de434b77fa4ab4fd4911edfa293e5152f891e92f8f9a061e8dbf27"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/WorldLightingProjection.cs",
@@ -39282,7 +39747,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/WorldLightingView.cs",
-      "sha256": "279d23d35f1359bcf14d147737ad8e02e245567efa18ec6a8abe123de3c8b5aa"
+      "sha256": "f96cb299d0a4de1c3227a643f7a0c61133f646ff880daae1c6a13c9e25fc299f"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/WorldRainView.cs",
+      "sha256": "8e0bb3048a3a7f21e4ac84b16f637c3c1dc8371aa466009913547fd8a6a075f3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/AssemblyInfo.cs",
@@ -39514,7 +39983,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "dee80f33a43a2c6c3ce72865e88a2ecd0f74f9d2730db42d1e26d76290c8e7d4"
+      "sha256": "23be6d08d50f01c74d8f14b8ff83a5788f74962d34be4cea8ca2158ec758e845"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -39878,11 +40347,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldTimeCapability.cs",
-      "sha256": "d2bf24e2e2740481eb4d77690c64ae1eee1b95f8d764aed2ce6a4b3baa54fcd0"
+      "sha256": "ce5041fef58e36bb29f6f0d4d3fc18289633bda0b691619d61c686eb11b65341"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldViewpointCapability.cs",
       "sha256": "4d5d92700aeca8193a372ffc56dff0bd411e79a94d657e06b775e343201a1d52"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldWeatherCapability.cs",
+      "sha256": "e14f2201b909e75abc2f7a956e277ea6c3b1f69f90e96ff02d4bbf95d19f7a68"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationPoseRetention.cs",
@@ -40010,7 +40483,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidPouring.cs",
-      "sha256": "45033a17a7efcf4c9df855c3e4c1c3874290bbfe159d05b7c03b63e500bcaae2"
+      "sha256": "7bf9658f0696ad8db864d7957afe9ab08bb59255a6e50c0e7d8e8cdd39e5585f"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidRainCollection.cs",
+      "sha256": "c15dd2f410db0900f4998fa3fe7aab891d511d33f777751b708098e7787a9c21"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/MaterialToolContentsView.cs",
@@ -40122,11 +40599,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "bc5774bd35d7fe359a9c4a7ad3f108a3268b00c59e26e5aa111f57542ff6d42f"
+      "sha256": "e091c6135f0868368214ba1d82fe740ceb3787d91954d6d60ff9802c7a81af17"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "a7801b5d5faf404a98d695aec73d1c05b2c6a3f2cff18cb2647db6ccd7bc137b"
+      "sha256": "c86d55d6700a298fe9fceb687dfe3b68228c0757102fa27c4d22888b1046fbcc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDrawingEdits.cs",
@@ -40142,7 +40619,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "7156607fda77152b42837fd8c2c2873441edea3f1937b6c536d0b013ccd158c5"
+      "sha256": "c75949a41e583055caa61368ec489a20c050abd937c64c95d38edbe68f4e76e6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -40190,11 +40667,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLighting.cs",
-      "sha256": "e61ac1ca05556f1faa004e1e2ad09ff8155fa67807a80f5724f977b4c57dcde9"
+      "sha256": "c511cda80fc248d6dc42c6be8f9603c704b7d372347097e3b6e39d590a955630"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLiquidEdits.cs",
-      "sha256": "d80bc001e5bd6fefb73b5e90f2915937ef107b11a13f6c0e31aac0d5b1b99d7f"
+      "sha256": "850e076ae3e7b2b0e41d14a404713c2c102703f5683ccaf077f7ddc5619660b6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomMaterialEdits.cs",
@@ -40262,7 +40739,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "d983554ac57ecd2f5aeca968d34b23682f8fac9d85679bbca703e8708393eec9"
+      "sha256": "be2c1d9921156badf2227a56db1ba2c5894e9930745cdf7ca2c641be19c95b68"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructure.cs",
@@ -40299,6 +40776,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomVisibilityLayer.cs",
       "sha256": "174db5a556b3d3235e284818339d2ec4b2f2b4a51d0608ab333261d43a77e57c"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomWeather.cs",
+      "sha256": "32bf03ceeb0e2590b7158a4ec22b5d7676b171a5a98bb39c0b331cf7c19c9889"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomWorldIdentity.cs",
@@ -40355,6 +40836,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/VersionedRoomFile.cs",
       "sha256": "3483d164a42b61c234a5d570c927839c2cbccb91e4e266aaf50c45e4e114b9db"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/WeatherCover.cs",
+      "sha256": "8d803b7dee834c73092eae33c07db7c17e2b52f58a0a325ba4c2701bced82602"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/WorldAudio.Control.cs",
@@ -40690,7 +41175,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
-      "sha256": "f131eec68783e47a59cb20c4e57694a7ec798ecf0ce2182dfb2802219187a54c"
+      "sha256": "b0dc864d6a75ed0c8d514697ac4cbc17d6b25da1e2503b3251f6dad26b484310"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceAcceptedSave.cs",
@@ -40702,7 +41187,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchive.cs",
-      "sha256": "ebbeadf77d69a441c5ff6d632ad74f4c419098c827994b14d83445968a5dad07"
+      "sha256": "87d7046ca08a4c7a6f58fdd94680f8a3e3da3d414684eeb3352e0e1f1434168a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveCapture.cs",
@@ -40710,7 +41195,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveSnapshot.cs",
-      "sha256": "6dc8695f77ccf1bd05b8919518240de5c91106fce60065694c82b8fccf9d3a1b"
+      "sha256": "49ee8f42c10e913a1284b4aa520a8ec418679ab66483e29e772ce5f2cfd9cf5f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceContent.cs",
@@ -40818,7 +41303,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "9a0b6ddfa16b19d1a9c9321e57ceabefb446642ea6715839a01dab5eb214ec14"
+      "sha256": "64c19074d55ef0e87102c9abfb0d1ac1a5d90144e58f7abc094c7140f12c3a4e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -40898,7 +41383,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RoomRules.cs",
-      "sha256": "0eddfeb582d33d3c582ce9fa539fdddaad40d5ce7a84bc779a53cbeb8b355da9"
+      "sha256": "e2c305ad9132f492c7a38abfca9c86f89d824d015e89beb9ca73f07b60042069"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleButton.cs",

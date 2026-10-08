@@ -11,11 +11,11 @@ namespace Maestro.Quest.Creation {
     // Native physical effects cooperate with grips/animation, like gravity. Authoring
     // the affected contents is blocked until the short live episode is published.
     [DefaultExecutionOrder(400)]
-    public sealed class LiquidPouring:MonoBehaviour {
+    public sealed partial class LiquidPouring:MonoBehaviour {
         internal const int Segments=32;
         sealed class Vessel {
             internal string Id;internal RoomContainer Saved,Live;internal RoomItem Item;internal RigidRoomItem Rigid;internal Rigidbody Body;internal bool Ready;internal ContainerFlowGeometry.Opening Opening;
-            internal LineRenderer Stream;internal Material Material;internal double Received,Spilled,Scooped,Drawn,DipBudget;internal readonly HashSet<string> Receivers=new(),Donors=new(),Dippers=new();
+            internal LineRenderer Stream;internal Material Material;internal double Received,Spilled,Scooped,Drawn,DipBudget,Rain;internal float Exposure;internal bool RainReady;internal string RainReason="Physics is paused";internal readonly HashSet<string> Receivers=new(),Donors=new(),Dippers=new();
         }
         readonly SortedDictionary<string,Vessel> vessels=new(StringComparer.Ordinal);
         readonly Dictionary<string,RoomContainer> original=new(),contents=new();
@@ -83,6 +83,7 @@ namespace Maestro.Quest.Creation {
                 donor.DipBudget-=moved;donor.Drawn+=moved;donor.Dippers.Add(recipient.Id);recipient.Scooped+=moved;recipient.Donors.Add(donor.Id);
                 contents[donor.Id]=donor.Live;contents[recipient.Id]=recipient.Live;flowing=true;Preview(donor);Preview(recipient);
             }
+            flowing|=CollectRain(seconds);
             if(!Active)return;elapsed+=seconds;quiet=flowing?0:quiet+seconds;
             if(quiet>=.3f||elapsed>=10)Finish(out _);
         }
@@ -146,14 +147,14 @@ namespace Maestro.Quest.Creation {
             issue=null;if(!Active||publishing){HideStreams();return true;}
             publishing=true;bool ok=false;
             try{ok=editor&&editor.CommitLiquidPour(original,contents,out issue);if(!ok){error=issue??"The liquid flow could not be saved; its liquid quantities were reverted";blocked=true;editor?.ReportStatus(error);}else{
-                foreach(var v in vessels.Values.ToArray()){if(v.Received+v.Spilled>0)editor.Poured(v.Id,v.Received,v.Spilled,v.Receivers.Count,v.Live.liquid);if(v.Scooped>0)editor.Scooped(v.Id,v.Scooped,v.Donors.Count,v.Live.liquid);}
+                foreach(var v in vessels.Values.ToArray()){if(v.Received+v.Spilled>0)editor.Poured(v.Id,v.Received,v.Spilled,v.Receivers.Count,v.Live.liquid);if(v.Scooped>0)editor.Scooped(v.Id,v.Scooped,v.Donors.Count,v.Live.liquid);if(v.Rain>0)editor.RainCollected(v.Id,v.Rain);}
             }}finally{ClearEpisode();publishing=false;}
             return ok;
         }
         void Cancel(string reason){error=reason;blocked=true;ClearEpisode();if(editor)editor.ReportStatus(reason);}
         void ClearEpisode(){
             write?.Dispose();write=null;original.Clear();contents.Clear();quiet=elapsed=0;
-            foreach(var v in vessels.Values){v.Received=v.Spilled=v.Scooped=v.Drawn=0;v.Receivers.Clear();v.Donors.Clear();v.Dippers.Clear();var saved=editor?editor.Read(v.Id)?.containers?.FirstOrDefault():null;if(saved!=null)v.Saved=saved.Copy();v.Live=v.Saved.Copy();Preview(v);}HideStreams();
+            foreach(var v in vessels.Values){v.Received=v.Spilled=v.Scooped=v.Drawn=v.Rain=0;v.Receivers.Clear();v.Donors.Clear();v.Dippers.Clear();var saved=editor?editor.Read(v.Id)?.containers?.FirstOrDefault():null;if(saved!=null)v.Saved=saved.Copy();v.Live=v.Saved.Copy();Preview(v);}HideStreams();
         }
         void HideStreams(){foreach(var v in vessels.Values)if(v.Stream)v.Stream.enabled=false;}
         internal JObject Observe(string id){if(!vessels.TryGetValue(id,out var v))return null;return new JObject{["sessionId"]=session,["phase"]=blocked?"failed":Owns(id)?"flowing":"idle",["contents"]=new JObject{["amountMl"]=v.Live.amountMl,["savedAmountMl"]=v.Saved.amountMl,["capacityMl"]=v.Live.capacityMl,["transferredMl"]=v.Received,["spilledMl"]=v.Spilled},["temporary"]=editor.TemporaryRoom,["error"]=Maestro.Quest.Imports.ImportObservation.Text(error)};}

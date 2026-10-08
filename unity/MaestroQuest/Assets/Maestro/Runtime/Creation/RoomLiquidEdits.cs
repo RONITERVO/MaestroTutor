@@ -9,6 +9,8 @@ namespace Maestro.Quest.Creation {
         internal LiquidPouring Liquids {get;private set;}
         internal event Action<string,double,double,int,string> ContainerPoured;
         internal event Action<string,double,int,string> ContainerScooped;
+        internal event Action<string,double> ContainerRainCollected;
+        internal void RainCollected(string id,double amount)=>ContainerRainCollected?.Invoke(id,amount);
         internal bool FinishLiquidPour(out string error) {error=null;return !Liquids||Liquids.Finish(out error);}
         internal bool CommitLiquidPour(IReadOnlyDictionary<string,RoomContainer> original,IReadOnlyDictionary<string,RoomContainer> contents,out string error) {
             var replacements=new List<RoomObjectData>();error="A container changed while liquid was flowing; the unfinished liquid flow was reverted";

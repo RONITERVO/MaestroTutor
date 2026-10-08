@@ -1306,3 +1306,73 @@ No new APK, signing, installation, upload or deployment occurred. Headset work
 remains on the outstanding cooling/charging readiness hold. Weather, local lights,
 shadows, water-aware traversal and medium interactions, streamed regions and the
 remaining novice/device/Store release gates remain accepted unfinished work.
+
+
+## Shared weather and rain collection (2026-10-08)
+
+The native region weather definition is shared by the generated book form,
+program actions and agent requests. Weather transitions sample the authored
+clock; rain intake uses active real seconds. Current/target weather, upstream
+cover and measured rain collection have typed facts. A saved rain collection
+episode can resume a user-authored event program. Cloud attenuation uses the
+same light sample as world.illumination; fog preserves actual book/control
+materials. Bounded local rain geometry is presentation only.
+
+Geometry checks use the receiver's effective real-room collision profile.
+Tests include a scanned roof covering one participant while a virtual-only
+participant remains exposed, plus actual virtual cover, unavailable scan,
+query saturation and a start point inside a solid. Liquid tests check measured
+opening-area intake, save-before-publication, one reversible episode,
+incompatible contents, pause and rollback after failed saving. No unscanned
+physical collider is inferred from the depth image.
+
+The new WorldWeather provider scenario uses fresh English-native/Spanish-target
+chat to request a gently rainy/cloudy/foggy afternoon, then to clear it while
+retaining objects, clock, view and collision policy. Its managed and BYOK
+results must be collected separately; merely adding the scenario is not a pass.
+
+Current results are recorded in .quest-evidence/spatial-state/weather-working.json.
+One initial focused test expected a textured control to be pure white; the
+correct acceptance compares its unfogged baseline against its fogged pixels.
+The failed attempt remains failed. No runtime behavior was changed for that
+assertion repair.
+
+Physical headset rendering, performance/thermal behavior, weather sound, wind
+forces, wetting, ground pools and water-medium interactions remain unverified or
+unimplemented release work. Cloud cover currently attenuates accepted lighting;
+there is no claim of volumetric cloud geometry. No new APK, signing, deployment,
+installation or upload is part of this increment.
+
+
+Verified results: **973 EditMode cases**, **857 full PlayMode cases** with the
+three known optional external-asset skips, and **28 final focused native cases**
+pass. The full PlayMode run preceded only a bounded rain ring-cursor cleanup;
+the focused run covers that final source. The shared room/headless/Quest/prompt
+suite passes **1,582 cases in 157 files**. After the book screenshot exposed
+binary32 transport noise, **70 focused shared cases in three files** pass for
+the final display-only formatting. Double quantities, integer guards and
+unchanged submitted values stay exact. Final app/probe types, build, lint,
+catalog provenance, core boundaries and included assets pass. The exported
+catalog has 118 actions, 136 facts, 18 events, 93 current-input mappings and
+471 source inputs.
+
+| Access | Run | Confirmed native operations |
+| --- | --- | --- |
+| Managed | 01f814b3b4d84e89ab9491d711faad30 | 6 |
+| BYOK | 91e4af0cbbf64f359727b006d803ab31 | 7 |
+
+Both fresh two-turn Gemini 3.8 Flash journeys complete the original tutor,
+verifier, exact-context handoff, native receipts and final chat. Requested rain,
+cloud cover and fog are accepted, then cleared; objects, clock, presentation and
+collision policy are unchanged. Managed accounting reconciles **217 credits /
+USD 0.210487**, with 14 usage and 14 charge entries and zero reservations before
+and after each turn. Introductory chat is outside those totals. BYOK costs belong
+to the configured test-key owner. No captured private media was reused.
+
+Native journey f3d16b24857a419ba9a316ea28266ac8 passes **670 observations**.
+Original-book journey f2a951a5916549f39676d7ce4452613e passed before numeric
+display polish; final journey f475e612967f4ec192fbcf60d1933a6a also passes.
+Its inspected weather form shows saved rain/wind/cloud/fog/seed and current-value
+reload through actual generated controls. Existing original-chat, create/edit/
+Undo, resource-selection and reload checks also pass. Neither these forms nor
+provider acknowledgements establish visible weather on a physical Quest.

@@ -5224,3 +5224,71 @@ description matches; saved colour validation rejects trailing newlines. Run IDs,
 billing reconciliation, final-source boundaries and retained failed attempts are
 in [the coverage matrix](QUEST_AGENT_RELEASE_COVERAGE.md#authored-world-time-and-daily-lighting-2026-10-08).
 These results do not complete physical Quest or broader weather/water acceptance.
+
+
+### Shared weather, cover and rain collection (2026-10-08)
+
+Weather is a saved region definition, alongside the existing authored clock and
+lighting. The shared catalog exposes current/target rain rate, wind, cloud cover,
+fog colour/density and a seeded local rain presentation. The same generated book
+form, agent action and program invocation use world.weather.set. Changes are
+revision guarded, saved before publication and reversible; temporary Keep/Discard
+and failed-save behavior use the existing world journal.
+
+A transition samples the authored clock. A paused clock requires either starting
+time or choosing an immediate change. Clock seeking resamples weather; it never
+replays old rain input or physical actions. Cloud cover attenuates the accepted
+sun/ambient light, and fog blends illustrated virtual surfaces without altering
+their opacity or the passthrough image. Browser pages and built-in control/label
+materials remain readable. No second lighting authority is introduced.
+
+Rain collection extends the existing liquid-flow episode. Empty or matching Water
+containers collect from their projected opening area, sampled cover fraction and
+rain rate in millimetres per hour. Quantity integrates active real seconds, not
+accelerated world-clock seconds; looking away has no effect. Different
+liquids do not silently mix. A physics pause publishes the current episode; failed
+saving restores its accepted quantities and blocks further flow until physics
+restarts. The object.container.rain fact explains last sampled eligibility/exposure,
+and object.container.rainCollected lets an ordinary user/agent program react only
+after a successful save. Containers retain their existing finite capacity.
+
+The cover query is shared by rain presentation, collection and
+world.weather.exposure. It checks up to 100 physical metres upstream, includes
+solid virtual item colliders, and uses the receiving entity's effective
+real-room policy for aligned scanned surfaces. A physical-room floor can therefore
+cover a real-room participant without trapping or covering a virtual-only
+participant beneath it. Unknown scan/alignment or saturated collision results are
+not treated as open air. Transparent solid roofs still block rain: appearance and
+collision participation remain separate choices.
+
+Presentation uses one fixed mesh with at most 64 rain streaks, processing at most
+16 paths per visual update at 20 Hz. There is no rigid body, material or GameObject
+per drop. Local visual sampling follows the viewer; it does not supply liquid
+quantities or freeze collection elsewhere. Wind currently inclines rain; it does
+not push objects. The rain renderer uses the viewer/global real-room policy,
+whereas each collecting entity uses its own policy. This distinction preserves
+per-entity simulation without pretending one global particle layer can depict
+all conflicting reality policies at once.
+
+Room v29, snapshot intent v28 and archive v27 retain weather, with exact current
+wire validation and future-version protection. The current verification record
+is .quest-evidence/spatial-state/weather-working.json; tests and configured
+journeys are not a claim of headset acceptance.
+
+This increment does not finish weather or immersion for release. Local lights,
+shadows, cloud geometry, weather audio, wet surface response, water-medium
+sources/sinks and rain-fed ground pools remain accepted work. So do buoyancy,
+water-aware characters/life, terrain water interactions and regional relevance/
+streaming. The current 64-object/one-region limits are explicit implementation
+bounds, not the intended limit of user-authored countries and cities. Physical
+Quest appearance, performance and thermal tests remain on the existing device
+hold until owner readiness and a fresh health check.
+
+
+Weather verification now passes 973 EditMode cases, 857 full PlayMode cases
+(three known optional external-asset skips), 28 final focused native cases,
+1,582 scoped shared tests and 70 final focused shared cases. Native transport,
+original-book and fresh managed/BYOK weather journeys pass. The final book form
+was visually inspected after reducing float transport noise in displayed numbers;
+untouched draft values and double-precision quantities are preserved. Exact run
+IDs, accounting and final-source boundaries are recorded in the coverage matrix.

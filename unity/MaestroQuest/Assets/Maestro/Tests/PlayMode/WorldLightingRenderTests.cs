@@ -13,7 +13,7 @@ namespace Maestro.Quest.Tests
     {
         readonly List<UnityEngine.Object> owned=new();
         T Own<T>(T value)where T:UnityEngine.Object{owned.Add(value);return value;}
-        [TearDown]public void Cleanup(){Shader.SetGlobalFloat("_MaestroLightingEnabled",0);for(int i=owned.Count-1;i>=0;i--)if(owned[i])UnityEngine.Object.DestroyImmediate(owned[i]);owned.Clear();}
+        [TearDown]public void Cleanup(){Shader.SetGlobalFloat("_MaestroLightingEnabled",0);Shader.SetGlobalFloat("_MaestroFogDensity",0);for(int i=owned.Count-1;i>=0;i--)if(owned[i])UnityEngine.Object.DestroyImmediate(owned[i]);owned.Clear();}
         static void Light(Vector3 sun,Vector3 ambient,float energy=1){Shader.SetGlobalFloat("_MaestroLightingEnabled",1);Shader.SetGlobalVector("_MaestroAmbient",ambient);Shader.SetGlobalVector("_MaestroSun",Vector3.one*energy);Shader.SetGlobalVector("_MaestroSunDirection",sun);}
         GameObject Quad(Material m){var q=Own(GameObject.CreatePrimitive(PrimitiveType.Quad));q.layer=31;q.GetComponent<Renderer>().sharedMaterial=m;return q;}
         Camera View(){var c=Own(new GameObject("Lighting pixel acceptance")).AddComponent<Camera>();c.enabled=false;c.cullingMask=1<<31;c.orthographic=true;c.orthographicSize=.6f;c.nearClipPlane=.01f;c.farClipPlane=4;c.transform.position=Vector3.back*2;c.clearFlags=CameraClearFlags.SolidColor;c.backgroundColor=Color.clear;return c;}
@@ -47,6 +47,14 @@ namespace Maestro.Quest.Tests
             var c=View();var control=Own(new GameObject("Recall acceptance")).AddComponent<Maestro.Quest.Interaction.PalmRecoveryButton>();control.Build(0,null,null,control.transform,c.transform);
             var material=control.GetComponentsInChildren<Renderer>(true).First(x=>x.sharedMaterial.shader.name=="Maestro/Watercolor").sharedMaterial;Quad(material);
             Shader.SetGlobalFloat("_MaestroLightingEnabled",0);var before=Read(c);Light(Vector3.back,Vector3.zero,0);var after=Read(c);Pixel(after,before.r,before.g,before.b,before.a);
+        }
+        [Test]public void WeatherFogChangesVirtualPixelsButPreservesTheBookAndControlPixels(){
+            var m=Own(IllustratedMaterials.Create(Color.white,0));var quad=Quad(m);var camera=View();
+            Shader.SetGlobalFloat("_MaestroLightingEnabled",0);Shader.SetGlobalFloat("_MaestroFogDensity",.25f);Shader.SetGlobalColor("_MaestroFogColor",Color.black);
+            Pixel(Read(camera),Mathf.Exp(-.5f),Mathf.Exp(-.5f),Mathf.Exp(-.5f),1);
+            var control=Own(IllustratedMaterials.CreateControl(Color.white));quad.GetComponent<Renderer>().sharedMaterial=control;Shader.SetGlobalFloat("_MaestroFogDensity",0);var before=Read(camera);Shader.SetGlobalFloat("_MaestroFogDensity",.25f);Pixel(Read(camera),before.r,before.g,before.b,before.a);
+            var book=Own(new GameObject("Weather book acceptance")).AddComponent<IllustratedBook>();book.Build();
+            foreach(var page in book.GetComponentsInChildren<BookPageTarget>()){quad.GetComponent<Renderer>().sharedMaterial=page.GetComponent<Renderer>().sharedMaterial;Pixel(Read(camera),1,1,1,1);}
         }
         [Test]public void ActualBookPageMaterialStaysReadableInAnUnlitWorld(){
             var book=Own(new GameObject("Book acceptance")).AddComponent<IllustratedBook>();book.Build();var pages=book.GetComponentsInChildren<BookPageTarget>();Assert.That(pages.Length,Is.EqualTo(2));

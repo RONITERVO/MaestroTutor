@@ -910,3 +910,26 @@ invocation ID, preventing a prior receipt from satisfying a later check. Native
 pixel tests check midnight interpolation using actual rendered materials; separate
 lifecycle tests cover write/runtime holds, save failure and temporary Keep/Discard.
 These desktop checks do not establish Quest appearance or frame-time acceptance.
+
+
+### Shared weather journey
+
+Use -ProviderScenario WorldWeather with the existing managed or BYOK headless
+configuration. It starts fresh English-native/Spanish-target context and asks
+for a gently rainy afternoon with cloud cover and light blue-grey fog, followed
+by an ordinary request to clear all three immediately. The original tutor,
+suggestion verification, delegated context, capability discovery, native receipts
+and final chat remain in the path. This scenario must preserve object state,
+world-clock settings, room presentation and collision policy.
+
+The no-provider native journey also covers weather readback, exposure, Undo/Redo
+and restoration. The original-book journey finds the generated weather form,
+loads current guards/settings, edits rain/wind/cloud/fog/seed and confirms the
+saved native receipt and reloaded values. The native PlayMode suite separately
+checks rain intake and rollback, real-room participation, covered/unknown
+openings, saved collection events and actual shader pixels.
+
+A passing desktop/provider journey does not establish physical rain, fog,
+occlusion, thermal or performance acceptance on Quest. Local rain visualization
+is bounded and does not supply water quantities. Unknown scan geometry remains
+unknown; this harness must not call synthetic room data a measured physical scan.

@@ -12,7 +12,7 @@ const view=():CatalogView=>({operation:'inspect',category:'facts',capability:'ob
 it('checks every native current-input annotation against both registered contracts',()=>{
  let count=0;
  const visit=(s:CapabilitySchema)=>{if(s['x-current'])count++;expect(()=>validateCurrentInputMapping(s)).not.toThrow();for(const child of [...s.oneOf??[],...Object.values(s.properties??{}),...s.items?[s.items]:[]])visit(child);};
- for(const action of behaviourCatalog.actions)visit(action.input as CapabilitySchema);expect(count).toBe(92);
+ for(const action of behaviourCatalog.actions)visit(action.input as CapabilitySchema);expect(count).toBe(93);
 });
 it('loads exact fact values atomically and distinguishes guards from editable preferences',()=>{
  const next=applyCurrentInputs(schema(),args(),view());expect(next).toEqual({target:native.beforePhysics.target,revision:native.beforePhysics.revision,mode:native.beforePhysics.mode,shape:native.beforePhysics.shape,mass:native.beforePhysics.mass});
