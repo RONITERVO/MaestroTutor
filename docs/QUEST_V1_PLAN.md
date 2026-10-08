@@ -3889,8 +3889,8 @@ Acceptance includes two actors with different real-floor policies simultaneously
 Maestro following a below-floor hill while a physical-room ball still bounces;
 unchanged virtual terrain/obstacle collisions; hand-off/grab/release; changing a
 profile with a running path or overlapping floor; save/export/reload; and identical
-manual and agent operations. The present runtime has a room-wide toggle only;
-per-entity profiles are a required follow-on, not a currently shipped capability.
+manual and agent operations. The saved per-entity checkpoint below implements
+this first collision-policy step; physical release acceptance remains pending.
 
 **Reusable appearance resources.** Add versioned, named appearance definitions
 with stable IDs and per-object/part/imported-material-slot bindings. They hold
@@ -3903,6 +3903,13 @@ of silently painting everything with a replacement colour. Reusing a definition
 and making an independent copy are explicit edits, with revision checks and Undo.
 Existing colour controls must edit the same appearance state, not maintain a
 second competing value.
+Imported-slot bindings must include the exact model asset identity and source
+material index; display names or a renderer's traversal order are not stable keys.
+An avatar/model replacement must report incompatible bindings rather than apply
+an old slot number to an unrelated new material. Define root/part/slot precedence
+explicitly. Painting one object must not mutate another object's leased material;
+shared-definition edits require the affected-member ownership checks, while an
+independent copy changes only its explicitly selected bindings.
 
 Appearance is separate from the existing `object.material` measured-volume store.
 Do not repurpose that API or infer physical properties from a texture name. Surface
@@ -4574,3 +4581,43 @@ testing remains on hold; this checkpoint has not been packaged or installed.
 Evidence: .quest-evidence/spatial-state/environment-profiles-*;
 native runs 3bb00a88aad64ff588f502a0bb6db0cc and
 f14e4be6047e4b6eba71d3fa76913a69.
+
+
+### Appearance rendering and import fidelity (2026-10-08)
+
+Shared appearance authoring first needs correct rendering. Illustrated surfaces
+now explicitly distinguish opaque, alpha-cutout and blended modes, with finite
+opacity, cutoff and sidedness. Opaque/cutout surfaces write depth; blends sort in
+the transparent queue and do not write depth. Separate alpha blending preserves
+compositor coverage. Blended surfaces disable the solid graphite outline; cutout
+outlines use the same texture/factor/vertex-alpha mask as their fill. Existing
+opaque book pages and browser colour decoding keep their prior treatment.
+
+The real GLB/VRM import path retains source material-slot indices and double-sided
+flags before restyling. Duplicate material names do not become binding identities.
+Imported texture, UV scale/offset, base opacity and alpha mode survive the
+illustrated conversion; later colour tinting does not overwrite opacity. Shared
+source slots still share one styled material within the imported instance. The
+immutable surface descriptor supplies explicit render state for future bounded
+appearance-material cache keys. Opacity is not a collision or acoustic policy.
+
+This is a renderer/import prerequisite, not the persisted appearance library,
+texture editor or new public appearance capability. Those remain required: named
+versioned definitions, explicit reuse/copy, object/part/source-slot bindings,
+revision/ownership checks, Undo and one authority for existing colour controls.
+Current transparency is ordinary sorted alpha blending, not refraction or
+order-independent rendering for arbitrary intersecting meshes. Quest stereo,
+real-depth composition, overdraw and sustained populated-scene cost still need
+physical acceptance before release.
+
+Focused verification passed 15 native checks, including actual imported GLBs,
+duplicate-named slots, both sides of thin surfaces, repainting without opacity
+loss, cutout factors/vertex alpha, opaque foregrounds, overlapping blends and
+compositor alpha. Native desktop captures at two eye-offset camera positions
+were inspected; these are not headset stereo acceptance. Full verification passed
+915 EditMode and 781 PlayMode tests with three optional private-file skips,
+1,187 shared room/headless checks, app/probe TypeScript and catalog provenance.
+Matching-source native headless and original-chat/book journeys both passed
+with scripted responses. Android packaging is checked separately; device testing
+remains on hold.
+Evidence: .quest-evidence/spatial-state/appearance-render-*.

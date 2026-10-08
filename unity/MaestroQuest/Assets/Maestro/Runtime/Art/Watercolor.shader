@@ -16,7 +16,13 @@ Shader "Maestro/Watercolor"
         _Shading ("Paper face shade", Range(0,.3)) = .12
         _HasRestCoordinates ("Rest-space coordinates", Float) = 0
         _PencilWidth ("Graphite silhouette in meters", Range(0,.005)) = .0012
-        _AlphaCutoff ("Imported texture cutout", Range(0,1)) = 0
+        _AlphaCutoff ("Texture cutout", Range(0,1)) = 0
+        _SurfaceMode ("Opaque / cutout / blend", Float) = 0
+        _SurfaceOpacity ("Surface opacity", Range(0,1)) = 1
+        [HideInInspector] _SurfaceCull ("Surface culling", Float) = 0
+        [HideInInspector] _SrcBlend ("Source blending", Float) = 1
+        [HideInInspector] _DstBlend ("Destination blending", Float) = 0
+        [HideInInspector] _ZWrite ("Depth writing", Float) = 1
         _DecodeBrowserSrgb ("Raw browser sRGB pixels", Float) = 0
     }
     SubShader
@@ -28,7 +34,8 @@ Shader "Maestro/Watercolor"
         {
             Name "PENCIL"
             Cull Front
-            ZWrite On
+            ZWrite [_ZWrite]
+            Blend [_SrcBlend] [_DstBlend], One OneMinusSrcAlpha
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
@@ -37,12 +44,12 @@ Shader "Maestro/Watercolor"
             #pragma multi_compile _ HARD_OCCLUSION SOFT_OCCLUSION
             #include "UnityCG.cginc"
             #include "MaestroEnvironmentDepth.cginc"
-            struct Vertex { float4 vertex : POSITION; float3 normal : NORMAL; float2 uv : TEXCOORD0; UNITY_VERTEX_INPUT_INSTANCE_ID };
-            struct Varying { float4 position : SV_POSITION; float2 uv : TEXCOORD0; float3 world : TEXCOORD1; UNITY_VERTEX_OUTPUT_STEREO };
+            struct Vertex { float4 vertex : POSITION; float3 normal : NORMAL; float2 uv : TEXCOORD0; float4 color : COLOR; UNITY_VERTEX_INPUT_INSTANCE_ID };
+            struct Varying { float4 position : SV_POSITION; float2 uv : TEXCOORD0; float3 world : TEXCOORD1; float alpha : TEXCOORD2; UNITY_VERTEX_OUTPUT_STEREO };
             float _PencilWidth;
             sampler2D _MainTex;
             float4 _MainTex_ST;
-            float _AlphaCutoff;
+            float _AlphaCutoff, _SurfaceMode, _SurfaceOpacity;
             Varying vert(Vertex input)
             {
                 Varying output;
@@ -52,6 +59,7 @@ Shader "Maestro/Watercolor"
                 world += UnityObjectToWorldNormal(input.normal) * _PencilWidth;
                 output.position = mul(UNITY_MATRIX_VP, float4(world, 1));
                 output.world = world;
+                output.alpha = input.color.a;
                 output.uv = TRANSFORM_TEX(input.uv, _MainTex);
                 return output;
             }
@@ -59,15 +67,17 @@ Shader "Maestro/Watercolor"
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
                 MaestroOccludeEnvironment(input.world);
-                clip(tex2D(_MainTex, input.uv).a - _AlphaCutoff);
+                float alpha = tex2D(_MainTex, input.uv).a * (_SurfaceMode > .5 ? _SurfaceOpacity * input.alpha : 1);
+                clip(alpha - _AlphaCutoff);
                 return fixed4(.204,.176,.169,1);
             }
             ENDCG
         }
         Pass
         {
-            Cull Off
-            ZWrite On
+            Cull [_SurfaceCull]
+            ZWrite [_ZWrite]
+            Blend [_SrcBlend] [_DstBlend], One OneMinusSrcAlpha
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
@@ -87,7 +97,7 @@ Shader "Maestro/Watercolor"
             float _Grain;
             float _Shading;
             float _HasRestCoordinates;
-            float _AlphaCutoff;
+            float _AlphaCutoff, _SurfaceMode, _SurfaceOpacity;
             float _DecodeBrowserSrgb;
             Varying vert(Vertex input)
             {
@@ -111,7 +121,8 @@ Shader "Maestro/Watercolor"
                 #ifndef UNITY_COLORSPACE_GAMMA
                 if (_DecodeBrowserSrgb > .5) surface.rgb = GammaToLinearSpace(surface.rgb);
                 #endif
-                clip(surface.a - _AlphaCutoff);
+                float alpha = surface.a * (_SurfaceMode > .5 ? _SurfaceOpacity * input.color.a : 1);
+                clip(alpha - _AlphaCutoff);
                 // Object-space pigment remains fixed through head motion and between eyes.
                 float3 weights = abs(normalize(input.pigmentNormal));
                 weights /= max(.001, weights.x + weights.y + weights.z);
@@ -130,7 +141,7 @@ Shader "Maestro/Watercolor"
                     float alternate = _PatternMode < 1.5 ? .5 - .5 * wave.x * wave.y : .5 - .5 * wave.x;
                     color = lerp(color, _PatternColor.rgb, saturate(alternate));
                 }
-                return fixed4(surface.rgb * color * input.color.rgb * pigment * face, 1);
+                return fixed4(surface.rgb * color * input.color.rgb * pigment * face, _SurfaceMode > 1.5 ? alpha : 1);
             }
             ENDCG
         }

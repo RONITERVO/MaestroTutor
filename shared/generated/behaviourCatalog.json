@@ -36200,7 +36200,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedModel.cs",
-      "sha256": "1616ccb7f89d39e80b9be5849e5c22119683da9947ddbb185d27852fcbbb3d69"
+      "sha256": "d2a6eb953f3752dfaae3568a69aee6448c2fc6155c627a4001cc8d805e18c8f7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/MaestroRoom.cs",
@@ -36436,7 +36436,23 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/Watercolor.shader",
-      "sha256": "e9606ab4d21f3717c23bff91f0d56cdc35d1ef7af44e51e55ea8313ba659defe"
+      "sha256": "cf6aeb24a313a53e61869dd68c66c55bd3fbecbcbed1c18637021748388f6f6b"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/IllustratedSurface.cs",
+      "sha256": "909fdc7c99153df6259039e3a4c501fd7bd1e79600152ead83500dc7140902de"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/IllustratedMaterials.cs",
+      "sha256": "93592bb87d4d1394e221de8efba80d87a5404d10842342c894929b75a5e35863"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/PencilModelStyle.cs",
+      "sha256": "164d56697d49914613ebf39bdf2001deab2de83a2d1ead9b3c877a266624c6f8"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/IllustratedGltfMaterials.cs",
+      "sha256": "0e0cb5434fb7b1eff9baabb7505266c22fe8b761b46c0311da3e39fad46c91c4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomViewCapture.cs",

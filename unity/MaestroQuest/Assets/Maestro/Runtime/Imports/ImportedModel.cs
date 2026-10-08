@@ -83,11 +83,11 @@ namespace Maestro.Quest.Imports
                 awaitCaller ??= new RuntimeOnlyAwaitCaller();
                 if (info.IsAvatar)
                 {
-                    var avatar = await Vrm10.LoadBytesAsync(asset.Bytes, controlRigGenerationOption: ControlRigGenerationOption.None, showMeshes: false, awaitCaller: awaitCaller, materialGenerator: new BuiltInGltfMaterialDescriptorGenerator());
+                    var avatar = await Vrm10.LoadBytesAsync(asset.Bytes, controlRigGenerationOption: ControlRigGenerationOption.None, showMeshes: false, awaitCaller: awaitCaller, materialGenerator: new IllustratedGltfMaterials());
                     avatar.UpdateType = Vrm10Instance.UpdateTypes.None;
                     loaded = avatar.GetComponent<RuntimeGltfInstance>();
                 }
-                else loaded = await GltfUtility.LoadBytesAsync("selected.glb", asset.Bytes, awaitCaller, new BuiltInGltfMaterialDescriptorGenerator());
+                else loaded = await GltfUtility.LoadBytesAsync("selected.glb", asset.Bytes, awaitCaller, new IllustratedGltfMaterials());
                 if (!this || destroyed) { loaded.Dispose(); ReleaseBudget(); return; }
                 instance = loaded;
                 if (!info.IsAvatar) { generatedAvatar = NamedHumanoid.TryCreate(instance,out var issue); HumanoidIssue = issue; }

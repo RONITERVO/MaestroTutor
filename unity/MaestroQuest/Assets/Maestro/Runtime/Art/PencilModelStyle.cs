@@ -10,6 +10,8 @@ namespace Maestro.Quest.Art
     {
         readonly List<Object> owned = new();
         readonly Dictionary<Material, Color> colors = new();
+        readonly Dictionary<int,Material> importedMaterials=new();
+        internal Material ImportedMaterial(int index)=>importedMaterials.TryGetValue(index,out var value)?value:null;
         bool applied;
 
         public void Apply()
@@ -46,6 +48,7 @@ namespace Maestro.Quest.Art
                     if (!materials.TryGetValue(original, out var pigment))
                     {
                         Color color = original.HasProperty("_BaseColor") ? original.GetColor("_BaseColor") : original.HasProperty("_Color") ? original.GetColor("_Color") : IllustratedMaterials.Paper;
+                        var surface=IllustratedSurface.Imported(original,color);
                         color.a = 1;
                         pigment = IllustratedMaterials.Create(color, .15f);
                         pigment.SetFloat("_HasRestCoordinates", 1);
@@ -54,8 +57,13 @@ namespace Maestro.Quest.Art
                         if (original.HasProperty("_BaseMap")) pigment.mainTexture = original.GetTexture("_BaseMap");
                         else if (original.HasProperty("_MainTex")) pigment.mainTexture = original.GetTexture("_MainTex");
                         pigment.mainTextureScale = original.mainTextureScale; pigment.mainTextureOffset = original.mainTextureOffset;
-                        if (original.renderQueue >= 2450 || original.HasProperty("_Mode") && original.GetFloat("_Mode") > 0)
-                            pigment.SetFloat("_AlphaCutoff", original.HasProperty("_Cutoff") ? Mathf.Max(.01f, original.GetFloat("_Cutoff")) : .5f);
+                        surface.Apply(pigment,pigment.GetShaderPassEnabled("PENCIL"));
+                        string slot=original.GetTag("MaestroMaterialIndex",false,"");
+                        if(int.TryParse(slot,System.Globalization.NumberStyles.None,System.Globalization.CultureInfo.InvariantCulture,out int index)&&index>=0) {
+                            pigment.SetOverrideTag("MaestroMaterialIndex",slot);
+                            pigment.SetOverrideTag("MaestroDoubleSided",surface.DoubleSided?"true":"false");
+                            importedMaterials.Add(index,pigment);
+                        }
                         materials.Add(original, pigment); owned.Add(pigment);
                         colors.Add(pigment, color);
                     }
