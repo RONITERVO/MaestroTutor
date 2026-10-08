@@ -48,3 +48,10 @@ it('preserves large exact revision values through literals, records and observat
  }
  for(const value of [MAX_PROGRAM_NUMBER+1,-MAX_PROGRAM_NUMBER-1,Infinity,NaN])expect(()=>checkedDataValue(value)).toThrow();
 });
+
+it('uses the generated record field ceiling without relaxing value budgets',()=>{
+ const value=Object.fromEntries(Array.from({length:16},(_,i)=>['f'+i,i]));
+ expect(()=>checkedDataValue(value)).not.toThrow();expect(validDataObservation(JSON.stringify(value),'record')).toBe(true);
+ expect(()=>checkedDataValue({...value,overflow:1})).toThrow('16 fields');expect(validDataObservation(JSON.stringify({...value,overflow:1}),'record')).toBe(false);
+ expect(()=>checkedDataValue(Object.fromEntries(Object.keys(value).map(k=>[k,'x'.repeat(128)])))).toThrow('1024');
+});

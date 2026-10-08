@@ -1,7 +1,8 @@
 {
   "version": 1,
   "limits": {
-    "programResources": 66
+    "programResources": 66,
+    "programRecordFields": 16
   },
   "actions": [
     {
@@ -15577,6 +15578,46 @@
                                         "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
                                         "maxLength": 32
                                       },
+                                      "fluid": {
+                                        "type": "object",
+                                        "properties": {
+                                          "version": {
+                                            "type": "integer",
+                                            "minimum": 1.0,
+                                            "maximum": 1.0
+                                          },
+                                          "densityKgM3": {
+                                            "type": "number",
+                                            "minimum": 1.0,
+                                            "maximum": 20000.0
+                                          },
+                                          "linearDrag": {
+                                            "type": "number",
+                                            "minimum": 0.0,
+                                            "maximum": 20.0
+                                          },
+                                          "angularDrag": {
+                                            "type": "number",
+                                            "minimum": 0.0,
+                                            "maximum": 20.0
+                                          }
+                                        },
+                                        "required": [
+                                          "version",
+                                          "densityKgM3",
+                                          "linearDrag",
+                                          "angularDrag"
+                                        ],
+                                        "additionalProperties": false,
+                                        "examples": [
+                                          {
+                                            "version": 1,
+                                            "densityKgM3": 1000.0,
+                                            "linearDrag": 2.0,
+                                            "angularDrag": 1.0
+                                          }
+                                        ]
+                                      },
                                       "color": {
                                         "type": "object",
                                         "properties": {
@@ -19783,6 +19824,46 @@
                     "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
                     "maxLength": 32
                   },
+                  "fluid": {
+                    "type": "object",
+                    "properties": {
+                      "version": {
+                        "type": "integer",
+                        "minimum": 1.0,
+                        "maximum": 1.0
+                      },
+                      "densityKgM3": {
+                        "type": "number",
+                        "minimum": 1.0,
+                        "maximum": 20000.0
+                      },
+                      "linearDrag": {
+                        "type": "number",
+                        "minimum": 0.0,
+                        "maximum": 20.0
+                      },
+                      "angularDrag": {
+                        "type": "number",
+                        "minimum": 0.0,
+                        "maximum": 20.0
+                      }
+                    },
+                    "required": [
+                      "version",
+                      "densityKgM3",
+                      "linearDrag",
+                      "angularDrag"
+                    ],
+                    "additionalProperties": false,
+                    "examples": [
+                      {
+                        "version": 1,
+                        "densityKgM3": 1000.0,
+                        "linearDrag": 2.0,
+                        "angularDrag": 1.0
+                      }
+                    ]
+                  },
                   "color": {
                     "type": "object",
                     "properties": {
@@ -19920,7 +20001,7 @@
         "source.revision.current",
         "storage.writable"
       ],
-      "description": "Configure one saved cylindrical or rectangular liquid store on any created object, or remove it. definition includes its contents: this authoring action can create, replace or empty liquid. Use object.container.transfer to conserve contents instead. The frame is the root-local bottom centre; +Y points toward the opening. An optional rectangle (width/depth) replaces the circular radius; removing it returns to the configured radius. Geometry describes the cavity and does not infer or modify mesh/colliders. Capacity is a logical game-rule value in millilitres, independent of visual scale; resizing a prop neither creates liquid nor changes capacity. One liquid identity and opaque display colour at a time, up to 16 containers per room. The shared saved amount survives Undo, duplication, prototypes, temporary rooms and archives. Room physics also runs bounded open-vessel pouring and immersion filling; inspect object.container.live, object.container.scooping, object.container.poured and object.container.scooped. Splashes, drinking, fluid forces and liquid mass remain unsupported. Imported bowls require explicit cavity configuration.",
+      "description": "Configure one saved cylindrical or rectangular liquid store on any created object, or remove it. definition includes its contents: this authoring action can create, replace or empty liquid. Use object.container.transfer to conserve contents instead. The frame is the root-local bottom centre; +Y points toward the opening. An optional rectangle (width/depth) replaces the circular radius; removing it returns to the configured radius. Geometry describes the cavity and does not infer or modify mesh/colliders. Capacity is a logical game-rule value in millilitres, independent of visual scale; resizing a prop neither creates liquid nor changes capacity. One liquid identity and opaque display colour at a time, up to 16 containers per room. The shared saved amount survives Undo, duplication, prototypes, temporary rooms and archives. Room physics also runs bounded open-vessel pouring and immersion filling; inspect object.container.live, object.container.scooping, object.container.poured and object.container.scooped. Optional fluid properties explicitly set density (kg/m3) and linear/angular drag (per second); omitted properties use density 1000 and drag 2/1, independent of liquid name. Properties follow pouring/transfers and unlike properties cannot mix. Native medium physics applies bounded buoyancy/drag to supported free rigid props from accepted collider displacement and mass. Inspect world.medium and object.medium. Level displacement, carried liquid mass, splashes and drinking remain unsupported. Imported bowls require explicit cavity configuration.",
       "example": {
         "operation": "configure",
         "target": "00000000000000000000000000000000",
@@ -19944,6 +20025,12 @@
           "capacityMl": 250.0,
           "amountMl": 200.0,
           "liquid": "Water",
+          "fluid": {
+            "version": 1,
+            "densityKgM3": 1000.0,
+            "linearDrag": 2.0,
+            "angularDrag": 1.0
+          },
           "color": {
             "r": 0.15999999642372131,
             "g": 0.550000011920929,
@@ -34554,6 +34641,14 @@
               "capacityMl": "number",
               "amountMl": "number",
               "liquid": "text",
+              "fluid": {
+                "record": {
+                  "version": "number",
+                  "densityKgM3": "number",
+                  "linearDrag": "number",
+                  "angularDrag": "number"
+                }
+              },
               "color": {
                 "record": {
                   "r": "number",
@@ -35017,7 +35112,7 @@
         }
       },
       "label": "Live container contents",
-      "description": "Current native liquid quantity during physical pouring or scooping, separate from the last accepted object.container definition. Flowing contents are published together after 0.3 seconds without flow, at grip release, pause or Save, at bounded ten-second checkpoints, and before an empty participating vessel adopts a different liquid identity or colour; one Undo restores that episode. Failed publication reverts all episode quantities and stops further pouring until physics is restarted. transferredMl/spilledMl are outgoing pouring totals for this source in the current episode, reset after publication. Scooping has separate object.container.scooping counters. No per-drop rigidbodies, pools, fluid mass, mixing or buoyancy. Amounts use logical millilitres independent of visual resizing.",
+      "description": "Current native liquid quantity during physical pouring or scooping, separate from the last accepted object.container definition. Flowing contents are published together after 0.3 seconds without flow, at grip release, pause or Save, at bounded ten-second checkpoints, and before an empty participating vessel adopts a different liquid identity or colour; one Undo restores that episode. Failed publication reverts all episode quantities and stops further pouring until physics is restarted. transferredMl/spilledMl are outgoing pouring totals for this source in the current episode, reset after publication. Scooping has separate object.container.scooping counters. No per-drop rigidbodies, terrain pools, carried fluid mass or mixing. Shared bounded buoyancy/drag is described by object.medium. Amounts use logical millilitres independent of visual resizing.",
       "input": {
         "type": "object",
         "properties": {
@@ -35055,7 +35150,7 @@
         }
       },
       "label": "Live liquid scooping",
-      "description": "Current physical-flow episode: scoopedMl entered this vessel through its submerged opening; drawnMl was taken from it by other vessels. donors/recipients count distinct counterpart vessels. These counters reset on publication or rollback. An empty participating vessel changing liquid identity or colour first closes its prior episode. Read object.container.live for current and accepted quantities. An upward-facing smaller open cavity must fit inside the donor with its entire opening below the measured surface, with a clear bounded path. The same conserved quantities, physics pause, grips, save/Undo and temporary-room episode are used for pouring and scooping. No fluid forces, displacement, air simulation or persistent pools.",
+      "description": "Current physical-flow episode: scoopedMl entered this vessel through its submerged opening; drawnMl was taken from it by other vessels. donors/recipients count distinct counterpart vessels. These counters reset on publication or rollback. An empty participating vessel changing liquid identity or colour first closes its prior episode. Read object.container.live for current and accepted quantities. An upward-facing smaller open cavity must fit inside the donor with its entire opening below the measured surface, with a clear bounded path. The same conserved quantities, physics pause, grips, save/Undo and temporary-room episode are used for pouring and scooping. Shared bounded buoyancy/drag is described by object.medium. No level displacement, air simulation or terrain pools.",
       "input": {
         "type": "object",
         "properties": {
@@ -35077,6 +35172,128 @@
       "features": [
         "factQueries.v1",
         "containerScooping.v1"
+      ]
+    },
+    {
+      "id": "world.medium",
+      "version": 1,
+      "type": {
+        "record": {
+          "worldId": "text",
+          "regionId": "text",
+          "found": "boolean",
+          "active": "boolean",
+          "bodyId": "text",
+          "liquid": "text",
+          "depthMetres": "number",
+          "surface": {
+            "record": {
+              "x": "number",
+              "y": "number",
+              "z": "number"
+            }
+          },
+          "densityKgM3": "number",
+          "reason": "text"
+        }
+      },
+      "label": "Liquid medium at a point",
+      "description": "Read finite live liquid at an authored world-coordinate point. Cylindrical/rectangular container geometry and the shared free surface use current pouring/rain quantities, not a second water store. target optionally selects the actor whose real-room readiness applies; empty uses global policy. found is geometric containment; active additionally requires unpaused admitted physics for both actor and medium. Nested or overlapping cavities select the smallest physical cavity, then stable object ID, never added densities. surface is projected along gravity and depth is in physical metres. Logical ml/capacity determine fill fraction; visual scale changes geometric displacement without creating contents. No terrain reservoir, fluid level displacement, route clearance, swimming or automatic mixing is implied.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "position": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": -10.0,
+                "maximum": 10.0
+              },
+              "y": {
+                "type": "number",
+                "minimum": -10.0,
+                "maximum": 10.0
+              },
+              "z": {
+                "type": "number",
+                "minimum": -10.0,
+                "maximum": 10.0
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "additionalProperties": false
+          },
+          "target": {
+            "type": "string",
+            "pattern": "^([a-zA-Z0-9_-]{1,64})?$",
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "position",
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "target": ""
+      },
+      "features": [
+        "factQueries.v1",
+        "liquidMedium.v1"
+      ]
+    },
+    {
+      "id": "object.medium",
+      "version": 1,
+      "type": {
+        "record": {
+          "applied": "boolean",
+          "submergedFraction": "number",
+          "displacementM3": "number",
+          "buoyancyNewtons": {
+            "record": {
+              "x": "number",
+              "y": "number",
+              "z": "number"
+            }
+          },
+          "reason": "text"
+        }
+      },
+      "label": "Rigid prop medium response",
+      "description": "Last native physics sample for a created prop. A cached 4x4x4 occupancy grid approximates the union of accepted box/sphere/capsule/convex-mesh colliders; thin geometry can have no supported samples. Existing mass and explicitly configured fluid density determine buoyancy, with linear/angular drag. Lift and linear drag acceleration are capped at 30 m/s2. Forces never alter saved poses/quantities or bypass fixed, held, animation-owned, paused or unavailable physics. A prop excludes its own liquid. applied is rechecked against current ownership/readiness; submergedFraction and displacementM3 describe the last sample. No carried-liquid mass or fluid-level displacement. Actor locomotion requires a separate traversal policy and is not proven by this fact.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1",
+        "liquidMedium.v1"
       ]
     },
     {
@@ -40023,15 +40240,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContainerCapability.cs",
-      "sha256": "5f681804979589cf66b32e256a74f0ef84fc8ec4b768f9fc3d0dbf2541034024"
+      "sha256": "d82ae9cc28e1141e62b4cb1f686e24c7278eb81ad5ed3e23f7abef8cbcf1a183"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContainerPouringFacts.cs",
-      "sha256": "67bc42a6179e0a3ace5e1d6e89d9fd06a5bde243e85e3af0920416409cbde777"
+      "sha256": "beaeaf4627673a55bf758e3b0484c1d5b1aaa95b456e51b29bce8a2d7e98fc6e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContainerScoopingFacts.cs",
-      "sha256": "28179c0e6656b64de9d7b8b6281448305325ed81a5bc77f96d5543839bc640fd"
+      "sha256": "e086e6db5c8a2e8218acf11c9166a341564e7389a625c3fdd943671c7cd71db7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ControllerConfigurationCapability.cs",
@@ -40152,6 +40369,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/MaterialTransferCapability.cs",
       "sha256": "2ce662a485c5e033d804b99ee73abb38a0f5527aa07519706d25a5a7c230195b"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/MediumFacts.cs",
+      "sha256": "c42d03aca1981fc6efe00ff51030b08fabddbd51401004d3a54ca77fe44c870e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ModelImportCapability.cs",
@@ -40423,7 +40644,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ContainerScoopingGeometry.cs",
-      "sha256": "d5dd6f2ae36ee93a25d99544e3929a32eaec1772ef2682f0cc7a2ab678232909"
+      "sha256": "760c449faa11c5d9ffc0f31247ddee4c70fe03f1e0b863957e71b44d9e823a47"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedDrawing.cs",
@@ -40482,12 +40703,20 @@
       "sha256": "e1582465ac88790ce6410350d5adbd0698ac9944916b013148819e5e02e74dd5"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidMediumGeometry.cs",
+      "sha256": "5365a0f4ca150be57b6f9a0ba425c0ad90da98aa2f99733d35bd8aeb1b914022"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidMediumPhysics.cs",
+      "sha256": "19639f817b68fa73430a1289b8ae8a2e7e0d8731f3a141f7b4df31ba8a23263a"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidPouring.cs",
-      "sha256": "7bf9658f0696ad8db864d7957afe9ab08bb59255a6e50c0e7d8e8cdd39e5585f"
+      "sha256": "fbdd82dc5af3b7f0713079053d160597e1f13398375a0f74060df95651994014"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidRainCollection.cs",
-      "sha256": "c15dd2f410db0900f4998fa3fe7aab891d511d33f777751b708098e7787a9c21"
+      "sha256": "fa5cd79780bd73af107b6ffc2f4bdef878a3b0899a31d78d1a8ab2292c17e454"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/MaterialToolContentsView.cs",
@@ -40496,6 +40725,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/MaterialTransfer.cs",
       "sha256": "f785e94d01c4d88bddca4140b6974a6014988a7d65f8ec7d8e978922024279c9"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/MediumDisplacement.cs",
+      "sha256": "fefee9291a6b9aff0f597e80e7811e240871ecad29b02d93f93af50a70ad42d3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PhysicalRoomAction.cs",
@@ -40591,7 +40824,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomContainer.cs",
-      "sha256": "acb26e9c5c2811511d6f2921913d3c09e65e632bb44670e8bc7066bc118c7eb1"
+      "sha256": "66df1782f7b63e3aa6e81fb5e17bc0a2f55c536a8c3466920c0cf84f43e52fa0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomContainerEdits.cs",
@@ -40599,11 +40832,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "e091c6135f0868368214ba1d82fe740ceb3787d91954d6d60ff9802c7a81af17"
+      "sha256": "e2f52ede2baf89927d5c8399d6525528c0278e131ddcdc4c2f9818a96b156244"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "c86d55d6700a298fe9fceb687dfe3b68228c0757102fa27c4d22888b1046fbcc"
+      "sha256": "c8162326ff27d01e09f164c67387e21a01d2972a2b1ccd26b9c31d1a489fed5b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDrawingEdits.cs",
@@ -40632,6 +40865,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomExecutions.cs",
       "sha256": "ae6d256464d752202e7155c7b0ad7955ce49883c7c0e76e83d6a0cbb0ca74398"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomFluid.cs",
+      "sha256": "79d70c0daab86e9f412242ec752b9fed089976a460fe93dc85fa1133786b9c2f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomFrame.cs",
@@ -40739,7 +40976,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "be2c1d9921156badf2227a56db1ba2c5894e9930745cdf7ca2c641be19c95b68"
+      "sha256": "bec415d1e48ce941afa7c7873897c6cccdeec4db356f80e78d8f71ec1d107e0a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructure.cs",
@@ -41175,7 +41412,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
-      "sha256": "b0dc864d6a75ed0c8d514697ac4cbc17d6b25da1e2503b3251f6dad26b484310"
+      "sha256": "b32718335873b5b9e75382e798a4297fbf0d55675de241e57405a019a11ca1e7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceAcceptedSave.cs",
@@ -41187,7 +41424,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchive.cs",
-      "sha256": "87d7046ca08a4c7a6f58fdd94680f8a3e3da3d414684eeb3352e0e1f1434168a"
+      "sha256": "685ff14c78fbf3e4107c916f2754cce4b444a98dbcea39bd996f02d141db31b0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveCapture.cs",
@@ -41303,7 +41540,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "64c19074d55ef0e87102c9abfb0d1ac1a5d90144e58f7abc094c7140f12c3a4e"
+      "sha256": "96a619eb33a933144fcbca75feb358218f0ea1de41b4a7024ebbb626c96546d1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -41335,7 +41572,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramData.cs",
-      "sha256": "1081fa67705c26b43bb1bbb5381550493b0bdf130051c55fd1d782561be3844d"
+      "sha256": "71a8a0b90b7cba742c4e6591a3f28d1b5b67c63e5a562825208cd67f66c41540"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramMachine.cs",

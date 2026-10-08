@@ -12,6 +12,7 @@ namespace Maestro.Quest.Programs
     /// <summary>Structural, immutable type identity; no CLR/user code types are loaded.</summary>
     public sealed class ProgramDataType : IEquatable<ProgramDataType>
     {
+        public const int MaximumRecordFields=16;
         public readonly ProgramType Kind;public readonly ProgramDataType Item;
         public readonly IReadOnlyDictionary<string,ProgramDataType> Fields;
         readonly string key;
@@ -34,7 +35,7 @@ namespace Maestro.Quest.Programs
             if(token?.Type==JTokenType.String)return (string)token switch {"void"=>ProgramType.Void,"number"=>ProgramType.Number,"boolean"=>ProgramType.Boolean,"text"=>ProgramType.Text,_=>throw new ProgramFault("Unknown value type")};
             Need(token is JObject o&&o.Count==1,"Expected a value type");var value=(JObject)token;
             if(value.ContainsKey("list")){var item=Read(value["list"],depth+1);Need(item.Kind!=ProgramType.Void,"List item cannot be void");return new(ProgramType.List,item);}
-            Need(value["record"] is JObject fields&&fields.Count<=8,"A record type needs up to 8 fields");var result=new Dictionary<string,ProgramDataType>();
+            Need(value["record"] is JObject fields&&fields.Count<=MaximumRecordFields,"A record type needs up to 16 fields");var result=new Dictionary<string,ProgramDataType>();
             foreach(var p in ((JObject)value["record"]).Properties()){Need(Field(p.Name),"Invalid record field");var type=Read(p.Value,depth+1);Need(type.Kind!=ProgramType.Void,"Record field cannot be void");result.Add(p.Name,type);}
             return new(ProgramType.Record,fields:result);
         }
@@ -42,7 +43,7 @@ namespace Maestro.Quest.Programs
             Need(depth<=4,"Value nesting exceeds 4");
             if(value?.Type==JTokenType.String)return ProgramType.Text;if(value?.Type==JTokenType.Boolean)return ProgramType.Boolean;if(value?.Type==JTokenType.Float||value?.Type==JTokenType.Integer)return ProgramType.Number;
             if(value is JArray array){Need(array.Count>0&&array.Count<=32,"An empty list needs an explicit type; lists have at most 32 items");var item=Infer(array[0],depth+1);Need(array.All(v=>Infer(v,depth+1)==item),"List items have different types");return new(ProgramType.List,item);}
-            Need(value is JObject fields&&fields.Count<=8,"Expected a bounded value");var result=new Dictionary<string,ProgramDataType>();
+            Need(value is JObject fields&&fields.Count<=MaximumRecordFields,"Expected a bounded value");var result=new Dictionary<string,ProgramDataType>();
             foreach(var p in ((JObject)value).Properties()){Need(Field(p.Name),"Invalid record field");result.Add(p.Name,Infer(p.Value,depth+1));}return new(ProgramType.Record,fields:result);
         }
         internal static ProgramDataType Operation(string op,ProgramDataType[] types,JToken field) {

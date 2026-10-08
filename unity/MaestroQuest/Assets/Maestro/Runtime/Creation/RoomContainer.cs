@@ -30,11 +30,13 @@ namespace Maestro.Quest.Creation {
         // Capacity is a game rule, independent of visual object scaling.
         public double capacityMl=250,amountMl;
         public string liquid="Water";
+        public RoomFluid fluid=new();
+        internal bool SameLiquid(RoomContainer other)=>other!=null&&liquid==other.liquid&&color.Equals(other.color)&&RoomFluid.Same(fluid,other.fluid);
         public Color color=new(.16f,.55f,.85f,1);
-        public RoomContainer Copy()=>new(){version=version,rectangle=rectangle?.Copy(),frame=frame?.Copy(),radius=radius,height=height,capacityMl=capacityMl,amountMl=amountMl,liquid=liquid,color=color};
+        public RoomContainer Copy()=>new(){version=version,rectangle=rectangle?.Copy(),frame=frame?.Copy(),radius=radius,height=height,capacityMl=capacityMl,amountMl=amountMl,liquid=liquid,fluid=RoomFluid.Effective(fluid).Copy(),color=color};
         public bool Validate(out string error){
             error="Use a cylindrical v1 or rectangular v2 container, normalized bottom frame, radius 0.005–1 m, rectangular width/depth 0.01–2 m, height 0.01–2 m and contents within capacity (1–1000000 ml)";
-            if(version is not (1 or 2)||IsRectangular&&(rectangle==null||!rectangle.Valid)||version==1&&rectangle!=null&&(rectangle.width!=0||rectangle.depth!=0)||frame?.Valid!=true||!float.IsFinite(radius)||radius<.005f||radius>1||!float.IsFinite(height)||height<.01f||height>2||!double.IsFinite(capacityMl)||capacityMl<1||capacityMl>MaximumMillilitres||!double.IsFinite(amountMl)||amountMl<0||amountMl>capacityMl||!RoomSnapPoint.Identifier(liquid)||liquid.Any(char.IsControl)||!Unit(color.r)||!Unit(color.g)||!Unit(color.b)||color.a!=1)return false;
+            if(!RoomFluid.Effective(fluid).Valid||version is not (1 or 2)||IsRectangular&&(rectangle==null||!rectangle.Valid)||version==1&&rectangle!=null&&(rectangle.width!=0||rectangle.depth!=0)||frame?.Valid!=true||!float.IsFinite(radius)||radius<.005f||radius>1||!float.IsFinite(height)||height<.01f||height>2||!double.IsFinite(capacityMl)||capacityMl<1||capacityMl>MaximumMillilitres||!double.IsFinite(amountMl)||amountMl<0||amountMl>capacityMl||!RoomSnapPoint.Identifier(liquid)||liquid.Any(char.IsControl)||!Unit(color.r)||!Unit(color.g)||!Unit(color.b)||color.a!=1)return false;
             error=null;return true;
         }
         static bool Unit(float n)=>float.IsFinite(n)&&n>=0&&n<=1;
@@ -47,13 +49,13 @@ namespace Maestro.Quest.Creation {
         internal static bool Transfer(RoomContainer source,RoomContainer destination,double requested,out double moved,out string error){
             moved=0;error="Choose two valid containers and a finite positive transfer of at most 1000000 ml";
             if(source==null||destination==null||ReferenceEquals(source,destination)||!source.Validate(out _)||!destination.Validate(out _)||!double.IsFinite(requested)||requested<=0||requested>MaximumMillilitres)return false;
-            if(destination.amountMl>0&&(source.liquid!=destination.liquid||!source.color.Equals(destination.color))){error="Empty the destination or choose matching liquid identity and colour; mixing is not supported";return false;}
+            if(destination.amountMl>0&&!source.SameLiquid(destination)){error="Empty the destination or choose matching liquid identity, colour and fluid properties; mixing is not supported";return false;}
             moved=Math.Min(requested,Math.Min(source.amountMl,destination.capacityMl-destination.amountMl));
             if(moved<=0){error=source.amountMl<=0?"The source is empty":"The destination is full";return false;}
             // Reject a sub-ULP request rather than claiming an amount neither side can represent.
             double left=source.amountMl-moved,right=destination.amountMl+moved;
             if(left==source.amountMl||right==destination.amountMl){moved=0;error="The requested amount is too small at the current quantities";return false;}
-            destination.liquid=source.liquid;destination.color=source.color;source.amountMl=left;destination.amountMl=right;error=null;return true;
+            destination.fluid=RoomFluid.Effective(source.fluid).Copy();destination.liquid=source.liquid;destination.color=source.color;source.amountMl=left;destination.amountMl=right;error=null;return true;
         }
     }
 }

@@ -34,6 +34,7 @@ namespace Maestro.Quest.Creation {
                 v.Saved=data.containers[0].Copy();if(!Active||!contents.ContainsKey(data.id))v.Live=v.Saved.Copy();v.Item=editor.Find(data.id);v.Rigid=v.Item?v.Item.GetComponent<RigidRoomItem>():null;v.Body=v.Item?v.Item.GetComponent<Rigidbody>():null;
                 Preview(v);
             }
+            SynchronizeMedia(document);
             foreach(var id in vessels.Keys.Where(x=>!ids.Contains(x)).ToArray()){
                 if(Owns(id))Cancel("A container was removed; the unfinished liquid flow was reverted");Release(vessels[id]);vessels.Remove(id);
             }
@@ -90,7 +91,7 @@ namespace Maestro.Quest.Creation {
         // An empty vessel may adopt new contents, but prior episode counters and
         // events must retain the old identity. Publish first and retry geometry
         // next tick; a failed publication rolls back and blocks all further flow.
-        bool ChangesEpisodeIdentity(Vessel source,Vessel receiver)=>Owns(receiver.Id)&&receiver.Live.amountMl==0&&(source.Live.liquid!=receiver.Live.liquid||!source.Live.color.Equals(receiver.Live.color));
+        bool ChangesEpisodeIdentity(Vessel source,Vessel receiver)=>Owns(receiver.Id)&&receiver.Live.amountMl==0&&!source.Live.SameLiquid(receiver.Live);
         bool Immersed(Vessel vessel,Vector3 up){
             // An immersed full bucket must not endlessly pour below the reservoir's
             // surface and refill. Reuse the same bounded, unobstructed cavity proof;

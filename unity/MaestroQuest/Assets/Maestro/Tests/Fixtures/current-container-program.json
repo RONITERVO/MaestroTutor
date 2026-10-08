@@ -55,6 +55,14 @@
                       "b": "number",
                       "a": "number"
                     }
+                  },
+                  "fluid": {
+                    "record": {
+                      "version": "number",
+                      "densityKgM3": "number",
+                      "linearDrag": "number",
+                      "angularDrag": "number"
+                    }
                   }
                 }
               }
@@ -91,6 +99,12 @@
                 "g": 0,
                 "b": 0,
                 "a": 0
+              },
+              "fluid": {
+                "version": 0,
+                "densityKgM3": 0,
+                "linearDrag": 0,
+                "angularDrag": 0
               }
             }
           }
@@ -147,6 +161,12 @@
               "rectangle": {
                 "width": 0,
                 "depth": 0
+              },
+              "fluid": {
+                "version": 1,
+                "densityKgM3": 1000,
+                "linearDrag": 2,
+                "angularDrag": 1
               }
             }
           },
@@ -346,6 +366,25 @@
                 },
                 {
                   "value": "color"
+                }
+              ]
+            },
+            "definition.fluid": {
+              "op": "field",
+              "args": [
+                {
+                  "op": "field",
+                  "args": [
+                    {
+                      "var": "current_1"
+                    },
+                    {
+                      "value": "definition"
+                    }
+                  ]
+                },
+                {
+                  "value": "fluid"
                 }
               ]
             }

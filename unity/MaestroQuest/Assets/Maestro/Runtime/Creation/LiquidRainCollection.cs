@@ -16,7 +16,7 @@ namespace Maestro.Quest.Creation
                 if(!v.Ready){v.RainReason="Container is unavailable for physics";continue;}
                 if(weather.Rain<=0){v.RainReason="There is no rain";continue;}
                 if(v.Live.amountMl>=v.Live.capacityMl){v.RainReason="Container is full";continue;}
-                if(v.Live.amountMl>0&&(v.Live.liquid!=rainSource.liquid||!v.Live.color.Equals(rainSource.color))){v.RainReason="Existing contents cannot mix with Water";continue;}
+                if(v.Live.amountMl>0&&!v.Live.SameLiquid(rainSource)){v.RainReason="Existing contents cannot mix with Water";continue;}
                 var t=v.Item.transform;var c=v.Live;var rotation=t.rotation*c.frame.rotation;
                 var normal=rotation*Vector3.up;float flux=Mathf.Max(0,Vector3.Dot(normal,-velocity)/6);
                 if(flux<=.001f){v.RainReason="Opening faces away from the rain";continue;}
@@ -34,7 +34,7 @@ namespace Maestro.Quest.Creation
                 double requested=Math.Min(c.capacityMl-c.amountMl,weather.Rain*area*flux*v.Exposure*seconds*1000/3600);
                 if(requested<=.000001){v.RainReason="Rain intake is below simulation precision";continue;}
                 // Preserve the identity of an earlier pour/scoop episode before an empty vessel adopts rainwater.
-                if(Owns(v.Id)&&c.amountMl==0&&(c.liquid!=rainSource.liquid||!c.color.Equals(rainSource.color))){Finish(out _);return flowing;}
+                if(Owns(v.Id)&&c.amountMl==0&&!c.SameLiquid(rainSource)){Finish(out _);return flowing;}
                 v.RainReady=true;
                 if(!Begin(out var issue)){error=issue;blocked=true;v.RainReady=false;v.RainReason=issue;editor.ReportStatus(issue);return flowing;}
                 Touch(v);rainSource.amountMl=requested;

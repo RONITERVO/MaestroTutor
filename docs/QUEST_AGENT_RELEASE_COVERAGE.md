@@ -1376,3 +1376,92 @@ Its inspected weather form shows saved rain/wind/cloud/fog/seed and current-valu
 reload through actual generated controls. Existing original-chat, create/edit/
 Undo, resource-selection and reload checks also pass. Neither these forms nor
 provider acknowledgements establish visible weather on a physical Quest.
+
+
+## Shared finite liquid media (2026-10-08)
+
+Fluid properties are shared container data, edited through existing native
+receipts and the generated original-book form. The new LiquidMedium provider
+scenario asks fresh English-native/Spanish-target Maestro chat to fill a named
+pool with one litre of light oil at density 850 kg/m3 and increased drag, then
+transfer exactly 200 ml to a named empty cup. Native assertions verify quantities,
+property inheritance, medium readback, unchanged vessel poses and unchanged
+paused simulation state. The harness creates the two empty vessels explicitly;
+this scenario does not establish spontaneous asset creation or actual floating
+on a physical headset. Real managed and BYOK results are recorded separately.
+
+Native tests cover fluid compatibility and independent copying, strict current
+wire validation, saved/snapshot properties, future-version protection, typed
+record bounds, live rain-driven depth, sustained floating, dense-prop sinking,
+drag, unchanged liquid inventory, paused/animated/unavailable physics, Undo/Redo,
+workspace holds and below-scan queries using both participants' collision
+profiles. Native and book journeys separately exercise shared authoring,
+conserved transfer and current-value reload.
+
+Failed attempts remain evidence: one missing test namespace prevented initial
+compilation; the next export exposed the old eight-field typed-record ceiling.
+After the explicit 16-field budget change, old nine-field-invalid and container
+shape fixtures needed updating. A first floating assertion sampled after the
+prop had risen out of the liquid. The subsequent sustained check revealed that
+the fixture's vessel was itself falling; making that test vessel fixed allowed
+a meaningful floating test. A later editor export exited after Unity's 300-second
+pending-operation timeout; the editor was confirmed stopped before a successful
+retry. No passing native result is inferred from a stale XML file.
+
+The focused corrected run passes 31 cases. Full verification of the final physics implementation passes
+976 EditMode and 863 PlayMode cases, with zero failed or inconclusive cases. Three
+known optional private-model/motion tests are ignored. Unity exits with code 0;
+the local wrapper initially rejected the aggregate Skipped:Ignored status and
+the individual ignored reasons were checked before continuing. All six final
+medium PlayMode cases pass, including per-entity ground and immediate hold gates.
+Scoped shared tests pass 1,587 cases in 158 files. Production build, lint, probe
+types, catalog provenance, core boundaries and included-asset integrity pass.
+The exported catalog has 118 actions, 138 facts, 18 events and 476 source inputs.
+Native transport, original-book and fresh managed/BYOK results follow below.
+
+Headset work remains on the existing owner cooling/charging readiness hold.
+No physical Quest medium behavior or performance acceptance is claimed. Terrain
+reservoirs, displacement level changes, carried-fluid mass, water-aware actors,
+ripples, water life and regional simulation remain unfinished release work.
+
+
+The full native transport journey **46492e8d4b664d5895960dd50199dba7** passes
+**689 observations**, including medium depth, conserved transfer, inherited
+properties and Undo/Redo. Original-book journey
+**a6fb0c4404484b31b909c3a012fb392b** passes visible fluid editing, native receipts
+and current-value reload; its screenshot was inspected. The shared form's labels
+still expose field paths, which remains a release usability-polish item. A final
+metadata-only change supplies the documented water defaults when enabling the
+optional fluid record; final focused and book verification follows that change.
+The full physics run and provider results below precede only that default-example
+metadata, not a physics or ownership implementation change.
+
+| Access | Run | Confirmed native operations |
+| --- | --- | --- |
+| Managed | aed6ac01010648229876f47281b45a7f | 10 |
+| BYOK | 1986fe8986f144e59303979e455a92bd | 10 |
+
+Both fresh two-turn **Gemini 3.8 Flash** LiquidMedium journeys pass tutor/verifier,
+original-context handoff, native receipts, final chat, usage and duplicate-handoff
+checks. Native readback confirms one litre of oil at density 850 kg/m3 and increased
+drag, followed by 800 ml in the pool and 200 ml in the cup with the same fluid
+properties. Both vessel poses and the exact paused simulation state are retained.
+Managed accounting reconciles **340 credits / USD 0.331799** across 18 usage and
+18 charge entries, with zero reservations before/after both action turns. These
+figures exclude introductory chat and the earlier failed harness attempt; BYOK
+costs belong to the test-key owner. No captured private media was reused.
+
+Managed attempt **68957d2789364976ae3b89271d695102** failed during harness baseline
+setup before the first liquid request: it incorrectly supplied arguments:{} to
+the parameterless physics.simulation fact and then dereferenced the unavailable
+value. The corrected harness omits arguments. That attempt remains failed;
+no native implementation or provider behavior was changed to make the retry pass.
+
+
+Final optional-record metadata verification passes **976 EditMode**, **33 focused
+PlayMode** and **70 shared tests in four files**. Final original-book journey
+**a95198610a64496fab8fce5025b44108** passes: enabling fluid properties starts at
+1000 kg/m3 with linear/angular drag 2/1; reloading restores the saved 850/3/1 values.
+The final screenshot was inspected. Probe type checking and catalog provenance
+also pass after that metadata change. No additional physics code changed after
+the full 863-case PlayMode run or the successful provider journeys.

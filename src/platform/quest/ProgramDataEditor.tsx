@@ -1,6 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {useState} from 'react';
+import {programRecordFieldLimit} from '../../../shared/programLimits';
 import {type DataType,type DataValue,defaultDataValue,dataTypeLabel} from '../../../shared/programValues';
 export function ProgramDataTypeEditor({value,label,onChange,allowVoid=false,structured=true,depth=0}:{value:DataType|'void';label:string;onChange:(type:DataType|'void')=>void;allowVoid?:boolean;structured?:boolean;depth?:number}) {
  const [field,setField]=useState('');const kind=typeof value==='string'?value:'list' in value?'list':'record';
@@ -16,7 +17,7 @@ export function ProgramDataTypeEditor({value,label,onChange,allowVoid=false,stru
   <button onClick={()=>onChange({record:Object.fromEntries(Object.entries(fields).filter(([k])=>k!==name))})}>Remove {label} field {name}</button>
  </div>)}
  <label>New field name<input aria-label={label+' new field name'} maxLength={32} value={field} onChange={e=>setField(e.target.value)}/></label>
- <button disabled={!validField||Object.keys(fields).length>=8||depth>=4} onClick={()=>{onChange({record:{...fields,[field]:'number'}});setField('');}}>Add {label} field</button>
+ <button disabled={!validField||Object.keys(fields).length>=programRecordFieldLimit||depth>=4} onClick={()=>{onChange({record:{...fields,[field]:'number'}});setField('');}}>Add {label} field</button>
  </fieldset>}
  </div>;
 }

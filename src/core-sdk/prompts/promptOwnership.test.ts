@@ -81,7 +81,7 @@ describe('prompt ownership', () => {
       creationBatch: ['./roomConnection', './creationResources', './creationPrototype'],
       creationPrototype: ['./surfaceGeometry', './creationResources', './roomConnection'],
       creationResources: ['./roomConnection'],
-      programValues: [], roomConnection: [], surfaceGeometry: [],
+      programValues: ['./programLimits'], programLimits: ['./generated/behaviourCatalog.json'], roomConnection: [], surfaceGeometry: [],
     };
     for (const [name, expectedImports] of Object.entries(dependencies)) {
       const dependency = readFileSync(new URL('../../../shared/' + name + '.ts', import.meta.url), 'utf8');

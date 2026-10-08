@@ -6,7 +6,7 @@ param(
  [Parameter(Mandatory)][string]$BuildMirror,
  [string]$Prompt,
  [string]$Profile = 'quest-probe',
- [ValidateSet('ContextCreateEdit','LiveVisual','ObserverVisual','EventProgram','AvatarAnimation','CompositeModule','PhysicsLaunch','TaskSteering','WorldPresentation','WorldLighting','WorldTime','WorldWeather','LearnerConversation')][string]$ProviderScenario,
+ [ValidateSet('ContextCreateEdit','LiveVisual','ObserverVisual','EventProgram','AvatarAnimation','CompositeModule','PhysicsLaunch','TaskSteering','WorldPresentation','WorldLighting','WorldTime','WorldWeather','LiquidMedium','LearnerConversation')][string]$ProviderScenario,
  [string]$SpeechFixture,
  [switch]$SyntheticRoomScan,
  [string]$ResumeLearnerRun,
@@ -23,6 +23,7 @@ if($ProviderScenario){
  if(![string]::IsNullOrWhiteSpace($Prompt)){throw 'ProviderScenario cannot be combined with Prompt.'}
  if($Journey -eq 'Book' -and $ProviderScenario -ne 'ContextCreateEdit'){throw 'The real-provider book supports ContextCreateEdit only.'}
  $Prompt='Please create my test object now. Use the definition I gave in the previous message.'
+ if($ProviderScenario -eq 'LiquidMedium'){$Prompt='Please fill the small pool named MediumPool with exactly one litre of light oil. Make its density 850 kilograms per cubic metre and let it slow things moving through it more than ordinary water. Leave the empty MediumCup alone, do not move either vessel, and keep physics paused.'}
  if($ProviderScenario -eq 'WorldWeather'){$Prompt='Could you make my virtual world feel like a gentle rainy afternoon right now, with some cloud cover and a little blue-grey fog? Only a light rain please. Keep every object where it is, keep my real room view and collisions as they are, and do not change the world clock.'}
  if($ProviderScenario -eq 'WorldTime'){$Prompt='Could you give my virtual world a repeating day and night lighting cycle? I want dim blue night light at midnight and bright warm sunlight at noon, with a full day taking 24 real minutes. Start at noon but leave the clock paused so I can inspect it. Keep all objects where they are, and keep my real room view and collisions as they are.'}
  if($ProviderScenario -eq 'WorldLighting'){$Prompt='Could you give my virtual objects gentle evening lighting, with dim blue ambient light and a warm sun? Keep everything in its place and leave my real room view and collisions as they are.'}

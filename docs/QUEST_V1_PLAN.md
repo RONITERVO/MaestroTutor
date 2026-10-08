@@ -5292,3 +5292,66 @@ original-book and fresh managed/BYOK weather journeys pass. The final book form
 was visually inspected after reducing float transport noise in displayed numbers;
 untouched draft values and double-precision quantities are preserved. Exact run
 IDs, accounting and final-source boundaries are recorded in the coverage matrix.
+
+
+### Shared finite liquid media and rigid-prop response (2026-10-08)
+
+Measured liquids now carry an explicit versioned physical definition: density
+in kg/m3 and linear/angular drag. These properties travel with the liquid on
+transfer into an empty vessel. Nonempty liquids must agree on identity, colour
+and physical properties; incompatible contents are refused instead of silently
+mixing. Rain remains the defined water medium. Existing container authoring,
+revision guards, receipts, Undo, temporary rooms and archives own these values.
+There is no second water inventory or agent-only physics interface.
+
+world.medium reads finite cylindrical or rectangular cavities using the same
+live quantities and gravity-aligned free surface as pouring. It reports surface,
+depth and density separately from physics admission. Actor-specific real-room
+participation applies to both the querying actor and the medium owner. Virtual
+water and virtual actors can therefore interact below the scanned floor, while
+an actor requiring the real-room scan does not borrow their readiness. Overlapping
+cavities select the smallest containing physical cavity, with stable object-ID
+ties; overlapping densities are never added.
+
+Free dynamic props receive native buoyancy and drag. A cached 4x4x4 occupancy
+approximation measures the union of accepted solid box, sphere, capsule and
+convex-mesh colliders. Existing rigid-body mass supplies the other half of the
+buoyancy calculation. Lift and linear drag acceleration are capped at 30 m/s2;
+fixed, grabbed, animated, paused and unavailable objects retain their current
+ownership rules. object.medium exposes the last sample and rechecks current
+admission. Workspace holds immediately make cached force observations inactive.
+Unsupported or undersampled thin geometry reports its limitation.
+
+The original book's generated container form exposes these same fluid fields.
+A user or agent can edit them without another vocabulary. Shared typed records
+now admit at most 16 fields, declared by the native catalog and consumed by the
+web editor/validator. The existing depth, node, value-size and execution budgets
+remain bounded; increasing field count does not permit unbounded programs.
+Room v30, snapshot intent v29 and archive v28 preserve the accepted definition;
+current wire fields are exact and future fluid versions remain protected.
+
+This is an approximate rigid-prop medium, not a completed water system. Logical
+millilitres and capacity control fill fraction; visual scale controls displaced
+physical volume without creating liquid. There is no displaced-water level rise,
+carried-liquid mass, mixing chemistry, terrain reservoir, automatic wading or
+swimming, contact ripples, water life or fluid mesh simulation yet. Those remain
+part of the accepted long-term immersion work. Character movement must eventually
+consume these same medium facts and explicit traversal policy, not bypass them.
+Quest CPU/thermal measurement is still required, especially for many submerged
+props and virtual-ground queries; bounded sample counts are not a performance
+acceptance result. Regional relevance/streaming remains required for larger worlds.
+
+Verification details and failed-attempt boundaries are recorded in
+[the coverage matrix](QUEST_AGENT_RELEASE_COVERAGE.md#shared-finite-liquid-media-2026-10-08)
+and .quest-evidence/spatial-state/medium-working.json. This increment does not
+include a new APK, signing, installation, cloud deployment or Store upload.
+
+
+Medium verification now includes 976 EditMode cases, 863 full PlayMode cases
+(three known optional external-asset skips), 1,587 scoped shared tests and a
+689-observation native transport journey. The original-book form and fresh
+managed/BYOK two-turn requests pass explicit fluid editing and conserved transfer.
+The complete physics run precedes only a metadata change giving the optional
+fluid form its documented water defaults. Final focused and book results are
+recorded in the coverage matrix. Plain-language field labels and physical Quest
+acceptance remain outstanding; successful desktop semantics do not close them.

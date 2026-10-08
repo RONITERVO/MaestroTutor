@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Numeric magnitude does not bound execution cost. Keep exact integers through the
 // JS/double safe range; action schemas still impose their own physical limits.
+import {programRecordFieldLimit} from './programLimits';
 export const MAX_PROGRAM_NUMBER=Number.MAX_SAFE_INTEGER;
 export const validProgramNumber=(value:unknown):value is number=>typeof value==='number'&&Number.isFinite(value)&&Math.abs(value)<=MAX_PROGRAM_NUMBER;
 export type ScalarType='number'|'boolean'|'text';
@@ -15,7 +16,7 @@ export function readDataType(v:unknown,depth=0):DataType {
  if(typeof v==='string'){need(['number','boolean','text'].includes(v),'Unknown value type');return v as ScalarType;}
  need(object(v)&&Object.keys(v).length===1,'Expected a value type');const value=v as Record<string,unknown>;
  if(Object.prototype.hasOwnProperty.call(value,'list'))return {list:readDataType(value.list,depth+1)};
- need(object(value.record)&&Object.keys(value.record).length<=8,'A record type needs up to 8 fields');
+ need(object(value.record)&&Object.keys(value.record).length<=programRecordFieldLimit,`A record type needs up to ${programRecordFieldLimit} fields`);
  const fields=value.record as Record<string,unknown>;return {record:Object.fromEntries(Object.keys(fields).sort().map(k=>{need(name(k),'Invalid record field');return [k,readDataType(fields[k],depth+1)];}))};
 }
 export const sameDataType=(a:DataType|'void',b:DataType|'void'):boolean=>JSON.stringify(a)==JSON.stringify(b)||typeof a!=='string'&&typeof b!=='string'&&JSON.stringify(readDataType(a))===JSON.stringify(readDataType(b));
@@ -68,7 +69,7 @@ export function validDataObservation(text:string,kind:'list'|'record'):boolean {
   let nodes=0;const check=(v:unknown,depth:number):boolean=>{
    if(depth>4||++nodes>128)return false;
    if(Array.isArray(v))return v.length<=32&&v.every(x=>check(x,depth+1));
-   if(object(v))return Object.keys(v).length<=8&&Object.entries(v).every(([k,x])=>name(k)&&check(x,depth+1));
+   if(object(v))return Object.keys(v).length<=programRecordFieldLimit&&Object.entries(v).every(([k,x])=>name(k)&&check(x,depth+1));
    checkedDataValue(v);return true;
   };
   return check(root,0)&&dataValueCost(root as DataValue)<=1024;

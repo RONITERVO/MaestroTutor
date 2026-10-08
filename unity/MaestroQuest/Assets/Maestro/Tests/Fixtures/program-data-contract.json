@@ -57,7 +57,7 @@
     },
     {
       "name": "large record",
-      "source": "{\"version\":3,\"dataVersion\":1,\"entry\":\"main\",\"resources\":[],\"state\":[],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[{\"name\":\"items\",\"type\":{\"list\":\"number\"},\"initial\":[1,2]},{\"name\":\"item\",\"initial\":0},{\"name\":\"r\",\"initial\":{\"0\":0,\"1\":1,\"2\":2,\"3\":3,\"4\":4,\"5\":5,\"6\":6,\"7\":7,\"8\":8}}],\"body\":[{\"id\":\"read\",\"op\":\"set\",\"variable\":\"item\",\"value\":{\"op\":\"at\",\"args\":[{\"var\":\"items\"},{\"value\":0}]}}]}]}",
+      "source": "{\"version\":3,\"dataVersion\":1,\"entry\":\"main\",\"resources\":[],\"state\":[],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[{\"name\":\"items\",\"type\":{\"list\":\"number\"},\"initial\":[1,2]},{\"name\":\"item\",\"initial\":0},{\"name\":\"r\",\"initial\":{\"0\":0,\"1\":1,\"2\":2,\"3\":3,\"4\":4,\"5\":5,\"6\":6,\"7\":7,\"8\":8,\"9\":9,\"10\":10,\"11\":11,\"12\":12,\"13\":13,\"14\":14,\"15\":15,\"16\":16}}],\"body\":[{\"id\":\"read\",\"op\":\"set\",\"variable\":\"item\",\"value\":{\"op\":\"at\",\"args\":[{\"var\":\"items\"},{\"value\":0}]}}]}]}",
       "valid": false
     },
     {
