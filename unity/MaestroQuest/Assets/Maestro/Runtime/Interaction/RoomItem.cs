@@ -17,6 +17,7 @@ namespace Maestro.Quest.Interaction
     {
         public XRGrabInteractable Grab { get; private set; }
         internal bool PoseLocked {get;set;}
+        internal Creation.RoomWaterTraversal WaterTraversal {get;set;}=new(){mode="ignore"};
         WorkspaceWriteGate writes;
         public bool canProcess=>isActiveAndEnabled;
         internal bool PointerVisible=>!GetComponent<Creation.RoomAppearanceView>()||GetComponent<Creation.RoomAppearanceView>().PointerVisible;

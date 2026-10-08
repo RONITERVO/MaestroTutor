@@ -33,6 +33,15 @@ namespace Maestro.Quest.Interaction
         readonly RoomGroundMotor groundMotor=new();
         Func<Vector3,bool> groundPosition;
         internal Collider TraversalBlocker {get;private set;}
+        internal string WaterBlocker {get;private set;}
+        bool WaterStep(Vector3 from,Vector3 to,float bodyHeight){
+            WaterBlocker=null;
+            if(!actor||actor.WaterTraversal.mode=="ignore")return true;
+            var editor=actor.GetComponentInParent<Creation.RoomEditor>();
+            if(!editor||!editor.Liquids){WaterBlocker="Water traversal is unavailable";return false;}
+            bool allowed=editor.Liquids.CheckTraversal(actor,from,to,radius,bodyHeight,out var result);
+            if(!allowed)WaterBlocker=result.Reason;return allowed;
+        }
         internal uint SurfaceRevision { get; private set; }
         internal uint BuildRevision { get; private set; }
         Vector3 installedPosition;
@@ -122,20 +131,28 @@ namespace Maestro.Quest.Interaction
         bool GroundPosition(Vector3 value)=>world&&world.ContainsSimulation(value+Vector3.up*.1f,actor);
         internal bool Traverse(Vector3 from,Vector3 to,Func<Collider,bool> obstacle,out Vector3 floor,out string error)
         {
-            TraversalBlocker=null;floor=default;error="No connected accepted ground is available for this step";
+            TraversalBlocker=null;WaterBlocker=null;floor=default;error="No connected accepted ground is available for this step";
             if(!Ready||!PathsPending&&!DirectStep(from,to,out _))return false;
             int mask=world.CollisionMask((1<<RoomPhysicsLayers.Scanned)|(1<<RoomPhysicsLayers.Item)|(1<<RoomPhysicsLayers.Environment),actor);
             bool moved=groundMotor.Travel(CurrentGround,from,to-from,radius,height,mask,obstacle,groundPosition??=GroundPosition,out floor,out error);
-            if(!moved)TraversalBlocker=groundMotor.Blocker;return moved;
+            if(!moved)TraversalBlocker=groundMotor.Blocker;
+            else if(!WaterStep(from,floor,height)){error=WaterBlocker;return false;}
+            return moved;
         }
         internal bool ClearAuthoredStep(Vector3 from,Vector3 to,float extraHeight,Func<Collider,bool> obstacle)
         {
-            int mask=world.CollisionMask((1<<RoomPhysicsLayers.Scanned)|(1<<RoomPhysicsLayers.Item)|(1<<RoomPhysicsLayers.Environment),actor);
-            bool clear=groundMotor.ClearExact(from,to,radius,height+extraHeight,mask,obstacle);TraversalBlocker=clear?null:groundMotor.Blocker;return clear;
+            WaterBlocker=null;int mask=world.CollisionMask((1<<RoomPhysicsLayers.Scanned)|(1<<RoomPhysicsLayers.Item)|(1<<RoomPhysicsLayers.Environment),actor);
+            bool clear=groundMotor.ClearExact(from,to,radius,height+extraHeight,mask,obstacle);TraversalBlocker=clear?null:groundMotor.Blocker;
+            return clear&&WaterStep(from,to,height);
         }
-        public bool Path(Vector3 from, Vector3 to, NavMeshPath path) => Ready && !PathsPending &&
-            Sample(from,.25f,out var start) && Sample(to,.5f,out var end) &&
-            NavMesh.CalculatePath(start,end,Filter,path) && path.status == NavMeshPathStatus.PathComplete;
+        public bool Path(Vector3 from, Vector3 to, NavMeshPath path) {
+            WaterBlocker=null;
+            if(!Ready||PathsPending||!Sample(from,.25f,out var start)||!Sample(to,.5f,out var end)||
+                !NavMesh.CalculatePath(start,end,Filter,path)||path.status!=NavMeshPathStatus.PathComplete)return false;
+            var corners=path.corners;
+            for(int i=1;i<corners.Length;i++)if(!WaterStep(corners[i-1],corners[i],height))return false;
+            return true;
+        }
         void Clear()
         {
             PathsPending=false;

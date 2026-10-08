@@ -451,6 +451,7 @@ namespace Maestro.Quest.Creation
                 }
                 if (!item.Grab.isSelected && (created || changed == null || (applyChangedPose && changed.Contains(data.id)))) ApplyPose(item,data);
                 var environment=item.GetComponent<RoomEnvironmentBinding>()??item.gameObject.AddComponent<RoomEnvironmentBinding>();
+                item.WaterTraversal=RoomWaterTraversal.Effective(data);
                 environment.Apply(PhysicsWorld,item,string.IsNullOrEmpty(data.environmentProfile)?true:journal.ReadEnvironment(data.environmentProfile).realCollisions);
                 if(created || changed==null || changed.Contains(data.id)) {
                 item.GetComponent<RecipeObject>()?.ConfigureAppearanceBindings(data.appearanceBindings);

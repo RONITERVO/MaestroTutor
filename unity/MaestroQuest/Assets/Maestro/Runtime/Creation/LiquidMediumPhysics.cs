@@ -19,9 +19,9 @@ namespace Maestro.Quest.Creation {
             mediumBodies.Clear();
             foreach(var data in document.objects){var item=editor.Find(data.id);if(!item||data.IsBuiltIn)continue;var rigid=item.GetComponent<RigidRoomItem>();var body=item.GetComponent<Rigidbody>();if(rigid&&body)mediumBodies[data.id]=new(){Id=data.id,Item=item,Rigid=rigid,Body=body};}
         }
-        internal void CaptureMedia(){
+        internal void CaptureMedia(bool requireReadyGeometry=true){
             mediaCount=0;var gravity=Physics.gravity;if(!float.IsFinite(gravity.sqrMagnitude)||gravity.sqrMagnitude<.01f)return;var up=-gravity.normalized;
-            foreach(var v in vessels.Values){if(mediaCount==media.Length)break;if(!v.Item||!v.Item.isActiveAndEnabled||!v.Rigid||!v.Rigid.GeometryReady||v.Live.amountMl<=0)continue;media[mediaCount++]=new(v.Id,v.Item,v.Live,up,v.Body);}
+            foreach(var v in vessels.Values){if(mediaCount==media.Length)break;if(!v.Item||!v.Item.isActiveAndEnabled||!v.Rigid||requireReadyGeometry&&!v.Rigid.GeometryReady||v.Live.amountMl<=0)continue;media[mediaCount++]=new(v.Id,v.Item,v.Live,up,v.Body);}
         }
         internal bool SampleMedium(Vector3 point,RoomItem participant,string ignore,out LiquidMediumGeometry chosen,out float depth,out bool ready){
             using var environment=mediumEnvironment.Begin(world);

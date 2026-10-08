@@ -21,7 +21,7 @@ namespace Maestro.Quest.Creation
         List<MotionFrame> recording;
         float began, nextSample;
         bool posing, stopping, saving;
-        string saveError;
+        string saveError,playbackError;
         PlayableGraph graph;
         ScriptPlayable<RoomMotionPlayable> player;
         RoomMotion preview;
@@ -154,7 +154,7 @@ namespace Maestro.Quest.Creation
             graph = PlayableGraph.Create("User animation preview"); graph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
             player = ScriptPlayable<RoomMotionPlayable>.Create(graph); player.GetBehaviour().Motion = preview; player.GetBehaviour().Apply = Apply;
             var output = ScriptPlayableOutput.Create(graph,"Room motion"); output.SetSourcePlayable(player);
-            graph.Play(); began = Time.unscaledTime; Say(preview.loop ? "Playing loop — Stop returns to the saved pose" : "Playing — Stop returns to the saved pose");
+            playbackError=null;graph.Play(); began = Time.unscaledTime; Say(preview.loop ? "Playing loop — Stop returns to the saved pose" : "Playing — Stop returns to the saved pose");
         }
         public void ToggleLoop()
         {
@@ -166,7 +166,8 @@ namespace Maestro.Quest.Creation
         }
         void Apply(MotionFrame frame)
         {
-            if (!target) return;
+            if (!target||playbackError!=null&&IsPlaying) return;
+            if(IsPlaying&&(editor.Frame.PointToWorld(frame.position)-target.transform.position).sqrMagnitude>1e-10f&&!editor.WaterMotionStep(target,editor.Frame.PointToWorld(frame.position),out var water)){playbackError=water.Reason;return;}
             if(!editor.Frame.Apply(target.transform,frame.position,frame.rotation,frame.scale)){Say("The animation needs a valid uniform room frame");return;}
             if (avatar && avatar.PoseRig) { avatar.PoseRig.SetManual(true); avatar.PoseRig.Apply(frame.joints); }
         }
@@ -263,6 +264,7 @@ namespace Maestro.Quest.Creation
             {
                 float time = Time.unscaledTime - began;
                 player.SetTime(time); graph.Evaluate(0);
+                if(playbackError!=null){var reason=playbackError;Stop();Say(reason);return;}
                 if (!preview.loop && time >= preview.Duration) Stop();
             }
         }

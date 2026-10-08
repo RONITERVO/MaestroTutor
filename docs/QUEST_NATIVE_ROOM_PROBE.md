@@ -933,3 +933,27 @@ A passing desktop/provider journey does not establish physical rain, fog,
 occlusion, thermal or performance acceptance on Quest. Local rain visualization
 is bounded and does not supply water quantities. Unknown scan geometry remains
 unknown; this harness must not call synthetic room data a measured physical scan.
+
+
+### Shared actor water traversal
+
+`-ProviderScenario WaterTraversal` uses the existing managed or BYOK setup and
+fresh English-native/Spanish-target context. The harness creates a named box
+stand-in, WaterRobot, then the learner asks Maestro to wade up to 15 cm while
+keeping the robot out of water. A second request switches Maestro to avoidance
+while retaining that depth preference. Native facts must confirm independent
+policies and unchanged saved/live placement, collision environments and simulation
+state. The original tutor, verifier, delegated agent, receipts, final chat and
+usage accounting remain in the path. This scenario does not claim actual walking,
+swimming, a measured scan or headset acceptance.
+
+The no-provider journey uses the same settings action and facts, checks exact
+revisions and Undo/Redo, and restores the initial policy. The original-book journey
+loads the named actor's current values, changes its policy in the generated form,
+checks the native receipt, and reloads the accepted values. Evidence files are
+`water-traversal.json`, `book-native-water-traversal.json` and its screenshot, or
+`provider-scenarios.json` for each provider run. Native movement tests separately
+cover continuous thin-water sweeps, live fill changes, per-participant environment
+policy, paused forces, freshly moved collision bounds, and both Maestro and
+opted-in creation recordings. A path fact reports water admission only, not an
+entire traversable route or an automatic detour.

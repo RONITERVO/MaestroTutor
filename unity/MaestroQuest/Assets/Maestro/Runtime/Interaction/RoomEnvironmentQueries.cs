@@ -27,8 +27,8 @@ namespace Maestro.Quest.Interaction {
             foreach(var column in columns)if(column.Contains(point))return true;
             return false;
         }
-        bool CanSimulate(uint token,Vector3 point,RoomItem first,RoomItem second){
-            if(!Live(token)||!world.SimulationActive||!float.IsFinite(point.sqrMagnitude))return false;
+        bool CanOccupy(uint token,Vector3 point,RoomItem first,RoomItem second){
+            if(!Live(token)||!world.EnvironmentActive||!float.IsFinite(point.sqrMagnitude))return false;
             bool a=world.IncludesRealRoom(first),b=world.IncludesRealRoom(second);
             // Two participants using the same environment need one spatial proof.
             // Mixed policies require both; a virtual actor cannot borrow scan readiness.
@@ -37,7 +37,8 @@ namespace Maestro.Quest.Interaction {
         internal readonly ref struct Batch {
             readonly RoomEnvironmentQueries owner;readonly uint token;
             internal Batch(RoomEnvironmentQueries owner,uint token){this.owner=owner;this.token=token;}
-            internal bool CanSimulate(Vector3 point,RoomItem first,RoomItem second)=>owner!=null&&owner.CanSimulate(token,point,first,second);
+            internal bool CanSimulate(Vector3 point,RoomItem first,RoomItem second)=>owner!=null&&owner.world&&owner.world.Running&&owner.CanOccupy(token,point,first,second);
+            internal bool CanOccupy(Vector3 point,RoomItem first,RoomItem second)=>owner!=null&&owner.CanOccupy(token,point,first,second);
             public void Dispose()=>owner?.End(token);
         }
     }

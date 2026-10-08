@@ -18,6 +18,7 @@ namespace Maestro.Quest.Creation
         public string name;
         public RoomRecipe recipe;
         public string environmentProfile="",visibilityLayer="";
+        public RoomWaterTraversal waterTraversal=new();
         public AppearanceBinding[] appearanceBindings=Array.Empty<AppearanceBinding>();
         public ScanDrawingAnchor[] scanAnchors=Array.Empty<ScanDrawingAnchor>();
         public CollisionRecipe collision;
@@ -49,13 +50,13 @@ namespace Maestro.Quest.Creation
         public int walkClip;
         public string walkMotionId;
         public bool IsBuiltIn => kind == RoomObjectKind.Book || kind == RoomObjectKind.Maestro;
-        public RoomObjectData Copy() => new() { id = id, name = name, appearanceBindings=(appearanceBindings??Array.Empty<AppearanceBinding>()).Select(x=>x.Copy()).ToArray(),visibilityLayer=visibilityLayer,environmentProfile=environmentProfile, scanAnchors=scanAnchors?.Select(a=>a?.Copy()).ToArray(), recipe = recipe?.Copy(), collision=collision?.Copy(), surfaces=surfaces?.Select(s=>s?.Copy()).ToArray(), drawingTips=drawingTips?.Select(t=>t?.Copy()).ToArray(), connections=connections?.Select(h=>h?.Copy()).ToArray(), snapPoints=snapPoints?.Select(p=>p?.Copy()).ToArray(), containers=containers?.Select(c=>c?.Copy()).ToArray(), heightFields=heightFields?.Select(f=>f?.Copy()).ToArray(), sculptTips=sculptTips?.Select(t=>t?.Copy()).ToArray(), materialStores=materialStores?.Select(s=>s?.Copy()).ToArray(), audioEmitters=audioEmitters?.Select(s=>s?.Copy()).ToArray(), kind = kind, position = position, rotation = rotation, scale = scale, color = color, radius = radius, points = points == null ? null : (Vector3[])points.Clone(), joints = MotionFrame.CopyJoints(joints), motion = motion?.Copy(), modelHash = modelHash, physics = physics, mass = mass, collisionShape = collisionShape, followDistance = followDistance, walkSpeed = walkSpeed, walkClip = walkClip, walkMotionId = walkMotionId };
+        public RoomObjectData Copy() => new() { id = id, name = name, waterTraversal=waterTraversal?.Copy(), appearanceBindings=(appearanceBindings??Array.Empty<AppearanceBinding>()).Select(x=>x.Copy()).ToArray(),visibilityLayer=visibilityLayer,environmentProfile=environmentProfile, scanAnchors=scanAnchors?.Select(a=>a?.Copy()).ToArray(), recipe = recipe?.Copy(), collision=collision?.Copy(), surfaces=surfaces?.Select(s=>s?.Copy()).ToArray(), drawingTips=drawingTips?.Select(t=>t?.Copy()).ToArray(), connections=connections?.Select(h=>h?.Copy()).ToArray(), snapPoints=snapPoints?.Select(p=>p?.Copy()).ToArray(), containers=containers?.Select(c=>c?.Copy()).ToArray(), heightFields=heightFields?.Select(f=>f?.Copy()).ToArray(), sculptTips=sculptTips?.Select(t=>t?.Copy()).ToArray(), materialStores=materialStores?.Select(s=>s?.Copy()).ToArray(), audioEmitters=audioEmitters?.Select(s=>s?.Copy()).ToArray(), kind = kind, position = position, rotation = rotation, scale = scale, color = color, radius = radius, points = points == null ? null : (Vector3[])points.Clone(), joints = MotionFrame.CopyJoints(joints), motion = motion?.Copy(), modelHash = modelHash, physics = physics, mass = mass, collisionShape = collisionShape, followDistance = followDistance, walkSpeed = walkSpeed, walkClip = walkClip, walkMotionId = walkMotionId };
     }
 
     [Serializable]
     public sealed class RoomDocument
     {
-        public const int CurrentVersion=30;
+        public const int CurrentVersion=31;
         public const int MaximumObjects = 64;
         public const int MaximumStrokePoints = 2048;
         public const int MaximumTotalPoints = 32768;
@@ -80,7 +81,7 @@ namespace Maestro.Quest.Creation
         public bool Validate(out string error)
         {
             error = null;
-            if (version != 1 && version != 2 && version != 3 && version != 4 && version != 5 && version != 7 && version != 8 && version != 9 && version != 10 && version != 11 && version != 12 && version != 13 && version != 14 && version != 15 && version != 16 && version != 17 && version != 18 && version != 19 && version != 20 && version != 21 && version != 22 && version != 23 && version != 24 && version != 25 && version != 26 && version != 27 && version != 28 && version != 29 && version != CurrentVersion || objects == null || objects.Length < 2 || objects.Length > MaximumObjects + 2)
+            if (version != 1 && version != 2 && version != 3 && version != 4 && version != 5 && version != 7 && version != 8 && version != 9 && version != 10 && version != 11 && version != 12 && version != 13 && version != 14 && version != 15 && version != 16 && version != 17 && version != 18 && version != 19 && version != 20 && version != 21 && version != 22 && version != 23 && version != 24 && version != 25 && version != 26 && version != 27 && version != 28 && version != 29 && version != 30 && version != CurrentVersion || objects == null || objects.Length < 2 || objects.Length > MaximumObjects + 2)
                 return Fail("This room file has an unsupported version or object count.", out error);
             if(world!=null&&!world.Valid||version>=23&&world==null)return Fail("This room has an invalid world or region identity.",out error);
             if(version>=22&&(viewpoint==null||!viewpoint.Valid))return Fail("This room has an invalid saved viewpoint.",out error);
@@ -89,6 +90,7 @@ namespace Maestro.Quest.Creation
             {
                 if (item == null || !Enum.IsDefined(typeof(RoomObjectKind), item.kind) || string.IsNullOrEmpty(item.id) || !ids.Add(item.id))
                     return Fail("This room contains invalid or duplicate objects.", out error);
+                if(item.waterTraversal==null||!item.waterTraversal.Valid||version<31&&!item.waterTraversal.Default)return Fail("An object has invalid or unsupported water traversal settings.",out error);
                 if (item.name != null && (item.name.Length > 80 || item.name.Any(char.IsControl))) return Fail("Object names must be at most 80 readable characters.",out error);
                 if (item.kind == RoomObjectKind.Assembly ? item.recipe == null || !item.recipe.Validate(out _) : item.recipe != null) return Fail("An object has an invalid construction recipe.",out error);
                 if(version<11&&item.recipe?.parts.Any(p=>p.shape=="sweep")==true)return Fail("Sweeps require the current room format.",out error);

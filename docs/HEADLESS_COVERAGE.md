@@ -442,3 +442,12 @@ stops at a real acknowledged edit, changes the object through manual handlers,
 requires exact parent-task resolution and retained manual placement, and reopens
 the task host/store without replay. The negative stopped outcome still reconciles
 managed billing. Physical input and crash/unknown-receipt recovery remain separate.
+
+
+`WaterTraversal` extends the fresh managed/BYOK native scenarios to independent
+actor water policies, ordinary-language revision of a prior preference, and
+preservation of placement, collision settings and physics state. The deterministic
+native journey and original-book generated form exercise the same capability.
+Real movement/geometry checks remain separate native tests; none of these desktop
+runs establishes physical headset performance or swimming support. Run IDs,
+failures and provider accounting belong in QUEST_AGENT_RELEASE_COVERAGE.md.

@@ -61,7 +61,8 @@ namespace Maestro.Quest.Programs
             graph=PlayableGraph.Create("Rule recording");graph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
             player=ScriptPlayable<RoomMotionPlayable>.Create(graph);player.GetBehaviour().Motion=Motion;
             player.GetBehaviour().Apply=frame=>{
-                if(!Target)return;
+                if(!Target||frameError!=null)return;
+                if((Context.Editor.Frame.PointToWorld(frame.position)-Target.transform.position).sqrMagnitude>1e-10f&&!Context.Editor.WaterMotionStep(Target,Context.Editor.Frame.PointToWorld(frame.position),out var water)){frameError=water.Reason;return;}
                 if(!Context.Editor.Frame.Apply(Target.transform,frame.position,frame.rotation,frame.scale)){frameError="The animation room frame changed to an unsupported transform";return;}
                 if(Avatar&&Avatar.PoseRig) {Avatar.PoseRig.SetManual(true);Avatar.PoseRig.Apply(frame.joints);}
             };

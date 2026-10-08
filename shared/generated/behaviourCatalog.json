@@ -14212,6 +14212,39 @@
                                   "minimum": 1.0,
                                   "maximum": 3.0
                                 },
+                                "waterTraversal": {
+                                  "type": "object",
+                                  "properties": {
+                                    "mode": {
+                                      "type": "string",
+                                      "enum": [
+                                        "default",
+                                        "ignore",
+                                        "avoid",
+                                        "wade"
+                                      ]
+                                    },
+                                    "maxDepthMetres": {
+                                      "type": "number",
+                                      "minimum": 0.0,
+                                      "maximum": 2.0
+                                    },
+                                    "version": {
+                                      "type": "integer",
+                                      "minimum": 1.0,
+                                      "maximum": 1.0
+                                    }
+                                  },
+                                  "required": [
+                                    "mode",
+                                    "maxDepthMetres",
+                                    "version"
+                                  ],
+                                  "additionalProperties": false,
+                                  "x-features": [
+                                    "waterTraversal.v1"
+                                  ]
+                                },
                                 "color": {
                                   "type": "object",
                                   "properties": {
@@ -29385,6 +29418,117 @@
       }
     },
     {
+      "id": "object.water.traversal.configure",
+      "version": 1,
+      "label": "Configure water traversal",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "default",
+              "ignore",
+              "avoid",
+              "wade"
+            ]
+          },
+          "maxDepthMetres": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 2.0
+          }
+        },
+        "required": [
+          "target",
+          "revision",
+          "mode",
+          "maxDepthMetres"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "spatialSettings.v1",
+          "waterTraversal.v1"
+        ],
+        "x-current": {
+          "fact": "object.water.traversal.settings",
+          "version": 1,
+          "arguments": {
+            "target": "target"
+          },
+          "fields": {
+            "revision": [
+              "revision"
+            ],
+            "mode": [
+              "mode"
+            ],
+            "maxDepthMetres": [
+              "maxDepthMetres"
+            ]
+          },
+          "guards": [
+            "revision"
+          ]
+        }
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "object.revision.current",
+        "storage.writable"
+      ],
+      "description": "Choose how Maestro walking and recorded root movement, or an opted-in creation's recorded root movement, respond to finite liquid cavities. default means Maestro avoids water and other objects ignore it. avoid stops at water; wade permits depth up to maxDepthMetres in authored-room metres, capped at 60% of walking body height; ignore is for deliberate non-walking movement. Swimming and water-aware route detours are not provided. Swept upright body checks use live fill levels, including when forces are paused. This changes neither rigid-body buoyancy, gripping, explicit placement, real-room collision profiles nor visibility. Read object.water.traversal.settings and preserve unrequested settings. Read the matching fact and pass the exact object revision. Changed settings save before success with one Undo outside temporary play; already identical settings add no Undo; temporary changes stay in the fork until Keep. Unrequested settings, poses and recorded animations are preserved. Refuses held targets, active authoring and competing motion instead of stopping them; physical tools keep manual interruption priority. Does not start playback, following or physics. Duplicate receipts do not save twice. Stop cannot undo an already completed save; use Undo or explicit settings with a fresh revision.",
+      "example": {
+        "target": "maestro",
+        "revision": 1,
+        "mode": "wade",
+        "maxDepthMetres": 0.2
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "target",
+          "revision",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "avatar.movement.configure",
       "version": 1,
       "label": "Configure Maestro movement",
@@ -36846,6 +36990,112 @@
       ]
     },
     {
+      "id": "object.water.traversal.settings",
+      "version": 1,
+      "type": {
+        "record": {
+          "target": "text",
+          "revision": "number",
+          "mode": "text",
+          "effectiveMode": "text",
+          "maxDepthMetres": "number",
+          "temporary": "boolean"
+        }
+      },
+      "label": "Water traversal settings",
+      "description": "Accepted actor policy and exact revision. default resolves to avoid for Maestro and ignore for creations. The saved wading depth is additionally limited by actual body height. This read does not move, swim or alter physics.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "maestro"
+      },
+      "features": [
+        "factQueries.v1",
+        "waterTraversal.v1"
+      ]
+    },
+    {
+      "id": "object.water.traversal.path",
+      "version": 1,
+      "type": {
+        "record": {
+          "allowed": "boolean",
+          "bodyId": "text",
+          "depthMetres": "number",
+          "reason": "text"
+        }
+      },
+      "label": "Water path inspection",
+      "description": "Read-only continuous liquid check from the target's current upright walking envelope to an authored-room position. It samples current fill levels and per-actor environment admission. allowed proves only water policy, not terrain, obstacle clearance, ownership or a connected route. bodyId is the refusing vessel, or the deepest allowed vessel. No movement or physics start.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "position": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "y": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "z": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "target",
+          "position"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "maestro",
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "features": [
+        "factQueries.v1",
+        "waterTraversal.v1"
+      ]
+    },
+    {
       "id": "avatar.movement.settings",
       "version": 1,
       "type": {
@@ -40004,7 +40254,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarSpatialMotion.cs",
-      "sha256": "28404dedd438708e397893802736613c9d1bdeaa0bd20e20fe72d75075ce3324"
+      "sha256": "b2b1922baf0792dd52752a8d3e319875ff664cd3a835fd0e7ab63c73b397d646"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarSpatialTools.cs",
@@ -40200,7 +40450,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "23be6d08d50f01c74d8f14b8ff83a5788f74962d34be4cea8ca2158ec758e845"
+      "sha256": "e3f2d79fad9cb57f50f16b02cd2f384180d7a5efb6ac2212673b95b59f6e1757"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -40272,7 +40522,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreationPrototypeSchema.cs",
-      "sha256": "0f81dc76aba28bcfe0dc786b9a3da9abc6201e5874421000416de92db28880f8"
+      "sha256": "e7c607e3f46d327c4a4d6525734407ba63aa58fc718d848db56050b153616861"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreationResourcesSchema.cs",
@@ -40432,7 +40682,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RecordedAnimationCapabilities.cs",
-      "sha256": "76b392b79a29290e7db0a5b9789ef06d9697f48a743480fdb2a14c67890984e9"
+      "sha256": "3d1f77d9271a9ecbac61ba6658551f99b919dbe5199e9e3e64ef425cd911e932"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RoomEnvironmentCapability.cs",
@@ -40513,6 +40763,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/VisibilityLayerCapabilities.cs",
       "sha256": "312a1a8bd9ab54f28722c25352585bc49ffafd7f5cbac80011aac1580001dadc"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WaterTraversalCapability.cs",
+      "sha256": "3e0d12cde113bda615b079747160d9075ade371a9ca717f1fbaa0ee6787e48ea"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceActivationCapabilities.cs",
@@ -40596,7 +40850,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationWorkshop.cs",
-      "sha256": "331fc5f49a6dc3b5662e18f8d56c859215bcf1a2faa59c3ed3967fb3f677275d"
+      "sha256": "dfa7970dd31d7d88f4e637ee68dd6a37b186dd43b5ce6aacbcb7c250738dadf6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AudioTone.cs",
@@ -40660,7 +40914,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationPrototype.cs",
-      "sha256": "81a97ded3137f9c7e9b47b2903dba5c7ad34d3c377544cefb0a78a22ccfa8abd"
+      "sha256": "96c3696e09e2ed1de6bb6510c9cc87d55dc7a6e8c057803df2045d97b8a65616"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationResources.cs",
@@ -40704,11 +40958,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidMediumGeometry.cs",
-      "sha256": "6a09499320bfba5277bac729323ac6be046831d7649a038e032c30158932c8d2"
+      "sha256": "34c1fe434063ad341e18d564a233df394b0f549c49b6e483335a8c565abbcd62"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidMediumPhysics.cs",
-      "sha256": "26dcb633f94ad146518eecf80692a725b88894f596314053fa857d619800a769"
+      "sha256": "7552cb80f75d5ea62c8f8cfd26788c65d9d7b1089608891f126aec78c33817e9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidPouring.cs",
@@ -40832,11 +41086,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "e2f52ede2baf89927d5c8399d6525528c0278e131ddcdc4c2f9818a96b156244"
+      "sha256": "14327c9619e034efa31bcd17f523c77db1f17dccff3d9631c5f0c9c38a3c658d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "c8162326ff27d01e09f164c67387e21a01d2972a2b1ccd26b9c31d1a489fed5b"
+      "sha256": "ea903c2c91c7a2009da97472c3157df890d2258eafb0faf11823ee6f626cce66"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDrawingEdits.cs",
@@ -40852,7 +41106,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "c75949a41e583055caa61368ec489a20c050abd937c64c95d38edbe68f4e76e6"
+      "sha256": "ac9afd7ba12f7d3354ec368ab008ee721a756f84234f9161f294fd508cf32d32"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -40976,7 +41230,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "bec415d1e48ce941afa7c7873897c6cccdeec4db356f80e78d8f71ec1d107e0a"
+      "sha256": "4f7e4222b88d694d9010b7cfc1fddc3d9bfd8a4298fbe741e4d59d5c8c737d6f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructure.cs",
@@ -41013,6 +41267,14 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomVisibilityLayer.cs",
       "sha256": "174db5a556b3d3235e284818339d2ec4b2f2b4a51d0608ab333261d43a77e57c"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomWaterTraversal.cs",
+      "sha256": "bafc4b66b79cc68797028e3b62f0bf8a54244d32c01b23a8d08285d436d00d25"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomWaterTraversalEdits.cs",
+      "sha256": "033e12d72f950611d92897e713b5470ffdd1c71c055888ef5bfaf83cd3f6b8df"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomWeather.cs",
@@ -41276,7 +41538,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomEnvironmentQueries.cs",
-      "sha256": "757a5ff649ba3c0a331ae81285b4840ef05aea071cae425e20dbfc3f4e3ffdc9"
+      "sha256": "5f044be249b6e99f853069449f25515f88b9327c8e4f07c4704b15cc9d94dd9e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomGroundMotor.cs",
@@ -41292,11 +41554,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomItem.cs",
-      "sha256": "5f506c705985bd6ebb9d497ca555bc3513c54b920f164a7418a2fe5cc6386dbc"
+      "sha256": "8912c1c5e621c93252b9f977cc05548995d5b800a99885ca211f9a2d85df6450"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigation.cs",
-      "sha256": "ddf0c29da576c4cfd7a9b553b6d53df94902092e60b0d7966b74b6e96d8235d9"
+      "sha256": "438ad56bbb809c8454fa9ec37455ed4731ef0413d943a383b4ec606cf8d99654"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationGeometry.cs",
@@ -41312,7 +41574,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomPhysicsWorld.cs",
-      "sha256": "1bf376ea873cb18780e6d23445fc0539c7c4370c25fef33ab1e21d08170e7695"
+      "sha256": "2ee3f7b38e0cc4aa08134b94304f19c87dbe4e52ddeb87140d25d629853df8ab"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomPointerHit.cs",
@@ -41416,7 +41678,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
-      "sha256": "b32718335873b5b9e75382e798a4297fbf0d55675de241e57405a019a11ca1e7"
+      "sha256": "1ac065b32cba0344ec0dd63628da6f4405f8bc67b4ed4246509f99321802aa97"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceAcceptedSave.cs",
@@ -41428,7 +41690,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchive.cs",
-      "sha256": "685ff14c78fbf3e4107c916f2754cce4b444a98dbcea39bd996f02d141db31b0"
+      "sha256": "28c29cfbef2e08c1703cbfbac8b0de72133c8a2fe10b85be042d5f2b5b5c60cf"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveCapture.cs",
@@ -41544,7 +41806,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "96a619eb33a933144fcbca75feb358218f0ea1de41b4a7024ebbb626c96546d1"
+      "sha256": "36880b460d38508ea4dfa12e6ea10295246b650e86c7748ef6914ad68ea58ad3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

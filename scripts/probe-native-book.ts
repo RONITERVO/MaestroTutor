@@ -328,6 +328,17 @@ try{
  assert.equal(layerPresentation.call.arguments.id,visualLayer.output!.id);assert.equal(layerPresentation.output!.opacity,.5);
  await writeFile(join(directory,'book-native-layer-presentation.json'),JSON.stringify({boundary:'Named layer lookup, current guard read and transient view request through the original book and native Unity. No headset or real-provider proof.',layerPresentation},null,2));
  await page.getByRole('region',{name:'Visual layer choice',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-layer-presentation.png')});
+ await openNamedAction('Configure water traversal','object.water.traversal.configure');
+ await page.getByLabel('Action inputs target',{exact:true}).selectOption(ball.id);
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ const retainedDepth=await page.getByLabel('Action inputs maxDepthMetres',{exact:true}).inputValue();
+ await page.getByLabel('Action inputs mode',{exact:true}).selectOption('avoid');
+ const waterTraversal=await runNamedAction('object.water.traversal.configure');
+ assert.equal(waterTraversal.call.arguments.mode,'avoid');assert.equal(waterTraversal.call.arguments.maxDepthMetres,Number(retainedDepth));
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ assert.equal(await page.getByLabel('Action inputs mode',{exact:true}).inputValue(),'avoid');
+ await page.getByRole('heading',{name:'Configure water traversal',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-water-traversal.png')});
+ await writeFile(join(directory,'book-native-water-traversal.json'),JSON.stringify({boundary:'Actual original-book generated form, native save receipt and current-value reload. No provider, physical movement or headset claim.',waterTraversal},null,2));
  await openNamedAction('Save environment profile','environment.profile.save');
  await page.getByLabel('Action inputs name',{exact:true}).fill('Virtual terrain only');
  await page.getByLabel('Action inputs realCollisions',{exact:true}).selectOption('false');

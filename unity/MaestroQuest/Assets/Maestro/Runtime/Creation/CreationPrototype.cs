@@ -26,6 +26,7 @@ namespace Maestro.Quest.Creation
         public AppearanceBinding[] appearanceBindings=Array.Empty<AppearanceBinding>();
         public RoomAudioEmitter[] audioEmitters=Array.Empty<RoomAudioEmitter>();
         public string environmentProfile="",visibilityLayer="";
+        public RoomWaterTraversal waterTraversal=new();
         internal bool HasResources=>appearanceBindings.Length>0||audioEmitters.Length>0||environmentProfile!=""||visibilityLayer!="";
         public ObjectPhysicsSettings physics;
         public RoomRecipe recipe;
@@ -46,7 +47,7 @@ namespace Maestro.Quest.Creation
             "drawing"=>RoomObjectKind.Drawing,"model"=>RoomObjectKind.ImportedModel,"recipe"=>RoomObjectKind.Assembly,_=>null};
         internal RoomObjectData Instantiate(string name,Vector3 position,Quaternion rotation,float scale) {
             var data=new RoomObjectData {id=Guid.NewGuid().ToString("N"),name=name,kind=Kind(kind).Value,position=position,rotation=rotation,scale=scale,
-                appearanceBindings=appearanceBindings.Select(b=>b.Copy()).ToArray(),audioEmitters=audioEmitters.Select(e=>e.Copy()).ToArray(),environmentProfile=environmentProfile,visibilityLayer=visibilityLayer,color=color,recipe=recipe?.Copy(),collision=collision?.Copy(),surfaces=surfaces.Select(s=>s.Copy()).ToArray(),drawingTips=drawingTips.Select(t=>t.Copy()).ToArray(),snapPoints=snapPoints?.Select(p=>p.Copy()).ToArray()??Array.Empty<RoomSnapPoint>(),
+                waterTraversal=waterTraversal.Copy(),appearanceBindings=appearanceBindings.Select(b=>b.Copy()).ToArray(),audioEmitters=audioEmitters.Select(e=>e.Copy()).ToArray(),environmentProfile=environmentProfile,visibilityLayer=visibilityLayer,color=color,recipe=recipe?.Copy(),collision=collision?.Copy(),surfaces=surfaces.Select(s=>s.Copy()).ToArray(),drawingTips=drawingTips.Select(t=>t.Copy()).ToArray(),snapPoints=snapPoints?.Select(p=>p.Copy()).ToArray()??Array.Empty<RoomSnapPoint>(),
                 heightFields=heightFields?.Select(f=>f.Copy()).ToArray()??Array.Empty<RoomHeightField>(),sculptTips=sculptTips?.Select(t=>t.Copy()).ToArray()??Array.Empty<SculptTip>(),materialStores=materialStores?.Select(s=>s.Copy()).ToArray()??Array.Empty<RoomMaterialStore>(),containers=containers?.Select(c=>c.Copy()).ToArray()??Array.Empty<RoomContainer>(),points=points?.ToArray(),radius=radius,modelHash=modelHash};
             RoomControls.SetPhysics(data,physics,out _);
             if(motion!=null)data.motion=new RoomMotion {loop=motion.loop,frames=motion.frames.Select(f=>new MotionFrame {
@@ -59,6 +60,7 @@ namespace Maestro.Quest.Creation
             // Unity creates default serializable reference objects for absent fields.
             result.recipe=result.kind=="recipe"?result.recipe:null;result.points=result.kind=="drawing"?result.points:null;
             result.modelHash=result.kind=="model"?result.modelHash:null;
+            if(!value.ContainsKey("waterTraversal"))result.waterTraversal=new();
             if(!value.ContainsKey("collision"))result.collision=null;if(!value.ContainsKey("motion"))result.motion=null;
             if(!value.ContainsKey("appearanceBindings"))result.appearanceBindings=Array.Empty<AppearanceBinding>();
             if(!value.ContainsKey("audioEmitters"))result.audioEmitters=Array.Empty<RoomAudioEmitter>();
@@ -68,7 +70,7 @@ namespace Maestro.Quest.Creation
         }
         public bool Validate(out string error) {
             error="Provide a version-1, version-2 or version-3 creation prototype with idle geometry, valid components and local motion";
-            if(version is not (1 or 2 or 3)||visibilityLayer==null||version<3&&visibilityLayer!=""||version==3&&visibilityLayer==""||appearanceBindings==null||audioEmitters==null||environmentProfile==null||appearanceBindings.Any(b=>b==null)||audioEmitters.Any(e=>e==null)||version==1&&HasResources||Kind(kind)==null||!RoomControls.ValidPhysics(physics)||surfaces==null||drawingTips==null||surfaces.Any(s=>s==null)||drawingTips.Any(t=>t==null)||
+            if(waterTraversal==null||!waterTraversal.Valid||version is not (1 or 2 or 3)||visibilityLayer==null||version<3&&visibilityLayer!=""||version==3&&visibilityLayer==""||appearanceBindings==null||audioEmitters==null||environmentProfile==null||appearanceBindings.Any(b=>b==null)||audioEmitters.Any(e=>e==null)||version==1&&HasResources||Kind(kind)==null||!RoomControls.ValidPhysics(physics)||surfaces==null||drawingTips==null||surfaces.Any(s=>s==null)||drawingTips.Any(t=>t==null)||
                 recipe?.playing==true||motion!=null&&!motion.Valid)return false;
             if(recipe!=null&&!recipe.Validate(out error)||collision!=null&&!collision.Validate(out error))return false;
             var shallow=new RoomObjectData {kind=Kind(kind).Value,recipe=recipe,surfaces=surfaces,drawingTips=drawingTips,snapPoints=snapPoints,containers=containers,heightFields=heightFields,sculptTips=sculptTips,materialStores=materialStores};
@@ -87,7 +89,7 @@ namespace Maestro.Quest.Creation
             if(data==null||data.IsBuiltIn)throw new ArgumentException("Choose a created object");
             var copy=data.Copy();var q=Quaternion.Inverse(copy.rotation);
             return new CreationPrototype {version=copy.visibilityLayer!=""?3:CreationResources.Uses(copy)?2:1,appearanceBindings=copy.appearanceBindings,audioEmitters=copy.audioEmitters,environmentProfile=copy.environmentProfile,visibilityLayer=copy.visibilityLayer,kind=copy.kind switch {RoomObjectKind.ImportedModel=>"model",RoomObjectKind.Assembly=>"recipe",_=>copy.kind.ToString().ToLowerInvariant()},
-                color=copy.color,physics=RoomControls.Physics(copy),recipe=copy.recipe,collision=copy.collision,surfaces=copy.surfaces,drawingTips=copy.drawingTips,snapPoints=copy.snapPoints,containers=copy.containers,heightFields=copy.heightFields,sculptTips=copy.sculptTips,materialStores=copy.materialStores,
+                waterTraversal=copy.waterTraversal.Copy(),color=copy.color,physics=RoomControls.Physics(copy),recipe=copy.recipe,collision=copy.collision,surfaces=copy.surfaces,drawingTips=copy.drawingTips,snapPoints=copy.snapPoints,containers=copy.containers,heightFields=copy.heightFields,sculptTips=copy.sculptTips,materialStores=copy.materialStores,
                 points=copy.points,radius=copy.radius,modelHash=copy.modelHash,motion=copy.motion==null?null:new PrototypeMotion {loop=copy.motion.loop,frames=copy.motion.frames.Select(f=>new PrototypeFrame {
                     time=f.time,position=q*(f.position-copy.position)/copy.scale,rotation=(q*f.rotation).normalized,scale=f.scale/copy.scale}).ToArray()}};
         }

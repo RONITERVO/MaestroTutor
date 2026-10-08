@@ -1525,3 +1525,74 @@ receipts and readback cover the complete existing journey, including finite
 medium properties, conserved transfer and Undo/Redo. No provider was used in
 this run. The generated catalog differs from the preceding commit only in
 source provenance; its public schemas and descriptions are unchanged. All ten protected unrelated working files remain unchanged.
+
+
+## Actor water traversal (2026-10-08)
+
+The shared waterTraversal.v1 capability persists an independent actor policy:
+Maestro defaults to avoidance; authored creations opt in to avoidance or bounded
+wading. Follow, controller walking, authored travel, recorded root motion and
+physical animation preview use continuous finite-liquid sweeps. Live fill levels
+and both participants' environment policies apply while rigid forces are paused.
+This does not change explicit placement, grips, buoyancy, collision profiles or
+visibility. The read-only path fact proves water admission only, not a connected
+route. Detours, escape/swimming, terrain reservoirs and headset acceptance remain
+open.
+
+Current native verification passes **982 EditMode**, **107 focused PlayMode** and
+**878 full PlayMode** cases. The full run has zero failures and three established
+optional private-asset ignores. Shared room/book/headless tests pass **1,432 in
+134 files**, with **22 probe-contract tests** separately passing. Types, targeted
+lint, catalog provenance and core boundaries pass. The catalog contains
+119 actions, 140 facts, 18 events and 480 native source inputs.
+
+Failure evidence remains explicit. The initial saved-room assertion relied on a
+different snapshot's object order; it now finds the stable object ID. A later
+regression exposed stale Collider.bounds after an immediate transform move;
+water-motion reads now synchronize transforms first. Dedicated tests cover both
+fresh clearance and subsequent water collision, plus an opted-in creation's
+recorded playback. All nine dedicated cases pass. Headless run
+320c204e07284ab08dbcd4b5b01f2c8f failed because the harness used creation-only
+object.placement for Maestro. The corrected harness uses existing
+object.definition and object.position v2; no runtime contract was loosened.
+The completed native/book/provider results follow separately below.
+
+
+The corrected deterministic native journey **29955143e8b8462ea4d6c85479041cd3**
+passes **702 observations** with client and Editor both exiting 0. It checks water
+configuration, exact revision readback, unchanged Maestro pose, Undo/Redo and
+restoration alongside the complete existing world journey. No provider was used;
+this does not replace movement tests or physical headset acceptance.
+
+
+Original-book journey **75b1f9ffed404fcf888196e4e9f9c0ef** passes with client and
+Editor both exiting 0. The generated form selects Cooperative ball by name,
+loads its current revision, saves avoidance while retaining the 0.25 m preference,
+and reloads the accepted values. The captured two-page form was inspected: target,
+mode, depth, completion status and current-value controls are visible and readable.
+This is the desktop original-book/native bridge, not Android texture or physical
+controller acceptance.
+
+
+Fresh real-provider WaterTraversal journeys also pass:
+
+| Access mode | Run | Confirmed result |
+| --- | --- | --- |
+| Managed | d16ffa9c1faf4290829a2f7fa0a4bf72 | Two ordinary requests, three completed native water-policy edits, 40 observations |
+| BYOK | 8d9593d9f8fe4e15990f6b19bead2a84 | Same two-request semantics, three completed edits, 40 observations |
+
+Both use Gemini 3.8 Flash through the original tutor/verifier/delegated-agent
+path. Maestro first wades to 0.15 m while WaterRobot avoids water; the later
+request makes Maestro avoid water while preserving that depth preference and
+the robot's unchanged policy. Native saved/live poses, collision environments
+and simulation state match the pre-request baseline. Each action turn confirms
+original context, verified handoff, native receipts, completion and reply in chat.
+The named robot is a harness-created box stand-in; no autonomous swimming,
+walking, camera input or actual scanned room is claimed by these provider runs.
+
+Managed accounting reconciles **329 credits / USD 0.321044** across the two
+action turns (176 + 153 credits), with no mismatches or outstanding reservations.
+The introductory chat is outside those totals. BYOK provider usage is retained;
+managed billing is inapplicable because the API-key owner pays the provider.
+All ten protected unrelated working files remain unchanged. Headset, signing,
+upload, deployment and Store acceptance were not exercised by this increment.

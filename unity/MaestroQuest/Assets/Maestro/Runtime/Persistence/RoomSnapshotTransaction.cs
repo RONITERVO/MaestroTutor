@@ -20,7 +20,7 @@ namespace Maestro.Quest.Persistence
     /// Recovery never executes actions, and unexpected file identities preserve all evidence.</summary>
     internal static class RoomSnapshotTransaction
     {
-        internal const string FileName="room-snapshot.v29.json";
+        internal const string FileName="room-snapshot.v30.json";
         internal const int RoomLimit=4*1024*1024,JournalLimit=16*1024*1024;
         static readonly string[] Names={RoomStorage.FileName,ProgramMemoryStore.FileName};
         static readonly int[] Limits={RoomLimit,ProgramMemoryDocument.MaximumBytes};
@@ -63,7 +63,7 @@ namespace Maestro.Quest.Persistence
             Need(bytes.Length>0&&bytes.Length<=Limits[index],"Snapshot document exceeds its limit.");
             if(index==1){_=ProgramMemoryDocument.Decode(bytes);return;}
             var json=Json(bytes,48);
-            Need(Exact(json,"version","objects","structures","audioSources","viewpoint","world","environmentProfiles","appearances","visibilityLayers","lighting","worldTime","weather")&&RoomFluid.ValidWire(json)&&RoomViewpoint.ValidWire(json)&&RoomWorldIdentity.ValidWire(json)&&RoomEnvironmentProfile.ValidWire(json)&&RoomAppearance.ValidWire(json)&&RoomVisibilityLayer.ValidWire(json)&&RoomLighting.ValidWire(json)&&RoomWorldTime.ValidWire(json)&&RoomWeather.ValidWire(json)&&json["version"]?.Type==JTokenType.Integer&&(int)json["version"]==RoomDocument.CurrentVersion,"Unsupported room snapshot.");
+            Need(Exact(json,"version","objects","structures","audioSources","viewpoint","world","environmentProfiles","appearances","visibilityLayers","lighting","worldTime","weather")&&RoomWaterTraversal.ValidWire(json)&&RoomFluid.ValidWire(json)&&RoomViewpoint.ValidWire(json)&&RoomWorldIdentity.ValidWire(json)&&RoomEnvironmentProfile.ValidWire(json)&&RoomAppearance.ValidWire(json)&&RoomVisibilityLayer.ValidWire(json)&&RoomLighting.ValidWire(json)&&RoomWorldTime.ValidWire(json)&&RoomWeather.ValidWire(json)&&json["version"]?.Type==JTokenType.Integer&&(int)json["version"]==RoomDocument.CurrentVersion,"Unsupported room snapshot.");
             var room=JsonUtility.FromJson<RoomDocument>(Utf8.GetString(bytes));Need(room!=null,"Missing room snapshot.");RoomStorage.Normalize(room);
             Need(room.Validate(out _),"Invalid room snapshot.");
         }

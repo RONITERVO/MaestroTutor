@@ -13,6 +13,9 @@ Current desktop source supports saved per-object real-room participation and
 swept world movement at any backdrop opacity. See the [current movement contract
 and evidence](#swept-world-travel-in-mixed-reality-2026-10-08). These changes are
 not physical Quest acceptance.
+Saved actor water policies now share live liquid geometry across walking and
+recorded root movement; see [water traversal](#water-traversal-shares-actor-policy-and-live-liquid-geometry).
+Automatic water detours, swimming and terrain reservoirs remain open.
 Saved visual layers now use the same native catalog and named resource forms for
 users and agents. Transient viewing controls extend that foundation; see
 [saved layers](#saved-visual-layers-and-shared-authoring--2026-10-08) and
@@ -5422,3 +5425,117 @@ receipts and readback cover the complete existing journey, including finite
 medium properties, conserved transfer and Undo/Redo. No provider was used in
 this run. The generated catalog differs from the preceding commit only in
 source provenance; its public schemas and descriptions are unchanged. All ten protected unrelated working files remain unchanged.
+
+
+## Water traversal shares actor policy and live liquid geometry
+
+The next immersion increment adds a versioned waterTraversal component to
+Maestro and creations, copied with objects, preserved in captured prototypes,
+paired snapshots and workspace archives. Default resolves to avoid for Maestro
+and ignore for ordinary props. An authored NPC can opt into avoid or wade;
+ignore remains available for explicitly non-walking motion. Saved wading depth
+uses authored-room metres and is capped at 60% of the actual walking-body height.
+This does not change collision profiles, real-room boundaries, visibility,
+rigid-prop buoyancy, gripping, explicit relocation or joint-only posing.
+
+object.water.traversal.configure, its current-settings fact and a read-only
+path fact use the existing catalog, generated book forms, guarded saves, native
+receipts and Undo. The path fact reports only water admission, not a complete
+navigable route. Native walking (follow and controller), authored avatar travel,
+recorded root motion and physical animation preview use the same continuous
+finite-cavity sweep. It considers live rain/pouring quantities even while rigid
+forces are paused. Both actor and water-owner environment profiles apply, so
+virtual participants can interact below the scanned floor without granting that
+permission to real-room participants. Unready intersected water refuses movement
+rather than disappearing from the query.
+
+The sweep conservatively expands convex cavity planes by an upright body
+envelope. Cylinders use sixteen circumscribed planes; rectangle corners can stop
+a rounded body slightly early. The current collision envelope does not simulate
+individual limbs or independently animated recipe parts. A blocked route is
+reported and movement stops; this increment does not reroute around pools,
+provide swimming/escape behavior, terrain reservoirs, viewer-water policies,
+underwater rendering, ripples or aquatic life. Those remain release-plan work.
+User physical movement and explicit authored placement remain separate from NPC
+locomotion. No city-scale, headset-performance or full-water-system acceptance is
+claimed.
+
+Room format advances to 31, paired snapshot to 30 and portable archive to 29.
+Current saves require the explicit component fields; unknown future component
+versions preserve the unreadable save. Legacy absence gets the explicit default;
+no new multi-step migration graph is introduced.
+
+Initial verification: 982 EditMode, 105 focused PlayMode and 1,432 shared tests
+in 134 files pass. The focused native tests cover thin-water sweep, rotated/
+scaled cavities, saved policy and future-data protection, live fill changes,
+paused forces, unavailable geometry, per-participant real-room policy, temporary
+discard, failed saves, shared revisions/Undo, follow/direct/authored travel and
+skipped recorded frames in both program and physical preview. An initial
+persistence assertion used another snapshot's object order; it now locates the
+saved object by stable ID. The shared path schema was corrected to allow negative
+authored heights, preserving the below-floor use case. Full regression and fresh
+native/book/provider evidence follow separately.
+
+
+A supplemental creation test exposed stale Unity Collider.bounds immediately
+following an authored transform change. Water-motion observation now synchronizes
+transforms before reading its body envelope and supporting geometry. The repaired
+case checks both above-water clearance and a later crossing through the water.
+A separate recorded-creation test confirms this is not Maestro-only enforcement.
+All nine dedicated water PlayMode cases pass; the final broader focused run has
+982 EditMode and 107 PlayMode passes. The full regression follows separately.
+
+The first extended headless journey, 320c204e07284ab08dbcd4b5b01f2c8f, failed
+because its new helper requested creation-only object.placement for Maestro.
+The helper now reads the existing object.definition and object.position v2 facts;
+the public placement contract was not broadened to hide a harness error. No
+complete headless acceptance is claimed for that failed run.
+
+
+The final full native run passes **878 PlayMode cases**, with zero failures and
+three established optional private-asset ignores. The earlier 876-pass run
+predates the transform-synchronization repair and is retained separately in the
+working record. Current catalog provenance covers 119 actions, 140 facts,
+18 events and 480 native source inputs. Shared room/book/headless contracts pass
+1,432 tests in 134 files; the separate probe contracts pass 22 tests in two files.
+Probe types, targeted lint, catalog provenance and core boundaries pass.
+
+
+The corrected deterministic native journey **29955143e8b8462ea4d6c85479041cd3**
+passes **702 observations** with client and Editor both exiting 0. It checks water
+configuration, exact revision readback, unchanged Maestro pose, Undo/Redo and
+restoration alongside the complete existing world journey. No provider was used;
+this does not replace movement tests or physical headset acceptance.
+
+
+Original-book journey **75b1f9ffed404fcf888196e4e9f9c0ef** passes with client and
+Editor both exiting 0. The generated form selects Cooperative ball by name,
+loads its current revision, saves avoidance while retaining the 0.25 m preference,
+and reloads the accepted values. The captured two-page form was inspected: target,
+mode, depth, completion status and current-value controls are visible and readable.
+This is the desktop original-book/native bridge, not Android texture or physical
+controller acceptance.
+
+
+Fresh real-provider WaterTraversal journeys also pass:
+
+| Access mode | Run | Confirmed result |
+| --- | --- | --- |
+| Managed | d16ffa9c1faf4290829a2f7fa0a4bf72 | Two ordinary requests, three completed native water-policy edits, 40 observations |
+| BYOK | 8d9593d9f8fe4e15990f6b19bead2a84 | Same two-request semantics, three completed edits, 40 observations |
+
+Both use Gemini 3.8 Flash through the original tutor/verifier/delegated-agent
+path. Maestro first wades to 0.15 m while WaterRobot avoids water; the later
+request makes Maestro avoid water while preserving that depth preference and
+the robot's unchanged policy. Native saved/live poses, collision environments
+and simulation state match the pre-request baseline. Each action turn confirms
+original context, verified handoff, native receipts, completion and reply in chat.
+The named robot is a harness-created box stand-in; no autonomous swimming,
+walking, camera input or actual scanned room is claimed by these provider runs.
+
+Managed accounting reconciles **329 credits / USD 0.321044** across the two
+action turns (176 + 153 credits), with no mismatches or outstanding reservations.
+The introductory chat is outside those totals. BYOK provider usage is retained;
+managed billing is inapplicable because the API-key owner pays the provider.
+All ten protected unrelated working files remain unchanged. Headset, signing,
+upload, deployment and Store acceptance were not exercised by this increment.

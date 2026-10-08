@@ -146,7 +146,7 @@ namespace Maestro.Quest.Avatar
                     }
                     else Say(navigation.TraversalBlocker?Blocker(navigation.TraversalBlocker):blocked);
                 }
-                else Say(navigation.PathsPending?"Updating the room path — following is still enabled":"No connected path — try Size, or place Maestro on the same clear floor");
+                else Say(navigation.WaterBlocker??(navigation.PathsPending?"Updating the room path — following is still enabled":"No connected path — try Size, or place Maestro on the same clear floor"));
             }
             else
             {
@@ -205,7 +205,7 @@ namespace Maestro.Quest.Avatar
         {
             blocked="The authored path is blocked";
             bool clear=navigation.ClearAuthoredStep(transform.position,next,extraHeight,walkingObstacle??=BodyObstacle);
-            if(!clear&&navigation.TraversalBlocker)blocked=Blocker(navigation.TraversalBlocker);return clear;
+            if(!clear)blocked=navigation.TraversalBlocker?Blocker(navigation.TraversalBlocker):navigation.WaterBlocker??blocked;return clear;
         }
         bool BodyObstacle(Collider collider)
         {
