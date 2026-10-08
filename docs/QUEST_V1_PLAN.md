@@ -4726,3 +4726,60 @@ image-backed texture authoring, weather/light, water-aware traversal and streame
 regions remain accepted v1 work. No APK was packaged, installed, signed or uploaded.
 Headset testing stays on hold pending fresh owner cooling/charge readiness and a health
 check. Release and provider acceptance gates remain open; the v1 goal remains active.
+
+
+### Independent backdrop and real-depth controls (2026-10-08)
+
+The shared world.presentation fact and world.presentation.set action expose a
+bounded neutral-backdrop opacity and a separate real-depth preference. Generated
+book inputs, agent/program invocations and the two physical tray controls use
+the same native state and admission rules. Each change invalidates stale view
+requests, including a manual change followed by reversal. Duplicate completed
+receipts do not restore an old view after Recall.
+
+Opacity zero reveals passthrough wherever virtual content is absent; one hides
+it behind the neutral backdrop. Intermediate values blend that backdrop.
+Authored objects, their textures/transparency, and the familiar book keep their
+own rendering. Full opacity makes real depth ineligible to avoid unintended
+room-shaped holes; a selected depth preference becomes eligible again below
+one. Eligibility does not establish platform support, available depth or correct
+physical alignment. The existing Meta OpenXR camera subsystem handles
+premultiplied clear color.
+
+Changing presentation preserves collision profiles, simulation, object poses,
+world placement and autonomous actions. User stick locomotion still requires
+full virtual presentation; reducing opacity disables that opt-in without taking
+over Maestro. Recall, focus/tracking loss, workspace retirement and restart
+restore normal MR. These live viewer preferences are deliberately not a saved
+world asset and are not journal Undo operations.
+
+This is the backdrop/depth increment of the accepted reality-layer design.
+Imported surroundings, geometry-layer blending, editable passthrough windows,
+MR locomotion admission and durable world presentation definitions remain open.
+It does not implement camera sharing or infer collisions from visual opacity.
+Compositor behavior, both eyes and actual depth transitions still require the
+cooled/charged headset. Desktop verification passes 927 EditMode cases and 801
+unique PlayMode cases with three optional private-file skips. The full PlayMode
+run plus 87 focused reruns corrected two test assumptions (the expanded tray and
+concurrent rigid-body capture); production runtime was unchanged between them.
+Shared room/book/headless checks pass 1,489 tests in 152 files, with another 55
+prompt-contract/ownership checks. App build, lint, probe types and catalog
+provenance pass. The catalog contains 110 actions and 125 facts.
+
+The full native headless journey passes 574 observations (run
+af3aa4d751504df0b35561e8e8b418ac). The original-book journey changes the view
+through generated inputs, checks unchanged saved scene, receives native
+completion and reloads without replay (9ee9255295204f4d8638f9ec556fcf5f).
+Its screenshot was inspected. These two journeys use scripted responses.
+
+Fresh real Gemini 3.8 Flash journeys also pass on managed staging
+(4f9c9bf25c7541ecae1cf367e2a409c9) and BYOK
+(735738fa7b3446cfbaeaaaab4461f2ac). Ordinary English learner requests change
+the backdrop to 50% with real occlusion off, then restore MR with depth preferred.
+Exact native facts, objects, saved revision, collision policy, chat handoff,
+provider usage and replies are checked. The two managed action turns reconcile
+213 credits / USD 0.204802 across 15 usage/charge entries with no remaining
+reservation. These checks cover desktop Unity, not physical depth or compositor
+pixels. See QUEST_AGENT_RELEASE_COVERAGE.md for the retained failed attempts and
+corrections; evidence is in .quest-evidence/spatial-state/world-presentation-*.
+No new APK was packaged, installed, signed or uploaded.

@@ -105,6 +105,9 @@ namespace Maestro.Quest.Tests
             var frame=content.transform.localToWorldMatrix;var physical=tracking.localToWorldMatrix;var simulation=world.ObserveSimulation().ToString();
             var velocity=ball.linearVelocity;var angular=ball.angularVelocity;var placement=rigid.PlacementRevision;var motionRevision=rigid.MotionRevision;
             for(int i=0;i<3;i++) {
+                Assert.That(view.SetPresentation(.5f,true),Is.True);
+                Assert.That(camera.backgroundColor.a,Is.EqualTo(.5f));
+                Assert.That(view.SetPresentation(.5f,false),Is.True);Assert.That(view.WantsRealDepth,Is.False);
                 Assert.That(view.Enter(),Is.True);view.Exit();
                 Assert.That(content.transform.localToWorldMatrix,Is.EqualTo(frame));Assert.That(tracking.localToWorldMatrix,Is.EqualTo(physical));
                 Assert.That(ball.linearVelocity,Is.EqualTo(velocity));Assert.That(ball.angularVelocity,Is.EqualTo(angular));

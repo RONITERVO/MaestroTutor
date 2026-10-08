@@ -9,14 +9,14 @@ namespace Maestro.Quest.Interaction
     public sealed partial class MovementControls
     {
         string modeId=Guid.NewGuid().ToString("N");
-        (string configuration,bool avatar,bool user,bool view,bool paused,bool focused,bool tracked) modeSignature;
+        (string configuration,bool avatar,bool user,string presentation,bool paused,bool focused,bool tracked) modeSignature;
         bool HeadReady=>headTracked?.Invoke()==true;
         internal bool RecoveryHeadReady=>isActiveAndEnabled&&!paused&&focused&&HeadReady;
         string CurrentModeId()
         {
             // Observe transitions, including focus/tracking loss while already off. Never
             // reuse an identity after recovery, rebinding or a manual change and reversal.
-            var signature=(configurationId,AvatarEnabled,UserEnabled,Virtual,paused,focused,HeadReady);
+            var signature=(configurationId,AvatarEnabled,UserEnabled,view?view.PresentationId:null,paused,focused,HeadReady);
             if(signature!=modeSignature){modeSignature=signature;modeId=Guid.NewGuid().ToString("N");}
             return modeId;
         }
@@ -35,7 +35,7 @@ namespace Maestro.Quest.Interaction
             return false;
         }
         internal static bool QuietMode(string operation)=>operation=="maestro.enable"||operation=="user.enable";
-        static bool ViewMode(string operation)=>operation=="view.virtual"||operation=="view.mixedReality";
+        static bool ViewMode(string operation)=>operation=="view.virtual"||operation=="view.mixedReality"||operation=="view.presentation";
         bool CanChangeMode(string operation,bool manual,out string error)
         {
             error=null;
@@ -56,7 +56,7 @@ namespace Maestro.Quest.Interaction
             }else if(operation=="user.enable"){
                 if(!Virtual)error="Choose Virtual view before enabling your own movement";
                 else if(preferences.userStick==MovementStick.None)error="Choose your movement binding first";
-            }else if(operation=="view.virtual"&&(!view||!view.CanEnter))error="Wait for the room view and scan to be ready before changing view";
+            }else if((operation=="view.virtual"||operation=="view.presentation")&&(!view||!view.CanEnter))error="Wait for the room view and scan to be ready before changing view";
             return error==null;
         }
         internal bool CanSetMode(string expected,string operation,out string error)
@@ -76,7 +76,7 @@ namespace Maestro.Quest.Interaction
         bool ChangeMode(string operation,bool manual,out string error)
         {
             if(!CanChangeMode(operation,manual,out error))return false;
-            bool same=operation switch {"maestro.enable"=>AvatarEnabled,"maestro.disable"=>!AvatarEnabled,"user.enable"=>UserEnabled,"user.disable"=>!UserEnabled,"view.virtual"=>Virtual,"view.mixedReality"=>!Virtual,_=>false};
+            bool same=operation switch {"maestro.enable"=>AvatarEnabled,"maestro.disable"=>!AvatarEnabled,"user.enable"=>UserEnabled,"user.disable"=>!UserEnabled,"view.virtual"=>Virtual&&!view.RealDepth,"view.mixedReality"=>!view||!view.PresentationChanged,_=>false};
             if(same)return true;
             if(ViewMode(operation)) {
                 if(operation=="view.virtual") {

@@ -8,7 +8,7 @@ using UnityEngine.XR.ARFoundation;
 namespace Maestro.Quest.Interaction
 {
     /// <summary>Virtual-only presentation over a movable content frame; physical tracking is never moved.</summary>
-    public sealed class VirtualRoomView : MonoBehaviour
+    public sealed partial class VirtualRoomView : MonoBehaviour
     {
         Transform content,trackingOrigin;
         RoomWorldMotion motion;
@@ -19,15 +19,12 @@ namespace Maestro.Quest.Interaction
         ScannedRoom scan;
         RoomPhysicsWorld physics;
         ARCameraManager passthrough;
-        Color homeBackground;
-        CameraClearFlags homeFlags;
-        bool passthroughWasEnabled;
         readonly RoomGroundQuery ground = new();
         readonly RoomGroundMotor groundMotor = new();
         Func<Collider,bool> groundObstacle;
         Func<Vector3,bool> groundPosition;
         readonly Collider[] overlaps = new Collider[32];
-        public bool Active { get; private set; }
+        public bool Active => BackdropOpacity == 1;
         public bool CanEnter=>isActiveAndEnabled&&motion!=null&&motion.Ready&&trackingOrigin&&viewer&&!viewer.transform.IsChildOf(content)&&(!scan||!scan.Busy);
         public void Initialize(Transform virtualContent,Transform physicalOrigin,Camera camera,ScannedRoom scanned,RoomPhysicsWorld world)
         { content=virtualContent;entryPosition=content.position;entryRotation=content.rotation;trackingOrigin=physicalOrigin;motion=new RoomWorldMotion(content,world);viewer=camera;scan=scanned;physics=world;
@@ -86,25 +83,8 @@ namespace Maestro.Quest.Interaction
         internal void ApplyPreparedViewpoint()=>motion.ApplyPreparedPose();
         internal Vector3 WorldPosition=>content.position;
         internal Quaternion WorldRotation=>content.rotation;
-        public bool Enter()
-        {
-            if (Active) return true;
-            if (!CanEnter) return false;
-            homeBackground=viewer.backgroundColor; homeFlags=viewer.clearFlags;
-            scan?.SetVirtualView(true);
-            passthroughWasEnabled=passthrough && passthrough.enabled;
-            if (passthrough) passthrough.enabled=false;
-            viewer.clearFlags=CameraClearFlags.SolidColor; viewer.backgroundColor=new Color(.91f,.90f,.86f,1);
-            Active=true; return true;
-        }
-        public void Exit()
-        {
-            if (!Active) return;
-            if(viewer) { viewer.backgroundColor=homeBackground; viewer.clearFlags=homeFlags; }
-            if (passthrough) passthrough.enabled=passthroughWasEnabled;
-            scan?.SetVirtualView(false);
-            Active=false;
-        }
+        public bool Enter() => SetPresentation(1,false);
+        public void Exit() => ResetPresentation();
         bool WalkingObstacle(Collider value)
         {
             if(!value||!value.transform.IsChildOf(content))return false;

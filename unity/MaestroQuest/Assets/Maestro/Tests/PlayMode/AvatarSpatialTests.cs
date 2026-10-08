@@ -440,8 +440,9 @@ namespace Maestro.Quest.Tests
             var runtime=root.AddComponent<RoomRules>(); runtime.Initialize(workshop,editor,authoring,null,room,null);
             var controls=Controls(out _,out _,runtime,workshop); controls.BindSelected(2);
             var board=new GameObject("Controller tools"); board.transform.SetParent(root.transform,false); board.AddComponent<MovementTools>().Build(controls,room);
-            var tools=board.GetComponentsInChildren<RuleToolAction>(); Assert.That(tools.Length,Is.EqualTo(13));
+            var tools=board.GetComponentsInChildren<RuleToolAction>(); Assert.That(tools.Length,Is.EqualTo(15));
             RuleToolAction Tool(string label) => Array.Find(tools,x => x.AccessibleName == label);
+            Assert.That(Tool("Backdrop"),Is.Not.Null);Assert.That(Tool("Real occlusion"),Is.Not.Null);
             Assert.That(Tool("World origin"),Is.Not.Null);Tool("World origin").Command();
             Assert.That(controls.Status,Does.Contain("unavailable"),"A bare fixture without workspace placement must refuse the shortcut");
             Tool("Swap sticks").Command(); Tool("Swap sticks").Command();

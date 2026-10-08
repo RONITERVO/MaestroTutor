@@ -743,3 +743,29 @@ loads current member values in the generated construction form and captures that
 object into the real native library. Its completed receipt and screenshot are saved as
 `book-native-construction-resources.*`; reload must not replay either operation. The
 runner waits for asynchronous inspection before expanding the members section.
+
+
+The ordinary native journey also exercises world.presentation.set through the
+shared catalog and execution transport at 25%, 50%, full virtual and ordinary MR,
+including independent real-depth selection and unchanged physical-collision
+policy. world-presentation.json retains observations and native receipts.
+The original-book journey edits the generated opacity/boolean inputs, loads the
+current view identity, runs the action and retains book-native-presentation.json
+and its screenshot. Its final browser reload must not replay this action.
+These checks cover native state and transport, not Quest passthrough composition,
+physical depth quality, imported environment blending or a real model provider.
+
+The WorldPresentation real-provider scenario starts a fresh English/Spanish
+profile, requests half-visible neutral background with real occlusion off in
+ordinary language, then requests normal MR again. It requires exact native view
+facts, unchanged collision policy and unchanged objects/saved scene in both
+states. It uses the existing provider adapter and chat-to-agent path; no old
+learner history or camera/audio payload is reused.
+
+The scenario reads an explicit native baseline immediately before the user request
+and retains both startup and pre-request snapshots in presentation-baseline.json.
+This separates initial book placement settling from a user-requested view change;
+object equality and saved-scene revision checks remain exact. The generated-form
+book journey likewise checks the scene revision immediately around the action.
+Final managed and BYOK acceptance, including prior failed attempts, is recorded
+in [the coverage matrix](QUEST_AGENT_RELEASE_COVERAGE.md#catalog-discovery-and-world-presentation--2026-10-08).

@@ -5040,7 +5040,7 @@
         "tracking.available",
         "manual.released"
       ],
-      "description": "Explicit live opt-in only: enable/disable Maestro's stick or the user's separate movement, or switch Virtual/Mixed Reality view. Use only when the user requests that movement or view change; entering Virtual hides the real room. Read controller.mode immediately beforehand and pass its exact stateId. Manual changes, settings saves, focus/tracking changes and recovery invalidate it. Enabling never injects movement: sticks must return to neutral first. Your movement moves virtual content while physical tracking stays fixed. It currently requires Virtual view; active physics against real-room colliders refuses world movement until paused or real collisions are disabled. enabling Maestro requires loaded avatar and aligned running room physics. Enabling a stick requires other runs and animation authoring to finish; it does not stop another actor. Disabling a stick and changing view are allowed alongside other runs. View changes preserve world position, objects, physics and autonomous activity, and create no ground. Returning to MR disables only user locomotion; Maestro control is retained. User walking currently requires accepted level authored ground under the complete step; missing ground, hills and ledges refuse movement until terrain-following travel is implemented. B/Y and palm Recall remain immediate manual recovery. Stick opt-ins are never saved; restart or tracking/focus loss requires explicit reenable. Focus/tracking loss restores the mixed view without rewinding the world. World offsets survive view changes in this session but are not yet persisted across restart. A completed receipt reports that moment, not continued tracking or path readiness; read the fact for current state. Cancelling a completed action does not undo its mode: issue the explicit disable or MR action with a fresh identity. Duplicate receipts never enable again.",
+      "description": "Explicit live opt-in only: enable/disable Maestro's stick or the user's separate movement, or switch Virtual/Mixed Reality endpoint presets. For a partial neutral backdrop or an independent real-depth preference use world.presentation.set. Use only when the user requests that movement or view change; entering Virtual hides the real room. Read controller.mode immediately beforehand and pass its exact stateId. Manual changes, settings saves, focus/tracking changes and recovery invalidate it. Enabling never injects movement: sticks must return to neutral first. Your movement moves virtual content while physical tracking stays fixed. It currently requires Virtual view; active physics against real-room colliders refuses world movement until paused or real collisions are disabled. enabling Maestro requires loaded avatar and aligned running room physics. Enabling a stick requires other runs and animation authoring to finish; it does not stop another actor. Disabling a stick and changing view are allowed alongside other runs. View changes preserve world position, objects, physics and autonomous activity, and create no ground. Returning to MR disables only user locomotion; Maestro control is retained. User walking requires accepted authored ground under the complete step, supports slopes up to 25 degrees and steps up to 0.1 metres, and refuses missing ground or excessive ledges. B/Y and palm Recall remain immediate manual recovery. Stick opt-ins are never saved; restart or tracking/focus loss requires explicit reenable. Focus/tracking loss restores the mixed view without rewinding the world. Accepted world viewpoints are persisted separately; this action does not change them. A completed receipt reports that moment, not continued tracking or path readiness; read the fact for current state. Cancelling a completed action does not undo its mode: issue the explicit disable or MR action with a fresh identity. Duplicate receipts never enable again.",
       "example": {
         "operation": "view.virtual",
         "stateId": "00000000000000000000000000000000"
@@ -5079,6 +5079,105 @@
           "configurationId",
           "avatarEnabled",
           "userEnabled",
+          "virtualView",
+          "headTracked",
+          "focused"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "world.presentation.set",
+      "version": 1,
+      "label": "Blend the backdrop and real occlusion",
+      "input": {
+        "type": "object",
+        "properties": {
+          "backdropOpacity": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          },
+          "realDepth": {
+            "type": "boolean"
+          },
+          "stateId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "backdropOpacity",
+          "realDepth",
+          "stateId"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "worldPresentation.v1"
+        ],
+        "x-current": {
+          "fact": "world.presentation",
+          "version": 1,
+          "arguments": {},
+          "fields": {
+            "stateId": [
+              "stateId"
+            ]
+          },
+          "guards": [
+            "stateId"
+          ]
+        }
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [
+        "controls.mode.current",
+        "tracking.available",
+        "manual.released"
+      ],
+      "description": "Change the viewer's neutral backdrop opacity (0 reveals passthrough in empty areas, 1 covers it, intermediate values blend it) and independent real-depth occlusion preference. Only change the view when requested by the user. Read world.presentation and pass its exact stateId. The book and authored objects retain their own materials/opacity: this is not an opacity slider for imported surroundings or a passthrough window. Full opacity temporarily makes real depth ineligible to prevent unintended room-shaped holes; a selected realDepth=true becomes eligible again below 1. Eligibility is not evidence of device support, permission, available depth, or alignment. Does not change real-room collisions, create terrain, stop autonomous activity, move tracking/world, share cameras, or save the room. User locomotion is disabled below full opacity until MR walking admission is implemented. Avatar stick opt-in is retained. Explicit Virtual/MR controls choose endpoint presets. Recall, focus/tracking loss and restart restore ordinary MR with depth preferred. These live presentation preferences are not saved or undoable; use a fresh observation to reverse a completed action. Replayed receipts never reapply it.",
+      "example": {
+        "backdropOpacity": 0.5,
+        "realDepth": true,
+        "stateId": "00000000000000000000000000000000"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "stateId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "backdropOpacity": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          },
+          "realDepth": {
+            "type": "boolean"
+          },
+          "depthEligible": {
+            "type": "boolean"
+          },
+          "virtualView": {
+            "type": "boolean"
+          },
+          "headTracked": {
+            "type": "boolean"
+          },
+          "focused": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "stateId",
+          "backdropOpacity",
+          "realDepth",
+          "depthEligible",
           "virtualView",
           "headTracked",
           "focused"
@@ -35171,6 +35270,23 @@
       "description": "Current transient opt-ins and view, with exact stateId for controller.mode.set. Read controller.settings for independent stick bindings. Focus/tracking and mode changes invalidate old state IDs. Enabled does not mean a clear path, controller tracking, or that a held stick has returned to neutral. Mode changes never save an artificial camera offset."
     },
     {
+      "id": "world.presentation",
+      "version": 1,
+      "type": {
+        "record": {
+          "stateId": "text",
+          "backdropOpacity": "number",
+          "realDepth": "boolean",
+          "depthEligible": "boolean",
+          "virtualView": "boolean",
+          "headTracked": "boolean",
+          "focused": "boolean"
+        }
+      },
+      "label": "Backdrop and real occlusion",
+      "description": "Current transient visual settings. stateId also changes on manual mode/settings edits, focus/tracking changes and recovery. depthEligible means the view permits depth, not that the device has supplied it. Read physics.environment and object.environment for independent collisions. No read side effects."
+    },
+    {
       "id": "animation.authored",
       "version": 1,
       "type": {
@@ -37465,7 +37581,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "c6a82de5e9fff679c3987b9b50748173a5a64c672c3e8ad6fd49bb35c7f4a508"
+      "sha256": "2722c98e5173cd44ff27089c5fbeea8984097e68e65e8141d9511293ffcbac76"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -37517,7 +37633,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "8842acab2c472d0d14f90e95a247572666cd143e40c7c41cbd26c3e70c817c10"
+      "sha256": "916701f24ec8846c8bf240fd8c8b762c58fa82a8a3920ca035fc63db58a80c31"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -37873,7 +37989,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MovementTools.cs",
-      "sha256": "3b7c479404e9f63770b5fe82d4cf767e6ae367065b763bbff818ef8be00ea217"
+      "sha256": "f2fa6be65b37bab8ebb27f2c8948aab8cb38a80dc5e196c1ceab3df7f5740345"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceContent.cs",
@@ -38201,7 +38317,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MovementControls.cs",
-      "sha256": "c253f6089e9abdb7e382f8fe4b5dbf7d033cb04916338a747dc4960a314ed9db"
+      "sha256": "8330c58ef2e3f52540564bfdf681dcc1737b9bd5d34dc5f0545885045c0d0d0b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MovementConfiguration.cs",
@@ -38209,11 +38325,23 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MovementModes.cs",
-      "sha256": "9ca24dde1c66d61a6f8bdf75fc029e6a717af20a495457d93a504bf98daf634f"
+      "sha256": "469f6661ea5e758b7bdb588452dddff2dc3a3e79486ee3f880346df0454f2f6f"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MovementPresentation.cs",
+      "sha256": "1a3c6774ff0258bd743671c32ae52fc1b815160a3f99c4fd3168533f742b25f1"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/VirtualRoomPresentation.cs",
+      "sha256": "0fe8ec495e4da811db6d8cd2fecb173cfa3ca8632edc7ad9994ac85f6230e4c2"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomDepthOcclusion.cs",
+      "sha256": "3320045bfce8c60c5ca27de2db769efaf650e32597b382f5625ad2b82c649b9b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/VirtualRoomView.cs",
-      "sha256": "df5599e90a2411add3f8d3407fecbd36c100c489c98e193cd4f5e4bb75f7c0ca"
+      "sha256": "6c04a08194292880ae6a539bda701e84f3a57bd2958aba610fc93f1578a40f72"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomWorldMotion.cs",
@@ -38489,7 +38617,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "bccf2208a3b032d105db01b5af28f7d8ff3b3630e7622fed5985852e9976bb5f"
+      "sha256": "6ee00c48fb0da294aebdb1c1696a8ecc98c481f67dc4d8368d61ee36af70367f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -38545,7 +38673,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ControllerModeCapability.cs",
-      "sha256": "e4d0aeb44128d84ba390f08d76d4146989f73fbf21432e1f9883487394ca6dd0"
+      "sha256": "6eda7fd099e3c334217ef3512ef91b23af40a9776beb51f6d5b08eb41f1bb624"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CopyObjectCapability.cs",
@@ -38834,6 +38962,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldIdentityFacts.cs",
       "sha256": "7e187a1f0275c859fdf69e8edadbf9888d0fe760e14697a706b917dc9fb642e0"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldPresentationCapability.cs",
+      "sha256": "f33c77522340775c669cd978bc3159d3fee2ab7c88b1ac70ab642aa7f663a624"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldViewpointCapability.cs",

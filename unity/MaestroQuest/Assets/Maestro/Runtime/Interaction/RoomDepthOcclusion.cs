@@ -22,7 +22,7 @@ namespace Maestro.Quest.Interaction
         void LateUpdate()
         {
 #if UNITY_ANDROID && !UNITY_EDITOR
-            bool wanted = focused && !paused && passthrough && passthrough.enabled && (!virtualView || !virtualView.Active);
+            bool wanted = focused && !paused && passthrough && passthrough.enabled && (!virtualView || virtualView.WantsRealDepth);
             if (wanted && !depth && EnvironmentDepthManager.IsSupported)
             {
                 var owner = new GameObject("Live environment depth");

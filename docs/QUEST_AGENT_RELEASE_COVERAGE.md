@@ -906,3 +906,59 @@ boundaries and the production web build pass. The ten unrelated local edits
 retain their original hashes. No native code changed or Unity test run was
 claimed for this recovery. It is not yet packaged or physically verified; the
 failed device attempt and interrupted follow-up remain in the acceptance record.
+
+
+## Catalog discovery and world presentation — 2026-10-08
+
+The WorldPresentation scenario starts a fresh English-native/Spanish-target
+learner conversation, asks in ordinary language for a half-visible neutral
+background with real occlusion disabled, then asks for the normal room view
+again. No action IDs, state IDs, schemas or coordinates are supplied in the user
+messages. The ordinary chat, suggestion verifier, delegated agent and existing
+provider adapter run against desktop Unity. No earlier private history or media
+is reused. Useful complementary artifacts remain allowed.
+
+| Access | Run | Observed result |
+| --- | --- | --- |
+| Managed staging | 4f9c9bf25c7541ecae1cf367e2a409c9 | Both requests complete through native receipts and chat replies. Backdrop 0.5/depth false changes to 0/depth true. Both turns reconcile usage and billing. |
+| BYOK | 735738fa7b3446cfbaeaaaab4461f2ac | Both requests complete through the same native path, with real provider usage and API-key-owner billing. |
+
+Both runs preserve exact object records, saved scene revision and independent
+real-room collision policy. Head tracking/focus are synthetic Editor state;
+scan readiness is false. These results do not establish room alignment, available
+physical depth, headset passthrough blending, stereo quality or comfort. The two
+managed action turns reconcile 213 credits / USD 0.204802 across 15 usage/charge
+entries, with zero outstanding reservations. That figure excludes context-only
+chat and earlier attempts.
+
+The first managed attempt (17f5aee9b82b4e659baf5f8252524dc5) returned an empty
+plan without querying the available catalog. Its native-receipt gate failed;
+accounting still reconciled 44 credits / USD 0.041092. The shared catalog guide
+now explicitly explains that static command descriptions are not exhaustive.
+For an unmatched request, the agent should search relevant terms, inspect exact
+definitions/current facts and check availability before declaring it unsupported.
+An empty narrow search permits a broader relevant term, not enumeration of the
+whole catalog. This is general capability discovery, without a special prompt
+branch for presentation or a separate provider implementation.
+
+An earlier BYOK run (6599ddec12bf428da02f2720212f3746) correctly changed the
+view but failed exact object comparison against the early startup snapshot.
+The book was identical across all of its recorded agent operations. The runner
+now queries native state immediately before the actual request and retains both
+baselines. In the subsequent managed run, those two snapshots show the startup
+book x changing from 1.4901161193847656e-08 to 2.9802322387695312e-08 before
+the requested change, with scene revision unchanged. No tolerance was added to
+object equality; both subsequent runs preserve the pre-request snapshot exactly.
+The original-book UI journey independently verifies a view action does not edit
+the saved scene and that reload does not repeat it.
+
+Local verification: 927 EditMode and 801 unique PlayMode cases pass, with three
+optional private-file skips. PlayMode uses the full run plus 87 focused reruns
+after correcting the old tray-button count and an assertion that conflicted
+with concurrent physics capture; runtime sources were unchanged between runs.
+Shared room/book/headless tests pass 1,489 cases in 152 files, plus 55 prompt
+checks, app/probe TypeScript, lint, catalog provenance and the production build.
+The scripted full native journey passes 574 observations; the generated book
+journey and inspected screenshot verify the same action and reload behavior.
+No new APK or device acceptance is claimed. Cooling/charge readiness and the
+remaining novice, Live, thermal, audio and release gates remain open.

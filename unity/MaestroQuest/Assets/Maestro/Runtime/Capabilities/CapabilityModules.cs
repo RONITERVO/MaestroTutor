@@ -17,7 +17,7 @@ namespace Maestro.Quest.Programs
             new AnimationPlayCapability(),new AnimationAuthoringCapability(),new AnimationRecordingCapability(),new AnimationPosingCapability(),new ModelLibraryCapability(),new ModelImportCapability(),new MotionBatchCapability(),new IncludedMotionsCapability(),new AvatarModelCapability(),
             new AudioSourceCapability(),new AudioEmitterCapability(),new AudioPlayCapability(),new AudioStartCapability(),new AudioControlCapability(),
             new WaitCapability(),new RoomViewCapability(),new RoomToolsCapability(),new RoomToolRecoveryCapability(),new WorldViewpointCapability(),
-            new RoomSessionCapability(),new ControllerConfigurationCapability(),new ControllerModeCapability(),
+            new RoomSessionCapability(),new ControllerConfigurationCapability(),new ControllerModeCapability(),new WorldPresentationCapability(),
             new WorkspaceRetentionCapability("inspect"),new WorkspaceRetentionCapability("export"),new WorkspaceRetentionCapability("reviewRemoval"),new WorkspaceRetentionCapability("remove"),
             new WorkspaceEvidenceCapability("inspect"),new WorkspaceEvidenceCapability("export"),new WorkspaceEvidenceCapability("remove"),
             new WorkspaceHistoryCapability(false),new WorkspaceHistoryCapability(true),

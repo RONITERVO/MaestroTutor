@@ -23,8 +23,8 @@ namespace Maestro.Quest.Interaction
             Part(transform,Vector3.zero,new Vector3(.92f,1f,.04f),wood);
             var handle=gameObject.AddComponent<BoxCollider>(); handle.size=new Vector3(.92f,1f,.04f);
             var item=gameObject.AddComponent<RoomItem>(); item.Configure(new Collider[] { handle },1,1); room.Register(item,true);
-            string[] labels={ "Maestro stick","Your movement","Virtual / MR","Maestro binding","Your binding","Swap sticks","Walk speed","Dead zone","Select button","Use action","Button command","Stop / MR","World origin" };
-            Action[] commands={ owner.ToggleAvatar,owner.ToggleUser,owner.ToggleView,() => owner.CycleStick(false),() => owner.CycleStick(true),owner.SwapSticks,Speed,DeadZone,SelectButton,() => owner.BindSelected(selectedButton),Command,owner.Recover,owner.ReturnToWorldOrigin };
+            string[] labels={ "Maestro stick","Your movement","Virtual / MR","Maestro binding","Your binding","Swap sticks","Walk speed","Dead zone","Select button","Use action","Button command","Stop / MR","World origin","Backdrop","Real occlusion" };
+            Action[] commands={ owner.ToggleAvatar,owner.ToggleUser,owner.ToggleView,() => owner.CycleStick(false),() => owner.CycleStick(true),owner.SwapSticks,Speed,DeadZone,SelectButton,() => owner.BindSelected(selectedButton),Command,owner.Recover,owner.ReturnToWorldOrigin,owner.CycleBackdrop,owner.ToggleRealDepth };
             for (int i=0;i<labels.Length;i++)
             {
                 var tool=new GameObject(labels[i]); tool.transform.SetParent(transform,false); tool.transform.localPosition=new Vector3(-.3f+i%3*.3f,.13f-i/3*.115f,-.05f);
@@ -46,7 +46,7 @@ namespace Maestro.Quest.Interaction
         {
             if(!isActiveAndEnabled||!controls||!summary||!status)return;
             var prefs=controls.Preferences;
-            summary.text="Maestro "+prefs.avatarStick+" / "+(controls.AvatarEnabled ? "ON" : "off")+" · You "+prefs.userStick+" / "+(controls.UserEnabled ? "ON" : "off")+" · "+(controls.Virtual ? "Virtual" : "MR")+
+            summary.text="Maestro "+prefs.avatarStick+" / "+(controls.AvatarEnabled ? "ON" : "off")+" · You "+prefs.userStick+" / "+(controls.UserEnabled ? "ON" : "off")+" · "+("Backdrop "+Mathf.RoundToInt(controls.BackdropOpacity*100)+"%")+
                 "\nYour speed "+prefs.userSpeed.ToString("0.00")+" m/s · Dead zone "+prefs.deadZone.ToString("0.0")+
                 "\n"+Buttons[selectedButton]+" → "+controls.ButtonLabel(selectedButton);
             status.text=string.Join("\n",ModelText.Wrap(controls.Status,75).Take(2))+"\nB / Y and palm Recall always recover";
