@@ -1465,3 +1465,63 @@ PlayMode** and **70 shared tests in four files**. Final original-book journey
 The final screenshot was inspected. Probe type checking and catalog provenance
 also pass after that metadata change. No additional physics code changed after
 the full 863-case PlayMode run or the successful provider journeys.
+
+
+## Environment-query batching (2026-10-08)
+
+This native-only optimization reuses accepted virtual ground across one
+synchronous medium-force pass. It retains live pause/scan/participant policy
+checks and fresh geometry on the next pass or observation. The same geometric
+support predicate is used by direct and batched queries. No public action/fact
+schema, saved format, book form or provider prompt changes.
+
+The baseline measurement passes on the preceding implementation. The final
+focused run passes **976 EditMode** and **46 PlayMode** cases, including all six
+new query cases and existing per-entity, buoyancy, rain and liquid-transfer checks.
+Shared contracts pass **1,444 tests in 135 files**; probe type checking, catalog
+source provenance and core boundaries also pass. A fresh full native regression
+and transport journey follow separately.
+
+For eight ground tiles and 1,000 decorative children, four trials of 4,096 paired
+point admissions took 104.40–105.45 ms before the change. The post-change direct
+path takes 103.24–104.57 ms versus 1.74–1.77 ms using one batch. Both warmed loops
+allocate zero managed bytes. These desktop Unity Editor measurements isolate
+admission queries; they do not measure the complete buoyancy pass, whole-app
+allocation, a Quest frame, or a city-scale world. The benchmark has no
+machine-dependent timing assertion; correctness and warmed allocation are
+asserted. Run EnvironmentQueryTests with MAESTRO_ENVIRONMENT_QUERY_EVIDENCE set
+to an output path to retain its direct/batched timing JSON.
+
+Existing real managed/BYOK liquid results above remain evidence for the shared
+contract. They predate this internal optimization and are not represented as new
+provider runs. The unchanged book UI likewise uses its preceding visible journey.
+Headset work remains on the owner's cooling/charging hold. No device, cloud,
+release-signing or distribution operation is part of this increment.
+
+
+The broader PlayMode run exposed a timing assumption in an existing visual-layer
+test: a 0.1-second fade was required to remain active after a yielded frame.
+A sufficiently slow Editor frame can correctly finish it first. The test now
+asserts transition start immediately after synchronous shared dispatch, then
+verifies completion through normal updates. Existing deterministic
+EditMode tests already verify interpolation and large-tick completion. This
+failure is retained as evidence; it is not treated as a passing full run.
+
+
+The completed broad run has **868 passes**, the single timing-test failure above,
+and the three established optional private-asset ignores. Production source did
+not change afterward. The repaired test and its entire avatar/view family,
+plus environment and liquid controls, pass **132 focused PlayMode cases** with
+zero failures. This records the failed first run and successful repair separately;
+it does not relabel the failed aggregate report. A second measurement inside the
+broad run shows 101.52–102.36 ms direct versus 1.80–1.81 ms batched, again with
+zero warmed allocations. Catalog contracts remain 118 actions, 138 facts and
+18 events, now with 477 native source inputs.
+
+
+Final native transport journey **1a98962f538e444d8ab6da50ba11c066** passes
+**692 observations** with both client and Editor exiting 0. Shared native
+receipts and readback cover the complete existing journey, including finite
+medium properties, conserved transfer and Undo/Redo. No provider was used in
+this run. The generated catalog differs from the preceding commit only in
+source provenance; its public schemas and descriptions are unchanged. All ten protected unrelated working files remain unchanged.

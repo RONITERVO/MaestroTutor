@@ -20,8 +20,11 @@ namespace Maestro.Quest.Tests
         [UnityTest]public IEnumerator LayerViewStartsAndFinishesWithoutSavingStoppingActorsOrChangingPhysics(){
             SharedModes(out _,out _);string id=PresentationLayer();Assert.That(editor.BindVisibility("maestro",editor.ObjectRevision("maestro"),id,editor.VisibilityRevision(id),out var error),Is.True,error);
             Assert.That(motion.Begin("existing follow",Avatar.AvatarSpatialMode.Follow,out error),Is.True,error);int revision=editor.VisibilityRevision(id);var environment=world.ObserveEnvironment().ToString();
-            yield return BlendLayer(id,0,.1f);Assert.That((bool)LayerView(id)["progress"]["blending"],Is.True);string state=(string)LayerView(id)["stateId"];
-            yield return new WaitForSecondsRealtime(.15f);Assert.That((bool)LayerView(id)["progress"]["blending"],Is.False);Assert.That((float)LayerView(id)["progress"]["effectiveOpacity"],Is.Zero);
+            Assert.That(modeActions.Execute(LayerViewRequest(id,0,.1f),out error),Is.True,error);
+            // Observe the start before yielding: a slow Editor frame may correctly
+            // finish this short fade before the coroutine resumes.
+            var started=LayerView(id);Assert.That((bool)started["progress"]["blending"],Is.True);Assert.That((float)started["progress"]["currentOpacity"],Is.EqualTo(1));string state=(string)started["stateId"];
+            yield return new WaitForSecondsRealtime(.15f);Assert.That((string)modeActions.Observe()["selected"]["phase"],Is.EqualTo("completed"),modeActions.Observe().ToString());Assert.That((bool)LayerView(id)["progress"]["blending"],Is.False);Assert.That((float)LayerView(id)["progress"]["effectiveOpacity"],Is.Zero);
             Assert.That(editor.Find("maestro").GetComponent<RoomAppearanceView>().PointerVisible,Is.False);Assert.That(motion.OwnedBy("existing follow"),Is.True);Assert.That(world.ObserveEnvironment().ToString(),Is.EqualTo(environment));Assert.That(editor.VisibilityRevision(id),Is.EqualTo(revision));Assert.That(editor.ReadVisibility(id).opacity,Is.EqualTo(.5f));Assert.That((string)LayerView(id)["stateId"],Is.EqualTo(state));
             yield return BlendLayer(id,1);Assert.That((float)LayerView(id)["progress"]["effectiveOpacity"],Is.EqualTo(.5f));Assert.That(editor.Find("maestro").GetComponent<RoomAppearanceView>().PointerVisible,Is.True);
         }

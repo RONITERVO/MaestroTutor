@@ -40704,11 +40704,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidMediumGeometry.cs",
-      "sha256": "5365a0f4ca150be57b6f9a0ba425c0ad90da98aa2f99733d35bd8aeb1b914022"
+      "sha256": "6a09499320bfba5277bac729323ac6be046831d7649a038e032c30158932c8d2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidMediumPhysics.cs",
-      "sha256": "19639f817b68fa73430a1289b8ae8a2e7e0d8731f3a141f7b4df31ba8a23263a"
+      "sha256": "26dcb633f94ad146518eecf80692a725b88894f596314053fa857d619800a769"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidPouring.cs",
@@ -41275,6 +41275,10 @@
       "sha256": "e162c09295524f6e35755d6ded825f2eb6e486e0b2e766734f322433d8b8640a"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomEnvironmentQueries.cs",
+      "sha256": "757a5ff649ba3c0a331ae81285b4840ef05aea071cae425e20dbfc3f4e3ffdc9"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomGroundMotor.cs",
       "sha256": "e1ae356c776978e2a293dd66ced3f1681477db00de83338500b0b966cdcd15e3"
     },
@@ -41308,7 +41312,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomPhysicsWorld.cs",
-      "sha256": "45262750d4fe30ddcce1f1ca7dd4dc0fed43f7f8fa029f63554e5ed6b776d0c2"
+      "sha256": "1bf376ea873cb18780e6d23445fc0539c7c4370c25fef33ab1e21d08170e7695"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomPointerHit.cs",
@@ -41324,7 +41328,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomSimulationEnvironment.cs",
-      "sha256": "57f157b0f0ce4640a848538ed07e64423842b234563b5b633f7d440edf8645b0"
+      "sha256": "cf67d247686bdc8cd16897231c91de6eb077ad0ac2669ad68ca31eea344422cd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomToolVisibility.cs",

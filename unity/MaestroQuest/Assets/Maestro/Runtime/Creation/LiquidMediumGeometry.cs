@@ -6,9 +6,10 @@ namespace Maestro.Quest.Creation {
     // One geometric interpretation of the live measured quantity; no extra inventory.
     internal readonly struct LiquidMediumGeometry {
         internal readonly string Id;internal readonly RoomItem Item;internal readonly RoomContainer Contents;
+        internal readonly Rigidbody Body;
         internal readonly float Level,Volume;internal readonly Vector3 Up;readonly Matrix4x4 inverse;
-        internal LiquidMediumGeometry(string id,RoomItem item,RoomContainer contents,Vector3 up){
-            Id=id;Item=item;Contents=contents;Up=up;
+        internal LiquidMediumGeometry(string id,RoomItem item,RoomContainer contents,Vector3 up,Rigidbody body){
+            Id=id;Item=item;Contents=contents;Up=up;Body=body;
             var t=item.transform;float scale=Mathf.Abs(t.lossyScale.x);
             var rotation=t.rotation*contents.frame.rotation;
             inverse=(t.localToWorldMatrix*Matrix4x4.TRS(contents.frame.position,contents.frame.rotation,Vector3.one)).inverse;

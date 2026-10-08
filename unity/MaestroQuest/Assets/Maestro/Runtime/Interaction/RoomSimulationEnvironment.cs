@@ -22,11 +22,12 @@ namespace Maestro.Quest.Interaction
         }
         public bool SimulationReady => RealCollisions ? SurfacesReady : AuthoredReady();
         internal int CollisionMask(int mask,RoomItem item=null) => IncludesRealRoom(item) ? mask : mask & ~(1<<RoomPhysicsLayers.Scanned);
-        bool GatherGround() {
-            ground.Clear();
+        bool GatherGround()=>GatherGround(ground);
+        internal bool GatherGround(List<RoomWalkableSurface> destination) {
+            destination.Clear();
             var frame=new Creation.RoomFrame(transform);
             if(!frame.Valid||Mathf.Abs(frame.MetresPerUnit-1)>.00001f||Vector3.Dot(transform.up,Vector3.up)<.99999f)return false;
-            GetComponentsInChildren(false,ground);return true;
+            GetComponentsInChildren(false,destination);return true;
         }
         bool AuthoredReady() {
             if(!GatherGround())return false;
@@ -42,10 +43,7 @@ namespace Maestro.Quest.Interaction
             // accepted ground columns. A hidden scan/fallback plane is never used.
             foreach(var surface in ground) {
                 if(!surface.Available)continue;
-                var c=surface.Collision;var b=c.bounds;
-                if(point.x<b.min.x||point.x>b.max.x||point.z<b.min.z||point.z>b.max.z)continue;
-                var ray=new Ray(new Vector3(point.x,b.max.y+.1f,point.z),Vector3.down);
-                if(c.Raycast(ray,out var hit,b.size.y+.2f)&&hit.normal.y>.1f&&point.y>=hit.point.y-.25f&&point.y<=hit.point.y+16)return true;
+                if(new RoomGroundColumn(surface.Collision).Contains(point))return true;
             }
             return false;
         }

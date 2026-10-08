@@ -12,6 +12,7 @@ namespace Maestro.Quest.Creation {
             internal readonly MediumDisplacement Displacement=new();internal uint Revision=uint.MaxValue;
             internal float Submerged,Volume;internal Vector3 Lift;internal bool Applied;internal string Reason="Physics has not sampled this object";
         }
+        readonly RoomEnvironmentQueries mediumEnvironment=new();
         readonly LiquidMediumGeometry[] media=new LiquidMediumGeometry[RoomContainer.MaximumPerRoom];int mediaCount;
         readonly SortedDictionary<string,MediumBody> mediumBodies=new(StringComparer.Ordinal);
         internal void SynchronizeMedia(RoomDocument document){
@@ -20,15 +21,19 @@ namespace Maestro.Quest.Creation {
         }
         internal void CaptureMedia(){
             mediaCount=0;var gravity=Physics.gravity;if(!float.IsFinite(gravity.sqrMagnitude)||gravity.sqrMagnitude<.01f)return;var up=-gravity.normalized;
-            foreach(var v in vessels.Values){if(mediaCount==media.Length)break;if(!v.Item||!v.Item.isActiveAndEnabled||!v.Rigid||!v.Rigid.GeometryReady||v.Live.amountMl<=0)continue;media[mediaCount++]=new(v.Id,v.Item,v.Live,up);}
+            foreach(var v in vessels.Values){if(mediaCount==media.Length)break;if(!v.Item||!v.Item.isActiveAndEnabled||!v.Rigid||!v.Rigid.GeometryReady||v.Live.amountMl<=0)continue;media[mediaCount++]=new(v.Id,v.Item,v.Live,up,v.Body);}
         }
         internal bool SampleMedium(Vector3 point,RoomItem participant,string ignore,out LiquidMediumGeometry chosen,out float depth,out bool ready){
+            using var environment=mediumEnvironment.Begin(world);
+            return SampleMedium(point,participant,ignore,in environment,out chosen,out depth,out ready);
+        }
+        bool SampleMedium(Vector3 point,RoomItem participant,string ignore,in RoomEnvironmentQueries.Batch environment,out LiquidMediumGeometry chosen,out float depth,out bool ready){
             chosen=default;depth=0;ready=false;bool found=false;
             for(int i=0;i<mediaCount;i++){var m=media[i];if(m.Id==ignore||!m.Sample(point,out var d)||found&&m.Volume>=chosen.Volume)continue;chosen=m;depth=d;found=true;}
             // Nested authored cavities select the smallest containing medium, then
             // stable ID order. Never add overlapping densities or skip an unavailable
             // inner medium to borrow readiness from another vessel.
-            if(found)ready=!blocked&&world&&world.CanSimulate(point,participant)&&world.CanSimulate(point,chosen.Item)&&!editor.RuntimeGate.Held&&!editor.Ownership.Suspended&&!editor.WriteGate.Frozen;
+            if(found)ready=!blocked&&environment.CanSimulate(point,participant,chosen.Item)&&!editor.RuntimeGate.Held&&!editor.Ownership.Suspended&&!editor.WriteGate.Frozen;
             return found;
         }
         void FixedUpdate()=>TickMedium(Time.fixedDeltaTime);
@@ -37,6 +42,7 @@ namespace Maestro.Quest.Creation {
             foreach(var b in mediumBodies.Values){b.Applied=false;b.Lift=Vector3.zero;b.Submerged=0;b.Reason="Physics or object ownership is unavailable";}
             if(!world||!world.Running||blocked||editor.RuntimeGate.Held||editor.Ownership.Suspended||editor.WriteGate.Frozen)return;
             CaptureMedia();if(mediaCount==0)return;
+            using var environment=mediumEnvironment.Begin(world);
             foreach(var b in mediumBodies.Values){
                 if(!b.Item||!b.Rigid||!b.Rigid.TryReadMotion(out bool available,out _,out _)||!available)continue;
                 if(b.Revision!=b.Rigid.MotionRevision){b.Displacement.Capture(b.Item);b.Revision=b.Rigid.MotionRevision;}
@@ -44,9 +50,9 @@ namespace Maestro.Quest.Creation {
                 float scale=Mathf.Abs(b.Item.transform.lossyScale.x),cell=shape.CellVolume*scale*scale*scale;b.Volume=cell*shape.Count;
                 Vector3 buoyancy=Vector3.zero,centre=Vector3.zero,drag=Vector3.zero;float weight=0,angular=0;int wet=0;
                 for(int i=0;i<shape.Count;i++){
-                    var p=b.Item.transform.TransformPoint(shape.Points[i]);if(!SampleMedium(p,b.Item,b.Id,out var m,out _,out bool ready)||!ready)continue;
+                    var p=b.Item.transform.TransformPoint(shape.Points[i]);if(!SampleMedium(p,b.Item,b.Id,in environment,out var m,out _,out bool ready)||!ready)continue;
                     wet++;var fluid=RoomFluid.Effective(m.Contents.fluid);float displacedMass=cell*fluid.densityKgM3;buoyancy-=Physics.gravity*displacedMass;centre+=p*displacedMass;weight+=displacedMass;
-                    var mediumBody=m.Item.GetComponent<Rigidbody>();var flow=mediumBody&&!mediumBody.isKinematic?mediumBody.GetPointVelocity(p):Vector3.zero;
+                    var mediumBody=m.Body;var flow=mediumBody&&!mediumBody.isKinematic?mediumBody.GetPointVelocity(p):Vector3.zero;
                     drag+=(flow-b.Body.GetPointVelocity(p))*Mathf.Min(fluid.linearDrag,1/seconds)/shape.Count;angular+=fluid.angularDrag/shape.Count;
                 }
                 b.Submerged=(float)wet/shape.Count;b.Reason=wet==0?"No active medium at displacement samples":"";

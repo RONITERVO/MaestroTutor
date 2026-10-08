@@ -66,7 +66,8 @@ namespace Maestro.Quest.Interaction
             if(Running!=running&&!SetRunning(running,out error))return false;
             result=ObserveSimulation();return true;
         }
-        public bool CanSimulate(Vector3 position,RoomItem item=null) => runtimeGate?.Held!=true && Active && Running && ContainsSimulation(position,item);
+        internal bool SimulationActive=>runtimeGate?.Held!=true&&Active&&Running;
+        public bool CanSimulate(Vector3 position,RoomItem item=null) => SimulationActive&&ContainsSimulation(position,item);
         void OnApplicationPause(bool value) { paused=value;if (paused) PausePhysics();else Notify(); }
         void OnApplicationFocus(bool value) { focused=value;if (!focused) PausePhysics();else Notify(); }
         void OnEnable()=>Notify();

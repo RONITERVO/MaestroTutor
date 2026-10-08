@@ -5355,3 +5355,70 @@ The complete physics run precedes only a metadata change giving the optional
 fluid form its documented water defaults. Final focused and book results are
 recorded in the coverage matrix. Plain-language field labels and physical Quest
 acceptance remain outstanding; successful desktop semantics do not close them.
+
+
+### Synchronous environment-query batches (2026-10-08)
+
+The rigid-prop medium loop now discovers accepted virtual ground once per
+synchronous force-sampling pass. Previously each submerged sample walked the
+whole hierarchy for both the prop and its liquid vessel. A reusable query batch
+captures accepted ground columns lazily; participants using the same environment
+share the point check, while mixed physical/virtual policies still require both
+checks. Live and batched paths use the same support-column geometry test. The
+vessel's already-owned Rigidbody supplies its point velocity without a component
+lookup at every submerged sample.
+
+This is a local optimization, not a persistent spatial cache. A stack-only batch
+cannot enter stored program state or cross an asynchronous/coroutine boundary.
+It expires on disposal, replacement, frame or physics-step change. Geometry must
+remain unchanged inside a batch; each force pass and external medium observation
+starts afresh. Pause, active/runtime state, scan readiness and each participant's
+collision policy are checked live. This preserves virtual interactions below the
+scanned floor without letting physical participants borrow virtual readiness.
+No capability, room format, fluid quantity or force equation changes.
+
+A reproducible desktop Editor microbenchmark uses eight accepted ground tiles,
+1,000 decorative children and 4,096 paired point checks per trial. The pre-change
+path took 104.40–105.45 ms across four trials. In the first post-change comparison,
+the direct path took 103.24–104.57 ms and the batch took 1.74–1.77 ms. Both warmed
+loops allocate zero managed bytes. These are isolated query measurements, not
+whole-frame or Quest performance evidence. Native tests compare the two paths,
+reject unsupported/nonfinite points, exercise mixed profiles and scan loss,
+keep pause live, invalidate replaced batches and check fresh geometry after
+movement, disabling, replacement and invalid room transforms.
+
+The focused run passes 976 EditMode and 46 PlayMode cases. Shared room/book/
+headless contracts pass 1,444 tests in 135 files; probe types, catalog provenance
+and core boundaries pass. The catalog's public contracts are unchanged; only
+native source provenance changed. The broader native run and transport evidence
+are recorded below and in the coverage matrix. Existing device hold and all
+water-aware traversal, terrain-reservoir, presentation and streaming gates remain
+open. Evidence: .quest-evidence/spatial-state/environment-query-*.
+
+
+The broader PlayMode run exposed a timing assumption in an existing visual-layer
+test: a 0.1-second fade was required to remain active after a yielded frame.
+A sufficiently slow Editor frame can correctly finish it first. The test now
+asserts transition start immediately after synchronous shared dispatch, then
+verifies completion through normal updates. Existing deterministic
+EditMode tests already verify interpolation and large-tick completion. This
+failure is retained as evidence; it is not treated as a passing full run.
+
+
+The completed broad run has **868 passes**, the single timing-test failure above,
+and the three established optional private-asset ignores. Production source did
+not change afterward. The repaired test and its entire avatar/view family,
+plus environment and liquid controls, pass **132 focused PlayMode cases** with
+zero failures. This records the failed first run and successful repair separately;
+it does not relabel the failed aggregate report. A second measurement inside the
+broad run shows 101.52–102.36 ms direct versus 1.80–1.81 ms batched, again with
+zero warmed allocations. Catalog contracts remain 118 actions, 138 facts and
+18 events, now with 477 native source inputs.
+
+
+Final native transport journey **1a98962f538e444d8ab6da50ba11c066** passes
+**692 observations** with both client and Editor exiting 0. Shared native
+receipts and readback cover the complete existing journey, including finite
+medium properties, conserved transfer and Undo/Redo. No provider was used in
+this run. The generated catalog differs from the preceding commit only in
+source provenance; its public schemas and descriptions are unchanged. All ten protected unrelated working files remain unchanged.
