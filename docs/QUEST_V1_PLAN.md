@@ -5703,3 +5703,12 @@ lint, probe types and whitespace checks pass. All ten protected unrelated files
 retain their original hashes. PR comments were reread with no new findings since
 the previous review. No new headset, APK, signing, upload, deployment or
 Store-readiness claim is made; the existing device cooling/charge hold remains.
+
+
+Release gate **37861313979** passed app/shared tests and lint, then exposed the
+production TypeScript target's older `Error` constructor signature in the new
+billing preflight. The helper now preserves its cause with the project's existing
+`Object.assign` pattern. The full local production build and all 35 affected
+billing/room-journey tests pass after that compatibility repair. The successful
+native/provider runtime behavior is unchanged; the exact follow-up commit still
+requires its own release gate.

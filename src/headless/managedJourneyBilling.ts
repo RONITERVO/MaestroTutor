@@ -112,7 +112,7 @@ export const beginManagedJourneyBilling = async (
 ): Promise<ManagedJourneyBillingSnapshot> => {
   try { return await waitForManagedJourneyBillingSettlement(client, operationId); }
   catch (cause) {
-    throw new Error('Cannot start a measured managed journey before earlier billing has settled.', { cause });
+    throw Object.assign(new Error('Cannot start a measured managed journey before earlier billing has settled.'), { cause });
   }
 };
 
