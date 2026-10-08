@@ -6911,7 +6911,7 @@
         "source.revision.current",
         "storage.writable"
       ],
-      "description": "Capture 1–16 created objects into the existing reusable program library. Give every exact member ID, its current revision and a distinct slot name. Pause physics, recipe playback and animation authoring, finish drawing, and release all members first. Captures current poses and saved geometry, paint, collision/physics, drawing patches/ink/tips and recorded root motion. Imported models retain their exact content hashes; a module file does not bundle model bytes. Include both ends of every hinge; external links are refused. Book/Maestro, structure monitors, running behaviours, buttons and unsaved drafts are not object geometry and are not captured. Objects with appearance bindings are currently refused because modules do not yet bundle the appearance library; export the workspace to preserve them. Objects with sound emitters are currently refused because modules do not yet bundle their source library; export the workspace to preserve them. Nothing moves or starts. The first listed member defines the constructor origin/orientation; its existing scale remains part of the piece. Publishes ordinary editable program source exporting create(position,rotation,scale), returning fresh member IDs in slot order; deleting originals does not invalidate that source. Standard source size, 16-piece and room budgets apply; oversized captures fail explicitly. Model files stay retained while the library references them. Existing module pins never change. A dispatched library write may finish after Stop; inspect its receipt/library instead of retrying uncertainty.",
+      "description": "Capture 1–16 created objects into the existing reusable program library. Give every exact member ID, its current revision and a distinct slot name. Pause physics, recipe playback and animation authoring, finish drawing, and release all members first. Captures current poses and saved geometry, paint, collision/physics, drawing patches/ink/tips and recorded root motion. Imported models retain their exact content hashes; a module file does not bundle model bytes. Include both ends of every hinge; external links are refused. Book/Maestro, structure monitors, running behaviours, buttons and unsaved drafts are not object geometry and are not captured. Appearance bindings, saved sound emitters and explicit real-room collision profiles travel with their exact definitions in a closed local resource bundle. Sharing among selected members is preserved; each constructor call creates independent definitions without changing unrelated room resources. Dormant appearance bindings stay explicit. Global collision switches still apply; saved emitters do not auto-play. Nothing moves or starts. The first listed member defines the constructor origin/orientation; its existing scale remains part of the piece. Publishes ordinary editable program source exporting create(position,rotation,scale), returning fresh member IDs in slot order; deleting originals does not invalidate that source. Standard source size, 16-piece and room budgets apply; oversized captures fail explicitly. Model files stay retained while the library references them. Existing module pins never change. A dispatched library write may finish after Stop; inspect its receipt/library instead of retrying uncertainty.",
       "example": {
         "name": "My construction",
         "members": [
@@ -10661,7 +10661,7 @@
               "version": {
                 "type": "integer",
                 "minimum": 1.0,
-                "maximum": 3.0
+                "maximum": 4.0
               },
               "pieces": {
                 "type": "array",
@@ -13005,7 +13005,7 @@
                                 "version": {
                                   "type": "integer",
                                   "minimum": 1.0,
-                                  "maximum": 1.0
+                                  "maximum": 2.0
                                 },
                                 "color": {
                                   "type": "object",
@@ -13038,6 +13038,181 @@
                                     "a"
                                   ],
                                   "additionalProperties": false
+                                },
+                                "appearanceBindings": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "version": {
+                                        "type": "integer",
+                                        "minimum": 1.0,
+                                        "maximum": 1.0
+                                      },
+                                      "appearanceId": {
+                                        "type": "string",
+                                        "pattern": "^[a-f0-9]{32}$",
+                                        "maxLength": 32
+                                      },
+                                      "kind": {
+                                        "type": "string",
+                                        "enum": [
+                                          "root",
+                                          "part",
+                                          "material"
+                                        ]
+                                      },
+                                      "partId": {
+                                        "type": "string",
+                                        "pattern": "^[a-zA-Z0-9_]{0,32}$",
+                                        "maxLength": 32
+                                      },
+                                      "modelHash": {
+                                        "type": "string",
+                                        "pattern": "^(|[a-f0-9]{64})$",
+                                        "maxLength": 64
+                                      },
+                                      "materialIndex": {
+                                        "type": "integer",
+                                        "minimum": -1.0,
+                                        "maximum": 1023.0
+                                      },
+                                      "tint": {
+                                        "type": "string",
+                                        "pattern": "^(|#[a-fA-F0-9]{6})$",
+                                        "maxLength": 7
+                                      }
+                                    },
+                                    "required": [
+                                      "version",
+                                      "appearanceId",
+                                      "kind",
+                                      "partId",
+                                      "modelHash",
+                                      "materialIndex",
+                                      "tint"
+                                    ],
+                                    "additionalProperties": false,
+                                    "format": "appearanceBinding"
+                                  },
+                                  "minItems": 0,
+                                  "maxItems": 33,
+                                  "x-features": [
+                                    "constructionResources.v1"
+                                  ]
+                                },
+                                "audioEmitters": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "version": {
+                                        "type": "integer",
+                                        "minimum": 1.0,
+                                        "maximum": 1.0
+                                      },
+                                      "id": {
+                                        "type": "string",
+                                        "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,23}$",
+                                        "maxLength": 24
+                                      },
+                                      "source": {
+                                        "type": "string",
+                                        "pattern": "^[a-f0-9]{32}$",
+                                        "maxLength": 32
+                                      },
+                                      "part": {
+                                        "type": "string",
+                                        "pattern": "^[a-zA-Z0-9_]{0,32}$",
+                                        "maxLength": 32
+                                      },
+                                      "joint": {
+                                        "type": "string",
+                                        "enum": [
+                                          ""
+                                        ]
+                                      },
+                                      "role": {
+                                        "type": "string",
+                                        "enum": [
+                                          "effects",
+                                          "media",
+                                          "ambience"
+                                        ]
+                                      },
+                                      "position": {
+                                        "type": "object",
+                                        "properties": {
+                                          "x": {
+                                            "type": "number",
+                                            "minimum": -10.0,
+                                            "maximum": 10.0
+                                          },
+                                          "y": {
+                                            "type": "number",
+                                            "minimum": -10.0,
+                                            "maximum": 10.0
+                                          },
+                                          "z": {
+                                            "type": "number",
+                                            "minimum": -10.0,
+                                            "maximum": 10.0
+                                          }
+                                        },
+                                        "required": [
+                                          "x",
+                                          "y",
+                                          "z"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      "spatial": {
+                                        "type": "boolean"
+                                      },
+                                      "gain": {
+                                        "type": "number",
+                                        "minimum": 0.0,
+                                        "maximum": 1.0
+                                      },
+                                      "minDistance": {
+                                        "type": "number",
+                                        "minimum": 0.1,
+                                        "maximum": 10.0
+                                      },
+                                      "maxDistance": {
+                                        "type": "number",
+                                        "minimum": 0.1,
+                                        "maximum": 50.0
+                                      }
+                                    },
+                                    "required": [
+                                      "version",
+                                      "id",
+                                      "source",
+                                      "part",
+                                      "joint",
+                                      "role",
+                                      "position",
+                                      "spatial",
+                                      "gain",
+                                      "minDistance",
+                                      "maxDistance"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  "minItems": 0,
+                                  "maxItems": 4,
+                                  "x-features": [
+                                    "constructionResources.v1"
+                                  ]
+                                },
+                                "environmentProfile": {
+                                  "type": "string",
+                                  "pattern": "^(|[a-f0-9]{32})$",
+                                  "maxLength": 32,
+                                  "x-features": [
+                                    "constructionResources.v1"
+                                  ]
                                 },
                                 "physics": {
                                   "type": "object",
@@ -17257,6 +17432,330 @@
                   "connectedBlueprints.v2",
                   "physicalConnections.v1"
                 ]
+              },
+              "resources": {
+                "type": "object",
+                "properties": {
+                  "version": {
+                    "type": "integer",
+                    "minimum": 1.0,
+                    "maximum": 1.0
+                  },
+                  "appearances": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "version": {
+                          "type": "integer",
+                          "minimum": 1.0,
+                          "maximum": 1.0
+                        },
+                        "id": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{32}$",
+                          "maxLength": 32
+                        },
+                        "name": {
+                          "type": "string",
+                          "pattern": "^.{1,80}$",
+                          "maxLength": 80
+                        },
+                        "style": {
+                          "type": "object",
+                          "properties": {
+                            "tint": {
+                              "type": "string",
+                              "pattern": "^#[a-fA-F0-9]{6}$",
+                              "maxLength": 7
+                            },
+                            "patternMode": {
+                              "type": "string",
+                              "enum": [
+                                "inherit",
+                                "replace"
+                              ]
+                            },
+                            "pattern": {
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "enum": [
+                                    "solid",
+                                    "checker",
+                                    "stripes"
+                                  ]
+                                },
+                                "plane": {
+                                  "type": "string",
+                                  "enum": [
+                                    "uv",
+                                    "xy",
+                                    "xz",
+                                    "yz"
+                                  ]
+                                },
+                                "secondary": {
+                                  "type": "string",
+                                  "pattern": "^#[a-fA-F0-9]{6}$",
+                                  "maxLength": 7
+                                },
+                                "columns": {
+                                  "type": "integer",
+                                  "minimum": 1.0,
+                                  "maximum": 32.0
+                                },
+                                "rows": {
+                                  "type": "integer",
+                                  "minimum": 1.0,
+                                  "maximum": 32.0
+                                }
+                              },
+                              "required": [
+                                "kind",
+                                "plane",
+                                "secondary",
+                                "columns",
+                                "rows"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "tiling": {
+                              "type": "object",
+                              "properties": {
+                                "x": {
+                                  "type": "number",
+                                  "minimum": 0.01,
+                                  "maximum": 64.0
+                                },
+                                "y": {
+                                  "type": "number",
+                                  "minimum": 0.01,
+                                  "maximum": 64.0
+                                }
+                              },
+                              "required": [
+                                "x",
+                                "y"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "offset": {
+                              "type": "object",
+                              "properties": {
+                                "x": {
+                                  "type": "number",
+                                  "minimum": -64.0,
+                                  "maximum": 64.0
+                                },
+                                "y": {
+                                  "type": "number",
+                                  "minimum": -64.0,
+                                  "maximum": 64.0
+                                }
+                              },
+                              "required": [
+                                "x",
+                                "y"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "renderMode": {
+                              "type": "string",
+                              "enum": [
+                                "inherit",
+                                "opaque",
+                                "cutout",
+                                "blend"
+                              ]
+                            },
+                            "opacity": {
+                              "type": "number",
+                              "minimum": 0.0,
+                              "maximum": 1.0
+                            },
+                            "cutoff": {
+                              "type": "number",
+                              "minimum": 0.0,
+                              "maximum": 1.0
+                            },
+                            "sidedness": {
+                              "type": "string",
+                              "enum": [
+                                "inherit",
+                                "front",
+                                "both"
+                              ]
+                            },
+                            "grain": {
+                              "type": "number",
+                              "minimum": -1.0,
+                              "maximum": 1.0
+                            },
+                            "shading": {
+                              "type": "number",
+                              "minimum": -1.0,
+                              "maximum": 0.3
+                            }
+                          },
+                          "required": [
+                            "tint",
+                            "patternMode",
+                            "pattern",
+                            "tiling",
+                            "offset",
+                            "renderMode",
+                            "opacity",
+                            "cutoff",
+                            "sidedness",
+                            "grain",
+                            "shading"
+                          ],
+                          "additionalProperties": false,
+                          "format": "appearanceStyle"
+                        }
+                      },
+                      "required": [
+                        "version",
+                        "id",
+                        "name",
+                        "style"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "minItems": 0,
+                    "maxItems": 64
+                  },
+                  "audioSources": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "version": {
+                          "type": "integer",
+                          "minimum": 1.0,
+                          "maximum": 1.0
+                        },
+                        "id": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{32}$",
+                          "maxLength": 32
+                        },
+                        "name": {
+                          "type": "string",
+                          "pattern": "^.{0,80}$",
+                          "maxLength": 80
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "tone"
+                          ]
+                        },
+                        "wave": {
+                          "type": "string",
+                          "enum": [
+                            "sine",
+                            "triangle",
+                            "noise"
+                          ]
+                        },
+                        "frequency": {
+                          "type": "number",
+                          "minimum": 20.0,
+                          "maximum": 10000.0
+                        },
+                        "endFrequency": {
+                          "type": "number",
+                          "minimum": 20.0,
+                          "maximum": 10000.0
+                        },
+                        "seconds": {
+                          "type": "number",
+                          "minimum": 0.03,
+                          "maximum": 30.0
+                        },
+                        "attack": {
+                          "type": "number",
+                          "minimum": 0.005,
+                          "maximum": 2.0
+                        },
+                        "release": {
+                          "type": "number",
+                          "minimum": 0.005,
+                          "maximum": 2.0
+                        },
+                        "seed": {
+                          "type": "integer",
+                          "minimum": 1.0,
+                          "maximum": 2147483647.0
+                        }
+                      },
+                      "required": [
+                        "version",
+                        "id",
+                        "name",
+                        "kind",
+                        "wave",
+                        "frequency",
+                        "endFrequency",
+                        "seconds",
+                        "attack",
+                        "release",
+                        "seed"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "minItems": 0,
+                    "maxItems": 32
+                  },
+                  "environmentProfiles": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "version": {
+                          "type": "integer",
+                          "minimum": 1.0,
+                          "maximum": 1.0
+                        },
+                        "id": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{32}$",
+                          "maxLength": 32
+                        },
+                        "name": {
+                          "type": "string",
+                          "pattern": "^.{1,80}$",
+                          "maxLength": 80
+                        },
+                        "realCollisions": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "version",
+                        "id",
+                        "name",
+                        "realCollisions"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "minItems": 0,
+                    "maxItems": 16
+                  }
+                },
+                "required": [
+                  "version",
+                  "appearances",
+                  "audioSources",
+                  "environmentProfiles"
+                ],
+                "additionalProperties": false,
+                "x-features": [
+                  "constructionResources.v1"
+                ]
               }
             },
             "required": [
@@ -17351,7 +17850,7 @@
         "storage.writable",
         "blueprint.valid"
       ],
-      "description": "Instantiate an editable version-1 independent or version-3 physically connected blueprint of 1–16 independently grabbable physical pieces. Each named slot contains an exact bundled template hash, inline recipe/collision/physics source, or version-1 prototype preserving created geometry, paint, surfaces/ink, drawing tips and recorded root motion and a local pose/scale. The outer pose/scale transforms the entire arrangement in room axes. All final positions must be within 25 metres and all final scales 0.1–4; recipe, vertex, collision and room-object budgets apply to the whole candidate. Reserves every creation before a program starts the call, then saves once with one Undo; failure creates no partial structure. Returns objectIds and slots in matching blueprint order. Version 3 includes 1–15 slot-to-slot connection links, each using the ordinary connection definition. One outgoing connection per piece, no cycles or external IDs; authored frames must already align at the transformed pose. Links become exact new object IDs only after all pieces are prepared, within the shared 16-connection room budget. Objects retain editable source and no longer depend on the blueprint. Save this definition in ordinary reusable programs/modules; this does not install a separate blueprint library or persistent group, create snap joints, replace missing pieces, avoid overlaps, or start physics/animations. Pieces must start idle. Prototype motion is relative to each piece pose and transforms with it; every resulting frame must satisfy room bounds. Model prototypes keep exact local model hashes: bytes are verified before any member is committed; missing/damaged files fail without partial creation. Model rendering still loads asynchronously through the usual importer. No external file or replacement model is fetched. Temporary creation stays in the fork; Stop leaves accepted pieces and duplicate receipts do not create again. Use explicit returned IDs for later actions/reset; never identify pieces by display names.",
+      "description": "Instantiate an editable version-1 independent version-3 physically connected, or version-4 resource-bundled blueprint of 1–16 independently grabbable physical pieces. Each named slot contains an exact bundled template hash, inline recipe/collision/physics source, or version-1/2 prototype preserving created geometry, paint, surfaces/ink, drawing tips and recorded root motion and a local pose/scale. The outer pose/scale transforms the entire arrangement in room axes. All final positions must be within 25 metres and all final scales 0.1–4; recipe, vertex, collision and room-object budgets apply to the whole candidate. Reserves every creation before a program starts the call, then saves once with one Undo; failure creates no partial structure. Returns objectIds and slots in matching blueprint order. Version 3 includes 1–15 slot-to-slot connection links, each using the ordinary connection definition. One outgoing connection per piece, no cycles or external IDs; authored frames must already align at the transformed pose. Links become exact new object IDs only after all pieces are prepared, within the shared 16-connection room budget. Objects retain editable source and no longer depend on the blueprint. Save this definition in ordinary reusable programs/modules; this does not install a separate blueprint library or persistent group, create snap joints, replace missing pieces, avoid overlaps, or start physics/animations. Pieces must start idle. Prototype motion is relative to each piece pose and transforms with it; every resulting frame must satisfy room bounds. Model prototypes keep exact local model hashes: bytes are verified before any member is committed; missing/damaged files fail without partial creation. Model rendering still loads asynchronously through the usual importer. No external file or replacement model is fetched. Version 4 bundles exactly the referenced appearances, tone sound definitions and environment collision profiles, including dormant appearance bindings. Version-2 prototypes carry these local references. All definition IDs are module-local symbols, remapped to fresh IDs on every instantiation; sharing within the construction survives, but existing room definitions are never reused or overwritten. Version 4 permits zero to fifteen links. Room resource budgets are checked before the single atomic save; Undo removes the new definitions with the pieces. Emitters are saved idle. Collision profiles remain subject to the global real-room collision switch. Temporary creation stays in the fork; Stop leaves accepted pieces and duplicate receipts do not create again. Use explicit returned IDs for later actions/reset; never identify pieces by display names.",
       "example": {
         "blueprint": {
           "version": 1,
@@ -36986,7 +37485,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "6698ddfe5a741e3b31bd0e434b145c66b977e9d1c88ac31a2482027be6f4997d"
+      "sha256": "83881a5e37a1981165088f1b96c98a7b62c63ce658a04b993ce0faa48356fe0f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -37018,7 +37517,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "2753a93f30b3c7385c7667f4414422f90ae2206b8db7135677fa668857f8edf2"
+      "sha256": "8842acab2c472d0d14f90e95a247572666cd143e40c7c41cbd26c3e70c817c10"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -37426,11 +37925,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationPrototype.cs",
-      "sha256": "80f5dc7f116fa0c43c61d64258d4647af8c26e3c96afebeef20384f5f92c7d00"
+      "sha256": "df8ef90a62bdb41e180013085925cb9e29f19bbd94f04ae48e8bb183a62ac067"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationResources.cs",
+      "sha256": "c3dc03f25c041163bb39d0641c2e13317cc7a0809491f00f6921b8ffcf0dc598"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ConstructionCapture.cs",
-      "sha256": "0aad3a05888c1eb316887a4633ad799113fef3d7462f8650bafe287a29c1f671"
+      "sha256": "d4b0ca812e658b5194208b76f883e33fd18669636072bcf45992467332fd7744"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomComponentEdits.cs",
@@ -37594,7 +38097,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAppearance.cs",
-      "sha256": "70547cfba0d06cd8302b5b227b1172ff9b577756eb25d4268e02e0ec53407fe0"
+      "sha256": "d5218be2f10ea6a3c3616dad84721cda60bf61a7502a2f2df7d7642a072c6c47"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentProfile.cs",
@@ -37866,7 +38369,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationBatch.cs",
-      "sha256": "df3f3f59082f343cd068db4d3e55b21f54897a872d5e6fdf3e084054a0426085"
+      "sha256": "85b4f2eedf5c826aea80a00c5d31250a752e502a373d672448ef92d971e7f1fe"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructure.cs",
@@ -37978,7 +38481,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/BatchCreationCapability.cs",
-      "sha256": "8615834e4ce90f3011575173a203affdb28d35ee8a712ee2df5da7333282cbe6"
+      "sha256": "bfac3581d150e25ce044749113bcfa13fa90a50fe417cd2ac577316b52047ce7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModule.cs",
@@ -37998,7 +38501,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CaptureConstructionCapability.cs",
-      "sha256": "41bbac7ddd5fdaf44bb52e1e9477b86a80f9e03a9a022c50093cb19f3d73c04b"
+      "sha256": "3f0903e5beb4b4a3327bd0fd0d6a12a2d7af2777ddaffdb60017d4f81e345c70"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CatchObjectCapability.cs",
@@ -38058,7 +38561,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreationPrototypeSchema.cs",
-      "sha256": "89f45c2e181df2e5de8d9be588ba3cc28d2d75651942d4acddf77c2f4df9c8a7"
+      "sha256": "d885cc6765655a65cdc08e9b1966d307d9089979676fb208f8eb4d5dcba3a42f"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreationResourcesSchema.cs",
+      "sha256": "4128a19c299396d677d52a2f6318f4fd3bb21aed7d9086a455ed9f3b9c1a24cf"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingCapabilities.cs",

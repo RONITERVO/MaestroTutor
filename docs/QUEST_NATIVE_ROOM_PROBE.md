@@ -723,3 +723,23 @@ changes name/opacity in the generated form and checks the completed native recei
 `book-native-appearance.json` and its screenshot retain that evidence. Reload must
 not dispatch the request again. These are desktop native/client integration checks
 with scripted responses, not live-provider or physical Quest appearance acceptance.
+
+
+## Portable construction resource journey
+
+`probe-construction-resources.ts` is part of the deterministic full native-room run.
+It creates two pieces sharing appearance, sound and environment definitions, captures
+an ordinary reusable module through the native library, removes the originals with
+Undo, then runs that module's constructor. Actual native facts must show preserved
+local tint, shared fresh IDs, configured sound attachments and virtual-only collision
+participation. A final Undo removes the instance and the module is explicitly removed
+from this disposable probe library. `construction-resources.json` stores the transport
+and readback evidence. Separate PlayMode tests cover renderer opacity, destination-ID
+isolation, receipt replay, room capacity and temporary Keep/Discard. This is desktop
+integration evidence; it does not claim live-provider or physical headset acceptance.
+
+The book journey additionally assigns the new appearance to its existing learner ball,
+loads current member values in the generated construction form and captures that styled
+object into the real native library. Its completed receipt and screenshot are saved as
+`book-native-construction-resources.*`; reload must not replay either operation. The
+runner waits for asynchronous inspection before expanding the members section.

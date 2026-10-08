@@ -4658,9 +4658,9 @@ Immutable rendered variants have leases, are shared for matching source/style,
 and are released when no object uses them. Reconciliation restores original
 renderer slots before selecting new variants, including asynchronous model
 completion. Undo/Redo, save/reload, temporary Keep/Discard and portable workspace
-snapshots retain definitions and bindings. Construction modules currently refuse
-bound appearance capture rather than silently dropping the dependency; bundling
-appearance resources into portable construction modules remains required work.
+snapshots retain definitions and bindings. This checkpoint refused construction
+capture with appearance bindings; the portable-construction checkpoint below
+supersedes that restriction with a closed dependency bundle.
 
 Final validation passed 923 EditMode and 792 PlayMode tests, with three optional
 private-file skips; 1,318 shared room/headless tests; app/probe TypeScript; lint;
@@ -4680,3 +4680,49 @@ scripted responses, not live providers or a headset. Evidence is tracked under
 This is an authoring increment; it does not complete weather/light, water/medium
 reactions, regional simulation, image-backed texture authoring, or hardware
 acceptance. The device hold remains until fresh owner readiness and a health check.
+
+
+### Portable construction resources (2026-10-08, desktop verified)
+
+Reusable constructions now retain appearances, sound emitters and explicit real-room
+collision profiles. This also closes a capture gap that previously omitted explicit
+collision-profile bindings. Version-4 blueprints bundle exactly their dependencies;
+version-2 prototypes carry local references. Existing resource-free blueprints keep
+their current formats. `constructionResources.v1` gates the new public fields.
+
+Capture converts source IDs to deterministic local symbols. Each constructor invocation
+allocates independent definitions while preserving sharing among its own pieces.
+Existing destination definitions, even with matching symbols/names, remain untouched.
+Dormant appearance bindings and exact imported-model identities survive. Model bytes
+remain verified external dependencies; this does not claim a self-contained GLB pack.
+Copied tone emitters start idle. Collision profiles still obey the global real-room
+switch. The same capability, generated book form, agent and program paths are used.
+One accepted save/Undo includes pieces, links and definitions. Dangling or unused
+bundled definitions, insufficient room capacity, failed storage and missing models
+cannot leave partial resources. Temporary Keep/Discard preserves that whole boundary.
+
+Validation: 927 EditMode cases passed. The full PlayMode run plus six targeted reruns
+verify 797 unique passing cases and three optional private-file skips. Production
+runtime was unchanged between those runs; the targeted pass replaced an obsolete
+capture-refusal expectation and added failed-save/missing-model checks. Shared checks
+pass 1,171 room/headless cases and 293 book/transport cases, plus app/probe TypeScript,
+lint and generated-catalog provenance. Thirty-three shared input fixtures keep native
+and web resource closure, ownership, envelope, binding and version rules aligned.
+
+The native headless run completed 552 observations, including capture, removal of
+originals, reconstruction, shared fresh IDs, idle playback facts and library cleanup
+on Undo. Run: fc5096d7031f42709a12ce9d740aa1bd. The real book journey assigned an
+appearance, captured the styled object through generated fields, received native
+completion and reloaded without replay. Run: e590889bb4e54251986db08a11600087;
+its screenshot was inspected. Two earlier book attempts exposed an automation race
+around asynchronous form expansion; the runner now waits for the returned form.
+These runs use scripted responses, not live providers or physical Quest testing.
+Evidence: .quest-evidence/spatial-state/construction-resources-working.json and
+construction-resources-*; docs/QUEST_BATCH_CREATION.md defines the versioned contract.
+
+This checkpoint does not bundle running programs, arbitrary code, texture files,
+imported/live audio or GLB bytes into a construction module. Those resource kinds,
+image-backed texture authoring, weather/light, water-aware traversal and streamed
+regions remain accepted v1 work. No APK was packaged, installed, signed or uploaded.
+Headset testing stays on hold pending fresh owner cooling/charge readiness and a health
+check. Release and provider acceptance gates remain open; the v1 goal remains active.

@@ -54,8 +54,9 @@ namespace Maestro.Quest.Tests
             Assert.That(AssignAppearance(target,id,out error,"copy","#0000FF"),Is.True,error);string copy=editor.Read(target).appearanceBindings[0].appearanceId;
             Assert.That(copy,Is.Not.EqualTo(id));Assert.That(editor.ReadAppearance(copy).style.tint,Is.EqualTo("#0000FF"));Assert.That(editor.ReadAppearance(copy).style.opacity,Is.EqualTo(before.style.opacity));
             Assert.That(editor.Read(target).appearanceBindings[0].tint,Is.Empty);
-            Assert.That(editor.CaptureConstruction(new[]{new ConstructionMember{target=target,revision=editor.ObjectRevision(target),slot="brick"}},out _,out error),Is.False);
-            Assert.That(error,Does.Contain("appearances"));editor.Undo();
+            Assert.That(editor.CaptureConstruction(new[]{new ConstructionMember{target=target,revision=editor.ObjectRevision(target),slot="brick"}},out var captured,out error),Is.True,error);
+            Assert.That(captured.blueprint.resources.appearances.Single().style.tint,Is.EqualTo("#0000FF"));
+            Assert.That(captured.blueprint.resources.appearances.Single().style.opacity,Is.EqualTo(before.style.opacity));editor.Undo();
             Assert.That(editor.ReadAppearance(copy),Is.Null);Assert.That(editor.Read(target).appearanceBindings[0].tint,Is.EqualTo("#0000FF"));
             yield return null;
         }

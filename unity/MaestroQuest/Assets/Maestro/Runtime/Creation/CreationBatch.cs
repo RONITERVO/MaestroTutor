@@ -65,10 +65,12 @@ namespace Maestro.Quest.Creation
     {
         public int version=1;
         public CreationPiece[] pieces;
+        public CreationResources resources;
         public BlueprintConnection[] connections=Array.Empty<BlueprintConnection>();
         public bool Validate(out string error) {
-            error="A blueprint needs version 1 or 3 and 1–16 distinct named pieces";
-            if(version is not (1 or 3)||pieces==null||pieces.Length<1||pieces.Length>16)return false;
+            error="A blueprint needs version 1, 3 or 4 and 1–16 distinct named pieces";
+            if(version is not (1 or 3 or 4)||pieces==null||pieces.Length<1||pieces.Length>16)return false;
+            if(version==4?(resources==null||!resources.Any):(resources!=null&&!resources.EmptySerializationShell)){error="Use blueprint version 4 with a nonempty resource bundle";return false;}
             var slots=new HashSet<string>(StringComparer.Ordinal);
             foreach(var p in pieces) {
                 error="A blueprint needs distinct named pieces with valid local poses and scales";
@@ -78,7 +80,7 @@ namespace Maestro.Quest.Creation
             }
             var allLinks=connections??Array.Empty<BlueprintConnection>();
             error="Use version 3 for 1–15 connection links between distinct blueprint slots";
-            if(version==1&&allLinks.Length>0||version==3&&(allLinks.Length<1||allLinks.Length>15))return false;
+            if(version==1&&allLinks.Length>0||version==3&&allLinks.Length<1||allLinks.Length>15)return false;
             var links=new Dictionary<string,string>(StringComparer.Ordinal);
             foreach(var h in allLinks){
                 error="Each connection needs two existing slots and a distinct owner; definitions cannot contain external object IDs";
@@ -95,14 +97,22 @@ namespace Maestro.Quest.Creation
         public Vector3 position;
         public Quaternion rotation=Quaternion.identity;
         public float scale=1;
+        internal static bool ValidResourceWire(JObject value,out string error) {
+            var wire=(JObject)value["blueprint"];error="Explicit construction resources require blueprint version 4";
+            if(wire.ContainsKey("resources")&&(int)wire["version"]!=4)return false;
+            error=null;return true;
+        }
         internal static CreationBatch Read(JObject value) {
+            if(!ValidResourceWire(value,out var error))throw new ArgumentException(error);
             var batch=JsonUtility.FromJson<CreationBatch>(value.ToString());
+            if(!((JObject)value["blueprint"]).ContainsKey("resources"))batch.blueprint.resources=null;
             for(int i=0;i<batch.blueprint.pieces.Length;i++)if(batch.blueprint.pieces[i].source.kind=="prototype")
                 batch.blueprint.pieces[i].source.prototype=CreationPrototype.Read((JObject)value["blueprint"]["pieces"][i]["source"]["prototype"]);
             return batch;
         }
-        public bool Prepare(out RoomObjectData[] objects,out string error) {
-            objects=null;error="Provide a valid blueprint, room position, unit rotation and scale";
+        public bool Prepare(out RoomObjectData[] objects,out string error)=>Prepare(out objects,out _,out error);
+        internal bool Prepare(out RoomObjectData[] objects,out CreationResources resources,out string error) {
+            objects=null;resources=null;error="Provide a valid blueprint, room position, unit rotation and scale";
             if(blueprint==null||!float.IsFinite(position.sqrMagnitude)||position.sqrMagnitude>625||!MotionFrame.ValidRotation(rotation)||!float.IsFinite(scale)||scale<.1f||scale>4)return false;
             if(!blueprint.Validate(out error))return false;
             var values=new List<RoomObjectData>();
@@ -119,7 +129,11 @@ namespace Maestro.Quest.Creation
                 if(!hinge.Aligned(owner,other,out error))return false;owner.connections=new[]{hinge};
             }
             if(!RoomConnection.ValidateCollection(values.ToArray(),out error))return false;
-            objects=values.ToArray();error=null;return true;
+            var local=blueprint.version==4?blueprint.resources:new CreationResources();var prepared=values.ToArray();
+            if(!local.Validate(prepared,out error))return false;
+            resources=local.Instantiate(prepared);
+            if(!CreationPrototype.ValidateObjects(prepared,out error,resources)){resources=null;return false;}
+            objects=prepared;error=null;return true;
         }
     }
     public sealed partial class RoomEditor
@@ -132,14 +146,16 @@ namespace Maestro.Quest.Creation
             if(physics!=null&&!RoomControls.SetPhysics(data,physics,out error))return false;
             if(!DrawingSurface.ValidateCollection(data,out error)||!DrawingTip.ValidateCollection(data,out error)||!RoomSnapPoint.ValidateCollection(data,out error)||!RoomContainer.ValidateCollection(data,out error)||!RoomMaterialStore.ValidateCollection(data,out error))return false;item=data;error=null;return true;
         }
-        bool PrepareCreationBatch(CreationBatch batch,out RoomObjectData[] objects,out string error) {
-            objects=null;error="Provide a creation batch";if(batch==null||!CanCreatePrimitive(out error)||!batch.Prepare(out objects,out error))return false;
-            var candidate=Snapshot();candidate.objects=candidate.objects.Concat(objects).ToArray();return candidate.Validate(out error);
+        bool PrepareCreationBatch(CreationBatch batch,out RoomObjectData[] objects,out CreationResources resources,out string error) {
+            objects=null;resources=null;error="Provide a creation batch";if(batch==null||!CanCreatePrimitive(out error)||!batch.Prepare(out objects,out resources,out error))return false;
+            var candidate=Snapshot();candidate.objects=candidate.objects.Concat(objects).ToArray();
+            candidate.appearances=candidate.appearances.Concat(resources.appearances).ToArray();candidate.audioSources=candidate.audioSources.Concat(resources.audioSources).ToArray();candidate.environmentProfiles=candidate.environmentProfiles.Concat(resources.environmentProfiles).ToArray();
+            return candidate.Validate(out error);
         }
-        public bool CanCreateBatch(CreationBatch batch,out string error)=>PrepareCreationBatch(batch,out _,out error);
+        public bool CanCreateBatch(CreationBatch batch,out string error)=>PrepareCreationBatch(batch,out _,out _,out error);
         public bool CreateBatch(CreationBatch batch,out string[] ids,out string error) {
-            ids=null;if(!PrepareCreationBatch(batch,out var objects,out error))return false;
-            if(!CommitPersisted(objects,Array.Empty<string>(),"Structure created — one Undo removes its pieces",false,out error))return false;
+            ids=null;if(!PrepareCreationBatch(batch,out var objects,out var resources,out error))return false;
+            if(!CommitPersisted(objects,Array.Empty<string>(),"Structure created — one Undo removes its pieces and resources",false,out error,appearanceEdits:new AppearanceEdits{Replacements=resources.appearances},audioEdits:new AudioDefinitionEdits{Replacements=resources.audioSources},environmentEdits:new EnvironmentProfileEdits{Replacements=resources.environmentProfiles}))return false;
             ids=objects.Select(o=>o.id).ToArray();return true;
         }
     }

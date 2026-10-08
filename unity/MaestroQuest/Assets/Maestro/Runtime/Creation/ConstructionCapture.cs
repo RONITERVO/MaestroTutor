@@ -23,8 +23,6 @@ namespace Maestro.Quest.Creation
                 if(GetComponent<AnimationWorkshop>()?.ControlsTarget(member.target)==true){error="Finish animation authoring before capturing";return false;}
                 var item=Find(member.target);if(!item.isActiveAndEnabled||item.GetComponent<RigidRoomItem>()?.GeometryReady==false){error="Wait for every construction member to be ready";return false;}
                 objects[i]=Pose(Read(member.target),item.transform);
-                if((objects[i].appearanceBindings?.Length??0)>0){error="Reusable construction modules do not yet bundle appearances. Export the workspace to preserve its appearances.";return false;}
-                if((objects[i].audioEmitters?.Length??0)>0){error="Reusable construction modules do not yet bundle sound sources. Export the workspace to preserve its sounds.";return false;}
                 if(objects[i].recipe?.playing==true){error="Pause recipe animations before capturing their authored geometry";return false;}
             }
             if(Snapshot().objects.Any(o=>(o.connections??Array.Empty<RoomConnection>()).Any(h=>selected.Contains(o.id)!=selected.Contains(h.connected)))){
@@ -33,10 +31,11 @@ namespace Maestro.Quest.Creation
             var slots=members.ToDictionary(m=>m.target,m=>m.slot);var anchor=objects[0];var inverse=Quaternion.Inverse(anchor.rotation);
             var links=objects.SelectMany(o=>(o.connections??Array.Empty<RoomConnection>()).Select(h=>new BlueprintConnection {
                 owner=slots[o.id],connected=slots[h.connected],definition=new ConnectionSettings {enabled=h.enabled,kind=h.kind,breakForce=h.breakForce,breakTorque=h.breakTorque,ownerFrame=h.ownerFrame.Copy(),connectedFrame=h.connectedFrame.Copy(),limits=h.limits.Copy(),drive=h.drive.Copy()}})).ToArray();
+            var resources=CreationResources.Capture(objects,Snapshot());
             var pieces=objects.Select(o=>new CreationPiece {slot=slots[o.id],name=o.name??"",position=inverse*(o.position-anchor.position),rotation=(inverse*o.rotation).normalized,scale=o.scale,
                 source=new CreationSource {kind="prototype",prototype=CreationPrototype.Capture(o)}}).ToArray();
-            batch=new CreationBatch {position=anchor.position,rotation=anchor.rotation,scale=1,blueprint=new CreationBlueprint {version=links.Length==0?1:3,pieces=pieces,connections=links}};
-            if(!batch.Prepare(out var candidate,out error)||!CreationPrototype.ValidateObjects(candidate,out error)){batch=null;return false;}
+            batch=new CreationBatch {position=anchor.position,rotation=anchor.rotation,scale=1,blueprint=new CreationBlueprint {version=resources.Any?4:links.Length==0?1:3,pieces=pieces,connections=links,resources=resources.Any?resources:null}};
+            if(!batch.Prepare(out _,out _,out error)){batch=null;return false;}
             error=null;return true;
         }
     }
@@ -47,8 +46,9 @@ namespace Maestro.Quest.Creation
             var pieces=(JArray)arguments["blueprint"]["pieces"];
             foreach(var entry in (JArray)arguments["blueprint"]["connections"])entry["definition"]=ConnectionCapability.Definition(batch.blueprint.connections[((JArray)arguments["blueprint"]["connections"]).IndexOf(entry)].definition.Bind(""));
             for(int i=0;i<pieces.Count;i++)pieces[i]["source"]=new JObject {["kind"]="prototype",["prototype"]=CreationPrototypeSchema.Encode(batch.blueprint.pieces[i].source.prototype)};
+            if(batch.blueprint.resources==null)((JObject)arguments["blueprint"]).Remove("resources");
             // Independent blueprints need no connected feature. A present empty connections field would require it.
-            if(batch.blueprint.version==1)((JObject)arguments["blueprint"]).Remove("connections");
+            if(batch.blueprint.connections.Length==0)((JObject)arguments["blueprint"]).Remove("connections");
             JObject VectorType(bool q=false){var fields=new JObject {["x"]="number",["y"]="number",["z"]="number"};if(q)fields["w"]="number";return new JObject {["record"]=fields};}
             var list=new JObject {["list"]="text"};
             var main=new JObject {["name"]="main",["returns"]="void",["parameters"]=new JArray(),["locals"]=new JArray(),["body"]=new JArray()};

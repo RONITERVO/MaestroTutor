@@ -89,7 +89,7 @@ namespace Maestro.Quest.Programs
                         if(obj["connected"]!=null&&(string)obj["target"]==(string)obj["connected"]){error=path+" needs different connection members";return false;}
                         if(obj["definition"]!=null){var connection=UnityEngine.JsonUtility.FromJson<Maestro.Quest.Creation.RoomConnection>(obj["definition"].ToString());connection.connected=(string)obj["connected"];if(!connection.Validate((string)obj["target"],out error))return false;}
                     } else if((string)schema["format"]=="creationBatch") {
-                        if(!CreationBatch.Read(obj).Prepare(out _,out error))return false;
+                        if(!CreationBatch.ValidResourceWire(obj,out error)||!CreationBatch.Read(obj).Prepare(out _,out error))return false;
                     } else if((string)schema["format"]=="objectLayout") {
                         if(!JsonUtility.FromJson<RoomLayout>(obj.ToString()).Validate(out error))return false;
                     } else if((string)schema["format"]=="lathePart") {

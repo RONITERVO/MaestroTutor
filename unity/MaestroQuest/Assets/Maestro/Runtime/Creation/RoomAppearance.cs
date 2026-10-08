@@ -64,14 +64,20 @@ namespace Maestro.Quest.Creation
                 if(bindings==null&&version<25)continue;
                 error="An object needs at most 33 distinct valid appearance bindings to existing definitions";
                 if(bindings==null||bindings.Length>33||version<25&&bindings.Length>0)return false;
-                var slots=new HashSet<string>(StringComparer.Ordinal);
-                foreach(var binding in bindings)if(binding==null||!binding.Validate(obj)||!ids.Contains(binding.appearanceId)||!slots.Add(binding.Key))return false;
-                error="Bound root/part tint belongs to its appearance binding, not a second source pigment";
-                if(bindings.Any(b=>b.kind=="root")&&obj.color!=Color.white)return false;
-                foreach(var b in bindings.Where(b=>b.kind=="part")) {
-                    var part=obj.recipe?.parts?.FirstOrDefault(p=>p.id==b.partId);
-                    if(part!=null&&part.color!=Color.white)return false;
-                }
+                if(!ValidateBindings(obj,ids,out error))return false;
+            }
+            error=null;return true;
+        }
+        internal static bool ValidateBindings(RoomObjectData obj,HashSet<string> ids,out string error) {
+            error="An object needs at most 33 distinct valid appearance bindings to existing definitions";
+            var bindings=obj.appearanceBindings;if(bindings==null||bindings.Length>33)return false;
+            var slots=new HashSet<string>(StringComparer.Ordinal);
+            foreach(var binding in bindings)if(binding==null||!binding.Validate(obj)||!ids.Contains(binding.appearanceId)||!slots.Add(binding.Key))return false;
+            error="Bound root/part tint belongs to its appearance binding, not a second source pigment";
+            if(bindings.Any(b=>b.kind=="root")&&obj.color!=Color.white)return false;
+            foreach(var b in bindings.Where(b=>b.kind=="part")) {
+                var part=obj.recipe?.parts?.FirstOrDefault(p=>p.id==b.partId);
+                if(part!=null&&part.color!=Color.white)return false;
             }
             error=null;return true;
         }

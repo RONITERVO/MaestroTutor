@@ -192,13 +192,42 @@ try{
  assert.equal(appearance.call.arguments.name,'Book-created glass');assert.equal((appearance.call.arguments.style as {opacity:number}).opacity,.35);assert.ok(appearance.output?.id);
  await writeFile(join(directory,'book-native-appearance.json'),JSON.stringify({boundary:'Actual generated book form and native saved receipt, scripted provider elsewhere; no headset/provider proof for appearances.',appearance},null,2));
  await page.screenshot({path:join(directory,'book-native-appearance.png')});
+ // Use the ordinary generated forms to bind a style and capture the styled object.
+ await page.getByRole('button',{name:'Back to workshop',exact:true}).click();
+ await page.getByRole('button',{name:'Action catalog',exact:true}).click();
+ await page.getByLabel('Search actions',{exact:true}).fill('Choose object appearance');await page.getByRole('button',{name:'Search',exact:true}).click();
+ await page.getByRole('button',{name:/Choose object appearance.*object.appearance.bind/}).click();
+ await page.getByLabel('Action inputs target',{exact:true}).selectOption(ball.id);
+ const bindingState=await page.evaluate(()=>window.nativeBookEvidence!().state!);
+ await page.getByLabel('Action inputs revision',{exact:true}).fill(String(bindingState.objects.find(o=>o.id===ball.id)!.objectRevision));
+ await page.getByLabel('Action inputs appearanceRevision',{exact:true}).fill(String(appearance.output!.revision));
+ await page.getByLabel('Action inputs binding appearanceId',{exact:true}).fill(String(appearance.output!.id));
+ await page.getByRole('button',{name:'Run action now',exact:true}).click();
+ await page.waitForFunction(()=>{const r=window.nativeBookEvidence!().state!.execution?.selected;return r?.capability==='object.appearance.bind'&&r.phase==='completed';});
+ const boundAppearance=await page.evaluate(()=>window.nativeBookEvidence!().state!.execution!.selected!);
+ await page.getByRole('button',{name:'Back to workshop',exact:true}).click();await page.getByRole('button',{name:'Action catalog',exact:true}).click();
+ await page.getByLabel('Search actions',{exact:true}).fill('Save construction');await page.getByRole('button',{name:'Search',exact:true}).click();
+ await page.getByRole('button',{name:/Save construction.*program.module.captureConstruction/}).click();
+ const memberFields=page.getByText('Action inputs members · 1 entries',{exact:true}),memberTarget=page.getByLabel('Action inputs members 1 target',{exact:true});
+ await memberFields.waitFor({state:'visible'}); // Inspection is asynchronous; the keyed form opens after its native reply.
+ if(!await memberTarget.isVisible())await memberFields.click();
+ await page.getByLabel('Action inputs name',{exact:true}).fill('My styled ball');
+ await page.getByLabel('Action inputs members 1 target',{exact:true}).selectOption(ball.id);
+ await page.getByLabel('Action inputs members 1 slot',{exact:true}).fill('ball');
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();
+ await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ await page.getByRole('button',{name:'Run action now',exact:true}).click();
+ await page.waitForFunction(()=>{const r=window.nativeBookEvidence!().state!.execution?.selected;return r?.capability==='program.module.captureConstruction'&&r.phase==='completed';});
+ const portableCapture=await page.evaluate(()=>window.nativeBookEvidence!().state!.execution!.selected!);assert.equal(typeof portableCapture.output?.hash,'string');
+ await writeFile(join(directory,'book-native-construction-resources.json'),JSON.stringify({boundary:'Real generated book forms and native receipts for style assignment and library capture; no provider or headset proof.',appearance,boundAppearance,portableCapture},null,2));
+ await page.screenshot({path:join(directory,'book-native-construction-resources.png')});
  await page.getByRole('button',{name:'Back to workshop',exact:true}).click();await page.getByRole('button',{name:'Back to chat',exact:true}).first().click();
  await page.waitForFunction(()=>window.nativeBookEvidence!().state!.visible===false);
  const commandCount=requests.size;
  await page.reload();await page.waitForFunction(()=>!!window.nativeBookEvidence?.().state);
  await page.getByText('The ball keeps your colour.',{exact:true}).waitFor();
  assert.equal(requests.size,commandCount,'Reload replayed a room command');assert.equal(plannerCalls,expectedPlans);assert.deepEqual(errors,[]);assert.deepEqual((await page.evaluate(()=>window.nativeBookEvidence!())).errors,[]);
- const evidence={boundary:'Real QuestBookSurface, ChatInterface/useTutorConversation, verifier, task service/IndexedDB and Unity app; provider SSE responses are explicitly scripted offline, no real provider, Android texture, headset or scan acceptance.',providerUsed:false,providerRequests,manual:true,physicalTools:{shownAndHiddenViaSharedForm:true,savedSceneUnchanged:true},manualForm,capture,capturePixelsVerified:true,humanEditPreserved:true,staleAgentPaintRefused:true,discoveryBudgetPreservedActions:true,planningCalls:plannerCalls,reloadWithoutReplay:true,initial,working,human,completed,task,requests:[...requests.values()],observations,errors};
+ const evidence={boundary:'Real QuestBookSurface, ChatInterface/useTutorConversation, verifier, task service/IndexedDB and Unity app; provider SSE responses are explicitly scripted offline, no real provider, Android texture, headset or scan acceptance.',providerUsed:false,providerRequests,manual:true,physicalTools:{shownAndHiddenViaSharedForm:true,savedSceneUnchanged:true},manualForm,portableCapture,capture,capturePixelsVerified:true,humanEditPreserved:true,staleAgentPaintRefused:true,discoveryBudgetPreservedActions:true,planningCalls:plannerCalls,reloadWithoutReplay:true,initial,working,human,completed,task,requests:[...requests.values()],observations,errors};
  await writeFile(join(directory,'book-journey.json'),JSON.stringify(evidence,null,2));
  console.log('Real native book and original-chat handoff journey passed.');
 }catch(error){

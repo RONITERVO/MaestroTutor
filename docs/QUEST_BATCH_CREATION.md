@@ -175,3 +175,39 @@ using the shared current-input metadata and normal program limits. It does not
 save a separate capture-only workflow or refresh stale revisions automatically.
 
 The included **Spring button** module uses the same connected blueprint constructor and exports an ordinary `waitForTravel` condition wait for press/release rules. See [sliding mechanisms](QUEST_PHYSICAL_CONNECTIONS.md#sliding-mechanisms-and-the-included-button).
+
+
+## Portable construction resources
+
+A version-4 blueprint contains a version-1 `resources` bundle with `appearances`,
+`audioSources` and `environmentProfiles`. Version-2 prototypes carry the corresponding
+`appearanceBindings`, `audioEmitters` and `environmentProfile` references. The native
+feature is `constructionResources.v1`; clients check it before dispatch or program
+installation. Versions 1 and 3 remain the resource-free independent/connected formats.
+Version 4 permits zero to fifteen internal connection links.
+
+Capture copies exactly the definitions referenced by the selected objects, including
+appearance addresses that are currently dormant. It converts room IDs to deterministic
+module-local symbols. These symbols never authorize reading or overwriting destination
+room definitions. Every constructor invocation allocates fresh definition IDs and
+rewrites every member reference together. Pieces that shared a definition in the
+capture still share it within that new construction; separate instances are independent.
+Identical names do not imply sharing. Users can explicitly rebind objects afterward.
+
+The complete candidate room must fit the existing object, geometry and resource limits:
+64 appearance definitions, 32 sound definitions/emitters, and 16 environment profiles
+with at most 16 members each. Closure is strict: dangling references, duplicate IDs,
+unused bundled definitions, incompatible owner bindings and invalid envelopes are
+rejected. Creation, new definitions and links use one accepted save and one Undo/Redo.
+Failed capacity, model verification or persistence cannot leave orphan definitions.
+Temporary-room Keep/Discard carries the entire instance. Library publication remains
+separate from room Undo, and pinned constructors retain their exact source.
+
+The bundle preserves the supported appearance values and tone recipes; it does not
+add texture downloads, imported/live audio or GLB-byte packaging. Model hashes remain
+exact external dependencies verified before commit. Copied emitters start idle and
+copied collision profiles remain subject to the global real-room collision switch.
+The module does not capture active audio connections, credentials, playback cursors,
+running programs or arbitrary user code. New resource kinds should extend this closed,
+typed dependency mechanism and the shared catalog instead of creating a parallel
+agent-only import path.
